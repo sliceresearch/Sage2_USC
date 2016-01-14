@@ -112,6 +112,9 @@ var mediaBlockSize     = 512;
 var startTime          = Date.now();
 var pressingAlt        = true;
 
+// master SAGE2 server for scalability
+var masterServer       = null;
+var slaveServers       = {};
 
 // Add extra folders defined in the configuration file
 if (config.folders) {
@@ -362,6 +365,47 @@ function initializeSage2Server() {
 	wsioServerS = new WebsocketIO.Server({server: sage2ServerS});
 	wsioServer.onconnection(openWebSocketClient);
 	wsioServerS.onconnection(openWebSocketClient);
+
+        if (config.master_port !== undefined) {
+		console.log("Try to connect as slave to master SAGE2 server...");
+		// assume it's on the same host for now!
+		masterServer = new WebsocketIO("wss://"+config.host+":"+config.master_port, false, function() {
+			console.log(sageutils.header("Remote") + "Connected to master server as rendering slave");
+			var clientDescription = {
+				clientType: "remoteServer",
+				host: config.host,
+				port: config.port,
+				requests: {
+					config: false,
+					version: false,
+					time: false,
+					console: false
+				}
+			};
+			masterServer.clientType = "remoteServer";
+
+                	masterServer.emit('addClient', clientDescription);
+
+			masterServer.on('initialize', function() {
+				masterServer.emit('addSlaveServer', clientDescription);
+			});
+			
+			masterServer.onclose(function() {
+				console.log("Remote site \"" + config.remote_sites[index].name + "\" now offline");
+				remoteSites[index].connected = false;
+				var delete_site = {name: remoteSites[index].name, connected: remoteSites[index].connected};
+				broadcast('connectedToRemoteSite', delete_site);
+				removeElement(clients, remote);
+			});
+		});
+	}
+}
+
+function wsAddSlaveServer(wsio, data) {
+	console.log("Add slave server: ", wsio.id, data);
+	data.id = wsio.id;
+	slaveServers[wsio.id]=data;
+	broadcast('displayAddSlaveServer',data);
 }
 
 function setUpDialogsAsInteractableObjects() {
@@ -494,6 +538,7 @@ function closeWebSocketClient(wsio) {
 }
 
 function wsAddClient(wsio, data) {
+	console.log("wsAddClient ", wsio.id);
 
 	// Just making sure the data is valid JSON (one gets strings from C++)
 	if (sageutils.isTrue(data.requests.config)) {
@@ -529,6 +574,11 @@ function wsAddClient(wsio, data) {
 	} else {
 		wsio.clientID = -1;
 		console.log(sageutils.header("Connect") + wsio.id + " (" + wsio.clientType + ")");
+		if (masterServer!==undefined && masterServer!=null) {
+			console.log("register new client with master");
+			masterServer.emit('addClient', data);
+			console.log("- registered new client with master");
+		}
 	}
 
 	clients.push(wsio);
@@ -539,9 +589,11 @@ function wsAddClient(wsio, data) {
 		// for mobile clients, default to window interaction mode
 		remoteInteraction[wsio.id].previousMode = 0;
 	}
+
 }
 
 function initializeWSClient(wsio, reqConfig, reqVersion, reqTime, reqConsole) {
+	console.log("initializeWSClient ", wsio.id);
 	setupListeners(wsio);
 
 	wsio.emit('initialize', {UID: wsio.id, time: Date.now(), start: startTime});
@@ -568,6 +620,11 @@ function initializeWSClient(wsio, reqConfig, reqVersion, reqTime, reqConsole) {
 		initializeRemoteServerInfo(wsio);
 		initializeExistingWallUI(wsio);
 		setTimeout(initializeExistingControls, 6000, wsio); // why can't this be done immediately with the rest?
+		console.log("Send slave servers...", slaveServers);
+		for (var ss in slaveServers) {
+			console.log("- send slave server details: ", slaveServers[ss]);
+			wsio.emit('displayAddSlaveServer', slaveServers[ss]);
+		}
 	} else if (wsio.clientType === "sageUI") {
 		createSagePointer(wsio.id);
 		var key;
@@ -579,6 +636,7 @@ function initializeWSClient(wsio, reqConfig, reqVersion, reqTime, reqConsole) {
 
 	var remote = findRemoteSiteByConnection(wsio);
 	if (remote !== null) {
+		console.log("Connected to remote site");
 		remote.wsio = wsio;
 		remote.connected = true;
 		var site = {name: remote.name, connected: remote.connected};
@@ -591,7 +649,10 @@ function initializeWSClient(wsio, reqConfig, reqVersion, reqTime, reqConsole) {
 }
 
 function setupListeners(wsio) {
+	console.log("setupListeners ",wsio.id);
 	wsio.on('registerInteractionClient',            wsRegisterInteractionClient);
+
+	wsio.on('addSlaveServer',            		wsAddSlaveServer);
 
 	wsio.on('startSagePointer',                     wsStartSagePointer);
 	wsio.on('stopSagePointer',                      wsStopSagePointer);
@@ -986,7 +1047,7 @@ function wsRadialMenuClick(wsio, data) {
 // **************  Media Stream Functions *****************
 
 function wsStartNewMediaStream(wsio, data) {
-	console.log("received new stream: ", data.id);
+	console.log("wsStartNewMediaStream ", data.id);
 
 	var i;
 	SAGE2Items.renderSync[data.id] = {clients: {}, chunks: []};
@@ -1013,6 +1074,15 @@ function wsStartNewMediaStream(wsio, data) {
 			};
 			addEventToUserLog(wsio.id, {type: "mediaStreamStart", data: eLogData, time: Date.now()});
 		});
+
+	if (masterServer!==undefined && masterServer!=null) {
+		console.log("master - start new media stream");
+		masterServer.emit('startNewMediaStream', data);
+		console.log("master - new media stream started");
+		// HACK! fake the first frame response which goes via the ``wrong'' server
+	 	wsio.emit('requestNextFrame');
+	}
+	
 }
 
 /**
@@ -1047,6 +1117,7 @@ function wsUpdateMediaStreamFrame(wsio, dataOrBuffer) {
           // buffer: id, state-type, state-encoding, state-src
           data.id = byteBufferToString(dataOrBuffer);
         }
+	console.log("wsUpdateMediaStreamFrame ", data.id);
 
 	// Reset the 'ready' flag for every display client
 	for (key in SAGE2Items.renderSync[data.id].clients) {
@@ -1102,6 +1173,7 @@ function wsUpdateMediaStreamFrame(wsio, dataOrBuffer) {
 }
 
 function wsUpdateMediaStreamChunk(wsio, data) {
+	console.log("wsUpdateMediaStreamChunk ",data);
 	if (SAGE2Items.renderSync[data.id].chunks.length === 0) {
 		SAGE2Items.renderSync[data.id].chunks = initializeArray(data.total, "");
 	}
@@ -1140,7 +1212,7 @@ function wsStopMediaStream(wsio, data) {
 }
 
 function wsReceivedMediaStreamFrame(wsio, data) {
-        //console.log("ReceivedMediaStreamFrame");
+        console.log("ReceivedMediaStreamFrame ", data);
 	SAGE2Items.renderSync[data.id].clients[wsio.id].readyForNextFrame = true;
 	if (allTrueDict(SAGE2Items.renderSync[data.id].clients, "readyForNextFrame")) {
 		var i;

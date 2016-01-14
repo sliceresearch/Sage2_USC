@@ -22,6 +22,9 @@ window.URL = (window.URL || window.webkitURL || window.msURL || window.oURL);
 
 var clientID;
 var wsio;
+// slave servers to subscribe to
+var slaveServers = {};
+var slaveConnections = {};
 
 var isMaster;
 var hostAlias = {};
@@ -45,6 +48,9 @@ var uiTimerDelay;
 window.onbeforeunload = function() {
 	if (wsio !== undefined) {
 		wsio.close();
+	}
+	if (wsio2 !== undefined) {
+		wsio2.close();
 	}
 };
 
@@ -170,9 +176,7 @@ function SAGE2_init() {
 
 	wsio.open(function() {
 		console.log("Websocket opened");
-
-		setupListeners();
-
+		setupListeners(wsio);
 		var clientDescription = {
 			clientType: "display",
 			clientID: clientID,
@@ -209,21 +213,98 @@ function SAGE2_init() {
 			xhr.send();
 		}, 2000);
 	});
+
+	//slaveInit("ws://10.234.2.22:8088/display.html");
 }
 
-function setupListeners() {
-	wsio.on('initialize', function(data) {
+// connect to a Sage2 ``slave'' media streaming server and be ready to receive frames from it
+function slaveInit(id) {
+	var url = "ws://"+id+"/display.html");
+	var slaveWsio = new WebsocketIO(url);
+	console.log("Connected to slave server ", url);
+
+	slaveWsio.open(function() {
+		console.log("Websocket opened");
+		slaveConnections[id]=slaveWsio;
+		setupSlaveListeners(slaveWsio);
+		var clientDescription = {
+			clientType: "display",
+			clientID: clientID,
+			requests: {
+				config: true,
+				version: true,
+				time: true,
+				console: false
+			},
+			isMobile: __SAGE2__.browser.isMobile
+		};
+		slaveWsio.emit('addClient', clientDescription);
+		// log(JSON.stringify(__SAGE2__.browser));
+	});
+}
+
+function setupSlaveListeners(anWsio) {
+	anWsio.on('updateMediaStreamFrame', function(dataOrBuffer) {
+		console.log("SCALE2: updateMediaStreamFrame");
+                // NB: Cloned code
+                var data;
+                if (dataOrBuffer.id !== undefined) {
+                  console.log("display.UpdateMediaStreamFrame: parameter is record");
+                  data = dataOrBuffer;
+                } else {
+                  console.log("display.UpdateMediaStreamFrame: parameter is Buffer");
+                  data = {}
+                  // buffer: id, state-type, state-encoding, state-src
+                  data.id = byteBufferToString(dataOrBuffer);
+                  var buf2 = dataOrBuffer.slice(data.id.length + 1, dataOrBuffer.length);
+                  data.state = {}
+                  data.state.type = byteBufferToString(buf2);
+                  var buf3 = buf2.subarray(data.state.type.length + 1);
+                  data.state.encoding = "base64";
+                  var buf4 = buf3.subarray(data.state.encoding.length + 1, buf3.length);
+                  data.state.src = btoa(String.fromCharCode.apply(null, buf4));
+                }
+		anWsio.emit('receivedMediaStreamFrame', {id: data.id});
+		var app = applications[data.id];
+		if (app !== undefined && app !== null) {
+			app.SAGE2Load(data.state, new Date(data.date));
+		}
+		// update clones in data-sharing portals
+		var key;
+		for (key in dataSharingPortals) {
+			app = applications[data.id + "_" + key];
+			if (app !== undefined && app !== null) {
+				app.SAGE2Load(data.state, new Date(data.date));
+			}
+		}
+	});
+}
+
+function setupListeners(anWsio) {
+	anWsio.on('initialize', function(data) {
 		var startTime  = new Date(data.start);
 
 		// Global initialization
 		SAGE2_initialize(startTime);
 	});
 
-	wsio.on('setAsMasterDisplay', function() {
+	anWsio.on('setAsMasterDisplay', function() {
 		isMaster = true;
 	});
 
-	wsio.on('broadcast', function(data) {
+	// new media streaming slave registered
+	anWsio.on('displayAddSlaveServer', function(data) {
+		console.log("Possibly-new slave server ", data);
+		console.log("Slave servers:", slaveServers);
+		if (!(data.id in slaveServers)) {
+			console.log("... add new slave server ", data);
+			slaveServers[data.id]=data;
+			// e.g. ws://10.234.2.22:8088/display.html
+			slaveInit(data.id);
+		}
+	});
+
+	anWsio.on('broadcast', function(data) {
 		if (applications[data.app] === undefined) {
 			// should have better way to determine if app is loaded
 			//   or already killed
@@ -237,14 +318,14 @@ function setupListeners() {
 		}
 	});
 
-	wsio.on('addScript', function(script_data) {
+	anWsio.on('addScript', function(script_data) {
 		var js = document.createElement('script');
 		js.type = "text/javascript";
 		js.src = script_data.source;
 		document.head.appendChild(js);
 	});
 
-	wsio.on('setupDisplayConfiguration', function(json_cfg) {
+	anWsio.on('setupDisplayConfiguration', function(json_cfg) {
 		var i;
 		var http_port;
 		var https_port;
@@ -270,7 +351,7 @@ function setupListeners() {
 		makeSvgBackgroundForWidgetConnectors(ui.main.style.width, ui.main.style.height);
 	});
 
-	wsio.on('hideui', function(param) {
+	anWsio.on('hideui', function(param) {
 		if (param) {
 			clearTimeout(uiTimer);
 			ui.showInterface();
@@ -286,23 +367,23 @@ function setupListeners() {
 			}
 	});
 
-	wsio.on('setupSAGE2Version', function(version) {
+	anWsio.on('setupSAGE2Version', function(version) {
 		ui.updateVersionText(version);
 	});
 
-	wsio.on('setSystemTime', function(data) {
+	anWsio.on('setSystemTime', function(data) {
 		ui.setTime(new Date(data.date));
 	});
 
-	wsio.on('addRemoteSite', function(data) {
+	anWsio.on('addRemoteSite', function(data) {
 		ui.addRemoteSite(data);
 	});
 
-	wsio.on('toggleHelp', function(data) {
+	anWsio.on('toggleHelp', function(data) {
 		ui.toggleHelp();
 	});
 
-	wsio.on('connectedToRemoteSite', function(data) {
+	anWsio.on('connectedToRemoteSite', function(data) {
 		if (window.ui) {
 			ui.connectedToRemoteSite(data);
 		} else {
@@ -312,7 +393,7 @@ function setupListeners() {
 		}
 	});
 
-	wsio.on('createSagePointer', function(pointer_data) {
+	anWsio.on('createSagePointer', function(pointer_data) {
 		if (window.ui) {
 			ui.createSagePointer(pointer_data);
 		} else {
@@ -322,7 +403,7 @@ function setupListeners() {
 		}
 	});
 
-	wsio.on('showSagePointer', function(pointer_data) {
+	anWsio.on('showSagePointer', function(pointer_data) {
 		ui.showSagePointer(pointer_data);
 		resetIdle();
 		var uniqueID = pointer_data.id.slice(0, pointer_data.id.lastIndexOf("_"));
@@ -331,7 +412,7 @@ function setupListeners() {
 		addStyleElementForTitleColor(stlyeCaption, pointer_data.color);
 	});
 
-	wsio.on('hideSagePointer', function(pointer_data) {
+	anWsio.on('hideSagePointer', function(pointer_data) {
 		ui.hideSagePointer(pointer_data);
 		var uniqueID = pointer_data.id.slice(0, pointer_data.id.lastIndexOf("_"));
 		var re = /\.|\:/g;
@@ -339,53 +420,53 @@ function setupListeners() {
 		removeStyleElementForTitleColor(stlyeCaption, pointer_data.color);
 	});
 
-	wsio.on('updateSagePointerPosition', function(pointer_data) {
+	anWsio.on('updateSagePointerPosition', function(pointer_data) {
 		if (ui) {
 			ui.updateSagePointerPosition(pointer_data);
 		}
 		resetIdle();
 	});
 
-	wsio.on('changeSagePointerMode', function(pointer_data) {
+	anWsio.on('changeSagePointerMode', function(pointer_data) {
 		ui.changeSagePointerMode(pointer_data);
 		resetIdle();
 	});
 
-	wsio.on('createRadialMenu', function(menu_data) {
+	anWsio.on('createRadialMenu', function(menu_data) {
 		ui.createRadialMenu(menu_data);
 	});
 
-	wsio.on('updateRadialMenu', function(menu_data) {
+	anWsio.on('updateRadialMenu', function(menu_data) {
 		ui.updateRadialMenu(menu_data);
 	});
 
-	wsio.on('updateRadialMenuPosition', function(menu_data) {
+	anWsio.on('updateRadialMenuPosition', function(menu_data) {
 		ui.updateRadialMenuPosition(menu_data);
 	});
 
-	wsio.on('radialMenuEvent', function(menu_data) {
+	anWsio.on('radialMenuEvent', function(menu_data) {
 		ui.radialMenuEvent(menu_data);
 		resetIdle();
 	});
 
-	wsio.on('updateRadialMenuDocs', function(menu_data) {
+	anWsio.on('updateRadialMenuDocs', function(menu_data) {
 		ui.updateRadialMenuDocs(menu_data);
 		resetIdle();
 	});
 
-	wsio.on('updateRadialMenuApps', function(menu_data) {
+	anWsio.on('updateRadialMenuApps', function(menu_data) {
 		ui.updateRadialMenuApps(menu_data);
 		resetIdle();
 	});
 
-	wsio.on('loadApplicationState', function(data) {
+	anWsio.on('loadApplicationState', function(data) {
 		var app = applications[data.id];
 		if (app !== undefined && app !== null) {
 			app.SAGE2Load(data.state, new Date(data.date));
 		}
 	});
 
-	wsio.on('loadApplicationOptions', function(data) {
+	anWsio.on('loadApplicationOptions', function(data) {
 		var fullSync = true;
 		var windowTitle = document.getElementById(data.id + "_title");
 		var windowIconSync = document.getElementById(data.id + "_iconSync");
@@ -410,7 +491,7 @@ function setupListeners() {
 		}
 	});
 
-	wsio.on('updateMediaStreamFrame', function(dataOrBuffer) {
+	anWsio.on('updateMediaStreamFrame', function(dataOrBuffer) {
                 // NB: Cloned code
                 var data;
                 if (dataOrBuffer.id !== undefined) {
@@ -429,14 +510,11 @@ function setupListeners() {
                   var buf4 = buf3.subarray(data.state.encoding.length + 1, buf3.length);
                   data.state.src = btoa(String.fromCharCode.apply(null, buf4));
                 }
-
-		wsio.emit('receivedMediaStreamFrame', {id: data.id});
-
+		anWsio.emit('receivedMediaStreamFrame', {id: data.id});
 		var app = applications[data.id];
 		if (app !== undefined && app !== null) {
 			app.SAGE2Load(data.state, new Date(data.date));
 		}
-
 		// update clones in data-sharing portals
 		var key;
 		for (key in dataSharingPortals) {
@@ -447,23 +525,24 @@ function setupListeners() {
 		}
 	});
 
-	wsio.on('updateMediaBlockStreamFrame', function(data) {
+
+	anWsio.on('updateMediaBlockStreamFrame', function(data) {
 		var appId     = byteBufferToString(data);
 		var blockIdx  = byteBufferToInt(data.subarray(appId.length + 1, appId.length + 3));
 		var date      = byteBufferToInt(data.subarray(appId.length + 3, appId.length + 11));
 		var yuvBuffer = data.subarray(appId.length + 11, data.length);
-
 		if (applications[appId] !== undefined && applications[appId] !== null) {
 			applications[appId].textureData(blockIdx, yuvBuffer);
 			if (applications[appId].receivedBlocks.every(isTrue) === true) {
 				applications[appId].refresh(new Date(date));
 				applications[appId].setValidBlocksFalse();
-				wsio.emit('receivedMediaBlockStreamFrame', {id: appId});
+				anWsio.emit('receivedMediaBlockStreamFrame', {id: appId});
 			}
 		}
 	});
 
-	wsio.on('updateVideoFrame', function(data) {
+
+	anWsio.on('updateVideoFrame', function(data) {
 		var appId     = byteBufferToString(data);
 		var blockIdx  = byteBufferToInt(data.subarray(appId.length + 1, appId.length + 3));
 		var date      = byteBufferToInt(data.subarray(appId.length + 7, appId.length + 15));
@@ -474,50 +553,50 @@ function setupListeners() {
 			if (applications[appId].receivedBlocks.every(isTrue) === true) {
 				applications[appId].refresh(new Date(date));
 				applications[appId].setValidBlocksFalse();
-				wsio.emit('requestVideoFrame', {id: appId});
+				anWsio.emit('requestVideoFrame', {id: appId});
 			}
 		}
 	});
 
-	wsio.on('updateFrameIndex', function(data) {
+	anWsio.on('updateFrameIndex', function(data) {
 		var app = applications[data.id];
 		if (app !== undefined && app !== null) {
 			app.setVideoFrame(data.frameIdx);
 		}
 	});
 
-	wsio.on('videoEnded', function(data) {
+	anWsio.on('videoEnded', function(data) {
 		var app = applications[data.id];
 		if (app !== undefined && app !== null) {
 			app.videoEnded();
 		}
 	});
 
-	wsio.on('updateValidStreamBlocks', function(data) {
+	anWsio.on('updateValidStreamBlocks', function(data) {
 		if (applications[data.id] !== undefined && applications[data.id] !== null) {
 			applications[data.id].validBlocks = data.blockList;
 			applications[data.id].setValidBlocksFalse();
 		}
 	});
 
-	wsio.on('updateWebpageStreamFrame', function(data) {
-		wsio.emit('receivedWebpageStreamFrame', {id: data.id, client: clientID});
+	anWsio.on('updateWebpageStreamFrame', function(data) {
+		anWsio.emit('receivedWebpageStreamFrame', {id: data.id, client: clientID});
 
 		var webpage = document.getElementById(data.id + "_webpage");
 		webpage.src = "data:image/jpeg;base64," + data.src;
 	});
 
-	wsio.on('createAppWindow', function(data) {
-		createAppWindow(data, ui.main.id, ui.titleBarHeight, ui.titleTextSize, ui.offsetX, ui.offsetY);
+	anWsio.on('createAppWindow', function(data) {
+		createAppWindow(data, anWsio, ui.main.id, ui.titleBarHeight, ui.titleTextSize, ui.offsetX, ui.offsetY);
 	});
 
-	wsio.on('createAppWindowInDataSharingPortal', function(data) {
+	anWsio.on('createAppWindowInDataSharingPortal', function(data) {
 		var portal = dataSharingPortals[data.portal];
 
-		createAppWindow(data.application, portal.id, portal.titleBarHeight, portal.titleTextSize, 0, 0);
+		createAppWindow(data.application, anWsio, portal.id, portal.titleBarHeight, portal.titleTextSize, 0, 0);
 	});
 
-	wsio.on('deleteElement', function(elem_data) {
+	anWsio.on('deleteElement', function(elem_data) {
 		resetIdle();
 
 		// Tell the application it is over
@@ -547,7 +626,7 @@ function setupListeners() {
 		}
 	});
 
-	wsio.on('hideControl', function(ctrl_data) {
+	anWsio.on('hideControl', function(ctrl_data) {
 		if (ctrl_data.id in controlItems && controlItems[ctrl_data.id].show === true) {
 			controlItems[ctrl_data.id].divHandle.style.display = "none";
 			controlItems[ctrl_data.id].show = false;
@@ -555,14 +634,14 @@ function setupListeners() {
 		}
 	});
 
-	wsio.on('showControl', function(ctrl_data) {
+	anWsio.on('showControl', function(ctrl_data) {
 		if (ctrl_data.id in controlItems && controlItems[ctrl_data.id].show === false) {
 			controlItems[ctrl_data.id].divHandle.style.display = "block";
 			controlItems[ctrl_data.id].show = true;
 		}
 	});
 
-	wsio.on('updateItemOrder', function(order) {
+	anWsio.on('updateItemOrder', function(order) {
 		resetIdle();
 
 		var key;
@@ -583,7 +662,7 @@ function setupListeners() {
 		}
 	});
 
-	wsio.on('hoverOverItemCorner', function(elem_data) {
+	anWsio.on('hoverOverItemCorner', function(elem_data) {
 		var selectedElem = document.getElementById(elem_data.elemId);
 		if (selectedElem) {
 			var dragCorner   = selectedElem.getElementsByClassName("dragCorner");
@@ -597,7 +676,7 @@ function setupListeners() {
 		}
 	});
 
-	wsio.on('setItemPosition', function(position_data) {
+	anWsio.on('setItemPosition', function(position_data) {
 		resetIdle();
 
 		if (position_data.elemId.split("_")[0] === "portal") {
@@ -649,7 +728,7 @@ function setupListeners() {
 
 	});
 
-	wsio.on('setControlPosition', function(position_data) {
+	anWsio.on('setControlPosition', function(position_data) {
 		var eLeft = position_data.elemLeft - ui.offsetX;
 		var eTop = position_data.elemTop - ui.offsetY;
 		var selectedControl = document.getElementById(position_data.elemId);
@@ -669,7 +748,7 @@ function setupListeners() {
 		}
 	});
 
-	wsio.on('showWidgetToAppConnector', function(data) {
+	anWsio.on('showWidgetToAppConnector', function(data) {
 		showWidgetToAppConnectors(data);
 		if (data.user_color !== null) {
 			if (!(data.id in widgetConnectorRequestList)) {
@@ -680,7 +759,7 @@ function setupListeners() {
 	});
 
 
-	wsio.on('hideWidgetToAppConnector', function(control_data) {
+	anWsio.on('hideWidgetToAppConnector', function(control_data) {
 		if (control_data.id in widgetConnectorRequestList) {
 			var lst = widgetConnectorRequestList[control_data.id];
 			if (lst.length > 1) {
@@ -700,7 +779,7 @@ function setupListeners() {
 
 	});
 
-	wsio.on('setItemPositionAndSize', function(position_data) {
+	anWsio.on('setItemPositionAndSize', function(position_data) {
 		resetIdle();
 
 		if (position_data.elemId.split("_")[0] === "portal") {
@@ -790,7 +869,7 @@ function setupListeners() {
 		}
 	});
 
-	wsio.on('startMove', function(data) {
+	anWsio.on('startMove', function(data) {
 		resetIdle();
 
 		var app = applications[data.id];
@@ -802,7 +881,7 @@ function setupListeners() {
 		}
 	});
 
-	wsio.on('finishedMove', function(data) {
+	anWsio.on('finishedMove', function(data) {
 		resetIdle();
 
 		var app = applications[data.id];
@@ -814,7 +893,7 @@ function setupListeners() {
 		}
 	});
 
-	wsio.on('startResize', function(data) {
+	anWsio.on('startResize', function(data) {
 		resetIdle();
 
 		var app = applications[data.id];
@@ -826,7 +905,7 @@ function setupListeners() {
 		}
 	});
 
-	wsio.on('finishedResize', function(data) {
+	anWsio.on('finishedResize', function(data) {
 		resetIdle();
 		var app = applications[data.id];
 		if (app !== undefined && app.resizeEvents === "onfinish") {
@@ -837,23 +916,23 @@ function setupListeners() {
 		}
 	});
 
-	wsio.on('animateCanvas', function(data) {
+	anWsio.on('animateCanvas', function(data) {
 		var app = applications[data.id];
 		if (app !== undefined && app !== null) {
 			var date = new Date(data.date);
 			app.refresh(date);
-			wsio.emit('finishedRenderingAppFrame', {id: data.id, fps: app.maxFPS});
+			anWsio.emit('finishedRenderingAppFrame', {id: data.id, fps: app.maxFPS});
 		}
 	});
 
-	wsio.on('eventInItem', function(event_data) {
+	anWsio.on('eventInItem', function(event_data) {
 		var date = new Date(event_data.date);
 		var app  = applications[event_data.id];
 
 		app.SAGE2Event(event_data.type, event_data.position, event_data.user, event_data.data, date);
 	});
 
-	wsio.on('requestNewControl', function(data) {
+	anWsio.on('requestNewControl', function(data) {
 		var dt = new Date(data.date);
 		if (data.elemId !== undefined && data.elemId !== null) {
 			if (controlObjects[data.elemId] !== undefined) {
@@ -861,7 +940,7 @@ function setupListeners() {
 				var spec = controlObjects[data.elemId].controls;
 				if (spec.controlsReady() === true) {
 					var size = spec.computeSize();
-					wsio.emit('addNewControl', {
+					anWsio.emit('addNewControl', {
 						id: data.elemId + data.user_id + "_controls",
 						appId: data.elemId,
 						left: data.x - size.height / 2,
@@ -879,7 +958,7 @@ function setupListeners() {
 		}
 	});
 
-	wsio.on('createControl', function(data) {
+	anWsio.on('createControl', function(data) {
 		if (controlItems[data.id] === null || controlItems[data.id] === undefined) {
 			var ctrDiv =  document.createElement("div");
 			ctrDiv.id = data.id;
@@ -906,7 +985,7 @@ function setupListeners() {
 
 		}
 	});
-	wsio.on('removeControlsForUser', function(data) {
+	anWsio.on('removeControlsForUser', function(data) {
 		for (var idx in controlItems) {
 			if (idx.indexOf(data.user_id) > -1) {
 				controlItems[idx].divHandle.parentNode.removeChild(controlItems[idx].divHandle);
@@ -916,7 +995,7 @@ function setupListeners() {
 		}
 	});
 
-	wsio.on('executeControlFunction', function(data) {
+	anWsio.on('executeControlFunction', function(data) {
 		var ctrl = getWidgetControlInstanceById(data.ctrl);
 		if (ctrl) {
 			var ctrlId = ctrl.attr('id');
@@ -979,12 +1058,12 @@ function setupListeners() {
 			switch (ctrlId) {
 				case "CloseApp":
 					if (isMaster) {
-						wsio.emit('closeAppFromControl', {appId: appId});
+						anWsio.emit('closeAppFromControl', {appId: appId});
 					}
 					break;
 				case "CloseWidget":
 					if (isMaster) {
-						wsio.emit('hideWidgetFromControl', {instanceID: data.ctrl.instanceID});
+						anWsio.emit('hideWidgetFromControl', {instanceID: data.ctrl.instanceID});
 					}
 					break;
 				case "ShareApp":
@@ -1000,7 +1079,7 @@ function setupListeners() {
 				app.requestForClone = false;
 				console.log("cloning app:" + appId);
 				if (isMaster) {
-					wsio.emit('createAppClone', {id: appId, cloneData: app.cloneData});
+					anWsio.emit('createAppClone', {id: appId, cloneData: app.cloneData});
 				}
 			}
 
@@ -1008,7 +1087,7 @@ function setupListeners() {
 
 	});
 
-	wsio.on('sliderKnobLockAction', function(data) {
+	anWsio.on('sliderKnobLockAction', function(data) {
 		var ctrl   = getWidgetControlInstanceById(data.ctrl);
 		var slider = ctrl.parent();
 		var appId = data.ctrl.appId;
@@ -1029,7 +1108,7 @@ function setupListeners() {
 		}
 	});
 
-	wsio.on('moveSliderKnob', function(data) {
+	anWsio.on('moveSliderKnob', function(data) {
 		// TODO: add `date` to `data` object
 		//       DON'T USE `new Date()` CLIENT SIDE (apps will get out of sync)
 
@@ -1048,7 +1127,7 @@ function setupListeners() {
 		app.SAGE2Event("widgetEvent", null, data.user, {identifier: ctrlId, action: "sliderUpdate"}, new Date(data.date));
 	});
 
-	wsio.on('keyInTextInputWidget', function(data) {
+	anWsio.on('keyInTextInputWidget', function(data) {
 		// TODO: add `date` to `data` object
 		//       DON'T USE `new Date()` CLIENT SIDE (apps will get out of sync)
 
@@ -1068,7 +1147,7 @@ function setupListeners() {
 		}
 	});
 
-	wsio.on('activateTextInputControl', function(data) {
+	anWsio.on('activateTextInputControl', function(data) {
 		var ctrl = null;
 		console.log("in activateTextInputContControl->", data);
 		if (data.prevTextInput) {
@@ -1089,7 +1168,7 @@ function setupListeners() {
 	});
 
 	// Called when the user clicks outside the widget control while a lock exists on text input
-	wsio.on('deactivateTextInputControl', function(data) {
+	anWsio.on('deactivateTextInputControl', function(data) {
 		console.log("in deactivateTextInputContControl->", data);
 		var ctrl = getWidgetControlInstanceById(data);
 		if (ctrl) {
@@ -1099,28 +1178,28 @@ function setupListeners() {
 		}
 	});
 
-	wsio.on('requestedDataSharingSession', function(data) {
+	anWsio.on('requestedDataSharingSession', function(data) {
 		ui.showDataSharingRequestDialog(data);
 	});
 
-	wsio.on('closeRequestDataSharingDialog', function(data) {
+	anWsio.on('closeRequestDataSharingDialog', function(data) {
 		ui.hideDataSharingRequestDialog();
 	});
 
-	wsio.on('dataSharingConnectionWait', function(data) {
+	anWsio.on('dataSharingConnectionWait', function(data) {
 		ui.showDataSharingWaitingDialog(data);
 	});
 
-	wsio.on('closeDataSharingWaitDialog', function(data) {
+	anWsio.on('closeDataSharingWaitDialog', function(data) {
 		ui.hideDataSharingWaitingDialog();
 	});
 
-	wsio.on('initializeDataSharingSession', function(data) {
+	anWsio.on('initializeDataSharingSession', function(data) {
 		console.log(data);
 		dataSharingPortals[data.id] = new DataSharing(data);
 	});
 
-	wsio.on('setAppSharingFlag', function(data) {
+	anWsio.on('setAppSharingFlag', function(data) {
 		var windowTitle = document.getElementById(data.id + "_title");
 		var windowIconSync = document.getElementById(data.id + "_iconSync");
 
@@ -1133,7 +1212,7 @@ function setupListeners() {
 		}
 	});
 
-	wsio.on('toggleSyncOptions', function(data) {
+	anWsio.on('toggleSyncOptions', function(data) {
 		var fullSync = true;
 		var key;
 		var windowTitle = document.getElementById(data.id + "_title");
@@ -1163,7 +1242,7 @@ function setupListeners() {
 
 			if (isMaster) {
 				var stateOp = ignoreFields(applications[data.id].SAGE2StateOptions, ["_name", "_value"]);
-				wsio.emit('updateStateOptions', {id: data.id, options: stateOp});
+				anWsio.emit('updateStateOptions', {id: data.id, options: stateOp});
 			}
 		} else {
 			if (applications[data.id].SAGE2StateSyncOptions.visible === false) {
@@ -1179,7 +1258,7 @@ function setupListeners() {
 	});
 }
 
-function createAppWindow(data, parentId, titleBarHeight, titleTextSize, offsetX, offsetY) {
+function createAppWindow(data, anWsio, parentId, titleBarHeight, titleTextSize, offsetX, offsetY) {
 	resetIdle();
 
 	var parent = document.getElementById(parentId);
@@ -1305,10 +1384,10 @@ function createAppWindow(data, parentId, titleBarHeight, titleTextSize, offsetX,
 
 	// App launched in window
 	if (data.application === "media_stream") {
-		wsio.emit('receivedMediaStreamFrame', {id: data.id});
+		anWsio.emit('receivedMediaStreamFrame', {id: data.id});
 	}
 	if (data.application === "media_block_stream") {
-		wsio.emit('receivedMediaBlockStreamFrame', {id: data.id, newClient: true});
+		anWsio.emit('receivedMediaBlockStreamFrame', {id: data.id, newClient: true});
 	}
 
 	// convert url if hostname is alias for current origin
@@ -1341,7 +1420,7 @@ function createAppWindow(data, parentId, titleBarHeight, titleTextSize, offsetX,
 				controlObjects[data.id] = newapp;
 
 				if (data.animation === true) {
-					wsio.emit('finishedRenderingAppFrame', {id: data.id});
+					anWsio.emit('finishedRenderingAppFrame', {id: data.id});
 				}
 			}, false);
 			js.type  = "text/javascript";
@@ -1360,10 +1439,10 @@ function createAppWindow(data, parentId, titleBarHeight, titleTextSize, offsetX,
 			controlObjects[data.id] = app;
 
 			if (data.animation === true) {
-				wsio.emit('finishedRenderingAppFrame', {id: data.id});
+				anWsio.emit('finishedRenderingAppFrame', {id: data.id});
 			}
 			if (data.application === "movie_player") {
-				setTimeout(function() { wsio.emit('requestVideoFrame', {id: data.id}); }, 500);
+				setTimeout(function() { anWsio.emit('requestVideoFrame', {id: data.id}); }, 500);
 			}
 		}
 	}
