@@ -566,7 +566,6 @@ var SAGE2_BlockStreamingApp = SAGE2_App.extend({
 
 		this.updateTextures();
 
-
 		if (this.state.colorspace === "RGBA") {
 			this.drawRGBA();
 		} else if (this.state.colorspace === "YUV420p") {
