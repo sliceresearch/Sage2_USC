@@ -293,6 +293,14 @@ var SAGE2_App = Class.extend({
 		}
 	},
 
+	SAGE2MessageEvent: function(data){
+		console.log("HERE WE GO " +  data.msg);
+		if (typeof this.messageEvent != "undefined") { 
+    		this.messageEvent(data); 
+		}
+		
+	},
+
 	/**
 	* SAGE2CopyState method called on init or load to copy state of app instance
 	*
@@ -515,6 +523,8 @@ var SAGE2_App = Class.extend({
 
 		return this.layer;
 	},
+
+
 
 	/**
 	* Method to display the layer

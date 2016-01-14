@@ -112,6 +112,9 @@ var mediaBlockSize     = 128;
 var startTime          = Date.now();
 var pressingAlt        = true;
 
+var parentApps 		   = {}; //store parent-child relationships (one parent, many children), indexed by parentId
+var childApps		   = {}; //store child-parent relationships (one parent, many children), indexed by childId
+
 
 // Add extra folders defined in the configuration file
 if (config.folders) {
@@ -1721,10 +1724,12 @@ function createAppFromDescription(app, callback) {
 	}
 }
 
+//this function is called when a parent app wants to launch a child app
+//this function launches the app (copy, past code from the load app function, not ideal but hack for now)
+//now i'm working on making it so that it 'subscribes' the parent and child to each other
 function wsLaunchLinkedChildApp(wsio, data){
 	console.log("launching child app", data.application);
 
-	// appName = path.join(publicDirectory, "uploads", data.application);
 	var appName = "./public/uploads/" + data.application;
 	console.log(appName);
 	var appData = {application: "custom_app", filename: appName};
@@ -1770,8 +1775,32 @@ function wsLaunchLinkedChildApp(wsio, data){
 
 		handleNewApplication(appInstance, null);
 
+		//add parents and children
+		if( data.id in parentApps ){
+			parentApps[data.id].push(appInstance.id)
+		}
+		else{
+			parentApps[data.id] = [];
+			parentApps[data.id].push(appInstance.id);
+		}
+		childApps[appInstance.id] = data.id;
+
+		console.log("appInstance.id = " + appInstance.id);
+
+		console.log( data.id + " is now the parent of: " )
+		for(i = 0; i < parentApps[data.id].length; i++) 
+			console.log("    " + parentApps[data.id][i] );
+
+
+		//send message to parent that child created
+		var theEvent = {id: data.id, type: "childCreated", childId: appInstance.id, msg: "this is a test message from server" };
+		broadcast('messageEvent', theEvent);
+
+		//send message to child that parent created
+
 		addEventToUserLog(data.user, {type: "openApplication", data:
 			{application: {id: appInstance.id, type: appInstance.application}}, time: Date.now()});
+
 	});
 
 }

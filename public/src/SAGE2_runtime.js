@@ -275,6 +275,18 @@ function broadcast(dataObject) {
 	wsio.emit('broadcast', dataObject);
 }
 
+
+/**
+ * Ask the server to launch a specified child app 
+ * See 'exampleParent' for usage.
+ *
+ * @method launchLinkedChildApp
+ * @param dataObject {Object} data to be sent
+ */
+function launchLinkedChildApp(dataObject){
+	wsio.emit('launchLinkedChildApp', dataObject);
+}
+
 /**
  * Pretty print a date object into string
  *
