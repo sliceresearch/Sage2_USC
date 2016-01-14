@@ -49,9 +49,6 @@ window.onbeforeunload = function() {
 	if (wsio !== undefined) {
 		wsio.close();
 	}
-	if (wsio2 !== undefined) {
-		wsio2.close();
-	}
 };
 
 
