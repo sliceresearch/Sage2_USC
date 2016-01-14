@@ -110,7 +110,7 @@ var exampleParent = SAGE2_App.extend( {
 
 		if( data.type == "childCreated" ){
 			console.log("the child is: " + data.childId); 
-			childList[childList.length-1].childId = data.childId; //put the id into the obj
+			this.childList[this.childList.length-1].childId = data.childId; //put the id into the obj
 		}
 
 		
