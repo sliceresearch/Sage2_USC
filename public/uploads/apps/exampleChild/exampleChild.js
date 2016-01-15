@@ -27,9 +27,12 @@ var exampleChild = SAGE2_App.extend( {
 		this.ctx = this.element.getContext('2d');
 		this.minDim = Math.min(this.element.width, this.element.height);
 
-		console.log(this.id);
+		//this.colorToDraw = [0, 255, 0]; 
+
+		this.colorToDraw = [this.state.red, this.state.green, this.state.blue];
 	},
 
+	//not called anymore... 
 	load: function(date) {
 		console.log('exampleChild> Load with state value', this.state.value);
 		this.refresh(date);
@@ -40,7 +43,7 @@ var exampleChild = SAGE2_App.extend( {
 
 		// I'm drawing things to make it evident that this is the child app
 		this.ctx.clearRect(0, 0, this.element.width, this.element.height);
-		this.ctx.fillStyle = "rgba(170, 225, 239, 1.0)";
+		this.ctx.fillStyle = this.colorStringify(this.colorToDraw);  //"rgba(170, 225, 239, 1.0)";
 		this.ctx.fillRect(0, 0, this.element.width, this.element.height);
 
 		this.ctx.font = "32px Ariel";
@@ -92,5 +95,10 @@ var exampleChild = SAGE2_App.extend( {
 				this.refresh(date);
 			}
 		}
+	},
+
+	colorStringify: function( color ){
+		str = "rgba("+color[0]+", "+color[1]+", "+color[2]+", 1.0)";
+		return str; 
 	}
 });

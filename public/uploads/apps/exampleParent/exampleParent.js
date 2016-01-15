@@ -35,7 +35,16 @@ var exampleParent = SAGE2_App.extend( {
 		this.childList = [];
 
 		//here is where the child is created
-		this.launchChild(); 
+		//this.launchChild(); 
+		this.count = 0;
+
+		this.randomColor1 = [0,0,0];
+		this.randomColor2 = [0,0,0];
+		this.randomColor3 = [0,0,0];
+
+		this.generateRandomColor(0);
+		this.generateRandomColor(1);
+		this.generateRandomColor(2);
 	},
 
 	load: function(date) {
@@ -44,18 +53,52 @@ var exampleParent = SAGE2_App.extend( {
 	},
 
 	draw: function(date) {
-		console.log('exampleParent> Draw with state value', this.state.value);
+		//console.log('exampleParent> Draw with state value', this.state.value);
 
 		// I'm drawing things to make it evident that this is the parent app
 		this.ctx.clearRect(0, 0, this.element.width, this.element.height);
-		this.ctx.fillStyle = "rgba(121, 189, 224, 1.0)";
+		this.ctx.fillStyle = "rgba(255, 248, 208, 1.0)";
 		this.ctx.fillRect(0, 0, this.element.width, this.element.height);
 
+		//title
 		this.ctx.font = "32px Ariel";
 		this.ctx.textAlign="left"; 
 		this.ctx.fillStyle = "rgba(0, 0, 0, 1.0)";
-		this.ctx.fillText( "I am the parent app.  Click to launch child apps.", 10, 32);
-		this.ctx.fillText( "Child app " + this.childList.length, 10, 32+32);
+		this.ctx.fillText( "I am the parent app.  Test features below:", 10, 32);
+
+		//console.log(this.randomColor1);
+		//button to create new child
+		this.ctx.fillStyle = "rgba(148, 240, 255, 1.0)";
+		this.ctx.fillRect(100, 100, this.element.width-200, 75);
+		this.ctx.fillStyle = "rgba(0, 0, 0, 1.0)";
+		this.ctx.fillText( "Click to create child with color: ", 110, 150);
+		this.ctx.fillStyle = this.colorStringify(this.randomColor1);
+		this.ctx.fillRect(this.element.width-200, 100, 100, 75);
+
+		//button to send message to all children 
+		this.ctx.fillStyle = "rgba(148, 210, 255, 1.0)";
+		this.ctx.fillRect(100, 200, this.element.width-200, 75);
+		this.ctx.fillStyle = "rgba(0, 0, 0, 1.0)";
+		this.ctx.fillText( "Click to change color of children to: ", 110, 250);
+		this.ctx.fillStyle = this.colorStringify(this.randomColor2);
+		this.ctx.fillRect(this.element.width-200, 200, 100, 75);
+
+		//button to send message to first child
+		this.ctx.fillStyle = "rgba(148, 165, 255, 1.0)";
+		this.ctx.fillRect(100, 300, this.element.width-200, 75);
+		this.ctx.fillStyle = "rgba(0, 0, 0, 1.0)";
+		this.ctx.fillText( "Click to change color of child"+this.count+" to:", 110, 350);
+		this.ctx.fillStyle = this.ctx.fillStyle = this.colorStringify(this.randomColor3);
+		this.ctx.fillRect(this.element.width-200, 300, 100, 75);
+
+		//future features 
+		this.ctx.fillStyle = "rgba(189, 148, 255, 1.0)";
+		this.ctx.fillRect(100, 400, this.element.width-200, 75);
+
+		this.ctx.fillStyle = "rgba(237, 148, 255, 1.0)";
+		this.ctx.fillRect(100, 500, this.element.width-200, 75);
+
+		//this.ctx.fillText( "Number of child apps " + this.childList.length, 10, 32+32);
 		
 	},
 
@@ -72,7 +115,25 @@ var exampleParent = SAGE2_App.extend( {
 
 	event: function(eventType, position, user_id, data, date) {
 		if (eventType === "pointerPress" && (data.button === "left")) {
-			this.launchChild();
+			100, 100, this.element.width-200, 75
+			
+			if( position.x > 100 && position.x < 100+this.element.width-200 )
+			{
+
+				if( position.y > 100 && position.y < 175 ){ //1st button:launch a child
+					this.launchChild();
+					this.generateRandomColor(0);//new color for next app
+				}
+				if( position.y > 200 && position.y < 275 ){ //2nd button:change color on childred
+
+					this.generateRandomColor(1);
+				}
+				if( position.y > 300 && position.y < 375 ){ //2nd button:change color on childred
+
+					this.generateRandomColor(2);
+				}
+			}
+		
 		}
 		else if (eventType === "pointerMove" && this.dragging) {
 		}
@@ -125,13 +186,58 @@ var exampleParent = SAGE2_App.extend( {
 			user: "articulate_ui", 
 			id: this.id,
 			msg:"this is a message from articulate_ui",
-			childId: null 
+			childId: null,
+			initState: {  // these values will load on child app init
+				value: 10,
+				red: this.randomColor1[0], 
+				green: this.randomColor1[1], 
+				blue: this.randomColor1[2]  
+			}
 		};
 		if( isMaster ){
 			launchLinkedChildApp(data);
 		}
 
 		this.childList.push( data );
+	},
+
+	generateRandomColor: function(idx){
+		if (isMaster) {
+			var rand1 = Math.floor(Math.random() * 255);
+			var rand2 = Math.floor(Math.random() * 255);
+			var rand3 = Math.floor(Math.random() * 255);
+			var rand = [rand1, rand2, rand3];
+			if( idx == 0 ){
+				this.randomColor1 = rand; 
+				//this.broadcast("storeRandomColor1", {random: rand});
+			}
+			if( idx == 1 )
+				this.randomColor2 = rand; 
+				// this.broadcast("storeRandomColor2", {random: rand});
+			if( idx == 2)
+				this.randomColor3 = rand; 
+				// this.broadcast("storeRandomColor3", {random: rand});
+		}
+	},
+
+	// storeRandomColor1: function(rand){
+	// 	this.randomColor1 = rand;
+	// 	console.log("STORE: " + this.randomColor1);
+	// },
+
+	// storeRandomColor2: function(rand){
+	// 	this.randomColor2 = rand;
+	// 	console.log(rand);
+	// },
+
+	// storeRandomColor3: function(rand){
+	// 	this.randomColor3 = rand;
+	// 	console.log(rand);
+	// },
+
+	colorStringify: function( color ){
+		str = "rgba("+color[0]+", "+color[1]+", "+color[2]+", 1.0)";
+		return str; 
 	}
 
 });

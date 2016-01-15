@@ -708,6 +708,9 @@ function setupListeners(wsio) {
 	wsio.on('createFolder',                         wsCreateFolder);
 
 	wsio.on('launchLinkedChildApp',					wsLaunchLinkedChildApp);
+	wsio.on('messageToParent',						wsMessageToParent);
+	wsio.on('messageToAllChildren',					wsMessageToAllChildren);
+	wsio.on('messageToChild',						wsMessageToChild);
 }
 
 function initializeExistingControls(wsio) {
@@ -1773,6 +1776,19 @@ function wsLaunchLinkedChildApp(wsio, data){
 			}
 		}
 
+		//add load variable here, maybe...?
+		// if( appInstance.load ){
+		// 	console.log("IN STATE");
+		// 	appInstance.load.red = 0;
+		// 	appInstance.load.green = 255;
+		// }
+
+		
+		if( appInstance.data && data.initState ){
+			appInstance.data = data.initState; //override 
+		}
+
+
 		handleNewApplication(appInstance, null);
 
 		//add parents and children
@@ -1804,6 +1820,22 @@ function wsLaunchLinkedChildApp(wsio, data){
 	});
 
 }
+
+//from child to parent
+function wsMessageToParent(wsio, data){
+	console.log("wsMessageToParent " + data);
+}	
+
+//from parent to all children
+function wsMessageToAllChildren(wsio, data){
+	console.log("wsMessageToAllChildren " + data);
+}
+
+//from parent to child
+function wsMessageToChild(wsio, data){
+	console.log("wsMessageToChild " + data);
+}
+
 
 function loadSession(filename) {
 	filename = filename || 'default.json';
