@@ -28,20 +28,19 @@ var exampleParent = SAGE2_App.extend( {
 		this.minDim = Math.min(this.element.width, this.element.height);
 
 
-		//Parent monitoring children:
+		//------  Parent monitoring children:
 		// for now, app decides how to store and handle children
 		// if parent wanted to just launch apps and do nothing else, 
 		// all it needs is 'launchChild' (see below)
 		this.childList = [];
+		this.count = 0; //keeping track of a child
 
-		//here is where the child is created
-		//this.launchChild(); 
-		this.count = 0;
 
+		//in this case, we are passing colors to the children
+		//so, we need random colors to test message passing
 		this.randomColor1 = [0,0,0];
 		this.randomColor2 = [0,0,0];
 		this.randomColor3 = [0,0,0];
-
 		this.generateRandomColor(0);
 		this.generateRandomColor(1);
 		this.generateRandomColor(2);
@@ -67,7 +66,7 @@ var exampleParent = SAGE2_App.extend( {
 		this.ctx.fillText( "I am the parent app.  Test features below:", 10, 32);
 
 		//console.log(this.randomColor1);
-		//button to create new child
+		//drawing a button to create new child
 		this.ctx.fillStyle = "rgba(148, 240, 255, 1.0)";
 		this.ctx.fillRect(100, 100, this.element.width-200, 75);
 		this.ctx.fillStyle = "rgba(0, 0, 0, 1.0)";
@@ -75,7 +74,7 @@ var exampleParent = SAGE2_App.extend( {
 		this.ctx.fillStyle = this.colorStringify(this.randomColor1);
 		this.ctx.fillRect(this.element.width-200, 100, 100, 75);
 
-		//button to send message to all children 
+		//drawing a button to send message to all children 
 		this.ctx.fillStyle = "rgba(148, 210, 255, 1.0)";
 		this.ctx.fillRect(100, 200, this.element.width-200, 75);
 		this.ctx.fillStyle = "rgba(0, 0, 0, 1.0)";
@@ -83,7 +82,7 @@ var exampleParent = SAGE2_App.extend( {
 		this.ctx.fillStyle = this.colorStringify(this.randomColor2);
 		this.ctx.fillRect(this.element.width-200, 200, 100, 75);
 
-		//button to send message to first child
+		//drawing a button to send message to a child
 		this.ctx.fillStyle = "rgba(148, 165, 255, 1.0)";
 		this.ctx.fillRect(100, 300, this.element.width-200, 75);
 		this.ctx.fillStyle = "rgba(0, 0, 0, 1.0)";
@@ -125,11 +124,10 @@ var exampleParent = SAGE2_App.extend( {
 					this.generateRandomColor(0);//new color for next app
 				}
 				if( position.y > 200 && position.y < 275 ){ //2nd button:change color on childred
-
 					this.generateRandomColor(1);
 				}
 				if( position.y > 300 && position.y < 375 ){ //2nd button:change color on childred
-
+					this.sendMessageToChild();
 					this.generateRandomColor(2);
 				}
 			}
@@ -174,7 +172,6 @@ var exampleParent = SAGE2_App.extend( {
 			this.childList[this.childList.length-1].childId = data.childId; //put the id into the obj
 		}
 
-		
 	},
 
 	//here is where the parent launches the child app
@@ -195,10 +192,40 @@ var exampleParent = SAGE2_App.extend( {
 			}
 		};
 		if( isMaster ){
-			launchLinkedChildApp(data);
+			launchLinkedChildApp(data); //defined in runtime
 		}
 
 		this.childList.push( data );
+	},
+
+	sendMessageToChild: function(){
+		if( this.childList.length == 0)//just in case
+			return; 
+
+		//who to send the message to:
+		childId = this.childList[this.count].childId; //get the id of the child to send message to (just doing )
+		this.incrementCount(); //next time pick a new child to send message to
+
+		//what to send:
+		colorToSend = this.randomColor3; //sending the color shown next to the button
+		data = {
+			id: this.id,
+			msg: "this is the message for the children from " + this.id,
+			childId: childId,
+			color: colorToSend
+		};
+
+		//send it: 
+		if( isMaster ){//only want one display node to send the message, not all
+			sendMessageToChild(data); //defined in runtime
+		}
+
+	},
+
+	incrementCount: function(){
+		this.count++;
+		if( this.count >= this.childList.length )
+			this.count = 0;
 	},
 
 	generateRandomColor: function(idx){

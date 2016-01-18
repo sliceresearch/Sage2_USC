@@ -835,8 +835,9 @@ function setupListeners() {
 	});
 
 	wsio.on('messageEvent', function(event_data) {
-		//var date = new Date(event_data.date);
+		var date = new Date(event_data.date);
 		var app  = applications[event_data.id];
+		event_data.date = date;
 		app.SAGE2MessageEvent(event_data); //event_data.type, event_data.position, event_data.user, event_data.data, date);
 	});
 

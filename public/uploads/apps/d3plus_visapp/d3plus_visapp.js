@@ -6,6 +6,7 @@
 //
 
 var d3plus_visapp = SAGE2_App.extend( {
+
 	init: function(data) {
 		// Create div into the DOM
 		this.SAGE2Init("div", data);

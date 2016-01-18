@@ -27,8 +27,6 @@ var exampleChild = SAGE2_App.extend( {
 		this.ctx = this.element.getContext('2d');
 		this.minDim = Math.min(this.element.width, this.element.height);
 
-		//this.colorToDraw = [0, 255, 0]; 
-
 		this.colorToDraw = [this.state.red, this.state.green, this.state.blue];
 	},
 
@@ -39,7 +37,7 @@ var exampleChild = SAGE2_App.extend( {
 	},
 
 	draw: function(date) {
-		console.log('exampleChild> Draw with state value', this.state.value);
+		// console.log('exampleChild> Draw with state value', this.state.value);
 
 		// I'm drawing things to make it evident that this is the child app
 		this.ctx.clearRect(0, 0, this.element.width, this.element.height);
@@ -64,6 +62,7 @@ var exampleChild = SAGE2_App.extend( {
 	},
 
 	event: function(eventType, position, user_id, data, date) {
+
 		if (eventType === "pointerPress" && (data.button === "left")) {
 		}
 		else if (eventType === "pointerMove" && this.dragging) {
@@ -95,6 +94,19 @@ var exampleChild = SAGE2_App.extend( {
 				this.refresh(date);
 			}
 		}
+	},
+
+	//here is where messages from parents and children are received
+	messageEvent: function(data){
+		console.log("I am in the child, getting message " + data); //just confirming that the message gets through
+
+		if( data.type == "messageFromParent" ){//this is one type of message
+			this.colorToDraw = data.data.color; //in this case, we know that the parent can update our color
+												//so we look for the color param 
+		}
+
+		this.refresh(data.date);//need to refresh for update to be seen
+
 	},
 
 	colorStringify: function( color ){

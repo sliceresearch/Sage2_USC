@@ -287,6 +287,18 @@ function launchLinkedChildApp(dataObject){
 	wsio.emit('launchLinkedChildApp', dataObject);
 }
 
+
+/**
+ * Ask the server to send a message to a specified child app 
+ * See 'exampleParent' for usage.
+ *
+ * @method sendMessageToChild
+ * @param dataObject {Object} data to be sent
+ */
+function sendMessageToChild(dataObject){
+	wsio.emit('messageToChild', dataObject);
+}
+
 /**
  * Pretty print a date object into string
  *

@@ -1735,6 +1735,8 @@ function wsLaunchLinkedChildApp(wsio, data){
 
 	var appName = "./public/uploads/" + data.application;
 	console.log(appName);
+
+	///////////
 	var appData = {application: "custom_app", filename: appName};
 
 	appLoader.loadFileFromLocalStorage(appData, function(appInstance) {
@@ -1775,19 +1777,10 @@ function wsLaunchLinkedChildApp(wsio, data){
 				appInstance.top = 0;
 			}
 		}
-
-		//add load variable here, maybe...?
-		// if( appInstance.load ){
-		// 	console.log("IN STATE");
-		// 	appInstance.load.red = 0;
-		// 	appInstance.load.green = 255;
-		// }
-
 		
 		if( appInstance.data && data.initState ){
 			appInstance.data = data.initState; //override 
 		}
-
 
 		handleNewApplication(appInstance, null);
 
@@ -1824,16 +1817,86 @@ function wsLaunchLinkedChildApp(wsio, data){
 //from child to parent
 function wsMessageToParent(wsio, data){
 	console.log("wsMessageToParent " + data);
+
+	//get id of child from data
+
+	//do parent lookup in associative array
+	
+	//if parent not exist, send fail message to child
+
+	//else succeed send message to parent
 }	
 
 //from parent to all children
 function wsMessageToAllChildren(wsio, data){
 	console.log("wsMessageToAllChildren " + data);
+
+	//get id of parent from data
+
+	//lookup children in associative array
+
+	//if children not exist, send fail message
+
+	//else send message to all children
 }
 
 //from parent to child
 function wsMessageToChild(wsio, data){
-	console.log("wsMessageToChild " + data);
+	console.log("wsMessageToChild " + data.id + " child: " + data.childId);
+
+	//get id of child and parent from data passed from the parent
+	var parentId = data.id;
+	var childId = data.childId; 
+
+	var canContinue = validParentChildPair(parentId, childId); 
+
+	//if valid pair, continue
+	if( canContinue ){
+		var theEvent = {id: childId, parentId: parentId, type: "messageFromParent", msg: "this is a test message from server", data:data, date: Date.now()};
+		broadcast('messageEvent', theEvent);
+	} else{
+		console.log("failed to find child"); //eventually should send fail message to parent
+	}
+
+}
+
+function validParentChildPair(parentId, childId){
+
+	//safety checks:
+	var fail = false;
+
+	//does parent have that child
+	if( parentId in parentApps ){
+		var childList = parentApps[parentId];
+		var found = false;
+		for(var i = 0; i < childList.length; i++){
+			console.log("childList[i] =" + childList[i] + " childId = " + childId);
+			if( childList[i] == childId )
+				found = true; 
+		}
+
+		if( !found ){
+			fail = true; 
+			console.log("childId not found");
+		}
+	} else{
+		console.log("parentId not in parentApps");
+		fail = true; 
+	}
+
+	//does child have that parent
+	if( childId in childApps ){
+		var parent = childApps[childId];
+			if( parent != parentId ){
+				fail = true; 
+				console.log("childId not found");
+			}
+	}else{
+		console.log("parentId not in parentApps");
+		fail = true; 
+	}
+
+	return !fail;
 }
 
 
