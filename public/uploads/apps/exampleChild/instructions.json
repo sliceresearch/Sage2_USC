@@ -1,8 +1,8 @@
 {
 	"main_script": "exampleChild.js",
 	"icon": "exampleChild.png",
-	"width": 800,
-	"height": 600,
+	"width": 300,
+	"height": 200,
 	"resize": "free",
 	"animation": true,			
 	"dependencies": [

@@ -37,6 +37,8 @@ var exampleParent = SAGE2_App.extend( {
 		this.generateRandomColor(0);
 		this.generateRandomColor(1);
 		this.generateRandomColor(2);
+
+		this.monitoringText = "";
 	},
 
 	load: function(date) {
@@ -87,8 +89,11 @@ var exampleParent = SAGE2_App.extend( {
 		this.ctx.fillStyle = "rgba(189, 148, 255, 1.0)";
 		this.ctx.fillRect(100, 400, this.element.width-200, 75);
 
-		this.ctx.fillStyle = "rgba(237, 148, 255, 1.0)";
-		this.ctx.fillRect(100, 500, this.element.width-200, 75);
+		this.ctx.fillStyle = "rgba(0, 0, 0, 1.0)";
+		this.ctx.fillText("monitoring: " + this.getNumberOfChildren() + " active children", 100, 510 );
+		this.ctx.font = "16px Ariel";
+		this.ctx.textAlign="left"; 
+		this.ctx.fillText(this.monitoringText, 100, 540); 
 
 		//this.ctx.fillText( "Number of child apps " + this.childList.length, 10, 32+32);
 		
@@ -191,33 +196,6 @@ var exampleParent = SAGE2_App.extend( {
 	},
 
 	sendMessageToChild: function(){
-
-		this.reorder(); 
-
-		// if( this.childList.length == 0)//just in case
-		// 	return; 
-
-		// //who to send the message to:
-		// childId = this.childList[this.count].childId; //get the id of the child to send message to (just doing )
-		// this.incrementCount(); //next time pick a new child to send message to
-
-		// //what to send:
-		// colorToSend = this.randomColor3; //sending the color shown next to the button
-		// data = {
-		// 	id: this.id,
-		// 	msg: "changeColor",
-		// 	childId: childId,
-		// 	color: colorToSend
-		// };
-
-		// //send it: 
-		// if( isMaster ){//only want one display node to send the message, not all
-		// 	sendMessageToChild(data); //defined in runtime
-		// }
-
-	},
-
-	reorder: function(){
 		if( this.getNumberOfChildren() == 0 || this.count >= this.getNumberOfChildren() )
 			return;
 
@@ -226,46 +204,44 @@ var exampleParent = SAGE2_App.extend( {
 
 		//what to send:
 		colorToSend = this.randomColor3; //sending the color shown next to the button
-		data = {
-			id: this.id,
-			msg: "changeColor",
-			childId: childId,
-			color: colorToSend
-		};
 
 		//send it: 
 		if( isMaster ){//only want one display node to send the message, not all
-			sendMessageToChild(data); //defined in runtime
+			sendMessageToChild( this.id, childId, {msgType: "changeColor",color: colorToSend});
 		}
-
-	}
+	},
 
 	sendMessageToAllChildren: function(){
 		console.log("Send");
 		for(var i =0; i<this.childList.length; i++){
 			//who to send the message to:
-			childId = this.childList[i].childId; //get the id of the child to send message to (just doing )
+			childId = this.childList[i].childId; //get the id of the child to send message to 
 
 			//what to send:
 			colorToSend = this.randomColor2; //sending the color shown next to the button
-			data = {
-				id: this.id,
-				msg: "this is the message for the children from " + this.id,
-				childId: childId,
-				color: colorToSend
-			};
 
 			//send it: 
 			if( isMaster ){//only want one display node to send the message, not all
-				sendMessageToChild(data); //defined in runtime
+				sendMessageToChild( this.id, childId, {msgType: "changeColor",color: colorToSend});
 			}
-
 		}
+	},
+
+	childMonitorEvent: function(childId, type, data, date){
+		if( type == "childMoveEvent")
+			this.monitoringText = "child: " + childId + " " + type + " x: " + data.x + "y: " + data.y;
+		if( type == "childResizeEvent")
+			this.monitoringText = "child: " + childId + " " + type + " w: " + data.w + "h: " + data.h;
+		if( type == "childMoveAndResizeEvent")
+			this.monitoringText = "child: " + childId + " " + type +  " x: " + data.x + "y: " + data.y + " w: " + data.w + "h: " + data.h;
+		if( type == "childCloseEvent" )
+			this.monitoringText = "child: " + childId + " closed";
+		this.refresh(date);
 	},
 
 	incrementCount: function(){
 		this.count++;
-		if( this.count >= this.childList.length )
+		if( this.count >= this.getNumberOfChildren() )
 			this.count = 0;
 	},
 

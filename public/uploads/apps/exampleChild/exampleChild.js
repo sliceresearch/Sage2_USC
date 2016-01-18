@@ -100,9 +100,8 @@ var exampleChild = SAGE2_App.extend( {
 	messageEvent: function(data){
 		console.log("I am in the child, getting message " + data); //just confirming that the message gets through
 
-		if( data.type == "messageFromParent" ){//this is one type of message
-			this.colorToDraw = data.data.color; //in this case, we know that the parent can update our color
-												//so we look for the color param 
+		if( data.type == "messageFromParent" && data.params.msgType == "changeColor" ){//this is one type of message
+			this.colorToDraw = data.params.color; //in this case, we know that the parent can update our color										//so we look for the color param 
 		}
 
 		this.refresh(data.date);//need to refresh for update to be seen

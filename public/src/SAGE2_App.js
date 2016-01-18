@@ -829,21 +829,27 @@ var SAGE2_App = Class.extend({
 			this.childLaunchResponseHandler(data.success);
 	},
 
+	//convenience function: could also just look at list directly
 	getNumberOfChildren: function(){
 		return this.childList.length;
 	},
 
+	//convenience function: could also just look at list directly
 	getChildByIdx: function(idx){
-		if( this.childList.length >= idx)
+		console.log("" + this.getNumberOfChildren() + " " + idx);
+		if( idx >= this.getNumberOfChildren() )
 			return null; 
 		return this.childList[idx];
 	},
 
+	//convenience function: could also just look at list directly
 	getChildIdByIdx: function(idx){
-		if( this.childList.length >= idx)
+		console.log(idx);
+		if( idx >= this.getNumberOfChildren() )
 			return null; 
 		return this.childList[idx].childId;
 	},
+
 
 
 	/**
@@ -856,8 +862,26 @@ var SAGE2_App = Class.extend({
 		if (typeof this.messageEvent != "undefined") { 
     		this.messageEvent(data); 
 		}
-	}
+	},
 
+
+
+	SAGE2MonitoringEvent: function(data){
+		console.log("sage2 monitoring event");
+
+		if (typeof this.childMonitorEvent != "undefined") { 
+			
+			if( data.type == "childCloseEvent" ){//remove child
+				for(i = 0; i < this.childList.length; i++)
+					if( this.childList[i].childId == data.childId )
+						this.childList.splice(i, 1);
+			}
+
+    		this.childMonitorEvent(data.childId, data.type, data.data, data.date); 
+		}
+
+
+	}
 
 
 

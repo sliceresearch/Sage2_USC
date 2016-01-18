@@ -1802,9 +1802,6 @@ function wsLaunchLinkedChildApp(wsio, data){
 
 
 		//send message to parent that child created
-		// var theEvent = {id: data.id, type: "childCreated", childId: appInstance.id, msg: "this is a test message from server" };
-		// broadcast('messageEvent', theEvent);
-
 		var dataToSend = {id: data.id, childId: appInstance.id, msg: "success", success: true };
 		broadcast('launchChildAppResponse', dataToSend);		
 
@@ -1855,12 +1852,36 @@ function wsMessageToChild(wsio, data){
 
 	//if valid pair, continue
 	if( canContinue ){
-		var theEvent = {id: childId, parentId: parentId, type: "messageFromParent", msg: "this is a test message from server", data:data, date: Date.now()};
+		// var theEvent = {id: childId, parentId: parentId, type: "messageFromParent", msg: data.msg, data:data, params: data.params, date: Date.now()};
+		var theEvent = {id: childId, parentId: parentId, type: "messageFromParent", params: data.params, date: Date.now()};
 		broadcast('messageEvent', theEvent);
 	} else{
 		console.log("failed to find child"); //eventually should send fail message to parent
 	}
 
+}
+
+function sendChildMonitoringEvent(parentId, childId, eventType, data){
+	console.log(parentId + " " + childId + " " + eventType);
+	var data = {id: parentId, childId: childId, type: eventType, data: data, date: Date.now()};
+	broadcast('childMonitoringEvent', data);
+}
+
+function isAChildApp(childId){
+	return (childId in childApps);
+}
+
+function isAParentApp(parentId){
+	return (parentId in parentApps);
+}
+
+function getParentApp(childId){
+	//does child have that parent
+	if( childId in childApps ){
+		var parent = childApps[childId];
+		return parent;
+	} else
+		return null;
 }
 
 function validParentChildPair(parentId, childId){
@@ -4774,6 +4795,7 @@ function pointerPress(uniqueID, pointerX, pointerY, data) {
 				showOrHideWidgetLinks({uniqueID: uniqueID, item: obj, user_color: color, show: true});
 			}
 			pointerPressOnApplication(uniqueID, pointerX, pointerY, data, obj, localPt, null);
+
 			break;
 		}
 		case "portals": {
@@ -5683,6 +5705,12 @@ function moveApplicationWindow(uniqueID, moveApp, portalId) {
 			}
 		}
 
+		//check parent monitoring
+		if( isAChildApp(moveApp.elemId) ){
+			sendChildMonitoringEvent(getParentApp(moveApp.elemId), moveApp.elemId, "childMoveEvent", 
+				{x: moveApp.elemLeft, y: moveApp.elemTop});
+		}
+
 		if (portalId !== undefined && portalId !== null) {
 			var ts = Date.now() + remoteSharingSessions[portalId].timeOffset;
 			remoteSharingSessions[portalId].wsio.emit('updateApplicationPosition',
@@ -5723,6 +5751,12 @@ function moveAndResizeApplicationWindow(resizeApp, portalId) {
 		if (app.id in SAGE2Items.renderSync && SAGE2Items.renderSync[app.id].newFrameGenerated === false) {
 			handleNewVideoFrame(app.id);
 		}
+	}
+
+	//check parent monitoring
+	if( isAChildApp(resizeApp.elemId) ){
+		sendChildMonitoringEvent(getParentApp(resizeApp.elemId), resizeApp.elemId, "childMoveAndResizeEvent", 
+			{x: resizeApp.elemLeft, y: resizeApp.elemTop, w: resizeApp.elemWidth, h: resizeApp.elemHeight + titleBarHeight});
 	}
 
 	if (portalId !== undefined && portalId !== null) {
@@ -6866,6 +6900,21 @@ function deleteApplication(appId, portalId) {
 
 	stickyAppHandler.removeElement(app);
 	broadcast('deleteElement', {elemId: appId});
+
+	//handle parent/children
+	if( isAChildApp(appId) ){
+		sendChildMonitoringEvent(getParentApp(appId), appId, "childCloseEvent", {});
+
+		var childList = parentApps[childApps[appId]];
+		for(var i = 0; i < childList.length; i++){
+			if(childList[i] == appId){
+				childList.splice(i, 1); 
+				parentApps[childApps[appId]] = childList; 
+			}
+		}
+		childApps[appId] = null; 
+
+	}
 
 	if (portalId !== undefined && portalId !== null) {
 		var ts = Date.now() + remoteSharingSessions[portalId].timeOffset;

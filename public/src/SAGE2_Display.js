@@ -847,6 +847,13 @@ function setupListeners() {
 		app.SAGE2ChildAppLaunchResponse(data); //event_data.type, event_data.position, event_data.user, event_data.data, date);
 	});
 
+	wsio.on('childMonitoringEvent', function(data) {
+		var app  = applications[data.id];
+		var date = new Date(data.date);
+		data.date = date;
+		app.SAGE2MonitoringEvent(data);
+	});
+
 	wsio.on('requestNewControl', function(data) {
 		var dt = new Date(data.date);
 		if (data.elemId !== undefined && data.elemId !== null) {
