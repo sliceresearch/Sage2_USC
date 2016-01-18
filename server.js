@@ -1785,7 +1785,7 @@ function wsLaunchLinkedChildApp(wsio, data){
 		handleNewApplication(appInstance, null);
 
 		//add parents and children
-		if( data.id in parentApps ){
+		if( data.id in parentApps && parentApps[data.id] != null){
 			parentApps[data.id].push(appInstance.id)
 		}
 		else{
@@ -1819,26 +1819,19 @@ function wsMessageToParent(wsio, data){
 	console.log("wsMessageToParent " + data);
 
 	//get id of child from data
+	var childId = data.id; //to
 
 	//do parent lookup in associative array
+	var parentId = getParentApp(childId);
+
+	if( parentId != null ){
+		var theEvent = {id: parentId, childId: childId, type: "messageFromChild", params: data.params, date: Date.now()};
+		broadcast('messageEvent', theEvent);
+	}
 	
 	//if parent not exist, send fail message to child
 
-	//else succeed send message to parent
 }	
-
-// //from parent to all children
-// function wsMessageToAllChildren(wsio, data){
-// 	console.log("wsMessageToAllChildren " + data);
-
-// 	//get id of parent from data
-
-// 	//lookup children in associative array
-
-// 	//if children not exist, send fail message
-
-// 	//else send message to all children
-// }
 
 //from parent to child
 function wsMessageToChild(wsio, data){
@@ -1868,16 +1861,16 @@ function sendChildMonitoringEvent(parentId, childId, eventType, data){
 }
 
 function isAChildApp(childId){
-	return (childId in childApps);
+	return (childId in childApps && childApps[childId] != null);
 }
 
 function isAParentApp(parentId){
-	return (parentId in parentApps);
+	return (parentId in parentApps && parentApps[parentId] != null);
 }
 
 function getParentApp(childId){
 	//does child have that parent
-	if( childId in childApps ){
+	if(childId in childApps && childApps[childId] != null){
 		var parent = childApps[childId];
 		return parent;
 	} else
@@ -1890,7 +1883,7 @@ function validParentChildPair(parentId, childId){
 	var fail = false;
 
 	//does parent have that child
-	if( parentId in parentApps ){
+	if( isAParentApp(parentId) ){
 		var childList = parentApps[parentId];
 		var found = false;
 		for(var i = 0; i < childList.length; i++){
@@ -1909,14 +1902,14 @@ function validParentChildPair(parentId, childId){
 	}
 
 	//does child have that parent
-	if( childId in childApps ){
-		var parent = childApps[childId];
+	if( isAChildApp(childId) ){
+		var parent = getParentApp(childId);
 			if( parent != parentId ){
 				fail = true; 
 				console.log("childId not found");
 			}
 	}else{
-		console.log("parentId not in parentApps");
+		console.log(" childId not in childapps");
 		fail = true; 
 	}
 
@@ -6901,7 +6894,7 @@ function deleteApplication(appId, portalId) {
 	stickyAppHandler.removeElement(app);
 	broadcast('deleteElement', {elemId: appId});
 
-	//handle parent/children
+	// //handle parent/children
 	if( isAChildApp(appId) ){
 		sendChildMonitoringEvent(getParentApp(appId), appId, "childCloseEvent", {});
 
@@ -6914,6 +6907,19 @@ function deleteApplication(appId, portalId) {
 		}
 		childApps[appId] = null; 
 
+		console.log("deleting a child");
+
+	}
+	if( isAParentApp(appId) ){
+				console.log("deleting a parent");
+
+		var childList = parentApps[appId];//get list of children
+		for(var i = 0; i < childList.length; i++){ 
+			childApps[childList[i]] = null; //child is not longer parented 
+
+		}
+
+		parentApps[appId] = null; //parent no longer has children
 	}
 
 	if (portalId !== undefined && portalId !== null) {

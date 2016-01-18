@@ -38,6 +38,8 @@ var exampleParent = SAGE2_App.extend( {
 		this.generateRandomColor(1);
 		this.generateRandomColor(2);
 
+		this.colorToDraw = [255,248,208];
+
 		this.monitoringText = "";
 	},
 
@@ -51,7 +53,7 @@ var exampleParent = SAGE2_App.extend( {
 
 		// I'm drawing things to make it evident that this is the parent app
 		this.ctx.clearRect(0, 0, this.element.width, this.element.height);
-		this.ctx.fillStyle = "rgba(255, 248, 208, 1.0)";
+		this.ctx.fillStyle = this.colorStringify(this.colorToDraw);
 		this.ctx.fillRect(0, 0, this.element.width, this.element.height);
 
 		//title
@@ -82,7 +84,7 @@ var exampleParent = SAGE2_App.extend( {
 		this.ctx.fillRect(100, 300, this.element.width-200, 75);
 		this.ctx.fillStyle = "rgba(0, 0, 0, 1.0)";
 		this.ctx.fillText( "Click to change color of child"+this.count+" to:", 110, 350);
-		this.ctx.fillStyle = this.ctx.fillStyle = this.colorStringify(this.randomColor3);
+		this.ctx.fillStyle = this.colorStringify(this.randomColor3);
 		this.ctx.fillRect(this.element.width-200, 300, 100, 75);
 
 		//future features 
@@ -164,16 +166,6 @@ var exampleParent = SAGE2_App.extend( {
 		}
 	},
 
-	messageEvent: function(data){
-		console.log("I am in the parent, getting message " + data.msg);
-
-		// if( data.type == "childCreated" ){
-		// 	console.log("the child is: " + data.childId); 
-		// 	this.childList[this.childList.length-1].childId = data.childId; //put the id into the obj
-		// }
-
-	},
-
 	//here is where the parent launches the child app
 	//we will have to add appropriate data variables 
 	launchChild: function(){
@@ -237,6 +229,18 @@ var exampleParent = SAGE2_App.extend( {
 		if( type == "childCloseEvent" )
 			this.monitoringText = "child: " + childId + " closed";
 		this.refresh(date);
+	},
+
+		//here is where messages from parents and children are received
+	messageEvent: function(data){
+		console.log("I am in the parent, getting message " + data); //just confirming that the message gets through
+
+		if( data.type == "messageFromChild" && data.params.msgType == "changeColor" ){//this is one type of message
+			this.colorToDraw = data.params.color ; //in this case, we know that the parent can update our color										//so we look for the color param 
+		}
+
+		this.refresh(data.date);//need to refresh for update to be seen
+
 	},
 
 	incrementCount: function(){

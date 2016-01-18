@@ -28,6 +28,9 @@ var exampleChild = SAGE2_App.extend( {
 		this.minDim = Math.min(this.element.width, this.element.height);
 
 		this.colorToDraw = [this.state.red, this.state.green, this.state.blue];
+
+		this.randomColor = [0,255,0];
+		this.generateRandomColor();
 	},
 
 	//not called anymore... 
@@ -44,10 +47,17 @@ var exampleChild = SAGE2_App.extend( {
 		this.ctx.fillStyle = this.colorStringify(this.colorToDraw);  //"rgba(170, 225, 239, 1.0)";
 		this.ctx.fillRect(0, 0, this.element.width, this.element.height);
 
-		this.ctx.font = "32px Ariel";
-		this.ctx.textAlign="center"; 
+		this.ctx.font = "24px Ariel";
+		this.ctx.textAlign="left"; 
 		this.ctx.fillStyle = "rgba(0, 0, 0, 1.0)";
 		this.ctx.fillText( "I am the child app", 10, 32);
+
+		this.ctx.fillStyle = "rgba(255, 255, 255, 1.0)";
+		this.ctx.fillRect(10, 100, this.element.width-20, 75);
+		this.ctx.fillStyle = "rgba(0, 0, 0, 1.0)";
+		this.ctx.fillText( "Change parentColor: ", 20, 150);
+		this.ctx.fillStyle = this.colorStringify(this.randomColor);
+		this.ctx.fillRect(this.element.width-50, 100, 40, 75);
 	},
 
 	resize: function(date) {
@@ -64,6 +74,11 @@ var exampleChild = SAGE2_App.extend( {
 	event: function(eventType, position, user_id, data, date) {
 
 		if (eventType === "pointerPress" && (data.button === "left")) {
+
+			if( isMaster ){//only want one display node to send the message, not all
+				sendMessageToParent( this.id, {msgType: "changeColor", color:this.randomColor});
+				this.generateRandomColor();
+			}
 		}
 		else if (eventType === "pointerMove" && this.dragging) {
 		}
@@ -106,6 +121,18 @@ var exampleChild = SAGE2_App.extend( {
 
 		this.refresh(data.date);//need to refresh for update to be seen
 
+	},
+
+	generateRandomColor: function(){
+		if (isMaster) {
+			var rand1 = Math.floor(Math.random() * 255);
+			var rand2 = Math.floor(Math.random() * 255);
+			var rand3 = Math.floor(Math.random() * 255);
+			var rand = [rand1, rand2, rand3];
+			
+			this.randomColor = rand; 
+			console.log(this.randomColor);
+		}
 	},
 
 	colorStringify: function( color ){

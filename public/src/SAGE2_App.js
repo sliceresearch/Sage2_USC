@@ -865,12 +865,17 @@ var SAGE2_App = Class.extend({
 	},
 
 
-
+	/**
+	* SAGE2MonitoringEvent method called when child is reposition or resized or closed
+	* 
+	* @method SAGE2MonitoringEvent
+	* @param data {Object} contains data.childId, data.type, data.data, data.date
+	*/
 	SAGE2MonitoringEvent: function(data){
 		console.log("sage2 monitoring event");
 
 		if (typeof this.childMonitorEvent != "undefined") { 
-			
+
 			if( data.type == "childCloseEvent" ){//remove child
 				for(i = 0; i < this.childList.length; i++)
 					if( this.childList[i].childId == data.childId )

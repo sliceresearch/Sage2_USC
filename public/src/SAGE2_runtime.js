@@ -306,6 +306,25 @@ function sendMessageToChild(id, childId, params){
 	};
 	wsio.emit('messageToChild', dataObject);
 }
+
+/**
+ * Ask the server to send a message to a specified child app 
+ * See 'exampleParent' for usage.
+ *
+ * @method sendMessageToChild
+ * @param id of self
+ * @param childId to send message to
+ * @param params include any particulars of the message
+ */
+
+function sendMessageToParent(id, params){
+	var dataObject = {
+		id: id,
+		params: params
+	};
+	wsio.emit('messageToParent', dataObject);
+}
+
 /**
  * Pretty print a date object into string
  *
