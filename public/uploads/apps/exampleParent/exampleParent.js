@@ -28,16 +28,9 @@ var exampleParent = SAGE2_App.extend( {
 		this.minDim = Math.min(this.element.width, this.element.height);
 
 
-		//------  Parent monitoring children:
-		// for now, app decides how to store and handle children
-		// if parent wanted to just launch apps and do nothing else, 
-		// all it needs is 'launchChild' (see below)
-		this.childList = [];
-		this.count = 0; //keeping track of a child
-
-
 		//in this case, we are passing colors to the children
 		//so, we need random colors to test message passing
+		this.count = 0; //keeping track of a child
 		this.randomColor1 = [0,0,0];
 		this.randomColor2 = [0,0,0];
 		this.randomColor3 = [0,0,0];
@@ -169,35 +162,32 @@ var exampleParent = SAGE2_App.extend( {
 	messageEvent: function(data){
 		console.log("I am in the parent, getting message " + data.msg);
 
-		if( data.type == "childCreated" ){
-			console.log("the child is: " + data.childId); 
-			this.childList[this.childList.length-1].childId = data.childId; //put the id into the obj
-		}
+		// if( data.type == "childCreated" ){
+		// 	console.log("the child is: " + data.childId); 
+		// 	this.childList[this.childList.length-1].childId = data.childId; //put the id into the obj
+		// }
 
 	},
 
 	//here is where the parent launches the child app
 	//we will have to add appropriate data variables 
 	launchChild: function(){
-		data = {
-			applicationType: "custom",
-			application: "apps/exampleChild", 
-			user: "articulate_ui", 
-			id: this.id,
-			msg:"this is a message from articulate_ui",
-			childId: null,
-			initState: {  // these values will load on child app init
+		applicationType ="custom",
+		application = "apps/exampleChild", 	
+		msg = "this is a message from articulate_ui",
+		initState = {  // these values will load on child app init
 				value: 10,
 				red: this.randomColor1[0], 
 				green: this.randomColor1[1], 
 				blue: this.randomColor1[2]  
 			}
-		};
-		if( isMaster ){
-			launchLinkedChildApp(data); //defined in runtime
-		}
 
-		this.childList.push( data );
+		this.launchNewChild(applicationType, application, initState, msg);//defined in sage2 app
+	},
+
+	//i don't really have a use for this in mind right now... but an app might want to know if it succeeded
+	childLaunchResponseHandler: function(success){
+
 	},
 
 	sendMessageToChild: function(){
@@ -212,7 +202,7 @@ var exampleParent = SAGE2_App.extend( {
 		colorToSend = this.randomColor3; //sending the color shown next to the button
 		data = {
 			id: this.id,
-			msg: "this is the message for the children from " + this.id,
+			msg: "changeColor",
 			childId: childId,
 			color: colorToSend
 		};

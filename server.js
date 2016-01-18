@@ -1802,8 +1802,11 @@ function wsLaunchLinkedChildApp(wsio, data){
 
 
 		//send message to parent that child created
-		var theEvent = {id: data.id, type: "childCreated", childId: appInstance.id, msg: "this is a test message from server" };
-		broadcast('messageEvent', theEvent);
+		// var theEvent = {id: data.id, type: "childCreated", childId: appInstance.id, msg: "this is a test message from server" };
+		// broadcast('messageEvent', theEvent);
+
+		var dataToSend = {id: data.id, childId: appInstance.id, msg: "success", success: true };
+		broadcast('launchChildAppResponse', dataToSend);		
 
 		//send message to child that parent created
 
@@ -1845,8 +1848,8 @@ function wsMessageToChild(wsio, data){
 	console.log("wsMessageToChild " + data.id + " child: " + data.childId);
 
 	//get id of child and parent from data passed from the parent
-	var parentId = data.id;
-	var childId = data.childId; 
+	var parentId = data.id; //from
+	var childId = data.childId; //to
 
 	var canContinue = validParentChildPair(parentId, childId); 
 

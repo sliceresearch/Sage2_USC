@@ -69,6 +69,13 @@ var SAGE2_App = Class.extend({
 		this.fileWrite = null;
 		this.fileReceived = null;
 
+
+		//------  Parent monitoring children:
+		// for now, app decides how to store and handle children
+		// if parent wanted to just launch apps and do nothing else, 
+		// all it needs is 'launchChild' (see below)
+		this.childList = [];
+
 		// Track if in User Event loop
 		this.SAGE2UserModification = false;
 		// Modify state sync options
@@ -293,13 +300,6 @@ var SAGE2_App = Class.extend({
 		}
 	},
 
-	SAGE2MessageEvent: function(data){
-		console.log("HERE WE GO " +  data.msg);
-		if (typeof this.messageEvent != "undefined") { 
-    		this.messageEvent(data); 
-		}
-		
-	},
 
 	/**
 	* SAGE2CopyState method called on init or load to copy state of app instance
@@ -781,5 +781,72 @@ var SAGE2_App = Class.extend({
 			args = msg;
 		}
 		sage2Log({app: this.div.id, message: args});
+	},
+
+////////////////////// INTER APP COMMUNICATION
+	
+	/**
+	* launchNewChild method allows apps to launch and coordinate 'childApps'
+	* 
+	* @method launchNewChild
+	* @param childAppType is the type of app (custom, pdf, image, etc)
+	*/
+	launchNewChild: function( childAppType, childAppName, initState, message ){
+		data = {
+			applicationType: childAppType,
+			application: childAppName, 
+			user: "parentApp", //would be nice to have actual app name... or sth
+			id: this.id,
+			msg: message,
+			childId: null,
+			initState: initState, 
+		};
+		if( isMaster ){
+			launchLinkedChildApp(data); //defined in runtime
+		}
+
+		this.childList.push( data );
+	},
+
+
+
+	/**
+	* SAGE2MessageEvent method called for communication between children or parents
+	* 
+	* @method SAGE2MessageEvent
+	* @param state {Object} contains state of app instance
+	*/
+	SAGE2ChildAppLaunchResponse: function(data){ //success, childId, msg){
+		if( data.success ){ 
+			console.log("child app launch success " + data.childId);
+			this.childList[this.childList.length-1].childId = data.childId; //put the id into the obj
+		}
+		else{
+			console.log("child app launch failure " + data.childId + " msg: " + data.msg );
+		}
+
+		if( typeof this.childLaunchResponseHandler != "undefined")
+			this.childLaunchResponseHandler(data.success);
+	},
+
+
+	/**
+	* SAGE2MessageEvent method called for communication between children or parents
+	* 
+	* @method SAGE2MessageEvent
+	* @param state {Object} contains state of app instance
+	*/
+	SAGE2MessageEvent: function(data){
+		if (typeof this.messageEvent != "undefined") { 
+    		this.messageEvent(data); 
+		}
 	}
+
+
+
+
+
+
+
+
 });
