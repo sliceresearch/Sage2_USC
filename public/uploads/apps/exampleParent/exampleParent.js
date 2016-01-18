@@ -191,12 +191,38 @@ var exampleParent = SAGE2_App.extend( {
 	},
 
 	sendMessageToChild: function(){
-		if( this.childList.length == 0)//just in case
-			return; 
 
-		//who to send the message to:
-		childId = this.childList[this.count].childId; //get the id of the child to send message to (just doing )
-		this.incrementCount(); //next time pick a new child to send message to
+		this.reorder(); 
+
+		// if( this.childList.length == 0)//just in case
+		// 	return; 
+
+		// //who to send the message to:
+		// childId = this.childList[this.count].childId; //get the id of the child to send message to (just doing )
+		// this.incrementCount(); //next time pick a new child to send message to
+
+		// //what to send:
+		// colorToSend = this.randomColor3; //sending the color shown next to the button
+		// data = {
+		// 	id: this.id,
+		// 	msg: "changeColor",
+		// 	childId: childId,
+		// 	color: colorToSend
+		// };
+
+		// //send it: 
+		// if( isMaster ){//only want one display node to send the message, not all
+		// 	sendMessageToChild(data); //defined in runtime
+		// }
+
+	},
+
+	reorder: function(){
+		if( this.getNumberOfChildren() == 0 || this.count >= this.getNumberOfChildren() )
+			return;
+
+		childId = this.getChildIdByIdx(this.count); //request the ith child
+		this.incrementCount(); 
 
 		//what to send:
 		colorToSend = this.randomColor3; //sending the color shown next to the button
@@ -212,7 +238,7 @@ var exampleParent = SAGE2_App.extend( {
 			sendMessageToChild(data); //defined in runtime
 		}
 
-	},
+	}
 
 	sendMessageToAllChildren: function(){
 		console.log("Send");

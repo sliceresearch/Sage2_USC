@@ -829,6 +829,22 @@ var SAGE2_App = Class.extend({
 			this.childLaunchResponseHandler(data.success);
 	},
 
+	getNumberOfChildren: function(){
+		return this.childList.length;
+	},
+
+	getChildByIdx: function(idx){
+		if( this.childList.length >= idx)
+			return null; 
+		return this.childList[idx];
+	},
+
+	getChildIdByIdx: function(idx){
+		if( this.childList.length >= idx)
+			return null; 
+		return this.childList[idx].childId;
+	},
+
 
 	/**
 	* SAGE2MessageEvent method called for communication between children or parents
