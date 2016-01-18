@@ -123,8 +123,10 @@ var exampleParent = SAGE2_App.extend( {
 					this.launchChild();
 					this.generateRandomColor(0);//new color for next app
 				}
-				if( position.y > 200 && position.y < 275 ){ //2nd button:change color on childred
+				if( position.y > 200 && position.y < 275 ){ //2nd button:change color on all children
+					this.sendMessageToAllChildren();
 					this.generateRandomColor(1);
+
 				}
 				if( position.y > 300 && position.y < 375 ){ //2nd button:change color on childred
 					this.sendMessageToChild();
@@ -220,6 +222,29 @@ var exampleParent = SAGE2_App.extend( {
 			sendMessageToChild(data); //defined in runtime
 		}
 
+	},
+
+	sendMessageToAllChildren: function(){
+		console.log("Send");
+		for(var i =0; i<this.childList.length; i++){
+			//who to send the message to:
+			childId = this.childList[i].childId; //get the id of the child to send message to (just doing )
+
+			//what to send:
+			colorToSend = this.randomColor2; //sending the color shown next to the button
+			data = {
+				id: this.id,
+				msg: "this is the message for the children from " + this.id,
+				childId: childId,
+				color: colorToSend
+			};
+
+			//send it: 
+			if( isMaster ){//only want one display node to send the message, not all
+				sendMessageToChild(data); //defined in runtime
+			}
+
+		}
 	},
 
 	incrementCount: function(){

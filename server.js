@@ -709,7 +709,7 @@ function setupListeners(wsio) {
 
 	wsio.on('launchLinkedChildApp',					wsLaunchLinkedChildApp);
 	wsio.on('messageToParent',						wsMessageToParent);
-	wsio.on('messageToAllChildren',					wsMessageToAllChildren);
+	// wsio.on('messageToAllChildren',					wsMessageToAllChildren);
 	wsio.on('messageToChild',						wsMessageToChild);
 }
 
@@ -1827,18 +1827,18 @@ function wsMessageToParent(wsio, data){
 	//else succeed send message to parent
 }	
 
-//from parent to all children
-function wsMessageToAllChildren(wsio, data){
-	console.log("wsMessageToAllChildren " + data);
+// //from parent to all children
+// function wsMessageToAllChildren(wsio, data){
+// 	console.log("wsMessageToAllChildren " + data);
 
-	//get id of parent from data
+// 	//get id of parent from data
 
-	//lookup children in associative array
+// 	//lookup children in associative array
 
-	//if children not exist, send fail message
+// 	//if children not exist, send fail message
 
-	//else send message to all children
-}
+// 	//else send message to all children
+// }
 
 //from parent to child
 function wsMessageToChild(wsio, data){
