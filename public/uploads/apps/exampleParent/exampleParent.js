@@ -128,7 +128,7 @@ var exampleParent = SAGE2_App.extend( {
 					this.generateRandomColor(1);
 
 				}
-				if( position.y > 300 && position.y < 375 ){ //2nd button:change color on childred
+				if( position.y > 300 && position.y < 375 ){ //3rd button:change color on childred
 					this.sendMessageToChild();
 					this.generateRandomColor(2);
 				}
