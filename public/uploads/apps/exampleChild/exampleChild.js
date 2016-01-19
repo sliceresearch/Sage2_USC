@@ -75,7 +75,7 @@ var exampleChild = SAGE2_App.extend( {
 
 		if (eventType === "pointerPress" && (data.button === "left")) {
 
-			if( isMaster ){//only want one display node to send the message, not all
+			if( isMaster && this.parentApp != null){//only want one display node to send the message, not all
 				sendMessageToParent( this.id, {msgType: "changeColor", color:this.randomColor});
 				this.generateRandomColor();
 			}
@@ -121,6 +121,10 @@ var exampleChild = SAGE2_App.extend( {
 
 		this.refresh(data.date);//need to refresh for update to be seen
 
+	},
+
+	parentMonitorEvent: function(data){
+		//empty for now
 	},
 
 	generateRandomColor: function(){

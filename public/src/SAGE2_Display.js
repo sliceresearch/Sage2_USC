@@ -847,10 +847,26 @@ function setupListeners() {
 		app.SAGE2ChildAppLaunchResponse(data); //event_data.type, event_data.position, event_data.user, event_data.data, date);
 	});
 
+	//not using yet... 
+	wsio.on('setParent',  function(data) {
+		// var date = new Date(event_data.date);
+		var app  = applications[data.id];
+		app.SAGE2SetParent(data); //event_data.type, event_data.position, event_data.user, event_data.data, date);
+	});
+
 	wsio.on('childMonitoringEvent', function(data) {
 		var app  = applications[data.id];
 		var date = new Date(data.date);
 		data.date = date;
+		data.whichType = "childMonitoring";
+		app.SAGE2MonitoringEvent(data);
+	});
+
+	wsio.on('parentMonitoringEvent', function(data) {
+		var app  = applications[data.id];
+		var date = new Date(data.date);
+		data.date = date;
+		data.whichType = "parentMonitoring";
 		app.SAGE2MonitoringEvent(data);
 	});
 
@@ -1324,7 +1340,9 @@ function createAppWindow(data, parentId, titleBarHeight, titleTextSize, offsetX,
 			height: data.height,
 			resrc: url,
 			state: data.data,
-			date: date
+			date: date,
+			parentApp: data.parentApp,
+			childList: data.childList
 		};
 
 		// load new app

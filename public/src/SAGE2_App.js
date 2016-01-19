@@ -76,6 +76,9 @@ var SAGE2_App = Class.extend({
 		// all it needs is 'launchChild' (see below)
 		this.childList = [];
 
+		this.parentApp = null; //if you become parented, here is how you get the parent id
+								//only one parent per child app
+
 		// Track if in User Event loop
 		this.SAGE2UserModification = false;
 		// Modify state sync options
@@ -153,6 +156,10 @@ var SAGE2_App = Class.extend({
 
 		this.SAGE2CopyState(data.state);
 		this.SAGE2InitializeAppOptionsFromState();
+
+		this.parentApp = data.parentApp; 
+		this.childList = data.childList;
+		console.log("init parent app " + this.parentApp);
 	},
 
 	SAGE2Load: function(state, date) {
@@ -829,6 +836,26 @@ var SAGE2_App = Class.extend({
 			this.childLaunchResponseHandler(data.success);
 	},
 
+	/**
+	* SAGE2SetParent method called to create parent app
+	* 
+	* @method SAGE2SetParent
+	* @param state {Object} contains state of app instance
+	* not using this yet, just initializing parent in init
+	*/
+	SAGE2SetParent: function(data){ //success, childId, msg){
+		if( data.success ){ 
+			console.log("child has parent " + data.parentId);
+			this.parentApp = data.parentId; //put the id into the obj
+		}
+		else{
+			console.log("set parent failure " + data.parentId + " msg: " + data.msg );
+		}
+
+		// if( typeof this.setParentResponseHandler != "undefined")
+		// 	this.setParentResponseHandler();
+	},
+
 	//convenience function: could also just look at list directly
 	getNumberOfChildren: function(){
 		return this.childList.length;
@@ -874,16 +901,26 @@ var SAGE2_App = Class.extend({
 	SAGE2MonitoringEvent: function(data){
 		console.log("sage2 monitoring event");
 
-		if (typeof this.childMonitorEvent != "undefined") { 
+		if( data.whichType == "childMonitoring"){
+			if (typeof this.childMonitorEvent != "undefined") { 
 
-			if( data.type == "childCloseEvent" ){//remove child
-				for(i = 0; i < this.childList.length; i++)
-					if( this.childList[i].childId == data.childId )
-						this.childList.splice(i, 1);
+				if( data.type == "childCloseEvent" ){//remove child
+					for(i = 0; i < this.childList.length; i++)
+						if( this.childList[i].childId == data.childId )
+							this.childList.splice(i, 1);
+				}
+	    		this.childMonitorEvent(data.childId, data.type, data.data, data.date); 
 			}
+		} else if( data.whichType == "parentMonitoring"){
+			if (typeof this.parentMonitorEvent != "undefined") { 
 
-    		this.childMonitorEvent(data.childId, data.type, data.data, data.date); 
+				if( data.type == "parentClose" ){//remove child
+					this.parentApp = null;
+				}
+	    		this.parentMonitorEvent(data.parentId, data.type, data.data, data.date); 
+			}
 		}
+		
 
 
 	}

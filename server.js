@@ -634,7 +634,7 @@ function setupListeners(wsio) {
 	wsio.on('appResize',                            wsAppResize);
 	wsio.on('appFullscreen',                        wsFullscreen);
 	wsio.on('broadcast',                            wsBroadcast);
-	wsio.on('applicationRPC',                       wsApplicationRPC);
+	wsio.on('applicationRPC',                      wsApplicationRPC);
 
 	wsio.on('requestAvailableApplications',         wsRequestAvailableApplications);
 	wsio.on('requestStoredFiles',                   wsRequestStoredFiles);
@@ -1782,6 +1782,9 @@ function wsLaunchLinkedChildApp(wsio, data){
 			appInstance.data = data.initState; //override 
 		}
 
+		appInstance.parentApp = data.id; //set parent
+		appInstance.childList = [];//new app has no children
+
 		handleNewApplication(appInstance, null);
 
 		//add parents and children
@@ -1806,6 +1809,8 @@ function wsLaunchLinkedChildApp(wsio, data){
 		broadcast('launchChildAppResponse', dataToSend);		
 
 		//send message to child that parent created
+		// var dataToSend = {id: appInstance.id, parentId: data.id, msg: "success", success: true };
+		// broadcast('setParent', dataToSend);
 
 		addEventToUserLog(data.user, {type: "openApplication", data:
 			{application: {id: appInstance.id, type: appInstance.application}}, time: Date.now()});
@@ -1858,6 +1863,12 @@ function sendChildMonitoringEvent(parentId, childId, eventType, data){
 	console.log(parentId + " " + childId + " " + eventType);
 	var data = {id: parentId, childId: childId, type: eventType, data: data, date: Date.now()};
 	broadcast('childMonitoringEvent', data);
+}
+
+function sendParentMonitoringEvent(childId, parentId, eventType, data){
+	console.log(parentId + " " + childId + " " + eventType);
+	var data = {id: childId, parentId: parentId, type: eventType, data: data, date: Date.now()};
+	broadcast('parentMonitoringEvent', data);
 }
 
 function isAChildApp(childId){
@@ -2307,6 +2318,20 @@ function wsLoadApplication(wsio, data) {
 			if (appInstance.top < 0) {
 				appInstance.top = 0;
 			}
+		}
+
+		// console.log("loading " + appInstance.id);
+		if( isAParentApp(appInstance.id) ){
+			// console.log("is a parent of " + childApps[appInstance.id].length);
+			appInstance.childList = childApps[appInstance.id];
+		} else{
+			appInstance.childList = [];
+		}
+		
+		if( isAChildApp(appInstance.id) ){
+			appInstance.parentApp = getParentApp(appInstance.id);
+		} else{
+			appInstance.parentApp = null; //set parent to null
 		}
 
 		handleNewApplication(appInstance, null);
@@ -6911,15 +6936,16 @@ function deleteApplication(appId, portalId) {
 
 	}
 	if( isAParentApp(appId) ){
-				console.log("deleting a parent");
+		console.log("deleting a parent");
 
 		var childList = parentApps[appId];//get list of children
 		for(var i = 0; i < childList.length; i++){ 
+			sendParentMonitoringEvent(childList[i], appId, "parentCloseEvent", {});
 			childApps[childList[i]] = null; //child is not longer parented 
-
 		}
 
 		parentApps[appId] = null; //parent no longer has children
+
 	}
 
 	if (portalId !== undefined && portalId !== null) {
