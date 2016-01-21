@@ -192,6 +192,8 @@ var exampleParent = SAGE2_App.extend( {
 			return;
 
 		childId = this.getChildIdByIdx(this.count); //request the ith child
+		
+
 		this.incrementCount(); 
 
 		//what to send:
