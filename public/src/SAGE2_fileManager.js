@@ -1103,7 +1103,6 @@ function FileManager(wsio, mydiv, uniqueID) {
 		var f, folder;
 		this.json_cfg  = data;
 		this.http_port = this.json_cfg.port === 80 ? "" : ":" + this.json_cfg.port;
-		console.log('PORT', this.http_port)
 		this.mediaFolders = data.folders;
 		for (f in data.folders) {
 			folder = data.folders[f];

@@ -409,7 +409,7 @@ function setupListeners() {
 	});
 
 	wsio.on('requestNextFrame', function(data) {
-		interactor.sendMediaStreamFrame();
+		interactor.requestMediaStreamFrame();
 	});
 
 	wsio.on('stopMediaCapture', function() {
@@ -1283,7 +1283,6 @@ function touchStart(event) {
 		event.stopPropagation();
 	} else if (event.target.id === "sage2MobileMiddle2Button") {
 		// Send play commad, spacebar for PDF and movies
-		console.log('Send play')
 		interactor.sendPlay();
 		event.preventDefault();
 		event.stopPropagation();
