@@ -95,6 +95,29 @@ function OmicronManager(sysConfig) {
 	// Used to track changes in the pointer state (like a zoom becoming a move)
 	this.pointerGestureState = {};
 
+	// Default Gestures
+	this.enableDoubleClickMaximize = false;
+	this.enableThreeFingerRightClick = true;
+	this.enableTwoFingerWindowDrag = false;
+	this.enableTwoFingerZoom = true;
+	this.enableFiveFingerCloseApp = false;
+
+	if (this.config.enableDoubleClickMaximize !== undefined) {
+		this.enableDoubleClickMaximize = this.config.enableDoubleClickMaximize;
+	}
+	if (this.config.enableThreeFingerRightClick !== undefined) {
+		this.enableThreeFingerRightClick = this.config.enableThreeFingerRightClick;
+	}
+	if (this.config.enableTwoFingerWindowDrag !== undefined) {
+		this.enableTwoFingerWindowDrag = this.config.enableTwoFingerWindowDrag;
+	}
+	if (this.config.enableTwoFingerZoom !== undefined) {
+		this.enableTwoFingerZoom = this.config.enableTwoFingerZoom;
+	}
+	if (this.config.enableFiveFingerCloseApp !== undefined) {
+		this.enableFiveFingerCloseApp = this.config.enableFiveFingerCloseApp;
+	}
+
 	if (this.config.host === undefined) {
 		console.log(sageutils.header('Omicron') + 'Using web server hostname: ', sysConfig.host);
 	} else {
@@ -113,7 +136,7 @@ function OmicronManager(sysConfig) {
 		this.touchOffset =  this.config.touchOffset;
 		console.log(sageutils.header('Omicron') + 'Touch points offset by: ', this.touchOffset);
 	}
-
+	
 	if (sysConfig.resolution) {
 		var columns = 1;
 		var rows    = 1;
@@ -623,7 +646,7 @@ OmicronManager.prototype.processPointerEvent = function(e, sourceID, posX, posY,
 				omicronManager.pointerPosition(address, { pointerX: posX, pointerY: posY });
 			}
 		}
-	} else if (e.type === 15) {
+	} else if (e.type === 15 && omicronManager.enableTwoFingerZoom) {
 		// zoom
 
 		/*
@@ -667,7 +690,7 @@ OmicronManager.prototype.processPointerEvent = function(e, sourceID, posX, posY,
 					console.log("Touch zoom state: " + omicronManager.pointerGestureState[sourceID]);
 				}
 
-				if (distance > omicronManager.zoomToMoveGestureMinimumDistance) {
+				if (omicronManager.enableTwoFingerWindowDrag && distance > omicronManager.zoomToMoveGestureMinimumDistance) {
 					if (omicronManager.pointerGestureState[sourceID] === "zoom") {
 						omicronManager.pointerScrollEnd(address, posX, posY);
 						omicronManager.pointerRelease(address, posX, posY, { button: "left" });
@@ -709,7 +732,7 @@ OmicronManager.prototype.processPointerEvent = function(e, sourceID, posX, posY,
 				console.log("Touch down gesture: Five finger hold - " + Date.now());
 			}
 			omicronManager.pointerCloseGesture(address, posX, posY, Date.now(), 0);
-		} else if (e.flags === FLAG_THREE_FINGER_HOLD) {
+		} else if (e.flags === FLAG_THREE_FINGER_HOLD && omicronManager.enableThreeFingerRightClick ) {
 			if (omicronManager.gestureDebug) {
 				console.log("Touch gesture: Three finger hold");
 			}
@@ -720,7 +743,7 @@ OmicronManager.prototype.processPointerEvent = function(e, sourceID, posX, posY,
 				console.log("Touch gesture: Click");
 			}
 
-		} else if (e.flags === FLAG_DOUBLE_CLICK) {
+		} else if (e.flags === FLAG_DOUBLE_CLICK && omicronManager.enableDoubleClickMaximize) {
 			if (omicronManager.gestureDebug) {
 				console.log("Touch gesture: Double Click");
 			}
@@ -742,7 +765,7 @@ OmicronManager.prototype.processPointerEvent = function(e, sourceID, posX, posY,
 				console.log("Touch up at - (" + posX.toFixed(2) + "," + posY.toFixed(2) + ") initPos: ("
 				+ initX.toFixed(2) + "," + initY.toFixed(2) + ") flags:" + e.flags);
 			}
-		} else if (e.flags === FLAG_FIVE_FINGER_HOLD) {
+		} else if (e.flags === FLAG_FIVE_FINGER_HOLD && omicronManager.enableFiveFingerCloseApp) {
 			if (omicronManager.gestureDebug) {
 				console.log("Touch up gesture: Five finger hold - " + Date.now());
 			}
