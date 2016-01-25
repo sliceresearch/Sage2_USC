@@ -191,70 +191,80 @@ HttpServer.prototype.onreq = function(req, res) {
 			if (stats.isDirectory()) {
 				this.redirect(res, getName + "/index.html");
 				return;
+			}
+
+			var header = {};
+			header["Content-Type"] = mime.lookup(pathname);
+			header["Access-Control-Allow-Headers" ] = "Range";
+			header["Access-Control-Expose-Headers"] = "Accept-Ranges, Content-Encoding, Content-Length, Content-Range";
+			if (req.headers.origin !== undefined) {
+				header['Access-Control-Allow-Origin' ]     = req.headers.origin;
+				header['Access-Control-Allow-Methods']     = "GET";
+				header['Access-Control-Allow-Headers']     = "X-Requested-With, X-HTTP-Method-Override, Content-Type, Accept";
+				header['Access-Control-Allow-Credentials'] = true;
+			}
+
+			if (getName.match(/^\/(src|lib|images|css)\/.+/)) {
+				// cache for 1 week for SAGE2 core files
+				header['Cache-Control'] = 'public, max-age=604800';
 			} else {
-				var header = {};
-				header["Content-Type"] = mime.lookup(pathname);
-				header["Access-Control-Allow-Headers" ] = "Range";
-				header["Access-Control-Expose-Headers"] = "Accept-Ranges, Content-Encoding, Content-Length, Content-Range";
-				if (req.headers.origin !== undefined) {
-					header['Access-Control-Allow-Origin' ]     = req.headers.origin;
-					header['Access-Control-Allow-Methods']     = "GET";
-					header['Access-Control-Allow-Headers']     = "X-Requested-With, X-HTTP-Method-Override, Content-Type, Accept";
-					header['Access-Control-Allow-Credentials'] = true;
-				}
+				// console.log('No caching for', pathname, getName);
+				header['Cache-Control'] = 'no-cache';
+			}
 
-				if (getName.match(/^\/(src|lib|images|css)\/.+/)) {
-					// cache for 1 week for SAGE2 core files
-					header['Cache-Control'] = 'public, max-age=604800';
-				} else {
-					// console.log('No caching for', pathname, getName);
-					header['Cache-Control'] = 'no-cache';
-				}
+			// Useful Cache-Control response headers include:
+			// max-age=[seconds] — specifies the maximum amount of time that a representation will be considered fresh.
+			// s-maxage=[seconds] — similar to max-age, except that it only applies to shared (e.g., proxy) caches.
+			// public — marks authenticated responses as cacheable;
+			// private — allows caches that are specific to one user (e.g., in a browser) to store the response
+			// no-cache — forces caches to submit the request to the origin server for validation before releasing
+			//  a cached copy, every time.
+			// no-store — instructs caches not to keep a copy of the representation under any conditions.
+			// must-revalidate — tells caches that they must obey any freshness information you give them about a representation.
+			// proxy-revalidate — similar to must-revalidate, except that it only applies to proxy caches.
+			//
+			// For example:
+			// Cache-Control: max-age=3600, must-revalidate
+			//
 
-				// Useful Cache-Control response headers include:
-				// max-age=[seconds] — specifies the maximum amount of time that a representation will be considered fresh.
-				// s-maxage=[seconds] — similar to max-age, except that it only applies to shared (e.g., proxy) caches.
-				// public — marks authenticated responses as cacheable;
-				// private — allows caches that are specific to one user (e.g., in a browser) to store the response
-				// no-cache — forces caches to submit the request to the origin server for validation before releasing
-				//  a cached copy, every time.
-				// no-store — instructs caches not to keep a copy of the representation under any conditions.
-				// must-revalidate — tells caches that they must obey any freshness information you give them about a representation.
-				// proxy-revalidate — similar to must-revalidate, except that it only applies to proxy caches.
-				//
-				// For example:
-				// Cache-Control: max-age=3600, must-revalidate
-				//
+			// Get the file size from the 'stat' system call
+			var total = stats.size;
+			if (typeof req.headers.range !== 'undefined') {
+				// Parse the range request from the HTTP header
+				var range = req.headers.range;
+				var parts = range.replace(/bytes=/, "").split("-");
+				var partialstart = parts[0];
+				var partialend   = parts[1];
 
-				// Get the file size from the 'stat' system call
-				var total = stats.size;
-				if (typeof req.headers.range !== 'undefined') {
-					// Parse the range request from the HTTP header
-					var range = req.headers.range;
-					var parts = range.replace(/bytes=/, "").split("-");
-					var partialstart = parts[0];
-					var partialend   = parts[1];
+				var start = parseInt(partialstart, 10);
+				var end = partialend ? parseInt(partialend, 10) : total - 1;
+				var chunksize = (end - start) + 1;
 
-					var start = parseInt(partialstart, 10);
-					var end = partialend ? parseInt(partialend, 10) : total - 1;
-					var chunksize = (end - start) + 1;
+				// Set the range into the HTPP header for the response
+				header["Content-Range"]  = "bytes " + start + "-" + end + "/" + total;
+				header["Accept-Ranges"]  = "bytes";
+				header["Content-Length"] = chunksize;
 
-					// Set the range into the HTPP header for the response
-					header["Content-Range"]  = "bytes " + start + "-" + end + "/" + total;
-					header["Accept-Ranges"]  = "bytes";
-					header["Content-Length"] = chunksize;
+				// Write the HTTP header, 206 Partial Content
+				res.writeHead(206, header);
+				// Read part of the file
+				stream = fs.createReadStream(pathname, {start: start, end: end});
+				// Pass it to the HTTP response
+				stream.pipe(res);
+			} else {
+				// Open the file as a stream
+				stream = fs.createReadStream(pathname);
+				// array of allowed compression file types
 
-					// Write the HTTP header, 206 Partial Content
-					res.writeHead(206, header);
-					// Read part of the file
-					stream = fs.createReadStream(pathname, {start: start, end: end});
-					// Pass it to the HTTP response
+				var compressExtensions = [ '.html', '.json', '.js', '.css', '.txt', '.svg', '.xml', '.md',  ];
+				if (compressExtensions.indexOf(path.extname(pathname)) === -1) {
+					// Do not compress, just set file size
+					header["Content-Length"] = total;
+					res.writeHead(200, header);
 					stream.pipe(res);
 				} else {
 					// Check for allowed compression
 					var acceptEncoding = req.headers['accept-encoding'] || '';
-					// Open the file as a stream
-					stream = fs.createReadStream(pathname);
 					if (acceptEncoding.match(/gzip/)) {
 						// Set the encoding to gzip
 						header["Content-Encoding"] = 'gzip';

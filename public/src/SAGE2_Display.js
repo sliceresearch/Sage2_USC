@@ -72,27 +72,24 @@ function getBrowserPrefix() {
 function hiddenProperty(prefix) {
 	if (prefix) {
 		return prefix + 'Hidden';
-	} else {
-		return 'hidden';
 	}
+	return 'hidden';
 }
 
 // Get Browser Specific Visibility State
 function visibilityState(prefix) {
 	if (prefix) {
 		return prefix + 'VisibilityState';
-	} else {
-		return 'visibilityState';
 	}
+	return 'visibilityState';
 }
 
 // Get Browser Specific Event
 function visibilityEvent(prefix) {
 	if (prefix) {
 		return prefix + 'visibilitychange';
-	} else {
-		return 'visibilitychange';
 	}
+	return 'visibilitychange';
 }
 
 /**
@@ -252,8 +249,8 @@ function setupListeners() {
 		var http_port;
 		var https_port;
 
-		http_port = json_cfg.index_port === 80 ? "" : ":" + json_cfg.index_port;
-		https_port = json_cfg.port === 443 ? "" : ":" + json_cfg.port;
+		http_port = json_cfg.port === 80 ? "" : ":" + json_cfg.port;
+		https_port = json_cfg.secure_port === 443 ? "" : ":" + json_cfg.secure_port;
 		hostAlias["http://"  + json_cfg.host + http_port]  = window.location.origin;
 		hostAlias["https://" + json_cfg.host + https_port] = window.location.origin;
 		for (i = 0; i < json_cfg.alternate_hosts.length; i++) {
@@ -299,6 +296,10 @@ function setupListeners() {
 
 	wsio.on('addRemoteSite', function(data) {
 		ui.addRemoteSite(data);
+	});
+
+	wsio.on('toggleHelp', function(data) {
+		ui.toggleHelp();
 	});
 
 	wsio.on('connectedToRemoteSite', function(data) {
@@ -601,7 +602,9 @@ function setupListeners() {
 			var parentTransform = getTransform(selectedElem.parentNode);
 			var border = parseInt(selectedElem.parentNode.style.borderWidth || 0, 10);
 			app.sage2_x = (position_data.elemLeft + border + 1) * parentTransform.scale.x + parentTransform.translate.x;
+			app.sage2_x = Math.round(app.sage2_x);
 			app.sage2_y = (position_data.elemTop + ui.titleBarHeight + border) * parentTransform.scale.y + parentTransform.translate.y;
+			app.sage2_y = Math.round(app.sage2_y);
 			app.sage2_width  = parseInt(position_data.elemWidth, 10) * parentTransform.scale.x;
 			app.sage2_height = parseInt(position_data.elemHeight, 10) * parentTransform.scale.y;
 
@@ -732,7 +735,9 @@ function setupListeners() {
 			var parentTransform = getTransform(selectedElem.parentNode);
 			var border = parseInt(selectedElem.parentNode.style.borderWidth || 0, 10);
 			app.sage2_x = (position_data.elemLeft + border + 1) * parentTransform.scale.x + parentTransform.translate.x;
+			app.sage2_x = Math.round(app.sage2_x);
 			app.sage2_y = (position_data.elemTop + ui.titleBarHeight + border) * parentTransform.scale.y + parentTransform.translate.y;
+			app.sage2_y = Math.round(app.sage2_y);
 			app.sage2_width  = parseInt(position_data.elemWidth, 10) * parentTransform.scale.x;
 			app.sage2_height = parseInt(position_data.elemHeight, 10) * parentTransform.scale.y;
 
@@ -1211,13 +1216,14 @@ function createAppWindow(data, parentId, titleBarHeight, titleTextSize, offsetX,
 
 	var windowIconClose = document.createElement("img");
 	windowIconClose.id  = data.id + "_iconClose";
-	windowIconClose.src = "images/window-close.svg";
+	windowIconClose.src = "images/window-close3.svg";
 	windowIconClose.height = Math.round(titleBarHeight);
 	windowIconClose.style.position = "absolute";
 	windowIconClose.style.right    = "0px";
 	windowTitle.appendChild(windowIconClose);
 
 	var titleText = document.createElement("p");
+	titleText.id  = data.id + "_text";
 	titleText.style.lineHeight = Math.round(titleBarHeight) + "px";
 	titleText.style.fontSize   = Math.round(titleTextSize) + "px";
 	titleText.style.color      = "#FFFFFF";
@@ -1299,7 +1305,8 @@ function createAppWindow(data, parentId, titleBarHeight, titleTextSize, offsetX,
 			height: data.height,
 			resrc: url,
 			state: data.data,
-			date: date
+			date: date,
+			title: data.title
 		};
 
 		// load new app
@@ -1379,7 +1386,9 @@ function createAppWindow(data, parentId, titleBarHeight, titleTextSize, offsetX,
 			});
 			js.type  = "text/javascript";
 			js.async = false;
-			if (data.resrc[idx].indexOf("http://") === 0 || data.resrc[idx].indexOf("https://") === 0) {
+			if (data.resrc[idx].indexOf("http://")  === 0 ||
+				data.resrc[idx].indexOf("https://") === 0 ||
+				data.resrc[idx].indexOf("/") === 0) {
 				js.src = data.resrc[idx];
 			} else {
 				js.src = url + "/" + data.resrc[idx];

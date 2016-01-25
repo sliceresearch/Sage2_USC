@@ -52,7 +52,10 @@ function createRemoteConnection(wsURL) {
 		});
 
 		remote.on('console', function(wsio, data) {
-			if (data.length<100) process.stdout.write(data);
+			// just to filter a bit the long outputs
+			if (data.length < 256) {
+				process.stdout.write(data);
+			}
 		});
 
 		remote.on('initialize', function(wsio, data) {

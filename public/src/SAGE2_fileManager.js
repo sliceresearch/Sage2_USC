@@ -48,6 +48,9 @@ function FileManager(wsio, mydiv, uniqueID) {
 	this.uniqueID = uniqueID;
 	this.selectedItem = null;
 	this.dragPosition = null;
+	this.json_cfg  = null;
+	this.http_port = null;
+
 	var _this = this;
 
 	// WEBIX
@@ -174,9 +177,8 @@ function FileManager(wsio, mydiv, uniqueID) {
 							template: function(obj) {
 									if (obj.image) {
 										return "<img src='" + obj.image + "_256.jpg'></img>";
-									} else {
-										return "";
 									}
+									return "";
 								}
 						}
 					]
@@ -281,10 +283,11 @@ function FileManager(wsio, mydiv, uniqueID) {
 				});
 			}
 		} else if (evt === "display_menu") {
-			var displayUrl = "http://" + window.location.hostname + ':' + _this.json_cfg.index_port +  "/display.html?clientID=0";
+			var displayUrl = "http://" + window.location.hostname + _this.http_port +  "/display.html?clientID=0";
+			console.log('Display URL', displayUrl);
 			window.open(displayUrl, '_blank');
 		} else if (evt === "overview_menu") {
-			var displayUrl = "http://" + window.location.hostname + ':' + _this.json_cfg.index_port +  "/display.html?clientID=-1";
+			var displayUrl = "http://" + window.location.hostname + _this.http_port +  "/display.html?clientID=-1";
 			window.open(displayUrl, '_blank');
 		} else if (evt === "clear_menu") {
 			wsio.emit('clearDisplay');
@@ -307,7 +310,7 @@ function FileManager(wsio, mydiv, uniqueID) {
 			}
 			_this.main.adjust();
 		} else if (evt === "audio_menu") {
-			var audioUrl = "http://" + window.location.hostname + ':' + _this.json_cfg.index_port +  "/audioManager.html";
+			var audioUrl = "http://" + window.location.hostname + _this.http_port +  "/audioManager.html";
 			// var audioUrl = "audioManager.html";
 			window.open(audioUrl, '_blank');
 		} else if (evt === "drawing_menu") {
@@ -590,9 +593,8 @@ function FileManager(wsio, mydiv, uniqueID) {
 			}
 			context.html += "</div>";
 			return true;
-		} else {
-			return false;
 		}
+		return false;
 	});
 	// Track the position of the dragged item
 	this.allTable.$dragPos = function(pos, event, node) {
@@ -615,14 +617,13 @@ function FileManager(wsio, mydiv, uniqueID) {
 			context.target.startsWith("Config:")) {
 			// No DnD on search icons
 			return false;
-		} else {
-			// Move each file selected one by one
-			context.source.map(function(elt) {
-				wsio.emit('moveElementFromStoredFiles', {filename: elt, url: context.target});
-			});
-			// Dont do a real DnD, stop there
-			return false;
 		}
+		// Move each file selected one by one
+		context.source.map(function(elt) {
+			wsio.emit('moveElementFromStoredFiles', {filename: elt, url: context.target});
+		});
+		// Dont do a real DnD, stop there
+		return false;
 	});
 
 	// Now, do the transfer
@@ -721,7 +722,7 @@ function FileManager(wsio, mydiv, uniqueID) {
 					textTbd += "</ol>";
 					webix.confirm({
 						title: "Confirm deletion - " + numItems + " item(s)",
-						width: "50%",
+						width: "75%",
 						ok: "Yes",
 						cancel: "No",
 						text: textTbd,
@@ -1005,9 +1006,8 @@ function FileManager(wsio, mydiv, uniqueID) {
 					return _this.allFiles[obj.id].sage2URL.lastIndexOf(treeSelection.sage2URL, 0) === 0;
 				});
 				return;
-			} else {
-				updateSearch(treeSelection.id);
 			}
+			updateSearch(treeSelection.id);
 		}
 
 	};
@@ -1101,7 +1101,8 @@ function FileManager(wsio, mydiv, uniqueID) {
 	this.serverConfiguration = function(data) {
 		// Add the media folders to the tree
 		var f, folder;
-		this.json_cfg = data;
+		this.json_cfg  = data;
+		this.http_port = this.json_cfg.port === 80 ? "" : ":" + this.json_cfg.port;
 		this.mediaFolders = data.folders;
 		for (f in data.folders) {
 			folder = data.folders[f];

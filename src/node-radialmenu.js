@@ -447,9 +447,8 @@ RadialMenu.prototype.getThumbnailWindowPosition = function() {
 RadialMenu.prototype.hasEventID = function(id) {
 	if (this.activeEventIDs.indexOf(id) === -1) {
 		return false;
-	} else {
-		return true;
 	}
+	return true;
 };
 
 /**
@@ -465,7 +464,8 @@ RadialMenu.prototype.isEventOnMenu = function(data) {
 			(data.y > this.top - this.radialMenuSize.y / 2) &&
 			(data.y < this.top - this.radialMenuSize.y / 2 + this.radialMenuSize.y)) {
 			return true;
-		} else if ((data.x > this.left + this.radialMenuSize.x / 2) &&
+		}
+		if ((data.x > this.left + this.radialMenuSize.x / 2) &&
 				(data.x < this.left + this.radialMenuSize.x / 2 + this.thumbnailWindowSize.x) &&
 				(data.y > this.top - this.radialMenuSize.y / 2) &&
 				(data.y < this.top - this.radialMenuSize.y / 2 + this.thumbnailWindowSize.y)) {
@@ -502,25 +502,24 @@ RadialMenu.prototype.onEvent = function(data) {
 			(data.y > this.top - this.radialMenuSize.y / 2) &&
 			(data.y < this.top - this.radialMenuSize.y / 2 + this.radialMenuSize.y)) {
 			// this.windowInteractionMode = false;
-
 			if (this.visible === true && data.type === "pointerPress") {
 				this.activeEventIDs.push(data.id);
 			}
-
 			return true;
-		} else if (isThumbnailWindowOpen() &&
-				(data.x > this.left + this.radialMenuSize.x / 2) &&
-				(data.x < this.left + this.radialMenuSize.x / 2 + this.thumbnailWindowSize.x) &&
-				(data.y > this.top - this.radialMenuSize.y / 2) &&
-				(data.y < this.top - this.radialMenuSize.y / 2 + this.thumbnailWindowSize.y)) {
+		}
+		if (isThumbnailWindowOpen() &&
+			(data.x > this.left + this.radialMenuSize.x / 2) &&
+			(data.x < this.left + this.radialMenuSize.x / 2 + this.thumbnailWindowSize.x) &&
+			(data.y > this.top - this.radialMenuSize.y / 2) &&
+			(data.y < this.top - this.radialMenuSize.y / 2 + this.thumbnailWindowSize.y)) {
 			// Else if over thumbnail window bounding box
 			// this.windowInteractionMode = false;
-
 			if (this.visible === true && data.type === "pointerPress") {
 				this.activeEventIDs.push(data.id);
 			}
 			return true;
-		} else if (this.activeEventIDs.indexOf(data.id) !== -1) {
+		}
+		if (this.activeEventIDs.indexOf(data.id) !== -1) {
 			return true;
 		}
 	}

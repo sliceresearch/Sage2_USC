@@ -255,8 +255,13 @@ var generateVideoThumbnails = function(infile, outfile, width, height, sizes, in
 		size = Math.round(sizes[index] * aspect) + "x" + sizes[index];
 	}
 
-	var cmd = ffmpeg(infile);
-	cmd.on('end', function() {
+	ffmpeg(infile)
+	.on('error', function(err) {
+		console.log(sageutils.header("Assets") + 'Error processing ' + infile);
+		// recursive call to generate the next size
+		generateVideoThumbnails(infile, outfile, width, height, sizes, index + 1, callback);
+	})
+	.on('end', function() {
 		var tmpImg = outfile + '_' + size + '_1.jpg';
 		imageMagick(tmpImg).command("convert").in("-resize", sizes[index] + "x" + sizes[index])
 			.in("-gravity", "center").in("-background", "rgb(71,71,71)")
@@ -275,7 +280,8 @@ var generateVideoThumbnails = function(infile, outfile, width, height, sizes, in
 			// recursive call to generate the next size
 			generateVideoThumbnails(infile, outfile, width, height, sizes, index + 1, callback);
 		});
-	}).screenshots({
+	})
+	.screenshots({
 		timestamps: ["10%"],
 		filename: path.basename(outfile) + "_%r_%i.jpg",
 		folder: path.dirname(outfile),
@@ -543,45 +549,40 @@ var getDimensions = function(id) {
 	if (id in AllAssets.list) {
 		return {width:  AllAssets.list[id].exif.ImageWidth,
 				height: AllAssets.list[id].exif.ImageHeight };
-	} else {
-		return null;
 	}
+	return null;
 };
 
 var getTag = function(id, tag) {
 	id = path.resolve(id);
 	if (id in AllAssets.list) {
 		return AllAssets.list[id].exif[tag];
-	} else {
-		return null;
 	}
+	return null;
 };
 
 var getURL = function(id) {
 	id = path.resolve(id);
 	if (id in AllAssets.list) {
 		return AllAssets.list[id].sage2URL;
-	} else {
-		return null;
 	}
+	return null;
 };
 
 var getMimeType = function(id) {
 	id = path.resolve(id);
 	if (id in AllAssets.list) {
 		return AllAssets.list[id].exif.MIMEType;
-	} else {
-		return null;
 	}
+	return null;
 };
 
 var getExifData = function(id) {
 	id = path.resolve(id);
 	if (id in AllAssets.list) {
 		return AllAssets.list[id].exif;
-	} else {
-		return null;
 	}
+	return null;
 };
 
 var exifAsync = function(cmds, cb) {
@@ -593,9 +594,8 @@ var exifAsync = function(cmds, cb) {
 			if (!sageutils.fileExists(instuctionsFile)) {
 				if (cmds.length > 0) {
 					return execNext();
-				} else {
-					return cb(null);
 				}
+				return cb(null);
 			}
 			instructions = json5.parse(fs.readFileSync(instuctionsFile, 'utf8'));
 			var appIcon = null;
@@ -748,7 +748,7 @@ var listApps = function() {
 
 var recursiveReaddirSync = function(aPath) {
 	var list     = [];
-	var excludes = [ '.DS_Store', 'Thumbs.db', 'assets', 'sessions', 'tmp', 'config' ];
+	var excludes = [ '.DS_Store', 'Thumbs.db', 'passwd.json', 'assets', 'sessions', 'tmp', 'config' ];
 	var files, stats;
 
 	files = fs.readdirSync(aPath);

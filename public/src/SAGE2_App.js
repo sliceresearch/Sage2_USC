@@ -564,9 +564,8 @@ var SAGE2_App = Class.extend({
 	isLayerHidden: function() {
 		if (this.layer) {
 			return (this.layer.style.display === "none");
-		} else {
-			return false;
 		}
+		return false;
 	},
 
 	/**
@@ -649,6 +648,19 @@ var SAGE2_App = Class.extend({
 	postDraw: function(date) {
 		this.prevDate = date;
 		this.frame++;
+	},
+
+	/**
+	* Change the title of the application window
+	*
+	* @method updateTitle
+	* @param title {String} new title string
+	*/
+	updateTitle: function(title) {
+		var titleText = document.getElementById(this.id + "_text");
+		if (titleText) {
+			titleText.textContent = title;
+		}
 	},
 
 	/**

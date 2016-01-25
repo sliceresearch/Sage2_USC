@@ -27,6 +27,7 @@ function SAGE2_interaction(wsio) {
 	this.wsio        = wsio;
 	this.uniqueID    = null;
 	this.sensitivity = null;
+	this.fileUploadStart    = null;
 	this.fileUploadProgress = null;
 	this.fileUploadComplete = null;
 	this.mediaStream = null;
@@ -35,10 +36,12 @@ function SAGE2_interaction(wsio) {
 	this.mediaQuality    = 7;
 	this.chromeDesktopCaptureEnabled = false;
 	this.broadcasting  = false;
-	this.videoTimer    = null;
+	this.gotRequest    = false;
+	// this.videoTimer    = null;
 	this.pix           = null;
 	this.chunk         = 32 * 1024; // 32 KB
 	this.maxUploadSize = 20 * (1024 * 1024 * 1024); // 20GB just as a precaution
+	this.array_xhr     = [];
 
 	// Event filtering for mouseMove
 	this.now = Date.now();
@@ -93,6 +96,16 @@ function SAGE2_interaction(wsio) {
 	};
 
 	/**
+	* Set the start callback
+	*
+	* @method setFileUploadStartCallback
+	* @param callback {Function} upload start callback
+	*/
+	this.setFileUploadStartCallback = function(callback) {
+		this.fileUploadStart = callback;
+	};
+
+	/**
 	* Set the progress callback
 	*
 	* @method setFileUploadProgressCallback
@@ -110,6 +123,20 @@ function SAGE2_interaction(wsio) {
 	*/
 	this.setFileUploadCompleteCallback = function(callback) {
 		this.fileUploadComplete = callback;
+	};
+
+	/**
+	* Cancel the file uploads by aborting the XMLHttpRequests
+	*
+	* @method cancelUploads
+	*/
+	this.cancelUploads = function() {
+		if (this.array_xhr.length > 0) {
+			for (var i = 0; i < this.array_xhr.length; i++) {
+				this.array_xhr[i].abort();
+			}
+			this.array_xhr.length = 0;
+		}
 	};
 
 	/**
@@ -167,6 +194,13 @@ function SAGE2_interaction(wsio) {
 			_this.wsio.emit('uploadedFile', {name: name, type: type});
 		};
 
+		if (this.fileUploadStart) {
+			this.fileUploadStart(files);
+		}
+
+		// Clear the upload array
+		this.array_xhr.length = 0;
+
 		for (var i = 0; i < files.length; i++) {
 			if (files[i].size <= this.maxUploadSize) {
 				var formdata = new FormData();
@@ -174,6 +208,8 @@ function SAGE2_interaction(wsio) {
 				formdata.append("dropX", dropX);
 				formdata.append("dropY", dropY);
 				var xhr = new XMLHttpRequest();
+				// add the request into the array
+				this.array_xhr.push(xhr);
 				xhr.open("POST", "upload", true);
 				xhr.upload.id = "file" + i.toString();
 				xhr.upload.addEventListener('progress', progressCallback, false);
@@ -371,11 +407,11 @@ function SAGE2_interaction(wsio) {
 	*/
 	this.captureDesktop = function(data) {
 		if (__SAGE2__.browser.isChrome === true) {
-			console.log('captureDesktop');
 			var constraints = {chromeMediaSource: 'desktop',
 								chromeMediaSourceId: data,
-								maxWidth: 3840, maxHeight: 2160,
-								// minFrameRate:3, maxFrameRate: 30
+								maxWidth: 1920, maxHeight: 1080,
+								maxFrameRate: 24,
+								minFrameRate: 3
 			};
 			navigator.getUserMedia({video: {mandatory: constraints, optional: []}, audio: false}, this.streamSuccess, this.streamFail);
 		} else if (__SAGE2__.browser.isFirefox === true) {
@@ -432,9 +468,11 @@ function SAGE2_interaction(wsio) {
 	*/
 	this.streamEndedMethod = function(event) {
 		this.broadcasting = false;
-		if (this.videoTimer) {
-			clearInterval(this.videoTimer);
-		}
+		// if (this.videoTimer) {
+		// 	clearInterval(this.videoTimer);
+		// }
+		// cancelAnimationFrame(this.req);
+		cancelIdleCallback(this.req);
 		this.wsio.emit('stopMediaStream', {id: this.uniqueID + "|0"});
 	};
 
@@ -456,7 +494,7 @@ function SAGE2_interaction(wsio) {
 				return;
 			}
 
-			var widths = [	Math.min(852, mediaVideo.videoWidth),
+			var widths = [	Math.min(852,  mediaVideo.videoWidth),
 							Math.min(1280, mediaVideo.videoWidth),
 							Math.min(1920, mediaVideo.videoWidth),
 							mediaVideo.videoWidth];
@@ -480,28 +518,39 @@ function SAGE2_interaction(wsio) {
 				width: mediaVideo.videoWidth, height: mediaVideo.videoHeight});
 
 			this.broadcasting = true;
+
+			var _this = this;
+
+			// Using requestAnimationFrame
+			// var lastCapture = performance.now();
+			// function step(timestamp) {
+			// 	console.log('    update', timestamp - lastCapture);
+			// 	var interval = timestamp - lastCapture;
+			// 	// if (_this.broadcasting && interval >= 16) {
+			// 		lastCapture = timestamp;
+			// 		if (_this.gotRequest) {
+			// 			console.log('  Capture', timestamp);
+			// 			_this.pix = _this.captureMediaFrame();
+			// 			_this.sendMediaStreamFrame();
+			// 		}
+			// 		_this.req = requestAnimationFrame(step);
+			// 	// }
+			// }
+			// this.req = requestAnimationFrame(step);
+
+			// Using requestIdleCallback
+			function step(deadline) {
+				// if more than 10ms of freetime, go for it
+				if (deadline.timeRemaining() > 10) {
+					if (_this.gotRequest) {
+						_this.pix = _this.captureMediaFrame();
+						_this.sendMediaStreamFrame();
+					}
+				}
+				_this.req = requestIdleCallback(step);
+			}
+			this.req = requestIdleCallback(step);
 		}
-
-		// create a web worker to do the job
-		// this.worker = new Worker('src/SAGE2_Worker.js');
-		// this.worker.onmessage = function(evt) {
-		// 	if (event.data === 'work') {
-		// 		var mediaCtx = mediaCanvas.getContext('2d');
-		// 		mediaCtx.drawImage(mediaVideo, 0, 0, mediaCanvas.width, mediaCanvas.height);
-		// 		_this.pix = mediaCanvas.toDataURL("image/jpeg", (_this.mediaQuality / 10));
-		// 	}
-		// };
-		// this.worker.onerror = function(evt) {
-		// 	console.log('Got an error from worker', evt);
-		// };
-		// this.worker.postMessage("hello");
-
-		// var _this = this;
-		// this.videoTimer = setInterval(function() {
-		// var mediaCtx = mediaCanvas.getContext('2d');
-		// mediaCtx.drawImage(mediaVideo, 0, 0, mediaCanvas.width, mediaCanvas.height);
-		// _this.pix = mediaCanvas.toDataURL("image/jpeg", (_this.mediaQuality / 10));
-		// }, 100);
 	};
 
 	/**
@@ -514,9 +563,15 @@ function SAGE2_interaction(wsio) {
 		var mediaCanvas = document.getElementById('mediaCanvas');
 		var mediaCtx    = mediaCanvas.getContext('2d');
 
-		mediaCtx.clearRect(0, 0, mediaCanvas.width, mediaCanvas.height);
+		// mediaCtx.clearRect(0, 0, mediaCanvas.width, mediaCanvas.height);
 		mediaCtx.drawImage(mediaVideo, 0, 0, mediaCanvas.width, mediaCanvas.height);
 		return mediaCanvas.toDataURL("image/jpeg", (this.mediaQuality / 10));
+	};
+
+	this.requestMediaStreamFrame = function(argument) {
+		if (this.broadcasting) {
+			this.gotRequest = true;
+		}
 	};
 
 	/**
@@ -526,8 +581,8 @@ function SAGE2_interaction(wsio) {
 	*/
 	this.sendMediaStreamFrame = function() {
 		if (this.broadcasting) {
-			var frame = this.captureMediaFrame();
-			// var frame = this.pix;
+			// var frame = this.captureMediaFrame();
+			var frame = this.pix;
 			var raw   = atob(frame.split(",")[1]);  // base64 to string
 
 			if (raw.length > this.chunk) {
@@ -541,12 +596,12 @@ function SAGE2_interaction(wsio) {
 							piece: index, total: nchunks});
 					}, 4);
 				};
-
 				for (var i = 0; i < nchunks; i++) {
 					var start = i * this.chunk;
 					var end   = (i + 1) * this.chunk < raw.length ? (i + 1) * this.chunk : raw.length;
 					updateMediaStreamChunk(i, raw.substring(start, end));
 				}
+				this.gotRequest = false;
 			} else {
 				this.wsio.emit('updateMediaStreamFrame', {id: this.uniqueID + "|0", state:
 					{src: raw, type: "image/jpeg", encoding: "binary"}});
@@ -817,4 +872,24 @@ function SAGE2_interaction(wsio) {
 	document.getElementById('screenShareResolution').addEventListener('change', this.changeScreenShareResolution, false);
 	document.getElementById('screenShareQuality').addEventListener('input',     this.changeScreenShareQuality,    false);
 	document.getElementById('mediaVideo').addEventListener('canplay',           this.streamCanPlay,               false);
+
+
+	// -----------
+	// Shim for requestIdleCallback (available on Chrome)
+	// -----------
+	window.requestIdleCallback = window.requestIdleCallback || function(cb) {
+		var start = Date.now();
+		return setTimeout(function() {
+			cb({
+				didTimeout: false,
+				timeRemaining: function() {
+					return Math.max(0, 50 - (Date.now() - start));
+				}
+			});
+		}, 1);
+	};
+	window.cancelIdleCallback =	window.cancelIdleCallback || function(id) {
+		clearTimeout(id);
+	};
+	// -----------
 }

@@ -193,13 +193,13 @@ var chronicles_of_spaceman_spiff = SAGE2_App.extend({
 
 	},
 
-	drawEverything: function(loadSuccess)	{
+	drawEverything: function(loadSuccess) {
 		this.sampleSVG.selectAll("*").remove();
 
 		this.drawImage(this.image1.src, loadSuccess);
 	},
 
-	update: function()	{
+	update: function() {
 		// get new image
 		var newurl = this.createURL(this.state.timeDiff);
 		if (newurl !== this.URL) {
@@ -217,9 +217,9 @@ var chronicles_of_spaceman_spiff = SAGE2_App.extend({
 
 	updateSlimNode: function(data) {
 		if (data) {
-			this.image1.src     = data;
 			this.image1.onload  = this.loadSuccessCallbackFunc;
 			this.image1.onerror = this.loadFailCallbackFunc;
+			this.image1.src     = data;
 		}
 	},
 
@@ -260,7 +260,8 @@ var chronicles_of_spaceman_spiff = SAGE2_App.extend({
 		this.URL   = "";
 		this.today = "";
 
-		this.maxFPS = 0.0003; // update once per hour
+		// update once per hour
+		this.maxFPS = 0.0003;
 
 		this.element.id = "div" + data.id;
 
@@ -314,9 +315,6 @@ var chronicles_of_spaceman_spiff = SAGE2_App.extend({
 	resize: function(date) {
 		this.svg.attr('width',  this.element.clientWidth  + "px");
 		this.svg.attr('height', this.element.clientHeight + "px");
-
-		// this.updateWindow();
-		// this.refresh(date);
 	},
 
 	showNextPage: function() {
@@ -326,10 +324,12 @@ var chronicles_of_spaceman_spiff = SAGE2_App.extend({
 		}
 		this.update();
 	},
+
 	showPreviousPage: function() {
 		this.state.timeDiff -= 1;
 		this.update();
 	},
+
 	event: function(eventType, position, user, data, date) {
 		if (eventType === "pointerPress" && (data.button === "left")) {
 			// pointer press
@@ -338,7 +338,7 @@ var chronicles_of_spaceman_spiff = SAGE2_App.extend({
 		} else if (eventType === "pointerRelease" && (data.button === "left")) {
 			if (position.x < 0.5 * this.element.clientWidth) {
 				this.showPreviousPage();
-			}			else {
+			} else {
 				this.showNextPage();
 			}
 			this.refresh(date);

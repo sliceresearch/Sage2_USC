@@ -448,13 +448,12 @@ function findTopmostGeometry(point, geometryList, ignoreList) {
 function getZIndexOfObj(obj) {
 	if (obj.hasOwnProperty("zIndex")) {
 		return obj.zIndex;
-	} else {
-		var lst = Object.getOwnPropertyNames(obj);
-		if (lst.length > 0) {
-			return obj[lst[0]].zIndex;
-		}
-		return null;
 	}
+	var lst = Object.getOwnPropertyNames(obj);
+	if (lst.length > 0) {
+		return obj[lst[0]].zIndex;
+	}
+	return null;
 }
 /**
 * Set method for the zIndex of an Object
