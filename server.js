@@ -391,7 +391,9 @@ function initializeSage2Server() {
 			});
 
 			masterServer.on('eventInItem', wsEventInItem);
-			
+			masterServer.on('setItemPosition', moveResize);
+			masterServer.on('setItemPositionAndSize', moveResize);
+
 			masterServer.onclose(function() {
 				console.log("Remote site \"" + config.remote_sites[index].name + "\" now offline");
 				remoteSites[index].connected = false;
@@ -410,11 +412,22 @@ function wsAddSlaveServer(wsio, data) {
 	broadcast('displayAddSlaveServer',data);
 }
 
+/////////////////////
+//// Slave services
+
+function moveResize(wsio, data) {
+	console.log("Master update pos/size: ", wsio.id, data);
+	var newdata = {appPositionAndSize: data};
+	wsUpdateApplicationPositionAndSize(wsio, newdata);
+}
+
 // attached to connection to master server only
 function wsEventInItem(wsio, data) {
 	console.log('wsEventInItem from master server: ', data);
 	broadcast('eventInItem', data);
 }
+
+/////////////////////
 
 function setUpDialogsAsInteractableObjects() {
 	var dialogGeometry = {
@@ -3078,6 +3091,7 @@ function wsStartApplicationResize(wsio, data) {
 }
 
 function wsUpdateApplicationPosition(wsio, data) {
+	console.log("wsUpdateApplicationPosition");
 	// should check timestamp first (data.date)
 	var appId = data.appPositionAndSize.elemId;
 	var app = null;
@@ -3112,6 +3126,7 @@ function wsUpdateApplicationPosition(wsio, data) {
 }
 
 function wsUpdateApplicationPositionAndSize(wsio, data) {
+	console.log("wsUpdateApplicationPositionAndSize");
 	// should check timestamp first (data.date)
 	var appId = data.appPositionAndSize.elemId;
 	var app = null;
