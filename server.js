@@ -389,6 +389,8 @@ function initializeSage2Server() {
 			masterServer.on('initialize', function() {
 				masterServer.emit('addSlaveServer', clientDescription);
 			});
+
+			masterServer.on('eventInItem', wsEventInItem);
 			
 			masterServer.onclose(function() {
 				console.log("Remote site \"" + config.remote_sites[index].name + "\" now offline");
@@ -406,6 +408,12 @@ function wsAddSlaveServer(wsio, data) {
 	data.id = wsio.id;
 	slaveServers[wsio.id]=data;
 	broadcast('displayAddSlaveServer',data);
+}
+
+// attached to connection to master server only
+function wsEventInItem(wsio, data) {
+	console.log('wsEventInItem from master server: ', data);
+	broadcast('eventInItem', data);
 }
 
 function setUpDialogsAsInteractableObjects() {
