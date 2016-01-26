@@ -216,7 +216,7 @@ function SAGE2_init() {
 
 // connect to a Sage2 ``slave'' media streaming server and be ready to receive frames from it
 function slaveInit(id) {
-	var url = "ws://"+id+"/display.html");
+	var url = "ws://"+id+"/display.html";
 	var slaveWsio = new WebsocketIO(url);
 	console.log("Connected to slave server ", url);
 
