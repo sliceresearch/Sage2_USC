@@ -54,6 +54,22 @@ function SAGE2_interaction(wsio) {
 	// Timeout for when scrolling ends
 	this.scrollTimeId = null;
 
+	// Check if a domain cookie exists for the name
+	var cookieName = getCookie('SAGE2_ptrName');
+	var noName = localStorage.SAGE2_ptrName  === undefined ||
+				localStorage.SAGE2_ptrName  === null ||
+				localStorage.SAGE2_ptrName  === "Default";
+	if (cookieName && noName) {
+		localStorage.SAGE2_ptrName = cookieName;
+	}
+	// Check if a domain cookie exists for the color
+	var cookieColor = getCookie('SAGE2_ptrColor');
+	var noColor = localStorage.SAGE2_ptrColor === undefined ||
+				localStorage.SAGE2_ptrColor === null;
+	if (cookieColor && noColor) {
+		localStorage.SAGE2_ptrColor = cookieColor;
+	}
+
 	if (localStorage.SAGE2_ptrName  === undefined ||
 		localStorage.SAGE2_ptrName  === null ||
 		localStorage.SAGE2_ptrName  === "Default") {
@@ -68,6 +84,9 @@ function SAGE2_interaction(wsio) {
 		localStorage.SAGE2_ptrColor === null) {
 		localStorage.SAGE2_ptrColor = "#B4B4B4";
 	}
+
+	addCookie('SAGE2_ptrName',  localStorage.SAGE2_ptrName);
+	addCookie('SAGE2_ptrColor', localStorage.SAGE2_ptrColor);
 
 	document.getElementById('sage2PointerLabel').value = localStorage.SAGE2_ptrName;
 	document.getElementById('sage2PointerColor').value = localStorage.SAGE2_ptrColor;
@@ -802,6 +821,8 @@ function SAGE2_interaction(wsio) {
 	*/
 	this.changeSage2PointerLabelMethod = function(event) {
 		localStorage.SAGE2_ptrName = event.target.value;
+
+		addCookie('SAGE2_ptrName', localStorage.SAGE2_ptrName);
 	};
 
 	/**
@@ -812,6 +833,8 @@ function SAGE2_interaction(wsio) {
 	*/
 	this.changeSage2PointerColorMethod = function(event) {
 		localStorage.SAGE2_ptrColor = event.target.value;
+
+		addCookie('SAGE2_ptrColor', localStorage.SAGE2_ptrColor);
 	};
 
 	/**
