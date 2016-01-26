@@ -913,10 +913,11 @@ function mouseCheck(event) {
 		uiButtonImg.style.mozTransform    = "scale(1.2)";
 		uiButtonImg.style.transform       = "scale(1.2)";
 	}
-	var uiButtonP = getCSSProperty("style_ui.css", "#menuUI tr td p");
-	if (uiButtonP !== null) {
-		uiButtonP.style.opacity = "0.0";
-	}
+	// Display/hide the labels under the UI buttons
+	// var uiButtonP = getCSSProperty("style_ui.css", "#menuUI tr td p");
+	// if (uiButtonP !== null) {
+	// 	uiButtonP.style.opacity = "0.0";
+	// }
 }
 
 /**
