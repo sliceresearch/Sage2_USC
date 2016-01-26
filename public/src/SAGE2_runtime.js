@@ -6,7 +6,7 @@
 //
 // See full text, terms and conditions in the LICENSE.txt included file
 //
-// Copyright (c) 2014
+// Copyright (c) 2014-16
 
 "use strict";
 
@@ -755,3 +755,39 @@ Math.seed = function(s) {
 		return s / m;
 	};
 };
+
+/**
+ * Add a key-value pair as a cookie
+ *
+ * @method addCookie
+ * @param sKey {String} key
+ * @param sValue {String} value
+ * @return {Boolean} true/false
+ */
+function addCookie(sKey, sValue) {
+	if (!sKey) {
+		return false;
+	}
+	document.cookie = encodeURIComponent(sKey) + "=" + encodeURIComponent(sValue) +
+		"; expires=Fri, 31 Dec 9999 23:59:59 GMT" +
+		"; domain=" + location.hostname.split('.').slice(-2).join(".") +
+		"; path=/" +
+		"; secure";
+	return true;
+}
+
+/**
+ * Return a cookie value for given key
+ *
+ * @method getCookie
+ * @param sKey {String} key
+ * @return {String} value found or null
+ */
+function getCookie(sKey) {
+	if (!sKey) {
+		return null;
+	}
+	return decodeURIComponent(document.cookie.replace(new RegExp("(?:(?:^|.*;)\\s*" +
+				encodeURIComponent(sKey).replace(/[\-\.\+\*]/g, "\\$&") + "\\s*\\=\\s*([^;]*).*$)|^.*$"), "$1"))
+		|| null;
+}

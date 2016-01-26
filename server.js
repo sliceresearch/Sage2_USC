@@ -1049,9 +1049,13 @@ function wsUpdateMediaStreamFrame(wsio, data) {
 	// Send the image to all display nodes
 	// broadcast('updateMediaStreamFrame', data);
 
+	// Update the date
+	data.date = new Date();
+
 	// Create a copy of the frame object with dummy data (white 1x1 gif)
 	var data_copy = {};
 	data_copy.id             = data.id;
+	data_copy.date           = data.date;
 	data_copy.state          = {};
 	data_copy.state.src      = "R0lGODlhAQABAIABAP///wAAACwAAAAAAQABAAACAkQBADs=";
 	data_copy.state.type     = "image/gif";
@@ -1165,7 +1169,7 @@ function wsReceivedMediaStreamFrame(wsio, data) {
 
 // **************  Media Block Stream Functions *****************
 function wsStartNewMediaBlockStream(wsio, data) {
-	console.log("Starting media stream: ", data);
+	// console.log("Starting media stream: ", data);
 	// Forcing 'int' type for width and height
 	//     for some reasons, messages from websocket lib from Linux send strings for ints
 	data.width  = parseInt(data.width,  10);

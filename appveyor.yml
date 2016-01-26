@@ -15,20 +15,20 @@ configuration: Release
 platform: x64
 
 init:
-  - curl -LsSO http://ffmpeg.zeranoe.com/builds/win64/dev/ffmpeg-2.8-win64-dev.7z
-  - 7z x ffmpeg-2.8-win64-dev.7z -o. > nul
+  - curl -LsSO http://ffmpeg.zeranoe.com/builds/win64/dev/ffmpeg-2.8.5-win64-dev.7z
+  - 7z x ffmpeg-2.8.5-win64-dev.7z -o. > nul
   - mkdir C:\Dev\
   - mkdir C:\Dev\ffmpeg-win64-dev
-  - move ffmpeg-2.8-win64-dev\lib C:\Dev\ffmpeg-win64-dev
-  - move ffmpeg-2.8-win64-dev\include C:\Dev\ffmpeg-win64-dev
+  - move ffmpeg-2.8.5-win64-dev\lib C:\Dev\ffmpeg-win64-dev
+  - move ffmpeg-2.8.5-win64-dev\include C:\Dev\ffmpeg-win64-dev
   - del /Q *.7z
-  - rmdir /Q /S ffmpeg-2.8-win64-dev
+  - rmdir /Q /S ffmpeg-2.8.5-win64-dev
   - dir C:\Dev
   - dir C:\Dev\ffmpeg-win64-dev\include
   - dir C:\Dev\ffmpeg-win64-dev\lib
 
 install:
-  - ps: Install-Product node 5.1.1 x64
+  - ps: Install-Product node 5.3.0 x64
   - dir C:\avvm\node
   - node -v
   - cd %APPVEYOR_BUILD_FOLDER%
@@ -38,14 +38,14 @@ install:
   - npm install npm
   - npm install -g kthxbai
   - kthxbai
-  - curl -LsSO http://ffmpeg.zeranoe.com/builds/win64/shared/ffmpeg-2.8-win64-shared.7z
-  - 7z x ffmpeg-2.8-win64-shared.7z -o.  > nul
-  - copy ffmpeg-2.8-win64-shared\bin\*.dll node_modules\node-demux\build\Release\
-  - copy ffmpeg-2.8-win64-shared\bin\*.dll bin\
-  - copy ffmpeg-2.8-win64-shared\bin\*.exe bin\
-  - rmdir /Q /S ffmpeg-2.8-win64-shared
-  - curl -LsSO http://www.sno.phy.queensu.ca/~phil/exiftool/exiftool-10.04.zip
-  - 7z x exiftool-10.04.zip > nul
+  - curl -LsSO http://ffmpeg.zeranoe.com/builds/win64/shared/ffmpeg-2.8.5-win64-shared.7z
+  - 7z x ffmpeg-2.8.5-win64-shared.7z -o.  > nul
+  - copy ffmpeg-2.8.5-win64-shared\bin\*.dll node_modules\node-demux\build\Release\
+  - copy ffmpeg-2.8.5-win64-shared\bin\*.dll bin\
+  - copy ffmpeg-2.8.5-win64-shared\bin\*.exe bin\
+  - rmdir /Q /S ffmpeg-2.8.5-win64-shared
+  - curl -LsSO http://www.sno.phy.queensu.ca/~phil/exiftool/exiftool-10.10.zip
+  - 7z x exiftool-10.10.zip > nul
   - move exiftool(-k).exe bin\exiftool.exe
   - move bin\sage2.bat sage2.bat
   - move bin\sabi.bat sabi.bat
@@ -56,8 +56,8 @@ install:
   - copy bin\gswin64c.exe bin\gswin32c.exe
   - xcopy /S /I /Y /Q gs\$_OUTDIR\lib lib
   - rmdir /Q /S gs
-  - curl -LsSO http://www.imagemagick.org/download/binaries/ImageMagick-6.9.3-0-portable-Q16-x64.zip
-  - 7z x -y ImageMagick-6.9.3-0-portable-Q16-x64.zip -oim > nul
+  - curl -LsSO http://www.imagemagick.org/download/binaries/ImageMagick-6.9.3-2-portable-Q16-x64.zip
+  - 7z x -y ImageMagick-6.9.3-2-portable-Q16-x64.zip -oim > nul
   - rmdir /Q /S im\www im\images
   - copy im\* bin
   - rmdir /Q /S im

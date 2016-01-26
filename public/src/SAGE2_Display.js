@@ -1223,6 +1223,7 @@ function createAppWindow(data, parentId, titleBarHeight, titleTextSize, offsetX,
 	windowTitle.appendChild(windowIconClose);
 
 	var titleText = document.createElement("p");
+	titleText.id  = data.id + "_text";
 	titleText.style.lineHeight = Math.round(titleBarHeight) + "px";
 	titleText.style.fontSize   = Math.round(titleTextSize) + "px";
 	titleText.style.color      = "#FFFFFF";
@@ -1304,7 +1305,8 @@ function createAppWindow(data, parentId, titleBarHeight, titleTextSize, offsetX,
 			height: data.height,
 			resrc: url,
 			state: data.data,
-			date: date
+			date: date,
+			title: data.title
 		};
 
 		// load new app

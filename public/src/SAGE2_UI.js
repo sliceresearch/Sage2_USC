@@ -409,7 +409,7 @@ function setupListeners() {
 	});
 
 	wsio.on('requestNextFrame', function(data) {
-		interactor.sendMediaStreamFrame();
+		interactor.requestMediaStreamFrame();
 	});
 
 	wsio.on('stopMediaCapture', function() {
@@ -913,10 +913,11 @@ function mouseCheck(event) {
 		uiButtonImg.style.mozTransform    = "scale(1.2)";
 		uiButtonImg.style.transform       = "scale(1.2)";
 	}
-	var uiButtonP = getCSSProperty("style_ui.css", "#menuUI tr td p");
-	if (uiButtonP !== null) {
-		uiButtonP.style.opacity = "0.0";
-	}
+	// Display/hide the labels under the UI buttons
+	// var uiButtonP = getCSSProperty("style_ui.css", "#menuUI tr td p");
+	// if (uiButtonP !== null) {
+	// 	uiButtonP.style.opacity = "0.0";
+	// }
 }
 
 /**
@@ -1053,6 +1054,9 @@ function handleClick(element) {
 	} else if (element.id === "settingsCloseBtn") {
 		// Settings Dialog
 		hideDialog('settingsDialog');
+	} else if (element.id === "settingsCloseBtn2") {
+		// Init Settings Dialog
+		hideDialog('settingsDialog2');
 	} else if (element.id === "browserOpenBtn") {
 		// Browser Dialog
 		var url = document.getElementById("openWebpageUrl");
@@ -1283,7 +1287,6 @@ function touchStart(event) {
 		event.stopPropagation();
 	} else if (event.target.id === "sage2MobileMiddle2Button") {
 		// Send play commad, spacebar for PDF and movies
-		console.log('Send play')
 		interactor.sendPlay();
 		event.preventDefault();
 		event.stopPropagation();
