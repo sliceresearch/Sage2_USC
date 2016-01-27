@@ -1076,7 +1076,7 @@ function processRPC(data, socket) { // dkedits made to account for makeNewMeetin
 			//one time because each startup of sabi will re
 			var sfpContents = 'cd "' + __dirname + '\\..' + '"\n';
 			sfpContents += 'set PATH=%CD%\\bin;%PATH%;\n';
-			sfpContents += 'git config credential.helper store';
+			sfpContents += 'git config credential.helper store\n';
 			sfpContents += 'git fetch --all\n';
 			sfpContents += 'git reset --hard origin/master\n';
 			sfpContents += 'cd sabi.js\n';
