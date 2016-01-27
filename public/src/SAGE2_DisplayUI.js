@@ -351,7 +351,6 @@ SAGE2DisplayUI.prototype.addAppWindow = function(data) {
 	appWindowTitle.style.top    = "0px";
 	appWindowTitle.style.width  = Math.round(data.width * this.scale) + "px";
 	appWindowTitle.style.height = Math.round(this.config.ui.titleBarHeight * this.scale) + "px";
-	appWindowTitle.style.backgroundColor = "rgba(230, 230, 230, 1.0)";
 
 	var appWindowArea = document.createElement('div');
 	appWindowArea.id = data.id + "_area";
@@ -360,7 +359,6 @@ SAGE2DisplayUI.prototype.addAppWindow = function(data) {
 	appWindowArea.style.top    = Math.round(this.config.ui.titleBarHeight * this.scale) + "px";
 	appWindowArea.style.width  = Math.round(data.width * this.scale) + "px";
 	appWindowArea.style.height = Math.round(data.height * this.scale) + "px";
-	appWindowArea.style.backgroundColor = "rgba(72, 72, 72, 1.0)";
 
 	var appIcon = document.createElement('img');
 	appIcon.id = data.id + "_icon";
@@ -614,6 +612,8 @@ SAGE2DisplayUI.prototype.highlightApplication = function(x, y) {
 			}
 			// remove decoration
 			app.className = "appWindow";
+			var area = document.getElementById(this.applications[a].id + "_title");
+			area.className = "appWindowTitle";
 		}
 	}
 	// Once we checked all the application, we can draw the top one
@@ -621,6 +621,8 @@ SAGE2DisplayUI.prototype.highlightApplication = function(x, y) {
 	if (topApp) {
 		// Since we have only one class, we dont have to use classList
 		topApp.className = "appWindowHover";
+		var area = document.getElementById(topApp.id + "_title");
+		area.className = "appWindowTitleHover";
 	}
 };
 
