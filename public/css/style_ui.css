@@ -57,7 +57,7 @@ h2 {
 	position: relative;
 	float: left;
 	margin: 10px 10px 0 10px;
-	cursor: nw-resize;
+	cursor: pointer;
 }
 
 #applicationsDiv {
@@ -141,6 +141,12 @@ h2 {
 .appWindow {
 	display: block;
 	position: absolute;
+	border: solid 1px #6C6C6C;
+}
+.appWindowHover {
+	display: block;
+	position: absolute;
+	border: solid 2px #3694B7;
 }
 
 .appWindowTitle {

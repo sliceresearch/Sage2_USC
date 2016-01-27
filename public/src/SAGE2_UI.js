@@ -839,6 +839,7 @@ function pointerRelease(event) {
 	}
 }
 
+
 /**
  * Handler for mouse move
  *
@@ -865,10 +866,15 @@ function pointerMove(event) {
 		var mouseY = event.clientY - rect.top;
 		pointerX   = mouseX;
 		pointerY   = mouseY;
-		// Send pointer event only during drag events
+
 		if (pointerDown) {
+			// Send pointer event only during drag events
 			displayUI.pointerMove(pointerX, pointerY);
+		} else {
+			// Otherwise test for application hover
+			displayUI.highlightApplication(pointerX, pointerY);
 		}
+
 	} else {
 		// Loose focus
 		pointerDown = false;

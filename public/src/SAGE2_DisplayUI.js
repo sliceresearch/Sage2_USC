@@ -579,6 +579,51 @@ SAGE2DisplayUI.prototype.pointerRelease = function(btn) {
 	}
 };
 
+
+function underElement(elem, pageX, pageY) {
+	var elemPosition   = {top: elem.offsetTop, left: elem.offsetLeft};
+	var elemPosition2  = {
+		top:  elemPosition.top  + elem.clientHeight,
+		left: elemPosition.left + elem.clientWidth
+	};
+	return ((pageX > elemPosition.left && pageX < elemPosition2.left) &&
+			(pageY  > elemPosition.top  && pageY < elemPosition2.top));
+ }
+
+
+/**
+ * Highlight the top most application under the cursor
+ *
+ * @method highlightApplication
+ * @param x {Number} x value
+ * @param y {Number} y value
+ */
+SAGE2DisplayUI.prototype.highlightApplication = function(x, y) {
+	var topApp   = null;
+	var topLevel = -1;
+	for (var a in this.applications) {
+		var app = document.getElementById(this.applications[a].id);
+		if (app) {
+			var isapp = underElement(app, x, y);
+			if (isapp) {
+				var zi = parseInt(app.style.zIndex, 10);
+				if (zi >= topLevel) {
+					topLevel = zi;
+					topApp = app;
+				}
+			}
+			// remove decoration
+			app.className = "appWindow";
+		}
+	}
+	// Once we checked all the application, we can draw the top one
+	// with decoration
+	if (topApp) {
+		// Since we have only one class, we dont have to use classList
+		topApp.className = "appWindowHover";
+	}
+};
+
 /**
  * Handler for mouse move
  *
