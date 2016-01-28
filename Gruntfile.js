@@ -133,7 +133,7 @@ module.exports = function(grunt) {
 						"public/src/Class.js", "public/src/SAGE2_App.js",
 						"public/src/SAGE2_BlockStreamingApp.js", "public/src/SAGE2_runtime.js",
 						"public/src/image_viewer.js", "public/src/movie_player.js",
-						"public/src/pdf_viewer.js", "public/src/media_stream.js",
+						"public/src/pdf_viewer.js", "public/src/media_stream.js", "public/src/xml_viewer.js",
 						"public/src/media_block_stream.js", "public/src/ui_builder.js",
 						"public/src/pointer.js", "public/src/SAGE2_WidgetButtonTypes.js",
 						"public/src/SAGE2_WidgetControl.js", "public/src/SAGE2_WidgetControlInstance.js",

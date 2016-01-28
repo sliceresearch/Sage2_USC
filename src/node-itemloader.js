@@ -180,6 +180,27 @@ AppLoader.prototype.loadVideoFromURL = function(aUrl, mime_type, source_url, nam
 };
 
 
+AppLoader.prototype.loadXmlFromURL = function(aUrl, mime_type, name, strictSSL, callback) {
+	var local_url = "uploads/xmls/" + name;
+	var localPath = path.join(this.publicDir, "xmls", name);
+	var _this = this;
+
+	var tmp = fs.createWriteStream(localPath);
+	tmp.on('error', function(err) {
+		if (err) {
+			throw err;
+		}
+	});
+	tmp.on('close', function() {
+		_this.loadXmlromFile(localPath, mime_type, local_url, aUrl, name, function(appInstance) {
+			callback(appInstance);
+		});
+	});
+	request({url: aUrl, strictSSL: strictSSL, headers: {'User-Agent': 'node'}}).pipe(tmp);
+};
+
+
+
 AppLoader.prototype.loadPdfFromURL = function(aUrl, mime_type, name, strictSSL, callback) {
 	var local_url = "uploads/pdfs/" + name;
 	var localPath = path.join(this.publicDir, "pdfs", name);
@@ -420,7 +441,8 @@ AppLoader.prototype.loadVideoFromFile = function(file, mime_type, aUrl, external
 };
 
 
-AppLoader.prototype.loadPdfFromFile = function(file, mime_type, aUrl, external_url, name, callback) {
+
+AppLoader.prototype.loadXmlFromFile = function(file, mime_type, aUrl, external_url, name, callback) {
 	// Assume default to Letter size
 	var page_width  = 612;
 	var page_height = 792;
@@ -428,19 +450,19 @@ AppLoader.prototype.loadPdfFromFile = function(file, mime_type, aUrl, external_u
 	var aspectRatio = page_width / page_height;
 
 	var metadata         = {};
-	metadata.title       = "PDF Viewer";
+	metadata.title       = "XML Viewer";
 	metadata.version     = "1.0.0";
-	metadata.description = "PDF viewer for SAGE2";
+	metadata.description = "XML viewer for SAGE2";
 	metadata.author      = "SAGE2";
 	metadata.license     = "SAGE2-Software-License";
-	metadata.keywords    = ["pdf", "document", "viewer"];
+	metadata.keywords    = ["xml", "ticket", "viewer"];
 
 	var exif = assets.getExifData(file);
 
 	var appInstance = {
 		id: null,
 		title: exif ? exif.FileName : name,
-		application: "pdf_viewer",
+		application: "xml_viewer",
 		icon: exif ? exif.SAGE2thumbnail : null,
 		type: mime_type,
 		url: external_url,
@@ -805,6 +827,11 @@ AppLoader.prototype.loadApplication = function(appData, callback) {
 					function(appInstance) {
 				callback(appInstance, null);
 			});
+		} else if (app === "xml_viewer") {
+			this.loadXmlFromFile(appData.path, appData.type, appData.url, appData.external_url, appData.name,
+					function(appInstance) {
+				callback(appInstance, null);
+			});
 		} else if (app === "custom_app") {
 			if (appData.compressed === true) {
 				var name = path.basename(appData.name, path.extname(appData.name));
@@ -849,6 +876,10 @@ AppLoader.prototype.loadApplication = function(appData, callback) {
 			}
 		} else if (app === "pdf_viewer") {
 			this.loadPdfFromURL(appData.url, appData.type, appData.name, appData.strictSSL, function(appInstance) {
+				callback(appInstance, null);
+			});
+		} else if (app === "xml_viewer") {
+			this.loadXmlFromURL(appData.url, appData.type, appData.name, appData.strictSSL, function(appInstance) {
 				callback(appInstance, null);
 			});
 		}

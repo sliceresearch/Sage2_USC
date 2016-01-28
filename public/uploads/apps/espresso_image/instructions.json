@@ -1,0 +1,20 @@
+{
+	"main_script": "espresso_image.js",
+	"icon": "espresso.png",
+	"width": 600,
+	"height": 400,
+	"animation": false,
+	"dependencies": [
+		"espressoWebsocket.js"
+	],
+	"load": {
+	},
+	"title": "Espresso Image Viewer",
+	"version": "1.0.0",
+	"description": "Images for Espresso",
+	"keywords": [ "espresso", "image", "viewer" ],
+	"fileTypes": ["tkt"],
+	"directory": "xml",
+	"author": "Daisuke Ando <ando3@hawaii.edu>",
+	"license": "SAGE2-Software-License"
+}

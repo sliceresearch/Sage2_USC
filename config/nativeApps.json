@@ -8,6 +8,13 @@
             "directory": "pdfs"
         },
         {
+            "name": "xml_viewer",
+            "types": [
+                "application/xml"
+            ],
+            "directory": "xmls"
+        },
+        {
             "name": "image_viewer",
             "types": [
                 "image/jpeg",
@@ -48,5 +55,5 @@
                 "application/stream"
             ]
         }
-    ]
+   ]
 }

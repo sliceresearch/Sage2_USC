@@ -1310,6 +1310,7 @@ function createAppWindow(data, parentId, titleBarHeight, titleTextSize, offsetX,
 		};
 
 		// load new app
+		console.log("CONSOLE!!"+window[data.application]);
 		if (window[data.application] === undefined) {
 			var js = document.createElement("script");
 			js.addEventListener('error', function(event) {
