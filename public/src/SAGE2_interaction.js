@@ -54,6 +54,21 @@ function SAGE2_interaction(wsio) {
 	// Timeout for when scrolling ends
 	this.scrollTimeId = null;
 
+	// Check if a domain cookie exists for the name
+	var cookieName = getCookie('SAGE2_ptrName');
+	if (cookieName) {
+		localStorage.SAGE2_ptrName = cookieName;
+	}
+	// Check if a domain cookie exists for the color
+	var cookieColor = getCookie('SAGE2_ptrColor');
+	if (cookieColor) {
+		localStorage.SAGE2_ptrColor = cookieColor;
+	}
+
+	if (!cookieName && !localStorage.SAGE2_ptrColor) {
+		showDialog('settingsDialog2');
+	}
+
 	if (localStorage.SAGE2_ptrName  === undefined ||
 		localStorage.SAGE2_ptrName  === null ||
 		localStorage.SAGE2_ptrName  === "Default") {
@@ -68,6 +83,9 @@ function SAGE2_interaction(wsio) {
 		localStorage.SAGE2_ptrColor === null) {
 		localStorage.SAGE2_ptrColor = "#B4B4B4";
 	}
+
+	addCookie('SAGE2_ptrName',  localStorage.SAGE2_ptrName);
+	addCookie('SAGE2_ptrColor', localStorage.SAGE2_ptrColor);
 
 	document.getElementById('sage2PointerLabel').value = localStorage.SAGE2_ptrName;
 	document.getElementById('sage2PointerColor').value = localStorage.SAGE2_ptrColor;
@@ -802,6 +820,13 @@ function SAGE2_interaction(wsio) {
 	*/
 	this.changeSage2PointerLabelMethod = function(event) {
 		localStorage.SAGE2_ptrName = event.target.value;
+
+		addCookie('SAGE2_ptrName', localStorage.SAGE2_ptrName);
+
+		// if it's an first time run, update the UI too
+		if (event.target.id === "sage2PointerLabelInit") {
+			document.getElementById('sage2PointerLabel').value = event.target.value;
+		}
 	};
 
 	/**
@@ -812,6 +837,13 @@ function SAGE2_interaction(wsio) {
 	*/
 	this.changeSage2PointerColorMethod = function(event) {
 		localStorage.SAGE2_ptrColor = event.target.value;
+
+		addCookie('SAGE2_ptrColor', localStorage.SAGE2_ptrColor);
+
+		// if it's an first time run, update the UI too
+		if (event.target.id === "sage2PointerColorInit") {
+			document.getElementById('sage2PointerColor').value = event.target.value;
+		}
 	};
 
 	/**
@@ -869,6 +901,8 @@ function SAGE2_interaction(wsio) {
 
 	document.getElementById('sage2PointerLabel').addEventListener('input',      this.changeSage2PointerLabel,     false);
 	document.getElementById('sage2PointerColor').addEventListener('input',      this.changeSage2PointerColor,     false);
+	document.getElementById('sage2PointerLabelInit').addEventListener('input',  this.changeSage2PointerLabel,     false);
+	document.getElementById('sage2PointerColorInit').addEventListener('input',  this.changeSage2PointerColor,     false);
 	document.getElementById('screenShareResolution').addEventListener('change', this.changeScreenShareResolution, false);
 	document.getElementById('screenShareQuality').addEventListener('input',     this.changeScreenShareQuality,    false);
 	document.getElementById('mediaVideo').addEventListener('canplay',           this.streamCanPlay,               false);

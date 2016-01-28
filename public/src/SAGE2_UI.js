@@ -839,6 +839,7 @@ function pointerRelease(event) {
 	}
 }
 
+
 /**
  * Handler for mouse move
  *
@@ -865,10 +866,15 @@ function pointerMove(event) {
 		var mouseY = event.clientY - rect.top;
 		pointerX   = mouseX;
 		pointerY   = mouseY;
-		// Send pointer event only during drag events
+
 		if (pointerDown) {
+			// Send pointer event only during drag events
 			displayUI.pointerMove(pointerX, pointerY);
+		} else {
+			// Otherwise test for application hover
+			displayUI.highlightApplication(pointerX, pointerY);
 		}
+
 	} else {
 		// Loose focus
 		pointerDown = false;
@@ -913,10 +919,11 @@ function mouseCheck(event) {
 		uiButtonImg.style.mozTransform    = "scale(1.2)";
 		uiButtonImg.style.transform       = "scale(1.2)";
 	}
-	var uiButtonP = getCSSProperty("style_ui.css", "#menuUI tr td p");
-	if (uiButtonP !== null) {
-		uiButtonP.style.opacity = "0.0";
-	}
+	// Display/hide the labels under the UI buttons
+	// var uiButtonP = getCSSProperty("style_ui.css", "#menuUI tr td p");
+	// if (uiButtonP !== null) {
+	// 	uiButtonP.style.opacity = "0.0";
+	// }
 }
 
 /**
@@ -1053,6 +1060,9 @@ function handleClick(element) {
 	} else if (element.id === "settingsCloseBtn") {
 		// Settings Dialog
 		hideDialog('settingsDialog');
+	} else if (element.id === "settingsCloseBtn2") {
+		// Init Settings Dialog
+		hideDialog('settingsDialog2');
 	} else if (element.id === "browserOpenBtn") {
 		// Browser Dialog
 		var url = document.getElementById("openWebpageUrl");
