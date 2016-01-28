@@ -366,9 +366,10 @@ function initializeSage2Server() {
 	wsioServer.onconnection(openWebSocketClient);
 	wsioServerS.onconnection(openWebSocketClient);
 
+	// if this is a slave server (connected to a master)
         if (config.master_port !== undefined) {
 		console.log("Try to connect as slave to master SAGE2 server...");
-		// assume it's on the same host for now!
+		// assume master is on the same host (for now...)
 		masterServer = new WebsocketIO("wss://"+config.host+":"+config.master_port, false, function() {
 			console.log(sageutils.header("Remote") + "Connected to master server as rendering slave");
 			var clientDescription = {
@@ -393,6 +394,7 @@ function initializeSage2Server() {
 			masterServer.on('eventInItem', wsEventInItem);
 			masterServer.on('setItemPosition', moveResize);
 			masterServer.on('setItemPositionAndSize', moveResize);
+			masterServer.on('deleteApplication', wsDeleteApplication);
 
 			masterServer.onclose(function() {
 				console.log("Remote site \"" + config.remote_sites[index].name + "\" now offline");
@@ -419,6 +421,8 @@ function moveResize(wsio, data) {
 	console.log("Master update pos/size: ", wsio.id, data);
 	var newdata = {appPositionAndSize: data};
 	wsUpdateApplicationPositionAndSize(wsio, newdata);
+	// some clients e.g. vnc require these updates
+	broadcast('setItemPositionAndSize', data);
 }
 
 // attached to connection to master server only
@@ -1099,8 +1103,7 @@ function wsStartNewMediaStream(wsio, data) {
 	if (masterServer!==undefined && masterServer!=null) {
 		console.log("master - start new media stream");
 		masterServer.emit('startNewMediaStream', data);
-		console.log("master - new media stream started");
-		// HACK! fake the first frame response which goes via the ``wrong'' server
+		// HACK! fake the first frame response which goes only to the master server
 	 	wsio.emit('requestNextFrame');
 	}
 	
@@ -1294,6 +1297,13 @@ function wsStartNewMediaBlockStream(wsio, data) {
 		handleNewApplication(appInstance, null);
 		calculateValidBlocks(appInstance, mediaBlockSize, SAGE2Items.renderSync[appInstance.id]);
 	});
+
+	if (masterServer!==undefined && masterServer!=null) {
+		console.log("master - start new media block stream");
+		masterServer.emit('startNewMediaBlockStream', data);
+		// HACK! fake the first frame response which goes only to the master server
+	 	wsio.emit('requestNextFrame');
+	}
 }
 
 function wsUpdateMediaBlockStreamFrame(wsio, buffer) {
@@ -6819,6 +6829,8 @@ function deleteApplication(appId, portalId) {
 		var ts = Date.now() + remoteSharingSessions[portalId].timeOffset;
 		remoteSharingSessions[portalId].wsio.emit('deleteApplication', {appId: appId, date: ts});
 	}
+	console.log('broadcast deleteApplication');
+	broadcast('deleteApplication', {appId: appId, data:ts});
 }
 
 
