@@ -3382,16 +3382,16 @@ function loadConfiguration() {
 		var objectHeightMeters = 27 / pixelsPerMeter;
 		var minimumWidgetControlSize = 20; // Min button size for text readability (also for touch wall)
 		var perceptualScalingFactor = 0.0213;
-		console.log("Server: loadConfig: ppm: " + pixelsPerMeter);
-		console.log("Server: loadConfig: defaultWidgetScale: " + Math.round(0.020 * minDim));
-		var calcuatedWidgetControlSize = userConfig.dimensions.viewing_distance * (perceptualScalingFactor * (userConfig.dimensions.viewing_distance / objectHeightMeters));
+		var userDist = userConfig.dimensions.viewing_distance;
+		var calcuatedWidgetControlSize = userDist * (perceptualScalingFactor * (userDist / objectHeightMeters));
 		// Set the minimum widget control size to using the old scaling method (or a factor of it)
-		if (calcuatedWidgetControlSize < minimumWidgetControlSize ) {
+		if (calcuatedWidgetControlSize < minimumWidgetControlSize) {
 			userConfig.ui.widgetControlSize = minimumWidgetControlSize;
+		} else if (calcuatedWidgetControlSize > Math.round(0.030 * minDim)) {
+			userConfig.ui.widgetControlSize = Math.round(0.030 * minDim);
 		} else {
 			userConfig.ui.widgetControlSize = calcuatedWidgetControlSize;
 		}
-		console.log("Server: calcuated widgetControlSize: " + calcuatedWidgetControlSize);
 		// calculate values in pixel now
 		userConfig.resolution.borders = {};
 		userConfig.resolution.borders.left   = Math.round(pixelsPerMeter * borderLeft)   || 0;

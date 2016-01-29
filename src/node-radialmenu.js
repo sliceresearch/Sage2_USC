@@ -44,8 +44,9 @@ function RadialMenu(id, ptrID, config) {
 	this.maximumMenuRadiusMeters;
 
 	if (config.ui.auto_scale_ui) {
-		this.radialMenuScale = 1;
 
+		// this.radialMenuScale = 1;
+		/*
 		var borderLeft, borderRight, borderBottom, borderTop;
 		var tileBorders = config.dimensions.tile_borders;
 		if (tileBorders) {
@@ -105,6 +106,7 @@ function RadialMenu(id, ptrID, config) {
 		if (totalContentWindowSize.h > totalWallDimensionsMeters.h) {
 			this.radialMenuScale = totalWallDimensionsMeters.h * 0.9 / thumbnailWindowDefaultSize.y * pixelsPerMeter;
 		}
+		*/
 		console.log("node-radialMenu: this.radialMenuScale = " + this.radialMenuScale);
 	}
 

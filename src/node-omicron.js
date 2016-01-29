@@ -136,7 +136,7 @@ function OmicronManager(sysConfig) {
 		this.touchOffset =  this.config.touchOffset;
 		console.log(sageutils.header('Omicron') + 'Touch points offset by: ', this.touchOffset);
 	}
-	
+
 	if (sysConfig.resolution) {
 		var columns = 1;
 		var rows    = 1;
@@ -732,7 +732,7 @@ OmicronManager.prototype.processPointerEvent = function(e, sourceID, posX, posY,
 				console.log("Touch down gesture: Five finger hold - " + Date.now());
 			}
 			omicronManager.pointerCloseGesture(address, posX, posY, Date.now(), 0);
-		} else if (e.flags === FLAG_THREE_FINGER_HOLD && omicronManager.enableThreeFingerRightClick ) {
+		} else if (e.flags === FLAG_THREE_FINGER_HOLD && omicronManager.enableThreeFingerRightClick) {
 			if (omicronManager.gestureDebug) {
 				console.log("Touch gesture: Three finger hold");
 			}
