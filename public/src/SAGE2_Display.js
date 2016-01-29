@@ -218,10 +218,10 @@ function SAGE2_init() {
 function slaveInit(id) {
 	var url = "ws://"+id+"/display.html";
 	var slaveWsio = new WebsocketIO(url);
-	console.log("Connected to slave server ", url);
+	console.log("Connecting via websocket to new slave server ", url, "...");
 
 	slaveWsio.open(function() {
-		console.log("Websocket opened");
+		console.log("... connection opened");
 		slaveConnections[id]=slaveWsio;
 		setupSlaveListeners(slaveWsio);
 		var clientDescription = {
@@ -275,6 +275,21 @@ function setupSlaveListeners(anWsio) {
 			}
 		}
 	});
+
+	anWsio.on('updateMediaBlockStreamFrame', function(data) {
+		var appId     = byteBufferToString(data);
+		var blockIdx  = byteBufferToInt(data.subarray(appId.length + 1, appId.length + 3));
+		var date      = byteBufferToInt(data.subarray(appId.length + 3, appId.length + 11));
+		var yuvBuffer = data.subarray(appId.length + 11, data.length);
+		if (applications[appId] !== undefined && applications[appId] !== null) {
+			applications[appId].textureData(blockIdx, yuvBuffer);
+			if (applications[appId].receivedBlocks.every(isTrue) === true) {
+				applications[appId].refresh(new Date(date));
+				applications[appId].setValidBlocksFalse();
+				anWsio.emit('receivedMediaBlockStreamFrame', {id: appId});
+			}
+		}
+	});
 }
 
 function setupListeners(anWsio) {
@@ -297,7 +312,7 @@ function setupListeners(anWsio) {
 			console.log("... add new slave server ", data);
 			slaveServers[data.id]=data;
 			// e.g. ws://10.234.2.22:8088/display.html
-			slaveInit(data.id);
+			slaveInit(data.host+":"+data.port);
 		}
 	});
 
