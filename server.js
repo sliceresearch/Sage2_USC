@@ -3379,18 +3379,20 @@ function loadConfiguration() {
 		// calculate pixel density (ppm) based on width
 		var pixelsPerMeter = userConfig.resolution.width / tileWidth;
 		// calculate the widget control size based on dimensions and user distance
-		var objectHeightMeters = 27 / pixelsPerMeter;
-		var minimumWidgetControlSize = 20; // Min button size for text readability (also for touch wall)
-		var perceptualScalingFactor = 0.0213;
-		var userDist = userConfig.dimensions.viewing_distance;
-		var calcuatedWidgetControlSize = userDist * (perceptualScalingFactor * (userDist / objectHeightMeters));
-		// Set the minimum widget control size to using the old scaling method (or a factor of it)
-		if (calcuatedWidgetControlSize < minimumWidgetControlSize) {
-			userConfig.ui.widgetControlSize = minimumWidgetControlSize;
-		} else if (calcuatedWidgetControlSize > Math.round(0.030 * minDim)) {
-			userConfig.ui.widgetControlSize = Math.round(0.030 * minDim);
-		} else {
-			userConfig.ui.widgetControlSize = calcuatedWidgetControlSize;
+		if (userConfig.ui.auto_scale_ui) {
+			var objectHeightMeters = 27 / pixelsPerMeter;
+			var minimumWidgetControlSize = 20; // Min button size for text readability (also for touch wall)
+			var perceptualScalingFactor = 0.0213;
+			var userDist = userConfig.dimensions.viewing_distance;
+			var calcuatedWidgetControlSize = userDist * (perceptualScalingFactor * (userDist / objectHeightMeters));
+			// Set the minimum widget control size to using the old scaling method (or a factor of it)
+			if (calcuatedWidgetControlSize < minimumWidgetControlSize) {
+				userConfig.ui.widgetControlSize = minimumWidgetControlSize;
+			} else if (calcuatedWidgetControlSize > Math.round(0.030 * minDim)) {
+				userConfig.ui.widgetControlSize = Math.round(0.030 * minDim);
+			} else {
+				userConfig.ui.widgetControlSize = calcuatedWidgetControlSize;
+			}
 		}
 		// calculate values in pixel now
 		userConfig.resolution.borders = {};
