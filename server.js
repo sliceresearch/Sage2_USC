@@ -3361,6 +3361,7 @@ function loadConfiguration() {
 	if (userConfig.dimensions === undefined) {
 		userConfig.dimensions = {};
 	}
+
 	if (userConfig.dimensions.tile_borders === undefined) {
 		// set default values to 0
 		// first for pixel sizes
@@ -3377,6 +3378,20 @@ function loadConfiguration() {
 		tileWidth    = parseFloat(userConfig.dimensions.tile_width) || 0.0;
 		// calculate pixel density (ppm) based on width
 		var pixelsPerMeter = userConfig.resolution.width / tileWidth;
+		// calculate the widget control size based on dimensions and user distance
+		var objectHeightMeters = 27 / pixelsPerMeter;
+		var minimumWidgetControlSize = 20; // Min button size for text readability (also for touch wall)
+		var perceptualScalingFactor = 0.0213;
+		console.log("Server: loadConfig: ppm: " + pixelsPerMeter);
+		console.log("Server: loadConfig: defaultWidgetScale: " + Math.round(0.020 * minDim));
+		var calcuatedWidgetControlSize = userConfig.dimensions.viewing_distance * (perceptualScalingFactor * (userConfig.dimensions.viewing_distance / objectHeightMeters));
+		// Set the minimum widget control size to using the old scaling method (or a factor of it)
+		if (calcuatedWidgetControlSize < minimumWidgetControlSize ) {
+			userConfig.ui.widgetControlSize = minimumWidgetControlSize;
+		} else {
+			userConfig.ui.widgetControlSize = calcuatedWidgetControlSize;
+		}
+		console.log("Server: calcuated widgetControlSize: " + calcuatedWidgetControlSize);
 		// calculate values in pixel now
 		userConfig.resolution.borders = {};
 		userConfig.resolution.borders.left   = Math.round(pixelsPerMeter * borderLeft)   || 0;
