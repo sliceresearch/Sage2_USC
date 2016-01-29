@@ -815,26 +815,24 @@ var SAGE2_App = Class.extend({
 		this.childList.push( data );
 	},
 
-
-
 	/**
 	* SAGE2MessageEvent method called for communication between children or parents
 	* 
 	* @method SAGE2MessageEvent
 	* @param state {Object} contains state of app instance
 	*/
-	SAGE2ChildAppLaunchResponse: function(data){ //success, childId, msg){
-		if( data.success ){ 
-			console.log("child app launch success " + data.childId);
-			this.childList[this.childList.length-1].childId = data.childId; //put the id into the obj
-		}
-		else{
-			console.log("child app launch failure " + data.childId + " msg: " + data.msg );
-		}
+	// SAGE2ChildAppLaunchResponse: function(data){ //success, childId, msg){
+	// 	if( data.success ){ 
+	// 		console.log("child app launch success " + data.childId);
+	// 		this.childList[this.childList.length-1].childId = data.childId; //put the id into the obj
+	// 	}
+	// 	else{
+	// 		console.log("child app launch failure " + data.childId + " msg: " + data.msg );
+	// 	}
 
-		if( typeof this.childLaunchResponseHandler != "undefined")
-			this.childLaunchResponseHandler(data.success);
-	},
+	// 	if( typeof this.childLaunchResponseHandler != "undefined")
+	// 		this.childLaunchResponseHandler(data.success);
+	// },
 
 	/**
 	* SAGE2SetParent method called to create parent app
@@ -909,6 +907,15 @@ var SAGE2_App = Class.extend({
 						if( this.childList[i].childId == data.childId )
 							this.childList.splice(i, 1);
 				}
+				if (data.type == "childOpenEvent") {
+					if( data.data.success ){ 
+						console.log("child app launch success " + data.childId);
+						this.childList[this.childList.length-1].childId = data.childId; //put the id into the obj
+					}
+					else{
+						console.log("child app launch failure " + data.childId + " success: " + data.data.success );
+					}
+				}
 	    		this.childMonitorEvent(data.childId, data.type, data.data, data.date); 
 			}
 		} else if( data.whichType == "parentMonitoring"){
@@ -920,11 +927,15 @@ var SAGE2_App = Class.extend({
 	    		this.parentMonitorEvent(data.parentId, data.type, data.data, data.date); 
 			}
 		}
-		
+	},
 
 
+
+	registerMyData: function( dataset, key ) {
+		if (isMaster) {
+			registerDataset(dataset, key, this.id);
+		}
 	}
-
 
 
 

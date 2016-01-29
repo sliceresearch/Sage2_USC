@@ -709,8 +709,8 @@ function setupListeners(wsio) {
 
 	wsio.on('launchLinkedChildApp',					wsLaunchLinkedChildApp);
 	wsio.on('messageToParent',						wsMessageToParent);
-	// wsio.on('messageToAllChildren',					wsMessageToAllChildren);
 	wsio.on('messageToChild',						wsMessageToChild);
+	// wsio.on('sendMessage',							wsSendMessage());
 }
 
 function initializeExistingControls(wsio) {
@@ -1805,8 +1805,10 @@ function wsLaunchLinkedChildApp(wsio, data) {
 
 
 		// send message to parent that child created
-		var dataToSend = {id: data.id, childId: appInstance.id, msg: "success", success: true };
-		broadcast('launchChildAppResponse', dataToSend);
+		// var dataToSend = {id: data.id, childId: appInstance.id, msg: "success", success: true };
+		// broadcast('launchChildAppResponse', dataToSend);
+		sendChildMonitoringEvent(data.id, appInstance.id, "childOpenEvent", {success: true});
+
 
 		// send message to child that parent created
 		// var dataToSend = {id: appInstance.id, parentId: data.id, msg: "success", success: true };
@@ -1855,6 +1857,55 @@ function wsMessageToChild(wsio, data) {
 	}
 
 }
+
+
+// function wsSendMessage(wsio, data) {
+// 	// var dataObject = {
+// 	// 	id: id,
+// 	// 	msgType: msgType,
+// 	// 	data: data
+// 	// };
+// 	console.log("wsSendMessage to:" + data.id + " from: ");
+
+// 	if (data.msgType == "childToParent") {
+
+// 		// get id of child from data
+// 		var childId = data.id; // to
+
+// 		// do parent lookup in associative array
+// 		var parentId = data.parentId;//getParentApp(childId); 
+
+// 		if (parentId != null) {
+// 			var theEvent = {id: parentId, childId: childId, type: "messageFromChild", params: data.params, date: Date.now()};
+// 			broadcast('messageEvent', theEvent);
+// 		}
+// 		// if parent not exist, send fail message to child
+// 	}
+// 	if (data.msgType == "parentToChild") {
+
+// 		// get id of child and parent from data passed from the parent
+// 		var parentId = data.id; // from
+// 		var childId = data.childId; // to
+
+// 		var canContinue = validParentChildPair(parentId, childId);
+
+// 		// if valid pair, continue
+// 		if (canContinue) {
+// 			var theEvent = {id: childId, parentId: parentId, type: "messageFromParent", params: data.params, date: Date.now()};
+// 			broadcast('messageEvent', theEvent);
+// 		} else {
+// 			console.log("failed to find child"); // eventually should send fail message to parent
+// 		}
+// 	}
+// 	if( data.msgType == "toEveryone"){
+// 		// to do?
+// 	}
+// 	if( data.msgType == "toAppType"){
+// 		// to do?
+// 	}
+
+
+// }
 
 function sendChildMonitoringEvent(parentId, childId, eventType, data) {
 	console.log(parentId + " " + childId + " " + eventType);

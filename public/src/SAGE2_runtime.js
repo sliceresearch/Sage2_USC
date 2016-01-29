@@ -325,6 +325,26 @@ function sendMessageToParent(id, params){
 	wsio.emit('messageToParent', dataObject);
 }
 
+function registerDataset(dataset, key, id){
+	var dataObject = {
+		dataset: dataset,
+		id: id,
+		key: key
+	};
+
+	wsio.emit("registerDataset", dataObject);
+}
+
+// function sendMessage(toId, msgType, data) {
+// 	var dataObject = {
+// 		id: id,
+// 		toId: toId,
+// 		msgType: msgType,
+// 		data: data
+// 	};
+// 	wsio.emit('sendMessage', dataObject);
+// }
+
 /**
  * Pretty print a date object into string
  *
@@ -787,6 +807,10 @@ function byteBufferToString(buf) {
 		i++;
 	}
 	return str;
+}
+
+function generateRandomKey() {
+	return Math.floor(Math.random*1000000000); 
 }
 
 /**

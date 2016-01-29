@@ -41,6 +41,12 @@ var exampleParent = SAGE2_App.extend( {
 		this.colorToDraw = [255,248,208];
 
 		this.monitoringText = "";
+
+		this.someDataSet = [2, 4, 6, 8, 10, 12, 14, 16];
+
+		if (isMaster) {
+			this.registerMyData( this.someDataSet, generateRandomKey() );
+		}
 	},
 
 	load: function(date) {
@@ -87,12 +93,16 @@ var exampleParent = SAGE2_App.extend( {
 		this.ctx.fillStyle = this.colorStringify(this.randomColor3);
 		this.ctx.fillRect(this.element.width-200, 300, 100, 75);
 
-		//future features 
+		// synced data
 		this.ctx.fillStyle = "rgba(189, 148, 255, 1.0)";
 		this.ctx.fillRect(100, 400, this.element.width-200, 75);
+		this.ctx.fillStyle = "rgba(0, 0, 0, 1.0)";
+		this.ctx.font = "24px Ariel";
+		this.ctx.textAlign="left"; 
+		this.ctx.fillText("click to double values in synced data: " + this.someDataSet , 110, 450 );
 
 		this.ctx.fillStyle = "rgba(0, 0, 0, 1.0)";
-		this.ctx.fillText("monitoring: " + this.getNumberOfChildren() + " active children", 100, 510 );
+		this.ctx.fillText("monitoring: " + this.getNumberOfChildren() + "   active children", 100, 510 );
 		this.ctx.font = "16px Ariel";
 		this.ctx.textAlign="left"; 
 		this.ctx.fillText(this.monitoringText, 100, 540); 
@@ -182,11 +192,6 @@ var exampleParent = SAGE2_App.extend( {
 		this.launchNewChild(applicationType, application, initState, msg);//defined in sage2 app
 	},
 
-	//i don't really have a use for this in mind right now... but an app might want to know if it succeeded
-	childLaunchResponseHandler: function(success){
-
-	},
-
 	sendMessageToChild: function(){
 		if( this.getNumberOfChildren() == 0 || this.count >= this.getNumberOfChildren() )
 			return;
@@ -230,6 +235,9 @@ var exampleParent = SAGE2_App.extend( {
 			this.monitoringText = "child: " + childId + " " + type +  " x: " + data.x + "y: " + data.y + " w: " + data.w + "h: " + data.h;
 		if( type == "childCloseEvent" )
 			this.monitoringText = "child: " + childId + " closed";
+		if( type == "childOpenEvent") {
+			this.monitoringText = "child: " + childId + " opened";	
+		}		
 		this.refresh(date);
 	},
 
