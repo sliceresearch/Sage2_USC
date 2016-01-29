@@ -1060,27 +1060,15 @@ function processRPC(data, socket) { // dkedits made to account for makeNewMeetin
 
 		//if platform is windows
 		if (platform === "Windows") {
-
-			//first write the git-credentials file if the credentials are not there.
-			var gcf = "";
-			if ( fileExists( pathToGitCredentials ) ) {
-				gcf = fs.readFileSync( pathToGitCredentials, "utf8" );
-			}
-			var gcflava = "https://uhlavalab%40gmail.com:1%5ev%5ebitb@bitbucket.org\n";
-			if ( gcf.indexOf( gcflava ) === -1 ) {
-				gcf += gcflava;
-				fs.writeFileSync( pathToGitCredentials, gcf );
-			}
-
 			//modify start up script for a one time git fetch and reset.
 			//one time because each startup of sabi will re
 			var sfpContents = 'cd "' + __dirname + '\\..' + '"\n';
 			sfpContents += 'set PATH=%CD%\\bin;%PATH%;\n';
-			sfpContents += 'git config credential.helper store\n'; 
+			//sfpContents += 'git config credential.helper store\n'; 
 			sfpContents += 'git fetch --all\n';
 			sfpContents += 'git reset --hard origin/master\n';
 			sfpContents += 'cd sabi.js\n';
-			sfpContents += 'start /MIN ..\\bin\\node server.js -f '+ pathToSabiConfigFolder +'\\config\\sage2.json %*';
+			sfpContents += 'start /MIN ..\\bin\\node server.js -f "'+ pathToSabiConfigFolder +'\\config\\sage2.json" %*';
 			fs.writeFileSync(pathToWinStartupFolder, sfpContents);
 
 			commandExecutionFunction("shutdown -r -t 1", null);
