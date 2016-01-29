@@ -495,6 +495,24 @@ function SAGE2_interaction(wsio) {
 	};
 
 	/**
+	* Using requestIdleCallback from Chrome for screen capture
+	*
+	* @method stepMethod
+	* @param deadline {Object} object containing timing information
+	*/
+	this.stepMethod = function(deadline) {
+		// if more than 10ms of freetime, go for it
+		if (deadline.timeRemaining() > 10) {
+			if (this.gotRequest) {
+				this.pix = this.captureMediaFrame();
+				this.sendMediaStreamFrame();
+			}
+		}
+		// and request again
+		this.req = requestIdleCallback(this.step);
+	};
+
+	/**
 	* The screen sharing can start
 	*
 	* @method streamCanPlayMethod
@@ -537,9 +555,8 @@ function SAGE2_interaction(wsio) {
 
 			this.broadcasting = true;
 
-			var _this = this;
-
 			// Using requestAnimationFrame
+			// var _this = this;
 			// var lastCapture = performance.now();
 			// function step(timestamp) {
 			// 	console.log('    update', timestamp - lastCapture);
@@ -556,18 +573,8 @@ function SAGE2_interaction(wsio) {
 			// }
 			// this.req = requestAnimationFrame(step);
 
-			// Using requestIdleCallback
-			function step(deadline) {
-				// if more than 10ms of freetime, go for it
-				if (deadline.timeRemaining() > 10) {
-					if (_this.gotRequest) {
-						_this.pix = _this.captureMediaFrame();
-						_this.sendMediaStreamFrame();
-					}
-				}
-				_this.req = requestIdleCallback(step);
-			}
-			this.req = requestIdleCallback(step);
+			// Request an idle callback for screencapture
+			this.req = requestIdleCallback(this.step);
 		}
 	};
 
@@ -893,6 +900,7 @@ function SAGE2_interaction(wsio) {
 	this.changeSage2PointerColor     = this.changeSage2PointerColorMethod.bind(this);
 	this.changeScreenShareResolution = this.changeScreenShareResolutionMethod.bind(this);
 	this.changeScreenShareQuality    = this.changeScreenShareQualityMethod.bind(this);
+	this.step                        = this.stepMethod.bind(this);
 
 	document.addEventListener('pointerlockerror',        this.pointerLockError,  false);
 	document.addEventListener('mozpointerlockerror',     this.pointerLockError,  false);
