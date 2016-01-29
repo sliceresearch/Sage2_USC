@@ -394,6 +394,7 @@ function initializeSage2Server() {
 			masterServer.on('eventInItem', wsEventInItem);
 			masterServer.on('setItemPosition', moveResize);
 			masterServer.on('setItemPositionAndSize', moveResize);
+			masterServer.on('deleteApplication', wsDeleteApplication);
 
 			masterServer.on('deleteApplication', wsDeleteApplication);
 
