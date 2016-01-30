@@ -2,8 +2,8 @@
 	default configuration of the server - Windows
 */
 {
-	name: "Endeavour",
-	host: "nishimoto.evl.uic.edu",
+	name: "Windows",
+	host: "localhost",
 	port: 9090,
 	index_port: 9292,
 	background: {
@@ -17,24 +17,13 @@
 		clock: 12,
 		show_version: false,
 		show_url: true,
-        maxWindowWidth: 8192,
-        maxWindowHeight: 8192,
-        noDropShadow: true,
-		auto_scale_ui: true,
-		calculate_viewing_distance: false,
-		reload_wallui_on_refresh: true
+                maxWindowWidth: 8192,
+                maxWindowHeight: 8192,
+                noDropShadow: true
 	},
 	resolution: {
-		width: 2560,
-		height: 1600
-	},
-	dimensions: {
-		// dimensions of one tile (can be overriden in displays section)
-		tile_width:  0.68,  // in meter, pixel area
-		tile_height: 0.485,  // in meter, pixel area
-		tile_borders: { left: 0.023, right: 0.023, bottom: 0.05, top: 0.05 }, // mullions in meter
-		// prefered or common viewing distance to calculate UI sizes
-		viewing_distance: 3.5	// in meter
+		width: 1920,
+		height: 1080
 	},
 	layout: {
 		rows: 1,
@@ -50,24 +39,6 @@
 		"127.0.0.1"
 	],
 	remote_sites: [
-		{
-			"name": "Cyber-Commons",
-			"host": "inferno.evlrn.uic.edu",
-			"port": 443,
-			"secure": true
-		},
-		{
-			"name": "CAVE2",
-			"host": "lyra.evl.uic.edu",
-			"port": 443,
-			"secure": true
-		},
-		{
-			"name": "CAVE2-Wall",
-			"host": "orion.evlrn.uic.edu",
-			"port": 443,
-			"secure": true
-		}
 	],
 	dependencies: {
 		ImageMagick: "C:/Program Files/ImageMagick-6.9.1-Q16/",
