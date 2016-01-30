@@ -710,6 +710,8 @@ function setupListeners(wsio) {
 	wsio.on('launchLinkedChildApp',					wsLaunchLinkedChildApp);
 	wsio.on('messageToParent',						wsMessageToParent);
 	wsio.on('messageToChild',						wsMessageToChild);
+
+	wsio.on('googleVoiceSpeechInput',               wsGoogleVoiceSpeechInput);
 	// wsio.on('sendMessage',							wsSendMessage());
 }
 
@@ -1974,6 +1976,10 @@ function validParentChildPair(parentId, childId) {
 	}
 
 	return !fail;
+}
+
+function wsGoogleVoiceSpeechInput(wsio, data){
+	console.log(data);
 }
 
 
