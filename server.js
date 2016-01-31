@@ -394,7 +394,6 @@ function initializeSage2Server() {
 			masterServer.on('eventInItem', wsEventInItem);
 			masterServer.on('setItemPosition', moveResize);
 			masterServer.on('setItemPositionAndSize', moveResize);
-			masterServer.on('deleteApplication', wsDeleteApplication);
 
 			masterServer.on('deleteApplication', wsDeleteApplication);
 
@@ -1364,6 +1363,11 @@ function wsUpdateMediaBlockStreamFrame(wsio, buffer) {
 
 function wsStopMediaBlockStream(wsio, data) {
 	deleteApplication(data.id);
+        // if this is a slave server (connected to a master)
+        if (masterServer !== undefined && masterServer !== null) {
+		console.log('send stopMediaBlockStream to master server');
+		masterServer.emit('stopMediaBlockStream', data);
+	}
 }
 
 function wsReceivedMediaBlockStreamFrame(wsio, data) {
