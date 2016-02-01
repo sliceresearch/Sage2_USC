@@ -203,7 +203,9 @@ AppLoader.prototype.loadPdfFromURL = function(aUrl, mime_type, name, strictSSL, 
 AppLoader.prototype.loadImageFromDataBuffer = function(buffer, width, height, mime_type, aUrl,
 	external_url, name, exif_data, callback) {
 
-	var source = buffer.toString("base64");
+	// var source = buffer.toString("base64");
+	var source = buffer;
+
 	var aspectRatio = width / height;
 
 	var metadata         = {};
@@ -218,7 +220,7 @@ AppLoader.prototype.loadImageFromDataBuffer = function(buffer, width, height, mi
 		id: null,
 		title: name,
 		application: "image_viewer",
-		icon: exif_data ? exif_data.SAGE2thumbnail : null,
+		icon: buffer,
 		type: mime_type,
 		url: external_url,
 		data: {

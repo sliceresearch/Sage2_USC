@@ -637,6 +637,7 @@ function setupListeners(wsio) {
 	wsio.on('requestStoredFiles',                   wsRequestStoredFiles);
 	wsio.on('loadApplication',                      wsLoadApplication);
 	wsio.on('loadFileFromServer',                   wsLoadFileFromServer);
+	wsio.on('loadImageFromBuffer',                  wsLoadImageFromBuffer);
 	wsio.on('deleteElementFromStoredFiles',         wsDeleteElementFromStoredFiles);
 	wsio.on('moveElementFromStoredFiles',           wsMoveElementFromStoredFiles);
 	wsio.on('saveSesion',                           wsSaveSesion);
@@ -2120,6 +2121,46 @@ function wsLoadApplication(wsio, data) {
 		addEventToUserLog(data.user, {type: "openApplication", data:
 			{application: {id: appInstance.id, type: appInstance.application}}, time: Date.now()});
 	});
+}
+
+function wsLoadImageFromBuffer(wsio, data) {
+	appLoader.loadImageFromDataBuffer(data.src, data.width, data.height,
+		"image/jpeg", "", data.url, data.title, {},
+		function(appInstance) {
+			// Get the drop position and convert it to wall coordinates
+			var position = data.position || [0, 0];
+			if (position[0] > 1) {
+				// value in pixels, used as origin
+				appInstance.left = position[0];
+			} else {
+				// value in percent
+				position[0] = Math.round(position[0] * config.totalWidth);
+				// Use the position as center of drop location
+				appInstance.left = position[0] - appInstance.width / 2;
+				if (appInstance.left < 0) {
+					appInstance.left = 0;
+				}
+			}
+			if (position[1] > 1) {
+				// value in pixels, used as origin
+				appInstance.top = position[1];
+			} else {
+				// value in percent
+				position[1] = Math.round(position[1] * config.totalHeight);
+				// Use the position as center of drop location
+				appInstance.top  = position[1] - appInstance.height / 2;
+				if (appInstance.top < 0) {
+					appInstance.top = 0;
+				}
+			}
+
+			appInstance.id = getUniqueAppId();
+
+			handleNewApplication(appInstance, null);
+
+			addEventToUserLog(data.user, {type: "openFile", data:
+				{name: data.filename, application: {id: appInstance.id, type: appInstance.application}}, time: Date.now()});
+		});
 }
 
 function wsLoadFileFromServer(wsio, data) {
