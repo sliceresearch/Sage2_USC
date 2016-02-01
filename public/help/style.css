@@ -66,7 +66,6 @@ footer {
 
 
 p {
-	font-size: 10pt;
 	padding-left: 25px;
 	text-indent: 0;
 	color: #FFFFFF;
@@ -75,7 +74,6 @@ p {
 
 
 footer li {
-	font-size: 10pt;
 	width: 800px;
 	overflow: hidden;
 	list-style: none outside none;
@@ -92,20 +90,24 @@ section ol {
 
 
 section li {
-	font-size: 10pt;
 	text-indent: 5px;
 	margin-left: 25px;
 	color: #FFFFFF;
 }
 
-a, a:visited {
-	font-size: 10pt;
+a {
 	text-decoration: none;
+	font-style: italic;
+	color: #FFFFFF;
+}
+
+a:visited {
+	text-decoration: underline;
+	font-style: italic;
 	color: #FFFFFF;
 }
 
 a:hover {
-	font-size: 10pt;
 	text-decoration: underline;
 	color: #FFFFFF;
 }
@@ -116,7 +118,6 @@ body {
 	height: 100%;
 	text-align: center;
 	min-width:500px;
-	zoom:1.2;
 }
 
 main {
