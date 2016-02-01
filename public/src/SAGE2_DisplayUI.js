@@ -370,12 +370,20 @@ SAGE2DisplayUI.prototype.addAppWindow = function(data) {
 	}
 	appIcon.onerror = function(event) {
 		setTimeout(function() {
-			appIcon.src = data.icon + "_512.jpg";
+			if (data.icon.startsWith('data:image')) {
+				appIcon.src = data.icon;
+			} else {
+				appIcon.src = data.icon + "_512.jpg";
+			}
 		}, 1000);
 	};
 
 	if (data.icon) {
-		appIcon.src = data.icon + "_512.jpg";
+		if (data.icon.startsWith('data:image')) {
+			appIcon.src = data.icon;
+		} else {
+			appIcon.src = data.icon + "_512.jpg";
+		}
 	} else if (data.application === "media_stream" || data.application === "media_block_stream") {
 		appIcon.src = this.generateMediaStreamIcon(data.title, data.color);
 	} else {

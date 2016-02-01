@@ -270,6 +270,9 @@ function SAGE2_init() {
 		if (event.data.cmd === "window_selected") {
 			interactor.captureDesktop(event.data.mediaSourceId);
 		}
+		if (event.data.cmd === "screenshot") {
+			wsio.emit('loadImageFromBuffer', event.data);
+		}
 	});
 }
 
