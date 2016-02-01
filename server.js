@@ -2480,11 +2480,11 @@ function wsOpenNewWebpage(wsio, data) {
 // **************  Volume sync  ********************
 
 function wsSetVolume(wsio, data) {
-      if (SAGE2Items.renderSync[data.id] === undefined || SAGE2Items.renderSync[data.id] === null) {
-              return;
-      }
-      console.log("setVolume ", data.id, " ", data.level);
-      broadcast('setVolume',data);
+	if (SAGE2Items.renderSync[data.id] === undefined || SAGE2Items.renderSync[data.id] === null) {
+		return;
+	}
+	console.log(sageutils.header("Volume>") + "set " + data.id + " " + data.level);
+	broadcast('setVolume',data);
 }
 
 // **************  Video / Audio Synchonization *****************
@@ -2595,14 +2595,14 @@ function wsAddNewSharedElementFromRemoteServer(wsio, data) {
 	var i;
 
 	appLoader.loadApplicationFromRemoteServer(data.application, function(appInstance, videohandle) {
-		console.log(sageutils.header("Remote App>") + appInstance.title + " (" + appInstance.application + ")");
+		console.log(sageutils.header("Remote App") + appInstance.title + " (" + appInstance.application + ")");
 
 		if (appInstance.application === "media_stream" || appInstance.application === "media_block_stream") {
 			appInstance.id = wsio.remoteAddress.address + ":" + wsio.remoteAddress.port + "|" + data.id;
 			SAGE2Items.renderSync[appInstance.id] = {chunks: [], clients: {}};
 			for (i = 0; i < clients.length; i++) {
 				if (clients[i].clientType === "display") {
-					console.log(sageutils.header("Remote App>") + "render client: " + clients[i].id);
+					console.log(sageutils.header("Remote App") + "render client: " + clients[i].id);
 					SAGE2Items.renderSync[appInstance.id].clients[clients[i].id] = {wsio: clients[i], readyForNextFrame: false, blocklist: []};
 				}
 			}
