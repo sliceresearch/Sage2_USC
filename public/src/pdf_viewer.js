@@ -46,6 +46,7 @@ PDFJS.maxCanvasPixels = 67108864; // 8k2
 		this.currCtx = 0;
 		this.numCtx  = 5;
 		this.src     = null;
+		this.title   = data.title;
 		this.gotresize      = false;
 		this.enableControls = true;
 		this.old_doc_url = "";
@@ -194,6 +195,10 @@ PDFJS.maxCanvasPixels = 67108864; // 8k2
 				_this.src = source;
 
 				_this.element.src = _this.src;
+
+				var newTitle;
+				newTitle = _this.title + " - " + _this.state.page + " / " + _this.pdfDoc.numPages;
+				_this.updateTitle(newTitle);
 			}
 		};
 		this.pdfDoc.getPage(this.state.page).then(gotPdfPage);

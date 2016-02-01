@@ -203,7 +203,9 @@ AppLoader.prototype.loadPdfFromURL = function(aUrl, mime_type, name, strictSSL, 
 AppLoader.prototype.loadImageFromDataBuffer = function(buffer, width, height, mime_type, aUrl,
 	external_url, name, exif_data, callback) {
 
-	var source = buffer.toString("base64");
+	// var source = buffer.toString("base64");
+	var source = buffer;
+
 	var aspectRatio = width / height;
 
 	var metadata         = {};
@@ -218,7 +220,7 @@ AppLoader.prototype.loadImageFromDataBuffer = function(buffer, width, height, mi
 		id: null,
 		title: name,
 		application: "image_viewer",
-		icon: exif_data ? exif_data.SAGE2thumbnail : null,
+		icon: buffer,
 		type: mime_type,
 		url: external_url,
 		data: {
@@ -755,35 +757,32 @@ AppLoader.prototype.manageAndLoadUploadedFile = function(file, callback) {
 		if (err1) {
 			throw err1;
 		}
-		// try to process all the files with exiftool
-		exiftool.file(localPath, function(err2, data) {
-			if (err2) {
-				console.log("internal error", err2);
-			} else {
-				assets.addFile(data.SourceFile, data, function() {
-					// get a valid URL for it
-					var aUrl = assets.getURL(data.SourceFile);
-					// calculate a complete URL with hostname
-					var external_url = url.resolve(_this.hostOrigin, aUrl);
+		if (app === "custom_app" && mime_type === "application/zip") {
+			// Compressed ZIP file, load directly
+			_this.loadApplication({location: "file", path: localPath, url: "", external_url: "",
+					type: mime_type, name: file.name, compressed: true}, function(appInstance, handle) {
+				callback(appInstance, handle);
+			});
+		} else {
+			// try to process all the files with exiftool
+			exiftool.file(localPath, function(err2, data) {
+				if (err2) {
+					console.log("internal error", err2);
+				} else {
+					assets.addFile(data.SourceFile, data, function() {
+						// get a valid URL for it
+						var aUrl = assets.getURL(data.SourceFile);
+						// calculate a complete URL with hostname
+						var external_url = url.resolve(_this.hostOrigin, aUrl);
 
-					_this.loadApplication({location: "file", path: localPath, url: aUrl, external_url: external_url,
-							type: mime_type, name: file.name, compressed: true}, function(appInstance, handle) {
-						callback(appInstance, handle);
+						_this.loadApplication({location: "file", path: localPath, url: aUrl, external_url: external_url,
+								type: mime_type, name: file.name, compressed: true}, function(appInstance, handle) {
+							callback(appInstance, handle);
+						});
 					});
-				});
-			}
-		});
-		// if (app === "image_viewer" || app === "movie_player" || app === "pdf_viewer") {
-		// } else {
-		// 	// get a valid URL for it
-		// 	var aUrl = assets.getURL(localPath);
-		// 	var external_url = null;
-		// 	console.log('Load', localPath, aUrl, mime_type, file.name, external_url)
-		// 	_this.loadApplication({location: "file", path: localPath, url: aUrl, external_url: external_url,
-		// 			type: mime_type, name: file.name, compressed: true}, function(appInstance, handle) {
-		// 		callback(appInstance, handle);
-		// 	});
-		// }
+				}
+			});
+		}
 	});
 };
 

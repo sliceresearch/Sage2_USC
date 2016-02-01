@@ -90,6 +90,41 @@ var pointerX, pointerY;
 
 var sage2Version;
 
+
+/**
+ * Reload the page if a application cache update is available
+ *
+ */
+if (window.applicationCache) {
+	applicationCache.addEventListener('updateready', function() {
+		window.location.reload();
+	});
+}
+
+/**
+ * Ask before closing the browser if desktop sharing in progress
+ *
+ */
+window.addEventListener('beforeunload', function(event) {
+	if (interactor && interactor.broadcasting) {
+		var confirmationMessage = "SAGE2 Desktop sharing in progress";
+
+		event.returnValue = confirmationMessage;  // Gecko, Trident, Chrome 34+
+		return confirmationMessage;               // Gecko, WebKit, Chrome <34
+	}
+});
+
+/**
+ * Closing desktop sharing before the browser closes
+ *
+ */
+window.addEventListener('unload', function(event) {
+	if (interactor && interactor.broadcasting) {
+		interactor.streamEnded();
+	}
+});
+
+
 /**
  * Entry point of the user interface
  *
@@ -105,10 +140,10 @@ function SAGE2_init() {
 				var json_cfg = JSON.parse(xhr.responseText);
 
 				var https_port;
-				if (json_cfg.rproxy_port !== undefined) {
-					https_port = ":" + json_cfg.rproxy_port.toString();
+				if (json_cfg.rproxy_secure_port !== undefined) {
+					https_port = ":" + json_cfg.rproxy_secure_port.toString();
 				} else {
-					https_port = ":" + json_cfg.port.toString();
+					https_port = ":" + json_cfg.secure_port.toString();
 				}
 				if (https_port === ":443") {
 					https_port = "";
@@ -220,17 +255,23 @@ function SAGE2_init() {
 	hasMouse = false;
 	console.log("Assuming mobile device");
 
+	// Event listener to the Chrome extension for desktop capture
 	window.addEventListener('message', function(event) {
 		if (event.origin !== window.location.origin) {
 			return;
 		}
 		if (event.data.cmd === "SAGE2_desktop_capture-Loaded") {
 			if (interactor !== undefined && interactor !== null) {
+				// Chrome extension is loaded
+				console.log('SAGE2 Chrome extension is loaded')
 				interactor.chromeDesktopCaptureEnabled = true;
 			}
 		}
 		if (event.data.cmd === "window_selected") {
 			interactor.captureDesktop(event.data.mediaSourceId);
+		}
+		if (event.data.cmd === "screenshot") {
+			wsio.emit('loadImageFromBuffer', event.data);
 		}
 	});
 }
@@ -409,7 +450,7 @@ function setupListeners() {
 	});
 
 	wsio.on('requestNextFrame', function(data) {
-		interactor.sendMediaStreamFrame();
+		interactor.requestMediaStreamFrame();
 	});
 
 	wsio.on('stopMediaCapture', function() {
@@ -839,6 +880,7 @@ function pointerRelease(event) {
 	}
 }
 
+
 /**
  * Handler for mouse move
  *
@@ -865,10 +907,15 @@ function pointerMove(event) {
 		var mouseY = event.clientY - rect.top;
 		pointerX   = mouseX;
 		pointerY   = mouseY;
-		// Send pointer event only during drag events
+
 		if (pointerDown) {
+			// Send pointer event only during drag events
 			displayUI.pointerMove(pointerX, pointerY);
+		} else {
+			// Otherwise test for application hover
+			displayUI.highlightApplication(pointerX, pointerY);
 		}
+
 	} else {
 		// Loose focus
 		pointerDown = false;
@@ -913,10 +960,11 @@ function mouseCheck(event) {
 		uiButtonImg.style.mozTransform    = "scale(1.2)";
 		uiButtonImg.style.transform       = "scale(1.2)";
 	}
-	var uiButtonP = getCSSProperty("style_ui.css", "#menuUI tr td p");
-	if (uiButtonP !== null) {
-		uiButtonP.style.opacity = "0.0";
-	}
+	// Display/hide the labels under the UI buttons
+	// var uiButtonP = getCSSProperty("style_ui.css", "#menuUI tr td p");
+	// if (uiButtonP !== null) {
+	// 	uiButtonP.style.opacity = "0.0";
+	// }
 }
 
 /**
@@ -1053,6 +1101,9 @@ function handleClick(element) {
 	} else if (element.id === "settingsCloseBtn") {
 		// Settings Dialog
 		hideDialog('settingsDialog');
+	} else if (element.id === "settingsCloseBtn2") {
+		// Init Settings Dialog
+		hideDialog('settingsDialog2');
 	} else if (element.id === "browserOpenBtn") {
 		// Browser Dialog
 		var url = document.getElementById("openWebpageUrl");
@@ -1283,7 +1334,6 @@ function touchStart(event) {
 		event.stopPropagation();
 	} else if (event.target.id === "sage2MobileMiddle2Button") {
 		// Send play commad, spacebar for PDF and movies
-		console.log('Send play')
 		interactor.sendPlay();
 		event.preventDefault();
 		event.stopPropagation();

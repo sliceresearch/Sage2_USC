@@ -252,27 +252,37 @@ HttpServer.prototype.onreq = function(req, res) {
 				// Pass it to the HTTP response
 				stream.pipe(res);
 			} else {
-				// Check for allowed compression
-				var acceptEncoding = req.headers['accept-encoding'] || '';
 				// Open the file as a stream
 				stream = fs.createReadStream(pathname);
-				if (acceptEncoding.match(/gzip/)) {
-					// Set the encoding to gzip
-					header["Content-Encoding"] = 'gzip';
-					// Write the HTTP response header
-					res.writeHead(200, header);
-					// Pipe the file input onto the HTTP response
-					stream.pipe(zlib.createGzip()).pipe(res);
-				} else if (acceptEncoding.match(/deflate/)) {
-					// Set the encoding to deflate
-					header["Content-Encoding"] = 'deflate';
-					res.writeHead(200, header);
-					stream.pipe(zlib.createDeflate()).pipe(res);
-				} else {
-					// No HTTP compression, just set file size
+				// array of allowed compression file types
+
+				var compressExtensions = [ '.html', '.json', '.js', '.css', '.txt', '.svg', '.xml', '.md',  ];
+				if (compressExtensions.indexOf(path.extname(pathname)) === -1) {
+					// Do not compress, just set file size
 					header["Content-Length"] = total;
 					res.writeHead(200, header);
 					stream.pipe(res);
+				} else {
+					// Check for allowed compression
+					var acceptEncoding = req.headers['accept-encoding'] || '';
+					if (acceptEncoding.match(/gzip/)) {
+						// Set the encoding to gzip
+						header["Content-Encoding"] = 'gzip';
+						// Write the HTTP response header
+						res.writeHead(200, header);
+						// Pipe the file input onto the HTTP response
+						stream.pipe(zlib.createGzip()).pipe(res);
+					} else if (acceptEncoding.match(/deflate/)) {
+						// Set the encoding to deflate
+						header["Content-Encoding"] = 'deflate';
+						res.writeHead(200, header);
+						stream.pipe(zlib.createDeflate()).pipe(res);
+					} else {
+						// No HTTP compression, just set file size
+						header["Content-Length"] = total;
+						res.writeHead(200, header);
+						stream.pipe(res);
+					}
 				}
 			}
 		} else {

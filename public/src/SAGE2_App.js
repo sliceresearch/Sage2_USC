@@ -654,6 +654,19 @@ var SAGE2_App = Class.extend({
 	},
 
 	/**
+	* Change the title of the application window
+	*
+	* @method updateTitle
+	* @param title {String} new title string
+	*/
+	updateTitle: function(title) {
+		var titleText = document.getElementById(this.id + "_text");
+		if (titleText) {
+			titleText.textContent = title;
+		}
+	},
+
+	/**
 	* Internal method for an actual draw loop (predraw, draw, postdraw).
 	*  draw is called as needed
 	*
