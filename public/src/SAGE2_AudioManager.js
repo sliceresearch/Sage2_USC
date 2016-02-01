@@ -133,9 +133,12 @@ function setupListeners() {
 			hostAlias["https://" + json_cfg.alternate_hosts[i] + https_port] = window.location.origin;
 		}
 
-		if (json_cfg.initialAppVolume !== undefined) {
-			initialVolume = json_cfg.initialAppVolume;
-			console.log("Config: initialVolume = ", initialVolume);
+		// Load the initial volume value from the configuration object
+		if (json_cfg.audio && json_cfg.audio.initialVolume !== undefined) {
+			// Making sure the value is between 0 and  10
+			initialVolume = parseInt(json_cfg.audio.initialVolume, 10);
+			initialVolume = Math.max(Math.min(initialVolume, 10), 0);
+			console.log("Configuration> initialVolume = ", initialVolume);
 		}
 
 		// play the jinggle
