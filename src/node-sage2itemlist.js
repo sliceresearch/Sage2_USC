@@ -151,6 +151,21 @@ SAGE2ItemList.prototype.getItemById = function(id) {
 	return this.list[id];
 };
 
+SAGE2ItemList.prototype.getFirstItemWithTitle = function(title) {
+	for (var key in this.list) {
+	  if (this.list[key].title == title) {
+	    return this.list[key];
+	  }
+	}
+	return null;
+};
+
+
+
+SAGE2ItemList.prototype.printList = function() {
+	console.log(this.list);
+};
+
 // TODO: Given local coordinate inside the item bounding box, determine if inside an interactable area
 
 module.exports = SAGE2ItemList;

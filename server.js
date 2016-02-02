@@ -1980,6 +1980,19 @@ function validParentChildPair(parentId, childId) {
 
 function wsGoogleVoiceSpeechInput(wsio, data){
 	console.log(data);
+
+	//find articulate app (just articulate app for now)
+	var app = SAGE2Items.applications.getFirstItemWithTitle("articulate_ui");
+	console.log(app);
+
+	if( app != null ){
+		var data = {id: app.id, data: data.text, date: Date.now()};
+		broadcast('textInputEvent', data);
+	}
+	else{
+		//launch articulate app ...?
+		//for now assume it is launched
+	}
 }
 
 

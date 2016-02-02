@@ -929,6 +929,11 @@ var SAGE2_App = Class.extend({
 		}
 	},
 
+	SAGE2TextInputEvent: function(data){
+		console.log("text in!" + data);
+		this.textInputEvent(data.data, data.date);
+	},
+
 
 
 	registerMyData: function( dataset, key ) {

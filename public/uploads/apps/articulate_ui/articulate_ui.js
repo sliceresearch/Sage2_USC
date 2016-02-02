@@ -8,9 +8,9 @@
 var articulate_ui = SAGE2_App.extend( {
 	init: function(data) {
 		// Create div into the DOM
-		this.SAGE2Init("div", data);
+		this.SAGE2Init("canvas", data);
 		// Set the background to black
-		this.element.style.backgroundColor = 'black';
+		this.element.style.backgroundColor = 'white';
 
 		// move and resize callbacks
 		this.resizeEvents = "continuous";
@@ -24,11 +24,17 @@ var articulate_ui = SAGE2_App.extend( {
 		this.controls.finishedAddingControls();
 		this.enableControls = true;
 
-		//only master should talk to articulate hub
-		if( isMaster ){
-			console.log("I'm the master");
-			this.contactArticulateHub("this is a test");
-		}
+		this.ctx = this.element.getContext('2d');
+
+
+		//TEST
+		// if( isMaster ){
+		// 	console.log("I'm the master");
+		// 	this.contactArticulateHub("this is a test");
+		// }
+
+		this.commands = [];
+		this.commands.push(">");
 	},
 
 	
@@ -48,10 +54,14 @@ var articulate_ui = SAGE2_App.extend( {
 	contactArticulateHub: function(msg){
 		console.log("sending msg: " , msg);
 
+		msg = msg.replace(" ", "%"); 
+		url = "http://articulate.evl.uic.edu:8080/smarthub/webapi/myresource/query/"
+		url = url+msg; 
+
 		this.callbackFunc = this.callback.bind(this);
 
-		// this.postRequest("http://rest.kegg.jp/list/pathway", this.callbackFunc, "TEXT");
-		wsio.emit('launchLinkedChildApp', {application: "apps/d3plus_visapp", user: "articulate_ui", msg:"this is a message from articulate_ui"});
+		this.postRequest(url, this.callbackFunc, 'TEXT');
+		//wsio.emit('launchLinkedChildApp', {application: "apps/d3plus_visapp", user: "articulate_ui", msg:"this is a message from articulate_ui"});
 
 	},
 
@@ -91,11 +101,11 @@ var articulate_ui = SAGE2_App.extend( {
 				console.log("error connecting to articulate smart hub");
 				return;
 			}
-
+			console.log("GOT THE RESPONSE: ");
 			console.log(text);
 
 			//then broadcast the results to display nodes!
-			broadcast( "handleResponse", {response:"responseTest"} ); 
+			//broadcast( "handleResponse", {response:"responseTest"} ); 
 		},
 
 	handleResponse: function(data){
@@ -110,6 +120,34 @@ var articulate_ui = SAGE2_App.extend( {
 	//---------------------------------------//
 	draw: function(date) {
 		console.log('articulate_ui> Draw with state value', this.state.value);
+
+		this.ctx.clearRect(0, 0, this.element.width, this.element.height);
+
+		this.ctx.font = "32px Ariel";
+		this.ctx.textAlign="left"; 
+		this.ctx.fillStyle = "rgba(0, 0, 0, 1.0)";
+		theY = 32;
+
+		//no idea if this works... 
+		startIdx = 0;
+		if( this.commands.length*32 > this.element.length-100 ) {
+			diff = (this.element.length-100) - (this.commands.length*32);
+			startIdx = diff % 32; 
+		}
+
+		// but this works...
+		for(i = 0; i < this.commands.length; i++){
+			this.ctx.fillText( this.commands[i], 10, theY);
+			theY += 32;
+		}
+
+		// synced data
+		// this.ctx.fillStyle = "rgba(189, 148, 255, 1.0)";
+		// this.ctx.fillRect(100, this.element.height - 100, this.element.width-200, 75 );
+		// this.ctx.fillStyle = "rgba(0, 0, 0, 1.0)";
+		// this.ctx.font = "24px Ariel";
+		// this.ctx.textAlign="left"; 
+		// this.ctx.fillText("generate vis", 110, this.element.height - 50 );
 	},
 
 
@@ -163,5 +201,19 @@ var articulate_ui = SAGE2_App.extend( {
 				this.refresh(date);
 			}
 		}
+	},
+
+	textInputEvent: function(text, date){
+		this.commands[this.commands.length-1] = text;
+		this.commands.push(">"); 
+
+
+		if( isMaster ){
+			//send to articulate hub...
+		}
+
+		this.refresh(date);
 	}
+
+
 });

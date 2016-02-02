@@ -44,8 +44,8 @@ var exampleParent = SAGE2_App.extend( {
 
 		this.someDataSet = [2, 4, 6, 8, 10, 12, 14, 16];
 
-		if (isMaster) {
-			this.registerMyData( this.someDataSet, generateRandomKey() );
+		if (isMaster) {//not working...
+			//this.registerMyData( this.someDataSet, generateRandomKey() );
 		}
 	},
 
