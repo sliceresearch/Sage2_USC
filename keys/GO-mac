@@ -13,7 +13,8 @@
 #      _.evl.uic.edu.key
 
 
-servers="$HOSTNAME localhost 127.0.0.1"
+#servers="$HOSTNAME localhost 127.0.0.1"
+servers="$HOSTNAME 128.171.47.211"
 
 for f in `echo $servers`
 do

@@ -1,0 +1,798 @@
+0 info it worked if it ends with ok
+1 verbose cli [ '/Users/mackey/.nodebrew/node/v5.1.0/bin/node',
+1 verbose cli   '/Users/mackey/.nodebrew/current/bin/npm',
+1 verbose cli   'outdated',
+1 verbose cli   '--depth',
+1 verbose cli   '0',
+1 verbose cli   '--json',
+1 verbose cli   '--production' ]
+2 info using npm@3.5.3
+3 info using node@v5.1.0
+4 silly mapToRegistry name cheerio
+5 silly mapToRegistry using default registry
+6 silly mapToRegistry registry https://registry.npmjs.org/
+7 silly mapToRegistry uri https://registry.npmjs.org/cheerio
+8 silly mapToRegistry name color
+9 silly mapToRegistry using default registry
+10 silly mapToRegistry registry https://registry.npmjs.org/
+11 silly mapToRegistry uri https://registry.npmjs.org/color
+12 silly mapToRegistry name commander
+13 silly mapToRegistry using default registry
+14 silly mapToRegistry registry https://registry.npmjs.org/
+15 silly mapToRegistry uri https://registry.npmjs.org/commander
+16 silly mapToRegistry name decompress-zip
+17 silly mapToRegistry using default registry
+18 silly mapToRegistry registry https://registry.npmjs.org/
+19 silly mapToRegistry uri https://registry.npmjs.org/decompress-zip
+20 silly mapToRegistry name fluent-ffmpeg
+21 silly mapToRegistry using default registry
+22 silly mapToRegistry registry https://registry.npmjs.org/
+23 silly mapToRegistry uri https://registry.npmjs.org/fluent-ffmpeg
+24 silly mapToRegistry name formidable
+25 silly mapToRegistry using default registry
+26 silly mapToRegistry registry https://registry.npmjs.org/
+27 silly mapToRegistry uri https://registry.npmjs.org/formidable
+28 silly mapToRegistry name fsmonitor
+29 silly mapToRegistry using default registry
+30 silly mapToRegistry registry https://registry.npmjs.org/
+31 silly mapToRegistry uri https://registry.npmjs.org/fsmonitor
+32 silly mapToRegistry name gm
+33 silly mapToRegistry using default registry
+34 silly mapToRegistry registry https://registry.npmjs.org/
+35 silly mapToRegistry uri https://registry.npmjs.org/gm
+36 silly mapToRegistry name imageinfo
+37 silly mapToRegistry using default registry
+38 silly mapToRegistry registry https://registry.npmjs.org/
+39 silly mapToRegistry uri https://registry.npmjs.org/imageinfo
+40 silly mapToRegistry name json5
+41 silly mapToRegistry using default registry
+42 silly mapToRegistry registry https://registry.npmjs.org/
+43 silly mapToRegistry uri https://registry.npmjs.org/json5
+44 silly mapToRegistry name mime
+45 silly mapToRegistry using default registry
+46 silly mapToRegistry registry https://registry.npmjs.org/
+47 silly mapToRegistry uri https://registry.npmjs.org/mime
+48 silly mapToRegistry name mv
+49 silly mapToRegistry using default registry
+50 silly mapToRegistry registry https://registry.npmjs.org/
+51 silly mapToRegistry uri https://registry.npmjs.org/mv
+52 silly mapToRegistry name node-demux
+53 silly mapToRegistry using default registry
+54 silly mapToRegistry registry https://registry.npmjs.org/
+55 silly mapToRegistry uri https://registry.npmjs.org/node-demux
+56 silly mapToRegistry name node-json-db
+57 silly mapToRegistry using default registry
+58 silly mapToRegistry registry https://registry.npmjs.org/
+59 silly mapToRegistry uri https://registry.npmjs.org/node-json-db
+60 silly mapToRegistry name qr-image
+61 silly mapToRegistry using default registry
+62 silly mapToRegistry registry https://registry.npmjs.org/
+63 silly mapToRegistry uri https://registry.npmjs.org/qr-image
+64 silly mapToRegistry name rbush
+65 silly mapToRegistry using default registry
+66 silly mapToRegistry registry https://registry.npmjs.org/
+67 silly mapToRegistry uri https://registry.npmjs.org/rbush
+68 silly mapToRegistry name request
+69 silly mapToRegistry using default registry
+70 silly mapToRegistry registry https://registry.npmjs.org/
+71 silly mapToRegistry uri https://registry.npmjs.org/request
+72 silly mapToRegistry name semver
+73 silly mapToRegistry using default registry
+74 silly mapToRegistry registry https://registry.npmjs.org/
+75 silly mapToRegistry uri https://registry.npmjs.org/semver
+76 silly mapToRegistry name sprint
+77 silly mapToRegistry using default registry
+78 silly mapToRegistry registry https://registry.npmjs.org/
+79 silly mapToRegistry uri https://registry.npmjs.org/sprint
+80 silly mapToRegistry name twit
+81 silly mapToRegistry using default registry
+82 silly mapToRegistry registry https://registry.npmjs.org/
+83 silly mapToRegistry uri https://registry.npmjs.org/twit
+84 silly mapToRegistry name websocketio
+85 silly mapToRegistry using default registry
+86 silly mapToRegistry registry https://registry.npmjs.org/
+87 silly mapToRegistry uri https://registry.npmjs.org/websocketio
+88 silly mapToRegistry name ytdl-core
+89 silly mapToRegistry using default registry
+90 silly mapToRegistry registry https://registry.npmjs.org/
+91 silly mapToRegistry uri https://registry.npmjs.org/ytdl-core
+92 verbose request uri https://registry.npmjs.org/color
+93 verbose request no auth needed
+94 info attempt registry request try #1 at 5:09:50 PM
+95 verbose request id a9c5bd2c9a6a94c3
+96 verbose etag "7MNUFQPFKOYC7C52D9XHI5F64"
+97 http request GET https://registry.npmjs.org/color
+98 verbose request uri https://registry.npmjs.org/cheerio
+99 verbose request no auth needed
+100 info attempt registry request try #1 at 5:09:50 PM
+101 verbose etag "160KN8KRX59YBDLUW7SH4TXMJ"
+102 http request GET https://registry.npmjs.org/cheerio
+103 verbose request uri https://registry.npmjs.org/decompress-zip
+104 verbose request no auth needed
+105 info attempt registry request try #1 at 5:09:50 PM
+106 verbose etag "2M7H3WFIXPP6S2KXGACIHPOQM"
+107 http request GET https://registry.npmjs.org/decompress-zip
+108 verbose request uri https://registry.npmjs.org/commander
+109 verbose request no auth needed
+110 info attempt registry request try #1 at 5:09:50 PM
+111 verbose etag "9QFCKI6JPOBO2C6TSPYB6JB0H"
+112 http request GET https://registry.npmjs.org/commander
+113 verbose request uri https://registry.npmjs.org/fluent-ffmpeg
+114 verbose request no auth needed
+115 info attempt registry request try #1 at 5:09:50 PM
+116 verbose etag "AKAX5Q5T4IESH3X4MX3M8AK10"
+117 http request GET https://registry.npmjs.org/fluent-ffmpeg
+118 verbose request uri https://registry.npmjs.org/formidable
+119 verbose request no auth needed
+120 info attempt registry request try #1 at 5:09:50 PM
+121 verbose etag "9BMUBP7S97OY92KZA6IP2EIHU"
+122 http request GET https://registry.npmjs.org/formidable
+123 verbose request uri https://registry.npmjs.org/fsmonitor
+124 verbose request no auth needed
+125 info attempt registry request try #1 at 5:09:50 PM
+126 verbose etag "D22BFOD37AWN9A7TPLCW3HK5P"
+127 http request GET https://registry.npmjs.org/fsmonitor
+128 verbose request uri https://registry.npmjs.org/gm
+129 verbose request no auth needed
+130 info attempt registry request try #1 at 5:09:50 PM
+131 verbose etag "3P35TRH3R1O5JMR7AXQTR1PEV"
+132 http request GET https://registry.npmjs.org/gm
+133 verbose request uri https://registry.npmjs.org/imageinfo
+134 verbose request no auth needed
+135 info attempt registry request try #1 at 5:09:50 PM
+136 verbose etag "7PYEA7EJHU7PKL1TQ7QB5CWQ4"
+137 http request GET https://registry.npmjs.org/imageinfo
+138 verbose request uri https://registry.npmjs.org/json5
+139 verbose request no auth needed
+140 info attempt registry request try #1 at 5:09:50 PM
+141 verbose etag "ASN70NOI1S08Z9FGL0U8OIO0B"
+142 http request GET https://registry.npmjs.org/json5
+143 verbose request uri https://registry.npmjs.org/mime
+144 verbose request no auth needed
+145 info attempt registry request try #1 at 5:09:50 PM
+146 verbose etag "E5HN6XFP2Z02A0GXHKAJS6DEY"
+147 http request GET https://registry.npmjs.org/mime
+148 verbose request uri https://registry.npmjs.org/mv
+149 verbose request no auth needed
+150 info attempt registry request try #1 at 5:09:50 PM
+151 verbose etag "67CE9FL4XF86MWXVZXMXOIESQ"
+152 http request GET https://registry.npmjs.org/mv
+153 verbose request uri https://registry.npmjs.org/node-demux
+154 verbose request no auth needed
+155 info attempt registry request try #1 at 5:09:50 PM
+156 verbose etag "EXYFNOZU5F04PJS2DWXJEIZ6C"
+157 http request GET https://registry.npmjs.org/node-demux
+158 verbose request uri https://registry.npmjs.org/node-json-db
+159 verbose request no auth needed
+160 info attempt registry request try #1 at 5:09:50 PM
+161 verbose etag "1H6UVYVBMNIVCVYQQNZHBL2NU"
+162 http request GET https://registry.npmjs.org/node-json-db
+163 verbose request uri https://registry.npmjs.org/rbush
+164 verbose request no auth needed
+165 info attempt registry request try #1 at 5:09:50 PM
+166 verbose etag "79RIOY50SZC1671TY3LDACAQ6"
+167 http request GET https://registry.npmjs.org/rbush
+168 verbose request uri https://registry.npmjs.org/qr-image
+169 verbose request no auth needed
+170 info attempt registry request try #1 at 5:09:50 PM
+171 verbose etag "A3M7ZF8X8GG2X4JDJ4LIYB5C0"
+172 http request GET https://registry.npmjs.org/qr-image
+173 verbose request uri https://registry.npmjs.org/semver
+174 verbose request no auth needed
+175 info attempt registry request try #1 at 5:09:50 PM
+176 verbose etag "9GG2YTTRYCB0LO0F649BP4N6J"
+177 http request GET https://registry.npmjs.org/semver
+178 verbose request uri https://registry.npmjs.org/sprint
+179 verbose request no auth needed
+180 info attempt registry request try #1 at 5:09:50 PM
+181 verbose etag "CVH2CVYJTQFLRAVW6WMX4N633"
+182 http request GET https://registry.npmjs.org/sprint
+183 verbose request uri https://registry.npmjs.org/request
+184 verbose request no auth needed
+185 info attempt registry request try #1 at 5:09:50 PM
+186 verbose etag "5V15WTHTIWGUT2Z468WFNZ9RH"
+187 http request GET https://registry.npmjs.org/request
+188 verbose request uri https://registry.npmjs.org/twit
+189 verbose request no auth needed
+190 info attempt registry request try #1 at 5:09:50 PM
+191 verbose etag "11SWF5ACC34BSLJEGZQRK2X0D"
+192 http request GET https://registry.npmjs.org/twit
+193 verbose request uri https://registry.npmjs.org/websocketio
+194 verbose request no auth needed
+195 info attempt registry request try #1 at 5:09:50 PM
+196 verbose etag "4SMOQRZXHTLPYQRH4F0DP4SJ1"
+197 http request GET https://registry.npmjs.org/websocketio
+198 verbose request uri https://registry.npmjs.org/ytdl-core
+199 verbose request no auth needed
+200 info attempt registry request try #1 at 5:09:50 PM
+201 verbose etag "5BJ09Z9O8WLV2N9JRGUOO11CH"
+202 http request GET https://registry.npmjs.org/ytdl-core
+203 http 304 https://registry.npmjs.org/color
+204 verbose headers { date: 'Fri, 29 Jan 2016 03:09:51 GMT',
+204 verbose headers   via: '1.1 varnish',
+204 verbose headers   'cache-control': 'max-age=300',
+204 verbose headers   etag: '"7MNUFQPFKOYC7C52D9XHI5F64"',
+204 verbose headers   age: '196',
+204 verbose headers   connection: 'keep-alive',
+204 verbose headers   'x-served-by': 'cache-sjc3126-SJC',
+204 verbose headers   'x-cache': 'HIT',
+204 verbose headers   'x-cache-hits': '1',
+204 verbose headers   'x-timer': 'S1454036991.232092,VS0,VE0',
+204 verbose headers   vary: 'Accept' }
+205 silly get cb [ 304,
+205 silly get   { date: 'Fri, 29 Jan 2016 03:09:51 GMT',
+205 silly get     via: '1.1 varnish',
+205 silly get     'cache-control': 'max-age=300',
+205 silly get     etag: '"7MNUFQPFKOYC7C52D9XHI5F64"',
+205 silly get     age: '196',
+205 silly get     connection: 'keep-alive',
+205 silly get     'x-served-by': 'cache-sjc3126-SJC',
+205 silly get     'x-cache': 'HIT',
+205 silly get     'x-cache-hits': '1',
+205 silly get     'x-timer': 'S1454036991.232092,VS0,VE0',
+205 silly get     vary: 'Accept' } ]
+206 verbose etag https://registry.npmjs.org/color from cache
+207 verbose get saving color to /Users/mackey/.npm/registry.npmjs.org/color/.cache.json
+208 http 304 https://registry.npmjs.org/commander
+209 verbose headers { date: 'Fri, 29 Jan 2016 03:09:51 GMT',
+209 verbose headers   via: '1.1 varnish',
+209 verbose headers   'cache-control': 'max-age=300',
+209 verbose headers   etag: '"9QFCKI6JPOBO2C6TSPYB6JB0H"',
+209 verbose headers   age: '32',
+209 verbose headers   connection: 'keep-alive',
+209 verbose headers   'x-served-by': 'cache-sjc3135-SJC',
+209 verbose headers   'x-cache': 'HIT',
+209 verbose headers   'x-cache-hits': '2',
+209 verbose headers   'x-timer': 'S1454036991.233404,VS0,VE0',
+209 verbose headers   vary: 'Accept' }
+210 silly get cb [ 304,
+210 silly get   { date: 'Fri, 29 Jan 2016 03:09:51 GMT',
+210 silly get     via: '1.1 varnish',
+210 silly get     'cache-control': 'max-age=300',
+210 silly get     etag: '"9QFCKI6JPOBO2C6TSPYB6JB0H"',
+210 silly get     age: '32',
+210 silly get     connection: 'keep-alive',
+210 silly get     'x-served-by': 'cache-sjc3135-SJC',
+210 silly get     'x-cache': 'HIT',
+210 silly get     'x-cache-hits': '2',
+210 silly get     'x-timer': 'S1454036991.233404,VS0,VE0',
+210 silly get     vary: 'Accept' } ]
+211 verbose etag https://registry.npmjs.org/commander from cache
+212 verbose get saving commander to /Users/mackey/.npm/registry.npmjs.org/commander/.cache.json
+213 http 304 https://registry.npmjs.org/sprint
+214 verbose headers { date: 'Fri, 29 Jan 2016 03:09:51 GMT',
+214 verbose headers   via: '1.1 varnish',
+214 verbose headers   'cache-control': 'max-age=300',
+214 verbose headers   etag: '"CVH2CVYJTQFLRAVW6WMX4N633"',
+214 verbose headers   age: '56',
+214 verbose headers   connection: 'keep-alive',
+214 verbose headers   'x-served-by': 'cache-sjc3129-SJC',
+214 verbose headers   'x-cache': 'HIT',
+214 verbose headers   'x-cache-hits': '1',
+214 verbose headers   'x-timer': 'S1454036991.233555,VS0,VE0',
+214 verbose headers   vary: 'Accept' }
+215 silly get cb [ 304,
+215 silly get   { date: 'Fri, 29 Jan 2016 03:09:51 GMT',
+215 silly get     via: '1.1 varnish',
+215 silly get     'cache-control': 'max-age=300',
+215 silly get     etag: '"CVH2CVYJTQFLRAVW6WMX4N633"',
+215 silly get     age: '56',
+215 silly get     connection: 'keep-alive',
+215 silly get     'x-served-by': 'cache-sjc3129-SJC',
+215 silly get     'x-cache': 'HIT',
+215 silly get     'x-cache-hits': '1',
+215 silly get     'x-timer': 'S1454036991.233555,VS0,VE0',
+215 silly get     vary: 'Accept' } ]
+216 verbose etag https://registry.npmjs.org/sprint from cache
+217 verbose get saving sprint to /Users/mackey/.npm/registry.npmjs.org/sprint/.cache.json
+218 http 304 https://registry.npmjs.org/cheerio
+219 verbose headers { date: 'Fri, 29 Jan 2016 03:09:51 GMT',
+219 verbose headers   via: '1.1 varnish',
+219 verbose headers   'cache-control': 'max-age=300',
+219 verbose headers   etag: '"160KN8KRX59YBDLUW7SH4TXMJ"',
+219 verbose headers   age: '197',
+219 verbose headers   connection: 'keep-alive',
+219 verbose headers   'x-served-by': 'cache-sjc3123-SJC',
+219 verbose headers   'x-cache': 'HIT',
+219 verbose headers   'x-cache-hits': '2',
+219 verbose headers   'x-timer': 'S1454036991.227247,VS0,VE0',
+219 verbose headers   vary: 'Accept' }
+220 silly get cb [ 304,
+220 silly get   { date: 'Fri, 29 Jan 2016 03:09:51 GMT',
+220 silly get     via: '1.1 varnish',
+220 silly get     'cache-control': 'max-age=300',
+220 silly get     etag: '"160KN8KRX59YBDLUW7SH4TXMJ"',
+220 silly get     age: '197',
+220 silly get     connection: 'keep-alive',
+220 silly get     'x-served-by': 'cache-sjc3123-SJC',
+220 silly get     'x-cache': 'HIT',
+220 silly get     'x-cache-hits': '2',
+220 silly get     'x-timer': 'S1454036991.227247,VS0,VE0',
+220 silly get     vary: 'Accept' } ]
+221 verbose etag https://registry.npmjs.org/cheerio from cache
+222 verbose get saving cheerio to /Users/mackey/.npm/registry.npmjs.org/cheerio/.cache.json
+223 http 304 https://registry.npmjs.org/semver
+224 verbose headers { date: 'Fri, 29 Jan 2016 03:09:51 GMT',
+224 verbose headers   via: '1.1 varnish',
+224 verbose headers   'cache-control': 'max-age=300',
+224 verbose headers   etag: '"9GG2YTTRYCB0LO0F649BP4N6J"',
+224 verbose headers   age: '287',
+224 verbose headers   connection: 'keep-alive',
+224 verbose headers   'x-served-by': 'cache-sjc3130-SJC',
+224 verbose headers   'x-cache': 'HIT',
+224 verbose headers   'x-cache-hits': '16',
+224 verbose headers   'x-timer': 'S1454036991.235196,VS0,VE0',
+224 verbose headers   vary: 'Accept' }
+225 silly get cb [ 304,
+225 silly get   { date: 'Fri, 29 Jan 2016 03:09:51 GMT',
+225 silly get     via: '1.1 varnish',
+225 silly get     'cache-control': 'max-age=300',
+225 silly get     etag: '"9GG2YTTRYCB0LO0F649BP4N6J"',
+225 silly get     age: '287',
+225 silly get     connection: 'keep-alive',
+225 silly get     'x-served-by': 'cache-sjc3130-SJC',
+225 silly get     'x-cache': 'HIT',
+225 silly get     'x-cache-hits': '16',
+225 silly get     'x-timer': 'S1454036991.235196,VS0,VE0',
+225 silly get     vary: 'Accept' } ]
+226 verbose etag https://registry.npmjs.org/semver from cache
+227 verbose get saving semver to /Users/mackey/.npm/registry.npmjs.org/semver/.cache.json
+228 http 304 https://registry.npmjs.org/node-demux
+229 verbose headers { date: 'Fri, 29 Jan 2016 03:09:51 GMT',
+229 verbose headers   via: '1.1 varnish',
+229 verbose headers   'cache-control': 'max-age=300',
+229 verbose headers   etag: '"EXYFNOZU5F04PJS2DWXJEIZ6C"',
+229 verbose headers   age: '56',
+229 verbose headers   connection: 'keep-alive',
+229 verbose headers   'x-served-by': 'cache-sjc3126-SJC',
+229 verbose headers   'x-cache': 'HIT',
+229 verbose headers   'x-cache-hits': '1',
+229 verbose headers   'x-timer': 'S1454036991.235954,VS0,VE0',
+229 verbose headers   vary: 'Accept' }
+230 silly get cb [ 304,
+230 silly get   { date: 'Fri, 29 Jan 2016 03:09:51 GMT',
+230 silly get     via: '1.1 varnish',
+230 silly get     'cache-control': 'max-age=300',
+230 silly get     etag: '"EXYFNOZU5F04PJS2DWXJEIZ6C"',
+230 silly get     age: '56',
+230 silly get     connection: 'keep-alive',
+230 silly get     'x-served-by': 'cache-sjc3126-SJC',
+230 silly get     'x-cache': 'HIT',
+230 silly get     'x-cache-hits': '1',
+230 silly get     'x-timer': 'S1454036991.235954,VS0,VE0',
+230 silly get     vary: 'Accept' } ]
+231 verbose etag https://registry.npmjs.org/node-demux from cache
+232 verbose get saving node-demux to /Users/mackey/.npm/registry.npmjs.org/node-demux/.cache.json
+233 http 304 https://registry.npmjs.org/fsmonitor
+234 verbose headers { date: 'Fri, 29 Jan 2016 03:09:51 GMT',
+234 verbose headers   via: '1.1 varnish',
+234 verbose headers   'cache-control': 'max-age=300',
+234 verbose headers   etag: '"D22BFOD37AWN9A7TPLCW3HK5P"',
+234 verbose headers   age: '56',
+234 verbose headers   connection: 'keep-alive',
+234 verbose headers   'x-served-by': 'cache-sjc3134-SJC',
+234 verbose headers   'x-cache': 'HIT',
+234 verbose headers   'x-cache-hits': '1',
+234 verbose headers   'x-timer': 'S1454036991.239445,VS0,VE0',
+234 verbose headers   vary: 'Accept' }
+235 silly get cb [ 304,
+235 silly get   { date: 'Fri, 29 Jan 2016 03:09:51 GMT',
+235 silly get     via: '1.1 varnish',
+235 silly get     'cache-control': 'max-age=300',
+235 silly get     etag: '"D22BFOD37AWN9A7TPLCW3HK5P"',
+235 silly get     age: '56',
+235 silly get     connection: 'keep-alive',
+235 silly get     'x-served-by': 'cache-sjc3134-SJC',
+235 silly get     'x-cache': 'HIT',
+235 silly get     'x-cache-hits': '1',
+235 silly get     'x-timer': 'S1454036991.239445,VS0,VE0',
+235 silly get     vary: 'Accept' } ]
+236 verbose etag https://registry.npmjs.org/fsmonitor from cache
+237 verbose get saving fsmonitor to /Users/mackey/.npm/registry.npmjs.org/fsmonitor/.cache.json
+238 http 304 https://registry.npmjs.org/json5
+239 verbose headers { date: 'Fri, 29 Jan 2016 03:09:51 GMT',
+239 verbose headers   via: '1.1 varnish',
+239 verbose headers   'cache-control': 'max-age=300',
+239 verbose headers   etag: '"ASN70NOI1S08Z9FGL0U8OIO0B"',
+239 verbose headers   age: '30',
+239 verbose headers   connection: 'keep-alive',
+239 verbose headers   'x-served-by': 'cache-sjc3120-SJC',
+239 verbose headers   'x-cache': 'HIT',
+239 verbose headers   'x-cache-hits': '2',
+239 verbose headers   'x-timer': 'S1454036991.241787,VS0,VE0',
+239 verbose headers   vary: 'Accept' }
+240 silly get cb [ 304,
+240 silly get   { date: 'Fri, 29 Jan 2016 03:09:51 GMT',
+240 silly get     via: '1.1 varnish',
+240 silly get     'cache-control': 'max-age=300',
+240 silly get     etag: '"ASN70NOI1S08Z9FGL0U8OIO0B"',
+240 silly get     age: '30',
+240 silly get     connection: 'keep-alive',
+240 silly get     'x-served-by': 'cache-sjc3120-SJC',
+240 silly get     'x-cache': 'HIT',
+240 silly get     'x-cache-hits': '2',
+240 silly get     'x-timer': 'S1454036991.241787,VS0,VE0',
+240 silly get     vary: 'Accept' } ]
+241 verbose etag https://registry.npmjs.org/json5 from cache
+242 verbose get saving json5 to /Users/mackey/.npm/registry.npmjs.org/json5/.cache.json
+243 http 304 https://registry.npmjs.org/rbush
+244 verbose headers { date: 'Fri, 29 Jan 2016 03:09:51 GMT',
+244 verbose headers   via: '1.1 varnish',
+244 verbose headers   'cache-control': 'max-age=300',
+244 verbose headers   etag: '"79RIOY50SZC1671TY3LDACAQ6"',
+244 verbose headers   age: '196',
+244 verbose headers   connection: 'keep-alive',
+244 verbose headers   'x-served-by': 'cache-sjc3124-SJC',
+244 verbose headers   'x-cache': 'HIT',
+244 verbose headers   'x-cache-hits': '1',
+244 verbose headers   'x-timer': 'S1454036991.243296,VS0,VE0',
+244 verbose headers   vary: 'Accept' }
+245 silly get cb [ 304,
+245 silly get   { date: 'Fri, 29 Jan 2016 03:09:51 GMT',
+245 silly get     via: '1.1 varnish',
+245 silly get     'cache-control': 'max-age=300',
+245 silly get     etag: '"79RIOY50SZC1671TY3LDACAQ6"',
+245 silly get     age: '196',
+245 silly get     connection: 'keep-alive',
+245 silly get     'x-served-by': 'cache-sjc3124-SJC',
+245 silly get     'x-cache': 'HIT',
+245 silly get     'x-cache-hits': '1',
+245 silly get     'x-timer': 'S1454036991.243296,VS0,VE0',
+245 silly get     vary: 'Accept' } ]
+246 verbose etag https://registry.npmjs.org/rbush from cache
+247 verbose get saving rbush to /Users/mackey/.npm/registry.npmjs.org/rbush/.cache.json
+248 http 304 https://registry.npmjs.org/decompress-zip
+249 verbose headers { date: 'Fri, 29 Jan 2016 03:09:51 GMT',
+249 verbose headers   via: '1.1 varnish',
+249 verbose headers   'cache-control': 'max-age=300',
+249 verbose headers   etag: '"2M7H3WFIXPP6S2KXGACIHPOQM"',
+249 verbose headers   age: '186',
+249 verbose headers   connection: 'keep-alive',
+249 verbose headers   'x-served-by': 'cache-sjc3121-SJC',
+249 verbose headers   'x-cache': 'HIT',
+249 verbose headers   'x-cache-hits': '2',
+249 verbose headers   'x-timer': 'S1454036991.243222,VS0,VE0',
+249 verbose headers   vary: 'Accept' }
+250 silly get cb [ 304,
+250 silly get   { date: 'Fri, 29 Jan 2016 03:09:51 GMT',
+250 silly get     via: '1.1 varnish',
+250 silly get     'cache-control': 'max-age=300',
+250 silly get     etag: '"2M7H3WFIXPP6S2KXGACIHPOQM"',
+250 silly get     age: '186',
+250 silly get     connection: 'keep-alive',
+250 silly get     'x-served-by': 'cache-sjc3121-SJC',
+250 silly get     'x-cache': 'HIT',
+250 silly get     'x-cache-hits': '2',
+250 silly get     'x-timer': 'S1454036991.243222,VS0,VE0',
+250 silly get     vary: 'Accept' } ]
+251 verbose etag https://registry.npmjs.org/decompress-zip from cache
+252 verbose get saving decompress-zip to /Users/mackey/.npm/registry.npmjs.org/decompress-zip/.cache.json
+253 http 304 https://registry.npmjs.org/imageinfo
+254 verbose headers { date: 'Fri, 29 Jan 2016 03:09:51 GMT',
+254 verbose headers   via: '1.1 varnish',
+254 verbose headers   'cache-control': 'max-age=300',
+254 verbose headers   etag: '"7PYEA7EJHU7PKL1TQ7QB5CWQ4"',
+254 verbose headers   age: '56',
+254 verbose headers   connection: 'keep-alive',
+254 verbose headers   'x-served-by': 'cache-sjc3132-SJC',
+254 verbose headers   'x-cache': 'HIT',
+254 verbose headers   'x-cache-hits': '5',
+254 verbose headers   'x-timer': 'S1454036991.245447,VS0,VE0',
+254 verbose headers   vary: 'Accept' }
+255 silly get cb [ 304,
+255 silly get   { date: 'Fri, 29 Jan 2016 03:09:51 GMT',
+255 silly get     via: '1.1 varnish',
+255 silly get     'cache-control': 'max-age=300',
+255 silly get     etag: '"7PYEA7EJHU7PKL1TQ7QB5CWQ4"',
+255 silly get     age: '56',
+255 silly get     connection: 'keep-alive',
+255 silly get     'x-served-by': 'cache-sjc3132-SJC',
+255 silly get     'x-cache': 'HIT',
+255 silly get     'x-cache-hits': '5',
+255 silly get     'x-timer': 'S1454036991.245447,VS0,VE0',
+255 silly get     vary: 'Accept' } ]
+256 verbose etag https://registry.npmjs.org/imageinfo from cache
+257 verbose get saving imageinfo to /Users/mackey/.npm/registry.npmjs.org/imageinfo/.cache.json
+258 http 304 https://registry.npmjs.org/mv
+259 verbose headers { date: 'Fri, 29 Jan 2016 03:09:51 GMT',
+259 verbose headers   via: '1.1 varnish',
+259 verbose headers   'cache-control': 'max-age=300',
+259 verbose headers   etag: '"67CE9FL4XF86MWXVZXMXOIESQ"',
+259 verbose headers   age: '152',
+259 verbose headers   connection: 'keep-alive',
+259 verbose headers   'x-served-by': 'cache-sjc3123-SJC',
+259 verbose headers   'x-cache': 'HIT',
+259 verbose headers   'x-cache-hits': '1',
+259 verbose headers   'x-timer': 'S1454036991.238991,VS0,VE0',
+259 verbose headers   vary: 'Accept' }
+260 silly get cb [ 304,
+260 silly get   { date: 'Fri, 29 Jan 2016 03:09:51 GMT',
+260 silly get     via: '1.1 varnish',
+260 silly get     'cache-control': 'max-age=300',
+260 silly get     etag: '"67CE9FL4XF86MWXVZXMXOIESQ"',
+260 silly get     age: '152',
+260 silly get     connection: 'keep-alive',
+260 silly get     'x-served-by': 'cache-sjc3123-SJC',
+260 silly get     'x-cache': 'HIT',
+260 silly get     'x-cache-hits': '1',
+260 silly get     'x-timer': 'S1454036991.238991,VS0,VE0',
+260 silly get     vary: 'Accept' } ]
+261 verbose etag https://registry.npmjs.org/mv from cache
+262 verbose get saving mv to /Users/mackey/.npm/registry.npmjs.org/mv/.cache.json
+263 http 304 https://registry.npmjs.org/formidable
+264 verbose headers { date: 'Fri, 29 Jan 2016 03:09:51 GMT',
+264 verbose headers   via: '1.1 varnish',
+264 verbose headers   'cache-control': 'max-age=300',
+264 verbose headers   etag: '"9BMUBP7S97OY92KZA6IP2EIHU"',
+264 verbose headers   age: '15',
+264 verbose headers   connection: 'keep-alive',
+264 verbose headers   'x-served-by': 'cache-sjc3125-SJC',
+264 verbose headers   'x-cache': 'HIT',
+264 verbose headers   'x-cache-hits': '2',
+264 verbose headers   'x-timer': 'S1454036991.245735,VS0,VE0',
+264 verbose headers   vary: 'Accept' }
+265 silly get cb [ 304,
+265 silly get   { date: 'Fri, 29 Jan 2016 03:09:51 GMT',
+265 silly get     via: '1.1 varnish',
+265 silly get     'cache-control': 'max-age=300',
+265 silly get     etag: '"9BMUBP7S97OY92KZA6IP2EIHU"',
+265 silly get     age: '15',
+265 silly get     connection: 'keep-alive',
+265 silly get     'x-served-by': 'cache-sjc3125-SJC',
+265 silly get     'x-cache': 'HIT',
+265 silly get     'x-cache-hits': '2',
+265 silly get     'x-timer': 'S1454036991.245735,VS0,VE0',
+265 silly get     vary: 'Accept' } ]
+266 verbose etag https://registry.npmjs.org/formidable from cache
+267 verbose get saving formidable to /Users/mackey/.npm/registry.npmjs.org/formidable/.cache.json
+268 http 304 https://registry.npmjs.org/request
+269 verbose headers { date: 'Fri, 29 Jan 2016 03:09:51 GMT',
+269 verbose headers   via: '1.1 varnish',
+269 verbose headers   'cache-control': 'max-age=300',
+269 verbose headers   etag: '"5V15WTHTIWGUT2Z468WFNZ9RH"',
+269 verbose headers   age: '255',
+269 verbose headers   connection: 'keep-alive',
+269 verbose headers   'x-served-by': 'cache-sjc3122-SJC',
+269 verbose headers   'x-cache': 'HIT',
+269 verbose headers   'x-cache-hits': '19',
+269 verbose headers   'x-timer': 'S1454036991.249097,VS0,VE0',
+269 verbose headers   vary: 'Accept' }
+270 silly get cb [ 304,
+270 silly get   { date: 'Fri, 29 Jan 2016 03:09:51 GMT',
+270 silly get     via: '1.1 varnish',
+270 silly get     'cache-control': 'max-age=300',
+270 silly get     etag: '"5V15WTHTIWGUT2Z468WFNZ9RH"',
+270 silly get     age: '255',
+270 silly get     connection: 'keep-alive',
+270 silly get     'x-served-by': 'cache-sjc3122-SJC',
+270 silly get     'x-cache': 'HIT',
+270 silly get     'x-cache-hits': '19',
+270 silly get     'x-timer': 'S1454036991.249097,VS0,VE0',
+270 silly get     vary: 'Accept' } ]
+271 verbose etag https://registry.npmjs.org/request from cache
+272 verbose get saving request to /Users/mackey/.npm/registry.npmjs.org/request/.cache.json
+273 http 304 https://registry.npmjs.org/fluent-ffmpeg
+274 verbose headers { date: 'Fri, 29 Jan 2016 03:09:51 GMT',
+274 verbose headers   via: '1.1 varnish',
+274 verbose headers   'cache-control': 'max-age=300',
+274 verbose headers   etag: '"AKAX5Q5T4IESH3X4MX3M8AK10"',
+274 verbose headers   age: '183',
+274 verbose headers   connection: 'keep-alive',
+274 verbose headers   'x-served-by': 'cache-sjc3127-SJC',
+274 verbose headers   'x-cache': 'HIT',
+274 verbose headers   'x-cache-hits': '1',
+274 verbose headers   'x-timer': 'S1454036991.249206,VS0,VE0',
+274 verbose headers   vary: 'Accept' }
+275 silly get cb [ 304,
+275 silly get   { date: 'Fri, 29 Jan 2016 03:09:51 GMT',
+275 silly get     via: '1.1 varnish',
+275 silly get     'cache-control': 'max-age=300',
+275 silly get     etag: '"AKAX5Q5T4IESH3X4MX3M8AK10"',
+275 silly get     age: '183',
+275 silly get     connection: 'keep-alive',
+275 silly get     'x-served-by': 'cache-sjc3127-SJC',
+275 silly get     'x-cache': 'HIT',
+275 silly get     'x-cache-hits': '1',
+275 silly get     'x-timer': 'S1454036991.249206,VS0,VE0',
+275 silly get     vary: 'Accept' } ]
+276 verbose etag https://registry.npmjs.org/fluent-ffmpeg from cache
+277 verbose get saving fluent-ffmpeg to /Users/mackey/.npm/registry.npmjs.org/fluent-ffmpeg/.cache.json
+278 http 304 https://registry.npmjs.org/node-json-db
+279 verbose headers { date: 'Fri, 29 Jan 2016 03:09:51 GMT',
+279 verbose headers   via: '1.1 varnish',
+279 verbose headers   'cache-control': 'max-age=300',
+279 verbose headers   etag: '"1H6UVYVBMNIVCVYQQNZHBL2NU"',
+279 verbose headers   age: '56',
+279 verbose headers   connection: 'keep-alive',
+279 verbose headers   'x-served-by': 'cache-sjc3131-SJC',
+279 verbose headers   'x-cache': 'HIT',
+279 verbose headers   'x-cache-hits': '1',
+279 verbose headers   'x-timer': 'S1454036991.252325,VS0,VE0',
+279 verbose headers   vary: 'Accept' }
+280 silly get cb [ 304,
+280 silly get   { date: 'Fri, 29 Jan 2016 03:09:51 GMT',
+280 silly get     via: '1.1 varnish',
+280 silly get     'cache-control': 'max-age=300',
+280 silly get     etag: '"1H6UVYVBMNIVCVYQQNZHBL2NU"',
+280 silly get     age: '56',
+280 silly get     connection: 'keep-alive',
+280 silly get     'x-served-by': 'cache-sjc3131-SJC',
+280 silly get     'x-cache': 'HIT',
+280 silly get     'x-cache-hits': '1',
+280 silly get     'x-timer': 'S1454036991.252325,VS0,VE0',
+280 silly get     vary: 'Accept' } ]
+281 verbose etag https://registry.npmjs.org/node-json-db from cache
+282 verbose get saving node-json-db to /Users/mackey/.npm/registry.npmjs.org/node-json-db/.cache.json
+283 http 304 https://registry.npmjs.org/gm
+284 verbose headers { date: 'Fri, 29 Jan 2016 03:09:51 GMT',
+284 verbose headers   via: '1.1 varnish',
+284 verbose headers   'cache-control': 'max-age=300',
+284 verbose headers   etag: '"3P35TRH3R1O5JMR7AXQTR1PEV"',
+284 verbose headers   age: '253',
+284 verbose headers   connection: 'keep-alive',
+284 verbose headers   'x-served-by': 'cache-sjc3124-SJC',
+284 verbose headers   'x-cache': 'HIT',
+284 verbose headers   'x-cache-hits': '1',
+284 verbose headers   'x-timer': 'S1454036991.251356,VS0,VE1',
+284 verbose headers   vary: 'Accept' }
+285 silly get cb [ 304,
+285 silly get   { date: 'Fri, 29 Jan 2016 03:09:51 GMT',
+285 silly get     via: '1.1 varnish',
+285 silly get     'cache-control': 'max-age=300',
+285 silly get     etag: '"3P35TRH3R1O5JMR7AXQTR1PEV"',
+285 silly get     age: '253',
+285 silly get     connection: 'keep-alive',
+285 silly get     'x-served-by': 'cache-sjc3124-SJC',
+285 silly get     'x-cache': 'HIT',
+285 silly get     'x-cache-hits': '1',
+285 silly get     'x-timer': 'S1454036991.251356,VS0,VE1',
+285 silly get     vary: 'Accept' } ]
+286 verbose etag https://registry.npmjs.org/gm from cache
+287 verbose get saving gm to /Users/mackey/.npm/registry.npmjs.org/gm/.cache.json
+288 http 304 https://registry.npmjs.org/ytdl-core
+289 verbose headers { date: 'Fri, 29 Jan 2016 03:09:51 GMT',
+289 verbose headers   via: '1.1 varnish',
+289 verbose headers   'cache-control': 'max-age=300',
+289 verbose headers   etag: '"5BJ09Z9O8WLV2N9JRGUOO11CH"',
+289 verbose headers   age: '56',
+289 verbose headers   connection: 'keep-alive',
+289 verbose headers   'x-served-by': 'cache-sjc3134-SJC',
+289 verbose headers   'x-cache': 'HIT',
+289 verbose headers   'x-cache-hits': '1',
+289 verbose headers   'x-timer': 'S1454036991.254041,VS0,VE0',
+289 verbose headers   vary: 'Accept' }
+290 silly get cb [ 304,
+290 silly get   { date: 'Fri, 29 Jan 2016 03:09:51 GMT',
+290 silly get     via: '1.1 varnish',
+290 silly get     'cache-control': 'max-age=300',
+290 silly get     etag: '"5BJ09Z9O8WLV2N9JRGUOO11CH"',
+290 silly get     age: '56',
+290 silly get     connection: 'keep-alive',
+290 silly get     'x-served-by': 'cache-sjc3134-SJC',
+290 silly get     'x-cache': 'HIT',
+290 silly get     'x-cache-hits': '1',
+290 silly get     'x-timer': 'S1454036991.254041,VS0,VE0',
+290 silly get     vary: 'Accept' } ]
+291 verbose etag https://registry.npmjs.org/ytdl-core from cache
+292 verbose get saving ytdl-core to /Users/mackey/.npm/registry.npmjs.org/ytdl-core/.cache.json
+293 http 304 https://registry.npmjs.org/qr-image
+294 verbose headers { date: 'Fri, 29 Jan 2016 03:09:51 GMT',
+294 verbose headers   via: '1.1 varnish',
+294 verbose headers   'cache-control': 'max-age=300',
+294 verbose headers   etag: '"A3M7ZF8X8GG2X4JDJ4LIYB5C0"',
+294 verbose headers   age: '56',
+294 verbose headers   connection: 'keep-alive',
+294 verbose headers   'x-served-by': 'cache-sjc3121-SJC',
+294 verbose headers   'x-cache': 'HIT',
+294 verbose headers   'x-cache-hits': '1',
+294 verbose headers   'x-timer': 'S1454036991.255745,VS0,VE1',
+294 verbose headers   vary: 'Accept' }
+295 silly get cb [ 304,
+295 silly get   { date: 'Fri, 29 Jan 2016 03:09:51 GMT',
+295 silly get     via: '1.1 varnish',
+295 silly get     'cache-control': 'max-age=300',
+295 silly get     etag: '"A3M7ZF8X8GG2X4JDJ4LIYB5C0"',
+295 silly get     age: '56',
+295 silly get     connection: 'keep-alive',
+295 silly get     'x-served-by': 'cache-sjc3121-SJC',
+295 silly get     'x-cache': 'HIT',
+295 silly get     'x-cache-hits': '1',
+295 silly get     'x-timer': 'S1454036991.255745,VS0,VE1',
+295 silly get     vary: 'Accept' } ]
+296 verbose etag https://registry.npmjs.org/qr-image from cache
+297 verbose get saving qr-image to /Users/mackey/.npm/registry.npmjs.org/qr-image/.cache.json
+298 http 304 https://registry.npmjs.org/mime
+299 verbose headers { date: 'Fri, 29 Jan 2016 03:09:51 GMT',
+299 verbose headers   via: '1.1 varnish',
+299 verbose headers   'cache-control': 'max-age=300',
+299 verbose headers   etag: '"E5HN6XFP2Z02A0GXHKAJS6DEY"',
+299 verbose headers   age: '287',
+299 verbose headers   connection: 'keep-alive',
+299 verbose headers   'x-served-by': 'cache-sjc3129-SJC',
+299 verbose headers   'x-cache': 'HIT',
+299 verbose headers   'x-cache-hits': '13',
+299 verbose headers   'x-timer': 'S1454036991.256302,VS0,VE0',
+299 verbose headers   vary: 'Accept' }
+300 silly get cb [ 304,
+300 silly get   { date: 'Fri, 29 Jan 2016 03:09:51 GMT',
+300 silly get     via: '1.1 varnish',
+300 silly get     'cache-control': 'max-age=300',
+300 silly get     etag: '"E5HN6XFP2Z02A0GXHKAJS6DEY"',
+300 silly get     age: '287',
+300 silly get     connection: 'keep-alive',
+300 silly get     'x-served-by': 'cache-sjc3129-SJC',
+300 silly get     'x-cache': 'HIT',
+300 silly get     'x-cache-hits': '13',
+300 silly get     'x-timer': 'S1454036991.256302,VS0,VE0',
+300 silly get     vary: 'Accept' } ]
+301 verbose etag https://registry.npmjs.org/mime from cache
+302 verbose get saving mime to /Users/mackey/.npm/registry.npmjs.org/mime/.cache.json
+303 http 304 https://registry.npmjs.org/websocketio
+304 verbose headers { date: 'Fri, 29 Jan 2016 03:09:51 GMT',
+304 verbose headers   via: '1.1 varnish',
+304 verbose headers   'cache-control': 'max-age=300',
+304 verbose headers   etag: '"4SMOQRZXHTLPYQRH4F0DP4SJ1"',
+304 verbose headers   age: '56',
+304 verbose headers   connection: 'keep-alive',
+304 verbose headers   'x-served-by': 'cache-sjc3128-SJC',
+304 verbose headers   'x-cache': 'HIT',
+304 verbose headers   'x-cache-hits': '1',
+304 verbose headers   'x-timer': 'S1454036991.256839,VS0,VE0',
+304 verbose headers   vary: 'Accept' }
+305 silly get cb [ 304,
+305 silly get   { date: 'Fri, 29 Jan 2016 03:09:51 GMT',
+305 silly get     via: '1.1 varnish',
+305 silly get     'cache-control': 'max-age=300',
+305 silly get     etag: '"4SMOQRZXHTLPYQRH4F0DP4SJ1"',
+305 silly get     age: '56',
+305 silly get     connection: 'keep-alive',
+305 silly get     'x-served-by': 'cache-sjc3128-SJC',
+305 silly get     'x-cache': 'HIT',
+305 silly get     'x-cache-hits': '1',
+305 silly get     'x-timer': 'S1454036991.256839,VS0,VE0',
+305 silly get     vary: 'Accept' } ]
+306 verbose etag https://registry.npmjs.org/websocketio from cache
+307 verbose get saving websocketio to /Users/mackey/.npm/registry.npmjs.org/websocketio/.cache.json
+308 http 304 https://registry.npmjs.org/twit
+309 verbose headers { date: 'Fri, 29 Jan 2016 03:09:51 GMT',
+309 verbose headers   via: '1.1 varnish',
+309 verbose headers   'cache-control': 'max-age=300',
+309 verbose headers   etag: '"11SWF5ACC34BSLJEGZQRK2X0D"',
+309 verbose headers   age: '56',
+309 verbose headers   connection: 'keep-alive',
+309 verbose headers   'x-served-by': 'cache-sjc3127-SJC',
+309 verbose headers   'x-cache': 'HIT',
+309 verbose headers   'x-cache-hits': '1',
+309 verbose headers   'x-timer': 'S1454036991.268123,VS0,VE0',
+309 verbose headers   vary: 'Accept' }
+310 silly get cb [ 304,
+310 silly get   { date: 'Fri, 29 Jan 2016 03:09:51 GMT',
+310 silly get     via: '1.1 varnish',
+310 silly get     'cache-control': 'max-age=300',
+310 silly get     etag: '"11SWF5ACC34BSLJEGZQRK2X0D"',
+310 silly get     age: '56',
+310 silly get     connection: 'keep-alive',
+310 silly get     'x-served-by': 'cache-sjc3127-SJC',
+310 silly get     'x-cache': 'HIT',
+310 silly get     'x-cache-hits': '1',
+310 silly get     'x-timer': 'S1454036991.268123,VS0,VE0',
+310 silly get     vary: 'Accept' } ]
+311 verbose etag https://registry.npmjs.org/twit from cache
+312 verbose get saving twit to /Users/mackey/.npm/registry.npmjs.org/twit/.cache.json
+313 verbose exit [ 0, true ]
+314 verbose stack Error: write EPIPE
+314 verbose stack     at Object.exports._errnoException (util.js:856:11)
+314 verbose stack     at exports._exceptionWithHostPort (util.js:879:20)
+314 verbose stack     at WriteWrap.afterWrite (net.js:763:14)
+315 verbose cwd /Users/mackey/Dropbox/Hawaii/SAGE2/sage2
+316 error Darwin 13.4.0
+317 error argv "/Users/mackey/.nodebrew/node/v5.1.0/bin/node" "/Users/mackey/.nodebrew/current/bin/npm" "outdated" "--depth" "0" "--json" "--production"
+318 error node v5.1.0
+319 error npm  v3.5.3
+320 error code EPIPE
+321 error errno EPIPE
+322 error syscall write
+323 error write EPIPE
+324 error If you need help, you may report this error at:
+324 error     <https://github.com/npm/npm/issues>
+325 verbose exit [ 1, true ]
