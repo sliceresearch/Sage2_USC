@@ -171,6 +171,7 @@ initializeSage2Server();
 
 
 function initializeSage2Server() {
+
 	// Remove API keys from being investigated further
 	// if (config.apis) delete config.apis;
 
@@ -367,10 +368,11 @@ function initializeSage2Server() {
 	wsioServerS.onconnection(openWebSocketClient);
 
 	// if this is a slave server (connected to a master)
-        if (config.master_port !== undefined) {
-		console.log("Try to connect as slave to master SAGE2 server...");
+        if (program.slaveports !== undefined) {
 		// assume master is on the same host (for now...)
-		masterServer = new WebsocketIO("wss://"+config.host+":"+config.master_port, false, function() {
+		var master = "wss://"+config.host+":"+config.master_https_port;
+		console.log("Slave server - try to connect to master ", master, "...");
+		masterServer = new WebsocketIO(master, false, function() {
 			console.log(sageutils.header("Remote") + "Connected to master server as rendering slave");
 			var clientDescription = {
 				clientType: "remoteServer",
@@ -3536,6 +3538,15 @@ function loadConfiguration() {
 	} else {
 		http_port = userConfig.port;
 		https_port = userConfig.secure_port;
+	}
+	console.log('Slave? ', program.slaveports);
+        if (program.slaveports !== undefined) {
+		userConfig.master_http_port = http_port;
+		userConfig.master_https_port = https_port;
+		var ports = program.slaveports.split(',');
+		console.log("Slave: use master ports from config ", ports);
+		https_port = ports[0];
+		http_port = ports[1];
 	}
 	var rproxy_port, rproxys_port;
 	if (userConfig.rproxy_secure_port === undefined) {
