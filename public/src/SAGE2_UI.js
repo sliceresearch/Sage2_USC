@@ -274,6 +274,8 @@ function SAGE2_init() {
 			wsio.emit('loadImageFromBuffer', event.data);
 		}
 	});
+
+	setupRmbContextMenuDiv();
 }
 
 // Show error message for 2 seconds (or time given as parameter)
@@ -459,6 +461,10 @@ function setupListeners() {
 			var track = interactor.mediaStream.getTracks()[0];
 			track.stop();
 		}
+	});
+
+	wsio.on('utdConsoleMessage', function(data) {
+		console.log("UTD message:" + data.message);
 	});
 }
 
@@ -852,7 +858,6 @@ function pointerPress(event) {
 			var btn = (event.button === 0) ? "left" : (event.button === 1) ? "middle" : "right";
 			displayUI.pointerPress(btn);
 		}
-
 		event.preventDefault();
 	}
 }
@@ -1719,4 +1724,97 @@ function reloadIfServerRunning(callback) {
 		}
 	};
 	xhr.send();
+}
+
+/**
+ * Will setup the rmbContextMenu properties.
+ */
+function setupRmbContextMenuDiv() {
+	var workingDiv = document.getElementById('rmbContextMenu');
+		workingDiv.style.position = "absolute";
+		workingDiv.style.visibility = "hidden";
+		workingDiv.style.border = "1px solid black";
+		workingDiv.style.background = "white";
+		workingDiv.style.zIndex = 9999;
+
+	//override rmb contextmenu calls.
+	//this will need to be disabled when switching to pointer mode
+    if (document.addEventListener) {
+        document.addEventListener('contextmenu', function(e) {
+
+			if (event.target.id === "sage2UICanvas") {
+				var rect   = event.target.getBoundingClientRect();
+				var pointerX = event.clientX - rect.left;
+				var pointerY = event.clientY - rect.top;
+				pointerX = pointerX / displayUI.scale;
+				pointerY = pointerY / displayUI.scale;
+				var data = {};
+				data.x = pointerX;
+				data.y = pointerY;
+				console.dir(data);
+				wsio.emit('utdWhatAppIsAt', data );
+
+				showRmbContextMenuDiv(e.clientX, e.clientY);
+	            //start with blank set of entries
+	            setRmbContextMenuEntries( [] );
+			}
+
+            //prevent the standard context menu
+            e.preventDefault();
+        }, false);
+    }
+    //disable the oncontextmenu checks.
+    else {
+        document.attachEvent('oncontextmenu', function() {
+            window.event.returnValue = false;
+        });
+    }
+}
+
+function showRmbContextMenuDiv(x,y) {
+	var workingDiv = document.getElementById('rmbContextMenu');
+		workingDiv.style.visibility = "visible";
+    	workingDiv.style.left 		= x + "px";
+    	workingDiv.style.top 		= y + "px";
+}
+
+function hideRmbContextMenuDiv() {
+	var workingDiv = document.getElementById('rmbContextMenu');
+		workingDiv.style.visibility = "hidden";
+}
+/**
+ *
+ */
+function setRmbContextMenuEntries(entriesToAdd) {
+	var rmbDiv = document.getElementById('rmbContextMenu');
+
+	while (rmbDiv.firstChild) {
+		rmbDiv.removeChild(rmbDiv.firstChild);
+	}
+
+	var closeEntry = {};
+		closeEntry.description = "Cancel";
+		closeEntry.buttonEffect = function () {
+			hideRmbContextMenuDiv();
+		}
+	entriesToAdd.push( closeEntry );
+
+	var workingDiv;
+	for (var i = 0; i < entriesToAdd.length; i++) {
+		workingDiv = document.createElement('div');
+		workingDiv.id = 'rmbContextMenuEntry' + i;
+		workingDiv.innerHTML = entriesToAdd[i].description;
+		workingDiv.addEventListener( 'mouseover', function() {
+			this.style.background = "lightgray";
+		} );
+		workingDiv.addEventListener( 'mouseout', function() {
+			this.style.background = "white";
+		} );
+		workingDiv.addEventListener( 'mousedown', entriesToAdd[i].buttonEffect );
+
+		if (i === entriesToAdd.length - 1) {
+			rmbDiv.appendChild( document.createElement('hr') );
+		}
+		rmbDiv.appendChild( workingDiv );
+	}
 }

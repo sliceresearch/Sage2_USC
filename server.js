@@ -706,6 +706,9 @@ function setupListeners(wsio) {
 	wsio.on('command',                              wsCommand);
 
 	wsio.on('createFolder',                         wsCreateFolder);
+
+	//message passing between ui to display (utd)
+	wsio.on('utdWhatAppIsAt', 						wsUtdWhatAppIsAt)
 }
 
 function initializeExistingControls(wsio) {
@@ -7194,4 +7197,20 @@ function showOrHideWidgetLinks(data) {
 			broadcast('hideWidgetToAppConnector', app);
 		}
 	}
+}
+
+
+/**
+ *
+ */
+function wsUtdWhatAppIsAt(wsio, data) {
+	console.log("Erase me: wsUtdWhatAppIsAt " + data.x + ',' + data.y );
+	var obj = interactMgr.searchGeometry({x: data.x, y: data.y});
+	if (obj === null) {
+		data.message = "no app at location";
+	}
+	else {
+		data.message = obj.data.id;
+	}
+	wsio.emit('utdConsoleMessage', data);
 }
