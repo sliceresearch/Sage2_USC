@@ -57,7 +57,7 @@ h2 {
 	position: relative;
 	float: left;
 	margin: 10px 10px 0 10px;
-	cursor: nw-resize;
+	cursor: pointer;
 }
 
 #applicationsDiv {
@@ -141,11 +141,26 @@ h2 {
 .appWindow {
 	display: block;
 	position: absolute;
+	border: solid 1px #6C6C6C;
+}
+.appWindowHover {
+	display: block;
+	position: absolute;
+	border: solid 1px #3694B7;
 }
 
 .appWindowTitle {
 	position: absolute;
 	border: solid 1px #6C6C6C;
+	background-color: #E6E6E6;
+	-webkit-box-sizing: border-box;
+	-moz-box-sizing: border-box;
+	box-sizing: border-box;
+}
+.appWindowTitleHover {
+	position: absolute;
+	border: solid 1px #6C6C6C;
+	background-color: #3694B7;
 	-webkit-box-sizing: border-box;
 	-moz-box-sizing: border-box;
 	box-sizing: border-box;
@@ -157,6 +172,7 @@ h2 {
 	-webkit-box-sizing: border-box;
 	-moz-box-sizing: border-box;
 	box-sizing: border-box;
+	background-color: #484848;
 }
 
 .appWindowIcon {

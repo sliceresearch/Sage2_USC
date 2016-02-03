@@ -90,6 +90,41 @@ var pointerX, pointerY;
 
 var sage2Version;
 
+
+/**
+ * Reload the page if a application cache update is available
+ *
+ */
+if (window.applicationCache) {
+	applicationCache.addEventListener('updateready', function() {
+		window.location.reload();
+	});
+}
+
+/**
+ * Ask before closing the browser if desktop sharing in progress
+ *
+ */
+window.addEventListener('beforeunload', function(event) {
+	if (interactor && interactor.broadcasting) {
+		var confirmationMessage = "SAGE2 Desktop sharing in progress";
+
+		event.returnValue = confirmationMessage;  // Gecko, Trident, Chrome 34+
+		return confirmationMessage;               // Gecko, WebKit, Chrome <34
+	}
+});
+
+/**
+ * Closing desktop sharing before the browser closes
+ *
+ */
+window.addEventListener('unload', function(event) {
+	if (interactor && interactor.broadcasting) {
+		interactor.streamEnded();
+	}
+});
+
+
 /**
  * Entry point of the user interface
  *
@@ -220,17 +255,23 @@ function SAGE2_init() {
 	hasMouse = false;
 	console.log("Assuming mobile device");
 
+	// Event listener to the Chrome extension for desktop capture
 	window.addEventListener('message', function(event) {
 		if (event.origin !== window.location.origin) {
 			return;
 		}
 		if (event.data.cmd === "SAGE2_desktop_capture-Loaded") {
 			if (interactor !== undefined && interactor !== null) {
+				// Chrome extension is loaded
+				console.log('SAGE2 Chrome extension is loaded')
 				interactor.chromeDesktopCaptureEnabled = true;
 			}
 		}
 		if (event.data.cmd === "window_selected") {
 			interactor.captureDesktop(event.data.mediaSourceId);
+		}
+		if (event.data.cmd === "screenshot") {
+			wsio.emit('loadImageFromBuffer', event.data);
 		}
 	});
 }
@@ -839,6 +880,7 @@ function pointerRelease(event) {
 	}
 }
 
+
 /**
  * Handler for mouse move
  *
@@ -865,10 +907,15 @@ function pointerMove(event) {
 		var mouseY = event.clientY - rect.top;
 		pointerX   = mouseX;
 		pointerY   = mouseY;
-		// Send pointer event only during drag events
+
 		if (pointerDown) {
+			// Send pointer event only during drag events
 			displayUI.pointerMove(pointerX, pointerY);
+		} else {
+			// Otherwise test for application hover
+			displayUI.highlightApplication(pointerX, pointerY);
 		}
+
 	} else {
 		// Loose focus
 		pointerDown = false;

@@ -136,9 +136,9 @@ deploy:
 
 notifications:
   - provider: Slack
+    channel: '#appveyor'
     auth_token:
-      secure: zWPzLLrh/2HV3lXJd9q5XK+m2D1zn/bWBIQOzjQ2QkFSFL3ijB839EMqTRUrYZeA
-    channel: appveyor
+      secure: zWPzLLrh/2HV3lXJd9q5XB+GlcmsJKMSGZzQjApwSdpPhOwo42miogTgg24z0iGPxiQU4qyykg68v8kErHvIwA==
     on_build_success: true
     on_build_failure: true
     on_build_status_changed: true
