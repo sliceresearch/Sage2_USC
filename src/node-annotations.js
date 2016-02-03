@@ -35,7 +35,7 @@ annotationSystem.prototype.initializeDB = function(folder) {
     var fullpath = path.join(folder, this.filename);
 
     //console.log("Annotations> Initializing ...", fullpath);
-    if (!sageutils.fileExists(folder)){
+    if (!sageutils.folderExists(folder)){
         fs.mkdirSync(folder);
     }
     

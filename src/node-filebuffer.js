@@ -24,7 +24,7 @@ function FileBuffer (root){
 	this.files = {};
 	this.root = root;
 	this.textFileFolder = path.join(root, "notes");
-	if (!sageutils.fileExists(this.textFileFolder)){
+	if (!sageutils.folderExists(this.textFileFolder)){
 		fs.mkdirSync(this.textFileFolder);
 	}
 }
