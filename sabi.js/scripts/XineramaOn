@@ -1,0 +1,7 @@
+#!/bin/sh
+
+# XineramaOn
+
+
+sudo /usr/local/bin/goXinerama
+

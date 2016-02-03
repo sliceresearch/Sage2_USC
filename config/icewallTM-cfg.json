@@ -35,6 +35,12 @@
 	],
 	remote_sites: [
 		{
+			name: "IceWall",
+			host: "thor.evl.uic.edu",
+			port: 443,
+			secure: true
+		},
+		{
 			name: "Cyber-Commons",
 			host: "iridium.evl.uic.edu",
 			port: 443,

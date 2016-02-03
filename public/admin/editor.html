@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+<meta charset="utf-8">
+<title>SAGE2 Editor</title>
+
+<script type="text/javascript">
+	// SAGE2 is available for use under the SAGE2 Software License
+	//
+	// University of Illinois at Chicago's Electronic Visualization Laboratory (EVL)
+	// and University of Hawai'i at Manoa's Laboratory for Advanced Visualization and
+	// Applications (LAVA)
+	//
+	// See full text, terms and conditions in the LICENSE.txt included file
+	//
+	// Copyright (c) 2014-15
+</script>
+
+<script type="text/javascript" src="../src/websocket.io.js"></script>
+<script type="text/javascript" src="../src/SAGE2_runtime.js"></script>
+
+<script type="text/javascript" src="../ace/ace.js"></script> 
+<script type="text/javascript" src="SAGE2_editor.js"></script>
+
+<link rel="stylesheet" type="text/css" href="style.css" media="screen" />
+
+</head>
+
+<body onload="SAGE2_init()">
+
+	<header>
+		<h1>Editor</h1>
+	</header>
+
+	<main>
+
+		<section class="siteType">
+			<h2>SAGE2 Editor</h2>
+			<div id="editor">
+			</div>
+		</section>
+
+		<section class="siteType">
+			<a onclick="SAGE2_saveFile()" class="myButton">Save</a>
+		</section>
+
+	</main>
+
+</body>
+</html>
+

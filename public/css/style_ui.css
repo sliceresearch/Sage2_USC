@@ -13,77 +13,61 @@
 
 /* CSS Document */
 
-@import url('fonts.css');
-
 * {
+	font-family: Arimo, Helvetica, sans-serif;
+	font-size: 12px;
+	font-weight: normal;
+	font-style: normal;
 	margin: 0;
 	padding: 0;
 }
 
 body {
-	margin: 0px;
-	padding: 0px;
+	margin: 0;
+	padding: 0;
 }
 
 p {
-	font-family: Arimo, Helvetica, sans-serif;
-	font-size: 12px;
 	color: #000000;
 }
 
 label {
-	font-family: Arimo, Helvetica, sans-serif;
-	font-size: 12px;
 	color: #000000;
 }
 
 span {
-	font-family: Arimo, Helvetica, sans-serif;
-	font-size: 12px;
 	color: #000000;
 }
 
 h1 {
-	font-family: Arimo, Helvetica, sans-serif;
 	font-size: 18pt;
-	font-weight: normal;
-	font-style: normal;
 }
 
 h2 {
-	font-family: Arimo, Helvetica, sans-serif;
 	font-size: 14pt;
-	font-weight: normal;
-	font-style: normal;
 	margin: 10px;
 }
 
-h3 {
-	font-family: Arimo, Helvetica, sans-serif;
-	font-size: 12pt;
-	font-weight: normal;
-	font-style: normal;
-}
-
 #mainUI {
-	margin: 0px;
-	overflow: auto;
+	margin: 0;
+	overflow: hidden;
 }
 
-#displayUI {
+#displayUIDiv {
 	position: relative;
 	float: left;
-	margin: 10px 10px 0px 10px;
+	margin: 10px 10px 0 10px;
+	cursor: pointer;
 }
 
 #applicationsDiv {
 	position: absolute;
 	overflow: hidden;
 	background-color: #B4B4B4;
-	margin: 2px 0px 0px 2px;
+	margin: 2px 0 0 2px;
 }
 
-#sage2UI {
+#sage2UICanvas {
 	position: absolute;
 	border: solid 2px #565656;
 	-webkit-box-sizing: border-box;
@@ -101,9 +85,10 @@ h3 {
 #menuUI {
 	margin: 0 auto;
 	white-space: nowrap;
-	-webkit-transform-origin: 0% 0%;
-	-moz-transform-origin: 0% 0%;
-	transform-origin: 0% 0%;
+	-webkit-transform-origin: 0 0;
+	-moz-transform-origin: 0 0;
+	-ms-transform-origin: 0 0;
+	transform-origin: 0 0;
 }
 
 #menuUI tr td {
@@ -122,13 +107,12 @@ h3 {
 #menuUI tr td:hover img {
 	-webkit-transform: scale(1.0);
 	-moz-transform: scale(1.0);
+	-ms-transform: scale(1.0);
 	transform: scale(1.0);
-	background-color: "#FF0000";
+	background-color: rgba(0,0,0,0);
 }
 
 #menuUI tr td p {
-	font-family: Arimo, Helvetica, sans-serif;
-	font-size: 12px;
 	white-space: nowrap;
 	display: inline;
 	padding: 2px 8px 2px 8px;
@@ -147,8 +131,6 @@ h3 {
 }
 
 #textWidthTest {
-	font-family: Arimo, Helvetica, sans-serif;
-	font-size: 12px;
 	white-space: nowrap;
 	position: absolute;
 	visibility: hidden;
@@ -159,11 +141,26 @@ h3 {
 .appWindow {
 	display: block;
 	position: absolute;
+	border: solid 1px #6C6C6C;
+}
+.appWindowHover {
+	display: block;
+	position: absolute;
+	border: solid 1px #3694B7;
 }
 
 .appWindowTitle {
 	position: absolute;
 	border: solid 1px #6C6C6C;
+	background-color: #E6E6E6;
+	-webkit-box-sizing: border-box;
+	-moz-box-sizing: border-box;
+	box-sizing: border-box;
+}
+.appWindowTitleHover {
+	position: absolute;
+	border: solid 1px #6C6C6C;
+	background-color: #3694B7;
 	-webkit-box-sizing: border-box;
 	-moz-box-sizing: border-box;
 	box-sizing: border-box;
@@ -175,6 +172,7 @@ h3 {
 	-webkit-box-sizing: border-box;
 	-moz-box-sizing: border-box;
 	box-sizing: border-box;
+	background-color: #484848;
 }
 
 .appWindowIcon {
@@ -183,6 +181,7 @@ h3 {
 	top: 50%;
 	-webkit-transform: translate(-50%, -50%);
 	-moz-transform: translate(-50%, -50%);
+	-ms-transform: translate(-50%, -50%);
 	transform: translate(-50%, -50%);
 	-webkit-user-drag: none;
 	-moz-user-drag: none;
@@ -201,6 +200,7 @@ h3 {
 	left: 50%;
 	-webkit-transform: translate(-50%, -50%);
 	-moz-transform: translate(-50%, -50%);
+	-ms-transform: translate(-50%, -50%);
 	transform: translate(-50%, -50%);
 }
 
@@ -215,7 +215,7 @@ h3 {
 	position: absolute;
 	left: 12px;
 	top: 12px;
-	margin: 0px;
+	margin: 0;
 	overflow: scroll;
 }
 
@@ -251,7 +251,7 @@ h3 {
 	position: absolute;
 	left: 12px;
 	top: 12px;
-	margin: 0px;
+	margin: 0;
 	background-color: #484848;
 	overflow: scroll;
 }
@@ -270,8 +270,8 @@ h3 {
 
 #metadata {
 	position: absolute;
-	margin: 0px;
-	padding: 0px;
+	margin: 0;
+	padding: 0;
 	top: 12px;
 	text-align: center;
 	background-color: #484848;
@@ -285,8 +285,6 @@ h3 {
 
 #metadata_text {
 	display: block;
-	font-family: Arimo, Helvetica, sans-serif;
-	font-size: 12px;
 	color: #FFFFFF;
 	white-space: pre-wrap;
 	word-wrap: break-word;
@@ -319,6 +317,7 @@ h3 {
 	left: 50%;
 	-webkit-transform: translate(-50%, -50%);
 	-moz-transform: translate(-50%, -50%);
+	-ms-transform: translate(-50%, -50%);
 	transform: translate(-50%, -50%);
 }
 
@@ -359,6 +358,7 @@ h3 {
 	left: 50%;
 	-webkit-transform: translate(-50%, -50%);
 	-moz-transform: translate(-50%, -50%);
+	-ms-transform: translate(-50%, -50%);
 	transform: translate(-50%, -50%);
 }
 #infoItems {
@@ -395,6 +395,16 @@ h3 {
 	left: 50%;
 	-webkit-transform: translate(-50%, -50%);
 	-moz-transform: translate(-50%, -50%);
+	-ms-transform: translate(-50%, -50%);
+	transform: translate(-50%, -50%);
+}
+
+#settingsDialog2 {
+	top: 50%;
+	left: 50%;
+	-webkit-transform: translate(-50%, -50%);
+	-moz-transform: translate(-50%, -50%);
+	-ms-transform: translate(-50%, -50%);
 	transform: translate(-50%, -50%);
 }
 
@@ -403,11 +413,13 @@ h3 {
 	overflow: auto;
 }
 
+
 #browserDialog {
 	top: 50%;
 	left: 50%;
 	-webkit-transform: translate(-50%, -50%);
 	-moz-transform: translate(-50%, -50%);
+	-ms-transform: translate(-50%, -50%);
 	transform: translate(-50%, -50%);
 }
 
@@ -473,15 +485,19 @@ h3 {
 	height: 25px;
 }
 
+#screenShareResolution {
+	width: 100px;
+}
 #screenShareQuality {
 	width: 100px;
 }
 
-#screenShareQualityIndicator {
-	margin-left: 4px;
-}
-
 #settingsCloseBtn {
+	position: absolute;
+	right: 10px;
+	bottom: 10px;
+}
+#settingsCloseBtn2 {
 	position: absolute;
 	right: 10px;
 	bottom: 10px;
@@ -492,6 +508,7 @@ h3 {
 	left: 50%;
 	-webkit-transform: translate(-50%, -50%);
 	-moz-transform: translate(-50%, -50%);
+	-ms-transform: translate(-50%, -50%);
 	transform: translate(-50%, -50%);
 	width: 265px;
 	height: 60px;
@@ -514,6 +531,7 @@ h3 {
 	left: 50%;
 	-webkit-transform: translate(-50%, -50%);
 	-moz-transform: translate(-50%, -50%);
+	-ms-transform: translate(-50%, -50%);
 	transform: translate(-50%, -50%);
 	width:  510px;
 	height: 100px;
@@ -536,9 +554,40 @@ h3 {
 	left: 50%;
 	-webkit-transform: translate(-50%, -50%);
 	-moz-transform: translate(-50%, -50%);
+	-ms-transform: translate(-50%, -50%);
 	transform: translate(-50%, -50%);
 	width: 310px;
 	height: 60px;
+}
+
+#noteItems {
+	margin: 10px 10px 66px 10px;
+	overflow: auto;
+}
+
+#noteDialog {
+	top: 50%;
+	left: 50%;
+	-webkit-transform: translate(-50%, -50%);
+	-moz-transform: translate(-50%, -50%);
+	-ms-transform: translate(-50%, -50%);
+	transform: translate(-50%, -50%);
+}
+
+#noteCloseBtn {
+	position: absolute;
+	right: 90px;
+	bottom: 10px;
+}
+
+#noteOkBtn {
+	position: absolute;
+	right: 10px;
+	bottom: 10px;
+}
+
+#colorPicker_palette-0 {
+	z-index: 10002;
 }
 #localFilesBtn {
 	position: absolute;
@@ -559,8 +608,8 @@ h3 {
 #blackoverlay {
 	display: none;
 	position: fixed;
-	top: 0%;
-	left: 0%;
+	top: 0;
+	left: 0;
 	width: 100%;
 	height: 100%;
 	background-color: #000000;
@@ -572,8 +621,8 @@ h3 {
 #sage2MobileContainer {
 	display: none;
 	position: fixed;
-	top: 0%;
-	left: 0%;
+	top: 0;
+	left: 0;
 	width: 100%;
 	height: 100%;
 	background-color: #464646;
@@ -590,9 +639,16 @@ h3 {
 	width: 100%;
 	height: 80%;
 	border: solid 3px #000000;
+	color: #FFFFFF;
 	-moz-box-sizing:border-box;
 	-webkit-box-sizing:border-box;
 	box-sizing:border-box;
+
+	background: url('../images/trackpad.svg') no-repeat;
+    background-position: 50% 70%;
+    background-size: 55vh;
+    background-origin: content-box;
+    padding: 10px;
 }
 
 #sage2MobileButtons {
@@ -602,19 +658,75 @@ h3 {
 
 #sage2MobileLeftButton {
 	float: left;
-	width: 50%;
+	width: 35%;
 	height: 100%;
 	border: solid 3px #000000;
+	color: #FFFFFF;
+	font-size: 16px;
+
+	background: url('../images/mouse-left.svg') no-repeat;
+    background-position: 50% 0;
+    background-size: contain;
+    background-origin: content-box;
+    padding: 5px;
+
+	-moz-box-sizing:border-box;
+	-webkit-box-sizing:border-box;
+	box-sizing:border-box;
+}
+
+#sage2MobileMiddleButton {
+	float: left;
+	width: 15%;
+	height: 100%;
+	border: solid 3px #000000;
+	color: #FFFFFF;
+	font-size: 16px;
+
+	background: url('../images/switch.svg') no-repeat;
+    background-position: 50% 0;
+    background-size: contain;
+    background-origin: content-box;
+    padding: 5px;
+
+	-moz-box-sizing:border-box;
+	-webkit-box-sizing:border-box;
+	box-sizing:border-box;
+}
+
+#sage2MobileMiddle2Button {
+	float: left;
+	width: 15%;
+	height: 100%;
+	border: solid 3px #000000;
+	color: #FFFFFF;
+	font-size: 16px;
+
+	background: url('../images/spacebar.svg') no-repeat;
+    background-position: 50% 0;
+    background-size: contain;
+    background-origin: content-box;
+    padding: 5px;
+
 	-moz-box-sizing:border-box;
 	-webkit-box-sizing:border-box;
 	box-sizing:border-box;
 }
 
 #sage2MobileRightButton {
-	float: left;
-	width: 50%;
+	float: right;
+	width: 35%;
 	height: 100%;
 	border: solid 3px #000000;
+	color: #FFFFFF;
+	font-size: 16px;
+
+	background: url('../images/mouse-right.svg') no-repeat;
+    background-position: 50% 0;
+    background-size: contain;
+    background-origin: content-box;
+    padding: 5px;
+
 	-moz-box-sizing:border-box;
 	-webkit-box-sizing:border-box;
 	box-sizing:border-box;
@@ -627,26 +739,11 @@ h3 {
 .button {
 	padding: 10px 12px 10px 12px;
 	border-radius: 12px;
-	font-family: Arimo, Helvetica, sans-serif;
-	font-size: 12px;
 	color: #FFFFFF;
 	background-color: #787878;
 	-webkit-user-select: none;
 	-moz-user-select: none;
-	user-select: none;
-}
-
-.button_session {
-	padding: 10px 12px 10px 12px;
-	margin: 10px;
-	width: 20%;
-	border-radius: 1px;
-	font-family: Arimo, Helvetica, sans-serif;
-	font-size: 12px;
-	color: #FFFFFF;
-	background-color: #787878;
-	-webkit-user-select: none;
-	-moz-user-select: none;
+	-ms-user-select: none;
 	user-select: none;
 }
 
@@ -668,17 +765,16 @@ h3 {
 /***** File Browser *****/
 
 .css-treeview {
-	font-family: Arimo, Helvetica, sans-serif;
-	font-size: 12px;
 	-webkit-user-select: none;
 	-moz-user-select: none;
+	-ms-user-select: none;
 	user-select: none;
 }
 
 .css-treeview ul,
 .css-treeview li {
-	padding: 0px;
-	margin: 6px 3px 0px 3px;
+	padding: 0;
+	margin: 6px 3px 0 3px;
 	list-style: none;
 	display: block;
 	white-space: nowrap;
@@ -696,8 +792,8 @@ h3 {
 .css-treeview input + label {
 	background: url('../images/dir-closed.svg') no-repeat;
 	background-size: 32px 17px;
-    padding: 3px 0px 3px 42px;
-    background-position: 0px 0px;
+    padding: 3px 0 3px 42px;
+    background-position: 0 0;
 }
 
 .css-treeview input:checked + label {
@@ -706,12 +802,12 @@ h3 {
 }
 
 .css-treeview input ~ ul {
-	margin: 0px;
+	margin: 0;
 	display: none;
 }
 
 .css-treeview input ~ ul > li {
-	margin: 0px;
+	margin: 0;
 	padding-left: 48px;
 	font-size: 11px;
 }
@@ -722,11 +818,10 @@ h3 {
 
 /******** Text - Width Test ********/
 #textWidthTest {
-	font-family: Arimo, Helvetica, sans-serif;
 	font-size: 11px;
 	position: absolute;
-	bottom: 0px;
-	left: 0px;
+	bottom: 0;
+	left: 0;
 	visibility: hidden;
 	height: auto;
 	width: auto;

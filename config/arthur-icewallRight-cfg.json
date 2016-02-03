@@ -1,0 +1,92 @@
+{
+	"name": "Endeavour",
+	"host": "nishimoto.evl.uic.edu",
+	"port": 9090,
+	"index_port": 9292,
+	"background": {
+		"color": "#333333",
+	},
+	"ui": {
+		"clock": 12,
+		"show_url": true,
+		"show_version": true,
+		"widgetControlSize": 20,
+		"auto_scale_ui": true,
+		"calculate_viewing_distance": false,
+		"reload_wallui_on_refresh": false
+	},
+	"resolution": {
+		"width": 1536,
+		"height": 1360
+	},
+	// NEW ATTRIBUTES
+	"dimensions": {
+		// dimensions of one tile (can be overriden in displays section)
+		"tile_width":  0.646,  // in meter, pixel area
+		"tile_height": 1.093,  // in meter, pixel area
+		"tile_borders": [ 0.002, 0.002, 0.002, 0.002 ], // mullions in meter, left, right, bottom, top
+		// prefered or common viewing distance to calculate UI sizes
+		"viewing_distance": 1.0668	// in meter
+	},
+	"layout": {
+		"rows": 1,
+		"columns": 2
+	},
+	"displays": [
+		{
+			"row": 0,
+			"column": 0
+		},
+		{
+			"row": 0,
+			"column": 1
+		}
+	],
+	"alternate_hosts": [
+		"localhost",
+		"127.0.0.1"
+	],
+	"remote_sites": [
+		{
+			"name": "Cyber-Commons",
+			"host": "iridium.evl.uic.edu",
+			"port": 443,
+			"secure": true
+		},
+		{
+			"name": "CAVE2",
+			"host": "lyra.evl.uic.edu",
+			"port": 443,
+			"secure": true
+		}
+	],
+	// for experimental features: true/false
+	"experimental": {
+		"webbrowser": false,  // enable the awesomium module
+	
+		"omicron": // enable omicron input module
+		{
+			// Standard 'SAGE' connection
+			// SAGE listens for a sageinputserver to stream events
+			"enable": true,
+			"dataPort": 30015,
+			
+			"debug": false,
+			
+			// Touch gestures
+			"touchOffset": [ 0, 0 ], // in pixels
+			"zoomGestureScale": 520,
+			"acceleratedDragScale": 0,
+			
+			// Additional 'CAVE2' type connection
+			// SAGE connects to an oinputserver to get events
+			"useOinputserver": false,
+			"inputServerIP": "cave2tracker.evl.uic.edu",
+			"msgPort": 28000
+		}
+	},
+	dependencies: {
+		ImageMagick: "C:/Program Files/ImageMagick-6.8.9-Q16/",
+		FFMpeg: "C:/Dev/ffmpeg-win64-shared/bin/"
+    }
+}

@@ -1,0 +1,7 @@
+node_modules
+doc
+src/node-osc
+lib
+test
+coverage
+

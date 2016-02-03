@@ -37,21 +37,25 @@ var sticky_note = SAGE2_App.extend( {
 		this.element.appendChild(this.svg.node);
 		
 		this.svg.attr("viewBox", "0,0," + this.width + "," + this.height);
-		this.backColor = [187,238,187];
+		this.backColor =  "rgba(187,238,187,1.0)";	
+		if (data.state.noteColor !== undefined && data.state.noteColor !== null){
+			this.backColor = data.state.noteColor;
+		}
+		
 		this.lineHeight = 1.4;
 		
 		//this.lineColor = this.backColor.diff(60);
 		//console.log(this.lineColor);
 		this.tailText = "";
 		this.rectbg = this.svg.rect(0, 0, this.width, this.height);
-		this.rectbg.attr({ fill: "rgba(" + this.backColor.join(",") + ",1.0)", strokeWidth: 0 });
+		this.rectbg.attr({ fill: this.backColor, strokeWidth: 0 });
 		this.setupWindow();
 		this.setText();
-		this.controls.addTextInput({defaultText: this.state.fileName, id:"TextInput", caption:"file"});
-		this.controls.addButton({type:"duplicate",sequenceNo:3, id:"DuplicateNote"});
-		this.controls.addButton({type:"new",sequenceNo:5, id:"NewNote"});
-		this.controls.addButton({type:"zoom-in",sequenceNo:8, id:"increaseFont"});
-		this.controls.addButton({type:"zoom-out",sequenceNo:9, id:"decreaseFont"});
+		this.controls.addTextInput({value: this.state.fileName, identifier:"TextInput", label:"file"});
+		this.controls.addButton({type:"duplicate", position:3, identifier:"DuplicateNote"});
+		this.controls.addButton({type:"new", position:5, identifier:"NewNote"});
+		this.controls.addButton({type:"zoom-in", position:8, identifier:"increaseFont"});
+		this.controls.addButton({type:"zoom-out", position:9, identifier:"decreaseFont"});
 		this.controls.finishedAddingControls();
 		//this.requestFileBuffer(this.state.fileName);
 		
@@ -140,7 +144,7 @@ var sticky_note = SAGE2_App.extend( {
 			}			
 		}
 		else if (eventType === "widgetEvent"){
-			switch(data.ctrlId){
+			switch(data.identifier){
 				case "DuplicateNote":
 					this.requestForClone = true;
 					break;
@@ -165,7 +169,7 @@ var sticky_note = SAGE2_App.extend( {
 					this.setFontSize();
 					break;
 				default:
-					console.log("No handler for:", data.ctrlId);
+					console.log("No handler for:", data.identifier);
 					break;
 			}
 		}

@@ -11,7 +11,9 @@
 	no-use-before-define: 0,
 	key-spacing: 0,
 	space-infix-ops: 0,
+	space-unary-ops: 0,
 	no-unused-vars: [2, {vars: "all", args: "none"}]
   }
 }
+
 

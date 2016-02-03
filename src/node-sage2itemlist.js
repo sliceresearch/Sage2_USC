@@ -32,7 +32,7 @@ function SAGE2ItemList() {
 	this.numItems = 0;
 	this.list = {};
 
-	this.interactable= new InteractableManager();
+	this.interactable = new InteractableManager();
 }
 
 /**
@@ -54,7 +54,7 @@ SAGE2ItemList.prototype.addItem = function(item) {
 * @param id {String} id of item to be removed from list
 */
 SAGE2ItemList.prototype.removeItem = function(id) {
-	if(this.list.hasOwnProperty(id)) {
+	if (this.list.hasOwnProperty(id)) {
 		this.numItems--;
 		delete this.list[id];
 		this.interactable.removeLayer(id);
@@ -70,7 +70,7 @@ SAGE2ItemList.prototype.removeItem = function(id) {
 */
 SAGE2ItemList.prototype.editItem = function(id, newProperties) {
 	var key;
-	for(key in newProperties) {
+	for (key in newProperties) {
 		this.list[id][key] = newProperties[key];
 	}
 };
@@ -99,6 +99,18 @@ SAGE2ItemList.prototype.addButtonToItem = function(id, buttonId, type, geometry,
 */
 SAGE2ItemList.prototype.editButtonOnItem = function(id, buttonId, type, geometry) {
 	this.interactable.editGeometry(buttonId, id, type, geometry);
+};
+
+/**
+* Edit visibility for an interactable button for an item in the list
+*
+* @method editButtonVisibilityOnItem
+* @param id {String} id of item
+* @param buttonId {String} id of button
+* @param visible {Boolean} whether or not the button is visible
+*/
+SAGE2ItemList.prototype.editButtonVisibilityOnItem = function(id, buttonId, visible) {
+	this.interactable.editVisibility(buttonId, id, visible);
 };
 
 /**

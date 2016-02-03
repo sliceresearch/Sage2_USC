@@ -1,6 +1,6 @@
 {
 	"name": "SAGE2",
-	"version": "0.3.0",
+	"version": "1.0.0",
 	"private": true,
 	"description": "A cluster-based html viewer used for displaying elements across multiple browser windows",
 	"keywords": [
@@ -31,6 +31,10 @@
 			"email": "krishnaknbharadwaj@gmail.com"
 		},
 		{
+			"name": "Dylan Kobayashi",
+			"email": "dylank@hawaii.edu"
+		},
+		{
 			"name": "Luc Renambot",
 			"email": "renambot@gmail.com"
 		}
@@ -49,27 +53,33 @@
 		"imageinfo": "latest",
 		"json5": "latest",
 		"mime": "latest",
-		"node-demux": "latest",
 		"node-json-db": "latest",
 		"qr-image": "latest",
 		"rbush": "latest",
 		"request": "latest",
 		"sprint": "^0.3.1",
 		"twit": "latest",
-		"ws": "latest",
+		"mv": "latest",
 		"semver": "latest",
+		"fsmonitor": "latest",
+		"cheerio": "latest",
 		"ytdl-core": "latest"
 	},
+	"bundledDependencies": [
+		"websocketio",
+		"node-demux"
+	],
 	"devDependencies": {
 		"grunt": "latest",
 		"grunt-cli": "latest",
-		"eslint-grunt": "latest",
+		"grunt-eslint": "latest",
+		"grunt-jscs": "latest",
 		"grunt-contrib-yuidoc": "latest",
 		"grunt-contrib-uglify": "latest",
 		"grunt-prompt": "latest",
 		"grunt-mocha-cli": "latest",
+		"jscs": "latest",
 		"nodemon": "latest",
-		"eslint": "latest",
 		"kthxbai": "latest",
 		"mocha": "^2.0.1",
 		"mocha-jshint": "^0.0.9",
@@ -81,8 +91,9 @@
 	},
 	"scripts": {
 		"start":   "node server.js -l",
-		"monitor": "./node_modules/.bin/nodemon -e js,html -I -L server.js -l",
+		"monitor": "./node_modules/.bin/nodemon -e json,js,html -I -L -i public/uploads server.js -l",
 		"lint":    "./node_modules/.bin/grunt eslint",
+		"style":   "./node_modules/.bin/grunt jscs",
 		"doc":     "./node_modules/.bin/grunt yuidoc",
 		"mini":    "./node_modules/.bin/grunt uglify --verbose",
 		"newapp":  "./node_modules/.bin/grunt newapp",

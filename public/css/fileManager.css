@@ -1,0 +1,39 @@
+@charset "UTF-8";
+
+/* SAGE2 is available for use under the SAGE2 Software License
+ * 
+ * University of Illinois at Chicago's Electronic Visualization Laboratory (EVL)
+ * and University of Hawai'i at Manoa's Laboratory for Advanced Visualization and
+ * Applications (LAVA)
+ * 
+ * See full text, terms and conditions in the LICENSE.txt included file
+ *
+ * Copyright (c) 2014
+ */
+
+/* CSS Document */
+
+.webix_tree_folder {
+    background-image: url("../lib/webix/icons/folder.png");
+    background-position: 0 4px;
+}
+.webix_tree_folder_open {
+    background-image: url("../lib/webix/icons/folder_open.png");
+    background-position: 0 4px;
+}
+.webix_tree_search {
+    background-image: url("../lib/webix/icons/rss.png");
+    background-position: 0 4px;
+}
+.webix_tree_home {
+    background-image: url("../lib/webix/icons/home.png");
+    background-position: 0 4px;
+}
+.webix_property_label_line {
+	background: #d3e3ef;
+	font-family: Arimo, Helvetica, sans-serif;
+	font-size: 13px;
+ 	color: #4a4a4a;
+ 	height: 34px;
+ 	line-height: 34px;
+}

@@ -5,7 +5,7 @@
 	name: "Arthur",
 	host: "nishimoto.evl.uic.edu",
 	port: 9090,
-	index_port: 9292,
+	index_port: 9293,
 	background: {
 		color: "#333333",
 		watermark: {
@@ -15,13 +15,27 @@
 	},
 	ui: {
 		clock: 12,
-		show_version: true,
-		show_url: true,
-		widgetControlSize: 50
+		show_version: false,
+		show_url: false,
+		widgetControlSize: 20,
+		auto_scale_ui: true,
+		calculate_viewing_distance: false,
+		reload_wallui_on_refresh: false
 	},
 	resolution: {
 		width: 2560,
 		height: 1600
+		//width: 1366,
+		//height: 768
+
+	},
+	dimensions: {
+		// dimensions of one tile (can be overriden in displays section)
+		tile_width:  0.68,  // in meter, pixel area
+		tile_height: 0.485,  // in meter, pixel area
+		tile_borders: { left: 0.023, right: 0.023, bottom: 0.05, top: 0.05 }, // mullions in meter
+		// prefered or common viewing distance to calculate UI sizes
+		viewing_distance: 3.5	// in meter
 	},
 	layout: {
 		rows: 1,
@@ -37,6 +51,18 @@
 		"127.0.0.1"
 	],
 	remote_sites: [
+		{
+			"name": "Cyber-Commons",
+			"host": "orion.evlrn.uic.edu",
+			"port": 443,
+			"secure": true
+		},
+		{
+			"name": "CAVE2",
+			"host": "lyra.evl.uic.edu",
+			"port": 443,
+			"secure": true
+		}
 	],
 	dependencies: {
 		ImageMagick: "C:/Program Files/ImageMagick-6.8.9-Q16/",
@@ -45,28 +71,25 @@
 	// for experimental features: true/false
 	experimental: {
 		omicron: { // enable omicron input module
+			// Default SAGE2 input connection
 			enable: true,
 			host: "131.193.76.121",
 			dataPort: 30005,
 			
+			debug: false,
+			
 			// Touch gestures
+			touchOffset: [ 0, 0 ], // in pixels
 			zoomGestureScale: 520,
 			acceleratedDragScale: 0,
 			
+			// Alternate input connection
 			// Note if the following is enabled the server will attempt
 			// to connect to the specified Omicron oinputserver
 			// (By default the server listens for an Omicron sageinputserver to connect to it)
-			useOinputserver: true,
+			useOinputserver: false,
 			inputServerIP: "131.193.76.121",
 			msgPort: 28000
-		}
-	},
-    apis: {
-		twitter: {
-			consumerKey: "fuyVLmYL4QMG8dhg4UDxiGYKK",
-			consumerSecret: "XPf8AxHF6l3VjNqJzWpIiy4t1B1nEun8kWbXdXHfMKhhNUK7ox",
-			accessToken: "213878544-eLXXES5ufR2XU2jI7SDAVnd4tgAwr5MqpE9S5gLZ",
-			accessSecret: "pjTo8R9ncGKVIqGOqX17nUAQNHLw2CWaWwP78MtT0Tv8x"
 		}
 	}
 }

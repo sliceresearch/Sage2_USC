@@ -107,8 +107,7 @@ StickyItems.prototype.attachStickyItemWithPredifnedOffset = function(backgroundI
 		if (this.stickyItemParent[backgroundItem.id].indexOf(stickyItem) < 0) {
 			this.stickyItemParent[backgroundItem.id].push(stickyItem);
 		}
-	}
-	else {
+	} else {
 		this.stickyItemParent[backgroundItem.id] = [];
 		this.stickyItemParent[backgroundItem.id].push(stickyItem);
 	}
@@ -124,7 +123,7 @@ StickyItems.prototype.detachStickyItem = function(stickyItem) {
 	for (var key in this.stickyItemParent) {
 		if (this.stickyItemParent.hasOwnProperty(key)) {
 			var idx = this.stickyItemParent[key].indexOf(stickyItem);
-			if (idx>-1) {
+			if (idx > -1) {
 				this.stickyItemParent[key].splice(idx, 1);
 				if (this.stickyItemParent[key].length < 1) {
 					delete this.stickyItemParent[key];
@@ -144,8 +143,9 @@ StickyItems.prototype.detachStickyItem = function(stickyItem) {
 */
 StickyItems.prototype.removeElement = function(elem) {
 	this.detachStickyItem(elem);
-	if (elem.id in this.stickyItemParent)
+	if (elem.id in this.stickyItemParent) {
 		delete this.stickyItemParent[elem.id];
+	}
 };
 
 /**
@@ -160,7 +160,8 @@ StickyItems.prototype.moveItemsStickingToUpdatedItem = function(updatedItem) {
 		for (var l in list) {
 			list[l].left = updatedItem.elemLeft + this.stickyItemOffsetInfo[list[l].id].offsetX * updatedItem.elemWidth;
 			list[l].top  = updatedItem.elemTop + this.stickyItemOffsetInfo[list[l].id].offsetY * updatedItem.elemHeight;
-			var item     = {elemId: list[l].id, elemLeft: list[l].left, elemTop: list[l].top, elemWidth: list[l].width, elemHeight: list[l].height, date: new Date()};
+			var item     = {elemId: list[l].id, elemLeft: list[l].left, elemTop: list[l].top,
+							elemWidth: list[l].width, elemHeight: list[l].height, date: new Date()};
 			moveItems.push(item);
 		}
 	}
@@ -173,8 +174,9 @@ StickyItems.prototype.moveItemsStickingToUpdatedItem = function(updatedItem) {
 * @method getStickingItems
 */
 StickyItems.prototype.getStickingItems = function(elemId) {
-	if (this.stickyItemParent[elemId])
+	if (this.stickyItemParent[elemId]) {
 		return this.stickyItemParent[elemId];
+	}
 	return [];
 };
 

@@ -11,17 +11,21 @@
 		"show_version": true
 	},
 	"resolution": {
-		"width": 3072,
+		"width": 1536,
 		"height": 1366
 	},
 	"layout": {
 		"rows": 1,
-		"columns": 1
+		"columns": 2
 	},
 	"displays": [
 		{
 			"row": 0,
 			"column": 0
+		},
+		{
+			"row": 0,
+			"column": 1
 		}
 	],
 	"alternate_hosts": [

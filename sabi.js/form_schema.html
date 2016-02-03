@@ -1,0 +1,221 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+
+	<meta name="apple-mobile-web-app-capable" content="yes">
+	<meta name="mobile-web-app-capable" content="yes">
+
+	<title>Form</title> 
+	
+	<!--check and see what the local dims of the device are-->
+	<meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1,
+		minimum-scale=1, width=device-width, height=device-height" />
+
+	<!-- CSS -->
+	<link rel="stylesheet" href="lib/jquery.mobile-1.4.5.min.css" />
+	<link rel="stylesheet" href="lib/theme-classic.css" />
+
+	<!-- LIBS -->
+	<script type="text/javascript" src="lib/socket.io.min.js"></script>
+	<script type="text/javascript" src="lib/jquery-2.1.4.min.js"></script>
+	<script type="text/javascript" src="lib/jquery.mobile-1.4.5.min.js"></script>
+	<script type="text/javascript" src="lib/underscore-min.js"></script>
+	<script type="text/javascript" src="lib/backbone-min.js"></script>
+
+	<script>
+	function addElementObject(container, obj, prefix) {
+		if (obj.id !== '/') {
+			var al = document.createElement('div');
+			if (prefix && prefix !== '/') {
+				al.innerText = prefix + "_" + obj.id;
+			} else {
+				al.innerText = obj.id;
+			}
+			al.style.fontWeight = "bold";
+			al.style.textTransform = "capitalize";
+			al.style.color = "#7689A9";
+			container.appendChild(al);
+		}
+
+		for (var key in obj.properties) {
+			var elt = obj.properties[key];
+			if (elt.type === "string") {
+				addElementString(container, elt);
+			} else if (elt.type === "integer" || elt.type === "number") {
+				addElementInteger(container, elt);
+			} else if (elt.type === "object") {
+				addElementObject(container, elt, prefix ? prefix + "_" + obj.id : null);
+			} else if (elt.type === "array") {
+				addElementArray(container, elt, obj.id);
+			}
+		}
+	}
+
+	function addElementArray(container, obj, prefix) {
+		var al = document.createElement('div');
+		if (prefix && prefix !== '/') {
+			al.innerText = prefix + "_" + obj.id;
+		} else {
+			al.innerText = obj.id;
+		}
+		al.style.fontWeight = "bold";
+		al.style.textTransform = "capitalize";
+		al.style.color = "#7689A9";
+		container.appendChild(al);
+
+		for (var key in obj.items) {
+			var elt = obj.items[key];
+			if (elt.type === "string") {
+				addElementString(container, elt, obj.id);
+			} else if (elt.type === "integer" || elt.type === "number") {
+				addElementInteger(container, elt);
+			} else if (elt.type === "object") {
+				addElementObject(container, elt, obj.id);
+			} else if (elt.type === "array") {
+				addElementArray(container, elt);
+			}
+		}
+	}
+
+	function addElementString(container, obj, prefix) {
+		var id = obj.id;
+		var defaultValue = obj.default;
+		var lb = document.createElement('label');
+		lb.setAttribute("for", id);
+		if (prefix && prefix !== '/') {
+			lb.innerText = prefix + "_" + id;
+		} else {
+			lb.innerText = id;			
+		}
+		lb.style.textTransform = "capitalize";
+		container.appendChild(lb);
+
+		var ib = document.createElement('input');
+		ib.setAttribute("type", "text");
+		ib.setAttribute("id",   id);
+		ib.setAttribute("name", id);
+		if (defaultValue !== undefined) {
+			ib.setAttribute("placeholder", defaultValue);
+			ib.setAttribute("value", defaultValue);
+		}
+		// ib.setAttribute("data-clear-btn", "true");
+		container.appendChild(ib);
+
+		// Help
+		if (obj.description) {
+			var hb = document.createElement('label');
+			hb.setAttribute("for", id + "_help");
+			hb.innerText = "";			
+			container.appendChild(hb);
+			var hh = document.createElement('input');
+			hh.setAttribute("type", "text");
+			hh.setAttribute("value", obj.description);
+			hh.setAttribute("disabled", "true");
+			container.appendChild(hh);
+		}
+	}
+	function addElementInteger(container, obj) {
+		var id = obj.id;
+		var defaultValue = obj.default;
+
+		var lb = document.createElement('label');
+		lb.setAttribute("for", id);
+		lb.innerText = id;
+		lb.style.textTransform = "capitalize";
+		container.appendChild(lb);
+
+		var ib = document.createElement('input');
+		ib.setAttribute("type", "number");
+		ib.setAttribute("id",   id);
+		ib.setAttribute("name", id);
+		ib.setAttribute("pattern", "[0-9]*");
+		if (defaultValue !== undefined) {
+			ib.setAttribute("placeholder", defaultValue);
+			ib.setAttribute("value", defaultValue);
+		}
+		container.appendChild(ib);
+
+		// Help
+		if (obj.description) {
+			var hb = document.createElement('label');
+			hb.setAttribute("for", id + "_help");
+			hb.innerText = "";			
+			container.appendChild(hb);
+			var hh = document.createElement('input');
+			hh.setAttribute("type", "text");
+			hh.setAttribute("value", "some help...");
+			hh.setAttribute("disabled", "true");
+			container.appendChild(hh);
+		}
+	}
+
+	function formBuild() {
+		console.log('Init');
+
+		var xhr = new XMLHttpRequest();
+		xhr.open("GET", "/scripts/schema.json", true);
+		xhr.onreadystatechange = function() {
+			if (xhr.readyState === 4 && xhr.status === 200) {
+				// Process the schema
+				var schema = JSON.parse(xhr.responseText);
+				console.log('schema', schema);
+
+				// Get the configuration
+				var dhr = new XMLHttpRequest();
+				dhr.open("GET", "/scripts/default-cfg.json", true);
+				dhr.onreadystatechange = function() {
+					if (dhr.readyState === 4 && dhr.status === 200) {
+						var config = JSON.parse(dhr.responseText);
+						console.log('Configuration', config);
+						// loadDataInSchema(config, schema);
+
+						var container = document.getElementById('container');
+						// Build up the UI
+						addElementObject(container, schema, null);
+						// update the jquery-mobile elements
+						$('#container').trigger('create');
+					}
+				};
+				dhr.send();
+
+
+			}
+		};
+		xhr.send();
+
+	}
+	</script>
+
+	
+</head>
+
+<body onload="formBuild()">
+
+
+<div data-role="page" id="MAIN" data-theme="a">
+
+	<div data-role="header" data-position="fixed">
+		<h4>Configuration Form</h4>
+	</div>
+
+	<div data-role="content">
+
+	<form method="post" action="demoform.asp">
+		<div id="container" class="ui-field-contain">
+		</div>
+		<input type="submit" value="Submit Button" data-shadow="false" data-mini="true">
+	</form>
+
+	</div>
+
+	<div data-role="footer" data-position="fixed">
+		<h4>Configuration Form</h4>
+	</div>
+
+</div>
+
+</body>
+
+</html>

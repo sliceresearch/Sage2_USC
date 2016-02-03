@@ -26,6 +26,9 @@ config/custom.types
 # generated content
 doc/api
 
+# http cache
+public/sage2.appcache
+
 # Dependency directory
 node_modules
 public/uploads/assets
@@ -43,3 +46,4 @@ public/images/background/*_[0-9]*.*
 # Users Environment Variables
 .lock-wscript
 
+/public/uploads/apps/sticky_note

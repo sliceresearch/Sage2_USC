@@ -230,6 +230,7 @@ SunCalc.getMoonIllumination = function (date) {
     };
 };
 
+/* global define module */
 
 // export as AMD module / Node module / browser variable
 if (typeof define === 'function' && define.amd) define(SunCalc);

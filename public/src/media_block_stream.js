@@ -8,6 +8,8 @@
 //
 // Copyright (c) 2014
 
+"use strict";
+
 /**
  * @module client
  * @submodule media_block_stream
@@ -18,7 +20,7 @@
  *
  * @class media_block_stream
  */
-var media_block_stream = SAGE2_BlockStreamingApp.extend( {
+var media_block_stream = SAGE2_BlockStreamingApp.extend({
 	/**
 	* Init method, creates a 'div' tag in the DOM
 	*

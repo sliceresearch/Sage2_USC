@@ -1,8 +1,8 @@
 <!DOCTYPE html>
-<html>
+<html manifest="sage2.appcache">
 <head lang="en">
 <meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=10.0, minimum-scale=1.0, user-scalable=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no" />
 
 <title>SAGE2 UI - Mobile</title>
 
@@ -18,36 +18,48 @@
 	// Copyright (c) 2014
 </script>
 
-<!-- SAGE2 code -->
-<script type="text/javascript" src="src/websocket.io.js"></script>
-<script type="text/javascript" src="src/SAGE2_runtime.js"></script>
-<script type="text/javascript" src="src/SAGE2_interaction.js"></script>
-<script type="text/javascript" src="src/SAGE2_DisplayUI.js"></script>
-<script type="text/javascript" src="src/SAGE2_UI.js"></script>
-
-<!-- SAGE2 minified -->
-<!--
-<script type="text/javascript" src="min/ui.min.js"></script>
--->
-
+<!-- Style sheets -->
+<link rel="stylesheet" type="text/css" href="css/fonts.css"/>
 <link rel="stylesheet" type="text/css" href="css/style_ui.css" media="screen">
+
+
+<!-- SAGE2 code -->
+<script async src="src/websocket.io.js"></script>
+<script async src="src/SAGE2_runtime.js"></script>
+<script async src="src/SAGE2_interaction.js"></script>
+<script async src="src/SAGE2_DisplayUI.js"></script>
+<script async src="src/SAGE2_UI.js"></script>
+
+<!-- File manager UI -->
+<script async src="src/SAGE2_fileManager.js"></script>
+<script async src="lib/moment.min.js"></script>
+<script async src="lib/webix/webix.js"></script>
+<link rel="stylesheet" type="text/css" href="lib/webix/webix.css">
+<link rel="stylesheet" type="text/css" href="lib/webix/skins/compact.css">
+<link rel="stylesheet" type="text/css" href="css/fileManager.css" media="screen">
+
+<!-- Note Color picker -->
+<script type="text/javascript" src="lib/jquery-1.12.0.min.js"></script>
+<link rel="stylesheet" type="text/css" href="css/colorPicker.css">
+<script async src="lib/jquery.colorPicker.min.js"/></script>
 
 </head>
 
 <body onload="SAGE2_init()" onresize="SAGE2_resize()">
 	<div id="mainUI">
 
-		<img src="images/sage2_logo.png" height="80" style="display:block;margin-left:auto;margin-right:auto;"/>
+		<!-- Loading panel -->
+		<div id="loadingUI" style="display:block;">
+			<h1 style="margin-top:40px;font-size:32px;text-align:center;text-valign:center;">Loading SAGE2 Interface...</h1>
+		</div>
 
-		<div class="clear"></div>
-
-		<div id="displayUI">
+		<div id="displayUIDiv" style="display:none;">
 			<div id="applicationsDiv"></div>
-			<canvas id="sage2UI"></canvas>
+			<canvas id="sage2UICanvas"></canvas>
 		</div>
 
 		<div class="clear"></div>
-		<div id="menuContainer">
+		<div id="menuContainer" style="display:none;width:auto;">
 			<table id="menuUI">
 				<tr>
 					<td id="sage2pointerContainer">
@@ -56,7 +68,7 @@
 					</td>
 					<td id="sharescreenContainer">
 						<img id="sharescreen"  alt="sharescreen"  src="images/ui/[graycircle]-sharescreen.svg"  width="48" height="48"/>
-						<p id="sharescreenLabel">Share Screen</p>
+						<p id="sharescreenLabel">Screen Sharing</p>
 					</td>
 					<td id="applauncherContainer">
 						<img id="applauncher"  alt="applauncher"  src="images/ui/[graycircle]-applauncher.svg"  width="48" height="48"/>
@@ -85,44 +97,13 @@
 				</tr>
 			</table>
 		</div>
-		<!--
-		<div id="menuUI">
-			<div id="sage2pointerContainer" class="uiButton">
-				<img id="sage2pointer" alt="pointer" src="images/ui/[graycircle]-sage2pointer.svg" width="48" height="48" />
-				<p id="sage2pointerLabel">SAGE2 Pointer</p>
-			</div>
-			<div id="sharescreenContainer" class="uiButton">
-				<img id="sharescreen" alt="sharescreen" src="images/ui/[graycircle]-sharescreen.svg" width="48" height="48" />
-				<p id="sharescreenLabel">Share Screen</p>
-			</div>
-			<div id="applauncherContainer" class="uiButton">
-				<img id="applauncher" alt="applauncher" src="images/ui/[graycircle]-applauncher.svg" width="48" height="48"/>
-				<p id="applauncherLabel">App Launcher</p>
-			</div>
-			<div id="mediabrowserContainer" class="uiButton">
-				<img id="mediabrowser" alt="mediabrowser" src="images/ui/[graycircle]-mediabrowser.svg" width="48" height="48"/>
-				<p id="mediabrowserLabel">Media Browser</p>
-			</div>
-			<div id="arrangementContainer" class="uiButton">
-				<img id="arrangement" alt="arrangement" src="images/ui/[graycircle]-arrangement.svg" width="48" height="48"/>
-				<p id="arrangementLabel">Arrangement</p>
-			</div>
-			<div id="settingsContainer" class="uiButton">
-				<img id="settings" alt="settings" src="images/ui/[graycircle]-settings.svg" width="48" height="48"/>
-				<p id="settingsLabel">Settings</p>
-			</div>
-			<div id="infoContainer" class="uiButton">
-				<img id="info" alt="info" src="images/ui/[graycircle]-info.svg" width="48" height="48"/>
-				<p id="infoLabel">Information</p>
-			</div>
-				<div id="browserContainer" class="uiButton">
-					<img id="browser" alt="browser" src="images/ui/[graycircle]-browser.svg" width="48" height="48"/>
-					<p id="browserLabel">Web browser</p>
-				</div>
-		</div>
-		-->
-
 	</div>
+
+	<div class="clear"></div>
+
+	<section class="siteType">
+		<div id="fileManager" style="display:none;margin: 0 auto;width:98%;"></div>
+	</section>
 
 	<div class="clear"></div>
 	
@@ -180,7 +161,7 @@
 			</div>
 		</div>
 		<div id="metadata">
-			<img alt="thumbnail" id="thumbnail" src="images/blank.png"/>
+			<img alt="thumbnail" name="thumbnail" id="thumbnail" src="images/blank.png"/>
 			<label id="metadata_text"></label>
 		</div>
 		<div id="fileButtons">
@@ -254,10 +235,70 @@
 			<span id="infoCloseBtn" class="button">Close</span>
 		</div>
 	</div>
-	
+
 	<!-- dialog for the Settings-->
-	<div id="settingsDialog" class="dialog">
+	<div id="settingsDialog" class="dialog" style="width:40%;min-width:280px;">
+
 		<div id="settingsItems">
+
+			<div id="sage2PointerSettingsContainer" style="width:100%">
+				<table style="width:100%;border-spacing:0;">
+					<tr>
+						<th colspan="3" style="padding-bottom:5px;font-weight:bold;font-size:1.5em;align:left;">SAGE2 Pointer</th>
+					</tr>
+					<tr>
+						<td rowspan="2" style="padding-right:20px;"><img id="sage2pointer2" alt="pointer" src="images/ui/[graycircle]-sage2pointer.svg" width="48" height="48"/></td>
+						<td style="align:left;">
+							<label class="sageLabel">Name</label>
+						</td>
+						<td style="align:left;">
+							<input id="sage2PointerLabel" type="text">
+						</td>
+					</tr>
+					<tr>
+						<td style="align:left;">
+							<label class="sageLabel">Color</label>
+						</td>
+						<td style="align:left;">
+							<input id="sage2PointerColor" type="color" value="#B4B4B4">
+						</td>
+					</tr>
+
+					<tr><td>&nbsp; &nbsp; &nbsp;</td></tr>
+
+					<tr>
+						<th colspan="3" style="padding-bottom:5px;font-weight: bold;font-size:1.5em;align:left;">Screen Sharing</th>
+					</tr>
+					<tr>
+						<td rowspan="2" style="padding-right:20px;"><img id="sharescreen2"  alt="sharescreen"  src="images/ui/[graycircle]-sharescreen.svg"  width="48" height="48"/></td>
+						<td style="align:left;">
+							<label class="sageLabel">Resolution</label>
+						</td>
+						<td style="align:left;">
+							<select id="screenShareResolution">
+								<option>Low</option>
+								<option>Medium</option>
+								<option selected="selected">High</option>
+								<option>Full</option>
+							</select>
+						</td>
+					</tr>
+					<tr>
+						<td style="align:left;">
+							<label class="sageLabel">Quality</label>
+						</td>
+						<td style="align:left;">
+							<select id="screenShareQuality">
+								<option value="3">Low</option>
+								<option value="7">Medium</option>
+								<option value="9" selected="selected">High</option>
+							</select>
+						</td>
+					</tr>
+				</table>
+			</div>
+
+<!--
 			<div id="sage2PointerSettingsContainer">
 				<table>
 					<tr>
@@ -278,6 +319,8 @@
 					</tr>
 				</table>
 			</div>
+ -->
+<!--
 			<div id="screenSharingSettingsContainer">
 				<table>
 					<tr>
@@ -287,28 +330,72 @@
 						<td>
 							<select id="screenShareResolution">
 								<option>Low</option>
-								<option>Medium</option>
+								<option selected="selected">Medium</option>
 								<option>High</option>
-								<option selected="selected">Full</option>
+								<option>Full</option>
 							</select>
 						</td>
 					</tr>
 					<tr>
 						<td style="padding-right:4px;">
-							<label class="sageLabel">Frame Quality:</label>
+							<label class="sageLabel">Quality:</label>
 						</td>
 						<td>
-							<input id="screenShareQuality" type="range" name="quality" min="1" max="10" step="1" value="5">
-							<span id="screenShareQualityIndicator">5</span>
+							<select id="screenShareQuality">
+								<option value="3">Low</option>
+								<option value="7" selected="selected">Medium</option>
+								<option value="9">High</option>
+							</select>
+ 						</td>
+					</tr>
+				</table>
+			</div>
+ -->
+		</div>
+
+		<div id="settingsButtons">
+			<span id="settingsCloseBtn" class="button">Close</span>
+		</div>
+	</div>
+
+
+	<!-- dialog for the intial settings-->
+	<div id="settingsDialog2" class="dialog" style="width:50%;min-width:320px;">
+		<div id="settingsItems">
+			<div id="sage2PointerSettingsContainer" style="width:100%">
+				<table style="width:100%;border-spacing:5;">
+					<tr>
+						<th colspan="3" style="font-weight:normal;font-size:1.5em;align:left;">First run, please set your pointer name and color</th>
+					</tr>
+					<tr>
+						<th colspan="3" style="font-weight:normal;font-size:1.5em;align:left;">&nbsp;</th>
+					</tr>
+					<tr>
+						<td rowspan="2" style="padding-right:20px;"><img id="sage2pointer2" alt="pointer" src="images/ui/[graycircle]-sage2pointer.svg" width="48" height="48"/></td>
+						<td style="align:left;">
+							<label class="sageLabel">Name</label>
+						</td>
+						<td style="align:left;">
+							<input id="sage2PointerLabelInit" type="text">
+						</td>
+					</tr>
+					<tr>
+						<td style="align:left;">
+							<label class="sageLabel">Color</label>
+						</td>
+						<td style="align:left;">
+							<input id="sage2PointerColorInit" type="color" value="#B4B4B4">
 						</td>
 					</tr>
 				</table>
 			</div>
 		</div>
 		<div id="settingsButtons">
-			<span id="settingsCloseBtn" class="button">Close</span>
+			<span id="settingsCloseBtn2" class="button">Close</span>
 		</div>
 	</div>
+
+
 
 	<div id="uploadDialog" class="dialog">
 		<span id="localFilesBtn" class="button">Picture</span>
@@ -323,7 +410,7 @@
 			</form>
 			<span id="cancelFilesBtn2" class="button">Close</span>
 			<p>&nbsp; &nbsp; &nbsp;</p>
-			<p style="text-align:center;"><b>Take or select a picture and upload it</b></p>
+			<p style="text-align:center;"><strong>Take or select a picture and upload it</strong></p>
 		</div>
 	</div>
 
@@ -333,15 +420,53 @@
 	</div>
 	
 	<div id="sage2MobileContainer">
-		<div id="sage2MobileTrackpad"></div>
+		<div id="sage2MobileTrackpad">
+			<div style="font-size:xx-large;text-align:center;">Trackpad</div>
+		</div>
 		<div id="sage2MobileButtons">
-			<div id="sage2MobileLeftButton"></div>
-			<div id="sage2MobileRightButton"></div>
+			<div id="sage2MobileLeftButton">Left button</div>
+			<div id="sage2MobileMiddleButton">Mode</div>
+			<div id="sage2MobileMiddle2Button">Play</div>
+			<div id="sage2MobileRightButton">Right button</div>
 		</div>
 		<img alt="closeMobileSAGE2Pointer" id="closeMobileSAGE2Pointer" src="images/closemobilepointer.svg" width="32" height="32" style="position:absolute; left:6px; top:6px;"/>
 	</div>
 	
-	
+	<!-- dialog for the Note-->
+	<div id="noteDialog" class="dialog" style="width:30%;min-width:280px;">
+
+		<div id="noteItems">
+
+			<div id="sage2NoteContainer" style="width:100%">
+				<table style="width:100%;border-spacing:0;">
+					<tr>
+						<th colspan="3" style="padding-bottom:5px;font-weight:bold;font-size:1.5em;align:left;">New Note</th>
+					</tr>
+					<tr>
+						<td style="padding-right:20px;align:left;">
+							<label class="sageLabel">Text:</label>
+						</td>
+						<td style="align:left;">
+							<textarea id="sage2NoteText" name="sage2NoteText" cols="30" rows="2" resize="none" ></textarea>
+						</td>
+					</tr>
+					<tr>
+						<td style="padding-right:20px;padding-bottom:10px;align:left;">
+							<label class="sageLabel">Color</label>
+						</td>
+						<td style="align:left;">
+							<input id="sage2NoteColor" name="sage2NoteColor" type="text" value="#fbb4ae">
+						</td>
+					</tr>
+				</table>
+			</div>
+		</div>
+
+		<div id="noteButtons">
+			<span id="noteCloseBtn" class="button">Close</span>
+			<span id="noteOkBtn" class="button">Ok</span>
+		</div>
+	</div>
 	<!-- invisible text to test rendered width -->
 	<div id="textWidthTest"></div>
 	<canvas id="mediaCanvas" style="display: none;"></canvas>

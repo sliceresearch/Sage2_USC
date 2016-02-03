@@ -8,6 +8,8 @@
 //
 // Copyright (c) 2014
 
+"use strict";
+
 /**
  * @module client
  * @submodule Class
@@ -44,7 +46,9 @@ Class.extend = function(def) {
 
 	for (var n in def) {
 		var item = def[n];
-		if (item instanceof Function) item.superClass = superClass;
+		if (item instanceof Function) {
+			item.superClass = superClass;
+		}
 		proto[n] = item;
 	}
 

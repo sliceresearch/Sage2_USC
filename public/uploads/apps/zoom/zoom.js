@@ -8,10 +8,14 @@
 //
 // Copyright (c) 2014
 
-var zoom = SAGE2_App.extend( {
+"use strict";
+
+/* global OpenSeadragon */
+
+var zoom = SAGE2_App.extend({
 	init: function(data) {
 		this.SAGE2Init("div", data);
-		
+
 		this.resizeEvents = "continuous";
 
 		this.lastZoom  = null;
@@ -21,50 +25,55 @@ var zoom = SAGE2_App.extend( {
 		this.position  = null;
 
 		this.element.id = "div" + data.id;
+		this.element.style.background = "black";
 		this.lastZoom  = data.date;
 		this.lastClick = data.date;
 		this.dragging  = false;
 		this.isShift   = false;
-		this.position  = {x:0, y:0};
+		this.position  = {x: 0, y: 0};
 
 		// create the image viewer with the right data and path
 		this.viewer = OpenSeadragon({
-			id: this.element.id,      // suppporting div
-			prefixUrl:   this.resrcPath + "/images/",
+			// suppporting div
+			id: this.element.id,
+			// icons for the library
+			prefixUrl: this.resrcPath + "/images/",
+			// show the little overview window (auto-hides)
+			showNavigator: true,
+			// remove the navigation button bar
+			showNavigationControl: false,
+
 			// change tileSources for your dataset
-			tileSources: this.resrcPath + "chicago.dzi"
-			//tileSources: this.resrcPath + "halfdome.dzi"
+			tileSources: this.resrcPath + "enceladus.dzi"
 		});
 
-		this.controls.addButton({type:"prev",sequenceNo:7, id:"Left"});
-		this.controls.addButton({type:"next",sequenceNo:1, id:"Right"});
-		this.controls.addButton({type:"up-arrow",sequenceNo:4, id:"Up"});
-		this.controls.addButton({type:"down-arrow",sequenceNo:10, id:"Down"});
-				
-		this.controls.addButton({type:"zoom-in",sequenceNo:8, id:"ZoomIn"});
-		this.controls.addButton({type:"zoom-out",sequenceNo:9, id:"ZoomOut"});
+		this.controls.addButton({type: "prev", position: 1, identifier: "Left"});
+		this.controls.addButton({type: "next", position: 7, identifier: "Right"});
+		this.controls.addButton({type: "up-arrow", position: 4, identifier: "Up"});
+		this.controls.addButton({type: "down-arrow", position: 10, identifier: "Down"});
+		this.controls.addButton({type: "zoom-in", position: 12, identifier: "ZoomIn"});
+		this.controls.addButton({type: "zoom-out", position: 11, identifier: "ZoomOut"});
 		this.controls.finishedAddingControls();
 	},
-	
+
 	load: function(date) {
 	},
-	
+
 	draw: function(date) {
 	},
-	
+
 	resize: function(date) {
 		this.refresh(date);
 	},
 
 	event: function(eventType, position, user_id, data, date) {
-		//console.log("Zoom event", eventType, position, user_id, data, date);
-		if (eventType === "pointerPress" && (data.button === "left") ) {
-			if ( (date - this.lastClick) < 350) {
+		if (eventType === "pointerPress" && (data.button === "left")) {
+			if ((date - this.lastClick) < 350) {
 				// double click
 				if (this.isShift) {
 					this.viewer.viewport.zoomBy(0.6);
 				} else {
-					this.viewer.viewport.zoomBy(1.4);					
+					this.viewer.viewport.zoomBy(1.4);
 				}
 				this.viewer.viewport.applyConstraints();
 				this.lastZoom = date;
@@ -76,78 +85,64 @@ var zoom = SAGE2_App.extend( {
 			this.position.x = position.x;
 			this.position.y = position.y;
 			this.lastClick  = date;
-		}
-		else if (eventType === "pointerMove" && this.dragging ) {
-            var delta = new OpenSeadragon.Point(this.position.x - position.x, this.position.y - position.y);
-            this.viewer.viewport.panBy(
-                this.viewer.viewport.deltaPointsFromPixels(delta)
-            );
+		} else if (eventType === "pointerMove" && this.dragging) {
+			var delta = new OpenSeadragon.Point(this.position.x - position.x, this.position.y - position.y);
+			this.viewer.viewport.panBy(
+			this.viewer.viewport.deltaPointsFromPixels(delta)
+			);
 			this.position.x = position.x;
 			this.position.y = position.y;
-		}
-		else if (eventType === "pointerRelease" && (data.button === "left") ) {
+		} else if (eventType === "pointerRelease" && (data.button === "left")) {
 			this.dragging = false;
 			this.position.x = position.x;
 			this.position.y = position.y;
-		}
-
-		// Scroll events for zoom
-		else if (eventType === "pointerScroll") {
+		} else if (eventType === "pointerScroll") {
+			// Scroll events for zoom
 			var amount = data.wheelDelta;
 			var diff = date - this.lastZoom;
-			if (amount >= 1 && (diff>300)) {
+			if (amount >= 1 && (diff > 300)) {
 				// zoom in
 				this.viewer.viewport.zoomBy(0.8);
 				this.viewer.viewport.applyConstraints();
 				this.lastZoom = date;
-			}
-			else if (amount <= 1 && (diff>300)) {
+			} else if (amount <= 1 && (diff > 300)) {
 				// zoom out
 				this.viewer.viewport.zoomBy(1.2);
 				this.viewer.viewport.applyConstraints();
 				this.lastZoom = date;
 			}
-		}
-
-		else if (eventType == "specialKey" && data.code == 16 && data.state == "down") {
+		} else if (eventType === "specialKey" && data.code === 16 && data.state === "down") {
 			// shift down
 			this.isShift = true;
 			// zoom in
-			//this.viewer.viewport.zoomBy(1.1);
-			//this.viewer.viewport.applyConstraints();
-		}
-		else if (eventType == "specialKey" && data.code == 16 && data.state == "up") {
+			// this.viewer.viewport.zoomBy(1.1);
+			// this.viewer.viewport.applyConstraints();
+		} else if (eventType === "specialKey" && data.code === 16 && data.state === "up") {
 			// shift up
 			this.isShift = false;
-		}
-		else if (eventType == "specialKey" && data.code == 17 && data.state == "down") {
+		} else if (eventType === "specialKey" && data.code === 17 && data.state === "down") {
 			// control down
 			// zoom out
-			//this.viewer.viewport.zoomBy(0.9);
-			//this.viewer.viewport.applyConstraints();
-		}
-		else if (eventType == "specialKey" && data.code == 37 && data.state == "down") {
+			// this.viewer.viewport.zoomBy(0.9);
+			// this.viewer.viewport.applyConstraints();
+		} else if (eventType === "specialKey" && data.code === 37 && data.state === "down") {
 			// left
 			this.viewer.viewport.panBy(new OpenSeadragon.Point(-0.01, 0));
 			this.viewer.viewport.applyConstraints();
-		}
-		else if (eventType == "specialKey" && data.code == 38 && data.state == "down") {
+		} else if (eventType === "specialKey" && data.code === 38 && data.state === "down") {
 			// up
 			this.viewer.viewport.panBy(new OpenSeadragon.Point(0, -0.01));
 			this.viewer.viewport.applyConstraints();
-		}
-		else if (eventType == "specialKey" && data.code == 39 && data.state == "down") {
+		} else if (eventType === "specialKey" && data.code === 39 && data.state === "down") {
 			// right
 			this.viewer.viewport.panBy(new OpenSeadragon.Point(0.01, 0));
 			this.viewer.viewport.applyConstraints();
-		}
-		else if (eventType == "specialKey" && data.code == 40 && data.state == "down") {
+		} else if (eventType === "specialKey" && data.code === 40 && data.state === "down") {
 			// down
 			this.viewer.viewport.panBy(new OpenSeadragon.Point(0, 0.01));
 			this.viewer.viewport.applyConstraints();
-		}
-		else if (eventType === "widgetEvent"){
-			switch(data.ctrlId){
+		} else if (eventType === "widgetEvent") {
+			switch (data.identifier) {
 				case "Up":
 					// up
 					this.viewer.viewport.panBy(new OpenSeadragon.Point(0, -0.01));
@@ -157,7 +152,7 @@ var zoom = SAGE2_App.extend( {
 					this.viewer.viewport.panBy(new OpenSeadragon.Point(0, 0.01));
 					break;
 				case "Left":
-					//left
+					// left
 					this.viewer.viewport.panBy(new OpenSeadragon.Point(-0.01, 0));
 					break;
 				case "Right":
@@ -166,16 +161,16 @@ var zoom = SAGE2_App.extend( {
 					break;
 				case "ZoomIn":
 					// zoom in
-					this.viewer.viewport.zoomBy(0.8);
+					this.viewer.viewport.zoomBy(1.2);
 					this.lastZoom = date;
 					break;
 				case "ZoomOut":
 					// zoom out
-					this.viewer.viewport.zoomBy(1.2);
+					this.viewer.viewport.zoomBy(0.8);
 					this.lastZoom = date;
 					break;
 				default:
-					console.log("No handler for:", data.ctrlId);
+					console.log("No handler for:", data.identifier);
 					return;
 			}
 			this.viewer.viewport.applyConstraints();
