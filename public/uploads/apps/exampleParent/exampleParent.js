@@ -146,6 +146,7 @@ var exampleParent = SAGE2_App.extend( {
 		
 		}
 		else if (eventType === "pointerMove" && this.dragging) {
+			console.log(position);
 		}
 		else if (eventType === "pointerRelease" && (data.button === "left")) {
 		}
@@ -296,6 +297,10 @@ var exampleParent = SAGE2_App.extend( {
 	colorStringify: function( color ){
 		str = "rgba("+color[0]+", "+color[1]+", "+color[2]+", 1.0)";
 		return str; 
+	},
+
+	positionChild: function(){
+		// broadcast( "positionChild", {id: , childId: this.childList[i].childId;})
 	}
 
 });
