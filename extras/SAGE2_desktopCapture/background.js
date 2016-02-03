@@ -12,11 +12,51 @@
 // This background script is used to invoke desktopCapture API
 // to capture screen-MediaStream.
 
-var mainPort = null;
+var ports = {};
+var numberOfConnection = 0;
+
+chrome.runtime.onInstalled.addListener(function() {
+	numberOfConnection = 0;
+	ports = {};
+});
+
+chrome.runtime.onSuspend.addListener(function() {
+});
+
+chrome.runtime.onConnectExternal.addListener(function(port) {
+});
+
+chrome.runtime.onMessage.addListener(function(message, sender) {
+	// getList message from popup
+	if (message.cmd && message.cmd === 'getList') {
+		chrome.runtime.sendMessage(sender.id, ports);
+	} else {
+		console.log('onMessage', message.sender);
+		if (message.sender) {
+			ports[message.sender].postMessage(message);
+		}
+	}
+});
 
 chrome.runtime.onConnect.addListener(function(port) {
+	numberOfConnection++;
+	chrome.browserAction.setBadgeText({text:numberOfConnection.toString()});
 
 	port.onMessage.addListener(portOnMessageHanlder);
+
+	port.onDisconnect.addListener(function() {
+		numberOfConnection--;
+		if (numberOfConnection === 0) {
+			chrome.browserAction.setBadgeText({text:""});
+		} else {
+			chrome.browserAction.setBadgeText({text:numberOfConnection.toString()});
+		}
+		port.onMessage.removeListener(portOnMessageHanlder);
+		delete  ports[port.sender.url];
+	});
+
+	// Save the port in the list, indexed by URL
+	ports[port.sender.url] = port;
 
 	// this one is called for each message from "content-script.js"
 	function portOnMessageHanlder(message) {
@@ -39,20 +79,8 @@ chrome.runtime.onConnect.addListener(function(port) {
 		port.postMessage({cmd: "window_selected", mediaSourceId: sourceId});
 	}
 
-	if (mainPort === null) {
-		// Making sure that only the first tab connecting sends screenshot
-		mainPort = port.sender.tab.id;
-		// Listen for a click on the camera icon. On that click, take a screenshot.
-		chrome.browserAction.onClicked.addListener(function(tab) {
-			chrome.tabs.captureVisibleTab(function(screenshotUrl) {
-				port.postMessage({cmd: "screenshot",
-					src:    screenshotUrl,
-					title:  tab.title,
-					url:    tab.url,
-					width:  tab.width,
-					height: tab.height
-				});
-			});
-		});
-	}
+	// Listen for a click on the camera icon. On that click, take a screenshot.
+	// chrome.browserAction.onClicked.addListener(function(tab) {
+	// });
+
 });
