@@ -212,8 +212,41 @@ var articulate_ui = SAGE2_App.extend( {
 			//send to articulate hub...
 		}
 
-		this.refresh(date);
-	}
+		if( text.indexOf("Launch example") > -1 ){
+			//wsio.emit('launchLinkedChildApp', {application: "apps/d3plus_visapp", user: "articulate_ui", msg:"this is a message from articulate_ui"});
+			this.launchVis();
+		}
+		if( text.indexOf("Open example") > -1 ){
+			this.launchVis2();
 
+		}
+
+		this.refresh(date);
+	},
+
+	//here is where the parent launches the child app
+	//we will have to add appropriate data variables 
+	launchVis: function(){
+		applicationType ="custom",
+		application = "apps/d3plus_visapp", 	
+		msg = "this is a message from articulate_ui",
+		initState = {  // these values will load on child app init
+				value: 10
+			};
+
+		this.launchNewChild(applicationType, application, initState, msg);//defined in sage2 app
+	},
+
+
+	launchVis2: function(){
+		applicationType ="custom",
+		application = "apps/vega_vis_app", 	
+		msg = "this is a message from articulate_ui",
+		initState = {  // these values will load on child app init
+				value: 10
+			};
+
+		this.launchNewChild(applicationType, application, initState, msg);//defined in sage2 app
+	},
 
 });

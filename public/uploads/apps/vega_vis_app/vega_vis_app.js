@@ -57,8 +57,8 @@ var vega_vis_app = SAGE2_App.extend( {
   			this.view.height(this.element.clientHeight-59);
   			updated = true;	
   		}
-  		if
-  		this.view.renderer('svg').update();
+  		if( updated )
+  			this.view.renderer('svg').update();
 
 		this.refresh(date);
 	},

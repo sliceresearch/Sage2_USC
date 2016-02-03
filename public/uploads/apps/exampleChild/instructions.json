@@ -1,7 +1,7 @@
 {
 	"main_script": "exampleChild.js",
 	"icon": "exampleChild.png",
-	"width": 300,
+	"width": 400,
 	"height": 200,
 	"resize": "free",
 	"animation": true,			

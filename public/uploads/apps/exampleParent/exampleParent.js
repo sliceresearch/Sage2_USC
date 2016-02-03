@@ -63,7 +63,7 @@ var exampleParent = SAGE2_App.extend( {
 		this.ctx.fillRect(0, 0, this.element.width, this.element.height);
 
 		//title
-		this.ctx.font = "32px Ariel";
+		this.ctx.font = "36px Ariel";
 		this.ctx.textAlign="left"; 
 		this.ctx.fillStyle = "rgba(0, 0, 0, 1.0)";
 		this.ctx.fillText( "I am the parent app.  Test features below:", 10, 32);
@@ -81,7 +81,7 @@ var exampleParent = SAGE2_App.extend( {
 		this.ctx.fillStyle = "rgba(148, 210, 255, 1.0)";
 		this.ctx.fillRect(100, 200, this.element.width-200, 75);
 		this.ctx.fillStyle = "rgba(0, 0, 0, 1.0)";
-		this.ctx.fillText( "Click to change color of children to: ", 110, 250);
+		this.ctx.fillText( "Click to change color of all to: ", 110, 250);
 		this.ctx.fillStyle = this.colorStringify(this.randomColor2);
 		this.ctx.fillRect(this.element.width-200, 200, 100, 75);
 
@@ -93,19 +93,19 @@ var exampleParent = SAGE2_App.extend( {
 		this.ctx.fillStyle = this.colorStringify(this.randomColor3);
 		this.ctx.fillRect(this.element.width-200, 300, 100, 75);
 
-		// synced data
-		this.ctx.fillStyle = "rgba(189, 148, 255, 1.0)";
-		this.ctx.fillRect(100, 400, this.element.width-200, 75);
-		this.ctx.fillStyle = "rgba(0, 0, 0, 1.0)";
-		this.ctx.font = "24px Ariel";
-		this.ctx.textAlign="left"; 
-		this.ctx.fillText("click to double values in synced data: " + this.someDataSet , 110, 450 );
+		// // synced data
+		// this.ctx.fillStyle = "rgba(189, 148, 255, 1.0)";
+		// this.ctx.fillRect(100, 400, this.element.width-200, 75);
+		// this.ctx.fillStyle = "rgba(0, 0, 0, 1.0)";
+		// this.ctx.font = "24px Ariel";
+		// this.ctx.textAlign="left"; 
+		// this.ctx.fillText("click to double values in synced data: " + this.someDataSet , 110, 450 );
 
 		this.ctx.fillStyle = "rgba(0, 0, 0, 1.0)";
-		this.ctx.fillText("monitoring: " + this.getNumberOfChildren() + "   active children", 100, 510 );
-		this.ctx.font = "16px Ariel";
+		this.ctx.fillText("monitoring: " + this.getNumberOfChildren() + "   active children", 100, 410 );
+		this.ctx.font = "36px Ariel";
 		this.ctx.textAlign="left"; 
-		this.ctx.fillText(this.monitoringText, 100, 540); 
+		this.ctx.fillText(this.monitoringText, 100, 450); 
 
 		//this.ctx.fillText( "Number of child apps " + this.childList.length, 10, 32+32);
 		

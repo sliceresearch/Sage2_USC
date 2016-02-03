@@ -47,7 +47,7 @@ var exampleChild = SAGE2_App.extend( {
 		this.ctx.fillStyle = this.colorStringify(this.colorToDraw);  //"rgba(170, 225, 239, 1.0)";
 		this.ctx.fillRect(0, 0, this.element.width, this.element.height);
 
-		this.ctx.font = "24px Ariel";
+		this.ctx.font = "36px Ariel";
 		this.ctx.textAlign="left"; 
 		this.ctx.fillStyle = "rgba(0, 0, 0, 1.0)";
 		this.ctx.fillText( "I am the child app", 10, 32);
