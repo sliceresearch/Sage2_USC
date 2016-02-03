@@ -22,8 +22,8 @@
                 noDropShadow: true
 	},
 	resolution: {
-		width: 1920,
-		height: 1080
+		width: 8160,
+		height: 2210
 	},
 	layout: {
 		rows: 1,

@@ -813,6 +813,11 @@ function generateRandomKey() {
 	return Math.floor(Math.random*1000000000); 
 }
 
+function getDisplaySize() {
+	//don't know how to yet- so for now I am just returning cybercommons
+	return {width: 8160, height: 2210}; 
+}
+
 /**
  * Overload Math.seed and Math.random to be deterministic, for distributed work
  *
