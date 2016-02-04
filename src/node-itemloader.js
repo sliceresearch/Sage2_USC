@@ -679,7 +679,8 @@ function getSAGE2Path(getName) {
 		if (pubdir.length === 2) {
 			// convert the URL into a path
 			var suburl = path.join('.', pubdir[1]);
-			pathname   = url.resolve(folder.path, suburl);
+			// pathname   = url.resolve(folder.path, suburl);
+			pathname = path.resolve(folder.path, suburl);
 			pathname   = decodeURIComponent(pathname);
 			break;
 		}
