@@ -215,6 +215,35 @@ var movie_player = SAGE2_BlockStreamingApp.extend({
 		this.playPauseBtn.state = 0;
 	},
 	/**
+	*/
+	getContextEntries: function() {
+		var entries = [];
+		var entry;
+		var description;
+		var nameOfFunction;
+		var params;
+
+		entry = {};
+		entry.description = "PlayPause";
+		entry.nameOfFunction = "togglePlayPause";
+		entry.params = [ "serverDate" ];
+		entries.push(entry);
+
+		entry = {};
+		entry.description = "Stop";
+		entry.nameOfFunction = "stopVideo";
+		entry.params = [];
+		entries.push(entry);
+
+		entry = {};
+		entry.description = "Mute";
+		entry.nameOfFunction = "toggleMute";
+		entry.params = [ "serverDate" ];
+		entries.push(entry);
+
+		return entries;
+	},
+	/**
 	* Handles event processing, arrow keys to navigate, and r to redraw
 	*
 	* @method event

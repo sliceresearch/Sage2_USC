@@ -708,7 +708,10 @@ function setupListeners(wsio) {
 	wsio.on('createFolder',                         wsCreateFolder);
 
 	//message passing between ui to display (utd)
-	wsio.on('utdWhatAppIsAt', 						wsUtdWhatAppIsAt)
+	wsio.on('utdWhatAppIsAt', 						wsUtdWhatAppIsAt);
+	wsio.on('utdRequestRmbContextMenu', 			wsUtdRequestRmbContextMenu);
+	//display to ui (dtu)
+	wsio.on('dtuRmbContextMenuContents', 			wsDtuRmbContextMenuContents);
 }
 
 function initializeExistingControls(wsio) {
@@ -7199,18 +7202,53 @@ function showOrHideWidgetLinks(data) {
 	}
 }
 
-
 /**
- *
+ * Asks what app is at given x,y coordinate.
  */
 function wsUtdWhatAppIsAt(wsio, data) {
-	console.log("Erase me: wsUtdWhatAppIsAt " + data.x + ',' + data.y );
 	var obj = interactMgr.searchGeometry({x: data.x, y: data.y});
+
+	data.message = "utdWhatAppIsAt>Received query from:" + wsio.id + " ";
 	if (obj === null) {
-		data.message = "no app at location";
+		data.message += "no app at location";
 	}
 	else {
-		data.message = obj.data.id;
+		data.message += obj.data.id;
 	}
 	wsio.emit('utdConsoleMessage', data);
+}
+
+/**
+ * Asks for rmb context menu from app under x,y coordinate.
+ */
+function wsUtdRequestRmbContextMenu(wsio, data) {
+	var obj = interactMgr.searchGeometry({x: data.x, y: data.y});
+
+	var dataForDisplayClient = {};
+	if (obj !== null) {
+		dataForDisplayClient.app = obj.data.id;
+		dataForDisplayClient.func = "rmbContextResponse";
+		dataForDisplayClient.data = {};
+		dataForDisplayClient.data.uiClient = wsio.id;
+		dataForDisplayClient.data.app = obj.data.id;
+
+		//only send if a master display is connected
+		if(masterDisplay) {
+			masterDisplay.emit('broadcast', dataForDisplayClient); //only send to one display to prevent multiple responses.
+		}
+	}
+}
+
+/**
+ * 
+ */
+function wsDtuRmbContextMenuContents(wsio, data) {
+	console.log("erase me. Activation of wsDtuRmbContextMenuContents");
+
+	for(var i = 0; i < clients.length; i++) {
+		if(clients[i].id === data.uiClient) {
+			console.log("erase me. sending data to matched client");
+			clients[i].emit('dtuRmbContextMenuContents', data);
+		}
+	}
 }

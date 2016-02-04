@@ -787,5 +787,29 @@ var SAGE2_App = Class.extend({
 			args = msg;
 		}
 		sage2Log({app: this.div.id, message: args});
+	},
+
+	/**
+	 * Returns the entry list for the dtuRmbContextMenuContents.
+	 */
+	rmbContextResponse: function(data) {
+		var dataForUiClient = {};
+			dataForUiClient.uiClient = data.uiClient; //already removed 1 layer of data from broadcast.
+			dataForUiClient.app = data.app;
+			dataForUiClient.entries;
+		if ( this.getContextEntries === undefined || this.getContextEntries === null ) {
+			dataForUiClient.entries = [];
+			var entry = {};
+				entry.description = "Not supported by this app";
+				entry.buttonEffect = null;
+				entry.button = null;
+			dataForUiClient.entries.push(entry);
+		}
+		else {
+			dataForUiClient.entries = this.getContextEntries();
+		}
+
+		wsio.emit('dtuRmbContextMenuContents', dataForUiClient);
 	}
+
 });

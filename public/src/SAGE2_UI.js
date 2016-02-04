@@ -466,6 +466,10 @@ function setupListeners() {
 	wsio.on('utdConsoleMessage', function(data) {
 		console.log("UTD message:" + data.message);
 	});
+
+	wsio.on('dtuRmbContextMenuContents', function(data) {
+		setRmbContextMenuEntries(data.entries, data.appSource);
+	});
 }
 
 
@@ -1752,7 +1756,7 @@ function setupRmbContextMenuDiv() {
 				data.x = pointerX;
 				data.y = pointerY;
 				console.dir(data);
-				wsio.emit('utdWhatAppIsAt', data );
+				wsio.emit('utdRequestRmbContextMenu', data );
 
 				showRmbContextMenuDiv(e.clientX, e.clientY);
 	            //start with blank set of entries
@@ -1785,11 +1789,40 @@ function hideRmbContextMenuDiv() {
 /**
  *
  */
-function setRmbContextMenuEntries(entriesToAdd) {
+function setRmbContextMenuEntries(entriesToAdd, appSource) {
 	var rmbDiv = document.getElementById('rmbContextMenu');
 
 	while (rmbDiv.firstChild) {
 		rmbDiv.removeChild(rmbDiv.firstChild);
+	}
+
+	for (var i = 0; i < entriesToAdd.length; i++) {
+		console.log("erase me. nof:" + entriesToAdd[i].nameOfFunction + ". params: " + entriesToAdd[i].params);
+		if(entriesToAdd[i].nameOfFunction !== undefined && entriesToAdd[i].nameOfFunction !== null) {
+			entriesToAdd[i].buttonEffect = function(firstParam) {
+
+				if(firstParam === "Initializing value") {
+					this.nameOfFunction = arguments[1];
+					this.paramArray = arguments[2];
+					this.appSource = arguments[3];
+				}
+
+				console.log( "rmbContextMenu button effect: activate display function called" + this.nameOfFunction + ". With params:");
+				var params = "      ";
+				for(var j = 0; j < this.paramArray.length; j++) {
+					params += this.paramArray[j] + ",";
+				}
+				if (this.paramArray.length === 0) {
+					params += "<no params given>"
+				}
+				console.log(params);
+				console.log("Intended for:" + this.appSource);
+			}
+			var nof = entriesToAdd[i].nameOfFunction;
+			var pArray = entriesToAdd[i].params;
+			var aSource = appSource;
+			entriesToAdd[i].buttonEffect("Initializing value", nof, pArray, aSource );
+		}
 	}
 
 	var closeEntry = {};
