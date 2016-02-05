@@ -12,26 +12,24 @@ chrome.runtime.onMessage.addListener(function(response) {
 	for (var i = 0; i < divs.length; i++) {
 		divs[i].parentNode.removeChild(divs[i]);
 	}
-
 	// Add new servers
-	Object.keys(response).forEach(function (v) {
-		if (response[v].sender && response[v].sender.url) {
+	for (var v in response) {
+		if (response[v]) {
 			var div = document.createElement('div');
-			console.log('Adding', response[v].sender.url)
-			div.innerText = response[v].sender.url;
+			div.innerText = response[v];
 			// Set a click callback
 			div.addEventListener('click', click);
 			// Add to the popup page
 			document.body.appendChild(div);
 		}
-	});
+	}
 });
 
 function click(e) {
 	chrome.tabs.query({active: true, currentWindow:true}, function(tabs) {
 		var tab = tabs[0];
 		chrome.tabs.captureVisibleTab(function(screenshotUrl) {
-			console.log('target is',  e.target.innerText);
+			console.log('Target',  e.target.innerText);
 			chrome.runtime.sendMessage({id: tabs[0].id,
 				sender: e.target.innerText,
 				cmd: "screenshot",
