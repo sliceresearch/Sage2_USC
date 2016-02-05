@@ -7247,7 +7247,7 @@ function wsDtuRmbContextMenuContents(wsio, data) {
 
 	for(var i = 0; i < clients.length; i++) {
 		if(clients[i].id === data.uiClient) {
-			console.log("erase me. sending data to matched client");
+			console.log("erase me. sending data to matched client, source app:" + data.app);
 			clients[i].emit('dtuRmbContextMenuContents', data);
 		}
 	}

@@ -468,7 +468,8 @@ function setupListeners() {
 	});
 
 	wsio.on('dtuRmbContextMenuContents', function(data) {
-		setRmbContextMenuEntries(data.entries, data.appSource);
+		console.log("original app" + data.app);
+		setRmbContextMenuEntries(data.entries, data.app);
 	});
 }
 
@@ -1789,7 +1790,7 @@ function hideRmbContextMenuDiv() {
 /**
  *
  */
-function setRmbContextMenuEntries(entriesToAdd, appSource) {
+function setRmbContextMenuEntries(entriesToAdd, app) {
 	var rmbDiv = document.getElementById('rmbContextMenu');
 
 	while (rmbDiv.firstChild) {
@@ -1800,13 +1801,6 @@ function setRmbContextMenuEntries(entriesToAdd, appSource) {
 		console.log("erase me. nof:" + entriesToAdd[i].nameOfFunction + ". params: " + entriesToAdd[i].params);
 		if(entriesToAdd[i].nameOfFunction !== undefined && entriesToAdd[i].nameOfFunction !== null) {
 			entriesToAdd[i].buttonEffect = function(firstParam) {
-
-				if(firstParam === "Initializing value") {
-					this.nameOfFunction = arguments[1];
-					this.paramArray = arguments[2];
-					this.appSource = arguments[3];
-				}
-
 				console.log( "rmbContextMenu button effect: activate display function called" + this.nameOfFunction + ". With params:");
 				var params = "      ";
 				for(var j = 0; j < this.paramArray.length; j++) {
@@ -1816,12 +1810,8 @@ function setRmbContextMenuEntries(entriesToAdd, appSource) {
 					params += "<no params given>"
 				}
 				console.log(params);
-				console.log("Intended for:" + this.appSource);
+				console.log("Intended for:" + this.app);
 			}
-			var nof = entriesToAdd[i].nameOfFunction;
-			var pArray = entriesToAdd[i].params;
-			var aSource = appSource;
-			entriesToAdd[i].buttonEffect("Initializing value", nof, pArray, aSource );
 		}
 	}
 
@@ -1844,6 +1834,9 @@ function setRmbContextMenuEntries(entriesToAdd, appSource) {
 			this.style.background = "white";
 		} );
 		workingDiv.addEventListener( 'mousedown', entriesToAdd[i].buttonEffect );
+		workingDiv.nameOfFunction = entriesToAdd[i].nameOfFunction;
+		workingDiv.paramArray = entriesToAdd[i].params;
+		workingDiv.app = app;
 
 		if (i === entriesToAdd.length - 1) {
 			rmbDiv.appendChild( document.createElement('hr') );
