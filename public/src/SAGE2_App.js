@@ -796,7 +796,6 @@ var SAGE2_App = Class.extend({
 		var dataForUiClient = {};
 			dataForUiClient.uiClient = data.uiClient; //already removed 1 layer of data from broadcast.
 			dataForUiClient.app = data.app;
-			console.log("erase me. this is the listed data app:" + dataForUiClient.app);
 			dataForUiClient.entries;
 		if ( this.getContextEntries === undefined || this.getContextEntries === null ) {
 			dataForUiClient.entries = [];

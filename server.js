@@ -7243,11 +7243,8 @@ function wsUtdRequestRmbContextMenu(wsio, data) {
  * 
  */
 function wsDtuRmbContextMenuContents(wsio, data) {
-	console.log("erase me. Activation of wsDtuRmbContextMenuContents");
-
 	for(var i = 0; i < clients.length; i++) {
 		if(clients[i].id === data.uiClient) {
-			console.log("erase me. sending data to matched client, source app:" + data.app);
 			clients[i].emit('dtuRmbContextMenuContents', data);
 		}
 	}

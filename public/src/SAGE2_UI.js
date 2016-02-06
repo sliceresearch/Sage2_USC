@@ -468,7 +468,6 @@ function setupListeners() {
 	});
 
 	wsio.on('dtuRmbContextMenuContents', function(data) {
-		console.log("original app" + data.app);
 		setRmbContextMenuEntries(data.entries, data.app);
 	});
 }
@@ -1798,7 +1797,6 @@ function setRmbContextMenuEntries(entriesToAdd, app) {
 	}
 
 	for (var i = 0; i < entriesToAdd.length; i++) {
-		console.log("erase me. nof:" + entriesToAdd[i].nameOfFunction + ". params: " + entriesToAdd[i].params);
 		if(entriesToAdd[i].nameOfFunction !== undefined && entriesToAdd[i].nameOfFunction !== null) {
 			entriesToAdd[i].buttonEffect = function(firstParam) {
 				console.log( "rmbContextMenu button effect: activate display function called" + this.nameOfFunction + ". With params:");
