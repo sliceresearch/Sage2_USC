@@ -805,10 +805,11 @@ function fileUploadComplete() {
 		webix.modalbox.hide(uploadMessage);
 	}
 
-	// setTimeout(function() {
-	// 	displayUI.fileUpload = false;
-	// 	displayUI.draw();
-	// }, 500);
+	// Seems useful, sometimes (at the end of upload)
+	setTimeout(function() {
+		displayUI.fileUpload = false;
+		displayUI.draw();
+	}, 500);
 }
 
 /**
@@ -821,10 +822,10 @@ function fileUploadFromUI() {
 	hideDialog('localfileDialog');
 
 	// Setup the progress bar
-	var sage2UI = document.getElementById('sage2UICanvas');
-	sage2UI.style.borderStyle = "solid";
-	displayUI.fileDrop = false;
-	displayUI.draw();
+	// var sage2UI = document.getElementById('sage2UICanvas');
+	// sage2UI.style.borderStyle = "solid";
+	// displayUI.fileDrop = false;
+	// displayUI.draw();
 
 	// trigger file upload
 	var thefile = document.getElementById('filenameForUpload');
