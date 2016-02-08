@@ -225,6 +225,10 @@ function SAGE2_interaction(wsio) {
 				formdata.append("file" + i.toString(), files[i]);
 				formdata.append("dropX", dropX);
 				formdata.append("dropY", dropY);
+
+				formdata.append("SAGE2_ptrName",  localStorage.SAGE2_ptrName);
+				formdata.append("SAGE2_ptrColor", localStorage.SAGE2_ptrColor);
+
 				var xhr = new XMLHttpRequest();
 				// add the request into the array
 				this.array_xhr.push(xhr);
