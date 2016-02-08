@@ -3746,7 +3746,12 @@ function sendConfig(req, res) {
 
 function uploadForm(req, res) {
 	var form     = new formidable.IncomingForm();
+	// Drop position
 	var position = [ 0, 0 ];
+	// User information
+	var ptrName  = "";
+	var ptrColor = "";
+
 	// Limits the amount of memory all fields together (except files) can allocate in bytes.
 	//    set to 4MB.
 	form.maxFieldsSize = 4 * 1024 * 1024;
@@ -3767,6 +3772,15 @@ function uploadForm(req, res) {
 	});
 
 	form.on('field', function(field, value) {
+		// Keep user information
+		if (field === 'SAGE2_ptrName') {
+			ptrName = value;
+			console.log(sageutils.header("Upload") + "by " + ptrName);
+		}
+		if (field === 'SAGE2_ptrColor') {
+			ptrColor = value;
+			console.log(sageutils.header("Upload") + "color " + ptrColor);
+		}
 		// convert value [0 to 1] to wall coordinate from drop location
 		if (field === 'dropX') {
 			position[0] = parseInt(parseFloat(value) * config.totalWidth,  10);
@@ -3809,11 +3823,11 @@ function uploadForm(req, res) {
 
 	form.on('end', function() {
 		// saves files in appropriate directory and broadcasts the items to the displays
-		manageUploadedFiles(this.openedFiles, position);
+		manageUploadedFiles(this.openedFiles, position, ptrName, ptrColor);
 	});
 }
 
-function manageUploadedFiles(files, position) {
+function manageUploadedFiles(files, position, ptrName, ptrColor) {
 	var fileKeys = Object.keys(files);
 	fileKeys.forEach(function(key) {
 		var file = files[key];
@@ -3823,6 +3837,10 @@ function manageUploadedFiles(files, position) {
 				console.log(sageutils.header("Upload") + 'unrecognized file type: ' + file.name + ' ' + file.type);
 				return;
 			}
+
+			// Add user information into exif data
+			assets.addTag(appInstance.file, "SAGE2user",  ptrName);
+			assets.addTag(appInstance.file, "SAGE2color", ptrColor);
 
 			// Use the size from the drop information
 			if (position[2] && position[2] !== 0) {
