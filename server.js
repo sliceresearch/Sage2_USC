@@ -3754,7 +3754,7 @@ function uploadForm(req, res) {
 	form.multiples     = true;
 
 	form.on('fileBegin', function(name, file) {
-		console.log(sageutils.header("Upload") + 'begin ' + name + ' ' + file.name + ' ' + file.type);
+		console.log(sageutils.header("Upload") + file.name + ' ' + file.type);
 	});
 
 	form.on('error', function(err) {
