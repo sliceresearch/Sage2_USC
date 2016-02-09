@@ -7247,7 +7247,6 @@ function wsUtdCallFunctionOnApp(wsio, data) {
 	//go through params and convert server values
 	for(var i = 0; i < data.params.length; i++) {
 		if(data.params[0] === "serverDate") {
-			console.log("Replacing serverDate");
 			data.params[0] = Date.now();
 		}
 	}
