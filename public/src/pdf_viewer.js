@@ -222,6 +222,79 @@ PDFJS.maxCanvasPixels = 67108864; // 8k2
 	},
 
 	/**
+	* To enable right click context menu support this function needs to be present with this format.
+	*
+	* Must return an array of entries. An entry is an object with three properties:
+	*	description: what is to be displayed to the viewer.
+	* 	func: name of the function to activate in the app. It must exist.
+	* 	params: currently an array. This might change. The string "serverDate" will be auto converted by server.
+	*/
+	getContextEntries: function() {
+		var entries = [];
+		var entry;
+
+		entry = {};
+		entry.description = "First Page";
+		entry.func = "changeThePage";
+		entry.params = [ "serverDate", "first" ];
+		entries.push(entry);
+
+		entry = {};
+		entry.description = "Previous Page";
+		entry.func = "changeThePage";
+		entry.params = [ "serverDate", "previous" ];
+		entries.push(entry);
+
+		entry = {};
+		entry.description = "Next Page";
+		entry.func = "changeThePage";
+		entry.params = [ "serverDate", "next" ];
+		entries.push(entry);
+
+		entry = {};
+		entry.description = "Last Page";
+		entry.func = "changeThePage";
+		entry.params = [ "serverDate", "last" ];
+		entries.push(entry);
+
+		return entries;
+	},
+
+	/**
+	* Support function to allows page changing through right mouse context menu.
+	* First param is serverDate. Second is the page to change to.
+	*/
+	changeThePage: function( ctpParams ) {
+		var page = ctpParams[1];
+
+		if(page === "first") {
+			if (this.state.page === 1) {
+				return;
+			}
+			this.state.page = 1;
+		}
+		else if(page === "previous") {
+			if (this.state.page <= 1) {
+				return;
+			}
+			this.state.page = this.state.page - 1;
+		}
+		else if(page === "next") {
+			if (this.state.page >= this.pdfDoc.numPages) {
+				return;
+			}
+			this.state.page = this.state.page + 1;
+		}
+		else if(page === "last") {
+			if (this.state.page === this.pdfDoc.numPages) {
+				return;
+			}
+			this.state.page = this.pdfDoc.numPages;
+		}
+		this.refresh( new Date(ctpParams[0]) );
+	},
+
+	/**
 	* Handles event processing, arrow keys to navigate, and r to redraw
 	*
 	* @method event

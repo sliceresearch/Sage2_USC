@@ -710,6 +710,7 @@ function setupListeners(wsio) {
 	//message passing between ui to display (utd)
 	wsio.on('utdWhatAppIsAt', 						wsUtdWhatAppIsAt);
 	wsio.on('utdRequestRmbContextMenu', 			wsUtdRequestRmbContextMenu);
+	wsio.on('utdCallFunctionOnApp', 				wsUtdCallFunctionOnApp)
 	//display to ui (dtu)
 	wsio.on('dtuRmbContextMenuContents', 			wsDtuRmbContextMenuContents);
 }
@@ -7235,6 +7236,36 @@ function wsUtdRequestRmbContextMenu(wsio, data) {
 		//only send if a master display is connected
 		if(masterDisplay) {
 			masterDisplay.emit('broadcast', dataForDisplayClient); //only send to one display to prevent multiple responses.
+		}
+	}
+}
+/**
+ * Asks for rmb context menu from app under x,y coordinate.
+ */
+function wsUtdCallFunctionOnApp(wsio, data) {
+	data.data = "";
+	//go through params and convert server values
+	for(var i = 0; i < data.params.length; i++) {
+		if(data.params[0] === "serverDate") {
+			console.log("Replacing serverDate");
+			data.params[0] = Date.now();
+		}
+	}
+	//some functions take a direct data value. Assuming that if array is size 1 send value directly.
+	if( data.params.length === 1) {
+		data.data = data.params[0];
+	}
+	//all other functions must work with an array. Objects won't work without make the array confusing.
+	else if (data.params.length > 1) {
+		data.data = [];
+		for(var i = 0; i < data.params.length; i++) {
+			data.data.push( data.params[i] );
+		}
+	}
+	//send to all display clients(since they all need to update)
+	for(var i = 0; i < clients.length; i++) {
+		if(clients[i].clientType === "display") {
+			clients[i].emit('broadcast', data);
 		}
 	}
 }

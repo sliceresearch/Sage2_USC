@@ -1797,18 +1797,13 @@ function setRmbContextMenuEntries(entriesToAdd, app) {
 	}
 
 	for (var i = 0; i < entriesToAdd.length; i++) {
-		if(entriesToAdd[i].nameOfFunction !== undefined && entriesToAdd[i].nameOfFunction !== null) {
+		if(entriesToAdd[i].func !== undefined && entriesToAdd[i].func !== null) {
 			entriesToAdd[i].buttonEffect = function(firstParam) {
-				console.log( "rmbContextMenu button effect: activate display function called" + this.nameOfFunction + ". With params:");
-				var params = "      ";
-				for(var j = 0; j < this.paramArray.length; j++) {
-					params += this.paramArray[j] + ",";
-				}
-				if (this.paramArray.length === 0) {
-					params += "<no params given>"
-				}
-				console.log(params);
-				console.log("Intended for:" + this.app);
+				var data = {};
+					data.app = this.app;
+					data.func = this.func;
+					data.params = this.params;
+				wsio.emit('utdCallFunctionOnApp', data);
 			}
 		}
 	}
@@ -1832,8 +1827,8 @@ function setRmbContextMenuEntries(entriesToAdd, app) {
 			this.style.background = "white";
 		} );
 		workingDiv.addEventListener( 'mousedown', entriesToAdd[i].buttonEffect );
-		workingDiv.nameOfFunction = entriesToAdd[i].nameOfFunction;
-		workingDiv.paramArray = entriesToAdd[i].params;
+		workingDiv.func = entriesToAdd[i].func;
+		workingDiv.params = entriesToAdd[i].params;
 		workingDiv.app = app;
 
 		if (i === entriesToAdd.length - 1) {

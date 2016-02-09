@@ -214,35 +214,40 @@ var movie_player = SAGE2_BlockStreamingApp.extend({
 		// must change play-pause button (should show 'play' icon)
 		this.playPauseBtn.state = 0;
 	},
+
 	/**
+	* To enable right click context menu support this function needs to be present with this format.
+	*
+	* Must return an array of entries. An entry is an object with three properties:
+	*	description: what is to be displayed to the viewer.
+	* 	func: name of the function to activate in the app. It must exist.
+	* 	params: currently an array. This might change. The string "serverDate" will be auto converted by server.
 	*/
 	getContextEntries: function() {
 		var entries = [];
 		var entry;
-		var description;
-		var nameOfFunction;
-		var params;
 
 		entry = {};
 		entry.description = "PlayPause";
-		entry.nameOfFunction = "togglePlayPause";
+		entry.func = "togglePlayPause";
 		entry.params = [ "serverDate" ];
 		entries.push(entry);
 
 		entry = {};
 		entry.description = "Stop";
-		entry.nameOfFunction = "stopVideo";
+		entry.func = "stopVideo";
 		entry.params = [];
 		entries.push(entry);
 
 		entry = {};
 		entry.description = "Mute";
-		entry.nameOfFunction = "toggleMute";
+		entry.func = "toggleMute";
 		entry.params = [ "serverDate" ];
 		entries.push(entry);
 
 		return entries;
 	},
+	
 	/**
 	* Handles event processing, arrow keys to navigate, and r to redraw
 	*
