@@ -1079,7 +1079,7 @@ function wsStartNewMediaStream(wsio, data) {
 	console.log("wsStartNewMediaStream ", data.id);
 
 	var i;
-	SAGE2Items.renderSync[data.id] = {clients: {}, chunks: []};
+	SAGE2Items.renderSync[data.id] = {clients: {}, chunks: [], frames: 0, start: Date.now()};
 	for (i = 0; i < clients.length; i++) {
 		if (clients[i].clientType === "display") {
 			SAGE2Items.renderSync[data.id].clients[clients[i].id] = {wsio: clients[i], readyForNextFrame: false, blocklist: []};
@@ -1242,6 +1242,7 @@ function wsStopMediaStream(wsio, data) {
 function wsReceivedMediaStreamFrame(wsio, data) {
         //console.log("ReceivedMediaStreamFrame ", data);
 	SAGE2Items.renderSync[data.id].clients[wsio.id].readyForNextFrame = true;
+        SAGE2Items.renderSync[data.id].frames = SAGE2Items.renderSync[data.id].frames + 1;
 	if (allTrueDict(SAGE2Items.renderSync[data.id].clients, "readyForNextFrame")) {
 		var i;
 		var key;
@@ -1288,7 +1289,7 @@ function wsStartNewMediaBlockStream(wsio, data) {
 	data.height = parseInt(data.height, 10);
 
 
-	SAGE2Items.renderSync[data.id] = {chunks: [], clients: {}, width: data.width, height: data.height};
+	SAGE2Items.renderSync[data.id] = {chunks: [], clients: {}, width: data.width, height: data.height, frames: 0, start: Date.now()};
 	for (var i = 0; i < clients.length; i++) {
 		if (clients[i].clientType === "display") {
 			SAGE2Items.renderSync[data.id].clients[clients[i].id] = {wsio: clients[i], readyForNextFrame: true, blocklist: []};
@@ -1375,6 +1376,7 @@ function wsStopMediaBlockStream(wsio, data) {
 
 function wsReceivedMediaBlockStreamFrame(wsio, data) {
 	SAGE2Items.renderSync[data.id].clients[wsio.id].readyForNextFrame = true;
+	SAGE2Items.renderSync[data.id].frames = SAGE2Items.renderSync[data.id].frames + 1;
 
 	if (allTrueDict(SAGE2Items.renderSync[data.id].clients, "readyForNextFrame")) {
 		SAGE2Items.renderSync[data.id].sendNextFrame = true;
@@ -1956,12 +1958,17 @@ function listApplications() {
 	console.log("Applications\n------------");
 	for (key in SAGE2Items.applications.list) {
 		var app = SAGE2Items.applications.list[key];
-		console.log(sprint("%2d: %s %s [%dx%d +%d+%d] %s (v%s) by %s",
+		var fps = "";
+		var renderSync = SAGE2Items.renderSync[app.id];
+		if (renderSync !== undefined && renderSync !== null && renderSync.frames !== null && renderSync.frames !== undefined) {
+			fps = SAGE2Items.renderSync[app.id].frames * 1000 / (Date.now() - renderSync.start);
+		}
+		console.log(sprint("%2d: %s %s [%dx%d +%d+%d] %s (v%s) by %s fps %s",
 			i, app.id, app.application,
 			app.width, app.height,
 			app.left,  app.top,
 			app.title, app.metadata.version,
-			app.metadata.author));
+			app.metadata.author, fps));
 		i++;
 	}
 }
