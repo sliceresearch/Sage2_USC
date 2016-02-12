@@ -310,7 +310,7 @@ function SAGE2_interaction(wsio) {
 			if (button.requestPointerLock) {
 				button.requestPointerLock();
 			} else {
-				console.log("No PointerLock support");
+				showSAGE2Message("No PointerLock support in this browser.<br> Google Chrome is preferred.", 10);
 			}
 		} else {
 			console.log("No mouse detected - entering touch interface for SAGE2 Pointer");
@@ -406,19 +406,30 @@ function SAGE2_interaction(wsio) {
 				// post message to start chrome screen share
 				window.postMessage('capture_desktop', '*');
 			} else if (__SAGE2__.browser.isChrome === true && this.chromeDesktopCaptureEnabled !== true) {
-				if (window.confirm("Let's install the SAGE2 screen sharing extension for Chrome (or visit the help page).\n" +
-						"Once done, please reload the SAGE UI page")) {
-					window.open("https://chrome.google.com/webstore/detail/sage2-screen-capture/mbkfcmpjbkmmdcfocaclghbobhnjfpkk",
-						"Good luck!");
-				} else {
-					window.open("help/index.html", "Good luck!");
-				}
+				webix.confirm({
+					title: "Screen sharing",
+					ok: "Ok",
+					cancel: "Cancel",
+					text:  "Let's install the SAGE2 screen sharing extension for Chrome (or visit the help page).<br>" +
+							"Once done, please reload the SAGE UI page",
+					width: "60%",
+					position: "center",
+					callback: function(confirm) {
+						if (confirm) {
+							window.open("https://chrome.google.com/webstore/detail/sage2-screen-capture/mbkfcmpjbkmmdcfocaclghbobhnjfpkk",
+								"Good luck!");
+						} else {
+							window.open("help/index.html", "Good luck!");
+						}
+						webix.modalbox.hide(this);
+					}
+				});
 			} else if (__SAGE2__.browser.isFirefox === true) {
 				// attempt to start firefox screen share
 				//   can replace 'screen' with 'window' (but need user choice ahead of time)
 				showDialog('ffShareScreenDialog');
 			} else {
-				alert("Cannot find screen capture support in this browser. Sorry.");
+				showSAGE2Message("Screen capture not supported in this browser.<br> Google Chrome is preferred.", 10);
 			}
 		} else {
 			var _this = this;
@@ -492,14 +503,14 @@ function SAGE2_interaction(wsio) {
 		console.log("no access to media capture");
 
 		if (__SAGE2__.browser.isChrome === true) {
-			alert('Screen capture failed. Make sure to install and enable the Chrome SAGE2 extension.' +
-				'See Window/Extension menu');
+			showSAGE2Message('Screen capture failed.<br> Make sure to install and enable the Chrome SAGE2 extension.<br>' +
+				'See Window/Extension menu', 10);
 		} else if (__SAGE2__.browser.isFirefox === true) {
-			alert('Screen capture failed.\nTo enable screen capture in Firefox:\n1- Open "about:config"\n' +
-				'2- Set "media.getusermedia.screensharing.enabled" to true\n' +
-				'3- Add your domain (or localhost) in "media.getusermedia.screensharing.allowed_domains" ');
+			showSAGE2Message('Screen capture failed. To enable screen capture in Firefox:<br>1- Open "about:config"<br>' +
+				'2- Set "media.getusermedia.screensharing.enabled" to true<br>' +
+				'3- Add your domain (or localhost) in "media.getusermedia.screensharing.allowed_domains"', 120);
 		} else {
-			alert("Cannot find screen capture support in this browser. Sorry.");
+			showSAGE2Message("No screen capture support in this browser.<br> Google Chrome is preferred.", 10);
 		}
 	};
 
