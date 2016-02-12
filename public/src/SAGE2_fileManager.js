@@ -122,7 +122,7 @@ function FileManager(wsio, mydiv, uniqueID) {
 		id: "layout",
 		css: { border: "solid 1px #565656;"},
 		rows: [
-			{ view: "toolbar", cols: [ mymenu, mytoolbar ]
+			{ view: "toolbar", cols: [mymenu, mytoolbar]
 			},
 			{ cols: [
 				{ rows: [
@@ -157,7 +157,7 @@ function FileManager(wsio, mydiv, uniqueID) {
 					scroll: 'y',
 					gravity: 2, // two times bigger
 					animate: false,
-					cells: [ { } ]
+					cells: [{}]
 				},
 				{
 					view: "resizer"
@@ -916,7 +916,7 @@ function FileManager(wsio, mydiv, uniqueID) {
 
 			}
 		}
-	}
+	};
 
 	// Server sends the media files list
 	this.updateFiles = function(data) {
@@ -964,7 +964,7 @@ function FileManager(wsio, mydiv, uniqueID) {
 				f.exif.Creator = f.exif.metadata.author;
 				this.allTable.data.add({id: f.id,
 					name: f.exif.FileName,
-					user: f.exif.SAGE2user ? f.exif.SAGE2user : "-"	,
+					user: f.exif.SAGE2user ? f.exif.SAGE2user : "-",
 					date: mm.format("YYYY/MM/DD HH:mm:ss"),
 					ago: mm.fromNow(),
 					type: "APP",
@@ -976,7 +976,7 @@ function FileManager(wsio, mydiv, uniqueID) {
 				f.exif.FileModifyDate = mm;
 				this.allTable.data.add({id: f.id,
 					name: f.exif.FileName,
-					user: f.exif.SAGE2user ? f.exif.SAGE2user : "-"	,
+					user: f.exif.SAGE2user ? f.exif.SAGE2user : "-",
 					date: mm.format("YYYY/MM/DD HH:mm:ss"),
 					ago:  mm.fromNow(),
 					type: "SESSION",
@@ -997,7 +997,7 @@ function FileManager(wsio, mydiv, uniqueID) {
 				f.exif.FileModifyDate = mm;
 				this.allTable.data.add({id: f.id,
 					name: f.exif.FileName,
-					user: f.exif.SAGE2user ? f.exif.SAGE2user : "-"	,
+					user: f.exif.SAGE2user ? f.exif.SAGE2user : "-",
 					date: mm.format("YYYY/MM/DD HH:mm:ss"),
 					ago:  mm.fromNow(),
 					type: f.exif.FileType,
@@ -1057,7 +1057,7 @@ function FileManager(wsio, mydiv, uniqueID) {
 	var tmenu = webix.ui({
 		view: "contextmenu",
 		id: "tmenu",
-		data: ["New folder", { $template: "Separator" }, "Refresh" ],
+		data: ["New folder", { $template: "Separator" }, "Refresh"],
 		on: {
 			onItemClick: function(id) {
 				var context = this.getContext();

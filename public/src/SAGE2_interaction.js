@@ -555,10 +555,10 @@ function SAGE2_interaction(wsio) {
 				return;
 			}
 
-			var widths = [	Math.min(852,  mediaVideo.videoWidth),
-							Math.min(1280, mediaVideo.videoWidth),
-							Math.min(1920, mediaVideo.videoWidth),
-							mediaVideo.videoWidth];
+			var widths = [Math.min(852,  mediaVideo.videoWidth),
+						Math.min(1280, mediaVideo.videoWidth),
+						Math.min(1920, mediaVideo.videoWidth),
+						mediaVideo.videoWidth];
 
 			for (var i = 0; i < 4; i++) {
 				var height = parseInt(widths[i] * mediaVideo.videoHeight / mediaVideo.videoWidth, 10);

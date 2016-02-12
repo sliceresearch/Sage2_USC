@@ -38,11 +38,11 @@ if (!Function.prototype.bind) {
 			// internal IsCallable function
 			throw new TypeError('Function.prototype.bind - what is trying to be bound is not callable');
 		}
-		var aArgs   = Array.prototype.slice.call(arguments, 1);
-		var fToBind = this;
+		var aArgs = Array.prototype.slice.call(arguments, 1);
+		var _this = this;
 		var FNOP    = function() {};
 		var fBound  = function() {
-			return fToBind.apply(this instanceof FNOP && oThis ? this : oThis,
+			return _this.apply(this instanceof FNOP && oThis ? this : oThis,
 						aArgs.concat(Array.prototype.slice.call(arguments)));
 		};
 		FNOP.prototype = this.prototype;
@@ -263,7 +263,7 @@ function SAGE2_init() {
 		if (event.data.cmd === "SAGE2_desktop_capture-Loaded") {
 			if (interactor !== undefined && interactor !== null) {
 				// Chrome extension is loaded
-				console.log('SAGE2 Chrome extension is loaded')
+				console.log('SAGE2 Chrome extension is loaded');
 				interactor.chromeDesktopCaptureEnabled = true;
 			}
 		}
@@ -711,7 +711,7 @@ var uploadMessage, msgui;
 function fileUploadStart(files) {
 	// Template for a prograss bar form
 	var aTemplate = '<div style="padding:0; margin: 0;"class="webix_el_box">' +
-		'<div style="width:#proc#%" class="webix_accordionitem_header">&nbsp;</div></div>'
+		'<div style="width:#proc#%" class="webix_accordionitem_header">&nbsp;</div></div>';
 	webix.protoUI({
 		name: "ProgressBar",
 		defaults: {
@@ -1054,7 +1054,9 @@ function handleClick(element) {
 		hideDialog('uploadDialog');
 		// open the file library
 		//    delay to remove bounce evennt on Chrome/iOS
-		setTimeout(function() { showDialog('localfileDialog'); }, 200);
+		setTimeout(function() {
+			showDialog('localfileDialog');
+		}, 200);
 	} else if (element.id === "dropboxFilesBtn") {
 		// upload from Dropbox
 		// Not Yet Implemented
@@ -1219,7 +1221,7 @@ function forceClick(event) {
 	// Check to see if the event has a force property
 	if ("webkitForce" in event) {
 		// Retrieve the force level
-		var forceLevel = event["webkitForce"];
+		var forceLevel = event.webkitForce;
 
 		// Retrieve the force thresholds for click and force click
 		var clickForce      = MouseEvent.WEBKIT_FORCE_AT_MOUSE_DOWN;
@@ -1351,8 +1353,16 @@ function touchStart(event) {
  */
 function touchEnd(event) {
 	var now = Date.now();
-	if ((now - touchTapTime) > 500) { touchTap = 0;                     }
-	if ((now - touchTime)    < 250) { touchTap++;   touchTapTime = now; } else { touchTap = 0; touchTapTime = 0;   }
+	if ((now - touchTapTime) > 500) {
+		touchTap = 0;
+	}
+	if ((now - touchTime) < 250) {
+		touchTap++;
+		touchTapTime = now;
+	} else {
+		touchTap = 0;
+		touchTapTime = 0;
+	}
 
 	if (event.target.id === "sage2UICanvas") {
 		if (touchMode === "translate") {
