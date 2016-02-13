@@ -499,7 +499,8 @@ AppLoader.prototype.loadAppFromFileFromRegistry = function(file, mime_type, aUrl
 	var _this = this;
 	fs.readFile(instructionsFile, 'utf8', function(err, json_str) {
 		if (err) {
-			throw err;
+			console.log(sageutils.header("Loader") + "cannot read application file " + instructionsFile);
+			return;
 		}
 
 		var appUrl = getSAGE2URL(localPath);
