@@ -159,6 +159,15 @@ function SAGE2_init() {
 	// Detect which browser is being used
 	SAGE2_browser();
 
+	// Deal with the warning label in the UI if Chrome or not Chrome
+	if (!__SAGE2__.browser.isMobile) {
+		if (!__SAGE2__.browser.isChrome) {
+			var chromeWarn = document.getElementById("usechrome");
+			// Make it visible
+			chromeWarn.style.display = "block";
+		}
+	}
+
 	// Create a connection to the SAGE2 server
 	wsio = new WebsocketIO();
 	wsio.open(function() {
