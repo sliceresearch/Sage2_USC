@@ -286,13 +286,17 @@ HttpServer.prototype.onreq = function(req, res) {
 				}
 			}
 		} else {
-			// File not found: 404 HTTP error, with link to index page
-			res.writeHead(404, {"Content-Type": "text/html"});
-			res.write("<h1>SAGE2 error</h1>file not found: <em>" + pathname + "</em>\n\n");
-			res.write("<br><br><br>\n");
-			res.write("<b><a href=/index.html>SAGE2 main page</a></b>\n");
-			res.end();
-			return;
+			// File not found: 404 HTTP error
+			// redirect to index page
+			this.redirect(res, "/");
+
+			// Not secure to show the URL: XSS
+			// res.writeHead(404, {"Content-Type": "text/html"});
+			// res.write("<h1>SAGE2 error</h1>file not found: <em>" + pathname + "</em>\n\n");
+			// res.write("<br><br><br>\n");
+			// res.write("<b><a href=/index.html>SAGE2 main page</a></b>\n");
+			// res.end();
+			// return;
 		}
 	} else if (req.method === "POST") {
 		var postName = decodeURIComponent(url.parse(req.url).pathname);
