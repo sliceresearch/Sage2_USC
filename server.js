@@ -438,7 +438,11 @@ function closeWebSocketClient(wsio) {
 	if (wsio.clientType === "display") {
 		console.log(sageutils.header("Disconnect") + wsio.id + " (" + wsio.clientType + " " + wsio.clientID + ")");
 	} else {
-		console.log(sageutils.header("Disconnect") + wsio.id + " (" + wsio.clientType + ")");
+		if (wsio.clientType) {
+			console.log(sageutils.header("Disconnect") + wsio.id + " (" + wsio.clientType + ")");
+		} else {
+			console.log(sageutils.header("Disconnect") + wsio.id + " (unknown)");
+		}
 	}
 
 	addEventToUserLog(wsio.id, {type: "disconnect", data: null, time: Date.now()});
