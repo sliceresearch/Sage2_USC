@@ -112,6 +112,9 @@ var mediaBlockSize     = 512;
 var startTime          = Date.now();
 var pressingAlt        = true;
 
+// master SAGE2 server for scalability
+var masterServer       = null;
+var slaveServers       = {};
 
 // Add extra folders defined in the configuration file
 if (config.folders) {
@@ -168,6 +171,7 @@ initializeSage2Server();
 
 
 function initializeSage2Server() {
+
 	// Remove API keys from being investigated further
 	// if (config.apis) delete config.apis;
 
@@ -362,7 +366,76 @@ function initializeSage2Server() {
 	wsioServerS = new WebsocketIO.Server({server: sage2ServerS});
 	wsioServer.onconnection(openWebSocketClient);
 	wsioServerS.onconnection(openWebSocketClient);
+
+	// if this is a slave server (connected to a master)
+        if (program.slaveports !== undefined) {
+		// assume master is on the same host (for now...)
+		var master = "wss://"+config.host+":"+config.master_https_port;
+		console.log("Slave server - try to connect to master ", master, "...");
+		masterServer = new WebsocketIO(master, false, function() {
+			console.log(sageutils.header("Remote") + "Connected to "+master+"as rendering slave");
+			var clientDescription = {
+				clientType: "remoteServer",
+				host: config.host,
+				port: config.port,
+				requests: {
+					config: false,
+					version: false,
+					time: false,
+					console: false
+				}
+			};
+			masterServer.clientType = "remoteServer";
+
+                	masterServer.emit('addClient', clientDescription);
+
+			masterServer.on('initialize', function() {
+				masterServer.emit('addSlaveServer', clientDescription);
+			});
+
+			masterServer.on('eventInItem', wsEventInItem);
+			masterServer.on('setItemPosition', moveResize);
+			masterServer.on('setItemPositionAndSize', moveResize);
+
+			masterServer.on('deleteApplication', wsDeleteApplication);
+
+			masterServer.onclose(function() {
+				console.log("Master "+master+" offline");
+				//remoteSites[index].connected = false;
+				//var delete_site = {name: remoteSites[index].name, connected: remoteSites[index].connected};
+				//broadcast('connectedToRemoteSite', delete_site);
+				//removeElement(clients, remote);
+				process.exit(0);
+			});
+		});
+	}
 }
+
+function wsAddSlaveServer(wsio, data) {
+	console.log("Add slave server: ", wsio.id, data);
+	data.id = wsio.id;
+	slaveServers[wsio.id]=data;
+	broadcast('displayAddSlaveServer',data);
+}
+
+/////////////////////
+//// Slave services
+
+function moveResize(wsio, data) {
+	console.log("Master update pos/size: ", wsio.id, data);
+	var newdata = {appPositionAndSize: data};
+	wsUpdateApplicationPositionAndSize(wsio, newdata);
+	// some clients e.g. vnc require these updates
+	broadcast('setItemPositionAndSize', data);
+}
+
+// attached to connection to master server only
+function wsEventInItem(wsio, data) {
+	console.log('wsEventInItem from master server: ', data);
+	broadcast('eventInItem', data);
+}
+
+/////////////////////
 
 function setUpDialogsAsInteractableObjects() {
 	var dialogGeometry = {
@@ -494,6 +567,7 @@ function closeWebSocketClient(wsio) {
 }
 
 function wsAddClient(wsio, data) {
+	console.log("wsAddClient ", wsio.id);
 
 	// Just making sure the data is valid JSON (one gets strings from C++)
 	if (sageutils.isTrue(data.requests.config)) {
@@ -529,6 +603,11 @@ function wsAddClient(wsio, data) {
 	} else {
 		wsio.clientID = -1;
 		console.log(sageutils.header("Connect") + wsio.id + " (" + wsio.clientType + ")");
+		if (masterServer!==undefined && masterServer!=null) {
+			console.log("register new client with master");
+			masterServer.emit('addClient', data);
+			console.log("- registered new client with master");
+		}
 	}
 
 	clients.push(wsio);
@@ -539,9 +618,11 @@ function wsAddClient(wsio, data) {
 		// for mobile clients, default to window interaction mode
 		remoteInteraction[wsio.id].previousMode = 0;
 	}
+
 }
 
 function initializeWSClient(wsio, reqConfig, reqVersion, reqTime, reqConsole) {
+	console.log("initializeWSClient ", wsio.id);
 	setupListeners(wsio);
 
 	wsio.emit('initialize', {UID: wsio.id, time: Date.now(), start: startTime});
@@ -568,6 +649,11 @@ function initializeWSClient(wsio, reqConfig, reqVersion, reqTime, reqConsole) {
 		initializeRemoteServerInfo(wsio);
 		initializeExistingWallUI(wsio);
 		setTimeout(initializeExistingControls, 6000, wsio); // why can't this be done immediately with the rest?
+		console.log("Send slave servers...", slaveServers);
+		for (var ss in slaveServers) {
+			console.log("- send slave server details: ", slaveServers[ss]);
+			wsio.emit('displayAddSlaveServer', slaveServers[ss]);
+		}
 	} else if (wsio.clientType === "sageUI") {
 		createSagePointer(wsio.id);
 		var key;
@@ -579,6 +665,7 @@ function initializeWSClient(wsio, reqConfig, reqVersion, reqTime, reqConsole) {
 
 	var remote = findRemoteSiteByConnection(wsio);
 	if (remote !== null) {
+		console.log("Connected to remote site");
 		remote.wsio = wsio;
 		remote.connected = true;
 		var site = {name: remote.name, connected: remote.connected};
@@ -591,7 +678,10 @@ function initializeWSClient(wsio, reqConfig, reqVersion, reqTime, reqConsole) {
 }
 
 function setupListeners(wsio) {
+	console.log("setupListeners ",wsio.id);
 	wsio.on('registerInteractionClient',            wsRegisterInteractionClient);
+
+	wsio.on('addSlaveServer',            		wsAddSlaveServer);
 
 	wsio.on('startSagePointer',                     wsStartSagePointer);
 	wsio.on('stopSagePointer',                      wsStopSagePointer);
@@ -987,10 +1077,10 @@ function wsRadialMenuClick(wsio, data) {
 // **************  Media Stream Functions *****************
 
 function wsStartNewMediaStream(wsio, data) {
-	console.log("received new stream: ", data.id);
+	console.log("wsStartNewMediaStream ", data.id);
 
 	var i;
-	SAGE2Items.renderSync[data.id] = {clients: {}, chunks: []};
+	SAGE2Items.renderSync[data.id] = {clients: {}, chunks: [], frames: 0, start: Date.now()};
 	for (i = 0; i < clients.length; i++) {
 		if (clients[i].clientType === "display") {
 			SAGE2Items.renderSync[data.id].clients[clients[i].id] = {wsio: clients[i], readyForNextFrame: false, blocklist: []};
@@ -1014,6 +1104,14 @@ function wsStartNewMediaStream(wsio, data) {
 			};
 			addEventToUserLog(wsio.id, {type: "mediaStreamStart", data: eLogData, time: Date.now()});
 		});
+
+	if (masterServer!==undefined && masterServer!=null) {
+		console.log("master - start new media stream");
+		masterServer.emit('startNewMediaStream', data);
+		// HACK! fake the first frame response which goes only to the master server
+	 	wsio.emit('requestNextFrame', {});
+	}
+	
 }
 
 /**
@@ -1034,8 +1132,22 @@ function doOverlap(x_1, y_1, width_1, height_1, x_2, y_2, width_2, height_2) {
 	return !(x_1 > x_2 + width_2 || x_1 + width_1 < x_2 || y_1 > y_2 + height_2 || y_1 + height_1 < y_2);
 }
 
-function wsUpdateMediaStreamFrame(wsio, data) {
+function wsUpdateMediaStreamFrame(wsio, dataOrBuffer) {
 	var key;
+
+        // NB: Cloned code
+        var data;
+        if (dataOrBuffer.id !== undefined) {
+          //console.log("UpdateMediaStreamFrame: parameter is record");
+          data = dataOrBuffer;
+        } else {
+          //console.log("UpdateMediaStreamFrame: parameter is Buffer");
+          data = {}
+          // buffer: id, state-type, state-encoding, state-src
+          data.id = byteBufferToString(dataOrBuffer);
+        }
+	//console.log("wsUpdateMediaStreamFrame ", data.id);
+
 	// Reset the 'ready' flag for every display client
 	for (key in SAGE2Items.renderSync[data.id].clients) {
 		SAGE2Items.renderSync[data.id].clients[key].readyForNextFrame = false;
@@ -1085,7 +1197,7 @@ function wsUpdateMediaStreamFrame(wsio, data) {
 		if (doOverlap(left, top, stream.width, stream.height,
 			offsetX, offsetY, config.resolution.width, config.resolution.height)) {
 			// send the full frame to be displayed
-			SAGE2Items.renderSync[data.id].clients[key].wsio.emit('updateMediaStreamFrame', data);
+			SAGE2Items.renderSync[data.id].clients[key].wsio.emit('updateMediaStreamFrame', dataOrBuffer);
 		} else {
 			// otherwise send a dummy small image
 			SAGE2Items.renderSync[data.id].clients[key].wsio.emit('updateMediaStreamFrame', data_copy);
@@ -1094,6 +1206,7 @@ function wsUpdateMediaStreamFrame(wsio, data) {
 }
 
 function wsUpdateMediaStreamChunk(wsio, data) {
+	//console.log("wsUpdateMediaStreamChunk ",data.id);
 	if (SAGE2Items.renderSync[data.id].chunks.length === 0) {
 		SAGE2Items.renderSync[data.id].chunks = initializeArray(data.total, "");
 	}
@@ -1132,7 +1245,9 @@ function wsStopMediaStream(wsio, data) {
 }
 
 function wsReceivedMediaStreamFrame(wsio, data) {
+        //console.log("ReceivedMediaStreamFrame ", data);
 	SAGE2Items.renderSync[data.id].clients[wsio.id].readyForNextFrame = true;
+        SAGE2Items.renderSync[data.id].frames = SAGE2Items.renderSync[data.id].frames + 1;
 	if (allTrueDict(SAGE2Items.renderSync[data.id].clients, "readyForNextFrame")) {
 		var i;
 		var key;
@@ -1179,24 +1294,40 @@ function wsStartNewMediaBlockStream(wsio, data) {
 	data.height = parseInt(data.height, 10);
 
 
-	SAGE2Items.renderSync[data.id] = {chunks: [], clients: {}, width: data.width, height: data.height};
+	SAGE2Items.renderSync[data.id] = {chunks: [], clients: {}, width: data.width, height: data.height, frames: 0, start: Date.now()};
 	for (var i = 0; i < clients.length; i++) {
 		if (clients[i].clientType === "display") {
 			SAGE2Items.renderSync[data.id].clients[clients[i].id] = {wsio: clients[i], readyForNextFrame: true, blocklist: []};
 		}
 	}
+	SAGE2Items.renderSync[data.id].sendNextFrame = true;
 
 	appLoader.createMediaBlockStream(data.title, data.color, data.colorspace, data.width, data.height, function(appInstance) {
 		appInstance.id = data.id;
 		handleNewApplication(appInstance, null);
 		calculateValidBlocks(appInstance, mediaBlockSize, SAGE2Items.renderSync[appInstance.id]);
 	});
+
+	if (masterServer!==undefined && masterServer!=null) {
+		console.log("master - start new media block stream");
+		masterServer.emit('startNewMediaBlockStream', data);
+		// HACK! fake the first frame response which goes only to the master server
+	 	wsio.emit('requestNextFrame', {});
+	}
 }
 
 function wsUpdateMediaBlockStreamFrame(wsio, buffer) {
 	var i;
 	var key;
 	var id = byteBufferToString(buffer);
+
+	if (!SAGE2Items.renderSync[id].sendNextFrame) {
+		//console.log("drop frame");
+		return; 
+	} else {
+		//console.log("relay frame");
+	}
+	SAGE2Items.renderSync[id].sendNextFrame = false;
 
 	if (!SAGE2Items.applications.list.hasOwnProperty(id)) {
 		return;
@@ -1241,12 +1372,19 @@ function wsUpdateMediaBlockStreamFrame(wsio, buffer) {
 
 function wsStopMediaBlockStream(wsio, data) {
 	deleteApplication(data.id);
+        // if this is a slave server (connected to a master)
+        if (masterServer !== undefined && masterServer !== null) {
+		console.log('send stopMediaBlockStream to master server');
+		masterServer.emit('stopMediaBlockStream', data);
+	}
 }
 
 function wsReceivedMediaBlockStreamFrame(wsio, data) {
 	SAGE2Items.renderSync[data.id].clients[wsio.id].readyForNextFrame = true;
+	SAGE2Items.renderSync[data.id].frames = SAGE2Items.renderSync[data.id].frames + 1;
 
 	if (allTrueDict(SAGE2Items.renderSync[data.id].clients, "readyForNextFrame")) {
+		SAGE2Items.renderSync[data.id].sendNextFrame = true;
 		var i;
 		var key;
 		for (key in SAGE2Items.renderSync[data.id].clients) {
@@ -1825,12 +1963,17 @@ function listApplications() {
 	console.log("Applications\n------------");
 	for (key in SAGE2Items.applications.list) {
 		var app = SAGE2Items.applications.list[key];
-		console.log(sprint("%2d: %s %s [%dx%d +%d+%d] %s (v%s) by %s",
+		var fps = "";
+		var renderSync = SAGE2Items.renderSync[app.id];
+		if (renderSync !== undefined && renderSync !== null && renderSync.frames !== null && renderSync.frames !== undefined) {
+			fps = SAGE2Items.renderSync[app.id].frames * 1000 / (Date.now() - renderSync.start);
+		}
+		console.log(sprint("%2d: %s %s [%dx%d +%d+%d] %s (v%s) by %s fps %s",
 			i, app.id, app.application,
 			app.width, app.height,
 			app.left,  app.top,
 			app.title, app.metadata.version,
-			app.metadata.author));
+			app.metadata.author, fps));
 		i++;
 	}
 }
@@ -3019,6 +3162,7 @@ function wsStartApplicationResize(wsio, data) {
 }
 
 function wsUpdateApplicationPosition(wsio, data) {
+	console.log("wsUpdateApplicationPosition");
 	// should check timestamp first (data.date)
 	var appId = data.appPositionAndSize.elemId;
 	var app = null;
@@ -3053,6 +3197,7 @@ function wsUpdateApplicationPosition(wsio, data) {
 }
 
 function wsUpdateApplicationPositionAndSize(wsio, data) {
+	console.log("wsUpdateApplicationPositionAndSize");
 	// should check timestamp first (data.date)
 	var appId = data.appPositionAndSize.elemId;
 	var app = null;
@@ -3446,6 +3591,14 @@ function loadConfiguration() {
 	} else {
 		http_port = userConfig.port;
 		https_port = userConfig.secure_port;
+	}
+        if (program.slaveports !== undefined) {
+		userConfig.master_http_port = http_port;
+		userConfig.master_https_port = https_port;
+		var ports = program.slaveports.split(',');
+		console.log("Slave: use master ports from config ", ports);
+		https_port = ports[0];
+		http_port = ports[1];
 	}
 	var rproxy_port, rproxys_port;
 	if (userConfig.rproxy_secure_port === undefined) {
@@ -6464,7 +6617,9 @@ function keyUp(uniqueID, pointerX, pointerY, data) {
 			// } else if (remoteInteraction[uniqueID].appInteractionMode()) {
 			// 	sendKeyUpToApplication(uniqueID, obj.data, localPt, data);
 			// }
-			if (data.code === 8 || data.code === 46) { // backspace or delete
+                        if (obj.data.title.startsWith("vnc") || obj.data.title.startsWith("VNC")) {
+                                sendKeyUpToApplication(uniqueID, obj.data, localPt, data);
+			} else if (data.code === 8 || data.code === 46) { // backspace or delete
 				deleteApplication(obj.data.id);
 
 				var eLogData = {
@@ -6761,6 +6916,8 @@ function deleteApplication(appId, portalId) {
 		var ts = Date.now() + remoteSharingSessions[portalId].timeOffset;
 		remoteSharingSessions[portalId].wsio.emit('deleteApplication', {appId: appId, date: ts});
 	}
+	console.log('broadcast deleteApplication');
+	broadcast('deleteApplication', {appId: appId, data:ts});
 }
 
 
