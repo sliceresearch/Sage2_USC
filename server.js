@@ -6617,7 +6617,7 @@ function keyUp(uniqueID, pointerX, pointerY, data) {
 			// } else if (remoteInteraction[uniqueID].appInteractionMode()) {
 			// 	sendKeyUpToApplication(uniqueID, obj.data, localPt, data);
 			// }
-                        if (obj.data.title.startsWith("vnc") || obj.data.title.startsWith("VNC")) {
+			if ((obj.data.title.startsWith("vnc") || obj.data.title.startsWith("VNC")) && remoteInteraction[uniqueID].appInteractionMode()) {
                                 sendKeyUpToApplication(uniqueID, obj.data, localPt, data);
 			} else if (data.code === 8 || data.code === 46) { // backspace or delete
 				deleteApplication(obj.data.id);
