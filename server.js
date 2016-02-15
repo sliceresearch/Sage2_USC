@@ -654,6 +654,8 @@ function setupListeners(wsio) {
 
 	wsio.on('openNewWebpage',                       wsOpenNewWebpage);
 
+	wsio.on('setVolume',                            wsSetVolume);
+
 	wsio.on('playVideo',                            wsPlayVideo);
 	wsio.on('pauseVideo',                           wsPauseVideo);
 	wsio.on('stopVideo',                            wsStopVideo);
@@ -2520,6 +2522,15 @@ function wsOpenNewWebpage(wsio, data) {
 	}
 }
 
+// **************  Volume sync  ********************
+
+function wsSetVolume(wsio, data) {
+	if (SAGE2Items.renderSync[data.id] === undefined || SAGE2Items.renderSync[data.id] === null) {
+		return;
+	}
+	console.log(sageutils.header("Volume") + "set " + data.id + " " + data.level);
+	broadcast('setVolume',data);
+}
 
 // **************  Video / Audio Synchonization *****************
 
@@ -2629,14 +2640,14 @@ function wsAddNewSharedElementFromRemoteServer(wsio, data) {
 	var i;
 
 	appLoader.loadApplicationFromRemoteServer(data.application, function(appInstance, videohandle) {
-		console.log(sageutils.header("Remote App>") + appInstance.title + " (" + appInstance.application + ")");
+		console.log(sageutils.header("Remote App") + appInstance.title + " (" + appInstance.application + ")");
 
 		if (appInstance.application === "media_stream" || appInstance.application === "media_block_stream") {
 			appInstance.id = wsio.remoteAddress.address + ":" + wsio.remoteAddress.port + "|" + data.id;
 			SAGE2Items.renderSync[appInstance.id] = {chunks: [], clients: {}};
 			for (i = 0; i < clients.length; i++) {
 				if (clients[i].clientType === "display") {
-					console.log(sageutils.header("Remote App>") + "render client: " + clients[i].id);
+					console.log(sageutils.header("Remote App") + "render client: " + clients[i].id);
 					SAGE2Items.renderSync[appInstance.id].clients[clients[i].id] = {wsio: clients[i], readyForNextFrame: false, blocklist: []};
 				}
 			}
@@ -3752,7 +3763,12 @@ function sendConfig(req, res) {
 
 function uploadForm(req, res) {
 	var form     = new formidable.IncomingForm();
+	// Drop position
 	var position = [ 0, 0 ];
+	// User information
+	var ptrName  = "";
+	var ptrColor = "";
+
 	// Limits the amount of memory all fields together (except files) can allocate in bytes.
 	//    set to 4MB.
 	form.maxFieldsSize = 4 * 1024 * 1024;
@@ -3760,7 +3776,7 @@ function uploadForm(req, res) {
 	form.multiples     = true;
 
 	form.on('fileBegin', function(name, file) {
-		console.log(sageutils.header("Upload") + 'begin ' + name + ' ' + file.name + ' ' + file.type);
+		console.log(sageutils.header("Upload") + file.name + ' ' + file.type);
 	});
 
 	form.on('error', function(err) {
@@ -3773,6 +3789,15 @@ function uploadForm(req, res) {
 	});
 
 	form.on('field', function(field, value) {
+		// Keep user information
+		if (field === 'SAGE2_ptrName') {
+			ptrName = value;
+			console.log(sageutils.header("Upload") + "by " + ptrName);
+		}
+		if (field === 'SAGE2_ptrColor') {
+			ptrColor = value;
+			console.log(sageutils.header("Upload") + "color " + ptrColor);
+		}
 		// convert value [0 to 1] to wall coordinate from drop location
 		if (field === 'dropX') {
 			position[0] = parseInt(parseFloat(value) * config.totalWidth,  10);
@@ -3815,11 +3840,11 @@ function uploadForm(req, res) {
 
 	form.on('end', function() {
 		// saves files in appropriate directory and broadcasts the items to the displays
-		manageUploadedFiles(this.openedFiles, position);
+		manageUploadedFiles(this.openedFiles, position, ptrName, ptrColor);
 	});
 }
 
-function manageUploadedFiles(files, position) {
+function manageUploadedFiles(files, position, ptrName, ptrColor) {
 	var fileKeys = Object.keys(files);
 	fileKeys.forEach(function(key) {
 		var file = files[key];
@@ -3829,6 +3854,10 @@ function manageUploadedFiles(files, position) {
 				console.log(sageutils.header("Upload") + 'unrecognized file type: ' + file.name + ' ' + file.type);
 				return;
 			}
+
+			// Add user information into exif data
+			assets.addTag(appInstance.file, "SAGE2user",  ptrName);
+			assets.addTag(appInstance.file, "SAGE2color", ptrColor);
 
 			// Use the size from the drop information
 			if (position[2] && position[2] !== 0) {

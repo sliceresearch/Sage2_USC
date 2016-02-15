@@ -21,6 +21,8 @@
 var clientID;
 var wsio;
 var autoplay;
+// default initial volume for applications
+var initialVolume;
 var hostAlias = {};
 
 // Explicitely close web socket when web browser is closed
@@ -43,6 +45,7 @@ function SAGE2_init() {
 	SAGE2_browser();
 
 	autoplay = false;
+	initialVolume = 8;
 	wsio = new WebsocketIO();
 
 	console.log("Connected to server: ", window.location.origin);
@@ -130,6 +133,14 @@ function setupListeners() {
 			hostAlias["https://" + json_cfg.alternate_hosts[i] + https_port] = window.location.origin;
 		}
 
+		// Load the initial volume value from the configuration object
+		if (json_cfg.audio && json_cfg.audio.initialVolume !== undefined) {
+			// Making sure the value is between 0 and  10
+			initialVolume = parseInt(json_cfg.audio.initialVolume, 10);
+			initialVolume = Math.max(Math.min(initialVolume, 10), 0);
+			console.log("Configuration> initialVolume = ", initialVolume);
+		}
+
 		// play the jinggle
 		var jinggle_elt = document.getElementById('jinggle');
 		if (json_cfg.ui.startup_sound) {
@@ -137,6 +148,7 @@ function setupListeners() {
 			jinggle_src.src = json_cfg.ui.startup_sound;
 		}
 		jinggle_elt.load();
+		jinggle_elt.volume = initialVolume / 10;
 		jinggle_elt.play();
 	});
 
@@ -153,7 +165,7 @@ function setupListeners() {
 				vid = document.createElement('audio');
 			}
 			vid.id  = data.id;
-			vid.volume = 0.8;
+			vid.volume = initialVolume / 10;
 			vid.firstPlay = true;
 			vid.startPaused = data.data.paused;
 			vid.style.display = "none";
@@ -212,7 +224,7 @@ function setupListeners() {
 			volumeSlider.min   = 0;
 			volumeSlider.max   = 10;
 			volumeSlider.step  = 1;
-			volumeSlider.value = 8;
+			volumeSlider.value = initialVolume;
 			volumeSlider.addEventListener('input', changeVolume, false);
 			volume.appendChild(volumeMute);
 			volume.appendChild(volumeSlider);
@@ -237,7 +249,15 @@ function setupListeners() {
 		}
 	});
 
+	wsio.on('setVolume', function(data) {
+		console.log("setVolume ", data.id, " ", data.level);
+		var slider = document.getElementById(data.id + "_volumeSlider");
+		slider.value = data.level * 10;
+		changeVideoVolume(data.id, data.level);
+	});
+
 	wsio.on('videoPlaying', function(data) {
+		console.log("videoPlaying");
 		var vid = document.getElementById(data.id);
 		if (vid) {
 			vid.play();
@@ -319,6 +339,7 @@ function setupListeners() {
 function changeVolume(event) {
 	var vol     = document.getElementById(event.target.id).value / 10;
 	var videoId = event.target.id.substring(0, event.target.id.length - 13);
+	wsio.emit("setVolume", {id: videoId, level: vol});
 	changeVideoVolume(videoId, vol);
 }
 

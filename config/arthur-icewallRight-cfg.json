@@ -4,20 +4,24 @@
 	"port": 9090,
 	"index_port": 9292,
 	"background": {
-		"color": "#333333",
+		//"color": "#333333",
+		image: {
+			url: "images/background/kamping_icewall_half.jpg",
+			style: "tile"
+		},
 	},
 	"ui": {
 		"clock": 12,
 		"show_url": true,
 		"show_version": true,
-		// "widgetControlSize": 40,
+		"widgetControlSize": 20,
 		"auto_scale_ui": true,
-		"calculate_viewing_distance": true,
+		"calculate_viewing_distance": false,
 		"reload_wallui_on_refresh": false
 	},
 	"resolution": {
 		"width": 1536,
-		"height": 1360
+		"height": 1366
 	},
 	// NEW ATTRIBUTES
 	"dimensions": {
@@ -26,7 +30,7 @@
 		"tile_height": 1.093,  // in meter, pixel area
 		"tile_borders": [ 0.002, 0.002, 0.002, 0.002 ], // mullions in meter, left, right, bottom, top
 		// prefered or common viewing distance to calculate UI sizes
-		"viewing_distance": 1.1	// in meter
+		"viewing_distance": 1.0668	// in meter
 	},
 	"layout": {
 		"rows": 1,
@@ -49,19 +53,13 @@
 	"remote_sites": [
 		{
 			"name": "Cyber-Commons",
-			"host": "inferno.evlrn.uic.edu",
+			"host": "inferno.evl.uic.edu",
 			"port": 443,
 			"secure": true
 		},
 		{
 			"name": "CAVE2",
 			"host": "lyra.evl.uic.edu",
-			"port": 443,
-			"secure": true
-		},
-		{
-			"name": "CAVE2-Wall",
-			"host": "orion.evlrn.uic.edu",
 			"port": 443,
 			"secure": true
 		}
