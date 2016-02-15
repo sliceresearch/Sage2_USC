@@ -344,8 +344,12 @@ HttpServer.prototype.onreq = function(req, res) {
 
 		wstream.on('finish', function() {
 			// stream closed
-			console.log(sageutils.header('HTTP') + 'PUT file has been written' + putName +
+			console.log(sageutils.header('PUT') + 'File written' + putName +
 				' ' + fileLength + ' bytes');
+		});
+		wstream.on('error', function() {
+			// Error during write
+			console.log(sageutils.header('PUT') + 'Error during write for ' + putName);
 		});
 		// Getting data
 		req.on('data', function(chunk) {
@@ -355,9 +359,9 @@ HttpServer.prototype.onreq = function(req, res) {
 		});
 		// Data no more
 		req.on('end', function() {
-			// No more date
-			console.log(sageutils.header('HTTP') + 'PUT Received: ' + fileLength + ' ' +
-				filename + ' ' + putName);
+			// No more data
+			console.log(sageutils.header('PUT') + 'Received: ' + filename + ' ' +
+				putName + ' ' + fileLength + ' bytes');
 			// Close the write stream
 			wstream.end();
 			// empty 200 OK response for now
