@@ -28,10 +28,10 @@ var articulate_ui = SAGE2_App.extend( {
 
 
 		//TEST
-		// if( isMaster ){
-		// 	console.log("I'm the master");
-		// 	this.contactArticulateHub("this is a test");
-		// }
+		if( isMaster ){
+			console.log("I'm the master");
+			this.contactArticulateHub("this is a test");
+		}
 
 		this.commands = [];
 		this.commands.push(">");
@@ -55,8 +55,8 @@ var articulate_ui = SAGE2_App.extend( {
 		console.log("sending msg: " , msg);
 
 		msg = msg.replace(" ", "%"); 
-		url = "http://articulate.evl.uic.edu:8080/smarthub/webapi/myresource/query/"
-		url = url+msg; 
+		url = "https://articulate.evl.uic.edu:8443/smarthub/webapi/myresource/query/show%20me%20theft%20in%20loop"
+		//url = url+msg; 
 
 		this.callbackFunc = this.callback.bind(this);
 
@@ -243,7 +243,7 @@ var articulate_ui = SAGE2_App.extend( {
 		application = "apps/vega_vis_app", 	
 		msg = "this is a message from articulate_ui",
 		initState = {  // these values will load on child app init
-				value: 10
+				value: 10 
 			};
 
 		this.launchNewChild(applicationType, application, initState, msg);//defined in sage2 app
