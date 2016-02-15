@@ -324,7 +324,7 @@ SAGE2WidgetControlInstance.prototype.createButton = function(buttonSpec, cx, cy,
 				y: (cy - buttonRad) + "px",
 				width: buttonRad2x + "px",
 				height: buttonRad2x + "px",
-				visibility: (type.state !== 1)? "visible" : "hidden"
+				visibility: (type.state !== 1) ? "visible" : "hidden"
 			});
 			buttonCoverReady(gs);
 		});
@@ -337,7 +337,7 @@ SAGE2WidgetControlInstance.prototype.createButton = function(buttonSpec, cx, cy,
 					y: (cy - buttonRad) + "px",
 					width: buttonRad2x + "px",
 					height: buttonRad2x + "px",
-					visibility: (type.state === 1)? "visible" : "hidden"
+					visibility: (type.state === 1) ? "visible" : "hidden"
 				});
 				buttonCoverReady(gs);
 			});
