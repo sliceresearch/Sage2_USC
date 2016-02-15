@@ -86,7 +86,11 @@ function detectCookies(request) {
  */
 HttpServer.prototype.redirect = function(res, aurl) {
 	// 302 HTTP code for redirect
-	res.writeHead(302, {Location: aurl});
+	var header = {};
+	header["Strict-Transport-Security"] = "max-age=31536000";
+	header["X-Frame-Options"] = "Deny";
+	header["Location"] = aurl;
+	res.writeHead(302, header);
 	res.end();
 };
 
@@ -359,6 +363,7 @@ HttpServer.prototype.onreq = function(req, res) {
 			// empty 200 OK response for now
 			var header = {};
 			header["X-Frame-Options"] = "Deny";
+			header["Strict-Transport-Security"] = "max-age=31536000";
 			header["Content-Type"] = "text/html";
 			res.writeHead(200, "OK", header);
 			res.end();
