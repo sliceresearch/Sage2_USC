@@ -427,6 +427,18 @@ var remoteSharingSessions      = {};
 var stickyAppHandler     = new StickyItems();
 
 
+//
+// Catch the uncaught errors that weren't wrapped in a domain or try catch statement
+//
+process.on('uncaughtException', function(err) {
+	// handle the error safely
+	console.trace("SAGE2>	", err);
+})
+
+
+
+
+
 function openWebSocketClient(wsio) {
 	wsio.onclose(closeWebSocketClient);
 	wsio.on('addClient', wsAddClient);
