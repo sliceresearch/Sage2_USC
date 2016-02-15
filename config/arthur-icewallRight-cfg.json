@@ -4,7 +4,11 @@
 	"port": 9090,
 	"index_port": 9292,
 	"background": {
-		"color": "#333333",
+		//"color": "#333333",
+		image: {
+			url: "images/background/kamping_icewall_half.jpg",
+			style: "tile"
+		},
 	},
 	"ui": {
 		"clock": 12,
@@ -17,7 +21,7 @@
 	},
 	"resolution": {
 		"width": 1536,
-		"height": 1360
+		"height": 1366
 	},
 	// NEW ATTRIBUTES
 	"dimensions": {
@@ -49,7 +53,7 @@
 	"remote_sites": [
 		{
 			"name": "Cyber-Commons",
-			"host": "iridium.evl.uic.edu",
+			"host": "inferno.evl.uic.edu",
 			"port": 443,
 			"secure": true
 		},
@@ -86,7 +90,7 @@
 		}
 	},
 	dependencies: {
-		ImageMagick: "C:/Program Files/ImageMagick-6.8.9-Q16/",
+		ImageMagick: "",
 		FFMpeg: "C:/Dev/ffmpeg-win64-shared/bin/"
     }
 }

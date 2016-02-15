@@ -46,7 +46,7 @@
 		"127.0.0.1"
 	],
 	dependencies: {
-		ImageMagick: "C:/Program Files/ImageMagick-6.8.9-Q16/",
+		ImageMagick: "",
 		FFMpeg: "C:/Dev/ffmpeg-win64-shared/bin/"
 	},
 	experimental: {
@@ -70,7 +70,7 @@
 	"remote_sites": [
 		{
 			"name": "Cyber-Commons",
-			"host": "iridium.evl.uic.edu",
+			"host": "inferno.evl.uic.edu",
 			"port": 443,
 			"secure": true
 		},
