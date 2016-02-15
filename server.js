@@ -3741,7 +3741,10 @@ function setupHttpsOptions() {
 }
 
 function sendConfig(req, res) {
-	res.writeHead(200, {"Content-Type": "text/plain"});
+	var header = {};
+	header["X-Frame-Options"] = "Deny";
+	header["Content-Type"] = "text/plain";
+	res.writeHead(200, header);
 	// Adding the calculated version into the data structure
 	config.version = SAGE2_version;
 	res.write(JSON.stringify(config));
@@ -3801,14 +3804,18 @@ function uploadForm(req, res) {
 	});
 
 	form.parse(req, function(err, fields, files) {
+		var header = {};
+		header["X-Frame-Options"] = "Deny";
 		if (err) {
-			res.writeHead(500, {"Content-Type": "text/plain"});
+			header["Content-Type"] = "text/plain";
+			res.writeHead(500, header);
 			res.write(err + "\n\n");
 			res.end();
 			return;
 		}
 		// build the reply to the upload
-		res.writeHead(200, {'Content-Type': 'application/json'});
+		header["Content-Type"] = "application/json";
+		res.writeHead(200, header);
 		// For webix uploader: status: server
 		fields.done = true;
 
