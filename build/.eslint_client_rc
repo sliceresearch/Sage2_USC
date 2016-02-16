@@ -7,7 +7,7 @@
 	initializeArray: true, readFile: true, mat4: true, PDFJS: true, cleanURL: true,
 	Snap: true, mina: true, hostAlias: true, UIBuilder: true,
 	SAGE2_initialize: true, log: true, createDrawingElement: true,
-	formatAMPM: true, format24Hr: true, formatHHMMSS: true, base64ToString: true, stringToBase64: true,
+	formatAMPM: true, format24Hr: true, base64ToString: true, stringToBase64: true,
 	stringToUint8Array: true, base64ToUint8Array: true, readFile: true, Expected: true, average: true,
 	allTrueDict: true, getParameterByName: true, playPauseVideo: true, moveItemToFront: true,
 	cleanURL: true, isTrue: true, isEmpty: true, initializeArray: true, byteBufferToInt: true,
