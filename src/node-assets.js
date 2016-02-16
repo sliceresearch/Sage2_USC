@@ -553,12 +553,23 @@ var getDimensions = function(id) {
 	return null;
 };
 
+// Returns a EXIF data element
 var getTag = function(id, tag) {
 	id = path.resolve(id);
 	if (id in AllAssets.list) {
 		return AllAssets.list[id].exif[tag];
 	}
 	return null;
+};
+
+// Add an EXIF data element
+var addTag = function(id, tagName, tagValue) {
+	id = path.resolve(id);
+	if (id in AllAssets.list) {
+		AllAssets.list[id].exif[tagName] = tagValue;
+		return true;
+	}
+	return false;
 };
 
 var getURL = function(id) {
@@ -1024,6 +1035,7 @@ exports.getDimensions = getDimensions;
 exports.getMimeType   = getMimeType;
 exports.getExifData   = getExifData;
 exports.getTag        = getTag;
+exports.addTag        = addTag;
 exports.getURL        = getURL;
 
 exports.initializeConfiguration = initializeConfiguration;

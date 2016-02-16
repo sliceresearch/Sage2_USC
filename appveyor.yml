@@ -28,7 +28,7 @@ init:
   - dir C:\Dev\ffmpeg-win64-dev\lib
 
 install:
-  - ps: Install-Product node 5.3.0 x64
+  - ps: Install-Product node 5.5.0 x64
   - dir C:\avvm\node
   - node -v
   - cd %APPVEYOR_BUILD_FOLDER%
@@ -56,8 +56,8 @@ install:
   - copy bin\gswin64c.exe bin\gswin32c.exe
   - xcopy /S /I /Y /Q gs\$_OUTDIR\lib lib
   - rmdir /Q /S gs
-  - curl -LsSO http://www.imagemagick.org/download/binaries/ImageMagick-6.9.3-2-portable-Q16-x64.zip
-  - 7z x -y ImageMagick-6.9.3-2-portable-Q16-x64.zip -oim > nul
+  - curl -LsSO http://www.imagemagick.org/download/binaries/ImageMagick-6.9.3-3-portable-Q16-x64.zip
+  - 7z x -y ImageMagick-6.9.3-3-portable-Q16-x64.zip -oim > nul
   - rmdir /Q /S im\www im\images
   - copy im\* bin
   - rmdir /Q /S im
@@ -136,9 +136,9 @@ deploy:
 
 notifications:
   - provider: Slack
+    channel: '#appveyor'
     auth_token:
-      secure: zWPzLLrh/2HV3lXJd9q5XK+m2D1zn/bWBIQOzjQ2QkFSFL3ijB839EMqTRUrYZeA
-    channel: appveyor
+      secure: zWPzLLrh/2HV3lXJd9q5XB+GlcmsJKMSGZzQjApwSdpPhOwo42miogTgg24z0iGPxiQU4qyykg68v8kErHvIwA==
     on_build_success: true
     on_build_failure: true
     on_build_status_changed: true

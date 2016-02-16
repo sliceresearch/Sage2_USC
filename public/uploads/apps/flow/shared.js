@@ -226,7 +226,7 @@ var premultiplyMatrix = function(out, matrixA, matrixB) { // out = matrixB * mat
 	var b2 = matrixB[2];
 	var b6 = matrixB[6];
 	var b10 = matrixB[10];
-	var b14 = matrixB[14]
+	var b14 = matrixB[14];
 	var b3 = matrixB[3];
 	var b7 = matrixB[7];
 	var b11 = matrixB[11];

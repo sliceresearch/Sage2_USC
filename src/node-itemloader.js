@@ -117,6 +117,7 @@ AppLoader.prototype.loadImageFromURL = function(aUrl, mime_type, name, strictSSL
 					if (!err3) {
 						_this.loadImageFromFile(localPath, mime_type, aUrl, aUrl, name, function(appInstance) {
 							_this.scaleAppToFitDisplay(appInstance);
+							appInstance.file = localPath;
 							callback(appInstance);
 						});
 					}
@@ -126,6 +127,33 @@ AppLoader.prototype.loadImageFromURL = function(aUrl, mime_type, name, strictSSL
 
 		}
 	);
+};
+
+AppLoader.prototype.loadPdfFromURL = function(aUrl, mime_type, name, strictSSL, callback) {
+	var localPath = path.join(this.publicDir, "pdfs", name);
+	var _this = this;
+
+	var tmp = fs.createWriteStream(localPath);
+	tmp.on('error', function(err) {
+		if (err) {
+			throw err;
+		}
+	});
+	tmp.on('close', function() {
+		assets.exifAsync([localPath], function(err3) {
+			if (!err3) {
+				var appUrl = getSAGE2URL(localPath);
+				var app_external_url = _this.hostOrigin + sageutils.encodeReservedURL(appUrl);
+
+				_this.loadPdfFromFile(localPath, mime_type, appUrl, app_external_url, name, function(appInstance) {
+					_this.scaleAppToFitDisplay(appInstance);
+					appInstance.file = localPath;
+					callback(appInstance);
+				});
+			}
+		});
+	});
+	request({url: aUrl, strictSSL: strictSSL, headers: {'User-Agent': 'node'}}).pipe(tmp);
 };
 
 AppLoader.prototype.loadYoutubeFromURL = function(aUrl, callback) {
@@ -170,6 +198,7 @@ AppLoader.prototype.loadYoutubeFromURL = function(aUrl, callback) {
 			appInstance.data.audio_url  = info.formats[audio.index].url;
 			appInstance.data.audio_type = audio.type;
 
+			appInstance.file = aUrl;
 			callback(appInstance, videohandle);
 		});
 	});
@@ -180,30 +209,13 @@ AppLoader.prototype.loadVideoFromURL = function(aUrl, mime_type, source_url, nam
 };
 
 
-AppLoader.prototype.loadPdfFromURL = function(aUrl, mime_type, name, strictSSL, callback) {
-	var local_url = "uploads/pdfs/" + name;
-	var localPath = path.join(this.publicDir, "pdfs", name);
-	var _this = this;
-
-	var tmp = fs.createWriteStream(localPath);
-	tmp.on('error', function(err) {
-		if (err) {
-			throw err;
-		}
-	});
-	tmp.on('close', function() {
-		_this.loadPdfFromFile(localPath, mime_type, local_url, aUrl, name, function(appInstance) {
-			callback(appInstance);
-		});
-	});
-	request({url: aUrl, strictSSL: strictSSL, headers: {'User-Agent': 'node'}}).pipe(tmp);
-};
-
 
 AppLoader.prototype.loadImageFromDataBuffer = function(buffer, width, height, mime_type, aUrl,
 	external_url, name, exif_data, callback) {
 
-	var source = buffer.toString("base64");
+	// var source = buffer.toString("base64");
+	var source = buffer;
+
 	var aspectRatio = width / height;
 
 	var metadata         = {};
@@ -218,7 +230,7 @@ AppLoader.prototype.loadImageFromDataBuffer = function(buffer, width, height, mi
 		id: null,
 		title: name,
 		application: "image_viewer",
-		icon: exif_data ? exif_data.SAGE2thumbnail : null,
+		icon: buffer,
 		type: mime_type,
 		url: external_url,
 		data: {
@@ -245,6 +257,7 @@ AppLoader.prototype.loadImageFromDataBuffer = function(buffer, width, height, mi
 		animation: false,
 		metadata: metadata,
 		sticky: false,
+		file: "",
 		date: new Date()
 	};
 	this.scaleAppToFitDisplay(appInstance);
@@ -308,7 +321,9 @@ AppLoader.prototype.loadImageFromFile = function(file, mime_type, aUrl, external
 		var dims = assets.getDimensions(file);
 		var exif = assets.getExifData(file);
 		if (dims) {
-			this.loadImageFromServer(dims.width, dims.height, mime_type, aUrl, external_url, exif.FileName, exif, function(appInstance) {
+			this.loadImageFromServer(dims.width, dims.height, mime_type, aUrl, external_url, exif.FileName, exif,
+				function(appInstance) {
+					appInstance.file = file;
 					callback(appInstance);
 				});
 		} else {
@@ -325,6 +340,7 @@ AppLoader.prototype.loadImageFromFile = function(file, mime_type, aUrl, external
 
 		if (svgDims) {
 			this.loadImageFromServer(svgDims.width, svgDims.height, mime_type, aUrl, external_url, name, svgExif, function(appInstance) {
+				appInstance.file = file;
 				callback(appInstance);
 			});
 		} else {
@@ -346,6 +362,7 @@ AppLoader.prototype.loadImageFromFile = function(file, mime_type, aUrl, external
 			if (dims) {
 				_this.loadImageFromServer(imgDims.width, imgDims.height, "image/png", aUrl + ".png",
 						external_url + ".png", name + ".png", imgExif, function(appInstance) {
+					appInstance.file = localPath;
 					callback(appInstance);
 				});
 			} else {
@@ -410,6 +427,7 @@ AppLoader.prototype.loadVideoFromFile = function(file, mime_type, aUrl, external
 				aspect:          native_width / native_height,
 				animation:       false,
 				metadata:        metadata,
+				file:            file,
 				date:            new Date()
 			};
 			_this.scaleAppToFitDisplay(appInstance);
@@ -465,7 +483,8 @@ AppLoader.prototype.loadPdfFromFile = function(file, mime_type, aUrl, external_u
 		animation: false,
 		metadata: metadata,
 		sticky: false,
-		date:      new Date()
+		file: file,
+		date: new Date()
 	};
 	this.scaleAppToFitDisplay(appInstance);
 	callback(appInstance);
@@ -480,7 +499,8 @@ AppLoader.prototype.loadAppFromFileFromRegistry = function(file, mime_type, aUrl
 	var _this = this;
 	fs.readFile(instructionsFile, 'utf8', function(err, json_str) {
 		if (err) {
-			throw err;
+			console.log(sageutils.header("Loader") + "cannot read application file " + instructionsFile);
+			return;
 		}
 
 		var appUrl = getSAGE2URL(localPath);
@@ -488,6 +508,7 @@ AppLoader.prototype.loadAppFromFileFromRegistry = function(file, mime_type, aUrl
 
 		var appInstance = _this.readInstructionsFile(json_str, localPath, mime_type, app_external_url);
 		appInstance.data.file = assets.getURL(file);
+		appInstance.file = file;
 		callback(appInstance);
 	});
 };
@@ -505,6 +526,7 @@ AppLoader.prototype.loadAppFromFile = function(file, mime_type, aUrl, external_u
 
 		var appInstance = _this.readInstructionsFile(json_str, zipFolder, mime_type, external_url);
 		_this.scaleAppToFitDisplay(appInstance);
+		appInstance.file = file;
 		callback(appInstance);
 	});
 };
@@ -529,6 +551,7 @@ AppLoader.prototype.loadZipAppFromFile = function(file, mime_type, aUrl, externa
 
 				var appInstance = _this.readInstructionsFile(json_str, zipFolder, mime_type, external_url);
 				_this.scaleAppToFitDisplay(appInstance);
+				appInstance.file = file;
 				callback(appInstance);
 			});
 		});
@@ -600,6 +623,7 @@ AppLoader.prototype.createMediaStream = function(source, type, encoding, name, c
 		animation: false,
 		sticky: false,
 		metadata: metadata,
+		file: "",
 		date: new Date()
 	};
 	this.scaleAppToFitDisplay(appInstance);
@@ -646,6 +670,7 @@ AppLoader.prototype.createMediaBlockStream = function(name, color, colorspace, w
 		animation: false,
 		sticky: false,
 		metadata: metadata,
+		file: "",
 		date: new Date()
 	};
 	this.scaleAppToFitDisplay(appInstance);
@@ -677,7 +702,8 @@ function getSAGE2Path(getName) {
 		if (pubdir.length === 2) {
 			// convert the URL into a path
 			var suburl = path.join('.', pubdir[1]);
-			pathname   = url.resolve(folder.path, suburl);
+			// pathname   = url.resolve(folder.path, suburl);
+			pathname = path.resolve(folder.path, suburl);
 			pathname   = decodeURIComponent(pathname);
 			break;
 		}
@@ -774,7 +800,7 @@ AppLoader.prototype.manageAndLoadUploadedFile = function(file, callback) {
 						var external_url = url.resolve(_this.hostOrigin, aUrl);
 
 						_this.loadApplication({location: "file", path: localPath, url: aUrl, external_url: external_url,
-								type: mime_type, name: file.name, compressed: true}, function(appInstance, handle) {
+								type: mime_type, name: file.name, compressed: false}, function(appInstance, handle) {
 							callback(appInstance, handle);
 						});
 					});
