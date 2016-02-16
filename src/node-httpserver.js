@@ -86,7 +86,11 @@ function detectCookies(request) {
  */
 HttpServer.prototype.redirect = function(res, aurl) {
 	// 302 HTTP code for redirect
-	res.writeHead(302, {Location: aurl});
+	var header = {};
+	header["Strict-Transport-Security"] = "max-age=31536000";
+	header["X-Frame-Options"] = "Deny";
+	header["Location"] = aurl;
+	res.writeHead(302, header);
 	res.end();
 };
 
@@ -109,6 +113,10 @@ HttpServer.prototype.onreq = function(req, res) {
 			return;
 		}
 
+		// var protocol = req.connection.encrypted ? 'https' : 'http';
+		// var fullUrl  = protocol + '://' + req.headers.host + req.url;
+		// console.log('Request>	', fullUrl);
+
 		// redirect root path to index.html
 		if (getName === "/") {
 			this.redirect(res, "index.html");
@@ -122,11 +130,14 @@ HttpServer.prototype.onreq = function(req, res) {
 		// Routes
 		// //////////////////////
 
+		// NOT NEEDED I THINK: done in getFuncs
 		// API call: /config
-		if (getName.indexOf('/config/') === 0) {
-			// if trying to access config files, add the correct path
-			pathname = path.join(this.publicDirectory, '..', getName);
-		} else if (getName.lastIndexOf('/images/', 0) === 0 ||
+		// if (getName.indexOf('/config/') === 0) {
+		// 	// if trying to access config files, add the correct path
+		// 	pathname = path.join(this.publicDirectory, '..', getName);
+		// } else
+
+		if (getName.lastIndexOf('/images/', 0) === 0 ||
 				getName.lastIndexOf('/shaders/', 0) === 0 ||
 				getName.lastIndexOf('/css/', 0) === 0 ||
 				getName.lastIndexOf('/lib/', 0) === 0 ||
@@ -195,6 +206,20 @@ HttpServer.prototype.onreq = function(req, res) {
 
 			var header = {};
 			header["Content-Type"] = mime.lookup(pathname);
+
+			// HTTP Strict Transport Security (HSTS) is an opt-in security enhancement
+			// Once a supported browser receives this header that browser will prevent any
+			// communications from being sent over HTTP to the specified domain
+			// and will instead send all communications over HTTPS.
+			// Here using a long (1 year) max-age
+			header["Strict-Transport-Security"] = "max-age=31536000";
+
+			// The X-Frame-Options header can be used to to indicate whether a browser is allowed
+			// to render a page within an <iframe> element or not. This is helpful to prevent clickjacking
+			// attacks by ensuring your content is not embedded within other sites.
+			// See more here: https://developer.mozilla.org/en-US/docs/HTTP/X-Frame-Options.
+			header["X-Frame-Options"] = "Deny";
+
 			header["Access-Control-Allow-Headers" ] = "Range";
 			header["Access-Control-Expose-Headers"] = "Accept-Ranges, Content-Encoding, Content-Length, Content-Range";
 			if (req.headers.origin !== undefined) {
@@ -286,13 +311,17 @@ HttpServer.prototype.onreq = function(req, res) {
 				}
 			}
 		} else {
-			// File not found: 404 HTTP error, with link to index page
-			res.writeHead(404, {"Content-Type": "text/html"});
-			res.write("<h1>SAGE2 error</h1>file not found: <em>" + pathname + "</em>\n\n");
-			res.write("<br><br><br>\n");
-			res.write("<b><a href=/index.html>SAGE2 main page</a></b>\n");
-			res.end();
+			// File not found: 404 HTTP error
+			// redirect to index page
+			this.redirect(res, "/");
 			return;
+
+			// Not secure to show the URL: XSS
+			// res.writeHead(404, {"Content-Type": "text/html"});
+			// res.write("<h1>SAGE2 error</h1>file not found: <em>" + pathname + "</em>\n\n");
+			// res.write("<br><br><br>\n");
+			// res.write("<b><a href=/index.html>SAGE2 main page</a></b>\n");
+			// res.end();
 		}
 	} else if (req.method === "POST") {
 		var postName = decodeURIComponent(url.parse(req.url).pathname);
@@ -315,7 +344,12 @@ HttpServer.prototype.onreq = function(req, res) {
 
 		wstream.on('finish', function() {
 			// stream closed
-			console.log('HTTP>		PUT file has been written', putName, fileLength, 'bytes');
+			console.log(sageutils.header('PUT') + 'File written' + putName +
+				' ' + fileLength + ' bytes');
+		});
+		wstream.on('error', function() {
+			// Error during write
+			console.log(sageutils.header('PUT') + 'Error during write for ' + putName);
 		});
 		// Getting data
 		req.on('data', function(chunk) {
@@ -325,12 +359,17 @@ HttpServer.prototype.onreq = function(req, res) {
 		});
 		// Data no more
 		req.on('end', function() {
-			// No more date
-			console.log("HTTP>		PUT Received:", fileLength, filename, putName);
+			// No more data
+			console.log(sageutils.header('PUT') + 'Received: ' + filename + ' ' +
+				putName + ' ' + fileLength + ' bytes');
 			// Close the write stream
 			wstream.end();
 			// empty 200 OK response for now
-			res.writeHead(200, "OK", {'Content-Type': 'text/html'});
+			var header = {};
+			header["X-Frame-Options"] = "Deny";
+			header["Strict-Transport-Security"] = "max-age=31536000";
+			header["Content-Type"] = "text/html";
+			res.writeHead(200, "OK", header);
 			res.end();
 		});
 	}

@@ -427,6 +427,18 @@ var remoteSharingSessions      = {};
 var stickyAppHandler     = new StickyItems();
 
 
+//
+// Catch the uncaught errors that weren't wrapped in a domain or try catch statement
+//
+process.on('uncaughtException', function(err) {
+	// handle the error safely
+	console.trace("SAGE2>	", err);
+})
+
+
+
+
+
 function openWebSocketClient(wsio) {
 	wsio.onclose(closeWebSocketClient);
 	wsio.on('addClient', wsAddClient);
@@ -438,7 +450,11 @@ function closeWebSocketClient(wsio) {
 	if (wsio.clientType === "display") {
 		console.log(sageutils.header("Disconnect") + wsio.id + " (" + wsio.clientType + " " + wsio.clientID + ")");
 	} else {
-		console.log(sageutils.header("Disconnect") + wsio.id + " (" + wsio.clientType + ")");
+		if (wsio.clientType) {
+			console.log(sageutils.header("Disconnect") + wsio.id + " (" + wsio.clientType + ")");
+		} else {
+			console.log(sageutils.header("Disconnect") + wsio.id + " (unknown)");
+		}
 	}
 
 	addEventToUserLog(wsio.id, {type: "disconnect", data: null, time: Date.now()});
@@ -3737,7 +3753,10 @@ function setupHttpsOptions() {
 }
 
 function sendConfig(req, res) {
-	res.writeHead(200, {"Content-Type": "text/plain"});
+	var header = {};
+	header["X-Frame-Options"] = "Deny";
+	header["Content-Type"] = "text/plain";
+	res.writeHead(200, header);
 	// Adding the calculated version into the data structure
 	config.version = SAGE2_version;
 	res.write(JSON.stringify(config));
@@ -3797,14 +3816,18 @@ function uploadForm(req, res) {
 	});
 
 	form.parse(req, function(err, fields, files) {
+		var header = {};
+		header["X-Frame-Options"] = "Deny";
 		if (err) {
-			res.writeHead(500, {"Content-Type": "text/plain"});
+			header["Content-Type"] = "text/plain";
+			res.writeHead(500, header);
 			res.write(err + "\n\n");
 			res.end();
 			return;
 		}
 		// build the reply to the upload
-		res.writeHead(200, {'Content-Type': 'application/json'});
+		header["Content-Type"] = "application/json";
+		res.writeHead(200, header);
 		// For webix uploader: status: server
 		fields.done = true;
 
