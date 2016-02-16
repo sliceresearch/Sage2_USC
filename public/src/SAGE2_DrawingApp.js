@@ -175,7 +175,7 @@ function setupListeners(wsio) {
 		});
 		uigrp = new Kinetic.Group();
 		var xoffset = 15;
-		var labels = [ "Brush", "Eraser", "Previous", "Next", "New", " ", " ", " ", " ", " ", " ", " ", " ", "1/1" ];
+		var labels  = ["Brush", "Eraser", "Previous", "Next", "New", " ", " ", " ", " ", " ", " ", " ", " ", "1/1"];
 
 		function onMouseUp(evt) {
 			var id = evt.target.id();

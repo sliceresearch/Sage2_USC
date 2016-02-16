@@ -63,9 +63,11 @@ module.exports = function(grunt) {
 					"public/uploads/apps/welcome/plugin.js",
 					"public/uploads/apps/tweetcloud2/plugin.js",
 					],
+				options: { config: "build/jscs_server.json" }
 			},
 			browserFiles: {
-				src: ['public/src/*.js', 'public/admin/*.js']
+				src: ['public/src/*.js', 'public/admin/*.js'],
+				options: { config: "build/jscs_sage2.json" }
 			},
 			appsFiles: {
 				src: [ 
@@ -88,18 +90,8 @@ module.exports = function(grunt) {
 					"public/uploads/apps/web_earth/web_earth.js",
 					"public/uploads/apps/whiteboard/whiteboard.js",
 					"public/uploads/apps/zoom/zoom.js"
-				]
-			},
-			options: {
-				"preset": "node-style-guide",
-				"requireCapitalizedComments": null,
-				"requireCamelCaseOrUpperCaseIdentifiers": null,
-				"validateQuoteMarks": null,
-				"validateIndentation": "\t",
-				"disallowCommaBeforeLineBreak": null,
-				"requireTrailingComma": null,
-				"requireCurlyBraces" : ["if", "else", "for", "while", "do", "try", "catch"],
-				"maximumLineLength": 130
+				],
+				options: { config: "build/jscs_sage2.json" }
 			}
 		},
 		yuidoc: {
