@@ -19,12 +19,14 @@
 // require variables to be declared
 "use strict";
 
+// builtins
 var fs   = require('fs');
 var path = require('path');
 var url  = require('url');
 var mime = require('mime');
 var zlib = require('zlib');  // to enable HTTP compression
 
+// SAGE2 own modules
 var sageutils = require('../src/node-utils');    // provides utility functions
 
 /**
@@ -85,14 +87,50 @@ function detectCookies(request) {
  * @param aurl {String} destination URL
  */
 HttpServer.prototype.redirect = function(res, aurl) {
+	var header = this.buildHeader();
 	// 302 HTTP code for redirect
-	var header = {};
-	header["Strict-Transport-Security"] = "max-age=31536000";
-	header["X-Frame-Options"] = "Deny";
 	header["Location"] = aurl;
 	res.writeHead(302, header);
 	res.end();
 };
+
+/**
+ * Build an HTTP header object
+ *
+ * @method buildHeader
+ * @return {Object} an object containig common HTTP header values
+ */
+HttpServer.prototype.buildHeader = function() {
+	var header = {};
+
+	// HTTP Strict Transport Security (HSTS) is an opt-in security enhancement
+	// Once a supported browser receives this header that browser will prevent any
+	// communications from being sent over HTTP to the specified domain
+	// and will instead send all communications over HTTPS.
+	// Here using a long (1 year) max-age
+	header["Strict-Transport-Security"] = "max-age=31536000";
+
+	// The X-Frame-Options header can be used to to indicate whether a browser is allowed
+	// to render a page within an <iframe> element or not. This is helpful to prevent clickjacking
+	// attacks by ensuring your content is not embedded within other sites.
+	// See more here: https://developer.mozilla.org/en-US/docs/HTTP/X-Frame-Options.
+	header["X-Frame-Options"] = "Deny";
+
+	// This header enables the Cross-site scripting (XSS) filter built into most recent web browsers.
+	// It's usually enabled by default anyway, so the role of this header is to re-enable the filter
+	// for this particular website if it was disabled by the user.
+	// This header is supported in IE 8+, and in Chrome.
+	header["X-XSS-Protection"] = "1; mode=block";
+
+	// The only defined value, "nosniff", prevents Internet Explorer and Google Chrome from MIME-sniffing
+	// a response away from the declared content-type. This also applies to Google Chrome, when downloading
+	// extensions. This reduces exposure to drive-by download attacks and sites serving user uploaded content
+	// that, by clever naming, could be treated by MSIE as executable or dynamic HTML files.
+	header["X-Content-Type-Options"] = "nosniff";
+
+	return header;
+};
+
 
 /**
  * Main router and trigger the GET and POST handlers
@@ -104,10 +142,12 @@ HttpServer.prototype.redirect = function(res, aurl) {
 HttpServer.prototype.onreq = function(req, res) {
 	var stream;
 	var i;
+	var _this = this;
 
 	if (req.method === "GET") {
 		var reqURL  = url.parse(req.url);
-		var getName = decodeURIComponent(reqURL.pathname);
+		// var getName = decodeURIComponent(reqURL.pathname);
+		var getName = sageutils.sanitizedURL(reqURL.pathname);
 		if (getName in this.getFuncs) {
 			this.getFuncs[getName](req, res);
 			return;
@@ -204,21 +244,11 @@ HttpServer.prototype.onreq = function(req, res) {
 				return;
 			}
 
-			var header = {};
+			// Build a default header object
+			var header = this.buildHeader();
+
+			// Set the mime type
 			header["Content-Type"] = mime.lookup(pathname);
-
-			// HTTP Strict Transport Security (HSTS) is an opt-in security enhancement
-			// Once a supported browser receives this header that browser will prevent any
-			// communications from being sent over HTTP to the specified domain
-			// and will instead send all communications over HTTPS.
-			// Here using a long (1 year) max-age
-			header["Strict-Transport-Security"] = "max-age=31536000";
-
-			// The X-Frame-Options header can be used to to indicate whether a browser is allowed
-			// to render a page within an <iframe> element or not. This is helpful to prevent clickjacking
-			// attacks by ensuring your content is not embedded within other sites.
-			// See more here: https://developer.mozilla.org/en-US/docs/HTTP/X-Frame-Options.
-			header["X-Frame-Options"] = "Deny";
 
 			header["Access-Control-Allow-Headers" ] = "Range";
 			header["Access-Control-Expose-Headers"] = "Accept-Ranges, Content-Encoding, Content-Length, Content-Range";
@@ -324,15 +354,17 @@ HttpServer.prototype.onreq = function(req, res) {
 			// res.end();
 		}
 	} else if (req.method === "POST") {
-		var postName = decodeURIComponent(url.parse(req.url).pathname);
+		// var postName = decodeURIComponent(url.parse(req.url).pathname);
+		var postName = sageutils.sanitizedURL(url.parse(req.url).pathname);
 		if (postName in this.postFuncs) {
 			this.postFuncs[postName](req, res);
 			return;
 		}
 	} else if (req.method === "PUT") {
 		// Need some authentication / security here
-		//
-		var putName = decodeURIComponent(url.parse(req.url).pathname);
+
+		// var putName = decodeURIComponent(url.parse(req.url).pathname);
+		var putName = sageutils.sanitizedURL(url.parse(req.url).pathname);
 		// Remove the first / if there
 		if (putName[0] === '/') {
 			putName = putName.slice(1);
@@ -365,9 +397,7 @@ HttpServer.prototype.onreq = function(req, res) {
 			// Close the write stream
 			wstream.end();
 			// empty 200 OK response for now
-			var header = {};
-			header["X-Frame-Options"] = "Deny";
-			header["Strict-Transport-Security"] = "max-age=31536000";
+			var header = _this.buildHeader();
 			header["Content-Type"] = "text/html";
 			res.writeHead(200, "OK", header);
 			res.end();

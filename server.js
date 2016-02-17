@@ -3753,8 +3753,7 @@ function setupHttpsOptions() {
 }
 
 function sendConfig(req, res) {
-	var header = {};
-	header["X-Frame-Options"] = "Deny";
+	var header = HttpServer.prototype.builHeader();
 	header["Content-Type"] = "text/plain";
 	res.writeHead(200, header);
 	// Adding the calculated version into the data structure
@@ -3816,8 +3815,7 @@ function uploadForm(req, res) {
 	});
 
 	form.parse(req, function(err, fields, files) {
-		var header = {};
-		header["X-Frame-Options"] = "Deny";
+		var header = HttpServer.prototype.builHeader();
 		if (err) {
 			header["Content-Type"] = "text/plain";
 			res.writeHead(500, header);
