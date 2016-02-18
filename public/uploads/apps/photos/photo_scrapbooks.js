@@ -31,6 +31,12 @@ function photoAlbums() {
 	SAGE2_photoAlbums[1] = {list: "https://lyra.evl.uic.edu:9000/webcam3.txt",
 		location: "http://cdn.abclocal.go.com/three/wls/webcam/",
 		name: "chi"};
+	SAGE2_photoAlbums[2] = {list: "https://lyra.evl.uic.edu:9000/webcam_lake.txt",
+		location: "http://www.glerl.noaa.gov/metdata/chi/",
+		name: "chi2"};
+	SAGE2_photoAlbums[3] = {list: "https://lyra.evl.uic.edu:9000/webcam_loop.txt",
+		location: "http://cdn.abclocal.go.com/three/wls/webcam/",
+		name: "chi3"};
 
 	// load timer is how long to show a single image in seconds before loading
 	// the next one or refreshing the current one
