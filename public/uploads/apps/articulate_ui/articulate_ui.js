@@ -27,10 +27,11 @@ var articulate_ui = SAGE2_App.extend( {
 		this.ctx = this.element.getContext('2d');
 
 
-		//TEST
+		//
 		if( isMaster ){
-			console.log("I'm the master");
-			this.contactArticulateHub("this is a test");
+			//console.log("I'm the master");
+			//this.launchVis();
+			this.readExample(); 
 		}
 
 		this.commands = [];
@@ -46,74 +47,7 @@ var articulate_ui = SAGE2_App.extend( {
 		this.refresh(date);
 	},
 
-	//---------------------------------------------
-	//------------ CONNECTION FUNCTIONS -----------
-	//---------------------------------------------
-
-	//contact the smart hub-- only called by master
-	contactArticulateHub: function(msg){
-		console.log("sending msg: " , msg);
-
-		msg = msg.replace(" ", "%"); 
-		url = "https://articulate.evl.uic.edu:8443/smarthub/webapi/myresource/query/show%20me%20theft%20in%20loop"
-		//url = url+msg; 
-
-		this.callbackFunc = this.callback.bind(this);
-
-		this.postRequest(url, this.callbackFunc, 'TEXT');
-		//wsio.emit('launchLinkedChildApp', {application: "apps/d3plus_visapp", user: "articulate_ui", msg:"this is a message from articulate_ui"});
-
-	},
-
-	//this sends the request to the rest service
-	//only called by master
-	postRequest: function(filename, callback, type) {
-		var dataType = type || "TEXT";
-
-		var xhr = new XMLHttpRequest();
-		xhr.open("GET", filename, true);
-		xhr.onreadystatechange = function() {
-			if (xhr.readyState === 4) {
-				if (xhr.status === 200) {
-					if (dataType === "TEXT") {
-						callback(null, xhr.responseText);
-					} else if (dataType === "JSON") {
-						callback(null, JSON.parse(xhr.responseText));
-					} else if (dataType === "CSV") {
-						callback(null, csvToArray(xhr.responseText));
-					} else if (dataType === "SVG") {
-						callback(null, xhr.responseXML.getElementsByTagName('svg')[0]);
-					} else {
-						callback(null, xhr.responseText);
-					}
-				} else {
-					callback("Error: File Not Found", null);
-				}
-			}
-		};
-		xhr.send();
-	},
-
-	//this gets the data from the smart hub, in a callback
-	//only called by master, hence the 'broadcast'
-	callback: function(err, text) {
-			if (err)			{
-				console.log("error connecting to articulate smart hub");
-				return;
-			}
-			console.log("GOT THE RESPONSE: ");
-			console.log(text);
-
-			//then broadcast the results to display nodes!
-			//broadcast( "handleResponse", {response:"responseTest"} ); 
-		},
-
-	handleResponse: function(data){
-		console.log(data.response);
-
-
-		// wsio.emit('launchLinkedChildApp', {msg:"this is a message from articulate_ui"});
-	},
+	
 
 	//----------------------------------------//
 	//---------- DRAWING FUNCTIONS ----------//
@@ -207,9 +141,9 @@ var articulate_ui = SAGE2_App.extend( {
 		this.commands[this.commands.length-1] = text;
 		this.commands.push(">"); 
 
-
 		if( isMaster ){
 			//send to articulate hub...
+			this.contactArticulateHub(text); 
 		}
 
 		if( text.indexOf("Launch example") > -1 ){
@@ -224,6 +158,123 @@ var articulate_ui = SAGE2_App.extend( {
 		this.refresh(date);
 	},
 
+	//---------------------------------------------
+	//------------ CONNECTION FUNCTIONS -----------
+	//---------------------------------------------
+
+	//contact the smart hub-- only called by master
+	contactArticulateHub: function(msg){
+		console.log("sending msg: " , msg);
+
+		msg = msg.replace(" ", "%"); 
+		url = "https://articulate.evl.uic.edu:8443/smarthub/webapi/myresource/query/";//show%20me%20theft%20in%20loop"
+		url = url+msg; 
+
+		this.callbackFunc = this.callback.bind(this);
+
+		this.postRequest(url, this.callbackFunc, 'JSON');
+	},
+
+	//this sends the request to the rest service
+	//only called by master
+	postRequest: function(filename, callback, type) {
+		var dataType = type || "TEXT";
+
+		var xhr = new XMLHttpRequest();
+		xhr.open("GET", filename, true);
+		xhr.onreadystatechange = function() {
+			if (xhr.readyState === 4) {
+				if (xhr.status === 200) {
+					if (dataType === "TEXT") {
+						callback(null, xhr.responseText);
+					} else if (dataType === "JSON") {
+						callback(null, JSON.parse(xhr.responseText));
+					} else if (dataType === "CSV") {
+						callback(null, csvToArray(xhr.responseText));
+					} else if (dataType === "SVG") {
+						callback(null, xhr.responseXML.getElementsByTagName('svg')[0]);
+					} else {
+						callback(null, xhr.responseText);
+					}
+				} else {
+					callback("Error: File Not Found", null);
+				}
+			}
+		};
+		xhr.send();
+	},
+
+	//this gets the data from the smart hub, in a callback
+	//only called by master, hence the 'broadcast'
+	callback: function(err, specObj) {
+			if (err)			{
+				console.log("error connecting to articulate smart hub");
+				return;
+			}
+			console.log("GOT THE RESPONSE: ");
+			console.log(specObj);
+
+			handleResponse(specObj); 
+			//then broadcast the results to display nodes!
+			//broadcast( "handleResponse", {response:"responseTest"} ); 
+		},
+
+	handleResponse: function(specObj){
+		console.log(data.response);
+
+		applicationType ="custom",
+		application = "apps/d3plus_visapp", 	
+		msg = "this is a message from articulate_ui",
+
+
+		type = specificationObj.plotType.string.toLowerCase();
+		x = specificationObj.xAxis.string.toLowerCase();
+		y = specificationObj.yAxis.string.toLowerCase();
+		if( specificationObj.id )
+			id = specificationObj.id.string.toLowerCase();
+		else
+			id = null;
+		data = []; 
+
+		console.log('type' + type + "x " + x + " y " + y);
+		for(i = 0; i < specificationObj.dataQueryResult.length; i++){
+				line = specificationObj.dataQueryResult[i].string;
+				console.log(line);
+				line = line.replace("(", "#");
+				line = line.replace(";", "#");
+				line = line.replace(")", "#");
+				line = line.replace(",", "#");
+				line = line.replace("(", "#");
+				line = line.replace(";", "#");
+				line = line.replace(")", "#");
+				line = line.replace(",", "#");
+				console.log(line);
+				tokens = line.split("#");
+				console.log(tokens);
+				obj = new Object();
+				//obj = {"year": 2010+i, "total_crime": 300, "id": 2010+i};
+				obj[tokens[1]] = parseInt(tokens[2]);
+				obj[tokens[5]] = parseInt(tokens[6]);
+				obj["id"] = parseInt(tokens[6]);
+				//obj["total_crime"] = 300;
+				data.push(obj);
+				console.log(obj);
+		}
+
+		console.log(data);
+
+		initState = {  // these values will load on child app init
+			value: 10,
+			type: type.toLowerCase(),
+			x: x.toLowerCase(),
+			y: y.toLowerCase(),
+			id: "id",
+			data: data
+		};
+
+		this.launchNewChild(applicationType, application, initState, msg);//defined in sage2 app
+	},
+
 	//here is where the parent launches the child app
 	//we will have to add appropriate data variables 
 	launchVis: function(){
@@ -231,7 +282,34 @@ var articulate_ui = SAGE2_App.extend( {
 		application = "apps/d3plus_visapp", 	
 		msg = "this is a message from articulate_ui",
 		initState = {  // these values will load on child app init
-				value: 10
+				value: 10,
+				type: "bar",
+				x: "year",
+				y: "value",
+				id: "name",
+				data: 
+				[
+				    {"year": 2010, "name":"TEST", "value": 15},
+				    {"year": 2010, "name":"Loop", "value": 10},
+				    {"year": 2010, "name":"River-North", "value": 5},
+				    {"year": 2010, "name":"Near-West", "value": 50},
+				  	{"year": 2011, "name":"TEST", "value": 22},
+				    {"year": 2011, "name":"Loop", "value": 13},
+				    {"year": 2011, "name":"River-North", "value": 16},
+				    {"year": 2011, "name":"Near-West", "value": 55},
+				  	{"year": 2012, "name":"TEST", "value": 43},
+				    {"year": 2012, "name":"Loop", "value": 3},
+				    {"year": 2012, "name":"River-North", "value": 34},
+				    {"year": 2012, "name":"Near-West", "value": 23},
+				  	{"year": 2013, "name":"TEST", "value": 27},
+				    {"year": 2013, "name":"Loop", "value": 14},
+				    {"year": 2013, "name":"River-North", "value": 10},
+				    {"year": 2013, "name":"Near-West", "value": 2},
+				    {"year": 2014, "name":"TEST", "value": 47},
+				    {"year": 2014, "name":"Loop", "value": 4},
+				    {"year": 2014, "name":"River-North", "value": 18},
+				    {"year": 2014, "name":"Near-West", "value": 22}
+			    ]
 			};
 
 		this.launchNewChild(applicationType, application, initState, msg);//defined in sage2 app
@@ -248,5 +326,114 @@ var articulate_ui = SAGE2_App.extend( {
 
 		this.launchNewChild(applicationType, application, initState, msg);//defined in sage2 app
 	},
+
+	readExample: function(){
+
+		applicationType ="custom",
+		application = "apps/d3plus_visapp", 	
+		msg = "this is a message from articulate_ui",
+
+		specificationObj = 
+		{
+			"plotType":
+			{
+				"valueType":"STRING",
+				"string":"BAR",
+				"chars":"BAR"
+			},
+			"xAxis":
+			{
+				"valueType":"STRING",
+				"string":"year",
+				"chars":"year"
+			},
+			"yAxis":
+			{
+				"valueType":"STRING",
+				"string":"TOTAL_CRIME",
+				"chars":"TOTAL_CRIME"
+			},
+			"dataQuery":
+			{
+				"valueType":"STRING",
+				"string":"SELECT count(*) as TOTAL_CRIME,`year` FROM chicagocrime WHERE `crimetype`='theft' AND `neighborhood`='river-north' GROUP BY year","chars":"SELECT count(*) as TOTAL_CRIME,`year` FROM chicagocrime WHERE `crimetype`='theft' AND `neighborhood`='river-north' GROUP BY year"
+			},
+			"dataQueryResult":
+			[
+				{
+					"valueType":"STRING",
+					"string":"(total_crime,3551);(year,2010)",
+					"chars":"(total_crime,3551);(year,2010)"
+				},
+				{
+					"valueType":"STRING",
+					"string":"(total_crime,3564);(year,2011)",
+					"chars":"(total_crime,3564);(year,2011)"
+				},
+				{
+					"valueType":"STRING",
+					"string":"(total_crime,3798);(year,2012)",
+					"chars":"(total_crime,3798);(year,2012)"
+				},
+				{
+					"valueType":"STRING",
+					"string":"(total_crime,3292);(year,2013)",
+					"chars":"(total_crime,3292);(year,2013)"
+				},
+				{
+					"valueType":"STRING",
+					"string":"(total_crime,2843);(year,2014)",
+					"chars":"(total_crime,2843);(year,2014)"
+				}
+			]
+		};
+
+	type = specificationObj.plotType.string.toLowerCase();
+	x = specificationObj.xAxis.string.toLowerCase();
+	y = specificationObj.yAxis.string.toLowerCase();
+	if( specificationObj.id )
+		id = specificationObj.id.string.toLowerCase();
+	else
+		id = null;
+	data = []; 
+
+	console.log('type' + type + "x " + x + " y " + y);
+	for(i = 0; i < specificationObj.dataQueryResult.length; i++){
+			line = specificationObj.dataQueryResult[i].string;
+			console.log(line);
+			line = line.replace("(", "#");
+			line = line.replace(";", "#");
+			line = line.replace(")", "#");
+			line = line.replace(",", "#");
+			line = line.replace("(", "#");
+			line = line.replace(";", "#");
+			line = line.replace(")", "#");
+			line = line.replace(",", "#");
+			console.log(line);
+			tokens = line.split("#");
+			console.log(tokens);
+			obj = new Object();
+			//obj = {"year": 2010+i, "total_crime": 300, "id": 2010+i};
+			obj[tokens[1]] = parseInt(tokens[2]);
+			obj[tokens[5]] = parseInt(tokens[6]);
+			obj["id"] = parseInt(tokens[6]);
+			//obj["total_crime"] = 300;
+			data.push(obj);
+			console.log(obj);
+	}
+
+	console.log(data);
+
+	initState = {  // these values will load on child app init
+		value: 10,
+		type: type.toLowerCase(),
+		x: x.toLowerCase(),
+		y: y.toLowerCase(),
+		id: "id",
+		data: data
+	};
+
+	this.launchNewChild(applicationType, application, initState, msg);//defined in sage2 app
+}
 
 });

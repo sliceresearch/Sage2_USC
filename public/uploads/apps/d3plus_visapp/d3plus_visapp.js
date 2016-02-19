@@ -29,26 +29,26 @@ var d3plus_visapp = SAGE2_App.extend( {
 
 		// sample data array- will need to pull from db
 	  	this.theData = [
-		    {"year": 2010, "name":"UIC", "value": 15},
-		    {"year": 2010, "name":"Loop", "value": 10},
-		    {"year": 2010, "name":"River-North", "value": 5},
-		    {"year": 2010, "name":"Near-West", "value": 50},
-		  	{"year": 2011, "name":"UIC", "value": 22},
-		    {"year": 2011, "name":"Loop", "value": 13},
-		    {"year": 2011, "name":"River-North", "value": 16},
-		    {"year": 2011, "name":"Near-West", "value": 55},
-		  	{"year": 2012, "name":"UIC", "value": 43},
-		    {"year": 2012, "name":"Loop", "value": 3},
-		    {"year": 2012, "name":"River-North", "value": 34},
-		    {"year": 2012, "name":"Near-West", "value": 23},
-		  	{"year": 2013, "name":"UIC", "value": 27},
-		    {"year": 2013, "name":"Loop", "value": 14},
-		    {"year": 2013, "name":"River-North", "value": 10},
-		    {"year": 2013, "name":"Near-West", "value": 2},
-		    {"year": 2014, "name":"UIC", "value": 47},
-		    {"year": 2014, "name":"Loop", "value": 4},
-		    {"year": 2014, "name":"River-North", "value": 18},
-		    {"year": 2014, "name":"Near-West", "value": 22},
+		    {"year": 2010, "id":"UIC", "total_crime": 15},
+		    {"year": 2010, "id":"Loop", "total_crime": 10},
+		    {"year": 2010, "id":"River-North", "total_crime": 5},
+		    {"year": 2010, "id":"Near-West", "total_crime": 50},
+		  	{"year": 2011, "id":"UIC", "total_crime": 22},
+		    {"year": 2011, "id":"Loop", "total_crime": 13},
+		    {"year": 2011, "id":"River-North", "total_crime": 16},
+		    {"year": 2011, "id":"Near-West", "total_crime": 55},
+		  	{"year": 2012, "id":"UIC", "total_crime": 43},
+		    {"year": 2012, "id":"Loop", "total_crime": 3},
+		    {"year": 2012, "id":"River-North", "total_crime": 34},
+		    {"year": 2012, "id":"Near-West", "total_crime": 23},
+		  	{"year": 2013, "id":"UIC", "total_crime": 27},
+		    {"year": 2013, "id":"Loop", "total_crime": 14},
+		    {"year": 2013, "id":"River-North", "total_crime": 10},
+		    {"year": 2013, "id":"Near-West", "total_crime": 2},
+		    {"year": 2014, "id":"UIC", "total_crime": 47},
+		    {"year": 2014, "id":"Loop", "total_crime": 4},
+		    {"year": 2014, "id":"River-North", "total_crime": 18},
+		    {"year": 2014, "id":"Near-West", "total_crime": 22},
 		  ];
 
 	},
@@ -64,10 +64,14 @@ var d3plus_visapp = SAGE2_App.extend( {
 		console.log(this.theData); 
 
 		//draw variables
-		this.selectedType = "bar";
-		this.selectedX = "year";
-		this.selectedY = "value";
-		this.selectedId = "name";
+		this.selectedType = this.state.type; //"bar";
+		this.selectedX = this.state.x; //"year";
+		this.selectedY = this.state.y; //"value";
+		this.selectedId = "id";//this.state.id;//"name";
+		this.theData = this.state.data;
+
+		console.log( "in app " + this.selectedType +  " " + this.selectedX + " " + this.selectedY + " " + this.selectedId);
+		console.log( this.theData );
 
 		//do it!
 		visualization = d3plus.viz()

@@ -3,7 +3,7 @@
 */
 {
 	name: "mysite",
-	host: "aurisano-macbook.evl.uic.edu",
+	host: "aurisano-macbook",
 	port: 9292,
 	index_port: 9090,
 	background: {
@@ -36,7 +36,8 @@
 		}
 	],
 	alternate_hosts: [
-		"127.0.0.1"
+		"127.0.0.1",
+		"localhost"
 	],
 	remote_sites: [
 	]
