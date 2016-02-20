@@ -15,7 +15,6 @@
  * @submodule image_viewer
  */
 
-var gstxb;
 
 /**
  * Xml viewing application
@@ -45,7 +44,7 @@ init: function(data) {
 	//this.element.innerHTML = "Default Message in esptkt_viewer";
 	//this.element.style.background = "white";
 
-	gstxb = this;
+	var gstxb = this;
 	console.log(">>>>>URL: " + this.state.file);
 
 	var ws;

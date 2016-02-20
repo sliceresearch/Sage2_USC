@@ -40,9 +40,9 @@
 	],
 	remote_sites: [
 		{
-			"name": "EspressoCopy",
-			"host": "128.171.47.211",
-			"port": 7272,
+			"name": "CentOS",
+			"host": "128.171.47.171",
+			"port": 9292,
 			"secure": true
 		}
 	]
