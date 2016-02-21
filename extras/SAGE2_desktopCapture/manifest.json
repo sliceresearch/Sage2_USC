@@ -1,7 +1,7 @@
 {
     "name": "SAGE2 Screen Capture",
     "author": "Thomas Marrinan",
-    "version": "1.5.1",
+    "version": "1.5.2",
     "manifest_version": 2,
     "minimum_chrome_version": "36",
     "description": "This chrome extension is developed primarily for SAGE2. It captures the content of your screen to stream to SAGE2.",

@@ -92,7 +92,7 @@ chrome.runtime.onConnect.addListener(function(port) {
 
 	// this one is called for each message from "content-script.js"
 	function portOnMessageHanlder(message) {
-		if (message === "SAGE2_capture_desktop") {
+		if (message === "SAGE2_capture_desktop" || message === "capture_desktop") {
 			chrome.desktopCapture.chooseDesktopMedia(['screen', 'window'],
 				port.sender.tab, onAccessApproved);
 		} else if (message === "SAGE2_registerUI") {

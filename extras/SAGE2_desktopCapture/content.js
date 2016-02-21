@@ -11,7 +11,7 @@
 // this object is used to make sure our extension isn't conflicted with irrelevant messages!
 var desktopCaptureMessages = [
 	"SAGE2_desktop_capture_enabled",
-	"SAGE2_capture_desktop",
+	"SAGE2_capture_desktop", "capture_desktop",
 	"SAGE2_registerUI"
 ];
 
@@ -44,7 +44,7 @@ window.addEventListener('message', function(event) {
 	}
 
 	// if it is something that need to be shared with background script
-	if (event.data === "SAGE2_capture_desktop") {
+	if (event.data === "SAGE2_capture_desktop" || event.data === "capture_desktop") {
 		// forward message to background script
 		port.postMessage(event.data);
 	}
