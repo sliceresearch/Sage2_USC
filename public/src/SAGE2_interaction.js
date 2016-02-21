@@ -69,6 +69,12 @@ function SAGE2_interaction(wsio) {
 		showDialog('settingsDialog2');
 	}
 
+	// Post message to the Chrome extension to register the UI
+	if (__SAGE2__.browser.isChrome === true) {
+		window.postMessage('SAGE2_registerUI', '*');
+	}
+
+	// Deals with the name and color of the pointer
 	if (localStorage.SAGE2_ptrName  === undefined ||
 		localStorage.SAGE2_ptrName  === null ||
 		localStorage.SAGE2_ptrName  === "Default") {
@@ -404,7 +410,7 @@ function SAGE2_interaction(wsio) {
 		if (!this.broadcasting) {
 			if (__SAGE2__.browser.isChrome === true && this.chromeDesktopCaptureEnabled === true) {
 				// post message to start chrome screen share
-				window.postMessage('capture_desktop', '*');
+				window.postMessage('SAGE2_capture_desktop', '*');
 			} else if (__SAGE2__.browser.isChrome === true && this.chromeDesktopCaptureEnabled !== true) {
 				webix.confirm({
 					title: "Screen sharing",
