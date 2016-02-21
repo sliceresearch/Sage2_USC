@@ -114,7 +114,7 @@ HttpServer.prototype.buildHeader = function() {
 	// to render a page within an <iframe> element or not. This is helpful to prevent clickjacking
 	// attacks by ensuring your content is not embedded within other sites.
 	// See more here: https://developer.mozilla.org/en-US/docs/HTTP/X-Frame-Options.
-	header["X-Frame-Options"] = "Deny";
+	header["X-Frame-Options"] = "SAMEORIGIN"; // "Deny";
 
 	// This header enables the Cross-site scripting (XSS) filter built into most recent web browsers.
 	// It's usually enabled by default anyway, so the role of this header is to re-enable the filter
