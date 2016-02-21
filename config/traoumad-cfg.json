@@ -23,6 +23,10 @@
 			color: "rgba(255, 255, 255, 0.25)"
 		}
 	},
+	security: {
+		// The SSL method to use
+		secureProtocol: "TLSv1_2_method"
+	},
 	ui: {
 		clock: 24,
 		show_url: true,

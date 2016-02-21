@@ -3737,6 +3737,7 @@ function setupHttpsOptions() {
 			// If true the server will request a certificate from clients that connect and attempt to verify that certificate
 			requestCert: false,
 			rejectUnauthorized: false,
+			honorCipherOrder: true,
 			// callback to handle multi-homed machines
 			SNICallback: function(servername, cb) {
 				if (certs.hasOwnProperty(servername)) {
@@ -3747,6 +3748,18 @@ function setupHttpsOptions() {
 				}
 			}
 		};
+
+		// The SSL method to use, otherwise undefined
+		if (config.security && config.security.secureProtocol) {
+			// Possible values are defined in the constant SSL_METHODS of OpenSSL
+			// Only enable TLS 1.2 for instance
+			// SSLv3_method,
+			// TLSv1_method, TLSv1_1_method, TLSv1_2_method
+			// DTLS_method,  DTLSv1_method,  DTLSv1_2_method
+			httpsOptions.secureProtocol = config.security.secureProtocol;
+			console.log(sageutils.header("HTTPS") +
+				"securing with protocol:" + httpsOptions.secureProtocol);
+		}
 	}
 
 	return httpsOptions;
