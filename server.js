@@ -357,6 +357,16 @@ function initializeSage2Server() {
 	sage2Server  = http.createServer(httpServerApp.onrequest);
 	sage2ServerS = https.createServer(options, httpServerApp.onrequest);
 
+	// In case the HTTPS client doesnt support tickets
+	var tlsSessionStore = {};
+	sage2ServerS.on('newSession', function(id, data, cb) {
+		tlsSessionStore[id.toString('hex')] = data;
+		cb();
+	});
+	sage2ServerS.on('resumeSession', function(id, cb) {
+		cb(null, tlsSessionStore[id.toString('hex')] || null);
+	});
+
 	// Set up websocket servers - 2 way communication between server and all browser clients
 	wsioServer  = new WebsocketIO.Server({server: sage2Server});
 	wsioServerS = new WebsocketIO.Server({server: sage2ServerS});
@@ -3758,7 +3768,7 @@ function setupHttpsOptions() {
 			// DTLS_method,  DTLSv1_method,  DTLSv1_2_method
 			httpsOptions.secureProtocol = config.security.secureProtocol;
 			console.log(sageutils.header("HTTPS") +
-				"securing with protocol:" + httpsOptions.secureProtocol);
+				"securing with protocol: " + httpsOptions.secureProtocol);
 		}
 	}
 
