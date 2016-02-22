@@ -108,7 +108,7 @@ var sharedApps         = {};
 var users              = null;
 var appLoader          = null;
 var interactMgr        = new InteractableManager();
-var mediaBlockSize     = 128;
+var mediaBlockSize     = 512;
 var startTime          = Date.now();
 var pressingAlt        = true;
 
@@ -198,7 +198,7 @@ function initializeSage2Server() {
 
 	// Set default host origin for this server
 	if (config.rproxy_port === undefined) {
-		hostOrigin = "http://" + config.host + (config.index_port === 80 ? "" : ":" + config.index_port) + "/";
+		hostOrigin = "http://" + config.host + (config.port === 80 ? "" : ":" + config.port) + "/";
 	}
 
 	// Initialize sage2 item lists
@@ -637,6 +637,7 @@ function setupListeners(wsio) {
 	wsio.on('requestStoredFiles',                   wsRequestStoredFiles);
 	wsio.on('loadApplication',                      wsLoadApplication);
 	wsio.on('loadFileFromServer',                   wsLoadFileFromServer);
+	wsio.on('loadImageFromBuffer',                  wsLoadImageFromBuffer);
 	wsio.on('deleteElementFromStoredFiles',         wsDeleteElementFromStoredFiles);
 	wsio.on('moveElementFromStoredFiles',           wsMoveElementFromStoredFiles);
 	wsio.on('saveSesion',                           wsSaveSesion);
@@ -652,6 +653,8 @@ function setupListeners(wsio) {
 	wsio.on('addNewWebElement',                     wsAddNewWebElement);
 
 	wsio.on('openNewWebpage',                       wsOpenNewWebpage);
+
+	wsio.on('setVolume',                            wsSetVolume);
 
 	wsio.on('playVideo',                            wsPlayVideo);
 	wsio.on('pauseVideo',                           wsPauseVideo);
@@ -1062,9 +1065,13 @@ function wsUpdateMediaStreamFrame(wsio, dataOrBuffer) {
 	// Send the image to all display nodes
 	// broadcast('updateMediaStreamFrame', data);
 
+	// Update the date
+	data.date = new Date();
+
 	// Create a copy of the frame object with dummy data (white 1x1 gif)
 	var data_copy = {};
 	data_copy.id             = data.id;
+	data_copy.date           = data.date;
 	data_copy.state          = {};
 	data_copy.state.src      = "R0lGODlhAQABAIABAP///wAAACwAAAAAAQABAAACAkQBADs=";
 	data_copy.state.type     = "image/gif";
@@ -1179,7 +1186,7 @@ function wsReceivedMediaStreamFrame(wsio, data) {
 
 // **************  Media Block Stream Functions *****************
 function wsStartNewMediaBlockStream(wsio, data) {
-	console.log("Starting media stream: ", data);
+	// console.log("Starting media stream: ", data);
 	// Forcing 'int' type for width and height
 	//     for some reasons, messages from websocket lib from Linux send strings for ints
 	data.width  = parseInt(data.width,  10);
@@ -2132,6 +2139,46 @@ function wsLoadApplication(wsio, data) {
 	});
 }
 
+function wsLoadImageFromBuffer(wsio, data) {
+	appLoader.loadImageFromDataBuffer(data.src, data.width, data.height,
+		"image/jpeg", "", data.url, data.title, {},
+		function(appInstance) {
+			// Get the drop position and convert it to wall coordinates
+			var position = data.position || [0, 0];
+			if (position[0] > 1) {
+				// value in pixels, used as origin
+				appInstance.left = position[0];
+			} else {
+				// value in percent
+				position[0] = Math.round(position[0] * config.totalWidth);
+				// Use the position as center of drop location
+				appInstance.left = position[0] - appInstance.width / 2;
+				if (appInstance.left < 0) {
+					appInstance.left = 0;
+				}
+			}
+			if (position[1] > 1) {
+				// value in pixels, used as origin
+				appInstance.top = position[1];
+			} else {
+				// value in percent
+				position[1] = Math.round(position[1] * config.totalHeight);
+				// Use the position as center of drop location
+				appInstance.top  = position[1] - appInstance.height / 2;
+				if (appInstance.top < 0) {
+					appInstance.top = 0;
+				}
+			}
+
+			appInstance.id = getUniqueAppId();
+
+			handleNewApplication(appInstance, null);
+
+			addEventToUserLog(data.user, {type: "openFile", data:
+				{name: data.filename, application: {id: appInstance.id, type: appInstance.application}}, time: Date.now()});
+		});
+}
+
 function wsLoadFileFromServer(wsio, data) {
 	if (data.application === "load_session") {
 		// if it's a session, then load it
@@ -2489,6 +2536,15 @@ function wsOpenNewWebpage(wsio, data) {
 	}
 }
 
+// **************  Volume sync  ********************
+
+function wsSetVolume(wsio, data) {
+	if (SAGE2Items.renderSync[data.id] === undefined || SAGE2Items.renderSync[data.id] === null) {
+		return;
+	}
+	console.log(sageutils.header("Volume") + "set " + data.id + " " + data.level);
+	broadcast('setVolume',data);
+}
 
 // **************  Video / Audio Synchonization *****************
 
@@ -2598,14 +2654,14 @@ function wsAddNewSharedElementFromRemoteServer(wsio, data) {
 	var i;
 
 	appLoader.loadApplicationFromRemoteServer(data.application, function(appInstance, videohandle) {
-		console.log(sageutils.header("Remote App>") + appInstance.title + " (" + appInstance.application + ")");
+		console.log(sageutils.header("Remote App") + appInstance.title + " (" + appInstance.application + ")");
 
 		if (appInstance.application === "media_stream" || appInstance.application === "media_block_stream") {
 			appInstance.id = wsio.remoteAddress.address + ":" + wsio.remoteAddress.port + "|" + data.id;
 			SAGE2Items.renderSync[appInstance.id] = {chunks: [], clients: {}};
 			for (i = 0; i < clients.length; i++) {
 				if (clients[i].clientType === "display") {
-					console.log(sageutils.header("Remote App>") + "render client: " + clients[i].id);
+					console.log(sageutils.header("Remote App") + "render client: " + clients[i].id);
 					SAGE2Items.renderSync[appInstance.id].clients[clients[i].id] = {wsio: clients[i], readyForNextFrame: false, blocklist: []};
 				}
 			}
@@ -2641,7 +2697,7 @@ function wsRequestNextRemoteFrame(wsio, data) {
 	} else {
 		originId = data.id;
 	}
-	var remote_id = config.host + ":" + config.port + "|" + data.id;
+	var remote_id = config.host + ":" + config.secure_port + "|" + data.id;
 
 	if (SAGE2Items.applications.list.hasOwnProperty(originId)) {
 		var stream = SAGE2Items.applications.list[originId];
@@ -2686,7 +2742,7 @@ function wsReceivedRemoteMediaStreamFrame(wsio, data) {
 
 // XXX - Remote block streaming not tested
 function wsRequestNextRemoteBlockFrame(wsio, data) {
-	var remote_id = config.host + ":" + config.port + "|" + data.id;
+	var remote_id = config.host + ":" + config.secure_port + "|" + data.id;
 	if (SAGE2Items.applications.list.hasOwnProperty(data.id)) {
 		var stream = SAGE2Items.applications.list[data.id];
 		wsio.emit('updateRemoteMediaBlockStreamFrame', {id: remote_id, state: stream.data});
@@ -2737,7 +2793,7 @@ function wsRequestDataSharingSession(wsio, data) {
 		data.config.name = "Unknown";
 	}
 
-	console.log("Data-sharing request from " + data.config.name + " (" + data.config.host + ":" + data.config.port + ")");
+	console.log("Data-sharing request from " + data.config.name + " (" + data.config.host + ":" + data.config.secure_port + ")");
 	broadcast('requestedDataSharingSession', {name: data.config.name, host: data.config.host, port: data.config.port});
 	remoteSharingRequestDialog = {wsio: wsio, config: data.config};
 	showRequestDialog(true);
@@ -3395,17 +3451,38 @@ function loadConfiguration() {
 		userConfig.resolution.borders.top    = Math.round(pixelsPerMeter * borderTop)    || 0;
 	}
 
+	// legacy support for config port names
+	var http_port, https_port;
+	if (userConfig.secure_port === undefined) {
+		http_port = userConfig.index_port;
+		https_port = userConfig.port;
+		delete userConfig.index_port;
+	} else {
+		http_port = userConfig.port;
+		https_port = userConfig.secure_port;
+	}
+	var rproxy_port, rproxys_port;
+	if (userConfig.rproxy_secure_port === undefined) {
+		rproxy_port = userConfig.rproxy_index_port;
+		rproxys_port = userConfig.rproxy_port;
+		delete userConfig.rproxy_index_port;
+	} else {
+		rproxy_port = userConfig.rproxy_port;
+		rproxys_port = userConfig.rproxy_secure_port;
+	}
 	// Set default values if missing
-	if (userConfig.port === undefined) {
-		userConfig.port = 443;
+	if (https_port === undefined) {
+		userConfig.secure_port = 443;
 	} else {
-		userConfig.port = parseInt(userConfig.port, 10); // to make sure it's a number
+		userConfig.secure_port = parseInt(https_port, 10); // to make sure it's a number
 	}
-	if (userConfig.index_port === undefined) {
-		userConfig.index_port = 80;
+	if (http_port === undefined) {
+		userConfig.port = 80;
 	} else {
-		userConfig.index_port = parseInt(userConfig.index_port, 10);
+		userConfig.port = parseInt(http_port, 10);
 	}
+	userConfig.rproxy_port = parseInt(rproxy_port, 10) || undefined;
+	userConfig.rproxy_secure_port = parseInt(rproxys_port, 10) || undefined;
 
 	// Set the display clip value if missing (true by default)
 	if (userConfig.background.clip !== undefined) {
@@ -3456,9 +3533,9 @@ var getNewUserId = (function() {
 function getUniqueDataSharingId(remoteHost, remotePort, caller) {
 	var id;
 	if (caller === true) {
-		id = config.host + ":" + config.port + "+" + remoteHost + ":" + remotePort;
+		id = config.host + ":" + config.secure_port + "+" + remoteHost + ":" + remotePort;
 	} else {
-		id = remoteHost + ":" + remotePort + "+" + config.host + ":" + config.port;
+		id = remoteHost + ":" + remotePort + "+" + config.host + ":" + config.secure_port;
 	}
 	return "portal_" + id;
 }
@@ -3683,7 +3760,12 @@ function sendConfig(req, res) {
 
 function uploadForm(req, res) {
 	var form     = new formidable.IncomingForm();
+	// Drop position
 	var position = [ 0, 0 ];
+	// User information
+	var ptrName  = "";
+	var ptrColor = "";
+
 	// Limits the amount of memory all fields together (except files) can allocate in bytes.
 	//    set to 4MB.
 	form.maxFieldsSize = 4 * 1024 * 1024;
@@ -3691,10 +3773,28 @@ function uploadForm(req, res) {
 	form.multiples     = true;
 
 	form.on('fileBegin', function(name, file) {
-		// console.log(sageutils.header("Upload") + 'begin ' + name + ' ' + file.name + ' ' + file.type);
+		console.log(sageutils.header("Upload") + file.name + ' ' + file.type);
+	});
+
+	form.on('error', function(err) {
+		console.log(sageutils.header("Upload") + 'Request aborted');
+		try {
+			// Removing the temporary file
+			fs.unlinkSync(this.openedFiles[0].path);
+		} catch (err) {
+		}
 	});
 
 	form.on('field', function(field, value) {
+		// Keep user information
+		if (field === 'SAGE2_ptrName') {
+			ptrName = value;
+			console.log(sageutils.header("Upload") + "by " + ptrName);
+		}
+		if (field === 'SAGE2_ptrColor') {
+			ptrColor = value;
+			console.log(sageutils.header("Upload") + "color " + ptrColor);
+		}
 		// convert value [0 to 1] to wall coordinate from drop location
 		if (field === 'dropX') {
 			position[0] = parseInt(parseFloat(value) * config.totalWidth,  10);
@@ -3715,6 +3815,7 @@ function uploadForm(req, res) {
 			res.writeHead(500, {"Content-Type": "text/plain"});
 			res.write(err + "\n\n");
 			res.end();
+			return;
 		}
 		// build the reply to the upload
 		res.writeHead(200, {'Content-Type': 'application/json'});
@@ -3736,11 +3837,11 @@ function uploadForm(req, res) {
 
 	form.on('end', function() {
 		// saves files in appropriate directory and broadcasts the items to the displays
-		manageUploadedFiles(this.openedFiles, position);
+		manageUploadedFiles(this.openedFiles, position, ptrName, ptrColor);
 	});
 }
 
-function manageUploadedFiles(files, position) {
+function manageUploadedFiles(files, position, ptrName, ptrColor) {
 	var fileKeys = Object.keys(files);
 	fileKeys.forEach(function(key) {
 		var file = files[key];
@@ -3750,6 +3851,10 @@ function manageUploadedFiles(files, position) {
 				console.log(sageutils.header("Upload") + 'unrecognized file type: ' + file.name + ' ' + file.type);
 				return;
 			}
+
+			// Add user information into exif data
+			assets.addTag(appInstance.file, "SAGE2user",  ptrName);
+			assets.addTag(appInstance.file, "SAGE2color", ptrColor);
 
 			// Use the size from the drop information
 			if (position[2] && position[2] !== 0) {
@@ -3906,19 +4011,21 @@ setTimeout(function() {
 
 sage2ServerS.on('listening', function(e) {
 	// Success
-	console.log(sageutils.header("SAGE2") + "Serving secure clients at https://" + config.host + ":" + config.port);
-	console.log(sageutils.header("SAGE2") + "Web console at https://" + config.host + ":" + config.port + "/admin/console.html");
+	console.log(sageutils.header("SAGE2") + "Serving secure clients at https://" +
+		config.host + ":" + config.secure_port);
+	console.log(sageutils.header("SAGE2") + "Web console at https://" + config.host +
+		":" + config.secure_port + "/admin/console.html");
 });
 
 // Place callback for errors in the 'listen' call for HTTP
 sage2Server.on('error', function(e) {
 	if (e.code === 'EACCES') {
-		console.log(sageutils.header("HTTP_Server") + "You are not allowed to use the port: ", config.index_port);
+		console.log(sageutils.header("HTTP_Server") + "You are not allowed to use the port: ", config.port);
 		console.log(sageutils.header("HTTP_Server") + "  use a different port or get authorization (sudo, setcap, ...)");
 		console.log(" ");
 		process.exit(1);
 	} else if (e.code === 'EADDRINUSE') {
-		console.log(sageutils.header("HTTP_Server") + "The port is already in use by another process:", config.index_port);
+		console.log(sageutils.header("HTTP_Server") + "The port is already in use by another process:", config.port);
 		console.log(sageutils.header("HTTP_Server") + "  use a different port or stop the offending process");
 		console.log(" ");
 		process.exit(1);
@@ -3932,14 +4039,14 @@ sage2Server.on('error', function(e) {
 // Place callback for success in the 'listen' call for HTTP
 sage2Server.on('listening', function(e) {
 	// Success
-	var ui_url = "http://" + config.host + ":" + config.index_port;
-	var dp_url = "http://" + config.host + ":" + config.index_port + "/display.html?clientID=0";
-	var am_url = "http://" + config.host + ":" + config.index_port + "/audioManager.html";
+	var ui_url = "http://" + config.host + ":" + config.port;
+	var dp_url = "http://" + config.host + ":" + config.port + "/display.html?clientID=0";
+	var am_url = "http://" + config.host + ":" + config.port + "/audioManager.html";
 	if (global.__SESSION_ID) {
-		ui_url = "http://" + config.host + ":" + config.index_port + "/session.html?hash=" + global.__SESSION_ID;
-		dp_url = "http://" + config.host + ":" + config.index_port + "/session.html?page=display.html?clientID=0&hash="
+		ui_url = "http://" + config.host + ":" + config.port + "/session.html?hash=" + global.__SESSION_ID;
+		dp_url = "http://" + config.host + ":" + config.port + "/session.html?page=display.html?clientID=0&hash="
 			+ global.__SESSION_ID;
-		am_url = "http://" + config.host + ":" + config.index_port + "/session.html?page=audioManager.html&hash="
+		am_url = "http://" + config.host + ":" + config.port + "/session.html?page=audioManager.html&hash="
 			+ global.__SESSION_ID;
 	}
 	console.log(sageutils.header("SAGE2") + "Serving web UI at " + ui_url);
@@ -3954,9 +4061,9 @@ process.on('SIGINT',  quitSAGE2);
 
 
 // Start the HTTP server (listen for IPv4 addresses 0.0.0.0)
-sage2Server.listen(config.index_port, "0.0.0.0");
+sage2Server.listen(config.port, "0.0.0.0");
 // Start the HTTPS server (listen for IPv4 addresses 0.0.0.0)
-sage2ServerS.listen(config.port, "0.0.0.0");
+sage2ServerS.listen(config.secure_port, "0.0.0.0");
 
 
 // ***************************************************************************************
@@ -5693,7 +5800,7 @@ function pointerReleaseOnStaticUI(uniqueID, pointerX, pointerY, obj) {
 	var remote = obj.data;
 	var app = dropSelectedItem(uniqueID, false, null);
 	if (app !== null && SAGE2Items.applications.list.hasOwnProperty(app.application.id) && remote.connected) {
-		var sharedId = app.application.id + "_" + config.host + ":" + config.port + "+" + remote.wsio.id;
+		var sharedId = app.application.id + "_" + config.host + ":" + config.secure_port + "+" + remote.wsio.id;
 		if (sharedApps[app.application.id] === undefined) {
 			sharedApps[app.application.id] = [{wsio: remote.wsio, sharedId: sharedId}];
 		} else {

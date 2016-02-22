@@ -48,18 +48,23 @@ function FileManager(wsio, mydiv, uniqueID) {
 	this.uniqueID = uniqueID;
 	this.selectedItem = null;
 	this.dragPosition = null;
+	this.json_cfg  = null;
+	this.http_port = null;
+
 	var _this = this;
 
 	// WEBIX
 	// ---------------------------------------------------
 
 	var data_with_icon = [
-		{id: "treeroot", value: "SAGE2", icon: "home", open: true, data: [
-				{id: "Image:/", value: "Image", icon: "search", data: []},
-				{id: "Video:/", value: "Video", icon: "search", data: []},
-				{id: "PDF:/", value: "PDF", icon: "search", data: []},
-				{id: "App:/", value: "Application", icon: "search", data: []},
-				{id: "Session:/", value: "Session", icon: "search", data: []}
+		{id: "treeroot", value: "SAGE2", icon: "home", open: true, tooltip: "All the files",
+			data: [
+				{id: "Image:/", value: "Image", icon: "search", data: [], tooltip: "Show all the images"},
+				{id: "Video:/", value: "Video", icon: "search", data: [], tooltip: "Show all the videos"},
+				{id: "PDF:/", value: "PDF", icon: "search", data: [], tooltip: "Show all the PDFs"},
+				{id: "App:/", value: "Application", icon: "search", data: [], tooltip: "Show all the applications"},
+				{id: "Session:/", value: "Session", icon: "search", data: [], tooltip: "Show all the sessions"},
+				{id: "Mine:/", value: "Uploaded", icon: "search", data: [], tooltip: "Show all my uploaded files"}
 			]
 		}
 	];
@@ -107,12 +112,17 @@ function FileManager(wsio, mydiv, uniqueID) {
 		]
 	};
 
+	// Custom tooltip function
+	function mytip(obj) {
+		return obj.tooltip ? obj.tooltip : "";
+	};
+
 	this.main = webix.ui({
 		container: mydiv,
 		id: "layout",
 		css: { border: "solid 1px #565656;"},
 		rows: [
-			{ view: "toolbar", cols: [ mymenu, mytoolbar ]
+			{ view: "toolbar", cols: [mymenu, mytoolbar]
 			},
 			{ cols: [
 				{ rows: [
@@ -123,7 +133,8 @@ function FileManager(wsio, mydiv, uniqueID) {
 					drag: true,
 					minWidth: 120,
 					width: 180,
-					// activeTitle: true, // close/open when selected
+					activeTitle: true, // close/open when selected
+					tooltip: mytip,
 					data: data_with_icon,
 					onContext: {} // required for context menu
 				},
@@ -146,7 +157,7 @@ function FileManager(wsio, mydiv, uniqueID) {
 					scroll: 'y',
 					gravity: 2, // two times bigger
 					animate: false,
-					cells: [ { } ]
+					cells: [{}]
 				},
 				{
 					view: "resizer"
@@ -280,10 +291,10 @@ function FileManager(wsio, mydiv, uniqueID) {
 				});
 			}
 		} else if (evt === "display_menu") {
-			var displayUrl = "http://" + window.location.hostname + ':' + _this.json_cfg.index_port +  "/display.html?clientID=0";
+			var displayUrl = "http://" + window.location.hostname + _this.http_port +  "/display.html?clientID=0";
 			window.open(displayUrl, '_blank');
 		} else if (evt === "overview_menu") {
-			var displayUrl = "http://" + window.location.hostname + ':' + _this.json_cfg.index_port +  "/display.html?clientID=-1";
+			var displayUrl = "http://" + window.location.hostname + _this.http_port +  "/display.html?clientID=-1";
 			window.open(displayUrl, '_blank');
 		} else if (evt === "clear_menu") {
 			wsio.emit('clearDisplay');
@@ -306,7 +317,7 @@ function FileManager(wsio, mydiv, uniqueID) {
 			}
 			_this.main.adjust();
 		} else if (evt === "audio_menu") {
-			var audioUrl = "http://" + window.location.hostname + ':' + _this.json_cfg.index_port +  "/audioManager.html";
+			var audioUrl = "http://" + window.location.hostname + _this.http_port +  "/audioManager.html";
 			// var audioUrl = "audioManager.html";
 			window.open(audioUrl, '_blank');
 		} else if (evt === "drawing_menu") {
@@ -344,10 +355,11 @@ function FileManager(wsio, mydiv, uniqueID) {
 		columns: [
 			{id: "index", header: "", width: 40, minWidth: 25, sort: "int"},
 			{id: "name", header: "Name", minWidth: 180, sort: "text", fillspace: true},
+			{id: "user", header: "User", width: 80, minWidth: 50, sort: "text", css: {'text-align': 'right'}},
+			{id: "size", header: "Size", width: 80, minWidth: 50,  sort: sortBySize, css: {'text-align': 'right'}},
 			{id: "date", header: "Date", width: 150, minWidth: 80, sort: sortByDate, css: {'text-align': 'center'}},
 			{id: "ago",  header: "Modified", width: 100, minWidth: 80, sort: sortByDate, css: {'text-align': 'right'}},
-			{id: "type", header: "Type", width: 80, minWidth: 50,  sort: "text", css: {'text-align': 'center'}},
-			{id: "size", header: "Size", width: 80, minWidth: 50,  sort: sortBySize, css: {'text-align': 'right'}}
+			{id: "type", header: "Type", width: 80, minWidth: 50,  sort: "text", css: {'text-align': 'center'}}
 		],
 		data: [
 		],
@@ -610,6 +622,7 @@ function FileManager(wsio, mydiv, uniqueID) {
 			context.target.startsWith("Video:")   ||
 			context.target.startsWith("App:")     ||
 			context.target.startsWith("Session:") ||
+			context.target.startsWith("Mine:")    ||
 			context.target.startsWith("Config:")) {
 			// No DnD on search icons
 			return false;
@@ -718,7 +731,7 @@ function FileManager(wsio, mydiv, uniqueID) {
 					textTbd += "</ol>";
 					webix.confirm({
 						title: "Confirm deletion - " + numItems + " item(s)",
-						width: "50%",
+						width: "75%",
 						ok: "Yes",
 						cancel: "No",
 						text: textTbd,
@@ -824,6 +837,14 @@ function FileManager(wsio, mydiv, uniqueID) {
 			_this.allTable.filter(function(obj) {
 				return _this.allFiles[obj.id].exif.MIMEType.indexOf('sage2/session') >= 0;
 			});
+		} else if (searchParam === "Mine:/") {
+			_this.allTable.filter(function(obj) {
+				var val = false;
+				if (_this.allFiles[obj.id].exif.SAGE2user) {
+					val = _this.allFiles[obj.id].exif.SAGE2user.indexOf(localStorage.SAGE2_ptrName) >= 0;
+				}
+				return val;
+			});
 		} else if (searchParam === "Config:/") {
 			_this.allTable.filter(function(obj) {
 				return false;
@@ -888,7 +909,6 @@ function FileManager(wsio, mydiv, uniqueID) {
 								data: [], onContext: {}
 						};
 						// Add to the tree
-						// _this.tree.parse({ parent: folder.name, data: newElement});
 						_this.tree.parse({ parent: parent, data: newElement});
 					}
 					parent = newid;
@@ -896,7 +916,7 @@ function FileManager(wsio, mydiv, uniqueID) {
 
 			}
 		}
-	}
+	};
 
 	// Server sends the media files list
 	this.updateFiles = function(data) {
@@ -944,6 +964,7 @@ function FileManager(wsio, mydiv, uniqueID) {
 				f.exif.Creator = f.exif.metadata.author;
 				this.allTable.data.add({id: f.id,
 					name: f.exif.FileName,
+					user: f.exif.SAGE2user ? f.exif.SAGE2user : "-",
 					date: mm.format("YYYY/MM/DD HH:mm:ss"),
 					ago: mm.fromNow(),
 					type: "APP",
@@ -955,8 +976,9 @@ function FileManager(wsio, mydiv, uniqueID) {
 				f.exif.FileModifyDate = mm;
 				this.allTable.data.add({id: f.id,
 					name: f.exif.FileName,
+					user: f.exif.SAGE2user ? f.exif.SAGE2user : "-",
 					date: mm.format("YYYY/MM/DD HH:mm:ss"),
-					ago: mm.fromNow(),
+					ago:  mm.fromNow(),
 					type: "SESSION",
 					size: fileSizeIEC(f.exif.FileSize)
 				});
@@ -975,8 +997,9 @@ function FileManager(wsio, mydiv, uniqueID) {
 				f.exif.FileModifyDate = mm;
 				this.allTable.data.add({id: f.id,
 					name: f.exif.FileName,
+					user: f.exif.SAGE2user ? f.exif.SAGE2user : "-",
 					date: mm.format("YYYY/MM/DD HH:mm:ss"),
-					ago: mm.fromNow(),
+					ago:  mm.fromNow(),
 					type: f.exif.FileType,
 					size: fileSizeIEC(f.exif.FileSize)
 				});
@@ -1034,7 +1057,7 @@ function FileManager(wsio, mydiv, uniqueID) {
 	var tmenu = webix.ui({
 		view: "contextmenu",
 		id: "tmenu",
-		data: ["New folder", { $template: "Separator" }, "Refresh" ],
+		data: ["New folder", { $template: "Separator" }, "Refresh"],
 		on: {
 			onItemClick: function(id) {
 				var context = this.getContext();
@@ -1097,26 +1120,25 @@ function FileManager(wsio, mydiv, uniqueID) {
 	this.serverConfiguration = function(data) {
 		// Add the media folders to the tree
 		var f, folder;
-		this.json_cfg = data;
+		this.json_cfg  = data;
+		this.http_port = this.json_cfg.port === 80 ? "" : ":" + this.json_cfg.port;
 		this.mediaFolders = data.folders;
 		for (f in data.folders) {
 			folder = data.folders[f];
-			// Build the search icons: use the url in the id for search
-			// var children = [
-			// 	{id: "Image:" + folder.url, value: "Image", icon: "search", data: []},
-			// 	{id: "Video:" + folder.url, value: "Video", icon: "search", data: []},
-			// 	{id: "PDF:"   + folder.url, value: "PDF", icon: "search", data: []},
-			// 	{id: "App:"   + folder.url, value: "Application", icon: "search", data: []},
-			// 	{id: "Session:" + folder.url, value: "Session", icon: "search", data: []}
-			// ];
 			// Build the tree item
 			//   folder Object {name: "system", path: "public/uploads/",
 			//                  url: "/uploads", upload: false}
 			var newElement = {id: folder.url, value: folder.name + ":" + folder.url,
 					icon: "home", open: true, sage2URL: folder.url, data: [],
+					tooltip: folder.name + " folder",
 					onContext: {}
 			};
+			// Add the new folder item into the tree
 			this.tree.parse({ parent: null, data: newElement });
+			// Fold/close the folders not for upload
+			if (!folder.upload) {
+				this.tree.close(folder.url);
+			}
 		}
 		// refresh the tree
 		this.tree.refresh();
@@ -1129,6 +1151,7 @@ function FileManager(wsio, mydiv, uniqueID) {
 				(id.indexOf('Video:/') >= 0) ||
 				(id.indexOf('PDF:/') >= 0) ||
 				(id.indexOf('App:/') >= 0) ||
+				(id.indexOf('Mine:/') >= 0) ||
 				(id.indexOf('Session:/') >= 0)
 				) {
 				tmenu.hideItem('New folder');

@@ -32,6 +32,9 @@ var movie_player = SAGE2_BlockStreamingApp.extend({
 
 		this.firstLoad();
 		this.initWidgets();
+
+		// Keep a copy of the title string
+		this.title = data.title;
 	},
 
 	/**
@@ -116,6 +119,23 @@ var movie_player = SAGE2_BlockStreamingApp.extend({
 	*/
 	load: function(date) {
 	},
+
+	/**
+	* Overloading the postDraw call to update the title
+	*
+	* @method postDraw
+	* @param date {Date} current time from the server
+	*/
+	postDraw: function(date) {
+		this.prevDate = date;
+		this.frame++;
+
+		// new code: put current time in title bar
+		var duration = parseInt(1000 * (this.state.frame / this.state.framerate), 10);
+		var current  = formatHHMMSS(duration);
+		this.updateTitle(this.title + " - " + current);
+	},
+
 
 	/**
 	* Toggle between play and pause

@@ -38,11 +38,11 @@ if (!Function.prototype.bind) {
 			// internal IsCallable function
 			throw new TypeError('Function.prototype.bind - what is trying to be bound is not callable');
 		}
-		var aArgs   = Array.prototype.slice.call(arguments, 1);
-		var fToBind = this;
+		var aArgs = Array.prototype.slice.call(arguments, 1);
+		var _this = this;
 		var FNOP    = function() {};
 		var fBound  = function() {
-			return fToBind.apply(this instanceof FNOP && oThis ? this : oThis,
+			return _this.apply(this instanceof FNOP && oThis ? this : oThis,
 						aArgs.concat(Array.prototype.slice.call(arguments)));
 		};
 		FNOP.prototype = this.prototype;
@@ -90,6 +90,41 @@ var pointerX, pointerY;
 
 var sage2Version;
 
+
+/**
+ * Reload the page if a application cache update is available
+ *
+ */
+if (window.applicationCache) {
+	applicationCache.addEventListener('updateready', function() {
+		window.location.reload();
+	});
+}
+
+/**
+ * Ask before closing the browser if desktop sharing in progress
+ *
+ */
+window.addEventListener('beforeunload', function(event) {
+	if (interactor && interactor.broadcasting) {
+		var confirmationMessage = "SAGE2 Desktop sharing in progress";
+
+		event.returnValue = confirmationMessage;  // Gecko, Trident, Chrome 34+
+		return confirmationMessage;               // Gecko, WebKit, Chrome <34
+	}
+});
+
+/**
+ * Closing desktop sharing before the browser closes
+ *
+ */
+window.addEventListener('unload', function(event) {
+	if (interactor && interactor.broadcasting) {
+		interactor.streamEnded();
+	}
+});
+
+
 /**
  * Entry point of the user interface
  *
@@ -105,10 +140,10 @@ function SAGE2_init() {
 				var json_cfg = JSON.parse(xhr.responseText);
 
 				var https_port;
-				if (json_cfg.rproxy_port !== undefined) {
-					https_port = ":" + json_cfg.rproxy_port.toString();
+				if (json_cfg.rproxy_secure_port !== undefined) {
+					https_port = ":" + json_cfg.rproxy_secure_port.toString();
 				} else {
-					https_port = ":" + json_cfg.port.toString();
+					https_port = ":" + json_cfg.secure_port.toString();
 				}
 				if (https_port === ":443") {
 					https_port = "";
@@ -123,6 +158,15 @@ function SAGE2_init() {
 
 	// Detect which browser is being used
 	SAGE2_browser();
+
+	// Deal with the warning label in the UI if Chrome or not Chrome
+	if (!__SAGE2__.browser.isMobile) {
+		if (!__SAGE2__.browser.isChrome) {
+			var chromeWarn = document.getElementById("usechrome");
+			// Make it visible
+			chromeWarn.style.display = "block";
+		}
+	}
 
 	// Create a connection to the SAGE2 server
 	wsio = new WebsocketIO();
@@ -153,6 +197,7 @@ function SAGE2_init() {
 
 		// Interaction object: file upload, desktop sharing, ...
 		interactor = new SAGE2_interaction(wsio);
+		interactor.setFileUploadStartCallback(fileUploadStart);
 		interactor.setFileUploadProgressCallback(fileUploadProgress);
 		interactor.setFileUploadCompleteCallback(fileUploadComplete);
 
@@ -163,7 +208,7 @@ function SAGE2_init() {
 	// socket close event (i.e. server crashed)
 	wsio.on('close', function(evt) {
 		// show a popup for a long time
-		showMessage("Server offline", 2147483647);
+		showSAGE2Message("Server offline", 2147483);
 		// try to reload every few seconds
 		var refresh = setInterval(function() {
 			reloadIfServerRunning(function() {
@@ -219,32 +264,41 @@ function SAGE2_init() {
 	hasMouse = false;
 	console.log("Assuming mobile device");
 
+	// Event listener to the Chrome extension for desktop capture
 	window.addEventListener('message', function(event) {
 		if (event.origin !== window.location.origin) {
 			return;
 		}
 		if (event.data.cmd === "SAGE2_desktop_capture-Loaded") {
 			if (interactor !== undefined && interactor !== null) {
+				// Chrome extension is loaded
+				console.log('SAGE2 Chrome extension is loaded');
 				interactor.chromeDesktopCaptureEnabled = true;
 			}
 		}
 		if (event.data.cmd === "window_selected") {
 			interactor.captureDesktop(event.data.mediaSourceId);
 		}
+		if (event.data.cmd === "screenshot") {
+			wsio.emit('loadImageFromBuffer', event.data);
+		}
 	});
 }
 
-// Show error message for 2 seconds (or time given as parameter)
-function showMessage(message, delay) {
+// Show error message for 2 seconds (or time given as parameter in seconds)
+function showSAGE2Message(message, delay) {
 	var aMessage = webix.alert({
 		type:  "alert-error",
 		title: "SAGE2 Error",
 		ok:    "OK",
-		text:  message
+		width: "40%",
+		text:  "<span style='font-weight:bold;'>" + message + "</span>"
 	});
 	setTimeout(function() {
-		webix.modalbox.hide(aMessage);
-	}, delay ? delay : 2000);
+		if (aMessage) {
+			webix.modalbox.hide(aMessage);
+		}
+	}, delay ? delay * 1000 : 2000);
 }
 
 function setupListeners() {
@@ -285,7 +339,7 @@ function setupListeners() {
 	});
 
 	// Open a popup on message sent from server
-	wsio.on('errorMessage', showMessage);
+	wsio.on('errorMessage', showSAGE2Message);
 
 	wsio.on('setupDisplayConfiguration', function(config) {
 		displayUI = new SAGE2DisplayUI();
@@ -408,7 +462,7 @@ function setupListeners() {
 	});
 
 	wsio.on('requestNextFrame', function(data) {
-		interactor.sendMediaStreamFrame();
+		interactor.requestMediaStreamFrame();
 	});
 
 	wsio.on('stopMediaCapture', function() {
@@ -634,7 +688,7 @@ function fileDrop(event) {
 	var y = event.layerY / event.target.clientHeight;
 	if (event.dataTransfer.files.length > 0) {
 		// upload a file
-		displayUI.fileUpload = true;
+		// displayUI.fileUpload = true;
 		displayUI.uploadPercent = 0;
 		interactor.uploadFiles(event.dataTransfer.files, x, y);
 	} else {
@@ -657,6 +711,82 @@ function fileDrop(event) {
 	return false;
 }
 
+var msgOpen = false;
+var uploadMessage, msgui;
+
+/**
+ * File upload start callback
+ *
+ * @method fileUploadStart
+ * @param files {Object} array-like that containing the file infos
+ */
+function fileUploadStart(files) {
+	// Template for a prograss bar form
+	var aTemplate = '<div style="padding:0; margin: 0;"class="webix_el_box">' +
+		'<div style="width:#proc#%" class="webix_accordionitem_header">&nbsp;</div></div>';
+	webix.protoUI({
+		name: "ProgressBar",
+		defaults: {
+			template: aTemplate,
+			data: {	proc: 0	},
+			borderles: true,
+			height: 25
+		},
+		setValue: function(val) {
+			if ((val < 0) || (val > 100)) {
+				throw "Invalid val: " + val + " need in range 0..100";
+			}
+			this.data.proc = val;
+			this.refresh();
+		}
+	}, webix.ui.template);
+
+	// Build the form with file names
+	var form = [];
+	var aTitle;
+	var panelHeight = 80;
+	if (files.length === 1) {
+		aTitle = "Uploading a file";
+		form.push({view: "label", align: "center", label: files[0].name});
+	} else {
+		aTitle = "Uploading " + files.length + " files";
+		panelHeight = 140;
+
+		for (var i = 0; i < Math.min(files.length, 3); i++) {
+			var aLabel = (i + 1).toString() + " - " + files[i].name;
+			form.push({view: "label", align: "left", label: aLabel});
+		}
+		if (files.length > 3) {
+			form.push({view: "label", align: "left", label: "..."});
+		}
+	}
+	// Add the progress bar element from template
+	form.push({id: 'progressBar', view: 'ProgressBar'});
+
+	// Create a modal window wit empty div
+	uploadMessage = webix.modalbox({
+		title: aTitle,
+		buttons: ["Cancel"],
+		margin: 25,
+		text: "<div id='box_content' style='width:100%; height:100%'></div>",
+		width: "80%",
+		position: "center",
+		callback: function(result) {
+			interactor.cancelUploads();
+			msgOpen = false;
+			webix.modalbox.hide(this);
+		}
+	});
+	// Add the form into the div
+	msgui = webix.ui({
+		container: "box_content",
+		height: panelHeight,
+		rows: form
+	});
+	// The dialog is now open
+	msgOpen = true;
+}
+
 /**
  * File upload progress callback
  *
@@ -664,8 +794,16 @@ function fileDrop(event) {
  * @param percent {Number} process
  */
 function fileUploadProgress(percent) {
-	displayUI.setUploadPercent(percent);
-	displayUI.draw();
+	// upadte the progress bar element
+	var pgbar = $$('progressBar');
+	var val   = percent * 100;
+	if (val > 100) {
+		val = 0;
+	}
+	pgbar.setValue(val);
+
+	// displayUI.setUploadPercent(percent);
+	// displayUI.draw();
 }
 
 /**
@@ -674,6 +812,12 @@ function fileUploadProgress(percent) {
  * @method fileUploadComplete
  */
 function fileUploadComplete() {
+	// close the modal window if still open
+	if (msgOpen) {
+		webix.modalbox.hide(uploadMessage);
+	}
+
+	// Seems useful, sometimes (at the end of upload)
 	setTimeout(function() {
 		displayUI.fileUpload = false;
 		displayUI.draw();
@@ -690,10 +834,10 @@ function fileUploadFromUI() {
 	hideDialog('localfileDialog');
 
 	// Setup the progress bar
-	var sage2UI = document.getElementById('sage2UICanvas');
-	sage2UI.style.borderStyle = "solid";
-	displayUI.fileDrop = false;
-	displayUI.draw();
+	// var sage2UI = document.getElementById('sage2UICanvas');
+	// sage2UI.style.borderStyle = "solid";
+	// displayUI.fileDrop = false;
+	// displayUI.draw();
 
 	// trigger file upload
 	var thefile = document.getElementById('filenameForUpload');
@@ -749,6 +893,7 @@ function pointerRelease(event) {
 	}
 }
 
+
 /**
  * Handler for mouse move
  *
@@ -775,10 +920,15 @@ function pointerMove(event) {
 		var mouseY = event.clientY - rect.top;
 		pointerX   = mouseX;
 		pointerY   = mouseY;
-		// Send pointer event only during drag events
+
 		if (pointerDown) {
+			// Send pointer event only during drag events
 			displayUI.pointerMove(pointerX, pointerY);
+		} else {
+			// Otherwise test for application hover
+			displayUI.highlightApplication(pointerX, pointerY);
 		}
+
 	} else {
 		// Loose focus
 		pointerDown = false;
@@ -823,10 +973,11 @@ function mouseCheck(event) {
 		uiButtonImg.style.mozTransform    = "scale(1.2)";
 		uiButtonImg.style.transform       = "scale(1.2)";
 	}
-	var uiButtonP = getCSSProperty("style_ui.css", "#menuUI tr td p");
-	if (uiButtonP !== null) {
-		uiButtonP.style.opacity = "0.0";
-	}
+	// Display/hide the labels under the UI buttons
+	// var uiButtonP = getCSSProperty("style_ui.css", "#menuUI tr td p");
+	// if (uiButtonP !== null) {
+	// 	uiButtonP.style.opacity = "0.0";
+	// }
 }
 
 /**
@@ -915,7 +1066,9 @@ function handleClick(element) {
 		hideDialog('uploadDialog');
 		// open the file library
 		//    delay to remove bounce evennt on Chrome/iOS
-		setTimeout(function() { showDialog('localfileDialog'); }, 200);
+		setTimeout(function() {
+			showDialog('localfileDialog');
+		}, 200);
 	} else if (element.id === "dropboxFilesBtn") {
 		// upload from Dropbox
 		// Not Yet Implemented
@@ -963,6 +1116,9 @@ function handleClick(element) {
 	} else if (element.id === "settingsCloseBtn") {
 		// Settings Dialog
 		hideDialog('settingsDialog');
+	} else if (element.id === "settingsCloseBtn2") {
+		// Init Settings Dialog
+		hideDialog('settingsDialog2');
 	} else if (element.id === "browserOpenBtn") {
 		// Browser Dialog
 		var url = document.getElementById("openWebpageUrl");
@@ -1077,7 +1233,7 @@ function forceClick(event) {
 	// Check to see if the event has a force property
 	if ("webkitForce" in event) {
 		// Retrieve the force level
-		var forceLevel = event["webkitForce"];
+		var forceLevel = event.webkitForce;
 
 		// Retrieve the force thresholds for click and force click
 		var clickForce      = MouseEvent.WEBKIT_FORCE_AT_MOUSE_DOWN;
@@ -1193,7 +1349,6 @@ function touchStart(event) {
 		event.stopPropagation();
 	} else if (event.target.id === "sage2MobileMiddle2Button") {
 		// Send play commad, spacebar for PDF and movies
-		console.log('Send play')
 		interactor.sendPlay();
 		event.preventDefault();
 		event.stopPropagation();
@@ -1210,8 +1365,16 @@ function touchStart(event) {
  */
 function touchEnd(event) {
 	var now = Date.now();
-	if ((now - touchTapTime) > 500) { touchTap = 0;                     }
-	if ((now - touchTime)    < 250) { touchTap++;   touchTapTime = now; } else { touchTap = 0; touchTapTime = 0;   }
+	if ((now - touchTapTime) > 500) {
+		touchTap = 0;
+	}
+	if ((now - touchTime) < 250) {
+		touchTap++;
+		touchTapTime = now;
+	} else {
+		touchTap = 0;
+		touchTapTime = 0;
+	}
 
 	if (event.target.id === "sage2UICanvas") {
 		if (touchMode === "translate") {
