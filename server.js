@@ -1138,15 +1138,15 @@ function wsUpdateMediaStreamFrame(wsio, dataOrBuffer) {
         // NB: Cloned code
         var data;
         if (dataOrBuffer.id !== undefined) {
-          //console.log("UpdateMediaStreamFrame: parameter is record");
+          console.log("UpdateMediaStreamFrame: parameter is record");
           data = dataOrBuffer;
         } else {
-          //console.log("UpdateMediaStreamFrame: parameter is Buffer");
+          console.log("UpdateMediaStreamFrame: parameter is Buffer");
           data = {}
           // buffer: id, state-type, state-encoding, state-src
           data.id = byteBufferToString(dataOrBuffer);
         }
-	//console.log("wsUpdateMediaStreamFrame ", data.id);
+	console.log("wsUpdateMediaStreamFrame ", data.id);
 
 	// Reset the 'ready' flag for every display client
 	for (key in SAGE2Items.renderSync[data.id].clients) {
@@ -4663,7 +4663,9 @@ function byteBufferToString(buf) {
 	var str = "";
 	var i = 0;
 
+	console.log("byteBufferToString ",buf.length);
 	while (buf[i] !== 0 && i < buf.length) {
+		console.log("byteBufferToString ",i,buf[i]);
 		str += String.fromCharCode(buf[i]);
 		i++;
 	}
