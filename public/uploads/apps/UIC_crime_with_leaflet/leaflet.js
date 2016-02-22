@@ -92,7 +92,7 @@ var leaflet = SAGE2_App.extend({
 		var myHeight = this.element.clientHeight;
 
 		this.element.id = "div" + data.id;
-		var mySelf = this;
+		var _this = this;
 
 		this.maxFPS = 0.000023; // once every 12 hours
 
@@ -110,33 +110,33 @@ var leaflet = SAGE2_App.extend({
 			' <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>';
 
 		// Load the CSS file for leaflet.js
-		addCSS(mySelf.resrcPath + "scripts/leaflet.css", function() {
+		addCSS(_this.resrcPath + "scripts/leaflet.css", function() {
 
-			mySelf.map1 = L.tileLayer(mapURL1, {attribution: mapCopyright1});
-			mySelf.map2 = L.tileLayer(mapURL2, {attribution: mapCopyright2});
+			_this.map1 = L.tileLayer(mapURL1, {attribution: mapCopyright1});
+			_this.map2 = L.tileLayer(mapURL2, {attribution: mapCopyright2});
 
 
 			// want to do this same thing when we reset the location
-			if (mySelf.whichMap === 1) {
-				mySelf.map = L.map(mySelf.element.id, {layers: [mySelf.map1], zoomControl: false}).setView([41.869910, -87.65], 17);
+			if (_this.whichMap === 1) {
+				_this.map = L.map(_this.element.id, {layers: [_this.map1], zoomControl: false}).setView([41.869910, -87.65], 17);
 			} else {
-				mySelf.map = L.map(mySelf.element.id, {layers: [mySelf.map2], zoomControl: false}).setView([41.869910, -87.65], 17);
+				_this.map = L.map(_this.element.id, {layers: [_this.map2], zoomControl: false}).setView([41.869910, -87.65], 17);
 			}
 
 			/* Initialize the SVG layer */
-			mySelf.map._initPathRoot();
+			_this.map._initPathRoot();
 
 			/* We simply pick up the SVG from the map object */
-			mySelf.svg = d3.select(mySelf.map.getPanes().overlayPane).select("svg");
-			mySelf.g = mySelf.svg.append("g");
+			_this.svg = d3.select(_this.map.getPanes().overlayPane).select("svg");
+			_this.g = _this.svg.append("g");
 
 			for (var loopIdx = 0; loopIdx < SAGE2_policeDistricts.length; loopIdx++) {
-				mySelf.getNewData(mySelf, SAGE2_policeDistricts[loopIdx], data.date);
+				_this.getNewData(_this, SAGE2_policeDistricts[loopIdx], data.date);
 			}
 
 			// attach the SVG into the this.element node provided to us
 			var box = "0,0," + myWidth + "," + myHeight;
-			mySelf.svg = d3.select(mySelf.element).append("svg")
+			_this.svg = d3.select(_this.element).append("svg")
 				.attr("width",   myWidth)
 				.attr("height",  myHeight)
 				.attr("viewBox", box);
@@ -269,7 +269,7 @@ var leaflet = SAGE2_App.extend({
 
 		});
 
-		var me = this;
+		var _this = this;
 
 		// jscs:disable
 		var feature = this.g.selectAll("circle")
@@ -307,16 +307,16 @@ var leaflet = SAGE2_App.extend({
 			feature.attr("transform",
 				function(d) {
 					return "translate(" +
-						me.map.latLngToLayerPoint(d.LatLng).x + "," +
-						me.map.latLngToLayerPoint(d.LatLng).y + ")";
+						_this.map.latLngToLayerPoint(d.LatLng).x + "," +
+						_this.map.latLngToLayerPoint(d.LatLng).y + ")";
 				}
 			);
 
 			feature2.attr("transform",
 				function(d) {
 					return "translate(" +
-						(me.map.latLngToLayerPoint(d.LatLng).x + 20.0) + "," +
-						(me.map.latLngToLayerPoint(d.LatLng).y + 5.0) + ")";
+						(_this.map.latLngToLayerPoint(d.LatLng).x + 20.0) + "," +
+						(_this.map.latLngToLayerPoint(d.LatLng).y + 5.0) + ")";
 				}
 			);
 		}
@@ -333,13 +333,13 @@ var leaflet = SAGE2_App.extend({
 	},
 
 	draw: function(date) {
-		var mySelf = this;
+		var _this = this;
 
 		if (this.allLoaded === 1) {
 			this.currentBeats = 0;
 
 			for (var loopIdx = 0; loopIdx < SAGE2_policeDistricts.length; loopIdx++) {
-				mySelf.getNewData(mySelf, SAGE2_policeDistricts[loopIdx], date);
+				_this.getNewData(_this, SAGE2_policeDistricts[loopIdx], date);
 			}
 		}
 	},

@@ -678,15 +678,15 @@ function RadialMenu() {
 		var bytesInt = parseInt(bytes);
 
 		if (bytesInt > Math.pow(1024, 3)) {
-			return (bytesInt / Math.pow(1024, 3)).toFixed(2) + " GB"
+			return (bytesInt / Math.pow(1024, 3)).toFixed(2) + " GB";
 		}
 		if (bytesInt > Math.pow(1024, 2)) {
-			return (bytesInt / Math.pow(1024, 2)).toFixed(2) + " MB"
+			return (bytesInt / Math.pow(1024, 2)).toFixed(2) + " MB";
 		}
 		if (bytesInt > Math.pow(1024, 1)) {
-			return Math.round(bytesInt / Math.pow(1024, 1)) + " KB"
+			return Math.round(bytesInt / Math.pow(1024, 1)) + " KB";
 		}
-		return bytes + " bytes"
+		return bytes + " bytes";
 	};
 
 	/**
@@ -1306,7 +1306,7 @@ function RadialMenu() {
 		}  else if (stateData.thumbnailWindowState === "closed") {
 			this.setMenu("radialMenu");
 		}
-	}
+	};
 }
 
 /**
