@@ -538,6 +538,7 @@ function SAGE2_interaction(wsio) {
 	* @param deadline {Object} object containing timing information
 	*/
 	this.stepMethod = function(deadline) {
+		console.log("stepMethod");
 		// if more than 10ms of freetime, go for it
 		if (deadline.timeRemaining() > 5) {
 			//if (this.gotRequest) {
@@ -582,6 +583,7 @@ function SAGE2_interaction(wsio) {
 			mediaCanvas.height = parseInt(res[1], 10);
 
 			var frame = this.captureMediaFrame();
+			console.log("captureMediaFrame");
 			this.pix  = frame;
 			var raw   = atob(frame.split(",")[1]); // base64 to string
 			this.wsio.emit('startNewMediaStream', {id: this.uniqueID + "|0",
@@ -637,13 +639,20 @@ function SAGE2_interaction(wsio) {
 	};
 
 function str2ab(str) {
-  var buf = new ArrayBuffer(str.length); // 2 bytes for each char
+  var buf = new ArrayBuffer(str.length);
   var bufView = new Uint8Array(buf);
   for (var i=0, strLen=str.length; i < strLen; i++) {
     bufView[i] = str.charCodeAt(i);
-    console.log("str2ab ",i, bufView[i]);
+    //console.log("str2ab ",i, bufView[i]);
   }
   return bufView;
+}
+
+function mytrace(str) {
+  console.log("mytrace ",typeof(str), str.length);
+  for (var i=0; i < 50; i++) {
+	console.log("trace ",i,str.charCodeAt(i));
+  }
 }
 
 /**
@@ -673,9 +682,9 @@ var _appendBuffers = function(buffer1, buffer2, buffer3, buffer4) {
   tmp.set(nulB, pos);
   pos = pos + 1;
   tmp.set(buffer4, pos);
-  for (i = 0; i<buffer1.byteLength + 2; i++) {
-    console.log("tmp ",i,tmp[i]);
-  }
+  //for (i = 0; i<buffer1.byteLength + 2; i++) {
+  //  console.log("tmp ",i,tmp[i]);
+  //}
   return tmp;
 };
 
@@ -688,6 +697,7 @@ var _appendBuffers = function(buffer1, buffer2, buffer3, buffer4) {
 		if (this.broadcasting) {
 			// var frame = this.captureMediaFrame();
 			var frame = this.pix;
+			console.log("pix ",typeof(frame));
 			var raw   = atob(frame.split(",")[1]);  // base64 to string
 
 			if (false) { //raw.length > this.chunk) {
@@ -710,9 +720,10 @@ var _appendBuffers = function(buffer1, buffer2, buffer3, buffer4) {
 			} else {
 				//this.wsio.emit('updateMediaStreamFrame', {id: this.uniqueID + "|0", state: {src: raw, type: "image/jpeg", encoding: "binary"}});
 				console.log("sendMediaStreamFrame ", this.uniqueID);
+				mytrace(raw);
 				var id = this.uniqueID+"|0";
 				console.log("id ",id.byteLength);
-                		var buffer = _appendBuffers(str2ab(id), str2ab("image/jpeg"), str2ab("Buffer"), new Uint8Array(raw));
+                		var buffer = _appendBuffers(str2ab(id), str2ab("image/jpeg"), str2ab("base64"), str2ab(raw));
 				this.wsio.emit('updateMediaStreamFrame', buffer);
 			}
 		}

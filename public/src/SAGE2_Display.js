@@ -95,6 +95,21 @@ function visibilityEvent(prefix) {
 	return 'visibilitychange';
 }
 
+function mytrace(str) {
+  console.log("mytrace ",typeof(str), str.length);
+  for (var i=0; i < 50; i++) {
+        console.log("trace ",i,str.charCodeAt(i));
+  }
+}
+
+function mytraceArr(arr) {
+  console.log("mytrace ",typeof(arr), arr.length);
+  for (var i=0; i < 50; i++) {
+        console.log("trace ",i,arr[i]);
+  }
+}
+
+
 /**
  * setupFocusHandlers
  *
@@ -257,8 +272,10 @@ function setupSlaveListeners(anWsio) {
                   data.state = {}
                   data.state.type = byteBufferToString(buf2);
                   var buf3 = buf2.subarray(data.state.type.length + 1);
+		  console.log("buf3 length ", buf3.length);
                   data.state.encoding = "base64";
                   var buf4 = buf3.subarray(data.state.encoding.length + 1, buf3.length);
+		  console.log("img length ", buf4.length);
                   data.state.src = btoa(String.fromCharCode.apply(null, buf4));
                 }
 		anWsio.emit('receivedMediaStreamFrame', {id: data.id});
@@ -518,10 +535,17 @@ function setupListeners(anWsio) {
                   data.state = {}
                   data.state.type = byteBufferToString(buf2);
                   var buf3 = buf2.subarray(data.state.type.length + 1);
+		  console.log("buf3 ",byteBufferToString(buf3));
                   data.state.encoding = "base64";
                   var buf4 = buf3.subarray(data.state.encoding.length + 1, buf3.length);
-                  data.state.src = btoa(String.fromCharCode.apply(null, buf4));
+	          mytraceArr(buf4);
+		  //if (byteBufferToString(buf3) == "Buffer") {
+                    data.state.src = btoa(String.fromCharCode.apply(null, buf4));
+		  //} else {
+                  //  data.state.src = String.fromCharCode.apply(null, buf4);
+                  //}
                 }
+	        mytrace(data.state.src);
 		anWsio.emit('receivedMediaStreamFrame', {id: data.id});
 		var app = applications[data.id];
 		if (app !== undefined && app !== null) {
