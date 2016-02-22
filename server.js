@@ -5122,14 +5122,14 @@ function pointerPressOnApplication(uniqueID, pointerX, pointerY, data, obj, loca
 	// pointer press on app window
 	if (btn === null) {
 		if (data.button === "right") {
-			var elemCtrl = SAGE2Items.widgets.list[obj.id + uniqueID + "_controls"];
+			var elemCtrl = SAGE2Items.widgets.list[obj.data.id + uniqueID + "_controls"];
 			if (!elemCtrl) {
-				broadcast('requestNewControl', {elemId: obj.id, user_id: uniqueID,
+				broadcast('requestNewControl', {elemId: obj.data.id, user_id: uniqueID,
 					user_label: sagePointers[uniqueID]? sagePointers[uniqueID].label : "", x: pointerX, y: pointerY, date: Date.now() });
 			} else if (elemCtrl.show === false) {
 				showControl(elemCtrl, uniqueID, pointerX, pointerY);
 				addEventToUserLog(uniqueID, {type: "widgetMenu", data: {action: "open", application:
-					{id: obj.id, type: obj.data.application}}, time: Date.now()});
+					{id: obj.data.id, type: obj.data.application}}, time: Date.now()});
 			} else {
 				moveControlToPointer(elemCtrl, uniqueID, pointerX, pointerY);
 			}
@@ -5471,8 +5471,8 @@ function updatePointerPosition(uniqueID, pointerX, pointerY, data) {
 			}
 			showOrHideWidgetLinks({uniqueID: uniqueID, item: obj, user_color: color, show: true});
 		} else {
-			var appId = obj.id;
-			if (obj.data !== undefined && obj.data !== null && obj.data.appId !== undefined) {
+			var appId = obj.data.id;
+			if (obj.data.appId !== undefined && obj.data.appId !== null) {
 				appId = obj.data.appId;
 			}
 			if (appUserColors[appId] !== color) {
@@ -7444,8 +7444,8 @@ function updateStickyItemAttachment(backgroundItem, appId){
 
 function showOrHideWidgetLinks(data) {
 	var obj = data.item;
-	var appId = obj.id;
-	if (obj.data !== undefined && obj.data !== null && obj.data.appId !== undefined) {
+	var appId = obj.data.id;
+	if (obj.data.appId !== undefined && obj.data.appId !== null) {
 		appId = obj.data.appId;
 	}
 	var app = SAGE2Items.applications.list[appId];

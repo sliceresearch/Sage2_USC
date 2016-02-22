@@ -30,6 +30,7 @@ function Interaction(config) {
 	this.selectedMoveControl = null;
 	this.previousInteractionItem = null;
 	this.controlLock     = null;
+	this.clickInProgress = null;
 	this.hoverControlItem = null;
 	this.hoverCornerItem = null;
 	this.selectOffsetX   = 0;
