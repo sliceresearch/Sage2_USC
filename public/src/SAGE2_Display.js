@@ -241,26 +241,35 @@ function slaveInit(id) {
 }
 
 function setupSlaveListeners(anWsio) {
-	anWsio.on('updateMediaStreamFrame', function(dataOrBuffer) {
-		console.log("SCALE2: updateMediaStreamFrame");
+	anWsio.on('updateMediaStreamFrame', function(data) { updateMediaStreamFrame(anWsio,data); });
+	anWsio.on('updateMediaBlockStreamFrame', function(data) { updateMediaBlockStreamFrame(anWsio,data); });
+}
+
+function updateMediaStreamFrame(anWsio,dataOrBuffer) {
                 // NB: Cloned code
                 var data;
                 if (dataOrBuffer.id !== undefined) {
-                  console.log("display.UpdateMediaStreamFrame: parameter is record");
+                  //console.log("display.UpdateMediaStreamFrame: parameter is record");
                   data = dataOrBuffer;
                 } else {
-                  console.log("display.UpdateMediaStreamFrame: parameter is Buffer");
+                  //console.log("display.UpdateMediaStreamFrame: parameter is Buffer");
                   data = {}
-                  // buffer: id, state-type, state-encoding, state-src
-                  data.id = byteBufferToString(dataOrBuffer);
-                  var buf2 = dataOrBuffer.slice(data.id.length + 1, dataOrBuffer.length);
                   data.state = {}
+                  data.id = byteBufferToString(dataOrBuffer);
+                  // buffer: id, state-type, state-encoding, state-src
+                  var buf2 = dataOrBuffer.slice(data.id.length + 1, dataOrBuffer.length);
                   data.state.type = byteBufferToString(buf2);
                   var buf3 = buf2.subarray(data.state.type.length + 1);
+		  var given_encoding = byteBufferToString(buf3);
+                  var buf4 = buf3.subarray(given_encoding.length + 1, buf3.length);
                   data.state.encoding = "base64";
-                  var buf4 = buf3.subarray(data.state.encoding.length + 1, buf3.length);
                   data.state.src = btoa(String.fromCharCode.apply(null, buf4));
+		  //if (buf3 === "plain") {
+		  //  console.log("non-base64");
+                  //  data.state.encoding = "string";
+		  //}
                 }
+		//console.log("updateMediaStreamFrame ",data);
 		anWsio.emit('receivedMediaStreamFrame', {id: data.id});
 		var app = applications[data.id];
 		if (app !== undefined && app !== null) {
@@ -274,9 +283,9 @@ function setupSlaveListeners(anWsio) {
 				app.SAGE2Load(data.state, new Date(data.date));
 			}
 		}
-	});
+};
 
-	anWsio.on('updateMediaBlockStreamFrame', function(data) {
+function updateMediaBlockStreamFrame(anWsio,data) {
 		var appId     = byteBufferToString(data);
 		var blockIdx  = byteBufferToInt(data.subarray(appId.length + 1, appId.length + 3));
 		var date      = byteBufferToInt(data.subarray(appId.length + 3, appId.length + 11));
@@ -289,8 +298,7 @@ function setupSlaveListeners(anWsio) {
 				anWsio.emit('receivedMediaBlockStreamFrame', {id: appId});
 			}
 		}
-	});
-}
+};
 
 function setupListeners(anWsio) {
 	anWsio.on('initialize', function(data) {
@@ -503,56 +511,10 @@ function setupListeners(anWsio) {
 		}
 	});
 
-	anWsio.on('updateMediaStreamFrame', function(dataOrBuffer) {
-                // NB: Cloned code
-                var data;
-                if (dataOrBuffer.id !== undefined) {
-                  console.log("display.UpdateMediaStreamFrame: parameter is record");
-                  data = dataOrBuffer;
-                } else {
-                  console.log("display.UpdateMediaStreamFrame: parameter is Buffer");
-                  data = {}
-                  // buffer: id, state-type, state-encoding, state-src
-                  data.id = byteBufferToString(dataOrBuffer);
-                  var buf2 = dataOrBuffer.slice(data.id.length + 1, dataOrBuffer.length);
-                  data.state = {}
-                  data.state.type = byteBufferToString(buf2);
-                  var buf3 = buf2.subarray(data.state.type.length + 1);
-                  data.state.encoding = "base64";
-                  var buf4 = buf3.subarray(data.state.encoding.length + 1, buf3.length);
-                  data.state.src = btoa(String.fromCharCode.apply(null, buf4));
-                }
-		anWsio.emit('receivedMediaStreamFrame', {id: data.id});
-		var app = applications[data.id];
-		if (app !== undefined && app !== null) {
-			app.SAGE2Load(data.state, new Date(data.date));
-		}
-		// update clones in data-sharing portals
-		var key;
-		for (key in dataSharingPortals) {
-			app = applications[data.id + "_" + key];
-			if (app !== undefined && app !== null) {
-				app.SAGE2Load(data.state, new Date(data.date));
-			}
-		}
-	});
 
+	anWsio.on('updateMediaBlockStreamFrame', function(data) { updateMediaBlockStreamFrame(anWsio,data); });
 
-	anWsio.on('updateMediaBlockStreamFrame', function(data) {
-		var appId     = byteBufferToString(data);
-		var blockIdx  = byteBufferToInt(data.subarray(appId.length + 1, appId.length + 3));
-		var date      = byteBufferToInt(data.subarray(appId.length + 3, appId.length + 11));
-		var yuvBuffer = data.subarray(appId.length + 11, data.length);
-		if (applications[appId] !== undefined && applications[appId] !== null) {
-			applications[appId].textureData(blockIdx, yuvBuffer);
-			if (applications[appId].receivedBlocks.every(isTrue) === true) {
-				applications[appId].refresh(new Date(date));
-				applications[appId].setValidBlocksFalse();
-				anWsio.emit('receivedMediaBlockStreamFrame', {id: appId});
-			}
-		}
-	});
-
+	anWsio.on('updateMediaStreamFrame', function(data) { updateMediaStreamFrame(anWsio,data); });
 
 	anWsio.on('updateVideoFrame', function(data) {
 		var appId     = byteBufferToString(data);
