@@ -33,7 +33,7 @@ function SAGE2_interaction(wsio) {
 	this.mediaStream = null;
 	this.mediaVideo  = null;
 	this.mediaResolution = 2;
-	this.mediaQuality    = 9;
+	this.mediaQuality    = 7;
 	this.chromeDesktopCaptureEnabled = false;
 	this.broadcasting  = false;
 	this.gotRequest    = false;
@@ -155,6 +155,56 @@ function SAGE2_interaction(wsio) {
 			}
 			this.array_xhr.length = 0;
 		}
+	};
+
+	this.str2ab = function(str) {
+	  var buf = new ArrayBuffer(str.length);
+	  var bufView = new Uint8Array(buf);
+	  for (var i=0, strLen=str.length; i < strLen; i++) {
+	    bufView[i] = str.charCodeAt(i);
+	    //console.log("str2ab ",i, bufView[i]);
+	  }
+	  return bufView;
+	};
+
+	this.buf = null;
+	this.bufView = null;
+
+	this.str2abc = function(str) {
+	  if (this.bufView != null) {
+		return this.bufView;
+	  }
+	  var buf = new ArrayBuffer(str.length);
+	  var bufView = new Uint8Array(buf);
+	  for (var i=0, strLen=str.length; i < strLen; i++) {
+	    bufView[i] = str.charCodeAt(i);
+	    //console.log("str2ab ",i, bufView[i]);
+	  }
+	  this.buf = buf;
+	  this.bufView = bufView;
+	  return bufView;
+	};
+
+	this.appendBuffers = function(buffer1, buffer2, buffer3, buffer4) {
+	  //console.log("appendBuffers ",buffer1.byteLength, buffer2.byteLength, buffer3.byteLength, buffer4.byteLength);
+	  var nulB = new Uint8Array([0]);
+	  var tmp = new Uint8Array(buffer1.byteLength + buffer2.byteLength + buffer3.byteLength + buffer4.byteLength + 3);
+	  var pos = 0;
+	  tmp.set(buffer1, pos);
+	  var i = 0;
+	  pos = pos + buffer1.byteLength;
+	  tmp.set(nulB, pos);
+	  pos = pos + 1;
+	  tmp.set(buffer2, pos);
+	  pos = pos + buffer2.byteLength;
+	  tmp.set(nulB, pos);
+	  pos = pos + 1;
+	  tmp.set(buffer3, pos);
+	  pos = pos + buffer3.byteLength;
+	  tmp.set(nulB, pos);
+	  pos = pos + 1;
+	  tmp.set(buffer4, pos);
+	  return tmp;
 	};
 
 	/**
@@ -538,11 +588,11 @@ function SAGE2_interaction(wsio) {
 	*/
 	this.stepMethod = function(deadline) {
 		// if more than 10ms of freetime, go for it
-		if (deadline.timeRemaining() > 10) {
-			if (this.gotRequest) {
+		if (true) { // deadline.timeRemaining() > 5) {
+			//if (this.gotRequest) {
 				this.pix = this.captureMediaFrame();
 				this.sendMediaStreamFrame();
-			}
+			//}
 		}
 		// and request again
 		this.req = requestIdleCallback(this.step);
@@ -645,8 +695,9 @@ function SAGE2_interaction(wsio) {
 			// var frame = this.captureMediaFrame();
 			var frame = this.pix;
 			var raw   = atob(frame.split(",")[1]);  // base64 to string
+			///////////////var raw   = frame.split(",")[1];
 
-			if (raw.length > this.chunk) {
+			if (false) {// raw.length > this.chunk) {
 				var _this   = this;
 				var nchunks = Math.ceil(raw.length / this.chunk);
 
@@ -664,8 +715,14 @@ function SAGE2_interaction(wsio) {
 				}
 				this.gotRequest = false;
 			} else {
-				this.wsio.emit('updateMediaStreamFrame', {id: this.uniqueID + "|0", state:
-					{src: raw, type: "image/jpeg", encoding: "binary"}});
+				//this.wsio.emit('updateMediaStreamFrame', {id: this.uniqueID + "|0", state:
+				//	{src: raw, type: "image/jpeg", encoding: "binary"}});
+                                //console.log("sendMediaStreamFrame ", this.uniqueID);
+                                var id = this.uniqueID+"|0";
+                                //console.log("id ",id.byteLength);
+                                var buffer = this.appendBuffers(this.str2ab(id), this.str2ab("image/jpeg"), this.str2ab("base64"), this.str2ab(raw));
+                                ///////var buffer = this.appendBuffers(this.str2ab(id), this.str2ab("image/jpeg"), this.str2ab("plain"), this.str2ab(frame));
+                                this.wsio.emit('updateMediaStreamFrame', buffer);
 			}
 		}
 	};
