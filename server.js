@@ -2683,7 +2683,9 @@ function wsRequestNextRemoteFrame(wsio, data) {
 	} else {
 		originId = data.id;
 	}
-	var remote_id = config.host + ":" + config.secure_port + "|" + data.id;
+	// Luc here: changing to unsecure port since websocket communication to display is unsecure
+	// var remote_id = config.host + ":" + config.secure_port + "|" + data.id;
+	var remote_id = config.host + ":" + config.port + "|" + data.id;
 
 	if (SAGE2Items.applications.list.hasOwnProperty(originId)) {
 		var stream = SAGE2Items.applications.list[originId];
