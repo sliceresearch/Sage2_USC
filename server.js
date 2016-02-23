@@ -1257,6 +1257,7 @@ function wsStopMediaStream(wsio, data) {
 function wsReceivedMediaStreamFrame(wsio, data) {
         //console.log("ReceivedMediaStreamFrame ", data);
 	SAGE2Items.renderSync[data.id].clients[wsio.id].readyForNextFrame = true;
+
 	if (allTrueDict(SAGE2Items.renderSync[data.id].clients, "readyForNextFrame")) {
 		SAGE2Items.renderSync[data.id].frames = SAGE2Items.renderSync[data.id].frames + 1;
 		var i;
@@ -1391,9 +1392,8 @@ function wsStopMediaBlockStream(wsio, data) {
 
 function wsReceivedMediaBlockStreamFrame(wsio, data) {
 	SAGE2Items.renderSync[data.id].clients[wsio.id].readyForNextFrame = true;
-	SAGE2Items.renderSync[data.id].frames = SAGE2Items.renderSync[data.id].frames + 1;
-
 	if (allTrueDict(SAGE2Items.renderSync[data.id].clients, "readyForNextFrame")) {
+		SAGE2Items.renderSync[data.id].frames = SAGE2Items.renderSync[data.id].frames + 1;
 		SAGE2Items.renderSync[data.id].sendNextFrame = true;
 		var i;
 		var key;
