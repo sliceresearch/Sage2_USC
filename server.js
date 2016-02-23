@@ -1105,6 +1105,8 @@ function wsStartNewMediaStream(wsio, data) {
 			addEventToUserLog(wsio.id, {type: "mediaStreamStart", data: eLogData, time: Date.now()});
 		});
 
+        SAGE2Items.renderSync[data.id].sendNextFrame = true;
+
 	if (masterServer!==undefined && masterServer!=null) {
 		console.log("master - start new media stream");
 		masterServer.emit('startNewMediaStream', data);
@@ -1147,6 +1149,13 @@ function wsUpdateMediaStreamFrame(wsio, dataOrBuffer) {
           data.id = byteBufferToString(dataOrBuffer);
         }
 	//console.log("wsUpdateMediaStreamFrame ", data.id);
+
+        if (!SAGE2Items.renderSync[data.id].sendNextFrame) {
+                console.log("drop frame");
+                return;
+        } else {
+                //console.log("relay frame");
+        }
 
 	// Reset the 'ready' flag for every display client
 	for (key in SAGE2Items.renderSync[data.id].clients) {
@@ -1198,8 +1207,9 @@ function wsUpdateMediaStreamFrame(wsio, dataOrBuffer) {
 			offsetX, offsetY, config.resolution.width, config.resolution.height)) {
 			// send the full frame to be displayed
 			SAGE2Items.renderSync[data.id].clients[key].wsio.emit('updateMediaStreamFrame', dataOrBuffer);
-		} else {
-			// otherwise send a dummy small image
+		}
+                else {
+		        // otherwise send a dummy small image
 			SAGE2Items.renderSync[data.id].clients[key].wsio.emit('updateMediaStreamFrame', data_copy);
 		}
 	}
@@ -1247,8 +1257,8 @@ function wsStopMediaStream(wsio, data) {
 function wsReceivedMediaStreamFrame(wsio, data) {
         //console.log("ReceivedMediaStreamFrame ", data);
 	SAGE2Items.renderSync[data.id].clients[wsio.id].readyForNextFrame = true;
-        SAGE2Items.renderSync[data.id].frames = SAGE2Items.renderSync[data.id].frames + 1;
 	if (allTrueDict(SAGE2Items.renderSync[data.id].clients, "readyForNextFrame")) {
+		SAGE2Items.renderSync[data.id].frames = SAGE2Items.renderSync[data.id].frames + 1;
 		var i;
 		var key;
 		for (key in SAGE2Items.renderSync[data.id].clients) {
@@ -1964,16 +1974,20 @@ function listApplications() {
 	for (key in SAGE2Items.applications.list) {
 		var app = SAGE2Items.applications.list[key];
 		var fps = "";
+		var frames = 0;
+		var elapsed_ms = 0;
 		var renderSync = SAGE2Items.renderSync[app.id];
 		if (renderSync !== undefined && renderSync !== null && renderSync.frames !== null && renderSync.frames !== undefined) {
+			elapsed_ms = Date.now() - renderSync.start;
+			frames = SAGE2Items.renderSync[app.id].frames;
 			fps = SAGE2Items.renderSync[app.id].frames * 1000 / (Date.now() - renderSync.start);
 		}
-		console.log(sprint("%2d: %s %s [%dx%d +%d+%d] %s (v%s) by %s fps %s",
+		console.log(sprint("%2d: %s %s [%dx%d +%d+%d] %s (v%s) by %s elapsed %d frames %d fps %s",
 			i, app.id, app.application,
 			app.width, app.height,
 			app.left,  app.top,
 			app.title, app.metadata.version,
-			app.metadata.author, fps));
+			app.metadata.author, elapsed_ms, frames, fps));
 		i++;
 	}
 }
