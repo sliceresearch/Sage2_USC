@@ -11,7 +11,7 @@
 	"load": {
 		"mapType":   "hybrid",
 		"zoomLevel": 8,
-		"center":    {"lat": 41.850033, "lng": -87.6500523},
+		"center":	{"lat": -37.8070901, "lng": 144.9627808},
 		"layer":     {"w": false, "t": false}
 	},
 	"title": "Google Maps",
