@@ -27,11 +27,10 @@ var articulate_ui = SAGE2_App.extend( {
 		this.ctx = this.element.getContext('2d');
 
 
-		//
+		//debug
 		if( isMaster ){
-			//console.log("I'm the master");
-			//this.launchVis();
-			this.readExample(); 
+			//this.readExample(); 
+			this.contactArticulateHub("Is there any way to see the crimetype that tend to be committed in restaurants?");
 		}
 
 		this.commands = [];
@@ -167,8 +166,8 @@ var articulate_ui = SAGE2_App.extend( {
 		console.log("sending msg: " , msg);
 
 		msg = msg.replace(" ", "%"); 
-		url = "https://articulate.evl.uic.edu:8443/smarthub/webapi/myresource/query/";//show%20me%20theft%20in%20loop"
-		url = url+msg; 
+		url = "https://articulate.evl.uic.edu:8443/smarthub/webapi/myresource/query/show%20me%20theft%20in%20loop";
+		//url = url+msg; 
 
 		this.callbackFunc = this.callback.bind(this);
 
@@ -214,22 +213,26 @@ var articulate_ui = SAGE2_App.extend( {
 			console.log("GOT THE RESPONSE: ");
 			console.log(specObj);
 
-			handleResponse(specObj); 
+			this.handleResponse(specObj); 
 			//then broadcast the results to display nodes!
 			//broadcast( "handleResponse", {response:"responseTest"} ); 
 		},
 
-	handleResponse: function(specObj){
-		console.log(data.response);
+	handleResponse: function(specificationObj){
+		// console.log(data.response);
 
 		applicationType ="custom",
 		application = "apps/d3plus_visapp", 	
 		msg = "this is a message from articulate_ui",
 
 
-		type = specificationObj.plotType.string.toLowerCase();
-		x = specificationObj.xAxis.string.toLowerCase();
-		y = specificationObj.yAxis.string.toLowerCase();
+		//type = specificationObj.plotType.string.toLowerCase();
+		type = specificationObj["plot-type"].string.toLowerCase();
+		x = specificationObj["x-axis"].string.toLowerCase();
+		y = specificationObj["y-axis"].string.toLowerCase();
+
+		// x = specificationObj.xAxis.string.toLowerCase();
+		// y = specificationObj.yAxis.string.toLowerCase();
 		if( specificationObj.id )
 			id = specificationObj.id.string.toLowerCase();
 		else
@@ -237,8 +240,8 @@ var articulate_ui = SAGE2_App.extend( {
 		data = []; 
 
 		console.log('type' + type + "x " + x + " y " + y);
-		for(i = 0; i < specificationObj.dataQueryResult.length; i++){
-				line = specificationObj.dataQueryResult[i].string;
+		for(i = 0; i < specificationObj["data-query-result"].length; i++){
+				line = specificationObj["data-query-result"][i].string;
 				console.log(line);
 				line = line.replace("(", "#");
 				line = line.replace(";", "#");
@@ -255,7 +258,7 @@ var articulate_ui = SAGE2_App.extend( {
 				//obj = {"year": 2010+i, "total_crime": 300, "id": 2010+i};
 				obj[tokens[1]] = parseInt(tokens[2]);
 				obj[tokens[5]] = parseInt(tokens[6]);
-				obj["id"] = parseInt(tokens[6]);
+				obj["id"] = parseInt(tokens[6]);//hack for now
 				//obj["total_crime"] = 300;
 				data.push(obj);
 				console.log(obj);
@@ -271,6 +274,7 @@ var articulate_ui = SAGE2_App.extend( {
 			id: "id",
 			data: data
 		};
+
 
 		this.launchNewChild(applicationType, application, initState, msg);//defined in sage2 app
 	},
@@ -335,30 +339,30 @@ var articulate_ui = SAGE2_App.extend( {
 
 		specificationObj = 
 		{
-			"plotType":
+			"plot-type":
 			{
 				"valueType":"STRING",
 				"string":"BAR",
 				"chars":"BAR"
 			},
-			"xAxis":
+			"x-axis":
 			{
 				"valueType":"STRING",
 				"string":"year",
 				"chars":"year"
 			},
-			"yAxis":
+			"y-axis":
 			{
 				"valueType":"STRING",
 				"string":"TOTAL_CRIME",
 				"chars":"TOTAL_CRIME"
 			},
-			"dataQuery":
+			"data-query":
 			{
 				"valueType":"STRING",
 				"string":"SELECT count(*) as TOTAL_CRIME,`year` FROM chicagocrime WHERE `crimetype`='theft' AND `neighborhood`='river-north' GROUP BY year","chars":"SELECT count(*) as TOTAL_CRIME,`year` FROM chicagocrime WHERE `crimetype`='theft' AND `neighborhood`='river-north' GROUP BY year"
 			},
-			"dataQueryResult":
+			"data-query-result":
 			[
 				{
 					"valueType":"STRING",
@@ -388,18 +392,18 @@ var articulate_ui = SAGE2_App.extend( {
 			]
 		};
 
-	type = specificationObj.plotType.string.toLowerCase();
-	x = specificationObj.xAxis.string.toLowerCase();
-	y = specificationObj.yAxis.string.toLowerCase();
-	if( specificationObj.id )
-		id = specificationObj.id.string.toLowerCase();
+	type = specificationObj["plot-type"].string.toLowerCase();
+	x = specificationObj["x-axis"].string.toLowerCase();
+	y = specificationObj["y-axis"].string.toLowerCase();
+	if( specificationObj["id"] )
+		id = specificationObj["id"].string.toLowerCase();
 	else
 		id = null;
 	data = []; 
 
 	console.log('type' + type + "x " + x + " y " + y);
-	for(i = 0; i < specificationObj.dataQueryResult.length; i++){
-			line = specificationObj.dataQueryResult[i].string;
+	for(i = 0; i < specificationObj["data-query-result"].length; i++){
+			line = specificationObj["data-query-result"][i].string;
 			console.log(line);
 			line = line.replace("(", "#");
 			line = line.replace(";", "#");
