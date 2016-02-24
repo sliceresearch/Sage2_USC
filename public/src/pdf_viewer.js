@@ -257,6 +257,14 @@ PDFJS.maxCanvasPixels = 67108864; // 8k2
 		entry.params = [ "serverDate", "last" ];
 		entries.push(entry);
 
+		entry = {};
+		entry.description = "Jump To: ";
+		entry.func = "changeThePage";
+		entry.params = [ "serverDate", "clientInput" ];
+		entry.inputField = true;
+		entry.inputFieldSize = 3;
+		entries.push(entry);
+
 		return entries;
 	},
 
@@ -266,30 +274,41 @@ PDFJS.maxCanvasPixels = 67108864; // 8k2
 	*/
 	changeThePage: function( ctpParams ) {
 		var page = ctpParams[1];
-
-		if(page === "first") {
-			if (this.state.page === 1) {
-				return;
-			}
-			this.state.page = 1;
+		var pageInt = parseInt(page);
+		//if the passed value is a valid int within page range.
+		if(
+			pageInt !== NaN
+			&& pageInt > 0
+			&& pageInt <= this.pdfDoc.numPages
+			) {
+			this.state.page = pageInt;
 		}
-		else if(page === "previous") {
-			if (this.state.page <= 1) {
-				return;
+		//else check for these word options
+		else {
+			if(page === "first") {
+				if (this.state.page === 1) {
+					return;
+				}
+				this.state.page = 1;
 			}
-			this.state.page = this.state.page - 1;
-		}
-		else if(page === "next") {
-			if (this.state.page >= this.pdfDoc.numPages) {
-				return;
+			else if(page === "previous") {
+				if (this.state.page <= 1) {
+					return;
+				}
+				this.state.page = this.state.page - 1;
 			}
-			this.state.page = this.state.page + 1;
-		}
-		else if(page === "last") {
-			if (this.state.page === this.pdfDoc.numPages) {
-				return;
+			else if(page === "next") {
+				if (this.state.page >= this.pdfDoc.numPages) {
+					return;
+				}
+				this.state.page = this.state.page + 1;
 			}
-			this.state.page = this.pdfDoc.numPages;
+			else if(page === "last") {
+				if (this.state.page === this.pdfDoc.numPages) {
+					return;
+				}
+				this.state.page = this.pdfDoc.numPages;
+			}
 		}
 		this.refresh( new Date(ctpParams[0]) );
 	},

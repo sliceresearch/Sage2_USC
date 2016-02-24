@@ -1755,7 +1755,7 @@ function setupRmbContextMenuDiv() {
 				var data = {};
 				data.x = pointerX;
 				data.y = pointerY;
-				console.dir(data);
+				//console.dir(data);
 				wsio.emit('utdRequestRmbContextMenu', data );
 
 				showRmbContextMenuDiv(e.clientX, e.clientY);
@@ -1798,15 +1798,36 @@ function setRmbContextMenuEntries(entriesToAdd, app) {
 
 	for (var i = 0; i < entriesToAdd.length; i++) {
 		if(entriesToAdd[i].func !== undefined && entriesToAdd[i].func !== null) {
+
 			entriesToAdd[i].buttonEffect = function(firstParam) {
+				//double check the input field status for replacement on param
+				if(this.inputField === true) {
+					var inputField = document.getElementById(this.inputFieldId);
+					if( inputField.value.length <= 0) { return; }
+					if( this.previousReplacedIndex !== false) {
+						this.params[this.previousReplacedIndex] = inputField.value;
+					}
+					else {
+						for(var i = 0; i < this.params.length; i++) {
+							if(this.params[i] == "clientInput") {
+								this.params[i] = inputField.value;
+								this.previousReplacedIndex = i;
+							}
+						}
+					}
+				}
+				//create data to send, then emit
 				var data = {};
 					data.app = this.app;
 					data.func = this.func;
 					data.params = this.params;
 				wsio.emit('utdCallFunctionOnApp', data);
+				//console.dir( this );
+				//console.dir( data );
 			}
-		}
-	}
+
+		} //end if the button should send something
+	} //end adding a send function to each menu entry
 
 	var closeEntry = {};
 		closeEntry.description = "Cancel";
@@ -1819,21 +1840,40 @@ function setRmbContextMenuEntries(entriesToAdd, app) {
 	for (var i = 0; i < entriesToAdd.length; i++) {
 		workingDiv = document.createElement('div');
 		workingDiv.id = 'rmbContextMenuEntry' + i;
-		workingDiv.innerHTML = entriesToAdd[i].description;
+		workingDiv.style.background = "#FFF8E1";
+		workingDiv.innerHTML = "&nbsp&nbsp&nbsp" + entriesToAdd[i].description + "&nbsp&nbsp&nbsp";
+		//highlighting effect on mouseover
 		workingDiv.addEventListener( 'mouseover', function() {
 			this.style.background = "lightgray";
 		} );
 		workingDiv.addEventListener( 'mouseout', function() {
-			this.style.background = "white";
+			this.style.background = "#FFF8E1";
 		} );
+		//click effect
 		workingDiv.addEventListener( 'mousedown', entriesToAdd[i].buttonEffect );
 		workingDiv.func = entriesToAdd[i].func;
 		workingDiv.params = entriesToAdd[i].params;
 		workingDiv.app = app;
 
+		//add input field if app says to.
+		workingDiv.inputField = false;
+		if( entriesToAdd[i].inputField === true ) {
+			workingDiv.inputField = true;
+			var inputField = document.createElement('input');
+			inputField.id = workingDiv.id + "Input";
+			inputField.value = "";
+			if( entriesToAdd[i].inputFieldSize ) {
+				inputField.size = entriesToAdd[i].inputFieldSize; //how many char size to add
+			}else { inputField.size = 5; }
+			workingDiv.appendChild( inputField );
+			workingDiv.innerHTML += "&nbsp&nbsp&nbsp";
+			workingDiv.inputFieldId = inputField.id;
+			workingDiv.previousReplacedIndex = false;
+		}
+
 		if (i === entriesToAdd.length - 1) {
 			rmbDiv.appendChild( document.createElement('hr') );
 		}
 		rmbDiv.appendChild( workingDiv );
-	}
-}
+	} //end for each entry
+} //end setRmbContextMenuEntries
