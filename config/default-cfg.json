@@ -3,7 +3,7 @@
 */
 {
 	name: "mysite",
-	host: "aurisano-macbook",
+	host: "localhost",
 	port: 9292,
 	index_port: 9090,
 	background: {

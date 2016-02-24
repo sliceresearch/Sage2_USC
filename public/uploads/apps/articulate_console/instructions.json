@@ -1,0 +1,18 @@
+{
+	"main_script": "articulate_console.js",
+	"icon": "articulate_console.png",
+	"width": 800,
+	"height": 600,
+	"resize": "free",
+	"dependencies": [
+	],
+	"load": {
+		"value": 4
+	},
+	"title": "articulate_console",
+	"version": "1.0.0",
+	"description": "SAGE2 application articulate_console",
+	"keywords": [ "sage2", "articulate_console" ],
+	"author": "Krupa Patel <kpate216@uic.edu>",
+	"license": "SAGE2-Software-License"
+}
