@@ -166,7 +166,7 @@ var articulate_ui = SAGE2_App.extend( {
 		console.log("sending msg: " , msg);
 
 		msg = msg.replace(" ", "%"); 
-		url = "https://articulate.evl.uic.edu:8443/smarthub/webapi/myresource/query/show%20me%20theft%20in%20loop";
+		url = "https://articulate.evl.uic.edu:8443/smarthub/webapi/myresource/query/can%we%look%at%total%crime%by%locationtype%in%2013%for%UIC";
 		//url = url+msg; 
 
 		this.callbackFunc = this.callback.bind(this);
@@ -239,7 +239,7 @@ var articulate_ui = SAGE2_App.extend( {
 			id = null;
 		data = []; 
 
-		console.log('type' + type + "x " + x + " y " + y);
+		//console.log('type' + type + "x " + x + " y " + y);
 		for(i = 0; i < specificationObj["data-query-result"].length; i++){
 				line = specificationObj["data-query-result"][i].string;
 				console.log(line);
@@ -251,9 +251,9 @@ var articulate_ui = SAGE2_App.extend( {
 				line = line.replace(";", "#");
 				line = line.replace(")", "#");
 				line = line.replace(",", "#");
-				console.log(line);
+				//console.log(line);
 				tokens = line.split("#");
-				console.log(tokens);
+				//console.log(tokens);
 				obj = new Object();
 				//obj = {"year": 2010+i, "total_crime": 300, "id": 2010+i};
 				obj[tokens[1]] = parseInt(tokens[2]);
@@ -261,9 +261,10 @@ var articulate_ui = SAGE2_App.extend( {
 				obj["id"] = parseInt(tokens[6]);//hack for now
 				//obj["total_crime"] = 300;
 				data.push(obj);
+				console.log("HERE IS OBJECT " + i + " PASSED TO D3PLUS")
 				console.log(obj);
 		}
-
+		console.log("HERE IS DATA PASSED TO D3PLUS")
 		console.log(data);
 
 		initState = {  // these values will load on child app init
