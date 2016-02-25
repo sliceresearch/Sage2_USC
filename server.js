@@ -713,6 +713,9 @@ function setupListeners(wsio) {
 	wsio.on('utdCallFunctionOnApp', 				wsUtdCallFunctionOnApp)
 	//display to ui (dtu)
 	wsio.on('dtuRmbContextMenuContents', 			wsDtuRmbContextMenuContents);
+	//generic message passing for data requests or for specific communications.
+	//might eventually break this up into individual ws functions
+	wsio.on('csdMessage', 						wsCsdMessage);
 }
 
 function initializeExistingControls(wsio) {
@@ -3499,7 +3502,8 @@ function loadConfiguration() {
 	return userConfig;
 }
 
-
+/**
+Commenting out old version because there is a need to access count.
 var getUniqueAppId = (function() {
 	var count = 0;
 	return function(param) {
@@ -3513,6 +3517,18 @@ var getUniqueAppId = (function() {
 		return id;
 	};
 })();
+*/
+var getUniqueAppId = function(param) {
+	// reset the counter
+	if (param && param === -1) {
+		getUniqueAppId.count = 0;
+		return;
+	}
+	var id = "app_" + getUniqueAppId.count.toString();
+	getUniqueAppId.count++;
+	return id;
+};
+getUniqueAppId.count = 0;
 
 var getNewUserId = (function() {
 	var count = 0;
@@ -7246,8 +7262,11 @@ function wsUtdCallFunctionOnApp(wsio, data) {
 	data.data = "";
 	//go through params and convert server values
 	for(var i = 0; i < data.params.length; i++) {
-		if(data.params[0] === "serverDate") {
-			data.params[0] = Date.now();
+		if (data.params[i] === "serverDate") {
+			data.params[i] = Date.now();
+		}
+		else if (data.params[i] === "clientId") {
+			data.params[i] = wsio.id;
 		}
 	}
 	//some functions take a direct data value. Assuming that if array is size 1 send value directly.
@@ -7278,4 +7297,125 @@ function wsDtuRmbContextMenuContents(wsio, data) {
 			clients[i].emit('dtuRmbContextMenuContents', data);
 		}
 	}
+}
+
+
+/**
+
+
+data should have the format
+{
+	type: string, see below for more details
+	
+	[ additional fields required by type ]
+}
+
+
+types:
+	getPathOfApp
+		appName: 	field must be name of application
+
+	launchAppWithValues
+		appName: 	field must be name of application
+		func: 		what function to call inorder to update
+		params: 	what to pass the specified function
+
+
+*/
+function wsCsdMessage(wsio, data) {
+
+	console.log("erase me, received csd message");
+
+	switch(data.type) {
+		case "getPathOfApp":
+			//currently just used for testing
+			console.log("erase me," + csdGetPathOfApp(data.appName));
+			break;
+		case "launchAppWithValues":
+			csdLaunchAppWithValues(wsio, data);
+		default:
+			console.log("");
+			break;
+	}
+	if(data.type === "getPathOfApp") {
+		console.log("erase me, csd message getPathOfApp");
+
+	}
+
+
+}
+
+/**
+Used to get the full path of an app.
+*/
+function csdGetPathOfApp (appName) {
+	var apps = getApplications();
+	for(var i = 0; i < apps.length; i++) {
+		if( 
+			apps[i].exif.FileName.indexOf( appName ) === 0
+			|| apps[i].id.indexOf( appName ) !== -1 
+		) {
+			return apps[i].id;
+		} //end if this app contains the specified name
+	}//end for each application available.
+	return null;
+}
+
+/**
+Will launch app, then have a time out to pass additional values.
+*/
+function csdLaunchAppWithValues(wsio,data) {
+	//get path of app
+	var fullpath = csdGetPathOfApp(data.appName);
+	//if no path, then invalid app
+	if (fullpath === null ){
+		console.log("csd ERROR could ont find path of app:" + appName);
+		return;
+	}
+	//Prep the load data.
+	var appLoadData = { };
+		appLoadData.application = fullpath;
+		appLoadData.user = wsio.id;
+	//get the length, which is what the new id should be
+	//var whatTheNewAppIdShouldBe = "app_" + SAGE2Items.applications.numItems;
+	// var whatTheNewAppIdShouldBe = 0;
+	// var tempAppRef = SAGE2Items.applications.list["app_"+whatTheNewAppIdShouldBe];
+	// while(tempAppRef !== null && tempAppRef !== undefined){
+	// 	whatTheNewAppIdShouldBe++;
+	// 	tempAppRef = SAGE2Items.applications.list["app_"+whatTheNewAppIdShouldBe];
+	// }
+	// whatTheNewAppIdShouldBe = "app_" + whatTheNewAppIdShouldBe;
+	var whatTheNewAppIdShouldBe = "app_" + getUniqueAppId.count;
+	console.log( "erase me, whatTheNewAppIdShouldBe " + whatTheNewAppIdShouldBe );
+	console.log( "erase me, bulls getUniqueAppId.count:" + getUniqueAppId.count );
+
+	wsLoadApplication( wsio, appLoadData );
+	//wait 1 second, because idk how long it takes to launch an app.
+	setTimeout(
+		function() {
+			var app = SAGE2Items.applications.list[ whatTheNewAppIdShouldBe ];
+			//if the app doesn't exist, exit. Because I dunno where the app is.
+			if( app === null || app === undefined) {
+				console.log("csd ERROR unable to find new app");
+			}
+			//else try send it data
+			else {
+				var dataForDisplay = {};
+					dataForDisplay.app 	= app.id;
+					dataForDisplay.func = data.func;
+					dataForDisplay.data = data.params;
+				console.log("erase me, values for app, func, data: "
+					+ dataForDisplay.app + ","
+					+ dataForDisplay.func + ","
+					+ dataForDisplay.data 
+					);
+				//send to all display clients(since they all need to update)
+				for(var i = 0; i < clients.length; i++) {
+					if(clients[i].clientType === "display") {
+						clients[i].emit('broadcast', dataForDisplay);
+					}
+				}
+			}
+		}
+	, 1000); // milliseconds
 }

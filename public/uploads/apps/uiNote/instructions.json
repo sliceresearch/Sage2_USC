@@ -1,0 +1,16 @@
+{
+	"main_script": "uiNote.js",
+        "icon": "uiNote.png",
+	"width": 300,
+	"height": 150,
+	"animation": true,
+	"sticky": true,
+	"dependencies": [
+	],
+	"title": "aUiNote",
+	"version": "1.0.0",
+	"description": "aUiNote",
+	"keywords": [ "note" ],
+	"author": "Dylan Kobayashi <dylank@hawaii.edu>",
+	"license": "SAGE2-Software-License"
+}

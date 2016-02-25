@@ -276,6 +276,7 @@ function SAGE2_init() {
 	});
 
 	setupRmbContextMenuDiv();
+	setupUiNoteMaker();
 }
 
 // Show error message for 2 seconds (or time given as parameter)
@@ -1535,7 +1536,9 @@ function noBackspace(event) {
 	// allow backspace in text box: target.type is defined for input elements
 	if (parseInt(event.keyCode, 10) === 8 && !event.target.type) {
 		event.preventDefault();
-	} else {
+	} else if (event.keyCode === 13 && event.target.id === "uiNoteMakerInputField") {
+		sendCsdMakeNote();
+	}else {
 		return true;
 	}
 }
@@ -1877,3 +1880,48 @@ function setRmbContextMenuEntries(entriesToAdd, app) {
 		rmbDiv.appendChild( workingDiv );
 	} //end for each entry
 } //end setRmbContextMenuEntries
+
+//
+function setupUiNoteMaker() {
+	var workingDiv = document.getElementById('uiNoteMaker');
+		workingDiv.style.position = "absolute";
+		workingDiv.style.border = "1px solid black"
+		workingDiv.style.bottom = "10px";
+		workingDiv.style.left = "10px";
+	var inputField = document.createElement('input');
+		inputField.id = "uiNoteMakerInputField";
+		//inputField.rows = 5;
+		//inputField.cols = 10;
+		//inputField.resize = "none";
+	var sendButton = document.createElement('button');
+		sendButton.id = "uiNoteMakerSendButton";
+		sendButton.style.background = "#FFF8E1";
+		sendButton.addEventListener( 'click', function() {
+			sendCsdMakeNote();
+		} );
+		sendButton.innerHTML = "Make Note";
+
+	workingDiv.appendChild( inputField );
+	workingDiv.innerHTML += "<br>";
+	workingDiv.appendChild( sendButton );
+}
+
+function sendCsdMakeNote() {
+
+	var workingDiv = document.getElementById('uiNoteMakerInputField');
+
+	var data = {};
+		data.type 		= "launchAppWithValues";
+		data.appName 	= "uiNote";
+		data.func 		= "setMessage";
+		data.params 	= [ workingDiv.value, interactor.uniqueID];
+
+	console.log("erase me, sending csd make note with value:" + workingDiv.value);
+	console.dir(data);
+	console.log("Btw did it contain a \\n?" + workingDiv.value.indexOf('\n'));
+
+	workingDiv.value = "";
+
+	wsio.emit( 'csdMessage', data );
+
+}
