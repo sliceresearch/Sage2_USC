@@ -124,6 +124,22 @@ window.addEventListener('unload', function(event) {
 	}
 });
 
+/**
+ * When the page loads, SAGE2 starts
+ *
+ */
+window.addEventListener('load', function(event) {
+	SAGE2_init();
+});
+
+/**
+ * When the page is resized
+ *
+ */
+window.addEventListener('resize', function(event) {
+	SAGE2_resize();
+});
+
 
 /**
  * Entry point of the user interface

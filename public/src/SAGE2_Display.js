@@ -48,6 +48,13 @@ window.onbeforeunload = function() {
 	}
 };
 
+/**
+ * When the page loads, SAGE2 starts
+ *
+ */
+window.addEventListener('load', function(event) {
+	SAGE2_init();
+});
 
 // Get Browser-Specifc Prefix
 function getBrowserPrefix() {

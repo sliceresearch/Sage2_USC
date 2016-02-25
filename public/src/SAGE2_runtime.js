@@ -30,7 +30,15 @@ __SAGE2__.version = "1.0.0";
 
 
 /**
- * Initializes global settings: random genrator, ...
+ * In Strict mode Webix doesn't use "eval"
+ * Should be enabled if Content Security Policy is switched on for the application
+ * or if the application runs in a "strict" mode
+ * The flag should be enabled before Webix files are included into the page
+ */
+window.webix_strict = true;
+
+/**
+ * Initializes global settings: random generator, ...
  *
  * @method SAGE2_initialize
  * @param data_seed {Date} seed number
