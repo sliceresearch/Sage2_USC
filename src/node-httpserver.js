@@ -114,7 +114,8 @@ HttpServer.prototype.buildHeader = function() {
 	// to render a page within an <iframe> element or not. This is helpful to prevent clickjacking
 	// attacks by ensuring your content is not embedded within other sites.
 	// See more here: https://developer.mozilla.org/en-US/docs/HTTP/X-Frame-Options.
-	header["X-Frame-Options"] = "SAMEORIGIN"; // "Deny";
+	// "SAMEORIGIN" or "DENY" for instance
+	header["X-Frame-Options"] = "SAMEORIGIN";
 
 	// This header enables the Cross-site scripting (XSS) filter built into most recent web browsers.
 	// It's usually enabled by default anyway, so the role of this header is to re-enable the filter
@@ -128,9 +129,28 @@ HttpServer.prototype.buildHeader = function() {
 	// that, by clever naming, could be treated by MSIE as executable or dynamic HTML files.
 	header["X-Content-Type-Options"] = "nosniff";
 
+	// Instead of blindly trusting everything that a server delivers, Content-Security-Policy defines
+	// the HTTP header that allows you to create a whitelist of sources of trusted content,
+	// and instructs the browser to only execute or render resources from those sources.
+	// Even if an attacker can find a hole through which to inject script, the script won’t match
+	// the whitelist, and therefore won’t be executed.
+	// default-src 'none' -> default policy that blocks absolutely everything
+
+	// header["Content-Security-Policy"] = "default-src 'none';" +
+	// 	" plugin-types image/svg+xml;" +
+	// 	" object-src 'self';" +
+	// 	" child-src 'self' blob:;" +
+	// 	" connect-src 'self' wss: ws: https://query.yahooapis.com https://data.cityofchicago.org https://lyra.evl.uic.edu:9000;" +
+	// 	" font-src 'self';" +
+	// 	" form-action 'self';" +
+	// 	// " img-src 'self' data: http://openweathermap.org a.tile.openstreetmap.org b.tile.openstreetmap.org c.tile.openstreetmap.org http://www.webglearth.com http://server.arcgisonline.com http://radar.weather.gov http://cdn.abclocal.go.com http://www.glerl.noaa.gov https://lyra.evl.uic.edu:9000 https://maps.gstatic.com https://maps.googleapis.com https://khms0.googleapis.com https://khms1.googleapis.com https://khms2.googleapis.com https://csi.gstatic.com;" +
+	// 	" img-src *;" +
+	// 	" media-src 'self';" +
+	// 	" style-src 'self' 'unsafe-inline';" +
+	// 	" script-src 'self' http://www.webglearth.com https://maps.googleapis.com 'unsafe-eval';";
+
 	return header;
 };
-
 
 /**
  * Main router and trigger the GET and POST handlers
