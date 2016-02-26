@@ -7320,11 +7320,25 @@ types:
 		func: 		what function to call inorder to update
 		params: 	what to pass the specified function
 
+	setValue
+		nameOfValue: 	used to searchstore value
+		value: 			sets the named value
+
+	getValue
+		nameOfValue: 	used to retrieve value
+		app: 			which app needs it
+		func: 			function to call on the app to give it back
+		
+
+	subscribeToValue
+
+
+
 
 */
 function wsCsdMessage(wsio, data) {
 
-	console.log("erase me, received csd message");
+	console.log("erase me, received csd message type:" + data.type );
 
 	switch(data.type) {
 		case "getPathOfApp":
@@ -7334,16 +7348,19 @@ function wsCsdMessage(wsio, data) {
 		case "launchAppWithValues":
 			csdLaunchAppWithValues(wsio, data);
 			break;
+		case "setValue":
+			csdSetValue(wsio, data);
+			break;
+		case "getValue":
+			csdGetValue(wsio, data);
+			break;
+		case "subscribeToValue":
+			csdSubscribeToValue(wsio, data);
+			break;
 		default:
 			console.log("");
 			break;
 	}
-	if(data.type === "getPathOfApp") {
-		console.log("erase me, csd message getPathOfApp");
-
-	}
-
-
 }
 
 /**
@@ -7419,4 +7436,158 @@ function csdLaunchAppWithValues(wsio,data) {
 			}
 		}
 	, 1000); // milliseconds
+}
+
+
+
+/*
+
+Data structure for the csd value passing.
+
+var csdDataStructure = {};
+	csdDataStructure.allValues = {};
+	csdDataStructure.numberOfValues = 0;
+	csdDataStructure.allNamesOfValues = [];
+
+	numberOfValues will increase each time one is set.
+	allNamesOfValues will get strings to denote the names used to track the values.
+
+
+	The allValues is comprised of entry objects
+	{
+		name: 	name of value
+		value: 	actual value which could be an object of more values
+		desc: 	used for later
+		subscribers: 	[]
+	}
+
+	Each entry in subscribers is also an object
+	{
+		app: 	identifies the app which is subscribing to the value.
+			NOTE: need to find a way to unsubscribe esp if the app is removed, or apps are reset.
+
+		func: 	name of the function to call in order to pass the information.
+			NOTE: broadcast currently only supports 1 parameter.
+	}
+
+
+
+*/
+var csdDataStructure = {};
+	csdDataStructure.allValues = {};
+	csdDataStructure.numberOfValues = 0;
+	csdDataStructure.allNamesOfValues = [];
+
+
+/**
+Needs
+	data.nameOfValue
+	data.value
+	data.description (for later)
+*/
+function csdSetValue(wsio, data) {
+	//don't do anything if this isn't filled out.
+	if(data.nameOfValue === undefined || data.nameOfValue === null) { return; }
+	
+	//check if there is not entry for that value
+	if ( csdDataStructure.allValues[ "" + data.nameOfValue ] === undefined ) {
+
+		//need to make an entry for this value
+		var newCsdValue = {};
+			newCsdValue.name 			= data.nameOfValue;
+			newCsdValue.value 			= data.value;
+			newCsdValue.description 	= data.description;
+			newCsdValue.subscribers 	= [];
+
+		csdDataStructure.allValues["" + data.nameOfValue] = newCsdValue;
+		csdDataStructure.numberOfValues++;
+		csdDataStructure.allNamesOfValues.push("" + data.nameOfValue);
+
+		console.log("erase me, made new value entry for" + data.nameOfValue);
+	}
+	else {
+		csdDataStructure.allValues[ "" + data.nameOfValue ].value = data.value;
+		console.log("erase me, set value entry for" + data.nameOfValue + " to " + data.value);
+	}
+
+	var dataForApp = {};
+	//send to each of the subscribers.
+	for(var i = 0; i < csdDataStructure.allValues[ "" + data.nameOfValue ].subscribers.length; i++ ) {
+		dataForApp.app = csdDataStructure.allValues[ "" + data.nameOfValue ].subscribers[i].app;
+		dataForApp.func = csdDataStructure.allValues[ "" + data.nameOfValue ].subscribers[i].func;
+		dataForApp.data = csdDataStructure.allValues[ "" + data.nameOfValue ].value;
+
+		//send to all display clients(since they all need to update)
+		for(var j = 0; j < clients.length; j++) {
+			if(clients[j].clientType === "display") {
+				clients[j].emit('broadcast', dataForApp);
+			}
+		}
+	}
+}
+
+/**
+Needs
+	data.nameOfValue
+
+	data.app
+	data.func
+*/
+function csdGetValue(wsio, data) {
+	//don't do anything if this isn't filled out.
+	if(data.nameOfValue === undefined || data.nameOfValue === null) { return; }
+
+	var dataForApp = {};
+		dataForApp.app 	= data.app;
+		dataForApp.func = data.func;
+		dataForApp.data = null; //defaul is null if the value doesn't exist.
+
+	//check if there is not entry for that value
+	if ( csdDataStructure.allValues[ "" + data.nameOfValue ] !== undefined ) {
+		dataForApp.data = csdDataStructure.allValues[ "" + data.nameOfValue ].value;
+
+	}
+
+	wsio.emit('broadcast', dataForApp);
+	console.log("erase me, csdgetvalue " + data.nameOfValue + ":" + dataForApp.data);
+}
+
+/**
+Needs
+	data.nameOfValue
+
+	data.app
+	data.func
+*/
+function csdSubscribeToValue(wsio, data) {
+	//don't do anything if this isn't filled out.
+	if(data.nameOfValue === undefined || data.nameOfValue === null) { return; }
+	//also don't do anything if the value doesn't exist
+	if(csdDataStructure.allValues[ "" + data.nameOfValue ] === undefined ) { return; }
+	
+	//make the new subscriber entry
+	var newCsdSubscriber = {};
+		newCsdSubscriber.app 	= data.app;
+		newCsdSubscriber.func 	= data.func;
+	//add it to that value
+	csdDataStructure.allValues[ "" + data.nameOfValue ].subscribers.push( newCsdSubscriber );
+
+
+	console.log("erase me, csdSubscribeToValue " + data. nameOfValue+ ":" + data.app);
+}
+
+
+function csdGetAllTrackedValues(wsio, data) {
+
+	var dataForApp = {};
+		dataForApp.nameValueObjectArray = [];
+
+	for(var i = 0; i < csdDataStructure.allNamesOfValues.length; i++) {
+		dataForApp.nameValueObjectArray.push(
+			{ name: csdDataStructure.allNamesOfValues[i],
+			 value: csdDataStructure.allValues[ csdDataStructure.allNamesOfValues[i] ]
+			} );
+	}
+
+	wsio.emit('broadcast', dataForApp);
 }

@@ -1,0 +1,16 @@
+{
+	"main_script": "aNumberSlave.js",
+        "icon": "aNumberSlave.png",
+	"width": 300,
+	"height": 300,
+	"animation": true,
+	"sticky": true,
+	"dependencies": [
+	],
+	"title": "aaNumberSlave",
+	"version": "1.0.0",
+	"description": "aaNumberSlave",
+	"keywords": [ "data" ],
+	"author": "Dylan Kobayashi <dylank@hawaii.edu>",
+	"license": "SAGE2-Software-License"
+}
