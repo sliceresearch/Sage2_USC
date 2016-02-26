@@ -36,7 +36,9 @@ var articulate_ui = SAGE2_App.extend( {
 				{"plot-type":{"valueType":"STRING","string":"BAR","chars":"BAR"},"x-axis":{"valueType":"STRING","string":"crimetype","chars":"crimetype"},"y-axis":{"valueType":"STRING","string":"TOTAL_CRIME","chars":"TOTAL_CRIME"},"data-query":{"valueType":"STRING","string":"SELECT count(*) as TOTAL_CRIME,`crimetype` FROM chicagocrime WHERE `locationtype`='restaurant' GROUP BY crimetype","chars":"SELECT count(*) as TOTAL_CRIME,`crimetype` FROM chicagocrime WHERE `locationtype`='restaurant' GROUP BY crimetype"},"data-query-result":[{"valueType":"STRING","string":"(total_crime,2);(crimetype,arson)","chars":"(total_crime,2);(crimetype,arson)"},{"valueType":"STRING","string":"(total_crime,238);(crimetype,assault)","chars":"(total_crime,238);(crimetype,assault)"},{"valueType":"STRING","string":"(total_crime,302);(crimetype,battery)","chars":"(total_crime,302);(crimetype,battery)"},{"valueType":"STRING","string":"(total_crime,134);(crimetype,burglary)","chars":"(total_crime,134);(crimetype,burglary)"},{"valueType":"STRING","string":"(total_crime,1);(crimetype,crim-sexual-assault)","chars":"(total_crime,1);(crimetype,crim-sexual-assault)"},{"valueType":"STRING","string":"(total_crime,177);(crimetype,criminal-damage)","chars":"(total_crime,177);(crimetype,criminal-damage)"},{"valueType":"STRING","string":"(total_crime,447);(crimetype,criminal-trespass)","chars":"(total_crime,447);(crimetype,criminal-trespass)"},{"valueType":"STRING","string":"(total_crime,905);(crimetype,deceptive-practice)","chars":"(total_crime,905);(crimetype,deceptive-practice)"},{"valueType":"STRING","string":"(total_crime,2);(crimetype,gambling)","chars":"(total_crime,2);(crimetype,gambling)"},{"valueType":"STRING","string":"(total_crime,3);(crimetype,intimidation)","chars":"(total_crime,3);(crimetype,intimidation)"},{"valueType":"STRING","string":"(total_crime,1);(crimetype,kidnapping)","chars":"(total_crime,1);(crimetype,kidnapping)"},{"valueType":"STRING","string":"(total_crime,63);(crimetype,liquor-law-violation)","chars":"(total_crime,63);(crimetype,liquor-law-violation)"},{"valueType":"STRING","string":"(total_crime,2);(crimetype,motor-vehicle-theft)","chars":"(total_crime,2);(crimetype,motor-vehicle-theft)"},{"valueType":"STRING","string":"(total_crime,26);(crimetype,narcotics)","chars":"(total_crime,26);(crimetype,narcotics)"},{"valueType":"STRING","string":"(total_crime,1);(crimetype,obscenity)","chars":"(total_crime,1);(crimetype,obscenity)"},{"valueType":"STRING","string":"(total_crime,8);(crimetype,offense-involving-children)","chars":"(total_crime,8);(crimetype,offense-involving-children)"},{"valueType":"STRING","string":"(total_crime,104);(crimetype,other-offense)","chars":"(total_crime,104);(crimetype,other-offense)"},{"valueType":"STRING","string":"(total_crime,18);(crimetype,public-peace-violation)","chars":"(total_crime,18);(crimetype,public-peace-violation)"},{"valueType":"STRING","string":"(total_crime,63);(crimetype,robbery)","chars":"(total_crime,63);(crimetype,robbery)"},{"valueType":"STRING","string":"(total_crime,4);(crimetype,sex-offense)","chars":"(total_crime,4);(crimetype,sex-offense)"},{"valueType":"STRING","string":"(total_crime,2);(crimetype,stalking)","chars":"(total_crime,2);(crimetype,stalking)"},{"valueType":"STRING","string":"(total_crime,5150);(crimetype,theft)","chars":"(total_crime,5150);(crimetype,theft)"}] }
 		];
 
-		
+		this.colors = ["steelblue", "mediumseagreen", "cadetblue", "lightskyblue"]; 
+
+		];
 
 		this.commands = [];
 		this.commands.push(">");
@@ -117,7 +119,7 @@ var articulate_ui = SAGE2_App.extend( {
 			//debug
 			if( isMaster ){
 				//this.launchVis2();
-				this.readExample(this.specificationObjects[this.counter]); 
+				this.readExample(this.specificationObjects[this.counter], this.colors[this.counter]); 
 				//this.contactArticulateHub("Is there any way to see the crimetype that tend to be committed in restaurants?");
 			}
 
@@ -366,7 +368,7 @@ var articulate_ui = SAGE2_App.extend( {
 		this.launchNewChild(applicationType, application, initState, msg);//defined in sage2 app
 	},
 
-	readExample: function(specificationObj){
+	readExample: function(specificationObj, color){
 
 		applicationType ="custom",
 		application = "apps/vega_vis_app";//"apps/d3plus_visapp", 	
@@ -417,7 +419,7 @@ var articulate_ui = SAGE2_App.extend( {
 			type: type.toLowerCase(),
 			x: x.toLowerCase(),
 			y: y.toLowerCase(),
-			color: "steelblue",
+			color: color,
 			visId: this.counter,
 			data: data
 		};
