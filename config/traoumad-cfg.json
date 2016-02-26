@@ -89,8 +89,8 @@
 			secure: true
 		},
                 {
-                        name: "PhD Room",
-                        host: "dante.evl.uic.edu",
+                        name: "TestServer",
+                        host: "sage2server.evl.uic.edu",
                         port: 443,
                         secure: true
                 },
