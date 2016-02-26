@@ -38,7 +38,6 @@ var articulate_ui = SAGE2_App.extend( {
 
 		this.colors = ["steelblue", "mediumseagreen", "cadetblue", "lightskyblue"]; 
 
-		];
 
 		this.commands = [];
 		this.commands.push(">");
