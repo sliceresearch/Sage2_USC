@@ -529,6 +529,20 @@ function wsAddClient(wsio, data) {
 	} else {
 		wsio.clientID = -1;
 		console.log(sageutils.header("Connect") + wsio.id + " (" + wsio.clientType + ")");
+		if (wsio.clientType === "remoteServer") {
+			var remoteaddr = wsio.ws.upgradeReq.connection.remoteAddress;
+			var remoteport = wsio.ws.upgradeReq.connection.remotePort;
+
+			// Checking if it's a known server
+			config.remote_sites.forEach(function(element, index, array) {
+				if (element.host === data.host &&
+					element.port === data.port &&
+					!remoteSites[index].connected) {
+					console.log(sageutils.header("Connect") + 'known remote site ' + data.host + ':' + data.port);
+					manageRemoteConnection(wsio, element, index);
+				}
+			});
+		}
 	}
 
 	clients.push(wsio);
@@ -3915,68 +3929,74 @@ if (config.remote_sites) {
 	});
 }
 
+function manageRemoteConnection(remote, site, index) {
+	console.log(sageutils.header("Remote") + "Connected to " + site.name);
+	remote.updateRemoteAddress(site.host, site.port);
+	var clientDescription = {
+		clientType: "remoteServer",
+		host: config.host,
+		port: config.secure_port,
+		// port: config.port,
+		requests: {
+			config: false,
+			version: false,
+			time: false,
+			console: false
+		}
+	};
+	remote.clientType = "remoteServer";
+
+	remote.onclose(function() {
+		console.log("Remote site \"" + config.remote_sites[index].name + "\" now offline");
+		remoteSites[index].connected = false;
+		var delete_site = {name: remoteSites[index].name, connected: remoteSites[index].connected};
+		broadcast('connectedToRemoteSite', delete_site);
+		removeElement(clients, remote);
+	});
+
+	remote.on('addClient',                              wsAddClient);
+	remote.on('addNewElementFromRemoteServer',          wsAddNewElementFromRemoteServer);
+	remote.on('addNewSharedElementFromRemoteServer',    wsAddNewSharedElementFromRemoteServer);
+	remote.on('requestNextRemoteFrame',                 wsRequestNextRemoteFrame);
+	remote.on('updateRemoteMediaStreamFrame',           wsUpdateRemoteMediaStreamFrame);
+	remote.on('stopMediaStream',                        wsStopMediaStream);
+	remote.on('requestNextRemoteBlockFrame',            wsRequestNextRemoteBlockFrame);
+	remote.on('updateRemoteMediaBlockStreamFrame',      wsUpdateRemoteMediaBlockStreamFrame);
+	remote.on('stopMediaBlockStream',                   wsStopMediaBlockStream);
+	remote.on('requestDataSharingSession',              wsRequestDataSharingSession);
+	remote.on('cancelDataSharingSession',               wsCancelDataSharingSession);
+	remote.on('acceptDataSharingSession',               wsAcceptDataSharingSession);
+	remote.on('rejectDataSharingSession',               wsRejectDataSharingSession);
+	remote.on('createRemoteSagePointer',                wsCreateRemoteSagePointer);
+	remote.on('startRemoteSagePointer',                 wsStartRemoteSagePointer);
+	remote.on('stopRemoteSagePointer',                  wsStopRemoteSagePointer);
+	remote.on('remoteSagePointerPosition',              wsRemoteSagePointerPosition);
+	remote.on('remoteSagePointerToggleModes',           wsRemoteSagePointerToggleModes);
+	remote.on('remoteSagePointerHoverCorner',           wsRemoteSagePointerHoverCorner);
+	remote.on('addNewRemoteElementInDataSharingPortal', wsAddNewRemoteElementInDataSharingPortal);
+
+	remote.on('updateApplicationOrder',                 wsUpdateApplicationOrder);
+	remote.on('startApplicationMove',                   wsStartApplicationMove);
+	remote.on('startApplicationResize',                 wsStartApplicationResize);
+	remote.on('updateApplicationPosition',              wsUpdateApplicationPosition);
+	remote.on('updateApplicationPositionAndSize',       wsUpdateApplicationPositionAndSize);
+	remote.on('finishApplicationMove',                  wsFinishApplicationMove);
+	remote.on('finishApplicationResize',                wsFinishApplicationResize);
+	remote.on('deleteApplication',                      wsDeleteApplication);
+	remote.on('updateApplicationState',                 wsUpdateApplicationState);
+	remote.on('updateApplicationStateOptions',          wsUpdateApplicationStateOptions);
+
+	remote.emit('addClient', clientDescription);
+	remoteSites[index].connected = true;
+	var new_site = {name: remoteSites[index].name, connected: remoteSites[index].connected};
+	broadcast('connectedToRemoteSite', new_site);
+	clients.push(remote);
+}
+
+
 function createRemoteConnection(wsURL, element, index) {
 	var remote = new WebsocketIO(wsURL, false, function() {
-		console.log(sageutils.header("Remote") + "Connected to " + element.name);
-		remote.updateRemoteAddress(element.host, element.port);
-		var clientDescription = {
-			clientType: "remoteServer",
-			host: config.host,
-			port: config.port,
-			requests: {
-				config: false,
-				version: false,
-				time: false,
-				console: false
-			}
-		};
-		remote.clientType = "remoteServer";
-
-		remote.onclose(function() {
-			console.log("Remote site \"" + config.remote_sites[index].name + "\" now offline");
-			remoteSites[index].connected = false;
-			var delete_site = {name: remoteSites[index].name, connected: remoteSites[index].connected};
-			broadcast('connectedToRemoteSite', delete_site);
-			removeElement(clients, remote);
-		});
-
-		remote.on('addClient',                              wsAddClient);
-		remote.on('addNewElementFromRemoteServer',          wsAddNewElementFromRemoteServer);
-		remote.on('addNewSharedElementFromRemoteServer',    wsAddNewSharedElementFromRemoteServer);
-		remote.on('requestNextRemoteFrame',                 wsRequestNextRemoteFrame);
-		remote.on('updateRemoteMediaStreamFrame',           wsUpdateRemoteMediaStreamFrame);
-		remote.on('stopMediaStream',                        wsStopMediaStream);
-		remote.on('requestNextRemoteBlockFrame',            wsRequestNextRemoteBlockFrame);
-		remote.on('updateRemoteMediaBlockStreamFrame',      wsUpdateRemoteMediaBlockStreamFrame);
-		remote.on('stopMediaBlockStream',                   wsStopMediaBlockStream);
-		remote.on('requestDataSharingSession',              wsRequestDataSharingSession);
-		remote.on('cancelDataSharingSession',               wsCancelDataSharingSession);
-		remote.on('acceptDataSharingSession',               wsAcceptDataSharingSession);
-		remote.on('rejectDataSharingSession',               wsRejectDataSharingSession);
-		remote.on('createRemoteSagePointer',                wsCreateRemoteSagePointer);
-		remote.on('startRemoteSagePointer',                 wsStartRemoteSagePointer);
-		remote.on('stopRemoteSagePointer',                  wsStopRemoteSagePointer);
-		remote.on('remoteSagePointerPosition',              wsRemoteSagePointerPosition);
-		remote.on('remoteSagePointerToggleModes',           wsRemoteSagePointerToggleModes);
-		remote.on('remoteSagePointerHoverCorner',           wsRemoteSagePointerHoverCorner);
-		remote.on('addNewRemoteElementInDataSharingPortal', wsAddNewRemoteElementInDataSharingPortal);
-
-		remote.on('updateApplicationOrder',                 wsUpdateApplicationOrder);
-		remote.on('startApplicationMove',                   wsStartApplicationMove);
-		remote.on('startApplicationResize',                 wsStartApplicationResize);
-		remote.on('updateApplicationPosition',              wsUpdateApplicationPosition);
-		remote.on('updateApplicationPositionAndSize',       wsUpdateApplicationPositionAndSize);
-		remote.on('finishApplicationMove',                  wsFinishApplicationMove);
-		remote.on('finishApplicationResize',                wsFinishApplicationResize);
-		remote.on('deleteApplication',                      wsDeleteApplication);
-		remote.on('updateApplicationState',                 wsUpdateApplicationState);
-		remote.on('updateApplicationStateOptions',          wsUpdateApplicationStateOptions);
-
-		remote.emit('addClient', clientDescription);
-		remoteSites[index].connected = true;
-		var new_site = {name: remoteSites[index].name, connected: remoteSites[index].connected};
-		broadcast('connectedToRemoteSite', new_site);
-		clients.push(remote);
+		manageRemoteConnection(remote, element, index);
 	});
 
 	return remote;
