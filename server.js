@@ -530,8 +530,9 @@ function wsAddClient(wsio, data) {
 		wsio.clientID = -1;
 		console.log(sageutils.header("Connect") + wsio.id + " (" + wsio.clientType + ")");
 		if (wsio.clientType === "remoteServer") {
-			var remoteaddr = wsio.ws.upgradeReq.connection.remoteAddress;
-			var remoteport = wsio.ws.upgradeReq.connection.remotePort;
+			// Remote info
+			// var remoteaddr = wsio.ws.upgradeReq.connection.remoteAddress;
+			// var remoteport = wsio.ws.upgradeReq.connection.remotePort;
 
 			// Checking if it's a known server
 			config.remote_sites.forEach(function(element, index, array) {
