@@ -7333,6 +7333,7 @@ function wsCsdMessage(wsio, data) {
 			break;
 		case "launchAppWithValues":
 			csdLaunchAppWithValues(wsio, data);
+			break;
 		default:
 			console.log("");
 			break;

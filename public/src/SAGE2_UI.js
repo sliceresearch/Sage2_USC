@@ -277,6 +277,7 @@ function SAGE2_init() {
 
 	setupRmbContextMenuDiv();
 	setupUiNoteMaker();
+	setupUiDrawCanvas();
 }
 
 // Show error message for 2 seconds (or time given as parameter)
@@ -1923,5 +1924,96 @@ function sendCsdMakeNote() {
 	workingDiv.value = "";
 
 	wsio.emit( 'csdMessage', data );
+
+}
+
+function setupUiDrawCanvas() {
+	var uidzCanvas = document.getElementById('uiDrawZoneCanvas');
+		uidzCanvas.pmx 		= 0;
+		uidzCanvas.pmy 		= 0;
+		uidzCanvas.doDraw 	= false;
+	uidzCanvas.getContext('2d').fillStyle = "#FFFFFF";
+	uidzCanvas.getContext('2d').fillRect( 0, 0, uidzCanvas.width, uidzCanvas.height );
+	uidzCanvas.getContext('2d').fillStyle = "#000000";
+	uidzCanvas.addEventListener('mousedown',
+		function(event){
+			this.doDraw 	= true;
+			this.pmx 		= event.offsetX;
+			this.pmy 		= event.offsetY;
+		}
+	);
+	uidzCanvas.addEventListener('mouseup', function(event){ this.doDraw = false; } );
+	uidzCanvas.addEventListener('mousemove',
+		function(event){
+			if (this.doDraw === true) {
+				var workingDiv  = document.getElementById('uiDrawZoneCanvas');
+				var ctx 		= workingDiv.getContext('2d');
+				ctx.beginPath();
+				ctx.moveTo( this.pmx, this.pmy );
+				ctx.lineTo( event.offsetX, event.offsetY);
+				ctx.stroke();
+				this.pmx 		= event.offsetX;
+				this.pmy 		= event.offsetY;
+			}
+		}
+	);
+
+	var sendButton = document.getElementById("uiDrawZoneSendButton");
+	sendButton.addEventListener('click',
+		function() {
+			var workingDiv 	= document.getElementById('uiDrawZoneCanvas');
+			var ctx 		= workingDiv.getContext('2d');
+			var imageString = workingDiv.toDataURL();
+
+			console.log("erase me," + imageString);
+
+			var data = {};
+				data.type 		= "launchAppWithValues";
+				data.appName 	= "uiDraw";
+				data.func 		= "setCanvas";
+				data.params 	= [ imageString, interactor.uniqueID];
+			wsio.emit( 'csdMessage', data );
+
+			//before clearing, need to get the data to send.
+			ctx.fillStyle = "#FFFFFF";
+			ctx.fillRect( 0, 0, uidzCanvas.width, uidzCanvas.height );
+			ctx.fillStyle = "#000000";
+		}
+	);
+
+	var workingDiv = document.getElementById('uiDrawZone');
+		workingDiv.style.position 	= "absolute";
+		workingDiv.style.top 	= "10px";
+		workingDiv.style.left 	= window.innerWidth/2 - uidzCanvas.width/2 + "px";
+
+	var showHideButton = document.getElementById('uiDrawZoneShowHideButton');
+		showHideButton.style.position 	= "absolute";
+		showHideButton.style.width 		= "50px";
+		showHideButton.style.height 	= "40px";
+		showHideButton.style.bottom 	= "1x";
+		showHideButton.style.right 		= "1px";
+		showHideButton.style.border 	= "1px solid black";
+		showHideButton.innerHTML 		= "Draw";
+	showHideButton.addEventListener( 'click', function() {
+			showDialog("uiDrawZone");
+		// var workingDiv = document.getElementById("uiDrawZone");
+		// //if button displays show, when clicked show the canvas
+		// if(showHideButton.innerHTML === "Draw") {
+		// 	// workingDiv.style.left 		= "";
+		// 	// workingDiv.style.right 		= "10px"; //move it to the right side of the screen
+		// 	showDialog("uiDrawZone");
+		// 	showHideButton.innerHTML 	= "Draw";
+		// }
+		// //else hide the canvase and switch button back to show
+		// else {
+		// 	// workingDiv.style.right 		= "";
+		// 	// workingDiv.style.left 		= "-600px"; //move it to the left
+		// 	showDialog("uiDrawZone");
+		// 	showHideButton.innerHTML 	= "Draw";
+		// }
+	});
+
+
+
 
 }
