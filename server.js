@@ -6468,7 +6468,8 @@ function keyUp(uniqueID, pointerX, pointerY, data) {
 		var eUser = {id: sagePointers[uniqueID].id, label: sagePointers[uniqueID].label,
 			color: sagePointers[uniqueID].color};
 		var event = {code: data.code, printable: false, state: "up", ctrlId: lockedControl.ctrlId,
-			appId: lockedControl.appId, instanceID: lockedControl.instanceID, user: eUser};
+			appId: lockedControl.appId, instanceID: lockedControl.instanceID, user: eUser,
+			date: Date.now()};
 		broadcast('keyInTextInputWidget', event);
 		if (data.code === 13) {
 			// Enter key
@@ -6620,7 +6621,8 @@ function keyPress(uniqueID, pointerX, pointerY, data) {
 		var eUser = {id: sagePointers[uniqueID].id, label: sagePointers[uniqueID].label,
 					color: sagePointers[uniqueID].color};
 		var event = {code: data.code, printable: true, state: "press", ctrlId: lockedControl.ctrlId,
-					appId: lockedControl.appId, instanceID: lockedControl.instanceID, user: eUser};
+					appId: lockedControl.appId, instanceID: lockedControl.instanceID, user: eUser,
+					date: Date.now()};
 		broadcast('keyInTextInputWidget', event);
 		if (data.code === 13) {
 			// Enter key
