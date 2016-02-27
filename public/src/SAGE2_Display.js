@@ -986,7 +986,7 @@ function setupListeners() {
 			// Check whether a request for clone was made.
 			if (app.cloneable === true && app.requestForClone === true) {
 				app.requestForClone = false;
-				console.log("cloning app:" + appId);
+				// console.log("cloning app:", appId, app.cloneData);
 				if (isMaster) {
 					wsio.emit('createAppClone', {id: appId, cloneData: app.cloneData});
 				}
@@ -1051,14 +1051,13 @@ function setupListeners() {
 				clearInterval(blinkControlHandle);
 				var app = applications[data.appId];
 				app.SAGE2Event("widgetEvent", null, data.user,
-					{identifier: ctrlId, action: "textEnter", text: getTextFromTextInputWidget(textInput)}, Date.now());
+					{identifier: ctrlId, action: "textEnter", text: getTextFromTextInputWidget(textInput)}, new Date(data.date));
 			}
 		}
 	});
 
 	wsio.on('activateTextInputControl', function(data) {
 		var ctrl = null;
-		console.log("in activateTextInputContControl->", data);
 		if (data.prevTextInput) {
 			ctrl = getWidgetControlInstanceById(data.prevTextInput);
 		}
@@ -1078,7 +1077,6 @@ function setupListeners() {
 
 	// Called when the user clicks outside the widget control while a lock exists on text input
 	wsio.on('deactivateTextInputControl', function(data) {
-		console.log("in deactivateTextInputContControl->", data);
 		var ctrl = getWidgetControlInstanceById(data);
 		if (ctrl) {
 			var textInput = ctrl.parent();
@@ -1104,7 +1102,7 @@ function setupListeners() {
 	});
 
 	wsio.on('initializeDataSharingSession', function(data) {
-		console.log(data);
+		// console.log(data);
 		dataSharingPortals[data.id] = new DataSharing(data);
 	});
 
