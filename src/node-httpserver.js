@@ -46,7 +46,10 @@ function HttpServer(publicDirectory) {
 	var fileTemplate = path.join(publicDirectory, "sage2.appcache.template");
 	var fileCache    = path.join(publicDirectory, "sage2.appcache");
 	fs.readFile(fileTemplate, 'utf8', function(err, data) {
-		if (err) { console.log('Error reading', fileCache); return; }
+		if (err) {
+			console.log('Error reading', fileCache);
+			return;
+		}
 		// Change the date in comment, force to flush the cache
 		var result = data.replace(/# SAGE@start .*/, "# SAGE@start " + Date());
 		// write the resulting content
@@ -80,6 +83,22 @@ function detectCookies(request) {
 }
 
 /**
+ * Handle a page not found (404)
+ *
+ * @method notfound
+ * @param res {Object} response
+ */
+HttpServer.prototype.notfound = function(res) {
+	var header = this.buildHeader();
+	res.writeHead(404, header);
+	res.write('<meta http-equiv="refresh" content="5;url=/index.html">');
+	res.write('<h1>SAGE2 error</h1>Invalid request\n');
+	res.write('<br><br><br>\n');
+	res.write('<b><a href=/index.html>SAGE2 main page</a></b>\n');
+	res.end();
+};
+
+/**
  * Handle a HTTP redirect
  *
  * @method redirect
@@ -88,9 +107,9 @@ function detectCookies(request) {
  */
 HttpServer.prototype.redirect = function(res, aurl) {
 	var header = this.buildHeader();
-	// 302 HTTP code for redirect
+	// 301 HTTP code for redirect: Moved Permanently
 	header["Location"] = aurl;
-	res.writeHead(302, header);
+	res.writeHead(301, header);
 	res.end();
 };
 
@@ -102,6 +121,9 @@ HttpServer.prototype.redirect = function(res, aurl) {
  */
 HttpServer.prototype.buildHeader = function() {
 	var header = {};
+
+	// Default datatype of the response
+	header["Content-Type"] = "text/html; charset=utf-8";
 
 	// HTTP Strict Transport Security (HSTS) is an opt-in security enhancement
 	// Once a supported browser receives this header that browser will prevent any
@@ -143,7 +165,11 @@ HttpServer.prototype.buildHeader = function() {
 	// 	" connect-src 'self' wss: ws: https://query.yahooapis.com https://data.cityofchicago.org https://lyra.evl.uic.edu:9000;" +
 	// 	" font-src 'self';" +
 	// 	" form-action 'self';" +
-	// 	// " img-src 'self' data: http://openweathermap.org a.tile.openstreetmap.org b.tile.openstreetmap.org c.tile.openstreetmap.org http://www.webglearth.com http://server.arcgisonline.com http://radar.weather.gov http://cdn.abclocal.go.com http://www.glerl.noaa.gov https://lyra.evl.uic.edu:9000 https://maps.gstatic.com https://maps.googleapis.com https://khms0.googleapis.com https://khms1.googleapis.com https://khms2.googleapis.com https://csi.gstatic.com;" +
+	// 	// " img-src 'self' data: http://openweathermap.org a.tile.openstreetmap.org b.tile.openstreetmap.org " +
+	// 	// "c.tile.openstreetmap.org http://www.webglearth.com http://server.arcgisonline.com http://radar.weather.gov " +
+	// 	// "http://cdn.abclocal.go.com http://www.glerl.noaa.gov " +
+	// 	// "https://lyra.evl.uic.edu:9000 https://maps.gstatic.com https://maps.googleapis.com https://khms0.googleapis.com " +
+	// 	// "https://khms1.googleapis.com https://khms2.googleapis.com https://csi.gstatic.com;" +
 	// 	" img-src *;" +
 	// 	" media-src 'self';" +
 	// 	" style-src 'self' 'unsafe-inline';" +
@@ -160,14 +186,15 @@ HttpServer.prototype.buildHeader = function() {
  * @param res {Object} response
  */
 HttpServer.prototype.onreq = function(req, res) {
-	var stream;
 	var i;
 	var _this = this;
 
 	if (req.method === "GET") {
 		var reqURL  = url.parse(req.url);
-		// var getName = decodeURIComponent(reqURL.pathname);
+		// Remove the bad HTML, like script
 		var getName = sageutils.sanitizedURL(reqURL.pathname);
+		// Remove the bad path, like ..
+		getName = path.normalize(getName);
 		if (getName in this.getFuncs) {
 			this.getFuncs[getName](req, res);
 			return;
@@ -190,13 +217,6 @@ HttpServer.prototype.onreq = function(req, res) {
 		// Routes
 		// //////////////////////
 
-		// NOT NEEDED I THINK: done in getFuncs
-		// API call: /config
-		// if (getName.indexOf('/config/') === 0) {
-		// 	// if trying to access config files, add the correct path
-		// 	pathname = path.join(this.publicDirectory, '..', getName);
-		// } else
-
 		if (getName.lastIndexOf('/images/', 0) === 0 ||
 				getName.lastIndexOf('/shaders/', 0) === 0 ||
 				getName.lastIndexOf('/css/', 0) === 0 ||
@@ -217,9 +237,9 @@ HttpServer.prototype.onreq = function(req, res) {
 				if (pubdir.length === 2) {
 					// convert the URL into a path
 					var suburl = path.join('.', pubdir[1]);
-					// pathname   = url.resolve(folder.path, suburl);
-					pathname   = path.join(folder.path, suburl);
-					pathname   = decodeURIComponent(pathname);
+					// pathname = url.resolve(folder.path, suburl);
+					pathname = path.join(folder.path, suburl);
+					pathname = decodeURIComponent(pathname);
 					break;
 				}
 			}
@@ -228,6 +248,9 @@ HttpServer.prototype.onreq = function(req, res) {
 				pathname = path.join(this.publicDirectory, getName);
 			}
 		}
+
+		// Converting to an actual path
+		pathname = path.resolve(pathname);
 
 		// //////////////////////
 		// Are we trying to session management
@@ -266,9 +289,6 @@ HttpServer.prototype.onreq = function(req, res) {
 
 			// Build a default header object
 			var header = this.buildHeader();
-
-			// Set the mime type
-			header["Content-Type"] = mime.lookup(pathname);
 
 			header["Access-Control-Allow-Headers" ] = "Range";
 			header["Access-Control-Expose-Headers"] = "Accept-Ranges, Content-Encoding, Content-Length, Content-Range";
@@ -319,18 +339,20 @@ HttpServer.prototype.onreq = function(req, res) {
 				header["Content-Range"]  = "bytes " + start + "-" + end + "/" + total;
 				header["Accept-Ranges"]  = "bytes";
 				header["Content-Length"] = chunksize;
+				// Set the mime type
+				header["Content-Type"] = mime.lookup(pathname);
+
 
 				// Write the HTTP header, 206 Partial Content
 				res.writeHead(206, header);
 				// Read part of the file
-				stream = fs.createReadStream(pathname, {start: start, end: end});
+				var rstream = fs.createReadStream(pathname, {start: start, end: end});
 				// Pass it to the HTTP response
-				stream.pipe(res);
+				rstream.pipe(res);
 			} else {
 				// Open the file as a stream
-				stream = fs.createReadStream(pathname);
+				var stream = fs.createReadStream(pathname);
 				// array of allowed compression file types
-
 				var compressExtensions = [ '.html', '.json', '.js', '.css', '.txt', '.svg', '.xml', '.md',  ];
 				if (compressExtensions.indexOf(path.extname(pathname)) === -1) {
 					// Do not compress, just set file size
@@ -338,6 +360,8 @@ HttpServer.prototype.onreq = function(req, res) {
 					res.writeHead(200, header);
 					stream.pipe(res);
 				} else {
+					// Set the mime type
+					header["Content-Type"] = mime.lookup(pathname);
 					// Check for allowed compression
 					var acceptEncoding = req.headers['accept-encoding'] || '';
 					if (acceptEncoding.match(/gzip/)) {
@@ -361,17 +385,12 @@ HttpServer.prototype.onreq = function(req, res) {
 				}
 			}
 		} else {
-			// File not found: 404 HTTP error
 			// redirect to index page
-			this.redirect(res, "/");
-			return;
+			// this.redirect(res, "/");
 
-			// Not secure to show the URL: XSS
-			// res.writeHead(404, {"Content-Type": "text/html"});
-			// res.write("<h1>SAGE2 error</h1>file not found: <em>" + pathname + "</em>\n\n");
-			// res.write("<br><br><br>\n");
-			// res.write("<b><a href=/index.html>SAGE2 main page</a></b>\n");
-			// res.end();
+			// File not found: 404 HTTP error
+			this.notfound(res);
+			return;
 		}
 	} else if (req.method === "POST") {
 		// var postName = decodeURIComponent(url.parse(req.url).pathname);
