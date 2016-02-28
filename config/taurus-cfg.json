@@ -1,0 +1,68 @@
+{
+    "name": "OLED",
+    "host": "taurus.evl.uic.edu",
+    "port": 443,
+    "index_port": 80,
+    "background": {
+        "color": "#333333",
+        "watermark": {
+            "svg": "images/EVL-LAVA.svg",
+            "color": "rgba(255, 255, 255, 0.5)"
+        }
+    },
+    "ui": {
+        "clock": 24,
+        "show_version": true,
+        "show_url": true,
+        "maxWindowWidth": 8192,
+        "maxWindowHeight": 8192,
+        "noDropShadow": true
+    },
+    "resolution": {
+        "width": 8192,
+        "height": 2160
+    },
+    "layout": {
+        "rows": 1,
+        "columns": 1
+    },
+    "displays": [
+        {
+            "row": 0,
+            "column": 0
+        }
+    ],
+    "alternate_hosts": [
+        "127.0.0.1"
+    ],
+    "remote_sites": [
+		{
+			name: "CAVE2",
+			host: "lyra.evlrn.uic.edu",
+			port: 443,
+			secure: true
+		},
+		{
+			name: "Cybercommons",
+			host: "inferno.evl.uic.edu",
+			port: 443,
+			secure: true
+		},
+		{
+			name: "LAVA",
+			host: "pele.manoa.hawaii.edu",
+			port: 443,
+			secure: true
+		},
+		{
+			name: "ANL",
+			host: "display3d.mcs.anl.gov",
+			port: 443,
+			secure: true
+		}
+	],
+    "dependencies": {
+        "ImageMagick": "bin/",
+        "FFMpeg": "bin/"
+    }
+}

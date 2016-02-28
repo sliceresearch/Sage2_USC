@@ -9,7 +9,11 @@
 // Copyright (c) 2014-16
 
 // this object is used to make sure our extension isn't conflicted with irrelevant messages!
-var desktopCaptureMessages = ["SAGE2_desktop_capture_enabled", "capture_desktop"];
+var desktopCaptureMessages = [
+	"SAGE2_desktop_capture_enabled",
+	"SAGE2_capture_desktop", "capture_desktop",
+	"SAGE2_registerUI"
+];
 
 // this port connects with background script
 var port = chrome.runtime.connect();
@@ -28,7 +32,7 @@ window.addEventListener('message', function(event) {
 		return;
 	}
 
-	// it is 3rd party message
+	// it is 3rd party message, ignore it
 	if (desktopCaptureMessages.indexOf(event.data) < 0) {
 		return;
 	}
@@ -40,7 +44,11 @@ window.addEventListener('message', function(event) {
 	}
 
 	// if it is something that need to be shared with background script
-	if (event.data === "capture_desktop") {
+	if (event.data === "SAGE2_capture_desktop" || event.data === "capture_desktop") {
+		// forward message to background script
+		port.postMessage(event.data);
+	}
+	if (event.data === "SAGE2_registerUI") {
 		// forward message to background script
 		port.postMessage(event.data);
 	}
