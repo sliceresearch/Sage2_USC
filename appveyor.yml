@@ -56,8 +56,8 @@ install:
   - copy bin\gswin64c.exe bin\gswin32c.exe
   - xcopy /S /I /Y /Q gs\$_OUTDIR\lib lib
   - rmdir /Q /S gs
-  - curl -LsSO http://www.imagemagick.org/download/binaries/ImageMagick-6.9.3-5-portable-Q16-x64.zip
-  - 7z x -y ImageMagick-6.9.3-5-portable-Q16-x64.zip -oim > nul
+  - curl -LsSO http://www.imagemagick.org/download/binaries/ImageMagick-6.9.3-6-portable-Q16-x64.zip
+  - 7z x -y ImageMagick-6.9.3-6-portable-Q16-x64.zip -oim > nul
   - rmdir /Q /S im\www im\images
   - copy im\* bin
   - rmdir /Q /S im
