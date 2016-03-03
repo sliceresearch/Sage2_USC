@@ -85,6 +85,15 @@
 						<img id="info"         alt="info"         src="images/ui/[graycircle]-info.svg"         width="48" height="48"/>
 						<p id="infoLabel">Information</p>
 					</td>
+					<td id="ezNoteContainer">
+						<img id="ezNote"         alt="ezNote"         src="images/ui/[graycircle]-ezNote.svg"         width="48" height="48"/>
+						<p id="ezNote">Make Note</p>
+					</td>
+					<td id="ezDrawContainer">
+						<img id="ezDraw"         alt="ezDraw"         src="images/ui/[graycircle]-ezDraw.svg"         width="48" height="48"/>
+						<p id="ezDrawLabel">Doodle</p>
+					</td>
+
 				</tr>
 			</table>
 		</div>
@@ -421,17 +430,25 @@
 	<div id="rmbContextMenu">
 	</div>
 
-	<div id="uiNoteMaker">
+	<div id="uiNoteMaker" class="dialog">
+			<br>
+			<textarea id="uiNoteMakerInputField"> </textarea>
+			<br>
+			<button id="uiNoteMakerSendButton"></button>
+			<br>
 	</div>
 	<div id="uiDrawZone" class="dialog">
-		<canvas id="uiDrawZoneCanvas" width="500" height="500">
-		</canvas>
-		<br><br>
+		&nbsp&nbsp
+		<input id="uiDrawColorPicker" type="color" value="#B4B4B4">
+		&nbsp&nbsp&nbsp&nbsp
 		<button id="uiDrawZoneSendButton">
 			Send Drawing
 		</button>
-	</div>
-	<div id="uiDrawZoneShowHideButton">
+		<input id="uiDrawLineThicknessSet" value="1" size="3" type="number">
+		<br>
+		<canvas id="uiDrawZoneCanvas" width="500" height="500" style="border:1px solid black">
+		</canvas>
+		<br><br>
 	</div>
 	
 	

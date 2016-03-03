@@ -1027,6 +1027,10 @@ function handleClick(element) {
 		showDialog('browserDialog');
 	} else if (element.id === "info"         || element.id === "infoContainer"         || element.id === "infoLabel") {
 		showDialog('infoDialog');
+	} else if (element.id === "ezNote"         || element.id === "ezNoteContainer"         || element.id === "ezNoteLabel") {
+		showDialog('uiNoteMaker');
+	} else if (element.id === "ezDraw"         || element.id === "ezDrawContainer"         || element.id === "ezDrawLabel") {
+		showDialog('uiDrawZone');
 	} else if (element.id === "appOpenBtn") {
 		// App Launcher Dialog
 		loadSelectedApplication();
@@ -1882,30 +1886,54 @@ function setRmbContextMenuEntries(entriesToAdd, app) {
 	} //end for each entry
 } //end setRmbContextMenuEntries
 
-//
+// //
+// function setupUiNoteMaker() {
+// 	var workingDiv = document.getElementById('uiNoteMaker');
+// 		workingDiv.style.position = "absolute";
+// 		workingDiv.style.border = "1px solid black"
+// 		workingDiv.style.bottom = "10px";
+// 		workingDiv.style.left = "10px";
+// 	var inputField = document.createElement('input');
+// 		inputField.id = "uiNoteMakerInputField";
+// 		//inputField.rows = 5;
+// 		//inputField.cols = 10;
+// 		//inputField.resize = "none";
+// 	var sendButton = document.createElement('button');
+// 		sendButton.id = "uiNoteMakerSendButton";
+// 		sendButton.style.background = "#FFF8E1";
+// 		sendButton.addEventListener( 'click', function() {
+// 			sendCsdMakeNote();
+// 		} );
+// 		sendButton.innerHTML = "Make Note";
+
+// 	workingDiv.appendChild( inputField );
+// 	workingDiv.innerHTML += "<br>";
+// 	workingDiv.appendChild( sendButton );
+// }
+
 function setupUiNoteMaker() {
 	var workingDiv = document.getElementById('uiNoteMaker');
-		workingDiv.style.position = "absolute";
-		workingDiv.style.border = "1px solid black"
-		workingDiv.style.bottom = "10px";
-		workingDiv.style.left = "10px";
-	var inputField = document.createElement('input');
+		workingDiv.style.position 	= "absolute";
+		workingDiv.style.border 	= "1px solid black"
+		workingDiv.style.top 		= "10px";
+	var inputField = document.getElementById('uiNoteMakerInputField');
 		inputField.id = "uiNoteMakerInputField";
-		//inputField.rows = 5;
-		//inputField.cols = 10;
-		//inputField.resize = "none";
-	var sendButton = document.createElement('button');
-		sendButton.id = "uiNoteMakerSendButton";
+		inputField.rows = 5;
+		inputField.cols = 20;
+		inputField.style.resize = 'none';
+		inputField.style.fontSize = '20px';
+	var sendButton = document.getElementById('uiNoteMakerSendButton');
 		sendButton.style.background = "#FFF8E1";
-		sendButton.addEventListener( 'click', function() {
-			sendCsdMakeNote();
-		} );
-		sendButton.innerHTML = "Make Note";
+	sendButton.addEventListener( 'click', function() {
+		sendCsdMakeNote();
+	} );
+	sendButton.innerHTML = "Make Note";
 
-	workingDiv.appendChild( inputField );
-	workingDiv.innerHTML += "<br>";
-	workingDiv.appendChild( sendButton );
+
+	//adjust center position
+	workingDiv.style.left 		= window.innerWidth/2 - (inputField.cols * ( parseInt(inputField.style.fontSize) /2 ) ) + "px";
 }
+
 
 function sendCsdMakeNote() {
 
@@ -1948,6 +1976,10 @@ function setupUiDrawCanvas() {
 			if (this.doDraw === true) {
 				var workingDiv  = document.getElementById('uiDrawZoneCanvas');
 				var ctx 		= workingDiv.getContext('2d');
+				var uidlts 		= document.getElementById('uiDrawLineThicknessSet');
+				if( parseInt(uidlts.value) < 1) { uidlts.value = 1; }
+				ctx.lineWidth 	= parseInt(uidlts.value);
+				ctx.strokeStyle	= document.getElementById('uiDrawColorPicker').value;
 				ctx.beginPath();
 				ctx.moveTo( this.pmx, this.pmy );
 				ctx.lineTo( event.offsetX, event.offsetY);
@@ -1985,33 +2017,6 @@ function setupUiDrawCanvas() {
 		workingDiv.style.position 	= "absolute";
 		workingDiv.style.top 	= "10px";
 		workingDiv.style.left 	= window.innerWidth/2 - uidzCanvas.width/2 + "px";
-
-	var showHideButton = document.getElementById('uiDrawZoneShowHideButton');
-		showHideButton.style.position 	= "absolute";
-		showHideButton.style.width 		= "50px";
-		showHideButton.style.height 	= "40px";
-		showHideButton.style.bottom 	= "1x";
-		showHideButton.style.right 		= "1px";
-		showHideButton.style.border 	= "1px solid black";
-		showHideButton.innerHTML 		= "Draw";
-	showHideButton.addEventListener( 'click', function() {
-			showDialog("uiDrawZone");
-		// var workingDiv = document.getElementById("uiDrawZone");
-		// //if button displays show, when clicked show the canvas
-		// if(showHideButton.innerHTML === "Draw") {
-		// 	// workingDiv.style.left 		= "";
-		// 	// workingDiv.style.right 		= "10px"; //move it to the right side of the screen
-		// 	showDialog("uiDrawZone");
-		// 	showHideButton.innerHTML 	= "Draw";
-		// }
-		// //else hide the canvase and switch button back to show
-		// else {
-		// 	// workingDiv.style.right 		= "";
-		// 	// workingDiv.style.left 		= "-600px"; //move it to the left
-		// 	showDialog("uiDrawZone");
-		// 	showHideButton.innerHTML 	= "Draw";
-		// }
-	});
 
 
 
