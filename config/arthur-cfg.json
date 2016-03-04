@@ -8,10 +8,14 @@
 	index_port: 9292,
 	background: {
 		color: "#333333",
-		watermark: {
-			svg: "images/EVL-LAVA.svg",
-			color: "rgba(255, 255, 255, 0.5)"
-		}
+		//watermark: {
+		//	svg: "images/EVL-LAVA.svg",
+		//	color: "rgba(255, 255, 255, 0.5)"
+		//}
+		image: {
+			url: "images/background/kamping_4k.jpg",
+			style: "tile"
+		},
 	},
 	ui: {
 		clock: 12,
@@ -96,7 +100,7 @@
 		}
 	},
 	dependencies: {
-		ImageMagick: "C:/Program Files/ImageMagick-6.8.9-Q16/",
+		ImageMagick: "",
 		FFMpeg: "C:/Dev/ffmpeg-win64-shared/bin/"
     }
 }
