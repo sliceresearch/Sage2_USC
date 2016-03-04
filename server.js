@@ -7407,6 +7407,21 @@ function csdLaunchAppWithValues(wsio,data) {
 	console.log( "erase me, whatTheNewAppIdShouldBe " + whatTheNewAppIdShouldBe );
 	console.log( "erase me, bulls getUniqueAppId.count:" + getUniqueAppId.count );
 
+	//stagger the start location to prevent them from stacking on top of each other.
+	//this is just a temporary solution.
+	//percents
+	appLoadData.position = [ csdDataStructure.xAppLaunchCoordinate, csdDataStructure.yAppLaunchCoordinate ];
+	//the csdDataStructure vars are declared below
+	csdDataStructure.yAppLaunchCoordinate += 0.1;
+	if( csdDataStructure.yAppLaunchCoordinate >= 1.0 ) { 
+		csdDataStructure.xAppLaunchCoordinate += 0.1;
+		csdDataStructure.yAppLaunchCoordinate = 0.05;
+		if( csdDataStructure.xAppLaunchCoordinate >= 1.0 ) { 
+			csdDataStructure.xAppLaunchCoordinate = 0.05;
+		}
+	}
+
+
 	wsLoadApplication( wsio, appLoadData );
 	//wait 1 second, because idk how long it takes to launch an app.
 	setTimeout(
@@ -7477,6 +7492,8 @@ var csdDataStructure = {};
 	csdDataStructure.allValues = {};
 	csdDataStructure.numberOfValues = 0;
 	csdDataStructure.allNamesOfValues = [];
+	csdDataStructure.xAppLaunchCoordinate = 0.05;
+	csdDataStructure.yAppLaunchCoordinate = 0.05;
 
 
 /**

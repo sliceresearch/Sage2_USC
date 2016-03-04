@@ -10,7 +10,7 @@
 
 "use strict";
 
-var uiNote = SAGE2_App.extend({
+var quickNote = SAGE2_App.extend({
 	init: function(data) {
 		this.SAGE2Init("div", data);
 
@@ -26,8 +26,9 @@ var uiNote = SAGE2_App.extend({
 			workingDiv.style.fontSize = ui.titleTextSize + "px";
 
 		this.setMessage(
-			[ "default",
-			"This is a test to see how the text will react when it probably extends beyond the width."
+			[ 
+				"Loading note from user...",
+				"Quick Note"
 			]);
 
 	},

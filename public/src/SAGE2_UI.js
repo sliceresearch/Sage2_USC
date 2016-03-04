@@ -1030,6 +1030,9 @@ function handleClick(element) {
 	} else if (element.id === "ezNote"         || element.id === "ezNoteContainer"         || element.id === "ezNoteLabel") {
 		showDialog('uiNoteMaker');
 	} else if (element.id === "ezDraw"         || element.id === "ezDrawContainer"         || element.id === "ezDrawLabel") {
+		//clear drawzone
+		uiCanvasBackgroundFlush('white');
+		//show
 		showDialog('uiDrawZone');
 	} else if (element.id === "appOpenBtn") {
 		// App Launcher Dialog
@@ -1927,11 +1930,10 @@ function setupUiNoteMaker() {
 	sendButton.addEventListener( 'click', function() {
 		sendCsdMakeNote();
 	} );
-	sendButton.innerHTML = "Make Note";
 
 
 	//adjust center position
-	workingDiv.style.left 		= window.innerWidth/2 - (inputField.cols * ( parseInt(inputField.style.fontSize) /2 ) ) + "px";
+	//workingDiv.style.left 		= window.innerWidth/2 - (inputField.cols * ( parseInt(inputField.style.fontSize) /2 ) ) + "px";
 }
 
 
@@ -1941,9 +1943,16 @@ function sendCsdMakeNote() {
 
 	var data = {};
 		data.type 		= "launchAppWithValues";
-		data.appName 	= "uiNote";
+		data.appName 	= "quickNote";
 		data.func 		= "setMessage";
-		data.params 	= [ workingDiv.value, interactor.uniqueID];
+		/*
+		To get the pointer name it is actually located in the 
+			document.getElementById('sage2PointerLabel').value
+		Or if the ip address and port number is desired (unique identifier beyond wsio)
+			interactor.uniqueID
+		Unsure if server knows/tracks pointer name.
+		*/
+		data.params 	= [ workingDiv.value, document.getElementById('sage2PointerLabel').value];
 
 	console.log("erase me, sending csd make note with value:" + workingDiv.value);
 	console.dir(data);
@@ -2001,7 +2010,7 @@ function setupUiDrawCanvas() {
 
 			var data = {};
 				data.type 		= "launchAppWithValues";
-				data.appName 	= "uiDraw";
+				data.appName 	= "ezDraw";
 				data.func 		= "setCanvas";
 				data.params 	= [ imageString, interactor.uniqueID];
 			wsio.emit( 'csdMessage', data );
@@ -2018,7 +2027,18 @@ function setupUiDrawCanvas() {
 		workingDiv.style.top 	= "10px";
 		workingDiv.style.left 	= window.innerWidth/2 - uidzCanvas.width/2 + "px";
 
+}
 
+function uiCanvasBackgroundFlush(color) {
+	var workingDiv 	= document.getElementById('uiDrawZoneCanvas');
+	var ctx 		= workingDiv.getContext('2d');
+	
+	if(color === 'transparent') {
 
-
+	}
+	else {
+		ctx.fillStyle = "#FFFFFF";
+		ctx.fillRect( 0, 0, workingDiv.width, workingDiv.height );
+		ctx.fillStyle = "#000000";
+	}
 }

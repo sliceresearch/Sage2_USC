@@ -1,15 +1,15 @@
 {
-	"main_script": "uiDraw.js",
-        "icon": "uiDraw.png",
+	"main_script": "ezDraw.js",
+        "icon": "ezDraw.png",
 	"width": 500,
 	"height": 500,
 	"animation": true,
 	"sticky": true,
 	"dependencies": [
 	],
-	"title": "aUiDraw",
+	"title": "ezDraw",
 	"version": "1.0.0",
-	"description": "aUiDraw",
+	"description": "ezDraw",
 	"keywords": [ "draw" ],
 	"author": "Dylan Kobayashi <dylank@hawaii.edu>",
 	"license": "SAGE2-Software-License"

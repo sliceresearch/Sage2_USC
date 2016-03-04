@@ -87,7 +87,7 @@
 					</td>
 					<td id="ezNoteContainer">
 						<img id="ezNote"         alt="ezNote"         src="images/ui/[graycircle]-ezNote.svg"         width="48" height="48"/>
-						<p id="ezNote">Make Note</p>
+						<p id="ezNote">Quick Note</p>
 					</td>
 					<td id="ezDrawContainer">
 						<img id="ezDraw"         alt="ezDraw"         src="images/ui/[graycircle]-ezDraw.svg"         width="48" height="48"/>
@@ -430,24 +430,31 @@
 	<div id="rmbContextMenu">
 	</div>
 
-	<div id="uiNoteMaker" class="dialog">
+	<div id="uiNoteMaker" class="dialog" style="horizontal-align:center;">
 			<br>
-			<textarea id="uiNoteMakerInputField"> </textarea>
+			&nbsp&nbsp&nbsp
+			<textarea id="uiNoteMakerInputField"></textarea>
+			&nbsp&nbsp&nbsp
 			<br>
-			<button id="uiNoteMakerSendButton"></button>
-			<br>
+			&nbsp&nbsp&nbsp
+			<button id="uiNoteMakerSendButton">&nbspMake Note [Enter]&nbsp</button>
+			<br>&nbsp
 	</div>
 	<div id="uiDrawZone" class="dialog">
+		<br>
 		&nbsp&nbsp
-		<input id="uiDrawColorPicker" type="color" value="#B4B4B4">
-		&nbsp&nbsp&nbsp&nbsp
+		<input id="uiDrawColorPicker" type="color" value="#000000">
+		&nbsp&nbsp&nbsp
+		<input id="uiDrawLineThicknessSet" value="1" size="3" type="number">
+		&nbsp&nbsp&nbsp
 		<button id="uiDrawZoneSendButton">
 			Send Drawing
 		</button>
-		<input id="uiDrawLineThicknessSet" value="1" size="3" type="number">
-		<br>
+		<br><br>
+		&nbsp&nbsp&nbsp
 		<canvas id="uiDrawZoneCanvas" width="500" height="500" style="border:1px solid black">
 		</canvas>
+		&nbsp&nbsp&nbsp
 		<br><br>
 	</div>
 	
