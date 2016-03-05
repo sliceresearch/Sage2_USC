@@ -25,7 +25,9 @@
 	},
 	security: {
 		// The SSL method to use
-		secureProtocol: "TLSv1_2_method"
+		secureProtocol: "TLSv1_2_method",
+		// Enable HPKP: HTTP Public Key Pinning Extension
+		enableHPKP: true
 	},
 	ui: {
 		clock: 24,

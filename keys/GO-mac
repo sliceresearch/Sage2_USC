@@ -22,5 +22,3 @@ done
 
 /usr/bin/security add-trusted-cert -d -r trustRoot localhost-server.crt
 
-openssl x509 -in localhost-ca.crt -pubkey -noout | openssl rsa -pubin -outform der | openssl dgst -sha256 -binary | openssl enc -base64 > pin1.sha256
-openssl x509 -in 127.0.0.1-ca.crt -pubkey -noout | openssl rsa -pubin -outform der | openssl dgst -sha256 -binary | openssl enc -base64 > pin2.sha256

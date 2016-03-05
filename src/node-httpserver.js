@@ -214,7 +214,7 @@ HttpServer.prototype.buildHeader = function() {
 		// 30 days expirations
 		header["Public-Key-Pins"] = "pin-sha256=\"" + hpkpPin1() +
 			"\"; pin-sha256=\"" + hpkpPin2() +
-			"=\"; max-age=2592000; includeSubDomains";
+			"\"; max-age=2592000; includeSubDomains";
 	}
 
 	return header;
