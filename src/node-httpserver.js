@@ -90,6 +90,9 @@ function detectCookies(request) {
  */
 HttpServer.prototype.notfound = function(res) {
 	var header = this.buildHeader();
+	// Do not allow iframe
+	header["X-Frame-Options"] = "DENY";
+
 	res.writeHead(404, header);
 	res.write('<meta http-equiv="refresh" content="5;url=/index.html">');
 	res.write('<h1>SAGE2 error</h1>Invalid request\n');
@@ -107,11 +110,37 @@ HttpServer.prototype.notfound = function(res) {
  */
 HttpServer.prototype.redirect = function(res, aurl) {
 	var header = this.buildHeader();
+	// Do not allow iframe
+	header["X-Frame-Options"] = "DENY";
 	// 301 HTTP code for redirect: Moved Permanently
 	header["Location"] = aurl;
 	res.writeHead(301, header);
 	res.end();
 };
+
+var hpkpPin1 = (function() {
+	var pin;
+	return function() {
+		if (!pin) {
+			pin = fs.readFileSync(path.join("keys", "pin1.sha256"), {encoding: 'utf8'});
+			pin = pin.trim();
+			console.log('PIN1', pin);
+		}
+		return pin;
+	};
+})();
+
+var hpkpPin2 = (function() {
+	var pin;
+	return function() {
+		if (!pin) {
+			pin = fs.readFileSync(path.join("keys", "pin2.sha256"), {encoding: 'utf8'});
+			pin = pin.trim();
+			console.log('PIN2', pin);
+		}
+		return pin;
+	};
+})();
 
 /**
  * Build an HTTP header object
@@ -174,6 +203,19 @@ HttpServer.prototype.buildHeader = function() {
 	// 	" media-src 'self';" +
 	// 	" style-src 'self' 'unsafe-inline';" +
 	// 	" script-src 'self' http://www.webglearth.com https://maps.googleapis.com 'unsafe-eval';";
+
+	// HTTP PUBLIC KEY PINNING (HPKP)
+	// Key pinning is a trust-on-first-use (TOFU) mechanism.
+	// The first time a browser connects to a host it lacks the the information necessary to perform
+	// "pin validation" so it will not be able to detect and thwart a MITM attack.
+	// This feature only allows detection of these kinds of attacks after the first connection.
+	var cfg = module.parent.exports.config;
+	if (cfg.security && sageutils.isTrue(cfg.security.enableHPKP)) {
+		// 30 days expirations
+		header["Public-Key-Pins"] = "pin-sha256=\"" + hpkpPin1() +
+			"\"; pin-sha256=\"" + hpkpPin2() +
+			"=\"; max-age=2592000; includeSubDomains";
+	}
 
 	return header;
 };
@@ -290,6 +332,11 @@ HttpServer.prototype.onreq = function(req, res) {
 			// Build a default header object
 			var header = this.buildHeader();
 
+			if (path.extname(pathname) === ".html") {
+				// Do not allow iframe
+				header["X-Frame-Options"] = "DENY";
+			}
+
 			header["Access-Control-Allow-Headers" ] = "Range";
 			header["Access-Control-Expose-Headers"] = "Accept-Ranges, Content-Encoding, Content-Length, Content-Range";
 			if (req.headers.origin !== undefined) {
@@ -301,9 +348,11 @@ HttpServer.prototype.onreq = function(req, res) {
 
 			if (getName.match(/^\/(src|lib|images|css)\/.+/)) {
 				// cache for 1 week for SAGE2 core files
-				header['Cache-Control'] = 'public, max-age=604800';
+				// header['Cache-Control'] = 'public, max-age=604800';
+
+				// No persistent copy - must check
+				header['Cache-Control'] = 'no-store, must-revalidate, max-age=604800';
 			} else {
-				// console.log('No caching for', pathname, getName);
 				header['Cache-Control'] = 'no-cache';
 			}
 
@@ -353,7 +402,7 @@ HttpServer.prototype.onreq = function(req, res) {
 				// Open the file as a stream
 				var stream = fs.createReadStream(pathname);
 				// array of allowed compression file types
-				var compressExtensions = [ '.html', '.json', '.js', '.css', '.txt', '.svg', '.xml', '.md',  ];
+				var compressExtensions = ['.html', '.json', '.js', '.css', '.txt', '.svg', '.xml', '.md'];
 				if (compressExtensions.indexOf(path.extname(pathname)) === -1) {
 					// Do not compress, just set file size
 					header["Content-Length"] = total;

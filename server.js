@@ -408,7 +408,8 @@ function broadcast(name, data) {
 	wsioServerS.broadcast(name, data);
 }
 
-// Export the function to sub modules
+// Export variables and functions to sub modules
+exports.config    = config;
 exports.broadcast = broadcast;
 exports.dirname   = path.join(__dirname, "node_modules");
 
