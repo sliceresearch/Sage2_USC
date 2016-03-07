@@ -18,7 +18,8 @@
  * @requires node-coordinateCalculator, node-1euro
  */
 
-// require variables to be declared
+/*eslint-disable */
+
 "use strict";
 
 var dgram     = require('dgram');

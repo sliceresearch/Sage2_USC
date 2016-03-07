@@ -8,6 +8,11 @@
 //
 // Copyright (c) 2014
 
+/* global showSAGE2Message, showDialog */
+/* global cancelIdleCallback, requestIdleCallback */
+/* global showSAGE2PointerOverlayNoMouse, hideSAGE2PointerOverlayNoMouse */
+/* global pointerClick, sagePointerDisabled, sagePointerEnabled */
+
 "use strict";
 
 /**

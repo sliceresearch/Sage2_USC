@@ -46,7 +46,7 @@ function photoAlbums() {
 	var SAGE2_photoAlbumFadeCount = 20;
 
 	// canvas background gives the color of the background of the window
-	SAGE2_photoAlbumCanvasBackground = "black";
+	var SAGE2_photoAlbumCanvasBackground = "black";
 
 	// return an object with all the settings
 	return {albums: SAGE2_photoAlbums, loadTimer: SAGE2_photoAlbumLoadTimer,

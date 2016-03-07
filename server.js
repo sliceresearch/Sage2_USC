@@ -363,6 +363,16 @@ function initializeSage2Server() {
 	sage2Server  = http.createServer(httpServerApp.onrequest);
 	sage2ServerS = https.createServer(options, httpServerApp.onrequest);
 
+	// In case the HTTPS client doesnt support tickets
+	var tlsSessionStore = {};
+	sage2ServerS.on('newSession', function(id, data, cb) {
+		tlsSessionStore[id.toString('hex')] = data;
+		cb();
+	});
+	sage2ServerS.on('resumeSession', function(id, cb) {
+		cb(null, tlsSessionStore[id.toString('hex')] || null);
+	});
+
 	// Set up websocket servers - 2 way communication between server and all browser clients
 	wsioServer  = new WebsocketIO.Server({server: sage2Server});
 	wsioServerS = new WebsocketIO.Server({server: sage2ServerS});
@@ -405,7 +415,8 @@ function broadcast(name, data) {
 	wsioServerS.broadcast(name, data);
 }
 
-// Export the function to sub modules
+// Export variables and functions to sub modules
+exports.config    = config;
 exports.broadcast = broadcast;
 exports.dirname   = path.join(__dirname, "node_modules");
 
@@ -439,6 +450,16 @@ var remoteSharingSessions      = {};
 var stickyAppHandler     = new StickyItems();
 
 
+//
+// Catch the uncaught errors that weren't wrapped in a domain or try catch statement
+//
+process.on('uncaughtException', function(err) {
+	// handle the error safely
+	console.trace("SAGE2>	", err);
+});
+
+
+
 function openWebSocketClient(wsio) {
 	wsio.onclose(closeWebSocketClient);
 	wsio.on('addClient', wsAddClient);
@@ -450,7 +471,11 @@ function closeWebSocketClient(wsio) {
 	if (wsio.clientType === "display") {
 		console.log(sageutils.header("Disconnect") + wsio.id + " (" + wsio.clientType + " " + wsio.clientID + ")");
 	} else {
-		console.log(sageutils.header("Disconnect") + wsio.id + " (" + wsio.clientType + ")");
+		if (wsio.clientType) {
+			console.log(sageutils.header("Disconnect") + wsio.id + " (" + wsio.clientType + ")");
+		} else {
+			console.log(sageutils.header("Disconnect") + wsio.id + " (unknown)");
+		}
 	}
 
 	addEventToUserLog(wsio.id, {type: "disconnect", data: null, time: Date.now()});
@@ -541,6 +566,21 @@ function wsAddClient(wsio, data) {
 	} else {
 		wsio.clientID = -1;
 		console.log(sageutils.header("Connect") + wsio.id + " (" + wsio.clientType + ")");
+		if (wsio.clientType === "remoteServer") {
+			// Remote info
+			// var remoteaddr = wsio.ws.upgradeReq.connection.remoteAddress;
+			// var remoteport = wsio.ws.upgradeReq.connection.remotePort;
+
+			// Checking if it's a known server
+			config.remote_sites.forEach(function(element, index, array) {
+				if (element.host === data.host &&
+					element.port === data.port &&
+					!remoteSites[index].connected) {
+					console.log(sageutils.header("Connect") + 'known remote site ' + data.host + ':' + data.port);
+					manageRemoteConnection(wsio, element, index);
+				}
+			});
+		}
 	}
 
 	clients.push(wsio);
@@ -790,10 +830,11 @@ function initializeExistingSagePointers(wsio) {
 }
 
 function initializeExistingWallUI(wsio) {
+	var menuInfo;
 	if (config.ui.reload_wallui_on_refresh === false) {
 		// console.log("WallUI reload on display client refresh: Disabled");
 		for (key in SAGE2Items.radialMenus.list) {
-			var menuInfo = SAGE2Items.radialMenus.list[key].getInfo();
+			menuInfo = SAGE2Items.radialMenus.list[key].getInfo();
 			hideRadialMenu(menuInfo.id);
 		}
 		return;
@@ -801,7 +842,7 @@ function initializeExistingWallUI(wsio) {
 	// console.log("WallUI reload on display client refresh: Enabled (default)");
 	var key;
 	for (key in SAGE2Items.radialMenus.list) {
-		var menuInfo = SAGE2Items.radialMenus.list[key].getInfo();
+		menuInfo = SAGE2Items.radialMenus.list[key].getInfo();
 		broadcast('createRadialMenu', menuInfo);
 		broadcast('updateRadialMenu', menuInfo);
 		updateWallUIMediaBrowser(menuInfo.id);
@@ -2837,7 +2878,9 @@ function wsRequestNextRemoteFrame(wsio, data) {
 	} else {
 		originId = data.id;
 	}
-	var remote_id = config.host + ":" + config.secure_port + "|" + data.id;
+	// Luc here: changing to unsecure port since websocket communication to display is unsecure
+	// var remote_id = config.host + ":" + config.secure_port + "|" + data.id;
+	var remote_id = config.host + ":" + config.port + "|" + data.id;
 
 	if (SAGE2Items.applications.list.hasOwnProperty(originId)) {
 		var stream = SAGE2Items.applications.list[originId];
@@ -2935,14 +2978,14 @@ function wsRequestDataSharingSession(wsio, data) {
 
 	console.log("Data-sharing request from " + data.config.name + " (" + data.config.host + ":" + data.config.secure_port + ")");
 	broadcast('requestedDataSharingSession', {name: data.config.name, host: data.config.host, port: data.config.port});
-	remoteSharingRequestDialog = {wsio: wsio, config: data.config};
+	// remoteSharingRequestDialog = {wsio: wsio, config: data.config};
 	showRequestDialog(true);
 }
 
 function wsCancelDataSharingSession(wsio, data) {
 	console.log("Data-sharing request cancelled");
 	broadcast('closeRequestDataSharingDialog', null, 'requiresFullApps');
-	remoteSharingRequestDialog = null;
+	// remoteSharingRequestDialog = null;
 	showRequestDialog(false);
 }
 
@@ -3887,6 +3930,7 @@ function setupHttpsOptions() {
 			// If true the server will request a certificate from clients that connect and attempt to verify that certificate
 			requestCert: false,
 			rejectUnauthorized: false,
+			honorCipherOrder: true,
 			// callback to handle multi-homed machines
 			SNICallback: function(servername, cb) {
 				if (certs.hasOwnProperty(servername)) {
@@ -3897,13 +3941,27 @@ function setupHttpsOptions() {
 				}
 			}
 		};
+
+		// The SSL method to use, otherwise undefined
+		if (config.security && config.security.secureProtocol) {
+			// Possible values are defined in the constant SSL_METHODS of OpenSSL
+			// Only enable TLS 1.2 for instance
+			// SSLv3_method,
+			// TLSv1_method, TLSv1_1_method, TLSv1_2_method
+			// DTLS_method,  DTLSv1_method,  DTLSv1_2_method
+			httpsOptions.secureProtocol = config.security.secureProtocol;
+			console.log(sageutils.header("HTTPS") +
+				"securing with protocol: " + httpsOptions.secureProtocol);
+		}
 	}
 
 	return httpsOptions;
 }
 
 function sendConfig(req, res) {
-	res.writeHead(200, {"Content-Type": "text/plain"});
+	var header = HttpServer.prototype.buildHeader();
+	header["Content-Type"] = "text/plain";
+	res.writeHead(200, header);
 	// Adding the calculated version into the data structure
 	config.version = SAGE2_version;
 	res.write(JSON.stringify(config));
@@ -3934,6 +3992,7 @@ function uploadForm(req, res) {
 			// Removing the temporary file
 			fs.unlinkSync(this.openedFiles[0].path);
 		} catch (err) {
+			console.log(sageutils.header("Upload") + '   error removing the temporary file');
 		}
 	});
 
@@ -3963,14 +4022,17 @@ function uploadForm(req, res) {
 	});
 
 	form.parse(req, function(err, fields, files) {
+		var header = HttpServer.prototype.buildHeader();
 		if (err) {
-			res.writeHead(500, {"Content-Type": "text/plain"});
+			header["Content-Type"] = "text/plain";
+			res.writeHead(500, header);
 			res.write(err + "\n\n");
 			res.end();
 			return;
 		}
 		// build the reply to the upload
-		res.writeHead(200, {'Content-Type': 'application/json'});
+		header["Content-Type"] = "application/json";
+		res.writeHead(200, header);
 		// For webix uploader: status: server
 		fields.done = true;
 
@@ -4079,68 +4141,74 @@ if (config.remote_sites) {
 	});
 }
 
+function manageRemoteConnection(remote, site, index) {
+	console.log(sageutils.header("Remote") + "Connected to " + site.name);
+	remote.updateRemoteAddress(site.host, site.port);
+	var clientDescription = {
+		clientType: "remoteServer",
+		host: config.host,
+		port: config.secure_port,
+		// port: config.port,
+		requests: {
+			config: false,
+			version: false,
+			time: false,
+			console: false
+		}
+	};
+	remote.clientType = "remoteServer";
+
+	remote.onclose(function() {
+		console.log("Remote site \"" + config.remote_sites[index].name + "\" now offline");
+		remoteSites[index].connected = false;
+		var delete_site = {name: remoteSites[index].name, connected: remoteSites[index].connected};
+		broadcast('connectedToRemoteSite', delete_site);
+		removeElement(clients, remote);
+	});
+
+	remote.on('addClient',                              wsAddClient);
+	remote.on('addNewElementFromRemoteServer',          wsAddNewElementFromRemoteServer);
+	remote.on('addNewSharedElementFromRemoteServer',    wsAddNewSharedElementFromRemoteServer);
+	remote.on('requestNextRemoteFrame',                 wsRequestNextRemoteFrame);
+	remote.on('updateRemoteMediaStreamFrame',           wsUpdateRemoteMediaStreamFrame);
+	remote.on('stopMediaStream',                        wsStopMediaStream);
+	remote.on('requestNextRemoteBlockFrame',            wsRequestNextRemoteBlockFrame);
+	remote.on('updateRemoteMediaBlockStreamFrame',      wsUpdateRemoteMediaBlockStreamFrame);
+	remote.on('stopMediaBlockStream',                   wsStopMediaBlockStream);
+	remote.on('requestDataSharingSession',              wsRequestDataSharingSession);
+	remote.on('cancelDataSharingSession',               wsCancelDataSharingSession);
+	remote.on('acceptDataSharingSession',               wsAcceptDataSharingSession);
+	remote.on('rejectDataSharingSession',               wsRejectDataSharingSession);
+	remote.on('createRemoteSagePointer',                wsCreateRemoteSagePointer);
+	remote.on('startRemoteSagePointer',                 wsStartRemoteSagePointer);
+	remote.on('stopRemoteSagePointer',                  wsStopRemoteSagePointer);
+	remote.on('remoteSagePointerPosition',              wsRemoteSagePointerPosition);
+	remote.on('remoteSagePointerToggleModes',           wsRemoteSagePointerToggleModes);
+	remote.on('remoteSagePointerHoverCorner',           wsRemoteSagePointerHoverCorner);
+	remote.on('addNewRemoteElementInDataSharingPortal', wsAddNewRemoteElementInDataSharingPortal);
+
+	remote.on('updateApplicationOrder',                 wsUpdateApplicationOrder);
+	remote.on('startApplicationMove',                   wsStartApplicationMove);
+	remote.on('startApplicationResize',                 wsStartApplicationResize);
+	remote.on('updateApplicationPosition',              wsUpdateApplicationPosition);
+	remote.on('updateApplicationPositionAndSize',       wsUpdateApplicationPositionAndSize);
+	remote.on('finishApplicationMove',                  wsFinishApplicationMove);
+	remote.on('finishApplicationResize',                wsFinishApplicationResize);
+	remote.on('deleteApplication',                      wsDeleteApplication);
+	remote.on('updateApplicationState',                 wsUpdateApplicationState);
+	remote.on('updateApplicationStateOptions',          wsUpdateApplicationStateOptions);
+
+	remote.emit('addClient', clientDescription);
+	remoteSites[index].connected = true;
+	var new_site = {name: remoteSites[index].name, connected: remoteSites[index].connected};
+	broadcast('connectedToRemoteSite', new_site);
+	clients.push(remote);
+}
+
+
 function createRemoteConnection(wsURL, element, index) {
 	var remote = new WebsocketIO(wsURL, false, function() {
-		console.log(sageutils.header("Remote") + "Connected to " + element.name);
-		remote.updateRemoteAddress(element.host, element.port);
-		var clientDescription = {
-			clientType: "remoteServer",
-			host: config.host,
-			port: config.port,
-			requests: {
-				config: false,
-				version: false,
-				time: false,
-				console: false
-			}
-		};
-		remote.clientType = "remoteServer";
-
-		remote.onclose(function() {
-			console.log("Remote site \"" + config.remote_sites[index].name + "\" now offline");
-			remoteSites[index].connected = false;
-			var delete_site = {name: remoteSites[index].name, connected: remoteSites[index].connected};
-			broadcast('connectedToRemoteSite', delete_site);
-			removeElement(clients, remote);
-		});
-
-		remote.on('addClient',                              wsAddClient);
-		remote.on('addNewElementFromRemoteServer',          wsAddNewElementFromRemoteServer);
-		remote.on('addNewSharedElementFromRemoteServer',    wsAddNewSharedElementFromRemoteServer);
-		remote.on('requestNextRemoteFrame',                 wsRequestNextRemoteFrame);
-		remote.on('updateRemoteMediaStreamFrame',           wsUpdateRemoteMediaStreamFrame);
-		remote.on('stopMediaStream',                        wsStopMediaStream);
-		remote.on('requestNextRemoteBlockFrame',            wsRequestNextRemoteBlockFrame);
-		remote.on('updateRemoteMediaBlockStreamFrame',      wsUpdateRemoteMediaBlockStreamFrame);
-		remote.on('stopMediaBlockStream',                   wsStopMediaBlockStream);
-		remote.on('requestDataSharingSession',              wsRequestDataSharingSession);
-		remote.on('cancelDataSharingSession',               wsCancelDataSharingSession);
-		remote.on('acceptDataSharingSession',               wsAcceptDataSharingSession);
-		remote.on('rejectDataSharingSession',               wsRejectDataSharingSession);
-		remote.on('createRemoteSagePointer',                wsCreateRemoteSagePointer);
-		remote.on('startRemoteSagePointer',                 wsStartRemoteSagePointer);
-		remote.on('stopRemoteSagePointer',                  wsStopRemoteSagePointer);
-		remote.on('remoteSagePointerPosition',              wsRemoteSagePointerPosition);
-		remote.on('remoteSagePointerToggleModes',           wsRemoteSagePointerToggleModes);
-		remote.on('remoteSagePointerHoverCorner',           wsRemoteSagePointerHoverCorner);
-		remote.on('addNewRemoteElementInDataSharingPortal', wsAddNewRemoteElementInDataSharingPortal);
-
-		remote.on('updateApplicationOrder',                 wsUpdateApplicationOrder);
-		remote.on('startApplicationMove',                   wsStartApplicationMove);
-		remote.on('startApplicationResize',                 wsStartApplicationResize);
-		remote.on('updateApplicationPosition',              wsUpdateApplicationPosition);
-		remote.on('updateApplicationPositionAndSize',       wsUpdateApplicationPositionAndSize);
-		remote.on('finishApplicationMove',                  wsFinishApplicationMove);
-		remote.on('finishApplicationResize',                wsFinishApplicationResize);
-		remote.on('deleteApplication',                      wsDeleteApplication);
-		remote.on('updateApplicationState',                 wsUpdateApplicationState);
-		remote.on('updateApplicationStateOptions',          wsUpdateApplicationStateOptions);
-
-		remote.emit('addClient', clientDescription);
-		remoteSites[index].connected = true;
-		var new_site = {name: remoteSites[index].name, connected: remoteSites[index].connected};
-		broadcast('connectedToRemoteSite', new_site);
-		clients.push(remote);
+		manageRemoteConnection(remote, element, index);
 	});
 
 	return remote;
@@ -6658,7 +6726,8 @@ function keyUp(uniqueID, pointerX, pointerY, data) {
 		var eUser = {id: sagePointers[uniqueID].id, label: sagePointers[uniqueID].label,
 			color: sagePointers[uniqueID].color};
 		var event = {code: data.code, printable: false, state: "up", ctrlId: lockedControl.ctrlId,
-			appId: lockedControl.appId, instanceID: lockedControl.instanceID, user: eUser};
+			appId: lockedControl.appId, instanceID: lockedControl.instanceID, user: eUser,
+			date: Date.now()};
 		broadcast('keyInTextInputWidget', event);
 		if (data.code === 13) {
 			// Enter key
@@ -6814,7 +6883,8 @@ function keyPress(uniqueID, pointerX, pointerY, data) {
 		var eUser = {id: sagePointers[uniqueID].id, label: sagePointers[uniqueID].label,
 					color: sagePointers[uniqueID].color};
 		var event = {code: data.code, printable: true, state: "press", ctrlId: lockedControl.ctrlId,
-					appId: lockedControl.appId, instanceID: lockedControl.instanceID, user: eUser};
+					appId: lockedControl.appId, instanceID: lockedControl.instanceID, user: eUser,
+					date: Date.now()};
 		broadcast('keyInTextInputWidget', event);
 		if (data.code === 13) {
 			// Enter key

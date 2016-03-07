@@ -8,6 +8,8 @@
 //
 // Copyright (c) 2014
 
+/* global SAGE2WidgetButtonTypes */
+
 "use strict";
 
 /**

@@ -15,7 +15,8 @@
  * @submodule radialmenu
  */
 
-// require variables to be declared
+/*eslint-disable */
+
 "use strict";
 
 // unused: var radialMenuCenter = { x: 210, y: 210 }; // scale applied in ctor

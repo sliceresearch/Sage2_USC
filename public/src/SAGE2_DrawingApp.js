@@ -8,6 +8,8 @@
 //
 // Copyright (c) 2014-15
 
+/* global Kinetic, simplify */
+
 "use strict";
 
 /**

@@ -1,0 +1,120 @@
+{
+	name: "Cybercommons2",
+	host: "inferno.evl.uic.edu",
+	port: 443,
+	index_port: 80,
+	url: "http://bit.do/cyberc",
+	background: {
+		image: {
+			url: "images/background/chicago_skyline_iridium.jpg",
+			style: "fit"
+		},
+		watermark: {
+			svg: "images/EVL-logo.svg",
+			color: "rgba(255, 255, 255, 0.2)"
+		},
+		clip: true
+	},
+	ui: {
+		clock: 12,
+		show_url: true,
+		show_version: true,
+		maxWindowWidth : 8196,
+		maxWindowHeight : 8196,
+		noDropShadow: true
+	},
+	resolution: {
+		width: 8160,
+		height: 2304
+		// height: 2190
+	},
+	layout: {
+		rows: 1,
+		columns: 1
+	},
+	displays: [
+		{
+			row: 0,
+			column: 0
+		}
+	],
+	alternate_hosts: [
+		"localhost",
+		"127.0.0.1",
+		"131.193.183.170"
+	],
+	remote_sites: [
+		{
+			name: "CAVE2",
+			host: "lyra.evlrn.uic.edu",
+			port: 443,
+			secure: true
+		},
+		{
+			name: "LAVA",
+			host: "pele.manoa.hawaii.edu",
+			port: 443,
+			secure: true
+		},
+		{
+			name: "ANL",
+			host: "display3d.mcs.anl.gov",
+			port: 443,
+			secure: true
+		},
+		{
+			name: "Green Room",
+			host: "mesaverde.evlrn.uic.edu",
+			port: 443,
+			secure: true
+		},
+		{
+			name: "IceWall",
+			host: "thor.evl.uic.edu",
+			port: 443,
+			secure: true
+		},
+		{
+			name: "Arthur",
+			host: "nishimoto.evl.uic.edu",
+			port: 9090,
+			secure: true
+		}
+	],
+	experimental: {
+		omicron: {
+			// Default SAGE2 input connection
+			// SAGE listens for a sageinputserver to stream events
+			enable: true,
+			//host: "131.193.76.121",
+			dataPort: 30005,
+			
+			debug: false,
+			
+			// Touch gestures
+			enableDoubleClickMaximize: true,
+			enableThreeFingerRightClick: true,
+			enableTwoFingerWindowDrag: false,
+			enableTwoFingerZoom: true,
+			enableFiveFingerCloseApp: false,
+			
+			touchOffset: [ 0, -25 ], // in pixels
+			zoomGestureScale: 5,
+			acceleratedDragScale: 2,
+			
+			// Alternate input connection
+			// Note if the following is enabled the server will attempt
+			// to connect to the specified Omicron oinputserver
+			// (By default the server listens for an Omicron sageinputserver to connect to it)
+			useOinputserver: false,
+			inputServerIP: "131.193.76.94",
+			//inputServerIP: "131.193.183.207",
+			msgPort: 28000
+		}
+	},
+	dependencies: {
+		ImageMagick: "bin/",
+		FFMpeg: "bin/"
+	}
+}
+

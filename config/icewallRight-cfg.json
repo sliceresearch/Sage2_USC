@@ -44,6 +44,12 @@
 			"host": "lyra.evl.uic.edu",
 			"port": 443,
 			"secure": true
+		},
+		{
+			"name": "Icewall Left",
+			"host": "thor.evl.uic.edu",
+			"port": 6070,
+			"secure": true
 		}
 	],
 	// for experimental features: true/false

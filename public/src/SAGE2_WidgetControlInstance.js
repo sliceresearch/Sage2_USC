@@ -8,6 +8,15 @@
 //
 // Copyright (c) 2014
 
+/* global drawBackgroundForWidgetRadialDial */
+/* global polarToCartesian */
+/* global drawSpokeForRadialLayout */
+/* global makeWidgetBarOutlinePath */
+/* global getPropertyHandle */
+/* global createButtonShape */
+/* global drawWidgetControlCenter */
+/* global insertTextIntoTextInputWidget */
+
 "use strict";
 
 /**

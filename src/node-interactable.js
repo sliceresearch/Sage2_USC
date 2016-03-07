@@ -268,6 +268,9 @@ InteractableManager.prototype.hasObjectWithId = function(id) {
 */
 InteractableManager.prototype.editVisibility = function(id, layerId, visible, partId) {
 	var pkg = this.interactableObjects[layerId][id];
+	if (!pkg) {
+		return;
+	}
 	if (pkg.hasOwnProperty("visible")) {
 		pkg.visible = visible;
 	} else {

@@ -197,13 +197,14 @@ var generateImageThumbnails = function(infile, outfile, sizes, index, callback) 
 		.in("-gravity", "center").in("-background", "rgb(71,71,71)")
 		.in("-extent", sizes[index] + "x" + sizes[index])
 		.out("-quality", "70").write(outfile + '_' + sizes[index] + '.jpg', function(err) {
-		if (err) {
-			console.log(sageutils.header("Assets") + "cannot generate " + sizes[index] + "x" + sizes[index] + " thumbnail for:", infile);
-			return;
+			if (err) {
+				console.log(sageutils.header("Assets") + "cannot generate " + sizes[index] + "x" + sizes[index] + " thumbnail for:", infile);
+				return;
+			}
+			// recursive call to generate the next size
+			generateImageThumbnails(infile, outfile, sizes, index + 1, callback);
 		}
-		// recursive call to generate the next size
-		generateImageThumbnails(infile, outfile, sizes, index + 1, callback);
-	});
+	);
 };
 
 var generatePdfThumbnailsHelper = function(buffer, infile, outfile, sizes, index, callback) {
@@ -219,13 +220,14 @@ var generatePdfThumbnailsHelper = function(buffer, infile, outfile, sizes, index
 		.in("-resize", sizes[index] + "x" + sizes[index]).in("-gravity", "center")
 		.in("-background", "rgb(71,71,71)").in("-extent", sizes[index] + "x" + sizes[index])
 		.out("-quality", "70").write(outfile + '_' + sizes[index] + '.jpg', function(err) {
-		if (err) {
-			console.log(sageutils.header("Assets") + "cannot generate " + sizes[index] + "x" + sizes[index] + " thumbnail for:", infile);
-			return;
+			if (err) {
+				console.log(sageutils.header("Assets") + "cannot generate " + sizes[index] + "x" + sizes[index] + " thumbnail for:", infile);
+				return;
+			}
+			// recursive call to generate the next size
+			generatePdfThumbnailsHelper(buffer, infile, outfile, sizes, index + 1, callback);
 		}
-		// recursive call to generate the next size
-		generatePdfThumbnailsHelper(buffer, infile, outfile, sizes, index + 1, callback);
-	});
+	);
 };
 
 var generatePdfThumbnails = function(infile, outfile, width, height, sizes, index, callback) {
@@ -267,19 +269,20 @@ var generateVideoThumbnails = function(infile, outfile, width, height, sizes, in
 			.in("-gravity", "center").in("-background", "rgb(71,71,71)")
 			.in("-extent", sizes[index] + "x" + sizes[index])
 			.out("-quality", "70").write(outfile + '_' + sizes[index] + '.jpg', function(err) {
-			if (err) {
-				console.log(sageutils.header("Assets") + "cannot generate " + sizes[index] + "x" + sizes[index] + " thumbnail for:", infile);
-				return;
-			}
-			fs.unlink(tmpImg, function(err2) {
-				if (err2) {
-					// throw err2;
-					console.log('Error', err2);
+				if (err) {
+					console.log(sageutils.header("Assets") + "cannot generate " + sizes[index] + "x" + sizes[index] + " thumbnail for:", infile);
+					return;
 				}
-			});
-			// recursive call to generate the next size
-			generateVideoThumbnails(infile, outfile, width, height, sizes, index + 1, callback);
-		});
+				fs.unlink(tmpImg, function(err2) {
+					if (err2) {
+						// throw err2;
+						console.log('Error', err2);
+					}
+				});
+				// recursive call to generate the next size
+				generateVideoThumbnails(infile, outfile, width, height, sizes, index + 1, callback);
+			}
+		);
 	})
 	.screenshots({
 		timestamps: ["10%"],
@@ -309,13 +312,14 @@ var generateAppThumbnails = function(infile, outfile, acolor, sizes, index, call
 		.in("-fill", "rgb(" + acolor.r + "," + acolor.g + "," + acolor.b + ")")
 		.in("-draw", "circle " + circle).in("-draw", "image src-over " + img + " '" + infile + "'")
 		.out("-quality", "70").write(outfile + '_' + sizes[index] + '.jpg', function(err) {
-		if (err) {
-			console.log(sageutils.header("Assets") + "cannot generate " + sizes[index] + "x" + sizes[index] + " thumbnail for:", infile);
-			return;
+			if (err) {
+				console.log(sageutils.header("Assets") + "cannot generate " + sizes[index] + "x" + sizes[index] + " thumbnail for:", infile);
+				return;
+			}
+			// recursive call to generate the next size
+			generateAppThumbnails(infile, outfile, acolor, sizes, index + 1, callback);
 		}
-		// recursive call to generate the next size
-		generateAppThumbnails(infile, outfile, acolor, sizes, index + 1, callback);
-	});
+	);
 };
 
 var generateRemoteSiteThumbnails = function(infile, outfile, sizes, index, callback) {
@@ -347,28 +351,30 @@ var generateRemoteSiteThumbnails = function(infile, outfile, sizes, index, callb
 	var finishedD = false;
 	imageMagick(sizes[index], sizes[index], connected).fill("#FFFFFF").font(font, fontSize)
 		.drawText(0, 0, infile, "Center").write(outfile + '_' + sizes[index] + '.jpg', function(err) {
-		if (err) {
-			console.log(sageutils.header("Assets") + "cannot generate " + sizes[index] + "x" + sizes[index] + " thumbnail for:", infile);
-			return;
+			if (err) {
+				console.log(sageutils.header("Assets") + "cannot generate " + sizes[index] + "x" + sizes[index] + " thumbnail for:", infile);
+				return;
+			}
+			finishedC = true;
+			if (finishedD === true) {
+				// recursive call to generate the next size
+				generateRemoteSiteThumbnails(infile, outfile, sizes, index + 1, callback);
+			}
 		}
-		finishedC = true;
-		if (finishedD === true) {
-			// recursive call to generate the next size
-			generateRemoteSiteThumbnails(infile, outfile, sizes, index + 1, callback);
-		}
-	});
+	);
 	imageMagick(sizes[index], sizes[index], disconnected).fill("#FFFFFF").font(font, fontSize).
 		drawText(0, 0, infile, "Center").write(outfile + '_disconnected_' + sizes[index] + '.jpg', function(err) {
-		if (err) {
-			console.log(sageutils.header("Assets") + "cannot generate " + sizes[index] + "x" + sizes[index] + " thumbnail for:", infile);
-			return;
+			if (err) {
+				console.log(sageutils.header("Assets") + "cannot generate " + sizes[index] + "x" + sizes[index] + " thumbnail for:", infile);
+				return;
+			}
+			finishedD = true;
+			if (finishedC === true) {
+				// recursive call to generate the next size
+				generateRemoteSiteThumbnails(infile, outfile, sizes, index + 1, callback);
+			}
 		}
-		finishedD = true;
-		if (finishedC === true) {
-			// recursive call to generate the next size
-			generateRemoteSiteThumbnails(infile, outfile, sizes, index + 1, callback);
-		}
-	});
+	);
 };
 
 var addFile = function(filename, exif, callback) {
@@ -779,7 +785,7 @@ var recursiveReaddirSync = function(aPath) {
 		});
 	}
 	return list;
-}
+};
 
 var refresh = function(root, callback) {
 	var uploaded = recursiveReaddirSync(root);

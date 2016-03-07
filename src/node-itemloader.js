@@ -363,9 +363,10 @@ AppLoader.prototype.loadImageFromFile = function(file, mime_type, aUrl, external
 			if (dims) {
 				_this.loadImageFromServer(imgDims.width, imgDims.height, "image/png", aUrl + ".png",
 						external_url + ".png", name + ".png", imgExif, function(appInstance) {
-					appInstance.file = localPath;
-					callback(appInstance);
-				});
+							appInstance.file = localPath;
+							callback(appInstance);
+						}
+				);
 			} else {
 				console.log("File not recognized:", file, mime_type, aUrl);
 			}
@@ -879,18 +880,21 @@ AppLoader.prototype.loadApplication = function(appData, callback) {
 		if (app === "image_viewer") {
 			this.loadImageFromFile(appData.path, appData.type, appData.url, appData.external_url, appData.name,
 					function(appInstance) {
-				callback(appInstance, null);
-			});
+						callback(appInstance, null);
+					}
+			);
 		} else if (app === "movie_player") {
 			this.loadVideoFromFile(appData.path, appData.type, appData.url, appData.external_url, appData.name,
 					function(appInstance, handle) {
-				callback(appInstance, handle);
-			});
+						callback(appInstance, handle);
+					}
+			);
 		} else if (app === "pdf_viewer") {
 			this.loadPdfFromFile(appData.path, appData.type, appData.url, appData.external_url, appData.name,
 					function(appInstance) {
-				callback(appInstance, null);
-			});
+						callback(appInstance, null);
+					}
+			);
 		} else if (app === "custom_app") {
 			if (appData.compressed === true) {
 				var name = path.basename(appData.name, path.extname(appData.name));
@@ -901,19 +905,22 @@ AppLoader.prototype.loadApplication = function(appData, callback) {
 
 				this.loadZipAppFromFile(appData.path, appData.type, aUrl, external_url, name,
 						function(appInstance) {
-					callback(appInstance, null);
-				});
+							callback(appInstance, null);
+						}
+				);
 			} else {
 				this.loadAppFromFile(appData.path, appData.type, appData.url, appData.external_url, appData.name,
 						function(appInstance) {
-					callback(appInstance, null);
-				});
+							callback(appInstance, null);
+						}
+				);
 			}
 		} else {
 			this.loadAppFromFileFromRegistry(appData.path, appData.type, appData.url, appData.external_url, appData.name,
 					function(appInstance) {
-				callback(appInstance);
-			});
+						callback(appInstance);
+					}
+			);
 		}
 	} else if (appData.location === "url") {
 		app = registry.getDefaultAppFromMime(appData.type);
