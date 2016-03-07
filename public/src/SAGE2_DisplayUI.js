@@ -629,8 +629,8 @@ SAGE2DisplayUI.prototype.highlightApplication = function(x, y) {
 	if (topApp) {
 		// Since we have only one class, we dont have to use classList
 		topApp.className = "appWindowHover";
-		var area = document.getElementById(topApp.id + "_title");
-		area.className = "appWindowTitleHover";
+		var title = document.getElementById(topApp.id + "_title");
+		title.className = "appWindowTitleHover";
 	}
 };
 

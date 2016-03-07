@@ -8,6 +8,8 @@
 //
 // Copyright (c) 2014-16
 
+/* global hostAlias */
+
 "use strict";
 
 /**
@@ -798,4 +800,36 @@ function getCookie(sKey) {
 	return decodeURIComponent(document.cookie.replace(new RegExp("(?:(?:^|.*;)\\s*" +
 				encodeURIComponent(sKey).replace(/[\-\.\+\*]/g, "\\$&") + "\\s*\\=\\s*([^;]*).*$)|^.*$"), "$1"))
 		|| null;
+}
+
+/**
+ * Extract translate and scale from a DOM element
+ *
+ * @method getTransform
+ * @param elem {Object} DOM element
+ * @return {Object} contains translate and scale specification
+ */
+function getTransform(elem) {
+	var transform = elem.style.transform;
+	var translate = {x: 0, y: 0};
+	var scale = {x: 1, y: 1};
+	if (transform) {
+		var tIdx = transform.indexOf("translate");
+		if (tIdx >= 0) {
+			var tStr = transform.substring(tIdx + 10, transform.length);
+			tStr = tStr.substring(0, tStr.indexOf(")"));
+			var tValue = tStr.split(",");
+			translate.x = parseFloat(tValue[0]);
+			translate.y = parseFloat(tValue[1]);
+		}
+		var sIdx = transform.indexOf("scale");
+		if (sIdx >= 0) {
+			var sStr = transform.substring(sIdx + 6, transform.length);
+			sStr = sStr.substring(0, sStr.indexOf(")"));
+			var sValue = sStr.split(",");
+			scale.x = parseFloat(sValue[0]);
+			scale.y = parseFloat(sValue[1]);
+		}
+	}
+	return {translate: translate, scale: scale};
 }

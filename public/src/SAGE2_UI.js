@@ -10,7 +10,7 @@
 
 "use strict";
 
-/* global FileManager, webix */
+/* global FileManager, SAGE2_interaction, SAGE2DisplayUI */
 
 /**
  * Web user interface
@@ -817,9 +817,6 @@ function fileUploadProgress(percent) {
 		val = 0;
 	}
 	pgbar.setValue(val);
-
-	// displayUI.setUploadPercent(percent);
-	// displayUI.draw();
 }
 
 /**
@@ -848,12 +845,6 @@ function fileUploadComplete() {
 function fileUploadFromUI() {
 	// Hide the dialog
 	hideDialog('localfileDialog');
-
-	// Setup the progress bar
-	// var sage2UI = document.getElementById('sage2UICanvas');
-	// sage2UI.style.borderStyle = "solid";
-	// displayUI.fileDrop = false;
-	// displayUI.draw();
 
 	// trigger file upload
 	var thefile = document.getElementById('filenameForUpload');

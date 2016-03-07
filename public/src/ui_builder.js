@@ -8,6 +8,8 @@
 //
 // Copyright (c) 2014
 
+/* global Pointer, dataSharingPortals, createDrawingElement, RadialMenu */
+
 "use strict";
 
 /**

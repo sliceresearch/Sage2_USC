@@ -8,8 +8,7 @@
 //
 // Copyright (c) 2014-2015
 
-// we use arguments and callee to build inheritance
-/*eslint-disable use-strict, strict, global-strict */
+/* global ignoreFields, SAGE2WidgetControl */
 
 /**
  * @module client

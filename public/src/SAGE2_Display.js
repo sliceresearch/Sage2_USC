@@ -8,6 +8,22 @@
 //
 // Copyright (c) 2014-15
 
+/* global ignoreFields, hostAlias, SAGE2WidgetControlInstance */
+/* global makeSvgBackgroundForWidgetConnectors */
+/* global addStyleElementForTitleColor */
+/* global removeStyleElementForTitleColor */
+/* global clearConnectorColor */
+/* global moveWidgetToAppConnector */
+/* global showWidgetToAppConnectors */
+/* global getWidgetControlInstanceById */
+/* global mapMoveToSlider */
+/* global getPropertyHandle */
+/* global insertTextIntoTextInputWidget */
+/* global removeWidgetToAppConnector */
+/* global hideWidgetToAppConnectors */
+/* global createWidgetToAppConnector */
+/* global getTextFromTextInputWidget */
+
 "use strict";
 
 /**
@@ -714,8 +730,6 @@ function setupListeners() {
 		selectedElemState.style.width = Math.round(position_data.elemWidth).toString() + "px";
 		selectedElemState.style.height = Math.round(position_data.elemHeight).toString() + "px";
 
-		var selectedElem = document.getElementById(position_data.elemId);
-
 		selectedElem.style.webkitTransform = translate;
 		selectedElem.style.mozTransform    = translate;
 		selectedElem.style.transform       = translate;
@@ -1405,29 +1419,4 @@ function createAppWindow(data, parentId, titleBarHeight, titleTextSize, offsetX,
 	}
 
 	itemCount += 2;
-}
-
-function getTransform(elem) {
-	var transform = elem.style.transform;
-	var translate = {x: 0, y: 0};
-	var scale = {x: 1, y: 1};
-	if (transform) {
-		var tIdx = transform.indexOf("translate");
-		if (tIdx >= 0) {
-			var tStr = transform.substring(tIdx + 10, transform.length);
-			tStr = tStr.substring(0, tStr.indexOf(")"));
-			var tValue = tStr.split(",");
-			translate.x = parseFloat(tValue[0]);
-			translate.y = parseFloat(tValue[1]);
-		}
-		var sIdx = transform.indexOf("scale");
-		if (sIdx >= 0) {
-			var sStr = transform.substring(sIdx + 6, transform.length);
-			sStr = sStr.substring(0, sStr.indexOf(")"));
-			var sValue = sStr.split(",");
-			scale.x = parseFloat(sValue[0]);
-			scale.y = parseFloat(sValue[1]);
-		}
-	}
-	return {translate: translate, scale: scale};
 }
