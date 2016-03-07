@@ -14,7 +14,8 @@
 		SAGE2_BlockStreamingApp: true, movie_player: true, SAGE2_WebGLApp: true,
 		formatHHMMSS: true, formatAMPM: true, format24Hr: true, cleanURL: true,
 		readFile: true, sage2Log: true,	getCookie: true, addCookie: true,
-		showMessage: true, smallWhiteGIF: true, SAGE2_browser: true, getTransform: true,
+		showMessage: true, smallTansparentGIF: true, smallWhiteGIF: true,
+		SAGE2_browser: true, getTransform: true,
 		isEmpty: true, deleteElement: true, initializeArray: true,
 		isTrue: true, byteBufferToInt: true,
 		byteBufferToString: true, getParameterByName: true
