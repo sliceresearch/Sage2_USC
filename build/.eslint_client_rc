@@ -1,52 +1,51 @@
 {
-  env: { browser: true },
-  globals: {
-	Class: true, SAGE2_App: true, clientID: true, wsio: true, SAGE2WidgetControlBar: true,
-	broadcast: true, searchTweets: true, sage2Log: true, ui: true,
-	SAGE2_BlockStreamingApp: true, movie_player: true, isMaster: true, formatHHMMSS: true,
-	readFile: true, mat4: true, PDFJS: true, cleanURL: true,
-	Snap: true, mina: true, hostAlias: true, UIBuilder: true,
-	SAGE2_initialize: true, log: true, createDrawingElement: true,
-	formatAMPM: true, format24Hr: true, base64ToString: true, stringToBase64: true,
-	stringToUint8Array: true, base64ToUint8Array: true, Expected: true, average: true,
-	allTrueDict: true, getParameterByName: true, playPauseVideo: true, moveItemToFront: true,
-	isTrue: true, isEmpty: true, initializeArray: true, byteBufferToInt: true,
-	byteBufferToString: true,
-	Kinetic: true, WebsocketIO: true, simplify: true, deleteElement: true,
-	RadialMenu: true, Pointer: true,
-	hasMouse: true, showSAGE2PointerOverlayNoMouse: true, hideSAGE2PointerOverlayNoMouse: true,
-	sagePointerDisabled: true, sagePointerEnabled: true,
-	pointerClick: true, browser: true, showDialog: true,
-	SAGE2_interaction: true, SAGE2DisplayUI: true,
-	addStyleElementForTitleColor: true, insertTextIntoTextInputWidget: true,
-	getTextFromTextInputWidget: true, getWidgetControlInstanceById: true,
-	getPropertyHandle: true, getWidgetControlInstanceUnderPointer: true,
-	polarToCartesian: true, createWidgetToAppConnector: true,
-	removeStyleElementForTitleColor: true,
-	hideWidgetToAppConnectors: true, showWidgetToAppConnectors: true,
-	removeWidgetToAppConnector: true, setConnectorColor: true,
-	clearConnectorColor: true, moveWidgetToAppConnector: true,
-	drawSpokeForRadialLayout: true, drawBackgroundForWidgetRadialDial: true,
-	drawWidgetControlCenter: true, drawPieSlice: true,
-	makeWidgetBarOutlinePath: true, mapMoveToSlider: true,
-	SAGE2WidgetControlInstance: true, SAGE2WidgetControl: true,
-	SAGE2WidgetButtonTypes: true, controlObjects: true, controlItems: true,
-	smallWhiteGIF: true, SAGE2_browser: true, __SAGE2__: true,
-	DynamicImage: true, makeSvgBackgroundForWidgetConnectors: true,
-	getTransform: true, DataSharing: true, dataSharingPortals: true,
-	md5: true, applications: true, createButtonShape: true
-  },
-  rules: {
-	no-console: 0,
-	no-alert: 0,
-	no-caller: 0,
-	quotes: 0,
-	no-multi-spaces: 0,
-	no-underscore-dangle: 0,
-	camelcase: 0,
-	no-use-before-define: 0,
-	no-unused-vars: [2, {vars: "local", args: "none"}],
-	new-cap: 0
-  }
+	"env": {
+		"browser": true,
+		"es6": true
+	},
+	"extends": "eslint:recommended",
+	"globals": {
+		__SAGE2__: true, WebsocketIO: true, isMaster: true,
+		ui: true, wsio: true, clientID: true, hasMouse: true,
+		Class: true, SAGE2_App: true, applications: true,
+		SAGE2_initialize: true, UIBuilder: true, DataSharing: true,
+		broadcast: true,
+		PDFJS: true, Snap: true, mina: true, webix: true, $$: true, moment: true,
+		SAGE2_BlockStreamingApp: true, movie_player: true, SAGE2_WebGLApp: true,
+		formatHHMMSS: true, formatAMPM: true, format24Hr: true, cleanURL: true,
+		readFile: true, sage2Log: true,	getCookie: true, addCookie: true,
+		showMessage: true, smallWhiteGIF: true, SAGE2_browser: true, getTransform: true,
+		isEmpty: true, deleteElement: true, initializeArray: true,
+		isTrue: true, byteBufferToInt: true,
+		byteBufferToString: true, getParameterByName: true
+	},
+	"rules": {
+		"indent": [2, "tab",
+			{"SwitchCase": 1}
+		],
+		"linebreak-style": [
+			"error",
+			"unix"
+		],
+		"quotes": 0,
+		"no-console": 0,
+		"semi": [
+			"error",
+			"always"
+		],
+		"no-process-exit": 0,
+		"no-loop-func": 0,
+		"no-multi-spaces": 0,
+		"no-underscore-dangle": 0,
+		"camelcase": 0,
+		"curly": 0,
+		"no-use-before-define": 0,
+		"key-spacing": 0,
+		"space-infix-ops": 0,
+		"space-unary-ops": 0,
+		"no-unused-vars": [2, {
+			"vars": "local",
+			"args": "none"
+		}]
+    }
 }
-

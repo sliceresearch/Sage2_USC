@@ -29,11 +29,12 @@ module.exports = function(grunt) {
 			appsFiles: {
 				files: {
 					src: [
+						"public/uploads/apps/UIC_crime_with_leaflet/leaflet.js",
+						"public/uploads/apps/US_weather/USweather.js",
 						"public/uploads/apps/car_threejs/car_threejs.js",
 						"public/uploads/apps/chronicles_of_spaceman_spiff/chronicles_of_spaceman_spiff.js",
 						"public/uploads/apps/clock_svg/clock_svg.js",
 						"public/uploads/apps/flow/flow.js",
-						"public/uploads/apps/flow/app.js",
 						"public/uploads/apps/flow/shared.js",
 						"public/uploads/apps/googlemaps/googlemaps.js",
 						"public/uploads/apps/notepad/notepad.js",
@@ -42,12 +43,8 @@ module.exports = function(grunt) {
 						"public/uploads/apps/radar/radar.js",
 						"public/uploads/apps/stereo_image/stereo_image.js",
 						"public/uploads/apps/sticky_note/sticky_note.js",
-						"public/uploads/apps/UIC_crime_with_leaflet/leaflet.js",
-						"public/uploads/apps/US_weather/USweather.js",
 						"public/uploads/apps/web_earth/web_earth.js",
 						"public/uploads/apps/welcome/welcome.js",
-						"public/uploads/apps/tweetcloud2/tweetcloud.js",
-						"public/uploads/apps/whiteboard/whiteboard.js",
 						"public/uploads/apps/zoom/zoom.js"
 					]
 				},
@@ -71,6 +68,8 @@ module.exports = function(grunt) {
 			},
 			appsFiles: {
 				src: [ 
+					"public/uploads/apps/UIC_crime_with_leaflet/leaflet.js",
+					"public/uploads/apps/US_weather/USweather.js",
 					"public/uploads/apps/car_threejs/car_threejs.js",
 					"public/uploads/apps/chronicles_of_spaceman_spiff/chronicles_of_spaceman_spiff.js",
 					"public/uploads/apps/clock_svg/clock_svg.js",
@@ -83,12 +82,8 @@ module.exports = function(grunt) {
 					"public/uploads/apps/radar/radar.js",
 					"public/uploads/apps/stereo_image/stereo_image.js",
 					"public/uploads/apps/sticky_note/sticky_note.js",
-					"public/uploads/apps/UIC_crime_with_leaflet/leaflet.js",
-					"public/uploads/apps/US_weather/USweather.js",
-					"public/uploads/apps/welcome/welcome.js",
-					"public/uploads/apps/tweetcloud2/tweetcloud.js",
 					"public/uploads/apps/web_earth/web_earth.js",
-					"public/uploads/apps/whiteboard/whiteboard.js",
+					"public/uploads/apps/welcome/welcome.js",
 					"public/uploads/apps/zoom/zoom.js"
 				],
 				options: { config: "build/jscs_sage2.json" }
