@@ -149,17 +149,13 @@ var hpkpPin2 = (function() {
  * @return {Object} an object containig common HTTP header values
  */
 HttpServer.prototype.buildHeader = function() {
+	// Get the site configuration, from server.js
+	var cfg = module.parent.exports.config;
+	// Build the header object
 	var header = {};
 
 	// Default datatype of the response
 	header["Content-Type"] = "text/html; charset=utf-8";
-
-	// HTTP Strict Transport Security (HSTS) is an opt-in security enhancement
-	// Once a supported browser receives this header that browser will prevent any
-	// communications from being sent over HTTP to the specified domain
-	// and will instead send all communications over HTTPS.
-	// Here using a long (1 year) max-age
-	header["Strict-Transport-Security"] = "max-age=31536000";
 
 	// The X-Frame-Options header can be used to to indicate whether a browser is allowed
 	// to render a page within an <iframe> element or not. This is helpful to prevent clickjacking
@@ -180,13 +176,36 @@ HttpServer.prototype.buildHeader = function() {
 	// that, by clever naming, could be treated by MSIE as executable or dynamic HTML files.
 	header["X-Content-Type-Options"] = "nosniff";
 
+	// HTTP Strict Transport Security (HSTS) is an opt-in security enhancement
+	// Once a supported browser receives this header that browser will prevent any
+	// communications from being sent over HTTP to the specified domain
+	// and will instead send all communications over HTTPS.
+	// Here using a long (1 year) max-age
+	if (cfg.security && sageutils.isTrue(cfg.security.enableHSTS)) {
+		header["Strict-Transport-Security"] = "max-age=31536000";
+	}
+
 	// Instead of blindly trusting everything that a server delivers, Content-Security-Policy defines
 	// the HTTP header that allows you to create a whitelist of sources of trusted content,
 	// and instructs the browser to only execute or render resources from those sources.
 	// Even if an attacker can find a hole through which to inject script, the script won’t match
 	// the whitelist, and therefore won’t be executed.
 	// default-src 'none' -> default policy that blocks absolutely everything
-
+	if (cfg.security && sageutils.isTrue(cfg.security.enableCSP)) {
+		// Pretty open
+		header["Content-Security-Policy"] = "default-src 'none';" +
+			" plugin-types image/svg+xml;" +
+			" object-src 'self';" +
+			" child-src 'self' blob:;" +
+			" connect-src *;" +
+			" font-src 'self' fonts.gstatic.com;" +
+			" form-action 'self';" +
+			" img-src * data:;" +
+			" media-src 'self';" +
+			" style-src 'self' 'unsafe-inline' fonts.googleapis.com;" +
+			" script-src * 'unsafe-eval';";
+	}
+	// More secure
 	// header["Content-Security-Policy"] = "default-src 'none';" +
 	// 	" plugin-types image/svg+xml;" +
 	// 	" object-src 'self';" +
@@ -204,12 +223,12 @@ HttpServer.prototype.buildHeader = function() {
 	// 	" style-src 'self' 'unsafe-inline';" +
 	// 	" script-src 'self' http://www.webglearth.com https://maps.googleapis.com 'unsafe-eval';";
 
+
 	// HTTP PUBLIC KEY PINNING (HPKP)
 	// Key pinning is a trust-on-first-use (TOFU) mechanism.
 	// The first time a browser connects to a host it lacks the the information necessary to perform
 	// "pin validation" so it will not be able to detect and thwart a MITM attack.
 	// This feature only allows detection of these kinds of attacks after the first connection.
-	var cfg = module.parent.exports.config;
 	if (cfg.security && sageutils.isTrue(cfg.security.enableHPKP)) {
 		// 30 days expirations
 		header["Public-Key-Pins"] = "pin-sha256=\"" + hpkpPin1() +
