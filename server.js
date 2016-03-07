@@ -444,9 +444,7 @@ var stickyAppHandler     = new StickyItems();
 process.on('uncaughtException', function(err) {
 	// handle the error safely
 	console.trace("SAGE2>	", err);
-})
-
-
+});
 
 
 
@@ -808,10 +806,11 @@ function initializeExistingSagePointers(wsio) {
 }
 
 function initializeExistingWallUI(wsio) {
+	var menuInfo;
 	if (config.ui.reload_wallui_on_refresh === false) {
 		// console.log("WallUI reload on display client refresh: Disabled");
 		for (key in SAGE2Items.radialMenus.list) {
-			var menuInfo = SAGE2Items.radialMenus.list[key].getInfo();
+			menuInfo = SAGE2Items.radialMenus.list[key].getInfo();
 			hideRadialMenu(menuInfo.id);
 		}
 		return;
@@ -819,7 +818,7 @@ function initializeExistingWallUI(wsio) {
 	// console.log("WallUI reload on display client refresh: Enabled (default)");
 	var key;
 	for (key in SAGE2Items.radialMenus.list) {
-		var menuInfo = SAGE2Items.radialMenus.list[key].getInfo();
+		menuInfo = SAGE2Items.radialMenus.list[key].getInfo();
 		broadcast('createRadialMenu', menuInfo);
 		broadcast('updateRadialMenu', menuInfo);
 		updateWallUIMediaBrowser(menuInfo.id);
@@ -2825,14 +2824,14 @@ function wsRequestDataSharingSession(wsio, data) {
 
 	console.log("Data-sharing request from " + data.config.name + " (" + data.config.host + ":" + data.config.secure_port + ")");
 	broadcast('requestedDataSharingSession', {name: data.config.name, host: data.config.host, port: data.config.port});
-	remoteSharingRequestDialog = {wsio: wsio, config: data.config};
+	// remoteSharingRequestDialog = {wsio: wsio, config: data.config};
 	showRequestDialog(true);
 }
 
 function wsCancelDataSharingSession(wsio, data) {
 	console.log("Data-sharing request cancelled");
 	broadcast('closeRequestDataSharingDialog', null, 'requiresFullApps');
-	remoteSharingRequestDialog = null;
+	// remoteSharingRequestDialog = null;
 	showRequestDialog(false);
 }
 
@@ -3827,6 +3826,7 @@ function uploadForm(req, res) {
 			// Removing the temporary file
 			fs.unlinkSync(this.openedFiles[0].path);
 		} catch (err) {
+			console.log(sageutils.header("Upload") + '   error removing the temporary file');
 		}
 	});
 
