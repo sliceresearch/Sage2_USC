@@ -285,6 +285,11 @@ var movie_player = SAGE2_BlockStreamingApp.extend({
 			// 	// Press 'x' to close itself
 			// 	this.close();
 			// }
+		}
+		else if (eventType === "specialKey") {
+			if (data.code === 80 && data.state === "up") { // P key
+				this.togglePlayPause(date);
+			} 
 		} else if (eventType === "widgetEvent") {
 			switch (data.identifier) {
 				case "Loop":
