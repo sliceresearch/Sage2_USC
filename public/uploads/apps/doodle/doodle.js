@@ -10,7 +10,7 @@
 
 "use strict";
 
-var ezDraw = SAGE2_App.extend({
+var doodle = SAGE2_App.extend({
 	init: function(data) {
 		this.SAGE2Init("div", data);
 

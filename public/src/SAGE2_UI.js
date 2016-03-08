@@ -2010,7 +2010,7 @@ function setupUiDrawCanvas() {
 
 			var data = {};
 				data.type 		= "launchAppWithValues";
-				data.appName 	= "ezDraw";
+				data.appName 	= "doodle";
 				data.func 		= "setCanvas";
 				data.params 	= [ imageString, interactor.uniqueID];
 			wsio.emit( 'csdMessage', data );
