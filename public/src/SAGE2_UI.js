@@ -1916,9 +1916,8 @@ function setRmbContextMenuEntries(entriesToAdd, app) {
 
 function setupUiNoteMaker() {
 	var workingDiv = document.getElementById('uiNoteMaker');
-		workingDiv.style.position 	= "absolute";
+		//workingDiv.style.position 	= "absolute";
 		workingDiv.style.border 	= "1px solid black"
-		workingDiv.style.top 		= "10px";
 	var inputField = document.getElementById('uiNoteMakerInputField');
 		inputField.id = "uiNoteMakerInputField";
 		inputField.rows = 5;
@@ -1926,7 +1925,7 @@ function setupUiNoteMaker() {
 		inputField.style.resize = 'none';
 		inputField.style.fontSize = '20px';
 	var sendButton = document.getElementById('uiNoteMakerSendButton');
-		sendButton.style.background = "#FFF8E1";
+		//sendButton.style.background = "#FFF8E1";
 	sendButton.addEventListener( 'click', function() {
 		sendCsdMakeNote();
 	} );
@@ -2021,11 +2020,6 @@ function setupUiDrawCanvas() {
 			ctx.fillStyle = "#000000";
 		}
 	);
-
-	var workingDiv = document.getElementById('uiDrawZone');
-		workingDiv.style.position 	= "absolute";
-		workingDiv.style.top 	= "10px";
-		workingDiv.style.left 	= window.innerWidth/2 - uidzCanvas.width/2 + "px";
 
 }
 
