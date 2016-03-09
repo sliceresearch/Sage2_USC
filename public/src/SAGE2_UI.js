@@ -1031,7 +1031,7 @@ function handleClick(element) {
 		showDialog('uiNoteMaker');
 	} else if (element.id === "ezDraw"         || element.id === "ezDrawContainer"         || element.id === "ezDrawLabel") {
 		//clear drawzone
-		uiCanvasBackgroundFlush('white');
+		uiDrawCanvasBackgroundFlush('white');
 		//show
 		showDialog('uiDrawZone');
 	} else if (element.id === "appOpenBtn") {
@@ -1640,6 +1640,8 @@ function hideDialog(id) {
 	openDialog = null;
 	document.getElementById('blackoverlay').style.display = "none";
 	document.getElementById(id).style.display = "none";
+	document.getElementById('uiDrawZoneEraseReference').style.left = "-100px";
+	document.getElementById('uiDrawZoneEraseReference').style.top = "-100px";
 }
 
 /**
@@ -1835,13 +1837,14 @@ function setRmbContextMenuEntries(entriesToAdd, app) {
 				wsio.emit('utdCallFunctionOnApp', data);
 				//console.dir( this );
 				//console.dir( data );
+				hideRmbContextMenuDiv();
 			}
 
 		} //end if the button should send something
 	} //end adding a send function to each menu entry
 
 	var closeEntry = {};
-		closeEntry.description = "Cancel";
+		closeEntry.description = "Close Menu";
 		closeEntry.buttonEffect = function () {
 			hideRmbContextMenuDiv();
 		}
@@ -1978,23 +1981,22 @@ function setupUiDrawCanvas() {
 			this.pmy 		= event.offsetY;
 		}
 	);
+	uidzCanvas.ongoingTouches = new Array();
+	uidzCanvas.addEventListener('touchstart', uiDrawTouchStart);
+	uidzCanvas.addEventListener('touchmove', uiDrawTouchMove);
+	uidzCanvas.addEventListener('touchend', uiDrawTouchEnd);
+
 	uidzCanvas.addEventListener('mouseup', function(event){ this.doDraw = false; } );
 	uidzCanvas.addEventListener('mousemove',
 		function(event){
-			if (this.doDraw === true) {
-				var workingDiv  = document.getElementById('uiDrawZoneCanvas');
-				var ctx 		= workingDiv.getContext('2d');
-				var uidlts 		= document.getElementById('uiDrawLineThicknessSet');
-				if( parseInt(uidlts.value) < 1) { uidlts.value = 1; }
-				ctx.lineWidth 	= parseInt(uidlts.value);
-				ctx.strokeStyle	= document.getElementById('uiDrawColorPicker').value;
-				ctx.beginPath();
-				ctx.moveTo( this.pmx, this.pmy );
-				ctx.lineTo( event.offsetX, event.offsetY);
-				ctx.stroke();
-				this.pmx 		= event.offsetX;
-				this.pmy 		= event.offsetY;
+			if(this.doDraw) {
+				uiDrawMakeLine(event.offsetX, event.offsetY, this.pmx, this.pmy, "mouse");
+				this.pmx = event.offsetX;
+				this.pmy = event.offsetY;
 			}
+			var workingDiv = document.getElementById('uiDrawZoneEraseReference');
+			workingDiv.style.left = (event.pageX - parseInt(workingDiv.style.width)/2 ) + "px";
+			workingDiv.style.top = (event.pageY - parseInt(workingDiv.style.height)/2 ) + "px";
 		}
 	);
 
@@ -2015,24 +2017,194 @@ function setupUiDrawCanvas() {
 			wsio.emit( 'csdMessage', data );
 
 			//before clearing, need to get the data to send.
-			ctx.fillStyle = "#FFFFFF";
-			ctx.fillRect( 0, 0, uidzCanvas.width, uidzCanvas.height );
-			ctx.fillStyle = "#000000";
+			uiDrawCanvasBackgroundFlush('white');
 		}
 	);
 
+	//get the line adjustment working for the thickness buttons.
+	var thicknessSelectBox = document.getElementById('uidztp1');
+	thicknessSelectBox.addEventListener( 'mousedown',
+		function() {
+			var workingDiv = document.getElementById('uiDrawZoneCanvas');
+			workingDiv.lineWidth = 1;
+			uiDrawSelectThickness('uidztp1');
+	} );
+	//start the with 1px selected
+	uidzCanvas.lineWidth = 1;
+	thicknessSelectBox.style.border = "3px solid red";
+	//
+	//have to hard code each selection due to linewidth adjustment
+	//2
+	thicknessSelectBox = document.getElementById('uidztp2');
+	thicknessSelectBox.addEventListener( 'mousedown',
+		function() {
+			var workingDiv = document.getElementById('uiDrawZoneCanvas');
+			workingDiv.lineWidth = 2;
+			uiDrawSelectThickness('uidztp2');
+	} );
+	//
+	thicknessSelectBox = document.getElementById('uidztp3');
+	thicknessSelectBox.addEventListener( 'mousedown',
+		function() {
+			var workingDiv = document.getElementById('uiDrawZoneCanvas');
+			workingDiv.lineWidth = 4;
+			uiDrawSelectThickness('uidztp3');
+	} );
+	//
+	thicknessSelectBox = document.getElementById('uidztp4');
+	thicknessSelectBox.addEventListener( 'mousedown',
+		function() {
+			var workingDiv = document.getElementById('uiDrawZoneCanvas');
+			workingDiv.lineWidth = 8;
+			uiDrawSelectThickness('uidztp4');
+	} );
+	//
+	thicknessSelectBox = document.getElementById('uidztp5');
+	thicknessSelectBox.addEventListener( 'mousedown',
+		function() {
+			var workingDiv = document.getElementById('uiDrawZoneCanvas');
+			workingDiv.lineWidth = 16;
+			uiDrawSelectThickness('uidztp5');
+	} );
+	//
+	thicknessSelectBox = document.getElementById('uidztp6');
+	thicknessSelectBox.addEventListener( 'mousedown',
+		function() {
+			var workingDiv = document.getElementById('uiDrawZoneCanvas');
+			workingDiv.lineWidth = 32;
+			uiDrawSelectThickness('uidztp6');
+	} );
+	//
+	thicknessSelectBox = document.getElementById('uidztp7');
+	thicknessSelectBox.addEventListener( 'mousedown',
+		function() {
+			var workingDiv = document.getElementById('uiDrawZoneCanvas');
+			workingDiv.lineWidth = 64;
+			uiDrawSelectThickness('uidztp7');
+	} );
+
+
 }
 
-function uiCanvasBackgroundFlush(color) {
+function uiDrawCanvasBackgroundFlush(color) {
 	var workingDiv 	= document.getElementById('uiDrawZoneCanvas');
 	var ctx 		= workingDiv.getContext('2d');
 	
 	if(color === 'transparent') {
-
+		//what is value for transparent?
 	}
 	else {
 		ctx.fillStyle = "#FFFFFF";
 		ctx.fillRect( 0, 0, workingDiv.width, workingDiv.height );
 		ctx.fillStyle = "#000000";
 	}
+}
+
+function uiDrawSelectThickness(selectedDivId) {
+	var workingDiv;
+	var thickness = 1;
+
+	for( var i = 1; i <= 7; i++ ) {
+		if('uidztp' + i == selectedDivId) {
+			workingDiv = document.getElementById(selectedDivId);
+			workingDiv.style.border = "3px solid red";
+			//change the reference draw circle
+			workingDiv = document.getElementById('uiDrawZoneEraseReference');
+			workingDiv.style.width = thickness + "px";
+			workingDiv.style.height = thickness + "px";
+		}
+		else {
+			workingDiv = document.getElementById('uidztp' + i);
+			workingDiv.style.border = "1px solid black";
+		}
+		thickness *= 2;
+	}
+}
+
+function uiDrawTouchStart(event) {
+	var workingDiv = document.getElementById('uiDrawZoneCanvas');
+	var touches = event.changedTouches;
+	for(var i = 0; i < touches.length; i++) {
+		workingDiv.ongoingTouches.push( uiDrawMakeTouchData( touches[i] ) );
+	}
+}
+
+function uiDrawTouchMove(event) {
+	var workingDiv = document.getElementById('uiDrawZoneCanvas');
+	var touches = event.changedTouches;
+	var touchId;
+	var cbb = workingDiv.getBoundingClientRect(); //canvas bounding box: cbb
+	for(var i = 0; i < touches.length; i++) {
+		touchId = uiDrawGetTouchId( touches[i].identifier );
+		//only if it is a known touch continuation
+		if(touchId !== -1) {
+			uiDrawMakeLine(
+				touches[i].pageX - cbb.left, touches[i].pageY - cbb.top,
+				workingDiv.ongoingTouches[touchId].x - cbb.left, workingDiv.ongoingTouches[touchId].y - cbb.top,
+				// touches[i].pageX - workingDiv.offsetX, touches[i].pageY - workingDiv.offsetY,
+				// workingDiv.ongoingTouches[touchId].x - workingDiv.offsetX, workingDiv.ongoingTouches[touchId].y - workingDiv.offsetY,
+				'touch'
+			);
+			workingDiv.ongoingTouches[touchId].x = touches[i].pageX;
+			workingDiv.ongoingTouches[touchId].y = touches[i].pageY;
+		}
+	}
+
+	workingDiv = document.getElementById('uiDrawZoneEraseReference');
+	workingDiv.style.left = (touches[0].pageX - parseInt(workingDiv.style.width)/2 ) + "px";
+	workingDiv.style.top = (touches[0].pageY - parseInt(workingDiv.style.height)/2 ) + "px";
+}
+
+function uiDrawTouchEnd(event) {
+	var workingDiv = document.getElementById('uiDrawZoneCanvas');
+	var touches = event.changedTouches;
+	var touchId;
+	for(var i = 0; i < touches.length; i++) {
+		touchId = uiDrawGetTouchId( touches[i].identifier );
+		if(touchId !== -1) {
+			workingDiv.ongoingTouches.splice( touchId, 1 );
+		}
+	}
+	workingDiv = document.getElementById('uiDrawZoneEraseReference');
+	workingDiv.style.left = "-100px";
+	workingDiv.style.top = "-100px";
+}
+
+function uiDrawMakeTouchData(touch) {
+	var nt = {};
+	nt.id 	= touch.identifier;
+	nt.x 	= touch.pageX;
+	nt.y 	= touch.pageY;
+	return nt;
+}
+
+function uiDrawGetTouchId(id) {
+	var workingDiv  = document.getElementById('uiDrawZoneCanvas');
+	for(var i = 0; i < workingDiv.ongoingTouches.length; i++) {
+		if ( workingDiv.ongoingTouches[i].id === id ) {
+			return i;
+		}
+	}
+	return -1;
+}
+
+function uiDrawMakeLine(xDest, yDest, xPrev, yPrev, type) {
+	var workingDiv  = document.getElementById('uiDrawZoneCanvas');
+	var ctx 		= workingDiv.getContext('2d');
+	var lineWidth 	= parseInt(workingDiv.lineWidth);
+
+	ctx.fillStyle	= document.getElementById('uiDrawColorPicker').value;
+	ctx.strokeStyle	= document.getElementById('uiDrawColorPicker').value;
+	//if the line width is greater than 1. At 1 the fill + circle border will expand beyond the line causing bumps in the line.
+	if(lineWidth > 2) {
+		ctx.lineWidth 	= 1;
+		ctx.beginPath();
+		ctx.arc( xPrev, yPrev, lineWidth/2, 0, Math.PI * 2, false);
+		ctx.fill();
+	}
+	ctx.beginPath();
+	ctx.lineWidth = lineWidth;
+	ctx.moveTo( xPrev, yPrev );
+	ctx.lineTo( xDest, yDest);
+	ctx.stroke();
 }

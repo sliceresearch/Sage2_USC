@@ -437,23 +437,42 @@
 			&nbsp&nbsp&nbsp
 			<br>
 			<br>&nbsp
-			<span id="uiNoteMakerSendButton" class="button">&nbspMake Note [Enter]&nbsp</span>
+			<span id="uiNoteMakerSendButton" class="button">Make Note [Enter]</span>
 			<br>&nbsp
 	</div>
 	<div id="uiDrawZone" class="dialog">
 		<br>
-		&nbsp&nbsp
-		<input id="uiDrawColorPicker" type="color" value="#000000">
-		&nbsp&nbsp&nbsp
-		<input id="uiDrawLineThicknessSet" value="1" size="3" type="number">
-		&nbsp&nbsp&nbsp
-		<span id="uiDrawZoneSendButton" class="button">&nbspSend Drawing&nbsp</span>
-		<br><br>
+		<table cellSpacing="4">
+			<tr>
+				<td>
+					&nbsp&nbsp&nbsp
+					<input id="uiDrawColorPicker" type="color" value="#000000">
+					&nbsp
+				</td>
+				<td id='uidztp1' class='uidzBarBox'> <div class='uidzBarAll uidzBarS1'> </div> </td>
+				<td id='uidztp2' class='uidzBarBox'> <div class='uidzBarAll uidzBarS2'> </div> </td>
+				<td id='uidztp3' class='uidzBarBox'> <div class='uidzBarAll uidzBarS3'> </div> </td>
+				<td id='uidztp4' class='uidzBarBox'> <div class='uidzBarAll uidzBarS4'> </div> </td>
+				<td id='uidztp5' class='uidzBarBox'> <div class='uidzBarAll uidzBarS5'> </div> </td>
+				<td id='uidztp6' class='uidzBarBox'> <div class='uidzBarAll uidzBarS6'> </div> </td>
+				<td id='uidztp7' class='uidzBarBox'> <div class='uidzBarAll uidzBarS7'> </div> </td><td>
+					&nbsp&nbsp&nbsp
+					<span id="uiDrawZoneSendButton" class="button">Clear</span>
+				</td>
+				<td>
+					&nbsp&nbsp&nbsp
+					<span id="uiDrawZoneSendButton" class="button">Send Drawing</span>
+				</td>
+			</tr>
+		</table>
+		<br>
 		&nbsp&nbsp&nbsp
 		<canvas id="uiDrawZoneCanvas" width="500" height="500" style="border:1px solid black">
 		</canvas>
 		&nbsp&nbsp&nbsp
 		<br><br>
+	</div>
+	<div id="uiDrawZoneEraseReference" style="position:absolute;top:-100;left:-100;width:1;border:1px solid black;border-radius:50%;z-index:10003;pointer-events:none" >
 	</div>
 	
 	
