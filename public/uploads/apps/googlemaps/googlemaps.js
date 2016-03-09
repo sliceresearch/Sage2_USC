@@ -354,6 +354,35 @@ var googlemaps = SAGE2_App.extend({
 				console.log('Geocode was not successful for the following reason: ' + status);
 			}
 		}.bind(this));
+	},
+
+	/**
+	 * Right menu on the web ui to type a location
+	*/
+	getContextEntries: function() {
+		var entries = [];
+		var entry   = {};
+		// label of them menu
+		entry.description = "Type a location:";
+		// callback
+		entry.func   = "setLocation";
+		// parameters of the callback function
+		entry.params = [ "clientInput", "clientId" ];
+		entry.inputField     = true;
+		entry.inputFieldSize = 20;
+		entries.push(entry);
+
+		return entries;
+	},
+
+	/**
+	 * Callback from th web ui menu (right click) 
+	*/
+	setLocation: function(msgParams) {
+		// receive a string from the web ui
+		// [0] string
+		// [1] user
+		this.codeAddress(msgParams[0]);
 	}
 
 });
