@@ -200,7 +200,7 @@ HttpServer.prototype.buildHeader = function() {
 			" connect-src *;" +
 			" font-src 'self' fonts.gstatic.com;" +
 			" form-action 'self';" +
-			" img-src * data:;" +
+			" img-src * data: blob:;" +
 			" media-src 'self';" +
 			" style-src 'self' 'unsafe-inline' fonts.googleapis.com;" +
 			" script-src * 'unsafe-eval';";
