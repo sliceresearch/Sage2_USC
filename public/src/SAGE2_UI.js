@@ -1835,8 +1835,8 @@ function setRmbContextMenuEntries(entriesToAdd, app) {
 					data.func = this.func;
 					data.params = this.params;
 				wsio.emit('utdCallFunctionOnApp', data);
-				//console.dir( this );
-				//console.dir( data );
+				console.dir( this );
+				console.dir( data );
 				hideRmbContextMenuDiv();
 			}
 
@@ -1856,18 +1856,6 @@ function setRmbContextMenuEntries(entriesToAdd, app) {
 		workingDiv.id = 'rmbContextMenuEntry' + i;
 		workingDiv.style.background = "#FFF8E1";
 		workingDiv.innerHTML = "&nbsp&nbsp&nbsp" + entriesToAdd[i].description + "&nbsp&nbsp&nbsp";
-		//highlighting effect on mouseover
-		workingDiv.addEventListener( 'mouseover', function() {
-			this.style.background = "lightgray";
-		} );
-		workingDiv.addEventListener( 'mouseout', function() {
-			this.style.background = "#FFF8E1";
-		} );
-		//click effect
-		workingDiv.addEventListener( 'mousedown', entriesToAdd[i].buttonEffect );
-		workingDiv.func = entriesToAdd[i].func;
-		workingDiv.params = entriesToAdd[i].params;
-		workingDiv.app = app;
 
 		//add input field if app says to.
 		workingDiv.inputField = false;
@@ -1883,6 +1871,45 @@ function setRmbContextMenuEntries(entriesToAdd, app) {
 			workingDiv.innerHTML += "&nbsp&nbsp&nbsp";
 			workingDiv.inputFieldId = inputField.id;
 			workingDiv.previousReplacedIndex = false;
+			//create OK buttont to send
+			var rmbcmeIob = document.createElement('span');
+				rmbcmeIob.innerHTML = "&nbspOK&nbsp";
+				rmbcmeIob.style.border = "1px solid black";
+				rmbcmeIob.inputField = true;
+				rmbcmeIob.inputFieldId = inputField.id;
+				rmbcmeIob.previousReplacedIndex = false;
+				//click effect
+				rmbcmeIob.func = entriesToAdd[i].func;
+				rmbcmeIob.params = entriesToAdd[i].params;
+				rmbcmeIob.app = app;
+				rmbcmeIob.addEventListener( 'mousedown', entriesToAdd[i].buttonEffect );
+				//highlighting effect on mouseover
+				rmbcmeIob.addEventListener( 'mouseover', function() {
+					this.style.background = "lightgray";
+				} );
+				rmbcmeIob.addEventListener( 'mouseout', function() {
+					this.style.background = "#FFF8E1";
+				} );
+			workingDiv.appendChild( rmbcmeIob );
+			//workingDiv.innerHTML += "&nbsp&nbsp&nbsp";
+			var rmbcmeSpace = document.createElement('span');
+				rmbcmeSpace.innerHTML = "&nbsp&nbsp&nbsp";
+			workingDiv.appendChild(rmbcmeSpace);
+		}
+		//if no input field attach button effect to entire div instead of just OK button.
+		else {
+			workingDiv.addEventListener( 'mousedown', entriesToAdd[i].buttonEffect );
+			//click effect
+			workingDiv.func = entriesToAdd[i].func;
+			workingDiv.params = entriesToAdd[i].params;
+			workingDiv.app = app;
+			//highlighting effect on mouseover
+			workingDiv.addEventListener( 'mouseover', function() {
+				this.style.background = "lightgray";
+			} );
+			workingDiv.addEventListener( 'mouseout', function() {
+				this.style.background = "#FFF8E1";
+			} );
 		}
 
 		if (i === entriesToAdd.length - 1) {
