@@ -211,7 +211,7 @@ function SAGE2_interaction(wsio) {
 				name = msgFromServer.files[k].name;
 				type = msgFromServer.files[k].type;
 				if (!msgFromServer.fields.good) {
-					showMessage('unrecognized file type: ' + name + ' ' + type);
+					showSAGE2Message('unrecognized file type: ' + name + ' ' + type);
 				}
 			});
 
@@ -250,7 +250,7 @@ function SAGE2_interaction(wsio) {
 				xhr.send(formdata);
 			} else {
 				// show message for 4 seconds
-				showMessage("File: " + files[i].name + " is too large (max size is " + (this.maxUploadSize / (1024 * 1024 * 1024)) + " GB)",
+				showSAGE2Message("File: " + files[i].name + " is too large (max size is " + (this.maxUploadSize / (1024 * 1024 * 1024)) + " GB)",
 					4000);
 			}
 		}
