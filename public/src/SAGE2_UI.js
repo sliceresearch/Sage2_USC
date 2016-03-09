@@ -1983,9 +1983,9 @@ function sendCsdMakeNote() {
 		*/
 		data.params 	= [ workingDiv.value, document.getElementById('sage2PointerLabel').value];
 
-	console.log("erase me, sending csd make note with value:" + workingDiv.value);
-	console.dir(data);
-	console.log("Btw did it contain a \\n?" + workingDiv.value.indexOf('\n'));
+	// console.log("erase me, sending csd make note with value:" + workingDiv.value);
+	// console.dir(data);
+	// console.log("Btw did it contain a \\n?" + workingDiv.value.indexOf('\n'));
 
 	workingDiv.value = "";
 
@@ -2033,8 +2033,6 @@ function setupUiDrawCanvas() {
 			var workingDiv 	= document.getElementById('uiDrawZoneCanvas');
 			var ctx 		= workingDiv.getContext('2d');
 			var imageString = workingDiv.toDataURL();
-
-			console.log("erase me," + imageString);
 
 			var data = {};
 				data.type 		= "launchAppWithValues";

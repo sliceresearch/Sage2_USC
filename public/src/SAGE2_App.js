@@ -73,6 +73,8 @@ var SAGE2_App = Class.extend({
 		this.SAGE2UserModification = false;
 		// Modify state sync options
 		this.SAGE2StateSyncOptions = {visible: false, hover: null, press: {name: null, value: null}, scroll: 0};
+		// Enabling this will attempt to convert SAGE2 pointer as mouse events as much as possible.
+		this.passSage2PointerAsMouseEvents = false;
 	},
 
 	/**
@@ -289,6 +291,9 @@ var SAGE2_App = Class.extend({
 		} else {
 			this.SAGE2UserModification = true;
 			this.event(eventType, position, user_id, data, date);
+			if (this.passSage2PointerAsMouseEvents) {
+				sagemep.processAndPassEvents( this.element.id, eventType, position, user_id, data, date );
+			}
 			this.SAGE2UserModification = false;
 		}
 	},
