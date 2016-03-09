@@ -28,7 +28,6 @@ var mime         = require('mime');
 var request      = require('request');
 var ytdl         = require('ytdl-core');
 var Videodemuxer = (process.arch !== 'arm') ? require('node-demux') : null;
-// require('node-demux');
 var mv           = require('mv');
 
 var exiftool     = require('../src/node-exiftool');        // gets exif tags for images
