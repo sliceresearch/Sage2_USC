@@ -220,7 +220,8 @@ var generatePdfThumbnailsHelper = function(buffer, infile, outfile, sizes, index
 		.in("-background", "rgb(71,71,71)").in("-extent", sizes[index] + "x" + sizes[index])
 		.out("-quality", "70").write(outfile + '_' + sizes[index] + '.jpg', function(err) {
 			if (err) {
-				console.log(sageutils.header("Assets") + "cannot generate " + sizes[index] + "x" + sizes[index] + " thumbnail for:" + infile + ' -- ' + err);
+				console.log(sageutils.header("Assets") + "cannot generate " + sizes[index] + "x" + sizes[index] +
+					" thumbnail for:" + infile + ' -- ' + err);
 				return;
 			}
 			// recursive call to generate the next size
