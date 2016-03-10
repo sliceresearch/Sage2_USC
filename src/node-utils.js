@@ -28,9 +28,14 @@ var fs      = require('fs');                  // filesystem access
 var path    = require('path');                // resolve directory paths
 var tls     = require('tls');                 // https encryption
 
+var querystring = require('querystring');     // utilities for dealing with URL
+
+// npm external modules
 var request   = require('request');           // http requests
 var semver    = require('semver');            // parse version numbers
 var fsmonitor = require('fsmonitor');         // file system monitoring
+var sanitizer = require('sanitizer');         // Caja's HTML Sanitizer as a Node.js module
+
 
 /**
  * Parse and store NodeJS version number: detect version 0.10.x or newer
@@ -229,6 +234,21 @@ function updateWithGIT(branch, callback) {
 	});
 }
 
+/**
+ * Cleanup URL from XSS attempts
+ *
+ * @method sanitizedURL
+ * @param aURL {String} a URL we received from a request
+ * @return {String} cleanup string
+ */
+function sanitizedURL(aURL) {
+	// convert HTML encoded content
+	// Node doc: It will try to use decodeURIComponent in the first place, but if that fails it falls back
+	// to a safer equivalent that doesn't throw on malformed URLs.
+	var decode = querystring.unescape(aURL);
+	// Then, remove the bad parts
+	return sanitizer.sanitize(decode);
+}
 
 /**
  * Utility function to create a header for console messages
@@ -574,8 +594,9 @@ module.exports.deregisterSAGE2   = deregisterSAGE2;
 module.exports.loadCABundle      = loadCABundle;
 module.exports.monitorFolders    = monitorFolders;
 module.exports.getHomeDirectory  = getHomeDirectory;
-module.exports.encodeReservedURL = encodeReservedURL;
 module.exports.mkdirParent       = mkdirParent;
+module.exports.sanitizedURL      = sanitizedURL;
 
+module.exports.encodeReservedURL  = encodeReservedURL;
 module.exports.encodeReservedPath = encodeReservedPath;
 

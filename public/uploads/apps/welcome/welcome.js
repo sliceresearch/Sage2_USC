@@ -209,11 +209,15 @@ var welcome = SAGE2_App.extend({
 
 	event: function(eventType, position, user_id, data, date) {
 		if (eventType === "pointerPress" && (data.button === "left")) {
+			// Pointer press
 		} else if (eventType === "pointerMove" && this.dragging) {
+			// Pointer move
 		} else if (eventType === "pointerRelease" && (data.button === "left")) {
+			// Pointer release
 		} else if (eventType === "pointerScroll") {
 			// Scroll events for zoom
 		} else if (eventType === "widgetEvent") {
+			// Widget events
 		} else if (eventType === "keyboard") {
 			if (data.character === "m") {
 				this.refresh(date);

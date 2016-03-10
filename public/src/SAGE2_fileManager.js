@@ -16,7 +16,7 @@
  * @class SAGE2_Files
  */
 
-/* global SAGE2_init, escape, unescape, webix, $$, moment, sage2Version */
+/* global SAGE2_init, SAGE2_resize, escape, unescape, sage2Version, showDialog */
 
 "use strict";
 
@@ -74,30 +74,30 @@ function FileManager(wsio, mydiv, uniqueID) {
 			{id: "folder_menu",  value: "New folder"},
 			{id: "upload_menu",  value: "Upload file"},
 			{id: "refresh_menu", value: "Refresh"}
-			]},
+		]},
 		{id: "edit_menu", value: "Edit", submenu: [
 			{id: "delete_menu",   value: "Delete"},
 			{id: "download_menu", value: "Download"}
-			]},
+		]},
 		{id: "view_menu", value: "View", submenu: [
 			{id: "hideui_menu", value: "Show/Hide UI"},
 			{id: "hidefm_menu", value: "Hide file manager"},
 			{$template: "Separator"},
 			{id: "tile_menu",   value: "Tile content"},
 			{id: "clear_menu",  value: "Clear display"}
-			]},
+		]},
 		{id: "mainadmin_menu",    value: "Admin", config: {width: 170}, submenu: [
 			{id: "display_menu",  value: "Display client 0"},
 			{id: "overview_menu", value: "Display overview client"},
 			{id: "audio_menu",    value: "Audio manager"},
 			// {id: "drawing_menu",  value: "Drawing application"},
 			{id: "console_menu",  value: "Server console"}
-			]},
+		]},
 		{id: "mainhelp_menu",  value: "Help", submenu: [
 			{id: "help_menu",  value: "Help"},
 			{id: "info_menu",  value: "Information"},
 			{id: "about_menu", value: "About"}
-			]}
+		]}
 	];
 	var mymenu = {
 		id: "mymenu",
@@ -115,7 +115,7 @@ function FileManager(wsio, mydiv, uniqueID) {
 	// Custom tooltip function
 	function mytip(obj) {
 		return obj.tooltip ? obj.tooltip : "";
-	};
+	}
 
 	this.main = webix.ui({
 		container: mydiv,
@@ -140,12 +140,10 @@ function FileManager(wsio, mydiv, uniqueID) {
 				},
 				{view: "resizer"},
 				{height: 160, rows: [
-				{type: "header", id: "drop_header", template: "Drop files below"
-				},
-				{
-					view: "list", id: "uploadlist", type: "uploader",
-					scroll: 'y'
-				}]}
+					{type: "header", id: "drop_header", template: "Drop files below"},
+					{view: "list", id: "uploadlist", type: "uploader", scroll: 'y'}
+				]
+				}
 				]
 				},
 				{
@@ -183,11 +181,11 @@ function FileManager(wsio, mydiv, uniqueID) {
 							minHeight: 100,
 							id: "thumb",
 							template: function(obj) {
-									if (obj.image) {
-										return "<img src='" + obj.image + "_256.jpg'></img>";
-									}
-									return "";
+								if (obj.image) {
+									return "<img src='" + obj.image + "_256.jpg'></img>";
 								}
+								return "";
+							}
 						}
 					]
 				}
@@ -252,18 +250,16 @@ function FileManager(wsio, mydiv, uniqueID) {
 							{view: "text", id: "folder_name", label: "Folder name", name: "folder"},
 							{margin: 5, cols: [
 								{view: "button", value: "Cancel", click: function() {
-										this.getTopParentView().hide();
-									}
-								},
+									this.getTopParentView().hide();
+								}},
 								{view: "button", value: "Create", type: "form", click: function() {
-										createFolder(item, this.getFormView().getValues());
-										this.getTopParentView().hide();
-									}
-								}
+									createFolder(item, this.getFormView().getValues());
+									this.getTopParentView().hide();
+								}}
 							]}
 						],
 						elementsConfig: {
-							labelPosition: "top",
+							labelPosition: "top"
 						}
 					}
 				}).show();
@@ -294,8 +290,8 @@ function FileManager(wsio, mydiv, uniqueID) {
 			var displayUrl = "http://" + window.location.hostname + _this.http_port +  "/display.html?clientID=0";
 			window.open(displayUrl, '_blank');
 		} else if (evt === "overview_menu") {
-			var displayUrl = "http://" + window.location.hostname + _this.http_port +  "/display.html?clientID=-1";
-			window.open(displayUrl, '_blank');
+			var overviewUrl = "http://" + window.location.hostname + _this.http_port +  "/display.html?clientID=-1";
+			window.open(overviewUrl, '_blank');
 		} else if (evt === "clear_menu") {
 			wsio.emit('clearDisplay');
 		} else if (evt === "tile_menu") {
@@ -1081,18 +1077,16 @@ function FileManager(wsio, mydiv, uniqueID) {
 								},
 								{margin: 5, cols: [
 									{view: "button", value: "Cancel", click: function() {
-											this.getTopParentView().hide();
-										}
-									},
+										this.getTopParentView().hide();
+									}},
 									{view: "button", value: "Create", type: "form", click: function() {
-											createFolder(list.getItem(listId), this.getFormView().getValues());
-											this.getTopParentView().hide();
-										}
-									}
+										createFolder(list.getItem(listId), this.getFormView().getValues());
+										this.getTopParentView().hide();
+									}}
 								]}
 							],
 							elementsConfig: {
-								labelPosition: "top",
+								labelPosition: "top"
 							}
 						}
 					}).show();

@@ -8,6 +8,8 @@
 //
 // Copyright (c) 2014
 
+/* global sagePointerEnabled, sagePointerDisabled */
+
 "use strict";
 
 /**

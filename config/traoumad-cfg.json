@@ -23,6 +23,12 @@
 			color: "rgba(255, 255, 255, 0.25)"
 		}
 	},
+	security: {
+		// The SSL method to use
+		secureProtocol: "TLSv1_2_method",
+		// Enable HPKP: HTTP Public Key Pinning Extension
+		enableHPKP: true
+	},
 	ui: {
 		clock: 24,
 		show_url: true,
@@ -85,8 +91,8 @@
 			secure: true
 		},
                 {
-                        name: "PhD Room",
-                        host: "dante.evl.uic.edu",
+                        name: "TestServer",
+                        host: "sage2server.evl.uic.edu",
                         port: 443,
                         secure: true
                 },

@@ -1,0 +1,44 @@
+{
+	name: "SAGE2 test",
+	host: "sage2server.evl.uic.edu",
+	port: 443,
+	index_port: 80,
+	background: {
+		color: "#333333",
+		watermark: {
+			svg: "images/sage2.svg",
+			color: "rgba(255, 255, 255, 0.5)"
+		}
+	},
+	security: {
+		secureProtocol: "TLSv1_2_method"
+	},
+	ui: {
+		clock: 12,
+		show_version: true,
+		show_url: true,
+	},
+	resolution: {
+		width: 1920,
+		height: 1080
+	},
+	layout: {
+		rows: 1,
+		columns: 2
+	},
+	displays: [
+		{
+			row: 0,
+			column: 0
+		},
+		{
+			row: 0,
+			column: 1
+		}
+	],
+	alternate_hosts: [
+		"127.0.0.1"
+	],
+	remote_sites: [
+	]
+}
