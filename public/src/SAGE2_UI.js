@@ -472,6 +472,20 @@ function setupListeners() {
 	wsio.on('dtuRmbContextMenuContents', function(data) {
 		setRmbContextMenuEntries(data.entries, data.app);
 	});
+
+	wsio.on('csdSendDataToClient', function(data) {
+
+		if( data.func === 'uiDrawSetCurrentStateAndShow') {
+			uiDrawSetCurrentStateAndShow(data);
+		}
+		else if( data.func === 'uiDrawMakeLine') {
+			uiDrawMakeLine(data);
+		}
+		else {
+			console.log("Error, csd data packet for client contained invalid function:" + data.func);
+		}
+
+	});
 }
 
 
@@ -1032,8 +1046,18 @@ function handleClick(element) {
 	} else if (element.id === "ezDraw"         || element.id === "ezDrawContainer"         || element.id === "ezDrawLabel") {
 		//clear drawzone
 		uiDrawCanvasBackgroundFlush('white');
-		//show
-		showDialog('uiDrawZone');
+
+		var data = {};
+			data.type 		= "launchAppWithValues";
+			data.appName 	= "doodle";
+			data.func 		= "addClientIdAsEditor";
+			data.params 	= [ "clientId" ];
+		wsio.emit( 'csdMessage', data );
+
+		//showDialog('uiDrawZone');
+
+		//Rather than show the dialog, the client will respond back, then will show.
+
 	} else if (element.id === "appOpenBtn") {
 		// App Launcher Dialog
 		loadSelectedApplication();
@@ -1642,6 +1666,10 @@ function hideDialog(id) {
 	document.getElementById(id).style.display = "none";
 	document.getElementById('uiDrawZoneEraseReference').style.left = "-100px";
 	document.getElementById('uiDrawZoneEraseReference').style.top = "-100px";
+
+	if ( id == 'uiDrawZone') {
+		uiDrawZoneRemoveSelfAsClient();
+	}
 }
 
 /**
@@ -1998,6 +2026,7 @@ function setupUiDrawCanvas() {
 		uidzCanvas.pmx 		= 0;
 		uidzCanvas.pmy 		= 0;
 		uidzCanvas.doDraw 	= false;
+		uidzCanvas.imageToDraw = new Image();
 	uidzCanvas.getContext('2d').fillStyle = "#FFFFFF";
 	uidzCanvas.getContext('2d').fillRect( 0, 0, uidzCanvas.width, uidzCanvas.height );
 	uidzCanvas.getContext('2d').fillStyle = "#000000";
@@ -2017,7 +2046,8 @@ function setupUiDrawCanvas() {
 	uidzCanvas.addEventListener('mousemove',
 		function(event){
 			if(this.doDraw) {
-				uiDrawMakeLine(event.offsetX, event.offsetY, this.pmx, this.pmy, "mouse");
+				//xDest, yDest, xPrev, yPrev
+				uiDrawSendLineCommand(event.offsetX, event.offsetY, this.pmx, this.pmy);
 				this.pmx = event.offsetX;
 				this.pmy = event.offsetY;
 			}
@@ -2027,22 +2057,22 @@ function setupUiDrawCanvas() {
 		}
 	);
 
-	var sendButton = document.getElementById("uiDrawZoneSendButton");
-	sendButton.addEventListener('click',
+	var closeButton = document.getElementById("uiDrawZoneCloseButton");
+	closeButton.addEventListener('click',
 		function() {
-			var workingDiv 	= document.getElementById('uiDrawZoneCanvas');
-			var ctx 		= workingDiv.getContext('2d');
-			var imageString = workingDiv.toDataURL();
-
+			hideDialog('uiDrawZone');
+		}
+	);
+	var newButton = document.getElementById("uiDrawZoneNewButton");
+	newButton.addEventListener('click',
+		function() {
+			uiDrawZoneRemoveSelfAsClient();
 			var data = {};
 				data.type 		= "launchAppWithValues";
 				data.appName 	= "doodle";
-				data.func 		= "setCanvas";
-				data.params 	= [ imageString, interactor.uniqueID];
+				data.func 		= "addClientIdAsEditor";
+				data.params 	= [ "clientId" ];
 			wsio.emit( 'csdMessage', data );
-
-			//before clearing, need to get the data to send.
-			uiDrawCanvasBackgroundFlush('white');
 		}
 	);
 
@@ -2163,12 +2193,15 @@ function uiDrawTouchMove(event) {
 		touchId = uiDrawGetTouchId( touches[i].identifier );
 		//only if it is a known touch continuation
 		if(touchId !== -1) {
-			uiDrawMakeLine(
-				touches[i].pageX - cbb.left, touches[i].pageY - cbb.top,
-				workingDiv.ongoingTouches[touchId].x - cbb.left, workingDiv.ongoingTouches[touchId].y - cbb.top,
+			//xDest, yDest, xPrev, yPrev
+			uiDrawSendLineCommand(
+				touches[i].pageX - cbb.left,
+				touches[i].pageY - cbb.top,
+				workingDiv.ongoingTouches[touchId].x - cbb.left,
+				workingDiv.ongoingTouches[touchId].y - cbb.top
 				// touches[i].pageX - workingDiv.offsetX, touches[i].pageY - workingDiv.offsetY,
 				// workingDiv.ongoingTouches[touchId].x - workingDiv.offsetX, workingDiv.ongoingTouches[touchId].y - workingDiv.offsetY,
-				'touch'
+				//'touch'
 			);
 			workingDiv.ongoingTouches[touchId].x = touches[i].pageX;
 			workingDiv.ongoingTouches[touchId].y = touches[i].pageY;
@@ -2213,23 +2246,91 @@ function uiDrawGetTouchId(id) {
 	return -1;
 }
 
-function uiDrawMakeLine(xDest, yDest, xPrev, yPrev, type) {
+function uiDrawSendLineCommand(xDest, yDest, xPrev, yPrev) {
 	var workingDiv  = document.getElementById('uiDrawZoneCanvas');
 	var ctx 		= workingDiv.getContext('2d');
 	var lineWidth 	= parseInt(workingDiv.lineWidth);
+	var fillStyle	= document.getElementById('uiDrawColorPicker').value;
+	var strokeStyle	= document.getElementById('uiDrawColorPicker').value;
 
-	ctx.fillStyle	= document.getElementById('uiDrawColorPicker').value;
-	ctx.strokeStyle	= document.getElementById('uiDrawColorPicker').value;
+	var dataForApp = {};
+		dataForApp.app 			= workingDiv.appId;
+		dataForApp.func 		= "drawLine";
+		dataForApp.data 		= [xDest, yDest,
+									 xPrev, yPrev,
+									 lineWidth,
+									 fillStyle, strokeStyle,
+									 workingDiv.clientDest];
+		dataForApp.type 		= "sendDataToClient";
+		dataForApp.clientDest 	= "allDisplays";
+	wsio.emit( "csdMessage" , dataForApp );
+}
+
+/**
+Will need to be cleaned up later
+data.params will match the doodle.js drawLined lineData parameter.
+	Currently lineData
+	0: 	xDest
+	1	yDest
+	2	xPrev
+	3	yPrev
+
+	4 	lineWidth
+	5 	fillStyle
+	6 	strokeStyle
+
+	7: 	uiClient
+*/
+function uiDrawMakeLine(data) {
+	//mostly original code
+	var workingDiv  = document.getElementById('uiDrawZoneCanvas');
+	var ctx 		= workingDiv.getContext('2d');
+	var lineWidth 	= data.params[4];
+
+	ctx.fillStyle	= data.params[5];
+	ctx.strokeStyle	= data.params[6];
 	//if the line width is greater than 1. At 1 the fill + circle border will expand beyond the line causing bumps in the line.
 	if(lineWidth > 2) {
 		ctx.lineWidth 	= 1;
 		ctx.beginPath();
-		ctx.arc( xPrev, yPrev, lineWidth/2, 0, Math.PI * 2, false);
+		ctx.arc( data.params[2], data.params[3], lineWidth/2, 0, Math.PI * 2, false);
 		ctx.fill();
 	}
 	ctx.beginPath();
 	ctx.lineWidth = lineWidth;
-	ctx.moveTo( xPrev, yPrev );
-	ctx.lineTo( xDest, yDest);
+	ctx.moveTo( data.params[2], data.params[3] );
+	ctx.lineTo( data.params[0], data.params[1]);
 	ctx.stroke();
+}
+
+
+
+/**
+This will be called from a wsio packet "csdSendDataToClient" with type "doodleAppCurrentState".
+Must clear out canvas, set state, show dialog.
+*/
+function uiDrawSetCurrentStateAndShow(data) {
+	//clear out canvas
+	uiDrawCanvasBackgroundFlush("white");
+	//set the state
+	var workingDiv  	= document.getElementById('uiDrawZoneCanvas');
+	var ctx 			= workingDiv.getContext('2d');
+	workingDiv.imageToDraw.src 	= data.canvasImage;
+	ctx.drawImage( workingDiv.imageToDraw , 0, 0 );
+	//set variables to correctly send updates and allow removal as editor.
+	workingDiv.clientDest = data.clientDest;
+	workingDiv.appId 	= data.appId;
+	//show dialog
+	showDialog('uiDrawZone');
+}
+
+function uiDrawZoneRemoveSelfAsClient() {
+	var workingDiv 	= document.getElementById('uiDrawZoneCanvas');
+	var dataForApp = {};
+		dataForApp.app 			= workingDiv.appId;
+		dataForApp.func 		= "removeClientIdAsEditor";
+		dataForApp.data 		= [ workingDiv.clientDest ];
+		dataForApp.type 		= "sendDataToClient";
+		dataForApp.clientDest 	= "allDisplays";
+	wsio.emit( "csdMessage" , dataForApp );
 }

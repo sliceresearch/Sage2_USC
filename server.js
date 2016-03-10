@@ -7348,6 +7348,9 @@ function wsCsdMessage(wsio, data) {
 		case "launchAppWithValues":
 			csdLaunchAppWithValues(wsio, data);
 			break;
+		case "sendDataToClient":
+			csdSendDataToClient(wsio, data);
+			break;
 		case "setValue":
 			csdSetValue(wsio, data);
 			break;
@@ -7387,13 +7390,13 @@ function csdLaunchAppWithValues(wsio,data) {
 	var fullpath = csdGetPathOfApp(data.appName);
 	//if no path, then invalid app
 	if (fullpath === null ){
-		console.log("csd ERROR could ont find path of app:" + appName);
+		console.log("csd ERROR could not find path of app:" + appName);
 		return;
 	}
 	//Prep the load data.
 	var appLoadData = { };
 		appLoadData.application = fullpath;
-		appLoadData.user = wsio.id;
+		appLoadData.user = wsio.id; //needed for the wsLoadApplication function
 	//get the length, which is what the new id should be
 	//var whatTheNewAppIdShouldBe = "app_" + SAGE2Items.applications.numItems;
 	// var whatTheNewAppIdShouldBe = 0;
@@ -7437,6 +7440,13 @@ function csdLaunchAppWithValues(wsio,data) {
 					dataForDisplay.app 	= app.id;
 					dataForDisplay.func = data.func;
 					dataForDisplay.data = data.params;
+
+				for(var i = 0; i < dataForDisplay.data.length; i++) {
+					if(dataForDisplay.data[i] === "clientId") {
+						dataForDisplay.data[i] = "" + wsio.id; //convert to string to reduce packet size
+					}
+				}
+
 				console.log("erase me, values for app, func, data: "
 					+ dataForDisplay.app + ","
 					+ dataForDisplay.func + ","
@@ -7450,10 +7460,35 @@ function csdLaunchAppWithValues(wsio,data) {
 				}
 			}
 		}
-	, 1000); // milliseconds
+	, 400); // milliseconds
 }
 
 
+function csdSendDataToClient(wsio, data) {
+
+	if( data.clientDest === "allDisplays") {
+		for(var i = 0; i < clients.length; i++) {
+			if(clients[i].clientType === "display") {
+				clients[i].emit('broadcast', data);
+			}
+		}
+	}
+	else if ( data.clientDest === "masterDisplay") {
+		//only send if a master display is connected
+		if(masterDisplay) {
+			masterDisplay.emit('broadcast', data); //only send to one display to prevent multiple responses.
+		}
+	}
+	else {
+		for(var i = 0; i < clients.length; i++) {
+			//!!!! the clients[i].id  and clientDest need auto convert to evaluate as equivalent.
+			if(clients[i].id == data.clientDest) {
+				clients[i].emit('csdSendDataToClient', data);
+			}
+		}
+	}
+
+}
 
 /*
 
