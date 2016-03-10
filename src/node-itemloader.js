@@ -736,7 +736,8 @@ function getSAGE2URL(getName) {
 
 AppLoader.prototype.loadFileFromLocalStorage = function(file, callback) {
 	var localPath = getSAGE2Path(file.filename);
-	var mime_type = mime.lookup(file.filename);
+	// var mime_type = mime.lookup(file.filename);
+	var mime_type = assets.getMimeType(localPath);
 	var a_url     = assets.getURL(localPath);
 	if (typeof a_url !== "string") {
 		console.log("AppLoader>	Cannot load app for file:", file);
@@ -757,7 +758,8 @@ AppLoader.prototype.manageAndLoadUploadedFile = function(file, callback) {
 	// Check if there is a matching application
 	var app = registry.getDefaultApp(cleanFilename);
 	if (app === undefined || app === "") {
-		callback(null); return;
+		callback(null);
+		return;
 	}
 	var mime_type = mime.lookup(cleanFilename);
 	var dir = registry.getDirectory(cleanFilename);
@@ -767,7 +769,7 @@ AppLoader.prototype.manageAndLoadUploadedFile = function(file, callback) {
 
 	// Use the defautl folder plus type as destination:
 	//    SAGE2_Media/pdf/ for instance
-	var localPath   = path.join(this.publicDir, dir, cleanFilename);
+	var localPath = path.join(this.publicDir, dir, cleanFilename);
 
 	// Filename exists, then add date
 	if (sageutils.fileExists(localPath)) {
@@ -815,10 +817,9 @@ AppLoader.prototype.manageAndLoadUploadedFile = function(file, callback) {
 };
 
 AppLoader.prototype.loadApplication = function(appData, callback) {
-	var app, dir;
+	var app;
 	if (appData.location === "file") {
 		app = registry.getDefaultAppFromMime(appData.type);
-		dir = registry.getDirectory(appData.type);
 
 		if (app === "image_viewer") {
 			this.loadImageFromFile(appData.path, appData.type, appData.url, appData.external_url, appData.name,
@@ -841,8 +842,9 @@ AppLoader.prototype.loadApplication = function(appData, callback) {
 		} else if (app === "custom_app") {
 			if (appData.compressed === true) {
 				var name = path.basename(appData.name, path.extname(appData.name));
+				var dir  = registry.getDirectory(appData.type);
 				var futurePath = this.publicDir + dir + "/" + name;
-				var localPath = getSAGE2Path(futurePath);
+				var localPath  = getSAGE2Path(futurePath);
 				var aUrl = getSAGE2URL(localPath);
 				var external_url = this.hostOrigin + sageutils.encodeReservedURL(aUrl);
 
