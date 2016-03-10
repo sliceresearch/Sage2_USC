@@ -215,13 +215,12 @@ var generatePdfThumbnailsHelper = function(buffer, infile, outfile, sizes, index
 		callback();
 		return;
 	}
-
 	imageMagick(buffer).in("-density", "96").in("-depth", "8").in("-quality", "70")
 		.in("-resize", sizes[index] + "x" + sizes[index]).in("-gravity", "center")
 		.in("-background", "rgb(71,71,71)").in("-extent", sizes[index] + "x" + sizes[index])
 		.out("-quality", "70").write(outfile + '_' + sizes[index] + '.jpg', function(err) {
 			if (err) {
-				console.log(sageutils.header("Assets") + "cannot generate " + sizes[index] + "x" + sizes[index] + " thumbnail for:", infile);
+				console.log(sageutils.header("Assets") + "cannot generate " + sizes[index] + "x" + sizes[index] + " thumbnail for:" + infile + ' -- ' + err);
 				return;
 			}
 			// recursive call to generate the next size
@@ -234,7 +233,7 @@ var generatePdfThumbnails = function(infile, outfile, width, height, sizes, inde
 	imageMagick(width, height, "#ffffff").append(infile + "[0]").colorspace("RGB").noProfile().flatten()
 	.toBuffer("PNG", function(err, buffer) {
 		if (err) {
-			console.log(sageutils.header("Assets") + "cannot generate thumbnails for:", infile);
+			console.log(sageutils.header("Assets") + "cannot generate thumbnails for:" + infile + ' -- ' + err);
 			return;
 		}
 
@@ -400,7 +399,8 @@ var addFile = function(filename, exif, callback) {
 		});
 		anAsset.exif.SAGE2thumbnail = rthumb;
 	} else if (exif.MIMEType === 'application/pdf') {
-		generatePdfThumbnails(filename, thumb, exif.ImageWidth, exif.ImageHeight, [512, 256], null, function() {
+		// Dont know the width and height, so null values
+		generatePdfThumbnails(filename, thumb, null, null, [512, 256], null, function() {
 			callback();
 		});
 		anAsset.exif.SAGE2thumbnail = rthumb;

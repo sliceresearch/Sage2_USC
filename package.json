@@ -64,6 +64,7 @@
 		"fsmonitor": "latest",
 		"cheerio": "latest",
 		"sanitizer": "latest",
+		"sanitize-filename": "latest",
 		"ytdl-core": "latest"
 	},
 	"bundledDependencies": [
