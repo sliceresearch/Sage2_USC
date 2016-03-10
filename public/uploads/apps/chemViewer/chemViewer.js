@@ -13,6 +13,7 @@
 // by: Luc Renambot <renambot@gmail.com>
 //
 
+/* global ChemDoodle */
 "use strict";
 
 function addCSS(url, callback) {
@@ -29,7 +30,7 @@ function addCSS(url, callback) {
 }
 
 
-var ChemViewer = SAGE2_App.extend( {
+var chemViewer = SAGE2_App.extend({
 	init: function(data) {
 		// Create div into the DOM
 		this.SAGE2Init("div", data);
@@ -101,9 +102,9 @@ var ChemViewer = SAGE2_App.extend( {
 	draw: function(date) {
 		if (this.ready && this.state.ismoving) {
 			var matrix = [];
-			var xAxis = [ 1, 0, 0 ];
-			var yAxis = [ 0, 1, 0 ];
-			var zAxis = [ 0, 0, 1 ];
+			var xAxis = [1, 0, 0];
+			var yAxis = [0, 1, 0];
+			var zAxis = [0, 0, 1];
 			ChemDoodle.lib.mat4.identity(matrix);
 			this.state.rotation += this.xIncrement * this.dt;
 			ChemDoodle.lib.mat4.rotate(matrix, this.state.rotation, xAxis);
@@ -124,34 +125,28 @@ var ChemViewer = SAGE2_App.extend( {
 
 	event: function(eventType, position, user_id, data, date) {
 		if (eventType === "pointerPress" && (data.button === "left")) {
-		}
-		else if (eventType === "pointerMove" && this.dragging) {
-		}
-		else if (eventType === "pointerRelease" && (data.button === "left")) {
-		}
-
-		// Scroll events for zoom
-		else if (eventType === "pointerScroll") {
-		}
-		else if (eventType === "widgetEvent"){
-		}
-		else if (eventType === "keyboard") {
+			// comment
+		} else if (eventType === "pointerMove" && this.dragging) {
+			// comment
+		} else if (eventType === "pointerRelease" && (data.button === "left")) {
+			// comment
+		} else if (eventType === "pointerScroll") {
+			// Scroll events for zoom
+		} else if (eventType === "widgetEvent") {
+			// comment
+		} else if (eventType === "keyboard") {
 			if (data.character === " ") {
 				this.state.ismoving = !this.state.ismoving;
 				this.refresh(date);
 			}
-		}
-		else if (eventType === "specialKey") {
+		} else if (eventType === "specialKey") {
 			if (data.code === 37 && data.state === "down") { // left
 				this.refresh(date);
-			}
-			else if (data.code === 38 && data.state === "down") { // up
+			} else if (data.code === 38 && data.state === "down") { // up
 				this.refresh(date);
-			}
-			else if (data.code === 39 && data.state === "down") { // right
+			} else if (data.code === 39 && data.state === "down") { // right
 				this.refresh(date);
-			}
-			else if (data.code === 40 && data.state === "down") { // down
+			} else if (data.code === 40 && data.state === "down") { // down
 				this.refresh(date);
 			}
 		}
