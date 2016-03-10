@@ -43,6 +43,7 @@ module.exports = function(grunt) {
 						"public/uploads/apps/radar/radar.js",
 						"public/uploads/apps/stereo_image/stereo_image.js",
 						"public/uploads/apps/sticky_note/sticky_note.js",
+						"public/uploads/apps/timerApp/timerApp.js",
 						"public/uploads/apps/web_earth/web_earth.js",
 						"public/uploads/apps/welcome/welcome.js",
 						"public/uploads/apps/zoom/zoom.js"
@@ -82,6 +83,7 @@ module.exports = function(grunt) {
 					"public/uploads/apps/radar/radar.js",
 					"public/uploads/apps/stereo_image/stereo_image.js",
 					"public/uploads/apps/sticky_note/sticky_note.js",
+					"public/uploads/apps/timerApp/timerApp.js",
 					"public/uploads/apps/web_earth/web_earth.js",
 					"public/uploads/apps/welcome/welcome.js",
 					"public/uploads/apps/zoom/zoom.js"
