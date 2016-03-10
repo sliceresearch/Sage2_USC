@@ -19,11 +19,15 @@ var quickNote = SAGE2_App.extend({
 		this.element.id = "div" + data.id;
 
 		var workingDiv = document.getElementById( this.element.id );
-			workingDiv.style.background = "lightyellow";
-			workingDiv.width = this.element.clientWidth + "px";
-			workingDiv.height = this.element.clientHeight + "px";
+		workingDiv.style.background = "lightyellow";
+		workingDiv.width 			= this.element.clientWidth + "px";
+		workingDiv.height 			= this.element.clientHeight + "px";
 
-			workingDiv.style.fontSize = ui.titleTextSize + "px";
+		workingDiv.style.fontSize 	= ui.titleTextSize + "px";
+
+		this.startingFontSize 	= ui.titleTextSize;
+		this.startingWidth 		= this.element.clientWidth;
+		this.startingHeight 	= this.element.clientHeight;
 
 		this.setMessage(
 			[ 
@@ -53,9 +57,12 @@ var quickNote = SAGE2_App.extend({
 
 	resize: function(date) {
 		var workingDiv = document.getElementById( this.element.id );
-			workingDiv.style.background = "lightyellow";
-			workingDiv.width = this.element.clientWidth + "px";
-			workingDiv.height = this.element.clientHeight + "px";
+		workingDiv.style.background = "lightyellow";
+		workingDiv.width = this.element.clientWidth + "px";
+		workingDiv.height = this.element.clientHeight + "px";
+
+		var percentChange = parseInt( this.element.clientWidth ) / this.startingWidth;
+		workingDiv.style.fontSize = (this.startingFontSize * percentChange) + "px";
 	},
 
 	event: function(eventType, position, user_id, data, date) {
@@ -77,7 +84,7 @@ var quickNote = SAGE2_App.extend({
 		entry = {};
 		entry.description = "Change Note:";
 		entry.func = "setMessage";
-		entry.params = [ "clientInput", "clientId" ];
+		entry.params = [ "clientInput", "clientName" ];
 		entry.inputField = true;
 		entry.inputFieldSize = 20;
 		entries.push(entry);

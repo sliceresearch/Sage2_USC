@@ -1568,9 +1568,17 @@ function noBackspace(event) {
 	// allow backspace in text box: target.type is defined for input elements
 	if (parseInt(event.keyCode, 10) === 8 && !event.target.type) {
 		event.preventDefault();
+	} else if (
+		event.keyCode === 13
+		&& event.target.id.indexOf("rmbContextMenuEntry") !== -1
+		&& event.target.id.indexOf("Input") !== -1
+		) {
+		console.log("erase me did it detect enter?");
+		console.dir(document.getElementById(event.target.parentNode));
+		event.target.parentNode["buttonEffect"+event.target.id]();
 	} else if (event.keyCode === 13 && event.target.id === "uiNoteMakerInputField") {
 		sendCsdMakeNote();
-	}else {
+	} else {
 		return true;
 	}
 }
@@ -1862,6 +1870,11 @@ function setRmbContextMenuEntries(entriesToAdd, app) {
 					data.app = this.app;
 					data.func = this.func;
 					data.params = this.params;
+				for(var di = 0; di < data.params.length; di++ ) {
+					if(data.params[di] == "clientName" ) {
+						data.params[di] = document.getElementById('sage2PointerLabel').value;
+					}
+				}
 				wsio.emit('utdCallFunctionOnApp', data);
 				console.dir( this );
 				console.dir( data );
@@ -1895,11 +1908,15 @@ function setRmbContextMenuEntries(entriesToAdd, app) {
 			if( entriesToAdd[i].inputFieldSize ) {
 				inputField.size = entriesToAdd[i].inputFieldSize; //how many char size to add
 			}else { inputField.size = 5; }
+			//add the button effect to the input field to allow enter to send
+			workingDiv["buttonEffect"+inputField.id] =  entriesToAdd[i].buttonEffect;
 			workingDiv.appendChild( inputField );
 			workingDiv.innerHTML += "&nbsp&nbsp&nbsp";
 			workingDiv.inputFieldId = inputField.id;
 			workingDiv.previousReplacedIndex = false;
-			//create OK buttont to send
+						console.log("erase me");
+			console.dir(inputField);
+			//create OK button to send
 			var rmbcmeIob = document.createElement('span');
 				rmbcmeIob.innerHTML = "&nbspOK&nbsp";
 				rmbcmeIob.style.border = "1px solid black";
@@ -1927,10 +1944,6 @@ function setRmbContextMenuEntries(entriesToAdd, app) {
 		//if no input field attach button effect to entire div instead of just OK button.
 		else {
 			workingDiv.addEventListener( 'mousedown', entriesToAdd[i].buttonEffect );
-			//click effect
-			workingDiv.func = entriesToAdd[i].func;
-			workingDiv.params = entriesToAdd[i].params;
-			workingDiv.app = app;
 			//highlighting effect on mouseover
 			workingDiv.addEventListener( 'mouseover', function() {
 				this.style.background = "lightgray";
@@ -1939,6 +1952,10 @@ function setRmbContextMenuEntries(entriesToAdd, app) {
 				this.style.background = "#FFF8E1";
 			} );
 		}
+		//click effect
+		workingDiv.func = entriesToAdd[i].func;
+		workingDiv.params = entriesToAdd[i].params;
+		workingDiv.app = app;
 
 		if (i === entriesToAdd.length - 1) {
 			rmbDiv.appendChild( document.createElement('hr') );
