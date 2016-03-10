@@ -6518,22 +6518,9 @@ function keyUp(uniqueID, pointerX, pointerY, data) {
 			break;
 		}
 		case "applications": {
-			// if (remoteInteraction[uniqueID].windowManagementMode()) {
-			// 	if (data.code === 8 || data.code === 46) { // backspace or delete
-			// 		deleteApplication(obj.data.id);
-
-			// 		var eLogData = {
-			// 			application: {
-			// 				id: obj.data.id,
-			// 				type: obj.data.application
-			// 			}
-			// 		};
-			// 		addEventToUserLog(uniqueID, {type: "delete", data: eLogData, time: Date.now()});
-			// 	}
-			// } else if (remoteInteraction[uniqueID].appInteractionMode()) {
-			// 	sendKeyUpToApplication(uniqueID, obj.data, localPt, data);
-			// }
-			if (data.code === 8 || data.code === 46) { // backspace or delete
+			if (remoteInteraction[uniqueID].windowManagementMode() &&
+				(data.code === 8 || data.code === 46)) {
+				// backspace or delete
 				deleteApplication(obj.data.id);
 
 				var eLogData = {
