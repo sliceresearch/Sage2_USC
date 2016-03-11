@@ -5051,21 +5051,25 @@ function pointerPressOnApplication(uniqueID, pointerX, pointerY, data, obj, loca
 			selectApplicationForMove(uniqueID, obj.data, pointerX, pointerY, portalId);
 			break;
 		case "dragCorner":
-			// if (remoteInteraction[uniqueID].windowManagementMode()) {
-			// 	selectApplicationForResize(uniqueID, obj.data, pointerX, pointerY, portalId);
-			// } else if (remoteInteraction[uniqueID].appInteractionMode()) {
-			// 	sendPointerPressToApplication(uniqueID, obj.data, pointerX, pointerY, data);
-			// }
 			selectApplicationForResize(uniqueID, obj.data, pointerX, pointerY, portalId);
 			break;
 		case "syncButton":
-			broadcast('toggleSyncOptions', {id: obj.data.id});
+			if (sagePointers[uniqueID].visible) {
+				// only if pointer on the wall, not the web UI
+				broadcast('toggleSyncOptions', {id: obj.data.id});
+			}
 			break;
 		case "fullscreenButton":
-			toggleApplicationFullscreen(uniqueID, obj.data, portalId);
+			if (sagePointers[uniqueID].visible) {
+				// only if pointer on the wall, not the web UI
+				toggleApplicationFullscreen(uniqueID, obj.data, portalId);
+			}
 			break;
 		case "closeButton":
-			deleteApplication(obj.data.id, portalId);
+			if (sagePointers[uniqueID].visible) {
+				// only if pointer on the wall, not the web UI
+				deleteApplication(obj.data.id, portalId);
+			}
 			break;
 	}
 }
@@ -5930,9 +5934,6 @@ function pointerReleaseOnPortal(uniqueID, portalId, localPt, data) {
 			addEventToUserLog(uniqueID, {type: "shareApplication", data: eLogData, time: Date.now()});
 		});
 	} else {
-		// console.log("pointer release on portal (no app selected):",
-		// 	remoteInteraction[uniqueID].windowManagementMode(),
-		// 	remoteInteraction[uniqueID].appInteractionMode());
 		if (remoteInteraction[uniqueID].appInteractionMode()) {
 			var scaledPt = {x: localPt.x / obj.data.scale, y: (localPt.y - config.ui.titleBarHeight) / obj.data.scale};
 			var pObj = SAGE2Items.portals.interactMgr[portalId].searchGeometry(scaledPt);
