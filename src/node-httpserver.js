@@ -26,6 +26,9 @@ var url  = require('url');
 var mime = require('mime');
 var zlib = require('zlib');  // to enable HTTP compression
 
+// External package to clean up URL requests
+var normalizeURL = require('normalizeurl');
+
 // SAGE2 own modules
 var sageutils = require('../src/node-utils');    // provides utility functions
 
@@ -255,7 +258,8 @@ HttpServer.prototype.onreq = function(req, res) {
 		// Remove the bad HTML, like script
 		var getName = sageutils.sanitizedURL(reqURL.pathname);
 		// Remove the bad path, like ..
-		getName = path.normalize(getName);
+		getName = normalizeURL(getName);
+		// Check the HTTP GET handlers
 		if (getName in this.getFuncs) {
 			this.getFuncs[getName](req, res);
 			return;
