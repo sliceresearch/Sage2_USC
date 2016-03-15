@@ -390,6 +390,9 @@ HttpServer.prototype.onreq = function(req, res) {
 			// Cache-Control: max-age=3600, must-revalidate
 			//
 
+			// Set the mime type
+			header["Content-Type"] = mime.lookup(pathname);
+
 			// Get the file size from the 'stat' system call
 			var total = stats.size;
 			if (typeof req.headers.range !== 'undefined') {
@@ -407,9 +410,6 @@ HttpServer.prototype.onreq = function(req, res) {
 				header["Content-Range"]  = "bytes " + start + "-" + end + "/" + total;
 				header["Accept-Ranges"]  = "bytes";
 				header["Content-Length"] = chunksize;
-				// Set the mime type
-				header["Content-Type"] = mime.lookup(pathname);
-
 
 				// Write the HTTP header, 206 Partial Content
 				res.writeHead(206, header);
@@ -428,8 +428,6 @@ HttpServer.prototype.onreq = function(req, res) {
 					res.writeHead(200, header);
 					stream.pipe(res);
 				} else {
-					// Set the mime type
-					header["Content-Type"] = mime.lookup(pathname);
 					// Check for allowed compression
 					var acceptEncoding = req.headers['accept-encoding'] || '';
 					if (acceptEncoding.match(/gzip/)) {
