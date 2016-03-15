@@ -18,7 +18,7 @@
 /* global d3 */
 "use strict";
 
-var Timezone = SAGE2_App.extend({
+var timezone = SAGE2_App.extend({
 
 	updateAllDivs: function() {
 		for (var i in this.state.clocks) {
@@ -272,12 +272,16 @@ var Timezone = SAGE2_App.extend({
 				}
 			}
 			if (!flag) {
-				var clock = {name: cityName.charAt(0).toUpperCase() + cityName.slice(1), offset: timeOffset, id: id, nightMode: false};
+				var clock = {
+					name: cityName.charAt(0).toUpperCase() + cityName.slice(1),
+					offset: timeOffset,
+					id: id,
+					nightMode: false};
 				_this.state.clocks.push(clock);
 				_this.addClockToView(clock);
 				_this.updateAllDivs();
 			}
-			this.SAGE2UserModification = false;
+			_this.SAGE2UserModification = false;
 		});
 	},
 
