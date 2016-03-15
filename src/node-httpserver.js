@@ -304,7 +304,6 @@ HttpServer.prototype.onreq = function(req, res) {
 					var suburl = path.join('.', pubdir[1]);
 					// pathname = url.resolve(folder.path, suburl);
 					pathname = path.join(folder.path, suburl);
-					pathname = decodeURIComponent(pathname);
 					break;
 				}
 			}
@@ -313,6 +312,9 @@ HttpServer.prototype.onreq = function(req, res) {
 				pathname = path.join(this.publicDirectory, getName);
 			}
 		}
+
+		// Decode the misc characters in the URL
+		pathname = decodeURIComponent(pathname);
 
 		// Converting to an actual path
 		pathname = path.resolve(pathname);
