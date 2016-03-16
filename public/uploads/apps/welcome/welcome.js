@@ -13,7 +13,7 @@ var welcome = SAGE2_App.extend({
 		this.element.style.backgroundColor = 'black';
 
 		// Make the SVG element fill the app
-		this.svg = Snap("100%","100%");
+		this.svg = Snap("100%", "100%");
 		// Adding it to the DOM
 		this.element.appendChild(this.svg.node);
 		// Sets the scale of the SVG scenegraph: 0 to 100 (make sure it matches aspect ratio from pacakge.json)
@@ -209,11 +209,15 @@ var welcome = SAGE2_App.extend({
 
 	event: function(eventType, position, user_id, data, date) {
 		if (eventType === "pointerPress" && (data.button === "left")) {
+			// Pointer press
 		} else if (eventType === "pointerMove" && this.dragging) {
+			// Pointer move
 		} else if (eventType === "pointerRelease" && (data.button === "left")) {
+			// Pointer release
 		} else if (eventType === "pointerScroll") {
 			// Scroll events for zoom
 		} else if (eventType === "widgetEvent") {
+			// Widget events
 		} else if (eventType === "keyboard") {
 			if (data.character === "m") {
 				this.refresh(date);
@@ -232,7 +236,7 @@ var welcome = SAGE2_App.extend({
 	},
 
 	getNewImageID: function() {
-		var imageIds = [ "1003", "1004", "1006", "1007", "1008", "1010", "1012", "1014", "1017",
+		var imageIds = ["1003", "1004", "1006", "1007", "1008", "1010", "1012", "1014", "1017",
 		"1018", "1019", "1021", "1022", "1023", "1024", "1026", "1027", "1032", "1033", "1034",
 		"1035", "1036", "1037", "1038", "1039", "1040", "1041", "1046", "1047", "1048", "1049",
 		"1050", "1052", "1053", "1054", "1055", "1056", "1057", "1063", "1064", "1065", "1066",
@@ -370,7 +374,7 @@ var welcome = SAGE2_App.extend({
 		"6528", "6531", "6543", "6545", "6561", "6565", "6566", "6575", "6578", "6579", "6587",
 		"6588", "6589", "6590", "6600", "6607", "7001", "7002", "7003", "7004", "7005", "7006",
 		"7008", "7009", "7010", "7011", "7012", "7013", "7015", "7016", "7017", "7018", "7019",
-		"7020", "7021",  "7023" ];
+		"7020", "7021",  "7023"];
 		return imageIds[Math.floor(Math.random() * imageIds.length)];
 	}
 });

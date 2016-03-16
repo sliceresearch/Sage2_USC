@@ -19,12 +19,17 @@
 // require variables to be declared
 "use strict";
 
+// builtins
 var fs   = require('fs');
 var path = require('path');
 var url  = require('url');
 var mime = require('mime');
 var zlib = require('zlib');  // to enable HTTP compression
 
+// External package to clean up URL requests
+var normalizeURL = require('normalizeurl');
+
+// SAGE2 own modules
 var sageutils = require('../src/node-utils');    // provides utility functions
 
 /**
@@ -44,7 +49,10 @@ function HttpServer(publicDirectory) {
 	var fileTemplate = path.join(publicDirectory, "sage2.appcache.template");
 	var fileCache    = path.join(publicDirectory, "sage2.appcache");
 	fs.readFile(fileTemplate, 'utf8', function(err, data) {
-		if (err) { console.log('Error reading', fileCache); return; }
+		if (err) {
+			console.log('Error reading', fileCache);
+			return;
+		}
 		// Change the date in comment, force to flush the cache
 		var result = data.replace(/# SAGE@start .*/, "# SAGE@start " + Date());
 		// write the resulting content
@@ -78,6 +86,25 @@ function detectCookies(request) {
 }
 
 /**
+ * Handle a page not found (404)
+ *
+ * @method notfound
+ * @param res {Object} response
+ */
+HttpServer.prototype.notfound = function(res) {
+	var header = this.buildHeader();
+	// Do not allow iframe
+	header["X-Frame-Options"] = "DENY";
+
+	res.writeHead(404, header);
+	res.write('<meta http-equiv="refresh" content="5;url=/index.html">');
+	res.write('<h1>SAGE2 error</h1>Invalid request\n');
+	res.write('<br><br><br>\n');
+	res.write('<b><a href=/index.html>SAGE2 main page</a></b>\n');
+	res.end();
+};
+
+/**
  * Handle a HTTP redirect
  *
  * @method redirect
@@ -85,9 +112,134 @@ function detectCookies(request) {
  * @param aurl {String} destination URL
  */
 HttpServer.prototype.redirect = function(res, aurl) {
-	// 302 HTTP code for redirect
-	res.writeHead(302, {Location: aurl});
+	var header = this.buildHeader();
+	// Do not allow iframe
+	header["X-Frame-Options"] = "DENY";
+	// 301 HTTP code for redirect: Moved Permanently
+	header["Location"] = aurl;
+	res.writeHead(301, header);
 	res.end();
+};
+
+var hpkpPin1 = (function() {
+	var pin;
+	return function() {
+		if (!pin) {
+			pin = fs.readFileSync(path.join("keys", "pin1.sha256"), {encoding: 'utf8'});
+			pin = pin.trim();
+			console.log('PIN1', pin);
+		}
+		return pin;
+	};
+})();
+
+var hpkpPin2 = (function() {
+	var pin;
+	return function() {
+		if (!pin) {
+			pin = fs.readFileSync(path.join("keys", "pin2.sha256"), {encoding: 'utf8'});
+			pin = pin.trim();
+			console.log('PIN2', pin);
+		}
+		return pin;
+	};
+})();
+
+/**
+ * Build an HTTP header object
+ *
+ * @method buildHeader
+ * @return {Object} an object containig common HTTP header values
+ */
+HttpServer.prototype.buildHeader = function() {
+	// Get the site configuration, from server.js
+	var cfg = module.parent.exports.config;
+	// Build the header object
+	var header = {};
+
+	// Default datatype of the response
+	header["Content-Type"] = "text/html; charset=utf-8";
+
+	// The X-Frame-Options header can be used to to indicate whether a browser is allowed
+	// to render a page within an <iframe> element or not. This is helpful to prevent clickjacking
+	// attacks by ensuring your content is not embedded within other sites.
+	// See more here: https://developer.mozilla.org/en-US/docs/HTTP/X-Frame-Options.
+	// "SAMEORIGIN" or "DENY" for instance
+	header["X-Frame-Options"] = "SAMEORIGIN";
+
+	// This header enables the Cross-site scripting (XSS) filter built into most recent web browsers.
+	// It's usually enabled by default anyway, so the role of this header is to re-enable the filter
+	// for this particular website if it was disabled by the user.
+	// This header is supported in IE 8+, and in Chrome.
+	header["X-XSS-Protection"] = "1; mode=block";
+
+	// The only defined value, "nosniff", prevents Internet Explorer and Google Chrome from MIME-sniffing
+	// a response away from the declared content-type. This also applies to Google Chrome, when downloading
+	// extensions. This reduces exposure to drive-by download attacks and sites serving user uploaded content
+	// that, by clever naming, could be treated by MSIE as executable or dynamic HTML files.
+	header["X-Content-Type-Options"] = "nosniff";
+
+	// HTTP Strict Transport Security (HSTS) is an opt-in security enhancement
+	// Once a supported browser receives this header that browser will prevent any
+	// communications from being sent over HTTP to the specified domain
+	// and will instead send all communications over HTTPS.
+	// Here using a long (1 year) max-age
+	if (cfg.security && sageutils.isTrue(cfg.security.enableHSTS)) {
+		header["Strict-Transport-Security"] = "max-age=31536000";
+	}
+
+	// Instead of blindly trusting everything that a server delivers, Content-Security-Policy defines
+	// the HTTP header that allows you to create a whitelist of sources of trusted content,
+	// and instructs the browser to only execute or render resources from those sources.
+	// Even if an attacker can find a hole through which to inject script, the script won’t match
+	// the whitelist, and therefore won’t be executed.
+	// default-src 'none' -> default policy that blocks absolutely everything
+	if (cfg.security && sageutils.isTrue(cfg.security.enableCSP)) {
+		// Pretty open
+		header["Content-Security-Policy"] = "default-src 'none';" +
+			" plugin-types image/svg+xml;" +
+			" object-src 'self';" +
+			" child-src 'self' blob:;" +
+			" connect-src *;" +
+			" font-src 'self' fonts.gstatic.com;" +
+			" form-action 'self';" +
+			" img-src * data: blob:;" +
+			" media-src 'self';" +
+			" style-src 'self' 'unsafe-inline' fonts.googleapis.com;" +
+			" script-src * 'unsafe-eval';";
+	}
+	// More secure
+	// header["Content-Security-Policy"] = "default-src 'none';" +
+	// 	" plugin-types image/svg+xml;" +
+	// 	" object-src 'self';" +
+	// 	" child-src 'self' blob:;" +
+	// 	" connect-src 'self' wss: ws: https://query.yahooapis.com https://data.cityofchicago.org https://lyra.evl.uic.edu:9000;" +
+	// 	" font-src 'self';" +
+	// 	" form-action 'self';" +
+	// 	// " img-src 'self' data: http://openweathermap.org a.tile.openstreetmap.org b.tile.openstreetmap.org " +
+	// 	// "c.tile.openstreetmap.org http://www.webglearth.com http://server.arcgisonline.com http://radar.weather.gov " +
+	// 	// "http://cdn.abclocal.go.com http://www.glerl.noaa.gov " +
+	// 	// "https://lyra.evl.uic.edu:9000 https://maps.gstatic.com https://maps.googleapis.com https://khms0.googleapis.com " +
+	// 	// "https://khms1.googleapis.com https://khms2.googleapis.com https://csi.gstatic.com;" +
+	// 	" img-src *;" +
+	// 	" media-src 'self';" +
+	// 	" style-src 'self' 'unsafe-inline';" +
+	// 	" script-src 'self' http://www.webglearth.com https://maps.googleapis.com 'unsafe-eval';";
+
+
+	// HTTP PUBLIC KEY PINNING (HPKP)
+	// Key pinning is a trust-on-first-use (TOFU) mechanism.
+	// The first time a browser connects to a host it lacks the the information necessary to perform
+	// "pin validation" so it will not be able to detect and thwart a MITM attack.
+	// This feature only allows detection of these kinds of attacks after the first connection.
+	if (cfg.security && sageutils.isTrue(cfg.security.enableHPKP)) {
+		// 30 days expirations
+		header["Public-Key-Pins"] = "pin-sha256=\"" + hpkpPin1() +
+			"\"; pin-sha256=\"" + hpkpPin2() +
+			"\"; max-age=2592000; includeSubDomains";
+	}
+
+	return header;
 };
 
 /**
@@ -98,16 +250,24 @@ HttpServer.prototype.redirect = function(res, aurl) {
  * @param res {Object} response
  */
 HttpServer.prototype.onreq = function(req, res) {
-	var stream;
 	var i;
+	var _this = this;
 
 	if (req.method === "GET") {
 		var reqURL  = url.parse(req.url);
-		var getName = decodeURIComponent(reqURL.pathname);
+		// Remove the bad HTML, like script
+		var getName = sageutils.sanitizedURL(reqURL.pathname);
+		// Remove the bad path, like ..
+		getName = normalizeURL(getName);
+		// Check the HTTP GET handlers
 		if (getName in this.getFuncs) {
 			this.getFuncs[getName](req, res);
 			return;
 		}
+
+		// var protocol = req.connection.encrypted ? 'https' : 'http';
+		// var fullUrl  = protocol + '://' + req.headers.host + req.url;
+		// console.log('Request>	', fullUrl);
 
 		// redirect root path to index.html
 		if (getName === "/") {
@@ -122,11 +282,7 @@ HttpServer.prototype.onreq = function(req, res) {
 		// Routes
 		// //////////////////////
 
-		// API call: /config
-		if (getName.indexOf('/config/') === 0) {
-			// if trying to access config files, add the correct path
-			pathname = path.join(this.publicDirectory, '..', getName);
-		} else if (getName.lastIndexOf('/images/', 0) === 0 ||
+		if (getName.lastIndexOf('/images/', 0) === 0 ||
 				getName.lastIndexOf('/shaders/', 0) === 0 ||
 				getName.lastIndexOf('/css/', 0) === 0 ||
 				getName.lastIndexOf('/lib/', 0) === 0 ||
@@ -146,9 +302,8 @@ HttpServer.prototype.onreq = function(req, res) {
 				if (pubdir.length === 2) {
 					// convert the URL into a path
 					var suburl = path.join('.', pubdir[1]);
-					// pathname   = url.resolve(folder.path, suburl);
-					pathname   = path.join(folder.path, suburl);
-					pathname   = decodeURIComponent(pathname);
+					// pathname = url.resolve(folder.path, suburl);
+					pathname = path.join(folder.path, suburl);
 					break;
 				}
 			}
@@ -157,6 +312,12 @@ HttpServer.prototype.onreq = function(req, res) {
 				pathname = path.join(this.publicDirectory, getName);
 			}
 		}
+
+		// Decode the misc characters in the URL
+		pathname = decodeURIComponent(pathname);
+
+		// Converting to an actual path
+		pathname = path.resolve(pathname);
 
 		// //////////////////////
 		// Are we trying to session management
@@ -191,70 +352,90 @@ HttpServer.prototype.onreq = function(req, res) {
 			if (stats.isDirectory()) {
 				this.redirect(res, getName + "/index.html");
 				return;
+			}
+
+			// Build a default header object
+			var header = this.buildHeader();
+
+			if (path.extname(pathname) === ".html") {
+				// Do not allow iframe
+				header["X-Frame-Options"] = "DENY";
+			}
+
+			header["Access-Control-Allow-Headers" ] = "Range";
+			header["Access-Control-Expose-Headers"] = "Accept-Ranges, Content-Encoding, Content-Length, Content-Range";
+			if (req.headers.origin !== undefined) {
+				header['Access-Control-Allow-Origin' ]     = req.headers.origin;
+				header['Access-Control-Allow-Methods']     = "GET";
+				header['Access-Control-Allow-Headers']     = "X-Requested-With, X-HTTP-Method-Override, Content-Type, Accept";
+				header['Access-Control-Allow-Credentials'] = true;
+			}
+
+			if (getName.match(/^\/(src|lib|images|css)\/.+/)) {
+				// cache for 1 week for SAGE2 core files
+				// header['Cache-Control'] = 'public, max-age=604800';
+
+				// No persistent copy - must check
+				header['Cache-Control'] = 'no-store, must-revalidate, max-age=604800';
 			} else {
-				var header = {};
-				header["Content-Type"] = mime.lookup(pathname);
-				header["Access-Control-Allow-Headers" ] = "Range";
-				header["Access-Control-Expose-Headers"] = "Accept-Ranges, Content-Encoding, Content-Length, Content-Range";
-				if (req.headers.origin !== undefined) {
-					header['Access-Control-Allow-Origin' ]     = req.headers.origin;
-					header['Access-Control-Allow-Methods']     = "GET";
-					header['Access-Control-Allow-Headers']     = "X-Requested-With, X-HTTP-Method-Override, Content-Type, Accept";
-					header['Access-Control-Allow-Credentials'] = true;
-				}
+				header['Cache-Control'] = 'no-cache';
+			}
 
-				if (getName.match(/^\/(src|lib|images|css)\/.+/)) {
-					// cache for 1 week for SAGE2 core files
-					header['Cache-Control'] = 'public, max-age=604800';
-				} else {
-					// console.log('No caching for', pathname, getName);
-					header['Cache-Control'] = 'no-cache';
-				}
+			// Useful Cache-Control response headers include:
+			// max-age=[seconds] — specifies the maximum amount of time that a representation will be considered fresh.
+			// s-maxage=[seconds] — similar to max-age, except that it only applies to shared (e.g., proxy) caches.
+			// public — marks authenticated responses as cacheable;
+			// private — allows caches that are specific to one user (e.g., in a browser) to store the response
+			// no-cache — forces caches to submit the request to the origin server for validation before releasing
+			//  a cached copy, every time.
+			// no-store — instructs caches not to keep a copy of the representation under any conditions.
+			// must-revalidate — tells caches that they must obey any freshness information you give them about a representation.
+			// proxy-revalidate — similar to must-revalidate, except that it only applies to proxy caches.
+			//
+			// For example:
+			// Cache-Control: max-age=3600, must-revalidate
+			//
 
-				// Useful Cache-Control response headers include:
-				// max-age=[seconds] — specifies the maximum amount of time that a representation will be considered fresh.
-				// s-maxage=[seconds] — similar to max-age, except that it only applies to shared (e.g., proxy) caches.
-				// public — marks authenticated responses as cacheable;
-				// private — allows caches that are specific to one user (e.g., in a browser) to store the response
-				// no-cache — forces caches to submit the request to the origin server for validation before releasing
-				//  a cached copy, every time.
-				// no-store — instructs caches not to keep a copy of the representation under any conditions.
-				// must-revalidate — tells caches that they must obey any freshness information you give them about a representation.
-				// proxy-revalidate — similar to must-revalidate, except that it only applies to proxy caches.
-				//
-				// For example:
-				// Cache-Control: max-age=3600, must-revalidate
-				//
+			// Set the mime type
+			header["Content-Type"] = mime.lookup(pathname);
 
-				// Get the file size from the 'stat' system call
-				var total = stats.size;
-				if (typeof req.headers.range !== 'undefined') {
-					// Parse the range request from the HTTP header
-					var range = req.headers.range;
-					var parts = range.replace(/bytes=/, "").split("-");
-					var partialstart = parts[0];
-					var partialend   = parts[1];
+			// Get the file size from the 'stat' system call
+			var total = stats.size;
+			if (typeof req.headers.range !== 'undefined') {
+				// Parse the range request from the HTTP header
+				var range = req.headers.range;
+				var parts = range.replace(/bytes=/, "").split("-");
+				var partialstart = parts[0];
+				var partialend   = parts[1];
 
-					var start = parseInt(partialstart, 10);
-					var end = partialend ? parseInt(partialend, 10) : total - 1;
-					var chunksize = (end - start) + 1;
+				var start = parseInt(partialstart, 10);
+				var end = partialend ? parseInt(partialend, 10) : total - 1;
+				var chunksize = (end - start) + 1;
 
-					// Set the range into the HTPP header for the response
-					header["Content-Range"]  = "bytes " + start + "-" + end + "/" + total;
-					header["Accept-Ranges"]  = "bytes";
-					header["Content-Length"] = chunksize;
+				// Set the range into the HTPP header for the response
+				header["Content-Range"]  = "bytes " + start + "-" + end + "/" + total;
+				header["Accept-Ranges"]  = "bytes";
+				header["Content-Length"] = chunksize;
 
-					// Write the HTTP header, 206 Partial Content
-					res.writeHead(206, header);
-					// Read part of the file
-					stream = fs.createReadStream(pathname, {start: start, end: end});
-					// Pass it to the HTTP response
+				// Write the HTTP header, 206 Partial Content
+				res.writeHead(206, header);
+				// Read part of the file
+				var rstream = fs.createReadStream(pathname, {start: start, end: end});
+				// Pass it to the HTTP response
+				rstream.pipe(res);
+			} else {
+				// Open the file as a stream
+				var stream = fs.createReadStream(pathname);
+				// array of allowed compression file types
+				var compressExtensions = ['.html', '.json', '.js', '.css', '.txt', '.svg', '.xml', '.md'];
+				if (compressExtensions.indexOf(path.extname(pathname)) === -1) {
+					// Do not compress, just set file size
+					header["Content-Length"] = total;
+					res.writeHead(200, header);
 					stream.pipe(res);
 				} else {
 					// Check for allowed compression
 					var acceptEncoding = req.headers['accept-encoding'] || '';
-					// Open the file as a stream
-					stream = fs.createReadStream(pathname);
 					if (acceptEncoding.match(/gzip/)) {
 						// Set the encoding to gzip
 						header["Content-Encoding"] = 'gzip';
@@ -276,24 +457,25 @@ HttpServer.prototype.onreq = function(req, res) {
 				}
 			}
 		} else {
-			// File not found: 404 HTTP error, with link to index page
-			res.writeHead(404, {"Content-Type": "text/html"});
-			res.write("<h1>SAGE2 error</h1>file not found: <em>" + pathname + "</em>\n\n");
-			res.write("<br><br><br>\n");
-			res.write("<b><a href=/index.html>SAGE2 main page</a></b>\n");
-			res.end();
+			// redirect to index page
+			// this.redirect(res, "/");
+
+			// File not found: 404 HTTP error
+			this.notfound(res);
 			return;
 		}
 	} else if (req.method === "POST") {
-		var postName = decodeURIComponent(url.parse(req.url).pathname);
+		// var postName = decodeURIComponent(url.parse(req.url).pathname);
+		var postName = sageutils.sanitizedURL(url.parse(req.url).pathname);
 		if (postName in this.postFuncs) {
 			this.postFuncs[postName](req, res);
 			return;
 		}
 	} else if (req.method === "PUT") {
 		// Need some authentication / security here
-		//
-		var putName = decodeURIComponent(url.parse(req.url).pathname);
+
+		// var putName = decodeURIComponent(url.parse(req.url).pathname);
+		var putName = sageutils.sanitizedURL(url.parse(req.url).pathname);
 		// Remove the first / if there
 		if (putName[0] === '/') {
 			putName = putName.slice(1);
@@ -305,7 +487,12 @@ HttpServer.prototype.onreq = function(req, res) {
 
 		wstream.on('finish', function() {
 			// stream closed
-			console.log('HTTP>		PUT file has been written', putName, fileLength, 'bytes');
+			console.log(sageutils.header('PUT') + 'File written' + putName +
+				' ' + fileLength + ' bytes');
+		});
+		wstream.on('error', function() {
+			// Error during write
+			console.log(sageutils.header('PUT') + 'Error during write for ' + putName);
 		});
 		// Getting data
 		req.on('data', function(chunk) {
@@ -315,12 +502,15 @@ HttpServer.prototype.onreq = function(req, res) {
 		});
 		// Data no more
 		req.on('end', function() {
-			// No more date
-			console.log("HTTP>		PUT Received:", fileLength, filename, putName);
+			// No more data
+			console.log(sageutils.header('PUT') + 'Received: ' + filename + ' ' +
+				putName + ' ' + fileLength + ' bytes');
 			// Close the write stream
 			wstream.end();
 			// empty 200 OK response for now
-			res.writeHead(200, "OK", {'Content-Type': 'text/html'});
+			var header = _this.buildHeader();
+			header["Content-Type"] = "text/html";
+			res.writeHead(200, "OK", header);
 			res.end();
 		});
 	}

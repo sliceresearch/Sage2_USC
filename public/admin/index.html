@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <title>SAGE2 site index</title>
 
-<script type="text/javascript">
+<script type="text/license">
 	// SAGE2 is available for use under the SAGE2 Software License
 	//
 	// University of Illinois at Chicago's Electronic Visualization Laboratory (EVL)
@@ -32,6 +32,7 @@
 		xhr.onreadystatechange = function() {
 			if(xhr.readyState == 4 && xhr.status == 200){
 				json_cfg = JSON.parse(xhr.responseText);
+				console.log('Got config', json_cfg)
 				initializePageList();
 			}
 		};
@@ -47,13 +48,14 @@
 		var remotesites = document.getElementById('remotesites');
 		var help        = document.getElementById('help');
 
-		var https_port;
-		if (typeof json_cfg.rproxy_port != "undefined")
+		var https_port, http_port;
+		if (typeof json_cfg.rproxy_port != "undefined") {
 			https_port = ":" + json_cfg.rproxy_port.toString();
-		else
-			https_port = ":" + json_cfg.port.toString();
-		if (https_port == ":443") https_port = "";
-		
+		} else {
+			https_port = json_cfg.secure_port === 443 ? "" : ":" + json_cfg.secure_port;
+		}
+		http_port  = json_cfg.port === 80 ? "" : ":" + json_cfg.port;
+
 		// User Interaction
 		var sageUI = document.createElement('p');
 		var sageUI_link = document.createElement('a');
@@ -70,13 +72,13 @@
 		// sagePointer.appendChild(sagePointer_link);
 		
 		userInteraction.appendChild(sageUI);
-		userInteraction.appendChild(sagePointer);
+		// userInteraction.appendChild(sagePointer);
 		
 		// Audio
 		var audioManager = document.createElement('p');
 		var audioManager_link = document.createElement('a');
 		audioManager_link.textContent = "Audio Manager";
-		audioManager_link.href = "http://" + window.location.hostname + ':' + json_cfg.index_port + window.location.pathname.replace("admin/index.html","") + "audioManager.html";
+		audioManager_link.href = "http://" + window.location.hostname + http_port + window.location.pathname.replace("admin/index.html","") + "audioManager.html";
 		audioManager_link.target = "_blank";
 		audioManager.appendChild(audioManager_link);
 		
@@ -87,7 +89,7 @@
 			var displayClient = document.createElement('p');
 			var displayClient_link = document.createElement('a');
 			displayClient_link.textContent = "Display (client " + i.toString() + ")";
-			displayClient_link.href = "http://" + window.location.hostname + ':' + json_cfg.index_port + window.location.pathname.replace("admin/index.html","") + "display.html?clientID=" + i.toString();
+			displayClient_link.href = "http://" + window.location.hostname + http_port + window.location.pathname.replace("admin/index.html","") + "display.html?clientID=" + i.toString();
 			displayClient_link.target = "_blank";
 			displayClient.appendChild(displayClient_link);
 		
@@ -98,7 +100,7 @@
 		var displayClient = document.createElement('p');
 		var displayClient_link = document.createElement('a');
 		displayClient_link.textContent = "Overview display (press 'f' to switch view and trackpad/wheel to navigate)";
-		displayClient_link.href = "http://" + window.location.hostname + ':' + json_cfg.index_port + window.location.pathname.replace("admin/index.html","") + "display.html?clientID=" + i.toString();
+		displayClient_link.href = "http://" + window.location.hostname + http_port + window.location.pathname.replace("admin/index.html","") + "display.html?clientID=" + i.toString();
 		displayClient_link.target = "_blank";
 		displayClient.appendChild(displayClient_link);
 		display.appendChild(displayClient);
@@ -161,7 +163,7 @@
 		var apiHelp = document.createElement('p');
 		var apiHelp_link = document.createElement('a');
 		apiHelp_link.textContent = "API for programmers";
-		apiHelp_link.href = "http://" + window.location.hostname + ':' + json_cfg.index_port + window.location.pathname.replace("admin/index.html","") + "api/index.html";
+		apiHelp_link.href = "http://" + window.location.hostname + http_port + window.location.pathname.replace("admin/index.html","") + "api/index.html";
 		apiHelp_link.target = "_blank";
 		apiHelp.appendChild(apiHelp_link);
 		help.appendChild(apiHelp);
@@ -181,11 +183,11 @@
 	<main>
 
 		<section id="userInteraction" class="siteType">
-			<h2>User Interaction Pages</h2>
+			<h2>User Interface</h2>
 		</section>
 
 		<section id="audio" class="siteType">
-			<h2>Audio Pages</h2>
+			<h2>Audio</h2>
 		</section>
 
 		<section id="display" class="siteType">
@@ -207,7 +209,6 @@
 		<section id="help" class="siteType">
 			<h2>Help</h2>
 			<p><a href="/help/index.html#sharing">Enable desktop sharing</a></p>
-			<p><a href="/help/index.html#pointer">Pointer usage</a></p>
 			<p><a href="/help/index.html#content">Sharing content</a></p>
 		</section>
 

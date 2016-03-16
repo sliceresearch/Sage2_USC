@@ -4,8 +4,8 @@
 {
 	name: "mysite",
 	host: "localhost",
-	port: 9090,
-	index_port: 9292,
+	port: 9292,
+	index_port: 9090,
 	background: {
 		color: "#333333",
 		watermark: {
@@ -13,6 +13,9 @@
 			color: "rgba(255, 255, 255, 0.5)"
 		}
 	},
+        audio: {
+                initialVolume: 8,
+        },
 	ui: {
 		clock: 12,
 		show_version: false,

@@ -8,6 +8,8 @@
 //
 // Copyright (c) 2014
 
+/* global Pointer, dataSharingPortals, createDrawingElement, RadialMenu */
+
 "use strict";
 
 /**
@@ -370,33 +372,35 @@ function UIBuilder(json_cfg, clientID) {
 		version.style.mozTransform  = "translateY(-50%)";
 		version.style.transform  = "translateY(-50%)";
 
+		// Change the type before placing the event handler
+		logo.type = "image/svg+xml";
 		logo.addEventListener('load', this.logoLoadedFunc, false);
 		if (__SAGE2__.browser.isIE) {
 			logo.src  = "images/EVL-LAVA.svg";
 		} else {
 			logo.data = "images/EVL-LAVA.svg";
-			logo.type = "image/svg+xml";
 		}
 
 		if (this.json_cfg.background.watermark !== undefined) {
+			// Change the type before placing the event handler
+			watermark.type = "image/svg+xml";
 			watermark.addEventListener('load', this.watermarkLoadedFunc, false);
 			if (__SAGE2__.browser.isIE) {
 				// using an image tag in IE
 				watermark.src  = this.json_cfg.background.watermark.svg;
 			} else {
 				watermark.data = this.json_cfg.background.watermark.svg;
-				watermark.type = "image/svg+xml";
 			}
 		}
 
 		if (this.json_cfg.ui.show_url) {
 			var url   = this.json_cfg.host;
-			var iport = this.json_cfg.index_port;
+			var iport = this.json_cfg.port;
 			if (iport !== 80) {
 				url += ":" + iport;
 			}
-			if (this.json_cfg.rproxy_index_port !== undefined) {
-				iport = this.json_cfg.rproxy_index_port;
+			if (this.json_cfg.rproxy_secure_port !== undefined) {
+				iport = this.json_cfg.rproxy_secure_port;
 				url = window.location.hostname;
 				if (iport !== 80) {
 					url += ":" + iport;
@@ -720,7 +724,7 @@ function UIBuilder(json_cfg, clientID) {
 	*
 	* @method logoLoaded
 	*/
-	this.logoLoaded = function() {
+	this.logoLoaded = function(evt) {
 		var logo   = document.getElementById('logo');
 		var height = 0.95 * this.titleBarHeight;
 		var width;

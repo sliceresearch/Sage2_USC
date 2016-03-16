@@ -678,14 +678,15 @@ function RadialMenu() {
 		var bytesInt = parseInt(bytes);
 
 		if (bytesInt > Math.pow(1024, 3)) {
-			return (bytesInt / Math.pow(1024, 3)).toFixed(2) + " GB"
-		} else if (bytesInt > Math.pow(1024, 2)) {
-			return (bytesInt / Math.pow(1024, 2)).toFixed(2) + " MB"
-		} else if (bytesInt > Math.pow(1024, 1)) {
-			return Math.round(bytesInt / Math.pow(1024, 1)) + " KB"
+			return (bytesInt / Math.pow(1024, 3)).toFixed(2) + " GB";
 		}
-
-		return bytes + " bytes"
+		if (bytesInt > Math.pow(1024, 2)) {
+			return (bytesInt / Math.pow(1024, 2)).toFixed(2) + " MB";
+		}
+		if (bytesInt > Math.pow(1024, 1)) {
+			return Math.round(bytesInt / Math.pow(1024, 1)) + " KB";
+		}
+		return bytes + " bytes";
 	};
 
 	/**
@@ -722,14 +723,13 @@ function RadialMenu() {
 			this.updateThumbnailPositions();
 			this.draw();
 			return true;
-		} else {
-			this.currentMenuState = "radialMenu";
-			this.element.width = this.radialMenuSize.x;
-			this.element.height = this.radialMenuSize.y;
-			this.thumbnailWindowDiv.style.display = "none";
-			this.draw();
-			return false;
 		}
+		this.currentMenuState = "radialMenu";
+		this.element.width = this.radialMenuSize.x;
+		this.element.height = this.radialMenuSize.y;
+		this.thumbnailWindowDiv.style.display = "none";
+		this.draw();
+		return false;
 	};
 
 	/**
@@ -1306,7 +1306,7 @@ function RadialMenu() {
 		}  else if (stateData.thumbnailWindowState === "closed") {
 			this.setMenu("radialMenu");
 		}
-	}
+	};
 }
 
 /**
@@ -1553,15 +1553,14 @@ function ButtonWidget() {
 				}
 			}*/
 			return 1;
-		} else {
-			if (this.isLit === false) {
-				if (this.state !== 0 && this.useEventOverColor) {
-					this.ctx.redraw = true;
-				}
-				this.state = 0;
-			}
-			return 0;
 		}
+		if (this.isLit === false) {
+			if (this.state !== 0 && this.useEventOverColor) {
+				this.ctx.redraw = true;
+			}
+			this.state = 0;
+		}
+		return 0;
 	};
 
 	this.setButtonState = function(state) {
@@ -1581,69 +1580,61 @@ function ButtonWidget() {
 		if (this.hitboxShape === "box") {
 			if (x >= this.posX && x <= this.posX + this.hitboxWidth && y >= this.posY && y <= this.posY + this.hitboxheight) {
 				return true;
-			} else {
-				return false;
 			}
-
-		} else if (this.hitboxShape === "circle") {
+			return false;
+		}
+		if (this.hitboxShape === "circle") {
 			var distance = Math.sqrt(Math.pow(Math.abs(x - this.posX), 2) + Math.pow(Math.abs(y - this.posY), 2));
 
 			if (distance <= this.hitboxWidth / 2) {
 				return true;
-			} else {
-				return false;
 			}
+			return false;
 		}
 	};
 
 	this.isFirstOver = function() {
 		if (this.state === 1) {
 			return true;
-		} else {
-			return false;
 		}
+		return false;
 	};
 
 	this.isOver = function() {
 		if (this.state === 1 || this.state === 6) {
 			return true;
-		} else {
-			return false;
 		}
+		return false;
 	};
 
 	this.isClicked = function() {
 		if (this.state === 3) {
 			this.state = 2;
 			return true;
-		} else {
-			return false;
 		}
+		return false;
 	};
 
 	this.isReleased = function() {
 		if (this.state === 4) {
 			this.state = 0;
 			return true;
-		} else {
-			return false;
 		}
+		return false;
 	};
 
 	this.isHidden = function() {
 		if (this.state === -2) {
 			return true;
-		} else {
-			return false;
 		}
+		return false;
 	};
 
 	this.isDisabled = function() {
 		if (this.state === -1) {
 			return true;
-		} else {
-			return false;
 		}
+		return false;
 	};
 
 	this.setHidden = function(val) {

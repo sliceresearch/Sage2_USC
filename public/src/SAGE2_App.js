@@ -8,8 +8,7 @@
 //
 // Copyright (c) 2014-2015
 
-// we use arguments and callee to build inheritance
-/*eslint-disable use-strict, strict, global-strict */
+/* global ignoreFields, SAGE2WidgetControl */
 
 /**
  * @module client
@@ -382,6 +381,9 @@ var SAGE2_App = Class.extend({
 	},
 
 	SAGE2UpdateAppOption: function(name, parent, save) {
+		if (!(name in save)) {
+			save[name] = {_name: name, _value: {textContent: ""}, _sync: true};
+		}
 		if (typeof parent[name] === "number") {
 			save[name]._value.textContent = parent[name].toString();
 		} else if (typeof parent[name] === "boolean") {
@@ -564,9 +566,8 @@ var SAGE2_App = Class.extend({
 	isLayerHidden: function() {
 		if (this.layer) {
 			return (this.layer.style.display === "none");
-		} else {
-			return false;
 		}
+		return false;
 	},
 
 	/**
@@ -649,6 +650,19 @@ var SAGE2_App = Class.extend({
 	postDraw: function(date) {
 		this.prevDate = date;
 		this.frame++;
+	},
+
+	/**
+	* Change the title of the application window
+	*
+	* @method updateTitle
+	* @param title {String} new title string
+	*/
+	updateTitle: function(title) {
+		var titleText = document.getElementById(this.id + "_text");
+		if (titleText) {
+			titleText.textContent = title;
+		}
 	},
 
 	/**

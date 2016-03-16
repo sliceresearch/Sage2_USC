@@ -10,13 +10,6 @@
 
 "use strict";
 
-/*eslint-disable */
-Array.prototype.diff = function(num) {
-	return this.map(function(x) {
-		return x - num;
-	});
-};
-/*eslint-enable */
 
 var sticky_note = SAGE2_App.extend({
 	init: function(data) {
@@ -26,7 +19,6 @@ var sticky_note = SAGE2_App.extend({
 
 		this.svg  = null;
 		this.obj  = null;
-		this.text = null;
 		this.textLines = [];
 		this.enableControls = true;
 		this.cloneable = true;
@@ -44,8 +36,7 @@ var sticky_note = SAGE2_App.extend({
 		this.margin = 0.05 * this.vw;
 		this.svg.attr("viewBox", "0,0," + this.vw + "," + this.vh);
 		this.backColor = [175, 175, 200];
-
-		this.lineColor = this.backColor.diff(60);
+		this.lineColor = [115, 115, 140];
 
 		var rectbg = this.svg.rect(0, 0, this.vw, this.vh);
 		rectbg.attr({ fill: "rgba(" + this.backColor.join(",") + ",1.0)", strokeWidth: 0 });
@@ -71,11 +62,12 @@ var sticky_note = SAGE2_App.extend({
 			this.textLines.push(lineText);
 		}
 
-		var text = "Enter note"; // use this.state for saving text entry
+		var text = this.state.text;
 		this.controls.addTextInput({value: text, identifier: "TextInput"});
 		this.controls.addButton({type: "duplicate", position: 5, identifier: "DuplicateNote"});
 		this.controls.addButton({type: "new", position: 3, identifier: "NewNote"});
 		this.controls.finishedAddingControls();
+		this.wrapText(text);
 	},
 
 	// get messages from the server through a broadcast call
@@ -84,9 +76,9 @@ var sticky_note = SAGE2_App.extend({
 	},
 
 	wrapText: function(text) {
-		this.text = text;
+		this.state.text = text;
 		var regex = /\b/g;
-		var list = text.split(regex);
+		var list = this.state.text.split(regex);
 		var rightEnd = this.vw - this.margin;
 		var wordCount = 0;
 		var lineNumber = 0;
@@ -116,9 +108,6 @@ var sticky_note = SAGE2_App.extend({
 		}
 	},
 
-	load: function(date) {
-	},
-
 	draw: function(date) {
 		// Update the text: instead of storing a variable, querying the SVG graph to retrieve the element
 		// this.svg.select("#mytext").attr({ text: date});
@@ -129,7 +118,6 @@ var sticky_note = SAGE2_App.extend({
 	},
 
 	event: function(eventType, position, user_id, data, date) {
-
 		if (eventType === "pointerPress" && (data.button === "left")) {
 			// Move the circle when I click
 			// this.obj.attr({ cx: Math.round(Math.random()*100), cy:Math.round(Math.random()*100)});
@@ -156,15 +144,16 @@ var sticky_note = SAGE2_App.extend({
 		} else if (eventType === "widgetEvent") {
 			switch (data.identifier){
 				case "DuplicateNote":
-					this.requestForClone = true;
 					this.cloneData = this.text;
+					this.requestForClone = true;
 					break;
 				case "NewNote":
-					this.requestForClone = true;
 					this.cloneData = "";
+					this.requestForClone = true;
 					break;
 				case "TextInput":
 					this.wrapText(data.text);
+					this.refresh(date);
 					break;
 				default:
 					console.log("No handler for:", data.identifier);

@@ -109,7 +109,7 @@ var sharedApps         = {};
 var users              = null;
 var appLoader          = null;
 var interactMgr        = new InteractableManager();
-var mediaBlockSize     = 128;
+var mediaBlockSize     = 512;
 var startTime          = Date.now();
 var drawingManager;
 var pressingAlt        = true;
@@ -220,7 +220,7 @@ function initializeSage2Server() {
 
 	// Set default host origin for this server
 	if (config.rproxy_port === undefined) {
-		hostOrigin = "http://" + config.host + (config.index_port === 80 ? "" : ":" + config.index_port) + "/";
+		hostOrigin = "http://" + config.host + (config.port === 80 ? "" : ":" + config.port) + "/";
 	}
 
 	// Initialize sage2 item lists
@@ -378,6 +378,16 @@ function initializeSage2Server() {
 	var options  = setupHttpsOptions();            // create HTTPS options - sets up security keys
 	sage2Server  = http.createServer(httpServerApp.onrequest);
 	sage2ServerS = https.createServer(options, httpServerApp.onrequest);
+
+	// In case the HTTPS client doesnt support tickets
+	var tlsSessionStore = {};
+	sage2ServerS.on('newSession', function(id, data, cb) {
+		tlsSessionStore[id.toString('hex')] = data;
+		cb();
+	});
+	sage2ServerS.on('resumeSession', function(id, cb) {
+		cb(null, tlsSessionStore[id.toString('hex')] || null);
+	});
 
 	// Set up websocket servers - 2 way communication between server and all browser clients
 	wsioServer  = new WebsocketIO.Server({server: sage2Server});
@@ -544,7 +554,8 @@ function broadcast(name, data) {
 	wsioServerS.broadcast(name, data);
 }
 
-// Export the function to sub modules
+// Export variables and functions to sub modules
+exports.config    = config;
 exports.broadcast = broadcast;
 exports.dirname   = path.join(__dirname, "node_modules");
 
@@ -573,6 +584,16 @@ var remoteSharingSessions      = {};
 var stickyAppHandler     = new StickyItems();
 
 
+//
+// Catch the uncaught errors that weren't wrapped in a domain or try catch statement
+//
+process.on('uncaughtException', function(err) {
+	// handle the error safely
+	console.trace("SAGE2>	", err);
+});
+
+
+
 function openWebSocketClient(wsio) {
 	wsio.onclose(closeWebSocketClient);
 	wsio.on('addClient', wsAddClient);
@@ -584,7 +605,11 @@ function closeWebSocketClient(wsio) {
 	if (wsio.clientType === "display") {
 		console.log(sageutils.header("Disconnect") + wsio.id + " (" + wsio.clientType + " " + wsio.clientID + ")");
 	} else {
-		console.log(sageutils.header("Disconnect") + wsio.id + " (" + wsio.clientType + ")");
+		if (wsio.clientType) {
+			console.log(sageutils.header("Disconnect") + wsio.id + " (" + wsio.clientType + ")");
+		} else {
+			console.log(sageutils.header("Disconnect") + wsio.id + " (unknown)");
+		}
 	}
 
 	addEventToUserLog(wsio.id, {type: "disconnect", data: null, time: Date.now()});
@@ -681,6 +706,21 @@ function wsAddClient(wsio, data) {
 	} else {
 		wsio.clientID = -1;
 		console.log(sageutils.header("Connect") + wsio.id + " (" + wsio.clientType + ")");
+		if (wsio.clientType === "remoteServer") {
+			// Remote info
+			// var remoteaddr = wsio.ws.upgradeReq.connection.remoteAddress;
+			// var remoteport = wsio.ws.upgradeReq.connection.remotePort;
+
+			// Checking if it's a known server
+			config.remote_sites.forEach(function(element, index, array) {
+				if (element.host === data.host &&
+					element.port === data.port &&
+					!remoteSites[index].connected) {
+					console.log(sageutils.header("Connect") + 'known remote site ' + data.host + ':' + data.port);
+					manageRemoteConnection(wsio, element, index);
+				}
+			});
+		}
 	}
 
 	clients.push(wsio);
@@ -791,6 +831,7 @@ function setupListeners(wsio) {
 	wsio.on('requestStoredFiles',                   wsRequestStoredFiles);
 	wsio.on('loadApplication',                      wsLoadApplication);
 	wsio.on('loadFileFromServer',                   wsLoadFileFromServer);
+	wsio.on('loadImageFromBuffer',                  wsLoadImageFromBuffer);
 	wsio.on('deleteElementFromStoredFiles',         wsDeleteElementFromStoredFiles);
 	wsio.on('moveElementFromStoredFiles',           wsMoveElementFromStoredFiles);
 	wsio.on('saveSesion',                           wsSaveSesion);
@@ -822,6 +863,8 @@ function setupListeners(wsio) {
 	wsio.on('addNewWebElement',                     wsAddNewWebElement);
 
 	wsio.on('openNewWebpage',                       wsOpenNewWebpage);
+
+	wsio.on('setVolume',                            wsSetVolume);
 
 	wsio.on('playVideo',                            wsPlayVideo);
 	wsio.on('pauseVideo',                           wsPauseVideo);
@@ -933,10 +976,11 @@ function initializeExistingSagePointers(wsio) {
 }
 
 function initializeExistingWallUI(wsio) {
+	var menuInfo;
 	if (config.ui.reload_wallui_on_refresh === false) {
 		// console.log("WallUI reload on display client refresh: Disabled");
 		for (key in SAGE2Items.radialMenus.list) {
-			var menuInfo = SAGE2Items.radialMenus.list[key].getInfo();
+			menuInfo = SAGE2Items.radialMenus.list[key].getInfo();
 			hideRadialMenu(menuInfo.id);
 		}
 		return;
@@ -944,7 +988,7 @@ function initializeExistingWallUI(wsio) {
 	// console.log("WallUI reload on display client refresh: Enabled (default)");
 	var key;
 	for (key in SAGE2Items.radialMenus.list) {
-		var menuInfo = SAGE2Items.radialMenus.list[key].getInfo();
+		menuInfo = SAGE2Items.radialMenus.list[key].getInfo();
 		broadcast('createRadialMenu', menuInfo);
 		broadcast('updateRadialMenu', menuInfo);
 		updateWallUIMediaBrowser(menuInfo.id);
@@ -1281,9 +1325,13 @@ function wsUpdateMediaStreamFrame(wsio, data) {
 	// Send the image to all display nodes
 	// broadcast('updateMediaStreamFrame', data);
 
+	// Update the date
+	data.date = new Date();
+
 	// Create a copy of the frame object with dummy data (white 1x1 gif)
 	var data_copy = {};
 	data_copy.id             = data.id;
+	data_copy.date           = data.date;
 	data_copy.state          = {};
 	data_copy.state.src      = "R0lGODlhAQABAIABAP///wAAACwAAAAAAQABAAACAkQBADs=";
 	data_copy.state.type     = "image/gif";
@@ -1397,7 +1445,7 @@ function wsReceivedMediaStreamFrame(wsio, data) {
 
 // **************  Media Block Stream Functions *****************
 function wsStartNewMediaBlockStream(wsio, data) {
-	console.log("Starting media stream: ", data);
+	// console.log("Starting media stream: ", data);
 	// Forcing 'int' type for width and height
 	//     for some reasons, messages from websocket lib from Linux send strings for ints
 	data.width  = parseInt(data.width,  10);
@@ -1979,9 +2027,8 @@ function saveUserLog(filename) {
 		var ignoreIP = function(key, value) {
 			if (key === "ip") {
 				return undefined;
-			} else {
-				return value;
 			}
+			return value;
 		};
 
 		fs.writeFileSync(userLogName, json5.stringify(users, ignoreIP, 4));
@@ -2428,6 +2475,46 @@ function wsLoadApplication(wsio, data) {
 	});
 }
 
+function wsLoadImageFromBuffer(wsio, data) {
+	appLoader.loadImageFromDataBuffer(data.src, data.width, data.height,
+		"image/jpeg", "", data.url, data.title, {},
+		function(appInstance) {
+			// Get the drop position and convert it to wall coordinates
+			var position = data.position || [0, 0];
+			if (position[0] > 1) {
+				// value in pixels, used as origin
+				appInstance.left = position[0];
+			} else {
+				// value in percent
+				position[0] = Math.round(position[0] * config.totalWidth);
+				// Use the position as center of drop location
+				appInstance.left = position[0] - appInstance.width / 2;
+				if (appInstance.left < 0) {
+					appInstance.left = 0;
+				}
+			}
+			if (position[1] > 1) {
+				// value in pixels, used as origin
+				appInstance.top = position[1];
+			} else {
+				// value in percent
+				position[1] = Math.round(position[1] * config.totalHeight);
+				// Use the position as center of drop location
+				appInstance.top  = position[1] - appInstance.height / 2;
+				if (appInstance.top < 0) {
+					appInstance.top = 0;
+				}
+			}
+
+			appInstance.id = getUniqueAppId();
+
+			handleNewApplication(appInstance, null);
+
+			addEventToUserLog(data.user, {type: "openFile", data:
+				{name: data.filename, application: {id: appInstance.id, type: appInstance.application}}, time: Date.now()});
+		});
+}
+
 function wsLoadFileFromServer(wsio, data) {
 	if (data.application === "load_session") {
 		// if it's a session, then load it
@@ -2785,6 +2872,15 @@ function wsOpenNewWebpage(wsio, data) {
 	}
 }
 
+// **************  Volume sync  ********************
+
+function wsSetVolume(wsio, data) {
+	if (SAGE2Items.renderSync[data.id] === undefined || SAGE2Items.renderSync[data.id] === null) {
+		return;
+	}
+	console.log(sageutils.header("Volume") + "set " + data.id + " " + data.level);
+	broadcast('setVolume',data);
+}
 
 // **************  Video / Audio Synchonization *****************
 
@@ -2894,14 +2990,14 @@ function wsAddNewSharedElementFromRemoteServer(wsio, data) {
 	var i;
 
 	appLoader.loadApplicationFromRemoteServer(data.application, function(appInstance, videohandle) {
-		console.log(sageutils.header("Remote App>") + appInstance.title + " (" + appInstance.application + ")");
+		console.log(sageutils.header("Remote App") + appInstance.title + " (" + appInstance.application + ")");
 
 		if (appInstance.application === "media_stream" || appInstance.application === "media_block_stream") {
 			appInstance.id = wsio.remoteAddress.address + ":" + wsio.remoteAddress.port + "|" + data.id;
 			SAGE2Items.renderSync[appInstance.id] = {chunks: [], clients: {}};
 			for (i = 0; i < clients.length; i++) {
 				if (clients[i].clientType === "display") {
-					console.log(sageutils.header("Remote App>") + "render client: " + clients[i].id);
+					console.log(sageutils.header("Remote App") + "render client: " + clients[i].id);
 					SAGE2Items.renderSync[appInstance.id].clients[clients[i].id] = {wsio: clients[i], readyForNextFrame: false, blocklist: []};
 				}
 			}
@@ -2937,6 +3033,8 @@ function wsRequestNextRemoteFrame(wsio, data) {
 	} else {
 		originId = data.id;
 	}
+	// Luc here: changing to unsecure port since websocket communication to display is unsecure
+	// var remote_id = config.host + ":" + config.secure_port + "|" + data.id;
 	var remote_id = config.host + ":" + config.port + "|" + data.id;
 
 	if (SAGE2Items.applications.list.hasOwnProperty(originId)) {
@@ -2982,7 +3080,7 @@ function wsReceivedRemoteMediaStreamFrame(wsio, data) {
 
 // XXX - Remote block streaming not tested
 function wsRequestNextRemoteBlockFrame(wsio, data) {
-	var remote_id = config.host + ":" + config.port + "|" + data.id;
+	var remote_id = config.host + ":" + config.secure_port + "|" + data.id;
 	if (SAGE2Items.applications.list.hasOwnProperty(data.id)) {
 		var stream = SAGE2Items.applications.list[data.id];
 		wsio.emit('updateRemoteMediaBlockStreamFrame', {id: remote_id, state: stream.data});
@@ -3033,16 +3131,16 @@ function wsRequestDataSharingSession(wsio, data) {
 		data.config.name = "Unknown";
 	}
 
-	console.log("Data-sharing request from " + data.config.name + " (" + data.config.host + ":" + data.config.port + ")");
+	console.log("Data-sharing request from " + data.config.name + " (" + data.config.host + ":" + data.config.secure_port + ")");
 	broadcast('requestedDataSharingSession', {name: data.config.name, host: data.config.host, port: data.config.port});
-	remoteSharingRequestDialog = {wsio: wsio, config: data.config};
+	// remoteSharingRequestDialog = {wsio: wsio, config: data.config};
 	showRequestDialog(true);
 }
 
 function wsCancelDataSharingSession(wsio, data) {
 	console.log("Data-sharing request cancelled");
 	broadcast('closeRequestDataSharingDialog', null, 'requiresFullApps');
-	remoteSharingRequestDialog = null;
+	// remoteSharingRequestDialog = null;
 	showRequestDialog(false);
 }
 
@@ -3691,17 +3789,38 @@ function loadConfiguration() {
 		userConfig.resolution.borders.top    = Math.round(pixelsPerMeter * borderTop)    || 0;
 	}
 
+	// legacy support for config port names
+	var http_port, https_port;
+	if (userConfig.secure_port === undefined) {
+		http_port = userConfig.index_port;
+		https_port = userConfig.port;
+		delete userConfig.index_port;
+	} else {
+		http_port = userConfig.port;
+		https_port = userConfig.secure_port;
+	}
+	var rproxy_port, rproxys_port;
+	if (userConfig.rproxy_secure_port === undefined) {
+		rproxy_port = userConfig.rproxy_index_port;
+		rproxys_port = userConfig.rproxy_port;
+		delete userConfig.rproxy_index_port;
+	} else {
+		rproxy_port = userConfig.rproxy_port;
+		rproxys_port = userConfig.rproxy_secure_port;
+	}
 	// Set default values if missing
-	if (userConfig.port === undefined) {
-		userConfig.port = 443;
+	if (https_port === undefined) {
+		userConfig.secure_port = 443;
 	} else {
-		userConfig.port = parseInt(userConfig.port, 10); // to make sure it's a number
+		userConfig.secure_port = parseInt(https_port, 10); // to make sure it's a number
 	}
-	if (userConfig.index_port === undefined) {
-		userConfig.index_port = 80;
+	if (http_port === undefined) {
+		userConfig.port = 80;
 	} else {
-		userConfig.index_port = parseInt(userConfig.index_port, 10);
+		userConfig.port = parseInt(http_port, 10);
 	}
+	userConfig.rproxy_port = parseInt(rproxy_port, 10) || undefined;
+	userConfig.rproxy_secure_port = parseInt(rproxys_port, 10) || undefined;
 
 	// Set the display clip value if missing (true by default)
 	if (userConfig.background.clip !== undefined) {
@@ -3752,9 +3871,9 @@ var getNewUserId = (function() {
 function getUniqueDataSharingId(remoteHost, remotePort, caller) {
 	var id;
 	if (caller === true) {
-		id = config.host + ":" + config.port + "+" + remoteHost + ":" + remotePort;
+		id = config.host + ":" + config.secure_port + "+" + remoteHost + ":" + remotePort;
 	} else {
-		id = remoteHost + ":" + remotePort + "+" + config.host + ":" + config.port;
+		id = remoteHost + ":" + remotePort + "+" + config.host + ":" + config.secure_port;
 	}
 	return "portal_" + id;
 }
@@ -3807,10 +3926,7 @@ function setupDisplayBackground() {
 	if (config.background.image !== undefined && config.background.image.url !== undefined) {
 		var bg_file = path.join(publicDirectory, config.background.image.url);
 
-		if (config.background.image.style === "tile") {
-			// do nothing
-			return;
-		} else if (config.background.image.style === "fit") {
+		if (config.background.image.style === "fit") {
 			exiftool.file(bg_file, function(err1, data) {
 				if (err1) {
 					console.log("Error processing background image:", bg_file, err1);
@@ -3834,6 +3950,8 @@ function setupDisplayBackground() {
 						});
 				}
 			});
+		} else if (config.background.image.style === "tile") {
+			// do nothing
 		} else {
 			config.background.image.style = "stretch";
 			imgExt = path.extname(bg_file);
@@ -3939,12 +4057,11 @@ function setupHttpsOptions() {
 			rejectUnauthorized: false,
 			// callback to handle multi-homed machines
 			SNICallback: function(servername) {
-				if (certs.hasOwnProperty(servername)) {
-					return certs[servername];
-				} else {
+				if (!certs.hasOwnProperty(servername)) {
 					console.log(sageutils.header("SNI") + "Unknown host, cannot find a certificate for ", servername);
 					return null;
 				}
+				return certs[servername];
 			}
 		};
 	} else {
@@ -3956,6 +4073,7 @@ function setupHttpsOptions() {
 			// If true the server will request a certificate from clients that connect and attempt to verify that certificate
 			requestCert: false,
 			rejectUnauthorized: false,
+			honorCipherOrder: true,
 			// callback to handle multi-homed machines
 			SNICallback: function(servername, cb) {
 				if (certs.hasOwnProperty(servername)) {
@@ -3966,13 +4084,27 @@ function setupHttpsOptions() {
 				}
 			}
 		};
+
+		// The SSL method to use, otherwise undefined
+		if (config.security && config.security.secureProtocol) {
+			// Possible values are defined in the constant SSL_METHODS of OpenSSL
+			// Only enable TLS 1.2 for instance
+			// SSLv3_method,
+			// TLSv1_method, TLSv1_1_method, TLSv1_2_method
+			// DTLS_method,  DTLSv1_method,  DTLSv1_2_method
+			httpsOptions.secureProtocol = config.security.secureProtocol;
+			console.log(sageutils.header("HTTPS") +
+				"securing with protocol: " + httpsOptions.secureProtocol);
+		}
 	}
 
 	return httpsOptions;
 }
 
 function sendConfig(req, res) {
-	res.writeHead(200, {"Content-Type": "text/plain"});
+	var header = HttpServer.prototype.buildHeader();
+	header["Content-Type"] = "text/plain";
+	res.writeHead(200, header);
 	// Adding the calculated version into the data structure
 	config.version = SAGE2_version;
 	res.write(JSON.stringify(config));
@@ -3981,7 +4113,12 @@ function sendConfig(req, res) {
 
 function uploadForm(req, res) {
 	var form     = new formidable.IncomingForm();
+	// Drop position
 	var position = [ 0, 0 ];
+	// User information
+	var ptrName  = "";
+	var ptrColor = "";
+
 	// Limits the amount of memory all fields together (except files) can allocate in bytes.
 	//    set to 4MB.
 	form.maxFieldsSize = 4 * 1024 * 1024;
@@ -3989,10 +4126,29 @@ function uploadForm(req, res) {
 	form.multiples     = true;
 
 	form.on('fileBegin', function(name, file) {
-		// console.log(sageutils.header("Upload") + 'begin ' + name + ' ' + file.name + ' ' + file.type);
+		console.log(sageutils.header("Upload") + file.name + ' ' + file.type);
+	});
+
+	form.on('error', function(err) {
+		console.log(sageutils.header("Upload") + 'Request aborted');
+		try {
+			// Removing the temporary file
+			fs.unlinkSync(this.openedFiles[0].path);
+		} catch (err) {
+			console.log(sageutils.header("Upload") + '   error removing the temporary file');
+		}
 	});
 
 	form.on('field', function(field, value) {
+		// Keep user information
+		if (field === 'SAGE2_ptrName') {
+			ptrName = value;
+			console.log(sageutils.header("Upload") + "by " + ptrName);
+		}
+		if (field === 'SAGE2_ptrColor') {
+			ptrColor = value;
+			console.log(sageutils.header("Upload") + "color " + ptrColor);
+		}
 		// convert value [0 to 1] to wall coordinate from drop location
 		if (field === 'dropX') {
 			position[0] = parseInt(parseFloat(value) * config.totalWidth,  10);
@@ -4009,13 +4165,17 @@ function uploadForm(req, res) {
 	});
 
 	form.parse(req, function(err, fields, files) {
+		var header = HttpServer.prototype.buildHeader();
 		if (err) {
-			res.writeHead(500, {"Content-Type": "text/plain"});
+			header["Content-Type"] = "text/plain";
+			res.writeHead(500, header);
 			res.write(err + "\n\n");
 			res.end();
+			return;
 		}
 		// build the reply to the upload
-		res.writeHead(200, {'Content-Type': 'application/json'});
+		header["Content-Type"] = "application/json";
+		res.writeHead(200, header);
 		// For webix uploader: status: server
 		fields.done = true;
 
@@ -4034,11 +4194,11 @@ function uploadForm(req, res) {
 
 	form.on('end', function() {
 		// saves files in appropriate directory and broadcasts the items to the displays
-		manageUploadedFiles(this.openedFiles, position);
+		manageUploadedFiles(this.openedFiles, position, ptrName, ptrColor);
 	});
 }
 
-function manageUploadedFiles(files, position) {
+function manageUploadedFiles(files, position, ptrName, ptrColor) {
 	var fileKeys = Object.keys(files);
 	fileKeys.forEach(function(key) {
 		var file = files[key];
@@ -4048,6 +4208,10 @@ function manageUploadedFiles(files, position) {
 				console.log(sageutils.header("Upload") + 'unrecognized file type: ' + file.name + ' ' + file.type);
 				return;
 			}
+
+			// Add user information into exif data
+			assets.addTag(appInstance.file, "SAGE2user",  ptrName);
+			assets.addTag(appInstance.file, "SAGE2color", ptrColor);
 
 			// Use the size from the drop information
 			if (position[2] && position[2] !== 0) {
@@ -4120,68 +4284,74 @@ if (config.remote_sites) {
 	});
 }
 
+function manageRemoteConnection(remote, site, index) {
+	console.log(sageutils.header("Remote") + "Connected to " + site.name);
+	remote.updateRemoteAddress(site.host, site.port);
+	var clientDescription = {
+		clientType: "remoteServer",
+		host: config.host,
+		port: config.secure_port,
+		// port: config.port,
+		requests: {
+			config: false,
+			version: false,
+			time: false,
+			console: false
+		}
+	};
+	remote.clientType = "remoteServer";
+
+	remote.onclose(function() {
+		console.log("Remote site \"" + config.remote_sites[index].name + "\" now offline");
+		remoteSites[index].connected = false;
+		var delete_site = {name: remoteSites[index].name, connected: remoteSites[index].connected};
+		broadcast('connectedToRemoteSite', delete_site);
+		removeElement(clients, remote);
+	});
+
+	remote.on('addClient',                              wsAddClient);
+	remote.on('addNewElementFromRemoteServer',          wsAddNewElementFromRemoteServer);
+	remote.on('addNewSharedElementFromRemoteServer',    wsAddNewSharedElementFromRemoteServer);
+	remote.on('requestNextRemoteFrame',                 wsRequestNextRemoteFrame);
+	remote.on('updateRemoteMediaStreamFrame',           wsUpdateRemoteMediaStreamFrame);
+	remote.on('stopMediaStream',                        wsStopMediaStream);
+	remote.on('requestNextRemoteBlockFrame',            wsRequestNextRemoteBlockFrame);
+	remote.on('updateRemoteMediaBlockStreamFrame',      wsUpdateRemoteMediaBlockStreamFrame);
+	remote.on('stopMediaBlockStream',                   wsStopMediaBlockStream);
+	remote.on('requestDataSharingSession',              wsRequestDataSharingSession);
+	remote.on('cancelDataSharingSession',               wsCancelDataSharingSession);
+	remote.on('acceptDataSharingSession',               wsAcceptDataSharingSession);
+	remote.on('rejectDataSharingSession',               wsRejectDataSharingSession);
+	remote.on('createRemoteSagePointer',                wsCreateRemoteSagePointer);
+	remote.on('startRemoteSagePointer',                 wsStartRemoteSagePointer);
+	remote.on('stopRemoteSagePointer',                  wsStopRemoteSagePointer);
+	remote.on('remoteSagePointerPosition',              wsRemoteSagePointerPosition);
+	remote.on('remoteSagePointerToggleModes',           wsRemoteSagePointerToggleModes);
+	remote.on('remoteSagePointerHoverCorner',           wsRemoteSagePointerHoverCorner);
+	remote.on('addNewRemoteElementInDataSharingPortal', wsAddNewRemoteElementInDataSharingPortal);
+
+	remote.on('updateApplicationOrder',                 wsUpdateApplicationOrder);
+	remote.on('startApplicationMove',                   wsStartApplicationMove);
+	remote.on('startApplicationResize',                 wsStartApplicationResize);
+	remote.on('updateApplicationPosition',              wsUpdateApplicationPosition);
+	remote.on('updateApplicationPositionAndSize',       wsUpdateApplicationPositionAndSize);
+	remote.on('finishApplicationMove',                  wsFinishApplicationMove);
+	remote.on('finishApplicationResize',                wsFinishApplicationResize);
+	remote.on('deleteApplication',                      wsDeleteApplication);
+	remote.on('updateApplicationState',                 wsUpdateApplicationState);
+	remote.on('updateApplicationStateOptions',          wsUpdateApplicationStateOptions);
+
+	remote.emit('addClient', clientDescription);
+	remoteSites[index].connected = true;
+	var new_site = {name: remoteSites[index].name, connected: remoteSites[index].connected};
+	broadcast('connectedToRemoteSite', new_site);
+	clients.push(remote);
+}
+
+
 function createRemoteConnection(wsURL, element, index) {
 	var remote = new WebsocketIO(wsURL, false, function() {
-		console.log(sageutils.header("Remote") + "Connected to " + element.name);
-		remote.updateRemoteAddress(element.host, element.port);
-		var clientDescription = {
-			clientType: "remoteServer",
-			host: config.host,
-			port: config.port,
-			requests: {
-				config: false,
-				version: false,
-				time: false,
-				console: false
-			}
-		};
-		remote.clientType = "remoteServer";
-
-		remote.onclose(function() {
-			console.log("Remote site \"" + config.remote_sites[index].name + "\" now offline");
-			remoteSites[index].connected = false;
-			var delete_site = {name: remoteSites[index].name, connected: remoteSites[index].connected};
-			broadcast('connectedToRemoteSite', delete_site);
-			removeElement(clients, remote);
-		});
-
-		remote.on('addClient',                              wsAddClient);
-		remote.on('addNewElementFromRemoteServer',          wsAddNewElementFromRemoteServer);
-		remote.on('addNewSharedElementFromRemoteServer',    wsAddNewSharedElementFromRemoteServer);
-		remote.on('requestNextRemoteFrame',                 wsRequestNextRemoteFrame);
-		remote.on('updateRemoteMediaStreamFrame',           wsUpdateRemoteMediaStreamFrame);
-		remote.on('stopMediaStream',                        wsStopMediaStream);
-		remote.on('requestNextRemoteBlockFrame',            wsRequestNextRemoteBlockFrame);
-		remote.on('updateRemoteMediaBlockStreamFrame',      wsUpdateRemoteMediaBlockStreamFrame);
-		remote.on('stopMediaBlockStream',                   wsStopMediaBlockStream);
-		remote.on('requestDataSharingSession',              wsRequestDataSharingSession);
-		remote.on('cancelDataSharingSession',               wsCancelDataSharingSession);
-		remote.on('acceptDataSharingSession',               wsAcceptDataSharingSession);
-		remote.on('rejectDataSharingSession',               wsRejectDataSharingSession);
-		remote.on('createRemoteSagePointer',                wsCreateRemoteSagePointer);
-		remote.on('startRemoteSagePointer',                 wsStartRemoteSagePointer);
-		remote.on('stopRemoteSagePointer',                  wsStopRemoteSagePointer);
-		remote.on('remoteSagePointerPosition',              wsRemoteSagePointerPosition);
-		remote.on('remoteSagePointerToggleModes',           wsRemoteSagePointerToggleModes);
-		remote.on('remoteSagePointerHoverCorner',           wsRemoteSagePointerHoverCorner);
-		remote.on('addNewRemoteElementInDataSharingPortal', wsAddNewRemoteElementInDataSharingPortal);
-
-		remote.on('updateApplicationOrder',                 wsUpdateApplicationOrder);
-		remote.on('startApplicationMove',                   wsStartApplicationMove);
-		remote.on('startApplicationResize',                 wsStartApplicationResize);
-		remote.on('updateApplicationPosition',              wsUpdateApplicationPosition);
-		remote.on('updateApplicationPositionAndSize',       wsUpdateApplicationPositionAndSize);
-		remote.on('finishApplicationMove',                  wsFinishApplicationMove);
-		remote.on('finishApplicationResize',                wsFinishApplicationResize);
-		remote.on('deleteApplication',                      wsDeleteApplication);
-		remote.on('updateApplicationState',                 wsUpdateApplicationState);
-		remote.on('updateApplicationStateOptions',          wsUpdateApplicationStateOptions);
-
-		remote.emit('addClient', clientDescription);
-		remoteSites[index].connected = true;
-		var new_site = {name: remoteSites[index].name, connected: remoteSites[index].connected};
-		broadcast('connectedToRemoteSite', new_site);
-		clients.push(remote);
+		manageRemoteConnection(remote, element, index);
 	});
 
 	return remote;
@@ -4204,19 +4374,21 @@ setTimeout(function() {
 
 sage2ServerS.on('listening', function(e) {
 	// Success
-	console.log(sageutils.header("SAGE2") + "Serving secure clients at https://" + config.host + ":" + config.port);
-	console.log(sageutils.header("SAGE2") + "Web console at https://" + config.host + ":" + config.port + "/admin/console.html");
+	console.log(sageutils.header("SAGE2") + "Serving secure clients at https://" +
+		config.host + ":" + config.secure_port);
+	console.log(sageutils.header("SAGE2") + "Web console at https://" + config.host +
+		":" + config.secure_port + "/admin/console.html");
 });
 
 // Place callback for errors in the 'listen' call for HTTP
 sage2Server.on('error', function(e) {
 	if (e.code === 'EACCES') {
-		console.log(sageutils.header("HTTP_Server") + "You are not allowed to use the port: ", config.index_port);
+		console.log(sageutils.header("HTTP_Server") + "You are not allowed to use the port: ", config.port);
 		console.log(sageutils.header("HTTP_Server") + "  use a different port or get authorization (sudo, setcap, ...)");
 		console.log(" ");
 		process.exit(1);
 	} else if (e.code === 'EADDRINUSE') {
-		console.log(sageutils.header("HTTP_Server") + "The port is already in use by another process:", config.index_port);
+		console.log(sageutils.header("HTTP_Server") + "The port is already in use by another process:", config.port);
 		console.log(sageutils.header("HTTP_Server") + "  use a different port or stop the offending process");
 		console.log(" ");
 		process.exit(1);
@@ -4230,14 +4402,14 @@ sage2Server.on('error', function(e) {
 // Place callback for success in the 'listen' call for HTTP
 sage2Server.on('listening', function(e) {
 	// Success
-	var ui_url = "http://" + config.host + ":" + config.index_port;
-	var dp_url = "http://" + config.host + ":" + config.index_port + "/display.html?clientID=0";
-	var am_url = "http://" + config.host + ":" + config.index_port + "/audioManager.html";
+	var ui_url = "http://" + config.host + ":" + config.port;
+	var dp_url = "http://" + config.host + ":" + config.port + "/display.html?clientID=0";
+	var am_url = "http://" + config.host + ":" + config.port + "/audioManager.html";
 	if (global.__SESSION_ID) {
-		ui_url = "http://" + config.host + ":" + config.index_port + "/session.html?hash=" + global.__SESSION_ID;
-		dp_url = "http://" + config.host + ":" + config.index_port + "/session.html?page=display.html?clientID=0&hash="
+		ui_url = "http://" + config.host + ":" + config.port + "/session.html?hash=" + global.__SESSION_ID;
+		dp_url = "http://" + config.host + ":" + config.port + "/session.html?page=display.html?clientID=0&hash="
 			+ global.__SESSION_ID;
-		am_url = "http://" + config.host + ":" + config.index_port + "/session.html?page=audioManager.html&hash="
+		am_url = "http://" + config.host + ":" + config.port + "/session.html?page=audioManager.html&hash="
 			+ global.__SESSION_ID;
 	}
 	console.log(sageutils.header("SAGE2") + "Serving web UI at " + ui_url);
@@ -4252,9 +4424,9 @@ process.on('SIGINT',  quitSAGE2);
 
 
 // Start the HTTP server (listen for IPv4 addresses 0.0.0.0)
-sage2Server.listen(config.index_port, "0.0.0.0");
+sage2Server.listen(config.port, "0.0.0.0");
 // Start the HTTPS server (listen for IPv4 addresses 0.0.0.0)
-sage2ServerS.listen(config.port, "0.0.0.0");
+sage2ServerS.listen(config.secure_port, "0.0.0.0");
 
 
 // ***************************************************************************************
@@ -4577,9 +4749,8 @@ function findRemoteSiteByConnection(wsio) {
 	}
 	if (remoteIdx >= 0) {
 		return remoteSites[remoteIdx];
-	} else {
-		return null;
 	}
+	return null;
 }
 
 function hideControl(ctrl) {
@@ -4672,10 +4843,9 @@ function allTrueDict(dict, property) {
 	for (key in dict) {
 		if (property === undefined && dict[key] !== true) {
 			return false;
-		} else {
-			if (property !== undefined && dict[key][property] !== true) {
-				return false;
-			}
+		}
+		if (property !== undefined && dict[key][property] !== true) {
+			return false;
 		}
 	}
 	return true;
@@ -5190,21 +5360,25 @@ function pointerPressOnApplication(uniqueID, pointerX, pointerY, data, obj, loca
 			selectApplicationForMove(uniqueID, obj.data, pointerX, pointerY, portalId);
 			break;
 		case "dragCorner":
-			// if (remoteInteraction[uniqueID].windowManagementMode()) {
-			// 	selectApplicationForResize(uniqueID, obj.data, pointerX, pointerY, portalId);
-			// } else if (remoteInteraction[uniqueID].appInteractionMode()) {
-			// 	sendPointerPressToApplication(uniqueID, obj.data, pointerX, pointerY, data);
-			// }
 			selectApplicationForResize(uniqueID, obj.data, pointerX, pointerY, portalId);
 			break;
 		case "syncButton":
-			broadcast('toggleSyncOptions', {id: obj.data.id});
+			if (sagePointers[uniqueID].visible) {
+				// only if pointer on the wall, not the web UI
+				broadcast('toggleSyncOptions', {id: obj.data.id});
+			}
 			break;
 		case "fullscreenButton":
-			toggleApplicationFullscreen(uniqueID, obj.data, portalId);
+			if (sagePointers[uniqueID].visible) {
+				// only if pointer on the wall, not the web UI
+				toggleApplicationFullscreen(uniqueID, obj.data, portalId);
+			}
 			break;
 		case "closeButton":
-			deleteApplication(obj.data.id, portalId);
+			if (sagePointers[uniqueID].visible) {
+				// only if pointer on the wall, not the web UI
+				deleteApplication(obj.data.id, portalId);
+			}
 			break;
 	}
 }
@@ -5449,7 +5623,8 @@ function updatePointerPosition(uniqueID, pointerX, pointerY, data) {
 		updatedMoveItem = remoteInteraction[uniqueID].moveSelectedItem(scaledPt.x, scaledPt.y);
 		moveApplicationWindow(uniqueID, updatedMoveItem, moveAppPortal.id);
 		return;
-	} else if (resizeAppPortal !== null) {
+	}
+	if (resizeAppPortal !== null) {
 		localPt = globalToLocal(pointerX, pointerY, resizeAppPortal.type, resizeAppPortal.geometry);
 		scaledPt = {x: localPt.x / resizeAppPortal.data.scale, y: (localPt.y - config.ui.titleBarHeight) / resizeAppPortal.data.scale};
 		remoteSharingSessions[resizeAppPortal.id].wsio.emit('remoteSagePointerPosition',
@@ -5473,14 +5648,16 @@ function updatePointerPosition(uniqueID, pointerX, pointerY, data) {
 			moveApplicationWindow(uniqueID, updatedMoveItem, null);
 		}
 		return;
-	} else if (updatedResizeItem !== null) {
+	}
+	if (updatedResizeItem !== null) {
 		if (SAGE2Items.portals.list.hasOwnProperty(updatedResizeItem.elemId)) {
 			moveAndResizeDataSharingPortalWindow(updatedResizeItem);
 		} else {
 			moveAndResizeApplicationWindow(updatedResizeItem, null);
 		}
 		return;
-	} else if (updatedControl !== null) {
+	}
+	if (updatedControl !== null) {
 		moveWidgetControls(uniqueID, updatedControl);
 		return;
 	}
@@ -5994,7 +6171,7 @@ function pointerReleaseOnStaticUI(uniqueID, pointerX, pointerY, obj) {
 	var remote = obj.data;
 	var app = dropSelectedItem(uniqueID, false, null);
 	if (app !== null && SAGE2Items.applications.list.hasOwnProperty(app.application.id) && remote.connected) {
-		var sharedId = app.application.id + "_" + config.host + ":" + config.port + "+" + remote.wsio.id;
+		var sharedId = app.application.id + "_" + config.host + ":" + config.secure_port + "+" + remote.wsio.id;
 		if (sharedApps[app.application.id] === undefined) {
 			sharedApps[app.application.id] = [{wsio: remote.wsio, sharedId: sharedId}];
 		} else {
@@ -6028,51 +6205,48 @@ function pointerReleaseOnPortal(uniqueID, portalId, localPt, data) {
 		if (portal !== undefined && portal !== null && portal.id === portalId) {
 			dropSelectedItem(uniqueID, true, portalId);
 			return;
-		} else {
-			var app = dropSelectedItem(uniqueID, false, null);
-			localPt = globalToLocal(app.previousPosition.left, app.previousPosition.top, obj.type, obj.geometry);
-			var remote = remoteSharingSessions[obj.id];
-			createAppFromDescription(app.application, function(appInstance, videohandle) {
-				if (appInstance.application === "media_stream" || appInstance.application === "media_block_stream") {
-					appInstance.id = app.application.id + "_" + obj.data.id;
-				} else {
-					appInstance.id = getUniqueSharedAppId(obj.data.id);
-				}
-
-				appInstance.left = localPt.x / obj.data.scale;
-				appInstance.top = (localPt.y - config.ui.titleBarHeight) / obj.data.scale;
-				appInstance.width = app.previousPosition.width / obj.data.scale;
-				appInstance.height = app.previousPosition.height / obj.data.scale;
-
-				remoteSharingSessions[obj.data.id].appCount++;
-
-				// if (SAGE2Items.renderSync.hasOwnProperty(app.id) {
-				var i;
-				SAGE2Items.renderSync[appInstance.id] = {clients: {}, date: Date.now()};
-				for (i = 0; i < clients.length; i++) {
-					if (clients[i].clientType === "display") {
-						SAGE2Items.renderSync[appInstance.id].clients[clients[i].id] = {wsio: clients[i], readyForNextFrame: false, blocklist: []};
-					}
-				}
-				handleNewApplicationInDataSharingPortal(appInstance, videohandle, obj.data.id);
-
-				remote.wsio.emit('addNewRemoteElementInDataSharingPortal', appInstance);
-
-				var eLogData = {
-					host: remote.portal.host,
-					port: remote.portal.port,
-					application: {
-						id: appInstance.id,
-						type: appInstance.application
-					}
-				};
-				addEventToUserLog(uniqueID, {type: "shareApplication", data: eLogData, time: Date.now()});
-			});
 		}
+
+		var app = dropSelectedItem(uniqueID, false, null);
+		localPt = globalToLocal(app.previousPosition.left, app.previousPosition.top, obj.type, obj.geometry);
+		var remote = remoteSharingSessions[obj.id];
+		createAppFromDescription(app.application, function(appInstance, videohandle) {
+			if (appInstance.application === "media_stream" || appInstance.application === "media_block_stream") {
+				appInstance.id = app.application.id + "_" + obj.data.id;
+			} else {
+				appInstance.id = getUniqueSharedAppId(obj.data.id);
+			}
+
+			appInstance.left = localPt.x / obj.data.scale;
+			appInstance.top = (localPt.y - config.ui.titleBarHeight) / obj.data.scale;
+			appInstance.width = app.previousPosition.width / obj.data.scale;
+			appInstance.height = app.previousPosition.height / obj.data.scale;
+
+			remoteSharingSessions[obj.data.id].appCount++;
+
+			// if (SAGE2Items.renderSync.hasOwnProperty(app.id) {
+			var i;
+			SAGE2Items.renderSync[appInstance.id] = {clients: {}, date: Date.now()};
+			for (i = 0; i < clients.length; i++) {
+				if (clients[i].clientType === "display") {
+					SAGE2Items.renderSync[appInstance.id].clients[clients[i].id] = {wsio: clients[i], readyForNextFrame: false, blocklist: []};
+				}
+			}
+			handleNewApplicationInDataSharingPortal(appInstance, videohandle, obj.data.id);
+
+			remote.wsio.emit('addNewRemoteElementInDataSharingPortal', appInstance);
+
+			var eLogData = {
+				host: remote.portal.host,
+				port: remote.portal.port,
+				application: {
+					id: appInstance.id,
+					type: appInstance.application
+				}
+			};
+			addEventToUserLog(uniqueID, {type: "shareApplication", data: eLogData, time: Date.now()});
+		});
 	} else {
-		// console.log("pointer release on portal (no app selected):",
-		// 	remoteInteraction[uniqueID].windowManagementMode(),
-		// 	remoteInteraction[uniqueID].appInteractionMode());
 		if (remoteInteraction[uniqueID].appInteractionMode()) {
 			var scaledPt = {x: localPt.x / obj.data.scale, y: (localPt.y - config.ui.titleBarHeight) / obj.data.scale};
 			var pObj = SAGE2Items.portals.interactMgr[portalId].searchGeometry(scaledPt);
@@ -6630,7 +6804,8 @@ function keyUp(uniqueID, pointerX, pointerY, data) {
 		var eUser = {id: sagePointers[uniqueID].id, label: sagePointers[uniqueID].label,
 			color: sagePointers[uniqueID].color};
 		var event = {code: data.code, printable: false, state: "up", ctrlId: lockedControl.ctrlId,
-			appId: lockedControl.appId, instanceID: lockedControl.instanceID, user: eUser};
+			appId: lockedControl.appId, instanceID: lockedControl.instanceID, user: eUser,
+			date: Date.now()};
 		broadcast('keyInTextInputWidget', event);
 		if (data.code === 13) {
 			// Enter key
@@ -6657,22 +6832,9 @@ function keyUp(uniqueID, pointerX, pointerY, data) {
 			break;
 		}
 		case "applications": {
-			// if (remoteInteraction[uniqueID].windowManagementMode()) {
-			// 	if (data.code === 8 || data.code === 46) { // backspace or delete
-			// 		deleteApplication(obj.data.id);
-
-			// 		var eLogData = {
-			// 			application: {
-			// 				id: obj.data.id,
-			// 				type: obj.data.application
-			// 			}
-			// 		};
-			// 		addEventToUserLog(uniqueID, {type: "delete", data: eLogData, time: Date.now()});
-			// 	}
-			// } else if (remoteInteraction[uniqueID].appInteractionMode()) {
-			// 	sendKeyUpToApplication(uniqueID, obj.data, localPt, data);
-			// }
-			if (data.code === 8 || data.code === 46) { // backspace or delete
+			if (remoteInteraction[uniqueID].windowManagementMode() &&
+				(data.code === 8 || data.code === 46)) {
+				// backspace or delete
 				deleteApplication(obj.data.id);
 
 				var eLogData = {
@@ -6782,7 +6944,8 @@ function keyPress(uniqueID, pointerX, pointerY, data) {
 		var eUser = {id: sagePointers[uniqueID].id, label: sagePointers[uniqueID].label,
 					color: sagePointers[uniqueID].color};
 		var event = {code: data.code, printable: true, state: "press", ctrlId: lockedControl.ctrlId,
-					appId: lockedControl.appId, instanceID: lockedControl.instanceID, user: eUser};
+					appId: lockedControl.appId, instanceID: lockedControl.instanceID, user: eUser,
+					date: Date.now()};
 		broadcast('keyInTextInputWidget', event);
 		if (data.code === 13) {
 			// Enter key

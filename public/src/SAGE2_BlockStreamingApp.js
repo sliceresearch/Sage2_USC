@@ -8,6 +8,8 @@
 //
 // Copyright (c) 2014
 
+/* global mat4 */
+
 "use strict";
 
 
@@ -67,7 +69,7 @@ var SAGE2_BlockStreamingApp = SAGE2_App.extend({
 		this.element.appendChild(this.canvas);
 
 		// application specific 'init'
-		this.maxSize = 128; // block size
+		this.maxSize = 512; // block size
 
 		this.initGL();
 		if (this.gl) {
@@ -556,7 +558,8 @@ var SAGE2_BlockStreamingApp = SAGE2_App.extend({
 		if (this.state.colorspace === "RGBA" && (this.rgbaBuffer === undefined || this.rgbaBuffer === null)) {
 			this.log("no texture loaded");
 			return;
-		} else if (this.state.colorspace === "YUV420p" && (this.yuvBuffer === undefined || this.yuvBuffer === null)) {
+		}
+		if (this.state.colorspace === "YUV420p" && (this.yuvBuffer === undefined || this.yuvBuffer === null)) {
 			this.log("no texture loaded");
 			return;
 		}
@@ -564,7 +567,6 @@ var SAGE2_BlockStreamingApp = SAGE2_App.extend({
 		this.gl.clear(this.gl.COLOR_BUFFER_BIT);
 
 		this.updateTextures();
-
 
 		if (this.state.colorspace === "RGBA") {
 			this.drawRGBA();

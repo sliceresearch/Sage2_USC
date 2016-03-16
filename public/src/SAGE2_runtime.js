@@ -6,7 +6,9 @@
 //
 // See full text, terms and conditions in the LICENSE.txt included file
 //
-// Copyright (c) 2014
+// Copyright (c) 2014-16
+
+/* global hostAlias */
 
 "use strict";
 
@@ -30,7 +32,15 @@ __SAGE2__.version = "1.0.0";
 
 
 /**
- * Initializes global settings: random genrator, ...
+ * In Strict mode Webix doesn't use "eval"
+ * Should be enabled if Content Security Policy is switched on for the application
+ * or if the application runs in a "strict" mode
+ * The flag should be enabled before Webix files are included into the page
+ */
+window.webix_strict = true;
+
+/**
+ * Initializes global settings: random generator, ...
  *
  * @method SAGE2_initialize
  * @param data_seed {Date} seed number
@@ -208,21 +218,23 @@ SAGE2types.create    = function(val) {
 	if (_typeOf(val) === 'object') {
 		if (val.hasOwnProperty('lat') && val.hasOwnProperty('lng')) {
 			return new SAGE2types.LatLng(val.lat, val.lng);
-		} else {
-			return new SAGE2types.Object(val);
 		}
-	} else if (_typeOf(val) === 'array') {
+		return new SAGE2types.Object(val);
+	}
+	if (_typeOf(val) === 'array') {
 		return new SAGE2types.Array(val);
-	} else if (_typeOf(val) === 'number') {
+	}
+	if (_typeOf(val) === 'number') {
 		var v = parseInt(val);
 		if (v === val) {
 			return new SAGE2types.Int(val);
-		} else {
-			return new SAGE2types.Float(val);
 		}
-	} else if (_typeOf(val) === 'string') {
+		return new SAGE2types.Float(val);
+	}
+	if (_typeOf(val) === 'string') {
 		return new SAGE2types.String(val);
-	} else if (_typeOf(val) === 'date') {
+	}
+	if (_typeOf(val) === 'date') {
 		return new SAGE2types.Date(val);
 	}
 	return null;
@@ -753,3 +765,71 @@ Math.seed = function(s) {
 		return s / m;
 	};
 };
+
+/**
+ * Add a key-value pair as a cookie
+ *
+ * @method addCookie
+ * @param sKey {String} key
+ * @param sValue {String} value
+ * @return {Boolean} true/false
+ */
+function addCookie(sKey, sValue) {
+	if (!sKey) {
+		return false;
+	}
+	document.cookie = encodeURIComponent(sKey) + "=" + encodeURIComponent(sValue) +
+		"; expires=Fri, 31 Dec 9999 23:59:59 GMT" +
+		"; domain=" + location.hostname.split('.').slice(-2).join(".") +
+		"; path=/" +
+		"; secure";
+	return true;
+}
+
+/**
+ * Return a cookie value for given key
+ *
+ * @method getCookie
+ * @param sKey {String} key
+ * @return {String} value found or null
+ */
+function getCookie(sKey) {
+	if (!sKey) {
+		return null;
+	}
+	return decodeURIComponent(document.cookie.replace(new RegExp("(?:(?:^|.*;)\\s*" +
+				encodeURIComponent(sKey).replace(/[\-\.\+\*]/g, "\\$&") + "\\s*\\=\\s*([^;]*).*$)|^.*$"), "$1"))
+		|| null;
+}
+
+/**
+ * Extract translate and scale from a DOM element
+ *
+ * @method getTransform
+ * @param elem {Object} DOM element
+ * @return {Object} contains translate and scale specification
+ */
+function getTransform(elem) {
+	var transform = elem.style.transform;
+	var translate = {x: 0, y: 0};
+	var scale = {x: 1, y: 1};
+	if (transform) {
+		var tIdx = transform.indexOf("translate");
+		if (tIdx >= 0) {
+			var tStr = transform.substring(tIdx + 10, transform.length);
+			tStr = tStr.substring(0, tStr.indexOf(")"));
+			var tValue = tStr.split(",");
+			translate.x = parseFloat(tValue[0]);
+			translate.y = parseFloat(tValue[1]);
+		}
+		var sIdx = transform.indexOf("scale");
+		if (sIdx >= 0) {
+			var sStr = transform.substring(sIdx + 6, transform.length);
+			sStr = sStr.substring(0, sStr.indexOf(")"));
+			var sValue = sStr.split(",");
+			scale.x = parseFloat(sValue[0]);
+			scale.y = parseFloat(sValue[1]);
+		}
+	}
+	return {translate: translate, scale: scale};
+}

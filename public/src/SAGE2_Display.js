@@ -8,6 +8,22 @@
 //
 // Copyright (c) 2014-15
 
+/* global ignoreFields, hostAlias, SAGE2WidgetControlInstance */
+/* global makeSvgBackgroundForWidgetConnectors */
+/* global addStyleElementForTitleColor */
+/* global removeStyleElementForTitleColor */
+/* global clearConnectorColor */
+/* global moveWidgetToAppConnector */
+/* global showWidgetToAppConnectors */
+/* global getWidgetControlInstanceById */
+/* global mapMoveToSlider */
+/* global getPropertyHandle */
+/* global insertTextIntoTextInputWidget */
+/* global removeWidgetToAppConnector */
+/* global hideWidgetToAppConnectors */
+/* global createWidgetToAppConnector */
+/* global getTextFromTextInputWidget */
+
 "use strict";
 
 /**
@@ -48,6 +64,13 @@ window.onbeforeunload = function() {
 	}
 };
 
+/**
+ * When the page loads, SAGE2 starts
+ *
+ */
+window.addEventListener('load', function(event) {
+	SAGE2_init();
+});
 
 // Get Browser-Specifc Prefix
 function getBrowserPrefix() {
@@ -72,27 +95,24 @@ function getBrowserPrefix() {
 function hiddenProperty(prefix) {
 	if (prefix) {
 		return prefix + 'Hidden';
-	} else {
-		return 'hidden';
 	}
+	return 'hidden';
 }
 
 // Get Browser Specific Visibility State
 function visibilityState(prefix) {
 	if (prefix) {
 		return prefix + 'VisibilityState';
-	} else {
-		return 'visibilityState';
 	}
+	return 'visibilityState';
 }
 
 // Get Browser Specific Event
 function visibilityEvent(prefix) {
 	if (prefix) {
 		return prefix + 'visibilitychange';
-	} else {
-		return 'visibilitychange';
 	}
+	return 'visibilitychange';
 }
 
 /**
@@ -254,8 +274,8 @@ function setupListeners() {
 		var http_port;
 		var https_port;
 
-		http_port = json_cfg.index_port === 80 ? "" : ":" + json_cfg.index_port;
-		https_port = json_cfg.port === 443 ? "" : ":" + json_cfg.port;
+		http_port = json_cfg.port === 80 ? "" : ":" + json_cfg.port;
+		https_port = json_cfg.secure_port === 443 ? "" : ":" + json_cfg.secure_port;
 		hostAlias["http://"  + json_cfg.host + http_port]  = window.location.origin;
 		hostAlias["https://" + json_cfg.host + https_port] = window.location.origin;
 		for (i = 0; i < json_cfg.alternate_hosts.length; i++) {
@@ -724,8 +744,6 @@ function setupListeners() {
 		selectedElemState.style.width = Math.round(position_data.elemWidth).toString() + "px";
 		selectedElemState.style.height = Math.round(position_data.elemHeight).toString() + "px";
 
-		var selectedElem = document.getElementById(position_data.elemId);
-
 		selectedElem.style.webkitTransform = translate;
 		selectedElem.style.mozTransform    = translate;
 		selectedElem.style.transform       = translate;
@@ -996,7 +1014,7 @@ function setupListeners() {
 			// Check whether a request for clone was made.
 			if (app.cloneable === true && app.requestForClone === true) {
 				app.requestForClone = false;
-				console.log("cloning app:" + appId);
+				// console.log("cloning app:", appId, app.cloneData);
 				if (isMaster) {
 					wsio.emit('createAppClone', {id: appId, cloneData: app.cloneData});
 				}
@@ -1061,14 +1079,13 @@ function setupListeners() {
 				clearInterval(blinkControlHandle);
 				var app = applications[data.appId];
 				app.SAGE2Event("widgetEvent", null, data.user,
-					{identifier: ctrlId, action: "textEnter", text: getTextFromTextInputWidget(textInput)}, Date.now());
+					{identifier: ctrlId, action: "textEnter", text: getTextFromTextInputWidget(textInput)}, new Date(data.date));
 			}
 		}
 	});
 
 	wsio.on('activateTextInputControl', function(data) {
 		var ctrl = null;
-		console.log("in activateTextInputContControl->", data);
 		if (data.prevTextInput) {
 			ctrl = getWidgetControlInstanceById(data.prevTextInput);
 		}
@@ -1088,7 +1105,6 @@ function setupListeners() {
 
 	// Called when the user clicks outside the widget control while a lock exists on text input
 	wsio.on('deactivateTextInputControl', function(data) {
-		console.log("in deactivateTextInputContControl->", data);
 		var ctrl = getWidgetControlInstanceById(data);
 		if (ctrl) {
 			var textInput = ctrl.parent();
@@ -1114,7 +1130,7 @@ function setupListeners() {
 	});
 
 	wsio.on('initializeDataSharingSession', function(data) {
-		console.log(data);
+		// console.log(data);
 		dataSharingPortals[data.id] = new DataSharing(data);
 	});
 
@@ -1240,6 +1256,7 @@ function createAppWindow(data, parentId, titleBarHeight, titleTextSize, offsetX,
 	windowTitle.appendChild(windowIconClose);
 
 	var titleText = document.createElement("p");
+	titleText.id  = data.id + "_text";
 	titleText.style.lineHeight = Math.round(titleBarHeight) + "px";
 	titleText.style.fontSize   = Math.round(titleTextSize) + "px";
 	titleText.style.color      = "#FFFFFF";
@@ -1321,7 +1338,8 @@ function createAppWindow(data, parentId, titleBarHeight, titleTextSize, offsetX,
 			height: data.height,
 			resrc: url,
 			state: data.data,
-			date: date
+			date: date,
+			title: data.title
 		};
 
 		// load new app
@@ -1415,29 +1433,4 @@ function createAppWindow(data, parentId, titleBarHeight, titleTextSize, offsetX,
 	}
 
 	itemCount += 2;
-}
-
-function getTransform(elem) {
-	var transform = elem.style.transform;
-	var translate = {x: 0, y: 0};
-	var scale = {x: 1, y: 1};
-	if (transform) {
-		var tIdx = transform.indexOf("translate");
-		if (tIdx >= 0) {
-			var tStr = transform.substring(tIdx + 10, transform.length);
-			tStr = tStr.substring(0, tStr.indexOf(")"));
-			var tValue = tStr.split(",");
-			translate.x = parseFloat(tValue[0]);
-			translate.y = parseFloat(tValue[1]);
-		}
-		var sIdx = transform.indexOf("scale");
-		if (sIdx >= 0) {
-			var sStr = transform.substring(sIdx + 6, transform.length);
-			sStr = sStr.substring(0, sStr.indexOf(")"));
-			var sValue = sStr.split(",");
-			scale.x = parseFloat(sValue[0]);
-			scale.y = parseFloat(sValue[1]);
-		}
-	}
-	return {translate: translate, scale: scale};
 }
