@@ -50,4 +50,4 @@ public/images/background/*_[0-9]*.*
 .lock-wscript
 
 # DSStores
-*.DS_Store
+.DS_Store
