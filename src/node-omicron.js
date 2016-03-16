@@ -318,7 +318,7 @@ OmicronManager.prototype.runTracker = function() {
 		// var r_roll  = Math.asin(2.0*e.orx*e.ory + 2.0*e.orz*e.orw);
 		// var r_yaw   = Math.atan2(2.0*e.ory*e.orw-2.0*e.orx*e.orz , 1.0 - 2.0*e.ory*e.ory - 2.0*e.orz*e.orz);
 		// var r_pitch = Math.atan2(2.0*e.orx*e.orw-2.0*e.ory*e.orz , 1.0 - 2.0*e.orx*e.orx - 2.0*e.orz*e.orz);
-
+		console.log(e);
 		var posX = e.posx * omicronManager.totalWidth;
 		var posY = e.posy * omicronManager.totalHeight;
 		posX += omicronManager.touchOffset[0];

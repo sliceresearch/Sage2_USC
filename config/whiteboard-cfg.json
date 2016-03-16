@@ -3,9 +3,9 @@
 */
 {
 	name: "Whiteboard",
-	host: "localhost",
-	port: 9090,
-	index_port: 9292,
+	host: "whiteboard.evl.uic.edu",
+	port: 443,
+	index_port: 9090,
 	background: {
 		color: "#333333",
 		watermark: {
@@ -22,34 +22,22 @@
 		calculate_viewing_distance: false
 	},
 	resolution: {
-		width: 4080,
-		height: 2304
+		width: 2000,
+		height: 1200
 
-	},
-	dimensions: {
-		// dimensions of one tile (can be overriden in displays section)
-		tile_width:  0.68,  // in meter, pixel area
-		tile_height: 0.485,  // in meter, pixel area
-		tile_borders: { left: 0.023, right: 0.023, bottom: 0.05, top: 0.05 }, // mullions in meter
-		// prefered or common viewing distance to calculate UI sizes
-		viewing_distance: 3.5	// in meter
 	},
 	layout: {
 		rows: 1,
-		columns: 2
+		columns: 1
 	},
 	displays: [
 		{
 			row: 0,
 			column: 0
-		},
-		{
-			row: 0,
-			column: 1
 		}
 	],
 	alternate_hosts: [
-		"127.0.0.1"
+		"whiteboard.evl.uic.edu"
 	],
 	remote_sites: [
 	],
@@ -59,14 +47,14 @@
 	// for experimental features: true/false
 	experimental: {
 		omicron: { // enable omicron input module
-			enable: false,
-			host: "131.193.138.170",
-			dataPort: 30005,
+			enable: true,
+			host: "whiteboard.evl.uic.edu",
+			dataPort: 9091,
 			
 			debug: false,
 			
 			// Touch gestures
-			touchOffset: [ 0, -100 ], // in pixels
+			touchOffset: [ 0, 0 ], //-100 in pixels
 			zoomGestureScale: 200,
 			acceleratedDragScale: 0,
 			

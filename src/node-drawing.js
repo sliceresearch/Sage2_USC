@@ -13,23 +13,33 @@ function DrawingManager(config) {
 	this.selectionBoxStyle = {fill: "none", stroke: "white", "stroke-width": "5px","stroke-dasharray": "10,10"};
 	this.drawingMode = false;
 	this.drawState = [{id: "drawing_1",type: "path",options: { points: [{x: 100,y: 200}, {x: 200,y: 300}] }, style: this.style}];
-	this.drawingsUndone = [];
 	this.tilesPosition = [];
 	this.palettePosition = {};
-	this.idMovingPalette = -1;
 	this.calculateTileDimensions(config);
-	this.actualAction = "drawing"
-	this.possibleActions = ["drawing", "movingPalette"];
+	// this.actualAction = "drawing"
+
+	// Reformat 1/27/2016
+	this.nextTouchSelection = false;
+	this.actionXTouch = {};
+	this.ERASER_SIZE = 200;
+	this.TITLE_BAR_HEIGHT = 58;
+	this.paletteIsMoving = false;
+	this.offsetFromPaletteXTouch = {};
+	this.selectionIsUsed = false;
+	this.lastPosition = {};
+	this.undoStack = [];
+	this.redoStack = [];
+	this.lastTimeSeen = {};
+	this.TIMEOUT_TIME = 5000;
+
+
+	// this.possibleActions = ["drawing", "movingPalette"];
 	this.paintingMode = false;
-	this.selectionMode = false;
 	this.selectionStart = {};
 	this.selectionEnd = {};
-	this.selectionTouchId = -1;
 	this.selectedDrawingObject = [];
 	this.selectionMovementStart = [];
 	this.selectionBox = null;
-	this.eraserBox = null;
-	this.eraserTouchId = -1;
 	this.interactMgr = null;
 	this.actionDoneStack = [{type: "drawing", data: [this.drawState[0].id]}];
 	this.actionRedoStack = [];
@@ -38,7 +48,7 @@ function DrawingManager(config) {
 	this.movingSelectionStartingPosition = null;
 	this.resizeSelectionStart = null;
 	this.oldSelectionInfo = {};
-	this.currentTouch = [];
+
 	// An object drawing is defined as follows:
 	// {
 	// id: String
@@ -142,7 +152,8 @@ DrawingManager.prototype.disablePaintingMode = function() {
 }
 
 DrawingManager.prototype.selectionModeOnOff = function() {
-	this.actualAction = "creatingSelection"
+	// this.actualAction = "creatingSelection"
+	this.nextTouchSelection = true;
 }
 
 DrawingManager.prototype.sendModesToPalette = function() {
@@ -181,174 +192,70 @@ function isInside(s,arr) {
 	return false;
 }
 
-DrawingManager.prototype.saveActionToActionStack = function(e, type, data) {
 
-	if (type == "drawing") {
-		if (this.idAssociatedToAction[e.sourceId]) {
-			if (this.oldSelectionInfo) {
-				var selection = {selection: this.oldSelectionInfo.selectionBox, start: this.oldSelectionInfo.selectionStart,
-								end: this.oldSelectionInfo.selectionEnd, obj: this.oldSelectionInfo.selectedDrawingObject};
-			}
-			var newAction = {type: "drawing", data: {ids: this.idAssociatedToAction[e.sourceId], selection: selection, obj: []}};
-			this.actionDoneStack.push(newAction);
-			delete this.idAssociatedToAction[e.sourceId];
-		}
-	} else if (type == "creatingSelection") {
-		var selection = {selection: this.selectionBox, start: this.selectionStart,
-						end: this.selectionEnd, obj: this.selectedDrawingObject};
-		var newAction = {type: "creatingSelection", data: selection};
-		this.actionDoneStack.push(newAction);
-	} else if (type == "erase") {
-		this.actionDoneStack.push({type: "erase", data: data});
-	} else if (type == "movingSelection") {
-		this.actionDoneStack.push({type: "movingSelection", data: data});
-	} else if (type == "zoomingSelection") {
-		this.actionDoneStack.push({type: "zoomingSelection", data: data});
-	}
+DrawingManager.prototype.saveDrawingToUndo = function(e) {
+	var obj = {type: "drawingToUndo"};
 
-	this.actionRedoStack = [];
+	obj["data"] = this.idAssociatedToAction[e.sourceId];
 
+	this.undoStack.push(obj);
 }
 
-DrawingManager.prototype.undoLastDrawing = function() {
+DrawingManager.prototype.undoThisDrawingGroup = function(array) {
+	var groupToDelete = [];
 
-	var undone = this.actionDoneStack.pop();
-
-	if (undone) {
-		var type = undone.type;
-
-		if (type == "drawing") {
-			var undoneDrawings = [];
-			var groupDrawings = undone['data']['ids'];
-			var i = 0
-			while (i < this.drawState.length) {
-				if (isInside(this.drawState[i].id, groupDrawings)) {
-					undoneDrawings.push(this.drawState.splice(i,1)[0]);
-				} else {
-					i++;
-				}
-			}
-
-			/*var selectionData = undone['data']['selection'];
-
-			if (selectionData.selection) {
-				console.log(selectionData.selection.start)
-				this.selectionBox = selectionData.selection;
-				this.selectedDrawingObject = selectionData.selection.obj;
-				this.selectionStart = selectionData.selection.start;
-				this.selectionEnd = selectionData.selection.end;
-				this.drawState.push(this.selectionBox);
-				this.updateWithGroupDrawingObject([this.selectionBox]);
-			}*/
-
-			this.removeDrawingObject(undoneDrawings);
-			undone['data']['obj'] = undoneDrawings;
-		} else if (type == "clearAll") {
-			var redoState = this.copy(undone.data);
-			undone.data = this.drawState;
-			this.drawState = redoState;
-			this.initAll();
-		} else if (type == "erase") {
-			var eraseIdDrawings = [];
-			var groupDrawings = undone.data;
-			for (var i in groupDrawings) {
-				this.drawState.push(groupDrawings[i]);
-				eraseIdDrawings.push(groupDrawings[i].id);
-			}
-
-			this.updateWithGroupDrawingObject(groupDrawings);
-			undone.data = eraseIdDrawings;
-		} else if (type == "creatingSelection") {
-			this.deleteSelectionBox();
-		} else if (type == "movingSelection") {
-			var dx = undone.data['dx'];
-			var dy = undone.data['dy'];
-			this.selectionStart.x += -dx;
-			this.selectionStart.y += -dy;
-			this.selectionEnd.x += -dx;
-			this.selectionEnd.y += -dy;
-			this.moveSelectionBox();
-			this.selectionMove(-dx, -dy);
-		} else if (type == "zoomingSelection") {
-			var sx = undone.data['sx'];
-			var sy = undone.data['sy'];
-			var swapEndX = this.selectionEnd.x;
-			var swapEndY = this.selectionEnd.y;
-			this.selectionStart = undone.data['selectionStart'];
-			this.selectionEnd['x'] = undone.data['selectionEnd'].x;
-			this.selectionEnd['y'] = undone.data['selectionEnd'].y;
-			undone.data['selectionEnd']['x'] = swapEndX;
-			undone.data['selectionEnd']['y'] = swapEndY;
-			this.moveSelectionBox();
-			this.selectionZoom(1 / sx, 1 / sy);
+	var i = 0;
+	while (i < this.drawState.length) {
+		if (isInside(this.drawState[i].id, array)) {
+			groupToDelete.push(this.drawState.splice(i,1)[0]);
+		} else {
+			i++;
 		}
+	}
 
-		this.actionRedoStack.push(undone);
+	// Tell the clients to remove them
+	this.removeDrawingObject(groupToDelete);
+
+	return groupToDelete;
+}
+
+DrawingManager.prototype.redoThisDrawingGroup = function(array) {
+	var idRedone = [];
+
+	for (var i in array) {
+		this.drawState.push(array[i]);
+		idRedone.push(array[i].id);
+	}
+	this.updateWithGroupDrawingObject(array);
+
+	return idRedone;
+}
+
+
+DrawingManager.prototype.undoLastDrawing = function() {
+	console.log(this.undoStack);
+	if (this.undoStack.length > 0) {
+		var last = this.undoStack.pop()
+
+		if (last.type == "drawingToUndo") {
+			last.data = this.undoThisDrawingGroup(last.data);
+			last.type = "drawingToRedo";
+			this.redoStack.push(last);
+		}
 	}
 
 }
 
 DrawingManager.prototype.redoDrawing = function() {
+	console.log(this.redoStack);
+	if (this.redoStack.length > 0) {
+		var last = this.redoStack.pop();
 
-	var redone = this.actionRedoStack.pop();
-
-	if (redone) {
-		var type = redone.type;
-
-		if (type == "drawing") {
-			var groupDrawings = redone['data']['obj'];
-			for (var i in groupDrawings) {
-				this.drawState.push(groupDrawings[i]);
-			}
-			this.updateWithGroupDrawingObject(groupDrawings);
-		} else if (type == "clearAll") {
-			var undoState = this.copy(redone.data);
-			redone.data = this.drawState;
-			this.drawState = undoState;
-			this.initAll();
-		} else if (type == "erase") {
-			var eraseDrawings = [];
-			var groupDrawings = redone.data;
-			while (i < this.drawState.length) {
-				if (isInside(this.drawState[i].id, groupDrawings)) {
-					eraseDrawings.push(eraseDrawings.push(this.drawState.splice(i,1)[0]));
-				} else {
-					i++;
-				}
-			}
-			this.removeDrawingObject(eraseDrawings);
-			redone.data = eraseDrawings;
-		} else if (type == "creatingSelection") {
-			this.selectionBox = redone['data']['selection'];
-			this.selectedDrawingObject = redone['data']['obj'];
-			this.selectionStart = redone['data']['start'];
-			this.selectionEnd = redone['data']['end'];
-			this.drawState.push(this.selectionBox);
-			this.updateWithGroupDrawingObject([this.selectionBox]);
-		} else if (type == "movingSelection") {
-			var dx = redone.data['dx'];
-			var dy = redone.data['dy'];
-			this.selectionStart.x += dx;
-			this.selectionStart.y += dy;
-			this.selectionEnd.x += dx;
-			this.selectionEnd.y += dy;
-			this.moveSelectionBox();
-			this.selectionMove(dx, dy);
-		} else if (type == "zoomingSelection") {
-			var sx = redone.data['sx'];
-			var sy = redone.data['sy'];
-			var swapEndX = this.selectionEnd.x;
-			var swapEndY = this.selectionEnd.y;
-			this.selectionStart = redone.data['selectionStart'];
-			this.selectionEnd['x'] = redone.data['selectionEnd'].x;
-			this.selectionEnd['y'] = redone.data['selectionEnd'].y;
-			redone.data['selectionEnd']['x'] = swapEndX;
-			redone.data['selectionEnd']['y'] = swapEndY;
-			this.moveSelectionBox();
-			this.selectionZoom(sx, sy);
+		if (last.type == "drawingToRedo") {
+			last.data = this.redoThisDrawingGroup(last.data);
+			last.type = "drawingToUndo";
+			this.undoStack.push(last);
 		}
-
-		this.actionDoneStack.push(redone);
 	}
 }
 
@@ -441,15 +348,12 @@ DrawingManager.prototype.findMaxId = function() {
 	return max;
 }
 
-DrawingManager.prototype.newEraserBox = function(x,y,w,h) {
 
-	// Create new Eraser box
-	this.eraserBox = {x: x - w / 2,y: y - h / 2,w: w,h: h};
 
-}
+DrawingManager.prototype.eraseArea = function(x,y,w,h) {
+	// Erase everything in the given area
 
-DrawingManager.prototype.erase = function() {
-	// Erases all the elements intersecting with the erase box
+	var eraserBox = {x: x - w / 2,y: y - h / 2,w: w,h: h};
 	var i = 0;
 	var groupToDelete = [];
 	while (i < this.drawState.length) {
@@ -457,10 +361,10 @@ DrawingManager.prototype.erase = function() {
 		var inside = false;
 		for (var j in draw) {
 			var p = draw[j];
-			if (p.x > this.eraserBox.x &&
-				p.x < this.eraserBox.x + this.eraserBox.w  &&
-				p.y > this.eraserBox.y &&
-				p.y < this.eraserBox.y + this.eraserBox.h) {
+			if (p.x > eraserBox.x &&
+				p.x < eraserBox.x + eraserBox.w  &&
+				p.y > eraserBox.y &&
+				p.y < eraserBox.y + eraserBox.h) {
 				inside = true;
 				break;
 			}
@@ -479,61 +383,16 @@ DrawingManager.prototype.erase = function() {
 	}
 
 	if (groupToDelete.length > 0) {
-		this.saveActionToActionStack(this.eraserTouchId, "erase", groupToDelete);
 		this.removeDrawingObject(groupToDelete);
 	}
-
+	// returns all the deleted elements?
+	return groupToDelete;
 }
 
 
-DrawingManager.prototype.newSelectionBox = function(e) {
 
-	// Create new Selection box
-	var drawingId = this.getNewId(e.sourceId);
-	this.newDrawingObject[drawingId] = {};
-	this.newDrawingObject[drawingId]["id"] = drawingId;
-	this.newDrawingObject[drawingId]["type"] = "rect";
-	this.newDrawingObject[drawingId]["options"] = { points: [this.selectionStart, this.selectionEnd] };
-	this.newDrawingObject[drawingId]["style"] = this.selectionBoxStyle;
 
-	this.selectionBox = this.newDrawingObject[drawingId];
-
-	this.drawState.push(this.newDrawingObject[drawingId]);
-}
-
-DrawingManager.prototype.moveSelectionBox = function() {
-
-	if (this.selectionBox) {
-		this.selectionBox["options"]["points"] = [this.selectionStart, this.selectionEnd];
-		this.updateWithGroupDrawingObject([this.selectionBox]);
-	}
-
-}
-
-DrawingManager.prototype.deleteSelectionBox = function() {
-
-	if (this.selectionBox) {
-
-		this.oldSelectionInfo = {selectedDrawingObject: this.selectedDrawingObject, selectionStart: this.selectionStart,
-								selectionEnd: this.selectionEnd, selectionBox: this.selectionBox};
-
-		for (var drawingObj in this.drawState) {
-			var idx = this.drawState[drawingObj]['id'];
-			if (idx == this.selectionBox["id"]) {
-				this.drawState.splice(drawingObj, 1);
-				break;
-			}
-		}
-		this.selectedDrawingObject = [];
-		this.selectionStart = {};
-		this.selectionEnd = {};
-		this.selectionBox = null;
-		this.selectionTouchId = -1;
-		this.initAll();
-	}
-}
-
-DrawingManager.prototype.newDrawingObjectFunc = function(e,posX,posY) {
+DrawingManager.prototype.createNewDraw = function(e,posX,posY) {
 
 	// Create new Drawing object
 	var drawingId = this.getNewId(e.sourceId);
@@ -551,7 +410,7 @@ DrawingManager.prototype.newDrawingObjectFunc = function(e,posX,posY) {
 
 DrawingManager.prototype.updateDrawingObject = function(e,posX,posY) {
 	if (!this.existsId(e.sourceId)) {
-		this.newDrawingObjectFunc(e, posX, posY);
+		this.createNewDraw(e, posX, posY);
 		this.idAssociatedToAction[e.sourceId] = [drawingId];
 	}
 
@@ -632,6 +491,7 @@ DrawingManager.prototype.touchInsideSelectionZoomBox = function(x, y) {
 
 DrawingManager.prototype.selectDrawingObjects = function() {
 
+	this.selectedDrawingObject = [];
 	for (var drawingObj in this.drawState) {
 		var points = this.drawState[drawingObj]['options']['points'];
 		for (var i in points) {
@@ -643,6 +503,51 @@ DrawingManager.prototype.selectDrawingObjects = function() {
 	}
 
 }
+
+
+DrawingManager.prototype.newSelectionBox = function(e) {
+
+	// Create new Selection box
+	var drawingId = this.getNewId(e.sourceId);
+	this.newDrawingObject[drawingId] = {};
+	this.newDrawingObject[drawingId]["id"] = drawingId;
+	this.newDrawingObject[drawingId]["type"] = "rect";
+	this.newDrawingObject[drawingId]["options"] = { points: [this.selectionStart, this.selectionEnd] };
+	this.newDrawingObject[drawingId]["style"] = this.selectionBoxStyle;
+
+	this.selectionBox = this.newDrawingObject[drawingId];
+
+	this.drawState.push(this.newDrawingObject[drawingId]);
+}
+
+DrawingManager.prototype.moveSelectionBox = function() {
+
+	if (this.selectionBox) {
+		this.selectionBox["options"]["points"] = [this.selectionStart, this.selectionEnd];
+		this.updateWithGroupDrawingObject([this.selectionBox]);
+	}
+
+}
+
+DrawingManager.prototype.deleteSelectionBox = function() {
+
+	if (this.selectionBox) {
+
+		for (var drawingObj in this.drawState) {
+			var idx = this.drawState[drawingObj]['id'];
+			if (idx == this.selectionBox["id"]) {
+				this.drawState.splice(drawingObj, 1);
+				break;
+			}
+		}
+		this.selectedDrawingObject = [];
+		this.selectionStart = {};
+		this.selectionEnd = {};
+		this.selectionBox = null;
+		this.initAll();
+	}
+}
+
 
 DrawingManager.prototype.selectionMove = function(x, y) {
 
@@ -664,6 +569,8 @@ DrawingManager.prototype.selectionMove = function(x, y) {
 
 DrawingManager.prototype.selectionZoom = function(sx, sy) {
 
+
+
 	for (var drawingObj in this.selectedDrawingObject) {
 		var points = this.selectedDrawingObject[drawingObj]['options']["points"];
 		for (var i in points) {
@@ -675,343 +582,420 @@ DrawingManager.prototype.selectionZoom = function(sx, sy) {
 	this.updateWithGroupDrawingObject(this.selectedDrawingObject);
 }
 
+DrawingManager.prototype.startSelectionFrom = function(e,posX,posY) {
+	this.deleteSelectionBox();
+	this.selectionStart = {x: posX, y: posY};
+	this.selectionEnd = {x: posX, y: posY};
+	this.selectionIsUsed = true;
+	this.newSelectionBox(e);
+}
+
+DrawingManager.prototype.updateCreatingSelection = function(posX,posY) {
+	if (this.selectionStart['x'] > posX) {
+		this.selectionStart['x'] = posX;
+	} else if (this.selectionEnd['x'] < posX) {
+		this.selectionEnd['x'] = posX;
+	}else {
+		var d1 = this.distance({x: posX,y: this.selectionStart.y},this.selectionStart);
+		if (d1 < this.distance({x: posX,y: this.selectionEnd.y},this.selectionEnd)) {
+			this.selectionStart['x'] = posX;
+		} else {
+			this.selectionEnd['x'] = posX;
+		}
+	}
+
+	if (this.selectionStart['y'] > posY) {
+		this.selectionStart['y'] = posY;
+	} else if (this.selectionEnd['y'] < posY) {
+		this.selectionEnd['y'] = posY;
+	}else {
+		var d1 = this.distance({x: this.selectionStart.x,y: posY},this.selectionStart);
+		if (d1 < this.distance({x: this.selectionEnd.x,y: posY},this.selectionEnd)) {
+			this.selectionStart['y'] = posY;
+		} else {
+			this.selectionEnd['y'] = posY;
+		}
+	}
+	this.moveSelectionBox();
+
+}
+
+DrawingManager.prototype.moveSelectionTo = function(e,posX,posY) {
+	var dx = posX - this.lastPosition[e.sourceId]['x'];
+	var dy = posY - this.lastPosition[e.sourceId]['y'];
+	this.lastPosition[e.sourceId]['x'] = posX;
+	this.lastPosition[e.sourceId]['y'] = posY;
+
+	this.selectionStart.x += dx;
+	this.selectionStart.y += dy;
+	this.selectionEnd.x += dx;
+	this.selectionEnd.y += dy;
+	this.moveSelectionBox();
+	this.selectionMove(dx, dy);
+}
+
+DrawingManager.prototype.zoomSelectionBy = function(e,posX,posY) {
+	var dx = posX - this.lastPosition[e.sourceId]['x'];
+	var dy = posY - this.lastPosition[e.sourceId]['y'];
+	var oldW = this.selectionEnd.x - this.selectionStart.x;
+	var oldH = this.selectionEnd.y - this.selectionStart.y;
+
+	var newW = oldW + dx;
+	var newH = oldH + dy;
+	var sx = parseFloat(newW) / oldW;
+	var sy = parseFloat(newH) / oldH;
+
+	this.lastPosition[e.sourceId] = {x: posX, y: posY};
+	this.selectionEnd.x += dx;
+	this.selectionEnd.y += dy;
+	this.moveSelectionBox();
+	this.selectionZoom(sx, sy);
+
+}
+
+DrawingManager.prototype.updateTimer = function() {
+	console.log(this.lastTimeSeen);
+	var t = new Date();
+	var timouted = [];
+	for (var i in this.lastTimeSeen) {
+		var e = this.lastTimeSeen[i];
+		if (t - e > this.TIMEOUT_TIME) {
+			console.log("Timeout for id: " + i);
+			timouted.push(i);
+			break;
+		}
+	}
+
+	for (var j in timouted) {
+		delete this.lastTimeSeen[timouted[j]];
+		var fake = {sourceId: timouted[j],type: 6};
+		this.pointerEvent(fake,timouted[j],0,0,0,0);
+	}
+}
+
+
+DrawingManager.prototype.detectDownAction = function(posX,posY,w,h) {
+	// First Priority: Moving & Using palette
+	if (this.touchInsidePaletteTitleBar(posX,posY)) {
+
+		// Check that nobody else is moving the palette
+		if (!this.paletteIsMoving) {
+			this.paletteIsMoving = true;
+			return "movingPalette";
+		}
+		// somebody else is moving
+		return "ignored";
+
+	}
+	if (this.touchInsidePalette(posX,posY)) {
+		return "usePalette";
+	}
+	if (this.touchNearBottom(posX,posY)) {
+		if (!this.paletteIsMoving) {
+			this.paletteIsMoving = true;
+			return "recallingPalette";
+		}
+		return "ignored";
+
+	}
+
+	// Second Priority: Selections
+	if (this.nextTouchSelection) {
+		this.nextTouchSelection = false;
+		return "creatingSelection";
+	}
+	if (this.touchInsideSelectionZoomBox(posX,posY)) {
+		if (!this.selectionIsUsed) {
+			this.selectionIsUsed = true;
+			return "zoomingSelection";
+		}
+		return "ignored";
+
+	}
+	if (this.touchInsideSelection(posX,posY)) {
+		if (!this.selectionIsUsed) {
+			this.selectionIsUsed = true;
+			return "movingSelection";
+		}
+		return "ignored";
+
+	}
+
+	// Third Priority: Eraser
+	if ((!this.paintingMode) && (Math.max(w,h) >= this.ERASER_SIZE)) {
+		return "eraser";
+	}
+
+
+	// Default: Drawing
+
+	return "drawing";
+
+}
+
+DrawingManager.prototype.touchDown = function(e,sourceId,posX,posY,w,h) {
+	// Detect what the user wants to do with this touch
+	var action = this.detectDownAction(posX,posY,w,h);
+	this.actionXTouch[e.sourceId] = action;
+
+	if (action == "movingPalette") {
+		// Just save the offset
+		this.offsetFromPaletteXTouch[e.sourceId] = {x: posX - this.palettePosition.startX,
+													y: posY - this.palettePosition.startY + this.TITLE_BAR_HEIGHT};
+		return;
+	}
+
+	// Action Performed at touch down: Using Palette
+	if (action == "usePalette") {
+		this.sendTouchToPalette(this.paletteID, posX - this.palettePosition.startX, posY - this.palettePosition.startY);
+		return;
+	}
+	// Action Performed at touch down: recall Palette
+	if (action == "recallingPalette") {
+		this.movePaletteTo(this.paletteID
+								, posX
+								, this.palettePosition.startY - this.TITLE_BAR_HEIGHT
+								, this.palettePosition.endX - this.palettePosition.startX
+								, this.palettePosition.endY - this.palettePosition.startY);
+		return;
+	}
+
+	if (action == "creatingSelection") {
+		this.startSelectionFrom(e,posX,posY);
+		return;
+	}
+
+	if (action == "movingSelection") {
+		this.lastPosition[e.sourceId] = {x: posX, y: posY};
+		return;
+	}
+
+	if (action == "zoomingSelection") {
+		this.lastPosition[e.sourceId] = {x: posX, y: posY};
+		return;
+	}
+
+	// Action Performed at touch down: erasing
+	if (action == "eraser") {
+		this.eraseArea(posX,posY,w,h);
+		return;
+	}
+
+	// Action Performed at touch down: drawing
+	if (action == "drawing") {
+		if (!this.selectionIsUsed) {
+			this.deleteSelectionBox();
+		}
+		if (this.paintingMode) {
+			this.style["stroke-width"] = Math.max(w,h)
+		}
+		this.redoStack = [];
+		this.createNewDraw(e,posX,posY);
+		return;
+	}
+
+
+
+
+
+
+}
+
+DrawingManager.prototype.touchMove = function(e,sourceId,posX,posY,w,h) {
+	// do what is supposed to happen when a touch is moving
+	var action = this.actionXTouch[e.sourceId];
+
+	// First Priority: Moving palette (using ignored)
+	if (action == "movingPalette") {
+		var offX = this.offsetFromPaletteXTouch[e.sourceId].x || 0;
+		var offY = this.offsetFromPaletteXTouch[e.sourceId].y || 0;
+		this.movePaletteTo(this.paletteID
+								, posX - offX
+								, posY - offY
+								, this.palettePosition.endX - this.palettePosition.startX
+								, this.palettePosition.endY - this.palettePosition.startY);
+	}
+
+	if (action == "recallingPalette") {
+		this.movePaletteTo(this.paletteID
+								, posX
+								, this.palettePosition.startY - this.TITLE_BAR_HEIGHT
+								, this.palettePosition.endX - this.palettePosition.startX
+								, this.palettePosition.endY - this.palettePosition.startY);
+		return;
+	}
+
+	// Second Priority: Selections
+	if (action == "creatingSelection") {
+		this.updateCreatingSelection(posX,posY);
+		return;
+	}
+
+	if (action == "movingSelection") {
+		this.moveSelectionTo(e,posX,posY);
+		return;
+	}
+
+	if (action == "zoomingSelection") {
+		this.zoomSelectionBy(e,posX,posY);
+		return;
+	}
+
+	// Third Priority: Eraser
+
+	// A Drawing can become an eraser
+	if ((!this.paintingMode) && (Math.max(w,h) >= this.ERASER_SIZE)) {
+		action = "eraser";
+		this.actionXTouch[e.sourceId] = action;
+	}
+
+	// An eraser can never go back to be a drawing
+	if (action == "eraser") {
+		this.eraseArea(posX,posY,w,h);
+		return;
+	}
+
+	if (action == "drawing") {
+		this.updateDrawingObject(e,posX,posY);
+		return;
+	}
+}
+
+DrawingManager.prototype.touchRelease = function(e,sourceId,posX,posY,w,h) {
+	// do what is supposed to happen when a touch is released
+	var action = this.actionXTouch[e.sourceId];
+
+	if (action == "movingPalette") {
+		delete this.offsetFromPaletteXTouch[e.sourceId];
+		this.paletteIsMoving = false;
+		return;
+	}
+
+	if (action == "recallingPalette") {
+		this.paletteIsMoving = false;
+		return;
+	}
+
+	if (action == "creatingSelection") {
+		// Select what's in the selection right now
+		this.selectDrawingObjects();
+
+		this.selectionIsUsed = false;
+		return;
+	}
+
+	if (action == "movingSelection") {
+
+		delete this.lastPosition[e.sourceId];
+
+		this.selectionIsUsed = false;
+		return;
+	}
+
+	if (action == "zoomingSelection") {
+
+		delete this.lastPosition[e.sourceId];
+
+		this.selectionIsUsed = false;
+		return;
+	}
+
+
+	if (action == "drawing") {
+		// Check if an application is under one of the lines drawn by this id
+		this.linkToApplication(e.sourceId);
+
+		this.saveDrawingToUndo(e);
+
+		// Release the drawingId
+		this.realeaseId(e.sourceId);
+
+	}
+}
+
+
 DrawingManager.prototype.pointerEvent = function(e,sourceId,posX,posY,w,h) {
 
-	if (this.paintingMode) {
-		this.style["stroke-width"] = Math.max(w,h)
-	}
 
 	if (e.type == 5) {
-		if (this.currentTouch.length == 0) {
-			var touch = {x: posX, y: posY};
-			this.currentTouch[e.sourceId] = touch;
-		} else {
-			var enoughDistant = true;
-			for (var id in this.currentTouch) {
-
-				if (this.distance(this.currentTouch[id], {x: posX, y: posY}) < 900) {
-					enoughDistant = false;
-					break;
-				}
-
-			}
-
-			if (enoughDistant) {
-				var touch = {x: posX, y: posY};
-				this.currentTouch[e.sourceId] = touch;
-			} else {
-				return;
-			}
-		}
-
-		// touch down
-		if (this.touchInsidePaletteTitleBar(posX,posY)) {
-			this.actualAction = "movingPalette";
-			this.idMovingPalette = e.sourceId;
-			this.touchOnPaletteOffsetX = posX - this.palettePosition.startX;
-			this.touchOnPaletteOffsetY = posY - this.palettePosition.startY + 58; // Title bar height
-			return;
-		} else if (this.touchInsidePalette(posX,posY)) {
-			this.sendTouchToPalette(this.paletteID, posX - this.palettePosition.startX, posY - this.palettePosition.startY);
-			return;
-		} else if (this.touchNearBottom(posX,posY)) {
-			this.movePaletteTo(this.paletteID
-								, posX
-								, this.palettePosition.startY - 58
-								, this.palettePosition.endX - this.palettePosition.startX
-								, this.palettePosition.endY - this.palettePosition.startY);
-			return;
-		} else if (this.actualAction == "creatingSelection" && this.selectionTouchId == -1) {
-			this.deleteSelectionBox();
-			this.selectionStart = {x: posX, y: posY};
-			this.selectionEnd = {x: posX, y: posY};
-			this.selectionTouchId = e.sourceId;
-			this.newSelectionBox(e);
-			return;
-		} else if (this.touchInsideSelection(posX, posY) && this.selectionTouchId == -1) {
-			this.selectionMovementStart = {x: posX, y: posY};
-			this.selectionTouchId = e.sourceId;
-			if (this.touchInsideSelectionZoomBox(posX,posY)) {
-				this.actualAction = "zoomingSelection";
-				this.resizeSelectionStart = {w: this.selectionEnd.x - this.selectionStart.x,
-											h: this.selectionEnd.y - this.selectionStart.y,
-											selectionEnd: {x: this.selectionEnd.x, y: this.selectionEnd.y}};
-			} else {
-				this.actualAction = "movingSelection";
-				this.movingSelectionStartingPosition = {x: posX, y: posY};
-			}
-			return;
-		} else if (this.paintingMode == false && Math.max(w,h) > 200 && this.eraserTouchId == -1) {
-			this.newEraserBox(posX,posY,w,h);
-			this.eraserTouchId = e.sourceId;
-			this.erase();
-			return;
-		} else {
-			if (this.actualAction == "drawing") {
-				this.deleteSelectionBox();
-			}
-			this.drawingsUndone = [];
-			this.newDrawingObjectFunc(e, posX, posY);
-		}
-
+		this.touchDown(e,sourceId,posX,posY,w,h);
+		this.lastTimeSeen[e.sourceId] = new Date();
 	} else if (e.type == 4) {
-
-		if (this.currentTouch.length == 0) {
-			var touch = {x: posX, y: posY};
-			this.currentTouch[e.sourceId] = touch;
-		} else if (!this.currentTouch[e.sourceId]) {
-
-			var enoughDistant = true;
-
-			for (var id in this.currentTouch) {
-
-				if (this.distance(this.currentTouch[id], {x: posX, y: posY}) < 900) {
-					enoughDistant = false;
-					break;
-				}
-
-			}
-
-			if (enoughDistant) {
-				var touch = {x: posX, y: posY};
-				this.currentTouch[e.sourceId] = touch;
-			} else {
-				return;
-			}
-
-		} else {
-			this.currentTouch[e.sourceId] = {x: posX, y: posY};
-		}
-
-		// touch move
-		if (this.paintingMode == false && Math.max(w,h) > 200 && this.eraserTouchId == -1) {
-			this.eraserTouchId = e.sourceId;
-		}
-		if (this.touchInsidePalette(posX,posY)) {
-			this.sendDragToPalette(this.paletteID, posX - this.palettePosition.startX, posY - this.palettePosition.startY);
-			return;
-		}
-
-		if ((this.actualAction == "movingPalette") && (this.idMovingPalette == e.sourceId)) {
-			this.movePaletteTo(this.paletteID
-								, posX - this.touchOnPaletteOffsetX
-								, posY - this.touchOnPaletteOffsetY
-								, this.palettePosition.endX - this.palettePosition.startX
-								, this.palettePosition.endY - this.palettePosition.startY);
-			return;
-		}
-
-		if (this.eraserTouchId == e.sourceId) {
-			this.realeaseId(e.sourceId);
-			this.newEraserBox(posX,posY,w,h);
-			this.erase();
-			return;
-		}
-
-		if (this.touchInsidePalette(posX,posY)) {
-			return;
-		}
-
-		if ((this.actualAction == "movingSelection") && (this.selectionTouchId == e.sourceId)) {
-			var dx = posX - this.selectionMovementStart['x'];
-			var dy = posY - this.selectionMovementStart['y'];
-			this.selectionMovementStart = {x: posX, y: posY};
-			this.selectionStart.x += dx;
-			this.selectionStart.y += dy;
-			this.selectionEnd.x += dx;
-			this.selectionEnd.y += dy;
-			this.moveSelectionBox();
-			this.selectionMove(dx, dy);
-			return;
-		}
-
-		if ((this.actualAction == "zoomingSelection") && (this.selectionTouchId == e.sourceId)) {
-			var dx = posX - this.selectionMovementStart['x'];
-			var dy = posY - this.selectionMovementStart['y'];
-			var oldW = this.selectionEnd.x - this.selectionStart.x;
-			var oldH = this.selectionEnd.y - this.selectionStart.y;
-			var newW = oldW + dx;
-			var newH = oldH + dy;
-			var sx = parseFloat(newW) / oldW;
-			var sy = parseFloat(newH) / oldH;
-			this.selectionMovementStart = {x: posX, y: posY};
-			this.selectionEnd.x += dx;
-			this.selectionEnd.y += dy;
-			this.moveSelectionBox();
-			this.selectionZoom(sx, sy);
-			return;
-		}
-
-		if ((this.actualAction == "creatingSelection") && (this.selectionTouchId == e.sourceId)) {
-			if (this.selectionStart['x'] > posX) {
-				this.selectionStart['x'] = posX;
-			} else if (this.selectionEnd['x'] < posX) {
-				this.selectionEnd['x'] = posX;
-			}else {
-				var d1 = this.distance({x: posX,y: this.selectionStart.y},this.selectionStart);
-				if (d1 < this.distance({x: posX,y: this.selectionEnd.y},this.selectionEnd)) {
-					this.selectionStart['x'] = posX;
-				} else {
-					this.selectionEnd['x'] = posX;
-				}
-			}
-
-			if (this.selectionStart['y'] > posY) {
-				this.selectionStart['y'] = posY;
-			} else if (this.selectionEnd['y'] < posY) {
-				this.selectionEnd['y'] = posY;
-			}else {
-				var d1 = this.distance({x: this.selectionStart.x,y: posY},this.selectionStart);
-				if (d1 < this.distance({x: this.selectionEnd.x,y: posY},this.selectionEnd)) {
-					this.selectionStart['y'] = posY;
-				} else {
-					this.selectionEnd['y'] = posY;
-				}
-			}
-			this.moveSelectionBox();
-			return;
-		}
-
-		this.updateDrawingObject(e, posX, posY);
-
+		this.touchMove(e,sourceId,posX,posY,w,h);
+		this.lastTimeSeen[e.sourceId] = new Date();
 	} else if (e.type == 6) {
-
-		if (this.currentTouch[e.sourceId]) {
-			delete this.currentTouch[e.sourceId];
-		}
-
-		// touch release
-		if (this.eraserTouchId == e.sourceId) {
-			this.eraserTouchId = -1;
-		} else if ((this.actualAction == "movingPalette") && (this.idMovingPalette == e.sourceId)) {
-			this.actualAction = "drawing";
-			this.idMovingPalette = -1;
-		} else if ((this.actualAction == "creatingSelection") && (this.selectionTouchId == e.sourceId)) {
-
-			var drawn = false;
-
-			if (this.selectionStart['x'] > posX) {
-				this.selectionStart['x'] = posX;
-			} else if (this.selectionEnd['x'] < posX) {
-				this.selectionEnd['x'] = posX;
-			}else {
-				var d1 = this.distance({x: posX,y: this.selectionStart.y},this.selectionStart);
-				if (d1 < this.distance({x: posX,y: this.selectionEnd.y},this.selectionEnd)) {
-					this.selectionStart['x'] = posX;
-				} else {
-					this.selectionEnd['x'] = posX;
-				}
-			}
-
-			if (this.selectionStart['y'] > posY) {
-				this.selectionStart['y'] = posY;
-			} else if (this.selectionEnd['y'] < posY) {
-				this.selectionEnd['y'] = posY;
-			}else {
-				var d1 = this.distance({x: this.selectionStart.x,y: posY},this.selectionStart)
-				if (d1 < this.distance({x: this.selectionEnd.x,y: posY},this.selectionEnd)) {
-					this.selectionStart['y'] = posY;
-				} else {
-					this.selectionEnd['y'] = posY;
-				}
-			}
-
-			this.selectionTouchId = -1;
-			this.selectDrawingObjects();
-			this.moveSelectionBox();
-			drawn = true;
-			this.actualAction = "drawing";
-			this.saveActionToActionStack(e, "creatingSelection", null);
-
-		} else if ((this.actualAction == "movingSelection") && (this.selectionTouchId == e.sourceId)) {
-			var dx = posX - this.selectionMovementStart['x'];
-			var dy = posY - this.selectionMovementStart['y'];
-			this.selectionStart.x += dx;
-			this.selectionStart.y += dy;
-			this.selectionEnd.x += dx;
-			this.selectionEnd.y += dy;
-			this.moveSelectionBox();
-			this.selectionMove(dx, dy);
-			this.selectionTouchId = -1;
-			this.actualAction = "drawing";
-			var completeMovementX = posX - this.movingSelectionStartingPosition.x;
-			var completeMovementY = posY - this.movingSelectionStartingPosition.y;
-			this.saveActionToActionStack(e.sourceId, "movingSelection",
-				{selectionStart: this.selectionStart, selectionEnd: this.selectionEnd, dx: completeMovementX, dy: completeMovementY});
-			this.movingSelectionStartingPosition = null;
-		} else if ((this.actualAction == "zoomingSelection") && (this.selectionTouchId == e.sourceId)) {
-			var dx = posX - this.selectionMovementStart['x'];
-			var dy = posY - this.selectionMovementStart['y'];
-			var oldW = this.selectionEnd.x - this.selectionStart.x;
-			var oldH = this.selectionEnd.y - this.selectionStart.y;
-			var newW = oldW + dx;
-			var newH = oldH + dy;
-			var sx = parseFloat(newW) / oldW;
-			var sy = parseFloat(newH) / oldH;
-			this.selectionMovementStart = {x: posX, y: posY};
-			this.selectionEnd.x += dx;
-			this.selectionEnd.y += dy;
-			this.moveSelectionBox();
-			this.selectionZoom(sx, sy);
-			this.selectionTouchId = -1;
-			this.actualAction = "drawing";
-			var completeResizeW = parseFloat(newW) / this.resizeSelectionStart.w;
-			var completeResizeH = parseFloat(newH) / this.resizeSelectionStart.h;
-			this.saveActionToActionStack(e.sourceId, "zoomingSelection",
-				{selectionStart: this.selectionStart, selectionEnd: this.resizeSelectionStart['selectionEnd'],
-				sx: completeResizeW, sy: completeResizeH});
-		}
-
-		if (!drawn) {
-			for (var j in this.idAssociatedToAction[e.sourceId]) {
-				this.checkForApplications(this.idAssociatedToAction[e.sourceId][j]);
-			}
-			if (!this.touchInsidePalette(posX, posY)) {
-				this.saveActionToActionStack(e, "drawing", null);
-			}
-			this.realeaseId(e.sourceId);
-			return;
-		}
-
+		this.touchRelease(e,sourceId,posX,posY,w,h);
+		delete this.lastTimeSeen[e.sourceId];
 	}
 
-	var drawingId = this.dictionaryId[e.sourceId];
-	var involvedClient = this.checkInvolvedClient(posX, posY);
-	var manipulatedObject = this.manipulateDrawingObject(this.newDrawingObject[drawingId], involvedClient);
+	// console.log( e.type+": "+this.actionXTouch[e.sourceId]  );
 
-	this.update(manipulatedObject, involvedClient);
+	if (this.actionXTouch[e.sourceId] == "drawing") {
+		var drawingId = this.dictionaryId[e.sourceId];
+		var involvedClient = this.checkInvolvedClient(posX, posY);
+		var manipulatedObject = this.manipulateDrawingObject(this.newDrawingObject[drawingId], involvedClient);
+
+		this.update(manipulatedObject, involvedClient);
+	}
+
+	// Maybe a timeout system here?
+
+	this.updateTimer(e,posX,posY);
+}
+
+DrawingManager.prototype.linkToApplication = function(touchId) {
+	var application;
+	for (var j in this.idAssociatedToAction[touchId]) {
+		var application = this.checkForApplications(this.idAssociatedToAction[touchId][j]);
+		if (application != undefined) {
+			break;
+		}
+	}
+
+	if (application != undefined) {
+		// Application found, link to all lines
+		for (var i in this.drawState) {
+			if (this.drawState[i].id in this.idAssociatedToAction[touchId]) {
+				this.drawState[i].linkedAppID = application.id;
+			}
+		}
+	}
+
+
 }
 
 DrawingManager.prototype.checkForApplications = function(id) {
 	var drawing;
+
+	// Find the drawing with that id inside the drawing state
 	for (var i in this.drawState) {
 		if (this.drawState[i].id == id) {
 			drawing = this.drawState[i];
 			break;
 		}
 	}
+
+
 	if (drawing) {
 		var app;
 		for (var i in drawing["options"]["points"]) {
 			var p = drawing["options"]["points"][i];
 			var obj = this.interactMgr.searchGeometry({x: p.x, y: p.y});
 			if (obj && obj.layerId == "applications") {
-				app = obj;
-				break;
+				return obj;
 			}
 		}
-		if (app) {
-			drawing.linkedAppID = obj.id;
-		}
 	}
+
+	return ;
 }
 
 DrawingManager.prototype.manipulateDrawingObject = function(drawingObject, clientID) {
 
 	if (clientID == null || !drawingObject) {
-		return
+		return;
 	}
-	
+
 	// Cloning the drawing object to manipuate its position, in order to send to the clients its relativ position
 	var manipulatedObject = JSON.parse(JSON.stringify(drawingObject));
 
@@ -1118,7 +1102,7 @@ DrawingManager.prototype.checkInvolvedClient = function(posX, posY) {
 	}
 
 	console.log("No single client involved")
-	return null;
+	return;
 
 }
 
