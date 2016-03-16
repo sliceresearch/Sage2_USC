@@ -7301,46 +7301,30 @@ function wsDtuRmbContextMenuContents(wsio, data) {
 
 
 /**
-
-
-data should have the format
-{
-	type: string, see below for more details
-	
-	[ additional fields required by type ]
-}
-
-
-types:
-	getPathOfApp
-		appName: 	field must be name of application
-
-	launchAppWithValues
-		appName: 	field must be name of application
-		func: 		what function to call inorder to update
-		params: 	what to pass the specified function
-
-	setValue
-		nameOfValue: 	used to searchstore value
-		value: 			sets the named value
-
-	getValue
-		nameOfValue: 	used to retrieve value
-		app: 			which app needs it
-		func: 			function to call on the app to give it back
-		
-
-	subscribeToValue
-
-
-
+This is the function that handles all 'csdMessage' packets.
+Required for processing is data.type.
+Further requirements based upon the type.
 
 */
 function wsCsdMessage(wsio, data) {
 
 	console.log("erase me, received csd message type:" + data.type );
 
+	//if the type is not defined, 
+	if(data.type === undefined) {
+		console.log(sageutils.header("csdMessage") + "Error: Undefined csdMessage");
+		return;
+	}
+
 	switch(data.type) {
+		case "consolePrint":
+			//used for debugging
+			csdConsolePrint(wsio,data);
+			break;
+		case "whatAppIsAt":
+			//used for testing
+			csdWhatAppIsAt(wsio, data);
+			break;
 		case "getPathOfApp":
 			//currently just used for testing
 			console.log("erase me," + csdGetPathOfApp(data.appName));
@@ -7367,48 +7351,88 @@ function wsCsdMessage(wsio, data) {
 }
 
 /**
-Used to get the full path of an app.
+ * Prints a console message on the server.
+ * csd requirement: 
+ * 		data.message 		what will be printed.
+ */
+function csdConsolePrint(wsio, data) {
+	if(data.message === undefined) {
+		console.log(sageutils.header("csdConsolePrint") + "Error: Undefined message");
+		return;
+	}
+	console.log(sageutils.header("csdConsolePrint") + data.message);
+}
+
+/**
+ * Will find app at location x,y.
+ * 
+ * csd requirement: 
+ * 		data.x 		x location to check.
+ * 		data.y 		y location to check.
+ * 
+ * csd options: 
+ * 		data.serverPrint 	true = print to console on server.
+ * 		data.replyPrint 	true = print to console on server.
+ * 
+ */
+function csdWhatAppIsAt(wsio, data) {
+	var obj = interactMgr.searchGeometry({x: data.x, y: data.y});
+
+	if(data.serverPrint === true) {
+		console.log(sageutils.header("csdWhatAppIsAt") + obj.data.id);
+	}
+
+	if(data.replyPrint === true) {
+		//send back to the source the print command
+		var csdData = {};
+			csdData.type 	= "consolePrint";
+			csdData.message = obj.data.id;
+		wsio.emit('csdMessage', csdData);
+	}
+}
+
+/**
+ * Used to get the full path of an app starting with appName in the FileName.
+ * 
+ * Note: under conditions it might be possible to generate false positives.
 */
 function csdGetPathOfApp (appName) {
 	var apps = getApplications();
+	//for each of the apps known to SAGE2, usually everything in public/uploads/apps
 	for(var i = 0; i < apps.length; i++) {
-		if( 
+		if(  //if the name contains appName
 			apps[i].exif.FileName.indexOf( appName ) === 0
 			|| apps[i].id.indexOf( appName ) !== -1 
 		) {
-			return apps[i].id;
+			return apps[i].id; //this is the path.
 		} //end if this app contains the specified name
 	}//end for each application available.
 	return null;
 }
 
+
 /**
-Will launch app, then have a time out to pass additional values.
-*/
+ * Will launch app with specified name and call the given function after.
+ * 
+ * csd requirement: 
+ * 		data.appName 	x location to check.
+ * 
+ * csd options: 
+ * 		data.func 		if defined will attempt to call this func on the app
+ * 		data.params 	assumed to be defined if data.func is. Will send these params to func.
+ * 
+ */
 function csdLaunchAppWithValues(wsio,data) {
-	//get path of app
 	var fullpath = csdGetPathOfApp(data.appName);
-	//if no path, then invalid app
 	if (fullpath === null ){
-		console.log("csd ERROR could not find path of app:" + appName);
+		console.log(sageutils.header("csdLaunchAppWithValues") + "Cannot launch " + data.appName + ", doesn't exist.");
 		return;
 	}
-	//Prep the load data.
+	//Prep the data needed to launch an application.
 	var appLoadData = { };
 		appLoadData.application = fullpath;
 		appLoadData.user = wsio.id; //needed for the wsLoadApplication function
-	//get the length, which is what the new id should be
-	//var whatTheNewAppIdShouldBe = "app_" + SAGE2Items.applications.numItems;
-	// var whatTheNewAppIdShouldBe = 0;
-	// var tempAppRef = SAGE2Items.applications.list["app_"+whatTheNewAppIdShouldBe];
-	// while(tempAppRef !== null && tempAppRef !== undefined){
-	// 	whatTheNewAppIdShouldBe++;
-	// 	tempAppRef = SAGE2Items.applications.list["app_"+whatTheNewAppIdShouldBe];
-	// }
-	// whatTheNewAppIdShouldBe = "app_" + whatTheNewAppIdShouldBe;
 	var whatTheNewAppIdShouldBe = "app_" + getUniqueAppId.count;
-	console.log( "erase me, whatTheNewAppIdShouldBe " + whatTheNewAppIdShouldBe );
-	console.log( "erase me, bulls getUniqueAppId.count:" + getUniqueAppId.count );
 
 	//stagger the start location to prevent them from stacking on top of each other.
 	//this is just a temporary solution.
@@ -7424,48 +7448,65 @@ function csdLaunchAppWithValues(wsio,data) {
 		}
 	}
 
-
+	//call the previously made wsLoadApplication funciton and give it the required data.
 	wsLoadApplication( wsio, appLoadData );
-	//wait 1 second, because idk how long it takes to launch an app.
-	setTimeout(
-		function() {
-			var app = SAGE2Items.applications.list[ whatTheNewAppIdShouldBe ];
-			//if the app doesn't exist, exit. Because I dunno where the app is.
-			if( app === null || app === undefined) {
-				console.log("csd ERROR unable to find new app");
-			}
-			//else try send it data
-			else {
-				var dataForDisplay = {};
-					dataForDisplay.app 	= app.id;
-					dataForDisplay.func = data.func;
-					dataForDisplay.data = data.params;
+	//if a data.func is defined make a delayed call to it on the app.
+	if(data.func !== undefined) {
+		setTimeout(
+			function() {
+				var app = SAGE2Items.applications.list[ whatTheNewAppIdShouldBe ];
+				//if the app doesn't exist, exit. Because it should and dunno what happened to it (potentially crash).
+				if( app === null || app === undefined) {
+					console.log(sageutils.header("csdLaunchAppWithValues") + "App " + data.appName + " launched, but now it doesn't exist.");
+				}
+				//else try send it data
+				else {
+					var dataForDisplay = {};
+						dataForDisplay.app 	= app.id;
+						dataForDisplay.func = data.func;
+						dataForDisplay.data = data.params;
 
-				for(var i = 0; i < dataForDisplay.data.length; i++) {
-					if(dataForDisplay.data[i] === "clientId") {
-						dataForDisplay.data[i] = "" + wsio.id; //convert to string to reduce packet size
+					for(var i = 0; i < dataForDisplay.data.length; i++) {
+						if(dataForDisplay.data[i] === "clientId") {
+							dataForDisplay.data[i] = "" + wsio.id; //convert to string to reduce packet size
+						}
+					}
+
+					console.log("erase me, values for app, func, data: "
+						+ dataForDisplay.app + ","
+						+ dataForDisplay.func + ","
+						+ dataForDisplay.data 
+						);
+					//send to all display clients(since they all need to update)
+					for(var i = 0; i < clients.length; i++) {
+						if(clients[i].clientType === "display") {
+							clients[i].emit('broadcast', dataForDisplay);
+						}
 					}
 				}
-
-				console.log("erase me, values for app, func, data: "
-					+ dataForDisplay.app + ","
-					+ dataForDisplay.func + ","
-					+ dataForDisplay.data 
-					);
-				//send to all display clients(since they all need to update)
-				for(var i = 0; i < clients.length; i++) {
-					if(clients[i].clientType === "display") {
-						clients[i].emit('broadcast', dataForDisplay);
-					}
-				}
 			}
-		}
-	, 400); // milliseconds
-}
+		, 400); // milliseconds how low can this value be to ensure it works?
+	} //end if data.func !== undefined
+} //end csdLaunchAppWithValues
 
 
+/**
+ * Will send data to a client by means of function.
+ * 
+ * csd requirement: 
+ * 		data.clientDest 	Which clients to send data to.
+ * 							allDisplays 	sends to any client with clientType === "display"
+ * 							masterDisplay 	sends only to masterDisplay. 
+ * 							allClients  	sends to all connected clients. (Not implemented)
+ * 							<wsio.id>		sends only to the specified id
+ * 
+ * csd options: 
+ * 		data.func 		displays need func defined
+ * 		data.app 	 	displays need app defined
+ * 		data.data 	 	displays need data defined (acts a param to function)
+ * 
+ */
 function csdSendDataToClient(wsio, data) {
-
 	if( data.clientDest === "allDisplays") {
 		for(var i = 0; i < clients.length; i++) {
 			if(clients[i].clientType === "display") {
@@ -7482,12 +7523,12 @@ function csdSendDataToClient(wsio, data) {
 	else {
 		for(var i = 0; i < clients.length; i++) {
 			//!!!! the clients[i].id  and clientDest need auto convert to evaluate as equivalent.
+			//update: condition is because console.log auto converts in a specific way
 			if(clients[i].id == data.clientDest) {
 				clients[i].emit('csdSendDataToClient', data);
 			}
 		}
 	}
-
 }
 
 /*
@@ -7496,12 +7537,17 @@ Data structure for the csd value passing.
 
 var csdDataStructure = {};
 	csdDataStructure.allValues = {};
+		object to hold all tracked values
+		example csdDataStructure.allValues['nameOfvalue'] = <entryObject>
 	csdDataStructure.numberOfValues = 0;
+		will increment as new values are added
 	csdDataStructure.allNamesOfValues = [];
-
-	numberOfValues will increase each time one is set.
-	allNamesOfValues will get strings to denote the names used to track the values.
-
+		strings to denote the names used for values
+		order is based on when it was first set (not alphabetical)
+	csdDataStructure.xAppLaunchCoordinate = 0.05;
+		for the csdLaunchAppWithValues positioning
+	csdDataStructure.yAppLaunchCoordinate = 0.05;
+		for the csdLaunchAppWithValues positioning
 
 	The allValues is comprised of entry objects
 	{
@@ -7511,7 +7557,8 @@ var csdDataStructure = {};
 		subscribers: 	[]
 	}
 
-	Each entry in subscribers is also an object
+	Each entry in subscribers is also an object.
+	Current assumption is that all subscribers are apps on a display.
 	{
 		app: 	identifies the app which is subscribing to the value.
 			NOTE: need to find a way to unsubscribe esp if the app is removed, or apps are reset.
@@ -7519,9 +7566,6 @@ var csdDataStructure = {};
 		func: 	name of the function to call in order to pass the information.
 			NOTE: broadcast currently only supports 1 parameter.
 	}
-
-
-
 */
 var csdDataStructure = {};
 	csdDataStructure.allValues = {};
@@ -7530,8 +7574,9 @@ var csdDataStructure = {};
 	csdDataStructure.xAppLaunchCoordinate = 0.05;
 	csdDataStructure.yAppLaunchCoordinate = 0.05;
 
-
 /**
+Will set the named value.
+
 Needs
 	data.nameOfValue
 	data.value
@@ -7540,35 +7585,30 @@ Needs
 function csdSetValue(wsio, data) {
 	//don't do anything if this isn't filled out.
 	if(data.nameOfValue === undefined || data.nameOfValue === null) { return; }
-	
-	//check if there is not entry for that value
+	//check if there is no entry for that value
 	if ( csdDataStructure.allValues[ "" + data.nameOfValue ] === undefined ) {
-
 		//need to make an entry for this value
 		var newCsdValue = {};
 			newCsdValue.name 			= data.nameOfValue;
 			newCsdValue.value 			= data.value;
 			newCsdValue.description 	= data.description;
 			newCsdValue.subscribers 	= [];
-
+		//add it and update tracking vars.
 		csdDataStructure.allValues["" + data.nameOfValue] = newCsdValue;
 		csdDataStructure.numberOfValues++;
 		csdDataStructure.allNamesOfValues.push("" + data.nameOfValue);
-
-		console.log("erase me, made new value entry for" + data.nameOfValue);
 	}
-	else {
+	else { //value exists, just update it.
 		csdDataStructure.allValues[ "" + data.nameOfValue ].value = data.value;
-		console.log("erase me, set value entry for" + data.nameOfValue + " to " + data.value);
 	}
 
-	var dataForApp = {};
 	//send to each of the subscribers.
+	var dataForApp = {};
 	for(var i = 0; i < csdDataStructure.allValues[ "" + data.nameOfValue ].subscribers.length; i++ ) {
+		//fill the data object for the app, using display's broadcast packet
 		dataForApp.app = csdDataStructure.allValues[ "" + data.nameOfValue ].subscribers[i].app;
 		dataForApp.func = csdDataStructure.allValues[ "" + data.nameOfValue ].subscribers[i].func;
 		dataForApp.data = csdDataStructure.allValues[ "" + data.nameOfValue ].value;
-
 		//send to all display clients(since they all need to update)
 		for(var j = 0; j < clients.length; j++) {
 			if(clients[j].clientType === "display") {
@@ -7579,35 +7619,32 @@ function csdSetValue(wsio, data) {
 }
 
 /**
+Will send back the named value if it exists.
+
 Needs
 	data.nameOfValue
-
-	data.app
-	data.func
+	data.app 			
+	data.func 			
 */
 function csdGetValue(wsio, data) {
 	//don't do anything if this isn't filled out.
 	if(data.nameOfValue === undefined || data.nameOfValue === null) { return; }
-
+	//also don't do anything if the value doesn't exist
+	if(csdDataStructure.allValues[ "" + data.nameOfValue ] === undefined ) { return; }
+	//make the data for the app, using display's broadcast packet
 	var dataForApp = {};
 		dataForApp.app 	= data.app;
 		dataForApp.func = data.func;
-		dataForApp.data = null; //defaul is null if the value doesn't exist.
-
-	//check if there is not entry for that value
-	if ( csdDataStructure.allValues[ "" + data.nameOfValue ] !== undefined ) {
 		dataForApp.data = csdDataStructure.allValues[ "" + data.nameOfValue ].value;
-
-	}
-
 	wsio.emit('broadcast', dataForApp);
-	console.log("erase me, csdgetvalue " + data.nameOfValue + ":" + dataForApp.data);
 }
 
 /**
+Adds the app to the named value as a subscriber. However the named value must exist.
+This will NOT automatically add a subscriber if the values doesn't exist but is added later.
+
 Needs
 	data.nameOfValue
-
 	data.app
 	data.func
 */
@@ -7616,30 +7653,35 @@ function csdSubscribeToValue(wsio, data) {
 	if(data.nameOfValue === undefined || data.nameOfValue === null) { return; }
 	//also don't do anything if the value doesn't exist
 	if(csdDataStructure.allValues[ "" + data.nameOfValue ] === undefined ) { return; }
-	
 	//make the new subscriber entry
 	var newCsdSubscriber = {};
 		newCsdSubscriber.app 	= data.app;
 		newCsdSubscriber.func 	= data.func;
 	//add it to that value
 	csdDataStructure.allValues[ "" + data.nameOfValue ].subscribers.push( newCsdSubscriber );
-
-
-	console.log("erase me, csdSubscribeToValue " + data. nameOfValue+ ":" + data.app);
 }
 
 
+
+/**
+Adds the app to the named value as a subscriber. However the named value must exist.
+This will NOT automatically add a subscriber if the values doesn't exist but is added later.
+
+Needs
+	data.nameOfValue
+	data.app
+	data.func
+*/
 function csdGetAllTrackedValues(wsio, data) {
-
 	var dataForApp = {};
-		dataForApp.nameValueObjectArray = [];
-
+		dataForApp.data = [];
+		dataForApp.app 	= data.app;
+		dataForApp.func = data.func;
 	for(var i = 0; i < csdDataStructure.allNamesOfValues.length; i++) {
-		dataForApp.nameValueObjectArray.push(
+		dataForApp.data.push(
 			{ name: csdDataStructure.allNamesOfValues[i],
 			 value: csdDataStructure.allValues[ csdDataStructure.allNamesOfValues[i] ]
 			} );
 	}
-
 	wsio.emit('broadcast', dataForApp);
 }

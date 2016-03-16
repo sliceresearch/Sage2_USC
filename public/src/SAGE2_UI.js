@@ -474,7 +474,7 @@ function setupListeners() {
 	});
 
 	wsio.on('csdSendDataToClient', function(data) {
-
+		//depending on the specified func does different things.
 		if( data.func === 'uiDrawSetCurrentStateAndShow') {
 			uiDrawSetCurrentStateAndShow(data);
 		}
@@ -484,7 +484,6 @@ function setupListeners() {
 		else {
 			console.log("Error, csd data packet for client contained invalid function:" + data.func);
 		}
-
 	});
 }
 
@@ -1780,7 +1779,8 @@ function reloadIfServerRunning(callback) {
 }
 
 /**
- * Will setup the rmbContextMenu properties.
+ * Called by default after setting up the rest of the page.
+ * Will set the values of the right mouse button(rmb) context menu div.
  */
 function setupRmbContextMenuDiv() {
 	var workingDiv = document.getElementById('rmbContextMenu');
@@ -1788,42 +1788,34 @@ function setupRmbContextMenuDiv() {
 		workingDiv.style.visibility = "hidden";
 		workingDiv.style.border = "1px solid black";
 		workingDiv.style.background = "white";
-		workingDiv.style.zIndex = 9999;
-
+		workingDiv.style.zIndex = 9999; //location matters. This is 1 lay below dialog but above the UI canvas.
 	//override rmb contextmenu calls.
-	//this will need to be disabled when switching to pointer mode
-    if (document.addEventListener) {
-        document.addEventListener('contextmenu', function(e) {
-
-			if (event.target.id === "sage2UICanvas") {
-				var rect   = event.target.getBoundingClientRect();
-				var pointerX = event.clientX - rect.left;
-				var pointerY = event.clientY - rect.top;
-				pointerX = pointerX / displayUI.scale;
-				pointerY = pointerY / displayUI.scale;
-				var data = {};
-				data.x = pointerX;
-				data.y = pointerY;
-				//console.dir(data);
-				wsio.emit('utdRequestRmbContextMenu', data );
-
-				showRmbContextMenuDiv(e.clientX, e.clientY);
-	            //start with blank set of entries
-	            setRmbContextMenuEntries( [] );
-			}
-
-            //prevent the standard context menu
-            e.preventDefault();
-        }, false);
-    }
-    //disable the oncontextmenu checks.
-    else {
-        document.attachEvent('oncontextmenu', function() {
-            window.event.returnValue = false;
-        });
-    }
+    document.addEventListener('contextmenu', function(e) {
+    	//if a right click is made on canvas
+		if (event.target.id === "sage2UICanvas") {
+			//get the location with respect to the display positioning.
+			var rect   = event.target.getBoundingClientRect();
+			var pointerX = event.clientX - rect.left;
+			var pointerY = event.clientY - rect.top;
+			pointerX = pointerX / displayUI.scale;
+			pointerY = pointerY / displayUI.scale;
+			var data = {};
+			data.x = pointerX;
+			data.y = pointerY;
+			//ask for the context menu for the topmost app at that spot.
+			wsio.emit('utdRequestRmbContextMenu', data );
+			showRmbContextMenuDiv(e.clientX, e.clientY);
+            //start with blank set of entries, it will be updated later
+            setRmbContextMenuEntries( [] );
+		}
+        //prevent the standard context menu
+        e.preventDefault();
+    }, false);
 }
 
+/**
+ * Makes the context menu visible and sets to given location.
+ */
 function showRmbContextMenuDiv(x,y) {
 	var workingDiv = document.getElementById('rmbContextMenu');
 		workingDiv.style.visibility = "visible";
@@ -1831,37 +1823,46 @@ function showRmbContextMenuDiv(x,y) {
     	workingDiv.style.top 		= y + "px";
 }
 
+/**
+ * Hides the menu, but the entries are still there.
+ */
 function hideRmbContextMenuDiv() {
 	var workingDiv = document.getElementById('rmbContextMenu');
 		workingDiv.style.visibility = "hidden";
 }
+
 /**
- *
+ * Will populate the context menu.
+ * 		Called on initial right click with empty array for entriesToAdd
+ *  	Called again when dtuRmbContextMenuContents packet is received.
+ *  	The call is given data.entries, data.app
+ * 
+ * entriesToAdd is an array of objects
+ * 		obj.func 			starts with this
+ * 		obj.buttonEffect 	will be added if .func exists
+ * 		
+ * 
  */
 function setRmbContextMenuEntries(entriesToAdd, app) {
 	var rmbDiv = document.getElementById('rmbContextMenu');
-
+	//full removal of current contents.
 	while (rmbDiv.firstChild) {
 		rmbDiv.removeChild(rmbDiv.firstChild);
 	}
-
+	//for each entry
 	for (var i = 0; i < entriesToAdd.length; i++) {
+		//if func is defined add buttonEffect
 		if(entriesToAdd[i].func !== undefined && entriesToAdd[i].func !== null) {
-
-			entriesToAdd[i].buttonEffect = function(firstParam) {
-				//double check the input field status for replacement on param
+			entriesToAdd[i].buttonEffect = function() {
+				//if an input field, need to modify the params to pass back before sending.
 				if(this.inputField === true) {
 					var inputField = document.getElementById(this.inputFieldId);
+					//dont do anything if there is nothing in the inputfield
 					if( inputField.value.length <= 0) { return; }
-					if( this.previousReplacedIndex !== false) {
-						this.params[this.previousReplacedIndex] = inputField.value;
-					}
-					else {
-						for(var i = 0; i < this.params.length; i++) {
-							if(this.params[i] == "clientInput") {
-								this.params[i] = inputField.value;
-								this.previousReplacedIndex = i;
-							}
+					//go through the input fields and replace the one with value "clientInput"
+					for(var i = 0; i < this.params.length; i++) {
+						if(this.params[i] == "clientInput") {
+							this.params[i] = inputField.value;
 						}
 					}
 				}
@@ -1870,59 +1871,53 @@ function setRmbContextMenuEntries(entriesToAdd, app) {
 					data.app = this.app;
 					data.func = this.func;
 					data.params = this.params;
+				//before sending back, if there is a field called "clientName" replace with pointer name.
+				//Done here instead of server because this might be more up to date than server.
 				for(var di = 0; di < data.params.length; di++ ) {
 					if(data.params[di] == "clientName" ) {
 						data.params[di] = document.getElementById('sage2PointerLabel').value;
 					}
 				}
 				wsio.emit('utdCallFunctionOnApp', data);
-				console.dir( this );
-				console.dir( data );
-				hideRmbContextMenuDiv();
+				hideRmbContextMenuDiv(); //hide after 1 use.
 			}
-
 		} //end if the button should send something
 	} //end adding a send function to each menu entry
-
+	//always add the Close Menu entry.
 	var closeEntry = {};
 		closeEntry.description = "Close Menu";
 		closeEntry.buttonEffect = function () {
 			hideRmbContextMenuDiv();
 		}
 	entriesToAdd.push( closeEntry );
-
+	//for each entry to add, create the div, app the properties, and effects
 	var workingDiv;
 	for (var i = 0; i < entriesToAdd.length; i++) {
 		workingDiv = document.createElement('div');
-		workingDiv.id = 'rmbContextMenuEntry' + i;
-		workingDiv.style.background = "#FFF8E1";
+		workingDiv.id = 'rmbContextMenuEntry' + i; //unique entry id
+		workingDiv.style.background = "#FFF8E1"; //start as off-white color
 		workingDiv.innerHTML = "&nbsp&nbsp&nbsp" + entriesToAdd[i].description + "&nbsp&nbsp&nbsp";
-
 		//add input field if app says to.
 		workingDiv.inputField = false;
 		if( entriesToAdd[i].inputField === true ) {
 			workingDiv.inputField = true;
 			var inputField = document.createElement('input');
-			inputField.id = workingDiv.id + "Input";
+			inputField.id = workingDiv.id + "Input"; //unique input field
 			inputField.value = "";
-			if( entriesToAdd[i].inputFieldSize ) {
-				inputField.size = entriesToAdd[i].inputFieldSize; //how many char size to add
-			}else { inputField.size = 5; }
+			if ( entriesToAdd[i].inputFieldSize ) { //if specified state input field size
+				inputField.size = entriesToAdd[i].inputFieldSize; 
+			} else { inputField.size = 5; }
 			//add the button effect to the input field to allow enter to send
 			workingDiv["buttonEffect"+inputField.id] =  entriesToAdd[i].buttonEffect;
 			workingDiv.appendChild( inputField );
 			workingDiv.innerHTML += "&nbsp&nbsp&nbsp";
 			workingDiv.inputFieldId = inputField.id;
-			workingDiv.previousReplacedIndex = false;
-						console.log("erase me");
-			console.dir(inputField);
 			//create OK button to send
 			var rmbcmeIob = document.createElement('span');
 				rmbcmeIob.innerHTML = "&nbspOK&nbsp";
 				rmbcmeIob.style.border = "1px solid black";
 				rmbcmeIob.inputField = true;
 				rmbcmeIob.inputFieldId = inputField.id;
-				rmbcmeIob.previousReplacedIndex = false;
 				//click effect
 				rmbcmeIob.func = entriesToAdd[i].func;
 				rmbcmeIob.params = entriesToAdd[i].params;
@@ -1956,7 +1951,7 @@ function setRmbContextMenuEntries(entriesToAdd, app) {
 		workingDiv.func = entriesToAdd[i].func;
 		workingDiv.params = entriesToAdd[i].params;
 		workingDiv.app = app;
-
+		//if it is the last entry to add, put a hr tag after it to separate the close menu button
 		if (i === entriesToAdd.length - 1) {
 			rmbDiv.appendChild( document.createElement('hr') );
 		}
@@ -1964,34 +1959,12 @@ function setRmbContextMenuEntries(entriesToAdd, app) {
 	} //end for each entry
 } //end setRmbContextMenuEntries
 
-// //
-// function setupUiNoteMaker() {
-// 	var workingDiv = document.getElementById('uiNoteMaker');
-// 		workingDiv.style.position = "absolute";
-// 		workingDiv.style.border = "1px solid black"
-// 		workingDiv.style.bottom = "10px";
-// 		workingDiv.style.left = "10px";
-// 	var inputField = document.createElement('input');
-// 		inputField.id = "uiNoteMakerInputField";
-// 		//inputField.rows = 5;
-// 		//inputField.cols = 10;
-// 		//inputField.resize = "none";
-// 	var sendButton = document.createElement('button');
-// 		sendButton.id = "uiNoteMakerSendButton";
-// 		sendButton.style.background = "#FFF8E1";
-// 		sendButton.addEventListener( 'click', function() {
-// 			sendCsdMakeNote();
-// 		} );
-// 		sendButton.innerHTML = "Make Note";
-
-// 	workingDiv.appendChild( inputField );
-// 	workingDiv.innerHTML += "<br>";
-// 	workingDiv.appendChild( sendButton );
-// }
-
+/**
+Called automatically as part of page setup.
+Fills out some of the field properties.
+*/
 function setupUiNoteMaker() {
 	var workingDiv = document.getElementById('uiNoteMaker');
-		//workingDiv.style.position 	= "absolute";
 		workingDiv.style.border 	= "1px solid black"
 	var inputField = document.getElementById('uiNoteMakerInputField');
 		inputField.id = "uiNoteMakerInputField";
@@ -2000,53 +1973,44 @@ function setupUiNoteMaker() {
 		inputField.style.resize = 'none';
 		inputField.style.fontSize = '20px';
 	var sendButton = document.getElementById('uiNoteMakerSendButton');
-		//sendButton.style.background = "#FFF8E1";
+	//click effect to make a note on the display (app launch)
 	sendButton.addEventListener( 'click', function() {
 		sendCsdMakeNote();
 	} );
-
-
-	//adjust center position
-	//workingDiv.style.left 		= window.innerWidth/2 - (inputField.cols * ( parseInt(inputField.style.fontSize) /2 ) ) + "px";
 }
 
-
+/**
+This function is activated in 2 ways.
+	User click the send button.
+	User hits enter when making a note. This check is done in the noBackspace funciton.
+When activated will make the packet to launch app
+	the params is a size 1 array containing the pointer name.
+*/
 function sendCsdMakeNote() {
-
 	var workingDiv = document.getElementById('uiNoteMakerInputField');
-
 	var data = {};
 		data.type 		= "launchAppWithValues";
 		data.appName 	= "quickNote";
 		data.func 		= "setMessage";
-		/*
-		To get the pointer name it is actually located in the 
-			document.getElementById('sage2PointerLabel').value
-		Or if the ip address and port number is desired (unique identifier beyond wsio)
-			interactor.uniqueID
-		Unsure if server knows/tracks pointer name.
-		*/
 		data.params 	= [ workingDiv.value, document.getElementById('sage2PointerLabel').value];
-
-	// console.log("erase me, sending csd make note with value:" + workingDiv.value);
-	// console.dir(data);
-	// console.log("Btw did it contain a \\n?" + workingDiv.value.indexOf('\n'));
-
-	workingDiv.value = "";
-
+	workingDiv.value = ""; //clear out the input field.
 	wsio.emit( 'csdMessage', data );
-
 }
 
+/**
+Called automatically as part of the page setup.
+Mostly fills out functionality and additional properties needed to operate.
+*/
 function setupUiDrawCanvas() {
 	var uidzCanvas = document.getElementById('uiDrawZoneCanvas');
+	//tracking variables when performing draw commands.
 		uidzCanvas.pmx 		= 0;
 		uidzCanvas.pmy 		= 0;
 		uidzCanvas.doDraw 	= false;
 		uidzCanvas.imageToDraw = new Image();
-	uidzCanvas.getContext('2d').fillStyle = "#FFFFFF";
+	uidzCanvas.getContext('2d').fillStyle = "#FFFFFF"; //whitewash the canvas.
 	uidzCanvas.getContext('2d').fillRect( 0, 0, uidzCanvas.width, uidzCanvas.height );
-	uidzCanvas.getContext('2d').fillStyle = "#000000";
+	uidzCanvas.getContext('2d').fillStyle = "#000000"; 
 	uidzCanvas.addEventListener('mousedown',
 		function(event){
 			this.doDraw 	= true;
@@ -2054,11 +2018,11 @@ function setupUiDrawCanvas() {
 			this.pmy 		= event.offsetY;
 		}
 	);
+	//event handlers to create the lines
 	uidzCanvas.ongoingTouches = new Array();
 	uidzCanvas.addEventListener('touchstart', uiDrawTouchStart);
 	uidzCanvas.addEventListener('touchmove', uiDrawTouchMove);
 	uidzCanvas.addEventListener('touchend', uiDrawTouchEnd);
-
 	uidzCanvas.addEventListener('mouseup', function(event){ this.doDraw = false; } );
 	uidzCanvas.addEventListener('mousemove',
 		function(event){
@@ -2073,13 +2037,14 @@ function setupUiDrawCanvas() {
 			workingDiv.style.top = (event.pageY - parseInt(workingDiv.style.height)/2 ) + "px";
 		}
 	);
-
+	//closes the draw area (but really hides it)
 	var closeButton = document.getElementById("uiDrawZoneCloseButton");
 	closeButton.addEventListener('click',
 		function() {
 			hideDialog('uiDrawZone');
 		}
 	);
+	//initiate a launch app for quick additions of doodles.
 	var newButton = document.getElementById("uiDrawZoneNewButton");
 	newButton.addEventListener('click',
 		function() {
@@ -2092,7 +2057,6 @@ function setupUiDrawCanvas() {
 			wsio.emit( 'csdMessage', data );
 		}
 	);
-
 	//get the line adjustment working for the thickness buttons.
 	var thicknessSelectBox = document.getElementById('uidztp1');
 	thicknessSelectBox.addEventListener( 'mousedown',
@@ -2154,17 +2118,17 @@ function setupUiDrawCanvas() {
 			workingDiv.lineWidth = 64;
 			uiDrawSelectThickness('uidztp7');
 	} );
-
-
 }
 
+/**
+Currently just whitewashes the draw canvas.
+Trying to figure out how this could be transparent.
+	But without knowing what is behind, seems pointless.
+*/
 function uiDrawCanvasBackgroundFlush(color) {
 	var workingDiv 	= document.getElementById('uiDrawZoneCanvas');
 	var ctx 		= workingDiv.getContext('2d');
-	
-	if(color === 'transparent') {
-		//what is value for transparent?
-	}
+	if(color === 'transparent') { }
 	else {
 		ctx.fillStyle = "#FFFFFF";
 		ctx.fillRect( 0, 0, workingDiv.width, workingDiv.height );
@@ -2172,10 +2136,14 @@ function uiDrawCanvasBackgroundFlush(color) {
 	}
 }
 
+/**
+Activated by clickong on a uidzBarBox div (line thickness selection).
+Since the values double, need to know which option was selected, adjust the border (visual indicator)
+	then finally double the thickness to get the correct value.
+*/
 function uiDrawSelectThickness(selectedDivId) {
 	var workingDiv;
 	var thickness = 1;
-
 	for( var i = 1; i <= 7; i++ ) {
 		if('uidztp' + i == selectedDivId) {
 			workingDiv = document.getElementById(selectedDivId);
@@ -2193,6 +2161,10 @@ function uiDrawSelectThickness(selectedDivId) {
 	}
 }
 
+/**
+Enables drawing with touch devices.
+Start will record the initial points, it isn't until move where a canvas change occurs.
+*/
 function uiDrawTouchStart(event) {
 	var workingDiv = document.getElementById('uiDrawZoneCanvas');
 	var touches = event.changedTouches;
@@ -2201,6 +2173,10 @@ function uiDrawTouchStart(event) {
 	}
 }
 
+/**
+Support for touch devices.
+This is when the new line is added.
+*/
 function uiDrawTouchMove(event) {
 	var workingDiv = document.getElementById('uiDrawZoneCanvas');
 	var touches = event.changedTouches;
@@ -2216,20 +2192,20 @@ function uiDrawTouchMove(event) {
 				touches[i].pageY - cbb.top,
 				workingDiv.ongoingTouches[touchId].x - cbb.left,
 				workingDiv.ongoingTouches[touchId].y - cbb.top
-				// touches[i].pageX - workingDiv.offsetX, touches[i].pageY - workingDiv.offsetY,
-				// workingDiv.ongoingTouches[touchId].x - workingDiv.offsetX, workingDiv.ongoingTouches[touchId].y - workingDiv.offsetY,
-				//'touch'
 			);
 			workingDiv.ongoingTouches[touchId].x = touches[i].pageX;
 			workingDiv.ongoingTouches[touchId].y = touches[i].pageY;
 		}
 	}
-
 	workingDiv = document.getElementById('uiDrawZoneEraseReference');
 	workingDiv.style.left = (touches[0].pageX - parseInt(workingDiv.style.width)/2 ) + "px";
 	workingDiv.style.top = (touches[0].pageY - parseInt(workingDiv.style.height)/2 ) + "px";
 }
 
+/**
+Support for touch devices.
+When touch ends, need to clear out the tracking values to prevent weird auto connections.
+*/
 function uiDrawTouchEnd(event) {
 	var workingDiv = document.getElementById('uiDrawZoneCanvas');
 	var touches = event.changedTouches;
@@ -2245,6 +2221,9 @@ function uiDrawTouchEnd(event) {
 	workingDiv.style.top = "-100px";
 }
 
+/**
+Makes the data used to track touches.
+*/
 function uiDrawMakeTouchData(touch) {
 	var nt = {};
 	nt.id 	= touch.identifier;
@@ -2253,6 +2232,9 @@ function uiDrawMakeTouchData(touch) {
 	return nt;
 }
 
+/**
+Given a touch identifier(id) will return the index of the touch tracking object.
+*/
 function uiDrawGetTouchId(id) {
 	var workingDiv  = document.getElementById('uiDrawZoneCanvas');
 	for(var i = 0; i < workingDiv.ongoingTouches.length; i++) {
@@ -2263,6 +2245,13 @@ function uiDrawGetTouchId(id) {
 	return -1;
 }
 
+/**
+When a user tries to draw on the doodle canavs, the events are converted to locations of where to place
+	the line data. Previous location to current location.
+
+The client doesn't actually cause their canvas to update. The app sends a confirmation back which
+	causes the canvas to update.
+*/
 function uiDrawSendLineCommand(xDest, yDest, xPrev, yPrev) {
 	var workingDiv  = document.getElementById('uiDrawZoneCanvas');
 	var ctx 		= workingDiv.getContext('2d');
@@ -2284,7 +2273,12 @@ function uiDrawSendLineCommand(xDest, yDest, xPrev, yPrev) {
 }
 
 /**
-Will need to be cleaned up later
+This function actually causes the line to appear on the canvas.
+Data packet sent by the doodle master app itself.
+
+This funciton activated by receiving that corresponding packet.
+
+Will need to be cleaned up later.
 data.params will match the doodle.js drawLined lineData parameter.
 	Currently lineData
 	0: 	xDest
@@ -2303,7 +2297,6 @@ function uiDrawMakeLine(data) {
 	var workingDiv  = document.getElementById('uiDrawZoneCanvas');
 	var ctx 		= workingDiv.getContext('2d');
 	var lineWidth 	= data.params[4];
-
 	ctx.fillStyle	= data.params[5];
 	ctx.strokeStyle	= data.params[6];
 	//if the line width is greater than 1. At 1 the fill + circle border will expand beyond the line causing bumps in the line.
@@ -2321,10 +2314,12 @@ function uiDrawMakeLine(data) {
 }
 
 
-
 /**
 This will be called from a wsio packet "csdSendDataToClient" with type "doodleAppCurrentState".
 Must clear out canvas, set state, show dialog.
+
+Generally this happens when a user chooses to edit an existing doodle. Their canvas needs to be set
+	to the current state of the doodle before edits should be made.
 */
 function uiDrawSetCurrentStateAndShow(data) {
 	//clear out canvas
@@ -2341,6 +2336,12 @@ function uiDrawSetCurrentStateAndShow(data) {
 	showDialog('uiDrawZone');
 }
 
+/**
+Called when the user creates a new doodle, or closes the doodle dialog.
+This is necessary because the doodle canvas space is a shared draw space,
+	if they do not remove themselves, then the app will continue to send updates
+	even if they are not currently editing the app.
+*/
 function uiDrawZoneRemoveSelfAsClient() {
 	var workingDiv 	= document.getElementById('uiDrawZoneCanvas');
 	var dataForApp = {};
