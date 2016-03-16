@@ -10,6 +10,46 @@
 
 "use strict";
 
+var	NotepadBlinker = function(id, ctx, date, color) {
+	this.id = id;
+	this.visible = true;
+	this.color = color;
+	this.blinkerX = null;
+	this.blinkerY = null;
+	this.textIdx = null;
+	this.blinkerL = null;
+	this.blinkerC = null;
+	this.draw = function(text, fH) { // This function assumes that offSet function is always called prior to this function
+		this.blinkerY += this.blinkerL * fH;
+		if (this.blinkerC > 0 && this.blinkerL in text) {
+			this.blinkerX += ctx.measureText(text[this.blinkerL].substring(0, this.blinkerC)).width;
+		}
+
+		var col = ctx.strokeStyle;
+		var offset = fH * 0.25;
+		var offY = this.blinkerY + offset;
+		ctx.strokeStyle = "rgba(" + this.color[0] + "," + this.color[1] + "," + this.color[2] + ",1.0)";
+		ctx.beginPath();
+		ctx.moveTo(this.blinkerX, offY);
+		ctx.lineTo(this.blinkerX, offY - fH);
+		ctx.moveTo(this.blinkerX, offY);
+		ctx.closePath();
+		ctx.stroke();
+		ctx.strokeStyle = col;
+	};
+
+	this.moveLC = function(l, c) {
+		this.blinkerL = l;
+		this.blinkerC = c;
+	};
+
+	this.offSet = function(x, y) {
+		this.blinkerX = x;
+		this.blinkerY = y;
+	};
+};
+
+
 var notepad = SAGE2_App.extend({
 	load: function(date) {
 		this.refresh(date);
@@ -40,45 +80,6 @@ var notepad = SAGE2_App.extend({
 		var rsize = div.offsetHeight;
 		document.body.removeChild(div);
 		return rsize;
-	},
-
-	blinker: function(id, ctx, date, color) {
-		this.id = id;
-		this.visible = true;
-		this.color = color;
-		this.blinkerX = null;
-		this.blinkerY = null;
-		this.textIdx = null;
-		this.blinkerL = null;
-		this.blinkerC = null;
-		this.draw = function(text, fH) { // This function assumes that offSet function is always called prior to this function
-			this.blinkerY += this.blinkerL * fH;
-			if (this.blinkerC > 0 && this.blinkerL in text) {
-				this.blinkerX += ctx.measureText(text[this.blinkerL].substring(0, this.blinkerC)).width;
-			}
-
-			var col = ctx.strokeStyle;
-			var offset = fH * 0.25;
-			var offY = this.blinkerY + offset;
-			ctx.strokeStyle = "rgba(" + this.color[0] + "," + this.color[1] + "," + this.color[2] + ",1.0)";
-			ctx.beginPath();
-			ctx.moveTo(this.blinkerX, offY);
-			ctx.lineTo(this.blinkerX, offY - fH);
-			ctx.moveTo(this.blinkerX, offY);
-			ctx.closePath();
-			ctx.stroke();
-			ctx.strokeStyle = col;
-		};
-
-		this.moveLC = function(l, c) {
-			this.blinkerL = l;
-			this.blinkerC = c;
-		};
-
-		this.offSet = function(x, y) {
-			this.blinkerX = x;
-			this.blinkerY = y;
-		};
 	},
 
 	init: function(data) {
@@ -219,7 +220,7 @@ var notepad = SAGE2_App.extend({
 		if (type === "pointerPress") {
 			if (data.button === "left") {
 				if ((userId.id in this.blinkerArr) === false) {
-					var bkr = new this.blinker(userId.id, this.ctx, date, user_color);
+					var bkr = new NotepadBlinker(userId.id, this.ctx, date, user_color);
 					this.blinkerArr[userId.id] = bkr;
 
 				} else {

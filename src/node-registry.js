@@ -32,7 +32,9 @@ function RegistryManager() {
 	this.mimeFile       = path.join("config", "custom.types");
 
 	// Set the default mime type for SAGE to be a custom app
-	mime.default_type   = "application/custom";
+	// mime.default_type   = "application/custom";
+	// Trying to avoid weird content
+	mime.default_type   = "";
 }
 
 RegistryManager.prototype.initialize = function(assetsFolder) {

@@ -203,6 +203,7 @@
 		"localhost",
 		"127.0.0.1",
 		"131.193.183.210",
+		"10.0.8.200",
 		"lyra.evl.optiputer.net"
 	],
 	remote_sites: [
@@ -220,7 +221,7 @@
 		},
 		{
 			name: "BackWall",
-			host: "orion.evlrn.uic.edu",
+			host: "orion.evl.uic.edu",
 			port: 443,
 			secure: true
 		},

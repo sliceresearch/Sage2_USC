@@ -23,9 +23,6 @@
 
   <defs>
 
-    <script type="text/javascript">
-    </script>
-
     <!-- hour stroke (swiss) -->
     <symbol id="hourStrokeSwiss">
       <rect x="96.25" y="0" width="7.5" height="25"/>

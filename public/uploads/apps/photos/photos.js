@@ -15,7 +15,7 @@
 // Written by Andy Johnson - 2014
 //
 
-/* global d3 */
+/* global d3, photoAlbums */
 
 
 var photos = SAGE2_App.extend({

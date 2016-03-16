@@ -8,6 +8,8 @@
 //
 // Copyright (c) 2014-15
 
+/* global Kinetic, simplify */
+
 "use strict";
 
 /**
@@ -175,7 +177,7 @@ function setupListeners(wsio) {
 		});
 		uigrp = new Kinetic.Group();
 		var xoffset = 15;
-		var labels = [ "Brush", "Eraser", "Previous", "Next", "New", " ", " ", " ", " ", " ", " ", " ", " ", "1/1" ];
+		var labels  = ["Brush", "Eraser", "Previous", "Next", "New", " ", " ", " ", " ", " ", " ", " ", " ", "1/1"];
 
 		function onMouseUp(evt) {
 			var id = evt.target.id();

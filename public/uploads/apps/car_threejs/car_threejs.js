@@ -94,7 +94,7 @@ var car_threejs = SAGE2_WebGLApp.extend({
 		// Texture cube
 		var cubeLoader = new THREE.CubeTextureLoader();
 		var r    = this.resrcPath + "textures/";
-		var urls = [ r + "px.jpg", r + "nx.jpg", r + "py.jpg", r + "ny.jpg", r + "pz.jpg", r + "nz.jpg" ];
+		var urls = [r + "px.jpg", r + "nx.jpg", r + "py.jpg", r + "ny.jpg", r + "pz.jpg", r + "nz.jpg"];
 		var textureCube = cubeLoader.load(urls);
 
 		var shader = THREE.ShaderLib.cube;

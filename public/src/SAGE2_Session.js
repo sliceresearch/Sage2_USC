@@ -8,6 +8,8 @@
 //
 // Copyright (c) 2015
 
+/* global md5 */
+
 "use strict";
 
 /**

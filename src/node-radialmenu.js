@@ -15,7 +15,6 @@
  * @submodule radialmenu
  */
 
-// require variables to be declared
 "use strict";
 
 // unused: var radialMenuCenter = { x: 210, y: 210 }; // scale applied in ctor
@@ -470,7 +469,7 @@ RadialMenu.prototype.isEventOnMenu = function(data) {
 				(data.y > this.top - this.radialMenuSize.y / 2) &&
 				(data.y < this.top - this.radialMenuSize.y / 2 + this.thumbnailWindowSize.y)) {
 			// Else if over thumbnail window bounding box
-			if (isThumbnailWindowOpen()) {
+			if (this.isThumbnailWindowOpen()) {
 				return true;
 			}
 		}
@@ -507,7 +506,7 @@ RadialMenu.prototype.onEvent = function(data) {
 			}
 			return true;
 		}
-		if (isThumbnailWindowOpen() &&
+		if (this.isThumbnailWindowOpen() &&
 			(data.x > this.left + this.radialMenuSize.x / 2) &&
 			(data.x < this.left + this.radialMenuSize.x / 2 + this.thumbnailWindowSize.x) &&
 			(data.y > this.top - this.radialMenuSize.y / 2) &&

@@ -8,6 +8,8 @@
 //
 // Copyright (c) 2014
 
+/* global controlObjects, controlItems */
+
 "use strict";
 
 /**
