@@ -26,6 +26,9 @@ var url  = require('url');
 var mime = require('mime');
 var zlib = require('zlib');  // to enable HTTP compression
 
+// External package to clean up URL requests
+var normalizeURL = require('normalizeurl');
+
 // SAGE2 own modules
 var sageutils = require('../src/node-utils');    // provides utility functions
 
@@ -255,7 +258,8 @@ HttpServer.prototype.onreq = function(req, res) {
 		// Remove the bad HTML, like script
 		var getName = sageutils.sanitizedURL(reqURL.pathname);
 		// Remove the bad path, like ..
-		getName = path.normalize(getName);
+		getName = normalizeURL(getName);
+		// Check the HTTP GET handlers
 		if (getName in this.getFuncs) {
 			this.getFuncs[getName](req, res);
 			return;
@@ -300,7 +304,6 @@ HttpServer.prototype.onreq = function(req, res) {
 					var suburl = path.join('.', pubdir[1]);
 					// pathname = url.resolve(folder.path, suburl);
 					pathname = path.join(folder.path, suburl);
-					pathname = decodeURIComponent(pathname);
 					break;
 				}
 			}
@@ -309,6 +312,9 @@ HttpServer.prototype.onreq = function(req, res) {
 				pathname = path.join(this.publicDirectory, getName);
 			}
 		}
+
+		// Decode the misc characters in the URL
+		pathname = decodeURIComponent(pathname);
 
 		// Converting to an actual path
 		pathname = path.resolve(pathname);
@@ -390,6 +396,9 @@ HttpServer.prototype.onreq = function(req, res) {
 			// Cache-Control: max-age=3600, must-revalidate
 			//
 
+			// Set the mime type
+			header["Content-Type"] = mime.lookup(pathname);
+
 			// Get the file size from the 'stat' system call
 			var total = stats.size;
 			if (typeof req.headers.range !== 'undefined') {
@@ -407,9 +416,6 @@ HttpServer.prototype.onreq = function(req, res) {
 				header["Content-Range"]  = "bytes " + start + "-" + end + "/" + total;
 				header["Accept-Ranges"]  = "bytes";
 				header["Content-Length"] = chunksize;
-				// Set the mime type
-				header["Content-Type"] = mime.lookup(pathname);
-
 
 				// Write the HTTP header, 206 Partial Content
 				res.writeHead(206, header);
@@ -428,8 +434,6 @@ HttpServer.prototype.onreq = function(req, res) {
 					res.writeHead(200, header);
 					stream.pipe(res);
 				} else {
-					// Set the mime type
-					header["Content-Type"] = mime.lookup(pathname);
 					// Check for allowed compression
 					var acceptEncoding = req.headers['accept-encoding'] || '';
 					if (acceptEncoding.match(/gzip/)) {

@@ -6,6 +6,7 @@
 //
 // See full text, terms and conditions in the LICENSE.txt included file
 //
+// Copyright (c) 2015-2016
 
 //
 // SAGE2 application: Timer
@@ -17,7 +18,7 @@
 /* global d3 */
 "use strict";
 
-var timerApp = SAGE2_App.extend({
+var countdown = SAGE2_App.extend({
 	init: function(data) {
 
 		// Create div into the DOM

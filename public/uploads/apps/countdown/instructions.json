@@ -1,6 +1,6 @@
 {
-	"main_script": "timerApp.js",
-	"icon": "timerApp.png",
+	"main_script": "countdown.js",
+	"icon": "countdown.png",
 	"width": 800,
 	"height": 600,
 	"resize": "free",
