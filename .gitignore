@@ -49,3 +49,5 @@ public/images/background/*_[0-9]*.*
 # Users Environment Variables
 .lock-wscript
 
+# DSStores
+*.DS_Store
