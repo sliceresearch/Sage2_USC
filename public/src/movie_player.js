@@ -230,7 +230,7 @@ var movie_player = SAGE2_BlockStreamingApp.extend({
 		entry = {};
 		entry.description = "PlayPause";
 		entry.func = "togglePlayPause";
-		entry.params = [ "serverDate" ];
+		entry.params = ["serverDate"];
 		entries.push(entry);
 
 		entry = {};
@@ -242,12 +242,12 @@ var movie_player = SAGE2_BlockStreamingApp.extend({
 		entry = {};
 		entry.description = "Mute";
 		entry.func = "toggleMute";
-		entry.params = [ "serverDate" ];
+		entry.params = ["serverDate"];
 		entries.push(entry);
 
 		return entries;
 	},
-	
+
 	/**
 	* Handles event processing, arrow keys to navigate, and r to redraw
 	*
@@ -281,15 +281,10 @@ var movie_player = SAGE2_BlockStreamingApp.extend({
 				// 1 start of video
 				this.stopVideo();
 			}
-			// else if (data.character === 'x') {
-			// 	// Press 'x' to close itself
-			// 	this.close();
-			// }
-		}
-		else if (eventType === "specialKey") {
+		} else if (eventType === "specialKey") {
 			if (data.code === 80 && data.state === "up") { // P key
 				this.togglePlayPause(date);
-			} 
+			}
 		} else if (eventType === "widgetEvent") {
 			switch (data.identifier) {
 				case "Loop":

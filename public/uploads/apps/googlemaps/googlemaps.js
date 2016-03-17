@@ -367,7 +367,7 @@ var googlemaps = SAGE2_App.extend({
 		// callback
 		entry.func   = "setLocation";
 		// parameters of the callback function
-		entry.params = [ "clientInput", "clientId" ];
+		entry.params = ["clientInput", "clientId"];
 		entry.inputField     = true;
 		entry.inputFieldSize = 20;
 		entries.push(entry);
@@ -376,7 +376,7 @@ var googlemaps = SAGE2_App.extend({
 	},
 
 	/**
-	 * Callback from th web ui menu (right click) 
+	 * Callback from th web ui menu (right click)
 	*/
 	setLocation: function(msgParams) {
 		// receive a string from the web ui

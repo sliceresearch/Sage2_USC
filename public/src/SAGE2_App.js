@@ -291,7 +291,7 @@ var SAGE2_App = Class.extend({
 			this.SAGE2UserModification = true;
 			this.event(eventType, position, user_id, data, date);
 			if (this.passSage2PointerAsMouseEvents) {
-				sagemep.processAndPassEvents( this.element.id, eventType, position, user_id, data, date );
+				sagemep.processAndPassEvents(this.element.id, eventType, position, user_id, data, date);
 			}
 			this.SAGE2UserModification = false;
 		}
@@ -798,21 +798,19 @@ var SAGE2_App = Class.extend({
 	 */
 	rmbContextResponse: function(data) {
 		var dataForUiClient = {};
-			dataForUiClient.uiClient = data.uiClient; //already removed 1 layer of data from broadcast.
-			dataForUiClient.app = data.app;
-			dataForUiClient.entries;
-		if ( this.getContextEntries === undefined || this.getContextEntries === null ) {
+		dataForUiClient.uiClient = data.uiClient; // already removed 1 layer of data from broadcast.
+		dataForUiClient.app = data.app;
+		dataForUiClient.entries;
+		if (this.getContextEntries === undefined || this.getContextEntries === null) {
 			dataForUiClient.entries = [];
 			var entry = {};
-				entry.description = "Not supported by this app";
-				entry.buttonEffect = null;
-				entry.button = null;
+			entry.description = "Not supported by this app";
+			entry.buttonEffect = null;
+			entry.button = null;
 			dataForUiClient.entries.push(entry);
-		}
-		else {
+		} else {
 			dataForUiClient.entries = this.getContextEntries();
 		}
-
 		wsio.emit('dtuRmbContextMenuContents', dataForUiClient);
 	}
 

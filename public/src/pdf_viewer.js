@@ -236,31 +236,31 @@ PDFJS.maxCanvasPixels = 67108864; // 8k2
 		entry = {};
 		entry.description = "First Page";
 		entry.func = "changeThePage";
-		entry.params = [ "serverDate", "first" ];
+		entry.params = ["serverDate", "first"];
 		entries.push(entry);
 
 		entry = {};
 		entry.description = "Previous Page";
 		entry.func = "changeThePage";
-		entry.params = [ "serverDate", "previous" ];
+		entry.params = ["serverDate", "previous"];
 		entries.push(entry);
 
 		entry = {};
 		entry.description = "Next Page";
 		entry.func = "changeThePage";
-		entry.params = [ "serverDate", "next" ];
+		entry.params = ["serverDate", "next"];
 		entries.push(entry);
 
 		entry = {};
 		entry.description = "Last Page";
 		entry.func = "changeThePage";
-		entry.params = [ "serverDate", "last" ];
+		entry.params = ["serverDate", "last"];
 		entries.push(entry);
 
 		entry = {};
 		entry.description = "Jump To: ";
 		entry.func = "changeThePage";
-		entry.params = [ "serverDate", "clientInput" ];
+		entry.params = ["serverDate", "clientInput"];
 		entry.inputField = true;
 		entry.inputFieldSize = 3;
 		entries.push(entry);
@@ -272,11 +272,11 @@ PDFJS.maxCanvasPixels = 67108864; // 8k2
 	* Support function to allows page changing through right mouse context menu.
 	* First param is serverDate. Second is the page to change to.
 	*/
-	changeThePage: function( ctpParams ) {
+	changeThePage: function(ctpParams) {
 		var page = ctpParams[1];
 		var pageInt = parseInt(page);
 		//if the passed value is a valid int within page range.
-		if(
+		if (
 			pageInt !== NaN
 			&& pageInt > 0
 			&& pageInt <= this.pdfDoc.numPages
@@ -285,32 +285,29 @@ PDFJS.maxCanvasPixels = 67108864; // 8k2
 		}
 		//else check for these word options
 		else {
-			if(page === "first") {
+			if (page === "first") {
 				if (this.state.page === 1) {
 					return;
 				}
 				this.state.page = 1;
-			}
-			else if(page === "previous") {
+			} else if (page === "previous") {
 				if (this.state.page <= 1) {
 					return;
 				}
 				this.state.page = this.state.page - 1;
-			}
-			else if(page === "next") {
+			} else if (page === "next") {
 				if (this.state.page >= this.pdfDoc.numPages) {
 					return;
 				}
 				this.state.page = this.state.page + 1;
-			}
-			else if(page === "last") {
+			} else if (page === "last") {
 				if (this.state.page === this.pdfDoc.numPages) {
 					return;
 				}
 				this.state.page = this.pdfDoc.numPages;
 			}
 		}
-		this.refresh( new Date(ctpParams[0]) );
+		this.refresh(new Date(ctpParams[0]));
 	},
 
 	/**
@@ -324,28 +321,12 @@ PDFJS.maxCanvasPixels = 67108864; // 8k2
 	* @param date {Date} current time from the server
 	*/
 	event: function(eventType, position, user, data, date) {
-		// Left Click  - go back one page
-		// Right Click - go forward one page
-		// if (eventType === "pointerPress") {
-		// 	if (data.button === "left") {
-		// 		if (this.state.page <= 1) {
-		// 			return;
-		// 		}
-		// 		this.state.page = this.state.page - 1;
-		// 		this.refresh(date);
-		// 	} else if (data.button === "right") {
-		// 		if (this.state.page >= this.pdfDoc.numPages) {
-		// 			return;
-		// 		}
-		// 		this.state.page = this.state.page + 1;
-		// 		this.refresh(date);
-		// 	}
-		// }
-
-		// Keyboard:
-		//   spacebar - next
-		//   1 - first
-		//   0 - last
+		/*
+		Keyboard:
+			spacebar - next
+			1 - first
+			0 - last
+		*/
 		if (eventType === "keyboard") {
 			if (data.character === " ") {
 				this.state.page = (this.state.page % this.pdfDoc.numPages) + 1;
@@ -359,10 +340,6 @@ PDFJS.maxCanvasPixels = 67108864; // 8k2
 			} else if (data.character === "r" || data.character === "R") {
 				this.refresh(date);
 			}
-			// Press 'x' to close itself
-			// if (data.character === 'x') {
-			// 	this.close();
-			// }
 		}
 
 		// Left Arrow  - go back one page
