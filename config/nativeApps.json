@@ -14,6 +14,7 @@
                 "image/webp",
                 "image/png",
                 "image/bmp",
+                "image/gif",
                 "image/tiff",
                 "image/svg+xml",
                 "image/vnd.adobe.photoshop"
