@@ -82,29 +82,23 @@ var doodle = SAGE2_App.extend({
 	Adds a clientId as a editer.
 	Everyone in the array should be able to update this app correctly and receive each other's updates.
 	
-	Note: param is actually an array.
 	*/
-	addClientIdAsEditor: function(clientId) {
-		this.arrayOfEditors.push(clientId[0]);
-
-		//This three line test proved that arrays with 1 element evaluated to that element without []
-		// console.log("erase me clientId without braces:" + clientId);
-		// console.dir(clientId);
-		// console.log("erase me clientId 0:" + clientId[0]);
-
-		//get canvas as image
+	addClientIdAsEditor: function(responseObject) {
+		// add the client who responded to the list of editors.
+		this.arrayOfEditors.push(responseObject.clientId);
+		// get canvas as image.
 		var imageString = this.getCanvasAsImage();
 
-		//prevent multiple sends if there are more than 1 display.
+		// prevent multiple sends if there are more than 1 display.
 		if(isMaster) {
-			//send back to client the OK to start editing.
+			// send back to client the OK to start editing.
 			var dataForClient = {};
-				dataForClient.clientDest	= clientId[0];
-				dataForClient.canvasImage 	= imageString;
-				dataForClient.func 			= 'uiDrawSetCurrentStateAndShow';
-				dataForClient.appId 		= this.appIdRef;
-				dataForClient.type 			= 'sendDataToClient';
-			wsio.emit( 'csdMessage', dataForClient );
+			dataForClient.clientDest	= responseObject.clientId;
+			dataForClient.canvasImage 	= imageString;
+			dataForClient.func 			= 'uiDrawSetCurrentStateAndShow';
+			dataForClient.appId 		= this.appIdRef;
+			dataForClient.type 			= 'sendDataToClient';
+			wsio.emit('csdMessage', dataForClient);
 		}
 	},
 
@@ -112,8 +106,8 @@ var doodle = SAGE2_App.extend({
 	Note: param is actually an array.
 	*/
 	removeClientIdAsEditor: function(clientId) {
-		for(var i = 0; i < this.arrayOfEditors.length; i++) {
-			if( this.arrayOfEditors[i] == clientId[0] ) {
+		for (var i = 0; i < this.arrayOfEditors.length; i++) {
+			if (this.arrayOfEditors[i] == clientId[0]) {
 				this.arrayOfEditors.splice(i, 1);
 				i--;
 			}
@@ -141,7 +135,7 @@ var doodle = SAGE2_App.extend({
 		var lineWidth 	= lineData[4];
 		ctx.fillStyle	= lineData[5];
 		ctx.strokeStyle	= lineData[6];
-		//if the line width is greater than 1. At 1 the fill + circle border will expand beyond the line causing bumps in the line.
+		// if the line width is greater than 1. At 1 the fill + circle border will expand beyond the line causing bumps in the line.
 		if(lineWidth > 2) {
 			ctx.lineWidth 	= 1;
 			ctx.beginPath();
@@ -181,12 +175,18 @@ var doodle = SAGE2_App.extend({
 	},
 
 	/**
-	* To enable right click context menu support this function needs to be present with this format.
+	* To enable right click context menu support this function needs to be present.
 	*
 	* Must return an array of entries. An entry is an object with three properties:
 	*	description: what is to be displayed to the viewer.
-	* 	func: name of the function to activate in the app. It must exist.
-	* 	params: currently an array. This might change. The string "serverDate" will be auto converted by server.
+	*	callback: String containing the name of the function to activate in the app. It must exist.
+	*	parameters: an object with specified datafields to be given to the function.
+	*		The following attributes will be automatically added by server.
+	*			serverDate, on the return back, server will fill this with time object.
+	*			clientId, unique identifier (ip and port) for the client that selected entry.
+	*			clientName, the name input for their pointer. Note: users are not required to do so.
+	*			clientInput, if entry is marked as input, the value will be in this property. See pdf_viewer.js for example.
+	*		Further parameters can be added. See pdf_view.js for example.
 	*/
 	getContextEntries: function() {
 		var entries = [];
@@ -194,8 +194,8 @@ var doodle = SAGE2_App.extend({
 
 		entry = {};
 		entry.description = "Edit";
-		entry.func = "addClientIdAsEditor";
-		entry.params = [ "clientId", "serverDate" ];
+		entry.callback = "addClientIdAsEditor";
+		entry.parameters = {};
 		entries.push(entry);
 
 		return entries;

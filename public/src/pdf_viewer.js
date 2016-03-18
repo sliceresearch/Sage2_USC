@@ -226,8 +226,14 @@ PDFJS.maxCanvasPixels = 67108864; // 8k2
 	*
 	* Must return an array of entries. An entry is an object with three properties:
 	*	description: what is to be displayed to the viewer.
-	* 	func: name of the function to activate in the app. It must exist.
-	* 	params: currently an array. This might change. The string "serverDate" will be auto converted by server.
+	*	callback: String containing the name of the function to activate in the app. It must exist.
+	*	parameters: an object with specified datafields to be given to the function.
+	*		The following attributes will be automatically added by server.
+	*			serverDate, on the return back, server will fill this with time object.
+	*			clientId, unique identifier (ip and port) for the client that selected entry.
+	*			clientName, the name input for their pointer. Note: users are not required to do so.
+	*			clientInput, if entry is marked as input, the value will be in this property. See pdf_viewer.js for example.
+	*		Further parameters can be added. See pdf_view.js for example.
 	*/
 	getContextEntries: function() {
 		var entries = [];
@@ -235,32 +241,36 @@ PDFJS.maxCanvasPixels = 67108864; // 8k2
 
 		entry = {};
 		entry.description = "First Page";
-		entry.func = "changeThePage";
-		entry.params = ["serverDate", "first"];
+		entry.callback = "changeThePage";
+		entry.parameters = {};
+		entry.parameters.page = "first";
 		entries.push(entry);
 
 		entry = {};
 		entry.description = "Previous Page";
-		entry.func = "changeThePage";
-		entry.params = ["serverDate", "previous"];
+		entry.callback = "changeThePage";
+		entry.parameters = {};
+		entry.parameters.page = "previous";
 		entries.push(entry);
 
 		entry = {};
 		entry.description = "Next Page";
-		entry.func = "changeThePage";
-		entry.params = ["serverDate", "next"];
+		entry.callback = "changeThePage";
+		entry.parameters = {};
+		entry.parameters.page = "next";
 		entries.push(entry);
 
 		entry = {};
 		entry.description = "Last Page";
-		entry.func = "changeThePage";
-		entry.params = ["serverDate", "last"];
+		entry.callback = "changeThePage";
+		entry.parameters = {};
+		entry.parameters.page = "last";
 		entries.push(entry);
 
 		entry = {};
 		entry.description = "Jump To: ";
-		entry.func = "changeThePage";
-		entry.params = ["serverDate", "clientInput"];
+		entry.callback = "changeThePage";
+		entry.parameters = {};
 		entry.inputField = true;
 		entry.inputFieldSize = 3;
 		entries.push(entry);
@@ -269,21 +279,26 @@ PDFJS.maxCanvasPixels = 67108864; // 8k2
 	},
 
 	/**
-	* Support function to allows page changing through right mouse context menu.
-	* First param is serverDate. Second is the page to change to.
+	* Support function to allow page changing through right mouse context menu.
+	*
+	* @method changeThePage
+	* @param responseObject {Object} contains response from entry selection
 	*/
-	changeThePage: function(ctpParams) {
-		var page = ctpParams[1];
-		var pageInt = parseInt(page);
-		//if the passed value is a valid int within page range.
-		if (
-			pageInt !== NaN
-			&& pageInt > 0
-			&& pageInt <= this.pdfDoc.numPages
-			) {
-			this.state.page = pageInt;
+	changeThePage: function(responseObject) {
+		console.log("erase me, function change the page activated");
+		console.dir(responseObject);
+		var page = responseObject.page;
+		// if the user did the input option
+		if (responseObject.clientInput) {
+			page = parseInt(responseObject.clientInput);
+			if (page > 0 && page <= this.pdfDoc.numPages) {
+				this.state.page = page;
+			}
+			else {
+				return;
+			}
 		}
-		//else check for these word options
+		// else check for these word options
 		else {
 			if (page === "first") {
 				if (this.state.page === 1) {
@@ -307,7 +322,8 @@ PDFJS.maxCanvasPixels = 67108864; // 8k2
 				this.state.page = this.pdfDoc.numPages;
 			}
 		}
-		this.refresh(new Date(ctpParams[0]));
+		// This needs to be a new date for the extra function.
+		this.refresh(responseObject.serverDate);
 	},
 
 	/**

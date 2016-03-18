@@ -175,8 +175,6 @@ var aDataPassMaster = SAGE2_App.extend({
 	},
 
 	event: function(eventType, position, user_id, data, date) {
-		//this.refresh(date);
-		sagemep.processAndPassEvents( this.element.id, eventType, position, user_id, data, date );
 	},
 
 	/**
@@ -184,8 +182,14 @@ var aDataPassMaster = SAGE2_App.extend({
 	*
 	* Must return an array of entries. An entry is an object with three properties:
 	*	description: what is to be displayed to the viewer.
-	* 	func: name of the function to activate in the app. It must exist.
-	* 	params: currently an array. This might change. The string "serverDate" will be auto converted by server.
+	*	callback: String containing the name of the function to activate in the app. It must exist.
+	*	parameters: an object with specified datafields to be given to the function.
+	*		The following attributes will be automatically added by server.
+	*			serverDate, on the return back, server will fill this with time object.
+	*			clientId, unique identifier (ip and port) for the client that selected entry.
+	*			clientName, the name input for their pointer. Note: users are not required to do so.
+	*			clientInput, if entry is marked as input, the value will be in this property. See pdf_viewer.js for example.
+	*		Further parameters can be added. See pdf_view.js for example.
 	*/
 	getContextEntries: function() {
 		var entries = [];
@@ -193,26 +197,26 @@ var aDataPassMaster = SAGE2_App.extend({
 
 		entry = {};
 		entry.description = "Increase Number";
-		entry.func = "increaseNumber";
-		entry.params = [];
+		entry.callback = "increaseNumber";
+		entry.parameters = {};
 		entries.push(entry);
 
 		entry = {};
 		entry.description = "Decrease Number";
-		entry.func = "decreaseNumber";
-		entry.params = [];
+		entry.callback = "decreaseNumber";
+		entry.parameters = {};
 		entries.push(entry);
 		
 		entry = {};
 		entry.description = "Next Color";
-		entry.func = "nextColor";
-		entry.params = [];
+		entry.callback = "nextColor";
+		entry.parameters = {};
 		entries.push(entry);
 		
 		entry = {};
 		entry.description = "Previous Color";
-		entry.func = "prevColor";
-		entry.params = [];
+		entry.callback = "prevColor";
+		entry.parameters = {};
 		entries.push(entry);
 
 		return entries;

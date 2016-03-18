@@ -1067,7 +1067,7 @@ function handleClick(element) {
 		data.type		= "launchAppWithValues";
 		data.appName	= "doodle";
 		data.func		= "addClientIdAsEditor";
-		data.params		= ["clientId"];
+		data.params		= {clientId: interactor.uniqueID};
 		wsio.emit('csdMessage', data);
 		/*
 		Dialog will not be shown here.
@@ -1876,32 +1876,22 @@ function setRmbContextMenuEntries(entriesToAdd, app) {
 	// for each entry
 	for (var i = 0; i < entriesToAdd.length; i++) {
 		// if func is defined add buttonEffect
-		if (entriesToAdd[i].func !== undefined && entriesToAdd[i].func !== null) {
+		if (entriesToAdd[i].callback !== undefined && entriesToAdd[i].callback !== null) {
 			entriesToAdd[i].buttonEffect = function() {
 				// if an input field, need to modify the params to pass back before sending.
 				if (this.inputField === true) {
 					var inputField = document.getElementById(this.inputFieldId);
 					//dont do anything if there is nothing in the inputfield
 					if (inputField.value.length <= 0) { return; }
-					//go through the input fields and replace the one with value "clientInput"
-					for (var i = 0; i < this.params.length; i++) {
-						if (this.params[i] == "clientInput") {
-							this.params[i] = inputField.value;
-						}
-					}
+					//add the field clientInput to the parameters
+					this.parameters.clientInput = inputField.value;
 				}
 				// create data to send, then emit
 				var data = {};
 				data.app = this.app;
-				data.func = this.func;
-				data.params = this.params;
-				// before sending back, if there is a field called "clientName" replace with pointer name.
-				// Done here instead of server because this might be more up to date than server.
-				for (var di = 0; di < data.params.length; di++) {
-					if (data.params[di] == "clientName") {
-						data.params[di] = document.getElementById('sage2PointerLabel').value;
-					}
-				}
+				data.func = this.callback;
+				data.parameters = this.parameters;
+				data.parameters.clientName = document.getElementById('sage2PointerLabel').value;
 				wsio.emit('utdCallFunctionOnApp', data);
 				hideRmbContextMenuDiv(); // hide after 1 use.
 			};
@@ -1943,8 +1933,8 @@ function setRmbContextMenuEntries(entriesToAdd, app) {
 			rmbcmeIob.inputField = true;
 			rmbcmeIob.inputFieldId = inputField.id;
 			// click effect
-			rmbcmeIob.func = entriesToAdd[i].func;
-			rmbcmeIob.params = entriesToAdd[i].params;
+			rmbcmeIob.callback = entriesToAdd[i].callback;
+			rmbcmeIob.parameters = entriesToAdd[i].parameters;
 			rmbcmeIob.app = app;
 			rmbcmeIob.addEventListener('mousedown', entriesToAdd[i].buttonEffect);
 			// highlighting effect on mouseover
@@ -1972,8 +1962,8 @@ function setRmbContextMenuEntries(entriesToAdd, app) {
 			});
 		}
 		// click effect
-		workingDiv.func = entriesToAdd[i].func;
-		workingDiv.params = entriesToAdd[i].params;
+		workingDiv.callback = entriesToAdd[i].callback;
+		workingDiv.parameters = entriesToAdd[i].parameters;
 		workingDiv.app = app;
 		// if it is the last entry to add, put a hr tag after it to separate the close menu button
 		if (i === entriesToAdd.length - 1) {
@@ -2016,7 +2006,9 @@ function sendCsdMakeNote() {
 	data.type		= "launchAppWithValues";
 	data.appName	= "quickNote";
 	data.func		= "setMessage";
-	data.params		= [workingDiv.value, document.getElementById('sage2PointerLabel').value];
+	data.params		= {};
+	data.params.clientName = document.getElementById('sage2PointerLabel').value;
+	data.params.clientInput = workingDiv.value;
 	workingDiv.value = ""; // clear out the input field.
 	wsio.emit('csdMessage', data);
 }
@@ -2077,7 +2069,7 @@ function setupUiDrawCanvas() {
 			data.type		= "launchAppWithValues";
 			data.appName	= "doodle";
 			data.func		= "addClientIdAsEditor";
-			data.params		= ["clientId"];
+			data.params		= {clientId: interactor.uniqueID};
 			wsio.emit('csdMessage', data);
 		}
 	);

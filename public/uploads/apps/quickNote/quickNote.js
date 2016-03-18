@@ -30,10 +30,10 @@ var quickNote = SAGE2_App.extend({
 		this.startingHeight 	= this.element.clientHeight;
 
 		this.setMessage(
-			[ 
-				"Loading note from user...",
-				"Quick Note"
-			]);
+			{ 
+				clientName: "Quick Note",
+				clientInput: "Loading note from user..."
+			});
 
 	},
 
@@ -44,9 +44,9 @@ var quickNote = SAGE2_App.extend({
 	setMessage: function(msgParams) {
 		var workingDiv = document.getElementById( this.element.id );
 
-		workingDiv.innerHTML = msgParams[1];
+		workingDiv.innerHTML = msgParams.clientName;
 		workingDiv.innerHTML += ":<br>";
-		workingDiv.innerHTML += msgParams[0];
+		workingDiv.innerHTML += msgParams.clientInput;
 	},
 
 	load: function(date) {
@@ -70,12 +70,18 @@ var quickNote = SAGE2_App.extend({
 	},
 
 	/**
-	* To enable right click context menu support this function needs to be present with this format.
+	* To enable right click context menu support this function needs to be present.
 	*
 	* Must return an array of entries. An entry is an object with three properties:
 	*	description: what is to be displayed to the viewer.
-	* 	func: name of the function to activate in the app. It must exist.
-	* 	params: currently an array. This might change. The string "serverDate" will be auto converted by server.
+	*	callback: String containing the name of the function to activate in the app. It must exist.
+	*	parameters: an object with specified datafields to be given to the function.
+	*		The following attributes will be automatically added by server.
+	*			serverDate, on the return back, server will fill this with time object.
+	*			clientId, unique identifier (ip and port) for the client that selected entry.
+	*			clientName, the name input for their pointer. Note: users are not required to do so.
+	*			clientInput, if entry is marked as input, the value will be in this property. See pdf_viewer.js for example.
+	*		Further parameters can be added. See pdf_view.js for example.
 	*/
 	getContextEntries: function() {
 		var entries = [];
@@ -83,8 +89,8 @@ var quickNote = SAGE2_App.extend({
 
 		entry = {};
 		entry.description = "Change Note:";
-		entry.func = "setMessage";
-		entry.params = [ "clientInput", "clientName" ];
+		entry.callback = "setMessage";
+		entry.parameters = {};
 		entry.inputField = true;
 		entry.inputFieldSize = 20;
 		entries.push(entry);

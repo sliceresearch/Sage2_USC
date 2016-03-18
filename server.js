@@ -7334,26 +7334,12 @@ function wsUtdRequestRmbContextMenu(wsio, data) {
  * Asks for rmb context menu from app under x,y coordinate.
  */
 function wsUtdCallFunctionOnApp(wsio, data) {
-	data.data = "";
-	// go through params and convert server values
-	for (var i = 0; i < data.params.length; i++) {
-		if (data.params[i] === "serverDate") {
-			data.params[i] = Date.now();
-		} else if (data.params[i] === "clientId") {
-			data.params[i] = wsio.id;
-		}
-	}
-	// some functions take a direct data value. Assuming that if array is size 1 send value directly.
-	if (data.params.length === 1) {
-		data.data = data.params[0];
-	}
-	// all other functions must work with an array. Objects won't work without make the array confusing.
-	else if (data.params.length > 1) {
-		data.data = [];
-		for (var i = 0; i < data.params.length; i++) {
-			data.data.push(data.params[i]);
-		}
-	}
+	// Using broadcast means the parameter must be in data.data
+	data.data = data.parameters;
+	// add the serverDate property
+	data.data.serverDate = Date.now();
+	// add the clientId property
+	data.data.clientId = wsio.id;
 	// send to all display clients(since they all need to update)
 	for (var i = 0; i < clients.length; i++) {
 		if (clients[i].clientType === "display") {
@@ -7509,13 +7495,13 @@ function csdLaunchAppWithValues(wsio,data) {
 	// this is just a temporary solution.
 	// percents
 	appLoadData.position = [ csdDataStructure.xAppLaunchCoordinate, csdDataStructure.yAppLaunchCoordinate ];
-	// the csdDataStructure vars are declared below
-	csdDataStructure.yAppLaunchCoordinate += 0.1;
-	if (csdDataStructure.yAppLaunchCoordinate >= 1.0) {
-		csdDataStructure.xAppLaunchCoordinate += 0.1;
-		csdDataStructure.yAppLaunchCoordinate = 0.05;
-		if (csdDataStructure.xAppLaunchCoordinate >= 1.0) {
-			csdDataStructure.xAppLaunchCoordinate = 0.05;
+	// after launch reset position
+	csdDataStructure.xAppLaunchCoordinate += 600;
+	if (csdDataStructure.xAppLaunchCoordinate >= config.totalWidth - 500) {
+		csdDataStructure.yAppLaunchCoordinate += 600;
+		csdDataStructure.xAppLaunchCoordinate = 10;
+		if (csdDataStructure.yAppLaunchCoordinate >= config.totalHeight -500) {
+			csdDataStructure.yAppLaunchCoordinate = 10;
 		}
 	}
 
@@ -7536,17 +7522,6 @@ function csdLaunchAppWithValues(wsio,data) {
 					dataForDisplay.app  = app.id;
 					dataForDisplay.func = data.func;
 					dataForDisplay.data = data.params;
-
-					for (var i = 0; i < dataForDisplay.data.length; i++) {
-						if (dataForDisplay.data[i] === "clientId") {
-							dataForDisplay.data[i] = "" + wsio.id; // convert to string to reduce packet size
-						}
-					}
-					console.log("erase me, values for app, func, data: "
-						+ dataForDisplay.app + ","
-						+ dataForDisplay.func + ","
-						+ dataForDisplay.data
-						);
 					// send to all display clients(since they all need to update)
 					for (var i = 0; i < clients.length; i++) {
 						if (clients[i].clientType === "display") {
@@ -7638,8 +7613,8 @@ var csdDataStructure = {};
 csdDataStructure.allValues = {};
 csdDataStructure.numberOfValues = 0;
 csdDataStructure.allNamesOfValues = [];
-csdDataStructure.xAppLaunchCoordinate = 0.05;
-csdDataStructure.yAppLaunchCoordinate = 0.05;
+csdDataStructure.xAppLaunchCoordinate = 10;
+csdDataStructure.yAppLaunchCoordinate = 10;
 
 /**
 Will set the named value.

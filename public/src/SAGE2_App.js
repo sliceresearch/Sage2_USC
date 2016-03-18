@@ -805,8 +805,6 @@ var SAGE2_App = Class.extend({
 			dataForUiClient.entries = [];
 			var entry = {};
 			entry.description = "Not supported by this app";
-			entry.buttonEffect = null;
-			entry.button = null;
 			dataForUiClient.entries.push(entry);
 		} else {
 			dataForUiClient.entries = this.getContextEntries();
