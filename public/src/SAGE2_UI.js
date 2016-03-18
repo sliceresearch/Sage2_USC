@@ -223,8 +223,8 @@ function SAGE2_init() {
 
 	// socket close event (i.e. server crashed)
 	wsio.on('close', function(evt) {
-		// show a popup for a long time
-		showSAGE2Message("Server offline", 2147483);
+		// show a popup
+		showSAGE2Message("Server offline");
 		// try to reload every few seconds
 		var refresh = setInterval(function() {
 			reloadIfServerRunning(function() {
@@ -301,7 +301,10 @@ function SAGE2_init() {
 	});
 }
 
-// Show error message for 2 seconds (or time given as parameter in seconds)
+//
+// Show error message
+// if time given as parameter in seconds, close after delay
+//
 function showSAGE2Message(message, delay) {
 	var aMessage = webix.alert({
 		type:  "alert-error",
@@ -310,11 +313,13 @@ function showSAGE2Message(message, delay) {
 		width: "40%",
 		text:  "<span style='font-weight:bold;'>" + message + "</span>"
 	});
-	setTimeout(function() {
-		if (aMessage) {
-			webix.modalbox.hide(aMessage);
-		}
-	}, delay ? delay * 1000 : 2000);
+	if (delay) {
+		setTimeout(function() {
+			if (aMessage) {
+				webix.modalbox.hide(aMessage);
+			}
+		}, delay * 1000);
+	}
 }
 
 function setupListeners() {
@@ -355,7 +360,9 @@ function setupListeners() {
 	});
 
 	// Open a popup on message sent from server
-	wsio.on('errorMessage', showSAGE2Message);
+	wsio.on('errorMessage', function(data) {
+		showSAGE2Message(data);
+	});
 
 	wsio.on('setupDisplayConfiguration', function(config) {
 		displayUI = new SAGE2DisplayUI();
