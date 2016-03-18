@@ -23,6 +23,16 @@
 
 var pageRedirect  = null;
 
+
+/**
+ * When the page loads, go!
+ *
+ */
+window.addEventListener('load', function(event) {
+	SAGE2_init();
+});
+
+
 /**
  * Entry point of the application
  *
