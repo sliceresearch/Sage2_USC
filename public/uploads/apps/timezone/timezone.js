@@ -1,13 +1,3 @@
-// SAGE2 is available for use under the SAGE2 Software License
-//
-// University of Illinois at Chicago's Electronic Visualization Laboratory (EVL)
-// and University of Hawai'i at Manoa's Laboratory for Advanced Visualization and
-// Applications (LAVA)
-//
-// See full text, terms and conditions in the LICENSE.txt included file
-//
-// Copyright (c) 2015-2016
-
 //
 // SAGE2 application: Timezone
 // by: Andrea Rottigni <arotti2@uic.edu>
@@ -15,13 +5,10 @@
 // Copyright (c) 2015
 //
 
-/* global d3 */
-"use strict";
-
-var timezone = SAGE2_App.extend({
+var Timezone = SAGE2_App.extend({
 
 	updateAllDivs: function() {
-		for (var i in this.state.clocks) {
+		for (i in this.state.clocks) {
 			var div = d3.select("#" + this.state.clocks[i].id);
 			div.style("width", 100 / this.state.clocks.length + "%");
 			div.style("height", 100 + "%");
@@ -32,7 +19,7 @@ var timezone = SAGE2_App.extend({
 	},
 
 	addAllClocks: function() {
-		for (var i in this.state.clocks) {
+		for (i in this.state.clocks) {
 			this.state.clocks[i].nightMode = false;
 			this.addClockToView(this.state.clocks[i]);
 		}
@@ -40,29 +27,33 @@ var timezone = SAGE2_App.extend({
 	},
 
 	updateAllCaption: function(that) {
-		for (var i in that.state.clocks) {
+		for (i in that.state.clocks) {
 			var captionDiv = d3.select("#" + that.state.clocks[i].id + "textDiv");
 			var captionP = d3.select("#" + that.state.clocks[i].id + "Text");
+			console.log(captionDiv.empty());
+			console.log(captionP.empty());
 			if (!captionDiv.empty() && !captionP.empty()) {
-				captionP.style("font-size", that.minimumFontSize + "px");
+				captionP.style("font-size",that.minimumFontSize + "px");
 				var maxwidth = parseInt(captionDiv.style("width"));
 				var textwidth = parseInt(captionP.style("width"));
 				var marginLeft = parseInt(maxwidth - textwidth) / 2;
-				captionP.style("left", marginLeft + "px");
+				captionP.style("left",marginLeft + "px");
 			}
 		}
 	},
 
-	setCaptionSize: function(captionDiv, captionP, that) {
+
+	setCaptionSize: function(captionDiv, captionP,that) {
+		console.log(captionDiv);
 		var maxheight = parseInt(captionDiv.style("height"));
 		var maxwidth = parseInt(captionDiv.style("width"));
 		var fontsize = maxheight;
-		captionP.style("font-size", fontsize + "px");
+		captionP.style("font-size",fontsize + "px");
 		var textwidth = parseInt(captionP.style("width"));
 		var textheight = parseInt(captionP.style("height"));
 		while ((textwidth > maxwidth || textheight > maxheight) && fontsize >= 3) {
 			fontsize -= 1;
-			captionP.style("font-size", fontsize + "px");
+			captionP.style("font-size",fontsize + "px");
 			textwidth = parseInt(captionP.style("width"));
 			textheight = parseInt(captionP.style("height"));
 		}
@@ -73,40 +64,40 @@ var timezone = SAGE2_App.extend({
 		captionP.style("left", marginLeft + "px");
 	},
 
-	createCaption: function(clock, that) {
+	createCaption: function(clock,that) {
 		var top = "85%";
 		var textdiv = d3.select("#" + clock.id)
 						.append("div")
-						.attr("id", clock.id + "textDiv")
-						.style("height", "15%")
-						.style("top", top)
-						.style("position", "absolute")
-						.style("width", "90%")
+						.attr("id",clock.id + "textDiv")
+						.style("height","15%")
+						.style("top",top)
+						.style("position","absolute")
+						.style("width","90%")
 						.style("left", "5%");
 		var text = textdiv.append("p")
-						.attr("id", clock.id + "Text")
-						.style("color", "white")
-						.style("position", "absolute")
-						.style("white-space", "nowrap")
+						.attr("id",clock.id + "Text")
+						.style("color","white")
+						.style("position","absolute")
+						.style("white-space","nowrap")
 						.text(clock.name.split(',')[0]);
-		that.setCaptionSize(textdiv, text, that);
+		that.setCaptionSize(textdiv,text,that);
 		that.resizeCaption();
 		that.updateAllCaption(that);
 	},
 
 
 	addClockToView: function(clock) {
-		d3.select("#clocks").append("div").attr("id", clock.id);
+		var div = d3.select("#clocks").append("div").attr("id",clock.id);
 		this.ready = false;
-		var _this = this;
-		d3.xml(this.resrcPath + 'clock.svg', "image/svg+xml", function(error, xml) {
+		var that = this;
+		d3.xml(this.resrcPath + 'clock_svg.svg', "image/svg+xml", function(error, xml) {
 			if (error) {
 				throw error;
 			}
 			var div = document.getElementById(clock.id);
 			div.appendChild(xml.documentElement);
-			_this.createCaption(clock, _this);
-			_this.ready = true;
+			that.createCaption(clock,that);
+			that.ready = true;
 		});
 	},
 
@@ -118,15 +109,16 @@ var timezone = SAGE2_App.extend({
 	createClockPage: function() {
 		this.clockDiv = d3.select(this.element)
 							.append("div")
-							.attr("id", "clocks")
+							.attr("id","clocks")
 							.style("width", "100%")
 							.style("height", "80%")
-							.style("position", "absolute");
+							.style("position","absolute");
 		this.addAllClocks();
 		this.createButtons();
 	},
 
 	init: function(data) {
+		var aaa = data.state.clocks[0];
 		this.SAGE2Init("div", data);
 		// Set the background to black
 		this.element.style.backgroundColor = '#6C6969';
@@ -135,13 +127,15 @@ var timezone = SAGE2_App.extend({
 		if (this.state.clocks.length == 0) {
 			this.state.clocks.push({name: "Chicago, IL, United States", offset: 0, id: "chicagoDiv", nightMode: false});
 		} else {
-			for (var i in this.state.clocks) {
+			for (i in this.state.clocks) {
 				this.state.clocks[i].nightMode = false;
 			}
 		}
 
 		this.createClockPage();
 		this.timeZoneOffset = data.date.getTimezoneOffset() * 60;
+
+
 
 		// move and resize callbacks
 		this.resizeEvents = "continuous";
@@ -154,12 +148,10 @@ var timezone = SAGE2_App.extend({
 		// Not adding controls but making the default buttons available
 		this.controls.finishedAddingControls();
 		this.enableControls = true;
-		this.SAGE2UserModification = true;
-		this.refresh(data.date);
-		this.SAGE2UserModification = false;
 	},
 
 	load: function(date) {
+		console.log('Timezone> Load with state value', this.state.value);
 		this.refresh(date);
 	},
 
@@ -171,10 +163,10 @@ var timezone = SAGE2_App.extend({
 	toggleNightMode: function(index, background, dial) {
 		var svgDoc = d3.select("#" + this.state.clocks[index].id).select('svg');
 		if (!svgDoc.empty()) {
-			svgDoc.select("#" + "background").style("fill", background);
-			svgDoc.select("#" + "dial").style("fill", dial);
-			svgDoc.select("#" + "hourHand").style("fill", dial);
-			svgDoc.select("#" + "minuteHand").style("fill", dial);
+			svgDoc.select("#" + "background").style("fill",background);
+			svgDoc.select("#" + "dial").style("fill",dial);
+			svgDoc.select("#" + "hourHand").style("fill",dial);
+			svgDoc.select("#" + "minuteHand").style("fill",dial);
 		} else {
 			this.state.clocks[index].nightMode = !this.state.clocks[index].nightMode;
 		}
@@ -182,14 +174,14 @@ var timezone = SAGE2_App.extend({
 	},
 
 	draw: function(date) {
-		for (var i in this.state.clocks) {
+		for (i in this.state.clocks) {
 			if (this.ready) {
 				var secondToHourCostant = 3600;
 				var secondToMinuteConstant = 60;
 				var hourOffset = Math.floor(this.state.clocks[i].offset / secondToHourCostant);
 				var minuteOffset = (this.state.clocks[i].offset % secondToHourCostant) / secondToMinuteConstant;
-				var now     = date;
-				var hours   = (now.getHours() + hourOffset) % 24;
+				var now = date;
+				var hours = (now.getHours() + hourOffset) % 24;
 				var minutes = (now.getMinutes() + minuteOffset) % 60;
 				var seconds = now.getSeconds();
 				var millis  = now.getMilliseconds();
@@ -198,7 +190,7 @@ var timezone = SAGE2_App.extend({
 				this.rotateElement(this.state.clocks[i].id, 'hourHand', 30 * hours + 0.5 * minutes);
 
 				// rotate minute hand
-				this.rotateElement(this.state.clocks[i].id, 'minuteHand',
+				this.rotateElement(this.state.clocks[i].id,'minuteHand',
 					6 * minutes + (this.minuteHandBehavior === 'sweeping' ? 0.1 * seconds : 0));
 				// handle "stop to go" second hand
 				if (this.secondHandStopToGo === 'yes' || this.secondHandStopToGo === 'true') {
@@ -216,31 +208,38 @@ var timezone = SAGE2_App.extend({
 				} else if (this.secondHandBehavior === 'swinging') {
 					secondAngle += 3 * (1 + Math.cos(Math.PI + Math.PI * (0.001 * millis)));
 				}
-				this.rotateElement(this.state.clocks[i].id, 'secondHand', secondAngle);
+				this.rotateElement(this.state.clocks[i].id,'secondHand', secondAngle);
 				if ((hours >= 19 || hours < 7) && !this.state.clocks[i].nightMode) {
 					this.state.clocks[i].nightMode = true;
-					this.toggleNightMode(i, "rgba(0,0,0,255)", "rgb(235,235,235)");
+					this.toggleNightMode(i,"rgba(0,0,0,255)","rgb(235,235,235)");
 				} else if ((hours < 19 && hours >= 7) && this.state.clocks[i].nightMode) {
 					this.state.clocks[i].nightMode = false;
-					this.toggleNightMode(i, "rgba(255,255,255,255)", "rgb(40,40,40)");
+					this.toggleNightMode(i,"rgba(255,255,255,255)","rgb(40,40,40)");
 				}
 			}
 		}
 	},
 
+
+
+
+
 	resizeCaption: function() {
 		this.minimumFontSize = Number.MAX_VALUE;
-		for (var i in this.state.clocks) {
+		for (i in this.state.clocks) {
 			var captionDiv = d3.select("#" + this.state.clocks[i].id + "textDiv");
 			var captionP = captionDiv.select("#" + this.state.clocks[i].id + "Text");
-			this.setCaptionSize(captionDiv, captionP, this);
-			this.updateAllCaption(this);
+			if (!captionDiv.empty() && !captionP.empty()) {
+				this.setCaptionSize(captionDiv,captionP,this);
+				this.updateAllCaption(this);
+			}
+
 		}
 	},
 
 	resize: function(date) {
-		this.refresh(date);
 		this.resizeCaption();
+		this.refresh(date);
 	},
 
 	move: function(date) {
@@ -252,42 +251,38 @@ var timezone = SAGE2_App.extend({
 	},
 
 
-	clockSelected: function(lat, lon, cityName) {
-		var url = "http://api.timezonedb.com/?lat=" + lat + "&lng=" + lon + "&format=json&key=4R3QHZXPDCOL";
-		var _this = this;
+	clockSelected: function(lat,lon,cityName) {
+		var url = "https://api.timezonedb.com/?lat=" + lat + "&lng=" + lon + "&format=json&key=4R3QHZXPDCOL";
+		var that = this;
 		d3.json(url, function(error, json) {
 			if (error) {
 				return console.warn(error);
 			}
-			var timeOffset = parseInt(json.gmtOffset) + _this.timeZoneOffset;
+			var timeOffset = parseInt(json.gmtOffset) + that.timeZoneOffset;
 			var id = cityName.toLowerCase() + lat + lon;
 			id = id.replace(/ /g, "");
-			id = id.replace(/\./g, '');
-			_this.SAGE2UserModification = true;
+			id = id.replace(/\./g,'');
+			that.SAGE2UserModification = true;
 			var flag = false;
-			for (var i in _this.state.clocks) {
-				if (id === _this.state.clocks[i].id) {
+			for (i in that.state.clocks) {
+				if (id === that.state.clocks[i].id) {
 					flag = true;
 					break;
 				}
 			}
 			if (!flag) {
-				var clock = {
-					name: cityName.charAt(0).toUpperCase() + cityName.slice(1),
-					offset: timeOffset,
-					id: id,
-					nightMode: false};
-				_this.state.clocks.push(clock);
-				_this.addClockToView(clock);
-				_this.updateAllDivs();
+				var clock = {name: cityName.charAt(0).toUpperCase() + cityName.slice(1),offset: timeOffset, id: id, nightMode: false};
+				that.state.clocks.push(clock);
+				that.addClockToView(clock);
+				that.updateAllDivs();
 			}
-			_this.SAGE2UserModification = false;
+			this.SAGE2UserModification = false;
 		});
 	},
 
 	localizeCity: function(city) {
 		var url = "https://maps.googleapis.com/maps/api/geocode/json?address=" + city + "&key=AIzaSyCtSvhdjFUTsAeefu3a99VxMs1igYKjk2I";
-		var _this = this;
+		var that = this;
 		d3.json(url, function(error, json) {
 			if (error) {
 				return console.warn(error);
@@ -297,22 +292,20 @@ var timezone = SAGE2_App.extend({
 			if (geometry !== undefined && name !== undefined) {
 				var lat = geometry.location.lat;
 				var lon = geometry.location.lng;
-				_this.clockSelected(lat, lon, name);
+				that.clockSelected(lat,lon,name);
 			}
 		});
 	},
 
 	event: function(eventType, position, user_id, data, date) {
 		if (eventType === "pointerPress" && (data.button === "left")) {
-			// press
 		} else if (eventType === "pointerMove" && this.dragging) {
-			// move
 		} else if (eventType === "pointerRelease" && (data.button === "left")) {
-			// release
-		} else if (eventType === "pointerScroll") {
-			// Scroll events for zoom
+		}
+		// Scroll events for zoom
+		else if (eventType === "pointerScroll") {
 		} else if (eventType === "widgetEvent") {
-			if (data.action === "textEnter") {
+			if (data.action = "textEnter") {
 				this.localizeCity(data.text);
 			}
 		} else if (eventType === "keyboard") {
@@ -320,17 +313,13 @@ var timezone = SAGE2_App.extend({
 				this.refresh(date);
 			}
 		} else if (eventType === "specialKey") {
-			if (data.code === 37 && data.state === "down") {
-				// left
+			if (data.code === 37 && data.state === "down") { // left
 				this.refresh(date);
-			} else if (data.code === 38 && data.state === "down") {
-				// up
+			} else if (data.code === 38 && data.state === "down") { // up
 				this.refresh(date);
-			} else if (data.code === 39 && data.state === "down") {
-				// right
+			} else if (data.code === 39 && data.state === "down") { // right
 				this.refresh(date);
-			} else if (data.code === 40 && data.state === "down") {
-				// down
+			} else if (data.code === 40 && data.state === "down") { // down
 				this.refresh(date);
 			}
 		}
