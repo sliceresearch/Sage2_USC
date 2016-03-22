@@ -39,12 +39,12 @@ var timezone = SAGE2_App.extend({
 		this.updateAllDivs();
 	},
 
-	updateAllCaption: function(that) {
-		for (var i in that.state.clocks) {
-			var captionDiv = d3.select("#" + that.state.clocks[i].id + "textDiv");
-			var captionP = d3.select("#" + that.state.clocks[i].id + "Text");
+	updateAllCaption: function() {
+		for (var i in this.state.clocks) {
+			var captionDiv = d3.select("#" + this.state.clocks[i].id + "textDiv");
+			var captionP = d3.select("#" + this.state.clocks[i].id + "Text");
 			if (!captionDiv.empty() && !captionP.empty()) {
-				captionP.style("font-size", that.minimumFontSize + "px");
+				captionP.style("font-size", this.minimumFontSize + "px");
 				var maxwidth = parseInt(captionDiv.style("width"));
 				var textwidth = parseInt(captionP.style("width"));
 				var marginLeft = parseInt(maxwidth - textwidth) / 2;
@@ -53,51 +53,78 @@ var timezone = SAGE2_App.extend({
 		}
 	},
 
-	setCaptionSize: function(captionDiv, captionP, that) {
+	setCaptionSize: function(captionDiv, captionP, captionAMPM) {
 		var maxheight = parseInt(captionDiv.style("height"));
-		var maxwidth = parseInt(captionDiv.style("width"));
-		var fontsize = maxheight;
+		var maxwidth  = parseInt(captionDiv.style("width"));
+
+		// Calculate city scaling
+		var fontsize  = maxheight;
 		captionP.style("font-size", fontsize + "px");
-		var textwidth = parseInt(captionP.style("width"));
+		var textwidth  = parseInt(captionP.style("width"));
 		var textheight = parseInt(captionP.style("height"));
 		while ((textwidth > maxwidth || textheight > maxheight) && fontsize >= 3) {
 			fontsize -= 1;
 			captionP.style("font-size", fontsize + "px");
-			textwidth = parseInt(captionP.style("width"));
+			textwidth  = parseInt(captionP.style("width"));
 			textheight = parseInt(captionP.style("height"));
 		}
-		if (fontsize < that.minimumFontSize) {
-			that.minimumFontSize = fontsize;
+		if (fontsize < this.minimumFontSize) {
+			this.minimumFontSize = fontsize;
 		}
 		var marginLeft = parseInt(maxwidth - textwidth) / 2;
 		captionP.style("left", marginLeft + "px");
+
+		// now for the AMPM label
+		fontsize  = maxheight;
+		captionAMPM.style("font-size", fontsize + "px");
+		textwidth  = parseInt(captionAMPM.style("width"));
+		textheight = parseInt(captionAMPM.style("height"));
+		while ((textwidth > maxwidth || textheight > maxheight) && fontsize >= 3) {
+			fontsize -= 1;
+			captionAMPM.style("font-size", fontsize + "px");
+			textwidth  = parseInt(captionAMPM.style("width"));
+			textheight = parseInt(captionAMPM.style("height"));
+		}
+		if (fontsize < this.minimumFontSize) {
+			this.minimumFontSize = fontsize;
+		}
+		marginLeft = parseInt(maxwidth - textwidth) / 2;
+		captionAMPM.style("left", marginLeft + "px");
 	},
 
-	createCaption: function(clock, that) {
-		var top = "85%";
+	createCaption: function(clock) {
+		var top = "95%";
 		var textdiv = d3.select("#" + clock.id)
 						.append("div")
 						.attr("id", clock.id + "textDiv")
 						.style("height", "15%")
 						.style("top", top)
 						.style("position", "absolute")
-						.style("width", "90%")
-						.style("left", "5%");
+						.style("width", "100%");
+		var textAMPM = textdiv.append("p")
+						.attr("id", clock.id + "TextAMPM")
+						.style("color", "#d3d3d3")
+						.style("top", "-1em")
+						.style("position", "absolute")
+						.style("white-space", "nowrap")
+						.text("00:00 PM");
 		var text = textdiv.append("p")
 						.attr("id", clock.id + "Text")
 						.style("color", "white")
 						.style("position", "absolute")
+						.style("top", "0.2em")
 						.style("white-space", "nowrap")
 						.text(clock.name.split(',')[0]);
-		that.setCaptionSize(textdiv, text, that);
-		that.resizeCaption();
-		that.updateAllCaption(that);
+		this.setCaptionSize(textdiv, text, textAMPM);
+		this.resizeCaption();
+		this.updateAllCaption();
+		this.ready = true;
 	},
 
 
 	addClockToView: function(clock) {
-		d3.select("#clocks").append("div").attr("id", clock.id);
 		this.ready = false;
+		d3.select("#clocks").append("div").attr("id", clock.id);
 		var _this = this;
 		d3.xml(this.resrcPath + 'clock.svg', "image/svg+xml", function(error, xml) {
 			if (error) {
@@ -105,8 +132,7 @@ var timezone = SAGE2_App.extend({
 			}
 			var div = document.getElementById(clock.id);
 			div.appendChild(xml.documentElement);
-			_this.createCaption(clock, _this);
-			_this.ready = true;
+			_this.createCaption(clock);
 		});
 	},
 
@@ -120,7 +146,8 @@ var timezone = SAGE2_App.extend({
 							.append("div")
 							.attr("id", "clocks")
 							.style("width", "100%")
-							.style("height", "80%")
+							.style("height", "85%")
+							.style("top", "2%")
 							.style("position", "absolute");
 		this.addAllClocks();
 		this.createButtons();
@@ -128,6 +155,9 @@ var timezone = SAGE2_App.extend({
 
 	init: function(data) {
 		this.SAGE2Init("div", data);
+
+		// SAGE2 Application Settings
+
 		// Set the background to black
 		this.element.style.backgroundColor = '#6C6969';
 		this.ready = false;
@@ -145,18 +175,12 @@ var timezone = SAGE2_App.extend({
 
 		// move and resize callbacks
 		this.resizeEvents = "continuous";
-		this.moveEvents   = "continuous";
 
-		// SAGE2 Application Settings
-		//
 		// Control the frame rate for an animation application
 		this.maxFPS = 2.0;
-		// Not adding controls but making the default buttons available
+		//  Adding controls
 		this.controls.finishedAddingControls();
 		this.enableControls = true;
-		this.SAGE2UserModification = true;
-		this.refresh(data.date);
-		this.SAGE2UserModification = false;
 	},
 
 	load: function(date) {
@@ -184,15 +208,21 @@ var timezone = SAGE2_App.extend({
 	draw: function(date) {
 		for (var i in this.state.clocks) {
 			if (this.ready) {
-				var secondToHourCostant = 3600;
+				var secondToHourCostant    = 3600;
 				var secondToMinuteConstant = 60;
-				var hourOffset = Math.floor(this.state.clocks[i].offset / secondToHourCostant);
+				var hourOffset   = Math.floor(this.state.clocks[i].offset / secondToHourCostant);
 				var minuteOffset = (this.state.clocks[i].offset % secondToHourCostant) / secondToMinuteConstant;
 				var now     = date;
 				var hours   = (now.getHours() + hourOffset) % 24;
 				var minutes = (now.getMinutes() + minuteOffset) % 60;
 				var seconds = now.getSeconds();
 				var millis  = now.getMilliseconds();
+
+				// Create a readable time (using moment.js)
+				var momentTime = moment({hour:hours, minute:minutes});
+				var momentStr  = momentTime.format("hh:mm A");
+				// update the text for this clock
+				d3.select("#" + this.state.clocks[i].id + "TextAMPM").text(momentStr);
 
 				// rotate hour hands
 				this.rotateElement(this.state.clocks[i].id, 'hourHand', 30 * hours + 0.5 * minutes);
@@ -231,58 +261,66 @@ var timezone = SAGE2_App.extend({
 	resizeCaption: function() {
 		this.minimumFontSize = Number.MAX_VALUE;
 		for (var i in this.state.clocks) {
-			var captionDiv = d3.select("#" + this.state.clocks[i].id + "textDiv");
-			var captionP = captionDiv.select("#" + this.state.clocks[i].id + "Text");
-			this.setCaptionSize(captionDiv, captionP, this);
-			this.updateAllCaption(this);
+			var captionDiv  = d3.select("#" + this.state.clocks[i].id + "textDiv");
+			var captionP    = captionDiv.select("#" + this.state.clocks[i].id + "Text");
+			var captionAMPM = captionDiv.select("#" + this.state.clocks[i].id + "TextAMPM");
+			this.setCaptionSize(captionDiv, captionP, captionAMPM);
+			this.updateAllCaption();
 		}
 	},
 
 	resize: function(date) {
-		this.refresh(date);
 		this.resizeCaption();
-	},
-
-	move: function(date) {
-		this.refresh(date);
 	},
 
 	quit: function() {
 		// Make sure to delete stuff (timers, ...)
 	},
 
+	// Callback function from the master, when doing TZ API request
+	addClock: function(data) {
+		var timeOffset = data.offset + this.timeZoneOffset;
+		var id = data.cityName.toLowerCase() + data.lat + data.lon;
+		id = id.replace(/ /g, "");
+		id = id.replace(/\./g, '');
+		var flag = false;
+		for (var i in this.state.clocks) {
+			if (id === this.state.clocks[i].id) {
+				flag = true;
+				break;
+			}
+		}
+		if (!flag) {
+			var clock = {
+				name: data.cityName.charAt(0).toUpperCase() + data.cityName.slice(1),
+				offset: timeOffset,
+				id: id,
+				nightMode: false};
+			this.state.clocks.push(clock);
+			this.addClockToView(clock);
+			this.updateAllDivs();
+		}
+		// Sync the state variable
+		this.SAGE2Sync(true);
+	},
 
 	clockSelected: function(lat, lon, cityName) {
-		var url = "http://api.timezonedb.com/?lat=" + lat + "&lng=" + lon + "&format=json&key=4R3QHZXPDCOL";
+		var url = "https://api.timezonedb.com/?lat=" + lat + "&lng=" + lon + "&format=json&key=4R3QHZXPDCOL";
 		var _this = this;
-		d3.json(url, function(error, json) {
-			if (error) {
-				return console.warn(error);
-			}
-			var timeOffset = parseInt(json.gmtOffset) + _this.timeZoneOffset;
-			var id = cityName.toLowerCase() + lat + lon;
-			id = id.replace(/ /g, "");
-			id = id.replace(/\./g, '');
-			_this.SAGE2UserModification = true;
-			var flag = false;
-			for (var i in _this.state.clocks) {
-				if (id === _this.state.clocks[i].id) {
-					flag = true;
-					break;
+		// Only do the API call on master, to lower load on timezonedb.com
+		if (isMaster) {
+			d3.json(url, function(error, json) {
+				if (error) {
+					return console.warn(error);
 				}
-			}
-			if (!flag) {
-				var clock = {
-					name: cityName.charAt(0).toUpperCase() + cityName.slice(1),
-					offset: timeOffset,
-					id: id,
-					nightMode: false};
-				_this.state.clocks.push(clock);
-				_this.addClockToView(clock);
-				_this.updateAllDivs();
-			}
-			_this.SAGE2UserModification = false;
-		});
+				_this.broadcast("addClock", {
+					offset: parseInt(json.gmtOffset),
+					lat: lat,
+					lon: lon,
+					cityName: cityName
+				});
+			});
+		}
 	},
 
 	localizeCity: function(city) {
