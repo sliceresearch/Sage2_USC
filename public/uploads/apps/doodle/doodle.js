@@ -17,71 +17,62 @@ var doodle = SAGE2_App.extend({
 		this.resizeEvents = "continuous"; // "onfinish";
 
 		this.element.id = "div" + data.id;
-		this.appIdRef 	= data.id;
+		this.appIdRef   = data.id;
 
-		//force this div to have specified width and height
-		var workingDiv = document.getElementById( this.element.id );
-			workingDiv.width = this.element.clientWidth + "px";
-			workingDiv.height = this.element.clientHeight + "px";
+		// force this div to have specified width and height
+		var workingDiv = document.getElementById(this.element.id);
+		workingDiv.width = this.element.clientWidth + "px";
+		workingDiv.height = this.element.clientHeight + "px";
 
-		//use up the entire amount such that a scaling will occur when the app is increased / decreased in size.
+		// use up the entire amount such that a scaling will occur when the app is increased / decreased in size.
 		var drawCanvas = document.createElement('canvas');
-			drawCanvas.id 			= this.element.id + "DrawCanvas";
-			drawCanvas.width 		= 500;
-			drawCanvas.height 		= 500;
-			drawCanvas.style.width 	= "100%";
-			drawCanvas.style.height = "100%";
-		workingDiv.appendChild( drawCanvas );
+		drawCanvas.id			= this.element.id + "DrawCanvas";
+		drawCanvas.width		= 500;
+		drawCanvas.height		= 500;
+		drawCanvas.style.width	= "100%";
+		drawCanvas.style.height = "100%";
+		workingDiv.appendChild(drawCanvas);
 		var ctx = drawCanvas.getContext("2d");
 		ctx.fillStyle = "#FFFFFF";
-		ctx.fillRect( 0, 0, drawCanvas.width, drawCanvas.height );
+		ctx.fillRect(0, 0, drawCanvas.width, drawCanvas.height);
 		ctx.fillStyle = "#000000";
 
+		// tracks who needs to receive updates for draw commands.
 		this.arrayOfEditors = [];
-
-
-
-
-		//erase me after code update
+		// used for initial state sending of drawing.
 		this.imageToDraw = new Image();
 
-
-
+		//
+		console.log("erase me, init funciton this.state");
+		console.dir(this.state);
+		if (this.state.imageSnapshot !== undefined && this.state.imageSnapshot.length > 0) { this.setInitialCanvas(this.state.imageSnapshot); }
 	},
 
 	/**
 	0: message
 	1: clientId
 	*/
-	setCanvas: function(msgParams) {
-		if( msgParams[0] === null || msgParams[0] === undefined ) { return; }
+	setInitialCanvas: function(initialImage) {
+		if( initialImage === null || initialImage === undefined ) { return; }
 
-		this.imageToDraw.src 		= msgParams[0];
-		var workingDiv 	= document.getElementById( this.element.id + "DrawCanvas");
-		var ctx 		= workingDiv.getContext('2d');
+		this.imageToDraw.src = initialImage;
+		var workingDiv = document.getElementById( this.element.id + "DrawCanvas");
+		var ctx = workingDiv.getContext('2d');
 
 		ctx.drawImage( this.imageToDraw, 0, 0 );
-
-		ctx.font = "20px";
-		ctx.fillText( msgParams[1], 0, 0);
-
-
-		// workingDiv.innerHTML = msgParams[1];
-		// workingDiv.innerHTML += ":<br>";
-		// workingDiv.innerHTML += msgParams[0];
 	},
 
 	/**
 	Returns current canvas as image encode.
 	*/
 	getCanvasAsImage: function () {
+		this.saveCurrentWork();
 		return document.getElementById( this.element.id + "DrawCanvas" ).toDataURL();
 	},
 
 	/**
 	Adds a clientId as a editer.
 	Everyone in the array should be able to update this app correctly and receive each other's updates.
-	
 	*/
 	addClientIdAsEditor: function(responseObject) {
 		// add the client who responded to the list of editors.
@@ -112,6 +103,7 @@ var doodle = SAGE2_App.extend({
 				i--;
 			}
 		}
+		this.saveCurrentWork();
 	},
 
 	/**
@@ -162,7 +154,18 @@ var doodle = SAGE2_App.extend({
 		}
 	},
 
+	saveCurrentWork: function() {
+		this.state.imageSnapshot = document.getElementById( this.element.id + "DrawCanvas" ).toDataURL();
+
+		console.log("erase me, saveCurrentWork funciton this.state");
+		console.dir(this.state);
+
+		this.SAGE2UpdateAppOptionsFromState();
+		this.SAGE2Sync(true);
+	},
+
 	load: function(date) {
+		this.setInitialCanvas(this.state.imageSnapshot);
 	},
 
 	draw: function(date) {
@@ -170,8 +173,8 @@ var doodle = SAGE2_App.extend({
 
 	resize: function(date) {
 		var workingDiv = document.getElementById( this.element.id );
-			workingDiv.width = this.element.clientWidth + "px";
-			workingDiv.height = this.element.clientHeight + "px";
+		workingDiv.width = this.element.clientWidth + "px";
+		workingDiv.height = this.element.clientHeight + "px";
 	},
 
 	/**
@@ -206,7 +209,7 @@ var doodle = SAGE2_App.extend({
 	},
 
 	quit: function() {
-		// no additional calls needed.
+		this.saveCurrentWork();
 	}
 
 });

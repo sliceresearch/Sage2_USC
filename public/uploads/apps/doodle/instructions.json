@@ -7,6 +7,9 @@
 	"sticky": true,
 	"dependencies": [
 	],
+	"load": {
+		"imageSnapshot": ""
+	},
 	"title": "doodle",
 	"version": "1.0.0",
 	"description": "doodle",

@@ -7,6 +7,10 @@
 	"sticky": true,
 	"dependencies": [
 	],
+	"load": {
+		"clientName": "Quick Note",
+		"clientInput": "Loading note from user..."
+	},
 	"title": "Quick Note",
 	"version": "1.0.0",
 	"description": "Quick Note",

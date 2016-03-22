@@ -29,27 +29,50 @@ var quickNote = SAGE2_App.extend({
 		this.startingWidth 		= this.element.clientWidth;
 		this.startingHeight 	= this.element.clientHeight;
 
-		this.setMessage(
-			{ 
-				clientName: "Quick Note",
-				clientInput: "Loading note from user..."
-			});
+		// this.setMessage(
+		// 	{
+		// 		clientName: "Quick Note",
+		// 		clientInput: "Loading note from user..."
+		// 	})
+
+
+		console.log("erase me, init function activate this.state");
+		console.dir(this.state);
+
+		this.setMessage(this.state);
 
 	},
 
 	/**
-	0: message
-	1: clientId
+	msgParams.clientName	Client input pointer name
+	msgParams.clientInput	What they typed for the note.
 	*/
 	setMessage: function(msgParams) {
 		var workingDiv = document.getElementById( this.element.id );
+		if (msgParams.clientName === undefined || msgParams.clientName === null || msgParams.clientName =="") {
+			msgParams.clientName = "Anonymous";
+		}
 
 		workingDiv.innerHTML = msgParams.clientName;
 		workingDiv.innerHTML += ":<br>";
 		workingDiv.innerHTML += msgParams.clientInput;
+
+		this.state.clientName = msgParams.clientName;
+		this.state.clientInput = msgParams.clientInput;
+
+		console.log("erase me, setMessage function activate this.state");
+		console.dir(this.state);
+
+		this.SAGE2UpdateAppOptionsFromState();
+		this.SAGE2Sync(true);
 	},
 
 	load: function(date) {
+		if (this.state.clientInput !== undefined && this.state.clientInput !== null) {
+			this.setMessage({clientName:this.state.clientName, clientInput:this.state.clientInput});
+		}
+		console.log("erase me, load function activate this.state");
+		console.dir(this.state);
 	},
 
 	draw: function(date) {
