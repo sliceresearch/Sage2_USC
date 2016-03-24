@@ -1001,7 +1001,12 @@ function handleClick(element) {
 	if (element.id === "sage2pointer"      || element.id === "sage2pointerContainer" || element.id === "sage2pointerLabel") {
 		interactor.startSAGE2Pointer(element.id);
 	} else if (element.id === "sharescreen"  || element.id === "sharescreenContainer"  || element.id === "sharescreenLabel") {
-		interactor.startScreenShare();
+		console.log("try to open new window for screen sharing...");
+		// HACK to guess port!!!
+		var newurl = "https://"+window.location.hostname+":9296/ssindex.html";
+		console.log("new url "+newurl);
+		window.open("https://"+window.location.hostname+":9296/ssindex.html", "_blank", "width=640, height=480");
+		//interactor.startScreenShare();
 	} else if (element.id === "applauncher"  || element.id === "applauncherContainer"  || element.id === "applauncherLabel") {
 		wsio.emit('requestAvailableApplications');
 	} else if (element.id === "mediabrowser" || element.id === "mediabrowserContainer" || element.id === "mediabrowserLabel") {
