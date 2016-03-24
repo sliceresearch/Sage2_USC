@@ -37,6 +37,9 @@ var doodle = SAGE2_App.extend({
 		ctx.fillRect(0, 0, drawCanvas.width, drawCanvas.height);
 		ctx.fillStyle = "#000000";
 
+		// Critical for file creation. Attributed to who first initiated doodle.
+		console.log("erase me, value of creationTime:" + this.state.creationTime );
+
 		// tracks who needs to receive updates for draw commands.
 		this.arrayOfEditors = [];
 		// used for initial state sending of drawing.
@@ -46,6 +49,7 @@ var doodle = SAGE2_App.extend({
 		console.log("erase me, init funciton this.state");
 		console.dir(this.state);
 		if (this.state.imageSnapshot !== undefined && this.state.imageSnapshot.length > 0) { this.setInitialCanvas(this.state.imageSnapshot); }
+		this.changeTitleToOriginalCreatorAndTime(this.state);
 	},
 
 	/**
@@ -81,16 +85,18 @@ var doodle = SAGE2_App.extend({
 		var imageString = this.getCanvasAsImage();
 
 		// prevent multiple sends if there are more than 1 display.
-		if(isMaster) {
+		if (isMaster) {
 			// send back to client the OK to start editing.
 			var dataForClient = {};
-			dataForClient.clientDest	= responseObject.clientId;
-			dataForClient.canvasImage 	= imageString;
-			dataForClient.func 			= 'uiDrawSetCurrentStateAndShow';
-			dataForClient.appId 		= this.appIdRef;
-			dataForClient.type 			= 'sendDataToClient';
+			dataForClient.clientDest  = responseObject.clientId;
+			dataForClient.canvasImage = imageString;
+			dataForClient.func        = 'uiDrawSetCurrentStateAndShow';
+			dataForClient.appId       = this.appIdRef;
+			dataForClient.type        = 'sendDataToClient';
 			wsio.emit('csdMessage', dataForClient);
 		}
+
+		this.changeTitleToOriginalCreatorAndTime(responseObject);
 	},
 
 	/**
@@ -128,7 +134,7 @@ var doodle = SAGE2_App.extend({
 		ctx.fillStyle	= lineData[5];
 		ctx.strokeStyle	= lineData[6];
 		// if the line width is greater than 1. At 1 the fill + circle border will expand beyond the line causing bumps in the line.
-		if(lineWidth > 2) {
+		if (lineWidth > 2) {
 			ctx.lineWidth 	= 1;
 			ctx.beginPath();
 			ctx.arc( lineData[2], lineData[3], lineWidth/2, 0, Math.PI * 2, false);
@@ -140,16 +146,16 @@ var doodle = SAGE2_App.extend({
 		ctx.lineTo( lineData[0], lineData[1]);
 		ctx.stroke();
 
-		if(isMaster) {
+		if (isMaster) {
 			var dataForClient = {};
-				dataForClient.clientDest	= lineData[7];
-				dataForClient.params 		= lineData;
-				dataForClient.func 			= 'uiDrawMakeLine';
-				dataForClient.appId 		= this.appIdRef;
-				dataForClient.type 			= 'sendDataToClient';
-			for(var i = 0; i < this.arrayOfEditors.length; i++) {
-				dataForClient.clientDest 	= this.arrayOfEditors[i];
-				wsio.emit( 'csdMessage', dataForClient );
+			dataForClient.clientDest = lineData[7];
+			dataForClient.params     = lineData;
+			dataForClient.func       = 'uiDrawMakeLine';
+			dataForClient.appId      = this.appIdRef;
+			dataForClient.type       = 'sendDataToClient';
+			for (var i = 0; i < this.arrayOfEditors.length; i++) {
+				dataForClient.clientDest = this.arrayOfEditors[i];
+				wsio.emit('csdMessage', dataForClient);
 			}
 		}
 	},
@@ -164,8 +170,46 @@ var doodle = SAGE2_App.extend({
 		this.SAGE2Sync(true);
 	},
 
+	/**
+	Will be called from addClientIdAsEditor or load.
+	When called from addClientIdAsEditor it will get passsed a parameter, responseObject.
+	From load, the responseObject will contain 
+	*/
+	changeTitleToOriginalCreatorAndTime: function(responseObject) {
+		// if the creationTime has not been set, then fill it out.
+		if (this.state.creationTime === null
+			&& responseObject.serverDate !== undefined
+			&& responseObject.serverDate !== null) {
+			this.state.creationTime = new Date(responseObject.serverDate);
+			// build the title string.
+			var titleString = "DO-" + responseObject.clientName + "-" + this.state.creationTime.getFullYear();
+			if (this.state.creationTime.getMonth() < 9) { titleString += "0"; }
+			titleString += (this.state.creationTime.getMonth() + 1) + ""; // month +1 because starts at 0
+			if (this.state.creationTime.getDate() < 10) { titleString += "0"; }
+			titleString += this.state.creationTime.getDate() + "-";
+			if (this.state.creationTime.getHours() < 10) { titleString += "0"; }
+			titleString += this.state.creationTime.getHours() + ":";
+			if (this.state.creationTime.getMinutes() < 10) { titleString += "0"; }
+			titleString += this.state.creationTime.getMinutes() + ":";
+			if (this.state.creationTime.getSeconds() < 10) { titleString += "0"; }
+			titleString += this.state.creationTime.getSeconds() + ".";
+			if (this.state.creationTime.getMilliseconds() < 10) { titleString += "0"; }
+			if (this.state.creationTime.getMilliseconds() < 100) { titleString += "0"; }
+			titleString += this.state.creationTime.getMilliseconds();
+			// store it for later and update the tile.
+			this.state.creationTime = titleString;
+			this.updateTitle(this.state.creationTime);
+			console.log("Should have updated title to:" + titleString);
+		}
+		// if loaded will include the creationTime
+		if (responseObject.creationTime !== undefined && responseObject.creationTime !== null) {
+			this.updateTitle(responseObject.creationTime);
+		}
+	},
+
 	load: function(date) {
 		this.setInitialCanvas(this.state.imageSnapshot);
+		this.changeTitleToOriginalCreatorAndTime({creationTime:this.state.creationTime});
 	},
 
 	draw: function(date) {

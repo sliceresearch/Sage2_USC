@@ -25,9 +25,12 @@ var quickNote = SAGE2_App.extend({
 
 		workingDiv.style.fontSize 	= ui.titleTextSize + "px";
 
-		this.startingFontSize 	= ui.titleTextSize;
-		this.startingWidth 		= this.element.clientWidth;
-		this.startingHeight 	= this.element.clientHeight;
+		this.startingFontSize = ui.titleTextSize;
+		this.startingWidth    = this.element.clientWidth;
+		this.startingHeight   = this.element.clientHeight;
+		// This is critical for naming of file scheme. Currently the file name will be based upon creator and time.
+		// However this does have potential issues later. For example edits by different users.
+		console.log("erase me, value of creationTime:" + this.state.creationTime );
 
 		// this.setMessage(
 		// 	{
@@ -53,9 +56,7 @@ var quickNote = SAGE2_App.extend({
 			msgParams.clientName = "Anonymous";
 		}
 
-		workingDiv.innerHTML = msgParams.clientName;
-		workingDiv.innerHTML += ":<br>";
-		workingDiv.innerHTML += msgParams.clientInput;
+		workingDiv.innerHTML = msgParams.clientInput;
 
 		this.state.clientName = msgParams.clientName;
 		this.state.clientInput = msgParams.clientInput;
@@ -63,13 +64,47 @@ var quickNote = SAGE2_App.extend({
 		console.log("erase me, setMessage function activate this.state");
 		console.dir(this.state);
 
+		// if the creationTime has not been set, then fill it out.
+		if (this.state.creationTime === null
+			&& msgParams.serverDate !== undefined
+			&& msgParams.serverDate !== null) {
+			this.state.creationTime = new Date(msgParams.serverDate);
+			// build the title string.
+			var titleString = "QN-" + msgParams.clientName + "-" + this.state.creationTime.getFullYear();
+			if (this.state.creationTime.getMonth() < 9) { titleString += "0"; }
+			titleString += (this.state.creationTime.getMonth() + 1) + ""; // month +1 because starts at 0
+			if (this.state.creationTime.getDate() < 10) { titleString += "0"; }
+			titleString += this.state.creationTime.getDate() + "-";
+			if (this.state.creationTime.getHours() < 10) { titleString += "0"; }
+			titleString += this.state.creationTime.getHours() + ":";
+			if (this.state.creationTime.getMinutes() < 10) { titleString += "0"; }
+			titleString += this.state.creationTime.getMinutes() + ":";
+			if (this.state.creationTime.getSeconds() < 10) { titleString += "0"; }
+			titleString += this.state.creationTime.getSeconds() + ".";
+			if (this.state.creationTime.getMilliseconds() < 10) { titleString += "0"; }
+			if (this.state.creationTime.getMilliseconds() < 100) { titleString += "0"; }
+			titleString += this.state.creationTime.getMilliseconds();
+			// store it for later and update the tile.
+			this.state.creationTime = titleString;
+			this.updateTitle(this.state.creationTime);
+			console.log("Should have updated title to:" + titleString);
+		}
+		// if loaded will include the creationTime
+		if (msgParams.creationTime !== undefined && msgParams.creationTime !== null) {
+			this.updateTitle(msgParams.creationTime);
+		}
+
 		this.SAGE2UpdateAppOptionsFromState();
 		this.SAGE2Sync(true);
 	},
 
 	load: function(date) {
 		if (this.state.clientInput !== undefined && this.state.clientInput !== null) {
-			this.setMessage({clientName:this.state.clientName, clientInput:this.state.clientInput});
+			this.setMessage({
+				clientName:this.state.clientName,
+				clientInput:this.state.clientInput,
+				creationTime:this.state.creationTime
+			});
 		}
 		console.log("erase me, load function activate this.state");
 		console.dir(this.state);

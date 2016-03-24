@@ -9,7 +9,8 @@
 	],
 	"load": {
 		"clientName": "Quick Note",
-		"clientInput": "Loading note from user..."
+		"clientInput": "Loading note from user...",
+		"creationTime": null
 	},
 	"title": "Quick Note",
 	"version": "1.0.0",

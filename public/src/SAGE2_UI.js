@@ -1067,7 +1067,10 @@ function handleClick(element) {
 		data.type		= "launchAppWithValues";
 		data.appName	= "doodle";
 		data.func		= "addClientIdAsEditor";
-		data.params		= {clientId: interactor.uniqueID};
+		data.params		= {
+			clientId: interactor.uniqueID,
+			clientName: document.getElementById('sage2PointerLabel').value
+		};
 		wsio.emit('csdMessage', data);
 		/*
 		Dialog will not be shown here.
@@ -2069,7 +2072,10 @@ function setupUiDrawCanvas() {
 			data.type		= "launchAppWithValues";
 			data.appName	= "doodle";
 			data.func		= "addClientIdAsEditor";
-			data.params		= {clientId: interactor.uniqueID};
+			data.params		= {
+				clientId: interactor.uniqueID,
+				clientName: document.getElementById('sage2PointerLabel').value
+			};
 			wsio.emit('csdMessage', data);
 		}
 	);

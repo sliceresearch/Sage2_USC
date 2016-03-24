@@ -7518,7 +7518,11 @@ function csdLaunchAppWithValues(wsio,data) {
 				}
 				// else try send it data
 				else {
-					var dataForDisplay = {};
+					//add potentially missing params
+					data.params.serverDate = Date.now();
+					data.params.clientId   = wsio.id;
+					//load the data object for the new app
+					var dataForDisplay  = {};
 					dataForDisplay.app  = app.id;
 					dataForDisplay.func = data.func;
 					dataForDisplay.data = data.params;
