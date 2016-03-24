@@ -199,6 +199,9 @@ function SAGE2_init() {
 
 		setupListeners();
 
+		// Get the cookie for the session, if there's one
+		var session = getCookie("session");
+
 		var clientDescription = {
 			clientType: "sageUI",
 			requests: {
@@ -207,7 +210,8 @@ function SAGE2_init() {
 				time: false,
 				console: false
 			},
-			browser: __SAGE2__.browser
+			browser: __SAGE2__.browser,
+			session: session
 		};
 		wsio.emit('addClient', clientDescription);
 

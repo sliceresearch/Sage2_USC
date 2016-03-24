@@ -55,6 +55,9 @@ function SAGE2_init() {
 
 		setupListeners();
 
+		// Get the cookie for the session, if there's one
+		var session = getCookie("session");
+
 		var clientDescription = {
 			clientType: "audioManager",
 			requests: {
@@ -62,7 +65,8 @@ function SAGE2_init() {
 				version: false,
 				time: false,
 				console: false
-			}
+			},
+			session: session
 		};
 		wsio.emit('addClient', clientDescription);
 	});

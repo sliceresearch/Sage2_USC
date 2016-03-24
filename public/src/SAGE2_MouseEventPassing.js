@@ -148,10 +148,8 @@ var SAGE2MEP = {
 				if (this.debug) {
 					console.log("Focused element:" + point.currentElement);
 					console.log("Dom thinks focus element is:" + document.activeElement);
-
 					console.log("pointer press at:" + position.x + "," + position.y);
 					console.log("webkit pointer location: " + xLocationOfPointerOnScreen + "," + yLocationOfPointerOnScreen);
-
 				}
 
 				mouseEventToPass = new MouseEvent("mousedown", {

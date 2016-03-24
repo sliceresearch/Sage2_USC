@@ -778,11 +778,16 @@ function addCookie(sKey, sValue) {
 	if (!sKey) {
 		return false;
 	}
+	var domain;
+	if (window.location.hostname === "127.0.0.1") {
+		domain = "127.0.0.1";
+	} else {
+		domain = window.location.hostname.split('.').slice(-2).join(".");
+	}
 	document.cookie = encodeURIComponent(sKey) + "=" + encodeURIComponent(sValue) +
 		"; expires=Fri, 31 Dec 9999 23:59:59 GMT" +
-		"; domain=" + location.hostname.split('.').slice(-2).join(".") +
-		"; path=/" +
-		"; secure";
+		"; domain=" + domain +
+		"; path=/";
 	return true;
 }
 

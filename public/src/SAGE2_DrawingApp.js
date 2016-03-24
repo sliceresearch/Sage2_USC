@@ -86,6 +86,9 @@ function SAGE2_init() {
 		// Setup message callbacks
 		setupListeners(wsio_global);
 
+		// Get the cookie for the session, if there's one
+		var session = getCookie("session");
+
 		var clientDescription = {
 			clientType: "sageDrawing",
 			requests: {
@@ -93,7 +96,8 @@ function SAGE2_init() {
 				version: true,
 				time: false,
 				console: false
-			}
+			},
+			session: session
 		};
 		wsio_global.emit('addClient', clientDescription);
 	});
