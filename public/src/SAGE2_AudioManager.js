@@ -8,6 +8,7 @@
 //
 // Copyright (c) 2014-15
 
+/* global createjs */
 "use strict";
 
 /**
@@ -40,6 +41,18 @@ window.onbeforeunload = function() {
 function SAGE2_init() {
 	// Just a given number
 	clientID = -2;
+
+	///////////
+	// SoundJS library
+	//
+	// Load the SoundJS library and plugins
+	if (!createjs.Sound.initializeDefaultPlugins()) {
+		console.log('SoundJS> cannot load library');
+		return;
+	} else {
+		console.log('SoundJS> library loaded - version', createjs.SoundJS.version);
+	}
+	///////////
 
 	// Detect which browser is being used
 	SAGE2_browser();
@@ -74,6 +87,7 @@ function SAGE2_init() {
 	// Socket close event (ie server crashed)
 	wsio.on('close', function(evt) {
 		var i, tracks;
+
 		// Pause all video tracks
 		tracks = document.getElementsByTagName('video');
 		for (i = 0; i < tracks.length; i++) {
@@ -82,6 +96,7 @@ function SAGE2_init() {
 				// tracks[i].parentNode.removeChild(tracks[i]);
 			}
 		}
+
 		// Pause all audio tracks
 		tracks = document.getElementsByTagName('audio');
 		for (i = 0; i < tracks.length; i++) {
@@ -90,6 +105,7 @@ function SAGE2_init() {
 				// tracks[i].parentNode.removeChild(tracks[i]);
 			}
 		}
+
 		// Try to reload
 		var refresh = setInterval(function() {
 			// make a dummy request to test the server every 2 sec
@@ -119,6 +135,7 @@ function SAGE2_init() {
 
 function setupListeners() {
 	wsio.on('initialize', function(data) {
+		// nothing
 	});
 
 	wsio.on('setupDisplayConfiguration', function(json_cfg) {
@@ -145,18 +162,52 @@ function setupListeners() {
 			console.log("Configuration> initialVolume = ", initialVolume);
 		}
 
-		// play the jinggle
-		var jinggle_elt = document.getElementById('jinggle');
+		// Select the jinggle sound (default or configuration file)
+		// var jingle = "sage2_jinggle.mp3";
+		var jingle = "kola-startup.mp3";
 		if (json_cfg.ui.startup_sound) {
-			var jinggle_src = document.getElementById('jinggle_src');
-			jinggle_src.src = json_cfg.ui.startup_sound;
+			// use the jingle file if specificied in configuration file
+			jingle = json_cfg.ui.startup_sound;
 		}
-		jinggle_elt.load();
-		jinggle_elt.volume = initialVolume / 10;
-		jinggle_elt.play();
+
+		// folder for audio files (relative to public/)
+		var audioPath   = "sounds/";
+		// Default settings
+		var defaults    =  {
+			volume: initialVolume / 20, // volume [0:1] - value 0-10 and half volume for special effects
+			delay:  0, // amount of time to delay the start of audio playback, in milliseconds
+			loop:   0, // times the audio loops when it reaches the end of playback, 0 no loops, -1 infinite
+			offset: 0, // offset from the start of the audio to begin playback, in milliseconds
+			pan:    0  // left-right pan of the sound, -1 (left) and 1 (right).
+		};
+		// Array of assets to preload
+		var soundAssets = [
+			{id: "startup", src: jingle,  defaultPlayProps: defaults},
+			{id: "loose",   src: "spacey-loose.wav", defaultPlayProps: defaults},
+			{id: "powerup", src: "spacey-1up-power-up.wav", defaultPlayProps: defaults}
+		];
+		// If the file cannot load, try other formats (need the files)
+		createjs.Sound.alternateExtensions = ["ogg", "mp3"];
+		// Callback when the assets are loaded
+		createjs.Sound.on("fileload", handleSoundJSLoad);
+		// Load the assets (will trigger the callbac when done)
+		createjs.Sound.registerSounds(soundAssets, audioPath);
 	});
 
+	function handleSoundJSLoad(event) {
+		if (event.id === "startup") {
+			// Play the startup jingle at load
+			var instance = createjs.Sound.play(event.src);
+			// Set the volume
+			instance.volume = initialVolume / 10;
+		}
+		console.log('SoundJS> asset loaded', event.id);
+	}
+
 	wsio.on('createAppWindow', function(data) {
+		// Play an audio blip
+		createjs.Sound.play("powerup");
+
 		if (data.application === "movie_player") {
 			var main = document.getElementById('main');
 			var videosTable = document.getElementById('videos');
@@ -329,6 +380,9 @@ function setupListeners() {
 	});
 
 	wsio.on('deleteElement', function(elem_data) {
+		// Play an audio blop
+		createjs.Sound.play("loose");
+
 		deleteElement(elem_data.elemId);
 		deleteElement(elem_data.elemId + "_row");
 	});

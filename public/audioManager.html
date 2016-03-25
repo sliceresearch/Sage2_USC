@@ -16,27 +16,29 @@
 	// Copyright (c) 2014
 </script>
 
+<!-- CSS style -->
+<link rel="stylesheet" type="text/css" href="css/style_audio.css"/>
+
+<!-- External dependencies -->
+<script src="lib/soundjs-0.6.1.min.js"></script>
+
 <!-- SAGE2 code -->
 <script async src="src/websocket.io.js"></script>
 <script async src="src/SAGE2_runtime.js"></script>
 <script async src="src/SAGE2_AudioManager.js"></script>
 
-<!-- SAGE2 minified -->
-<!--
-<script type="text/javascript" src="min/audio.min.js"></script>
--->
-
-<link rel="stylesheet" type="text/css" href="css/style_audio.css" media="screen" />
 
 </head>
 
 <body onload="SAGE2_init()">
 
 	<!-- SAGE2 jinggle at startup -->
+<!--
 	<audio id="jinggle" preload="auto" hidden>
 		<source id="jinggle_src" src="images/kola-startup.mp3">
 		Your browser does not support the audio element.
 	</audio>
+ -->
 
 	<div id="main">
 		<table id="videos">
