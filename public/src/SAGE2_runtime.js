@@ -328,8 +328,8 @@ function format24Hr(date) {
  * @return {String} formatted duration
  */
 function formatHHMMSS(duration) {
-	var ss = parseInt((duration / 1000) % 60,         10);
-	var mm = parseInt((duration / (1000 * 60)) % 60,    10);
+	var ss = parseInt((duration / 1000) % 60,             10);
+	var mm = parseInt((duration / (1000 * 60)) % 60,      10);
 	var hh = parseInt((duration / (1000 * 60 * 60)) % 24, 10);
 
 	hh = (hh < 10) ? "0" + hh : hh;

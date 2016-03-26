@@ -34,6 +34,14 @@ window.onbeforeunload = function() {
 };
 
 /**
+ * When the page loads, starts the audio manager
+ *
+ */
+window.addEventListener('load', function(event) {
+	SAGE2_init();
+});
+
+/**
  * Entry point of the application
  *
  * @method SAGE2_init
@@ -143,8 +151,6 @@ function setupListeners() {
 		var http_port;
 		var https_port;
 
-		console.log(json_cfg);
-
 		http_port  = json_cfg.port === 80 ? "" : ":" + json_cfg.port;
 		https_port = json_cfg.secure_port === 443 ? "" : ":" + json_cfg.secure_port;
 		hostAlias["http://"  + json_cfg.host + http_port]  = window.location.origin;
@@ -219,10 +225,10 @@ function setupListeners() {
 			} else {
 				vid = document.createElement('audio');
 			}
-			vid.id  = data.id;
-			vid.volume = initialVolume / 10;
-			vid.firstPlay = true;
-			vid.startPaused = data.data.paused;
+			vid.id            = data.id;
+			vid.volume        = initialVolume / 10;
+			vid.firstPlay     = true;
+			vid.startPaused   = data.data.paused;
 			vid.style.display = "none";
 			vid.addEventListener('canplaythrough', function() {
 				// Video is loaded and can be played
@@ -243,7 +249,8 @@ function setupListeners() {
 			vid.addEventListener('timeupdate', function() {
 				var vid_time = document.getElementById(data.id + "_time");
 				if (vid_time) {
-					vid_time.textContent = formatHHMMSS(vid.currentTime);
+					// time second, converted to millis, and to string
+					vid_time.textContent = formatHHMMSS(1000.0 * vid.currentTime);
 				}
 			}, false);
 
@@ -259,13 +266,46 @@ function setupListeners() {
 			vid.appendChild(source);
 
 			var videoRow = document.createElement('tr');
+			videoRow.className = "rowNoBorder";
 			videoRow.id  = data.id + "_row";
+
+			var icon = document.createElement('td');
+			icon.setAttribute("rowspan", 2);
+			var link = document.createElement("img");
+			if (data.icon) {
+				link.src = data.icon + '_256.jpg';
+			} else {
+				link.src = "images/unknownapp_256.jpg";
+			}
+			link.width = 120;
+			icon.appendChild(link);
+
 			var title    = document.createElement('td');
 			title.id     = data.id + "_title";
 			title.className   = "videoTitle";
 			title.textContent = data.title;
 
+			var time = document.createElement('td');
+			time.id  = data.id + "_time";
+			time.className   = "videoTime";
+			time.textContent = "00:00:00";
+
+			var play = document.createElement('td');
+			play.id  = data.id + "_play";
+			play.className   = "videoPlay";
+			play.textContent = "Paused";
+
+			videoRow.appendChild(icon);
+			videoRow.appendChild(title);
+			videoRow.appendChild(time);
+			videoRow.appendChild(play);
+
+			var videoRow2 = document.createElement('tr');
+			videoRow2.className = "rowWithBorder";
+			videoRow2.id  = data.id + "_row2";
+
 			var volume = document.createElement('td');
+			volume.setAttribute("colspan", 3);
 			volume.id  = data.id + "_volume";
 			volume.className = "videoVolume";
 			var volumeMute   = document.createElement('span');
@@ -278,41 +318,27 @@ function setupListeners() {
 			volumeSlider.type  = "range";
 			volumeSlider.min   = 0;
 			volumeSlider.max   = 10;
-			volumeSlider.step  = 1;
+			volumeSlider.step  = 0.1;
 			volumeSlider.value = initialVolume;
 			volumeSlider.addEventListener('input', changeVolume, false);
 			volume.appendChild(volumeMute);
 			volume.appendChild(volumeSlider);
 
-			var time = document.createElement('td');
-			time.id  = data.id + "_time";
-			time.className   = "videoTime";
-			time.textContent = "00:00:00";
-
-			var play = document.createElement('td');
-			play.id  = data.id + "_play";
-			play.className   = "videoPlay";
-			play.textContent = "Paused";
-
-			videoRow.appendChild(title);
-			videoRow.appendChild(volume);
-			videoRow.appendChild(time);
-			videoRow.appendChild(play);
+			videoRow2.appendChild(volume);
 
 			main.appendChild(vid);
 			videosTable.appendChild(videoRow);
+			videosTable.appendChild(videoRow2);
 		}
 	});
 
 	wsio.on('setVolume', function(data) {
-		console.log("setVolume ", data.id, " ", data.level);
 		var slider = document.getElementById(data.id + "_volumeSlider");
 		slider.value = data.level * 10;
 		changeVideoVolume(data.id, data.level);
 	});
 
 	wsio.on('videoPlaying', function(data) {
-		console.log("videoPlaying");
 		var vid = document.getElementById(data.id);
 		if (vid) {
 			vid.play();
@@ -385,6 +411,7 @@ function setupListeners() {
 
 		deleteElement(elem_data.elemId);
 		deleteElement(elem_data.elemId + "_row");
+		deleteElement(elem_data.elemId + "_row2");
 	});
 }
 
