@@ -2577,7 +2577,7 @@ function wsSetVolume(wsio, data) {
 	if (SAGE2Items.renderSync[data.id] === undefined || SAGE2Items.renderSync[data.id] === null) {
 		return;
 	}
-	console.log(sageutils.header("Volume") + "set " + data.id + " " + data.level);
+	// console.log(sageutils.header("Volume") + "set " + data.id + " " + data.level);
 	broadcast('setVolume',data);
 }
 
