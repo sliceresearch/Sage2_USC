@@ -19,12 +19,20 @@
  * @class SAGE2_AudioManager
  */
 
-var clientID;
-var wsio;
-var autoplay;
-// default initial volume for applications
-var initialVolume;
+// Global variable (needed by runtime)
 var hostAlias = {};
+// Websocket handle
+var wsio;
+// default settings for applications
+var autoplay = false;
+var initialVolume = 8;
+// WebAudio API variables
+var audioCtx;
+var audioGainNodes   = {};
+var audioPannerNodes = {};
+
+
+
 
 // Explicitely close web socket when web browser is closed
 window.onbeforeunload = function() {
@@ -47,10 +55,6 @@ window.addEventListener('load', function(event) {
  * @method SAGE2_init
  */
 function SAGE2_init() {
-	// Just a given number
-	clientID = -2;
-
-	///////////
 	// SoundJS library
 	//
 	// Load the SoundJS library and plugins
@@ -65,8 +69,6 @@ function SAGE2_init() {
 	// Detect which browser is being used
 	SAGE2_browser();
 
-	autoplay = false;
-	initialVolume = 8;
 	wsio = new WebsocketIO();
 
 	console.log("Connected to server: ", window.location.origin);
@@ -82,9 +84,9 @@ function SAGE2_init() {
 		var clientDescription = {
 			clientType: "audioManager",
 			requests: {
-				config: true,
+				config:  true,
 				version: false,
-				time: false,
+				time:    false,
 				console: false
 			},
 			session: session
@@ -142,6 +144,10 @@ function SAGE2_init() {
 }
 
 function setupListeners() {
+	// wall values
+	var totalWidth;
+	// var totalHeight;
+
 	wsio.on('initialize', function(data) {
 		// nothing
 	});
@@ -198,17 +204,13 @@ function setupListeners() {
 		createjs.Sound.on("fileload", handleSoundJSLoad);
 		// Load the assets (will trigger the callbac when done)
 		createjs.Sound.registerSounds(soundAssets, audioPath);
-	});
 
-	function handleSoundJSLoad(event) {
-		if (event.id === "startup") {
-			// Play the startup jingle at load
-			var instance = createjs.Sound.play(event.src);
-			// Set the volume
-			instance.volume = initialVolume / 10;
-		}
-		console.log('SoundJS> asset loaded', event.id);
-	}
+		// Main audio context (for low-level operations)
+		audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+		audioCtx.listener.setPosition(0, 0, 0);
+		totalWidth  = json_cfg.totalWidth;
+		// totalHeight = json_cfg.totalHeight;
+	});
 
 	wsio.on('createAppWindow', function(data) {
 		// Play an audio blip
@@ -226,9 +228,10 @@ function setupListeners() {
 				vid = document.createElement('audio');
 			}
 			vid.id            = data.id;
-			vid.volume        = initialVolume / 10;
+			// vid.volume        = initialVolume / 10;
 			vid.firstPlay     = true;
 			vid.startPaused   = data.data.paused;
+			vid.controls      = false;
 			vid.style.display = "none";
 			vid.addEventListener('canplaythrough', function() {
 				// Video is loaded and can be played
@@ -265,6 +268,21 @@ function setupListeners() {
 			source.type = data.data.audio_type;
 			vid.appendChild(source);
 
+			// WebAudio API
+			var audioSource = audioCtx.createMediaElementSource(vid);
+			var gainNode    = audioCtx.createGain();
+			audioGainNodes[vid.id] = gainNode;
+
+			var panNode = audioCtx.createPanner();
+			panNode.panningModel = 'equalpower';
+			audioPannerNodes[vid.id] = panNode;
+
+			// source -> gain -> pan -> speakers
+			audioSource.connect(gainNode);
+			gainNode.connect(panNode);
+			panNode.connect(audioCtx.destination);
+			// webaudio end
+
 			var videoRow = document.createElement('tr');
 			videoRow.className = "rowNoBorder";
 			videoRow.id  = data.id + "_row";
@@ -295,9 +313,15 @@ function setupListeners() {
 			play.className   = "videoPlay";
 			play.textContent = "Paused";
 
+			var volumeMute   = document.createElement('td');
+			volumeMute.id    = data.id + "_mute";
+			volumeMute.className = "videoVolumeMute";
+			volumeMute.innerHTML = "&#x2713;";
+
 			videoRow.appendChild(icon);
 			videoRow.appendChild(title);
 			videoRow.appendChild(time);
+			videoRow.appendChild(volumeMute);
 			videoRow.appendChild(play);
 
 			var videoRow2 = document.createElement('tr');
@@ -305,23 +329,19 @@ function setupListeners() {
 			videoRow2.id  = data.id + "_row2";
 
 			var volume = document.createElement('td');
-			volume.setAttribute("colspan", 3);
+			volume.setAttribute("colspan", 4);
 			volume.id  = data.id + "_volume";
 			volume.className = "videoVolume";
-			var volumeMute   = document.createElement('span');
-			volumeMute.id    = data.id + "_mute";
-			volumeMute.className = "videoVolumeMute";
-			volumeMute.innerHTML = "&#x2713;";
 			var volumeSlider = document.createElement('input');
 			volumeSlider.id  = data.id + "_volumeSlider";
 			volumeSlider.className = "videoVolumeSlider";
 			volumeSlider.type  = "range";
+			volumeSlider.appid = data.id;
 			volumeSlider.min   = 0;
-			volumeSlider.max   = 10;
-			volumeSlider.step  = 0.1;
-			volumeSlider.value = initialVolume;
+			volumeSlider.max   = 1;
+			volumeSlider.step  = 0.05;
+			volumeSlider.value = initialVolume / 10;
 			volumeSlider.addEventListener('input', changeVolume, false);
-			volume.appendChild(volumeMute);
 			volume.appendChild(volumeSlider);
 
 			videoRow2.appendChild(volume);
@@ -332,9 +352,48 @@ function setupListeners() {
 		}
 	});
 
+	wsio.on('setItemPosition', function (data) {
+		// Calculate center of the application window
+		var halfTotalWidth = totalWidth / 2;
+		var centerX = data.elemLeft + data.elemWidth / 2 - halfTotalWidth;
+		if (centerX < -totalWidth) {
+			centerX = -totalWidth;
+		}
+		if (centerX > totalWidth) {
+			centerX = totalWidth;
+		}
+		// Update the panner position
+		var panX = centerX / totalWidth;
+		var panY = 0;
+		var panZ = 1 - Math.abs(panX);
+		var panNode = audioPannerNodes[data.elemId];
+		panNode.setPosition(panX, panY, panZ);
+	});
+
+	wsio.on('setItemPositionAndSize', function (data) {
+		// Calculate center of the application window
+		var halfTotalWidth = totalWidth / 2;
+		var centerX = data.elemLeft + data.elemWidth / 2 - halfTotalWidth;
+		if (centerX < -totalWidth) {
+			centerX = -totalWidth;
+		}
+		if (centerX > totalWidth) {
+			centerX = totalWidth;
+		}
+		// Update the panner position
+		var panX = centerX / totalWidth;
+		var panY = 0;
+		var panZ = 1 - Math.abs(panX);
+		var panNode = audioPannerNodes[data.elemId];
+		panNode.setPosition(panX, panY, panZ);
+	});
+
 	wsio.on('setVolume', function(data) {
+		// Get the slider element
 		var slider = document.getElementById(data.id + "_volumeSlider");
-		slider.value = data.level * 10;
+		// Change its value
+		slider.value = data.level;
+		// Go change the actual volume (gain)
 		changeVideoVolume(data.id, data.level);
 	});
 
@@ -405,15 +464,43 @@ function setupListeners() {
 		}
 	});
 
-	wsio.on('deleteElement', function(elem_data) {
+	wsio.on('deleteElement', function(data) {
 		// Play an audio blop
 		createjs.Sound.play("loose");
 
-		deleteElement(elem_data.elemId);
-		deleteElement(elem_data.elemId + "_row");
-		deleteElement(elem_data.elemId + "_row2");
+		// Stop video
+		var vid = document.getElementById(data.elemId);
+		if (vid) {
+			vid.pause();
+		}
+
+		// Clean up the DOM
+		deleteElement(data.elemId);
+		deleteElement(data.elemId + "_row");
+		deleteElement(data.elemId + "_row2");
+
+		// Delete also the webaudio nodes
+		delete audioPannerNodes[data.elemId];
+		delete audioGainNodes[data.elemId];
 	});
 }
+
+/**
+ * Callback for Soundjs library when all audio assets loaded
+ *
+ * @method handleSoundJSLoad
+ * @param event {Event} event data
+ */
+function handleSoundJSLoad(event) {
+	if (event.id === "startup") {
+		// Play the startup jingle at load
+		var instance = createjs.Sound.play(event.src);
+		// Set the volume
+		instance.volume = initialVolume / 10;
+	}
+	console.log('SoundJS> asset loaded', event.id);
+}
+
 
 /**
  * Handler for the volume slider
@@ -422,10 +509,10 @@ function setupListeners() {
  * @param event {Event} event data
  */
 function changeVolume(event) {
-	var vol     = document.getElementById(event.target.id).value / 10;
-	var videoId = event.target.id.substring(0, event.target.id.length - 13);
-	wsio.emit("setVolume", {id: videoId, level: vol});
-	changeVideoVolume(videoId, vol);
+	var volumeSlider = event.target;
+	var vol = volumeSlider.value;
+	wsio.emit("setVolume", {id: volumeSlider.appid, level: vol});
+	changeVideoVolume(volumeSlider.appid, vol);
 }
 
 /**
@@ -436,7 +523,8 @@ function changeVolume(event) {
  * @param volume {Number} new volume value
  */
 function changeVideoVolume(videoId, volume) {
-	document.getElementById(videoId).volume = volume;
+	// Change the gain (0 to 1)
+	audioGainNodes[videoId].gain.value = volume;
 }
 
 /**
