@@ -532,6 +532,9 @@ var SAGE2_App = Class.extend({
 	*/
 	showLayer: function() {
 		if (this.layer) {
+			// before showing, make sure to update the size
+			this.layer.style.width  = this.div.clientWidth  + 'px';
+			this.layer.style.height = this.div.clientHeight + 'px';
 			// Reset its top position, just in case
 			this.layer.style.top = "0px";
 			this.layer.style.display = "block";
