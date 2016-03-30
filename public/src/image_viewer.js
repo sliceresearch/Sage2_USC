@@ -67,6 +67,8 @@ var image_viewer = SAGE2_App.extend({
 	updateAppFromState: function() {
 		this.element.src  = cleanURL(this.state.src || this.state.img_url);
 
+		this.pre.innerHTML = this.syntaxHighlight(this.state.exif);
+
 		if (this.state.showExif === true) {
 			this.showLayer();
 		}
@@ -186,7 +188,8 @@ var image_viewer = SAGE2_App.extend({
 	*/
 	event: function(eventType, position, user_id, data, date) {
 		// Press 'i' to display EXIF information
-		if ((eventType === "keyboard" && data.character === "i") || (eventType === "widgetEvent" && data.identifier === "Info")) {
+		if ((eventType === "keyboard" && data.character === "i") ||
+			(eventType === "widgetEvent" && data.identifier === "Info")) {
 			if (this.isLayerHidden()) {
 				this.state.top = 0;
 				this.state.showExif = true;
