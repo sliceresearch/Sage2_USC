@@ -1158,6 +1158,28 @@ function handleClick(element) {
 	} else if (element.id === "browser"      || element.id === "browserContainer"      || element.id === "browserLabel") {
 		showDialog('browserDialog');
 	} else if (element.id === "info"         || element.id === "infoContainer"         || element.id === "infoLabel") {
+		// Fill up some information from the server
+		var infoData = document.getElementById('infoData');
+		// Clean up the existing values
+		while (infoData.firstChild) {
+			infoData.removeChild(infoData.firstChild);
+		}
+		// Add new information
+		var info2 = document.createElement('p');
+		info2.innerHTML = "<span style='font-weight:bold;'>Host</span>: " + displayUI.config.host;
+		var info3 = document.createElement('p');
+		info3.innerHTML = "<span style='font-weight:bold;'>Resolution</span>: " + displayUI.config.totalWidth + " x " +  displayUI.config.totalHeight + " pixels";
+		info3.innerHTML += " (" + displayUI.config.layout.columns + " by " + displayUI.config.layout.rows + " tiles";
+		info3.innerHTML += "  - " + displayUI.config.resolution.width + " x " + displayUI.config.resolution.height + ")";
+		infoData.appendChild(info2);
+		infoData.appendChild(info3);
+		if (displayUI.config.version) {
+			var info5 = document.createElement('p');
+			info5.innerHTML  = "<span style='font-weight:bold;'>Version</span>: " + displayUI.config.version.base + "-" + displayUI.config.version.branch + "-"
+				+ displayUI.config.version.commit + " - " + displayUI.config.version.date;
+			infoData.appendChild(info5);
+		}
+		// Finally show the dialog
 		showDialog('infoDialog');
 	} else if (element.id === "appOpenBtn") {
 		// App Launcher Dialog
