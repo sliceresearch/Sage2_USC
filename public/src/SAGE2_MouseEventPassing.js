@@ -104,7 +104,9 @@ var SAGE2MEP = {
 						screenY: point.yCurrent,
 						target: point.currentElement
 					});
-					point.currentElement.dispatchEvent(mouseEventToPass);
+					if (point && point.currentElement) {
+						point.currentElement.dispatchEvent(mouseEventToPass);
+					}
 				} // end if the current and previous element match
 				else {
 					// since the current is different from previous, need to create and dispatch mouse over, enter, out, leave
