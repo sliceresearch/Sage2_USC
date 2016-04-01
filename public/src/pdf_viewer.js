@@ -323,7 +323,7 @@ PDFJS.maxCanvasPixels = 67108864; // 8k2
 			}
 		}
 		// This needs to be a new date for the extra function.
-		this.refresh(responseObject.serverDate);
+		this.refresh(new Date(responseObject.serverDate));
 	},
 
 	/**

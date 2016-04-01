@@ -261,7 +261,7 @@ var movie_player = SAGE2_BlockStreamingApp.extend({
 	* @param responseObject {Object} contains response from entry selection
 	*/
 	contextTogglePlayPause: function(responseObject) {
-		this.togglePlayPause(responseObject.serverDate);
+		this.togglePlayPause(new Date(responseObject.serverDate));
 	},
 
 	/**
@@ -271,7 +271,7 @@ var movie_player = SAGE2_BlockStreamingApp.extend({
 	* @param responseObject {Object} contains response from entry selection
 	*/
 	contextToggleMute: function(responseObject) {
-		this.toggleMute(responseObject.serverDate);
+		this.toggleMute(new Date(responseObject.serverDate));
 	},
 
 	/**
