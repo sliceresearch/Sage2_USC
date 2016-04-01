@@ -616,6 +616,8 @@ function initializeWSClient(wsio, reqConfig, reqVersion, reqTime, reqConsole) {
 		initializeRemoteServerInfo(wsio);
 		initializeExistingWallUI(wsio);
 		setTimeout(initializeExistingControls, 6000, wsio); // why can't this be done immediately with the rest?
+	} else if (wsio.clientType === "audioManager") {
+               initializeExistingAppsAudio(wsio);
 	} else if (wsio.clientType === "sageUI") {
 		createSagePointer(wsio.id);
 		var key;
@@ -637,6 +639,15 @@ function initializeWSClient(wsio, reqConfig, reqVersion, reqTime, reqConsole) {
 		webBrowserClient = wsio;
 	}
 }
+
+function initializeExistingAppsAudio(wsio) {
+       var key;
+
+       for (key in SAGE2Items.applications.list) {
+               wsio.emit('createAppWindow', SAGE2Items.applications.list[key]);
+       }
+}
+
 
 function setupListeners(wsio) {
 	wsio.on('registerInteractionClient',            wsRegisterInteractionClient);
