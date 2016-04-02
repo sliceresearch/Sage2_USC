@@ -610,6 +610,21 @@ function deleteElement(id) {
 	}
 }
 
+/**
+ * Remove of children of a DOM element
+ *
+ * @method removeAllChildren
+ * @param node {Element|String} id or node to be processed
+ */
+function removeAllChildren(node) {
+	// if the parameter a string, look it up
+	var elt = (typeof node === "string") ? document.getElementById(node) : node;
+	// remove one child at a time
+	while (elt.lastChild) {
+		elt.removeChild(elt.lastChild);
+	}
+}
+
 
 /**
  * Cleanup a URL and replace the origin to match the client (to mitigate CORS problems, cross-origin resource sharing)
