@@ -7315,21 +7315,25 @@ function wsUtdWhatAppIsAt(wsio, data) {
  */
 function wsUtdRequestRmbContextMenu(wsio, data) {
 	var obj = interactMgr.searchGeometry({x: data.x, y: data.y});
-
-	var dataForDisplayClient = {};
 	if (obj !== null) {
-		dataForDisplayClient.app = obj.data.id;
-		dataForDisplayClient.func = "rmbContextResponse";
-		dataForDisplayClient.data = {};
-		dataForDisplayClient.data.uiClient = wsio.id;
-		dataForDisplayClient.data.app = obj.data.id;
-
-		// only send if a master display is connected
-		if (masterDisplay) {
-			masterDisplay.emit('broadcast', dataForDisplayClient); // only send to one display to prevent multiple responses.
+		if (SAGE2Items.applications.list[obj.data.id].contextMenu) {
+			// If we already have the menu info, send it
+			wsio.emit('dtuRmbContextMenuContents', {
+				app: obj.data.id,
+				entries : SAGE2Items.applications.list[obj.data.id].contextMenu
+			});
+		} else {
+			// Default response
+			wsio.emit('dtuRmbContextMenuContents', {
+				app: obj.data.id,
+				entries: [{
+					description: "Not supported by this app"
+				}]
+			});
 		}
 	}
 }
+
 /**
  * Asks for rmb context menu from app under x,y coordinate.
  */
@@ -7352,11 +7356,7 @@ function wsUtdCallFunctionOnApp(wsio, data) {
  * Passes the received values from app to the specified client.
  */
 function wsDtuRmbContextMenuContents(wsio, data) {
-	for (var i = 0; i < clients.length; i++) {
-		if (clients[i].id === data.uiClient) {
-			clients[i].emit('dtuRmbContextMenuContents', data);
-		}
-	}
+	SAGE2Items.applications.list[data.app].contextMenu = data.entries;
 }
 
 

@@ -1747,18 +1747,6 @@ function sagePointerDisabled() {
 
 
 /**
- * Remove of children of a DOM element
- *
- * @method removeAllChildren
- * @param node {Element} node to be processed
- */
-function removeAllChildren(node) {
-	while (node.lastChild) {
-		node.removeChild(node.lastChild);
-	}
-}
-
-/**
  * Pad a number to string
  *
  * @method pad
@@ -1834,7 +1822,7 @@ function setupRmbContextMenuDiv() {
 			wsio.emit('utdRequestRmbContextMenu', data);
 			showRmbContextMenuDiv(e.clientX, e.clientY);
 			// start with blank set of entries, it will be updated later
-			setRmbContextMenuEntries([]);
+			clearContextMenu();
 		}
 		// prevent the standard context menu
 		e.preventDefault();
@@ -1859,6 +1847,13 @@ function hideRmbContextMenuDiv() {
 	workingDiv.style.visibility = "hidden";
 }
 
+/*
+ * Clear the context menu
+ */
+function clearContextMenu() {
+	removeAllChildren('rmbContextMenu');
+}
+
 /**
  * Will populate the context menu.
  * 		Called on initial right click with empty array for entriesToAdd
@@ -1871,32 +1866,52 @@ function hideRmbContextMenuDiv() {
  *
  */
 function setRmbContextMenuEntries(entriesToAdd, app) {
-	var rmbDiv = document.getElementById('rmbContextMenu');
-	// full removal of current contents.
-	while (rmbDiv.firstChild) {
-		rmbDiv.removeChild(rmbDiv.firstChild);
-	}
+	// full removal of current contents
+	removeAllChildren('rmbContextMenu');
 	// for each entry
 	for (var i = 0; i < entriesToAdd.length; i++) {
 		// if func is defined add buttonEffect
 		if (entriesToAdd[i].callback !== undefined && entriesToAdd[i].callback !== null) {
 			entriesToAdd[i].buttonEffect = function() {
-				// if an input field, need to modify the params to pass back before sending.
-				if (this.inputField === true) {
-					var inputField = document.getElementById(this.inputFieldId);
-					//dont do anything if there is nothing in the inputfield
-					if (inputField.value.length <= 0) { return; }
-					//add the field clientInput to the parameters
-					this.parameters.clientInput = inputField.value;
+				if (this.callback === "SAGE2_download") {
+					// special case: want to download the file
+					var url = this.parameters.url;
+					console.log('trying to download', url)
+					if (url) {
+						// Download the file
+						var link = document.createElement('a');
+						link.href = url;
+						if (link.download !== undefined) {
+							// Set HTML5 download attribute. This will prevent file from opening if supported.
+							var fileName = url.substring(url.lastIndexOf('/') + 1, url.length);
+							link.download = fileName;
+						}
+						// Dispatching click event
+						if (document.createEvent) {
+							var me = document.createEvent('MouseEvents');
+							me.initEvent('click', true, true);
+							link.dispatchEvent(me);
+						}
+					}
+				} else {
+					// if an input field, need to modify the params to pass back before sending.
+					if (this.inputField === true) {
+						var inputField = document.getElementById(this.inputFieldId);
+						//dont do anything if there is nothing in the inputfield
+						if (inputField.value.length <= 0) { return; }
+						//add the field clientInput to the parameters
+						this.parameters.clientInput = inputField.value;
+					}
+					// create data to send, then emit
+					var data = {};
+					data.app = this.app;
+					data.func = this.callback;
+					data.parameters = this.parameters;
+					data.parameters.clientName = document.getElementById('sage2PointerLabel').value;
+					wsio.emit('utdCallFunctionOnApp', data);
 				}
-				// create data to send, then emit
-				var data = {};
-				data.app = this.app;
-				data.func = this.callback;
-				data.parameters = this.parameters;
-				data.parameters.clientName = document.getElementById('sage2PointerLabel').value;
-				wsio.emit('utdCallFunctionOnApp', data);
-				hideRmbContextMenuDiv(); // hide after 1 use.
+				// hide after use
+				hideRmbContextMenuDiv();
 			};
 		} // end if the button should send something
 	} // end adding a send function to each menu entry
@@ -1969,6 +1984,7 @@ function setRmbContextMenuEntries(entriesToAdd, app) {
 		workingDiv.parameters = entriesToAdd[i].parameters;
 		workingDiv.app = app;
 		// if it is the last entry to add, put a hr tag after it to separate the close menu button
+		var rmbDiv = document.getElementById('rmbContextMenu');
 		if (i === entriesToAdd.length - 1) {
 			rmbDiv.appendChild(document.createElement('hr'));
 		}

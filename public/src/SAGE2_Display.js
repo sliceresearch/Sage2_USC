@@ -1339,6 +1339,25 @@ function createAppWindow(data, parentId, titleBarHeight, titleTextSize, offsetX,
 				newapp.init(init);
 				newapp.refresh(date);
 
+				// Sending the context menu info to the server
+				if (isMaster) {
+					// If the application defines a menu function, use it
+					if (typeof newapp.getContextEntries === "function") {
+						wsio.emit('dtuRmbContextMenuContents', {
+							app: newapp.id,
+							entries: newapp.getContextEntries()
+						});
+					} else {
+						// Otherwise, send a default empty menu
+						wsio.emit('dtuRmbContextMenuContents', {
+							app: newapp.id,
+							entries: [{
+								description: "Not supported by this app"
+							}]
+						});
+					}
+				}
+
 				applications[data.id]   = newapp;
 				controlObjects[data.id] = newapp;
 
@@ -1355,8 +1374,26 @@ function createAppWindow(data, parentId, titleBarHeight, titleTextSize, offsetX,
 			// load existing app
 			var app = new window[data.application]();
 			app.init(init);
-			// app.SAGE2Load(app.state, date);
 			app.refresh(date);
+
+			// Sending the context menu info to the server
+			if (isMaster) {
+				// If the application defines a menu function, use it
+				if (typeof app.getContextEntries === "function") {
+					wsio.emit('dtuRmbContextMenuContents', {
+						app: app.id,
+						entries: app.getContextEntries()
+					});
+				} else {
+					// Otherwise, send a default empty menu
+					wsio.emit('dtuRmbContextMenuContents', {
+						app: app.id,
+						entries: [{
+							description: "Not supported by this app"
+						}]
+					});
+				}
+			}
 
 			applications[data.id] = app;
 			controlObjects[data.id] = app;
