@@ -251,6 +251,15 @@ var movie_player = SAGE2_BlockStreamingApp.extend({
 		entry.parameters = {};
 		entries.push(entry);
 
+		// Special callback: dowload the file
+		entries.push({
+			description: "Download",
+			callback: "SAGE2_download",
+			parameters: {
+				url: this.state.video_url
+			}
+		});
+
 		return entries;
 	},
 

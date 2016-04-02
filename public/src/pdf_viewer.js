@@ -275,6 +275,15 @@ PDFJS.maxCanvasPixels = 67108864; // 8k2
 		entry.inputFieldSize = 3;
 		entries.push(entry);
 
+		// Special callback: dowload the file
+		entries.push({
+			description: "Download",
+			callback: "SAGE2_download",
+			parameters: {
+				url: this.state.doc_url
+			}
+		});
+
 		return entries;
 	},
 
@@ -285,16 +294,13 @@ PDFJS.maxCanvasPixels = 67108864; // 8k2
 	* @param responseObject {Object} contains response from entry selection
 	*/
 	changeThePage: function(responseObject) {
-		console.log("erase me, function change the page activated");
-		console.dir(responseObject);
 		var page = responseObject.page;
 		// if the user did the input option
 		if (responseObject.clientInput) {
 			page = parseInt(responseObject.clientInput);
 			if (page > 0 && page <= this.pdfDoc.numPages) {
 				this.state.page = page;
-			}
-			else {
+			} else {
 				return;
 			}
 		}

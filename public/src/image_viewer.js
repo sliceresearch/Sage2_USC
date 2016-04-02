@@ -115,6 +115,24 @@ var image_viewer = SAGE2_App.extend({
 	},
 
 	/**
+	* To enable right click context menu support this function needs to be present with this format.
+	*/
+	getContextEntries: function() {
+		var entries = [];
+
+		// Special callback: dowload the file
+		entries.push({
+			description: "Download",
+			callback: "SAGE2_download",
+			parameters: {
+				url: cleanURL(this.state.src || this.state.img_url)
+			}
+		});
+
+		return entries;
+	},
+
+	/**
 	* Draw function, empty since the img tag is in the DOM
 	*
 	* @method draw
