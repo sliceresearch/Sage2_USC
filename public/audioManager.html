@@ -16,38 +16,44 @@
 	// Copyright (c) 2014
 </script>
 
+<!-- CSS style -->
+<link rel="stylesheet" type="text/css" href="css/style_audio.css"/>
+
+<!-- External dependencies -->
+<script src="lib/soundjs-0.6.1.min.js"></script>
+
 <!-- SAGE2 code -->
 <script async src="src/websocket.io.js"></script>
 <script async src="src/SAGE2_runtime.js"></script>
 <script async src="src/SAGE2_AudioManager.js"></script>
 
-<!-- SAGE2 minified -->
-<!--
-<script type="text/javascript" src="min/audio.min.js"></script>
--->
-
-<link rel="stylesheet" type="text/css" href="css/style_audio.css" media="screen" />
 
 </head>
 
-<body onload="SAGE2_init()">
+<body>
 
-	<!-- SAGE2 jinggle at startup -->
-	<audio id="jinggle" preload="auto" hidden>
-		<source id="jinggle_src" src="images/kola-startup.mp3">
-		Your browser does not support the audio element.
-	</audio>
+	<header>
+		<h1>SAGE2 Audio Manager</h1>
+	</header>
 
-	<div id="main">
-		<table id="videos">
-			<tr>
-				<td class="videoTitle"><strong>Video</strong></td>
-				<td class="videoVolume"><strong>Volume</strong></td>
-				<td class="videoTime"><strong>Time</strong></td>
-				<td class="videoPlay"><strong>Play/Pause</strong></td>
-			</tr>
-		</table>
-	</div>
+	<main>
+		<section id="allvideos" class="siteType">
+			<h2>Video streams</h2>
+			<div id="main">
+				<table id="videos">
+					<tr>
+						<th class="videoIcon" align="center">Video</td>
+						<th class="videoTitle" align="center"><strong>Name</strong></td>
+						<th class="videoTime" align="center"><strong>Time</strong></td>
+						<th class="videoVolumeMute" align="center"><strong>Output</strong></td>
+						<th class="videoPlay" align="center"><strong>Play/Pause</strong></td>
+					</tr>
+				</table>
+			</div>
+
+		</section>
+
+	</main>
 
 </body>
 </html>

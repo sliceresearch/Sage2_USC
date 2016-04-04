@@ -256,10 +256,11 @@ var googlemaps = SAGE2_App.extend({
 					}
 					break;
 				case "Address":
+					// Async call to geocoder (will sync the state)
 					this.codeAddress(data.text);
-					this.updateCenter();
+					// Setting the zoom
 					this.map.setZoom(15);
-					this.state.zoomLevel = this.map.getZoom();
+					this.state.zoomLevel = 15;
 					break;
 				default:
 					console.log("No handler for:", data.identifier);
@@ -349,7 +350,13 @@ var googlemaps = SAGE2_App.extend({
 	codeAddress: function(text) {
 		this.geocoder.geocode({address: text}, function(results, status) {
 			if (status === google.maps.GeocoderStatus.OK) {
-				this.map.setCenter(results[0].geometry.location);
+				var res = results[0].geometry.location;
+				// Update the map with the result
+				this.map.setCenter(res);
+				// Update the state variable
+				this.state.center = {lat: res.lat(), lng: res.lng()};
+				// Need to sync since it's an async function
+				this.SAGE2Sync(true);
 			} else {
 				console.log('Geocode was not successful for the following reason: ' + status);
 			}

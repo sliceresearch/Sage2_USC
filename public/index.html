@@ -205,18 +205,30 @@
 	<!-- dialog for the Info -->
 	<div id="infoDialog" class="dialog">
 		<div id="infoItems">
-			<div id="helpContainer">
-				<img alt="helpcontent" id="helpcontent" src="images/ui/graycircle-help.svg" width="64" height="64"/>
-				<p>Help</p>
-			</div>
-			<div id="adminContainer">
-				<img alt="admincontent" id="admincontent" src="images/ui/graycircle-admin.svg" width="64" height="64"/>
-				<p>Admin</p>
-			</div>
-			<div id="informationContainer">
-				<img alt="infocontent" id="infocontent" src="images/ui/graycircle-info.svg" width="64" height="64"/>
-				<p>Info</p>
-			</div>
+			<table style="width:100%;border-spacing:0;">
+			<tr>
+				<td>
+				<div id="helpContainer">
+					<img alt="helpcontent" id="helpcontent" src="images/ui/graycircle-help.svg" width="64" height="64"/>
+					<p>Help</p>
+				</div>
+				</td>
+				<td>
+				<div id="adminContainer">
+					<img alt="admincontent" id="admincontent" src="images/ui/graycircle-admin.svg" width="64" height="64"/>
+					<p>Admin</p>
+				</div>
+				</td>
+				<td>
+				<div id="informationContainer">
+					<img alt="infocontent" id="infocontent" src="images/ui/graycircle-info.svg" width="64" height="64"/>
+					<p>SAGE2 Info</p>
+				</div>
+				</td>
+			</tr>
+			<tr><td>&nbsp;</td></tr>
+			<tr><td colspan="3"><p id="infoData"></p></td></tr>
+			</table>
 		</div>
 		<div id="infoButtons">
 			<span id="infoCloseBtn" class="button">Close</span>

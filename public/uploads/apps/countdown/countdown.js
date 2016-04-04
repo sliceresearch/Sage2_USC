@@ -6,7 +6,6 @@
 //
 // See full text, terms and conditions in the LICENSE.txt included file
 //
-// Copyright (c) 2015-2016
 
 //
 // SAGE2 application: Timer
@@ -31,17 +30,14 @@ var countdown = SAGE2_App.extend({
 
 		// move and resize callbacks
 		this.resizeEvents = "continuous";
-		this.moveEvents   = "continuous";
 
 		// SAGE2 Application Settings
 		//
-		// Control the frame rate for an animation application
-		this.maxFPS = 2.0;
 
 		// adding widget buttons
-		this.controls.addButton({label: "Start", identifier: "start", position: 4});
-		this.controls.addButton({label: "Stop", identifier: "stop", position: 8});
-		this.controls.addButton({label: "Pause", identifier: "pause", position: 12});
+		this.controls.addButton({ label: "Start", identifier: "start", position: 4 });
+		this.controls.addButton({ label: "Stop", identifier: "stop", position: 8 });
+		this.controls.addButton({ label: "Pause", identifier: "pause", position: 12 });
 
 		// adding widget slider
 		this.controls.addSlider({
@@ -68,6 +64,10 @@ var countdown = SAGE2_App.extend({
 		this.resetTimeText();
 		this.positionInsertion = 0;
 		this.minutes = 0;
+
+		// some instance variable
+		this.startButton = null;
+		this.pauseButton = null;
 
 		// start the timer if there is residual time and the timer was running
 		if (this.state.remainingTime > 0 && this.state.running) {
@@ -102,7 +102,7 @@ var countdown = SAGE2_App.extend({
 		this.SAGE2UserModification = false;
 	},
 
-	// function used to transform residual time to a string of hh/mm/ss
+	// functionused to transform residual time to a string of hh/mm/ss
 	getTextTimeFromMillis: function() {
 
 		if (this.state.remainingTime == 0) {
@@ -136,7 +136,7 @@ var countdown = SAGE2_App.extend({
 
 	},
 
-	// function used to create the interface of the timer
+	// functionused to create the interface of the timer
 	createTimerInterface: function() {
 		// clear the current svg
 		this.container.selectAll("*").remove();
@@ -154,16 +154,16 @@ var countdown = SAGE2_App.extend({
 
 		// creating the model of the interface that will be given and interpreted by d3 to create the interface
 		this.modelInterface = [
-			{name: "Timer", text: timerToVisualize, parent: this, r: 0, c: 0, cSpan: 3, rSpan: 2},
-			{name: "Hour", parent: this, action: this.modifyHours, text: "Hours", r: 2, c: 0, cSpan: 1, rSpan: 1},
-			{name: "Minute", parent: this, action: this.modifyMinutes, text: "Minutes", r: 2, c: 1, cSpan: 1, rSpan: 1},
-			{name: "Second", parent: this, action: this.modifySeconds, text: "Seconds", r: 2, c: 2, cSpan: 1, rSpan: 1},
-			{name: "Start", command: "true",
-				parent: this, action: this.startTimer, image: path + "play.png", r: 3, c: 1, cSpan: 1, rSpan: 1},
-			{name: "Pause", command: "true",
-				parent: this, action: this.pauseTimer, image: path + "pause.png", r: 3, c: 0, cSpan: 1, rSpan: 1},
-			{name: "Reset", command: "true",
-				parent: this, action: this.resetTimer, image: path + "stop.png", r: 3, c: 2, cSpan: 1, rSpan: 1}
+			{ name: "Timer", text: timerToVisualize, parent: this, r: 0, c: 0, cSpan: 3, rSpan: 2 },
+			{ name: "Hour", parent: this, action: this.modifyHours, text: "Hours", r: 2, c: 0, cSpan: 1, rSpan: 1 },
+			{ name: "Minute", parent: this, action: this.modifyMinutes, text: "Minutes", r: 2, c: 1, cSpan: 1, rSpan: 1 },
+			{ name: "Second", parent: this, action: this.modifySeconds, text: "Seconds", r: 2, c: 2, cSpan: 1, rSpan: 1 },
+			{ name: "Start", command: "true",
+				parent: this, action: this.startTimer, image: path + "play.png", r: 3, c: 1, cSpan: 1, rSpan: 1 },
+			{ name: "Pause", command: "true",
+				parent: this, action: this.pauseTimer, image: path + "pause.png", r: 3, c: 0, cSpan: 1, rSpan: 1 },
+			{ name: "Reset", command: "true",
+				parent: this, action: this.resetTimer, image: path + "stop.png", r: 3, c: 2, cSpan: 1, rSpan: 1 }
 		];
 
 		// getting the height and width of the current container
@@ -183,10 +183,10 @@ var countdown = SAGE2_App.extend({
 
 			// getting the styles contained into the model for the current item.
 			// If a style is not specified, it is set to the default value
-			var elem = this.modelInterface[i];
-			var rSpan = elem.rSpan || 1;
-			var cSpan = elem.cSpan || 1;
-			var bg = elem.backgroundColor || defaultBg;
+			var elem   = this.modelInterface[i];
+			var rSpan  = elem.rSpan || 1;
+			var cSpan  = elem.cSpan || 1;
+			var bg     = elem.backgroundColor || defaultBg;
 			var stroke = elem.stroke || defaultStroke;
 
 			// calculate the actual size with respect to the proportions specified in the model
@@ -226,8 +226,6 @@ var countdown = SAGE2_App.extend({
 				}
 			}
 
-			this.timerText;
-
 			// inserting the image, if present in the model
 			if (elem.image) {
 				this.container
@@ -240,12 +238,16 @@ var countdown = SAGE2_App.extend({
 					.attr("xlink:href", elem.image);
 			}
 
+			if (elem.name == "Start") {
+				this.startButton = elem;
+			}
+
+			if (elem.name == "Pause") {
+				this.pauseButton = elem;
+			}
+
 		}
 
-	},
-
-	load: function(date) {
-		this.refresh(date);
 	},
 
 	draw: function(date) {
@@ -256,44 +258,33 @@ var countdown = SAGE2_App.extend({
 
 		// getting the new size and redraw the interface into the svg
 		this.container
-			.attr("width", this.element.clientWidth)
+			.attr("width",  this.element.clientWidth)
 			.attr("height", this.element.clientHeight);
 		this.createTimerInterface();
-	},
-
-	move: function(date) {
-		this.refresh(date);
-	},
-
-	quit: function() {
-		// Make sure to delete stuff (timers, ...)
 	},
 
 	event: function(eventType, position, user_id, data, date) {
 		if (eventType === "pointerPress" && (data.button === "left")) {
 			// if left mouse is pressed, try to understand if the click was within a button
 			this.leftClickPosition(position.x, position.y);
-		} else if (eventType === "widgetEvent") {
+		}
+		if (eventType === "widgetEvent") {
 
 			// identify the button pressed ont he widget
 			switch (data.identifier) {
 				case "start":
-
 					// if start button pressed, invoke its function
 					this.startTimer(this);
 					break;
 				case "pause":
-
 					// if pause button pressed, invoke its function
 					this.pauseTimer(this);
 					break;
 				case "stop":
-
 					// if reset button pressed, invoke its function
 					this.resetTimer(this);
 					break;
 				case "sliderMinutes":
-
 					// identify the action performed by the slider
 					switch (data.action) {
 						case "sliderLock":
@@ -331,28 +322,90 @@ var countdown = SAGE2_App.extend({
 			}
 		} else if (eventType === "keyboard") {
 
+			if (data.code == "32" || data.code == "13") {
+
+				var button = this.state.running ? this.pauseButton : this.startButton;
+
+				if (button.command) {
+					var oldColor = button.backgroundColor || "gray";
+					d3.select("#" + button.name).attr("fill", "white").transition().duration(500).attr("fill", oldColor);
+				}
+
+				// invoke the button action passing the reference of the main object
+				button.action(this);
+			}
+
 			var c = data.character;
-			if (!isNaN(c) && (this.insertionStateSecond || this.insertionStateMinute || this.insertionStateHour)) {
+
+			if (isNaN(parseInt(c))) {
+				return;
+			}
+
+			if (this.insertionStateSecond || this.insertionStateMinute || this.insertionStateHour) {
 				this.interpretNumber(c);
+			} else if (!this.state.running) {
+				this.interpretNumberFree(c);
 			}
 
 		} else if (eventType === "specialKey") {
-			if (data.code === 37 && data.state === "down") { // left
+			if (data.code === 37 && data.state === "down") {
+				// left
 				this.refresh(date);
-			} else if (data.code === 38 && data.state === "down") { // up
+			} else if (data.code === 38 && data.state === "down") {
+				// up
 				this.refresh(date);
-			} else if (data.code === 39 && data.state === "down") { // right
+			} else if (data.code === 39 && data.state === "down") {
+				// right
 				this.refresh(date);
-			} else if (data.code === 40 && data.state === "down") { // down
+			} else if (data.code === 40 && data.state === "down") {
+				// down
 				this.refresh(date);
 			}
 		}
 	},
 
-	// function used to interpret a character into a numeric value (hour, minute or second)
-	interpretNumber: function(num) {
+	interpretNumberFree: function(numb) {
+		var number = parseInt(numb);
+		this.freeText.shift();
+		this.freeText.push(number);
+		this.positionInsertion += 1;
+		if (this.positionInsertion > 5) {
+			this.positionInsertion = 0;
+		}
+
+		this.secondText[0] = this.freeText[5];
+		this.secondText[1] = this.freeText[4];
+		this.minuteText[0] = this.freeText[3];
+		this.minuteText[1] = this.freeText[2];
+		this.hourText[0]   = this.freeText[1];
+		this.hourText[1]   = this.freeText[0];
+
+		var textToInsert = '';
+		textToInsert += this.freeText[0];
+		textToInsert += this.freeText[1];
+		textToInsert += ':';
+		textToInsert += this.freeText[2];
+		textToInsert += this.freeText[3];
+		textToInsert += ':';
+		textToInsert += this.freeText[4];
+		textToInsert += this.freeText[5];
+
+		// update the text on the timer
+		this.timerText.text(textToInsert);
+
+		// claculating the residual time, from the number contained into the arrays
+		var seconds = this.freeText[4] * 10 + this.freeText[5];
+		var minutes = this.freeText[2] * 10 + this.freeText[3];
+		var hours = this.freeText[0] * 10 + this.freeText[1];
+
+		// setting the synchronized residual time, with this new value
+		this.setRemainingTime(seconds * 1000 + minutes * 60 * 1000 + hours * 60 * 60 * 1000);
+	},
+
+	// functionused to interpret a character into a numeric value (hour, minute or second)
+	interpretNumber: function(numb) {
 		// interpret character as number
-		var number = parseInt(num);
+		var number = parseInt(numb);
 
 		// fill vector of seconds, minutes or hours depending the button was pressed
 		if (this.insertionStateSecond) {
@@ -395,6 +448,14 @@ var countdown = SAGE2_App.extend({
 			this.positionInsertion = 1;
 		}
 
+		// maintaing coherent the free insertion mode with the single insertion mode
+		this.freeText[5] = this.secondText[0];
+		this.freeText[4] = this.secondText[1];
+		this.freeText[3] = this.minuteText[0];
+		this.freeText[2] = this.minuteText[1];
+		this.freeText[1] = this.hourText[0];
+		this.freeText[0] = this.hourText[1];
+
 		// transforming the number in a text
 		var textToInsert = '';
 		textToInsert += this.hourText[1];
@@ -412,13 +473,13 @@ var countdown = SAGE2_App.extend({
 		// claculating the residual time, from the number contained into the arrays
 		var seconds = this.secondText[1] * 10 + this.secondText[0];
 		var minutes = this.minuteText[1] * 10 + this.minuteText[0];
-		var hours   = this.hourText[1]   * 10 + this.hourText[0];
+		var hours   = this.hourText[1] * 10 + this.hourText[0];
 
 		// setting the synchronized residual time, with this new value
 		this.setRemainingTime(seconds * 1000 + minutes * 60 * 1000 + hours * 60 * 60 * 1000);
 	},
 
-	// this function nullify the buttons effect and the insertion position,
+	// this functionnullify the buttons effect and the insertion position,
 	// so that when a new isertion occurs no interferences happen
 	resetInsertion: function() {
 		this.insertionStateSecond = false;
@@ -433,16 +494,16 @@ var countdown = SAGE2_App.extend({
 	// reset the arrays containing the number of the timer
 	resetTimeText: function() {
 		this.secondText = [];
-		this.secondText.push(0);
-		this.secondText.push(0);
+		this.secondText.push(0, 0);
 
 		this.minuteText = [];
-		this.minuteText.push(0);
-		this.minuteText.push(0);
+		this.minuteText.push(0, 0);
 
 		this.hourText = [];
-		this.hourText.push(0);
-		this.hourText.push(0);
+		this.hourText.push(0, 0);
+
+		this.freeText = [];
+		this.freeText.push(0, 0, 0, 0, 0, 0);
 	},
 
 	// stop the timer in a syncronized way
@@ -472,7 +533,7 @@ var countdown = SAGE2_App.extend({
 		that.timerText.text('00:00:00');
 	},
 
-	// this function start the timer if
+	// this functionstart the timer if
 	startTimer: function(that) {
 
 		// if no residual time is present or the timer is active and no timer exists, do not start any timer
@@ -483,7 +544,7 @@ var countdown = SAGE2_App.extend({
 		// reset the insertion arrays
 		that.resetInsertion();
 
-		// instantiate the function given to the timer
+		// instantiate the functiongiven to the timer
 		var intervalFunction = function(that) {
 
 			// when the timer is not running and no residual timer remains, delete the timer and return
@@ -516,7 +577,7 @@ var countdown = SAGE2_App.extend({
 			that.setRemainingTime(that.state.remainingTime -= _second);
 
 			// generate the text of residual time
-			var hours = Math.floor((that.state.remainingTime % _day) / _hour);
+			var hours  = Math.floor((that.state.remainingTime % _day) / _hour);
 			var minutes = Math.floor((that.state.remainingTime % _hour) / _minute);
 			var seconds = Math.floor((that.state.remainingTime % _minute) / _second);
 
@@ -542,7 +603,7 @@ var countdown = SAGE2_App.extend({
 
 		};
 
-		// start the timer and repeat the givn function every second
+		// start the timer and repeat the givn functionevery second
 		that.theTimer = setInterval(intervalFunction, 1000, that);
 
 		// setting to true the synchronized running variable, so that every client knows that the timer is running
@@ -608,7 +669,7 @@ var countdown = SAGE2_App.extend({
 	leftClickPosition: function(x, y) {
 		// setting the feedback button color
 		var pressedColor = "white";
-		var defaultBg = "gray";
+		var defaultBg    = "gray";
 
 		// taking a reference of the main object
 		var _this = this;

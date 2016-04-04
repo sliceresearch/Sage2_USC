@@ -65,12 +65,11 @@ RegistryManager.prototype.initialize = function(assetsFolder) {
 RegistryManager.prototype.mimeRegister = function(fileType) {
 	var type = mime.lookup(fileType);
 
-	if (type === undefined || type === null || type === 'application/custom') {
+	if (type === undefined || type === null || type === "" || type === 'application/custom') {
 		var map = {};
 		map['application/' + fileType] = [ fileType ];
 		mime.define(map);
 		fs.appendFileSync(this.mimeFile, 'application/' + fileType + ' ' + fileType + '\n');
-
 		type = mime.lookup(fileType);
 	}
 	return type;
