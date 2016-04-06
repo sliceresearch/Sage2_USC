@@ -3990,6 +3990,7 @@ function manageRemoteConnection(remote, site, index) {
 		clientType: "remoteServer",
 		host: config.host,
 		port: config.secure_port,
+		session: site.session,
 		// port: config.port,
 		requests: {
 			config: false,
