@@ -328,8 +328,8 @@ function format24Hr(date) {
  * @return {String} formatted duration
  */
 function formatHHMMSS(duration) {
-	var ss = parseInt((duration / 1000) % 60,         10);
-	var mm = parseInt((duration / (1000 * 60)) % 60,    10);
+	var ss = parseInt((duration / 1000) % 60,             10);
+	var mm = parseInt((duration / (1000 * 60)) % 60,      10);
 	var hh = parseInt((duration / (1000 * 60 * 60)) % 24, 10);
 
 	hh = (hh < 10) ? "0" + hh : hh;
@@ -793,11 +793,16 @@ function addCookie(sKey, sValue) {
 	if (!sKey) {
 		return false;
 	}
+	var domain;
+	if (window.location.hostname === "127.0.0.1") {
+		domain = "127.0.0.1";
+	} else {
+		domain = window.location.hostname.split('.').slice(-2).join(".");
+	}
 	document.cookie = encodeURIComponent(sKey) + "=" + encodeURIComponent(sValue) +
 		"; expires=Fri, 31 Dec 9999 23:59:59 GMT" +
-		"; domain=" + location.hostname.split('.').slice(-2).join(".") +
-		"; path=/" +
-		"; secure";
+		"; domain=" + domain +
+		"; path=/";
 	return true;
 }
 

@@ -362,7 +362,7 @@ h2 {
 	transform: translate(-50%, -50%);
 }
 #infoItems {
-	margin: 10px 10px 66px 10px;
+	margin: 5px 5px 45px 5px;
 	overflow: auto;
 }
 #helpContainer {
@@ -388,6 +388,9 @@ h2 {
 	position: absolute;
 	right: 10px;
 	bottom: 10px;
+}
+#infoData {
+	margin: 10px 10px 10px 10px;
 }
 
 #settingsDialog {

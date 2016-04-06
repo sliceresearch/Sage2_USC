@@ -36,6 +36,9 @@ PDFJS.maxCanvasPixels = 67108864; // 8k2
 	init: function(data) {
 		this.SAGE2Init("img", data);
 
+		// Clear the background before first rendering
+		this.div.style.background = "black";
+
 		this.resizeEvents = "onfinish";
 
 		this.canvas  = [];
@@ -211,7 +214,6 @@ PDFJS.maxCanvasPixels = 67108864; // 8k2
 	* @param date {Date} current time from the server
 	*/
 	resize: function(date) {
-		console.log("resize pdf viewer");
 		for (var i = 0; i < this.numCtx; i++) {
 			this.canvas[i].width  = this.element.width;
 			this.canvas[i].height = this.element.height;
@@ -343,12 +345,29 @@ PDFJS.maxCanvasPixels = 67108864; // 8k2
 	* @param date {Date} current time from the server
 	*/
 	event: function(eventType, position, user, data, date) {
-		/*
-		Keyboard:
-			spacebar - next
-			1 - first
-			0 - last
-		*/
+		// Left Click  - go back one page
+		// Right Click - go forward one page
+
+		// if (eventType === "pointerPress") {
+		// 	if (data.button === "left") {
+		// 		if (this.state.page <= 1) {
+		// 			return;
+		// 		}
+		// 		this.state.page = this.state.page - 1;
+		// 		this.refresh(date);
+		// 	} else if (data.button === "right") {
+		// 		if (this.state.page >= this.pdfDoc.numPages) {
+		// 			return;
+		// 		}
+		// 		this.state.page = this.state.page + 1;
+		// 		this.refresh(date);
+		// 	}
+		// }
+
+		// Keyboard:
+		//   spacebar - next
+		//   1 - first
+		//   0 - last
 		if (eventType === "keyboard") {
 			if (data.character === " ") {
 				this.state.page = (this.state.page % this.pdfDoc.numPages) + 1;
@@ -367,13 +386,15 @@ PDFJS.maxCanvasPixels = 67108864; // 8k2
 		// Left Arrow  - go back one page
 		// Right Arrow - go forward one page
 		if (eventType === "specialKey") {
-			if (data.code === 37 && data.state === "up") { // Left Arrow
+			if (data.code === 37 && data.state === "up") {
+				// Left Arrow
 				if (this.state.page <= 1) {
 					return;
 				}
 				this.state.page = this.state.page - 1;
 				this.refresh(date);
-			} else if (data.code === 39 && data.state === "up") { // Right Arrow
+			} else if (data.code === 39 && data.state === "up") {
+				// Right Arrow
 				this.state.page = (this.state.page % this.pdfDoc.numPages) + 1;
 				this.refresh(date);
 			}

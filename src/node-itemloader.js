@@ -347,11 +347,12 @@ AppLoader.prototype.loadImageFromFile = function(file, mime_type, aUrl, external
 			console.log("File not recognized:", file, mime_type, aUrl);
 		}
 	} else {
-		var localPath = path.join(this.publicDir, "tmp", name) + ".png";
+		var localPath = path.join(this.publicDir, "tmp", path.basename(name)) + ".png";
+		var localUrl  = getSAGE2URL(localPath);
 
 		imageMagick(file + "[0]").noProfile().bitdepth(8).flatten().setFormat("PNG").write(localPath, function(err, buffer) {
 			if (err) {
-				console.log("Error> processing image file", file);
+				console.log("Error> processing image file", file, localPath);
 				return;
 			}
 
@@ -359,12 +360,12 @@ AppLoader.prototype.loadImageFromFile = function(file, mime_type, aUrl, external
 			var imgDims = assets.getDimensions(file);
 			var imgExif = assets.getExifData(file);
 
-			if (dims) {
-				_this.loadImageFromServer(imgDims.width, imgDims.height, "image/png", aUrl + ".png",
-						external_url + ".png", name + ".png", imgExif, function(appInstance) {
-							appInstance.file = localPath;
-							callback(appInstance);
-						}
+			if (imgDims) {
+				_this.loadImageFromServer(imgDims.width, imgDims.height, "image/png", localUrl,
+					localUrl, name + ".png", imgExif, function(appInstance) {
+						appInstance.file = localPath;
+						callback(appInstance);
+					}
 				);
 			} else {
 				console.log("File not recognized:", file, mime_type, aUrl);
@@ -763,6 +764,7 @@ AppLoader.prototype.manageAndLoadUploadedFile = function(file, callback) {
 	}
 	var mime_type = mime.lookup(cleanFilename);
 	var dir = registry.getDirectory(cleanFilename);
+
 	if (!sageutils.folderExists(path.join(this.publicDir, dir))) {
 		fs.mkdirSync(path.join(this.publicDir, dir));
 	}

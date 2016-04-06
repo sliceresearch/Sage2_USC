@@ -35,15 +35,14 @@ var os            = require('os');               // operating system access
 var path          = require('path');             // file path management
 var readline      = require('readline');         // to build an evaluation loop
 var url           = require('url');              // parses urls
-// var util          = require('util');          // node util
 
 // npm: defined in package.json
 var formidable    = require('formidable');       // upload processor
 var gm            = require('gm');               // graphicsmagick
-var imageMagick;                                 // derived from graphicsmagick
 var json5         = require('json5');            // Relaxed JSON format
 var qrimage       = require('qr-image');         // qr-code generation
 var sprint        = require('sprint');           // pretty formating (sprintf)
+var imageMagick;                                 // derived from graphicsmagick
 
 var WebsocketIO   = require('websocketio');      // creates WebSocket server and clients
 
@@ -519,6 +518,15 @@ function closeWebSocketClient(wsio) {
 }
 
 function wsAddClient(wsio, data) {
+	// Check for password
+	if (config.passordProtected) {
+		if (!data.session || data.session !== global.__SESSION_ID) {
+			console.log(sageutils.header("WebsocketIO") + "wrong session hash - closing");
+			// if server protected and wrong hash, close the socket and byebye
+			wsio.ws.close();
+			return;
+		}
+	}
 
 	// Just making sure the data is valid JSON (one gets strings from C++)
 	if (sageutils.isTrue(data.requests.config)) {
@@ -2579,7 +2587,7 @@ function wsSetVolume(wsio, data) {
 	if (SAGE2Items.renderSync[data.id] === undefined || SAGE2Items.renderSync[data.id] === null) {
 		return;
 	}
-	console.log(sageutils.header("Volume") + "set " + data.id + " " + data.level);
+	// console.log(sageutils.header("Volume") + "set " + data.id + " " + data.level);
 	broadcast('setVolume',data);
 }
 
@@ -4005,6 +4013,7 @@ function manageRemoteConnection(remote, site, index) {
 		clientType: "remoteServer",
 		host: config.host,
 		port: config.secure_port,
+		session: site.session,
 		// port: config.port,
 		requests: {
 			config: false,
