@@ -8,6 +8,8 @@
 //
 // Copyright (c) 2014-16
 
+/* global hostAlias */
+
 "use strict";
 
 /**
@@ -30,7 +32,15 @@ __SAGE2__.version = "1.0.0";
 
 
 /**
- * Initializes global settings: random genrator, ...
+ * In Strict mode Webix doesn't use "eval"
+ * Should be enabled if Content Security Policy is switched on for the application
+ * or if the application runs in a "strict" mode
+ * The flag should be enabled before Webix files are included into the page
+ */
+window.webix_strict = true;
+
+/**
+ * Initializes global settings: random generator, ...
  *
  * @method SAGE2_initialize
  * @param data_seed {Date} seed number
@@ -318,8 +328,8 @@ function format24Hr(date) {
  * @return {String} formatted duration
  */
 function formatHHMMSS(duration) {
-	var ss = parseInt((duration / 1000) % 60,         10);
-	var mm = parseInt((duration / (1000 * 60)) % 60,    10);
+	var ss = parseInt((duration / 1000) % 60,             10);
+	var mm = parseInt((duration / (1000 * 60)) % 60,      10);
 	var hh = parseInt((duration / (1000 * 60 * 60)) % 24, 10);
 
 	hh = (hh < 10) ? "0" + hh : hh;
@@ -768,11 +778,16 @@ function addCookie(sKey, sValue) {
 	if (!sKey) {
 		return false;
 	}
+	var domain;
+	if (window.location.hostname === "127.0.0.1") {
+		domain = "127.0.0.1";
+	} else {
+		domain = window.location.hostname.split('.').slice(-2).join(".");
+	}
 	document.cookie = encodeURIComponent(sKey) + "=" + encodeURIComponent(sValue) +
 		"; expires=Fri, 31 Dec 9999 23:59:59 GMT" +
-		"; domain=" + location.hostname.split('.').slice(-2).join(".") +
-		"; path=/" +
-		"; secure";
+		"; domain=" + domain +
+		"; path=/";
 	return true;
 }
 
@@ -790,4 +805,36 @@ function getCookie(sKey) {
 	return decodeURIComponent(document.cookie.replace(new RegExp("(?:(?:^|.*;)\\s*" +
 				encodeURIComponent(sKey).replace(/[\-\.\+\*]/g, "\\$&") + "\\s*\\=\\s*([^;]*).*$)|^.*$"), "$1"))
 		|| null;
+}
+
+/**
+ * Extract translate and scale from a DOM element
+ *
+ * @method getTransform
+ * @param elem {Object} DOM element
+ * @return {Object} contains translate and scale specification
+ */
+function getTransform(elem) {
+	var transform = elem.style.transform;
+	var translate = {x: 0, y: 0};
+	var scale = {x: 1, y: 1};
+	if (transform) {
+		var tIdx = transform.indexOf("translate");
+		if (tIdx >= 0) {
+			var tStr = transform.substring(tIdx + 10, transform.length);
+			tStr = tStr.substring(0, tStr.indexOf(")"));
+			var tValue = tStr.split(",");
+			translate.x = parseFloat(tValue[0]);
+			translate.y = parseFloat(tValue[1]);
+		}
+		var sIdx = transform.indexOf("scale");
+		if (sIdx >= 0) {
+			var sStr = transform.substring(sIdx + 6, transform.length);
+			sStr = sStr.substring(0, sStr.indexOf(")"));
+			var sValue = sStr.split(",");
+			scale.x = parseFloat(sValue[0]);
+			scale.y = parseFloat(sValue[1]);
+		}
+	}
+	return {translate: translate, scale: scale};
 }

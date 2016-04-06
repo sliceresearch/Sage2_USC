@@ -8,8 +8,7 @@
 //
 // Copyright (c) 2014-2015
 
-// we use arguments and callee to build inheritance
-/*eslint-disable use-strict, strict, global-strict */
+/* global ignoreFields, SAGE2WidgetControl, SAGE2MEP */
 
 /**
  * @module client
@@ -73,6 +72,9 @@ var SAGE2_App = Class.extend({
 		this.SAGE2UserModification = false;
 		// Modify state sync options
 		this.SAGE2StateSyncOptions = {visible: false, hover: null, press: {name: null, value: null}, scroll: 0};
+
+		// Enabling this will attempt to convert SAGE2 pointer as mouse events as much as possible.
+		this.passSAGE2PointerAsMouseEvents = false;
 	},
 
 	/**
@@ -289,6 +291,10 @@ var SAGE2_App = Class.extend({
 		} else {
 			this.SAGE2UserModification = true;
 			this.event(eventType, position, user_id, data, date);
+			if (this.passSAGE2PointerAsMouseEvents) {
+				SAGE2MEP.processAndPassEvents(this.element.id, eventType, position,
+					user_id, data, date);
+			}
 			this.SAGE2UserModification = false;
 		}
 	},
@@ -526,6 +532,9 @@ var SAGE2_App = Class.extend({
 	*/
 	showLayer: function() {
 		if (this.layer) {
+			// before showing, make sure to update the size
+			this.layer.style.width  = this.div.clientWidth  + 'px';
+			this.layer.style.height = this.div.clientHeight + 'px';
 			// Reset its top position, just in case
 			this.layer.style.top = "0px";
 			this.layer.style.display = "block";

@@ -1,7 +1,7 @@
 #!/bin/sh
 
-# Usage: node randomPointer.js [url] [number of pointers]
-#    node randomPointer.js wss://localhost:443 5
+# Usage: stressPointers [url] [number of pointers]
+#    stressPointers wss://localhost:443 5
 
 server=$1
 count=$2
