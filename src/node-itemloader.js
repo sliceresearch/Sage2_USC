@@ -801,6 +801,8 @@ AppLoader.prototype.manageAndLoadUploadedFile = function(file, callback) {
 				if (err2) {
 					console.log("internal error", err2);
 				} else {
+					// save original mime type
+					data.OriginalMIMEType = mime_type;
 					assets.addFile(data.SourceFile, data, function() {
 						// get a valid URL for it
 						var aUrl = assets.getURL(data.SourceFile);

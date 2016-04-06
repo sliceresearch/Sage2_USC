@@ -485,6 +485,10 @@ var addFile = function(filename, exif, callback) {
 			callback();
 		});
 		anAsset.exif.SAGE2thumbnail = rthumb;
+	} else if (exif.OriginalMIMEType.indexOf('model/') > -1) {
+		// exif is too verbose for files such as collada xml
+		anAsset.exif = null;
+		callback();
 	}
 	saveAssets();
 };
