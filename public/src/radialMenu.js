@@ -1050,6 +1050,7 @@ function RadialMenu() {
 						customIcon.lsrc = imageList[i].exif.SAGE2thumbnail + "_512.jpg";
 						customIcon.src = imageList[i].exif.SAGE2thumbnail + "_256.jpg";
 						thumbnailButton.setButtonImage(customIcon);
+						thumbnailButton.setDefaultImage(radialMenuIcons["images/ui/images.svg"]);
 					} else {
 						thumbnailButton.setButtonImage(radialMenuIcons["images/ui/images.svg"]);
 					}
@@ -1082,6 +1083,7 @@ function RadialMenu() {
 					customIcon.lsrc = pdfList[i].exif.SAGE2thumbnail + "_512.jpg";
 					customIcon.src = pdfList[i].exif.SAGE2thumbnail + "_256.jpg";
 					thumbnailButton.setButtonImage(customIcon);
+					thumbnailButton.setDefaultImage(radialMenuIcons["images/ui/pdfs.svg"]);
 				} else {
 					thumbnailButton.setButtonImage(radialMenuIcons["images/ui/pdfs.svg"]);
 				}
@@ -1112,6 +1114,7 @@ function RadialMenu() {
 					customIcon.lsrc = videoList[i].exif.SAGE2thumbnail + "_512.jpg";
 					customIcon.src  = videoList[i].exif.SAGE2thumbnail + "_256.jpg";
 					thumbnailButton.setButtonImage(customIcon);
+					thumbnailButton.setDefaultImage(radialMenuIcons["images/ui/videos.svg"]);
 				} else {
 					thumbnailButton.setButtonImage(radialMenuIcons["images/ui/videos.svg"]);
 				}
@@ -1131,7 +1134,7 @@ function RadialMenu() {
 				data = {application: "custom_app", filename: appList[i].filename, shortname: appList[i].exif.FileName, meta: appList[i].exif};
 				thumbnailButton.setData(data);
 				thumbnailButton.simpleTint = false;
-				thumbnailButton.useBackgroundColor = false;
+				thumbnailButton.useBackgroundColor = true;
 
 				thumbnailButton.setSize(this.imageThumbSize * 2, this.imageThumbSize * 2);
 				thumbnailButton.setHitboxSize(this.imageThumbSize * 2, this.imageThumbSize * 2);
@@ -1141,6 +1144,7 @@ function RadialMenu() {
 					customIcon.lsrc = appList[i].exif.SAGE2thumbnail + "_512.jpg";
 					customIcon.src = appList[i].exif.SAGE2thumbnail + "_256.jpg";
 					thumbnailButton.setButtonImage(customIcon);
+					thumbnailButton.setDefaultImage(radialMenuIcons["images/ui/applauncher.svg"]);
 				} else {
 					thumbnailButton.setButtonImage(radialMenuIcons["images/ui/applauncher.svg"]);
 				}
@@ -1339,6 +1343,7 @@ function ButtonWidget() {
 
 	this.buttonImage = null;
 	this.overlayImage = null;
+	this.defaultImage = null;
 
 	this.useBackgroundColor = true;
 	this.useEventOverColor = false;
@@ -1388,7 +1393,11 @@ function ButtonWidget() {
 	this.setButtonImage = function(image) {
 		this.buttonImage = image;
 	};
-
+	
+	this.setDefaultImage = function(image) {
+		this.defaultImage = image;
+	};
+	
 	this.setOverlayImage = function(overlayImage, scale) {
 		this.overlayImage = overlayImage;
 		this.overlayScale = scale;
@@ -1452,8 +1461,12 @@ function ButtonWidget() {
 			// this.ctx.rotate( this.angle);
 
 			// draw the original image
-			this.ctx.drawImage(this.buttonImage, offset.x, offset.y, this.width, this.height);
-
+			try {
+				this.ctx.drawImage(this.buttonImage, offset.x, offset.y, this.width, this.height);
+			} catch (e) {
+				this.buttonImage = this.defaultImage;
+				this.ctx.drawImage(this.buttonImage, offset.x, offset.y, this.width, this.height);
+			}
 			if (this.state === 5) {
 				this.drawTintImage(this.buttonImage, offset, this.width, this.height, this.litColor, 0.5);
 			} else if (this.state === 1) {
