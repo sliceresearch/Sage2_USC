@@ -2155,6 +2155,42 @@ function setupUiNoteMaker() {
 	sendButton.addEventListener('click', function() {
 		sendCsdMakeNote();
 	});
+	// Add Color fields.
+	for (var i = 1; i <= 6; i++) {
+		workingDiv = document.getElementById("uinmColorPick" + i);
+		workingDiv.style.width = "65px";
+		workingDiv.style.height = "45px";
+		workingDiv.style.border = "1px solid black";
+		workingDiv.colorNumber = i;
+		workingDiv.colorWasPicked = false;
+		workingDiv.addEventListener("click", function () {
+			setUiNoteColorSelect( this.colorNumber );
+		});
+		if (i === 1) { workingDiv.style.background = "lightyellow"; }
+		if (i === 2) { workingDiv.style.background = "lightblue"; }
+		if (i === 3) { workingDiv.style.background = "lightcoral"; }
+		if (i === 4) { workingDiv.style.background = "lightgreen"; }
+		if (i === 5) { workingDiv.style.background = "lightsalmon"; }
+		if (i === 6) { workingDiv.style.background = "white"; }
+	}
+	setUiNoteColorSelect(1);
+}
+
+function setUiNoteColorSelect(colorNumber) {
+	var workingDiv;
+	// Adjust border size with 
+	for (var i = 1; i <= 6; i++) {
+		workingDiv = document.getElementById("uinmColorPick" + i);
+		workingDiv.style.border = "1px solid black";
+		workingDiv.colorWasPicked = false;
+		workingDiv.style.width = "65px";
+		workingDiv.style.height = "45px";
+	}
+	workingDiv = document.getElementById("uinmColorPick" + colorNumber);
+	workingDiv.style.border = "3px solid black";
+	workingDiv.colorWasPicked = true;
+	workingDiv.style.width = "59px";
+	workingDiv.style.height = "39px";
 }
 
 /**
@@ -2174,6 +2210,13 @@ function sendCsdMakeNote() {
 	data.params.clientName = document.getElementById('sage2PointerLabel').value;
 	data.params.clientInput = workingDiv.value;
 	workingDiv.value = ""; // clear out the input field.
+	if (document.getElementById("uiNoteMakerCheckAnonymous").checked) { data.params.clientName = "Anonymous"; }
+	data.params.colorChoice = "lightyellow";
+	for (var i = 1; i <= 6; i++) {
+		if (document.getElementById("uinmColorPick" + i).colorWasPicked) {
+			data.params.colorChoice = document.getElementById("uinmColorPick" + i).style.background;
+		}
+	}
 	wsio.emit('csdMessage', data);
 }
 

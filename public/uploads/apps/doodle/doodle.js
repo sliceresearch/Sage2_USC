@@ -182,7 +182,7 @@ var doodle = SAGE2_App.extend({
 			&& responseObject.serverDate !== null) {
 			this.state.creationTime = new Date(responseObject.serverDate);
 			// build the title string.
-			var titleString = "DO-" + responseObject.clientName + "-" + this.state.creationTime.getFullYear();
+			var titleString = responseObject.clientName + "-DO-" + this.state.creationTime.getFullYear();
 			if (this.state.creationTime.getMonth() < 9) { titleString += "0"; }
 			titleString += (this.state.creationTime.getMonth() + 1) + ""; // month +1 because starts at 0
 			if (this.state.creationTime.getDate() < 10) { titleString += "0"; }

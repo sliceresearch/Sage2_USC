@@ -7510,7 +7510,7 @@ function csdLaunchAppWithValues(wsio,data) {
 		csdDataStructure.yAppLaunchCoordinate += 600;
 		csdDataStructure.xAppLaunchCoordinate = 10;
 		if (csdDataStructure.yAppLaunchCoordinate >= config.totalHeight -500) {
-			csdDataStructure.yAppLaunchCoordinate = 10;
+			csdDataStructure.yAppLaunchCoordinate = 100;
 		}
 	}
 
@@ -7627,7 +7627,7 @@ csdDataStructure.allValues = {};
 csdDataStructure.numberOfValues = 0;
 csdDataStructure.allNamesOfValues = [];
 csdDataStructure.xAppLaunchCoordinate = 10;
-csdDataStructure.yAppLaunchCoordinate = 10;
+csdDataStructure.yAppLaunchCoordinate = 100;
 
 /**
 Will set the named value.

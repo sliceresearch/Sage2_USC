@@ -25,9 +25,9 @@ var quickNote = SAGE2_App.extend({
 
 		workingDiv.style.fontSize 	= ui.titleTextSize + "px";
 
+		this.backgroundChoice = "lightyellow";
 		this.startingFontSize = ui.titleTextSize;
-		this.startingWidth    = this.element.clientWidth;
-		this.startingHeight   = this.element.clientHeight;
+		this.startingWidth    = 300; // hard coded to match instructions width
 		// This is critical for naming of file scheme. Currently the file name will be based upon creator and time.
 		// However this does have potential issues later. For example edits by different users.
 		console.log("erase me, value of creationTime:" + this.state.creationTime );
@@ -55,11 +55,21 @@ var quickNote = SAGE2_App.extend({
 		if (msgParams.clientName === undefined || msgParams.clientName === null || msgParams.clientName =="") {
 			msgParams.clientName = "Anonymous";
 		}
+		// If the color choice was not defined, default to lightyellow.
+		if (msgParams.colorChoice === undefined || msgParams.colorChoice === null || msgParams.colorChoice =="") {
+			this.backgroundChoice = "lightyellow";
+			workingDiv.style.background = "lightyellow";
+		}
+		else { // Else use the given color.
+			this.backgroundChoice = msgParams.colorChoice;
+			workingDiv.style.background = msgParams.colorChoice;
+		}
 
 		workingDiv.innerHTML = msgParams.clientInput;
 
 		this.state.clientName = msgParams.clientName;
 		this.state.clientInput = msgParams.clientInput;
+		this.state.colorChoice = this.backgroundChoice;
 
 		console.log("erase me, setMessage function activate this.state");
 		console.dir(this.state);
@@ -70,7 +80,7 @@ var quickNote = SAGE2_App.extend({
 			&& msgParams.serverDate !== null) {
 			this.state.creationTime = new Date(msgParams.serverDate);
 			// build the title string.
-			var titleString = "QN-" + msgParams.clientName + "-" + this.state.creationTime.getFullYear();
+			var titleString = msgParams.clientName + "-QN-" + this.state.creationTime.getFullYear();
 			if (this.state.creationTime.getMonth() < 9) { titleString += "0"; }
 			titleString += (this.state.creationTime.getMonth() + 1) + ""; // month +1 because starts at 0
 			if (this.state.creationTime.getDate() < 10) { titleString += "0"; }
@@ -94,8 +104,10 @@ var quickNote = SAGE2_App.extend({
 			this.updateTitle(msgParams.creationTime);
 		}
 
+		// This is what saves the state between sessions as far as can be determined.
 		this.SAGE2UpdateAppOptionsFromState();
 		this.SAGE2Sync(true);
+		this.resize(msgParams.creationTime);
 	},
 
 	load: function(date) {
@@ -103,11 +115,13 @@ var quickNote = SAGE2_App.extend({
 			this.setMessage({
 				clientName:this.state.clientName,
 				clientInput:this.state.clientInput,
+				colorChoice:this.state.colorChoice,
 				creationTime:this.state.creationTime
 			});
 		}
 		console.log("erase me, load function activate this.state");
 		console.dir(this.state);
+		this.resize(date);
 	},
 
 	draw: function(date) {
@@ -115,7 +129,7 @@ var quickNote = SAGE2_App.extend({
 
 	resize: function(date) {
 		var workingDiv = document.getElementById( this.element.id );
-		workingDiv.style.background = "lightyellow";
+		workingDiv.style.background = this.backgroundChoice;
 		workingDiv.width = this.element.clientWidth + "px";
 		workingDiv.height = this.element.clientHeight + "px";
 
@@ -124,6 +138,10 @@ var quickNote = SAGE2_App.extend({
 	},
 
 	event: function(eventType, position, user_id, data, date) {
+
+	},
+
+	duplicate: function() {
 
 	},
 

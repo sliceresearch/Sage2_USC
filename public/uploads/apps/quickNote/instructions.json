@@ -1,6 +1,6 @@
 {
 	"main_script": "quickNote.js",
-        "icon": "quickNote.png",
+	"icon": "quickNote.png",
 	"width": 300,
 	"height": 150,
 	"animation": true,
@@ -10,6 +10,7 @@
 	"load": {
 		"clientName": "Quick Note",
 		"clientInput": "Loading note from user...",
+		"colorChoice": "lightyellow",
 		"creationTime": null
 	},
 	"title": "Quick Note",
