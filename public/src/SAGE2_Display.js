@@ -1180,6 +1180,13 @@ function setupListeners() {
 			}
 		}
 	});
+
+	wsio.on('passFileReferenceToApp', function(data) {
+		var app = applications[data.id];
+		if (app && app.receive) {
+			app.receive(data.data.file);
+		}
+	});
 }
 
 function createAppWindow(data, parentId, titleBarHeight, titleTextSize, offsetX, offsetY) {

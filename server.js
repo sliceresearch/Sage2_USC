@@ -3932,17 +3932,35 @@ function manageUploadedFiles(files, position, ptrName, ptrColor) {
 				}
 			}
 
-			appInstance.id = getUniqueAppId();
-			if (appInstance.animation) {
-				var i;
-				SAGE2Items.renderSync[appInstance.id] = {clients: {}, date: Date.now()};
-				for (i = 0; i < clients.length; i++) {
-					if (clients[i].clientType === "display") {
-						SAGE2Items.renderSync[appInstance.id].clients[clients[i].id] = {wsio: clients[i], readyForNextFrame: false, blocklist: []};
+			// handle application declared as a singleton
+			if (appInstance.singleton) {
+				var appList = SAGE2Items.applications.list;
+				// find out if an instance of this application is already running
+				for (var key in appList) {
+					if (appList[key].application == appInstance.application) {
+						// instance found
+						appInstance.id = appList[key].id;
+						handleSingletonApplication(appInstance);
+						break;
 					}
 				}
 			}
-			handleNewApplication(appInstance, videohandle);
+
+			// if not a singleton application or no instance found, proceed as usually
+			if (appInstance.id === null) {
+				appInstance.id = getUniqueAppId();
+				if (appInstance.animation) {
+					var i;
+					SAGE2Items.renderSync[appInstance.id] = {clients: {}, date: Date.now()};
+					for (i = 0; i < clients.length; i++) {
+						if (clients[i].clientType === "display") {
+							SAGE2Items.renderSync[appInstance.id].clients[clients[i].id] = {wsio: clients[i], readyForNextFrame: false, blocklist: []};
+						}
+					}
+				}
+
+				handleNewApplication(appInstance, videohandle);
+			}
 
 			// send the update file list
 			broadcast('storedFileList', getSavedFilesList());
@@ -6867,6 +6885,12 @@ function pointerCloseGesture(uniqueID, pointerX, pointerY, time, gesture) {
 		}
 	}
 }
+
+
+function handleSingletonApplication(appInstance) {
+	broadcast('passFileReferenceToApp', appInstance);
+}
+
 
 function handleNewApplication(appInstance, videohandle) {
 	broadcast('createAppWindow', appInstance);

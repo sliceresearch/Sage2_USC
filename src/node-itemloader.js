@@ -978,6 +978,7 @@ AppLoader.prototype.readInstructionsFile = function(json_str, file, mime_type, e
 		animation: instructions.animation,
 		metadata: exif.metadata,
 		resizeMode: resizeMode,
+		singleton: instructions.singleton || false,
 		sticky: instructions.sticky,
 		plugin: instructions.plugin,
 		file: file,

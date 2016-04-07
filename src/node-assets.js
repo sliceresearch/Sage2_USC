@@ -486,8 +486,23 @@ var addFile = function(filename, exif, callback) {
 		});
 		anAsset.exif.SAGE2thumbnail = rthumb;
 	} else if (exif.OriginalMIMEType.indexOf('model/') > -1) {
-		// exif is too verbose for files such as collada xml
-		anAsset.exif = null;
+		// exif is generally too verbose for files such as collada xml
+		// retain only essential file information
+		var originalExif = anAsset.exif;
+		var conciseExif = {
+			SourceFile: originalExif.SourceFile,
+			FileSize: originalExif.FileSize,
+			ExifToolVersion: originalExif.ExifToolVersion,
+			FileName: originalExif.FileName,
+			Directory: originalExif.Directory,
+			FileModifyDate: originalExif.FileModifyDate,
+			FileAccessDate: originalExif.FileAccessDate,
+			FileInodeChangeDate: originalExif.FileInodeChangeDate,
+			FilePermissions: originalExif.FilePermissions,
+			FileType: originalExif.FileType,
+			MIMEType: originalExif.OriginalMIMEType
+		}
+		anAsset.setEXIF(conciseExif);
 		callback();
 	}
 	saveAssets();
