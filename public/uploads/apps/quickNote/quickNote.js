@@ -142,15 +142,17 @@ var quickNote = SAGE2_App.extend({
 	},
 
 	duplicate: function() {
-		var data = {};
-		data.type		= "launchAppWithValues";
-		data.appName	= "quickNote";
-		data.func		= "setMessage";
-		data.params		= {};
-		data.params.clientName = this.state.clientName;
-		data.params.clientInput = this.state.clientInput;
-		data.params.colorChoice = this.state.colorChoice;
-		wsio.emit("csdMessage", data);
+		if (isMaster) {
+			var data = {};
+			data.type		= "launchAppWithValues";
+			data.appName	= "quickNote";
+			data.func		= "setMessage";
+			data.params		= {};
+			data.params.clientName = this.state.clientName;
+			data.params.clientInput = this.state.clientInput;
+			data.params.colorChoice = this.state.colorChoice;
+			wsio.emit("csdMessage", data);
+		}
 	},
 
 	/**
@@ -167,12 +169,12 @@ var quickNote = SAGE2_App.extend({
 	*			clientInput, if entry is marked as input, the value will be in this property. See pdf_viewer.js for example.
 	*		Further parameters can be added. See pdf_view.js for example.
 	*/
-	getContextEntries: function() {
+	getContextEntries: function(	) {
 		var entries = [];
 		var entry;
 
 		entry = {};
-		entry.description = "Make a copy of this note.";
+		entry.description = "Duplicate";
 		entry.callback = "duplicate";
 		entry.parameters = {};
 		entries.push(entry);

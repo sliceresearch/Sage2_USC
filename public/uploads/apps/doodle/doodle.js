@@ -230,14 +230,16 @@ var doodle = SAGE2_App.extend({
 	},
 
 	duplicate: function () {
-		var data = {};
-		data.type		= "launchAppWithValues";
-		data.appName	= "doodle";
-		data.func		= "initializationThroughDuplicate";
-		data.params		= {};
-		data.params.originalCreator = this.state.originalCreator;
-		data.params.imageSnapshot = this.state.imageSnapshot;
-		wsio.emit("csdMessage", data);
+		if (isMaster) {
+			var data = {};
+			data.type		= "launchAppWithValues";
+			data.appName	= "doodle";
+			data.func		= "initializationThroughDuplicate";
+			data.params		= {};
+			data.params.originalCreator = this.state.originalCreator;
+			data.params.imageSnapshot = this.state.imageSnapshot;
+			wsio.emit("csdMessage", data);
+		}
 	},
 
 	/**
@@ -259,7 +261,7 @@ var doodle = SAGE2_App.extend({
 		var entry;
 
 		entry = {};
-		entry.description = "Make a copy";
+		entry.description = "Duplicate";
 		entry.callback = "duplicate";
 		entry.parameters = {};
 		entries.push(entry);

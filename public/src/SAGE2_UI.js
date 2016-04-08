@@ -2168,7 +2168,7 @@ function setupUiNoteMaker() {
 		});
 		if (i === 1) { workingDiv.style.background = "lightyellow"; }
 		if (i === 2) { workingDiv.style.background = "lightblue"; }
-		if (i === 3) { workingDiv.style.background = "lightcoral"; }
+		if (i === 3) { workingDiv.style.background = "lightpink"; }
 		if (i === 4) { workingDiv.style.background = "lightgreen"; }
 		if (i === 5) { workingDiv.style.background = "lightsalmon"; }
 		if (i === 6) { workingDiv.style.background = "white"; }
