@@ -199,6 +199,7 @@ var doodle = SAGE2_App.extend({
 			// store it for later and update the tile.
 			this.state.creationTime = titleString;
 			this.updateTitle(this.state.creationTime);
+			this.state.originalCreator = responseObject.clientName;
 			console.log("Should have updated title to:" + titleString);
 		}
 		// if loaded will include the creationTime
@@ -221,6 +222,24 @@ var doodle = SAGE2_App.extend({
 		workingDiv.height = this.element.clientHeight + "px";
 	},
 
+	initializationThroughDuplicate: function(responseObject) {
+		this.setInitialCanvas(responseObject.imageSnapshot);
+		responseObject.creationTime = null;
+		responseObject.clientName = responseObject.originalCreator;
+		this.changeTitleToOriginalCreatorAndTime(responseObject);
+	},
+
+	duplicate: function () {
+		var data = {};
+		data.type		= "launchAppWithValues";
+		data.appName	= "doodle";
+		data.func		= "initializationThroughDuplicate";
+		data.params		= {};
+		data.params.originalCreator = this.state.originalCreator;
+		data.params.imageSnapshot = this.state.imageSnapshot;
+		wsio.emit("csdMessage", data);
+	},
+
 	/**
 	* To enable right click context menu support this function needs to be present.
 	*
@@ -238,6 +257,12 @@ var doodle = SAGE2_App.extend({
 	getContextEntries: function() {
 		var entries = [];
 		var entry;
+
+		entry = {};
+		entry.description = "Make a copy";
+		entry.callback = "duplicate";
+		entry.parameters = {};
+		entries.push(entry);
 
 		entry = {};
 		entry.description = "Edit";

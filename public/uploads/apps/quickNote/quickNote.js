@@ -142,7 +142,15 @@ var quickNote = SAGE2_App.extend({
 	},
 
 	duplicate: function() {
-
+		var data = {};
+		data.type		= "launchAppWithValues";
+		data.appName	= "quickNote";
+		data.func		= "setMessage";
+		data.params		= {};
+		data.params.clientName = this.state.clientName;
+		data.params.clientInput = this.state.clientInput;
+		data.params.colorChoice = this.state.colorChoice;
+		wsio.emit("csdMessage", data);
 	},
 
 	/**
@@ -162,6 +170,12 @@ var quickNote = SAGE2_App.extend({
 	getContextEntries: function() {
 		var entries = [];
 		var entry;
+
+		entry = {};
+		entry.description = "Make a copy of this note.";
+		entry.callback = "duplicate";
+		entry.parameters = {};
+		entries.push(entry);
 
 		entry = {};
 		entry.description = "Change Note:";
