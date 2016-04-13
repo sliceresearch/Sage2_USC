@@ -13,6 +13,7 @@
   "author": "Luc Renambot",
   "license": "CC0-1.0",
   "devDependencies": {
-    "electron-prebuilt": "^0.37.0"
+    "electron-prebuilt": "^0.37.0",
+    "electron-packager": "latest"
   }
 }
