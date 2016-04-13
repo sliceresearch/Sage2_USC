@@ -634,6 +634,7 @@ function UIBuilder(json_cfg, clientID) {
 		newDialogCancel.style.mozBoxSizing    = "border-box";
 		newDialogCancel.style.boxSizing       = "border-box";
 		newDialogCancel.style.border          =  "2px solid #000000";
+		newDialogCancel.style.textAlign       = "center";
 
 		// Create a img element to display the image
 		var newDialogImage = document.createElement("img");
