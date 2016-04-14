@@ -405,6 +405,8 @@ var addFile = function(filename, exif, callback) {
 			callback();
 		});
 		anAsset.exif.SAGE2thumbnail = rthumb;
+	} else if (exif.MIMEType === 'text/plain') {
+		callback(); // Callback must be done otherwise the associated app will not launch. Might be worth doing an else catch.
 	} else if (exif.MIMEType.indexOf('video/') > -1) {
 		generateVideoThumbnails(filename, thumb, exif.ImageWidth, exif.ImageHeight, [512, 256], null, function() {
 			callback();

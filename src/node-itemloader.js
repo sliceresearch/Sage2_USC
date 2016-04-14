@@ -492,6 +492,32 @@ AppLoader.prototype.loadPdfFromFile = function(file, mime_type, aUrl, external_u
 	callback(appInstance);
 };
 
+
+AppLoader.prototype.loadNoteFromFile = function(file, mime_type, aUrl, external_url, name, callback) {
+	// Find the app. Look it the file name in the registry. Get path, navigate to the path's instruction.json file.
+	var appName = registry.getDefaultApp(file);
+	var localPath = getSAGE2Path(appName);
+	var instructionsFile = path.join(localPath, "instructions.json");
+
+	// Will read the instruction file and then launch app with instructionfile parameters.
+	var _this = this;
+	fs.readFile(instructionsFile, 'utf8', function(err, json_str) {
+		if (err) {
+			console.log(sageutils.header("Loader") + "cannot read application file " + instructionsFile);
+			return;
+		}
+
+		var appUrl = getSAGE2URL(localPath);
+		var app_external_url = _this.hostOrigin + sageutils.encodeReservedURL(appUrl);
+
+		var appInstance = _this.readInstructionsFile(json_str, localPath, mime_type, app_external_url);
+		appInstance.data.file = assets.getURL(file);
+		appInstance.file = file;
+		callback(appInstance);
+	});
+};
+
+
 AppLoader.prototype.loadAppFromFileFromRegistry = function(file, mime_type, aUrl, external_url, name, callback) {
 	// Find the app!!
 	var appName = registry.getDefaultApp(file);
@@ -822,7 +848,6 @@ AppLoader.prototype.loadApplication = function(appData, callback) {
 	var app;
 	if (appData.location === "file") {
 		app = registry.getDefaultAppFromMime(appData.type);
-
 		if (app === "image_viewer") {
 			this.loadImageFromFile(appData.path, appData.type, appData.url, appData.external_url, appData.name,
 					function(appInstance) {
@@ -837,6 +862,12 @@ AppLoader.prototype.loadApplication = function(appData, callback) {
 			);
 		} else if (app === "pdf_viewer") {
 			this.loadPdfFromFile(appData.path, appData.type, appData.url, appData.external_url, appData.name,
+					function(appInstance) {
+						callback(appInstance, null);
+					}
+			);
+		} else if (app.indexOf("apps") >= 0 && app.indexOf("quickNote") >= 0) {
+			this.loadNoteFromFile(appData.path, appData.type, appData.url, appData.external_url, appData.name,
 					function(appInstance) {
 						callback(appInstance, null);
 					}

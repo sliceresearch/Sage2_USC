@@ -44,6 +44,12 @@ var quickNote = SAGE2_App.extend({
 
 		this.setMessage(this.state);
 
+		// If a .note file is drag and dropped with launch with the known file
+		// var data = {};
+		// data.type     = "consolePrint";
+		// data.message  = "Quick note was launched with file:" + this.state.file;
+		// wsio.emit("csdMessage", data);
+
 	},
 
 	/**

@@ -76,7 +76,17 @@ function fileSpawn(filename, done) {
 function file(filename, done) {
 	ChildProcess.exec('exiftool -json -filesize# -all \"' + filename + '\"', function(error, stdout, stderr) {
 		if (error !== null) {
-			done(error);
+			var fileSplit = filename.split(".");
+			// Adding MIMEType manually for files ending with .note
+			if (fileSplit[fileSplit.length - 1].indexOf("note") === 0) {
+				var metadata = JSON.parse(stdout);
+				metadata[0].MIMEType = 'text/plain',
+				done(null, metadata[0]);
+			}
+			else {
+				console.log("EXIF error?");
+				done(error);
+			}
 		} else {
 			var metadata = JSON.parse(stdout);
 			done(null, metadata[0]);
