@@ -573,25 +573,29 @@ function setupListeners() {
 	wsio.on('storedFileList', function(data) {
 		document.getElementById('images-dir').checked   = false;
 		document.getElementById('pdfs-dir').checked     = false;
+		document.getElementById('notes-dir').checked     = false;
 		document.getElementById('videos-dir').checked   = false;
 		document.getElementById('sessions-dir').checked = false;
 
 		var images   = document.getElementById('images');
 		var videos   = document.getElementById('videos');
 		var pdfs     = document.getElementById('pdfs');
+		var notes    = document.getElementById('notes');
 		var sessions = document.getElementById('sessions');
 
 		removeAllChildren(images);
 		removeAllChildren(videos);
 		removeAllChildren(pdfs);
+		removeAllChildren(notes);
 		removeAllChildren(sessions);
 
 		var longestImageName   = createFileList(data, "images",   images);
 		var longestVideoName   = createFileList(data, "videos",   videos);
 		var longestPdfName     = createFileList(data, "pdfs",     pdfs);
+		var longestNoteName     = createFileList(data, "notes",     notes);
 		var longestSessionName = createFileList(data, "sessions", sessions);
 
-		var longest = Math.max(longestImageName, longestVideoName, longestPdfName, longestSessionName);
+		var longest = Math.max(longestImageName, longestVideoName, longestPdfName, longestSessionName, longestNoteName);
 		document.getElementById('fileListElems').style.width = (longest + 60).toString() + "px";
 
 		// showDialog('mediaBrowserDialog');

@@ -30,7 +30,7 @@ var quickNote = SAGE2_App.extend({
 		this.startingWidth    = 300; // hard coded to match instructions width
 		// This is critical for naming of file scheme. Currently the file name will be based upon creator and time.
 		// However this does have potential issues later. For example edits by different users.
-		console.log("erase me, value of creationTime:" + this.state.creationTime );
+		// console.log("erase me, value of creationTime:" + this.state.creationTime );
 
 		// this.setMessage(
 		// 	{
@@ -39,8 +39,8 @@ var quickNote = SAGE2_App.extend({
 		// 	})
 
 
-		console.log("erase me, init function activate this.state");
-		console.dir(this.state);
+		// console.log("erase me, init function activate this.state");
+		// console.dir(this.state);
 
 		this.setMessage(this.state);
 
@@ -49,7 +49,14 @@ var quickNote = SAGE2_App.extend({
 		// data.type     = "consolePrint";
 		// data.message  = "Quick note was launched with file:" + this.state.file;
 		// wsio.emit("csdMessage", data);
-
+		// var msgData = {};
+		// msgData.type     = "consolePrint";
+		// msgData.message  = "QuickNote: does it have the new variable:" + data.thisVariableIsNew;
+		// wsio.emit("csdMessage", msgData);
+		console.log("erase me, printing supposedly the passed data" + data);
+		console.dir(data);
+		console.log("erase me, compared to this" + this);
+		console.dir(this);
 	},
 
 	/**

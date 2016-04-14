@@ -208,8 +208,6 @@ AppLoader.prototype.loadVideoFromURL = function(aUrl, mime_type, source_url, nam
 	this.loadVideoFromFile(source_url, mime_type, aUrl, aUrl, name, callback);
 };
 
-
-
 AppLoader.prototype.loadImageFromDataBuffer = function(buffer, width, height, mime_type, aUrl,
 	external_url, name, exif_data, callback) {
 
@@ -511,8 +509,12 @@ AppLoader.prototype.loadNoteFromFile = function(file, mime_type, aUrl, external_
 		var app_external_url = _this.hostOrigin + sageutils.encodeReservedURL(appUrl);
 
 		var appInstance = _this.readInstructionsFile(json_str, localPath, mime_type, app_external_url);
+		appInstance.data.thisVariableIsNew = "added in loadNoteFromFile";
 		appInstance.data.file = assets.getURL(file);
 		appInstance.file = file;
+		// if (appInstance.data.thisVariableIsNew) { console.log("erase me, confirmed new var in itemLoader"); }
+		console.log("erase me, thisVariableIsNew:" + appInstance.data.thisVariableIsNew);
+		console.dir(appInstance.data);
 		callback(appInstance);
 	});
 };
@@ -846,6 +848,9 @@ AppLoader.prototype.manageAndLoadUploadedFile = function(file, callback) {
 
 AppLoader.prototype.loadApplication = function(appData, callback) {
 	var app;
+	console.log("");
+	console.log("erase me, where the hell is it loading from UI");
+	console.log("location:" + appData.location);
 	if (appData.location === "file") {
 		app = registry.getDefaultAppFromMime(appData.type);
 		if (app === "image_viewer") {
@@ -922,6 +927,12 @@ AppLoader.prototype.loadApplication = function(appData, callback) {
 			this.loadPdfFromURL(appData.url, appData.type, appData.name, appData.strictSSL, function(appInstance) {
 				callback(appInstance, null);
 			});
+		} else if (app.indexOf("apps") >= 0 && app.indexOf("quickNote") >= 0) {
+			console.log();
+			console.log();
+			console.log("erase me, ERROR don't know what to do with a note url. This will need to be fixed.");
+			console.log();
+			console.log();
 		}
 	} else if (appData.location === "remote") {
 		if (appData.application.application === "movie_player") {

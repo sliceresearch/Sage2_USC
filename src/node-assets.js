@@ -504,6 +504,18 @@ var deletePDF = function(filename) {
 	});
 };
 
+var deleteNote = function(filename) {
+	var filepath = path.resolve(AllAssets.root, 'notes', filename);
+	fs.unlink(filepath, function(err) {
+		if (err) {
+			console.log("Server> error removing file:", filename, err);
+		}
+		console.log("Server> successfully deleted file:", filename);
+		// Delete the metadata
+		delete AllAssets.list[filepath];
+		saveAssets();
+	});
+};
 
 var deleteAsset = function(filename) {
 	var filepath = path.resolve(filename);
@@ -766,6 +778,26 @@ var listApps = function() {
 	return result;
 };
 
+var listNotes = function() {
+	var result = [];
+	var keys = Object.keys(AllAssets.list);
+	console.log();
+	console.log();
+	var noteCounter = 0;
+	console.log();
+	console.log("erase me, trying to list notes");
+	for (var f in keys) {
+		var one = AllAssets.list[keys[f]];
+		if (one.exif.MIMEType === 'text/plain') {
+			console.log("erase me, found a note");
+			noteCounter++;
+			result.push(one);
+		}
+	}
+	if (noteCounter == 0) { console.log("erase me, DID NOT FIND NOTES"); }
+	return result;
+};
+
 var recursiveReaddirSync = function(aPath) {
 	var list     = [];
 	var excludes = [ '.DS_Store', 'Thumbs.db', 'passwd.json', 'assets', 'sessions', 'tmp', 'config' ];
@@ -1025,6 +1057,7 @@ exports.listAssets = listAssets;
 exports.saveAssets = saveAssets;
 exports.listImages = listImages;
 exports.listPDFs   = listPDFs;
+exports.listNotes  = listNotes;
 exports.listVideos = listVideos;
 exports.listApps   = listApps;
 exports.addFile    = addFile;
@@ -1037,6 +1070,7 @@ exports.exifAsync   = exifAsync;
 exports.deleteImage = deleteImage;
 exports.deleteVideo = deleteVideo;
 exports.deletePDF   = deletePDF;
+exports.deleteNote  = deleteNote;
 exports.deleteAsset = deleteAsset;
 exports.moveAsset   = moveAsset;
 

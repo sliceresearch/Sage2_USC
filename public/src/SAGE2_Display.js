@@ -1331,6 +1331,9 @@ function createAppWindow(data, parentId, titleBarHeight, titleTextSize, offsetX,
 			title: data.title
 		};
 
+		console.log("erase me, contents of the passed data object for new application");
+		console.dir(data.data);
+
 		// load new app
 		if (window[data.application] === undefined) {
 			var js = document.createElement("script");

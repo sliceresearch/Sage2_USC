@@ -146,7 +146,7 @@ for (var folder in mediaFolders) {
 		}
 		console.log(sageutils.header('Folders') + 'upload to ' + f.path);
 	}
-	var newdirs = ["apps", "assets", "images", "pdfs", "tmp", "videos", "config"];
+	var newdirs = ["apps", "assets", "images", "pdfs", "tmp", "videos", "config", "notes"];
 	newdirs.forEach(function(d) {
 		var newsubdir = path.join(mediaFolders[f.name].path, d);
 		if (!sageutils.folderExists(newsubdir)) {
@@ -3626,6 +3626,7 @@ function getSavedFilesList() {
 	var uploadedImages = assets.listImages();
 	var uploadedVideos = assets.listVideos();
 	var uploadedPdfs   = assets.listPDFs();
+	var uploadedNotes  = assets.listNotes();
 	var savedSessions  = listSessions();
 	var uploadedApps   = getApplications();
 
@@ -3633,9 +3634,10 @@ function getSavedFilesList() {
 	uploadedImages.sort(sageutils.compareFilename);
 	uploadedVideos.sort(sageutils.compareFilename);
 	uploadedPdfs.sort(sageutils.compareFilename);
+	uploadedNotes.sort(sageutils.compareFilename);
 	savedSessions.sort(sageutils.compareFilename);
 
-	var list = {images: uploadedImages, videos: uploadedVideos, pdfs: uploadedPdfs,
+	var list = {images: uploadedImages, videos: uploadedVideos, pdfs: uploadedPdfs, notes: uploadedNotes,
 				sessions: savedSessions, applications: uploadedApps};
 
 	return list;
@@ -6926,6 +6928,10 @@ function handleNewApplication(appInstance, videohandle) {
 		y: appInstance.height + config.ui.titleBarHeight - cornerSize, w: cornerSize, h: cornerSize}, 2);
 	SAGE2Items.applications.editButtonVisibilityOnItem(appInstance.id, "syncButton", false);
 
+	console.dir(appInstance.data);
+	if (appInstance.data.thisVariableIsNew) {
+		console.log("erase me, and the if. The new variable is seen by the server");
+	}
 	initializeLoadedVideo(appInstance, videohandle);
 }
 
