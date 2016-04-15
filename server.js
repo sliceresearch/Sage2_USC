@@ -7416,6 +7416,9 @@ function wsCsdMessage(wsio, data) {
 		case "subscribeToValue":
 			csdSubscribeToValue(wsio, data);
 			break;
+		case "saveDataOnServer":
+			csdSaveDataOnServer(wsio, data);
+			break;
 		default:
 			console.log("");
 			break;
@@ -7470,8 +7473,14 @@ function csdWhatAppIsAt(wsio, data) {
 */
 function csdGetPathOfApp(appName) {
 	var apps = getApplications();
+		console.log();
+		console.log();
+		console.log("erase me, getting app list");
 	// for each of the apps known to SAGE2, usually everything in public/uploads/apps
 	for (var i = 0; i < apps.length; i++) {
+
+		console.log(apps[i].id);
+
 		if (// if the name contains appName
 			apps[i].exif.FileName.indexOf(appName) === 0
 			|| apps[i].id.indexOf(appName) !== -1
@@ -7497,8 +7506,13 @@ function csdGetPathOfApp(appName) {
 function csdLaunchAppWithValues(wsio,data) {
 	var fullpath = csdGetPathOfApp(data.appName);
 	if (fullpath === null) {
-		console.log(sageutils.header("csdLaunchAppWithValues") + "Cannot launch " + data.appName + ", doesn't exist.");
-		return;
+		fullpath = path.join(mediaFolders.system.path, "apps", data.appName);
+		try {
+			fs.accessSync(fullpath);
+		} catch (err) {
+			console.log(sageutils.header("csdLaunchAppWithValues") + "Cannot launch " + data.appName + ", doesn't exist.");
+			return;
+		}
 	}
 	// Prep the data needed to launch an application.
 	var appLoadData = { };
@@ -7744,3 +7758,51 @@ function csdGetAllTrackedValues(wsio, data) {
 	}
 	wsio.emit('broadcast', dataForApp);
 }
+
+
+
+
+/**
+Currently used to save files in server media folders.
+Writes to mainFolder.path, which should place it into ~/Documents/SAGE2_Media
+
+Needs
+	data.fileName
+	data.fileType
+		note
+	data.fileContent
+
+*/
+function csdSaveDataOnServer(wsio, data) {
+	if (data.fileType === "note") {
+		if (data.fileType == null || data.fileType == undefined
+			|| data.fileName == null || data.fileName == undefined
+			|| data.fileContent == null || data.fileContent == undefined
+		) {
+			console.log("ERROR:csdSaveDataOnServer: not saving data, a required field is null or undefined");
+		}	
+		var fullpath;
+		console.log();
+		console.log();
+		fullpath = path.join(mainFolder.path, "notes", "lastNote.note");
+		console.log("erase me, just in case note save to:" + fullpath);
+		fs.writeFileSync(fullpath, data.fileContent);
+		fullpath = path.join(mainFolder.path, "notes", data.fileName);
+		console.log();
+		console.log();
+		console.log("erase me, Trying to make a note file with fileType, fileName, fcontents,fullpath");
+		console.log(data.fileType);
+		console.log(data.fileName);
+		console.log(data.fileContent);
+		console.log(fullpath);
+		fs.writeFileSync(fullpath, data.fileContent);
+		console.log("erase me, made a .note file.");
+	} else {
+		console.log("ERROR:csdSaveDataOnServer: unable to save data on server for fileType " + data.fileType);
+	}
+}
+
+
+
+
+

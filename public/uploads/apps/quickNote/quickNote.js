@@ -57,6 +57,27 @@ var quickNote = SAGE2_App.extend({
 		console.dir(data);
 		console.log("erase me, compared to this" + this);
 		console.dir(this);
+		// If it got file contents from the sever, then extract.
+		if (data.state.contentsOfNoteFile) {
+			this.parseDataFromServer(data.state.contentsOfNoteFile);
+		}
+	},
+
+	/**
+	Currently assumes that file from server will contain three lines.
+	1st: creator and timestamp
+	2nd: color for note
+	3rd: content for note
+
+	*/
+	parseDataFromServer: function(fileContentsFromServer) {
+		var fileData = {};
+		var fileLines = fileContentsFromServer.split("\n");
+		fileData.fileDefined = true;
+		fileData.clientName = fileLines[0];
+		fileData.colorChoice = fileLines[1];
+		fileData.clientInput = fileLines[2];
+		this.setMessage(fileData);
 	},
 
 	/**
@@ -65,6 +86,22 @@ var quickNote = SAGE2_App.extend({
 	*/
 	setMessage: function(msgParams) {
 		var workingDiv = document.getElementById( this.element.id );
+		// First remove potential new lines from input
+		if (msgParams.clientInput) { msgParams.clientInput = msgParams.clientInput.replace(/\n/g,""); }
+		// If defined by a file, use those values
+		if (msgParams.fileDefined === true) {
+			this.backgroundChoice       = msgParams.colorChoice;
+			this.state.colorChoice      = this.backgroundChoice;
+			workingDiv.style.background = msgParams.colorChoice;
+			this.state.clientInput      = msgParams.clientInput;
+			workingDiv.innerHTML        = msgParams.clientInput;
+			this.state.creationTime     = msgParams.clientName;
+			this.updateTitle(this.state.creationTime);
+			this.saveNote(msgParams.creationTime);
+			return;
+		}
+
+		// Otherwise set the values using probably user input.
 		if (msgParams.clientName === undefined || msgParams.clientName === null || msgParams.clientName =="") {
 			msgParams.clientName = "Anonymous";
 		}
@@ -99,11 +136,11 @@ var quickNote = SAGE2_App.extend({
 			if (this.state.creationTime.getDate() < 10) { titleString += "0"; }
 			titleString += this.state.creationTime.getDate() + "-";
 			if (this.state.creationTime.getHours() < 10) { titleString += "0"; }
-			titleString += this.state.creationTime.getHours() + ":";
+			titleString += this.state.creationTime.getHours();
 			if (this.state.creationTime.getMinutes() < 10) { titleString += "0"; }
-			titleString += this.state.creationTime.getMinutes() + ":";
+			titleString += this.state.creationTime.getMinutes();
 			if (this.state.creationTime.getSeconds() < 10) { titleString += "0"; }
-			titleString += this.state.creationTime.getSeconds() + ".";
+			titleString += this.state.creationTime.getSeconds();
 			if (this.state.creationTime.getMilliseconds() < 10) { titleString += "0"; }
 			if (this.state.creationTime.getMilliseconds() < 100) { titleString += "0"; }
 			titleString += this.state.creationTime.getMilliseconds();
@@ -116,11 +153,7 @@ var quickNote = SAGE2_App.extend({
 		if (msgParams.creationTime !== undefined && msgParams.creationTime !== null) {
 			this.updateTitle(msgParams.creationTime);
 		}
-
-		// This is what saves the state between sessions as far as can be determined.
-		this.SAGE2UpdateAppOptionsFromState();
-		this.SAGE2Sync(true);
-		this.resize(msgParams.creationTime);
+		this.saveNote(msgParams.creationTime);
 	},
 
 	load: function(date) {
@@ -135,6 +168,37 @@ var quickNote = SAGE2_App.extend({
 		console.log("erase me, load function activate this.state");
 		console.dir(this.state);
 		this.resize(date);
+	},
+
+	saveNote: function(date) {
+		if (this.state.creationTime === null || this.state.creationTime === undefined) { return; }
+		// This is what saves the state between sessions as far as can be determined.
+		this.SAGE2UpdateAppOptionsFromState();
+		this.SAGE2Sync(true);
+		this.resize();
+
+		// Tell server to save the file.
+		var fileData = {};
+		fileData.type = "saveDataOnServer";
+		fileData.fileType = "note";
+		fileData.fileName = this.state.creationTime + ".note";
+		fileData.fileContent = this.state.creationTime
+			+ "\n"
+			+ this.state.colorChoice
+			+ "\n"
+			+ this.state.clientInput;
+
+		console.log();
+		console.log();
+		console.log();
+		console.log("erase me, double checking save data");
+		console.log("type:" + fileData.fileType);
+		console.log("name:" + fileData.fileName);
+		console.log("content:" + fileData.fileContent);
+		console.log("oc creationTime:" + this.state.creationTime);
+		console.log("oc colorChoice:" + this.state.colorChoice);
+		console.log("oc clientInput:" + this.state.clientInput);
+		wsio.emit("csdMessage", fileData);
 	},
 
 	draw: function(date) {

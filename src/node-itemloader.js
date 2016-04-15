@@ -497,6 +497,13 @@ AppLoader.prototype.loadNoteFromFile = function(file, mime_type, aUrl, external_
 	var localPath = getSAGE2Path(appName);
 	var instructionsFile = path.join(localPath, "instructions.json");
 
+	console.log();
+	console.log("erase me, loading note from file using file, appName, localPath");
+	console.log(file);
+	console.log(appName);
+	console.log(localPath);
+
+
 	// Will read the instruction file and then launch app with instructionfile parameters.
 	var _this = this;
 	fs.readFile(instructionsFile, 'utf8', function(err, json_str) {
@@ -513,8 +520,18 @@ AppLoader.prototype.loadNoteFromFile = function(file, mime_type, aUrl, external_
 		appInstance.data.file = assets.getURL(file);
 		appInstance.file = file;
 		// if (appInstance.data.thisVariableIsNew) { console.log("erase me, confirmed new var in itemLoader"); }
+		console.dir("");
 		console.log("erase me, thisVariableIsNew:" + appInstance.data.thisVariableIsNew);
 		console.dir(appInstance.data);
+		console.log("erase me, looking for directory:");
+		console.log(appInstance.data.file);
+		console.log(aUrl);
+		console.log(external_url);
+		console.log(file);
+
+		// This will add the contents of the note to the send data values. Assuming the var is unique.
+		appInstance.data.contentsOfNoteFile = fs.readFileSync(file, 'utf8');
+
 		callback(appInstance);
 	});
 };
