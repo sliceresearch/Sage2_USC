@@ -283,9 +283,11 @@ function SAGE2_init() {
 	SAGE2_browser();
 
 	// Setup focus events
-	Notification.requestPermission(function (permission) {
-		console.log('Request', permission);
-	});
+	if ("Notification" in window) {
+		Notification.requestPermission(function (permission) {
+			console.log('Request', permission);
+		});
+	}
 	setupFocusHandlers();
 
 	// Deal with the warning label in the UI if Chrome or not Chrome
