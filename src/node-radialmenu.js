@@ -215,7 +215,7 @@ RadialMenu.prototype.getInfo = function() {
 			thumbnailWindowSize: this.thumbnailWindowSize, radialMenuScale: this.radialMenuScale,
 			visible: this.visible, layout: this.radialButtons, thumbnailWindowState: this.thumbnailWindowState,
 			arrangementMenuState: this.showArrangementSubmenu
-			};
+	};
 };
 
 /**
