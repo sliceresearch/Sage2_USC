@@ -65,7 +65,7 @@ module.exports = function(grunt) {
 					"public/uploads/apps/welcome/plugin.js",
 					"public/uploads/apps/tweetcloud2/plugin.js",
 					],
-				options: { config: "build/jscs_server.json" }
+				options: { config: "build/jscs_server.json", esnext: true }
 			},
 			browserFiles: {
 				src: ['public/src/*.js', 'public/admin/*.js'],
