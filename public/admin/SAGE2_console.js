@@ -48,7 +48,7 @@ function SAGE2_init() {
 				config:  true,
 				version: true,
 				time:    false,
-				console: true,
+				console: true
 			},
 			session: session
 		};
