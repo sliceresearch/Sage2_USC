@@ -9,8 +9,7 @@
 		"scripts/d3.geo.projection.min.js",
 		"scripts/d3.layout.cloud.js",
 		"scripts/topojson.js",			
-		"scripts/vega.min.js",
-		"scripts/vega-embed.js"
+		"scripts/vega.min.js"
 	],
 	"load": {
 		"value": 4,
