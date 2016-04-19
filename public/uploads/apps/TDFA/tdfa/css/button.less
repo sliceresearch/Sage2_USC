@@ -1,0 +1,101 @@
+.btn {
+
+	box-sizing: border-box;
+	display: inline-block;
+	padding: 6px 12px 6px 12px;
+	margin: 0;
+	width: 100%;
+	box-sizing: border-box;
+	display: inline-block;
+	vertical-align: middle;
+	font-size: 14px;
+	line-height: 1;
+	text-transform: uppercase;
+	text-decoration: none;
+	text-align: center;
+	color: white;
+	text-shadow: 0px -1px 0px rgba(0, 0, 0, 0.25);
+	border: 2px solid;
+	border-radius: 4px;
+
+	transition: background-color 0.1s linear;
+
+	.theme .background();
+	.theme .border();
+
+	&.hover {
+		.theme .background-dark();
+	}
+
+	&.disabled {
+		.theme .background-darkest();
+	}
+
+}
+
+.btn-group {
+
+	> .btn {
+
+		border-radius: 0px;
+
+		&.active {
+			.theme .background-darker();
+		}
+
+		&.disabled {
+			.theme .background-darkest();
+		}
+
+	}
+
+	&.horizontal {
+
+		> .btn {
+			border-left: 0px;
+			border-right: 0px;
+			margin-left: -2px;
+			margin-right: -2px;
+		}
+
+		> .btn.first {
+			border-left: 1px;
+			border-bottom-left-radius: 4px;
+			border-top-left-radius: 4px;
+			margin-left: 0px;
+		}
+
+		> .btn.last {
+			border-right: 1px;
+			border-bottom-right-radius: 4px;
+			border-top-right-radius: 4px;
+			margin-right: 0px;
+		}
+
+	}
+
+	&.vertical {
+
+		> .btn {
+			display: block;
+			border-top: 0px;
+			border-bottom: 0px;
+		}
+
+		> .btn.first {
+			border-top: 1px;
+			border-top-left-radius: 4px;
+			border-top-right-radius: 4px;
+			margin-left: 0px;
+		}
+
+		> .btn.last {
+			border-bottom: 1px;
+			border-bottom-left-radius: 4px;
+			border-bottom-right-radius: 4px;
+			margin-right: 0px;
+		}
+
+	}
+
+}

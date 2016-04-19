@@ -1,0 +1,84 @@
+.viewportAreaIndicator {
+
+	&.vertical {
+		text-align: center;
+
+		& > .fixed {
+			border-top-left-radius: 10px;
+			border-top-right-radius: 10px;
+		}
+
+		& > .variable {
+			border-bottom-left-radius: 10px;
+			border-bottom-right-radius: 10px;
+		}
+	}
+
+	&.horizontal {
+		display: inline-flex;
+
+		& > div {
+			width: 50%;
+
+			& > label {
+				vertical-align: middle;
+			}
+		}
+
+		& > .fixed {
+			text-align: right;
+			border-top-left-radius: 10px;
+			border-bottom-left-radius: 10px;
+		}
+
+		& > .variable {
+			text-align: center;
+			border-top-right-radius: 10px;
+			border-bottom-right-radius: 10px;
+		}
+	}
+
+	& > div {
+		padding-left: 5px;
+		padding-right: 5px;
+		padding-top: 5px;
+		padding-bottom: 5px;
+	}
+
+	& > .fixed {
+		.theme .translucent-background();
+	}
+
+	& > .variable {
+		.theme .alternative-translucent-background();
+
+		&.flashing {
+			@keyframes flash {
+				0% { .theme .contrasting-translucent-flash-background(); 	};
+				100%	 { .theme .alternative-translucent-background(); 		};
+			}
+
+			animation-name: flash;
+			animation-duration: 0.25s;
+		}
+	}
+
+	margin: 5px 5px 5px 5px;
+	position: relative;
+	//padding: 5px 5px 5px 5px;
+
+	&.top {
+		top: 0px;
+	}
+
+	&.left {
+		left: 0px;
+	}
+
+	& label {
+		margin-top: 5px;
+		margin-bottom: 5px;
+		//margin-left: 10px;
+		//margin-right: 10px;
+	}
+}

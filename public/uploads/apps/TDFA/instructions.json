@@ -1,0 +1,23 @@
+{
+	"main_script": "TDFA.js",
+	"icon": "TDFA.png",
+	"width": 1600,
+	"height": 900,
+	"animation": true,
+	"resize": "free",
+	"sticky": true,
+	"singleton": true,
+	"dependencies": [
+		"tdfa/scripts/lib/r.js",
+		"tdfa/scripts/lib/three.js"
+	],
+	"load": {},
+	"title": "TDFA",
+	"version": "0.5.0",
+	"description": "Application for previewing 3D content exchange files",
+	"keywords": [ "three", "3d", "model", "viewer" ],
+	"fileTypes": [ "dae", "obj", "fbx"],
+	"directory": "models",
+	"author": "sharkgoesmad",
+	"license": "SAGE2-Software-License"
+}

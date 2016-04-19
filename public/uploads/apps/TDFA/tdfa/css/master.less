@@ -1,0 +1,203 @@
+@import "theme";
+@import "button";
+@import "vpareaindicator";
+
+/* Let's get this party started */
+.TdfaRoot ::-webkit-scrollbar {
+	width: 1px;
+}
+
+/* Track */
+.TdfaRoot ::-webkit-scrollbar-track {
+	//-webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.3);
+	//-webkit-border-radius: 10px;
+	//border-radius: 10px;
+}
+
+/* Handle */
+.TdfaRoot ::-webkit-scrollbar-thumb:vertical {
+	-webkit-border-radius: 10px;
+	//border-radius: 4px;
+	background: rgba(255,0,0,0.8);
+	//-webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.5);
+}
+
+
+
+.TdfaRoot {
+/*    position: absolute;*/
+	width: 100%;
+	height: 100%;
+
+	//font-size: 62.5%;
+
+}
+
+.TdfaUiContainer {
+	width: 100%;
+	height: 100%;
+
+	// all labels in this
+	& label {
+		color: white;
+		font-family: Arimo, Helvetica, sans-serif;
+		//font-size: 16px;
+
+	}
+
+}
+
+.TdfaWebGlContainer {
+	position: absolute;
+	left: 0px;
+	top: 0px;
+	width: 100%;
+	height: 100%;
+}
+
+.TdfaTileContainer {
+	width: 100%;
+	height: 100%;
+}
+
+.TdfaTileContainer .tileDisplay {
+	position: absolute;
+	width: 100%;
+	height: 100%;
+}
+
+.TdfaTileContainer .splitter {
+	background-color: #000000;
+	border: 0px solid #000000;
+	opacity: 0.0;
+	background-clip: content-box;
+	position: absolute;
+
+	transition: width 0.08s linear, height 0.08s linear, left 0.08s linear, top 0.08s linear, right 0.08s linear, bottom 0.08s linear;
+
+	&.hover {
+		opacity: 0.5;
+		background-color: #A0A0A0;
+	}
+
+}
+
+.TdfaTileContainer .splitter.vertical {
+	width: 20px;
+	margin-left: -10px;
+	height: 100%;
+}
+
+.TdfaTileContainer .splitter.horizontal {
+	height: 20px;
+	margin-top: -10px;
+	width: 100%;
+}
+
+
+/* TILE SPLITTER */
+.tileSplitTriggerBtn {
+	right: 0px;
+	top: 0px;
+	width: 30px;
+	height: 30px;
+	position: absolute;
+	background: rgba( 0, 0, 0, 0.6);
+
+	transition: left 0.08s linear, top 0.08s linear;
+}
+
+.sinkOverlay {
+	/* background-color: rgba(0, 0, 0, 0.6); */
+	position: absolute;
+	display: inline-flex;
+	border: 1px solid;
+	border-color: forestgreen;
+}
+
+.sinkOverlay > .sinkCtlPanel {
+/*	width: 300px;*/
+	left: 0px;
+	top: 0px;
+	height: 100%;
+	position: relative;
+	width: 150px;
+	background-color: #111111;
+	padding-left: 5px;
+	padding-right: 5px;
+
+	overflow-y: auto;
+
+
+	transition: width 0.08s linear, left 0.08s linear, top 0.08s linear;
+
+
+	& section {
+		margin-top: 15px;
+
+		// all nodes in each section
+		& > * {
+			margin-top: 3px;
+		}
+
+		& .objectNameHighlight {
+			.theme .alternative-background-highlight();
+			padding: 3px;
+			border-radius: 3px;
+		}
+	}
+
+	& .sceneHierarchy {
+
+		.theme .alternative-background();
+
+		list-style-type: none;
+		padding-top: 5px;
+		padding-bottom: 5px;
+		padding-left: 5px;
+		border-radius: 3px;
+
+		& > .sceneHierarchyListItem {
+			overflow-x: hidden;
+			padding-top: 3px;
+			padding-bottom: 3px;
+			width: 100%;
+
+			transition: background-color 0.1s linear;
+
+			&.hover {
+				.theme .alternative-background-dark();
+			}
+
+			&.selected {
+				.theme .alternative-background-highlight();
+			}
+		}
+
+		& label {
+			white-space: nowrap;
+		}
+	}
+}
+
+.sinkCtlPanel.hidden {
+	width: 0px;
+	padding-left: 0px;
+	padding-right: 0px;
+}
+
+.sinkCtlPanel.hidden > * {
+	visibility: hidden;
+}
+
+.sinkOverlay > .sinkViewport {
+	height: 100%;
+	flex: 1;
+	overflow: hidden;
+
+	& > .vpAreaIndicatorContainer {
+		& > .viewportAreaIndicator {
+			width: 220px;
+		}
+	}
+}

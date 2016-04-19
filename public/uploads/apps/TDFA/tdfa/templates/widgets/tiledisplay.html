@@ -1,0 +1,12 @@
+<script type="text/html" id="TileDisplay">
+	<div class="tileDisplay" data-bind="splitter_manager: { splitters: srcSplitters }">
+		<div data-bind="foreach: { data: splitters, afterRender: AfterSplitterRender }">
+			<!-- ko if: $data.IsHorizontal() -->
+			<div class="splitter vertical" data-bind="style: { left: leftHorizontal($data), top: top($data), height: height($data) }, attr: { 'data-idx': $index }"></div>
+			<!-- /ko -->
+			<!-- ko if: $data.IsVertical() -->
+			<div class="splitter horizontal" data-bind="style: { left: left($data), top: topVertical($data), width: width($data) }, attr: { 'data-idx': $index }"></div>
+			<!-- /ko -->
+		</div>
+	</div>
+</script>

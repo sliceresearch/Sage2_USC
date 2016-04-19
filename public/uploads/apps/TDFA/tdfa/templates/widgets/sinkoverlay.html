@@ -1,0 +1,61 @@
+<script type="text/html" id="SinkOverlay">
+	<div class="sinkOverlayContainer" data-bind="sink_overlay: { sink: srcSink, index: srcIndex }">
+		<div class="sinkOverlay" data-bind="style: { left: cssLeft, top: cssTop, width: cssWidth, height: cssHeight }">
+
+			<!-- Control Panel -->
+			<div class="sinkCtlPanel" data-bind="css: { hidden: sink.width() &lt; 300 }">
+
+				<section>
+					<label>Controls</label>
+					<div data-bind="template: { name: 'ButtonsetTemplate', data: { descriptor: controllerSelectionModel, orientation: 'vertical' } }"></div>
+				</section>
+
+				<section>
+					<label>Camera</label>
+					<div data-bind="template: { name: 'ButtonsetTemplate', data: { descriptor: cameraSelectionModel, orientation: 'vertical' } }"></div>
+				</section>
+
+				<section data-bind="visible: sink.SelectedObject() != null">
+					<label data-bind="text: sink.SelectedObject() != null ? 'Selected:\n' : 'Scene Objects'"></label><br>
+					<div class="objectNameHighlight"><label data-bind="text: selectedObjectName"></label></div>
+					<div data-bind="template: { name: 'ButtonTemplate', data: { descriptor: goToObjButtonModel } }"></div>
+					<div data-bind="template: { name: 'ButtonTemplate', data: { descriptor: selectParentObjModel } }"></div>
+					<div data-bind="template: { name: 'ButtonTemplate', data: { descriptor: removeObjButtonModel } }"></div>
+				</section>
+
+				<!-- Transform Control Widgets -->
+				<div data-bind="visible: sink.TransformControlAttached">
+					<section>
+						<label>Transform Space</label>
+						<div data-bind="template: { name: 'ButtonsetTemplate', data: { descriptor: transformSpaceSelectionModel, orientation: 'vertical' } }"></div>
+					</section>
+
+					<section>
+						<label>Transform Mode</label>
+						<div data-bind="template: { name: 'ButtonsetTemplate', data: { descriptor: transformModeSelectionModel, orientation: 'vertical' } }"></div>
+					</section>
+				</div>
+
+				<section data-bind="visible: hierarchySectionVisible">
+					<label data-bind="text: hierarchySectionTitle"></label>
+					<ul class="sceneHierarchy">
+						<!-- ko foreach: { data: hierarchyObjects, afterRender: MakeObjectListItemCollider, beforeRemove: CleanupObjectListElement } -->
+						<li class="sceneHierarchyListItem" data-bind="manualClick: SelectSceneObject, css: { selected: sink.SelectedObject() == $data }"><label data-bind="text: name || id"></label></li>
+						<!-- /ko -->
+					</ul>
+				</section>
+
+
+			</div>
+
+			<!-- Viewport -->
+			<div class="sinkViewport">
+				<div class="vpAreaIndicatorContainer" data-bind="template: { name: 'ViewportAreaIndicatorTemplate', data: { descriptor: pointerModeIndicatorModel, orientation: 'horizontal' } }"></div>
+
+				<div data-bind="template: { name: 'TileSplitTrigger', data: { sink: sink } }"></div>
+			</div>
+
+		</div>
+
+	</div>
+</script>

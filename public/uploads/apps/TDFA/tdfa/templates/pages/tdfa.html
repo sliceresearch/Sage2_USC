@@ -1,0 +1,14 @@
+<div class="TdfaRoot">
+	<div class="TdfaWebGlContainer"></div>
+	<div class="TdfaUiContainer">
+		<div class="TdfaTileContainer">
+
+			<!-- ko foreach: sinks -->
+			<div data-bind="template: { name: 'SinkOverlay', data: { srcSink: $data, srcIndex: $index } }"></div>
+			<!-- /ko -->
+
+			<div data-bind="template: { name: 'TileDisplay', data: { srcSplitters: splitters } }"></div>
+
+		</div>
+	</div>
+</div>
