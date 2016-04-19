@@ -29,9 +29,11 @@ var vega_vis_app = SAGE2_App.extend( {
 
 		this.view = null;//where we will put the view object
 
-		this.vegaCallbackFunc = this.vegaCallback.bind(this);
+		this.vegaCallbackFuncBar = this.vegaCallbackBar.bind(this);
+		this.vegaCallbackFuncLine = this.vegaCallbackLine.bind(this);
 
 		this.initBarSpec();
+		this.initLineSpec();
 		//updated = true; 
 
 		//this.spec = "uploads/apps/vega_vis_app/data/spec.json";
@@ -39,6 +41,9 @@ var vega_vis_app = SAGE2_App.extend( {
   		
 
   		// this.sendResize(spec.width, spec.height);
+
+		this.updateTitle("title");	
+
 
 	},
 
@@ -58,26 +63,32 @@ var vega_vis_app = SAGE2_App.extend( {
 			this.barSpec.axes[0].title = this.state.x;
 			this.barSpec.axes[1].title = this.state.y;
 			this.barSpec.data[0].values = this.state.data;
-		}
+			this.parseBar(this.barSpec);
 
-		this.parse(this.barSpec);
+		}
+		if( this.state.type == "line"){
+
+			//this.linSpec.marks[0]
+			this.lineSpec.axes[0].title = this.state.x;
+			this.lineSpec.axes[1].title = this.state.y;
+			this.lineSpec.data[0].values = this.state.data;
+			this.parseLine(this.lineSpec);
+		}
 
 	},
 
 	resize: function(date) {
 		updated = false;
 		if( this.element.clientWidth > 400 ){
-  			this.view.width(this.element.clientWidth-50);
+  			this.view.width(this.element.clientWidth-60);
   			updated = true;
   		}
   		if( this.element.clientWidth > 400 ){
-  			this.view.height(this.element.clientHeight-59);
+  			this.view.height(this.element.clientHeight-60);
   			updated = true;	
   		}
   		if( updated )
   			this.view.renderer('svg').update();
-
-		this.refresh(date);
 	},
 
 
@@ -123,14 +134,14 @@ var vega_vis_app = SAGE2_App.extend( {
 		}
 	},
 
-	parse: function(spec) {
+	parseBar: function(spec) {
 		console.log("parse");
-  		vg.parse.spec(spec, this.vegaCallbackFunc);
+  		vg.parse.spec(spec, this.vegaCallbackFuncBar);
   		//vg.embed("#vis", spec, this.vegaCallbackFunc);
 
 	},
 
-	vegaCallback: function(error, chart) { 
+	vegaCallbackBar: function(error, chart) { 
 		// chart( {el:"vis"} ).update(); 
 		this.view = chart({el:'vis'+this.id});
 		this.view.update();
@@ -150,8 +161,123 @@ var vega_vis_app = SAGE2_App.extend( {
 
 	},
 
+	parseLine: function(spec) {
+		console.log("parse");
+  		vg.parse.spec(spec, this.vegaCallbackFuncLine);
+  		//vg.embed("#vis", spec, this.vegaCallbackFunc);
+
+	},
+
+	vegaCallbackLine: function(error, chart) { 
+		// chart( {el:"vis"} ).update(); 
+		this.view = chart({el:'vis'+this.id});
+		this.view.update();
+  		
+
+		//set width and height appropriately
+		paddingWidth = this.lineSpec.padding.left + this.lineSpec.padding.right;
+		paddingHeight = this.lineSpec.padding.top + this.lineSpec.padding.bottom;
+  		this.view.width(this.element.clientWidth-paddingWidth).height(this.element.clientHeight-paddingHeight).renderer('svg').update();
+
+		this.view.renderer('svg').update();
+
+
+	},
+
+
+
 	callback2(){
 		console.log("it worked!");
+	},
+
+
+
+	initLineSpec: function(){
+		this.lineSpec = 
+		  {
+			  "width": 1240,
+			  "height": 530,
+  			  "padding": {"top": 10, "left": 60, "bottom": 60, "right": 30},
+
+			  "data": [
+			    {
+			      "name": "table",
+			      "values": [
+			        {"x": 2010,"y": 100,"id": "Loop"},
+			        {"x": 2011,"y": 200,"id": "Loop"},
+			        {"x": 2012,"y": 300,"id": "Loop"},
+			        {"x": 2013,"y": 400,"id": "Loop"},
+			        {"x": 2010,"y": 100,"id": "UIC"},
+			        {"x": 2011,"y": 250,"id": "UIC"},
+			        {"x": 2012,"y": 380,"id": "UIC"},
+			        {"x": 2013,"y": 420,"id": "UIC"}
+			        ]
+			    }
+			  ],
+			  "scales": [
+			    {
+			      "name": "x",
+			      "type": "ordinal",
+			      "range": "width",
+			      "domain": {"data": "table", "field": "x"}
+			    },
+			    {
+			      "name": "y",
+			      "type": "linear",
+			      "range": "height",
+			      "nice": true,
+			      "domain": {"data": "table", "field": "y"}
+			    },
+			    {
+			      "name": "color", 
+			      "type": "ordinal", 
+			      "domain": {"data": "table", "field": "id"},
+			      "range": "category20"
+			    }
+			  ],
+			  "axes": [
+			    {"type": "x", "scale": "x", "tickSizeEnd": 0},
+			    {"type": "y", "scale": "y"}
+			  ],
+			  "marks": [
+			    {
+			      "type": "group",
+			      "from": {
+			        "data": "table",
+			        "transform": [{"type": "facet", "groupby": ["id"]}]
+			      },
+			      "marks": [
+			        {
+			          "type": "line",
+			          "properties": {
+			            "enter": {
+			              "x": {"scale": "x", "field": "x"},
+			              "y": {"scale": "y", "field": "y"},
+			              "stroke": {"scale": "color", "field": "id"},
+			              "strokeWidth": {"value": 4}
+			            }
+			          }
+			        },
+			        {
+			          "type": "text",
+			          "from": {
+			            "transform": [{"type": "filter", "test": "datum.date == 1267430400000"}]
+			          },
+			          "properties": {
+			            "enter": {
+			              "x": {"scale": "x", "field": "x", "offset": 2},
+			              "y": {"scale": "y", "field": "y"},
+			              "fill": {"scale": "color", "field": "id"},
+			              "text": {"field": "id"},
+			              "baseline": {"value": "middle"}
+			            }
+			          }
+			        }
+			      ]
+			    }
+			  ]
+			}
+
 	},
 
 
