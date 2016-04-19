@@ -1599,18 +1599,22 @@ function touchMove(event) {
 				touchHold = null;
 			}
 		} else if (touchMode === "scale") {
-			rect    = event.target.getBoundingClientRect();
-			touch0X = event.touches[0].clientX - rect.left;
-			touch0Y = event.touches[0].clientY - rect.top;
-			touch1X = event.touches[1].clientX - rect.left;
-			touch1Y = event.touches[1].clientY - rect.top;
-			touchX  = parseInt((touch0X + touch1X) / 2, 10);
-			touchY  = parseInt((touch0Y + touch1Y) / 2, 10);
-			newDist = (touch1X - touch0X) * (touch1X - touch0X) + (touch1Y - touch0Y) * (touch1Y - touch0Y);
-			if (Math.abs(newDist - touchDist) > 25) {
-				wheelDelta = parseInt((touchDist - newDist) / 256, 10);
-				displayUI.pointerScroll(touchX, touchY, wheelDelta);
-				touchDist = newDist;
+			// just making sure there are two touches
+			if (event.touches.length === 2) {
+				// use the data as pinch movement
+				rect    = event.target.getBoundingClientRect();
+				touch0X = event.touches[0].clientX - rect.left;
+				touch0Y = event.touches[0].clientY - rect.top;
+				touch1X = event.touches[1].clientX - rect.left;
+				touch1Y = event.touches[1].clientY - rect.top;
+				touchX  = parseInt((touch0X + touch1X) / 2, 10);
+				touchY  = parseInt((touch0Y + touch1Y) / 2, 10);
+				newDist = (touch1X - touch0X) * (touch1X - touch0X) + (touch1Y - touch0Y) * (touch1Y - touch0Y);
+				if (Math.abs(newDist - touchDist) > 25) {
+					wheelDelta = parseInt((touchDist - newDist) / 256, 10);
+					displayUI.pointerScroll(touchX, touchY, wheelDelta);
+					touchDist = newDist;
+				}
 			}
 		}
 		event.preventDefault();

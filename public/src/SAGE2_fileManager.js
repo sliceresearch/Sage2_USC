@@ -150,12 +150,42 @@ function FileManager(wsio, mydiv, uniqueID) {
 					view: "resizer"
 				},
 				{
-					id: "multiview1",
-					view: "multiview",
-					scroll: 'y',
+					id: "all_table",
+					view: "datatable",
+					// editable: true,
 					gravity: 2, // two times bigger
-					animate: false,
-					cells: [{}]
+					columnWidth: 200,
+					resizeColumn: true,
+					// animate: false,
+					scroll: 'y',
+					drag: true,
+					select: "multiselect",
+					navigation: true,
+					scheme: {
+						// Generate an automatic index
+						$init: function(obj) { obj.index = this.count() + 1; }
+					},
+					on: {
+						// update index after sort or update
+						"data->onStoreUpdated": function() {
+							this.data.each(function(obj, i) {
+								obj.index = i + 1;
+							});
+							return true;
+						}
+					},
+					columns: [
+						{id: "index", header: "",     width: 40, minWidth: 25, sort: "int"},
+						{id: "name",  header: "Name", minWidth: 180, sort: "text", fillspace: true},
+						{id: "user",  header: "User", width: 80, minWidth: 50, sort: "text", css: {'text-align': 'right'}},
+						{id: "size",  header: "Size", width: 80, minWidth: 50,  sort: sortBySize, css: {'text-align': 'right'}},
+						{id: "date",  header: "Date", width: 150, minWidth: 80, sort: sortByDate, css: {'text-align': 'center'}},
+						{id: "ago",   header: "Modified", width: 100, minWidth: 80, sort: sortByDate, css: {'text-align': 'right'}},
+						{id: "type",  header: "Type",     width: 80, minWidth: 50,  sort: "text", css: {'text-align': 'center'}}
+					],
+					data: [
+					]
+
 				},
 				{
 					view: "resizer"
@@ -336,43 +366,7 @@ function FileManager(wsio, mydiv, uniqueID) {
 		}
 	});
 
-	var multiview1 = $$("multiview1");
-	multiview1.addView({
-		id: "all_table",
-		view: "datatable",
-		// editable: true,
-		columnWidth: 200,
-		resizeColumn: true,
-		// animate: false,
-		scroll: 'y',
-		drag: true,
-		select: "multiselect",
-		navigation: true,
-		columns: [
-			{id: "index", header: "", width: 40, minWidth: 25, sort: "int"},
-			{id: "name", header: "Name", minWidth: 180, sort: "text", fillspace: true},
-			{id: "user", header: "User", width: 80, minWidth: 50, sort: "text", css: {'text-align': 'right'}},
-			{id: "size", header: "Size", width: 80, minWidth: 50,  sort: sortBySize, css: {'text-align': 'right'}},
-			{id: "date", header: "Date", width: 150, minWidth: 80, sort: sortByDate, css: {'text-align': 'center'}},
-			{id: "ago",  header: "Modified", width: 100, minWidth: 80, sort: sortByDate, css: {'text-align': 'right'}},
-			{id: "type", header: "Type", width: 80, minWidth: 50,  sort: "text", css: {'text-align': 'center'}}
-		],
-		data: [
-		],
-		scheme: {
-			// Generate an automatic index
-			$init: function(obj) { obj.index = this.count() + 1; }
-		},
-		on: {
-			// update index after sort or update
-			"data->onStoreUpdated": function() {
-				this.data.each(function(obj, i) {
-					obj.index = i + 1;
-				});
-				return true;
-			}
-		}
-	});
+	// Get handle on the middle table data
 	this.allTable = $$("all_table");
 
 	// User selection
@@ -1030,7 +1024,6 @@ function FileManager(wsio, mydiv, uniqueID) {
 	this.refresh = function() {
 		this.tree.refresh();
 		this.allTable.refresh();
-		$$("multiview1").setValue("all_table");
 		this.main.adjust();
 	};
 
