@@ -27,7 +27,7 @@ var articulate_ui = SAGE2_App.extend( {
 		this.ctx = this.element.getContext('2d');
 
 		this.counter = 0;
-
+		this.debugMode = true; 
 
 		// this.specificationObjects = [
 		// 		{"plot-type":{"valueType":"STRING","string":"BAR","chars":"BAR"},"x-axis":{"valueType":"STRING","string":"dayofweek","chars":"dayofweek"},"y-axis":{"valueType":"STRING","string":"TOTAL_CRIME","chars":"TOTAL_CRIME"},"data-query":{"valueType":"STRING","string":"SELECT count(*) as TOTAL_CRIME,`dayofweek` FROM chicagocrime WHERE `neighborhood`='loop' AND `timeofdayrange`='6pm-midnight' GROUP BY dayofweek","chars":"SELECT count(*) as TOTAL_CRIME,`dayofweek` FROM chicagocrime WHERE `neighborhood`='loop' AND `timeofdayrange`='6pm-midnight' GROUP BY dayofweek"},"data-query-result":[{"valueType":"STRING","string":"(total_crime,1255);(dayofweek,friday)","chars":"(total_crime,1255);(dayofweek,friday)"},{"valueType":"STRING","string":"(total_crime,913);(dayofweek,monday)","chars":"(total_crime,913);(dayofweek,monday)"},{"valueType":"STRING","string":"(total_crime,1117);(dayofweek,saturday)","chars":"(total_crime,1117);(dayofweek,saturday)"},{"valueType":"STRING","string":"(total_crime,699);(dayofweek,sunday)","chars":"(total_crime,699);(dayofweek,sunday)"},{"valueType":"STRING","string":"(total_crime,1018);(dayofweek,thursday)","chars":"(total_crime,1018);(dayofweek,thursday)"},{"valueType":"STRING","string":"(total_crime,935);(dayofweek,tuesday)","chars":"(total_crime,935);(dayofweek,tuesday)"},{"valueType":"STRING","string":"(total_crime,944);(dayofweek,wednesday)","chars":"(total_crime,944);(dayofweek,wednesday)"}] },
@@ -121,7 +121,7 @@ var articulate_ui = SAGE2_App.extend( {
 	//------------------------------------------//
 	event: function(eventType, position, user_id, data, date) {
 		if (eventType === "pointerPress" && (data.button === "left")) {
-			if( isMaster ){
+			if( isMaster && this.debugMode ){
 				//this.launchVis2();
 				//console.log( this.specificationObjects[this.counter]);
 				this.readExample2(this.specificationObjects[this.counter], this.colors[this.counter]); 
@@ -248,7 +248,7 @@ var articulate_ui = SAGE2_App.extend( {
 			//OLD
 			//this.handleResponse(specObj); 
 			if( isMaster)
-				this.readExample2(specObj, this.colors[0]);
+				this.readExample2(specObj, this.colors[this.counter]);
 
 			//then broadcast the results to display nodes!
 			//broadcast( "handleResponse", {response:"responseTest"} ); 
@@ -314,7 +314,6 @@ readExample2: function(specificationObj, color){
 				data: data,
 				maxValue: maxVal,
 				title: "visualization response"
-				
 			};
 		}
 		else if( type == "bar" ){

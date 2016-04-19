@@ -667,7 +667,7 @@ var SAGE2_App = Class.extend({
 		this.frame++;
 	},
 
-	 
+
 	/**
 	* Change the title of the application window
 	*
@@ -828,6 +828,8 @@ var SAGE2_App = Class.extend({
 
 		this.childList.push( data );
 	},
+
+	//requestDisplayDimensions: 
 
 	/**
 	* SAGE2MessageEvent method called for communication between children or parents
