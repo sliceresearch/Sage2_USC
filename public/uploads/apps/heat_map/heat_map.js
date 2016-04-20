@@ -35,7 +35,7 @@ var heat_map = SAGE2_App.extend( {
 		this.scrollAmount = null;
 
 		// application specific 'init'	
-		this.element.id = "div" + data.id;
+		this.element.id = "div" + data.id + "map";
 		this.lastZoom     = data.date;
 		this.dragging     = false;
 		this.position     = {x:0, y:0};
@@ -59,14 +59,19 @@ var heat_map = SAGE2_App.extend( {
 		this.map.setCenterZoom(chicago, 14);
 		this.log("Modest map at " + JSON.stringify(chicago));
 
+		this.layer = this.createLayer("black");
 		this.canvas = document.createElement('canvas');
 		this.canvas.width = this.element.clientWidth;
 		this.canvas.height = this.element.clientHeight; 
-		this.element.appendChild(this.canvas);
+		//this.element.appendChild(this.canvas);
+		this.layer.appendChild(this.canvas);
+		this.element.appendChild(this.layer);
+		this.layer.style.zIndex = 101;
 
 		//this.map.parent.appendChild(this.canvas);
 		this.ctx = this.canvas.getContext('2d');
 
+		console.log(this.map);
 
 		//color gradient
 		this.colors = [ "255,245,240", 
@@ -81,7 +86,7 @@ var heat_map = SAGE2_App.extend( {
 					]; 
 		this.partition = Math.round( this.state.maxValue / this.colors.length ); 
 
-		this.updateTitle("title");	
+		//this.updateTitle("title");	
 
 	},
 

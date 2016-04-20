@@ -42,7 +42,7 @@ var vega_vis_app = SAGE2_App.extend( {
 
   		// this.sendResize(spec.width, spec.height);
 
-		this.updateTitle("title");	
+		//this.updateTitle("title");	
 
 
 	},
