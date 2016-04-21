@@ -116,6 +116,9 @@ function SAGE2_init() {
 			}
 		}
 
+		// Play an audio blop
+		createjs.Sound.play("down");
+
 		// Try to reload
 		var refresh = setInterval(function() {
 			// make a dummy request to test the server every 2 sec
@@ -194,9 +197,10 @@ function setupListeners() {
 		};
 		// Array of assets to preload
 		var soundAssets = [
-			{id: "startup", src: jingle,  defaultPlayProps: defaults},
-			{id: "loose",   src: "spacey-loose.wav", defaultPlayProps: defaults},
-			{id: "powerup", src: "spacey-1up-power-up.wav", defaultPlayProps: defaults}
+			{id: "startup",   src: jingle,  defaultPlayProps: defaults},
+			{id: "newapp",    src: "newapp.mp3", defaultPlayProps: defaults},
+			{id: "deleteapp", src: "deleteapp.mp3", defaultPlayProps: defaults},
+			{id: "down",      src: "down.mp3", defaultPlayProps: defaults}
 		];
 		// If the file cannot load, try other formats (need the files)
 		createjs.Sound.alternateExtensions = ["ogg", "mp3"];
@@ -214,7 +218,7 @@ function setupListeners() {
 
 	wsio.on('createAppWindow', function(data) {
 		// Play an audio blip
-		createjs.Sound.play("powerup");
+		createjs.Sound.play("newapp");
 
 		if (data.application === "movie_player") {
 			var main = document.getElementById('main');
@@ -466,7 +470,7 @@ function setupListeners() {
 
 	wsio.on('deleteElement', function(data) {
 		// Play an audio blop
-		createjs.Sound.play("loose");
+		createjs.Sound.play("deleteapp");
 
 		// Stop video
 		var vid = document.getElementById(data.elemId);
