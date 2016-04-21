@@ -180,8 +180,9 @@ var quickNote = SAGE2_App.extend({
 		// Tell server to save the file.
 		var fileData = {};
 		fileData.type = "saveDataOnServer";
-		fileData.fileType = "note";
-		fileData.fileName = this.state.creationTime + ".note";
+		fileData.fileType = "note"; // Extension
+		fileData.fileName = this.state.creationTime + ".note"; // Fullname w/ extension
+		// What to save in the file
 		fileData.fileContent = this.state.creationTime
 			+ "\n"
 			+ this.state.colorChoice
@@ -218,14 +219,14 @@ var quickNote = SAGE2_App.extend({
 
 	},
 
-	duplicate: function() {
+	duplicate: function(responseObject) {
 		if (isMaster) {
 			var data = {};
 			data.type		= "launchAppWithValues";
 			data.appName	= "quickNote";
 			data.func		= "setMessage";
 			data.params		= {};
-			data.params.clientName = this.state.clientName;
+			data.params.clientName = responseObject.clientName;
 			data.params.clientInput = this.state.clientInput;
 			data.params.colorChoice = this.state.colorChoice;
 			wsio.emit("csdMessage", data);

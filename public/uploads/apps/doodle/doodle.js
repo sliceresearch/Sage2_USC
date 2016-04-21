@@ -50,6 +50,20 @@ var doodle = SAGE2_App.extend({
 		console.dir(this.state);
 		if (this.state.imageSnapshot !== undefined && this.state.imageSnapshot.length > 0) { this.setInitialCanvas(this.state.imageSnapshot); }
 		this.changeTitleToOriginalCreatorAndTime(this.state);
+
+
+			// var pack = {};
+			// pack.type = "consolePrint";
+			// pack.message = "eraseme, got file:" + data.file;
+			//wsio.emit('csdMessage', pack);
+		console.log("erase me, displaying the data param used to initialize");
+		console.dir(data);
+		console.log(data.file);
+		if (data.state.contentsOfDoodleFile) {
+			this.changeTitleToOriginalCreatorAndTime({creationTime:data.state.fileName});
+			console.log("erase me, attempting to load contentsOfDoodleFile");
+			this.setInitialCanvas(data.state.contentsOfDoodleFile);
+		}
 	},
 
 	/**
@@ -168,6 +182,27 @@ var doodle = SAGE2_App.extend({
 
 		this.SAGE2UpdateAppOptionsFromState();
 		this.SAGE2Sync(true);
+
+		// Tell server to save the file
+		if (this.state.creationTime !== null && this.state.creationTime !== undefined) {
+			var fileData = {};
+			var fileData = {};
+			fileData.type = "saveDataOnServer";
+			fileData.fileType = "doodle"; // Extension
+			fileData.fileName = this.state.creationTime + ".doodle"; // Full name w/ extension
+			// What to save in the file
+			fileData.fileContent = this.state.imageSnapshot;
+
+			console.log();
+			console.log();
+			console.log();
+			console.log("erase me, double checking save data");
+			console.log("type:" + fileData.fileType);
+			console.log("name:" + fileData.fileName);
+			console.log("content:" + fileData.fileContent);
+			console.log("oc creationTime:" + this.state.creationTime);
+			wsio.emit("csdMessage", fileData);
+		}
 	},
 
 	/**
@@ -188,11 +223,11 @@ var doodle = SAGE2_App.extend({
 			if (this.state.creationTime.getDate() < 10) { titleString += "0"; }
 			titleString += this.state.creationTime.getDate() + "-";
 			if (this.state.creationTime.getHours() < 10) { titleString += "0"; }
-			titleString += this.state.creationTime.getHours() + ":";
+			titleString += this.state.creationTime.getHours();
 			if (this.state.creationTime.getMinutes() < 10) { titleString += "0"; }
-			titleString += this.state.creationTime.getMinutes() + ":";
+			titleString += this.state.creationTime.getMinutes();
 			if (this.state.creationTime.getSeconds() < 10) { titleString += "0"; }
-			titleString += this.state.creationTime.getSeconds() + ".";
+			titleString += this.state.creationTime.getSeconds();
 			if (this.state.creationTime.getMilliseconds() < 10) { titleString += "0"; }
 			if (this.state.creationTime.getMilliseconds() < 100) { titleString += "0"; }
 			titleString += this.state.creationTime.getMilliseconds();
@@ -204,6 +239,7 @@ var doodle = SAGE2_App.extend({
 		}
 		// if loaded will include the creationTime
 		if (responseObject.creationTime !== undefined && responseObject.creationTime !== null) {
+			this.state.creationTime = responseObject.creationTime;
 			this.updateTitle(responseObject.creationTime);
 		}
 	},
@@ -225,19 +261,18 @@ var doodle = SAGE2_App.extend({
 	initializationThroughDuplicate: function(responseObject) {
 		this.setInitialCanvas(responseObject.imageSnapshot);
 		responseObject.creationTime = null;
-		responseObject.clientName = responseObject.originalCreator;
 		this.changeTitleToOriginalCreatorAndTime(responseObject);
 	},
 
-	duplicate: function () {
+	duplicate: function (responseObject) {
 		if (isMaster) {
 			var data = {};
 			data.type		= "launchAppWithValues";
 			data.appName	= "doodle";
 			data.func		= "initializationThroughDuplicate";
 			data.params		= {};
-			data.params.originalCreator = this.state.originalCreator;
-			data.params.imageSnapshot = this.state.imageSnapshot;
+			data.params.clientName = responseObject.clientName;
+			data.params.imageSnapshot = this.getCanvasAsImage();
 			wsio.emit("csdMessage", data);
 		}
 	},

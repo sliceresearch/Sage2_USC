@@ -537,6 +537,58 @@ AppLoader.prototype.loadNoteFromFile = function(file, mime_type, aUrl, external_
 };
 
 
+AppLoader.prototype.loadDoodleFromFile = function(file, mime_type, aUrl, external_url, name, callback) {
+	// Find the app. Look it the file name in the registry. Get path, navigate to the path's instruction.json file.
+	var appName = registry.getDefaultApp(file);
+	var localPath = getSAGE2Path(appName);
+	var instructionsFile = path.join(localPath, "instructions.json");
+
+	console.log();
+	console.log("erase me, loading doodle from file using file, appName, localPath");
+	console.log(file);
+	console.log(appName);
+	console.log(localPath);
+
+
+	// Will read the instruction file and then launch app with instructionfile parameters.
+	var _this = this;
+	fs.readFile(instructionsFile, 'utf8', function(err, json_str) {
+		if (err) {
+			console.log(sageutils.header("Loader") + "cannot read application file " + instructionsFile);
+			return;
+		}
+
+		var appUrl = getSAGE2URL(localPath);
+		var app_external_url = _this.hostOrigin + sageutils.encodeReservedURL(appUrl);
+
+		var appInstance = _this.readInstructionsFile(json_str, localPath, mime_type, app_external_url);
+		appInstance.data.thisVariableIsNew = "added in loadDoodleFromFile";
+		appInstance.data.file = assets.getURL(file);
+		appInstance.file = file;
+		// if (appInstance.data.thisVariableIsNew) { console.log("erase me, confirmed new var in itemLoader"); }
+		console.dir("");
+		console.log("erase me, thisVariableIsNew:" + appInstance.data.thisVariableIsNew);
+		console.dir(appInstance.data);
+		console.log("erase me, looking for directory:");
+		console.log(appInstance.data.file);
+		console.log(aUrl);
+		console.log(external_url);
+		console.log(file);
+
+		// This will add the contents of the note to the send data values. Assuming the var is unique.
+		appInstance.data.contentsOfDoodleFile = "data:image/png;base64," + fs.readFileSync(file).toString('base64');
+		// Include the file name to reset to original
+		var fbasic = file;
+		while (fbasic.indexOf("/") > -1) { fbasic = fbasic.substring(fbasic.indexOf("/") + 1); }
+		while (fbasic.indexOf("\\") > -1) { fbasic = fbasic.substring(fbasic.indexOf("\\") + 1); }
+		fbasic = fbasic.substring(0, fbasic.indexOf(".doodle"));
+		appInstance.data.fileName = fbasic;
+
+		callback(appInstance);
+	});
+};
+
+
 AppLoader.prototype.loadAppFromFileFromRegistry = function(file, mime_type, aUrl, external_url, name, callback) {
 	// Find the app!!
 	var appName = registry.getDefaultApp(file);
@@ -870,6 +922,10 @@ AppLoader.prototype.loadApplication = function(appData, callback) {
 	console.log("location:" + appData.location);
 	if (appData.location === "file") {
 		app = registry.getDefaultAppFromMime(appData.type);
+		// Hardcode bad. but currently one of few ways to get around.
+		if (appData.name.indexOf(".doodle") >= 0) {
+			app = "apps doodle";
+		}
 		if (app === "image_viewer") {
 			this.loadImageFromFile(appData.path, appData.type, appData.url, appData.external_url, appData.name,
 					function(appInstance) {
@@ -890,6 +946,12 @@ AppLoader.prototype.loadApplication = function(appData, callback) {
 			);
 		} else if (app.indexOf("apps") >= 0 && app.indexOf("quickNote") >= 0) {
 			this.loadNoteFromFile(appData.path, appData.type, appData.url, appData.external_url, appData.name,
+					function(appInstance) {
+						callback(appInstance, null);
+					}
+			);
+		} else if (app.indexOf("apps") >= 0 && app.indexOf("doodle") >= 0) {
+			this.loadDoodleFromFile(appData.path, appData.type, appData.url, appData.external_url, appData.name,
 					function(appInstance) {
 						callback(appInstance, null);
 					}

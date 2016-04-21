@@ -7773,14 +7773,23 @@ Needs
 	data.fileContent
 
 */
-function csdSaveDataOnServer(wsio, data) {
+function csdSaveDataOnServer(wsio, data) { 
+	// First check if all necessary fields have been provided.
+	if (data.fileType == null || data.fileType == undefined
+		|| data.fileName == null || data.fileName == undefined
+		|| data.fileContent == null || data.fileContent == undefined
+	) {
+		console.log("ERROR:csdSaveDataOnServer: not saving data, a required field is null or undefined");
+	}
+	// Remove weird path changing by chopping of the / andor \ in the filename.
+	while (data.fileName.indexOf("/") >= 0) {
+		data.fileName = data.fileName.substring(data.fileName.indexOf("/") + 1);
+	}
+	while (data.fileName.indexOf("\\") >= 0) {
+		data.fileName = data.fileName.substring(data.fileName.indexOf("\\") + 1);
+	}
+	// Special case for the extension saving.
 	if (data.fileType === "note") {
-		if (data.fileType == null || data.fileType == undefined
-			|| data.fileName == null || data.fileName == undefined
-			|| data.fileContent == null || data.fileContent == undefined
-		) {
-			console.log("ERROR:csdSaveDataOnServer: not saving data, a required field is null or undefined");
-		}	
 		var fullpath;
 		console.log();
 		console.log();
@@ -7797,7 +7806,27 @@ function csdSaveDataOnServer(wsio, data) {
 		console.log(fullpath);
 		fs.writeFileSync(fullpath, data.fileContent);
 		console.log("erase me, made a .note file.");
-	} else {
+	} else if(data.fileType === "doodle") {
+		var fullpath;
+		console.log();
+		console.log();
+		fullpath = path.join(mainFolder.path, "notes", "lastDoodle.doodle");
+		var regex = /^data:.+\/(.+);base64,(.*)$/;
+		var matches = data.fileContent.match(regex);
+		var buffer = new Buffer(matches[2], 'base64');
+		console.log("erase me, just in case doodle save to:" + fullpath);
+		fs.writeFileSync(fullpath, buffer);
+		fullpath = path.join(mainFolder.path, "notes", data.fileName);
+		console.log();
+		console.log();
+		console.log("erase me, Trying to make a doodle file with fileType, fileName, fcontents,fullpath");
+		console.log(data.fileType);
+		console.log(data.fileName);
+		console.log(data.fileContent);
+		console.log(fullpath);
+		fs.writeFileSync(fullpath, buffer);
+		console.log("erase me, made a .doodle file.");
+	}else {
 		console.log("ERROR:csdSaveDataOnServer: unable to save data on server for fileType " + data.fileType);
 	}
 }
