@@ -70,14 +70,14 @@ function SAGE2_interaction(wsio) {
 		localStorage.SAGE2_ptrColor = cookieColor;
 	}
 
-	if (!cookieName && !localStorage.SAGE2_ptrColor) {
-		showDialog('settingsDialog2');
-	}
+	// if (!cookieName && !localStorage.SAGE2_ptrColor) {
+	// 	showDialog('settingsDialog2');
+	// }
 
 	// Post message to the Chrome extension to register the UI
-	if (__SAGE2__.browser.isChrome === true) {
-		window.postMessage('SAGE2_registerUI', '*');
-	}
+	// if (__SAGE2__.browser.isChrome === true) {
+	// 	window.postMessage('SAGE2_registerUI', '*');
+	// }
 
 	// Deals with the name and color of the pointer
 	if (localStorage.SAGE2_ptrName  === undefined ||
@@ -309,27 +309,26 @@ function SAGE2_interaction(wsio) {
 	* @param buttonId {String} name of the button triggering the pointer
 	*/
 	this.startSAGE2Pointer = function(buttonId) {
-		if (hasMouse) {
-			var button = document.getElementById(buttonId);
-			button.addEventListener('pointerlockchange', function(e) {
-				console.log(e);
-			});
-			button.requestPointerLock = button.requestPointerLock       ||
-										button.mozRequestPointerLock    ||
-										button.webkitRequestPointerLock;
-
-			// Ask the browser to lock the pointer
-			if (button.requestPointerLock) {
-				button.requestPointerLock();
-			} else {
-				showSAGE2Message("No PointerLock support in this browser.<br> Google Chrome is preferred.");
-			}
+		var button;
+		if (typeof buttonId === "string") {
+			button = document.getElementById(buttonId);
 		} else {
-			console.log("No mouse detected - entering touch interface for SAGE2 Pointer");
+			button = buttonId;
+		}
+		button.addEventListener('pointerlockchange', function(e) {
+			console.log('button pointerlockchange', e);
+			e.preventDefault();
+			e.stopPropagation();
+		});
+		button.requestPointerLock = button.requestPointerLock       ||
+									button.mozRequestPointerLock    ||
+									button.webkitRequestPointerLock;
 
-			this.wsio.emit('startSagePointer', {label: localStorage.SAGE2_ptrName, color: localStorage.SAGE2_ptrColor});
-
-			showSAGE2PointerOverlayNoMouse();
+		// Ask the browser to lock the pointer
+		if (button.requestPointerLock) {
+			button.requestPointerLock();
+		} else {
+			showSAGE2Message("No PointerLock support in this browser.<br> Google Chrome is preferred.");
 		}
 	};
 
@@ -372,6 +371,8 @@ function SAGE2_interaction(wsio) {
 								document.mozPointerLockElement ||
 								document.webkitPointerLockElement;
 
+		console.log('pointerLockChangeMethod', pointerLockElement);
+
 		// disable SAGE2 Pointer
 		if (pointerLockElement === undefined || pointerLockElement === null) {
 			this.wsio.emit('stopSagePointer');
@@ -387,7 +388,7 @@ function SAGE2_interaction(wsio) {
 
 			document.addEventListener('click', pointerClick, false);
 
-			sagePointerDisabled();
+			// sagePointerDisabled();
 		} else {
 			// enable SAGE2 Pointer
 			this.wsio.emit('startSagePointer', {label: localStorage.SAGE2_ptrName, color: localStorage.SAGE2_ptrColor});
@@ -401,9 +402,9 @@ function SAGE2_interaction(wsio) {
 			document.addEventListener('keyup',      this.pointerKeyUp,     false);
 			document.addEventListener('keypress',   this.pointerKeyPress,  false);
 
-			document.removeEventListener('click', pointerClick, false);
+			document.removeEventListener('click',	pointerClick, false);
 
-			sagePointerEnabled();
+			// sagePointerEnabled();
 		}
 	};
 
@@ -425,17 +426,65 @@ function SAGE2_interaction(wsio) {
 	* @param data {Object} data
 	*/
 	this.captureDesktop = function(data) {
-		var constraints = {
-			chromeMediaSource: 'screen',
-			maxWidth: 1920, maxHeight: 1080,
-			maxFrameRate: 24,
-			minFrameRate: 3
-		};
-		navigator.getUserMedia({
-				video: {mandatory: constraints, optional: []}, audio: false
-			},
-			this.streamSuccess,
-			this.streamFail);
+		var target = data || "window";
+		if (!this.broadcasting) {
+			var constraints = {
+				chromeMediaSource: 'screen',
+				maxWidth: 1920, maxHeight: 1080,
+				maxFrameRate: 24,
+				minFrameRate: 3
+			};
+			var desktopCapturer = require('electron').desktopCapturer;
+			console.log('Capturer', desktopCapturer);
+			var _this = this;
+			desktopCapturer.getSources({types: ['window', 'screen']}, function(error, sources) {
+				if (error) {
+					throw error;
+				}
+				for (var i = 0; i < sources.length; ++i) {
+					console.log('Win:', sources[i].name, sources[i].id, sources[i].thumbnail);
+				}
+				for (var i = 0; i < sources.length; ++i) {
+					if (target === "window" && sources[i].name == "SAGE2 - Electron") {
+					// if (sources[i].name == "Entire screen") {
+						navigator.getUserMedia({
+								audio: false,
+								video: {
+									mandatory: {
+										chromeMediaSource: 'desktop',
+										chromeMediaSourceId: sources[i].id,
+										minWidth: 1280,
+										maxWidth: 1920,
+										minHeight: 720,
+										maxHeight: 1080
+									}
+								}
+							},
+							_this.streamSuccess, _this.streamFail
+						);
+						return;
+					}
+					if (target === "screen" && sources[i].name == "Entire screen") {
+						navigator.getUserMedia({
+								audio: false,
+								video: {
+									mandatory: {
+										chromeMediaSource: 'desktop',
+										chromeMediaSourceId: sources[i].id,
+										minWidth: 1280,
+										maxWidth: 1920,
+										minHeight: 720,
+										maxHeight: 1080
+									}
+								}
+							},
+							_this.streamSuccess, _this.streamFail
+						);
+						return;
+					}
+				}
+			});
+		}
 	};
 
 	/**
@@ -495,7 +544,6 @@ function SAGE2_interaction(wsio) {
 	* @param deadline {Object} object containing timing information
 	*/
 	this.stepMethod = function(deadline) {
-		console.log('Step', deadline)
 		// if more than 10ms of freetime, go for it
 		if (deadline.timeRemaining() > 10) {
 			if (this.gotRequest) {
@@ -534,7 +582,6 @@ function SAGE2_interaction(wsio) {
 				var height = parseInt(widths[i] * mediaVideo.videoHeight / mediaVideo.videoWidth, 10);
 				screenShareResolution.options[i].value = widths[i] + "x" + height;
 			}
-			console.log('screenShareResolution', screenShareResolution);
 
 			var res = screenShareResolution.options[this.mediaResolution].value.split("x");
 			mediaCanvas.width  = parseInt(res[0], 10);
@@ -649,6 +696,7 @@ function SAGE2_interaction(wsio) {
 			var px  = this.deltaX * scale;
 			var py  = this.deltaY * scale;
 			// Send the event
+	console.log('pointerMove', Math.round(px), Math.round(py), this.deltaX, this.deltaY, scale);
 			this.wsio.emit('pointerMove', {dx: Math.round(px), dy: Math.round(py)});
 			// Reset the accumulators
 			this.deltaX = 0;
@@ -844,7 +892,6 @@ function SAGE2_interaction(wsio) {
 			var mediaCanvas = document.getElementById('mediaCanvas');
 			mediaCanvas.width  = parseInt(res[0], 10);
 			mediaCanvas.height = parseInt(res[1], 10);
-			console.log("media resolution: " + event.target.options[this.mediaResolution].value);
 		}
 	};
 
@@ -883,7 +930,12 @@ function SAGE2_interaction(wsio) {
 	document.addEventListener('pointerlockerror',        this.pointerLockError,  false);
 	document.addEventListener('mozpointerlockerror',     this.pointerLockError,  false);
 	document.addEventListener('pointerlockchange',       this.pointerLockChange, false);
-	document.addEventListener('mozpointerlockchange',    this.pointerLockChange, false);
+	// document.addEventListener('mozpointerlockchange',    this.pointerLockChange, false);
+
+	document.addEventListener('pointerlockerror', function(e) {
+		console.log('Pointer error', e)
+	}, false);
+
 
 	// document.getElementById('sage2PointerLabel').addEventListener('input',      this.changeSage2PointerLabel,     false);
 	// document.getElementById('sage2PointerColor').addEventListener('input',      this.changeSage2PointerColor,     false);
