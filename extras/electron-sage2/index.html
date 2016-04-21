@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>SAGE2</title>
+
+	<link rel="stylesheet" type="text/css" href="css/fonts.css"/>
+	<link rel="stylesheet" type="text/css" href="css/app.css" media="screen" />
+
+	<!-- SAGE2 code -->
+	<script async src="src/md5.js"></script>
+	<script async src="src/websocket.io.js"></script>
+	<script async src="src/SAGE2_runtime.js"></script>
+	<script async src="src/SAGE2_interaction.js"></script>
+
+
+      <script type="text/javascript">
+const remote = require('electron').remote;
+const Menu = remote.Menu;
+const MenuItem = remote.MenuItem;
+
+var menu = new Menu();
+menu.append(new MenuItem({ label: 'MenuItem1', click: function() { console.log('item 1 clicked'); } }));
+menu.append(new MenuItem({ type: 'separator' }));
+menu.append(new MenuItem({ label: 'MenuItem2', type: 'checkbox', checked: true }));
+
+window.addEventListener('contextmenu', function (e) {
+  e.preventDefault();
+  menu.popup(remote.getCurrentWindow());
+}, false);
+
+
+var template = [
+  {
+    label: 'Edit',
+    submenu: [
+      {
+        label: 'Cut',
+        accelerator: 'CmdOrCtrl+X',
+        role: 'cut'
+      },
+      {
+        label: 'Copy',
+        accelerator: 'CmdOrCtrl+C',
+        role: 'copy'
+      },
+      {
+        label: 'Paste',
+        accelerator: 'CmdOrCtrl+V',
+        role: 'paste'
+      }
+    ]
+  }];
+
+if (process.platform == 'darwin') {
+  var name = require('electron').remote.app.getName();
+  console.log('name', name)
+  template.unshift({
+    label: name,
+    submenu: [
+      {
+        label: 'About ' + name,
+        role: 'about'
+      },
+      {
+        label: 'Hide ' + name,
+        accelerator: 'Command+H',
+        role: 'hide'
+      },
+      {
+        label: 'Hide Others',
+        accelerator: 'Command+Alt+H',
+        role: 'hideothers'
+      },
+      {
+        label: 'Show All',
+        role: 'unhide'
+      },
+      {
+        type: 'separator'
+      },
+      {
+        label: 'Quit',
+        accelerator: 'Command+Q',
+        click: function() { require('electron').remote.app.quit(); }
+      },
+    ]
+  });
+  // // Window menu.
+  // template[3].submenu.push(
+  //   {
+  //     type: 'separator'
+  //   },
+  //   {
+  //     label: 'Bring All to Front',
+  //     role: 'front'
+  //   }
+  // );
+}
+
+// var menu = Menu.buildFromTemplate(template);
+// Menu.setApplicationMenu(menu);
+
+// SAGE2 code
+var wsio;
+var interactor;
+
+navigator.getUserMedia   = (navigator.getUserMedia  || navigator.webkitGetUserMedia ||
+							navigator.mozGetUserMedia || navigator.msGetUserMedia);
+
+
+// Explicitely close web socket when web browser is closed
+window.onbeforeunload = function() {
+};
+
+/**
+ * When the page loads, SAGE2 starts
+ *
+ */
+window.addEventListener('load', function(event) {
+	SAGE2_init();
+
+	document.getElementById('button1').addEventListener('click', function(event) {
+		var url   = document.getElementById('input_url').value;
+		var pcode = document.getElementById('input_passcode').value;
+		console.log('Print', url, pcode);
+
+		// Detect which browser is being used
+		SAGE2_browser();
+
+
+		// Create a connection to the SAGE2 server
+		wsio = new WebsocketIO(url);
+		wsio.open(function() {
+			console.log("Websocket opened");
+
+			setupListeners();
+
+			var clientDescription = {
+				clientType: "sagePointer",
+				requests: {
+					config: true,
+					version: true,
+					time: false,
+					console: false
+				},
+				browser: __SAGE2__.browser,
+				session: pcode ? md5(pcode) : null
+			};
+			wsio.emit('addClient', clientDescription);
+
+			// Interaction object: file upload, desktop sharing, ...
+			interactor = new SAGE2_interaction(wsio);
+			interactor.setFileUploadStartCallback(fileUploadStart);
+			interactor.setFileUploadProgressCallback(fileUploadProgress);
+			interactor.setFileUploadCompleteCallback(fileUploadComplete);
+
+			// socket close event (i.e. server crashed)
+			wsio.on('close', function(evt) {
+				console.log("Connection closed");
+			});
+
+		});
+
+	});
+
+	document.getElementById('button2').addEventListener('click', function(event) {
+	});
+	document.getElementById('button3').addEventListener('click', function(event) {
+		interactor.captureDesktop();
+	});
+
+});
+
+function fileUploadStart(files) {
+}
+function fileUploadProgress(percent) {
+}
+function fileUploadComplete() {
+}
+
+
+/**
+ * Entry point of the user interface
+ *
+ * @method SAGE2_init
+ */
+function SAGE2_init() {
+	console.log('SAGE2 Init');
+}
+
+function setupListeners() {
+	wsio.on('initialize', function(data) {
+		console.log('initialize', data);
+		interactor.setInteractionId(data.UID);
+	});
+
+
+	// Open a popup on message sent from server
+	wsio.on('errorMessage', function(data) {
+		console.log('message from server>', data);
+	});
+
+	wsio.on('setupDisplayConfiguration', function(config) {
+		console.log('Display', config);
+	});
+
+	// Server sends the SAGE2 version
+	wsio.on('setupSAGE2Version', function(data) {
+		console.log('SAGE2: version', data.base, data.branch, data.commit, data.date);
+	});
+
+	wsio.on('requestNextFrame', function(data) {
+		interactor.requestMediaStreamFrame();
+	});
+
+	wsio.on('stopMediaCapture', function() {
+		if (interactor.mediaStream !== null) {
+			var track = interactor.mediaStream.getTracks()[0];
+			track.stop();
+		}
+	});
+
+
+}
+
+      </script>
+  </head>
+  <body>
+
+   <div style="padding:0;margin:0;width:100%;height:500px;background-color:grey;">
+
+  <div id="wrapper">
+    <div id="content">
+      <ul class="input-list style-1 clearfix">
+      <li>
+        SAGE2 URL: <input type="text" id="input_url" placeholder="URL" value="wss://traoumad.evl.uic.edu">
+      </li>
+      <li>
+        Passcode: <input type="password" id="input_passcode" placeholder="Code" class="focus">
+      </li>
+      </ul>
+
+
+    </div>
+    <div id="sidebar">
+      <a href="#" id="button1" class="myButton">Connect</a> <hr>
+      <a href="#" id="button2" class="myButton">Disconnect</a> <hr>
+      <a href="#" id="button3" class="myButton">Screen Share</a> <hr>
+    </div>
+    <div id="cleared"></div>
+  </div>
+
+	<canvas id="mediaCanvas" style="display: none;"></canvas>
+	<video  id="mediaVideo"  style="display: none;"></video>
+
+
+  </body>
+</html>
