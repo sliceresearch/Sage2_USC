@@ -37,31 +37,18 @@ var doodle = SAGE2_App.extend({
 		ctx.fillRect(0, 0, drawCanvas.width, drawCanvas.height);
 		ctx.fillStyle = "#000000";
 
-		// Critical for file creation. Attributed to who first initiated doodle.
-		console.log("erase me, value of creationTime:" + this.state.creationTime );
-
 		// tracks who needs to receive updates for draw commands.
 		this.arrayOfEditors = [];
 		// used for initial state sending of drawing.
 		this.imageToDraw = new Image();
 
-		//
-		console.log("erase me, init funciton this.state");
-		console.dir(this.state);
+		// If this was restored from a session, will have a state.imageSnapshot value.
 		if (this.state.imageSnapshot !== undefined && this.state.imageSnapshot.length > 0) { this.setInitialCanvas(this.state.imageSnapshot); }
 		this.changeTitleToOriginalCreatorAndTime(this.state);
 
-
-			// var pack = {};
-			// pack.type = "consolePrint";
-			// pack.message = "eraseme, got file:" + data.file;
-			//wsio.emit('csdMessage', pack);
-		console.log("erase me, displaying the data param used to initialize");
-		console.dir(data);
-		console.log(data.file);
+		// If there are file contents, use the passed file values. It will overwrite the existing file.
 		if (data.state.contentsOfDoodleFile) {
 			this.changeTitleToOriginalCreatorAndTime({creationTime:data.state.fileName});
-			console.log("erase me, attempting to load contentsOfDoodleFile");
 			this.setInitialCanvas(data.state.contentsOfDoodleFile);
 		}
 	},
@@ -175,14 +162,10 @@ var doodle = SAGE2_App.extend({
 	},
 
 	saveCurrentWork: function() {
+		// Before saving make sure to grab a snapshot of current canvas.
 		this.state.imageSnapshot = document.getElementById( this.element.id + "DrawCanvas" ).toDataURL();
-
-		console.log("erase me, saveCurrentWork funciton this.state");
-		console.dir(this.state);
-
 		this.SAGE2UpdateAppOptionsFromState();
 		this.SAGE2Sync(true);
-
 		// Tell server to save the file
 		if (this.state.creationTime !== null && this.state.creationTime !== undefined) {
 			var fileData = {};
@@ -192,15 +175,6 @@ var doodle = SAGE2_App.extend({
 			fileData.fileName = this.state.creationTime + ".doodle"; // Full name w/ extension
 			// What to save in the file
 			fileData.fileContent = this.state.imageSnapshot;
-
-			console.log();
-			console.log();
-			console.log();
-			console.log("erase me, double checking save data");
-			console.log("type:" + fileData.fileType);
-			console.log("name:" + fileData.fileName);
-			console.log("content:" + fileData.fileContent);
-			console.log("oc creationTime:" + this.state.creationTime);
 			wsio.emit("csdMessage", fileData);
 		}
 	},
@@ -235,7 +209,6 @@ var doodle = SAGE2_App.extend({
 			this.state.creationTime = titleString;
 			this.updateTitle(this.state.creationTime);
 			this.state.originalCreator = responseObject.clientName;
-			console.log("Should have updated title to:" + titleString);
 		}
 		// if loaded will include the creationTime
 		if (responseObject.creationTime !== undefined && responseObject.creationTime !== null) {

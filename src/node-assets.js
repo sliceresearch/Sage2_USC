@@ -781,20 +781,12 @@ var listApps = function() {
 var listNotes = function() {
 	var result = [];
 	var keys = Object.keys(AllAssets.list);
-	console.log();
-	console.log();
-	var noteCounter = 0;
-	console.log();
-	console.log("erase me, trying to list notes");
 	for (var f in keys) {
 		var one = AllAssets.list[keys[f]];
 		if (one.exif.MIMEType === 'text/plain') {
-			console.log("erase me, found a note");
-			noteCounter++;
 			result.push(one);
 		}
 	}
-	if (noteCounter == 0) { console.log("erase me, DID NOT FIND NOTES"); }
 	return result;
 };
 

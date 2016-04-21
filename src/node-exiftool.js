@@ -84,7 +84,6 @@ function file(filename, done) {
 				done(null, metadata[0]);
 			}
 			else {
-				console.log("EXIF error?");
 				done(error);
 			}
 		} else {

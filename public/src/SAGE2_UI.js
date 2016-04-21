@@ -1750,8 +1750,6 @@ function noBackspace(event) {
 		&& event.target.id.indexOf("rmbContextMenuEntry") !== -1
 		&& event.target.id.indexOf("Input") !== -1
 		) {
-		// console.log("erase me did it detect enter?");
-		// console.dir(document.getElementById(event.target.parentNode));
 		event.target.parentNode["buttonEffect" + event.target.id]();
 	} else if (event.keyCode === 13 && event.target.id === "uiNoteMakerInputField") {
 		sendCsdMakeNote();

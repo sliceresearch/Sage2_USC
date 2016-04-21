@@ -6928,10 +6928,6 @@ function handleNewApplication(appInstance, videohandle) {
 		y: appInstance.height + config.ui.titleBarHeight - cornerSize, w: cornerSize, h: cornerSize}, 2);
 	SAGE2Items.applications.editButtonVisibilityOnItem(appInstance.id, "syncButton", false);
 
-	console.dir(appInstance.data);
-	if (appInstance.data.thisVariableIsNew) {
-		console.log("erase me, and the if. The new variable is seen by the server");
-	}
 	initializeLoadedVideo(appInstance, videohandle);
 }
 
@@ -7381,7 +7377,6 @@ Required for processing is data.type.
 Further requirements based upon the type.
 */
 function wsCsdMessage(wsio, data) {
-	console.log("erase me, received csd message type:" + data.type);
 	// if the type is not defined,
 	if (data.type === undefined) {
 		console.log(sageutils.header("csdMessage") + "Error: Undefined csdMessage");
@@ -7399,7 +7394,7 @@ function wsCsdMessage(wsio, data) {
 			break;
 		case "getPathOfApp":
 			// currently just used for testing
-			console.log("erase me," + csdGetPathOfApp(data.appName));
+			console.log("csd getPathOfApp " + data.appName + ":" + csdGetPathOfApp(data.appName));
 			break;
 		case "launchAppWithValues":
 			csdLaunchAppWithValues(wsio, data);
@@ -7420,7 +7415,7 @@ function wsCsdMessage(wsio, data) {
 			csdSaveDataOnServer(wsio, data);
 			break;
 		default:
-			console.log("");
+			console.log("csd ERROR, unknown message type " + data.type);
 			break;
 	}
 }
@@ -7473,14 +7468,8 @@ function csdWhatAppIsAt(wsio, data) {
 */
 function csdGetPathOfApp(appName) {
 	var apps = getApplications();
-		console.log();
-		console.log();
-		console.log("erase me, getting app list");
 	// for each of the apps known to SAGE2, usually everything in public/uploads/apps
 	for (var i = 0; i < apps.length; i++) {
-
-		console.log(apps[i].id);
-
 		if (// if the name contains appName
 			apps[i].exif.FileName.indexOf(appName) === 0
 			|| apps[i].id.indexOf(appName) !== -1
@@ -7791,41 +7780,23 @@ function csdSaveDataOnServer(wsio, data) {
 	// Special case for the extension saving.
 	if (data.fileType === "note") {
 		var fullpath;
-		console.log();
-		console.log();
+		// Just in case, save
 		fullpath = path.join(mainFolder.path, "notes", "lastNote.note");
-		console.log("erase me, just in case note save to:" + fullpath);
 		fs.writeFileSync(fullpath, data.fileContent);
 		fullpath = path.join(mainFolder.path, "notes", data.fileName);
-		console.log();
-		console.log();
-		console.log("erase me, Trying to make a note file with fileType, fileName, fcontents,fullpath");
-		console.log(data.fileType);
-		console.log(data.fileName);
-		console.log(data.fileContent);
-		console.log(fullpath);
 		fs.writeFileSync(fullpath, data.fileContent);
-		console.log("erase me, made a .note file.");
 	} else if(data.fileType === "doodle") {
 		var fullpath;
-		console.log();
-		console.log();
+		// Just in case, save
 		fullpath = path.join(mainFolder.path, "notes", "lastDoodle.doodle");
+		// Remove the header but keep uri
 		var regex = /^data:.+\/(.+);base64,(.*)$/;
 		var matches = data.fileContent.match(regex);
+		// Convert to base64 encoding
 		var buffer = new Buffer(matches[2], 'base64');
-		console.log("erase me, just in case doodle save to:" + fullpath);
 		fs.writeFileSync(fullpath, buffer);
 		fullpath = path.join(mainFolder.path, "notes", data.fileName);
-		console.log();
-		console.log();
-		console.log("erase me, Trying to make a doodle file with fileType, fileName, fcontents,fullpath");
-		console.log(data.fileType);
-		console.log(data.fileName);
-		console.log(data.fileContent);
-		console.log(fullpath);
 		fs.writeFileSync(fullpath, buffer);
-		console.log("erase me, made a .doodle file.");
 	}else {
 		console.log("ERROR:csdSaveDataOnServer: unable to save data on server for fileType " + data.fileType);
 	}

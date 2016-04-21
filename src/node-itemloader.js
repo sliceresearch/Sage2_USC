@@ -497,13 +497,6 @@ AppLoader.prototype.loadNoteFromFile = function(file, mime_type, aUrl, external_
 	var localPath = getSAGE2Path(appName);
 	var instructionsFile = path.join(localPath, "instructions.json");
 
-	console.log();
-	console.log("erase me, loading note from file using file, appName, localPath");
-	console.log(file);
-	console.log(appName);
-	console.log(localPath);
-
-
 	// Will read the instruction file and then launch app with instructionfile parameters.
 	var _this = this;
 	fs.readFile(instructionsFile, 'utf8', function(err, json_str) {
@@ -511,27 +504,14 @@ AppLoader.prototype.loadNoteFromFile = function(file, mime_type, aUrl, external_
 			console.log(sageutils.header("Loader") + "cannot read application file " + instructionsFile);
 			return;
 		}
-
 		var appUrl = getSAGE2URL(localPath);
 		var app_external_url = _this.hostOrigin + sageutils.encodeReservedURL(appUrl);
-
 		var appInstance = _this.readInstructionsFile(json_str, localPath, mime_type, app_external_url);
-		appInstance.data.thisVariableIsNew = "added in loadNoteFromFile";
 		appInstance.data.file = assets.getURL(file);
 		appInstance.file = file;
-		// if (appInstance.data.thisVariableIsNew) { console.log("erase me, confirmed new var in itemLoader"); }
-		console.dir("");
-		console.log("erase me, thisVariableIsNew:" + appInstance.data.thisVariableIsNew);
-		console.dir(appInstance.data);
-		console.log("erase me, looking for directory:");
-		console.log(appInstance.data.file);
-		console.log(aUrl);
-		console.log(external_url);
-		console.log(file);
 
 		// This will add the contents of the note to the send data values. Assuming the var is unique.
 		appInstance.data.contentsOfNoteFile = fs.readFileSync(file, 'utf8');
-
 		callback(appInstance);
 	});
 };
@@ -543,13 +523,6 @@ AppLoader.prototype.loadDoodleFromFile = function(file, mime_type, aUrl, externa
 	var localPath = getSAGE2Path(appName);
 	var instructionsFile = path.join(localPath, "instructions.json");
 
-	console.log();
-	console.log("erase me, loading doodle from file using file, appName, localPath");
-	console.log(file);
-	console.log(appName);
-	console.log(localPath);
-
-
 	// Will read the instruction file and then launch app with instructionfile parameters.
 	var _this = this;
 	fs.readFile(instructionsFile, 'utf8', function(err, json_str) {
@@ -557,23 +530,11 @@ AppLoader.prototype.loadDoodleFromFile = function(file, mime_type, aUrl, externa
 			console.log(sageutils.header("Loader") + "cannot read application file " + instructionsFile);
 			return;
 		}
-
 		var appUrl = getSAGE2URL(localPath);
 		var app_external_url = _this.hostOrigin + sageutils.encodeReservedURL(appUrl);
-
 		var appInstance = _this.readInstructionsFile(json_str, localPath, mime_type, app_external_url);
-		appInstance.data.thisVariableIsNew = "added in loadDoodleFromFile";
 		appInstance.data.file = assets.getURL(file);
 		appInstance.file = file;
-		// if (appInstance.data.thisVariableIsNew) { console.log("erase me, confirmed new var in itemLoader"); }
-		console.dir("");
-		console.log("erase me, thisVariableIsNew:" + appInstance.data.thisVariableIsNew);
-		console.dir(appInstance.data);
-		console.log("erase me, looking for directory:");
-		console.log(appInstance.data.file);
-		console.log(aUrl);
-		console.log(external_url);
-		console.log(file);
 
 		// This will add the contents of the note to the send data values. Assuming the var is unique.
 		appInstance.data.contentsOfDoodleFile = "data:image/png;base64," + fs.readFileSync(file).toString('base64');
@@ -583,7 +544,6 @@ AppLoader.prototype.loadDoodleFromFile = function(file, mime_type, aUrl, externa
 		while (fbasic.indexOf("\\") > -1) { fbasic = fbasic.substring(fbasic.indexOf("\\") + 1); }
 		fbasic = fbasic.substring(0, fbasic.indexOf(".doodle"));
 		appInstance.data.fileName = fbasic;
-
 		callback(appInstance);
 	});
 };
@@ -917,9 +877,6 @@ AppLoader.prototype.manageAndLoadUploadedFile = function(file, callback) {
 
 AppLoader.prototype.loadApplication = function(appData, callback) {
 	var app;
-	console.log("");
-	console.log("erase me, where the hell is it loading from UI");
-	console.log("location:" + appData.location);
 	if (appData.location === "file") {
 		app = registry.getDefaultAppFromMime(appData.type);
 		// Hardcode bad. but currently one of few ways to get around.
@@ -1006,12 +963,6 @@ AppLoader.prototype.loadApplication = function(appData, callback) {
 			this.loadPdfFromURL(appData.url, appData.type, appData.name, appData.strictSSL, function(appInstance) {
 				callback(appInstance, null);
 			});
-		} else if (app.indexOf("apps") >= 0 && app.indexOf("quickNote") >= 0) {
-			console.log();
-			console.log();
-			console.log("erase me, ERROR don't know what to do with a note url. This will need to be fixed.");
-			console.log();
-			console.log();
 		}
 	} else if (appData.location === "remote") {
 		if (appData.application.application === "movie_player") {
