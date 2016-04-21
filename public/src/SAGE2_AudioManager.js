@@ -196,7 +196,7 @@ function setupListeners() {
 			pan:    0  // left-right pan of the sound, -1 (left) and 1 (right).
 		};
 		var lowdefaults =  {
-			volume: initialVolume / 100, // low volume for some events
+			volume: initialVolume / 80, // low volume for some events
 			delay:  0, loop:   0,
 			offset: 0, pan:    0
 		};
@@ -206,6 +206,7 @@ function setupListeners() {
 			{id: "newapp",    src: "newapp.mp3",    defaultPlayProps: defaults},
 			{id: "deleteapp", src: "deleteapp.mp3", defaultPlayProps: defaults},
 			{id: "remote",    src: "remote.mp3",    defaultPlayProps: lowdefaults},
+			{id: "send",      src: "send.mp3",      defaultPlayProps: defaults},
 			{id: "down",      src: "down.mp3",      defaultPlayProps: lowdefaults}
 		];
 		// If the file cannot load, try other formats (need the files)
@@ -363,39 +364,43 @@ function setupListeners() {
 	});
 
 	wsio.on('setItemPosition', function (data) {
-		// Calculate center of the application window
-		var halfTotalWidth = totalWidth / 2;
-		var centerX = data.elemLeft + data.elemWidth / 2 - halfTotalWidth;
-		if (centerX < -totalWidth) {
-			centerX = -totalWidth;
+		if (audioPannerNodes[data.elemId]) {
+			// Calculate center of the application window
+			var halfTotalWidth = totalWidth / 2;
+			var centerX = data.elemLeft + data.elemWidth / 2 - halfTotalWidth;
+			if (centerX < -totalWidth) {
+				centerX = -totalWidth;
+			}
+			if (centerX > totalWidth) {
+				centerX = totalWidth;
+			}
+			// Update the panner position
+			var panX = centerX / totalWidth;
+			var panY = 0;
+			var panZ = 1 - Math.abs(panX);
+			var panNode = audioPannerNodes[data.elemId];
+			panNode.setPosition(panX, panY, panZ);
 		}
-		if (centerX > totalWidth) {
-			centerX = totalWidth;
-		}
-		// Update the panner position
-		var panX = centerX / totalWidth;
-		var panY = 0;
-		var panZ = 1 - Math.abs(panX);
-		var panNode = audioPannerNodes[data.elemId];
-		panNode.setPosition(panX, panY, panZ);
 	});
 
 	wsio.on('setItemPositionAndSize', function (data) {
-		// Calculate center of the application window
-		var halfTotalWidth = totalWidth / 2;
-		var centerX = data.elemLeft + data.elemWidth / 2 - halfTotalWidth;
-		if (centerX < -totalWidth) {
-			centerX = -totalWidth;
+		if (audioPannerNodes[data.elemId]) {
+			// Calculate center of the application window
+			var halfTotalWidth = totalWidth / 2;
+			var centerX = data.elemLeft + data.elemWidth / 2 - halfTotalWidth;
+			if (centerX < -totalWidth) {
+				centerX = -totalWidth;
+			}
+			if (centerX > totalWidth) {
+				centerX = totalWidth;
+			}
+			// Update the panner position
+			var panX = centerX / totalWidth;
+			var panY = 0;
+			var panZ = 1 - Math.abs(panX);
+			var panNode = audioPannerNodes[data.elemId];
+			panNode.setPosition(panX, panY, panZ);
 		}
-		if (centerX > totalWidth) {
-			centerX = totalWidth;
-		}
-		// Update the panner position
-		var panX = centerX / totalWidth;
-		var panY = 0;
-		var panZ = 1 - Math.abs(panX);
-		var panNode = audioPannerNodes[data.elemId];
-		panNode.setPosition(panX, panY, panZ);
 	});
 
 	wsio.on('setVolume', function(data) {
@@ -502,6 +507,14 @@ function setupListeners() {
 			createjs.Sound.play("down");
 		}
 	});
+
+	wsio.on('setAppSharingFlag', function(data) {
+		// Play an audio blop when sending an app to a remote site
+		if (data.sharing) {
+			createjs.Sound.play("send");
+		}
+	});
+
 }
 
 /**
