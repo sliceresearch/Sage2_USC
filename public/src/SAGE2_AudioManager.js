@@ -188,19 +188,25 @@ function setupListeners() {
 		// folder for audio files (relative to public/)
 		var audioPath   = "sounds/";
 		// Default settings
-		var defaults    =  {
+		var defaults =  {
 			volume: initialVolume / 20, // volume [0:1] - value 0-10 and half volume for special effects
 			delay:  0, // amount of time to delay the start of audio playback, in milliseconds
 			loop:   0, // times the audio loops when it reaches the end of playback, 0 no loops, -1 infinite
 			offset: 0, // offset from the start of the audio to begin playback, in milliseconds
 			pan:    0  // left-right pan of the sound, -1 (left) and 1 (right).
 		};
+		var lowdefaults =  {
+			volume: initialVolume / 100, // low volume for some events
+			delay:  0, loop:   0,
+			offset: 0, pan:    0
+		};
 		// Array of assets to preload
 		var soundAssets = [
-			{id: "startup",   src: jingle,  defaultPlayProps: defaults},
-			{id: "newapp",    src: "newapp.mp3", defaultPlayProps: defaults},
+			{id: "startup",   src: jingle,          defaultPlayProps: defaults},
+			{id: "newapp",    src: "newapp.mp3",    defaultPlayProps: defaults},
 			{id: "deleteapp", src: "deleteapp.mp3", defaultPlayProps: defaults},
-			{id: "down",      src: "down.mp3", defaultPlayProps: defaults}
+			{id: "remote",    src: "remote.mp3",    defaultPlayProps: lowdefaults},
+			{id: "down",      src: "down.mp3",      defaultPlayProps: lowdefaults}
 		];
 		// If the file cannot load, try other formats (need the files)
 		createjs.Sound.alternateExtensions = ["ogg", "mp3"];
@@ -486,6 +492,15 @@ function setupListeners() {
 		// Delete also the webaudio nodes
 		delete audioPannerNodes[data.elemId];
 		delete audioGainNodes[data.elemId];
+	});
+
+	wsio.on('connectedToRemoteSite', function(data) {
+		// Play an audio blop when a remote site comes up or down
+		if (data.connected) {
+			createjs.Sound.play("remote");
+		} else {
+			createjs.Sound.play("down");
+		}
 	});
 }
 
