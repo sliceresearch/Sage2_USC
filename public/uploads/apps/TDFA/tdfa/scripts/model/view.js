@@ -617,12 +617,11 @@ define(["lib/knockout", "three", "core/disposable", "util/uid", "util/misc"], fu
 						// insert the child in our position in parent's array of children (this View is effectively removed)
 						_self.parent.children()[idx] = childToKeep;
 						_self.parent.children.notifySubscribers(_self.parent.children());
+						// cleanup subscriptions
+					_self.dispose();
 					} else {
 						_self.children.notifySubscribers(_self.children());
 					}
-
-					// cleanup subscriptions
-					_self.dispose();
 				} else {
 					var childToReap = _self.children()[childToKeep.index() + mergeDir];
 					var geom = _combinedGeometry(childToKeep.Geometry(), childToReap.Geometry());

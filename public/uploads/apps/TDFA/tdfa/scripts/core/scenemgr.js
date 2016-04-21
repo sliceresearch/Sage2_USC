@@ -16,31 +16,6 @@ define(["three", "lib/knockout"], function (THREE, ko) {
 
 		var _init = function () {
 
-			// TODO remove
-			var m1 = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1),
-				new THREE.MeshBasicMaterial({
-					color: 0xffff00
-				}));
-			var m2 = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1),
-				new THREE.MeshBasicMaterial({
-					color: 0x00ffff
-				}));
-			var m3 = m1.clone();
-			var m4 = m2.clone();
-			_self.Add(m1);
-			_self.Add(m2);
-			m2.add(m3);
-			m1.add(m4);
-			m3.position.set(2, 0, 0);
-			m1.position.set(-10, 3, 30);
-			m2.position.set(4, 0, -40);
-			m4.position.set(-8, 4, -5);
-			m1.scale.set(8, 8, 8);
-			m2.scale.set(8, 8, 8);
-			m1.updateMatrixWorld();
-			m2.updateMatrixWorld();
-			m1.name = "The quick brown fox jumps and breaks legs";
-
 			// light up the scene a bit
 			var directionalLight1 = new THREE.DirectionalLight(0xffffff, 1.0);
 			var directionalLight2 = new THREE.DirectionalLight(0xffffff, 1.0);
