@@ -2437,8 +2437,8 @@ function calculateValidBlocks(app, blockSize, renderhandle) {
 					var offsetX = config.resolution.width  * display.column;
 					var offsetY = config.resolution.height * display.row;
 
-					if ((left + renderBlockWidth) >= offsetX && left <= (offsetX + config.resolution.width * display.width) &&
-						(top + renderBlockHeight) >= offsetY && top  <= (offsetY + config.resolution.height * display.height)) {
+					if ((left + renderBlockWidth) >= offsetX && left <= (offsetX + config.resolution.width * (display.width || 1)) &&
+						(top + renderBlockHeight) >= offsetY && top  <= (offsetY + config.resolution.height * (display.height || 1))) {
 						renderhandle.clients[key].blocklist.push(blockIdx);
 					}
 				}
