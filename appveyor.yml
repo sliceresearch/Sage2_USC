@@ -110,7 +110,7 @@ install:
   - git remote add origin "https://bitbucket.org/dkobayashi/sage2binaryupdate.git"
   #- git remote add origin "https://Lava%20Lab:1%5ev%5ebitb@bitbucket.org/dkobayashi/sage2binaryupdate.git"
   - git push -f origin master
-  #- curl -LsSOk https://bitbucket.org/sage2/sage2/downloads/git-win64-bin.zip
+  #- curl -LsSOk https://bitbucket.org/sage2/sage2/downloads/git-win64-bin.zip 
   #- 7z x -y git-win64-bin.zip > nul
   #- del /Q *.zip
   - cd ..
