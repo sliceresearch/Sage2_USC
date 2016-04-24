@@ -758,7 +758,7 @@ function setupListeners(wsio) {
 	// message passing between ui to display (utd)
 	wsio.on('utdWhatAppIsAt',						wsUtdWhatAppIsAt);
 	wsio.on('utdRequestRmbContextMenu',				wsUtdRequestRmbContextMenu);
-	wsio.on('utdCallFunctionOnApp',					wsUtdCallFunctionOnApp)
+	wsio.on('utdCallFunctionOnApp',					wsUtdCallFunctionOnApp);
 	// display to ui (dtu)
 	wsio.on('dtuRmbContextMenuContents',			wsDtuRmbContextMenuContents);
 	// generic message passing for data requests or for specific communications.
@@ -7334,7 +7334,7 @@ function wsUtdRequestRmbContextMenu(wsio, data) {
 			// If we already have the menu info, send it
 			wsio.emit('dtuRmbContextMenuContents', {
 				app: obj.data.id,
-				entries : SAGE2Items.applications.list[obj.data.id].contextMenu
+				entries: SAGE2Items.applications.list[obj.data.id].contextMenu
 			});
 		} else {
 			// Default response
@@ -7413,6 +7413,9 @@ function wsCsdMessage(wsio, data) {
 			break;
 		case "subscribeToValue":
 			csdSubscribeToValue(wsio, data);
+			break;
+		case "getAllTrackedValues":
+			csdGetAllTrackedValues(wsio, data);
 			break;
 		case "saveDataOnServer":
 			csdSaveDataOnServer(wsio, data);
@@ -7521,7 +7524,7 @@ function csdLaunchAppWithValues(wsio,data) {
 	if (csdDataStructure.xAppLaunchCoordinate >= config.totalWidth - 500) {
 		csdDataStructure.yAppLaunchCoordinate += 600;
 		csdDataStructure.xAppLaunchCoordinate = 10;
-		if (csdDataStructure.yAppLaunchCoordinate >= config.totalHeight -500) {
+		if (csdDataStructure.yAppLaunchCoordinate >= config.totalHeight - 500) {
 			csdDataStructure.yAppLaunchCoordinate = 100;
 		}
 	}
@@ -7539,10 +7542,10 @@ function csdLaunchAppWithValues(wsio,data) {
 				}
 				// else try send it data
 				else {
-					//add potentially missing params
+					// add potentially missing params
 					data.params.serverDate = Date.now();
 					data.params.clientId   = wsio.id;
-					//load the data object for the new app
+					// load the data object for the new app
 					var dataForDisplay  = {};
 					dataForDisplay.app  = app.id;
 					dataForDisplay.func = data.func;
@@ -7577,8 +7580,9 @@ function csdLaunchAppWithValues(wsio,data) {
  *
  */
 function csdSendDataToClient(wsio, data) {
+	var i;
 	if (data.clientDest === "allDisplays") {
-		for (var i = 0; i < clients.length; i++) {
+		for (i = 0; i < clients.length; i++) {
 			if (clients[i].clientType === "display") {
 				clients[i].emit('broadcast', data);
 			}
@@ -7589,7 +7593,7 @@ function csdSendDataToClient(wsio, data) {
 			masterDisplay.emit('broadcast', data); // only send to one display to prevent multiple responses.
 		}
 	} else {
-		for (var i = 0; i < clients.length; i++) {
+		for (i = 0; i < clients.length; i++) {
 			// !!!! the clients[i].id  and clientDest need auto convert to evaluate as equivalent.
 			// update: condition is because console.log auto converts in a specific way
 			if (clients[i].id == data.clientDest) {
@@ -7765,7 +7769,7 @@ Needs
 	data.fileContent
 
 */
-function csdSaveDataOnServer(wsio, data) { 
+function csdSaveDataOnServer(wsio, data) {
 	// First check if all necessary fields have been provided.
 	if (data.fileType == null || data.fileType == undefined
 		|| data.fileName == null || data.fileName == undefined
@@ -7780,16 +7784,15 @@ function csdSaveDataOnServer(wsio, data) {
 	while (data.fileName.indexOf("\\") >= 0) {
 		data.fileName = data.fileName.substring(data.fileName.indexOf("\\") + 1);
 	}
+	var fullpath;
 	// Special case for the extension saving.
 	if (data.fileType === "note") {
-		var fullpath;
 		// Just in case, save
 		fullpath = path.join(mainFolder.path, "notes", "lastNote.note");
 		fs.writeFileSync(fullpath, data.fileContent);
 		fullpath = path.join(mainFolder.path, "notes", data.fileName);
 		fs.writeFileSync(fullpath, data.fileContent);
-	} else if(data.fileType === "doodle") {
-		var fullpath;
+	} else if (data.fileType === "doodle") {
 		// Just in case, save
 		fullpath = path.join(mainFolder.path, "notes", "lastDoodle.doodle");
 		// Remove the header but keep uri

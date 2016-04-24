@@ -8,6 +8,7 @@
 //
 // Copyright (c) 2015
 
+
 /**
  * SAGE2 File Manager
  *
@@ -17,6 +18,7 @@
  */
 
 /* global SAGE2_init, SAGE2_resize, escape, unescape, sage2Version, showDialog */
+/* global removeAllChildren */
 
 "use strict";
 
@@ -471,16 +473,17 @@ function FileManager(wsio, mydiv, uniqueID) {
 			info = _this.allFiles[elt.id].exif.Linearized || '';
 			metadata.config.elements.push({label: "Linearized", value: info});
 
-		} else if (_this.allFiles[elt.id].exif.MIMEType.indexOf('text/plain') >= 0) { 
-			if(_this.allFiles[elt.id].exif.FileName.split(".").pop() === "note") {
+		} else if (_this.allFiles[elt.id].exif.MIMEType.indexOf('text/plain') >= 0) {
+			var key;
+			if (_this.allFiles[elt.id].exif.FileName.split(".").pop() === "note") {
 				metadata.config.elements.push({label: "note (QuickNote)", type: "label"});
-				for (var key in _this.allFiles[elt.id].exif) {
+				for (key in _this.allFiles[elt.id].exif) {
 					info = _this.allFiles[elt.id].exif[key] || '';
 					metadata.config.elements.push({label: key, value: info});
 				}
 			} else {
 				metadata.config.elements.push({label: "Note", type: "label"});
-				for (var key in _this.allFiles[elt.id].exif) {
+				for (key in _this.allFiles[elt.id].exif) {
 					info = _this.allFiles[elt.id].exif[key] || '';
 					metadata.config.elements.push({label: key, value: info});
 				}

@@ -11,6 +11,7 @@
 "use strict";
 
 /* global FileManager, SAGE2_interaction, SAGE2DisplayUI */
+/* global removeAllChildren */
 
 /**
  * Web user interface
@@ -2022,14 +2023,15 @@ function setRmbContextMenuEntries(entriesToAdd, app) {
 	// full removal of current contents
 	removeAllChildren('rmbContextMenu');
 	// for each entry
-	for (var i = 0; i < entriesToAdd.length; i++) {
+	var i;
+	for (i = 0; i < entriesToAdd.length; i++) {
 		// if func is defined add buttonEffect
 		if (entriesToAdd[i].callback !== undefined && entriesToAdd[i].callback !== null) {
 			entriesToAdd[i].buttonEffect = function() {
 				if (this.callback === "SAGE2_download") {
 					// special case: want to download the file
 					var url = this.parameters.url;
-					console.log('trying to download', url)
+					console.log('trying to download', url);
 					if (url) {
 						// Download the file
 						var link = document.createElement('a');
@@ -2077,7 +2079,7 @@ function setRmbContextMenuEntries(entriesToAdd, app) {
 	entriesToAdd.push(closeEntry);
 	// for each entry to add, create the div, app the properties, and effects
 	var workingDiv;
-	for (var i = 0; i < entriesToAdd.length; i++) {
+	for (i = 0; i < entriesToAdd.length; i++) {
 		workingDiv = document.createElement('div');
 		workingDiv.id = 'rmbContextMenuEntry' + i; // unique entry id
 		workingDiv.style.background = "#FFF8E1"; // start as off-white color
@@ -2172,7 +2174,7 @@ function setupUiNoteMaker() {
 		workingDiv.colorNumber = i;
 		workingDiv.colorWasPicked = false;
 		workingDiv.addEventListener("click", function () {
-			setUiNoteColorSelect( this.colorNumber );
+			setUiNoteColorSelect(this.colorNumber);
 		});
 		if (i === 1) { workingDiv.style.background = "lightyellow"; }
 		if (i === 2) { workingDiv.style.background = "lightblue"; }
@@ -2186,7 +2188,7 @@ function setupUiNoteMaker() {
 
 function setUiNoteColorSelect(colorNumber) {
 	var workingDiv;
-	// Adjust border size with 
+	// Adjust border size width
 	for (var i = 1; i <= 6; i++) {
 		workingDiv = document.getElementById("uinmColorPick" + i);
 		workingDiv.style.border = "1px solid black";
@@ -2361,8 +2363,7 @@ Trying to figure out how this could be transparent.
 function uiDrawCanvasBackgroundFlush(color) {
 	var workingDiv	= document.getElementById('uiDrawZoneCanvas');
 	var ctx			= workingDiv.getContext('2d');
-	if (color === 'transparent') {
-	} else {
+	if (color !== 'transparent') {
 		ctx.fillStyle = "#FFFFFF";
 		ctx.fillRect(0, 0, workingDiv.width, workingDiv.height);
 		ctx.fillStyle = "#000000";
@@ -2486,7 +2487,6 @@ The client doesn't actually cause their canvas to update. The app sends a confir
 */
 function uiDrawSendLineCommand(xDest, yDest, xPrev, yPrev) {
 	var workingDiv	= document.getElementById('uiDrawZoneCanvas');
-	var ctx			= workingDiv.getContext('2d');
 	var lineWidth	= parseInt(workingDiv.lineWidth);
 	var fillStyle	= document.getElementById('uiDrawColorPicker').value;
 	var strokeStyle	= document.getElementById('uiDrawColorPicker').value;
