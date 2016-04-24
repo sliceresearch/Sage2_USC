@@ -71,11 +71,19 @@ function WebsocketIO(url) {
 	* @method open
 	* @param callback {Function} function to be called when the socket is ready
 	*/
-	this.open = function(callback) {
+	this.open = function(callback, errcb) {
 		var _this = this;
 
 		console.log('WebsocketIO> open', this.url);
-		this.ws = new WebSocket(this.url);
+		try {
+			this.ws = new WebSocket(this.url);
+		} catch (err) {
+			console.log('Error', err);
+			if (errcb) {
+				errcb(err);
+			}
+			return;
+		}
 		this.ws.binaryType = "arraybuffer";
 		this.ws.onopen = callback;
 
