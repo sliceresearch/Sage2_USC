@@ -8,6 +8,7 @@
 //
 // Copyright (c) 2015
 
+
 /**
  * SAGE2 File Manager
  *
@@ -17,6 +18,7 @@
  */
 
 /* global SAGE2_init, SAGE2_resize, escape, unescape, sage2Version, showDialog */
+/* global removeAllChildren */
 
 "use strict";
 
@@ -62,6 +64,7 @@ function FileManager(wsio, mydiv, uniqueID) {
 				{id: "Image:/", value: "Image", icon: "search", data: [], tooltip: "Show all the images"},
 				{id: "Video:/", value: "Video", icon: "search", data: [], tooltip: "Show all the videos"},
 				{id: "PDF:/", value: "PDF", icon: "search", data: [], tooltip: "Show all the PDFs"},
+				{id: "Note:/", value: "Note", icon: "search", data: [], tooltip: "Show all the Notes"},
 				{id: "App:/", value: "Application", icon: "search", data: [], tooltip: "Show all the applications"},
 				{id: "Session:/", value: "Session", icon: "search", data: [], tooltip: "Show all the sessions"},
 				{id: "Mine:/", value: "Uploaded", icon: "search", data: [], tooltip: "Show all my uploaded files"}
@@ -150,12 +153,42 @@ function FileManager(wsio, mydiv, uniqueID) {
 					view: "resizer"
 				},
 				{
-					id: "multiview1",
-					view: "multiview",
-					scroll: 'y',
+					id: "all_table",
+					view: "datatable",
+					// editable: true,
 					gravity: 2, // two times bigger
-					animate: false,
-					cells: [{}]
+					columnWidth: 200,
+					resizeColumn: true,
+					// animate: false,
+					scroll: 'y',
+					drag: true,
+					select: "multiselect",
+					navigation: true,
+					scheme: {
+						// Generate an automatic index
+						$init: function(obj) { obj.index = this.count() + 1; }
+					},
+					on: {
+						// update index after sort or update
+						"data->onStoreUpdated": function() {
+							this.data.each(function(obj, i) {
+								obj.index = i + 1;
+							});
+							return true;
+						}
+					},
+					columns: [
+						{id: "index", header: "",     width: 40, minWidth: 25, sort: "int"},
+						{id: "name",  header: "Name", minWidth: 180, sort: "text", fillspace: true},
+						{id: "user",  header: "User", width: 80, minWidth: 50, sort: "text", css: {'text-align': 'right'}},
+						{id: "size",  header: "Size", width: 80, minWidth: 50,  sort: sortBySize, css: {'text-align': 'right'}},
+						{id: "date",  header: "Date", width: 150, minWidth: 80, sort: sortByDate, css: {'text-align': 'center'}},
+						{id: "ago",   header: "Modified", width: 100, minWidth: 80, sort: sortByDate, css: {'text-align': 'right'}},
+						{id: "type",  header: "Type",     width: 80, minWidth: 50,  sort: "text", css: {'text-align': 'center'}}
+					],
+					data: [
+					]
+
 				},
 				{
 					view: "resizer"
@@ -336,43 +369,7 @@ function FileManager(wsio, mydiv, uniqueID) {
 		}
 	});
 
-	var multiview1 = $$("multiview1");
-	multiview1.addView({
-		id: "all_table",
-		view: "datatable",
-		// editable: true,
-		columnWidth: 200,
-		resizeColumn: true,
-		// animate: false,
-		scroll: 'y',
-		drag: true,
-		select: "multiselect",
-		navigation: true,
-		columns: [
-			{id: "index", header: "", width: 40, minWidth: 25, sort: "int"},
-			{id: "name", header: "Name", minWidth: 180, sort: "text", fillspace: true},
-			{id: "user", header: "User", width: 80, minWidth: 50, sort: "text", css: {'text-align': 'right'}},
-			{id: "size", header: "Size", width: 80, minWidth: 50,  sort: sortBySize, css: {'text-align': 'right'}},
-			{id: "date", header: "Date", width: 150, minWidth: 80, sort: sortByDate, css: {'text-align': 'center'}},
-			{id: "ago",  header: "Modified", width: 100, minWidth: 80, sort: sortByDate, css: {'text-align': 'right'}},
-			{id: "type", header: "Type", width: 80, minWidth: 50,  sort: "text", css: {'text-align': 'center'}}
-		],
-		data: [
-		],
-		scheme: {
-			// Generate an automatic index
-			$init: function(obj) { obj.index = this.count() + 1; }
-		},
-		on: {
-			// update index after sort or update
-			"data->onStoreUpdated": function() {
-				this.data.each(function(obj, i) {
-					obj.index = i + 1;
-				});
-				return true;
-			}
-		}
-	});
+	// Get handle on the middle table data
 	this.allTable = $$("all_table");
 
 	// User selection
@@ -476,6 +473,21 @@ function FileManager(wsio, mydiv, uniqueID) {
 			info = _this.allFiles[elt.id].exif.Linearized || '';
 			metadata.config.elements.push({label: "Linearized", value: info});
 
+		} else if (_this.allFiles[elt.id].exif.MIMEType.indexOf('text/plain') >= 0) {
+			var key;
+			if (_this.allFiles[elt.id].exif.FileName.split(".").pop() === "note") {
+				metadata.config.elements.push({label: "note (QuickNote)", type: "label"});
+				for (key in _this.allFiles[elt.id].exif) {
+					info = _this.allFiles[elt.id].exif[key] || '';
+					metadata.config.elements.push({label: key, value: info});
+				}
+			} else {
+				metadata.config.elements.push({label: "Note", type: "label"});
+				for (key in _this.allFiles[elt.id].exif) {
+					info = _this.allFiles[elt.id].exif[key] || '';
+					metadata.config.elements.push({label: key, value: info});
+				}
+			}
 		} else if (_this.allFiles[elt.id].exif.MIMEType.indexOf('application/custom') >= 0) {
 			metadata.config.elements.push({label: "Application", type: "label"});
 
@@ -615,6 +627,7 @@ function FileManager(wsio, mydiv, uniqueID) {
 	this.tree.attachEvent("onBeforeDrop", function(context, ev) {
 		if (context.target.startsWith("Image:")   ||
 			context.target.startsWith("PDF:")     ||
+			context.target.startsWith("Note:")     ||
 			context.target.startsWith("Video:")   ||
 			context.target.startsWith("App:")     ||
 			context.target.startsWith("Session:") ||
@@ -821,6 +834,10 @@ function FileManager(wsio, mydiv, uniqueID) {
 			_this.allTable.filter(function(obj) {
 				return obj.type.toString() === "PDF";
 			});
+		} else if (searchParam === "Note:/") {
+			_this.allTable.filter(function(obj) {
+				return _this.allFiles[obj.id].exif.MIMEType.indexOf('text/plain') >= 0;
+			});
 		} else if (searchParam === "Video:/") {
 			_this.allTable.filter(function(obj) {
 				return _this.allFiles[obj.id].exif.MIMEType.indexOf('video') >= 0;
@@ -857,6 +874,11 @@ function FileManager(wsio, mydiv, uniqueID) {
 			} else if (query[0] === "PDF") {
 				_this.allTable.filter(function(obj) {
 					return (obj.type.toString() === "PDF") &&
+							(_this.allFiles[obj.id].sage2URL.lastIndexOf(query[1], 0) === 0);
+				});
+			} else if (query[0] === "Note") {
+				_this.allTable.filter(function(obj) {
+					return (obj.type.toString() === "text/plain") &&
 							(_this.allFiles[obj.id].sage2URL.lastIndexOf(query[1], 0) === 0);
 				});
 			} else if (query[0] === "Video") {
@@ -935,6 +957,11 @@ function FileManager(wsio, mydiv, uniqueID) {
 		}
 		for (i = 0; i < data.pdfs.length; i++) {
 			f = data.pdfs[i];
+			this.allFiles[f.id] = f;
+			this.createSubFolderForFile(f);
+		}
+		for (i = 0; i < data.notes.length; i++) {
+			f = data.notes[i];
 			this.allFiles[f.id] = f;
 			this.createSubFolderForFile(f);
 		}
@@ -1030,7 +1057,6 @@ function FileManager(wsio, mydiv, uniqueID) {
 	this.refresh = function() {
 		this.tree.refresh();
 		this.allTable.refresh();
-		$$("multiview1").setValue("all_table");
 		this.main.adjust();
 	};
 
@@ -1144,6 +1170,7 @@ function FileManager(wsio, mydiv, uniqueID) {
 				(id.indexOf('Image:/') >= 0) ||
 				(id.indexOf('Video:/') >= 0) ||
 				(id.indexOf('PDF:/') >= 0) ||
+				(id.indexOf('Note:/') >= 0) ||
 				(id.indexOf('App:/') >= 0) ||
 				(id.indexOf('Mine:/') >= 0) ||
 				(id.indexOf('Session:/') >= 0)

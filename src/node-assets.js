@@ -405,6 +405,8 @@ var addFile = function(filename, exif, callback) {
 			callback();
 		});
 		anAsset.exif.SAGE2thumbnail = rthumb;
+	} else if (exif.MIMEType === 'text/plain') {
+		callback(); // Callback must be done otherwise the associated app will not launch. Might be worth doing an else catch.
 	} else if (exif.MIMEType.indexOf('video/') > -1) {
 		generateVideoThumbnails(filename, thumb, exif.ImageWidth, exif.ImageHeight, [512, 256], null, function() {
 			callback();
@@ -502,6 +504,18 @@ var deletePDF = function(filename) {
 	});
 };
 
+var deleteNote = function(filename) {
+	var filepath = path.resolve(AllAssets.root, 'notes', filename);
+	fs.unlink(filepath, function(err) {
+		if (err) {
+			console.log("Server> error removing file:", filename, err);
+		}
+		console.log("Server> successfully deleted file:", filename);
+		// Delete the metadata
+		delete AllAssets.list[filepath];
+		saveAssets();
+	});
+};
 
 var deleteAsset = function(filename) {
 	var filepath = path.resolve(filename);
@@ -758,6 +772,18 @@ var listApps = function() {
 	for (var f in keys) {
 		var one = AllAssets.list[keys[f]];
 		if (one.exif.MIMEType === 'application/custom') {
+			result.push(one);
+		}
+	}
+	return result;
+};
+
+var listNotes = function() {
+	var result = [];
+	var keys = Object.keys(AllAssets.list);
+	for (var f in keys) {
+		var one = AllAssets.list[keys[f]];
+		if (one.exif.MIMEType === 'text/plain') {
 			result.push(one);
 		}
 	}
@@ -1023,6 +1049,7 @@ exports.listAssets = listAssets;
 exports.saveAssets = saveAssets;
 exports.listImages = listImages;
 exports.listPDFs   = listPDFs;
+exports.listNotes  = listNotes;
 exports.listVideos = listVideos;
 exports.listApps   = listApps;
 exports.addFile    = addFile;
@@ -1035,6 +1062,7 @@ exports.exifAsync   = exifAsync;
 exports.deleteImage = deleteImage;
 exports.deleteVideo = deleteVideo;
 exports.deletePDF   = deletePDF;
+exports.deleteNote  = deleteNote;
 exports.deleteAsset = deleteAsset;
 exports.moveAsset   = moveAsset;
 

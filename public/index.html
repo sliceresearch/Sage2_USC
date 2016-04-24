@@ -85,6 +85,15 @@
 						<img id="info"         alt="info"         src="images/ui/graycircle-info.svg"         width="48" height="48"/>
 						<p id="infoLabel">Information</p>
 					</td>
+					<td id="ezNoteContainer">
+						<img id="ezNote"         alt="ezNote"         src="images/ui/[graycircle]-ezNote.svg"         width="48" height="48"/>
+						<p id="ezNote">Quick Note</p>
+					</td>
+					<td id="ezDrawContainer">
+						<img id="ezDraw"         alt="ezDraw"         src="images/ui/[graycircle]-ezDraw.svg"         width="48" height="48"/>
+						<p id="ezDrawLabel">Doodle</p>
+					</td>
+
 				</tr>
 			</table>
 		</div>
@@ -143,6 +152,11 @@
 						<input type="checkbox" id="sessions-dir">
 						<label for="sessions-dir">Sessions</label>
 						<ul id="sessions" class="fileItem"></ul>
+					</li>
+					<li>
+						<input type="checkbox" id="notes-dir">
+						<label for="notes-dir">Notes</label>
+						<ul id="notes" class="fileItem"></ul>
 					</li>
 				</ul>
 			</div>
@@ -375,6 +389,77 @@
 			<div id="sage2MobileRightButton">Right button</div>
 		</div>
 		<img alt="closeMobileSAGE2Pointer" id="closeMobileSAGE2Pointer" src="images/closemobilepointer.svg" width="32" height="32" style="position:absolute; left:6px; top:6px;"/>
+	</div>
+
+	<div id="rmbContextMenu">
+	</div>
+
+	<div id="uiNoteMaker" class="dialog">
+			<br>
+			<div id="uiNoteMakerOptions">
+				<table cellSpacing="5">
+					<tr>
+						<input type="checkbox" id="uiNoteMakerCheckAnonymous"></input>
+						<label for="uiNoteMakerCheckAnonymous"> Anonymous</label>
+					</tr>
+					<tr>
+						<td>&nbsp&nbsp</td>
+						<td> <div id="uinmColorPick1"></div> </td>
+						<td> <div id="uinmColorPick2"></div> </td>
+						<td> <div id="uinmColorPick3"></div> </td>
+					</tr>
+					<tr>
+						<td>&nbsp&nbsp</td>
+						<td> <div id="uinmColorPick4"></div> </td>
+						<td> <div id="uinmColorPick5"></div> </td>
+						<td> <div id="uinmColorPick6"></div> </td>
+					</tr>
+				</table>
+			</div>
+			<br>
+			&nbsp&nbsp&nbsp
+			<textarea id="uiNoteMakerInputField"></textarea>
+			&nbsp&nbsp&nbsp
+			<br>
+			<br>&nbsp
+			<span id="uiNoteMakerSendButton" class="button">Make Note [Enter]</span>
+			<br>&nbsp
+	</div>
+	<div id="uiDrawZone" class="dialog">
+		<br>
+		<table cellSpacing="4">
+			<tr>
+				<td>
+					&nbsp&nbsp&nbsp
+					<input id="uiDrawColorPicker" type="color" value="#000000">
+					&nbsp
+				</td>
+				<td id='uidztp1' class='uidzBarBox'> <div class='uidzBarAll uidzBarS1'> </div> </td>
+				<td id='uidztp2' class='uidzBarBox'> <div class='uidzBarAll uidzBarS2'> </div> </td>
+				<td id='uidztp3' class='uidzBarBox'> <div class='uidzBarAll uidzBarS3'> </div> </td>
+				<td id='uidztp4' class='uidzBarBox'> <div class='uidzBarAll uidzBarS4'> </div> </td>
+				<td id='uidztp5' class='uidzBarBox'> <div class='uidzBarAll uidzBarS5'> </div> </td>
+				<td id='uidztp6' class='uidzBarBox'> <div class='uidzBarAll uidzBarS6'> </div> </td>
+				<td id='uidztp7' class='uidzBarBox'> <div class='uidzBarAll uidzBarS7'> </div> </td>
+				<td>
+					&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp
+					<span id="uiDrawZoneNewButton" class="button">New Doodle</span>
+				</td>
+			</tr>
+		</table>
+		<br>
+		&nbsp&nbsp&nbsp
+		<canvas id="uiDrawZoneCanvas" width="500" height="500" style="border:1px solid black">
+		</canvas>
+		&nbsp&nbsp&nbsp
+		<br>
+		<br>
+		<div style="position:relative; text-align:right; right:5%">
+			<span id="uiDrawZoneCloseButton" class="button">Close</span>
+		</div>
+		<br>
+	</div>
+	<div id="uiDrawZoneEraseReference" style="position:absolute;top:-100;left:-100;width:1;border:1px solid black;border-radius:50%;z-index:10003;pointer-events:none" >
 	</div>
 	
 	

@@ -11,6 +11,7 @@
 "use strict";
 
 /* global FileManager, SAGE2_interaction, SAGE2DisplayUI */
+/* global removeAllChildren */
 
 /**
  * Web user interface
@@ -414,6 +415,10 @@ function SAGE2_init() {
 			wsio.emit('loadImageFromBuffer', event.data);
 		}
 	});
+
+	setupRmbContextMenuDiv();
+	setupUiNoteMaker();
+	setupUiDrawCanvas();
 }
 
 //
@@ -571,25 +576,29 @@ function setupListeners() {
 	wsio.on('storedFileList', function(data) {
 		document.getElementById('images-dir').checked   = false;
 		document.getElementById('pdfs-dir').checked     = false;
+		document.getElementById('notes-dir').checked     = false;
 		document.getElementById('videos-dir').checked   = false;
 		document.getElementById('sessions-dir').checked = false;
 
 		var images   = document.getElementById('images');
 		var videos   = document.getElementById('videos');
 		var pdfs     = document.getElementById('pdfs');
+		var notes    = document.getElementById('notes');
 		var sessions = document.getElementById('sessions');
 
 		removeAllChildren(images);
 		removeAllChildren(videos);
 		removeAllChildren(pdfs);
+		removeAllChildren(notes);
 		removeAllChildren(sessions);
 
 		var longestImageName   = createFileList(data, "images",   images);
 		var longestVideoName   = createFileList(data, "videos",   videos);
 		var longestPdfName     = createFileList(data, "pdfs",     pdfs);
+		var longestNoteName     = createFileList(data, "notes",     notes);
 		var longestSessionName = createFileList(data, "sessions", sessions);
 
-		var longest = Math.max(longestImageName, longestVideoName, longestPdfName, longestSessionName);
+		var longest = Math.max(longestImageName, longestVideoName, longestPdfName, longestSessionName, longestNoteName);
 		document.getElementById('fileListElems').style.width = (longest + 60).toString() + "px";
 
 		// showDialog('mediaBrowserDialog');
@@ -611,6 +620,25 @@ function setupListeners() {
 			if (note) {
 				note.close();
 			}
+		}
+	});
+
+	wsio.on('utdConsoleMessage', function(data) {
+		console.log("UTD message:" + data.message);
+	});
+
+	wsio.on('dtuRmbContextMenuContents', function(data) {
+		setRmbContextMenuEntries(data.entries, data.app);
+	});
+
+	wsio.on('csdSendDataToClient', function(data) {
+		// depending on the specified func does different things.
+		if (data.func === 'uiDrawSetCurrentStateAndShow') {
+			uiDrawSetCurrentStateAndShow(data);
+		} else if (data.func === 'uiDrawMakeLine') {
+			uiDrawMakeLine(data);
+		} else {
+			console.log("Error, csd data packet for client contained invalid function:" + data.func);
 		}
 	});
 }
@@ -997,7 +1025,6 @@ function pointerPress(event) {
 			var btn = (event.button === 0) ? "left" : (event.button === 1) ? "middle" : "right";
 			displayUI.pointerPress(btn);
 		}
-
 		event.preventDefault();
 	}
 }
@@ -1183,6 +1210,24 @@ function handleClick(element) {
 		}
 		// Finally show the dialog
 		showDialog('infoDialog');
+	} else if (element.id === "ezNote"         || element.id === "ezNoteContainer"         || element.id === "ezNoteLabel") {
+		showDialog('uiNoteMaker');
+	} else if (element.id === "ezDraw"         || element.id === "ezDrawContainer"         || element.id === "ezDrawLabel") {
+		// clear drawzone
+		uiDrawCanvasBackgroundFlush('white');
+		var data = {};
+		data.type		= "launchAppWithValues";
+		data.appName	= "doodle";
+		data.func		= "addClientIdAsEditor";
+		data.params		= {
+			clientId: interactor.uniqueID,
+			clientName: document.getElementById('sage2PointerLabel').value
+		};
+		wsio.emit('csdMessage', data);
+		/*
+		Dialog will not be shown here.
+		Rather than show the dialog, the client will respond back, then it will be shown.
+		*/
 	} else if (element.id === "appOpenBtn") {
 		// App Launcher Dialog
 		loadSelectedApplication();
@@ -1599,18 +1644,22 @@ function touchMove(event) {
 				touchHold = null;
 			}
 		} else if (touchMode === "scale") {
-			rect    = event.target.getBoundingClientRect();
-			touch0X = event.touches[0].clientX - rect.left;
-			touch0Y = event.touches[0].clientY - rect.top;
-			touch1X = event.touches[1].clientX - rect.left;
-			touch1Y = event.touches[1].clientY - rect.top;
-			touchX  = parseInt((touch0X + touch1X) / 2, 10);
-			touchY  = parseInt((touch0Y + touch1Y) / 2, 10);
-			newDist = (touch1X - touch0X) * (touch1X - touch0X) + (touch1Y - touch0Y) * (touch1Y - touch0Y);
-			if (Math.abs(newDist - touchDist) > 25) {
-				wheelDelta = parseInt((touchDist - newDist) / 256, 10);
-				displayUI.pointerScroll(touchX, touchY, wheelDelta);
-				touchDist = newDist;
+			// just making sure there are two touches
+			if (event.touches.length === 2) {
+				// use the data as pinch movement
+				rect    = event.target.getBoundingClientRect();
+				touch0X = event.touches[0].clientX - rect.left;
+				touch0Y = event.touches[0].clientY - rect.top;
+				touch1X = event.touches[1].clientX - rect.left;
+				touch1Y = event.touches[1].clientY - rect.top;
+				touchX  = parseInt((touch0X + touch1X) / 2, 10);
+				touchY  = parseInt((touch0Y + touch1Y) / 2, 10);
+				newDist = (touch1X - touch0X) * (touch1X - touch0X) + (touch1Y - touch0Y) * (touch1Y - touch0Y);
+				if (Math.abs(newDist - touchDist) > 25) {
+					wheelDelta = parseInt((touchDist - newDist) / 256, 10);
+					displayUI.pointerScroll(touchX, touchY, wheelDelta);
+					touchDist = newDist;
+				}
 			}
 		}
 		event.preventDefault();
@@ -1703,6 +1752,14 @@ function noBackspace(event) {
 	// allow backspace in text box: target.type is defined for input elements
 	if (parseInt(event.keyCode, 10) === 8 && !event.target.type) {
 		event.preventDefault();
+	} else if (
+		event.keyCode === 13
+		&& event.target.id.indexOf("rmbContextMenuEntry") !== -1
+		&& event.target.id.indexOf("Input") !== -1
+		) {
+		event.target.parentNode["buttonEffect" + event.target.id]();
+	} else if (event.keyCode === 13 && event.target.id === "uiNoteMakerInputField") {
+		sendCsdMakeNote();
 	} else {
 		return true;
 	}
@@ -1797,6 +1854,11 @@ function hideDialog(id) {
 	openDialog = null;
 	document.getElementById('blackoverlay').style.display = "none";
 	document.getElementById(id).style.display = "none";
+	document.getElementById('uiDrawZoneEraseReference').style.left = "-100px";
+	document.getElementById('uiDrawZoneEraseReference').style.top = "-100px";
+	if (id == 'uiDrawZone') {
+		uiDrawZoneRemoveSelfAsClient();
+	}
 }
 
 /**
@@ -1837,18 +1899,6 @@ function sagePointerDisabled() {
 	hideDialog('sage2pointerDialog');
 }
 
-
-/**
- * Remove of children of a DOM element
- *
- * @method removeAllChildren
- * @param node {Element} node to be processed
- */
-function removeAllChildren(node) {
-	while (node.lastChild) {
-		node.removeChild(node.lastChild);
-	}
-}
 
 /**
  * Pad a number to string
@@ -1896,4 +1946,640 @@ function reloadIfServerRunning(callback) {
 		}
 	};
 	xhr.send();
+}
+
+/**
+ * Called by default after setting up the rest of the page.
+ * Will set the values of the right mouse button(rmb) context menu div.
+ */
+function setupRmbContextMenuDiv() {
+	var workingDiv = document.getElementById('rmbContextMenu');
+	workingDiv.style.position = "absolute";
+	workingDiv.style.visibility = "hidden";
+	workingDiv.style.border = "1px solid black";
+	workingDiv.style.background = "white";
+	workingDiv.style.zIndex = 9999; // location matters. This is 1 lay below dialog but above the UI canvas.
+	// override rmb contextmenu calls.
+	document.addEventListener('contextmenu', function(e) {
+		// if a right click is made on canvas
+		if (event.target.id === "sage2UICanvas") {
+			// get the location with respect to the display positioning.
+			var rect = event.target.getBoundingClientRect();
+			var pointerX = event.clientX - rect.left;
+			var pointerY = event.clientY - rect.top;
+			pointerX = pointerX / displayUI.scale;
+			pointerY = pointerY / displayUI.scale;
+			var data = {};
+			data.x = pointerX;
+			data.y = pointerY;
+			// ask for the context menu for the topmost app at that spot.
+			wsio.emit('utdRequestRmbContextMenu', data);
+			showRmbContextMenuDiv(e.clientX, e.clientY);
+			// start with blank set of entries, it will be updated later
+			clearContextMenu();
+		}
+		// prevent the standard context menu
+		e.preventDefault();
+	}, false);
+}
+
+/**
+ * Makes the context menu visible and sets to given location.
+ */
+function showRmbContextMenuDiv(x, y) {
+	var workingDiv = document.getElementById('rmbContextMenu');
+	workingDiv.style.visibility = "visible";
+	workingDiv.style.left		= x + "px";
+	workingDiv.style.top		= y + "px";
+}
+
+/**
+ * Hides the menu, but the entries are still there.
+ */
+function hideRmbContextMenuDiv() {
+	var workingDiv = document.getElementById('rmbContextMenu');
+	workingDiv.style.visibility = "hidden";
+}
+
+/*
+ * Clear the context menu
+ */
+function clearContextMenu() {
+	removeAllChildren('rmbContextMenu');
+}
+
+/**
+ * Will populate the context menu.
+ * 		Called on initial right click with empty array for entriesToAdd
+ *  	Called again when dtuRmbContextMenuContents packet is received.
+ *  	The call is given data.entries, data.app
+ *
+ * entriesToAdd is an array of objects
+ * 		obj.func 			starts with this
+ * 		obj.buttonEffect 	will be added if .func exists
+ *
+ */
+function setRmbContextMenuEntries(entriesToAdd, app) {
+	// full removal of current contents
+	removeAllChildren('rmbContextMenu');
+	// for each entry
+	var i;
+	for (i = 0; i < entriesToAdd.length; i++) {
+		// if func is defined add buttonEffect
+		if (entriesToAdd[i].callback !== undefined && entriesToAdd[i].callback !== null) {
+			entriesToAdd[i].buttonEffect = function() {
+				if (this.callback === "SAGE2_download") {
+					// special case: want to download the file
+					var url = this.parameters.url;
+					console.log('trying to download', url);
+					if (url) {
+						// Download the file
+						var link = document.createElement('a');
+						link.href = url;
+						if (link.download !== undefined) {
+							// Set HTML5 download attribute. This will prevent file from opening if supported.
+							var fileName = url.substring(url.lastIndexOf('/') + 1, url.length);
+							link.download = fileName;
+						}
+						// Dispatching click event
+						if (document.createEvent) {
+							var me = document.createEvent('MouseEvents');
+							me.initEvent('click', true, true);
+							link.dispatchEvent(me);
+						}
+					}
+				} else {
+					// if an input field, need to modify the params to pass back before sending.
+					if (this.inputField === true) {
+						var inputField = document.getElementById(this.inputFieldId);
+						//dont do anything if there is nothing in the inputfield
+						if (inputField.value.length <= 0) { return; }
+						//add the field clientInput to the parameters
+						this.parameters.clientInput = inputField.value;
+					}
+					// create data to send, then emit
+					var data = {};
+					data.app = this.app;
+					data.func = this.callback;
+					data.parameters = this.parameters;
+					data.parameters.clientName = document.getElementById('sage2PointerLabel').value;
+					wsio.emit('utdCallFunctionOnApp', data);
+				}
+				// hide after use
+				hideRmbContextMenuDiv();
+			};
+		} // end if the button should send something
+	} // end adding a send function to each menu entry
+	// always add the Close Menu entry.
+	var closeEntry = {};
+	closeEntry.description = "Close Menu";
+	closeEntry.buttonEffect = function () {
+		hideRmbContextMenuDiv();
+	};
+	entriesToAdd.push(closeEntry);
+	// for each entry to add, create the div, app the properties, and effects
+	var workingDiv;
+	for (i = 0; i < entriesToAdd.length; i++) {
+		workingDiv = document.createElement('div');
+		workingDiv.id = 'rmbContextMenuEntry' + i; // unique entry id
+		workingDiv.style.background = "#FFF8E1"; // start as off-white color
+		workingDiv.innerHTML = "&nbsp&nbsp&nbsp" + entriesToAdd[i].description + "&nbsp&nbsp&nbsp";
+		// add input field if app says to.
+		workingDiv.inputField = false;
+		if (entriesToAdd[i].inputField === true) {
+			workingDiv.inputField = true;
+			var inputField = document.createElement('input');
+			inputField.id = workingDiv.id + "Input"; // unique input field
+			inputField.value = "";
+			if (entriesToAdd[i].inputFieldSize) { // if specified state input field size
+				inputField.size = entriesToAdd[i].inputFieldSize;
+			} else { inputField.size = 5; }
+			// add the button effect to the input field to allow enter to send
+			workingDiv["buttonEffect" + inputField.id] =  entriesToAdd[i].buttonEffect;
+			workingDiv.appendChild(inputField);
+			workingDiv.innerHTML += "&nbsp&nbsp&nbsp";
+			workingDiv.inputFieldId = inputField.id;
+			// create OK button to send
+			var rmbcmeIob = document.createElement('span');
+			rmbcmeIob.innerHTML = "&nbspOK&nbsp";
+			rmbcmeIob.style.border = "1px solid black";
+			rmbcmeIob.inputField = true;
+			rmbcmeIob.inputFieldId = inputField.id;
+			// click effect
+			rmbcmeIob.callback = entriesToAdd[i].callback;
+			rmbcmeIob.parameters = entriesToAdd[i].parameters;
+			rmbcmeIob.app = app;
+			rmbcmeIob.addEventListener('mousedown', entriesToAdd[i].buttonEffect);
+			// highlighting effect on mouseover
+			rmbcmeIob.addEventListener('mouseover', function() {
+				this.style.background = "lightgray";
+			});
+			rmbcmeIob.addEventListener('mouseout', function() {
+				this.style.background = "#FFF8E1";
+			});
+			workingDiv.appendChild(rmbcmeIob);
+			// workingDiv.innerHTML += "&nbsp&nbsp&nbsp";
+			var rmbcmeSpace = document.createElement('span');
+			rmbcmeSpace.innerHTML = "&nbsp&nbsp&nbsp";
+			workingDiv.appendChild(rmbcmeSpace);
+		}
+		// if no input field attach button effect to entire div instead of just OK button.
+		else {
+			workingDiv.addEventListener('mousedown', entriesToAdd[i].buttonEffect);
+			// highlighting effect on mouseover
+			workingDiv.addEventListener('mouseover', function() {
+				this.style.background = "lightgray";
+			});
+			workingDiv.addEventListener('mouseout', function() {
+				this.style.background = "#FFF8E1";
+			});
+		}
+		// click effect
+		workingDiv.callback = entriesToAdd[i].callback;
+		workingDiv.parameters = entriesToAdd[i].parameters;
+		workingDiv.app = app;
+		// if it is the last entry to add, put a hr tag after it to separate the close menu button
+		var rmbDiv = document.getElementById('rmbContextMenu');
+		if (i === entriesToAdd.length - 1) {
+			rmbDiv.appendChild(document.createElement('hr'));
+		}
+		rmbDiv.appendChild(workingDiv);
+	} // end for each entry
+} // end setRmbContextMenuEntries
+
+/**
+Called automatically as part of page setup.
+Fills out some of the field properties.
+*/
+function setupUiNoteMaker() {
+	var workingDiv = document.getElementById('uiNoteMaker');
+	workingDiv.style.border = "1px solid black";
+	var inputField = document.getElementById('uiNoteMakerInputField');
+	inputField.id = "uiNoteMakerInputField";
+	inputField.rows = 5;
+	inputField.cols = 20;
+	inputField.style.resize = 'none';
+	inputField.style.fontSize = '20px';
+	var sendButton = document.getElementById('uiNoteMakerSendButton');
+	// click effect to make a note on the display (app launch)
+	sendButton.addEventListener('click', function() {
+		sendCsdMakeNote();
+	});
+	// Add Color fields.
+	for (var i = 1; i <= 6; i++) {
+		workingDiv = document.getElementById("uinmColorPick" + i);
+		workingDiv.style.width = "65px";
+		workingDiv.style.height = "45px";
+		workingDiv.style.border = "1px solid black";
+		workingDiv.colorNumber = i;
+		workingDiv.colorWasPicked = false;
+		workingDiv.addEventListener("click", function () {
+			setUiNoteColorSelect(this.colorNumber);
+		});
+		if (i === 1) { workingDiv.style.background = "lightyellow"; }
+		if (i === 2) { workingDiv.style.background = "lightblue"; }
+		if (i === 3) { workingDiv.style.background = "lightpink"; }
+		if (i === 4) { workingDiv.style.background = "lightgreen"; }
+		if (i === 5) { workingDiv.style.background = "lightsalmon"; }
+		if (i === 6) { workingDiv.style.background = "white"; }
+	}
+	setUiNoteColorSelect(1);
+}
+
+function setUiNoteColorSelect(colorNumber) {
+	var workingDiv;
+	// Adjust border size width
+	for (var i = 1; i <= 6; i++) {
+		workingDiv = document.getElementById("uinmColorPick" + i);
+		workingDiv.style.border = "1px solid black";
+		workingDiv.colorWasPicked = false;
+		workingDiv.style.width = "65px";
+		workingDiv.style.height = "45px";
+	}
+	workingDiv = document.getElementById("uinmColorPick" + colorNumber);
+	workingDiv.style.border = "3px solid black";
+	workingDiv.colorWasPicked = true;
+	workingDiv.style.width = "59px";
+	workingDiv.style.height = "39px";
+}
+
+/**
+This function is activated in 2 ways.
+	User click the send button.
+	User hits enter when making a note. This check is done in the noBackspace funciton.
+When activated will make the packet to launch app
+	the params is a size 1 array containing the pointer name.
+*/
+function sendCsdMakeNote() {
+	var workingDiv = document.getElementById('uiNoteMakerInputField');
+	var data = {};
+	data.type		= "launchAppWithValues";
+	data.appName	= "quickNote";
+	data.func		= "setMessage";
+	data.params		= {};
+	data.params.clientName = document.getElementById('sage2PointerLabel').value;
+	data.params.clientInput = workingDiv.value;
+	workingDiv.value = ""; // clear out the input field.
+	if (document.getElementById("uiNoteMakerCheckAnonymous").checked) { data.params.clientName = "Anonymous"; }
+	data.params.colorChoice = "lightyellow";
+	for (var i = 1; i <= 6; i++) {
+		if (document.getElementById("uinmColorPick" + i).colorWasPicked) {
+			data.params.colorChoice = document.getElementById("uinmColorPick" + i).style.background;
+		}
+	}
+	wsio.emit('csdMessage', data);
+}
+
+/**
+Called automatically as part of the page setup.
+Mostly fills out functionality and additional properties needed to operate.
+*/
+function setupUiDrawCanvas() {
+	var uidzCanvas = document.getElementById('uiDrawZoneCanvas');
+	// tracking variables when performing draw commands.
+	uidzCanvas.pmx		= 0;
+	uidzCanvas.pmy		= 0;
+	uidzCanvas.doDraw	= false;
+	uidzCanvas.imageToDraw = new Image();
+	uidzCanvas.getContext('2d').fillStyle = "#FFFFFF"; //whitewash the canvas.
+	uidzCanvas.getContext('2d').fillRect(0, 0, uidzCanvas.width, uidzCanvas.height);
+	uidzCanvas.getContext('2d').fillStyle = "#000000";
+	uidzCanvas.addEventListener('mousedown',
+		function(event) {
+			this.doDraw	= true;
+			this.pmx	= event.offsetX;
+			this.pmy	= event.offsetY;
+		}
+	);
+	// event handlers to create the lines
+	uidzCanvas.ongoingTouches = new Array();
+	uidzCanvas.addEventListener('touchstart', uiDrawTouchStart);
+	uidzCanvas.addEventListener('touchmove', uiDrawTouchMove);
+	uidzCanvas.addEventListener('touchend', uiDrawTouchEnd);
+	uidzCanvas.addEventListener('mouseup', function(event) { this.doDraw = false; });
+	uidzCanvas.addEventListener('mousemove',
+		function(event) {
+			if (this.doDraw) {
+				// xDest, yDest, xPrev, yPrev
+				uiDrawSendLineCommand(event.offsetX, event.offsetY, this.pmx, this.pmy);
+				this.pmx = event.offsetX;
+				this.pmy = event.offsetY;
+			}
+			var workingDiv = document.getElementById('uiDrawZoneEraseReference');
+			workingDiv.style.left = (event.pageX - parseInt(workingDiv.style.width) / 2) + "px";
+			workingDiv.style.top = (event.pageY - parseInt(workingDiv.style.height) / 2) + "px";
+		}
+	);
+	// closes the draw area (but really hides it)
+	var closeButton = document.getElementById("uiDrawZoneCloseButton");
+	closeButton.addEventListener('click',
+		function() {
+			hideDialog('uiDrawZone');
+		}
+	);
+	// initiate a launch app for quick additions of doodles.
+	var newButton = document.getElementById("uiDrawZoneNewButton");
+	newButton.addEventListener('click',
+		function() {
+			uiDrawZoneRemoveSelfAsClient();
+			var data = {};
+			data.type		= "launchAppWithValues";
+			data.appName	= "doodle";
+			data.func		= "addClientIdAsEditor";
+			data.params		= {
+				clientId: interactor.uniqueID,
+				clientName: document.getElementById('sage2PointerLabel').value
+			};
+			wsio.emit('csdMessage', data);
+		}
+	);
+	// get the line adjustment working for the thickness buttons.
+	var thicknessSelectBox = document.getElementById('uidztp1');
+	thicknessSelectBox.addEventListener('mousedown',
+		function() {
+			var workingDiv = document.getElementById('uiDrawZoneCanvas');
+			workingDiv.lineWidth = 1;
+			uiDrawSelectThickness('uidztp1');
+		});
+	// start the with 1px selected
+	uidzCanvas.lineWidth = 1;
+	thicknessSelectBox.style.border = "3px solid red";
+	// have to hard code each selection due to linewidth adjustment
+	// 2
+	thicknessSelectBox = document.getElementById('uidztp2');
+	thicknessSelectBox.addEventListener('mousedown',
+		function() {
+			var workingDiv = document.getElementById('uiDrawZoneCanvas');
+			workingDiv.lineWidth = 2;
+			uiDrawSelectThickness('uidztp2');
+		});
+	// next
+	thicknessSelectBox = document.getElementById('uidztp3');
+	thicknessSelectBox.addEventListener('mousedown',
+		function() {
+			var workingDiv = document.getElementById('uiDrawZoneCanvas');
+			workingDiv.lineWidth = 4;
+			uiDrawSelectThickness('uidztp3');
+		});
+	// next
+	thicknessSelectBox = document.getElementById('uidztp4');
+	thicknessSelectBox.addEventListener('mousedown',
+		function() {
+			var workingDiv = document.getElementById('uiDrawZoneCanvas');
+			workingDiv.lineWidth = 8;
+			uiDrawSelectThickness('uidztp4');
+		});
+	// next
+	thicknessSelectBox = document.getElementById('uidztp5');
+	thicknessSelectBox.addEventListener('mousedown',
+		function() {
+			var workingDiv = document.getElementById('uiDrawZoneCanvas');
+			workingDiv.lineWidth = 16;
+			uiDrawSelectThickness('uidztp5');
+		});
+	// next
+	thicknessSelectBox = document.getElementById('uidztp6');
+	thicknessSelectBox.addEventListener('mousedown',
+		function() {
+			var workingDiv = document.getElementById('uiDrawZoneCanvas');
+			workingDiv.lineWidth = 32;
+			uiDrawSelectThickness('uidztp6');
+		});
+	// next
+	thicknessSelectBox = document.getElementById('uidztp7');
+	thicknessSelectBox.addEventListener('mousedown',
+		function() {
+			var workingDiv = document.getElementById('uiDrawZoneCanvas');
+			workingDiv.lineWidth = 64;
+			uiDrawSelectThickness('uidztp7');
+		});
+}
+
+/**
+Currently just whitewashes the draw canvas.
+Trying to figure out how this could be transparent.
+	But without knowing what is behind, seems pointless.
+*/
+function uiDrawCanvasBackgroundFlush(color) {
+	var workingDiv	= document.getElementById('uiDrawZoneCanvas');
+	var ctx			= workingDiv.getContext('2d');
+	if (color !== 'transparent') {
+		ctx.fillStyle = "#FFFFFF";
+		ctx.fillRect(0, 0, workingDiv.width, workingDiv.height);
+		ctx.fillStyle = "#000000";
+	}
+}
+
+/**
+Activated by clickong on a uidzBarBox div (line thickness selection).
+Since the values double, need to know which option was selected, adjust the border (visual indicator)
+	then finally double the thickness to get the correct value.
+*/
+function uiDrawSelectThickness(selectedDivId) {
+	var workingDiv;
+	var thickness = 1;
+	for (var i = 1; i <= 7; i++) {
+		if ('uidztp' + i == selectedDivId) {
+			workingDiv = document.getElementById(selectedDivId);
+			workingDiv.style.border = "3px solid red";
+			// change the reference draw circle
+			workingDiv = document.getElementById('uiDrawZoneEraseReference');
+			workingDiv.style.width = thickness + "px";
+			workingDiv.style.height = thickness + "px";
+		} else {
+			workingDiv = document.getElementById('uidztp' + i);
+			workingDiv.style.border = "1px solid black";
+		}
+		thickness *= 2;
+	}
+}
+
+/**
+Enables drawing with touch devices.
+Start will record the initial points, it isn't until move where a canvas change occurs.
+*/
+function uiDrawTouchStart(event) {
+	var workingDiv = document.getElementById('uiDrawZoneCanvas');
+	var touches = event.changedTouches;
+	for (var i = 0; i < touches.length; i++) {
+		workingDiv.ongoingTouches.push(uiDrawMakeTouchData(touches[i]));
+	}
+}
+
+/**
+Support for touch devices.
+This is when the new line is added.
+*/
+function uiDrawTouchMove(event) {
+	var workingDiv = document.getElementById('uiDrawZoneCanvas');
+	var touches = event.changedTouches;
+	var touchId;
+	var cbb = workingDiv.getBoundingClientRect(); //canvas bounding box: cbb
+	for (var i = 0; i < touches.length; i++) {
+		touchId = uiDrawGetTouchId(touches[i].identifier);
+		//only if it is a known touch continuation
+		if (touchId !== -1) {
+			//xDest, yDest, xPrev, yPrev
+			uiDrawSendLineCommand(
+				touches[i].pageX - cbb.left,
+				touches[i].pageY - cbb.top,
+				workingDiv.ongoingTouches[touchId].x - cbb.left,
+				workingDiv.ongoingTouches[touchId].y - cbb.top
+			);
+			workingDiv.ongoingTouches[touchId].x = touches[i].pageX;
+			workingDiv.ongoingTouches[touchId].y = touches[i].pageY;
+		}
+	}
+	workingDiv = document.getElementById('uiDrawZoneEraseReference');
+	workingDiv.style.left = (touches[0].pageX - parseInt(workingDiv.style.width) / 2) + "px";
+	workingDiv.style.top = (touches[0].pageY - parseInt(workingDiv.style.height) / 2) + "px";
+}
+
+/**
+Support for touch devices.
+When touch ends, need to clear out the tracking values to prevent weird auto connections.
+*/
+function uiDrawTouchEnd(event) {
+	var workingDiv = document.getElementById('uiDrawZoneCanvas');
+	var touches = event.changedTouches;
+	var touchId;
+	for (var i = 0; i < touches.length; i++) {
+		touchId = uiDrawGetTouchId(touches[i].identifier);
+		if (touchId !== -1) {
+			workingDiv.ongoingTouches.splice(touchId, 1);
+		}
+	}
+	workingDiv = document.getElementById('uiDrawZoneEraseReference');
+	workingDiv.style.left = "-100px";
+	workingDiv.style.top = "-100px";
+}
+
+/**
+Makes the data used to track touches.
+*/
+function uiDrawMakeTouchData(touch) {
+	var nt = {};
+	nt.id	= touch.identifier;
+	nt.x	= touch.pageX;
+	nt.y	= touch.pageY;
+	return nt;
+}
+
+/**
+Given a touch identifier(id) will return the index of the touch tracking object.
+*/
+function uiDrawGetTouchId(id) {
+	var workingDiv  = document.getElementById('uiDrawZoneCanvas');
+	for (var i = 0; i < workingDiv.ongoingTouches.length; i++) {
+		if (workingDiv.ongoingTouches[i].id === id) {
+			return i;
+		}
+	}
+	return -1;
+}
+
+/**
+When a user tries to draw on the doodle canavs, the events are converted to locations of where to place
+	the line data. Previous location to current location.
+
+The client doesn't actually cause their canvas to update. The app sends a confirmation back which
+	causes the canvas to update.
+*/
+function uiDrawSendLineCommand(xDest, yDest, xPrev, yPrev) {
+	var workingDiv	= document.getElementById('uiDrawZoneCanvas');
+	var lineWidth	= parseInt(workingDiv.lineWidth);
+	var fillStyle	= document.getElementById('uiDrawColorPicker').value;
+	var strokeStyle	= document.getElementById('uiDrawColorPicker').value;
+	var dataForApp = {};
+	dataForApp.app			= workingDiv.appId;
+	dataForApp.func			= "drawLine";
+	dataForApp.data			= [xDest, yDest,
+								xPrev, yPrev,
+								lineWidth,
+								fillStyle, strokeStyle,
+								workingDiv.clientDest];
+	dataForApp.type			= "sendDataToClient";
+	dataForApp.clientDest	= "allDisplays";
+	wsio.emit("csdMessage", dataForApp);
+}
+
+/**
+This function actually causes the line to appear on the canvas.
+Data packet sent by the doodle master app itself.
+
+This funciton activated by receiving that corresponding packet.
+
+Will need to be cleaned up later.
+data.params will match the doodle.js drawLined lineData parameter.
+	Currently lineData
+	0: 	xDest
+	1	yDest
+	2	xPrev
+	3	yPrev
+
+	4 	lineWidth
+	5 	fillStyle
+	6 	strokeStyle
+
+	7: 	uiClient
+*/
+function uiDrawMakeLine(data) {
+	// mostly original code
+	var workingDiv	= document.getElementById('uiDrawZoneCanvas');
+	var ctx			= workingDiv.getContext('2d');
+	var lineWidth	= data.params[4];
+	ctx.fillStyle	= data.params[5];
+	ctx.strokeStyle	= data.params[6];
+	// if the line width is greater than 1. At 1 the fill + circle border will expand beyond the line causing bumps in the line.
+	if (lineWidth > 2) {
+		ctx.lineWidth = 1;
+		ctx.beginPath();
+		ctx.arc(data.params[2], data.params[3], lineWidth / 2, 0, Math.PI * 2, false);
+		ctx.fill();
+	}
+	ctx.beginPath();
+	ctx.lineWidth = lineWidth;
+	ctx.moveTo(data.params[2], data.params[3]);
+	ctx.lineTo(data.params[0], data.params[1]);
+	ctx.stroke();
+}
+
+
+/**
+This will be called from a wsio packet "csdSendDataToClient" with type "doodleAppCurrentState".
+Must clear out canvas, set state, show dialog.
+
+Generally this happens when a user chooses to edit an existing doodle. Their canvas needs to be set
+	to the current state of the doodle before edits should be made.
+*/
+function uiDrawSetCurrentStateAndShow(data) {
+	// clear out canvas
+	uiDrawCanvasBackgroundFlush("white");
+	// set the state
+	var workingDiv	= document.getElementById('uiDrawZoneCanvas');
+	var ctx			= workingDiv.getContext('2d');
+	workingDiv.imageToDraw.src = data.canvasImage;
+	ctx.drawImage(workingDiv.imageToDraw, 0, 0);
+	// set variables to correctly send updates and allow removal as editor.
+	workingDiv.clientDest = data.clientDest;
+	workingDiv.appId = data.appId;
+	// show dialog
+	showDialog('uiDrawZone');
+}
+
+/**
+Called when the user creates a new doodle, or closes the doodle dialog.
+This is necessary because the doodle canvas space is a shared draw space,
+	if they do not remove themselves, then the app will continue to send updates
+	even if they are not currently editing the app.
+*/
+function uiDrawZoneRemoveSelfAsClient() {
+	var workingDiv			= document.getElementById('uiDrawZoneCanvas');
+	var dataForApp			= {};
+	dataForApp.app			= workingDiv.appId;
+	dataForApp.func			= "removeClientIdAsEditor";
+	dataForApp.data			= [workingDiv.clientDest];
+	dataForApp.type			= "sendDataToClient";
+	dataForApp.clientDest	= "allDisplays";
+	wsio.emit("csdMessage", dataForApp);
 }

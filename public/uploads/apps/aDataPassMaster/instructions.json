@@ -1,0 +1,17 @@
+{
+	"main_script": "aDataPassMaster.js",
+        "icon": "aDataPassMaster.png",
+	"width": 600,
+	"height": 900,
+	"animation": true,
+	"sticky": true,
+	"dependencies": [
+		"scripts/sageMouseEventPass.js"
+	],
+	"title": "aaDataPassMaster",
+	"version": "1.0.0",
+	"description": "aaDataPassMaster",
+	"keywords": [ "data" ],
+	"author": "Dylan Kobayashi <dylank@hawaii.edu>",
+	"license": "SAGE2-Software-License"
+}
