@@ -159,7 +159,6 @@ var SAGE2_App = Class.extend({
 
 		this.parentApp = data.parentApp; 
 		this.childList = data.childList;
-		console.log("init parent app " + this.parentApp);
 	},
 
 	SAGE2Load: function(state, date) {

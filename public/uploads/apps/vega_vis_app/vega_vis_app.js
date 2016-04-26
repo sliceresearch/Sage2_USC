@@ -78,17 +78,22 @@ var vega_vis_app = SAGE2_App.extend( {
 	},
 
 	resize: function(date) {
-		updated = false;
-		if( this.element.clientWidth > 400 ){
-  			this.view.width(this.element.clientWidth-60);
-  			updated = true;
-  		}
-  		if( this.element.clientWidth > 400 ){
-  			this.view.height(this.element.clientHeight-60);
-  			updated = true;	
-  		}
-  		if( updated )
-  			this.view.renderer('svg').update();
+		// updated = false;
+		// if( this.element.clientWidth > 400 ){
+  // 			this.view.width(this.element.clientWidth-60);
+  // 			updated = true;
+  // 		}
+  // 		if( this.element.clientWidth > 400 ){
+  // 			this.view.height(this.element.clientHeight-60);
+  // 			updated = true;	
+  // 		}
+  // 		if( updated )
+  // 			this.view.renderer('svg').update();
+
+  		this.svg.attr('width',  this.element.clientWidth);
+		this.svg.attr('height', this.element.clientHeight);
+		this.view.renderer('svg').update();
+		this.refresh(date);
 	},
 
 
@@ -171,8 +176,12 @@ var vega_vis_app = SAGE2_App.extend( {
 	vegaCallbackLine: function(error, chart) { 
 		// chart( {el:"vis"} ).update(); 
 		this.view = chart({el:'vis'+this.id});
+
+		this.box = [this.element.width, this.element.height];
+		var box = "0,0," + this.box[0] + "," + this.box[1];
+		d3.select("svg").attr("viewBox", box);
 		this.view.update();
-  		
+  	
 
 		//set width and height appropriately
 		paddingWidth = this.lineSpec.padding.left + this.lineSpec.padding.right;
@@ -180,7 +189,6 @@ var vega_vis_app = SAGE2_App.extend( {
   		this.view.width(this.element.clientWidth-paddingWidth).height(this.element.clientHeight-paddingHeight).renderer('svg').update();
 
 		this.view.renderer('svg').update();
-
 
 	},
 

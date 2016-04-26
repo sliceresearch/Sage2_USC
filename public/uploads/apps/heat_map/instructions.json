@@ -4,6 +4,7 @@
 	"width": 800,
 	"height": 600,
 	"resize": "free",
+	"animation": true,
 	"dependencies": [
 		"scripts/modestMaps.js"
 	],
@@ -13,7 +14,8 @@
 		    {"latitude": 41.872, "longitude": -87.624, "value": 82},
 		    {"latitude": 41.873, "longitude": -87.625, "value": 82}
 		  ],
-		"maxValue": 100
+		"maxValue": 100,
+		"title": "visualization response"
 	},
 	"title": "heat_map",
 	"version": "1.0.0",

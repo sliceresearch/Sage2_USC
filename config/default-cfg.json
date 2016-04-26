@@ -3,7 +3,7 @@
 */
 {
 	name: "mysite",
-	host: "localhost",
+	host: "aurisano-macbook.evl.uic.edu",/*"localhost",*/
 	port: 9292,
 	index_port: 9090,
 	background: {

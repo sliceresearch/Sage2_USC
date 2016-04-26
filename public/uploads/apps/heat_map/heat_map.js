@@ -9,8 +9,6 @@ var heat_map = SAGE2_App.extend( {
 	init: function(data) {
 		// Create div into the DOM
 		this.SAGE2Init("div", data);
-		//this.SAGE2Init("canvas", data);
-		//this.canvas = null;
 
 		// Set the background to black
 		this.element.style.backgroundColor = 'black';
@@ -35,18 +33,12 @@ var heat_map = SAGE2_App.extend( {
 		this.scrollAmount = null;
 
 		// application specific 'init'	
-		this.element.id = "div" + data.id + "map";
+		this.element.id = "div" + data.id;
 		this.lastZoom     = data.date;
 		this.dragging     = false;
 		this.position     = {x:0, y:0};
 		this.scrollAmount = 0;
 
-// 		var bingBase = "http://ecn.t0.tiles.virtualearth.net/tiles/r{Q}?";
-// var bing = new MM.Template(bingBase + "g=689&mkt=en-us&lbl=l1&stl=h");
-
-		// var template   = 'http://{S}tile.openstreetmap.org/{Z}/{X}/{Y}.png';
-		// var subdomains = ['', 'a.', 'b.', 'c.'];
-		// var provider   = new MM.TemplatedLayer(template, subdomains);
 
 		var toner = new MM.TemplatedLayer("http://tile.stamen.com/toner/{Z}/{X}/{Y}.png");
 		var bing = new MM.TemplatedLayer("http://ecn.t0.tiles.virtualearth.net/tiles/r{Q}?" +
@@ -59,17 +51,16 @@ var heat_map = SAGE2_App.extend( {
 		this.map.setCenterZoom(chicago, 14);
 		this.log("Modest map at " + JSON.stringify(chicago));
 
-		this.layer = this.createLayer("black");
-		this.canvas = document.createElement('canvas');
-		this.canvas.width = this.element.clientWidth;
-		this.canvas.height = this.element.clientHeight; 
-		//this.element.appendChild(this.canvas);
-		this.layer.appendChild(this.canvas);
-		this.element.appendChild(this.layer);
-		this.layer.style.zIndex = 101;
+		this.canvasDiv = document.createElement('div');
 
-		//this.map.parent.appendChild(this.canvas);
-		this.ctx = this.canvas.getContext('2d');
+		// Create the extra canvas
+		this.mycanvas = document.createElement("canvas");
+		this.mycanvas.width  = data.width;
+		this.mycanvas.height = data.height;
+		this.mycanvas.style.position = "absolute";
+		this.mycanvas.id = data.id + "_canvas";
+		this.element.appendChild(this.mycanvas);
+		this.ctx = this.mycanvas.getContext('2d');
 
 		console.log(this.map);
 
@@ -96,15 +87,11 @@ var heat_map = SAGE2_App.extend( {
 	},
 
 	draw: function(date) {
-		//console.log('heat_map Draw with state value', this.state.value);
+		
+		this.ctx.clearRect(0, 0, this.mycanvas.width, this.mycanvas.height);
 
-		// I'm drawing things to make it evident that this is the parent app
-		this.ctx.clearRect(0, 0, this.element.width, this.element.height);
-		// this.ctx.fillStyle = "#FF0000";
-		// this.ctx.fillRect(0, 0, 400, 400);//this.element.width, this.element.height);
 
 		for(i = 0; i < this.state.data.length; i++){
-			//console.log(this.state.data[i]);
 
 			mmLoc = new com.modestmaps.Location(this.state.data[i].latitude, this.state.data[i].longitude);
 			p = this.map.locationPoint( mmLoc );
@@ -113,32 +100,22 @@ var heat_map = SAGE2_App.extend( {
 			p2 = this.map.locationPoint( mmLoc2 );
 			xDim = p2.x - p.x;
 			yDim = p.y - p2.y;
-			//console.log( xDim + " " + yDim);
 
  			idx = Math.round( this.state.data[i].value / this.colors.length );
 			this.ctx.fillStyle = "rgba(" + this.colors[idx] + ", .5)";
 			this.ctx.fillRect(p.x, p.y, xDim, yDim);
-			// this.ctx.stroke();
-			// this.ctx.fill();
-			//console.log(p.x + " " + p.y );
-			// radius = inc.radius;
-			// ctx.globalAlpha= inc.alpha; 
-			
-			// ctx.lineWidth = 1;
-			// ctx.strokeStyle = '#000000';
-			
-			// ctx.fillStyle = inc.fillColor;
-			// ctx.beginPath();
-			// ctx.arc(p.x, p.y, radius, 0, 2 * Math.PI, false);
-			// ctx.fill();
-			// ctx.stroke();
 		}
+
+		this.ctx.fillStyle = "rgba(255, 255, 255, 1.0)";
+		this.ctx.fillRect(0, 0, this.element.width, this.element.height);
+
 	},
 
 	resize: function(date) {
+		this.mycanvas.width = this.element.clientWidth;
+		this.mycanvas.height = this.element.clientHeight; 
 		this.refresh(date);
-		this.canvas.width = this.element.clientWidth;
-		this.canvas.height = this.element.clientHeight; 
+
 	},
 	move: function(date) {
 		this.refresh(date);
