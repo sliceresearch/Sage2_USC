@@ -53,9 +53,15 @@ define(["three", "lib/knockout"], function (THREE, ko) {
 			* @param {Object} object
 			*/
 			Remove: function (object) {
+				debugger;
 				object.parent.remove(object);
-				_self.Objects().splice(_self.Objects().indexOf(object), 1);
-				_self.Objects.notifySubscribers(_self.Objects());
+
+				var topLevelObjIdx = _self.Objects().indexOf(object);
+				if (topLevelObjIdx > -1) {
+					// top level object, we need to remove it from our list
+					_self.Objects().splice(topLevelObjIdx, 1);
+					_self.Objects.notifySubscribers(_self.Objects());
+				}
 			},
 
 			/**
