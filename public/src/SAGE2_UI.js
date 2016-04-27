@@ -90,6 +90,7 @@ var pointerX, pointerY;
 
 var sage2Version;
 
+var note;
 
 /**
  * Reload the page if a application cache update is available
@@ -121,6 +122,9 @@ window.addEventListener('beforeunload', function(event) {
 window.addEventListener('unload', function(event) {
 	if (interactor && interactor.broadcasting) {
 		interactor.streamEnded();
+		if (note) {
+			note.close();
+		}
 	}
 });
 
@@ -139,6 +143,109 @@ window.addEventListener('load', function(event) {
 window.addEventListener('resize', function(event) {
 	SAGE2_resize();
 });
+
+
+
+// Get Browser-Specifc Prefix
+function getBrowserPrefix() {
+	// Check for the unprefixed property.
+	if ('hidden' in document) {
+		return null;
+	}
+	// All the possible prefixes.
+	var browserPrefixes = ['moz', 'ms', 'o', 'webkit'];
+
+	for (var i = 0; i < browserPrefixes.length; i++) {
+		var prefix = browserPrefixes[i] + 'Hidden';
+		if (prefix in document) {
+			return browserPrefixes[i];
+		}
+	}
+	// The API is not supported in browser.
+	return null;
+}
+
+// Get Browser Specific Hidden Property
+function hiddenProperty(prefix) {
+	if (prefix) {
+		return prefix + 'Hidden';
+	}
+	return 'hidden';
+}
+
+// Get Browser Specific Visibility State
+function visibilityState(prefix) {
+	if (prefix) {
+		return prefix + 'VisibilityState';
+	}
+	return 'visibilityState';
+}
+
+// Get Browser Specific Event
+function visibilityEvent(prefix) {
+	if (prefix) {
+		return prefix + 'visibilitychange';
+	}
+	return 'visibilitychange';
+}
+
+function notifyMe(message) {
+	// Let's check if the browser supports notifications
+	if (!("Notification" in window)) {
+		console.log("This browser does not support desktop notification");
+		return null;
+	} else if (Notification.permission === "granted") {
+		// Let's check whether notification permissions have already been granted
+		// If it's okay let's create a notification
+		var notification = new Notification("SAGE2 Notification", {
+			icon: "images/S2-logo.png",
+			body: message
+		});
+		return notification;
+	} else if (Notification.permission !== 'denied') {
+		// Otherwise, we need to ask the user for permission
+		Notification.requestPermission(function (permission) {
+			// If the user accepts, let's create a notification
+			if (permission === "granted") {
+				var notification = new Notification("Hi there!");
+				return notification;
+			}
+		});
+	}
+	return null;
+}
+
+/**
+ * setupFocusHandlers
+ *
+ * @method setupFocusHandlers
+ */
+function setupFocusHandlers() {
+	window.addEventListener("focus", function(evt) {
+		// console.log('got focus');
+	}, false);
+	window.addEventListener("blur", function(evt) {
+		// console.log('got blur');
+	}, false);
+
+	// Get Browser Prefix
+	var prefix   = getBrowserPrefix();
+	var hidden   = hiddenProperty(prefix);
+	// var visState = visibilityState(prefix);
+	var visEvent = visibilityEvent(prefix);
+
+	document.addEventListener(visEvent, function(event) {
+		if (document[hidden]) {
+			if (interactor && interactor.broadcasting) {
+				note = notifyMe("Keep SAGE2 UI visible during screen sharing");
+			}
+		} else {
+			if (note) {
+				note.close();
+			}
+		}
+	});
+}
 
 
 /**
@@ -175,6 +282,14 @@ function SAGE2_init() {
 	// Detect which browser is being used
 	SAGE2_browser();
 
+	// Setup focus events
+	if ("Notification" in window) {
+		Notification.requestPermission(function (permission) {
+			console.log('Request', permission);
+		});
+	}
+	setupFocusHandlers();
+
 	// Deal with the warning label in the UI if Chrome or not Chrome
 	if (!__SAGE2__.browser.isMobile) {
 		if (!__SAGE2__.browser.isChrome) {
@@ -199,6 +314,9 @@ function SAGE2_init() {
 
 		setupListeners();
 
+		// Get the cookie for the session, if there's one
+		var session = getCookie("session");
+
 		var clientDescription = {
 			clientType: "sageUI",
 			requests: {
@@ -207,7 +325,8 @@ function SAGE2_init() {
 				time: false,
 				console: false
 			},
-			browser: __SAGE2__.browser
+			browser: __SAGE2__.browser,
+			session: session
 		};
 		wsio.emit('addClient', clientDescription);
 
@@ -223,8 +342,8 @@ function SAGE2_init() {
 
 	// socket close event (i.e. server crashed)
 	wsio.on('close', function(evt) {
-		// show a popup for a long time
-		showSAGE2Message("Server offline", 2147483);
+		// show a popup
+		showSAGE2Message("Server offline");
 		// try to reload every few seconds
 		var refresh = setInterval(function() {
 			reloadIfServerRunning(function() {
@@ -234,10 +353,6 @@ function SAGE2_init() {
 	});
 
 	var sage2UI = document.getElementById('sage2UICanvas');
-
-	// window.addEventListener('dragover', preventDefault, false);
-	// window.addEventListener('dragend',  preventDefault, false);
-	// window.addEventListener('drop',     preventDefault, false);
 
 	sage2UI.addEventListener('dragover',  preventDefault, false);
 	sage2UI.addEventListener('dragenter', fileDragEnter,  false);
@@ -271,9 +386,9 @@ function SAGE2_init() {
 	touchMode = "";
 
 	type2App = {
-		images: "image_viewer",
-		videos: "movie_player",
-		pdfs: "pdf_viewer",
+		images:   "image_viewer",
+		videos:   "movie_player",
+		pdfs:     "pdf_viewer",
 		sessions: "load_session"
 	};
 
@@ -301,7 +416,10 @@ function SAGE2_init() {
 	});
 }
 
-// Show error message for 2 seconds (or time given as parameter in seconds)
+//
+// Show error message
+// if time given as parameter in seconds, close after delay
+//
 function showSAGE2Message(message, delay) {
 	var aMessage = webix.alert({
 		type:  "alert-error",
@@ -310,11 +428,13 @@ function showSAGE2Message(message, delay) {
 		width: "40%",
 		text:  "<span style='font-weight:bold;'>" + message + "</span>"
 	});
-	setTimeout(function() {
-		if (aMessage) {
-			webix.modalbox.hide(aMessage);
-		}
-	}, delay ? delay * 1000 : 2000);
+	if (delay) {
+		setTimeout(function() {
+			if (aMessage) {
+				webix.modalbox.hide(aMessage);
+			}
+		}, delay * 1000);
+	}
 }
 
 function setupListeners() {
@@ -355,7 +475,9 @@ function setupListeners() {
 	});
 
 	// Open a popup on message sent from server
-	wsio.on('errorMessage', showSAGE2Message);
+	wsio.on('errorMessage', function(data) {
+		showSAGE2Message(data);
+	});
 
 	wsio.on('setupDisplayConfiguration', function(config) {
 		displayUI = new SAGE2DisplayUI();
@@ -483,9 +605,12 @@ function setupListeners() {
 
 	wsio.on('stopMediaCapture', function() {
 		if (interactor.mediaStream !== null) {
-			// interactor.mediaStream.stop();
 			var track = interactor.mediaStream.getTracks()[0];
 			track.stop();
+			// close notification
+			if (note) {
+				note.close();
+			}
 		}
 	});
 }
@@ -1035,6 +1160,28 @@ function handleClick(element) {
 	} else if (element.id === "browser"      || element.id === "browserContainer"      || element.id === "browserLabel") {
 		showDialog('browserDialog');
 	} else if (element.id === "info"         || element.id === "infoContainer"         || element.id === "infoLabel") {
+		// Fill up some information from the server
+		var infoData = document.getElementById('infoData');
+		// Clean up the existing values
+		while (infoData.firstChild) {
+			infoData.removeChild(infoData.firstChild);
+		}
+		// Add new information
+		var info2 = document.createElement('p');
+		info2.innerHTML = "<span style='font-weight:bold;'>Host</span>: " + displayUI.config.host;
+		var info3 = document.createElement('p');
+		info3.innerHTML = "<span style='font-weight:bold;'>Resolution</span>: " + displayUI.config.totalWidth + " x " +  displayUI.config.totalHeight + " pixels";
+		info3.innerHTML += " (" + displayUI.config.layout.columns + " by " + displayUI.config.layout.rows + " tiles";
+		info3.innerHTML += "  - " + displayUI.config.resolution.width + " x " + displayUI.config.resolution.height + ")";
+		infoData.appendChild(info2);
+		infoData.appendChild(info3);
+		if (displayUI.config.version) {
+			var info5 = document.createElement('p');
+			info5.innerHTML  = "<span style='font-weight:bold;'>Version</span>: " + displayUI.config.version.base + "-" + displayUI.config.version.branch + "-"
+				+ displayUI.config.version.commit + " - " + displayUI.config.version.date;
+			infoData.appendChild(info5);
+		}
+		// Finally show the dialog
 		showDialog('infoDialog');
 	} else if (element.id === "appOpenBtn") {
 		// App Launcher Dialog
@@ -1452,18 +1599,22 @@ function touchMove(event) {
 				touchHold = null;
 			}
 		} else if (touchMode === "scale") {
-			rect    = event.target.getBoundingClientRect();
-			touch0X = event.touches[0].clientX - rect.left;
-			touch0Y = event.touches[0].clientY - rect.top;
-			touch1X = event.touches[1].clientX - rect.left;
-			touch1Y = event.touches[1].clientY - rect.top;
-			touchX  = parseInt((touch0X + touch1X) / 2, 10);
-			touchY  = parseInt((touch0Y + touch1Y) / 2, 10);
-			newDist = (touch1X - touch0X) * (touch1X - touch0X) + (touch1Y - touch0Y) * (touch1Y - touch0Y);
-			if (Math.abs(newDist - touchDist) > 25) {
-				wheelDelta = parseInt((touchDist - newDist) / 256, 10);
-				displayUI.pointerScroll(touchX, touchY, wheelDelta);
-				touchDist = newDist;
+			// just making sure there are two touches
+			if (event.touches.length === 2) {
+				// use the data as pinch movement
+				rect    = event.target.getBoundingClientRect();
+				touch0X = event.touches[0].clientX - rect.left;
+				touch0Y = event.touches[0].clientY - rect.top;
+				touch1X = event.touches[1].clientX - rect.left;
+				touch1Y = event.touches[1].clientY - rect.top;
+				touchX  = parseInt((touch0X + touch1X) / 2, 10);
+				touchY  = parseInt((touch0Y + touch1Y) / 2, 10);
+				newDist = (touch1X - touch0X) * (touch1X - touch0X) + (touch1Y - touch0Y) * (touch1Y - touch0Y);
+				if (Math.abs(newDist - touchDist) > 25) {
+					wheelDelta = parseInt((touchDist - newDist) / 256, 10);
+					displayUI.pointerScroll(touchX, touchY, wheelDelta);
+					touchDist = newDist;
+				}
 			}
 		}
 		event.preventDefault();

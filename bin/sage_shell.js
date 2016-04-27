@@ -13,8 +13,6 @@
 /**
  * Connect to a SAGE2 server
  *
- * ./sage_shell.js <url>
- *
  * @class shell
  * @module commands
  * @submodule shell
@@ -22,12 +20,13 @@
 
 "use strict";
 
-var path        = require('path');                // file path extraction and creation
-var json5       = require('json5');               // JSON5 parsing
-var readline    = require('readline');            // to build an evaluation loop
+var json5     = require('json5');           // JSON5 parsing
+var readline  = require('readline');        // to build an evaluation loop
+var commander = require('commander');       // parsing command-line arguments
 
 // custom node modules
-var websocketIO = require('websocketio');   // creates WebSocket server and clients
+var WebsocketIO = require('websocketio');   // creates WebSocket server and clients
+var md5         = require('../src/md5');    // return standard md5 hash of given param
 var connection;
 var command;
 var wssURL;
@@ -35,8 +34,16 @@ var wssURL;
 
 // create the websocket connection and start the timer
 function createRemoteConnection(wsURL) {
-	var remote = new websocketIO(wsURL, false, function() {
+	var remote = new WebsocketIO(wsURL, false, function() {
 		console.log("Client> connecting to ", wsURL);
+
+		// Grab the password passed from the command line
+		var session;
+		if (commander.hash && commander.hash !== '') {
+			session = commander.hash;
+		} else {
+			session = md5.getHash(commander.password);
+		}
 
 		var clientDescription = {
 			clientType: "shell",
@@ -45,7 +52,8 @@ function createRemoteConnection(wsURL) {
 				version: false,
 				time:    false,
 				console: true
-			}
+			},
+			session: session
 		};
 
 		remote.onclose(function() {
@@ -71,7 +79,9 @@ function createRemoteConnection(wsURL) {
 
 			// Callback for each line
 			shell.on('line', function(line) {
-				if (line==='exit'||line==='quit') process.exit(0);
+				if (line === 'exit' || line === 'quit') {
+					process.exit(0);
+				}
 				remote.emit('command', line);
 				shell.prompt();
 			}).on('close', function() {
@@ -105,37 +115,39 @@ wssURL = "wss://localhost:443";
 // First command
 command = "help";
 
+commander
+	.version("1.0.0")
+	.option('-s, --server <url>', 'URL SAGE2 server', 'localhost:9090')
+	.option('-p, --password <password>', 'Set the password to connect to SAGE2 server', '')
+	.option('-a, --hash <hash>', 'Use a MD5 hash instead of password')
+	.parse(process.argv);
+
+// Extra help with examples
+commander.on('--help', function() {
+	console.log('  Examples:');
+	console.log('');
+	console.log('    $ sage_shell.js -s localhost:9090 -p tutu');
+	console.log('    $ sage_shell.js -s wss://localhost:9090 -a bd8cd8ae21342q991');
+	console.log('');
+});
+
 if (process.argv.length === 2) {
-	console.log('');
-	console.log('Usage> sage_shell.js <url>');
-	console.log('');
-	console.log('Example>     ./sage_shell.js localhost:9090');
-	console.log('');
+	commander.help();
 	process.exit(0);
 }
 
-if (process.argv.length === 3 && ( (process.argv[2] === '-h') || (process.argv[2] === '--help') ) ) {
-	console.log('');
-	console.log('Usage> sage_shell.js <url>');
-	console.log('');
-	console.log('Example>     ./sage_shell.js localhost:9090');
-	console.log('');
-	process.exit(0);
-}
-
-// If there's an argument, use it as a url
-//     wss://hostname:portnumber
-if (process.argv.length >= 3) {
-	wssURL = process.argv[2];
-	if (wssURL.indexOf('wss://')>=0) {
+// Prepare the URL
+if (commander.server) {
+	wssURL = commander.server;
+	if (wssURL.indexOf('wss://') >= 0) {
 		// all good
-	} else if (wssURL.indexOf('ws://')>=0) {
+	} else if (wssURL.indexOf('ws://') >= 0) {
 		console.log('Client> switching to wss:// protocol');
 		wssURL = wssURL.replace('ws', 'wss');
-	} else if (wssURL.indexOf('http://')>=0) {
+	} else if (wssURL.indexOf('http://') >= 0) {
 		console.log('Client> switching to wss:// protocol');
 		wssURL = wssURL.replace('http', 'wss');
-	} else if (wssURL.indexOf('https://')>=0) {
+	} else if (wssURL.indexOf('https://') >= 0) {
 		console.log('Client> switching to wss:// protocol');
 		wssURL = wssURL.replace('https', 'wss');
 	} else {

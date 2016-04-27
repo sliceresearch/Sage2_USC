@@ -196,6 +196,9 @@ function SAGE2_init() {
 
 		setupListeners();
 
+		// Get the cookie for the session, if there's one
+		var session = getCookie("session");
+
 		var clientDescription = {
 			clientType: "display",
 			clientID: clientID,
@@ -205,10 +208,10 @@ function SAGE2_init() {
 				time: true,
 				console: false
 			},
-			isMobile: __SAGE2__.browser.isMobile
+			isMobile: __SAGE2__.browser.isMobile,
+			session: session
 		};
 		wsio.emit('addClient', clientDescription);
-		// log(JSON.stringify(__SAGE2__.browser));
 	});
 
 	// Socket close event (ie server crashed)

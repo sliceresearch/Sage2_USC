@@ -23,6 +23,16 @@
 
 var pageRedirect  = null;
 
+
+/**
+ * When the page loads, go!
+ *
+ */
+window.addEventListener('load', function(event) {
+	SAGE2_init();
+});
+
+
 /**
  * Entry point of the application
  *
@@ -84,7 +94,12 @@ function processAndRedirect(session, location, hash) {
 	if (hash == null) {
 		hash = md5(session);
 	}
-	document.cookie      = "session=" + hash;
+
+	// Adding the cookie to the HTTP header
+	// (SAGE2 runtime function)
+	addCookie('session', hash);
+
+	// redirect to the asked page
 	window.location.href = location;
 }
 

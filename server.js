@@ -35,15 +35,14 @@ var os            = require('os');               // operating system access
 var path          = require('path');             // file path management
 var readline      = require('readline');         // to build an evaluation loop
 var url           = require('url');              // parses urls
-// var util          = require('util');          // node util
 
 // npm: defined in package.json
 var formidable    = require('formidable');       // upload processor
 var gm            = require('gm');               // graphicsmagick
-var imageMagick;                                 // derived from graphicsmagick
 var json5         = require('json5');            // Relaxed JSON format
 var qrimage       = require('qr-image');         // qr-code generation
 var sprint        = require('sprint');           // pretty formating (sprintf)
+var imageMagick;                                 // derived from graphicsmagick
 
 var WebsocketIO   = require('websocketio');      // creates WebSocket server and clients
 
@@ -674,6 +673,15 @@ function closeWebSocketClient(wsio) {
 }
 
 function wsAddClient(wsio, data) {
+	// Check for password
+	if (config.passordProtected) {
+		if (!data.session || data.session !== global.__SESSION_ID) {
+			console.log(sageutils.header("WebsocketIO") + "wrong session hash - closing");
+			// if server protected and wrong hash, close the socket and byebye
+			wsio.ws.close();
+			return;
+		}
+	}
 
 	// Just making sure the data is valid JSON (one gets strings from C++)
 	if (sageutils.isTrue(data.requests.config)) {
@@ -1314,6 +1322,11 @@ function doOverlap(x_1, y_1, width_1, height_1, x_2, y_2, width_2, height_2) {
 
 function wsUpdateMediaStreamFrame(wsio, data) {
 	var key;
+	// Remote sites have a pass back issue that needs to be caught
+	if (SAGE2Items.renderSync[data.id] === undefined || SAGE2Items.renderSync[data.id] === null) {
+		return;
+	}
+
 	// Reset the 'ready' flag for every display client
 	for (key in SAGE2Items.renderSync[data.id].clients) {
 		SAGE2Items.renderSync[data.id].clients[key].readyForNextFrame = false;
@@ -2883,7 +2896,7 @@ function wsSetVolume(wsio, data) {
 	if (SAGE2Items.renderSync[data.id] === undefined || SAGE2Items.renderSync[data.id] === null) {
 		return;
 	}
-	console.log(sageutils.header("Volume") + "set " + data.id + " " + data.level);
+	// console.log(sageutils.header("Volume") + "set " + data.id + " " + data.level);
 	broadcast('setVolume',data);
 }
 
@@ -3038,9 +3051,7 @@ function wsRequestNextRemoteFrame(wsio, data) {
 	} else {
 		originId = data.id;
 	}
-	// Luc here: changing to unsecure port since websocket communication to display is unsecure
-	// var remote_id = config.host + ":" + config.secure_port + "|" + data.id;
-	var remote_id = config.host + ":" + config.port + "|" + data.id;
+	var remote_id = config.host + ":" + config.secure_port + "|" + data.id;
 
 	if (SAGE2Items.applications.list.hasOwnProperty(originId)) {
 		var stream = SAGE2Items.applications.list[originId];
@@ -4296,6 +4307,7 @@ function manageRemoteConnection(remote, site, index) {
 		clientType: "remoteServer",
 		host: config.host,
 		port: config.secure_port,
+		session: site.session,
 		// port: config.port,
 		requests: {
 			config: false,
