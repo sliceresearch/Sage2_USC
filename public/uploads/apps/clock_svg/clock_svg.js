@@ -84,6 +84,8 @@ var clock_svg = SAGE2_App.extend({
 	init: function(data) {
 		// call super-class 'init'
 		this.SAGE2Init("object", data);
+		// Specify the type to enforce CSP rules
+		this.element.type = "image/svg+xml";
 
 		// application specific 'init'
 		var _this  = this;

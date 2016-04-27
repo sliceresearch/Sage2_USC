@@ -1,12 +1,12 @@
 #!/bin/sh
 
-global_param="--new-window --window-size=1536,1350 --kiosk --disable-popup-blocking --no-first-run --use-gl --enable-accelerated-compositing --allow-file-access-from-files --disable-session-crashed-bubble --allow-running-insecure-content --disable-infobars  --ignore-certificate-errors"
+global_param="--new-window --window-size=1536,1366 --kiosk --disable-popup-blocking --no-first-run --use-gl --enable-accelerated-compositing --allow-file-access-from-files --disable-session-crashed-bubble --allow-running-insecure-content --disable-infobars  --ignore-certificate-errors"
 
 # Launch Audio Manager
 UDD=$HOME/.config/chrome-nfs/thor_an_audio
 mkdir -p $UDD/Default
 audio_param="--new-window --window-size=768,1360 --allow-file-access-from-files --user-data-dir=$UDD"
-env DISPLAY=:0.0 google-chrome $audio_param 'https://localhost:8292/audioManager.html' &
+env DISPLAY=:0.0 google-chrome $audio_param 'http://localhost:8292/audioManager.html' &
 
 sleep 1.5
 

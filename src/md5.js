@@ -17,12 +17,12 @@
  * See http://pajhome.org.uk/crypt/md5 for more info.
  */
 
- /*jslint bitwise: true */
- /*global unescape */
+/* jslint bitwise: true */
+/* global unescape */
 
- /* Modified to work with noderequire 2015 04 13 */
+/* Modified to work with noderequire 2015 04 13 */
 
- 'use strict';
+'use strict';
 
 /*
 * Add integers, wrapping at 2^32. This uses 16-bit operations internally

@@ -8,6 +8,8 @@
 //
 // Copyright (c) 2014
 
+/* global mat4 */
+
 "use strict";
 
 

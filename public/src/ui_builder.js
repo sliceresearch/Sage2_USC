@@ -8,6 +8,8 @@
 //
 // Copyright (c) 2014
 
+/* global Pointer, dataSharingPortals, createDrawingElement, RadialMenu */
+
 "use strict";
 
 /**
@@ -369,22 +371,24 @@ function UIBuilder(json_cfg, clientID) {
 		version.style.mozTransform  = "translateY(-50%)";
 		version.style.transform  = "translateY(-50%)";
 
+		// Change the type before placing the event handler
+		logo.type = "image/svg+xml";
 		logo.addEventListener('load', this.logoLoadedFunc, false);
 		if (__SAGE2__.browser.isIE) {
 			logo.src  = "images/EVL-LAVA.svg";
 		} else {
 			logo.data = "images/EVL-LAVA.svg";
-			logo.type = "image/svg+xml";
 		}
 
 		if (this.json_cfg.background.watermark !== undefined) {
+			// Change the type before placing the event handler
+			watermark.type = "image/svg+xml";
 			watermark.addEventListener('load', this.watermarkLoadedFunc, false);
 			if (__SAGE2__.browser.isIE) {
 				// using an image tag in IE
 				watermark.src  = this.json_cfg.background.watermark.svg;
 			} else {
 				watermark.data = this.json_cfg.background.watermark.svg;
-				watermark.type = "image/svg+xml";
 			}
 		}
 
@@ -630,6 +634,7 @@ function UIBuilder(json_cfg, clientID) {
 		newDialogCancel.style.mozBoxSizing    = "border-box";
 		newDialogCancel.style.boxSizing       = "border-box";
 		newDialogCancel.style.border          =  "2px solid #000000";
+		newDialogCancel.style.textAlign       = "center";
 
 		// Create a img element to display the image
 		var newDialogImage = document.createElement("img");
@@ -719,7 +724,7 @@ function UIBuilder(json_cfg, clientID) {
 	*
 	* @method logoLoaded
 	*/
-	this.logoLoaded = function() {
+	this.logoLoaded = function(evt) {
 		var logo   = document.getElementById('logo');
 		var height = 0.95 * this.titleBarHeight;
 		var width;

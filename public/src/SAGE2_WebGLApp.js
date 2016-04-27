@@ -177,5 +177,5 @@ var SAGE2_WebGLApp = SAGE2_App.extend({
 		this.resizeCanvas(date);
 		this.canvas.style.display = "block";
 		this.refresh(date);
-	},
+	}
 });

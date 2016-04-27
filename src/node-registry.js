@@ -32,7 +32,9 @@ function RegistryManager() {
 	this.mimeFile       = path.join("config", "custom.types");
 
 	// Set the default mime type for SAGE to be a custom app
-	mime.default_type   = "application/custom";
+	// mime.default_type   = "application/custom";
+	// Trying to avoid weird content
+	mime.default_type   = "";
 }
 
 RegistryManager.prototype.initialize = function(assetsFolder) {
@@ -63,12 +65,11 @@ RegistryManager.prototype.initialize = function(assetsFolder) {
 RegistryManager.prototype.mimeRegister = function(fileType) {
 	var type = mime.lookup(fileType);
 
-	if (type === undefined || type === null || type === 'application/custom') {
+	if (type === undefined || type === null || type === "" || type === 'application/custom') {
 		var map = {};
 		map['application/' + fileType] = [ fileType ];
 		mime.define(map);
 		fs.appendFileSync(this.mimeFile, 'application/' + fileType + ' ' + fileType + '\n');
-
 		type = mime.lookup(fileType);
 	}
 	return type;
