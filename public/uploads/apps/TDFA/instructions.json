@@ -16,7 +16,7 @@
 	"version": "0.5.0",
 	"description": "Application for previewing 3D content exchange files",
 	"keywords": [ "three", "3d", "model", "viewer" ],
-	"fileTypes": [ "dae", "obj", "fbx"],
+	"fileTypes": [ "json", "dae", "obj", "fbx" ],
 	"directory": "models",
 	"author": "sharkgoesmad",
 	"license": "SAGE2-Software-License"

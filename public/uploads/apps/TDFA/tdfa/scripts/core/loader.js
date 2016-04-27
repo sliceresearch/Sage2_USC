@@ -1,80 +1,53 @@
-/*jslint nomen: true */
-/*jshint strict: false */
-/*jslint plusplus: true */
+define("lib/loader/AssimpJSONLoader", function () {
 
-var modules =
-	[
-		"lib/loader/ColladaLoader",
-		"lib/loader/FBXLoader",
-		"lib/loader/MTLLoader",
-		"lib/loader/OBJLoader",
-		"lib/loader/STLLoader"
-	];
-
-
-/*global define, THREE*/
-define(modules, function () {
-	"use strict";
-
-	var _oldTHREELoadingManager;
-
-	var _dae,
-		_fbx,
-		_mtl,
-		_obj,
-		_stl;
+	var _assimpJSON;
 
 
 	function init() {
 
-		_oldTHREELoadingManager = THREE.DefaultLoadingManager;
-		THREE.DefaultLoadingManager = getLoadingManager();	// register our own
-
-		_dae = new THREE.ColladaLoader();
-		_fbx = new THREE.FBXLoader();
-		_mtl = new THREE.MTLLoader();
-		_obj = new THREE.OBJLoader();
-		_stl = new THREE.STLLoader();
+		_assimpJSON = new THREE.AssimpJSONLoader(getLoadingManager());
 
 	}
 
 
-	function onLoadFailed(arg) {
-		debugger;
+	function extractMediaBase(url) {
+
+		var parts = url.split('/');
+		parts.pop(); // pop resource name
+		parts.pop(); // pop parent directory (models)
+		return (parts.length < 1 ? '.' : parts.join('/')) + '/';
+
 	}
 
 
-	function onProgress(arg) {
-		debugger;
+	function onLoadFailed(error) {
+		// TODO present to user
+		console.error(error);
 	}
 
 
-	function getOnLoadedHandler(callback) {
+	function onProgress(event) {}
+
+
+	function getAssimpLoadedHandler(callback) {
 		return function (resource) {
 
-			var idx,
-				objects = resource.scene.children;
-
-			resource.scene.updateMatrix();
-			while (objects.length > 0) {
-				objects[0].applyMatrix(resource.scene.matrix);
-				callback(objects[0]);
-			}
+			// append id to the name, which is always "RootNode"
+			resource.name += new String("_" + resource.id);
+			callback(resource);
 
 		};
 	}
 
 
-
 	function getLoadingManager() {
 
-		var _onLoad = function(url, itemsLoaded, itemsTotal) {
-		}
+		var _onLoad = function () {}
 
-		var _onProgress = function(url, itemsLoaded, itemsTotal) {
-		}
+		var _onProgress = function (url, itemsLoaded, itemsTotal) {}
 
-		var _onError = function(url, itemsLoaded, itemsTotal) {
+		var _onError = function (url) {
+			onLoadFailed("Failed fetching " + url);
 		}
 
 		var _self = new THREE.LoadingManager(_onLoad, _onProgress, _onError);
@@ -83,34 +56,20 @@ define(modules, function () {
 	}
 
 
-
-	function load(uri, cb) {
+	function Load(uri, cb) {
 
 		var dotIdx = uri.lastIndexOf("."),
 			extension = uri.substring(dotIdx + 1),
-			loader = null;
+			loader = null,
+			loadedHandler = null;
 
 
 		switch (extension) {
 
-		case "dae":
-			loader = _dae;
-			break;
-
-		case "fbx":
-			loader = _fbx;
-			break;
-
-		case "mtl":
-			loader = _mtl;
-			break;
-
-		case "obj":
-			loader = _obj;
-			break;
-
-		case "stl":
-			loader = _stl;
+		case "json": // assimpJSON
+			loader = _assimpJSON;
+			loader.setTexturePath(extractMediaBase(uri) + "images"); // /path/to/model/../images
+			loadedHandler = getAssimpLoadedHandler(cb);
 			break;
 
 		default:
@@ -121,11 +80,13 @@ define(modules, function () {
 		if (loader !== null) {
 			try {
 
-				loader.load(uri, getOnLoadedHandler(cb), onProgress, onLoadFailed);
+				loader.load(uri, loadedHandler, onProgress, onLoadFailed);
 
-			} catch (error) {;
-				console.error(error);
+			} catch (error) {
+				onLoadFailed(error);
 			}
+		} else {
+			onLoadFailed("No suitable loader found for ." + extension);
 		}
 
 	}
@@ -135,7 +96,7 @@ define(modules, function () {
 
 	return {
 
-		Load: load
+		Load: Load
 
 	};
 

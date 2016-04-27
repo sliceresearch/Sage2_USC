@@ -53,7 +53,7 @@ define(["three", "lib/knockout"], function (THREE, ko) {
 			* @param {Object} object
 			*/
 			Remove: function (object) {
-				_self.scene.remove(object);
+				object.parent.remove(object);
 				_self.Objects().splice(_self.Objects().indexOf(object), 1);
 				_self.Objects.notifySubscribers(_self.Objects());
 			},

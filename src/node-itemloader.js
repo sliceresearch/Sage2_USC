@@ -32,6 +32,7 @@ var mv           = require('mv');
 var sanitize     = require("sanitize-filename");
 
 var exiftool     = require('../src/node-exiftool');        // gets exif tags for images
+var assimp       = require('../src/node-assimp2json');     // converts 3D asssets
 var assets       = require('../src/node-assets');          // asset management
 var sageutils    = require('../src/node-utils');           // provides utility functions
 var registry     = require('../src/node-registry');        // Registry Manager
@@ -762,8 +763,24 @@ AppLoader.prototype.manageAndLoadUploadedFile = function(file, callback) {
 		callback(null);
 		return;
 	}
+
 	var mime_type = mime.lookup(cleanFilename);
 	var dir = registry.getDirectory(cleanFilename);
+
+	// 3D models need to be converted to json format
+	if (app === "/uploads/apps/TDFA") {
+		// synchronously convert the file
+		var status = assimp.convertSync(file);
+		if (status.err === null) {
+			// fix mime type
+			cleanFilename = sanitize(file.name);
+			mime_type = mime.lookup(cleanFilename);
+		} else {
+			console.log(status.err);
+			callback(null);
+			return;
+		}
+	}
 
 	if (!sageutils.folderExists(path.join(this.publicDir, dir))) {
 		fs.mkdirSync(path.join(this.publicDir, dir));
@@ -795,6 +812,25 @@ AppLoader.prototype.manageAndLoadUploadedFile = function(file, callback) {
 					type: mime_type, name: cleanFilename, compressed: true}, function(appInstance, handle) {
 				callback(appInstance, handle);
 			});
+		} else if (app === "/uploads/apps/TDFA") {
+			// attempting to load a 3d model, bypass exiftool
+                        var fakeExif = {
+                                FileName: cleanFilename,
+                                MIMEType: mime_type,
+                                OriginalMIMEType: mime_type,
+                                SourceFile: localPath
+                        };
+                        assets.addFile(fakeExif.SourceFile, fakeExif, function() {
+			        // get a valid URL for it
+			        var aUrl = assets.getURL(fakeExif.SourceFile);
+			        // calculate a complete URL with hostname
+			        var external_url = url.resolve(_this.hostOrigin, aUrl);
+
+			        _this.loadApplication({location: "file", path: localPath, url: aUrl, external_url: external_url,
+					        type: mime_type, name: cleanFilename, compressed: false}, function(appInstance, handle) {
+				        callback(appInstance, handle);
+			        });
+		        });
 		} else {
 			// try to process all the files with exiftool
 			exiftool.file(localPath, function(err2, data) {
