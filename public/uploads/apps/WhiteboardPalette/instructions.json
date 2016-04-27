@@ -6,13 +6,10 @@
 	"resize": "free",
 	"dependencies": [
 	],
-	"load": {
-		"value": 4
-	},
 	"title": "WhiteboardPalette",
 	"version": "1.0.0",
 	"description": "SAGE2 application WhiteboardPalette",
-	"keywords": [ "sage2", "WhiteboardPalette" ],
+	"keywords": [ "sage2", "WhiteboardPalette", "whiteboard", "writing", "drawing" ],
 	"author": "Filippo Pellolio <fpello2@uic.edu>",
 	"license": "SAGE2-Software-License"
 }
