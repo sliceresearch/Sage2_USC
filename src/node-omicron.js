@@ -188,7 +188,7 @@ var drawingManager ;
  */
 OmicronManager.prototype.linkDrawingManager = function(dManager) {
 	drawingManager = dManager;
-}
+};
  /**
  * Receives server pointer functions
  *
@@ -550,6 +550,7 @@ OmicronManager.prototype.processPointerEvent = function(e, sourceID, posX, posY,
 		touchHeight = msg.readFloatLE(offset); offset += 4;
 	}
 
+	// the touch size is normalized
 	touchWidth *=  omicronManager.totalWidth;
 	touchHeight *= omicronManager.totalHeight;
 
@@ -561,25 +562,27 @@ OmicronManager.prototype.processPointerEvent = function(e, sourceID, posX, posY,
 		console.log("pointer width/height ", touchWidth, touchHeight);
 	}
 
+	// Basic way to check if the input is coming from oinput, should be changed to an extra field
+	// but that would mean change the C++ code for the oinput server
 	var isOInput = e.flags == 0;
-	
+
 	if (isOInput && drawingManager.drawingMode) {
+		// If the touch is coming from oinput send it to node-drawing and stop after that
 		drawingManager.pointerEvent(e,sourceID,posX,posY,touchWidth,touchHeight);
-		
 		return;
 	}
-	
+
 	// If the user touches on the palette with drawing disabled, enable it
-	if ((!drawingManager.drawingMode ) && drawingManager.touchInsidePalette(posX,posY) && e.type === 5
+	if ((!drawingManager.drawingMode) && drawingManager.touchInsidePalette(posX,posY) && e.type === 5
 		&& isOInput) {
 		drawingManager.reEnableDrawingMode();
 	}
-	
+
 	// If drawing don't do anything else
 	if (drawingManager.drawingMode) {
 		return;
 	}
-	
+
 	// TouchGestureManager Flags:
 	// 1 << 18 = User flag start (as of 8/3/14)
 	// User << 1 = Unprocessed

@@ -412,6 +412,9 @@ function initializeSage2Server() {
 	drawingManager.linkInteractableManager(interactMgr);
 }
 
+
+/************************Whiteboard Callbacks************************/
+
 function drawingInit(clientWebSocket, drawState) {
 	clientWebSocket.emit("drawingInit", drawState);
 }
@@ -1031,6 +1034,8 @@ function initializeRemoteServerInfo(wsio) {
 }
 
 // **************  Drawing Functions *****************
+
+// The functions just call their associated method in the drawing manager
 function wsUpdatePalettePosition(wsio, data) {
 	var whiteboardApp = interactMgr.getObject(drawingManager.paletteID, "applications");
 	drawingManager.updatePalettePosition({
@@ -1927,7 +1932,7 @@ function saveDrawingSession(data) {
 
 function getAllDrawingsessions() {
 	var allNames = fs.readdirSync(sessionDirectory);
-	var res = []
+	var res = [];
 	for (var i in allNames) {
 		if (allNames[i].indexOf("drawingSession") != -1) {
 			res.push(allNames[i]);

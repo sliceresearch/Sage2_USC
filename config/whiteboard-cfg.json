@@ -4,7 +4,7 @@
 {
 	name: "Whiteboard",
 	host: "whiteboard.evl.uic.edu",
-	port: 443,
+	port: 9292,
 	index_port: 9090,
 	background: {
 		color: "#333333",
@@ -49,7 +49,7 @@
 		omicron: { // enable omicron input module
 			enable: true,
 			host: "whiteboard.evl.uic.edu",
-			dataPort: 9091,
+			dataPort: 35000,
 			
 			debug: false,
 			

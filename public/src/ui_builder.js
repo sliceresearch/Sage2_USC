@@ -817,30 +817,30 @@ function UIBuilder(json_cfg, clientID) {
 	};
 
 	this.drawingInit = function(data) {
-		console.log("toCreateSVG")
+		console.log("toCreateSVG");
 		if (!this.drawingSvg) {
-			this.drawingSvg = d3.select("#main").append("svg").attr("id","drawingSVG");
-			this.drawingSvg.attr("height",parseInt(this.main.style.height));
-			this.drawingSvg.attr("width",parseInt(this.main.style.width));
-			this.drawingSvg.style("position","absolute");
-			this.drawingSvg.style("z-index","3").style("visibility","hidden");
+			this.drawingSvg = d3.select("#main").append("svg").attr("id", "drawingSVG");
+			this.drawingSvg.attr("height", parseInt(this.main.style.height));
+			this.drawingSvg.attr("width", parseInt(this.main.style.width));
+			this.drawingSvg.style("position", "absolute");
+			this.drawingSvg.style("z-index", "3").style("visibility", "hidden");
 
 		}
 		this.drawingSvg.selectAll("*").remove();
-		var r = this.drawingSvg.append("rect").attr("width",parseInt(this.main.style.width));
-		r.attr("height",parseInt(this.main.style.height) * 0.1);
-		r.attr("y",parseInt(this.main.style.height) * 0.9);
-		r.attr("fill","white").style("opacity",0.2)
-		this.drawingSvg.append("text").style("dominant-baseline","middle").style("text-anchor","middle")
+		var r = this.drawingSvg.append("rect").attr("width", parseInt(this.main.style.width));
+		r.attr("height", parseInt(this.main.style.height) * 0.1);
+		r.attr("y", parseInt(this.main.style.height) * 0.9);
+		r.attr("fill", "white").style("opacity", 0.2);
+		this.drawingSvg.append("text").style("dominant-baseline", "middle").style("text-anchor", "middle")
 			.text("Tap here to recall the palette")
-			.attr("x",parseInt(this.main.style.width) * 0.5).attr("y",parseInt(this.main.style.height) * 0.925)
-			.attr("fill","white")
-			.style("font-family","arial").style("font-size","5vmin").style("opacity",0.2);
+			.attr("x", parseInt(this.main.style.width) * 0.5).attr("y", parseInt(this.main.style.height) * 0.925)
+			.attr("fill", "white")
+			.style("font-family", "arial").style("font-size", "5vmin").style("opacity", 0.2);
 		for (var d in data) {
 			var drawing = data[d];
 			this.drawObject(drawing);
 		}
-	}
+	};
 
 	/**
 	* Draws a drawing object gotten from the server to the tile's drawingSvg
@@ -852,7 +852,7 @@ function UIBuilder(json_cfg, clientID) {
 		var newDraw;
 		if (this.drawingSvg) {
 			if (drawingObject.type == "path") {
-				newDraw = d3.select("#drawingSVG").append("path").attr("id",drawingObject.id);
+				newDraw = d3.select("#drawingSVG").append("path").attr("id", drawingObject.id);
 				for (var s in drawingObject.style) {
 					newDraw.style(s, drawingObject.style[s]);
 				}
@@ -865,7 +865,7 @@ function UIBuilder(json_cfg, clientID) {
 			}
 
 			if (drawingObject.type == "circle") {
-				newDraw = d3.select("#drawingSVG").append("circle").attr("id",drawingObject.id);
+				newDraw = d3.select("#drawingSVG").append("circle").attr("id", drawingObject.id);
 				for (var s in drawingObject.style) {
 					if (s != "stroke-width") {
 						newDraw.style(s, drawingObject.style[s]);
@@ -873,11 +873,11 @@ function UIBuilder(json_cfg, clientID) {
 				}
 				var point = drawingObject.options.points[0];
 				var r = parseInt(drawingObject.style["stroke-width"]) / 2 + "px" || "3px";
-				var fill = drawingObject.style["stroke"] || "white";
-				newDraw.attr("cx",point.x).attr("cy",point.y).attr("r",r).style("fill",fill);
+				var fill = drawingObject.style.stroke || "white";
+				newDraw.attr("cx", point.x).attr("cy", point.y).attr("r", r).style("fill", fill);
 			}
 			if (drawingObject.type == "rect") {
-				newDraw = d3.select("#drawingSVG").append("rect").attr("id",drawingObject.id);
+				newDraw = d3.select("#drawingSVG").append("rect").attr("id", drawingObject.id);
 				for (var s in drawingObject.style) {
 					newDraw.style(s, drawingObject.style[s]);
 				}
@@ -885,22 +885,22 @@ function UIBuilder(json_cfg, clientID) {
 				var end = drawingObject.options.points[1];
 				var w = end.x - start.x;
 				var h = end.y - start.y;
-				newDraw.attr("x",start.x).attr("y",start.y).attr("width",w).attr("height",h);
+				newDraw.attr("x", start.x).attr("y", start.y).attr("width", w).attr("height", h);
 
 				var lw = w * 0.1;
 				var lh = h * 0.1;
 				var lx = w - lw;
 				var ly = h - lh;
 
-				d3.select("#drawingSVG").append("rect").attr("id",drawingObject.id + "b")
-					.attr("x",start.x + lx).attr("y",start.y + ly)
-					.attr("width",lw).attr("height",lh)
-					.attr("fill","white").style("opacity",0.2);
+				d3.select("#drawingSVG").append("rect").attr("id", drawingObject.id + "b")
+					.attr("x", start.x + lx).attr("y", start.y + ly)
+					.attr("width", lw).attr("height", lh)
+					.attr("fill", "white").style("opacity", 0.2);
 			}
 
 
 		}
-	}
+	};
 
 	/**
 	* update a drawing object already drawn in the drawingSvg
@@ -925,7 +925,7 @@ function UIBuilder(json_cfg, clientID) {
 
 				if (drawingObject.type == "circle") {
 					var point = drawingObject.options.points[0];
-					toUpdate.attr("cx",point.x).attr("cy",point.y)
+					toUpdate.attr("cx", point.x).attr("cy", point.y);
 				}
 
 				if (drawingObject.type == "path") {
@@ -947,14 +947,14 @@ function UIBuilder(json_cfg, clientID) {
 		}else {
 			this.drawObject(drawingObject);
 		}
-	}
+	};
 
 	this.removeObject = function(group) {
 		for (var i in group) {
 			var drawingObject = group[i];
 			d3.select("#" + drawingObject.id).remove();
 		}
-	}
+	};
 	/**
 	* Create a pointer
 	*
