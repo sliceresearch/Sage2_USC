@@ -1,4 +1,4 @@
-define("lib/loader/AssimpJSONLoader", function () {
+define(["lib/loader/AssimpJSONLoader"], function () {
 
 	var _assimpJSON;
 
