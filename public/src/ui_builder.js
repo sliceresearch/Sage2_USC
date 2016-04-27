@@ -8,7 +8,7 @@
 //
 // Copyright (c) 2014
 
-/* global Pointer, dataSharingPortals, createDrawingElement, RadialMenu */
+/* global Pointer, dataSharingPortals, createDrawingElement, RadialMenu, d3 */
 
 "use strict";
 
@@ -850,11 +850,11 @@ function UIBuilder(json_cfg, clientID) {
 	* @param drawingObject {object} drawing object
 	*/
 	this.drawObject = function(drawingObject) {
-		var newDraw;
+		var newDraw, s;
 		if (this.drawingSvg) {
 			if (drawingObject.type == "path") {
 				newDraw = d3.select("#drawingSVG").append("path").attr("id", drawingObject.id);
-				for (var s in drawingObject.style) {
+				for (s in drawingObject.style) {
 					newDraw.style(s, drawingObject.style[s]);
 				}
 				var lineFunction = d3.svg.line()
@@ -867,7 +867,7 @@ function UIBuilder(json_cfg, clientID) {
 
 			if (drawingObject.type == "circle") {
 				newDraw = d3.select("#drawingSVG").append("circle").attr("id", drawingObject.id);
-				for (var s in drawingObject.style) {
+				for (s in drawingObject.style) {
 					if (s != "stroke-width") {
 						newDraw.style(s, drawingObject.style[s]);
 					}
@@ -879,7 +879,7 @@ function UIBuilder(json_cfg, clientID) {
 			}
 			if (drawingObject.type == "rect") {
 				newDraw = d3.select("#drawingSVG").append("rect").attr("id", drawingObject.id);
-				for (var s in drawingObject.style) {
+				for (s in drawingObject.style) {
 					newDraw.style(s, drawingObject.style[s]);
 				}
 				var start = drawingObject.options.points[0];

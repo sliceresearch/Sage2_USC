@@ -397,6 +397,7 @@ OmicronManager.prototype.runTracker = function() {
 
 			// if( omicronManager.showPointerToggle === false )
 			// return;
+			var timeSinceLastNonCritEvent = Date.now() - omicronManager.lastNonCritEventTime;
 
 			if (omicronManager.showPointerToggle && screenPos.x !== -1 && screenPos.y !== -1) {
 				var timestamp = e.timestamp / 1000;
@@ -430,7 +431,7 @@ OmicronManager.prototype.runTracker = function() {
 				}
 			}
 
-			if (timeSinceLastNonCritEvent >= nonCriticalEventDelay) {
+			if (timeSinceLastNonCritEvent >= omicronManager.nonCriticalEventDelay) {
 				omicronManager.pointerPosition(address, { pointerX: posX, pointerY: posY });
 				omicronManager.lastNonCritEventTime = Date.now();
 			}
@@ -443,7 +444,7 @@ OmicronManager.prototype.runTracker = function() {
 						omicronManager.pointerPress(address, posX, posY, { button: "left" });
 					} else {
 						// Wand Drag
-						if (timeSinceLastNonCritEvent >= nonCriticalEventDelay) {
+						if (timeSinceLastNonCritEvent >= omicronManager.nonCriticalEventDelay) {
 							omicronManager.pointerPosition(address, { pointerX: posX, pointerY: posY });
 							omicronManager.pointerMove(address, posX, posY, { deltaX: 0, deltaY: 0, button: "left" });
 
