@@ -65,13 +65,5 @@
 			inputServerIP: "131.193.183.207",
 			msgPort: 28000
 		}
-	},
-    apis: {
-		twitter: {
-			consumerKey: "fuyVLmYL4QMG8dhg4UDxiGYKK",
-			consumerSecret: "XPf8AxHF6l3VjNqJzWpIiy4t1B1nEun8kWbXdXHfMKhhNUK7ox",
-			accessToken: "213878544-eLXXES5ufR2XU2jI7SDAVnd4tgAwr5MqpE9S5gLZ",
-			accessSecret: "pjTo8R9ncGKVIqGOqX17nUAQNHLw2CWaWwP78MtT0Tv8x"
-		}
 	}
 }
