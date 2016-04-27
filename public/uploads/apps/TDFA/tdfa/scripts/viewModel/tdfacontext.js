@@ -237,6 +237,18 @@ define(["lib/knockout", "three", "core/scenemgr", "core/event", "core/inputmgr",
 				args.forEach(function (arg) {
 					loader.Load(arg, onLoaded);
 				});
+			},
+
+			/**
+			* Perform cleanup on app quit.
+			*
+			* @method Quit
+			*/
+			Quit: function () {
+				// this will effectively collapse all instantiated templates,
+				// unbind handlers, cleanup subscriptions, etc
+				_rootViewNode.children([]);
+				_rootViewNode.dispose();
 			}
 
 		}

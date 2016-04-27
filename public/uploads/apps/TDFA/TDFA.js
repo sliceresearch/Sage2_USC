@@ -95,6 +95,7 @@ var TDFA = SAGE2_App.extend({
 				self.context.Move(self.sage2_x - ui.offsetX, self.sage2_y - ui.offsetY);
 			};
 			self.event = self.context.OnEvent;
+			self.quit = self.context.Quit;
 
 			// apply initial offsets
 			self.move(self.prevDate);
@@ -124,6 +125,6 @@ var TDFA = SAGE2_App.extend({
 	receive: function (file) {},
 	event: function (eventType, position, user_id, data, date) {},
 	move: function (date) {},
-	quit: function () {/* TODO */}
+	quit: function () {}
 
 });
