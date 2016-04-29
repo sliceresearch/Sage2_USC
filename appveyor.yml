@@ -50,8 +50,8 @@ install:
   - move bin\sage2.bat sage2.bat
   - move bin\sabi.bat sabi.bat
   - move /Y config\defaultWinstall-cfg.json config\defaultWin-cfg.json
-  - curl -LsSO http://downloads.ghostscript.com/public/gs918w64.exe
-  - 7z x -y gs918w64.exe $_OUTDIR\bin\ $_OUTDIR\lib -ogs > nul
+  - curl -LsSO https://github.com/ArtifexSoftware/ghostpdl-downloads/releases/download/gs919/gs919w64.exe
+  - 7z x -y gs919w64.exe $_OUTDIR\bin\ $_OUTDIR\lib -ogs > nul
   - copy gs\$_OUTDIR\bin\* bin\
   - copy bin\gswin64c.exe bin\gswin32c.exe
   - xcopy /S /I /Y /Q gs\$_OUTDIR\lib lib
