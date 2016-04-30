@@ -324,7 +324,7 @@ var SAGE2_BlockStreamingApp = SAGE2_App.extend({
 		var i, j;
 		if (this.state.colorspace === "RGB" || this.state.colorspace === "BGR") {
 			// Go bottom up
-			for (i = this.verticalBlocks-1; i >= 0; i--) {
+			for (i = this.verticalBlocks - 1; i >= 0; i--) {
 				for (j = 0; j < this.horizontalBlocks; j++) {
 					this.initABlock(i, j);
 				}
