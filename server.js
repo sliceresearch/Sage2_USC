@@ -1046,7 +1046,7 @@ function wsRadialMenuClick(wsio, data) {
 // **************  Media Stream Functions *****************
 
 function wsStartNewMediaStream(wsio, data) {
-	console.log("received new stream: ", data.id);
+	console.log(sageutils.header("Media stream") + 'new stream: ' + data.id);
 
 	var i;
 	SAGE2Items.renderSync[data.id] = {clients: {}, chunks: []};
@@ -1236,12 +1236,12 @@ function wsReceivedMediaStreamFrame(wsio, data) {
 
 // **************  Media Block Stream Functions *****************
 function wsStartNewMediaBlockStream(wsio, data) {
-	// console.log("Starting media stream: ", data);
 	// Forcing 'int' type for width and height
 	//     for some reasons, messages from websocket lib from Linux send strings for ints
 	data.width  = parseInt(data.width,  10);
 	data.height = parseInt(data.height, 10);
 
+	console.log(sageutils.header("Block stream") + data.width + 'x' + data.height + ' ' + data.colorspace);
 
 	SAGE2Items.renderSync[data.id] = {chunks: [], clients: {}, width: data.width, height: data.height};
 	for (var i = 0; i < clients.length; i++) {
@@ -1274,8 +1274,12 @@ function wsUpdateMediaBlockStreamFrame(wsio, buffer) {
 
 	var colorspace = SAGE2Items.applications.list[id].data.colorspace;
 	var blockBuffers;
+
 	if (colorspace === "RGBA") {
 		blockBuffers = pixelblock.rgbaToPixelBlocks(imgBuffer, SAGE2Items.renderSync[id].width,
+			SAGE2Items.renderSync[id].height, mediaBlockSize);
+	} else if (colorspace === "RGB" || colorspace === "BGR") {
+		blockBuffers = pixelblock.rgbToPixelBlocks(imgBuffer, SAGE2Items.renderSync[id].width,
 			SAGE2Items.renderSync[id].height, mediaBlockSize);
 	} else if (colorspace === "YUV420p") {
 		blockBuffers = pixelblock.yuv420ToPixelBlocks(imgBuffer, SAGE2Items.renderSync[id].width,
@@ -1349,8 +1353,6 @@ function wsReceivedMediaBlockStreamFrame(wsio, data) {
 
 // Print message from remote applications
 function wsPrintDebugInfo(wsio, data) {
-	// sprint for padding and pretty colors
-	// console.log( sprint("Node %2d> ", data.node) + sprint("[%s] ", data.app), data.message);
 	console.log(sageutils.header("Client") + "Node " + data.node + " [" + data.app + "] " + data.message);
 }
 

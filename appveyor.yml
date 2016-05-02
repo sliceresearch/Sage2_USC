@@ -29,7 +29,7 @@ init:
   - dir C:\Dev\ffmpeg-win64-dev\lib
 
 install:
-  - ps: Install-Product node 5.8.0 x64
+  - ps: Install-Product node 5.10.1 x64
   - dir C:\avvm\node
   - node -v
   - cd %APPVEYOR_BUILD_FOLDER%
