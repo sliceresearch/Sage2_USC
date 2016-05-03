@@ -925,14 +925,15 @@ var initialize = function(mainFolder, mediaFolders) {
 				addAssetFolder(f.path);
 			}
 		}
-		for (i = 0; i < config.remote_sites.length; i++) {
-			if (config.remote_sites[i].name in AllAssets.list) {
-				AllAssets.list[config.remote_sites[i].name].Valid = true;
-			} else {
-				thelist.push(config.remote_sites[i].name);
+		if (config.remote_sites) { // Not all config files have remote sites
+			for (i = 0; i < config.remote_sites.length; i++) {
+				if (config.remote_sites[i].name in AllAssets.list) {
+					AllAssets.list[config.remote_sites[i].name].Valid = true;
+				} else {
+					thelist.push(config.remote_sites[i].name);
+				}
 			}
 		}
-
 		// Finally, delete the elements which not there anymore
 		for (var item in AllAssets.list) {
 			if (AllAssets.list[item].Valid === false) {
