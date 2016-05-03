@@ -3,12 +3,7 @@ version: 1.0.{build}
 branches:
   only:
   - master
-  - sabiUpdater
-  - secure
 
-# git clone of depth 1
-#clone_depth: 1
-# specific to github and bitbucket: get a ZIP file using REST API
 shallow_clone: true
 
 configuration: Release
@@ -74,12 +69,7 @@ install:
   - kthxbai
   - cd ..
   - 'echo {"version": "%APPVEYOR_BUILD_VERSION%", "build": "%APPVEYOR_BUILD_NUMBER%", "commit": "%APPVEYOR_REPO_COMMIT%", "arch": "win%PLATFORM%", "tag_name": "%PLATFORM%_%APPVEYOR_BUILD_VERSION%", "target_commitish": "%APPVEYOR_REPO_BRANCH%", "name": "SAGE2 v%APPVEYOR_BUILD_VERSION% for Win %PLATFORM% devices", "body": "Release of SAGE2 app v%APPVEYOR_BUILD_VERSION%\n Commit by %APPVEYOR_REPO_COMMIT_AUTHOR% \n%APPVEYOR_REPO_COMMIT_MESSAGE%", "prerelease": true} > VERSION.json'
-  # - 7z a -tzip sage2-win64-%APPVEYOR_BUILD_VERSION%-%APPVEYOR_REPO_BRANCH%.zip VERSION.json .git sage2.bat sabi.bat AUTHORS sabi.js GO-scripts Gruntfile.js LICENSE.txt README.md bin lib config doc keys node_modules package.json public server.js src > nul
-  # - 7z a -sfx7z.sfx sage2-win64-%APPVEYOR_BUILD_VERSION%-%APPVEYOR_REPO_BRANCH%.exe VERSION.json .git sage2.bat sabi.bat AUTHORS sabi.js GO-scripts Gruntfile.js LICENSE.txt README.md bin lib config doc keys node_modules package.json public server.js src > nul
   - mkdir SAGE2
-  # - attrib -H .git
-  # - move .git SAGE2
-  # - attrib +H SAGE2\.git
   - move VERSION.json SAGE2
   - move sage2.bat SAGE2
   - move sabi.bat SAGE2\Launcher.bat
@@ -99,22 +89,6 @@ install:
   - move public SAGE2
   - move server.js SAGE2
   - move src SAGE2
-  #- move bin\.git-credentials  ~\
-  - cd SAGE2
-  - git init
-  - git add .
-  - git config --global credential.helper store
-  - ps: Add-Content "$env:USERPROFILE\.git-credentials" "https://uhlavalab%40gmail.com:1%5ev%5ebitb@bitbucket.org`n"
-  - git config user.email "uhlavalab@gmail.com"
-  - git config user.name "Lava Lab"
-  - git commit -m "Forced overwrite from appveyor"
-  - git remote add origin "https://bitbucket.org/dkobayashi/sage2binaryupdate.git"
-  #- git remote add origin "https://Lava%20Lab:1%5ev%5ebitb@bitbucket.org/dkobayashi/sage2binaryupdate.git"
-  - git push -f origin master
-  #- curl -LsSOk https://bitbucket.org/sage2/sage2/downloads/git-win64-bin.zip
-  #- 7z x -y git-win64-bin.zip > nul
-  #- del /Q *.zip
-  - cd ..
   - ren SAGE2 SAGE2-%APPVEYOR_BUILD_VERSION%
   - 7z a -sfx7z.sfx SAGE2-win64-%APPVEYOR_BUILD_VERSION%-%APPVEYOR_REPO_BRANCH%.exe SAGE2-%APPVEYOR_BUILD_VERSION% > nul
 
