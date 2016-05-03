@@ -3,6 +3,7 @@ version: 1.0.{build}
 branches:
   only:
   - master
+  - sabiUpdater
   - secure
 
 # git clone of depth 1
@@ -51,8 +52,8 @@ install:
   - move bin\sage2.bat sage2.bat
   - move bin\sabi.bat sabi.bat
   - move /Y config\defaultWinstall-cfg.json config\defaultWin-cfg.json
-  - curl -LsSO http://downloads.ghostscript.com/public/gs918w64.exe
-  - 7z x -y gs918w64.exe $_OUTDIR\bin\ $_OUTDIR\lib -ogs > nul
+  - curl -LsSO https://github.com/ArtifexSoftware/ghostpdl-downloads/releases/download/gs919/gs919w64.exe
+  - 7z x -y gs919w64.exe $_OUTDIR\bin\ $_OUTDIR\lib -ogs > nul
   - copy gs\$_OUTDIR\bin\* bin\
   - copy bin\gswin64c.exe bin\gswin32c.exe
   - xcopy /S /I /Y /Q gs\$_OUTDIR\lib lib
@@ -62,8 +63,6 @@ install:
   - rmdir /Q /S im\www im\images
   - copy im\* bin
   - rmdir /Q /S im
-  # - curl -LsSOk https://bitbucket.org/sage2/sage2/downloads/git-win64-bin.zip
-  # - 7z x -y git-win64-bin.zip > nul
   - del /Q *.7z
   - del /Q *.zip
   - cd bin
@@ -100,6 +99,22 @@ install:
   - move public SAGE2
   - move server.js SAGE2
   - move src SAGE2
+  #- move bin\.git-credentials  ~\
+  - cd SAGE2
+  - git init
+  - git add .
+  - git config --global credential.helper store
+  - ps: Add-Content "$env:USERPROFILE\.git-credentials" "https://uhlavalab%40gmail.com:1%5ev%5ebitb@bitbucket.org`n"
+  - git config user.email "uhlavalab@gmail.com"
+  - git config user.name "Lava Lab"
+  - git commit -m "Forced overwrite from appveyor"
+  - git remote add origin "https://bitbucket.org/dkobayashi/sage2binaryupdate.git"
+  #- git remote add origin "https://Lava%20Lab:1%5ev%5ebitb@bitbucket.org/dkobayashi/sage2binaryupdate.git"
+  - git push -f origin master
+  #- curl -LsSOk https://bitbucket.org/sage2/sage2/downloads/git-win64-bin.zip
+  #- 7z x -y git-win64-bin.zip > nul
+  #- del /Q *.zip
+  - cd ..
   - ren SAGE2 SAGE2-%APPVEYOR_BUILD_VERSION%
   - 7z a -sfx7z.sfx SAGE2-win64-%APPVEYOR_BUILD_VERSION%-%APPVEYOR_REPO_BRANCH%.exe SAGE2-%APPVEYOR_BUILD_VERSION% > nul
 

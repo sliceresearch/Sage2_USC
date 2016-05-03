@@ -703,6 +703,50 @@ h2 {
 	box-sizing:border-box;
 }
 
+#uiNoteMaker {
+	top: 50%;
+	left: 50%;
+	-webkit-transform: translate(-50%, -50%);
+	-moz-transform: translate(-50%, -50%);
+	-ms-transform: translate(-50%, -50%);
+	transform: translate(-50%, -50%);
+	text-align:center;
+}
+
+#uiDrawZone {
+	top: 50%;
+	left: 50%;
+	-webkit-transform: translate(-50%, -50%);
+	-moz-transform: translate(-50%, -50%);
+	-ms-transform: translate(-50%, -50%);
+	transform: translate(-50%, -50%);
+}
+
+.uidzBarBox {
+	width: 	30px;
+	height: 30px;
+	border: 1px solid black;
+}
+.uidzBarAll {
+	height: 		100%;
+	left: 			50%;
+	position: 		relative;
+	background: 	black;
+	-webkit-transform: translate(-50%, 0);
+	-moz-transform: translate(-50%, 0);
+	-ms-transform: translate(-50%, 0);
+	transform: translate(-50%, 0);
+}
+.uidzBarS1{ width: 1px; }
+.uidzBarS2{ width: 2px; }
+.uidzBarS3{ width: 4px; }
+.uidzBarS4{ width: 8px; }
+.uidzBarS5{ width: 16px; }
+.uidzBarS6{ width: 32px; }
+.uidzBarS7{ width: 64px; }
+
+
+
 .fileItem {
 	cursor: default;
 }

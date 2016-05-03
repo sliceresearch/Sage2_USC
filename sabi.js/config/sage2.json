@@ -23,6 +23,8 @@
 		"submitLP":          { "sendData": "forLP", "dataID": "inputLP", "sendPurpose": "makeNewLauncherPassword" },
 		"inputLP":           { "ignore" :  "Not sending"},
 
+		"updateSage":          { "sendData": "forMA", "dataID": "inputMA", "sendPurpose": "performGitUpdate" },
+
 		"notepad-on":        { "command": "start notepad" },
 		"notepad-off":       { "command": "Taskkill /IM notepad.exe /F" },
 		"firefox-on":        { "command": "start firefox" },
@@ -57,7 +59,7 @@
 	"Admin" : {
 		"title"  : "Admin",
 		"navbar" : "true",
-		"groups" : [ "group2" ],
+		"groups" : [ "group2", "update" ],
 		"group2" : {
 			"title": "Configure SAGE2",
 			"image": "images/settings.png",
@@ -67,6 +69,14 @@
 				{"title": "Wall configuration -  <em>expert</em>", "action": "edit-config" },
 				{"title": "", "action": "inputLP", "role": "inputPassword", "placeholder":"Enter new launcher password"},
 				{"title": "Reset launcher password", "action": "submitLP", "theme": "b"}
+			]
+		},
+		"update" : {
+			"title": "Update SAGE2",
+			"image": "images/settings.png",
+			"description": "Choosing to update will edit the startup file and then restart the computer.<br> Be sure to save all work before updating.",
+			"actions": [
+				{"title": "Update (will cause the computer to restart)", "action": "updateSage" }
 			]
 		}
 	}

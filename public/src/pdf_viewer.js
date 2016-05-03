@@ -224,6 +224,117 @@ PDFJS.maxCanvasPixels = 67108864; // 8k2
 	},
 
 	/**
+	* To enable right click context menu support this function needs to be present with this format.
+	*
+	* Must return an array of entries. An entry is an object with three properties:
+	*	description: what is to be displayed to the viewer.
+	*	callback: String containing the name of the function to activate in the app. It must exist.
+	*	parameters: an object with specified datafields to be given to the function.
+	*		The following attributes will be automatically added by server.
+	*			serverDate, on the return back, server will fill this with time object.
+	*			clientId, unique identifier (ip and port) for the client that selected entry.
+	*			clientName, the name input for their pointer. Note: users are not required to do so.
+	*			clientInput, if entry is marked as input, the value will be in this property. See pdf_viewer.js for example.
+	*		Further parameters can be added. See pdf_view.js for example.
+	*/
+	getContextEntries: function() {
+		var entries = [];
+		var entry;
+
+		entry = {};
+		entry.description = "First Page";
+		entry.callback = "changeThePage";
+		entry.parameters = {};
+		entry.parameters.page = "first";
+		entries.push(entry);
+
+		entry = {};
+		entry.description = "Previous Page";
+		entry.callback = "changeThePage";
+		entry.parameters = {};
+		entry.parameters.page = "previous";
+		entries.push(entry);
+
+		entry = {};
+		entry.description = "Next Page";
+		entry.callback = "changeThePage";
+		entry.parameters = {};
+		entry.parameters.page = "next";
+		entries.push(entry);
+
+		entry = {};
+		entry.description = "Last Page";
+		entry.callback = "changeThePage";
+		entry.parameters = {};
+		entry.parameters.page = "last";
+		entries.push(entry);
+
+		entry = {};
+		entry.description = "Jump To: ";
+		entry.callback = "changeThePage";
+		entry.parameters = {};
+		entry.inputField = true;
+		entry.inputFieldSize = 3;
+		entries.push(entry);
+
+		// Special callback: dowload the file
+		entries.push({
+			description: "Download",
+			callback: "SAGE2_download",
+			parameters: {
+				url: this.state.doc_url
+			}
+		});
+
+		return entries;
+	},
+
+	/**
+	* Support function to allow page changing through right mouse context menu.
+	*
+	* @method changeThePage
+	* @param responseObject {Object} contains response from entry selection
+	*/
+	changeThePage: function(responseObject) {
+		var page = responseObject.page;
+		// if the user did the input option
+		if (responseObject.clientInput) {
+			page = parseInt(responseObject.clientInput);
+			if (page > 0 && page <= this.pdfDoc.numPages) {
+				this.state.page = page;
+			} else {
+				return;
+			}
+		}
+		// else check for these word options
+		else {
+			if (page === "first") {
+				if (this.state.page === 1) {
+					return;
+				}
+				this.state.page = 1;
+			} else if (page === "previous") {
+				if (this.state.page <= 1) {
+					return;
+				}
+				this.state.page = this.state.page - 1;
+			} else if (page === "next") {
+				if (this.state.page >= this.pdfDoc.numPages) {
+					return;
+				}
+				this.state.page = this.state.page + 1;
+			} else if (page === "last") {
+				if (this.state.page === this.pdfDoc.numPages) {
+					return;
+				}
+				this.state.page = this.pdfDoc.numPages;
+			}
+		}
+		// This needs to be a new date for the extra function.
+		this.refresh(new Date(responseObject.serverDate));
+	},
+
+	/**
 	* Handles event processing, arrow keys to navigate, and r to redraw
 	*
 	* @method event
@@ -270,10 +381,6 @@ PDFJS.maxCanvasPixels = 67108864; // 8k2
 			} else if (data.character === "r" || data.character === "R") {
 				this.refresh(date);
 			}
-			// Press 'x' to close itself
-			// if (data.character === 'x') {
-			// 	this.close();
-			// }
 		}
 
 		// Left Arrow  - go back one page

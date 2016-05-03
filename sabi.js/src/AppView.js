@@ -55,9 +55,10 @@ Views.AppView = Backbone.View.extend({
     this.render();
   },
 
-  load: function(filename) {
+  load: function(cfg) { //changed to the contents of the config file.
+  //load: function(filename) {
     // Get the configuration file from the web server
-    // var	objXml = new XMLHttpRequest();
+    // var  objXml = new XMLHttpRequest();
     // console.log('Trying to load file: ', filename);
     // objXml.open("GET",filename,false);
     // objXml.send(null);
@@ -66,16 +67,20 @@ Views.AppView = Backbone.View.extend({
     // // Parse the JSON file got from the server
     // this.cfg = JSON.parse(data);
 
-    var objXml = new XMLHttpRequest();
-    console.log('Trying to load file: ', filename);
-    var _this = this;
-    objXml.open("GET",filename, true);
-    objXml.onload = function() {
-      var data = objXml.response;
-      // Parse the JSON file got from the server
-      _this.cfg = JSON.parse(data);
-    };
-    objXml.send(null);
+    // var objXml = new XMLHttpRequest();
+    // console.log('Trying to load file: ', filename);
+    // var _this = this;
+    // objXml.open("GET",filename, true);
+    // objXml.onload = function() {
+    //   var data = objXml.response;
+    //   // Parse the JSON file got from the server
+    //   _this.cfg = JSON.parse(data);
+    // };
+    // objXml.send(null);
+
+    this.cfg = cfg;
+    console.dir(cfg);
+
   },
 
   sendCall: function (namefunc, param) {

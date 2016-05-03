@@ -150,6 +150,7 @@ RegistryManager.prototype.getDefaultAppFromMime = function(type) {
 	try {
 		defaultApp = this.db.getData('/' + type + '/default');
 	} catch (error) {
+		if (type === "text/plain") { return "uploads/apps/quickNote"; } // currently lack a better way to associate
 		console.error(sageutils.header("Registry") + "No default app for " + type);
 	}
 	return defaultApp;

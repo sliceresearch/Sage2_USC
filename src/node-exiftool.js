@@ -75,10 +75,19 @@ function fileSpawn(filename, done) {
  */
 function file(filename, done) {
 	ChildProcess.exec('exiftool -json -filesize# -all \"' + filename + '\"', function(error, stdout, stderr) {
+		var metadata;
 		if (error !== null) {
-			done(error);
+			var fileSplit = filename.split(".");
+			// Adding MIMEType manually for files ending with .note
+			if (fileSplit[fileSplit.length - 1].indexOf("note") === 0) {
+				metadata = JSON.parse(stdout);
+				metadata[0].MIMEType = 'text/plain',
+				done(null, metadata[0]);
+			} else {
+				done(error);
+			}
 		} else {
-			var metadata = JSON.parse(stdout);
+			metadata = JSON.parse(stdout);
 			done(null, metadata[0]);
 		}
 	});

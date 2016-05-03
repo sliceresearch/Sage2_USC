@@ -291,6 +291,7 @@ var SAGE2_App = Class.extend({
 		} else {
 			this.SAGE2UserModification = true;
 			this.event(eventType, position, user_id, data, date);
+
 			if (this.passSAGE2PointerAsMouseEvents) {
 				SAGE2MEP.processAndPassEvents(this.element.id, eventType, position,
 					user_id, data, date);
@@ -797,4 +798,5 @@ var SAGE2_App = Class.extend({
 		}
 		sage2Log({app: this.div.id, message: args});
 	}
+
 });
