@@ -1810,14 +1810,8 @@ function wsLaunchLinkedChildApp(wsio, data) {
 
 
 		// send message to parent that child created
-		// var dataToSend = {id: data.id, childId: appInstance.id, msg: "success", success: true };
-		// broadcast('launchChildAppResponse', dataToSend);
 		sendChildMonitoringEvent(data.id, appInstance.id, "childOpenEvent", {success: true});
 
-
-		// send message to child that parent created
-		// var dataToSend = {id: appInstance.id, parentId: data.id, msg: "success", success: true };
-		// broadcast('setParent', dataToSend);
 
 		addEventToUserLog(data.user, {type: "openApplication", data:
 			{application: {id: appInstance.id, type: appInstance.application}}, time: Date.now()});
@@ -1853,6 +1847,15 @@ function wsMoveLinkedChildApp(wsio, data) {
 
 	if( canContinue ){
 		wsAppMoveTo(null, {id: childId, x: data.x, y: data.y});
+
+		var im = findInteractableManager(childId);
+		im.moveObjectToFront(childId, "applications", ["portals"]);
+		var stickyList = stickyAppHandler.getStickingItems(childId);
+		for (var idx in stickyList) {
+			im.moveObjectToFront(stickyList[idx].id, obj.layerId);
+		}
+		var newOrder = im.getObjectZIndexList("applications", ["portals"]);
+		broadcast('updateItemOrder', newOrder);
 	}
 }
 
@@ -1868,6 +1871,15 @@ function wsResizeLinkedChildApp(wsio, data) {
 
 	if( canContinue ){
 		wsAppResize(null, {id: childId, width: data.w, height: data.h, keepRatio: data.aspectKeep});
+
+		var im = findInteractableManager(childId);
+		im.moveObjectToFront(childId, "applications", ["portals"]);
+		var stickyList = stickyAppHandler.getStickingItems(childId);
+		for (var idx in stickyList) {
+			im.moveObjectToFront(stickyList[idx].id, obj.layerId);
+		}
+		var newOrder = im.getObjectZIndexList("applications", ["portals"]);
+		broadcast('updateItemOrder', newOrder);
 
 	}
 }
