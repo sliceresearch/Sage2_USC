@@ -802,6 +802,9 @@ var SAGE2_BlockStreamingApp = SAGE2_App.extend({
 			// set the resolution to be the whole display wall
 			checkWidth  *= this.config.layout.columns;
 			checkHeight *= this.config.layout.rows;
+		} else {
+			checkWidth  *= (ui.json_cfg.displays[clientID].width || 1);
+			checkHeight *= (ui.json_cfg.displays[clientID].height || 1);
 		}
 
 		var localX = this.sage2_x - ui.offsetX;

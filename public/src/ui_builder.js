@@ -174,11 +174,11 @@ function UIBuilder(json_cfg, clientID) {
 			this.bg.style.backgroundColor = this.json_cfg.background.color || "#333333";
 			this.bg.style.top    = "0px";
 			this.bg.style.left   = "0px";
-			this.bg.style.width  = this.json_cfg.resolution.width + "px";
-			this.bg.style.height = this.json_cfg.resolution.height + "px";
+			this.bg.style.width  = this.json_cfg.resolution.width * (this.json_cfg.displays[this.clientID].width || 1) + "px";
+			this.bg.style.height = this.json_cfg.resolution.height * (this.json_cfg.displays[this.clientID].height || 1) + "px";
 
-			this.main.style.width  = this.json_cfg.resolution.width  + "px";
-			this.main.style.height = this.json_cfg.resolution.height + "px";
+			this.main.style.width  = this.json_cfg.resolution.width * (this.json_cfg.displays[this.clientID].width || 1) + "px";
+			this.main.style.height = this.json_cfg.resolution.height * (this.json_cfg.displays[this.clientID].height || 1) + "px";
 
 			if (this.json_cfg.background.image !== undefined &&
 				this.json_cfg.background.image.url !== undefined &&
