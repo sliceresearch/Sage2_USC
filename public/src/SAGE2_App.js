@@ -590,10 +590,16 @@ var SAGE2_App = Class.extend({
 	isHidden: function() {
 		var checkWidth  = this.config.resolution.width;
 		var checkHeight = this.config.resolution.height;
+		// Overview client covers all
 		if (clientID === -1) {
 			// set the resolution to be the whole display wall
 			checkWidth  *= this.config.layout.columns;
 			checkHeight *= this.config.layout.rows;
+		} else {
+			// multiply by the size of the tile
+			// FIX: offsetX and offsetY might not be correct
+			checkWidth  *= (this.config.displays[clientID].width  || 1);
+			checkHeight *= (this.config.displays[clientID].height || 1);
 		}
 		return (this.sage2_x > (ui.offsetX + checkWidth)  ||
 				(this.sage2_x + this.sage2_width) < ui.offsetX ||

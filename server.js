@@ -1145,9 +1145,16 @@ function wsUpdateMediaStreamFrame(wsio, data) {
 		var offsetX = config.resolution.width  * display.column;
 		var offsetY = config.resolution.height * display.row;
 
+		var checkWidth  = config.resolution.width;
+		var checkHeight = config.resolution.height;
+		// Check for irregular tiles
+		// FIX: offestX and Y might not be correct
+		checkWidth  *= (config.displays[did].width  || 1);
+		checkHeight *= (config.displays[did].height || 1);
+
 		// If the app window and the display overlap
 		if (doOverlap(left, top, stream.width, stream.height,
-			offsetX, offsetY, config.resolution.width, config.resolution.height)) {
+			offsetX, offsetY, checkWidth, checkHeight)) {
 			// send the full frame to be displayed
 			SAGE2Items.renderSync[data.id].clients[key].wsio.emit('updateMediaStreamFrame', data);
 		} else {
