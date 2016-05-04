@@ -6,7 +6,7 @@
 //
 // See full text, terms and conditions in the LICENSE.txt included file
 //
-// Copyright (c) 2014
+// Copyright (c) 2016
 
 "use strict";
 
@@ -17,25 +17,24 @@ var doodle = SAGE2_App.extend({
 		this.resizeEvents = "continuous"; // "onfinish";
 
 		this.element.id = "div" + data.id;
-		this.appIdRef   = data.id;
 
 		// force this div to have specified width and height
-		var workingDiv = document.getElementById(this.element.id);
-		workingDiv.width = this.element.clientWidth + "px";
-		workingDiv.height = this.element.clientHeight + "px";
+		// var workingDiv = this.element;
+		// workingDiv.width  = this.element.clientWidth  + "px";
+		// workingDiv.height = this.element.clientHeight + "px";
 
 		// use up the entire amount such that a scaling will occur when the app is increased / decreased in size.
-		var drawCanvas = document.createElement('canvas');
-		drawCanvas.id			= this.element.id + "DrawCanvas";
-		drawCanvas.width		= 500;
-		drawCanvas.height		= 500;
-		drawCanvas.style.width	= "100%";
-		drawCanvas.style.height = "100%";
-		workingDiv.appendChild(drawCanvas);
-		var ctx = drawCanvas.getContext("2d");
-		ctx.fillStyle = "#FFFFFF";
-		ctx.fillRect(0, 0, drawCanvas.width, drawCanvas.height);
-		ctx.fillStyle = "#000000";
+		this.drawCanvas = document.createElement('canvas');
+		this.drawCanvas.id           = this.element.id + "DrawCanvas";
+		this.drawCanvas.width        = data.width;
+		this.drawCanvas.height       = data.height;
+		this.drawCanvas.style.width  = "100%";
+		this.drawCanvas.style.height = "100%";
+		this.element.appendChild(this.drawCanvas);
+		this.ctx = this.drawCanvas.getContext("2d");
+		this.ctx.fillStyle = "#FFFFFF";
+		this.ctx.fillRect(0, 0, this.drawCanvas.width, this.drawCanvas.height);
+		this.ctx.fillStyle = "#000000";
 
 		// tracks who needs to receive updates for draw commands.
 		this.arrayOfEditors = [];
@@ -43,7 +42,9 @@ var doodle = SAGE2_App.extend({
 		this.imageToDraw = new Image();
 
 		// If this was restored from a session, will have a state.imageSnapshot value.
-		if (this.state.imageSnapshot !== undefined && this.state.imageSnapshot.length > 0) { this.setInitialCanvas(this.state.imageSnapshot); }
+		if (this.state.imageSnapshot !== undefined && this.state.imageSnapshot.length > 0) {
+			this.setInitialCanvas(this.state.imageSnapshot);
+		}
 		this.changeTitleToOriginalCreatorAndTime(this.state);
 
 		// If there are file contents, use the passed file values. It will overwrite the existing file.
@@ -58,13 +59,12 @@ var doodle = SAGE2_App.extend({
 	1: clientId
 	*/
 	setInitialCanvas: function(initialImage) {
-		if( initialImage === null || initialImage === undefined ) { return; }
+		if (initialImage === null || initialImage === undefined) {
+			return;
+		}
 
 		this.imageToDraw.src = initialImage;
-		var workingDiv = document.getElementById( this.element.id + "DrawCanvas");
-		var ctx = workingDiv.getContext('2d');
-
-		ctx.drawImage( this.imageToDraw, 0, 0 );
+		this.ctx.drawImage(this.imageToDraw, 0, 0);
 	},
 
 	/**
@@ -72,7 +72,7 @@ var doodle = SAGE2_App.extend({
 	*/
 	getCanvasAsImage: function () {
 		this.saveCurrentWork();
-		return document.getElementById( this.element.id + "DrawCanvas" ).toDataURL();
+		return this.drawCanvas.toDataURL();
 	},
 
 	/**
@@ -92,7 +92,7 @@ var doodle = SAGE2_App.extend({
 			dataForClient.clientDest  = responseObject.clientId;
 			dataForClient.canvasImage = imageString;
 			dataForClient.func        = 'uiDrawSetCurrentStateAndShow';
-			dataForClient.appId       = this.appIdRef;
+			dataForClient.appId       = this.id;
 			dataForClient.type        = 'sendDataToClient';
 			wsio.emit('csdMessage', dataForClient);
 		}
@@ -129,30 +129,28 @@ var doodle = SAGE2_App.extend({
 	7: 	uiClient
 	*/
 	drawLine: function(lineData) {
-		var workingDiv  = document.getElementById( this.element.id + "DrawCanvas");
-		var ctx 		= workingDiv.getContext('2d');
-		var lineWidth 	= lineData[4];
-		ctx.fillStyle	= lineData[5];
-		ctx.strokeStyle	= lineData[6];
+		var lineWidth = lineData[4];
+		this.ctx.fillStyle   = lineData[5];
+		this.ctx.strokeStyle = lineData[6];
 		// if the line width is greater than 1. At 1 the fill + circle border will expand beyond the line causing bumps in the line.
 		if (lineWidth > 2) {
-			ctx.lineWidth 	= 1;
-			ctx.beginPath();
-			ctx.arc( lineData[2], lineData[3], lineWidth/2, 0, Math.PI * 2, false);
-			ctx.fill();
+			this.ctx.lineWidth = 1;
+			this.ctx.beginPath();
+			this.ctx.arc(lineData[2], lineData[3], lineWidth / 2, 0, Math.PI * 2, false);
+			this.ctx.fill();
 		}
-		ctx.beginPath();
-		ctx.lineWidth = lineWidth;
-		ctx.moveTo( lineData[2], lineData[3] );
-		ctx.lineTo( lineData[0], lineData[1]);
-		ctx.stroke();
+		this.ctx.beginPath();
+		this.ctx.lineWidth = lineWidth;
+		this.ctx.moveTo(lineData[2], lineData[3]);
+		this.ctx.lineTo(lineData[0], lineData[1]);
+		this.ctx.stroke();
 
 		if (isMaster) {
 			var dataForClient = {};
 			dataForClient.clientDest = lineData[7];
 			dataForClient.params     = lineData;
 			dataForClient.func       = 'uiDrawMakeLine';
-			dataForClient.appId      = this.appIdRef;
+			dataForClient.appId      = this.id;
 			dataForClient.type       = 'sendDataToClient';
 			for (var i = 0; i < this.arrayOfEditors.length; i++) {
 				dataForClient.clientDest = this.arrayOfEditors[i];
@@ -163,12 +161,11 @@ var doodle = SAGE2_App.extend({
 
 	saveCurrentWork: function() {
 		// Before saving make sure to grab a snapshot of current canvas.
-		this.state.imageSnapshot = document.getElementById( this.element.id + "DrawCanvas" ).toDataURL();
+		this.state.imageSnapshot = this.drawCanvas.toDataURL();
 		this.SAGE2UpdateAppOptionsFromState();
 		this.SAGE2Sync(true);
 		// Tell server to save the file
 		if (this.state.creationTime !== null && this.state.creationTime !== undefined) {
-			var fileData = {};
 			var fileData = {};
 			fileData.type = "saveDataOnServer";
 			fileData.fileType = "doodle"; // Extension
@@ -182,7 +179,7 @@ var doodle = SAGE2_App.extend({
 	/**
 	Will be called from addClientIdAsEditor or load.
 	When called from addClientIdAsEditor it will get passsed a parameter, responseObject.
-	From load, the responseObject will contain 
+	From load, the responseObject will contain
 	*/
 	changeTitleToOriginalCreatorAndTime: function(responseObject) {
 		// if the creationTime has not been set, then fill it out.
@@ -192,18 +189,32 @@ var doodle = SAGE2_App.extend({
 			this.state.creationTime = new Date(responseObject.serverDate);
 			// build the title string.
 			var titleString = responseObject.clientName + "-DO-" + this.state.creationTime.getFullYear();
-			if (this.state.creationTime.getMonth() < 9) { titleString += "0"; }
+			if (this.state.creationTime.getMonth() < 9) {
+				titleString += "0";
+			}
 			titleString += (this.state.creationTime.getMonth() + 1) + ""; // month +1 because starts at 0
-			if (this.state.creationTime.getDate() < 10) { titleString += "0"; }
+			if (this.state.creationTime.getDate() < 10) {
+				titleString += "0";
+			}
 			titleString += this.state.creationTime.getDate() + "-";
-			if (this.state.creationTime.getHours() < 10) { titleString += "0"; }
+			if (this.state.creationTime.getHours() < 10) {
+				titleString += "0";
+			}
 			titleString += this.state.creationTime.getHours();
-			if (this.state.creationTime.getMinutes() < 10) { titleString += "0"; }
+			if (this.state.creationTime.getMinutes() < 10) {
+				titleString += "0";
+			}
 			titleString += this.state.creationTime.getMinutes();
-			if (this.state.creationTime.getSeconds() < 10) { titleString += "0"; }
+			if (this.state.creationTime.getSeconds() < 10) {
+				titleString += "0";
+			}
 			titleString += this.state.creationTime.getSeconds();
-			if (this.state.creationTime.getMilliseconds() < 10) { titleString += "0"; }
-			if (this.state.creationTime.getMilliseconds() < 100) { titleString += "0"; }
+			if (this.state.creationTime.getMilliseconds() < 10) {
+				titleString += "0";
+			}
+			if (this.state.creationTime.getMilliseconds() < 100) {
+				titleString += "0";
+			}
 			titleString += this.state.creationTime.getMilliseconds();
 			// store it for later and update the tile.
 			this.state.creationTime = titleString;
@@ -219,16 +230,17 @@ var doodle = SAGE2_App.extend({
 
 	load: function(date) {
 		this.setInitialCanvas(this.state.imageSnapshot);
-		this.changeTitleToOriginalCreatorAndTime({creationTime:this.state.creationTime});
+		this.changeTitleToOriginalCreatorAndTime({creationTime: this.state.creationTime});
 	},
 
 	draw: function(date) {
+		// left intentionally blank
 	},
 
 	resize: function(date) {
-		var workingDiv = document.getElementById( this.element.id );
-		workingDiv.width = this.element.clientWidth + "px";
-		workingDiv.height = this.element.clientHeight + "px";
+		// var workingDiv = document.getElementById(this.element.id);
+		// workingDiv.width = this.element.clientWidth + "px";
+		// workingDiv.height = this.element.clientHeight + "px";
 	},
 
 	initializationThroughDuplicate: function(responseObject) {
@@ -240,11 +252,11 @@ var doodle = SAGE2_App.extend({
 	duplicate: function (responseObject) {
 		if (isMaster) {
 			var data = {};
-			data.type		= "launchAppWithValues";
-			data.appName	= "doodle";
-			data.func		= "initializationThroughDuplicate";
-			data.params		= {};
-			data.params.clientName = responseObject.clientName;
+			data.type    = "launchAppWithValues";
+			data.appName = "doodle";
+			data.func    = "initializationThroughDuplicate";
+			data.params  =  {};
+			data.params.clientName    = responseObject.clientName;
 			data.params.imageSnapshot = this.getCanvasAsImage();
 			wsio.emit("csdMessage", data);
 		}
@@ -270,21 +282,21 @@ var doodle = SAGE2_App.extend({
 
 		entry = {};
 		entry.description = "Duplicate";
-		entry.callback = "duplicate";
-		entry.parameters = {};
+		entry.callback    = "duplicate";
+		entry.parameters  = {};
 		entries.push(entry);
 
 		entry = {};
 		entry.description = "Edit";
-		entry.callback = "addClientIdAsEditor";
-		entry.parameters = {};
+		entry.callback    = "addClientIdAsEditor";
+		entry.parameters  = {};
 		entries.push(entry);
 
 		return entries;
 	},
 
 	event: function(eventType, position, user_id, data, date) {
-
+		// left intentionally blank
 	},
 
 	quit: function() {
