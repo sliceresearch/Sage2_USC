@@ -63,7 +63,7 @@ var exampleParent = SAGE2_App.extend( {
 		this.ctx.fillRect(0, 0, this.element.width, this.element.height);
 
 		//title
-		this.ctx.font = "36px Ariel";
+		this.ctx.font = "32px Ariel";
 		this.ctx.textAlign="left"; 
 		this.ctx.fillStyle = "rgba(0, 0, 0, 1.0)";
 		this.ctx.fillText( "I am the parent app.  Test features below:", 10, 32);
@@ -89,23 +89,40 @@ var exampleParent = SAGE2_App.extend( {
 		this.ctx.fillStyle = "rgba(148, 165, 255, 1.0)";
 		this.ctx.fillRect(100, 300, this.element.width-200, 75);
 		this.ctx.fillStyle = "rgba(0, 0, 0, 1.0)";
-		this.ctx.fillText( "Click to change color of child"+this.count+" to:", 110, 350);
+		this.ctx.fillText( "Click to change color of child"+this.count + " to:", 110, 350);
 		this.ctx.fillStyle = this.colorStringify(this.randomColor3);
 		this.ctx.fillRect(this.element.width-200, 300, 100, 75);
 
-		// // synced data
-		// this.ctx.fillStyle = "rgba(189, 148, 255, 1.0)";
-		// this.ctx.fillRect(100, 400, this.element.width-200, 75);
-		// this.ctx.fillStyle = "rgba(0, 0, 0, 1.0)";
-		// this.ctx.font = "24px Ariel";
-		// this.ctx.textAlign="left"; 
-		// this.ctx.fillText("click to double values in synced data: " + this.someDataSet , 110, 450 );
+		// close child
+		this.ctx.fillStyle = "rgba(189, 148, 255, 1.0)";
+		this.ctx.fillRect(100, 400, this.element.width-200, 75);
+		this.ctx.fillStyle = "rgba(0, 0, 0, 1.0)";
+		this.ctx.textAlign="left"; 
+		this.ctx.fillText("click to close most recent child: child" + (this.getNumberOfChildren() -1) , 110, 450 );
+
+		// move child
+		this.ctx.fillStyle = "rgba(249, 134, 167, 1.0)";
+		this.ctx.fillRect(100, 500, this.element.width-200, 75);
+		this.ctx.fillStyle = "rgba(0, 0, 0, 1.0)";
+		this.ctx.textAlign="left"; 
+		this.ctx.fillText("click to move most recent child: child" +  (this.getNumberOfChildren() -1) , 110, 550 );
+
+		// resize child
+		this.ctx.fillStyle = "rgba(249, 156, 134, 1.0)";
+		this.ctx.fillRect(100, 600, this.element.width-200, 75);
+		this.ctx.fillStyle = "rgba(0, 0, 0, 1.0)";
+		this.ctx.textAlign="left"; 
+		this.ctx.fillText("click to resize most recent child: child" +  (this.getNumberOfChildren() -1) , 110, 650 );
 
 		this.ctx.fillStyle = "rgba(0, 0, 0, 1.0)";
-		this.ctx.fillText("monitoring: " + this.getNumberOfChildren() + "   active children", 100, 410 );
-		this.ctx.font = "36px Ariel";
+		this.ctx.fillText("monitoring: " + this.getNumberOfChildren() + "   active children", 100, 710 );
 		this.ctx.textAlign="left"; 
-		this.ctx.fillText(this.monitoringText, 100, 450); 
+		this.ctx.fillText(this.monitoringText, 100, 750);   
+
+		// this.ctx.fillStyle = "rgba(0, 0, 0, 1.0)";
+		// this.ctx.fillText("display resolution: " + this.display + "   active children", 100, 610 );
+		// this.ctx.textAlign="left"; 
+		// this.ctx.fillText(this.monitoringText, 100, 650); 
 
 		//this.ctx.fillText( "Number of child apps " + this.childList.length, 10, 32+32);
 		
@@ -141,6 +158,18 @@ var exampleParent = SAGE2_App.extend( {
 				if( position.y > 300 && position.y < 375 ){ //3rd button:change color on childred
 					this.sendMessageToChild();
 					this.generateRandomColor(2);
+				}
+				if( position.y > 400 && position.y < 475 ){ //3rd button:change color on childred
+					if( this.getNumberOfChildren() > 0 )
+						this.closeChild(this.getNumberOfChildren()-1);
+				}
+				if( position.y > 500 && position.y < 575 ){ //3rd button:change color on childred
+					if( this.getNumberOfChildren() > 0 )
+						this.moveChild(this.getNumberOfChildren()-1, 300, 300);
+				}
+				if( position.y > 600 && position.y < 675 ){ //3rd button:change color on childred
+					if( this.getNumberOfChildren() > 0 )
+						this.resizeChild(this.getNumberOfChildren()-1, 900, 400, false);
 				}
 			}
 		

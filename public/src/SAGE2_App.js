@@ -828,6 +828,63 @@ var SAGE2_App = Class.extend({
 		this.childList.push( data );
 	},
 
+	/**
+	* closeChild method allows parents to close child apps
+	* 
+	* @method launchNewChild
+	* @param childAppType is the type of app (custom, pdf, image, etc)
+	*/
+	closeChild: function( n ){
+		if( n >= this.childList.length )
+			return;
+		child = this.childList[n];
+		data = {
+			childId: child.childId,
+			id: this.id
+		};
+		if( isMaster ){
+			console.log("close child");
+			closeLinkedChildApp(data); //defined in runtime
+		}
+	},
+
+	moveChild: function( n, x, y ){
+		if( n >= this.childList.length )
+			return;
+
+		child = this.childList[n];
+		data = {
+			childId: child.childId,
+			id: this.id,
+			x: x,
+			y: y
+		};
+		if( isMaster ){
+			console.log("move child");
+			moveLinkedChildApp(data); //defined in runtime
+		}
+	},
+
+	resizeChild: function( n, w, h, aspectKeep ){
+		if( n >= this.childList.length )
+			return;
+
+		child = this.childList[n];
+		data = {
+			childId: child.childId,
+			id: this.id,
+			w: w,
+			h: h,
+			aspectKeep: aspectKeep
+		};
+		if( isMaster ){
+			console.log("resize child");
+			resizeLinkedChildApp(data); //defined in runtime
+		}
+	},
+
+
+
 	//requestDisplayDimensions: 
 
 	/**
@@ -929,6 +986,9 @@ var SAGE2_App = Class.extend({
 					}
 					else{
 						console.log("child app launch failure " + data.childId + " success: " + data.data.success );
+
+						//remove the child
+						this.childList.splice(this.childList.length-1, 1);
 					}
 				}
 	    		this.childMonitorEvent(data.childId, data.type, data.data, data.date); 
@@ -951,11 +1011,11 @@ var SAGE2_App = Class.extend({
 
 
 
-	registerMyData: function( dataset, key ) {
-		if (isMaster) {
-			registerDataset(dataset, key, this.id);
-		}
-	}
+	// registerMyData: function( dataset, key ) {
+	// 	if (isMaster) {
+	// 		registerDataset(dataset, key, this.id);
+	// 	}
+	// }
 
 
 

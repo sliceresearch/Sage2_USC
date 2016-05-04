@@ -289,6 +289,40 @@ function launchLinkedChildApp(dataObject){
 
 
 /**
+ * Ask the server to close a specified child app 
+ * See 'exampleParent' for usage.
+ *
+ * @method launchLinkedChildApp
+ * @param dataObject {Object} data to be sent
+ */
+function closeLinkedChildApp(dataObject){
+	wsio.emit('closeLinkedChildApp', dataObject);
+}
+
+/**
+ * Ask the server to move a specified child app 
+ * See 'exampleParent' for usage.
+ *
+ * @method launchLinkedChildApp
+ * @param dataObject {Object} data to be sent
+ */
+function moveLinkedChildApp(dataObject){
+	wsio.emit('moveLinkedChildApp', dataObject);
+}
+
+/**
+ * Ask the server to move a specified child app 
+ * See 'exampleParent' for usage.
+ *
+ * @method launchLinkedChildApp
+ * @param dataObject {Object} data to be sent
+ */
+function resizeLinkedChildApp(dataObject){
+	wsio.emit('resizeLinkedChildApp', dataObject);
+}
+
+
+/**
  * Ask the server to send a message to a specified child app 
  * See 'exampleParent' for usage.
  *
@@ -325,15 +359,15 @@ function sendMessageToParent(id, params){
 	wsio.emit('messageToParent', dataObject);
 }
 
-function registerDataset(dataset, key, id){
-	var dataObject = {
-		dataset: dataset,
-		id: id,
-		key: key
-	};
+// function registerDataset(dataset, key, id){
+// 	var dataObject = {
+// 		dataset: dataset,
+// 		id: id,
+// 		key: key
+// 	};
 
-	wsio.emit("registerDataset", dataObject);
-}
+// 	wsio.emit("registerDataset", dataObject);
+// }
 
 // function sendMessage(toId, msgType, data) {
 // 	var dataObject = {

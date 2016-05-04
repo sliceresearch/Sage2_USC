@@ -710,6 +710,9 @@ function setupListeners(wsio) {
 	wsio.on('launchLinkedChildApp',					wsLaunchLinkedChildApp);
 	wsio.on('messageToParent',						wsMessageToParent);
 	wsio.on('messageToChild',						wsMessageToChild);
+	wsio.on('closeLinkedChildApp',					wsCloseLinkedChildApp);
+	wsio.on('moveLinkedChildApp',					wsMoveLinkedChildApp);
+	wsio.on('resizeLinkedChildApp',					wsResizeLinkedChildApp);
 
 	wsio.on('googleVoiceSpeechInput',               wsGoogleVoiceSpeechInput);
 	// wsio.on('sendMessage',							wsSendMessage());
@@ -1821,6 +1824,52 @@ function wsLaunchLinkedChildApp(wsio, data) {
 
 	});
 
+}
+
+// this function is called when a parent app wants to close a child app
+function wsCloseLinkedChildApp(wsio, data) {
+	//make sure this is a valid parent
+	console.log("close child " + data.childId);
+	// get id of child and parent from data passed from the parent
+	var parentId = data.id; // from
+	var childId = data.childId; // to
+
+	var canContinue = validParentChildPair(parentId, childId);
+
+	if( canContinue ){
+		deleteApplication(childId);
+	}
+}
+
+// this function is called when a parent app wants to move a child app
+function wsMoveLinkedChildApp(wsio, data) {
+	//make sure this is a valid parent
+	console.log("move child " + data.childId + " x:" + data.x + " y:" + data.y);
+	// get id of child and parent from data passed from the parent
+	var parentId = data.id; // from
+	var childId = data.childId; // to
+
+	var canContinue = validParentChildPair(parentId, childId);
+
+	if( canContinue ){
+		wsAppMoveTo(null, {id: childId, x: data.x, y: data.y});
+	}
+}
+
+// this function is called when a parent app wants to launch a child app
+function wsResizeLinkedChildApp(wsio, data) {
+	//make sure this is a valid parent
+	console.log("resize child " + data.childId + " w:" + data.w + " h:" + data.h);
+	// get id of child and parent from data passed from the parent
+	var parentId = data.id; // from
+	var childId = data.childId; // to
+
+	var canContinue = validParentChildPair(parentId, childId);
+
+	if( canContinue ){
+		wsAppResize(null, {id: childId, width: data.w, height: data.h, keepRatio: data.aspectKeep});
+
+	}
 }
 
 // from child to parent
