@@ -686,8 +686,9 @@ function resizeMenuUI(ratio) {
 
 	var menuScale = 1.0;
 	var freeWidth = window.innerWidth * ratio;
-	if (freeWidth < 856) {
-		menuScale = freeWidth / 856;
+	if (freeWidth < 1080) {
+		// 9 buttons, 120 pixels per button
+		menuScale = freeWidth / 1080;
 	}
 
 	menuUI.style.webkitTransform = "scale(" + menuScale + ")";
