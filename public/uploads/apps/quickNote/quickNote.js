@@ -6,7 +6,7 @@
 //
 // See full text, terms and conditions in the LICENSE.txt included file
 //
-// Copyright (c) 2014
+// Copyright (c) 2016
 
 "use strict";
 
@@ -17,17 +17,14 @@ var quickNote = SAGE2_App.extend({
 		this.resizeEvents = "continuous"; // "onfinish";
 
 		this.element.id = "div" + data.id;
-
-		var workingDiv = document.getElementById( this.element.id );
-		workingDiv.style.background = "lightyellow";
-		workingDiv.width 			= this.element.clientWidth + "px";
-		workingDiv.height 			= this.element.clientHeight + "px";
-
-		workingDiv.style.fontSize 	= ui.titleTextSize + "px";
+		this.element.style.background = "lightyellow";
+		this.element.style.fontSize   = ui.titleTextSize + "px";
+		// Using SAGE2 default font
+		this.element.style.fontFamily = "Arimo, Helvetica, sans-serif";
 
 		this.backgroundChoice = "lightyellow";
 		this.startingFontSize = ui.titleTextSize;
-		this.startingWidth    = 300; // hard coded to match instructions width
+		this.startingWidth    = data.width; // to match instructions width
 
 		// If loaded from session, this.state will have meaningful values.
 		this.setMessage(this.state);
@@ -46,10 +43,10 @@ var quickNote = SAGE2_App.extend({
 
 	*/
 	parseDataFromServer: function(fileContentsFromServer) {
-		var fileData = {};
+		var fileData  = {};
 		var fileLines = fileContentsFromServer.split("\n");
 		fileData.fileDefined = true;
-		fileData.clientName = fileLines[0];
+		fileData.clientName  = fileLines[0];
 		fileData.colorChoice = fileLines[1];
 		fileData.clientInput = fileLines[2];
 		this.setMessage(fileData);
@@ -60,39 +57,38 @@ var quickNote = SAGE2_App.extend({
 	msgParams.clientInput	What they typed for the note.
 	*/
 	setMessage: function(msgParams) {
-		var workingDiv = document.getElementById( this.element.id );
 		// First remove potential new lines from input
-		if (msgParams.clientInput) { msgParams.clientInput = msgParams.clientInput.replace(/\n/g,""); }
+		if (msgParams.clientInput) { msgParams.clientInput = msgParams.clientInput.replace(/\n/g, ""); }
 		// If defined by a file, use those values
 		if (msgParams.fileDefined === true) {
-			this.backgroundChoice       = msgParams.colorChoice;
-			this.state.colorChoice      = this.backgroundChoice;
-			workingDiv.style.background = msgParams.colorChoice;
-			this.state.clientInput      = msgParams.clientInput;
-			workingDiv.innerHTML        = msgParams.clientInput;
-			this.state.creationTime     = msgParams.clientName;
+			this.backgroundChoice   = msgParams.colorChoice;
+			this.state.colorChoice  = this.backgroundChoice;
+			this.state.clientInput  = msgParams.clientInput;
+			this.state.creationTime = msgParams.clientName;
+			this.element.style.background = msgParams.colorChoice;
+			this.element.innerHTML        = msgParams.clientInput;
 			this.updateTitle(this.state.creationTime);
 			this.saveNote(msgParams.creationTime);
 			return;
 		}
 
 		// Otherwise set the values using probably user input.
-		if (msgParams.clientName === undefined || msgParams.clientName === null || msgParams.clientName =="") {
+		if (msgParams.clientName === undefined || msgParams.clientName === null || msgParams.clientName == "") {
 			msgParams.clientName = "Anonymous";
 		}
 		// If the color choice was not defined, default to lightyellow.
-		if (msgParams.colorChoice === undefined || msgParams.colorChoice === null || msgParams.colorChoice =="") {
+		if (msgParams.colorChoice === undefined || msgParams.colorChoice === null || msgParams.colorChoice == "") {
 			this.backgroundChoice = "lightyellow";
-			workingDiv.style.background = "lightyellow";
-		}
-		else { // Else use the given color.
+			this.element.style.background = "lightyellow";
+		} else {
+			// Else use the given color.
 			this.backgroundChoice = msgParams.colorChoice;
-			workingDiv.style.background = msgParams.colorChoice;
+			this.element.style.background = msgParams.colorChoice;
 		}
 
-		workingDiv.innerHTML = msgParams.clientInput;
+		this.element.innerHTML = msgParams.clientInput;
 
-		this.state.clientName = msgParams.clientName;
+		this.state.clientName  = msgParams.clientName;
 		this.state.clientInput = msgParams.clientInput;
 		this.state.colorChoice = this.backgroundChoice;
 
@@ -103,18 +99,32 @@ var quickNote = SAGE2_App.extend({
 			this.state.creationTime = new Date(msgParams.serverDate);
 			// build the title string.
 			var titleString = msgParams.clientName + "-QN-" + this.state.creationTime.getFullYear();
-			if (this.state.creationTime.getMonth() < 9) { titleString += "0"; }
+			if (this.state.creationTime.getMonth() < 9) {
+				titleString += "0";
+			}
 			titleString += (this.state.creationTime.getMonth() + 1) + ""; // month +1 because starts at 0
-			if (this.state.creationTime.getDate() < 10) { titleString += "0"; }
+			if (this.state.creationTime.getDate() < 10) {
+				titleString += "0";
+			}
 			titleString += this.state.creationTime.getDate() + "-";
-			if (this.state.creationTime.getHours() < 10) { titleString += "0"; }
+			if (this.state.creationTime.getHours() < 10) {
+				titleString += "0";
+			}
 			titleString += this.state.creationTime.getHours();
-			if (this.state.creationTime.getMinutes() < 10) { titleString += "0"; }
+			if (this.state.creationTime.getMinutes() < 10) {
+				titleString += "0";
+			}
 			titleString += this.state.creationTime.getMinutes();
-			if (this.state.creationTime.getSeconds() < 10) { titleString += "0"; }
+			if (this.state.creationTime.getSeconds() < 10) {
+				titleString += "0";
+			}
 			titleString += this.state.creationTime.getSeconds();
-			if (this.state.creationTime.getMilliseconds() < 10) { titleString += "0"; }
-			if (this.state.creationTime.getMilliseconds() < 100) { titleString += "0"; }
+			if (this.state.creationTime.getMilliseconds() < 10) {
+				titleString += "0";
+			}
+			if (this.state.creationTime.getMilliseconds() < 100) {
+				titleString += "0";
+			}
 			titleString += this.state.creationTime.getMilliseconds();
 			// store it for later and update the tile.
 			this.state.creationTime = titleString;
@@ -140,7 +150,9 @@ var quickNote = SAGE2_App.extend({
 	},
 
 	saveNote: function(date) {
-		if (this.state.creationTime === null || this.state.creationTime === undefined) { return; }
+		if (this.state.creationTime === null || this.state.creationTime === undefined) {
+			return;
+		}
 		// This is what saves the state between sessions as far as can be determined.
 		this.SAGE2UpdateAppOptionsFromState();
 		this.SAGE2Sync(true);
@@ -160,20 +172,17 @@ var quickNote = SAGE2_App.extend({
 	},
 
 	draw: function(date) {
+		// left intentionally blank
 	},
 
 	resize: function(date) {
-		var workingDiv = document.getElementById( this.element.id );
-		workingDiv.style.background = this.backgroundChoice;
-		workingDiv.width = this.element.clientWidth + "px";
-		workingDiv.height = this.element.clientHeight + "px";
-
-		var percentChange = parseInt( this.element.clientWidth ) / this.startingWidth;
-		workingDiv.style.fontSize = (this.startingFontSize * percentChange) + "px";
+		this.element.style.background = this.backgroundChoice;
+		var percentChange = parseInt(this.element.clientWidth) / this.startingWidth;
+		this.element.style.fontSize = (this.startingFontSize * percentChange) + "px";
 	},
 
 	event: function(eventType, position, user_id, data, date) {
-
+		// left intentionally blank
 	},
 
 	duplicate: function(responseObject) {
@@ -204,21 +213,21 @@ var quickNote = SAGE2_App.extend({
 	*			clientInput, if entry is marked as input, the value will be in this property. See pdf_viewer.js for example.
 	*		Further parameters can be added. See pdf_view.js for example.
 	*/
-	getContextEntries: function(	) {
+	getContextEntries: function() {
 		var entries = [];
 		var entry;
 
 		entry = {};
 		entry.description = "Duplicate";
-		entry.callback = "duplicate";
-		entry.parameters = {};
+		entry.callback    = "duplicate";
+		entry.parameters  = {};
 		entries.push(entry);
 
 		entry = {};
 		entry.description = "Change Note:";
-		entry.callback = "setMessage";
-		entry.parameters = {};
-		entry.inputField = true;
+		entry.callback    = "setMessage";
+		entry.parameters  = {};
+		entry.inputField  = true;
 		entry.inputFieldSize = 20;
 		entries.push(entry);
 

@@ -3,7 +3,7 @@
 	"icon": "quickNote.png",
 	"width": 300,
 	"height": 150,
-	"animation": true,
+	"animation": false,
 	"sticky": true,
 	"dependencies": [
 	],
@@ -16,7 +16,7 @@
 	"title": "Quick Note",
 	"version": "1.0.0",
 	"description": "Quick Note",
-	"keywords": [ "note" ],
+	"keywords": [ "note", "text", "postit" ],
 	"fileTypes": [ "note"],
 	"directory": "notes",
 	"author": "Dylan Kobayashi <dylank@hawaii.edu>",
