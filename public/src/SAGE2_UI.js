@@ -321,9 +321,9 @@ function SAGE2_init() {
 		var clientDescription = {
 			clientType: "sageUI",
 			requests: {
-				config: true,
+				config:  true,
 				version: true,
-				time: false,
+				time:    false,
 				console: false
 			},
 			browser: __SAGE2__.browser,
@@ -1202,10 +1202,10 @@ function handleClick(element) {
 		info3.innerHTML += "  - " + displayUI.config.resolution.width + " x " + displayUI.config.resolution.height + ")";
 		infoData.appendChild(info2);
 		infoData.appendChild(info3);
-		if (displayUI.config.version) {
+		if (sage2Version) {
 			var info5 = document.createElement('p');
-			info5.innerHTML  = "<span style='font-weight:bold;'>Version</span>: " + displayUI.config.version.base + "-" + displayUI.config.version.branch + "-"
-				+ displayUI.config.version.commit + " - " + displayUI.config.version.date;
+			info5.innerHTML  = "<span style='font-weight:bold;'>Version</span>: " + sage2Version.base + "-" + sage2Version.branch + "-"
+				+ sage2Version.commit + " - " + sage2Version.date;
 			infoData.appendChild(info5);
 		}
 		// Finally show the dialog
