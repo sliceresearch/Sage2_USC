@@ -597,7 +597,6 @@ var SAGE2_App = Class.extend({
 			checkHeight *= this.config.layout.rows;
 		} else {
 			// multiply by the size of the tile
-			// FIX: offsetX and offsetY might not be correct
 			checkWidth  *= (this.config.displays[clientID].width  || 1);
 			checkHeight *= (this.config.displays[clientID].height || 1);
 		}

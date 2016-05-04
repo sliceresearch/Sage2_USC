@@ -1148,7 +1148,6 @@ function wsUpdateMediaStreamFrame(wsio, data) {
 		var checkWidth  = config.resolution.width;
 		var checkHeight = config.resolution.height;
 		// Check for irregular tiles
-		// FIX: offestX and Y might not be correct
 		checkWidth  *= (config.displays[did].width  || 1);
 		checkHeight *= (config.displays[did].height || 1);
 
