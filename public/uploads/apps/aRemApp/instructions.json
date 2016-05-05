@@ -8,7 +8,8 @@
 	"dependencies": [
 	],
 	"load": {
-		"numToShow": 0
+		"numToShow": 0,
+		"araPointers": null
 	},
 	"title": "aRemApp",
 	"version": "1.0.0",

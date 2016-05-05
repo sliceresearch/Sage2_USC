@@ -26,6 +26,9 @@ var aRemApp = SAGE2_App.extend({
 
 		this.state.numToShow = 0;
 		workingDiv.innerHTML = "<div id='" + this.element.id + "infoDiv'>Starting</div>";
+		this.state.araPointers = [];
+		this.pointerUpdateTimer = Date.now();
+		console.log("erase me, just started aRemApp the id is:" + this.element.id);
 	},
 
 	load: function(date) {
@@ -37,6 +40,28 @@ var aRemApp = SAGE2_App.extend({
 		workingDiv.style.fontSize = "100px";
 		workingDiv.style.background = "white";
 		workingDiv.innerHTML = this.state.numToShow;
+
+		for (var i = 0; i < this.state.araPointers.length; i++) {
+			workingDiv = "app_" + this.element.id.substring(this.element.id.indexOf("_") + 1) + this.state.araPointers[i].id;
+			// console.log("erase me, workingDiv id string:" + workingDiv);
+			workingDiv = document.getElementById(workingDiv);
+			// console.log("erase me, workingDiv after getElementById:" + workingDiv);
+			if (workingDiv === undefined || workingDiv === null) {
+				console.log("erase me, error with working div:" + workingDiv);
+				console.dir(workingDiv);
+				workingDiv = document.createElement("div");
+				workingDiv.id = "app_" + this.element.id.substring(this.element.id.indexOf("_") + 1) + this.state.araPointers[i].id;
+				workingDiv.style.position = "absolute";
+				workingDiv.style.width = "20px";
+				workingDiv.style.height = "20px";
+				var appContainer = document.getElementById("app_" + this.element.id.substring(this.element.id.indexOf("_") + 1));
+				appContainer.appendChild(workingDiv);
+			}
+			workingDiv.style.left = this.state.araPointers[i].x + "px";
+			workingDiv.style.top = this.state.araPointers[i].y + "px";
+			workingDiv.style.background = this.state.araPointers[i].color;
+			workingDiv.innerHTML = this.state.araPointers[i].label;
+		}
 	},
 
 	resize: function(date) {
@@ -92,7 +117,60 @@ var aRemApp = SAGE2_App.extend({
 	},
 
 	event: function(eventType, position, user_id, data, date) {
+		if (eventType === "pointerMove") {
+			this.trackPointer(user_id, position, date);
+		}
+	},
 
+	trackPointer: function(userInfo, position, date) {
+		var pIndex = -1;
+		var pointerRef;
+		var pointDiv;
+		// Search if the pointer is being tracked.
+		for (var i = 0; i < this.state.araPointers.length; i++) {
+			// Two equals instead of three because there seems to be auto conversion with a pointer id.
+			if (this.state.araPointers[i].id == (""+ userInfo.id)) {
+				pIndex = i;
+				break;
+			}
+		}
+		// If not found make a new entry.
+		if (pIndex === -1) {
+			pointerRef = {};
+			pointerRef.id = "" + userInfo.id;
+			console.log("erase me, pointerRef.id:" + pointerRef.id);
+			this.state.araPointers.push(pointerRef);
+			// Also make visual value for it
+			pointDiv = document.createElement("div");
+			pointDiv.id = "app_" + this.element.id.substring(this.element.id.indexOf("_") + 1) + pointerRef.id;
+			pointDiv.style.position = "absolute";
+			pointDiv.style.width = "20px";
+			pointDiv.style.height = "20px";
+			var appContainer = document.getElementById("app_" + this.element.id.substring(this.element.id.indexOf("_") + 1));
+			appContainer.appendChild(pointDiv);
+		} else { // Otherwise use existing entry.
+			pointerRef = this.state.araPointers[pIndex];
+		}
+		// Update values
+		pointerRef.color = userInfo.color;
+		pointerRef.label = userInfo.label;
+		pointerRef.x = position.x;
+		pointerRef.y = position.y;
+		// Update div
+		pointDiv = document.getElementById("app_" + this.element.id.substring(this.element.id.indexOf("_") + 1) + pointerRef.id);
+		pointDiv.style.left = pointerRef.x + "px";
+		pointDiv.style.top = pointerRef.y + "px";
+		pointDiv.style.background = pointerRef.color;
+		pointDiv.innerHTML = pointerRef.label;
+
+		if (Date.now() - this.pointerUpdateTimer > 50) {
+			this.SAGE2UserModification = true;
+			this.refresh(date);
+			this.SAGE2UserModification = false;
+			this.pointerUpdateTimer = Date.now();
+			// console.log("erase me, updating a pointer move now");
+			// console.dir(this.state.araPointers);
+		}
 	},
 
 	quit: function() {
