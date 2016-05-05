@@ -12,7 +12,6 @@
  * @module server
  */
 
-// Comment added on cloud9
 
 // node mode
 /* jshint node: true */
