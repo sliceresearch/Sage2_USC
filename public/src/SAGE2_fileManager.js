@@ -627,12 +627,11 @@ function FileManager(wsio, mydiv, uniqueID) {
 	this.tree.attachEvent("onBeforeDrop", function(context, ev) {
 		if (context.target.startsWith("Image:")   ||
 			context.target.startsWith("PDF:")     ||
-			context.target.startsWith("Note:")     ||
+			context.target.startsWith("Note:")    ||
 			context.target.startsWith("Video:")   ||
 			context.target.startsWith("App:")     ||
 			context.target.startsWith("Session:") ||
-			context.target.startsWith("Mine:")    ||
-			context.target.startsWith("Config:")) {
+			context.target.startsWith("Mine:")) {
 			// No DnD on search icons
 			return false;
 		}
@@ -832,11 +831,14 @@ function FileManager(wsio, mydiv, uniqueID) {
 			});
 		} else if (searchParam === "PDF:/") {
 			_this.allTable.filter(function(obj) {
-				return obj.type.toString() === "PDF";
+				return _this.allFiles[obj.id].exif.MIMEType.indexOf('pdf') >= 0;
 			});
 		} else if (searchParam === "Note:/") {
 			_this.allTable.filter(function(obj) {
-				return _this.allFiles[obj.id].exif.MIMEType.indexOf('text/plain') >= 0;
+				return (_this.allFiles[obj.id].sage2Type &&
+					(_this.allFiles[obj.id].sage2Type.indexOf('application/note') >= 0 ||
+					_this.allFiles[obj.id].sage2Type.indexOf('application/doodle') >= 0)
+				);
 			});
 		} else if (searchParam === "Video:/") {
 			_this.allTable.filter(function(obj) {
@@ -858,51 +860,47 @@ function FileManager(wsio, mydiv, uniqueID) {
 				}
 				return val;
 			});
-		} else if (searchParam === "Config:/") {
-			_this.allTable.filter(function(obj) {
-				return false;
-			});
 		} else if (searchParam === "treeroot") {
 			_this.allTable.filter();
 		} else {
-			var query = searchParam.split(':');
-			if (query[0] === "Image") {
-				_this.allTable.filter(function(obj) {
-					return (_this.allFiles[obj.id].exif.MIMEType.indexOf('image') >= 0) &&
-							(_this.allFiles[obj.id].sage2URL.lastIndexOf(query[1], 0) === 0);
-				});
-			} else if (query[0] === "PDF") {
-				_this.allTable.filter(function(obj) {
-					return (obj.type.toString() === "PDF") &&
-							(_this.allFiles[obj.id].sage2URL.lastIndexOf(query[1], 0) === 0);
-				});
-			} else if (query[0] === "Note") {
-				_this.allTable.filter(function(obj) {
-					return (obj.type.toString() === "text/plain") &&
-							(_this.allFiles[obj.id].sage2URL.lastIndexOf(query[1], 0) === 0);
-				});
-			} else if (query[0] === "Video") {
-				_this.allTable.filter(function(obj) {
-					return (_this.allFiles[obj.id].exif.MIMEType.indexOf('video') >= 0) &&
-							(_this.allFiles[obj.id].sage2URL.lastIndexOf(query[1], 0) === 0);
-				});
-			} else if (query[0] === "App") {
-				_this.allTable.filter(function(obj) {
-					return (_this.allFiles[obj.id].exif.MIMEType.indexOf('application/custom') >= 0) &&
-							(_this.allFiles[obj.id].sage2URL.lastIndexOf(query[1], 0) === 0);
-				});
-			} else if (query[0] === "Session") {
-				_this.allTable.filter(function(obj) {
-					return (_this.allFiles[obj.id].exif.MIMEType.indexOf('sage2/session') >= 0) &&
-							(_this.allFiles[obj.id].sage2URL.lastIndexOf(query[1], 0) === 0);
-				});
-			} else if (query[0] === "Config") {
-				_this.allTable.filter(function(obj) {
-					return false;
-				});
-			} else {
-				// console.log('Default search on:', searchParam);
-			}
+			// var query = searchParam.split(':');
+			// if (query[0] === "Image") {
+			// 	_this.allTable.filter(function(obj) {
+			// 		return (_this.allFiles[obj.id].exif.MIMEType.indexOf('image') >= 0) &&
+			// 				(_this.allFiles[obj.id].sage2URL.lastIndexOf(query[1], 0) === 0);
+			// 	});
+			// } else if (query[0] === "PDF") {
+			// 	_this.allTable.filter(function(obj) {
+			// 		return (_this.allFiles[obj.id].exif.MIMEType.indexOf('pdf') >= 0) &&
+			// 				(_this.allFiles[obj.id].sage2URL.lastIndexOf(query[1], 0) === 0);
+			// 	});
+			// } else if (query[0] === "Note") {
+			// 	_this.allTable.filter(function(obj) {
+			// 		return (_this.allFiles[obj.id].exif.sage2Type.indexOf('application/note') >= 0) &&
+			// 				(_this.allFiles[obj.id].sage2URL.lastIndexOf(query[1], 0) === 0);
+			// 	});
+			// } else if (query[0] === "Video") {
+			// 	_this.allTable.filter(function(obj) {
+			// 		return (_this.allFiles[obj.id].exif.MIMEType.indexOf('video') >= 0) &&
+			// 				(_this.allFiles[obj.id].sage2URL.lastIndexOf(query[1], 0) === 0);
+			// 	});
+			// } else if (query[0] === "App") {
+			// 	_this.allTable.filter(function(obj) {
+			// 		return (_this.allFiles[obj.id].exif.MIMEType.indexOf('application/custom') >= 0) &&
+			// 				(_this.allFiles[obj.id].sage2URL.lastIndexOf(query[1], 0) === 0);
+			// 	});
+			// } else if (query[0] === "Session") {
+			// 	_this.allTable.filter(function(obj) {
+			// 		return (_this.allFiles[obj.id].exif.MIMEType.indexOf('sage2/session') >= 0) &&
+			// 				(_this.allFiles[obj.id].sage2URL.lastIndexOf(query[1], 0) === 0);
+			// 	});
+			// } else if (query[0] === "Config") {
+			// 	_this.allTable.filter(function(obj) {
+			// 		return false;
+			// 	});
+			// } else {
+			// 	// console.log('Default search on:', searchParam);
+			// }
 		}
 	}
 
@@ -960,13 +958,13 @@ function FileManager(wsio, mydiv, uniqueID) {
 			this.allFiles[f.id] = f;
 			this.createSubFolderForFile(f);
 		}
-		for (i = 0; i < data.notes.length; i++) {
-			f = data.notes[i];
+		for (i = 0; i < data.applications.length; i++) {
+			f = data.applications[i];
 			this.allFiles[f.id] = f;
 			this.createSubFolderForFile(f);
 		}
-		for (i = 0; i < data.applications.length; i++) {
-			f = data.applications[i];
+		for (i = 0; i < data.others.length; i++) {
+			f = data.others[i];
 			this.allFiles[f.id] = f;
 			this.createSubFolderForFile(f);
 		}
