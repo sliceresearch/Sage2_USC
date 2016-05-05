@@ -58,7 +58,9 @@ var quickNote = SAGE2_App.extend({
 	*/
 	setMessage: function(msgParams) {
 		// First remove potential new lines from input
-		if (msgParams.clientInput) { msgParams.clientInput = msgParams.clientInput.replace(/\n/g, ""); }
+		if (msgParams.clientInput) {
+			msgParams.clientInput = msgParams.clientInput.replace(/\n/g, "");
+		}
 		// If defined by a file, use those values
 		if (msgParams.fileDefined === true) {
 			this.backgroundChoice   = msgParams.colorChoice;
@@ -140,10 +142,10 @@ var quickNote = SAGE2_App.extend({
 	load: function(date) {
 		if (this.state.clientInput !== undefined && this.state.clientInput !== null) {
 			this.setMessage({
-				clientName:this.state.clientName,
-				clientInput:this.state.clientInput,
-				colorChoice:this.state.colorChoice,
-				creationTime:this.state.creationTime
+				clientName:   this.state.clientName,
+				clientInput:  this.state.clientInput,
+				colorChoice:  this.state.colorChoice,
+				creationTime: this.state.creationTime
 			});
 		}
 		this.resize(date);
@@ -161,7 +163,7 @@ var quickNote = SAGE2_App.extend({
 		var fileData = {};
 		fileData.type = "saveDataOnServer";
 		fileData.fileType = "note"; // Extension
-		fileData.fileName = this.state.creationTime + ".note"; // Fullname w/ extension
+		fileData.fileName = this.state.creationTime + ".note"; // Fullname with extension
 		// What to save in the file
 		fileData.fileContent = this.state.creationTime
 			+ "\n"
