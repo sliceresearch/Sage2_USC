@@ -535,12 +535,24 @@ AppLoader.prototype.loadDoodleFromFile = function(file, mime_type, aUrl, externa
 		appInstance.data.file = assets.getURL(file);
 		appInstance.file = file;
 
-		// This will add the contents of the note to the send data values. Assuming the var is unique.
-		appInstance.data.contentsOfDoodleFile = "data:image/png;base64," + fs.readFileSync(file).toString('base64');
+		// Making sure the file exist first
+		if (sageutils.fileExists(file)) {
+			var content = fs.readFileSync(file).toString('base64');
+			// This will add the contents of the note to the send data values.
+			// Assuming the var is unique.
+			appInstance.data.contentsOfDoodleFile = "data:image/png;base64," + content;
+		} else {
+			appInstance.data.contentsOfDoodleFile = null;
+		}
+
 		// Include the file name to reset to original
 		var fbasic = file;
-		while (fbasic.indexOf("/") > -1) { fbasic = fbasic.substring(fbasic.indexOf("/") + 1); }
-		while (fbasic.indexOf("\\") > -1) { fbasic = fbasic.substring(fbasic.indexOf("\\") + 1); }
+		while (fbasic.indexOf("/") > -1) {
+			fbasic = fbasic.substring(fbasic.indexOf("/") + 1);
+		}
+		while (fbasic.indexOf("\\") > -1) {
+			fbasic = fbasic.substring(fbasic.indexOf("\\") + 1);
+		}
 		fbasic = fbasic.substring(0, fbasic.indexOf(".doodle"));
 		appInstance.data.fileName = fbasic;
 		callback(appInstance);
