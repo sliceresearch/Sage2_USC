@@ -24,7 +24,6 @@ var url          = require('url');
 
 var Unzip        = require('decompress-zip');
 var gm           = require('gm');
-var mime         = require('mime');
 var request      = require('request');
 var ytdl         = require('ytdl-core');
 var Videodemuxer = (process.arch !== 'arm') ? require('node-demux') : null;
@@ -793,10 +792,18 @@ function getSAGE2URL(getName) {
 
 
 AppLoader.prototype.loadFileFromLocalStorage = function(file, callback) {
+	var mime_type;
 	var localPath = getSAGE2Path(file.filename);
-	// var mime_type = mime.lookup(file.filename);
-	var mime_type = assets.getMimeType(localPath);
 	var a_url     = assets.getURL(localPath);
+	var mime_app  = registry.getMimeType(localPath);
+	if (mime_app) {
+		// if it's a type registred by an app, override the mime type
+		// in order to launch the right app
+		mime_type = mime_app;
+	} else {
+		// otherwise use the mime type from exiftool
+		mime_type = assets.getMimeType(localPath);
+	}
 	if (typeof a_url !== "string") {
 		console.log("AppLoader>	Cannot load app for file:", file);
 		return;
@@ -819,7 +826,7 @@ AppLoader.prototype.manageAndLoadUploadedFile = function(file, callback) {
 		callback(null);
 		return;
 	}
-	var mime_type = mime.lookup(cleanFilename);
+	var mime_type = registry.getMimeType(cleanFilename);
 	var dir = registry.getDirectory(cleanFilename);
 
 	if (!sageutils.folderExists(path.join(this.publicDir, dir))) {
@@ -879,10 +886,6 @@ AppLoader.prototype.loadApplication = function(appData, callback) {
 	var app;
 	if (appData.location === "file") {
 		app = registry.getDefaultAppFromMime(appData.type);
-		// Hardcode bad. but currently one of few ways to get around.
-		if (appData.name.indexOf(".doodle") >= 0) {
-			app = "apps doodle";
-		}
 		if (app === "image_viewer") {
 			this.loadImageFromFile(appData.path, appData.type, appData.url, appData.external_url, appData.name,
 					function(appInstance) {
