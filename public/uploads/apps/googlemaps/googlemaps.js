@@ -361,6 +361,45 @@ var googlemaps = SAGE2_App.extend({
 				console.log('Geocode was not successful for the following reason: ' + status);
 			}
 		}.bind(this));
+	},
+
+	/**
+	* To enable right click context menu support this function needs to be present.
+	*
+	* Must return an array of entries. An entry is an object with three properties:
+	*	description: what is to be displayed to the viewer.
+	*	callback: String containing the name of the function to activate in the app. It must exist.
+	*	parameters: an object with specified datafields to be given to the function.
+	*		The following attributes will be automatically added by server.
+	*			serverDate, on the return back, server will fill this with time object.
+	*			clientId, unique identifier (ip and port) for the client that selected entry.
+	*			clientName, the name input for their pointer. Note: users are not required to do so.
+	*			clientInput, if entry is marked as input, the value will be in this property. See pdf_viewer.js for example.
+	*		Further parameters can be added. See pdf_view.js for example.
+	*/
+	getContextEntries: function() {
+		var entries = [];
+		var entry   = {};
+		// label of them menu
+		entry.description = "Type a location:";
+		// callback
+		entry.callback   = "setLocation";
+		// parameters of the callback function
+		entry.parameters = {};
+		entry.inputField     = true;
+		entry.inputFieldSize = 20;
+		entries.push(entry);
+
+		return entries;
+	},
+
+	/**
+	 * Callback from th web ui menu (right click)
+	*/
+	setLocation: function(msgParams) {
+		// receive an from the web ui
+		// .clientInput for what they typed
+		this.codeAddress(msgParams.clientInput);
 	}
 
 });
