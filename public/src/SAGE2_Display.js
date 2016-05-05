@@ -408,6 +408,7 @@ function setupListeners() {
 		var app = applications[data.id];
 		if (app !== undefined && app !== null) {
 			app.SAGE2Load(data.state, new Date(data.date));
+			app.drawRemotePointerGhosts();
 		}
 	});
 
@@ -1330,9 +1331,6 @@ function createAppWindow(data, parentId, titleBarHeight, titleTextSize, offsetX,
 			date: date,
 			title: data.title
 		};
-
-		console.log("erase me, value of init.state" + init.state);
-		console.dir(init.state);
 
 		// load new app
 		if (window[data.application] === undefined) {

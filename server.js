@@ -6899,6 +6899,9 @@ function pointerCloseGesture(uniqueID, pointerX, pointerY, time, gesture) {
 }
 
 function handleNewApplication(appInstance, videohandle) {
+	// Create tracking for all apps by default stacking another state load value.
+	if (appInstance.data === null || appInstance.data === undefined) { appInstance.data = {}; }
+	appInstance.data.pointersOverApp = [];
 	broadcast('createAppWindow', appInstance);
 	broadcast('createAppWindowPositionSizeOnly', getAppPositionSize(appInstance));
 
