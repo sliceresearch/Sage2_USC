@@ -76,7 +76,9 @@ function FileManager(wsio, mydiv, uniqueID) {
 		{id: "file_menu", value: "File", submenu: [
 			{id: "folder_menu",  value: "New folder"},
 			{id: "upload_menu",  value: "Upload file"},
-			{id: "refresh_menu", value: "Refresh"}
+			{id: "refresh_menu", value: "Refresh"},
+			{$template: "Separator"},
+			{id: "hidefm_menu", value: "Quit"}
 		]},
 		{id: "edit_menu", value: "Edit", submenu: [
 			{id: "delete_menu",   value: "Delete"},
@@ -84,7 +86,6 @@ function FileManager(wsio, mydiv, uniqueID) {
 		]},
 		{id: "view_menu", value: "View", submenu: [
 			{id: "hideui_menu", value: "Show/Hide UI"},
-			{id: "hidefm_menu", value: "Hide file manager"},
 			{$template: "Separator"},
 			{id: "tile_menu",   value: "Tile content"},
 			{id: "clear_menu",  value: "Clear display"}
