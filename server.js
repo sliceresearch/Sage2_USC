@@ -146,7 +146,7 @@ for (var folder in mediaFolders) {
 		}
 		console.log(sageutils.header('Folders') + 'upload to ' + f.path);
 	}
-	var newdirs = ["apps", "assets", "images", "pdfs", "tmp", "videos", "config", "notes"];
+	var newdirs = ["apps", "assets", "images", "pdfs", "tmp", "videos", "config"];
 	newdirs.forEach(function(d) {
 		var newsubdir = path.join(mediaFolders[f.name].path, d);
 		if (!sageutils.folderExists(newsubdir)) {
@@ -1697,10 +1697,10 @@ function deleteSession(filename) {
 		}
 		fs.unlink(fullpath, function(err) {
 			if (err) {
-				console.log("Sessions> Could not delete session ", filename, err);
+				console.log(sageutils.header("Session") + "Could not delete session " + filename + err);
 				return;
 			}
-			console.log("Sessions> Successfully deleted session", filename);
+			console.log(sageutils.header("Session") + "Successfully deleted session " + filename);
 		});
 	}
 }
@@ -1733,7 +1733,7 @@ function saveSession(filename) {
 		console.log(sageutils.header("Session") + "saved session file to " + fullpath);
 	}
 	catch (err) {
-		console.log(sageutils.header("Session") + "error saving", err);
+		console.log(sageutils.header("Session") + "error saving " + err);
 	}
 }
 
@@ -2140,7 +2140,7 @@ function wsTileApplications(wsio, data) {
 // **************  Server File Functions *****************
 
 function wsRequestAvailableApplications(wsio, data) {
-	var apps = getApplications();
+	var apps = assets.listApps();
 	wsio.emit('availableApplications', apps);
 }
 
@@ -2473,23 +2473,6 @@ function wsDeleteElementFromStoredFiles(wsio, data) {
 		// if it's a session
 		deleteSession(data.filename);
 	}
-	// } else if (data.application === 'custom_app') {
-	// 	// an app
-	// 	// NYI
-	// 	return;
-	// } else if (data.application === 'image_viewer') {
-	// 	// an image
-	// 	assets.deleteImage(data.filename);
-	// } else if (data.application === 'movie_player') {
-	// 	// a movie
-	// 	assets.deleteVideo(data.filename);
-	// } else if (data.application === 'pdf_viewer') {
-	// 	// an pdf
-	// 	assets.deletePDF(data.filename);
-	// } else {
-	// 	// I dont know
-	// 	return;
-	// }
 }
 
 function wsMoveElementFromStoredFiles(wsio, data) {
@@ -3615,41 +3598,15 @@ function getUniqueSharedAppId(portalId) {
 	return "app_" + remoteSharingSessions[portalId].appCount + "_" + portalId;
 }
 
-function getApplications() {
-	var uploadedApps = assets.listApps();
-
-	// Remove 'viewer' apps
-	var i = uploadedApps.length;
-	while (i--) {
-		if (uploadedApps[i].exif.metadata.fileTypes &&
-			uploadedApps[i].exif.metadata.fileTypes.length > 0) {
-			uploadedApps.splice(i, 1);
-		}
-	}
-	// Sort the list of apps
-	uploadedApps.sort(sageutils.compareTitle);
-
-	return uploadedApps;
-}
-
 function getSavedFilesList() {
-	// Build lists of assets
-	var uploadedImages = assets.listImages();
-	var uploadedVideos = assets.listVideos();
-	var uploadedPdfs   = assets.listPDFs();
-	var uploadedNotes  = assets.listNotes();
+	// Get the sessions
 	var savedSessions  = listSessions();
-	var uploadedApps   = getApplications();
-
-	// Sort independently of case
-	uploadedImages.sort(sageutils.compareFilename);
-	uploadedVideos.sort(sageutils.compareFilename);
-	uploadedPdfs.sort(sageutils.compareFilename);
-	uploadedNotes.sort(sageutils.compareFilename);
 	savedSessions.sort(sageutils.compareFilename);
 
-	var list = {images: uploadedImages, videos: uploadedVideos, pdfs: uploadedPdfs, notes: uploadedNotes,
-				sessions: savedSessions, applications: uploadedApps};
+	// Get everything from the asset manager
+	var list = assets.listAssets();
+	// add the sessions
+	list.sessions = savedSessions;
 
 	return list;
 }
@@ -4371,7 +4328,7 @@ function processInputCommand(line) {
 			break;
 		}
 		case 'assets': {
-			assets.listAssets();
+			assets.printAssets();
 			break;
 		}
 		case 'regenerate': {
@@ -7481,7 +7438,7 @@ function csdWhatAppIsAt(wsio, data) {
  * Note: under conditions it might be possible to generate false positives.
 */
 function csdGetPathOfApp(appName) {
-	var apps = getApplications();
+	var apps = assets.listApps();
 	// for each of the apps known to SAGE2, usually everything in public/uploads/apps
 	for (var i = 0; i < apps.length; i++) {
 		if (// if the name contains appName
@@ -7792,26 +7749,33 @@ function csdSaveDataOnServer(wsio, data) {
 	while (data.fileName.indexOf("\\") >= 0) {
 		data.fileName = data.fileName.substring(data.fileName.indexOf("\\") + 1);
 	}
+
+	// Create the folder as needed
+	var notesFolder = path.join(mainFolder.path, "notes");
+	if (!sageutils.folderExists(notesFolder)) {
+		sageutils.mkdirParent(notesFolder);
+	}
+
 	var fullpath;
 	// Special case for the extension saving.
 	if (data.fileType === "note") {
 		// Just in case, save
-		fullpath = path.join(mainFolder.path, "notes", "lastNote.note");
+		fullpath = path.join(notesFolder, "lastNote.note");
 		fs.writeFileSync(fullpath, data.fileContent);
-		fullpath = path.join(mainFolder.path, "notes", data.fileName);
+		fullpath = path.join(notesFolder, data.fileName);
 		fs.writeFileSync(fullpath, data.fileContent);
 	} else if (data.fileType === "doodle") {
 		// Just in case, save
-		fullpath = path.join(mainFolder.path, "notes", "lastDoodle.doodle");
+		fullpath = path.join(notesFolder, "lastDoodle.doodle");
 		// Remove the header but keep uri
 		var regex = /^data:.+\/(.+);base64,(.*)$/;
 		var matches = data.fileContent.match(regex);
 		// Convert to base64 encoding
 		var buffer = new Buffer(matches[2], 'base64');
 		fs.writeFileSync(fullpath, buffer);
-		fullpath = path.join(mainFolder.path, "notes", data.fileName);
+		fullpath = path.join(notesFolder, data.fileName);
 		fs.writeFileSync(fullpath, buffer);
-	}else {
+	} else {
 		console.log("ERROR:csdSaveDataOnServer: unable to save data on server for fileType " + data.fileType);
 	}
 }
