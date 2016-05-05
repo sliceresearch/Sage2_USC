@@ -134,6 +134,10 @@ RegistryManager.prototype.push = function(key, value, overwrite) {
 	}
 };
 
+RegistryManager.prototype.getMimeType = function(file) {
+	return mime.lookup(file);
+};
+
 RegistryManager.prototype.getDefaultApp = function(file) {
 	var defaultApp = "";
 	var type = '/' + mime.lookup(file);
