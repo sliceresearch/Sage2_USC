@@ -167,7 +167,7 @@ for (var folder in mediaFolders) {
 		}
 		console.log(sageutils.header('Folders') + 'upload to ' + f.path);
 	}
-	var newdirs = ["apps", "assets", "images", "pdfs", "tmp", "videos", "config","whiteboard"];
+	var newdirs = ["apps", "assets", "images", "pdfs", "tmp", "videos", "config", "whiteboard"];
 
 	newdirs.forEach(function(d) {
 		var newsubdir = path.join(mediaFolders[f.name].path, d);
