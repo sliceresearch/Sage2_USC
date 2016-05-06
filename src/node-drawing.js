@@ -425,8 +425,8 @@ DrawingManager.prototype.updateDrawingObject = function(e,posX,posY) {
 	}
 
 	var drawingId = this.dictionaryId[e.sourceId];
-	var lastPoint = this.newDrawingObject[drawingId]["options"]["points"];
-	[this.newDrawingObject[drawingId]["options"]["points"].length - 1];
+	var lastPointId = this.newDrawingObject[drawingId]["options"]["points"].length - 1;
+	var lastPoint = this.newDrawingObject[drawingId]["options"]["points"][lastPointId];
 	if (this.distance(lastPoint, {x: posX, y: posY}) > 0.5) {
 		this.newDrawingObject[drawingId]["type"] = "path";
 		this.newDrawingObject[drawingId]["options"]["points"].push({x: posX,y: posY});
