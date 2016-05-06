@@ -339,6 +339,7 @@ OmicronManager.prototype.runTracker = function() {
 		// 6 = Brain
 		// 7 = Wand
 		// 8 = Speech
+		// 9 = Ipad Framework
 		var serviceType = e.serviceType;
 		// console.log("Event service type: " + serviceType);
 

@@ -3,7 +3,7 @@
 */
 {
 	name: "Whiteboard",
-	host: "whiteboard.evl.uic.edu",
+	host: "localhost",
 	port: 9292,
 	index_port: 9090,
 	background: {
