@@ -114,10 +114,8 @@ packages.forEach(function(element, index, array) {
 	} else {
 		isSecure = true;
 	}
-
 	request({host: packageURL.host, path: packageURL.pathname + "/" + element.name + suffix}, isSecure, function(res) {
 		if (res.statusCode === 200) {
-			console.log("found binary package: " + element.name + suffix);
 			var writestream = fs.createWriteStream(path.join("node_modules", element.name + suffix));
 			writestream.on('error', function(err) {
 				console.log(err);
@@ -126,7 +124,8 @@ packages.forEach(function(element, index, array) {
 			res.on('end', function() {
 				downloaded[element.name] = true;
 				if (allTrueDict(downloaded)) {
-					unzipModules();
+					// unzipModules();
+					install();
 				}
 			});
 			res.pipe(writestream);
@@ -134,7 +133,8 @@ packages.forEach(function(element, index, array) {
 			console.log("could not find binary package " + element.name + suffix + ". compiling instead.");
 			delete downloaded[element.name];
 			if (allTrueDict(downloaded)) {
-				unzipModules();
+				// unzipModules();
+				install();
 			}
 		}
 	});
@@ -150,9 +150,9 @@ function install() {
 	var installCommand;
 
 	if (process.argv.indexOf('--dev') > 0) {
-		installCommand = "npm install --skip-installed --target=" + target + " --loglevel warn";
+		installCommand = "npm  --verbose install --skip-installed --target=" + target + " --loglevel warn";
 	} else {
-		installCommand = "npm install --skip-installed --target=" + target + " --loglevel warn --production";
+		installCommand = "npm  --verbose install --skip-installed --target=" + target + " --loglevel warn --production";
 	}
 
 	// Run the command
@@ -165,16 +165,21 @@ function install() {
 			}
 			// wait for it...
 			clearInterval(timer);
+
 			process.stdout.write("\n");
 			console.log(stdout);
-			console.log("INSTALL FINISHED!");
+			// console.log("INSTALL FINISHED!");
+
+			unzipModules();
 		}
 	);
 }
 
 function unzipModules() {
 	if (isEmpty(downloaded)) {
-		install();
+		process.stdout.write("\n");
+		console.log("INSTALL FINISHED!");
+		// install();
 	} else {
 		var key;
 		for (key in downloaded) {
@@ -187,7 +192,7 @@ function unzipModules() {
 
 function unzipModule(keys, idx) {
 	if (idx >= keys.length) {
-		install();
+		// install();
 		return;
 	}
 

@@ -66,13 +66,12 @@
 		"sanitizer": "latest",
 		"sanitize-filename": "latest",
 		"normalizeurl": "latest",
-		"websocketio": "latest",
 		"ytdl-core": "latest"
 	},
-	"bundledDependencies": [
-		"websocketio",
-		"node-demux"
-	],
+	"optionalDependencies": {
+		"websocketio": "latest",
+		"node-demux" : "latest"
+	},
 	"devDependencies": {
 		"grunt": "latest",
 		"grunt-cli": "latest",
