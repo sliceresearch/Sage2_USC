@@ -66,7 +66,7 @@
 		"sanitizer": "latest",
 		"sanitize-filename": "latest",
 		"normalizeurl": "latest",
-		"websocketio": "1.0.1",
+		"websocketio": "latest",
 		"ytdl-core": "latest"
 	},
 	"bundledDependencies": [
@@ -103,7 +103,8 @@
 		"newapp":  "grunt newapp",
 		"test":    "grunt all",
 		"in":      "node ./install_dependencies.js",
-		"inprod":  "node ./install_dependencies.js --prod"
+		"inprod":  "node ./install_dependencies.js --prod",
+		"indev":   "node ./install_dependencies.js --dev"
 	},
 	"license": "SAGE2-Software-License"
 }
