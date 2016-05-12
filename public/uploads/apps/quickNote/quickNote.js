@@ -69,7 +69,7 @@ var quickNote = SAGE2_App.extend({
 			this.state.creationTime = msgParams.clientName;
 			this.element.style.background = msgParams.colorChoice;
 			this.element.innerHTML        = msgParams.clientInput;
-			this.updateTitle(this.state.creationTime);
+			this.formatAndSetTitle(this.state.creationTime);
 			this.saveNote(msgParams.creationTime);
 			return;
 		}
@@ -130,13 +130,34 @@ var quickNote = SAGE2_App.extend({
 			titleString += this.state.creationTime.getMilliseconds();
 			// store it for later and update the tile.
 			this.state.creationTime = titleString;
-			this.updateTitle(this.state.creationTime);
+			this.formatAndSetTitle(this.state.creationTime);
 		}
 		// if loaded will include the creationTime
 		if (msgParams.creationTime !== undefined && msgParams.creationTime !== null) {
-			this.updateTitle(msgParams.creationTime);
+			this.formatAndSetTitle(msgParams.creationTime);
 		}
 		this.saveNote(msgParams.creationTime);
+	},
+
+	formatAndSetTitle: function(wholeName) {
+		// Preservers original functionality. Remove this when done with format handling.
+		//this.updateTitle(wholeName);
+
+		// Breaking apart whole name and using moment.js to make easier to read.
+		var parts  = wholeName.split("-"); // name - qn - YYYYMMDD - HHMMSSmmm
+		var author = parts[0];
+		var month  = parseInt(parts[1].substring(4, 6)); // YYYY[MM]
+		var day    = parseInt(parts[1].substring(6, 8)); // YYYYMM[DD]
+		var hour   = parseInt(parts[2].substring(0, 2)); // [HH]
+		var min    = parseInt(parts[2].substring(2, 4)); // HH[MM]
+		// Moment conversion
+		var momentTime = moment( {
+			month: month,
+			day: day,
+			hour: hour,
+			minute: min
+		} );
+		this.updateTitle(author + " @ " + momentTime.format("MMM Do hh:mm A"));
 	},
 
 	load: function(date) {
