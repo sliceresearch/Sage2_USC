@@ -24,7 +24,7 @@ var quickNote = SAGE2_App.extend({
 
 		this.backgroundChoice = "lightyellow";
 		this.startingFontSize = ui.titleTextSize;
-		this.startingWidth    = data.width; // to match instructions width
+		this.startingWidth    = 300; // Hardcode necessary to keep scale on resize/restart/reload
 
 		// If loaded from session, this.state will have meaningful values.
 		this.setMessage(this.state);
@@ -144,20 +144,25 @@ var quickNote = SAGE2_App.extend({
 		//this.updateTitle(wholeName);
 
 		// Breaking apart whole name and using moment.js to make easier to read.
-		var parts  = wholeName.split("-"); // name - qn - YYYYMMDD - HHMMSSmmm
+		var parts  = wholeName.split("-"); // 0 name - 1 qn - 2 YYYYMMDD - 3 HHMMSSmmm
 		var author = parts[0];
-		var month  = parseInt(parts[1].substring(4, 6)); // YYYY[MM]
-		var day    = parseInt(parts[1].substring(6, 8)); // YYYYMM[DD]
-		var hour   = parseInt(parts[2].substring(0, 2)); // [HH]
-		var min    = parseInt(parts[2].substring(2, 4)); // HH[MM]
+		var month  = parseInt(parts[2].substring(4, 6)); // YYYY[MM]
+		var day    = parseInt(parts[2].substring(6, 8)); // YYYYMM[DD]
+		var hour   = parseInt(parts[3].substring(0, 2)); // [HH]
+		var min    = parseInt(parts[3].substring(2, 4)); // HH[MM]
 		// Moment conversion
-		var momentTime = moment( {
+		var momentTime = {
 			month: month,
 			day: day,
 			hour: hour,
 			minute: min
-		} );
-		this.updateTitle(author + " @ " + momentTime.format("MMM Do hh:mm A"));
+		};
+		console.log(wholeName);
+		console.log(parts);
+		console.log(momentTime);
+		momentTime = moment(momentTime);
+		console.log(momentTime);
+		this.updateTitle(author + " @ " + momentTime.format("MMM Do, hh:mm A"));
 	},
 
 	load: function(date) {
