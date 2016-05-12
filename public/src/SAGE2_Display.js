@@ -1344,21 +1344,20 @@ function createAppWindow(data, parentId, titleBarHeight, titleTextSize, offsetX,
 
 				// Sending the context menu info to the server
 				if (isMaster) {
+					var rmbData = {};
+					rmbData.app = newapp.id;
 					// If the application defines a menu function, use it
 					if (typeof newapp.getContextEntries === "function") {
-						wsio.emit('dtuRmbContextMenuContents', {
-							app: newapp.id,
-							entries: newapp.getContextEntries()
-						});
+						rmbData.entries = newapp.getContextEntries();
+						rmbData.entries.push({description: "Close App"});
 					} else {
-						// Otherwise, send a default empty menu
-						wsio.emit('dtuRmbContextMenuContents', {
-							app: newapp.id,
-							entries: [{
-								description: "Not supported by this app"
-							}]
-						});
+						rmbData.entries = [{
+							description: "Close App",
+							callback: "SAGE2DeleteElement", // better function name?
+							parameters: {}
+						}]
 					}
+					wsio.emit("dtuRmbContextMenuContents", rmbData);
 				}
 
 				applications[data.id]   = newapp;
@@ -1381,21 +1380,20 @@ function createAppWindow(data, parentId, titleBarHeight, titleTextSize, offsetX,
 
 			// Sending the context menu info to the server
 			if (isMaster) {
+				var rmbData = {};
+				rmbData.app = newapp.id;
 				// If the application defines a menu function, use it
-				if (typeof app.getContextEntries === "function") {
-					wsio.emit('dtuRmbContextMenuContents', {
-						app: app.id,
-						entries: app.getContextEntries()
-					});
+				if (typeof newapp.getContextEntries === "function") {
+					rmbData.entries = newapp.getContextEntries();
+					rmbData.entries.push({description: "Close App"});
 				} else {
-					// Otherwise, send a default empty menu
-					wsio.emit('dtuRmbContextMenuContents', {
-						app: app.id,
-						entries: [{
-							description: "Not supported by this app"
-						}]
-					});
+					rmbData.entries = [{
+						description: "Close App",
+						callback: "SAGE2DeleteElement", // better function name?
+						parameters: {}
+					}]
 				}
+				wsio.emit("dtuRmbContextMenuContents", rmbData);
 			}
 
 			applications[data.id] = app;

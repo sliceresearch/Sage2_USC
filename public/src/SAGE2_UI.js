@@ -2079,7 +2079,12 @@ function setRmbContextMenuEntries(entriesToAdd, app) {
 	for (i = 0; i < entriesToAdd.length; i++) {
 		workingDiv = document.createElement('div');
 		workingDiv.id = 'rmbContextMenuEntry' + i; // unique entry id
-		workingDiv.style.background = "#FFF8E1"; // start as off-white color
+		if (typeof entriesToAdd[i].entryColor === "string") {
+			workingDiv.startingBgColor = entriesToAdd[i].entryColor; // use given color if specified
+		} else {
+			workingDiv.startingBgColor = "#FFF8E1"; // start as off-white color
+		}
+		workingDiv.style.background = workingDiv.startingBgColor;
 		workingDiv.innerHTML = "&nbsp&nbsp&nbsp" + entriesToAdd[i].description + "&nbsp&nbsp&nbsp";
 		// add input field if app says to.
 		workingDiv.inputField = false;
@@ -2112,7 +2117,7 @@ function setRmbContextMenuEntries(entriesToAdd, app) {
 				this.style.background = "lightgray";
 			});
 			rmbcmeIob.addEventListener('mouseout', function() {
-				this.style.background = "#FFF8E1";
+				this.style.background = this.startingBgColor;
 			});
 			workingDiv.appendChild(rmbcmeIob);
 			// workingDiv.innerHTML += "&nbsp&nbsp&nbsp";
@@ -2128,7 +2133,7 @@ function setRmbContextMenuEntries(entriesToAdd, app) {
 				this.style.background = "lightgray";
 			});
 			workingDiv.addEventListener('mouseout', function() {
-				this.style.background = "#FFF8E1";
+				this.style.background = this.startingBgColor;
 			});
 		}
 		// click effect

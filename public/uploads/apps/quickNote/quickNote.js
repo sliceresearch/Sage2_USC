@@ -139,6 +139,13 @@ var quickNote = SAGE2_App.extend({
 		this.saveNote(msgParams.creationTime);
 	},
 
+	setColor: function(responseObject) {
+		this.backgroundChoice         = responseObject.color;
+		this.state.colorChoice        = this.backgroundChoice;
+		this.element.style.background = responseObject.color;
+		this.saveNote(responseObject.creationTime);
+	},
+
 	formatAndSetTitle: function(wholeName) {
 		// Preservers original functionality. Remove this when done with format handling.
 		//this.updateTitle(wholeName);
@@ -157,11 +164,7 @@ var quickNote = SAGE2_App.extend({
 			hour: hour,
 			minute: min
 		};
-		console.log(wholeName);
-		console.log(parts);
-		console.log(momentTime);
 		momentTime = moment(momentTime);
-		console.log(momentTime);
 		this.updateTitle(author + " @ " + momentTime.format("MMM Do, hh:mm A"));
 	},
 
@@ -249,6 +252,48 @@ var quickNote = SAGE2_App.extend({
 		entry.description = "Duplicate";
 		entry.callback    = "duplicate";
 		entry.parameters  = {};
+		entries.push(entry);
+
+		entry = {};
+		entry.description = "Blue";
+		entry.callback    = "setColor";
+		entry.parameters  = {color:"lightblue"};
+		entry.entryColor  = "lightblue";
+		entries.push(entry);
+
+		entry = {};
+		entry.description = "Yellow";
+		entry.callback    = "setColor";
+		entry.parameters  = {color:"lightyellow"};
+		entry.entryColor  = "lightyellow";
+		entries.push(entry);
+
+		entry = {};
+		entry.description = "Pink";
+		entry.callback    = "setColor";
+		entry.parameters  = {color:"lightpink"};
+		entry.entryColor  = "lightpink";
+		entries.push(entry);
+
+		entry = {};
+		entry.description = "Green";
+		entry.callback    = "setColor";
+		entry.parameters  = {color:"lightgreen"};
+		entry.entryColor  = "lightgreen";
+		entries.push(entry);
+
+		entry = {};
+		entry.description = "White";
+		entry.callback    = "setColor";
+		entry.parameters  = {color:"white"};
+		entry.entryColor  = "white";
+		entries.push(entry);
+
+		entry = {};
+		entry.description = "Orange";
+		entry.callback    = "setColor";
+		entry.parameters  = {color:"lightsalmon"};
+		entry.entryColor  = "lightsalmon";
 		entries.push(entry);
 
 		entry = {};

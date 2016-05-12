@@ -7326,7 +7326,12 @@ function wsUtdCallFunctionOnApp(wsio, data) {
 	// send to all display clients(since they all need to update)
 	for (var i = 0; i < clients.length; i++) {
 		if (clients[i].clientType === "display") {
-			clients[i].emit('broadcast', data);
+			if (data.func === "SAGE2DeleteElement") {
+				data.elemId = data.app;
+				clients[i].emit('deleteElement', data);
+			} else {
+				clients[i].emit('broadcast', data);
+			}
 		}
 	}
 }
