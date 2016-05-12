@@ -7317,6 +7317,10 @@ function wsUtdRequestRmbContextMenu(wsio, data) {
  * Asks for rmb context menu from app under x,y coordinate.
  */
 function wsUtdCallFunctionOnApp(wsio, data) {
+	if (data.func === "SAGE2DeleteElement") {
+		deleteApplication(data.app);
+		return; // closing of applications are handled by the called function.
+	} 
 	// Using broadcast means the parameter must be in data.data
 	data.data = data.parameters;
 	// add the serverDate property
@@ -7326,12 +7330,7 @@ function wsUtdCallFunctionOnApp(wsio, data) {
 	// send to all display clients(since they all need to update)
 	for (var i = 0; i < clients.length; i++) {
 		if (clients[i].clientType === "display") {
-			if (data.func === "SAGE2DeleteElement") {
-				data.elemId = data.app;
-				clients[i].emit('deleteElement', data);
-			} else {
-				clients[i].emit('broadcast', data);
-			}
+			clients[i].emit('broadcast', data);
 		}
 	}
 }
