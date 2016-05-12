@@ -44,8 +44,8 @@ var exampleParent = SAGE2_App.extend( {
 
 		this.someDataSet = [2, 4, 6, 8, 10, 12, 14, 16];
 
-		if (isMaster) {//not working...
-			//this.registerMyData( this.someDataSet, generateRandomKey() );
+		if (isMaster) { //get display configuration from server
+
 		}
 	},
 
@@ -220,6 +220,19 @@ var exampleParent = SAGE2_App.extend( {
 			}
 
 		this.launchNewChild(applicationType, application, initState, msg);//defined in sage2 app
+	},
+
+
+	//here is where the parent launches the child app
+	//we will have to add appropriate data variables 
+	launchChildImage: function(){
+		// applicationType ="standard",
+		// application = "image_viewer", 	
+		// initState = {  // these values will load on child app init
+		// 		img_url: "sage2-displays-cave2-4.jpg"
+		// 	}
+
+		// this.launchNewChild(applicationType, application, initState, msg);//defined in sage2 app
 	},
 
 	sendMessageToChild: function(){

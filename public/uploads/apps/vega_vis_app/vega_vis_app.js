@@ -79,21 +79,23 @@ var vega_vis_app = SAGE2_App.extend( {
 
 	resize: function(date) {
 		// updated = false;
-		// if( this.element.clientWidth > 400 ){
-  // 			this.view.width(this.element.clientWidth-60);
-  // 			updated = true;
-  // 		}
-  // 		if( this.element.clientWidth > 400 ){
-  // 			this.view.height(this.element.clientHeight-60);
-  // 			updated = true;	
-  // 		}
-  // 		if( updated )
-  // 			this.view.renderer('svg').update();
+		if( this.element.clientWidth > 400 ){
+  			this.view.width(this.element.clientWidth-60);
+  			updated = true;
+  		}
+  		if( this.element.clientWidth > 400 ){
+  			this.view.height(this.element.clientHeight-60);
+  			updated = true;	
+  		}
+  		if( updated )
+  			this.view.renderer('svg').update();
 
-  		this.svg.attr('width',  this.element.clientWidth);
-		this.svg.attr('height', this.element.clientHeight);
-		this.view.renderer('svg').update();
-		this.refresh(date);
+  // 		console.log(this.view);
+
+  // 		this.svg.attr('width',  this.element.clientWidth + "px");
+		// this.svg.attr('height', this.element.clientHeight + "px");
+		// this.view.renderer('svg').update();
+		// this.refresh(date);
 	},
 
 
@@ -156,6 +158,21 @@ var vega_vis_app = SAGE2_App.extend( {
 		paddingHeight = this.barSpec.padding.top + this.barSpec.padding.bottom;
   		this.view.width(this.element.clientWidth-paddingWidth).height(this.element.clientHeight-paddingHeight).renderer('svg').update();
   		
+  		this.box = "0,0," + this.element.clientWidth + "," + this.element.clientHeight;
+  		d3.select("vis"+this.id).select("div").select("svg").attr("viewBox", this.box);
+  		// this.svg = d3.select("vis"+this.id)[0][0];
+  		// console.log(this.view);
+  		//d3.select(".marks").attr("id", "svg"+this.id).attr("viewBox", this.box);
+
+  		// this.box = "0,0," + this.element.clientWidth + "," + this.element.clientHeight;
+  		// this.svg = this.view.children[0];
+  		// this.svg.id = "svg" + this.id;
+  		// d3.select( "svg" + this.id).attr("viewBox", this.box);
+
+		// this.view.viewport([0,0,this.element.clientWidth, this.element.clientHeight]);
+
+  // 		marks = d3.select(".marks").attr("viewBox", box);
+
 		//this.view.props.marks.update.fill.value = "red";
 
 
@@ -177,9 +194,11 @@ var vega_vis_app = SAGE2_App.extend( {
 		// chart( {el:"vis"} ).update(); 
 		this.view = chart({el:'vis'+this.id});
 
-		this.box = [this.element.width, this.element.height];
-		var box = "0,0," + this.box[0] + "," + this.box[1];
-		d3.select("svg").attr("viewBox", box);
+		// this.box = [this.element.width, this.element.height];
+		// var box = "0,0," + this.box[0] + "," + this.box[1];
+		// d3.select("svg").attr("viewBox", box);
+  		
+
 		this.view.update();
   	
 
@@ -187,8 +206,12 @@ var vega_vis_app = SAGE2_App.extend( {
 		paddingWidth = this.lineSpec.padding.left + this.lineSpec.padding.right;
 		paddingHeight = this.lineSpec.padding.top + this.lineSpec.padding.bottom;
   		this.view.width(this.element.clientWidth-paddingWidth).height(this.element.clientHeight-paddingHeight).renderer('svg').update();
-
+		// this.view.viewport([0,0,this.element.clientWidth, this.element.clientHeight]);
 		this.view.renderer('svg').update();
+
+		this.box = "0,0," + this.element.clientWidth + "," + this.element.clientHeight;
+  		d3.select("vis"+this.id).select("div").select("svg").attr("viewBox", this.box);
+
 
 	},
 
