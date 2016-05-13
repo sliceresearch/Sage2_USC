@@ -1022,7 +1022,12 @@ function pointerPress(event) {
 			var btn = (event.button === 0) ? "left" : (event.button === 1) ? "middle" : "right";
 			displayUI.pointerPress(btn);
 		}
+		hideRmbContextMenuDiv();
+		clearContextMenu();
 		event.preventDefault();
+	} else if(event.target.id === "mainUI") {
+		hideRmbContextMenuDiv();
+		clearContextMenu();
 	}
 }
 

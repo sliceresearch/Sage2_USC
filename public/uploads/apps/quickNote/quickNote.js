@@ -21,10 +21,17 @@ var quickNote = SAGE2_App.extend({
 		this.element.style.fontSize   = ui.titleTextSize + "px";
 		// Using SAGE2 default font
 		this.element.style.fontFamily = "Arimo, Helvetica, sans-serif";
-
+		// Default starting attributes
 		this.backgroundChoice = "lightyellow";
 		this.startingFontSize = ui.titleTextSize;
 		this.startingWidth    = 300; // Hardcode necessary to keep scale on resize/restart/reload
+		// textarea setup
+		// this.txtArea = document.createElement("textarea");
+		// this.txtArea.rows = 5;
+		// this.txtArea.cols = 20;
+		// this.txtArea.style.resize = "none";
+		// this.txtArea.value = "Where is this?";
+		// this.element.appendChild(this.txtArea);
 
 		// If loaded from session, this.state will have meaningful values.
 		this.setMessage(this.state);
