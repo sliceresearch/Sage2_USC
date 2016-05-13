@@ -1151,6 +1151,11 @@ function UIBuilder(json_cfg, clientID) {
 		if (this.json_cfg.ui.menubar !== undefined && this.json_cfg.ui.menubar.remoteDisconnectedColor !== undefined) {
 			disconnectedColor = this.json_cfg.ui.menubar.remoteDisconnectedColor;
 		}
+		var lockedColor = "rgba(230, 110, 0, 1.0)";
+		if (this.json_cfg.ui.menubar !== undefined && this.json_cfg.ui.menubar.remoteLockedColor !== undefined) {
+			lockedColor = this.json_cfg.ui.menubar.remoteLockedColor;
+		}
+		var unknownColor = "rgba(140, 140, 140, 1.0)";
 
 		var remote = document.createElement('div');
 		remote.id  = data.name;
@@ -1160,10 +1165,14 @@ function UIBuilder(json_cfg, clientID) {
 		remote.style.height = data.geometry.h.toString() + "px";
 		remote.style.left   = (-this.offsetX + data.geometry.x).toString() + "px";
 		remote.style.top    = (-this.offsetY + data.geometry.y).toString() + "px";
-		if (data.connected) {
+		if (data.connected === "on") {
 			remote.style.backgroundColor = connectedColor;
-		} else {
+		} else if (data.connected === "off") {
 			remote.style.backgroundColor = disconnectedColor;
+		} else if (data.connected === "locked") {
+			remote.style.backgroundColor = lockedColor;
+		} else {
+			remote.style.backgroundColor = unknownColor;
 		}
 
 		var color = "rgba(255, 255, 255, 1.0)";
@@ -1196,12 +1205,21 @@ function UIBuilder(json_cfg, clientID) {
 		if (this.json_cfg.ui.menubar !== undefined && this.json_cfg.ui.menubar.remoteDisconnectedColor !== undefined) {
 			disconnectedColor = this.json_cfg.ui.menubar.remoteDisconnectedColor;
 		}
+		var lockedColor = "rgba(230, 110, 0, 1.0)";
+		if (this.json_cfg.ui.menubar !== undefined && this.json_cfg.ui.menubar.remoteLockedColor !== undefined) {
+			lockedColor = this.json_cfg.ui.menubar.remoteLockedColor;
+		}
+		var unknownColor = "rgba(140, 140, 140, 1.0)";
 
 		var remote = document.getElementById(data.name);
-		if (data.connected) {
+		if (data.connected === "on") {
 			remote.style.backgroundColor = connectedColor;
-		} else {
+		} else if (data.connected === "off") {
 			remote.style.backgroundColor = disconnectedColor;
+		} else if (data.connected === "locked") {
+			remote.style.backgroundColor = lockedColor;
+		} else {
+			remote.style.backgroundColor = unknownColor;
 		}
 	};
 

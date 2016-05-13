@@ -234,7 +234,7 @@ function initializeSage2Server() {
 		broadcast('setupSAGE2Version', SAGE2_version);
 
 		if (users !== null) {
-			users.session.verison = SAGE2_version;
+			users.session.version = SAGE2_version;
 		}
 	});
 
@@ -470,8 +470,8 @@ function closeWebSocketClient(wsio) {
 	// if client is a remote site, send disconnect message
 	var remote = findRemoteSiteByConnection(wsio);
 	if (remote !== null) {
-		console.log("Remote site \"" + remote.name + "\" now offline");
-		remote.connected = false;
+		console.log(sageutils.header("Remote") + "\"" + remote.name + "\" now offline");
+		remote.connected = "off";
 		var site = {name: remote.name, connected: remote.connected};
 		broadcast('connectedToRemoteSite', site);
 	}
@@ -522,11 +522,15 @@ function wsAddClient(wsio, data) {
 	if (config.passordProtected) {
 		if (!data.session || data.session !== global.__SESSION_ID) {
 			console.log(sageutils.header("WebsocketIO") + "wrong session hash - closing");
+			// Send a message back to server
+			wsio.emit('remoteConnection', {status: "refused", reason: 'wrong session hash'});
 			// if server protected and wrong hash, close the socket and byebye
 			wsio.ws.close();
 			return;
 		}
 	}
+	// Send a message back to server
+	wsio.emit('remoteConnection', {status: "accepted"});
 
 	// Just making sure the data is valid JSON (one gets strings from C++)
 	if (sageutils.isTrue(data.requests.config)) {
@@ -571,7 +575,7 @@ function wsAddClient(wsio, data) {
 			config.remote_sites.forEach(function(element, index, array) {
 				if (element.host === data.host &&
 					element.port === data.port &&
-					!remoteSites[index].connected) {
+					remoteSites[index].connected === "on") {
 					console.log(sageutils.header("Connect") + 'known remote site ' + data.host + ':' + data.port);
 					manageRemoteConnection(wsio, element, index);
 				}
@@ -628,7 +632,7 @@ function initializeWSClient(wsio, reqConfig, reqVersion, reqTime, reqConsole) {
 	var remote = findRemoteSiteByConnection(wsio);
 	if (remote !== null) {
 		remote.wsio = wsio;
-		remote.connected = true;
+		remote.connected = "on";
 		var site = {name: remote.name, connected: remote.connected};
 		broadcast('connectedToRemoteSite', site);
 	}
@@ -3963,12 +3967,19 @@ if (config.remote_sites) {
 			+ (0.08 * config.ui.titleBarHeight);
 		rGeom.y = 0.08 * config.ui.titleBarHeight;
 
-		remoteSites[index] = {name: element.name, wsio: remote, connected: false, geometry: rGeom};
+		// Build the object
+		remoteSites[index] = {
+			name: element.name,
+			wsio: remote,
+			connected: "off",
+			geometry: rGeom
+		};
+		// Add the gemeotry for the button
 		interactMgr.addGeometry("remote_" + index, "staticUI", "rectangle", rGeom,  true, index, remoteSites[index]);
 
 		// attempt to connect every 15 seconds, if connection failed
 		setInterval(function() {
-			if (!remoteSites[index].connected) {
+			if (remoteSites[index].connected !== "on") {
 				var rem = createRemoteConnection(wsURL, element, index);
 				remoteSites[index].wsio = rem;
 			}
@@ -3977,8 +3988,16 @@ if (config.remote_sites) {
 }
 
 function manageRemoteConnection(remote, site, index) {
-	console.log(sageutils.header("Remote") + "Connected to " + site.name);
+	// Fix address
 	remote.updateRemoteAddress(site.host, site.port);
+	// Hope for the best
+	remoteSites[index].connected = "on";
+	// Check the password or session hash
+	if (site.password) {
+		// MD5 hash of the password
+		site.session = md5.getHash(site.password);
+	}
+
 	var clientDescription = {
 		clientType: "remoteServer",
 		host: config.host,
@@ -3995,10 +4014,13 @@ function manageRemoteConnection(remote, site, index) {
 	remote.clientType = "remoteServer";
 
 	remote.onclose(function() {
-		console.log("Remote site \"" + config.remote_sites[index].name + "\" now offline");
-		remoteSites[index].connected = false;
-		var delete_site = {name: remoteSites[index].name, connected: remoteSites[index].connected};
-		broadcast('connectedToRemoteSite', delete_site);
+		console.log(sageutils.header("Remote") + "\"" + config.remote_sites[index].name + "\" offline");
+		// it was locked, keep the state locked
+		if (remoteSites[index].connected !== "locked") {
+			remoteSites[index].connected = "off";
+			var delete_site = {name: remoteSites[index].name, connected: remoteSites[index].connected};
+			broadcast('connectedToRemoteSite', delete_site);
+		}
 		removeElement(clients, remote);
 	});
 
@@ -4035,10 +4057,19 @@ function manageRemoteConnection(remote, site, index) {
 	remote.on('updateApplicationStateOptions',          wsUpdateApplicationStateOptions);
 
 	remote.emit('addClient', clientDescription);
-	remoteSites[index].connected = true;
-	var new_site = {name: remoteSites[index].name, connected: remoteSites[index].connected};
-	broadcast('connectedToRemoteSite', new_site);
 	clients.push(remote);
+
+	remote.on('remoteConnection', function(remotesocket, data) {
+		if (data.status === "refused") {
+			console.log(sageutils.header('Remote') + "Connection refused to " + site.name + ": " + data.reason);
+			remoteSites[index].connected = "locked";
+		} else {
+			console.log(sageutils.header("Remote") + "Connected to " + site.name);
+			remoteSites[index].connected = "on";
+		}
+		var update_site = {name: remoteSites[index].name, connected: remoteSites[index].connected};
+		broadcast('connectedToRemoteSite', update_site);
+	});
 }
 
 
@@ -5859,7 +5890,7 @@ function pointerReleaseOnStaticUI(uniqueID, pointerX, pointerY, obj) {
 
 	var remote = obj.data;
 	var app = dropSelectedItem(uniqueID, false, null);
-	if (app !== null && SAGE2Items.applications.list.hasOwnProperty(app.application.id) && remote.connected) {
+	if (app !== null && SAGE2Items.applications.list.hasOwnProperty(app.application.id) && remote.connected === "on") {
 		var sharedId = app.application.id + "_" + config.host + ":" + config.secure_port + "+" + remote.wsio.id;
 		if (sharedApps[app.application.id] === undefined) {
 			sharedApps[app.application.id] = [{wsio: remote.wsio, sharedId: sharedId}];
