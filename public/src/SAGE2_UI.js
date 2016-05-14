@@ -1760,11 +1760,12 @@ function noBackspace(event) {
 		&& event.target.id.indexOf("Input") !== -1
 		) {
 		event.target.parentNode["buttonEffect" + event.target.id]();
+	} else if (event.ctrlKey && event.keyCode === 13 && event.target.id === "uiNoteMakerInputField") {
+		event.target.value += "\n";
 	} else if (event.keyCode === 13 && event.target.id === "uiNoteMakerInputField") {
 		sendCsdMakeNote();
-	} else {
-		return true;
 	}
+	return true;
 }
 
 /**
