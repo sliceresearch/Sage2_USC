@@ -31,6 +31,9 @@ function SAGE2_init() {
 
 	console.log("Connected to server: ", window.location.origin);
 
+	// Get the cookie for the session, if there's one
+	var session = getCookie("session");
+
 	// Callback when socket opens
 	wsio.open(function() {
 		console.log("open websocket");
@@ -42,11 +45,12 @@ function SAGE2_init() {
 		var clientDescription = {
 			clientType: "consoleManager",
 			requests: {
-				config: true,
+				config:  true,
 				version: true,
-				time: false,
+				time:    false,
 				console: true
-			}
+			},
+			session: session
 		};
 		wsio.emit('addClient', clientDescription);
 	});

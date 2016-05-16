@@ -30,7 +30,29 @@
  * @return {Array} array of buffer, one for each block of pixel
  */
 module.exports.rgbToPixelBlocks = function(rgbBuffer, width, height, maxSize) {
+	var i, j, k;
+	var blockBuffers = [];
 
+	var horizontalBlocks = Math.ceil(width  / maxSize);
+	var verticalBlocks   = Math.ceil(height / maxSize);
+	for (i = 0; i < verticalBlocks; i++) {
+		for (j = 0; j < horizontalBlocks; j++) {
+			var bWidth  = (j + 1) * maxSize > width  ? width  - (j * maxSize) : maxSize;
+			var bHeight = (i + 1) * maxSize > height ? height - (i * maxSize) : maxSize;
+			var block   = new Buffer(bWidth * bHeight * 3);
+
+			for (k = 0; k < bHeight; k++) {
+				var row = i * maxSize + k;
+				var col = j * maxSize;
+				var start = 3 * (row * width + col);
+
+				rgbBuffer.copy(block, k * bWidth * 3, start, start + bWidth * 3);
+			}
+			blockBuffers.push(block);
+		}
+	}
+
+	return blockBuffers;
 };
 
 /**

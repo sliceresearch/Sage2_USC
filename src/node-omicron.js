@@ -8,7 +8,7 @@
 //
 // Copyright (c) 2014-2015
 
- /**
+/**
  * Omicron connection module for SAGE2
  * Provides external input device support
  * https://github.com/uic-evl/omicron
@@ -30,7 +30,7 @@ var OneEuroFilter        = require('./node-1euro');
 
 var omicronManager; // Handle to OmicronManager inside of udp blocks (instead of this)
 
- /**
+/**
  * Omicron setup and opens a listener socket for an Omicron input server to connect to
  *
  * @class OmicronManager
@@ -201,7 +201,7 @@ function OmicronManager(sysConfig) {
 	}
 }
 
- /**
+/**
  * Sends disconnect signal to input server
  *
  * @method disconnect
@@ -214,7 +214,7 @@ OmicronManager.prototype.disconnect = function() {
 	}
 };
 
- /**
+/**
  * Receives server pointer functions
  *
  * @method setCallbacks
@@ -258,7 +258,7 @@ OmicronManager.prototype.setCallbacks = function(
 	this.createSagePointer(this.config.inputServerIP);
 };
 
- /**
+/**
  * Manages incoming input server data
  *
  * @method runTracker
@@ -556,7 +556,7 @@ OmicronManager.prototype.runTracker = function() {
 	udp.bind(this.omicronDataPort);
 };
 
- /**
+/**
  * Manages pointer (serviceType = 0) type events
  *
  * @method processPointerEvent
