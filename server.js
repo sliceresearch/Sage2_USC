@@ -2477,6 +2477,9 @@ function wsDeleteElementFromStoredFiles(wsio, data) {
 		// if it's a session
 		deleteSession(data.filename);
 	}
+
+	// send the update file list
+	broadcast('storedFileList', getSavedFilesList());
 }
 
 function wsMoveElementFromStoredFiles(wsio, data) {
@@ -2500,7 +2503,9 @@ function wsMoveElementFromStoredFiles(wsio, data) {
 				console.log(sageutils.header('Assets') + 'Error moving ' + data.filename);
 			} else {
 				// if all good, send the new list of files
-				wsRequestStoredFiles(wsio);
+				// wsRequestStoredFiles(wsio);
+				// send the update file list
+				broadcast('storedFileList', getSavedFilesList());
 			}
 		});
 	}
