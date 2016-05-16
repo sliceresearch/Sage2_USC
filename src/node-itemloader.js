@@ -831,6 +831,8 @@ AppLoader.prototype.loadFileFromLocalStorage = function(file, callback) {
 AppLoader.prototype.manageAndLoadUploadedFile = function(file, callback) {
 	// sanitize filename by remove odd charaters
 	var cleanFilename = sanitize(file.name);
+	// Clean up further the file names
+	cleanFilename = cleanFilename.replace(/[\$\%\^\&\(\)]/g, '_');
 
 	// Check if there is a matching application
 	var app = registry.getDefaultApp(cleanFilename);
