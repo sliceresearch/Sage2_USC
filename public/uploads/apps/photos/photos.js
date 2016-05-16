@@ -23,7 +23,7 @@ var photos = SAGE2_App.extend({
 	// choose a specific image library from those loaded to cycle through
 
 	chooseImagery: function(selection) {
-		this.listFileNamePhotos = this.photoAlbums[selection].list;
+		this.listFileNamePhotos  = this.photoAlbums[selection].list;
 		this.listFileNameLibrary = this.photoAlbums[selection].location;
 	},
 
@@ -41,16 +41,31 @@ var photos = SAGE2_App.extend({
 
 		this.chooseImagery(this.state.imageSet);
 
+		// Register a callback to handle file list from server
+		this.registerFileListHandler(this.fileList);
+
 		this.loadInList();
+	},
+
+	// Callback from file manager
+	fileList: function(data) {
+		// Create an array of images from the 'slideshow' user folder
+		this.slideshowList = [];
+		for (var i = data.images.length - 1; i >= 0; i--) {
+			// take only images from the slideshow folder in user directory
+			if (data.images[i].sage2URL.startsWith("/user/slideshow/")) {
+				this.slideshowList.push({name: data.images[i].sage2URL});
+			}
+		}
 	},
 
 	imageLoadCallback: function() {
 		this.imageTemp = this.image2; // hold onto 2
-		this.image2 = this.image1; // image2 is the previous image (needed for fading)
+		this.image2    = this.image1; // image2 is the previous image (needed for fading)
 
 		this.okToDraw = this.fadeCount;
-		this.image1 = this.image3; // image1 is now the new image
-		this.image3 = this.imageTemp;
+		this.image1   = this.image3;    // image1 is now the new image
+		this.image3   = this.imageTemp;
 	},
 
 	imageLoadFailedCallback: function() {
@@ -82,6 +97,7 @@ var photos = SAGE2_App.extend({
 		this.bigList = d3.csv.parse(localData);
 		console.log(this.appName + "loaded in list of " + this.bigList.length + " images");
 
+		this.updateTitle("Photo Slideshow: " + this.photoAlbums[this.state.imageSet].name);
 		this.update();
 		this.drawEverything();
 	},
@@ -169,11 +185,18 @@ var photos = SAGE2_App.extend({
 	// the master loads in the text file containing ths list of images in this photo album
 
 	loadInList: function() {
-		if (isMaster) {
-			this.listFileName = this.listFileNamePhotos;
-			d3.text(this.listFileName, this.listFileCallbackFunc);
+		if (this.listFileNamePhotos === "slideshow") {
+			// Special case: slideshow filder from server
+			this.bigList = this.slideshowList;
+			this.update();
+			this.drawEverything();
+			this.updateTitle("Photo Slideshow: user");
+		} else {
+			if (isMaster) {
+				this.listFileName = this.listFileNamePhotos;
+				d3.text(this.listFileName, this.listFileCallbackFunc);
+			}
 		}
-
 	},
 
 	// choose a random image from the current photo album
@@ -242,10 +265,11 @@ var photos = SAGE2_App.extend({
 
 			// ideally this random number should come from the master to guarantee identical values across clients
 
-			this.fileName = this.listFileNameLibrary + escape(this.bigList[this.state.counter].name) +
-								'?' + Math.floor(Math.random() * 10000000);
-
-			this.broadcast("updateNode", {data: this.fileName});
+			if (this.bigList.length > 0) {
+				this.fileName = this.listFileNameLibrary + escape(this.bigList[this.state.counter].name) +
+									'?' + Math.floor(Math.random() * 10000000);
+				this.broadcast("updateNode", {data: this.fileName});
+			}
 		}
 	},
 
@@ -317,6 +341,13 @@ var photos = SAGE2_App.extend({
 			this.canvasBackground = settings.background;
 		}
 
+		// Add an extra slideshow: will load images from the 'slideshow' user folder
+		this.photoAlbums.push({
+			list:     "slideshow",
+			location: "",
+			name:     "slideshow"
+		});
+
 		this.URL1  = "";
 		this.URL1a = "";
 		this.URL1b = "";
@@ -325,6 +356,7 @@ var photos = SAGE2_App.extend({
 		this.timeDiff = 0;
 
 		this.bigList = null;
+		this.slideshowList = null;
 
 		this.okToDraw = this.fadeCount;
 		this.forceRedraw = 1;
@@ -418,6 +450,11 @@ var photos = SAGE2_App.extend({
 
 		this.updateWindow();
 		this.refresh(date);
+	},
+
+	quit: function() {
+		// Remove callback
+		this.unregisterFileListHandler(this.fileList);
 	},
 
 	event: function(eventType, pos, user, data, date) {
