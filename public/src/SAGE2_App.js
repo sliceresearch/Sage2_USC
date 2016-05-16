@@ -9,6 +9,7 @@
 // Copyright (c) 2014-2015
 
 /* global ignoreFields, SAGE2WidgetControl, SAGE2MEP */
+/* globla addStoredFileListEventHandler, removeStoredFileListEventHandler */
 
 /**
  * @module client
@@ -782,6 +783,26 @@ var SAGE2_App = Class.extend({
 	*/
 	applicationRPC: function(query, funcName, broadcast) {
 		wsio.emit('applicationRPC', {app: this.div.id, func: funcName, query: query, broadcast: broadcast});
+	},
+
+	/**
+	* Register a callback to be called when receiving a updated file list from server
+	*
+	* @method registerFileListHandler
+	* @param mth {Method} method on object to be called back
+	*/
+	registerFileListHandler: function(mth) {
+		addStoredFileListEventHandler(mth.bind(this));
+	},
+
+	/**
+	* Unregister a callback to be called when receiving a updated file list from server
+	*
+	* @method unregisterFileListHandler
+	* @param mth {Method} method on object to be called back
+	*/
+	unregisterFileListHandler: function(mth) {
+		removeStoredFileListEventHandler(mth.bind(this));
 	},
 
 	/**
