@@ -912,7 +912,10 @@ function FileManager(wsio, mydiv, uniqueID) {
 			folder = this.mediaFolders[df];
 			if (myFile.sage2URL.startsWith(folder.url)) {
 				// Create a subfolder if needed
-				var filepath = myFile.sage2URL.split('/');
+
+				// var filepath = myFile.sage2URL.split('/');
+				var filepath = decodeURIComponent(myFile.sage2URL).split('/');
+
 				// Remove the fist two elements (root) and the last (filename)
 				var subdirArray = filepath.slice(2, -1);
 				var parent = folder.url;
