@@ -58,7 +58,8 @@ var HttpServer          = require('./src/node-httpserver');       // creates web
 var InteractableManager = require('./src/node-interactable');     // handles geometry and determining which object a point is over
 var Interaction         = require('./src/node-interaction');      // handles sage interaction (move, resize, etc.)
 var Loader              = require('./src/node-itemloader');       // handles sage item creation
-var Omicron             = require('./src/node-omicron');          // handles Omicron input events
+var Omicron             = require('./src/node-omicron');
+var Drawing             = require('./src/node-drawing');          // handles Omicron input events
 var Radialmenu          = require('./src/node-radialmenu');       // radial menu
 var Sage2ItemList       = require('./src/node-sage2itemlist');    // list of SAGE2 items
 var Sagepointer         = require('./src/node-sagepointer');      // handles sage pointers (creation, location, etc.)
@@ -109,8 +110,27 @@ var appLoader          = null;
 var interactMgr        = new InteractableManager();
 var mediaBlockSize     = 512;
 var startTime          = Date.now();
+var drawingManager;
 var pressingAlt        = true;
 
+
+
+// Global variable for all media folders
+global.mediaFolders = {};
+// System folder, defined within SAGE2 installation
+mediaFolders.system =	{
+	name: "system",
+	path: "public/uploads/",
+	url:  "/uploads",
+	upload: false
+};
+// Home directory, defined as ~/Documents/SAGE2_Media or equivalent
+mediaFolders.user =	{
+	name: "user",
+	path: path.join(sageutils.getHomeDirectory(), "Documents", "SAGE2_Media", "/"),
+	url:  "/user",
+	upload: true
+};
 
 // Add extra folders defined in the configuration file
 if (config.folders) {
@@ -127,7 +147,7 @@ if (config.folders) {
 var publicDirectory  = "public";
 var uploadsDirectory = path.join(publicDirectory, "uploads");
 var sessionDirectory = path.join(publicDirectory, "sessions");
-
+var whiteboardDirectory = sessionDirectory;
 // Validate all the media folders
 for (var folder in mediaFolders) {
 	var f = mediaFolders[folder];
@@ -141,12 +161,14 @@ for (var folder in mediaFolders) {
 		uploadsDirectory = f.path;
 		mainFolder = f;
 		sessionDirectory = path.join(uploadsDirectory, "sessions");
+		whiteboardDirectory = path.join(uploadsDirectory, "whiteboard");
 		if (!sageutils.folderExists(sessionDirectory)) {
 			sageutils.mkdirParent(sessionDirectory);
 		}
 		console.log(sageutils.header('Folders') + 'upload to ' + f.path);
 	}
-	var newdirs = ["apps", "assets", "images", "pdfs", "tmp", "videos", "config"];
+	var newdirs = ["apps", "assets", "images", "pdfs", "tmp", "videos", "config", "whiteboard"];
+
 	newdirs.forEach(function(d) {
 		var newsubdir = path.join(mediaFolders[f.name].path, d);
 		if (!sageutils.folderExists(newsubdir)) {
@@ -371,7 +393,134 @@ function initializeSage2Server() {
 	wsioServerS = new WebsocketIO.Server({server: sage2ServerS});
 	wsioServer.onconnection(openWebSocketClient);
 	wsioServerS.onconnection(openWebSocketClient);
+	drawingManager = new Drawing(config);
+	drawingManager.setCallbacks(
+								drawingInit,
+								drawingUpdate,
+								drawingRemove,
+								sendTouchToPalette,
+								sendDragToPalette,
+								sendStyleToPalette,
+								sendChangeToPalette,
+								movePaletteTo,
+								saveDrawingSession,
+								loadDrawingSession,
+								sendSessionListToPalette
+								);
+	// Link the interactable manager to the drawing manager
+	drawingManager.linkInteractableManager(interactMgr);
 }
+
+
+/************************Whiteboard Callbacks************************/
+
+function drawingInit(clientWebSocket, drawState) {
+	clientWebSocket.emit("drawingInit", drawState);
+}
+
+function drawingUpdate(clientWebSocket, drawingObject) {
+	clientWebSocket.emit("drawingUpdate", drawingObject);
+}
+
+function drawingRemove(clientWebSocket, drawingObject) {
+	clientWebSocket.emit("drawingRemove", drawingObject);
+}
+
+function sendTouchToPalette(paletteID,x,y) {
+	var ePosition = {x: x , y: y};
+	var eUser = {id: 1, label: "Touch", color: "none"};
+
+	var event = {
+		id: paletteID,
+		type: "pointerPress",
+		position: ePosition,
+		user: eUser,
+		data: {button: "left"},
+		date: Date.now()
+	};
+
+	broadcast('eventInItem', event);
+}
+function sendDragToPalette(paletteID,x,y) {
+	var ePosition = {x: x , y: y};
+	var eUser = {id: 1, label: "Touch", color: "none"};
+
+	var event = {
+		id: paletteID,
+		type: "pointerDrag",
+		position: ePosition,
+		user: eUser,
+		data: {button: "left"},
+		date: Date.now()
+	};
+
+	broadcast('eventInItem', event);
+}
+
+function sendStyleToPalette(paletteID,style) {
+	var ePosition = {x: 0 , y: 0};
+	var eUser = {id: 1, label: "Touch", color: "none"};
+
+	var event = {
+		id: paletteID,
+		type: "styleChange",
+		position: ePosition,
+		user: eUser,
+		data: {style: style},
+		date: Date.now()
+	};
+
+	broadcast('eventInItem', event);
+}
+
+function sendSessionListToPalette(paletteID, data) {
+	var ePosition = {x: 0 , y: 0};
+	var eUser = {id: 1, label: "Touch", color: "none"};
+
+	var event = {
+		id: paletteID,
+		type: "sessionsList",
+		position: ePosition,
+		user: eUser,
+		data: data,
+		date: Date.now()
+	};
+
+	broadcast('eventInItem', event);
+
+}
+
+function sendChangeToPalette(paletteID,data) {
+	var ePosition = {x: 0 , y: 0};
+	var eUser = {id: 1, label: "Touch", color: "none"};
+
+	var event = {
+		id: paletteID,
+		type: "modeChange",
+		position: ePosition,
+		user: eUser,
+		data: data,
+		date: Date.now()
+	};
+
+	broadcast('eventInItem', event);
+}
+
+function movePaletteTo(paletteID,x,y, w, h) {
+	SAGE2Items.applications.list[paletteID].left = x;
+	SAGE2Items.applications.list[paletteID].top = y;
+	var moveApp = {
+		elemId: paletteID,
+		elemLeft: x,
+		elemTop: y,
+		elemWidth: w,
+		elemHeight: h,
+		date: new Date()
+	};
+
+	moveApplicationWindow(null,moveApp, null);
+}
+
 
 function setUpDialogsAsInteractableObjects() {
 	var dialogGeometry = {
@@ -515,6 +664,12 @@ function closeWebSocketClient(wsio) {
 	}
 
 	removeElement(clients, wsio);
+
+	// Unregistering the client from the drawingManager
+	if (wsio.clientType === "display") {
+		drawingManager.removeWebSocket(wsio);
+	}
+
 }
 
 function wsAddClient(wsio, data) {
@@ -585,7 +740,9 @@ function wsAddClient(wsio, data) {
 
 	clients.push(wsio);
 	initializeWSClient(wsio, data.requests.config, data.requests.version, data.requests.time, data.requests.console);
-
+	if (wsio.clientType === "display") {
+		drawingManager.init(wsio);
+	}
 	// Check if there's a new pointer for a mobile client
 	if (data.browser && data.browser.isMobile && remoteInteraction[wsio.id]) {
 		// for mobile clients, default to window interaction mode
@@ -701,6 +858,22 @@ function setupListeners(wsio) {
 	wsio.on('radialMenuMoved',                      wsRadialMenuMoved);
 	wsio.on('removeRadialMenu',                     wsRemoveRadialMenu);
 	wsio.on('radialMenuWindowToggle',               wsRadialMenuThumbnailWindow);
+
+	// DrawingState messages, should they have their own section?
+	wsio.on('updatePalettePosition',				wsUpdatePalettePosition);
+	wsio.on('enableDrawingMode',					wsEnableDrawingMode);
+	wsio.on('disableDrawingMode',					wsDisableDrawingMode);
+	wsio.on('clearDrawingCanvas',					wsClearDrawingCanvas);
+	wsio.on('changeStyle',							wsChangeStyle);
+	wsio.on('undoLastDrawing',						wsUndoLastDrawing);
+	wsio.on('redoDrawing',							wsRedoDrawing);
+	wsio.on('loadDrawings',							wsLoadDrawings);
+	wsio.on('getSessionsList',						wsGetSessionsList);
+	wsio.on('saveDrawings',							wsSaveDrawings);
+	wsio.on('enablePaintingMode',					wsEnablePaintingMode);
+	wsio.on('disablePaintingMode',					wsDisablePaintingMode);
+	wsio.on('saveScreenshot',						wsSaveScreenshot);
+	wsio.on('selectionModeOnOff',					wsSelectionModeOnOff);
 
 	wsio.on('addNewWebElement',                     wsAddNewWebElement);
 
@@ -880,6 +1053,70 @@ function initializeRemoteServerInfo(wsio) {
 		var site = {name: remoteSites[i].name, connected: remoteSites[i].connected, geometry: remoteSites[i].geometry};
 		wsio.emit('addRemoteSite', site);
 	}
+}
+
+// **************  Drawing Functions *****************
+
+// The functions just call their associated method in the drawing manager
+function wsUpdatePalettePosition(wsio, data) {
+	var whiteboardApp = interactMgr.getObject(drawingManager.paletteID, "applications");
+	drawingManager.updatePalettePosition({
+		startX: whiteboardApp.x1,
+		endX: whiteboardApp.x2,
+		startY: whiteboardApp.y1,
+		endY: whiteboardApp.y2});
+}
+
+function wsEnableDrawingMode(wsio, data) {
+	drawingManager.enableDrawingMode(data);
+}
+function wsDisableDrawingMode(wsio, data) {
+	drawingManager.disableDrawingMode(data);
+}
+
+
+function wsClearDrawingCanvas(wsio,data) {
+	drawingManager.clearDrawingCanvas();
+}
+
+function wsChangeStyle(wsio,data) {
+	drawingManager.changeStyle(data);
+}
+
+function wsUndoLastDrawing(wsio,data) {
+	drawingManager.undoLastDrawing();
+}
+
+function wsRedoDrawing(wsio,data) {
+	drawingManager.redoDrawing();
+}
+
+function wsLoadDrawings(wsio,data) {
+	drawingManager.loadDrawings(data);
+}
+
+function wsGetSessionsList(wsio,data) {
+	var allDrawings = getAllDrawingsessions();
+	drawingManager.gotSessionsList(allDrawings);
+}
+
+function wsSaveDrawings(wsio, data) {
+	drawingManager.saveDrawings();
+}
+
+function wsEnablePaintingMode(wsio, data) {
+	drawingManager.enablePaintingMode();
+}
+
+function wsDisablePaintingMode(wsio, data) {
+	drawingManager.disablePaintingMode();
+}
+function wsSaveScreenshot(wsio, data) {
+	saveScreenshot(data["screenshot"]);
+}
+
+function wsSelectionModeOnOff(wsio, data) {
+	drawingManager.selectionModeOnOff();
 }
 
 // **************  Sage Pointer Functions *****************
@@ -1706,6 +1943,83 @@ function deleteSession(filename) {
 			}
 			console.log(sageutils.header("Session") + "Successfully deleted session " + filename);
 		});
+	}
+}
+
+function saveDrawingSession(data) {
+	var now = new Date();
+	var filename = "drawingSession" + now.getTime();
+
+	var fullpath = path.join(sessionDirectory, filename);
+	// if it doesn't end in .json, add it
+	if (fullpath.indexOf(".json", fullpath.length - 5) === -1) {
+		fullpath += '.json';
+	}
+
+	try {
+		fs.writeFileSync(fullpath, JSON.stringify(data, null, 4));
+		console.log(sageutils.header("Session") + "saved drawing session file to " + fullpath);
+	}
+	catch (err) {
+		console.log(sageutils.header("Session") + "error saving", err);
+	}
+}
+
+function getAllDrawingsessions() {
+	var allNames = fs.readdirSync(sessionDirectory);
+	var res = [];
+	for (var i in allNames) {
+		if (allNames[i].indexOf("drawingSession") != -1) {
+			res.push(allNames[i]);
+		}
+	}
+	return res;
+}
+
+function loadDrawingSession(filename) {
+
+	if (filename == null) {
+		console.log("Filename does not exist");
+		filename = "drawingSession";
+	}
+
+	var fullpath;
+	if (sageutils.fileExists(path.resolve(filename))) {
+		fullpath = filename;
+	} else {
+		fullpath = path.join(sessionDirectory, filename);
+	}
+
+	// if it doesn't end in .json, add it
+	if (fullpath.indexOf(".json", fullpath.length - 5) === -1) {
+		fullpath += '.json';
+	}
+
+	fs.readFile(fullpath, function(err, data) {
+		if (err) {
+			console.log("Error reading DrawingState: ", err);
+		} else {
+			console.log("Reading DrawingState from " + fullpath);
+			var j = JSON.parse(data);
+			drawingManager.loadOldState(j);
+		}
+	});
+
+}
+
+function saveScreenshot(data) {
+	var now = new Date();
+	// Assign a unique name
+	var filename = "screenshot" + now.getTime() + '.png';
+	var img = data.replace("data:image/png;base64,", "");
+	var fullpath = path.join(whiteboardDirectory, filename);
+	var buf = new Buffer(img, 'base64');
+	try {
+		fs.writeFile(fullpath, buf);
+		console.log(sageutils.header("Session") + "saved screenshot file to " + fullpath);
+	}
+	catch (err) {
+		console.log(sageutils.header("Session") + "error saving", err);
 	}
 }
 
@@ -5685,6 +5999,7 @@ function moveApplicationWindow(uniqueID, moveApp, portalId) {
 				attachAppIfSticky(backgroundObj.data, moveApp.elemId);
 			}
 		}
+		drawingManager.applicationMoved(moveApp.elemId, moveApp.elemLeft, moveApp.elemTop);
 		im.editGeometry(moveApp.elemId, "applications", "rectangle",
 			{x: moveApp.elemLeft, y: moveApp.elemTop, w: moveApp.elemWidth, h: moveApp.elemHeight + titleBarHeight});
 		broadcast('setItemPosition', moveApp);
@@ -5726,6 +6041,9 @@ function moveAndResizeApplicationWindow(resizeApp, portalId) {
 		titleBarHeight = remoteSharingSessions[portalId].portal.titleBarHeight;
 	}
 	var im = findInteractableManager(resizeApp.elemId);
+	drawingManager.applicationMoved(resizeApp.elemId,resizeApp.elemLeft,resizeApp.elemTop);
+	drawingManager.applicationResized(resizeApp.elemId, resizeApp.elemWidth, resizeApp.elemHeight + titleBarHeight,
+										{x: resizeApp.elemLeft,y: resizeApp.elemTop});
 	im.editGeometry(resizeApp.elemId, "applications", "rectangle",
 		{x: resizeApp.elemLeft, y: resizeApp.elemTop, w: resizeApp.elemWidth, h: resizeApp.elemHeight + titleBarHeight});
 	handleApplicationResize(resizeApp.elemId);
@@ -7085,6 +7403,7 @@ var omicronRunning = false;
 if (config.experimental && config.experimental.omicron &&
 	(config.experimental.omicron.enable === true || config.experimental.omicron.useSageInputServer === true)) {
 	var omicronManager = new Omicron(config);
+	omicronManager.linkDrawingManager(drawingManager);
 
 	var closeGestureDelay = 1500;
 

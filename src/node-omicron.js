@@ -18,6 +18,7 @@
  * @requires node-coordinateCalculator, node-1euro
  */
 
+// require variables to be declared
 "use strict";
 
 var dgram     = require('dgram');
@@ -29,7 +30,7 @@ var CoordinateCalculator = require('./node-coordinateCalculator');
 var OneEuroFilter        = require('./node-1euro');
 
 var omicronManager; // Handle to OmicronManager inside of udp blocks (instead of this)
-
+var drawingManager; // Connect to the node-drawing
 /**
  * Omicron setup and opens a listener socket for an Omicron input server to connect to
  *
@@ -214,6 +215,17 @@ OmicronManager.prototype.disconnect = function() {
 	}
 };
 
+
+ /**
+ * Links the drawing manager to the omicron server
+ *
+ * @method linkDrawingManager
+ */
+OmicronManager.prototype.linkDrawingManager = function(dManager) {
+	drawingManager = dManager;
+};
+
+
 /**
  * Receives server pointer functions
  *
@@ -345,7 +357,6 @@ OmicronManager.prototype.runTracker = function() {
 		// var r_roll  = Math.asin(2.0*e.orx*e.ory + 2.0*e.orz*e.orw);
 		// var r_yaw   = Math.atan2(2.0*e.ory*e.orw-2.0*e.orx*e.orz , 1.0 - 2.0*e.ory*e.ory - 2.0*e.orz*e.orz);
 		// var r_pitch = Math.atan2(2.0*e.orx*e.orw-2.0*e.ory*e.orz , 1.0 - 2.0*e.orx*e.orx - 2.0*e.orz*e.orz);
-
 		var posX = e.posx * omicronManager.totalWidth;
 		var posY = e.posy * omicronManager.totalHeight;
 		posX += omicronManager.touchOffset[0];
@@ -363,6 +374,7 @@ OmicronManager.prototype.runTracker = function() {
 		// 6 = Brain
 		// 7 = Wand
 		// 8 = Speech
+		// 9 = Ipad Framework
 		var serviceType = e.serviceType;
 		// console.log("Event service type: " + serviceType);
 
@@ -578,12 +590,37 @@ OmicronManager.prototype.processPointerEvent = function(e, sourceID, posX, posY,
 		touchHeight = msg.readFloatLE(offset); offset += 4;
 	}
 
+	// the touch size is normalized
+	touchWidth *=  omicronManager.totalWidth;
+	touchHeight *= omicronManager.totalHeight;
+
 	if (omicronManager.eventDebug) {
 		console.log(sageutils.header('Omicron') + "pointer ID " + sourceID + " event! type: " + e.type);
 		console.log(sageutils.header('Omicron') + "pointer event! type: " + e.type);
 		console.log(sageutils.header('Omicron') + "ServiceTypePointer> source ", e.sourceId);
 		console.log(sageutils.header('Omicron') + "ServiceTypePointer> serviceID ", e.serviceId);
 		console.log(sageutils.header('Omicron') + "pointer width/height ", touchWidth, touchHeight);
+	}
+
+	// Basic way to check if the input is coming from oinput, should be changed to an extra field
+	// but that would mean change the C++ code for the oinput server
+	var isOInput = e.flags == 0;
+
+	if (isOInput && drawingManager.drawingMode) {
+		// If the touch is coming from oinput send it to node-drawing and stop after that
+		drawingManager.pointerEvent(e,sourceID,posX,posY,touchWidth,touchHeight);
+		return;
+	}
+
+	// If the user touches on the palette with drawing disabled, enable it
+	if ((!drawingManager.drawingMode) && drawingManager.touchInsidePalette(posX,posY) && e.type === 5
+		&& isOInput) {
+		drawingManager.reEnableDrawingMode();
+	}
+
+	// If drawing don't do anything else
+	if (drawingManager.drawingMode) {
+		return;
 	}
 
 	// TouchGestureManager Flags:
