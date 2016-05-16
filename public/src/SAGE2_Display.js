@@ -52,6 +52,10 @@ var applications = {};
 var dependencies = {};
 var dataSharingPortals = {};
 
+// Maintain the file list available on the server
+var storedFileList = null;
+var storedFileListEventHandlers = [];
+
 // UI object to build the element on the wall
 var ui;
 var uiTimer = null;
@@ -157,6 +161,31 @@ function setupFocusHandlers() {
 	});
 }
 
+/**
+ * Add a stored file list event handler
+ *
+ * @method addStoredFileListEventHandler
+ */
+function addStoredFileListEventHandler(callback) {
+	// Register the event handler and call it if we already have a stored file list available
+	storedFileListEventHandlers.push(callback);
+	if (storedFileList) {
+		callback(storedFileList);
+	}
+}
+
+/**
+ * Remove a stored file list event handler
+ *
+ * @method removeStoredFileListEventHandler
+ */
+function removeStoredFileListEventHandler(callback) {
+	var index = storedFileListEventHandlers.indexOf(callback);
+	if (index > -1) {
+		storedFileListEventHandlers.splice(index, 1);
+	}
+}
+
 
 /**
  * Idle function, show and hide the UI, triggered at uiTimerDelay sec delay
@@ -212,6 +241,7 @@ function SAGE2_init() {
 			session: session
 		};
 		wsio.emit('addClient', clientDescription);
+		wsio.emit('requestStoredFiles');
 	});
 
 	// Socket close event (ie server crashed)
@@ -433,6 +463,14 @@ function setupListeners() {
 					console.log("unsycned :(");
 				}
 			}
+		}
+	});
+
+	wsio.on('storedFileList', function(data) {
+		// Save the cached stored file list and update all the listeners
+		storedFileList = data;
+		for (var i = 0; i < storedFileListEventHandlers.length; i++) {
+			storedFileListEventHandlers[i](storedFileList);
 		}
 	});
 
