@@ -5249,6 +5249,34 @@ function sendPointerPressToApplication(uniqueID, app, pointerX, pointerY, data) 
 	addEventToUserLog(uniqueID, {type: "applicationInteraction", data: eLogData, time: Date.now()});
 }
 
+function sendPointerDblClickToApplication(uniqueID, app, pointerX, pointerY) {
+	var ePosition = {x: pointerX - app.left, y: pointerY - (app.top + config.ui.titleBarHeight)};
+	var eUser = {id: sagePointers[uniqueID].id, label: sagePointers[uniqueID].label, color: sagePointers[uniqueID].color};
+
+	var event = {
+		id: app.id,
+		type: "pointerDblClick",
+		position: ePosition,
+		user: eUser,
+		date: Date.now()
+	};
+
+	broadcast('eventInItem', event);
+
+	var eLogData = {
+		type: "pointerDblClick",
+		application: {
+			id: app.id,
+			type: app.application
+		},
+		position: {
+			x: parseInt(ePosition.x, 10),
+			y: parseInt(ePosition.y, 10)
+		}
+	};
+	addEventToUserLog(uniqueID, {type: "applicationInteraction", data: eLogData, time: Date.now()});
+}
+
 function selectPortalForMove(uniqueID, portal, pointerX, pointerY) {
 	remoteInteraction[uniqueID].selectMoveItem(portal, pointerX, pointerY);
 
@@ -6155,6 +6183,8 @@ function pointerDblClickOnApplication(uniqueID, pointerX, pointerY, obj, localPt
 	if (btn === null) {
 		if (remoteInteraction[uniqueID].windowManagementMode()) {
 			toggleApplicationFullscreen(uniqueID, obj.data);
+		} else {
+			sendPointerDblClickToApplication(uniqueID, obj.data, pointerX, pointerY);
 		}
 		return;
 	}

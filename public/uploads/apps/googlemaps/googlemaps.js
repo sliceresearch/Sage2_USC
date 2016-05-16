@@ -24,6 +24,7 @@ var googlemaps = SAGE2_App.extend({
 		this.position     = {x: 0, y: 0};
 		this.scrollAmount = 0;
 		this.trafficTimer = null;
+		this.isShift      = false;
 
 		// Create a callback function for traffic updates
 		this.trafficCB = this.reloadTiles.bind(this);
@@ -200,26 +201,33 @@ var googlemaps = SAGE2_App.extend({
 			this.position.y = position.y;
 
 			this.refresh(date);
+		} else if (eventType === "pointerDblClick") {
+			// Double click to zoom in, with shift to zoom out
+			if (this.isShift) {
+				this.relativeZoom(-1);
+			} else {
+				this.relativeZoom(1);
+			}
 		} else if (eventType === "pointerScroll") {
 			// Scroll events for zoom
 			this.scrollAmount += data.wheelDelta;
 
-			if (this.scrollAmount >= 128) {
+			if (this.scrollAmount >= 64) {
 				// zoom out
 				z = this.map.getZoom();
 				this.map.setZoom(z - 1);
 				this.state.zoomLevel = this.map.getZoom();
 				this.lastZoom = date;
 
-				this.scrollAmount -= 128;
-			} else if (this.scrollAmount <= -128) {
+				this.scrollAmount -= 64;
+			} else if (this.scrollAmount <= -64) {
 				// zoom in
 				z = this.map.getZoom();
 				this.map.setZoom(z + 1);
 				this.state.zoomLevel = this.map.getZoom();
 				this.lastZoom = date;
 
-				this.scrollAmount += 128;
+				this.scrollAmount += 64;
 			}
 
 			this.refresh(date);
@@ -282,6 +290,10 @@ var googlemaps = SAGE2_App.extend({
 			// }
 			this.refresh(date);
 		} else if (eventType === "specialKey") {
+			if (data.code === 16) {
+				// Shift key
+				this.isShift = (data.state === "down");
+			}
 			if (data.code === 18 && data.state === "down") {      // alt
 				// zoom in
 				this.relativeZoom(1);
@@ -305,6 +317,7 @@ var googlemaps = SAGE2_App.extend({
 			this.refresh(date);
 		}
 	},
+
 	changeMapType: function() {
 		if (this.state.mapType === google.maps.MapTypeId.TERRAIN) {
 			this.state.mapType = google.maps.MapTypeId.ROADMAP;
@@ -319,6 +332,7 @@ var googlemaps = SAGE2_App.extend({
 		}
 		this.map.setMapTypeId(this.state.mapType);
 	},
+
 	toggleWeather: function() {
 		if (this.weatherLayer.getMap() == null) {
 			this.weatherLayer.setMap(this.map);
@@ -327,6 +341,7 @@ var googlemaps = SAGE2_App.extend({
 		}
 		this.updateLayers();
 	},
+
 	toggleTraffic: function() {
 		// add/remove traffic layer
 		if (this.trafficLayer.getMap() == null) {
@@ -340,6 +355,7 @@ var googlemaps = SAGE2_App.extend({
 		}
 		this.updateLayers();
 	},
+
 	relativeZoom: function(delta) {
 		delta = parseInt(delta);
 		delta = (delta > -1) ? 1 : -1;
@@ -347,6 +363,7 @@ var googlemaps = SAGE2_App.extend({
 		this.map.setZoom(z + delta);
 		this.state.zoomLevel = this.map.getZoom();
 	},
+
 	codeAddress: function(text) {
 		this.geocoder.geocode({address: text}, function(results, status) {
 			if (status === google.maps.GeocoderStatus.OK) {
@@ -383,9 +400,9 @@ var googlemaps = SAGE2_App.extend({
 		// label of them menu
 		entry.description = "Type a location:";
 		// callback
-		entry.callback   = "setLocation";
+		entry.callback = "setLocation";
 		// parameters of the callback function
-		entry.parameters = {};
+		entry.parameters     = {};
 		entry.inputField     = true;
 		entry.inputFieldSize = 20;
 		entries.push(entry);
