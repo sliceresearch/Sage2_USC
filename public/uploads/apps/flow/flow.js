@@ -5,6 +5,9 @@
 // Copyright (c) 2015
 //
 
+/* global Flow */
+/* global INITIAL_SPEED, INITIAL_TURBULENCE, INITIAL_AZIMUTH, INITIAL_ELEVATION */
+/* global MAX_SPEED, CAMERA_SENSITIVITY, MIN_ELEVATION, MAX_ELEVATION, MAX_TURBULENCE */
 
 var flow = SAGE2_App.extend({
 	init: function(data) {
@@ -120,7 +123,7 @@ var flow = SAGE2_App.extend({
 					this.flow.changeQualityLevel(3);
 					break;
 				case "Persistence":
-					val = parseFloat(data.text);
+					var val = parseFloat(data.text);
 					if (val > 0.0 && val < MAX_TURBULENCE) {
 						console.log('Setting persistence', val);
 						this.flow.setPersistence(val);

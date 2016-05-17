@@ -8,6 +8,8 @@
 //
 // Copyright (c) 2014
 
+/* global Pointer, dataSharingPortals, createDrawingElement, RadialMenu */
+
 "use strict";
 
 /**
@@ -172,11 +174,11 @@ function UIBuilder(json_cfg, clientID) {
 			this.bg.style.backgroundColor = this.json_cfg.background.color || "#333333";
 			this.bg.style.top    = "0px";
 			this.bg.style.left   = "0px";
-			this.bg.style.width  = this.json_cfg.resolution.width + "px";
-			this.bg.style.height = this.json_cfg.resolution.height + "px";
+			this.bg.style.width  = this.json_cfg.resolution.width * (this.json_cfg.displays[this.clientID].width || 1) + "px";
+			this.bg.style.height = this.json_cfg.resolution.height * (this.json_cfg.displays[this.clientID].height || 1) + "px";
 
-			this.main.style.width  = this.json_cfg.resolution.width  + "px";
-			this.main.style.height = this.json_cfg.resolution.height + "px";
+			this.main.style.width  = this.json_cfg.resolution.width * (this.json_cfg.displays[this.clientID].width || 1) + "px";
+			this.main.style.height = this.json_cfg.resolution.height * (this.json_cfg.displays[this.clientID].height || 1) + "px";
 
 			if (this.json_cfg.background.image !== undefined &&
 				this.json_cfg.background.image.url !== undefined &&
@@ -369,22 +371,24 @@ function UIBuilder(json_cfg, clientID) {
 		version.style.mozTransform  = "translateY(-50%)";
 		version.style.transform  = "translateY(-50%)";
 
+		// Change the type before placing the event handler
+		logo.type = "image/svg+xml";
 		logo.addEventListener('load', this.logoLoadedFunc, false);
 		if (__SAGE2__.browser.isIE) {
 			logo.src  = "images/EVL-LAVA.svg";
 		} else {
 			logo.data = "images/EVL-LAVA.svg";
-			logo.type = "image/svg+xml";
 		}
 
 		if (this.json_cfg.background.watermark !== undefined) {
+			// Change the type before placing the event handler
+			watermark.type = "image/svg+xml";
 			watermark.addEventListener('load', this.watermarkLoadedFunc, false);
 			if (__SAGE2__.browser.isIE) {
 				// using an image tag in IE
 				watermark.src  = this.json_cfg.background.watermark.svg;
 			} else {
 				watermark.data = this.json_cfg.background.watermark.svg;
-				watermark.type = "image/svg+xml";
 			}
 		}
 
@@ -630,6 +634,7 @@ function UIBuilder(json_cfg, clientID) {
 		newDialogCancel.style.mozBoxSizing    = "border-box";
 		newDialogCancel.style.boxSizing       = "border-box";
 		newDialogCancel.style.border          =  "2px solid #000000";
+		newDialogCancel.style.textAlign       = "center";
 
 		// Create a img element to display the image
 		var newDialogImage = document.createElement("img");
@@ -719,7 +724,7 @@ function UIBuilder(json_cfg, clientID) {
 	*
 	* @method logoLoaded
 	*/
-	this.logoLoaded = function() {
+	this.logoLoaded = function(evt) {
 		var logo   = document.getElementById('logo');
 		var height = 0.95 * this.titleBarHeight;
 		var width;
@@ -1146,6 +1151,11 @@ function UIBuilder(json_cfg, clientID) {
 		if (this.json_cfg.ui.menubar !== undefined && this.json_cfg.ui.menubar.remoteDisconnectedColor !== undefined) {
 			disconnectedColor = this.json_cfg.ui.menubar.remoteDisconnectedColor;
 		}
+		var lockedColor = "rgba(230, 110, 0, 1.0)";
+		if (this.json_cfg.ui.menubar !== undefined && this.json_cfg.ui.menubar.remoteLockedColor !== undefined) {
+			lockedColor = this.json_cfg.ui.menubar.remoteLockedColor;
+		}
+		var unknownColor = "rgba(140, 140, 140, 1.0)";
 
 		var remote = document.createElement('div');
 		remote.id  = data.name;
@@ -1155,10 +1165,14 @@ function UIBuilder(json_cfg, clientID) {
 		remote.style.height = data.geometry.h.toString() + "px";
 		remote.style.left   = (-this.offsetX + data.geometry.x).toString() + "px";
 		remote.style.top    = (-this.offsetY + data.geometry.y).toString() + "px";
-		if (data.connected) {
+		if (data.connected === "on") {
 			remote.style.backgroundColor = connectedColor;
-		} else {
+		} else if (data.connected === "off") {
 			remote.style.backgroundColor = disconnectedColor;
+		} else if (data.connected === "locked") {
+			remote.style.backgroundColor = lockedColor;
+		} else {
+			remote.style.backgroundColor = unknownColor;
 		}
 
 		var color = "rgba(255, 255, 255, 1.0)";
@@ -1191,12 +1205,21 @@ function UIBuilder(json_cfg, clientID) {
 		if (this.json_cfg.ui.menubar !== undefined && this.json_cfg.ui.menubar.remoteDisconnectedColor !== undefined) {
 			disconnectedColor = this.json_cfg.ui.menubar.remoteDisconnectedColor;
 		}
+		var lockedColor = "rgba(230, 110, 0, 1.0)";
+		if (this.json_cfg.ui.menubar !== undefined && this.json_cfg.ui.menubar.remoteLockedColor !== undefined) {
+			lockedColor = this.json_cfg.ui.menubar.remoteLockedColor;
+		}
+		var unknownColor = "rgba(140, 140, 140, 1.0)";
 
 		var remote = document.getElementById(data.name);
-		if (data.connected) {
+		if (data.connected === "on") {
 			remote.style.backgroundColor = connectedColor;
-		} else {
+		} else if (data.connected === "off") {
 			remote.style.backgroundColor = disconnectedColor;
+		} else if (data.connected === "locked") {
+			remote.style.backgroundColor = lockedColor;
+		} else {
+			remote.style.backgroundColor = unknownColor;
 		}
 	};
 

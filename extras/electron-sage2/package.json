@@ -1,0 +1,19 @@
+{
+  "name": "SAGE2",
+  "version": "1.1.0",
+  "description": "SAGE2 application",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron main.js"
+  },
+  "keywords": [
+    "Electron",
+    "SAGE2"
+  ],
+  "author": "Luc Renambot",
+  "license": "CC0-1.0",
+  "devDependencies": {
+    "electron-prebuilt": "latest",
+    "electron-packager": "latest"
+  }
+}

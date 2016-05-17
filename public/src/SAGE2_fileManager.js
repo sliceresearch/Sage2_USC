@@ -8,6 +8,7 @@
 //
 // Copyright (c) 2015
 
+
 /**
  * SAGE2 File Manager
  *
@@ -16,7 +17,8 @@
  * @class SAGE2_Files
  */
 
-/* global SAGE2_init, escape, unescape, webix, $$, moment, sage2Version */
+/* global SAGE2_init, SAGE2_resize, escape, unescape, sage2Version, showDialog */
+/* global removeAllChildren */
 
 "use strict";
 
@@ -62,6 +64,7 @@ function FileManager(wsio, mydiv, uniqueID) {
 				{id: "Image:/", value: "Image", icon: "search", data: [], tooltip: "Show all the images"},
 				{id: "Video:/", value: "Video", icon: "search", data: [], tooltip: "Show all the videos"},
 				{id: "PDF:/", value: "PDF", icon: "search", data: [], tooltip: "Show all the PDFs"},
+				{id: "Note:/", value: "Note", icon: "search", data: [], tooltip: "Show all the Notes"},
 				{id: "App:/", value: "Application", icon: "search", data: [], tooltip: "Show all the applications"},
 				{id: "Session:/", value: "Session", icon: "search", data: [], tooltip: "Show all the sessions"},
 				{id: "Mine:/", value: "Uploaded", icon: "search", data: [], tooltip: "Show all my uploaded files"}
@@ -73,31 +76,32 @@ function FileManager(wsio, mydiv, uniqueID) {
 		{id: "file_menu", value: "File", submenu: [
 			{id: "folder_menu",  value: "New folder"},
 			{id: "upload_menu",  value: "Upload file"},
-			{id: "refresh_menu", value: "Refresh"}
-			]},
+			{id: "refresh_menu", value: "Refresh"},
+			{$template: "Separator"},
+			{id: "hidefm_menu", value: "Quit"}
+		]},
 		{id: "edit_menu", value: "Edit", submenu: [
 			{id: "delete_menu",   value: "Delete"},
 			{id: "download_menu", value: "Download"}
-			]},
+		]},
 		{id: "view_menu", value: "View", submenu: [
 			{id: "hideui_menu", value: "Show/Hide UI"},
-			{id: "hidefm_menu", value: "Hide file manager"},
 			{$template: "Separator"},
 			{id: "tile_menu",   value: "Tile content"},
 			{id: "clear_menu",  value: "Clear display"}
-			]},
+		]},
 		{id: "mainadmin_menu",    value: "Admin", config: {width: 170}, submenu: [
 			{id: "display_menu",  value: "Display client 0"},
 			{id: "overview_menu", value: "Display overview client"},
 			{id: "audio_menu",    value: "Audio manager"},
 			// {id: "drawing_menu",  value: "Drawing application"},
 			{id: "console_menu",  value: "Server console"}
-			]},
+		]},
 		{id: "mainhelp_menu",  value: "Help", submenu: [
 			{id: "help_menu",  value: "Help"},
 			{id: "info_menu",  value: "Information"},
 			{id: "about_menu", value: "About"}
-			]}
+		]}
 	];
 	var mymenu = {
 		id: "mymenu",
@@ -115,7 +119,7 @@ function FileManager(wsio, mydiv, uniqueID) {
 	// Custom tooltip function
 	function mytip(obj) {
 		return obj.tooltip ? obj.tooltip : "";
-	};
+	}
 
 	this.main = webix.ui({
 		container: mydiv,
@@ -140,24 +144,52 @@ function FileManager(wsio, mydiv, uniqueID) {
 				},
 				{view: "resizer"},
 				{height: 160, rows: [
-				{type: "header", id: "drop_header", template: "Drop files below"
-				},
-				{
-					view: "list", id: "uploadlist", type: "uploader",
-					scroll: 'y'
-				}]}
+					{type: "header", id: "drop_header", template: "Drop files below"},
+					{view: "list", id: "uploadlist", type: "uploader", scroll: 'y'}
+				]
+				}
 				]
 				},
 				{
 					view: "resizer"
 				},
 				{
-					id: "multiview1",
-					view: "multiview",
-					scroll: 'y',
+					id: "all_table",
+					view: "datatable",
+					// editable: true,
 					gravity: 2, // two times bigger
-					animate: false,
-					cells: [{}]
+					columnWidth: 200,
+					resizeColumn: true,
+					// animate: false,
+					scroll: 'y',
+					drag: true,
+					select: "multiselect",
+					navigation: true,
+					scheme: {
+						// Generate an automatic index
+						$init: function(obj) { obj.index = this.count() + 1; }
+					},
+					on: {
+						// update index after sort or update
+						"data->onStoreUpdated": function() {
+							this.data.each(function(obj, i) {
+								obj.index = i + 1;
+							});
+							return true;
+						}
+					},
+					columns: [
+						{id: "index", header: "",     width: 40, minWidth: 25, sort: "int"},
+						{id: "name",  header: "Name", minWidth: 180, sort: "text", fillspace: true},
+						{id: "user",  header: "User", width: 80, minWidth: 50, sort: "text", css: {'text-align': 'right'}},
+						{id: "size",  header: "Size", width: 80, minWidth: 50,  sort: sortBySize, css: {'text-align': 'right'}},
+						{id: "date",  header: "Date", width: 150, minWidth: 80, sort: sortByDate, css: {'text-align': 'center'}},
+						{id: "ago",   header: "Modified", width: 100, minWidth: 80, sort: sortByDate, css: {'text-align': 'right'}},
+						{id: "type",  header: "Type",     width: 80, minWidth: 50,  sort: "text", css: {'text-align': 'center'}}
+					],
+					data: [
+					]
+
 				},
 				{
 					view: "resizer"
@@ -183,11 +215,11 @@ function FileManager(wsio, mydiv, uniqueID) {
 							minHeight: 100,
 							id: "thumb",
 							template: function(obj) {
-									if (obj.image) {
-										return "<img src='" + obj.image + "_256.jpg'></img>";
-									}
-									return "";
+								if (obj.image) {
+									return "<img src='" + obj.image + "_256.jpg'></img>";
 								}
+								return "";
+							}
 						}
 					]
 				}
@@ -252,18 +284,16 @@ function FileManager(wsio, mydiv, uniqueID) {
 							{view: "text", id: "folder_name", label: "Folder name", name: "folder"},
 							{margin: 5, cols: [
 								{view: "button", value: "Cancel", click: function() {
-										this.getTopParentView().hide();
-									}
-								},
+									this.getTopParentView().hide();
+								}},
 								{view: "button", value: "Create", type: "form", click: function() {
-										createFolder(item, this.getFormView().getValues());
-										this.getTopParentView().hide();
-									}
-								}
+									createFolder(item, this.getFormView().getValues());
+									this.getTopParentView().hide();
+								}}
 							]}
 						],
 						elementsConfig: {
-							labelPosition: "top",
+							labelPosition: "top"
 						}
 					}
 				}).show();
@@ -294,8 +324,8 @@ function FileManager(wsio, mydiv, uniqueID) {
 			var displayUrl = "http://" + window.location.hostname + _this.http_port +  "/display.html?clientID=0";
 			window.open(displayUrl, '_blank');
 		} else if (evt === "overview_menu") {
-			var displayUrl = "http://" + window.location.hostname + _this.http_port +  "/display.html?clientID=-1";
-			window.open(displayUrl, '_blank');
+			var overviewUrl = "http://" + window.location.hostname + _this.http_port +  "/display.html?clientID=-1";
+			window.open(overviewUrl, '_blank');
 		} else if (evt === "clear_menu") {
 			wsio.emit('clearDisplay');
 		} else if (evt === "tile_menu") {
@@ -340,43 +370,7 @@ function FileManager(wsio, mydiv, uniqueID) {
 		}
 	});
 
-	var multiview1 = $$("multiview1");
-	multiview1.addView({
-		id: "all_table",
-		view: "datatable",
-		// editable: true,
-		columnWidth: 200,
-		resizeColumn: true,
-		// animate: false,
-		scroll: 'y',
-		drag: true,
-		select: "multiselect",
-		navigation: true,
-		columns: [
-			{id: "index", header: "", width: 40, minWidth: 25, sort: "int"},
-			{id: "name", header: "Name", minWidth: 180, sort: "text", fillspace: true},
-			{id: "user", header: "User", width: 80, minWidth: 50, sort: "text", css: {'text-align': 'right'}},
-			{id: "size", header: "Size", width: 80, minWidth: 50,  sort: sortBySize, css: {'text-align': 'right'}},
-			{id: "date", header: "Date", width: 150, minWidth: 80, sort: sortByDate, css: {'text-align': 'center'}},
-			{id: "ago",  header: "Modified", width: 100, minWidth: 80, sort: sortByDate, css: {'text-align': 'right'}},
-			{id: "type", header: "Type", width: 80, minWidth: 50,  sort: "text", css: {'text-align': 'center'}}
-		],
-		data: [
-		],
-		scheme: {
-			// Generate an automatic index
-			$init: function(obj) { obj.index = this.count() + 1; }
-		},
-		on: {
-			// update index after sort or update
-			"data->onStoreUpdated": function() {
-				this.data.each(function(obj, i) {
-					obj.index = i + 1;
-				});
-				return true;
-			}
-		}
-	});
+	// Get handle on the middle table data
 	this.allTable = $$("all_table");
 
 	// User selection
@@ -480,6 +474,21 @@ function FileManager(wsio, mydiv, uniqueID) {
 			info = _this.allFiles[elt.id].exif.Linearized || '';
 			metadata.config.elements.push({label: "Linearized", value: info});
 
+		} else if (_this.allFiles[elt.id].exif.MIMEType.indexOf('text/plain') >= 0) {
+			var key;
+			if (_this.allFiles[elt.id].exif.FileName.split(".").pop() === "note") {
+				metadata.config.elements.push({label: "note (QuickNote)", type: "label"});
+				for (key in _this.allFiles[elt.id].exif) {
+					info = _this.allFiles[elt.id].exif[key] || '';
+					metadata.config.elements.push({label: key, value: info});
+				}
+			} else {
+				metadata.config.elements.push({label: "Note", type: "label"});
+				for (key in _this.allFiles[elt.id].exif) {
+					info = _this.allFiles[elt.id].exif[key] || '';
+					metadata.config.elements.push({label: key, value: info});
+				}
+			}
 		} else if (_this.allFiles[elt.id].exif.MIMEType.indexOf('application/custom') >= 0) {
 			metadata.config.elements.push({label: "Application", type: "label"});
 
@@ -619,11 +628,11 @@ function FileManager(wsio, mydiv, uniqueID) {
 	this.tree.attachEvent("onBeforeDrop", function(context, ev) {
 		if (context.target.startsWith("Image:")   ||
 			context.target.startsWith("PDF:")     ||
+			context.target.startsWith("Note:")    ||
 			context.target.startsWith("Video:")   ||
 			context.target.startsWith("App:")     ||
 			context.target.startsWith("Session:") ||
-			context.target.startsWith("Mine:")    ||
-			context.target.startsWith("Config:")) {
+			context.target.startsWith("Mine:")) {
 			// No DnD on search icons
 			return false;
 		}
@@ -823,7 +832,14 @@ function FileManager(wsio, mydiv, uniqueID) {
 			});
 		} else if (searchParam === "PDF:/") {
 			_this.allTable.filter(function(obj) {
-				return obj.type.toString() === "PDF";
+				return _this.allFiles[obj.id].exif.MIMEType.indexOf('pdf') >= 0;
+			});
+		} else if (searchParam === "Note:/") {
+			_this.allTable.filter(function(obj) {
+				return (_this.allFiles[obj.id].sage2Type &&
+					(_this.allFiles[obj.id].sage2Type.indexOf('application/note') >= 0 ||
+					_this.allFiles[obj.id].sage2Type.indexOf('application/doodle') >= 0)
+				);
 			});
 		} else if (searchParam === "Video:/") {
 			_this.allTable.filter(function(obj) {
@@ -845,46 +861,47 @@ function FileManager(wsio, mydiv, uniqueID) {
 				}
 				return val;
 			});
-		} else if (searchParam === "Config:/") {
-			_this.allTable.filter(function(obj) {
-				return false;
-			});
 		} else if (searchParam === "treeroot") {
 			_this.allTable.filter();
 		} else {
-			var query = searchParam.split(':');
-			if (query[0] === "Image") {
-				_this.allTable.filter(function(obj) {
-					return (_this.allFiles[obj.id].exif.MIMEType.indexOf('image') >= 0) &&
-							(_this.allFiles[obj.id].sage2URL.lastIndexOf(query[1], 0) === 0);
-				});
-			} else if (query[0] === "PDF") {
-				_this.allTable.filter(function(obj) {
-					return (obj.type.toString() === "PDF") &&
-							(_this.allFiles[obj.id].sage2URL.lastIndexOf(query[1], 0) === 0);
-				});
-			} else if (query[0] === "Video") {
-				_this.allTable.filter(function(obj) {
-					return (_this.allFiles[obj.id].exif.MIMEType.indexOf('video') >= 0) &&
-							(_this.allFiles[obj.id].sage2URL.lastIndexOf(query[1], 0) === 0);
-				});
-			} else if (query[0] === "App") {
-				_this.allTable.filter(function(obj) {
-					return (_this.allFiles[obj.id].exif.MIMEType.indexOf('application/custom') >= 0) &&
-							(_this.allFiles[obj.id].sage2URL.lastIndexOf(query[1], 0) === 0);
-				});
-			} else if (query[0] === "Session") {
-				_this.allTable.filter(function(obj) {
-					return (_this.allFiles[obj.id].exif.MIMEType.indexOf('sage2/session') >= 0) &&
-							(_this.allFiles[obj.id].sage2URL.lastIndexOf(query[1], 0) === 0);
-				});
-			} else if (query[0] === "Config") {
-				_this.allTable.filter(function(obj) {
-					return false;
-				});
-			} else {
-				// console.log('Default search on:', searchParam);
-			}
+			// var query = searchParam.split(':');
+			// if (query[0] === "Image") {
+			// 	_this.allTable.filter(function(obj) {
+			// 		return (_this.allFiles[obj.id].exif.MIMEType.indexOf('image') >= 0) &&
+			// 				(_this.allFiles[obj.id].sage2URL.lastIndexOf(query[1], 0) === 0);
+			// 	});
+			// } else if (query[0] === "PDF") {
+			// 	_this.allTable.filter(function(obj) {
+			// 		return (_this.allFiles[obj.id].exif.MIMEType.indexOf('pdf') >= 0) &&
+			// 				(_this.allFiles[obj.id].sage2URL.lastIndexOf(query[1], 0) === 0);
+			// 	});
+			// } else if (query[0] === "Note") {
+			// 	_this.allTable.filter(function(obj) {
+			// 		return (_this.allFiles[obj.id].exif.sage2Type.indexOf('application/note') >= 0) &&
+			// 				(_this.allFiles[obj.id].sage2URL.lastIndexOf(query[1], 0) === 0);
+			// 	});
+			// } else if (query[0] === "Video") {
+			// 	_this.allTable.filter(function(obj) {
+			// 		return (_this.allFiles[obj.id].exif.MIMEType.indexOf('video') >= 0) &&
+			// 				(_this.allFiles[obj.id].sage2URL.lastIndexOf(query[1], 0) === 0);
+			// 	});
+			// } else if (query[0] === "App") {
+			// 	_this.allTable.filter(function(obj) {
+			// 		return (_this.allFiles[obj.id].exif.MIMEType.indexOf('application/custom') >= 0) &&
+			// 				(_this.allFiles[obj.id].sage2URL.lastIndexOf(query[1], 0) === 0);
+			// 	});
+			// } else if (query[0] === "Session") {
+			// 	_this.allTable.filter(function(obj) {
+			// 		return (_this.allFiles[obj.id].exif.MIMEType.indexOf('sage2/session') >= 0) &&
+			// 				(_this.allFiles[obj.id].sage2URL.lastIndexOf(query[1], 0) === 0);
+			// 	});
+			// } else if (query[0] === "Config") {
+			// 	_this.allTable.filter(function(obj) {
+			// 		return false;
+			// 	});
+			// } else {
+			// 	// console.log('Default search on:', searchParam);
+			// }
 		}
 	}
 
@@ -895,7 +912,10 @@ function FileManager(wsio, mydiv, uniqueID) {
 			folder = this.mediaFolders[df];
 			if (myFile.sage2URL.startsWith(folder.url)) {
 				// Create a subfolder if needed
-				var filepath = myFile.sage2URL.split('/');
+
+				// var filepath = myFile.sage2URL.split('/');
+				var filepath = decodeURIComponent(myFile.sage2URL).split('/');
+
 				// Remove the fist two elements (root) and the last (filename)
 				var subdirArray = filepath.slice(2, -1);
 				var parent = folder.url;
@@ -944,6 +964,11 @@ function FileManager(wsio, mydiv, uniqueID) {
 		}
 		for (i = 0; i < data.applications.length; i++) {
 			f = data.applications[i];
+			this.allFiles[f.id] = f;
+			this.createSubFolderForFile(f);
+		}
+		for (i = 0; i < data.others.length; i++) {
+			f = data.others[i];
 			this.allFiles[f.id] = f;
 			this.createSubFolderForFile(f);
 		}
@@ -1034,7 +1059,6 @@ function FileManager(wsio, mydiv, uniqueID) {
 	this.refresh = function() {
 		this.tree.refresh();
 		this.allTable.refresh();
-		$$("multiview1").setValue("all_table");
 		this.main.adjust();
 	};
 
@@ -1081,18 +1105,16 @@ function FileManager(wsio, mydiv, uniqueID) {
 								},
 								{margin: 5, cols: [
 									{view: "button", value: "Cancel", click: function() {
-											this.getTopParentView().hide();
-										}
-									},
+										this.getTopParentView().hide();
+									}},
 									{view: "button", value: "Create", type: "form", click: function() {
-											createFolder(list.getItem(listId), this.getFormView().getValues());
-											this.getTopParentView().hide();
-										}
-									}
+										createFolder(list.getItem(listId), this.getFormView().getValues());
+										this.getTopParentView().hide();
+									}}
 								]}
 							],
 							elementsConfig: {
-								labelPosition: "top",
+								labelPosition: "top"
 							}
 						}
 					}).show();
@@ -1150,6 +1172,7 @@ function FileManager(wsio, mydiv, uniqueID) {
 				(id.indexOf('Image:/') >= 0) ||
 				(id.indexOf('Video:/') >= 0) ||
 				(id.indexOf('PDF:/') >= 0) ||
+				(id.indexOf('Note:/') >= 0) ||
 				(id.indexOf('App:/') >= 0) ||
 				(id.indexOf('Mine:/') >= 0) ||
 				(id.indexOf('Session:/') >= 0)

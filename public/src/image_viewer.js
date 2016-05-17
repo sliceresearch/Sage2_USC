@@ -67,6 +67,8 @@ var image_viewer = SAGE2_App.extend({
 	updateAppFromState: function() {
 		this.element.src  = cleanURL(this.state.src || this.state.img_url);
 
+		this.pre.innerHTML = this.syntaxHighlight(this.state.exif);
+
 		if (this.state.showExif === true) {
 			this.showLayer();
 		}
@@ -112,6 +114,24 @@ var image_viewer = SAGE2_App.extend({
 			this.element.src = smallWhiteGIF();
 		}
 		*/
+	},
+
+	/**
+	* To enable right click context menu support this function needs to be present with this format.
+	*/
+	getContextEntries: function() {
+		var entries = [];
+
+		// Special callback: dowload the file
+		entries.push({
+			description: "Download",
+			callback: "SAGE2_download",
+			parameters: {
+				url: cleanURL(this.state.src || this.state.img_url)
+			}
+		});
+
+		return entries;
 	},
 
 	/**
@@ -186,7 +206,8 @@ var image_viewer = SAGE2_App.extend({
 	*/
 	event: function(eventType, position, user_id, data, date) {
 		// Press 'i' to display EXIF information
-		if ((eventType === "keyboard" && data.character === "i") || (eventType === "widgetEvent" && data.identifier === "Info")) {
+		if ((eventType === "keyboard" && data.character === "i") ||
+			(eventType === "widgetEvent" && data.identifier === "Info")) {
 			if (this.isLayerHidden()) {
 				this.state.top = 0;
 				this.state.showExif = true;

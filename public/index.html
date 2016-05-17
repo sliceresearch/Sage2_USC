@@ -6,7 +6,7 @@
 
 <title>SAGE2 UI - Mobile</title>
 
-<script type="text/javascript">
+<script type="text/license">
 	// SAGE2 is available for use under the SAGE2 Software License 
 	//      
 	// University of Illinois at Chicago's Electronic Visualization Laboratory (EVL)
@@ -40,7 +40,7 @@
 
 </head>
 
-<body onload="SAGE2_init()" onresize="SAGE2_resize()">
+<body>
 	<div id="mainUI">
 
 		<!-- Loading panel -->
@@ -58,33 +58,42 @@
 			<table id="menuUI">
 				<tr>
 					<td id="sage2pointerContainer">
-						<img id="sage2pointer" alt="pointer" src="images/ui/[graycircle]-sage2pointer.svg" width="48" height="48"/>
+						<img id="sage2pointer" alt="pointer" src="images/ui/graycircle-sage2pointer.svg" width="48" height="48"/>
 						<p id="sage2pointerLabel">SAGE2 Pointer</p>
 					</td>
 					<td id="sharescreenContainer">
-						<img id="sharescreen"  alt="sharescreen"  src="images/ui/[graycircle]-sharescreen.svg"  width="48" height="48"/>
+						<img id="sharescreen"  alt="sharescreen"  src="images/ui/graycircle-sharescreen.svg"  width="48" height="48"/>
 						<p id="sharescreenLabel">Screen Sharing</p>
 					</td>
 					<td id="applauncherContainer">
-						<img id="applauncher"  alt="applauncher"  src="images/ui/[graycircle]-applauncher.svg"  width="48" height="48"/>
+						<img id="applauncher"  alt="applauncher"  src="images/ui/graycircle-applauncher.svg"  width="48" height="48"/>
 						<p id="applauncherLabel">App Launcher</p>
 					</td>
 					<td id="mediabrowserContainer">
-						<img id="mediabrowser" alt="mediabrowser" src="images/ui/[graycircle]-mediabrowser.svg" width="48" height="48"/>
+						<img id="mediabrowser" alt="mediabrowser" src="images/ui/graycircle-mediabrowser.svg" width="48" height="48"/>
 						<p id="mediabrowserLabel">Media Browser</p>
 					</td>
 					<td id="arrangementContainer">
-						<img id="arrangement"  alt="arrangement"  src="images/ui/[graycircle]-arrangement.svg"  width="48" height="48"/>
+						<img id="arrangement"  alt="arrangement"  src="images/ui/graycircle-arrangement.svg"  width="48" height="48"/>
 						<p id="arrangementLabel">Arrangement</p>
 					</td>
 					<td id="settingsContainer">
-						<img id="settings"     alt="settings"     src="images/ui/[graycircle]-settings.svg"     width="48" height="48"/>
+						<img id="settings"     alt="settings"     src="images/ui/graycircle-settings.svg"     width="48" height="48"/>
 						<p id="settingsLabel">Settings</p>
 					</td>
 					<td id="infoContainer">
-						<img id="info"         alt="info"         src="images/ui/[graycircle]-info.svg"         width="48" height="48"/>
+						<img id="info"         alt="info"         src="images/ui/graycircle-info.svg"         width="48" height="48"/>
 						<p id="infoLabel">Information</p>
 					</td>
+					<td id="ezNoteContainer">
+						<img id="ezNote"       alt="ezNote"     src="images/ui/graycircle-ezNote.svg"       width="48" height="48"/>
+						<p id="ezNote">Quick Note</p>
+					</td>
+					<td id="ezDrawContainer">
+						<img id="ezDraw"       alt="ezDraw"     src="images/ui/graycircle-ezDraw.svg"       width="48" height="48"/>
+						<p id="ezDrawLabel">Doodle</p>
+					</td>
+
 				</tr>
 			</table>
 		</div>
@@ -185,15 +194,15 @@
 	<div id="arrangementDialog" class="dialog">
 		<div id="arrangementItems">
 			<div id="clearcontentContainer">
-				<img alt="clearcontent" id="clearcontent" src="images/ui/[graycircle]-clearcontent.svg" width="64" height="64"/>
+				<img alt="clearcontent" id="clearcontent" src="images/ui/graycircle-clearcontent.svg" width="64" height="64"/>
 				<p>Clear All</p>
 			</div>
 			<div id="tilecontentContainer">
-				<img alt="tilecontent" id="tilecontent" src="images/ui/[graycircle]-tilecontent.svg" width="64" height="64"/>
+				<img alt="tilecontent" id="tilecontent" src="images/ui/graycircle-tilecontent.svg" width="64" height="64"/>
 				<p>Tile Content</p>
 			</div>
 			<div id="savesessionContainer">
-				<img alt="savesession" id="savesession" src="images/ui/[graycircle]-savesession.svg" width="64" height="64"/>
+				<img alt="savesession" id="savesession" src="images/ui/graycircle-savesession.svg" width="64" height="64"/>
 				<p>Save Session</p>
 			</div>
 		</div>
@@ -205,18 +214,30 @@
 	<!-- dialog for the Info -->
 	<div id="infoDialog" class="dialog">
 		<div id="infoItems">
-			<div id="helpContainer">
-				<img alt="helpcontent" id="helpcontent" src="images/ui/[graycircle]-help.svg" width="64" height="64"/>
-				<p>Help</p>
-			</div>
-			<div id="adminContainer">
-				<img alt="admincontent" id="admincontent" src="images/ui/[graycircle]-admin.svg" width="64" height="64"/>
-				<p>Admin</p>
-			</div>
-			<div id="informationContainer">
-				<img alt="infocontent" id="infocontent" src="images/ui/[graycircle]-info.svg" width="64" height="64"/>
-				<p>Info</p>
-			</div>
+			<table style="width:100%;border-spacing:0;">
+			<tr>
+				<td>
+				<div id="helpContainer">
+					<img alt="helpcontent" id="helpcontent" src="images/ui/graycircle-help.svg" width="64" height="64"/>
+					<p>Help</p>
+				</div>
+				</td>
+				<td>
+				<div id="adminContainer">
+					<img alt="admincontent" id="admincontent" src="images/ui/graycircle-admin.svg" width="64" height="64"/>
+					<p>Admin</p>
+				</div>
+				</td>
+				<td>
+				<div id="informationContainer">
+					<img alt="infocontent" id="infocontent" src="images/ui/graycircle-info.svg" width="64" height="64"/>
+					<p>SAGE2 Info</p>
+				</div>
+				</td>
+			</tr>
+			<tr><td>&nbsp;</td></tr>
+			<tr><td colspan="3"><p id="infoData"></p></td></tr>
+			</table>
 		</div>
 		<div id="infoButtons">
 			<span id="infoCloseBtn" class="button">Close</span>
@@ -234,7 +255,7 @@
 						<th colspan="3" style="padding-bottom:5px;font-weight:bold;font-size:1.5em;align:left;">SAGE2 Pointer</th>
 					</tr>
 					<tr>
-						<td rowspan="2" style="padding-right:20px;"><img id="sage2pointer2" alt="pointer" src="images/ui/[graycircle]-sage2pointer.svg" width="48" height="48"/></td>
+						<td rowspan="2" style="padding-right:20px;"><img id="sage2pointer2" alt="pointer" src="images/ui/graycircle-sage2pointer.svg" width="48" height="48"/></td>
 						<td style="align:left;">
 							<label class="sageLabel">Name</label>
 						</td>
@@ -257,7 +278,7 @@
 						<th colspan="3" style="padding-bottom:5px;font-weight: bold;font-size:1.5em;align:left;">Screen Sharing</th>
 					</tr>
 					<tr>
-						<td rowspan="2" style="padding-right:20px;"><img id="sharescreen2"  alt="sharescreen"  src="images/ui/[graycircle]-sharescreen.svg"  width="48" height="48"/></td>
+						<td rowspan="2" style="padding-right:20px;"><img id="sharescreen2"  alt="sharescreen"  src="images/ui/graycircle-sharescreen.svg"  width="48" height="48"/></td>
 						<td style="align:left;">
 							<label class="sageLabel">Resolution</label>
 						</td>
@@ -304,7 +325,7 @@
 						<th colspan="3" style="font-weight:normal;font-size:1.5em;align:left;">&nbsp;</th>
 					</tr>
 					<tr>
-						<td rowspan="2" style="padding-right:20px;"><img id="sage2pointer2" alt="pointer" src="images/ui/[graycircle]-sage2pointer.svg" width="48" height="48"/></td>
+						<td rowspan="2" style="padding-right:20px;"><img id="sage2pointer2" alt="pointer" src="images/ui/graycircle-sage2pointer.svg" width="48" height="48"/></td>
 						<td style="align:left;">
 							<label class="sageLabel">Name</label>
 						</td>
@@ -363,6 +384,77 @@
 			<div id="sage2MobileRightButton">Right button</div>
 		</div>
 		<img alt="closeMobileSAGE2Pointer" id="closeMobileSAGE2Pointer" src="images/closemobilepointer.svg" width="32" height="32" style="position:absolute; left:6px; top:6px;"/>
+	</div>
+
+	<div id="rmbContextMenu">
+	</div>
+
+	<div id="uiNoteMaker" class="dialog">
+			<br>
+			<div id="uiNoteMakerOptions">
+				<table cellSpacing="5">
+					<tr>
+						<input type="checkbox" id="uiNoteMakerCheckAnonymous"></input>
+						<label for="uiNoteMakerCheckAnonymous"> Anonymous</label>
+					</tr>
+					<tr>
+						<td>&nbsp&nbsp</td>
+						<td> <div id="uinmColorPick1"></div> </td>
+						<td> <div id="uinmColorPick2"></div> </td>
+						<td> <div id="uinmColorPick3"></div> </td>
+					</tr>
+					<tr>
+						<td>&nbsp&nbsp</td>
+						<td> <div id="uinmColorPick4"></div> </td>
+						<td> <div id="uinmColorPick5"></div> </td>
+						<td> <div id="uinmColorPick6"></div> </td>
+					</tr>
+				</table>
+			</div>
+			<br>
+			&nbsp&nbsp&nbsp
+			<textarea id="uiNoteMakerInputField"></textarea>
+			&nbsp&nbsp&nbsp
+			<br>
+			<br>&nbsp
+			<span id="uiNoteMakerSendButton" class="button">Make Note [Enter]</span>
+			<br>&nbsp
+	</div>
+	<div id="uiDrawZone" class="dialog">
+		<br>
+		<table cellSpacing="4">
+			<tr>
+				<td>
+					&nbsp&nbsp&nbsp
+					<input id="uiDrawColorPicker" type="color" value="#000000">
+					&nbsp
+				</td>
+				<td id='uidztp1' class='uidzBarBox'> <div class='uidzBarAll uidzBarS1'> </div> </td>
+				<td id='uidztp2' class='uidzBarBox'> <div class='uidzBarAll uidzBarS2'> </div> </td>
+				<td id='uidztp3' class='uidzBarBox'> <div class='uidzBarAll uidzBarS3'> </div> </td>
+				<td id='uidztp4' class='uidzBarBox'> <div class='uidzBarAll uidzBarS4'> </div> </td>
+				<td id='uidztp5' class='uidzBarBox'> <div class='uidzBarAll uidzBarS5'> </div> </td>
+				<td id='uidztp6' class='uidzBarBox'> <div class='uidzBarAll uidzBarS6'> </div> </td>
+				<td id='uidztp7' class='uidzBarBox'> <div class='uidzBarAll uidzBarS7'> </div> </td>
+				<td>
+					&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp
+					<span id="uiDrawZoneNewButton" class="button">New Doodle</span>
+				</td>
+			</tr>
+		</table>
+		<br>
+		&nbsp&nbsp&nbsp
+		<canvas id="uiDrawZoneCanvas" width="500" height="500" style="border:1px solid black">
+		</canvas>
+		&nbsp&nbsp&nbsp
+		<br>
+		<br>
+		<div style="position:relative; text-align:right; right:5%">
+			<span id="uiDrawZoneCloseButton" class="button">Close</span>
+		</div>
+		<br>
+	</div>
+	<div id="uiDrawZoneEraseReference" style="position:absolute;top:-100;left:-100;width:1;border:1px solid black;border-radius:50%;z-index:10003;pointer-events:none" >
 	</div>
 	
 	

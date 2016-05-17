@@ -362,7 +362,7 @@ h2 {
 	transform: translate(-50%, -50%);
 }
 #infoItems {
-	margin: 10px 10px 66px 10px;
+	margin: 5px 5px 45px 5px;
 	overflow: auto;
 }
 #helpContainer {
@@ -379,15 +379,28 @@ h2 {
 	width: 100px;
 	text-align: center;
 }
+#ezNoteContainer {
+	width: 100px;
+	text-align: center;
+}
+#ezDrawContainer {
+	width: 100px;
+	text-align: center;
+}
+
 #informationContainer {
 	width: 100px;
 	float: left;
 	text-align: center;
 }
+
 #infoCloseBtn {
 	position: absolute;
 	right: 10px;
 	bottom: 10px;
+}
+#infoData {
+	margin: 10px 10px 10px 10px;
 }
 
 #settingsDialog {
@@ -699,6 +712,50 @@ h2 {
 	-webkit-box-sizing:border-box;
 	box-sizing:border-box;
 }
+
+#uiNoteMaker {
+	top: 50%;
+	left: 50%;
+	-webkit-transform: translate(-50%, -50%);
+	-moz-transform: translate(-50%, -50%);
+	-ms-transform: translate(-50%, -50%);
+	transform: translate(-50%, -50%);
+	text-align:center;
+}
+
+#uiDrawZone {
+	top: 50%;
+	left: 50%;
+	-webkit-transform: translate(-50%, -50%);
+	-moz-transform: translate(-50%, -50%);
+	-ms-transform: translate(-50%, -50%);
+	transform: translate(-50%, -50%);
+}
+
+.uidzBarBox {
+	width: 	30px;
+	height: 30px;
+	border: 1px solid black;
+}
+.uidzBarAll {
+	height: 		100%;
+	left: 			50%;
+	position: 		relative;
+	background: 	black;
+	-webkit-transform: translate(-50%, 0);
+	-moz-transform: translate(-50%, 0);
+	-ms-transform: translate(-50%, 0);
+	transform: translate(-50%, 0);
+}
+.uidzBarS1{ width: 1px; }
+.uidzBarS2{ width: 2px; }
+.uidzBarS3{ width: 4px; }
+.uidzBarS4{ width: 8px; }
+.uidzBarS5{ width: 16px; }
+.uidzBarS6{ width: 32px; }
+.uidzBarS7{ width: 64px; }
+
+
 
 .fileItem {
 	cursor: default;

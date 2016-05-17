@@ -90,22 +90,22 @@ chrome.runtime.onConnect.addListener(function(port) {
 		port.onMessage.removeListener(portOnMessageHanlder);
 	});
 
-	var found = findURL(ports, port.sender.url);
-	// if it is a new site, store the info
-	if (!found) {
-		// Save the port in the list, indexed by URL
-		ports[port.sender.tab.id] = port;
-		var numberOfConnection = Object.keys(ports).length;
-		chrome.browserAction.setBadgeText({text:numberOfConnection.toString()});
-	} else {
-		ports[port.sender.tab.id] = port;
-	}
-
 	// this one is called for each message from "content-script.js"
 	function portOnMessageHanlder(message) {
-		if (message === "capture_desktop") {
+		if (message === "SAGE2_capture_desktop" || message === "capture_desktop") {
 			chrome.desktopCapture.chooseDesktopMedia(['screen', 'window'],
 				port.sender.tab, onAccessApproved);
+		} else if (message === "SAGE2_registerUI") {
+			var found = findURL(ports, port.sender.url);
+			// if it is a new site, store the info
+			if (!found) {
+				// Save the port in the list, indexed by URL
+				ports[port.sender.tab.id] = port;
+				var numberOfConnection = Object.keys(ports).length;
+				chrome.browserAction.setBadgeText({text:numberOfConnection.toString()});
+			} else {
+				ports[port.sender.tab.id] = port;
+			}
 		}
 	}
 
