@@ -117,10 +117,10 @@ var leaflet = SAGE2_App.extend({
 
 
 			// want to do this same thing when we reset the location
-			if (_this.whichMap === 1) {
-				_this.map = L.map(_this.element.id, {layers: [_this.map1], zoomControl: false}).setView([41.869910, -87.65], 17);
+			if (_this.state.whichMap === 1) {
+				_this.map = L.map(_this.element.id, {layers: [_this.map1], zoomControl: false}).setView([_this.state.center.lat, _this.state.center.lng], _this.state.zoomLevel);
 			} else {
-				_this.map = L.map(_this.element.id, {layers: [_this.map2], zoomControl: false}).setView([41.869910, -87.65], 17);
+				_this.map = L.map(_this.element.id, {layers: [_this.map2], zoomControl: false}).setView([_this.state.center.lat, _this.state.center.lng], _this.state.zoomLevel);
 			}
 
 			/* Initialize the SVG layer */
@@ -150,7 +150,8 @@ var leaflet = SAGE2_App.extend({
 	},
 
 	resetMap: function() {
-		this.map.setView([41.869910, -87.65], 17);
+		//this.map.setView([41.869910, -87.65], 17);
+		this.map.setView([this.state.center.lat, this.state.center.lng], this.state.zoomLevel);
 	},
 
 	changeMap: function() {
