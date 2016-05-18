@@ -73,6 +73,9 @@ var SAGE2_BlockStreamingApp = SAGE2_App.extend({
 		// application specific 'init'
 		this.maxSize = 512; // block size
 
+		// Setup a function for RAF call
+		this.drawFunc = this.mydraw.bind(this);
+
 		this.initGL();
 		if (this.gl) {
 			var _this = this;
@@ -324,7 +327,12 @@ var SAGE2_BlockStreamingApp = SAGE2_App.extend({
 		var i, j;
 		if (this.state.colorspace === "RGB" || this.state.colorspace === "BGR") {
 			// Go bottom up
-			for (i = this.verticalBlocks - 1; i >= 0; i--) {
+			// for (i = this.verticalBlocks - 1; i >= 0; i--) {
+			// 	for (j = 0; j < this.horizontalBlocks; j++) {
+			// 		this.initABlock(i, j);
+			// 	}
+			// }
+			for (i = 0; i < this.verticalBlocks; i++) {
 				for (j = 0; j < this.horizontalBlocks; j++) {
 					this.initABlock(i, j);
 				}
@@ -422,6 +430,7 @@ var SAGE2_BlockStreamingApp = SAGE2_App.extend({
 
 				var rgbaBuffer = new Uint8Array(bWidth * bHeight * 4);
 
+				this.gl.activeTexture(this.gl.TEXTURE0);
 				this.gl.bindTexture(this.gl.TEXTURE_2D, rgbaTexture);
 				this.gl.texImage2D(this.gl.TEXTURE_2D, 0, this.gl.RGBA, bWidth, bHeight, 0, this.gl.RGBA, this.gl.UNSIGNED_BYTE, rgbaBuffer);
 
@@ -439,7 +448,7 @@ var SAGE2_BlockStreamingApp = SAGE2_App.extend({
 
 	initRGBTextures: function() {
 		// Flips the source data along its vertical axis if true
-		this.gl.pixelStorei(this.gl.UNPACK_FLIP_Y_WEBGL, false);
+		// this.gl.pixelStorei(this.gl.UNPACK_FLIP_Y_WEBGL, false);
 
 		for (var i = 0; i < this.verticalBlocks; i++) {
 			for (var j = 0; j < this.horizontalBlocks; j++) {
@@ -450,6 +459,7 @@ var SAGE2_BlockStreamingApp = SAGE2_App.extend({
 
 				var rgbBuffer = new Uint8Array(bWidth * bHeight * 3);
 
+				this.gl.activeTexture(this.gl.TEXTURE0);
 				this.gl.bindTexture(this.gl.TEXTURE_2D, rgbTexture);
 				this.gl.texImage2D(this.gl.TEXTURE_2D, 0, this.gl.RGB, bWidth, bHeight, 0, this.gl.RGB, this.gl.UNSIGNED_BYTE, rgbBuffer);
 
@@ -548,6 +558,17 @@ var SAGE2_BlockStreamingApp = SAGE2_App.extend({
 	textureDataRGB: function(blockIdx, rgbBuffer) {
 		this.rgbBuffer[blockIdx] = rgbBuffer;
 		this.receivedBlocks[blockIdx] = true;
+
+
+		// Updating the texture right away
+		var i, j;
+		i = Math.floor(blockIdx / this.horizontalBlocks);
+		j = blockIdx % this.horizontalBlocks;
+		var bWidth  = (j + 1) * this.maxSize > this.state.width  ? this.state.width  - (j * this.maxSize) : this.maxSize;
+		var bHeight = (i + 1) * this.maxSize > this.state.height ? this.state.height - (i * this.maxSize) : this.maxSize;
+		this.gl.bindTexture(this.gl.TEXTURE_2D, this.rgbTexture[blockIdx]);
+		this.gl.texSubImage2D(this.gl.TEXTURE_2D, 0, 0, 0, bWidth, bHeight, this.gl.RGB,
+					this.gl.UNSIGNED_BYTE, this.rgbBuffer[blockIdx]);
 	},
 
 	textureDataYUV420p: function(blockIdx, yuvBuffer) {
@@ -600,7 +621,6 @@ var SAGE2_BlockStreamingApp = SAGE2_App.extend({
 					this.gl.bindTexture(this.gl.TEXTURE_2D, this.rgbTexture[blockIdx]);
 					this.gl.texSubImage2D(this.gl.TEXTURE_2D, 0, 0, 0, bWidth, bHeight, this.gl.RGB,
 								this.gl.UNSIGNED_BYTE, this.rgbBuffer[blockIdx]);
-					this.gl.bindTexture(this.gl.TEXTURE_2D, null);
 				}
 			}
 		}
@@ -662,6 +682,10 @@ var SAGE2_BlockStreamingApp = SAGE2_App.extend({
 	* @param date {Date} current time from the server
 	*/
 	draw: function(date) {
+		// Schedule a draw call
+		requestAnimationFrame(this.drawFunc);
+	},
+	mydraw: function(date) {
 		if (this.shaderProgram === undefined || this.shaderProgram === null) {
 			// this.log("waiting for shaders to load");
 			return;
@@ -684,9 +708,8 @@ var SAGE2_BlockStreamingApp = SAGE2_App.extend({
 			return;
 		}
 
-		this.gl.clear(this.gl.COLOR_BUFFER_BIT);
-
-		this.updateTextures();
+		// this.gl.clear(this.gl.COLOR_BUFFER_BIT);
+		// this.updateTextures();
 
 		if (this.state.colorspace === "RGBA") {
 			this.drawRGBA();
@@ -712,7 +735,6 @@ var SAGE2_BlockStreamingApp = SAGE2_App.extend({
 					this.gl.vertexAttribPointer(this.shaderProgram.textureCoordAttribute,
 							this.squareVertexTextureCoordBuffer[blockIdx].itemSize, this.gl.FLOAT, false, 0, 0);
 
-					this.gl.activeTexture(this.gl.TEXTURE0);
 					this.gl.bindTexture(this.gl.TEXTURE_2D, this.rgbaTexture[blockIdx]);
 					this.gl.uniform1i(this.shaderProgram.samplerUniform1, 0);
 
@@ -739,7 +761,6 @@ var SAGE2_BlockStreamingApp = SAGE2_App.extend({
 					this.gl.vertexAttribPointer(this.shaderProgram.textureCoordAttribute,
 							this.squareVertexTextureCoordBuffer[blockIdx].itemSize, this.gl.FLOAT, false, 0, 0);
 
-					this.gl.activeTexture(this.gl.TEXTURE0);
 					this.gl.bindTexture(this.gl.TEXTURE_2D, this.rgbTexture[blockIdx]);
 					this.gl.uniform1i(this.shaderProgram.samplerUniform1, 0);
 

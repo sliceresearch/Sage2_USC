@@ -455,12 +455,10 @@ function setupListeners() {
 					windowTitle.style.backgroundColor = "#39C4A6";
 					windowIconSync.style.display = "block";
 					windowIconUnSync.style.display = "none";
-					console.log("sycned!");
 				} else {
 					windowTitle.style.backgroundColor = "#666666";
 					windowIconSync.style.display = "none";
 					windowIconUnSync.style.display = "block";
-					console.log("unsycned :(");
 				}
 			}
 		}
@@ -1031,7 +1029,6 @@ function setupListeners() {
 					}
 					break;
 				case "ShareApp":
-					console.log("SHARE APP");
 					break;
 				default:
 					app.SAGE2Event("widgetEvent", null, data.user, {identifier: ctrlId, action: action}, new Date(data.date));
@@ -1041,7 +1038,6 @@ function setupListeners() {
 			// Check whether a request for clone was made.
 			if (app.cloneable === true && app.requestForClone === true) {
 				app.requestForClone = false;
-				// console.log("cloning app:", appId, app.cloneData);
 				if (isMaster) {
 					wsio.emit('createAppClone', {id: appId, cloneData: app.cloneData});
 				}
@@ -1157,7 +1153,6 @@ function setupListeners() {
 	});
 
 	wsio.on('initializeDataSharingSession', function(data) {
-		// console.log(data);
 		dataSharingPortals[data.id] = new DataSharing(data);
 	});
 
