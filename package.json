@@ -64,7 +64,8 @@
 		"fsmonitor": "latest",
 		"cheerio": "latest",
 		"sanitizer": "latest",
-		"ytdl-core": "latest"
+		"ytdl-core": "latest",
+		"rtf": "latest"
 	},
 	"bundledDependencies": [
 		"websocketio",

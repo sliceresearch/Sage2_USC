@@ -153,7 +153,7 @@ for (var folder in mediaFolders) {
 		}
 		console.log(sageutils.header('Folders') + 'upload to ' + f.path);
 	}
-	var newdirs = ["apps", "assets", "images", "pdfs", "tmp", "videos", "config"];
+	var newdirs = ["apps", "assets", "images", "pdfs", "notes", "tmp", "videos", "config"];
 	newdirs.forEach(function(d) {
 		var newsubdir = path.join(mediaFolders[f.name].path, d);
 		if (!sageutils.folderExists(newsubdir)) {
@@ -1691,15 +1691,21 @@ function listNotes() {
 		var stat = fs.statSync(filename);
 		// is it a file
 		if (stat.isFile()) {
-			// doest it ends in .json
-			if (filename.indexOf(".json", filename.length - 5) >= 0) {
+			// does it ends in .md
+			if (filename.indexOf(".md", filename.length - 3) >= 0) {
 				// use its change time (creation, update, ...)
-				var ad = new Date(stat.ctime);
+				var ad = new Date(stat.mtime);
 				var strdate = sprint("%4d/%02d/%02d %02d:%02d:%02s",
-										ad.getFullYear(), ad.getMonth()+1, ad.getDate(),
-										ad.getHours(), ad.getMinutes(), ad.getSeconds() );
-				// Make it look like an exif data structure
-				thelist.push( { exif: { FileName: file.slice(0, -5),  FileSize:stat.size, FileDate: strdate} } );
+										ad.getFullYear(), ad.getMonth() + 1, ad.getDate(),
+										ad.getHours(), ad.getMinutes(), ad.getSeconds());
+				thelist.push( {id: filename,
+					sage2URL: '/uploads/' + file, 
+					exif: { FileName: file.slice(0, -3),  
+							FileSize: stat.size, 
+							FileDate: strdate,
+							MIMEType: 'text/markdown'
+						} 
+				});
 			}
 		}
 	}
@@ -1710,8 +1716,8 @@ function deleteNote (filename) {
 	if (filename) {
 		var fullpath = path.join(notesDirectory, filename);
 		// if it doesn't end in .json, add it
-		if (fullpath.indexOf(".json", fullpath.length - 5) === -1) {
-			fullpath += '.json';
+		if (fullpath.indexOf(".md", fullpath.length - 3) === -1) {
+			fullpath += '.md';
 		}
 		fs.unlink(fullpath, function (err) {
 			if (err) {
@@ -1725,19 +1731,24 @@ function deleteNote (filename) {
 
 function loadNote(filename, callback) {
 	if (filename) {
-		var fullpath = path.join(notesDirectory, filename);
-		// if it doesn't end in .json, add it
-		if (fullpath.indexOf(".json", fullpath.length - 5) === -1) {
-			fullpath += '.json';
+		// if it doesn't end in .md, add it
+		if (filename.indexOf(".md", filename.length - 3) === -1) {
+			filename += '.md';
 		}
-		fs.readFile(fullpath, function(err, data) {
+		fs.readFile(filename, function(err, data) {
 			if (err) {
 				console.log(sageutils.header("SAGE2") + "error reading note", err);
 			} else {
-				console.log(sageutils.header("SAGE2") + "reading note from " + fullpath);
-
-				var note = JSON.parse(data);
-				createNote({text: note.text, user: note.owner, createdOn:note.createdOn, fileName: filename}, callback);
+				console.log(sageutils.header("SAGE2") + "reading note from " + filename);
+				//console.log(data);
+				var note = fileBufferManager.parse(data);
+				var idx = filename.lastIndexOf("/");
+				if (idx === -1) {
+					idx = filename.lastIndexOf("\\");
+				}
+				var shortName = filename.slice(idx+1);
+				console.log("shortName: " + shortName);
+				createNote({text: note.text, user: note.owner, createdOn:note.createdOn, fileName: shortName, color:note.color}, callback);
 				
 			}
 		});
@@ -1890,9 +1901,9 @@ function loadSession(filename) {
 						appInstance.width = element.width;
 						appInstance.height = element.height;
 						appInstance.data.fontSize = data.fontSize;
-						fileBufferManager.requestBuffer({appId:appInstance.id, owner: appInstance.data.owner, createdOn: appInstance.data.createdOn});
+						fileBufferManager.requestBuffer({appId:appInstance.id, owner: appInstance.data.owner, createdOn: appInstance.data.createdOn, color: appInstance.data.noteColor});
 						fileBufferManager.insertStr({appId:appInstance.id, text:appInstance.data.buffer});
-						fileBufferManager.associateFile({appId:appInstance.id, fileName:appInstance.data.fileName, extension:"json"});
+						fileBufferManager.associateFile({appId:appInstance.id, fileName:appInstance.data.fileName, extension:"md"});
 						
 						handleNewApplication(appInstance, null);
 						addEventToUserLog(data.user, {type: "openApplication", data: {application: {id: appInstance.id, type: appInstance.application}}, time: Date.now()});
@@ -2328,9 +2339,9 @@ function wsLoadFileFromServer(wsio, data) {
 		console.log("Loading:::",data.filename);
 		loadNote(data.filename, function(appInstance) {
 			appInstance.id = getUniqueAppId();
-			fileBufferManager.requestBuffer({appId:appInstance.id, owner: appInstance.data.owner, createdOn: appInstance.data.createdOn});
+			fileBufferManager.requestBuffer({appId:appInstance.id, owner: appInstance.data.owner, createdOn: appInstance.data.createdOn, color: appInstance.data.noteColor});
 			fileBufferManager.insertStr({appId:appInstance.id, text:appInstance.data.buffer});
-			fileBufferManager.associateFile({appId:appInstance.id, fileName:appInstance.data.fileName, extension:"json"});
+			fileBufferManager.associateFile({appId:appInstance.id, fileName:appInstance.data.fileName, extension:"md"});
 			handleNewApplication(appInstance, null);
 			addEventToUserLog(data.user, {type: "openApplication", data: {application: {id: appInstance.id, type: appInstance.application}}, time: Date.now()});
 		});
@@ -2389,8 +2400,8 @@ function wsCreateNewNote(wsio, data) {
 	data.createdOn = Date.now();
 	createNote(data, function(appInstance) {
 		appInstance.id = getUniqueAppId();
-		fileBufferManager.requestBuffer({appId:appInstance.id, owner: appInstance.data.owner, createdOn: appInstance.data.createdOn});
-		fileBufferManager.associateFile({appId:appInstance.id, fileName:appInstance.data.fileName, extension:"json"});
+		fileBufferManager.requestBuffer({appId:appInstance.id, owner: appInstance.data.owner, createdOn: appInstance.data.createdOn, color: data.color});
+		fileBufferManager.associateFile({appId:appInstance.id, fileName:appInstance.data.fileName, extension:"md"});
 		fileBufferManager.insertStr({appId:appInstance.id, text:data.text});
 		
 		handleNewApplication(appInstance, null);
@@ -3068,9 +3079,9 @@ function wsCreateAppClone(wsio, data) {
 			appInstance.id = getUniqueAppId();
 			appInstance.left = appInstance.left + 20;
 			appInstance.top = appInstance.top + 20;
-			fileBufferManager.requestBuffer({appId:appInstance.id, owner: appInstance.data.owner, createdOn: appInstance.data.createdOn});
+			fileBufferManager.requestBuffer({appId:appInstance.id, owner: appInstance.data.owner, createdOn: appInstance.data.createdOn, color: appInstance.data.noteColor});
 			fileBufferManager.insertStr({appId:appInstance.id, text:appInstance.data.buffer});
-			fileBufferManager.associateFile({appId:appInstance.id, fileName:appInstance.data.fileName, extension:"json"});
+			fileBufferManager.associateFile({appId:appInstance.id, fileName:appInstance.data.fileName, extension:"md"});
 			
 			handleNewApplication(appInstance, null);
 			addEventToUserLog(data.user, {type: "openApplication",
@@ -3770,7 +3781,6 @@ function getSavedFilesList() {
 	uploadedPdfs.sort(   sageutils.compareFilename );
 	savedNotes.sort(     sageutils.compareFilename );
 	savedSessions.sort(  sageutils.compareFilename );
-
 	var list = {images: uploadedImages, videos: uploadedVideos, pdfs: uploadedPdfs,
 				notes:savedNotes, sessions: savedSessions, applications: uploadedApps};
 	return list;
@@ -7762,7 +7772,7 @@ function wsRequestFileBuffer (wsio, data){
 		fileBufferManager.editCredentialsForBuffer({appId:data.id, owner: data.owner, createdOn: data.createdOn});
 	}
 	else{
-		fileBufferManager.requestBuffer({appId:data.id, owner: data.owner, createdOn: data.createdOn});		
+		fileBufferManager.requestBuffer({appId:data.id, owner: data.owner, createdOn: data.createdOn, color: data.color});		
 	}
 	
 	if (data.fileName!==null && data.fileName!==undefined){
@@ -7770,7 +7780,7 @@ function wsRequestFileBuffer (wsio, data){
 		console.log("requesting file buffer:", app.application);
 		var ext = "txt";
 		if (app.application === "sticky_note"){
-			ext = "json";
+			ext = "md";
 		}
 		fileBufferManager.associateFile({appId:data.id, fileName:data.fileName, extension:ext});
 	}

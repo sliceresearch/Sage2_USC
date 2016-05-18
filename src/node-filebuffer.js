@@ -18,28 +18,65 @@ var fs        = require('fs');
 var path      = require('path');
 var sageutils = require('../src/node-utils');    // provides utility functions
 
+function MDManager() {
+}
+
+function getEntryValue (data, entryStr, delim) {
+	var position = data.indexOf(entryStr);
+	var entry = null;
+	var tempStr;
+	var tempPos = 0;
+	if (position > -1) {
+		position = position + entryStr.length;
+		tempStr = data.slice(position);
+		tempPos = tempStr.indexOf(delim);
+		if (tempPos > -1) {
+			entry = tempStr.slice(0,tempPos);
+			tempPos = tempPos + delim.length;
+		} else {
+			entry = tempStr;
+			tempPos = 0;
+		}
+		
+	}
+	return {value: entry, end: position + tempPos};
+}
+
+MDManager.prototype.parse = function(data) {
+	var owner = getEntryValue(data, ' _Owner:_ ', '  \n').value;
+	var color = getEntryValue(data, ' _Color:_ ', '  \n').value;
+	var temp = getEntryValue(data, ' _Created On:_ ', '  \n');
+	var createdOn = parseInt(temp.value, 10);
+	//console.log("**" + createdOn + "**");
+	var texIdx = temp.end;
+	var text = data.slice(texIdx);
+	return {text: text, owner: owner, createdOn: createdOn, color: color};
+}
+
 function FileBuffer (root){
 
 	this.buffers = {};
 	this.files = {};
 	this.root = root;
 	this.textFileFolder = path.join(root, "notes");
+	this.mdManager = new MDManager();
 	if (!sageutils.folderExists(this.textFileFolder)){
 		fs.mkdirSync(this.textFileFolder);
 	}
 }
 
-function Buffer(data){
+function customBuffer(data){
 	this.changeCount = 0;
 	this.appId = data.appId;
 	this.owner = data.owner;
 	this.createdOn = data.createdOn;
+	this.color = data.color;
 	this.str = [];
 	this.caret = 0;
 	
 }
 
-Buffer.prototype.insertStr = function(text){
+customBuffer.prototype.insertStr = function(text){
 	var str = this.str.join("");
 	this.str = (str.slice(0, this.caret) + text + str.slice(this.caret)).split('');
 	this.caret = this.caret + text.length;
@@ -48,20 +85,21 @@ Buffer.prototype.insertStr = function(text){
 	return result;
 };
 
-Buffer.prototype.resetChange = function(){
+customBuffer.prototype.resetChange = function(){
 	this.changeCount = 0;
 };
 
-Buffer.prototype.getData = function(){
+customBuffer.prototype.getData = function(){
 	var data = {
 		owner: this.owner,
 		createdOn: this.createdOn,
-		text: this.str.join("")
+		text: this.str.join(""),
+		color: this.color
 	};
 	return data;
 };
 
-Buffer.prototype.insertChar = function(code, printable){
+customBuffer.prototype.insertChar = function(code, printable){
 	var result = {index:this.caret, offset:0, deleteCount:0, data:null};
 	if (printable){
 		this.str.splice(this.caret, 0, String.fromCharCode(code));
@@ -118,8 +156,8 @@ Buffer.prototype.insertChar = function(code, printable){
 
 FileBuffer.prototype.requestBuffer = function(data){
 	if ((data.appId.toString() in this.buffers)===false){
-		console.log("Creating buffer for:", data.appId);
-		var buf = new Buffer(data);
+		console.log("Creating customBuffer for:", data.appId);
+		var buf = new customBuffer(data);
 		this.buffers[data.appId] = buf;
 	}
 };
@@ -148,7 +186,11 @@ FileBuffer.prototype.hasFileBufferForApp = function(appId){
 };
 
 FileBuffer.prototype.associateFile = function(data){
-	var fileName = path.join(this.textFileFolder, data.fileName + "." + data.extension);
+	var fileName = data.fileName;
+	if (fileName.indexOf('.'+data.extension, fileName.length - (data.extension.length + 1)) === -1) {
+			fileName += '.'+data.extension;
+	}
+	var fileName = path.join(this.textFileFolder, fileName);
 	this.files[data.appId] = fileName;
 	console.log("file attached to buffer:", data.appId, fileName);
 };
@@ -157,13 +199,19 @@ FileBuffer.prototype.writeToFile = function(appId){
 	if (this.buffers.hasOwnProperty(appId) && this.files.hasOwnProperty(appId)){
 		var buffer = this.buffers[appId];
 		var fileName = this.files[appId];
-
-		fs.writeFile(fileName, JSON.stringify(buffer.getData()), function (err) {
-			if (err){
-				console.log("Could not save file: " + fileName);
-			}
-			buffer.resetChange();
-		});
+		var bufData = buffer.getData();
+		var prefix = " _Owner:_ " + bufData.owner + "  \n" 
+			+ " _Color:_ " + bufData.color + "  \n"
+			+ " _Created On:_ " + bufData.createdOn + "  \n";
+    	
+		var output = prefix + bufData.text;
+		
+        fs.writeFile(fileName, output, function (err) {
+        	if (err) {
+        		return console.log(err);
+        	}
+        	buffer.resetChange();
+        });
 	}
 };
 
@@ -188,5 +236,21 @@ FileBuffer.prototype.insertStr = function(data){
 		return update;
 	}
 };
+
+FileBuffer.prototype.parse = function(data) {
+	try {
+    	if (typeof data !== 'string') {
+    		data = data.toString('utf8');
+    	}
+    	var parsedFileData = this.mdManager.parse(data);
+    	
+		return parsedFileData;
+	} catch (e) {
+		console.log("Error :->", e);
+	}
+	
+};
+
+
 
 module.exports = FileBuffer;

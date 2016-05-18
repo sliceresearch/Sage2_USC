@@ -404,6 +404,10 @@ var addFile = function(filename, exif, callback) {
 			callback();
 		});
 		anAsset.exif.SAGE2thumbnail = rthumb;
+	/*} else if (exif.MIMEType.indexOf('text/markdown') > -1) {
+		anAsset.exif.SAGE2thumbnail = path.join(AllAssets.rel, 'assets', 'note');
+		callback();
+	*/	
 	} else if (exif.MIMEType.indexOf('video/') > -1) {
 		generateVideoThumbnails(filename, thumb, exif.ImageWidth, exif.ImageHeight, [512, 256], null, function() {
 			callback();
@@ -727,6 +731,18 @@ var listPDFs = function() {
 	return result;
 };
 
+var listNotes = function() {
+	var result = [];
+	var keys = Object.keys(AllAssets.list);
+	for (var f in keys) {
+		var one = AllAssets.list[keys[f]];
+		if (one.exif.MIMEType.indexOf('text/markdown') > -1) {
+			result.push(one);
+		}
+	}
+	return result;
+};
+
 var listImages = function() {
 	var result = [];
 	var keys = Object.keys(AllAssets.list);
@@ -765,7 +781,7 @@ var listApps = function() {
 
 var recursiveReaddirSync = function(aPath) {
 	var list     = [];
-	var excludes = [ '.DS_Store', 'Thumbs.db', 'passwd.json', 'assets', 'sessions', 'tmp', 'config' ];
+	var excludes = [ '.DS_Store', 'Thumbs.db', 'annotationsDB.json', 'passwd.json', 'assets', 'sessions', 'notes', 'tmp', 'config' ];
 	var files, stats;
 
 	files = fs.readdirSync(aPath);
@@ -859,6 +875,18 @@ var initialize = function(mainFolder, mediaFolders) {
 		var unknownapp_512 = path.join(assetAppsFolder, 'unknownapp_512.jpg');
 		if (!sageutils.fileExists(unknownapp_512)) {
 			fs.createReadStream(unknownapp_512Img).pipe(fs.createWriteStream(unknownapp_512));
+		}
+
+		// Make sure note images exist
+		var note_256Img = path.resolve('public', 'images', 'note_256.jpg');
+		var note_256 = path.join(assetFolder, 'note_256.jpg');
+		if (!sageutils.fileExists(note_256)) {
+			fs.createReadStream(note_256Img).pipe(fs.createWriteStream(note_256));
+		}
+		var note_512Img = path.resolve('public', 'images', 'note_512.jpg');
+		var note_512 = path.join(assetFolder, 'note_512.jpg');
+		if (!sageutils.fileExists(note_512)) {
+			fs.createReadStream(note_512Img).pipe(fs.createWriteStream(note_512));
 		}
 
 		// Make sure the asset/remote folder exists
@@ -1022,6 +1050,7 @@ exports.listAssets = listAssets;
 exports.saveAssets = saveAssets;
 exports.listImages = listImages;
 exports.listPDFs   = listPDFs;
+exports.listNotes   = listNotes;
 exports.listVideos = listVideos;
 exports.listApps   = listApps;
 exports.addFile    = addFile;
