@@ -694,19 +694,22 @@ var SAGE2_App = Class.extend({
 			this.SAGE2Sync(true);
 		}
 
-		// update time
-		this.preDraw(date);
-		// measure actual frame rate
-		if (this.sec >= 1.0) {
-			this.fps       = this.frame_sec / this.sec;
-			this.frame_sec = 0;
-			this.sec       = 0;
-		}
-		// actual application draw
-		this.draw(date);
-		this.frame_sec++;
-		// update time and misc
-		this.postDraw(date);
+		var _this = this;
+		requestAnimationFrame(function () {
+			// update time
+			_this.preDraw(date);
+			// measure actual frame rate
+			if (_this.sec >= 1.0) {
+				_this.fps       = this.frame_sec / this.sec;
+				_this.frame_sec = 0;
+				_this.sec       = 0;
+			}
+			// actual application draw
+			_this.draw(date);
+			_this.frame_sec++;
+			// update time and misc
+			_this.postDraw(date);
+		});
 	},
 
 	/**
