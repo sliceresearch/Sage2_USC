@@ -624,7 +624,7 @@ function setupListeners() {
 	});
 
 	wsio.on('dtuRmbContextMenuContents', function(data) {
-		setRmbContextMenuEntries(data.entries, data.app);
+		setRmbContextMenuEntries(data);
 	});
 
 	wsio.on('csdSendDataToClient', function(data) {
@@ -1975,11 +1975,13 @@ function setupRmbContextMenuDiv() {
 			var data = {};
 			data.x = pointerX;
 			data.y = pointerY;
+			data.xClick = e.clientX;
+			data.yClick = e.clientY;
 			// ask for the context menu for the topmost app at that spot.
 			wsio.emit('utdRequestRmbContextMenu', data);
-			showRmbContextMenuDiv(e.clientX, e.clientY);
-			// start with blank set of entries, it will be updated later
 			clearContextMenu();
+			hideRmbContextMenuDiv();
+			// The context menu will be filled and positioned after getting a response from server.
 		}
 		// prevent the standard context menu
 		e.preventDefault();
@@ -2022,7 +2024,11 @@ function clearContextMenu() {
  * 		obj.buttonEffect 	will be added if .func exists
  *
  */
-function setRmbContextMenuEntries(entriesToAdd, app) {
+function setRmbContextMenuEntries(data) {
+	//data.entries, data.app, data.x, data.y
+	var entriesToAdd = data.entries;
+	var app = data.app;
+	showRmbContextMenuDiv(data.x, data.y);
 	// full removal of current contents
 	removeAllChildren('rmbContextMenu');
 	// for each entry
