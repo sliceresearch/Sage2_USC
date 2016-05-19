@@ -187,7 +187,7 @@ var leaflet = SAGE2_App.extend({
 		var z = this.map.getZoom();
 		if (z <= 19) {
 			this.map.setZoom(z + 1, {animate: false});
-			this.state.zoomLevel = z+1; // new 5/2016
+			this.state.zoomLevel = z + 1; // new 5/2016
 		}
 		this.lastZoom = date;
 		this.refresh(date);
@@ -197,8 +197,8 @@ var leaflet = SAGE2_App.extend({
 		var z = this.map.getZoom();
 		if (z >= 3) {
 			this.map.setZoom(z - 1, {animate: false});
-			this.state.zoomLevel = z-1; // new 5/2016
-		}		
+			this.state.zoomLevel = z - 1; // new 5/2016
+		}
 		this.lastZoom = date;
 		this.refresh(date);
 	},
