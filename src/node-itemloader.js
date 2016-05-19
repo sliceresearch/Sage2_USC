@@ -24,12 +24,11 @@ var url          = require('url');
 
 var Unzip        = require('decompress-zip');
 var gm           = require('gm');
-var mime         = require('mime');
 var request      = require('request');
 var ytdl         = require('ytdl-core');
 var Videodemuxer = (process.arch !== 'arm') ? require('node-demux') : null;
-// require('node-demux');
 var mv           = require('mv');
+var sanitize     = require("sanitize-filename");
 
 var exiftool     = require('../src/node-exiftool');        // gets exif tags for images
 var assets       = require('../src/node-assets');          // asset management
@@ -208,8 +207,6 @@ AppLoader.prototype.loadVideoFromURL = function(aUrl, mime_type, source_url, nam
 	this.loadVideoFromFile(source_url, mime_type, aUrl, aUrl, name, callback);
 };
 
-
-
 AppLoader.prototype.loadImageFromDataBuffer = function(buffer, width, height, mime_type, aUrl,
 	external_url, name, exif_data, callback) {
 
@@ -307,7 +304,7 @@ AppLoader.prototype.loadImageFromServer = function(width, height, mime_type, aUr
 		animation: false,
 		metadata: metadata,
 		sticky: false,
-		annotation:true,
+		annotation: true,
 		date: new Date()
 	};
 	this.scaleAppToFitDisplay(appInstance);
@@ -348,11 +345,12 @@ AppLoader.prototype.loadImageFromFile = function(file, mime_type, aUrl, external
 			console.log("File not recognized:", file, mime_type, aUrl);
 		}
 	} else {
-		var localPath = path.join(this.publicDir, "tmp", name) + ".png";
+		var localPath = path.join(this.publicDir, "tmp", path.basename(name)) + ".png";
+		var localUrl  = getSAGE2URL(localPath);
 
 		imageMagick(file + "[0]").noProfile().bitdepth(8).flatten().setFormat("PNG").write(localPath, function(err, buffer) {
 			if (err) {
-				console.log("Error> processing image file", file);
+				console.log("Error> processing image file", file, localPath);
 				return;
 			}
 
@@ -360,12 +358,12 @@ AppLoader.prototype.loadImageFromFile = function(file, mime_type, aUrl, external
 			var imgDims = assets.getDimensions(file);
 			var imgExif = assets.getExifData(file);
 
-			if (dims) {
-				_this.loadImageFromServer(imgDims.width, imgDims.height, "image/png", aUrl + ".png",
-						external_url + ".png", name + ".png", imgExif, function(appInstance) {
-							appInstance.file = localPath;
-							callback(appInstance);
-						}
+			if (imgDims) {
+				_this.loadImageFromServer(imgDims.width, imgDims.height, "image/png", localUrl,
+					localUrl, name + ".png", imgExif, function(appInstance) {
+						appInstance.file = localPath;
+						callback(appInstance);
+					}
 				);
 			} else {
 				console.log("File not recognized:", file, mime_type, aUrl);
@@ -485,13 +483,84 @@ AppLoader.prototype.loadPdfFromFile = function(file, mime_type, aUrl, external_u
 		animation: false,
 		metadata: metadata,
 		sticky: false,
-		annotation:true,
+		annotation: true,
 		file: file,
 		date: new Date()
 	};
 	this.scaleAppToFitDisplay(appInstance);
 	callback(appInstance);
 };
+
+
+AppLoader.prototype.loadNoteFromFile = function(file, mime_type, aUrl, external_url, name, callback) {
+	// Find the app. Look it the file name in the registry. Get path, navigate to the path's instruction.json file.
+	var appName = registry.getDefaultApp(file);
+	var localPath = getSAGE2Path(appName);
+	var instructionsFile = path.join(localPath, "instructions.json");
+
+	// Will read the instruction file and then launch app with instructionfile parameters.
+	var _this = this;
+	fs.readFile(instructionsFile, 'utf8', function(err, json_str) {
+		if (err) {
+			console.log(sageutils.header("Loader") + "cannot read application file " + instructionsFile);
+			return;
+		}
+		var appUrl = getSAGE2URL(localPath);
+		var app_external_url = _this.hostOrigin + sageutils.encodeReservedURL(appUrl);
+		var appInstance = _this.readInstructionsFile(json_str, localPath, mime_type, app_external_url);
+		appInstance.data.file = assets.getURL(file);
+		appInstance.file = file;
+
+		// This will add the contents of the note to the send data values. Assuming the var is unique.
+		appInstance.data.contentsOfNoteFile = fs.readFileSync(file, 'utf8');
+		callback(appInstance);
+	});
+};
+
+
+AppLoader.prototype.loadDoodleFromFile = function(file, mime_type, aUrl, external_url, name, callback) {
+	// Find the app. Look it the file name in the registry. Get path, navigate to the path's instruction.json file.
+	var appName = registry.getDefaultApp(file);
+	var localPath = getSAGE2Path(appName);
+	var instructionsFile = path.join(localPath, "instructions.json");
+
+	// Will read the instruction file and then launch app with instructionfile parameters.
+	var _this = this;
+	fs.readFile(instructionsFile, 'utf8', function(err, json_str) {
+		if (err) {
+			console.log(sageutils.header("Loader") + "cannot read application file " + instructionsFile);
+			return;
+		}
+		var appUrl = getSAGE2URL(localPath);
+		var app_external_url = _this.hostOrigin + sageutils.encodeReservedURL(appUrl);
+		var appInstance = _this.readInstructionsFile(json_str, localPath, mime_type, app_external_url);
+		appInstance.data.file = assets.getURL(file);
+		appInstance.file = file;
+
+		// Making sure the file exist first
+		if (sageutils.fileExists(file)) {
+			var content = fs.readFileSync(file).toString('base64');
+			// This will add the contents of the note to the send data values.
+			// Assuming the var is unique.
+			appInstance.data.contentsOfDoodleFile = "data:image/png;base64," + content;
+		} else {
+			appInstance.data.contentsOfDoodleFile = null;
+		}
+
+		// Include the file name to reset to original
+		var fbasic = file;
+		while (fbasic.indexOf("/") > -1) {
+			fbasic = fbasic.substring(fbasic.indexOf("/") + 1);
+		}
+		while (fbasic.indexOf("\\") > -1) {
+			fbasic = fbasic.substring(fbasic.indexOf("\\") + 1);
+		}
+		fbasic = fbasic.substring(0, fbasic.indexOf(".doodle"));
+		appInstance.data.fileName = fbasic;
+		callback(appInstance);
+	});
+};
+
 
 AppLoader.prototype.loadAppFromFileFromRegistry = function(file, mime_type, aUrl, external_url, name, callback) {
 	// Find the app!!
@@ -737,9 +806,18 @@ function getSAGE2URL(getName) {
 
 
 AppLoader.prototype.loadFileFromLocalStorage = function(file, callback) {
+	var mime_type;
 	var localPath = getSAGE2Path(file.filename);
-	var mime_type = mime.lookup(file.filename);
 	var a_url     = assets.getURL(localPath);
+	var mime_app  = registry.getMimeType(localPath);
+	if (mime_app) {
+		// if it's a type registred by an app, override the mime type
+		// in order to launch the right app
+		mime_type = mime_app;
+	} else {
+		// otherwise use the mime type from exiftool
+		mime_type = assets.getMimeType(localPath);
+	}
 	if (typeof a_url !== "string") {
 		console.log("AppLoader>	Cannot load app for file:", file);
 		return;
@@ -753,25 +831,32 @@ AppLoader.prototype.loadFileFromLocalStorage = function(file, callback) {
 };
 
 AppLoader.prototype.manageAndLoadUploadedFile = function(file, callback) {
+	// sanitize filename by remove odd charaters
+	var cleanFilename = sanitize(file.name);
+	// Clean up further the file names
+	cleanFilename = cleanFilename.replace(/[\$\%\^\&\(\)]/g, '_');
+
 	// Check if there is a matching application
-	var app = registry.getDefaultApp(file.name);
+	var app = registry.getDefaultApp(cleanFilename);
 	if (app === undefined || app === "") {
-		callback(null); return;
+		callback(null);
+		return;
 	}
-	var mime_type = mime.lookup(file.name);
-	var dir = registry.getDirectory(file.name);
+	var mime_type = registry.getMimeType(cleanFilename);
+	var dir = registry.getDirectory(cleanFilename);
+
 	if (!sageutils.folderExists(path.join(this.publicDir, dir))) {
 		fs.mkdirSync(path.join(this.publicDir, dir));
 	}
 
 	// Use the defautl folder plus type as destination:
 	//    SAGE2_Media/pdf/ for instance
-	var localPath   = path.join(this.publicDir, dir, file.name);
+	var localPath = path.join(this.publicDir, dir, cleanFilename);
 
 	// Filename exists, then add date
 	if (sageutils.fileExists(localPath)) {
 		// Add the date to filename
-		var filen  = file.name;
+		var filen  = cleanFilename;
 		var splits = filen.split('.');
 		var extension   = splits.pop();
 		var newfilename = splits.join('_') + "_" + Date.now() + '.' + extension;
@@ -787,7 +872,7 @@ AppLoader.prototype.manageAndLoadUploadedFile = function(file, callback) {
 		if (app === "custom_app" && mime_type === "application/zip") {
 			// Compressed ZIP file, load directly
 			_this.loadApplication({location: "file", path: localPath, url: "", external_url: "",
-					type: mime_type, name: file.name, compressed: true}, function(appInstance, handle) {
+					type: mime_type, name: cleanFilename, compressed: true}, function(appInstance, handle) {
 				callback(appInstance, handle);
 			});
 		} else {
@@ -803,7 +888,7 @@ AppLoader.prototype.manageAndLoadUploadedFile = function(file, callback) {
 						var external_url = url.resolve(_this.hostOrigin, aUrl);
 
 						_this.loadApplication({location: "file", path: localPath, url: aUrl, external_url: external_url,
-								type: mime_type, name: file.name, compressed: false}, function(appInstance, handle) {
+								type: mime_type, name: cleanFilename, compressed: false}, function(appInstance, handle) {
 							callback(appInstance, handle);
 						});
 					});
@@ -813,14 +898,14 @@ AppLoader.prototype.manageAndLoadUploadedFile = function(file, callback) {
 	});
 };
 AppLoader.prototype.createNewNoteFromText = function(data, callback) {
-	var url = "uploads/"+data.dir+"/"+data.fileName;
+	var url = "uploads/" + data.dir + "/" + data.fileName;
 	var external_url = this.hostOrigin + sageutils.encodeReservedURL(url);
 
 	// Assume default to Letter size
 	var page_width  = 300;
 	var page_height = 300;
 
-	var aspectRatio = page_width/page_height;
+	var aspectRatio = page_width / page_height;
 
 	var metadata         = {};
 	metadata.title       = "Sticky Note";
@@ -830,17 +915,17 @@ AppLoader.prototype.createNewNoteFromText = function(data, callback) {
 	metadata.license     = "SAGE2-Software-License";
 	metadata.keywords    = ["text", "document", "editor"];
 
-	//var exif = assets.getExifData(file);
+	// var exif = assets.getExifData(file);
 
 	var appInstance = {
 		id: null,
 		title: data.fileName? data.fileName : "Sticky Note",
 		application: "sticky_note",
-		icon: null,//exif ? exif.SAGE2thumbnail : null,
+		icon: null,// exif ? exif.SAGE2thumbnail : null,
 		type: "application",
 		url: external_url,
 		data: {
-			owner:data.user,
+			owner: data.user,
 			createdOn: data.createdOn,
 			buffer: data.text,
 			caretPos: data.text.length,
@@ -865,18 +950,16 @@ AppLoader.prototype.createNewNoteFromText = function(data, callback) {
 		animation: false,
 		metadata: metadata,
 		sticky: true,
-		annotation:false,
+		annotation: false,
 		date:      new Date()
 	};
 	this.scaleAppToFitDisplay(appInstance);
 	callback(appInstance, null);
 };
 AppLoader.prototype.loadApplication = function(appData, callback) {
-	var app, dir;
+	var app;
 	if (appData.location === "file") {
 		app = registry.getDefaultAppFromMime(appData.type);
-		dir = registry.getDirectory(appData.type);
-
 		if (app === "image_viewer") {
 			this.loadImageFromFile(appData.path, appData.type, appData.url, appData.external_url, appData.name,
 					function(appInstance) {
@@ -895,11 +978,24 @@ AppLoader.prototype.loadApplication = function(appData, callback) {
 						callback(appInstance, null);
 					}
 			);
+		} else if (app.indexOf("apps") >= 0 && app.indexOf("quickNote") >= 0) {
+			this.loadNoteFromFile(appData.path, appData.type, appData.url, appData.external_url, appData.name,
+					function(appInstance) {
+						callback(appInstance, null);
+					}
+			);
+		} else if (app.indexOf("apps") >= 0 && app.indexOf("doodle") >= 0) {
+			this.loadDoodleFromFile(appData.path, appData.type, appData.url, appData.external_url, appData.name,
+					function(appInstance) {
+						callback(appInstance, null);
+					}
+			);
 		} else if (app === "custom_app") {
 			if (appData.compressed === true) {
 				var name = path.basename(appData.name, path.extname(appData.name));
+				var dir  = registry.getDirectory(appData.type);
 				var futurePath = this.publicDir + dir + "/" + name;
-				var localPath = getSAGE2Path(futurePath);
+				var localPath  = getSAGE2Path(futurePath);
 				var aUrl = getSAGE2URL(localPath);
 				var external_url = this.hostOrigin + sageutils.encodeReservedURL(aUrl);
 

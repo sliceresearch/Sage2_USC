@@ -37,21 +37,20 @@ function StickyItems() {
 */
 StickyItems.prototype.getStickyItemsStructure = function() {
 	var managerObj = {
-		stickyItemParent:{},
-		stickyItemOffsetInfo:{}
+		stickyItemParent: {},
+		stickyItemOffsetInfo: {}
 	};
-	for (var key in this.stickyItemParent){
-		if (this.stickyItemParent.hasOwnProperty(key)){
+	for (var key in this.stickyItemParent) {
+		if (this.stickyItemParent.hasOwnProperty(key)) {
 			managerObj.stickyItemParent[key] = [];
-			for (var idx=0; idx<this.stickyItemParent[key].length;idx++){
+			for (var idx = 0; idx < this.stickyItemParent[key].length; idx++) {
 				managerObj.stickyItemParent[key].push(this.stickyItemParent[key][idx].id);
 			}
-				
 		}
 	}
-	for (var key2 in this.stickyItemOffsetInfo){
-		if (this.stickyItemOffsetInfo.hasOwnProperty(key2)){
-			managerObj.stickyItemOffsetInfo[key2] = this.stickyItemOffsetInfo[key2];	
+	for (var key2 in this.stickyItemOffsetInfo) {
+		if (this.stickyItemOffsetInfo.hasOwnProperty(key2)) {
+			managerObj.stickyItemOffsetInfo[key2] = this.stickyItemOffsetInfo[key2];
 		}
 	}
 	return managerObj;
@@ -65,14 +64,14 @@ StickyItems.prototype.getStickyItemsStructure = function() {
 StickyItems.prototype.copyStickyItemsStructure = function(managerObj) {
 	this.stickyItemParent = {};
 	this.stickyItemOffsetInfo = {};
-	for (var key in managerObj.stickyItemParent){
-		if (managerObj.stickyItemParent.hasOwnProperty(key)){
-			this.stickyItemParent[key] = managerObj.stickyItemParent[key];	
+	for (var key in managerObj.stickyItemParent) {
+		if (managerObj.stickyItemParent.hasOwnProperty(key)) {
+			this.stickyItemParent[key] = managerObj.stickyItemParent[key];
 		}
 	}
-	for (var key2 in managerObj.stickyItemOffsetInfo){
-		if (managerObj.stickyItemOffsetInfo.hasOwnProperty(key2)){
-			this.stickyItemParent[key2] = managerObj.stickyItemParent[key2];	
+	for (var key2 in managerObj.stickyItemOffsetInfo) {
+		if (managerObj.stickyItemOffsetInfo.hasOwnProperty(key2)) {
+			this.stickyItemParent[key2] = managerObj.stickyItemParent[key2];
 		}
 	}
 };
@@ -83,17 +82,21 @@ StickyItems.prototype.copyStickyItemsStructure = function(managerObj) {
 * @method attachStickyItem
 */
 StickyItems.prototype.attachStickyItem = function(backgroundItem, stickyItem) {
-	if (backgroundItem.id === stickyItem.id) return;
+	if (backgroundItem.id === stickyItem.id) {
+		return;
+	}
 	if (this.stickyItemParent[backgroundItem.id]) {
 		if (this.stickyItemParent[backgroundItem.id].indexOf(stickyItem) < 0) {
 			this.stickyItemParent[backgroundItem.id].push(stickyItem);
 		}
-	}
-	else {
+	} else {
 		this.stickyItemParent[backgroundItem.id] = [];
 		this.stickyItemParent[backgroundItem.id].push(stickyItem);
 	}
-	this.stickyItemOffsetInfo[stickyItem.id] = {offsetX:(stickyItem.left - backgroundItem.left)/backgroundItem.width, offsetY:(stickyItem.top - backgroundItem.top)/backgroundItem.height};
+	this.stickyItemOffsetInfo[stickyItem.id] = {
+		offsetX: (stickyItem.left - backgroundItem.left) / backgroundItem.width,
+		offsetY: (stickyItem.top - backgroundItem.top) / backgroundItem.height
+	};
 };
 
 /**
@@ -102,7 +105,9 @@ StickyItems.prototype.attachStickyItem = function(backgroundItem, stickyItem) {
 * @method attachStickyItemWithPredifnedOffset
 */
 StickyItems.prototype.attachStickyItemWithPredifnedOffset = function(backgroundItem, stickyItem, offset) {
-	if (backgroundItem.id === stickyItem.id) return;
+	if (backgroundItem.id === stickyItem.id) {
+		return;
+	}
 	if (this.stickyItemParent[backgroundItem.id]) {
 		if (this.stickyItemParent[backgroundItem.id].indexOf(stickyItem) < 0) {
 			this.stickyItemParent[backgroundItem.id].push(stickyItem);

@@ -8,7 +8,8 @@
 //
 // Copyright (c) 2014-2015
 
-/* global ignoreFields, SAGE2WidgetControl */
+/* global ignoreFields, SAGE2WidgetControl, SAGE2MEP */
+/* global addStoredFileListEventHandler, removeStoredFileListEventHandler */
 
 /**
  * @module client
@@ -72,6 +73,9 @@ var SAGE2_App = Class.extend({
 		this.SAGE2UserModification = false;
 		// Modify state sync options
 		this.SAGE2StateSyncOptions = {visible: false, hover: null, press: {name: null, value: null}, scroll: 0};
+
+		// Enabling this will attempt to convert SAGE2 pointer as mouse events as much as possible.
+		this.passSAGE2PointerAsMouseEvents = false;
 	},
 
 	/**
@@ -288,6 +292,11 @@ var SAGE2_App = Class.extend({
 		} else {
 			this.SAGE2UserModification = true;
 			this.event(eventType, position, user_id, data, date);
+
+			if (this.passSAGE2PointerAsMouseEvents) {
+				SAGE2MEP.processAndPassEvents(this.element.id, eventType, position,
+					user_id, data, date);
+			}
 			this.SAGE2UserModification = false;
 		}
 	},
@@ -525,6 +534,9 @@ var SAGE2_App = Class.extend({
 	*/
 	showLayer: function() {
 		if (this.layer) {
+			// before showing, make sure to update the size
+			this.layer.style.width  = this.div.clientWidth  + 'px';
+			this.layer.style.height = this.div.clientHeight + 'px';
 			// Reset its top position, just in case
 			this.layer.style.top = "0px";
 			this.layer.style.display = "block";
@@ -579,10 +591,15 @@ var SAGE2_App = Class.extend({
 	isHidden: function() {
 		var checkWidth  = this.config.resolution.width;
 		var checkHeight = this.config.resolution.height;
+		// Overview client covers all
 		if (clientID === -1) {
 			// set the resolution to be the whole display wall
 			checkWidth  *= this.config.layout.columns;
 			checkHeight *= this.config.layout.rows;
+		} else {
+			// multiply by the size of the tile
+			checkWidth  *= (this.config.displays[clientID].width  || 1);
+			checkHeight *= (this.config.displays[clientID].height || 1);
 		}
 		return (this.sage2_x > (ui.offsetX + checkWidth)  ||
 				(this.sage2_x + this.sage2_width) < ui.offsetX ||
@@ -701,8 +718,8 @@ var SAGE2_App = Class.extend({
 		if (typeof this.quit === 'function') {
 			this.quit();
 		}
-		if (isMaster && this.hasFileBuffer === true){
-			wsio.emit('closeFileBuffer', {id:this.div.id});
+		if (isMaster && this.hasFileBuffer === true) {
+			wsio.emit('closeFileBuffer', {id: this.div.id});
 		}
 	},
 
@@ -772,6 +789,26 @@ var SAGE2_App = Class.extend({
 	},
 
 	/**
+	* Register a callback to be called when receiving a updated file list from server
+	*
+	* @method registerFileListHandler
+	* @param mth {Method} method on object to be called back
+	*/
+	registerFileListHandler: function(mth) {
+		addStoredFileListEventHandler(mth.bind(this));
+	},
+
+	/**
+	* Unregister a callback to be called when receiving a updated file list from server
+	*
+	* @method unregisterFileListHandler
+	* @param mth {Method} method on object to be called back
+	*/
+	unregisterFileListHandler: function(mth) {
+		removeStoredFileListEventHandler(mth.bind(this));
+	},
+
+	/**
 	* Prints message to local browser console and send to server.
 	*  Accept a string as parameter or multiple parameters
 	*
@@ -799,11 +836,11 @@ var SAGE2_App = Class.extend({
 	*/
 	requestFileBuffer: function (data) {
 		this.hasFileBuffer = true;
-		if (isMaster){
+		if (isMaster) {
 			var msgObject = {};
 			msgObject.id        = this.div.id;
 			msgObject.fileName  = data.fileName;
-			msgObject.owner 	= data.owner;
+			msgObject.owner     = data.owner;
 			msgObject.createdOn = data.createdOn;
 			// Send the message to the server
 			wsio.emit('requestFileBuffer', msgObject);
@@ -816,12 +853,13 @@ var SAGE2_App = Class.extend({
 	* @param fileName {String} name of the file to which data will be saved.
 	*/
 	requestNewTitle: function (newTitle) {
-		if (isMaster){
+		if (isMaster) {
 			var msgObject = {};
 			msgObject.id        = this.div.id;
-			msgObject.title 	= newTitle;
+			msgObject.title     = newTitle;
 			// Send the message to the server
 			wsio.emit('requestNewTitle', msgObject);
 		}
-	},
+	}
+
 });

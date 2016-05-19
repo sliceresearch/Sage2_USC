@@ -328,8 +328,8 @@ function format24Hr(date) {
  * @return {String} formatted duration
  */
 function formatHHMMSS(duration) {
-	var ss = parseInt((duration / 1000) % 60,         10);
-	var mm = parseInt((duration / (1000 * 60)) % 60,    10);
+	var ss = parseInt((duration / 1000) % 60,             10);
+	var mm = parseInt((duration / (1000 * 60)) % 60,      10);
 	var hh = parseInt((duration / (1000 * 60 * 60)) % 24, 10);
 
 	hh = (hh < 10) ? "0" + hh : hh;
@@ -610,6 +610,21 @@ function deleteElement(id) {
 	}
 }
 
+/**
+ * Remove of children of a DOM element
+ *
+ * @method removeAllChildren
+ * @param node {Element|String} id or node to be processed
+ */
+function removeAllChildren(node) {
+	// if the parameter a string, look it up
+	var elt = (typeof node === "string") ? document.getElementById(node) : node;
+	// remove one child at a time
+	while (elt.lastChild) {
+		elt.removeChild(elt.lastChild);
+	}
+}
+
 
 /**
  * Cleanup a URL and replace the origin to match the client (to mitigate CORS problems, cross-origin resource sharing)
@@ -778,11 +793,16 @@ function addCookie(sKey, sValue) {
 	if (!sKey) {
 		return false;
 	}
+	var domain;
+	if (window.location.hostname === "127.0.0.1") {
+		domain = "127.0.0.1";
+	} else {
+		domain = window.location.hostname.split('.').slice(-2).join(".");
+	}
 	document.cookie = encodeURIComponent(sKey) + "=" + encodeURIComponent(sValue) +
 		"; expires=Fri, 31 Dec 9999 23:59:59 GMT" +
-		"; domain=" + location.hostname.split('.').slice(-2).join(".") +
-		"; path=/" +
-		"; secure";
+		"; domain=" + domain +
+		"; path=/";
 	return true;
 }
 

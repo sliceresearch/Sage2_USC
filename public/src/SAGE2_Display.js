@@ -23,6 +23,7 @@
 /* global hideWidgetToAppConnectors */
 /* global createWidgetToAppConnector */
 /* global getTextFromTextInputWidget */
+/* global SAGE2Annotations */
 
 "use strict";
 
@@ -52,8 +53,12 @@ var applications = {};
 var dependencies = {};
 var dataSharingPortals = {};
 
-
 var annotationItems = {};
+
+// Maintain the file list available on the server
+var storedFileList = null;
+var storedFileListEventHandlers = [];
+
 // UI object to build the element on the wall
 var ui;
 var uiTimer = null;
@@ -159,6 +164,31 @@ function setupFocusHandlers() {
 	});
 }
 
+/**
+ * Add a stored file list event handler
+ *
+ * @method addStoredFileListEventHandler
+ */
+function addStoredFileListEventHandler(callback) {
+	// Register the event handler and call it if we already have a stored file list available
+	storedFileListEventHandlers.push(callback);
+	if (storedFileList) {
+		callback(storedFileList);
+	}
+}
+
+/**
+ * Remove a stored file list event handler
+ *
+ * @method removeStoredFileListEventHandler
+ */
+function removeStoredFileListEventHandler(callback) {
+	var index = storedFileListEventHandlers.indexOf(callback);
+	if (index > -1) {
+		storedFileListEventHandlers.splice(index, 1);
+	}
+}
+
 
 /**
  * Idle function, show and hide the UI, triggered at uiTimerDelay sec delay
@@ -198,6 +228,9 @@ function SAGE2_init() {
 
 		setupListeners();
 
+		// Get the cookie for the session, if there's one
+		var session = getCookie("session");
+
 		var clientDescription = {
 			clientType: "display",
 			clientID: clientID,
@@ -207,10 +240,11 @@ function SAGE2_init() {
 				time: true,
 				console: false
 			},
-			isMobile: __SAGE2__.browser.isMobile
+			isMobile: __SAGE2__.browser.isMobile,
+			session: session
 		};
 		wsio.emit('addClient', clientDescription);
-		// log(JSON.stringify(__SAGE2__.browser));
+		wsio.emit('requestStoredFiles');
 	});
 
 	// Socket close event (ie server crashed)
@@ -435,6 +469,14 @@ function setupListeners() {
 		}
 	});
 
+	wsio.on('storedFileList', function(data) {
+		// Save the cached stored file list and update all the listeners
+		storedFileList = data;
+		for (var i = 0; i < storedFileListEventHandlers.length; i++) {
+			storedFileListEventHandlers[i](storedFileList);
+		}
+	});
+
 	wsio.on('updateMediaStreamFrame', function(data) {
 		wsio.emit('receivedMediaStreamFrame', {id: data.id});
 
@@ -585,7 +627,7 @@ function setupListeners() {
 			if (selectedElemOverlay) {
 				selectedElemOverlay.style.zIndex = order[key].toString();
 			}
-			if(annotationItems.hasOwnProperty(key)){
+			if (annotationItems.hasOwnProperty(key)) {
 				var annotationWindow = annotationItems[key];
 				annotationWindow.setOrder(order[key]);
 			}
@@ -1007,7 +1049,7 @@ function setupListeners() {
 				app.requestForClone = false;
 				// console.log("cloning app:", appId, app.cloneData);
 				if (isMaster) {
-					wsio.emit('createAppClone', {id : appId, state: app.state, user:data.user});
+					wsio.emit('createAppClone', {id: appId, state: app.state, user: data.user});
 				}
 			}
 
@@ -1105,149 +1147,148 @@ function setupListeners() {
 	});
 
 	wsio.on('setAnnotationWindowPosition', function(position_data) {
-		if (position_data.appId in annotationItems)
+		if (position_data.appId in annotationItems) {
 			annotationItems[position_data.appId].setPosition(position_data);
+		}
 	});
 
 	wsio.on('setAnnotationWindowPositionAndSize', function(data) {
-		if (data.appId in annotationItems){
+		if (data.appId in annotationItems) {
 			annotationItems[data.appId].setPositionAndSize(data);
 			annotationItems[data.appId].setAllMarkerPositionsAfterResize();
 		}
 
 	});
-	
-	wsio.on('createAnnotationWindow',function(data){
+
+	wsio.on('createAnnotationWindow', function(data) {
 		var appAnnotation = new SAGE2Annotations();
 		appAnnotation.makeWindow(data);
 		appAnnotation.setOrder(data.zIndex);
 		annotationItems[data.appId] = appAnnotation;
-		var app    = applications[data.appId];
+		var app = applications[data.appId];
 		Object.observe(app.state, function (changes) {
-			for (var key in changes){
-				if (changes[key].name === "page"){
-					appAnnotation.showMarkersForPage({appId:data.appId, page: app.state.page});	
+			for (var key in changes) {
+				if (changes[key].name === "page") {
+					appAnnotation.showMarkersForPage({appId: data.appId, page: app.state.page});
 				}
 			}
 		});
 	});
 
-	wsio.on('deleteAnnotationWindow',function(data){
+	wsio.on('deleteAnnotationWindow', function(data) {
 		annotationItems[data.appId].deleteWindow();
 		delete annotationItems[data.appId];
 	});
 
-	wsio.on('showAnnotationWindow', function(data){
+	wsio.on('showAnnotationWindow', function(data) {
 		annotationItems[data.appId].showWindow(data);
 		var app = applications[data.appId];
-		if (app){
-			var page = app.state? app.state.page : 1;
-			annotationItems[data.appId].showMarkersForPage({appId:data.appId, page: page});	
+		if (app) {
+			var page = app.state ? app.state.page : 1;
+			annotationItems[data.appId].showMarkersForPage({appId: data.appId, page: page});
 		}
-		
 	});
-	wsio.on('hideAnnotationWindow', function(data){
+	wsio.on('hideAnnotationWindow', function(data) {
 		annotationItems[data.appId].hideWindow(data);
 		var app = applications[data.appId];
-		if (app){
-			var page = app.state? app.state.page : 1;
-			annotationItems[data.appId].hideMarkersForPage({appId:data.appId, page: page});	
+		if (app) {
+			var page = app.state ? app.state.page : 1;
+			annotationItems[data.appId].hideMarkersForPage({appId: data.appId, page: page});
 		}
 	});
-	wsio.on('addNewNoteToAnnotationWindow', function(data){
+	wsio.on('addNewNoteToAnnotationWindow', function(data) {
 		var credentials = data.credentials;
 		var annotationWindow = annotationItems[credentials.appId];
-		if (annotationWindow){
-			annotationItems[credentials.appId].addNote(credentials);	
-			if (credentials.marker !== null){
+		if (annotationWindow) {
+			annotationItems[credentials.appId].addNote(credentials);
+			if (credentials.marker !== null) {
 				annotationWindow.createMarker(credentials);
 			}
 			annotationWindow.makeNoteEditable(data);
 		}
 	});
 
-	wsio.on('addMarkerToNote', function(data){
+	wsio.on('addMarkerToNote', function(data) {
 		var credentials = data.credentials;
 		var annotationWindow = annotationItems[credentials.appId];
-		if (annotationWindow){
+		if (annotationWindow) {
 			annotationWindow.createMarker(credentials);
 			annotationWindow.makeNoteEditable(data);
 		}
 	});
 
-	wsio.on('removeMarkerFromNote', function(data){
+	wsio.on('removeMarkerFromNote', function(data) {
 		var annotationWindow = annotationItems[data.appId];
-		if (annotationWindow){
+		if (annotationWindow) {
 			annotationWindow.removeMarker(data);
-			annotationWindow.makeNoteEditable({credentials: data, color:null});
+			annotationWindow.makeNoteEditable({credentials: data, color: null});
 		}
 	});
 
-	wsio.on('setAnnotationMarker', function(data){
+	wsio.on('setAnnotationMarker', function(data) {
 		var annotationWindow = annotationItems[data.appId];
-		if (annotationWindow){
+		if (annotationWindow) {
 			annotationWindow.setMarkerPosition(data);
 		}
 	});
 
-	wsio.on('eventInAnnotationWindow', function(event_data){
+	wsio.on('eventInAnnotationWindow', function(event_data) {
 		var date = new Date(event_data.date);
 		var annotationWindow = annotationItems[event_data.appId];
-		if (annotationWindow){
+		if (annotationWindow) {
 			annotationWindow.event(event_data.type, event_data.position, event_data.user, event_data.data, date);
 		}
 	});
 
-	/*wsio.on('showAnnotationMarkersForPage', function(data){
+	/*wsio.on('showAnnotationMarkersForPage', function(data) {
 		var annotationWindow = annotationItems[data.appId];
-		if (annotationWindow){
-			annotationWindow.showMarkersForPage({appId:data.appId, page: data.page});	
+		if (annotationWindow) {
+			annotationWindow.showMarkersForPage({appId: data.appId, page: data.page});
 		}
 	});*/
 
-	wsio.on('timeUpdate', function(data){
-		for(var key in annotationItems){
+	wsio.on('timeUpdate', function(data) {
+		for (var key in annotationItems) {
 			annotationItems[key].updateTime(data.now);
 		}
 	});
-	wsio.on('makeNoteEditable', function(data){
+	wsio.on('makeNoteEditable', function(data) {
 		var appId = data.credentials.appId;
 		var credentials = data.credentials;
 		var annotationWindow = annotationItems[appId];
-		if (annotationWindow){
-			annotationWindow.makeNoteEditable(data);	
-			if (credentials.marker){
+		if (annotationWindow) {
+			annotationWindow.makeNoteEditable(data);
+			if (credentials.marker) {
 				var app = applications[appId];
-				if (app.hasOwnProperty("state")){
-					if (app.state.hasOwnProperty("page")){
+				if (app.hasOwnProperty("state")) {
+					if (app.state.hasOwnProperty("page")) {
 						app.state.page = credentials.marker.page;
 						app.redraw = true;
 						app.refresh(new Date());
 					}
 				}
 			}
-			
 		}
 	});
 
-	wsio.on('makeAllNotesNonEditable', function(data){
+	wsio.on('makeAllNotesNonEditable', function(data) {
 		var annotationWindow = annotationItems[data.appId];
-		if (annotationWindow){
-			annotationWindow.makeAllNotesNonEditable();	
+		if (annotationWindow) {
+			annotationWindow.makeAllNotesNonEditable();
 		}
 	});
 
-	wsio.on('deleteNote',function(data){
+	wsio.on('deleteNote', function(data) {
 		var annotationWindow = annotationItems[data.appId];
-		if (annotationWindow){
-			annotationWindow.deleteNote(data);	
+		if (annotationWindow) {
+			annotationWindow.deleteNote(data);
 		}
 	});
-	/*wsio.on('receiveFileData', function(data){
+	/*wsio.on('receiveFileData', function(data) {
 		var app = applications[data.id];
 		app.fileDataBuffer = data.buffer;
 		app.fileReceived = true;
-		console.log("file Data:",app.fileDataBuffer);
+		console.log("file Data:", app.fileDataBuffer);
 	});*/
 	wsio.on('requestedDataSharingSession', function(data) {
 		ui.showDataSharingRequestDialog(data);
@@ -1271,7 +1312,7 @@ function setupListeners() {
 	});
 
 	wsio.on('setTitle', function(data) {
-		if (data.id !== null && data.id !== undefined){
+		if (data.id !== null && data.id !== undefined) {
 			var titleDiv = document.getElementById(data.id + "_title");
 			var pElement = titleDiv.getElementsByTagName("p");
 			pElement[0].textContent = data.title;
@@ -1497,6 +1538,25 @@ function createAppWindow(data, parentId, titleBarHeight, titleTextSize, offsetX,
 				newapp.init(init);
 				newapp.refresh(date);
 
+				// Sending the context menu info to the server
+				if (isMaster) {
+					// If the application defines a menu function, use it
+					if (typeof newapp.getContextEntries === "function") {
+						wsio.emit('dtuRmbContextMenuContents', {
+							app: newapp.id,
+							entries: newapp.getContextEntries()
+						});
+					} else {
+						// Otherwise, send a default empty menu
+						wsio.emit('dtuRmbContextMenuContents', {
+							app: newapp.id,
+							entries: [{
+								description: "Not supported by this app"
+							}]
+						});
+					}
+				}
+
 				applications[data.id]   = newapp;
 				controlObjects[data.id] = newapp;
 
@@ -1513,8 +1573,26 @@ function createAppWindow(data, parentId, titleBarHeight, titleTextSize, offsetX,
 			// load existing app
 			var app = new window[data.application]();
 			app.init(init);
-			// app.SAGE2Load(app.state, date);
 			app.refresh(date);
+
+			// Sending the context menu info to the server
+			if (isMaster) {
+				// If the application defines a menu function, use it
+				if (typeof app.getContextEntries === "function") {
+					wsio.emit('dtuRmbContextMenuContents', {
+						app: app.id,
+						entries: app.getContextEntries()
+					});
+				} else {
+					// Otherwise, send a default empty menu
+					wsio.emit('dtuRmbContextMenuContents', {
+						app: app.id,
+						entries: [{
+							description: "Not supported by this app"
+						}]
+					});
+				}
+			}
 
 			applications[data.id] = app;
 			controlObjects[data.id] = app;

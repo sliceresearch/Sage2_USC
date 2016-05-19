@@ -68,6 +68,9 @@ function SAGE2_init() {
 		}
 	});
 
+	// Get the cookie for the session, if there's one
+	var session = getCookie("session");
+
 	// Callback when socket opens
 	wsio.open(function() {
 		console.log("open websocket");
@@ -79,11 +82,12 @@ function SAGE2_init() {
 		var clientDescription = {
 			clientType: "editor",
 			requests: {
-				config: true,
+				config:  true,
 				version: true,
-				time: false,
+				time:    false,
 				console: false
-			}
+			},
+			session: session
 		};
 		wsio.emit('addClient', clientDescription);
 	});
@@ -140,10 +144,15 @@ function setupListeners(wsio) {
 	wsio.on('initialize', function() {
 		console.log('initialize');
 
-		readFile("/config/default-cfg.json", function(error, data) {
+		readFile("/config", function(error, data) {
 			if (!error) {
+				// Format the JSON string
+				var json = JSON.stringify(JSON.parse(data), undefined, 4);
+				// Set the JSON mode
 				SAGE2_editor.getSession().setMode("ace/mode/json");
-				SAGE2_editor.setValue(data, -1);
+				// put the data as text in the editor
+				SAGE2_editor.setValue(json, -1);
+				// reset the cursor
 				SAGE2_editor.gotoLine(0);
 			}
 		});

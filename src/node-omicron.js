@@ -8,7 +8,7 @@
 //
 // Copyright (c) 2014-2015
 
- /**
+/**
  * Omicron connection module for SAGE2
  * Provides external input device support
  * https://github.com/uic-evl/omicron
@@ -17,8 +17,6 @@
  * @submodule omicron
  * @requires node-coordinateCalculator, node-1euro
  */
-
-/*eslint-disable */
 
 "use strict";
 
@@ -31,7 +29,7 @@ var OneEuroFilter        = require('./node-1euro');
 
 var omicronManager; // Handle to OmicronManager inside of udp blocks (instead of this)
 
- /**
+/**
  * Omicron setup and opens a listener socket for an Omicron input server to connect to
  *
  * @class OmicronManager
@@ -169,7 +167,7 @@ function OmicronManager(sysConfig) {
 	}
 }
 
- /**
+/**
  * Sends disconnect signal to input server
  *
  * @method disconnect
@@ -182,7 +180,7 @@ OmicronManager.prototype.disconnect = function() {
 	}
 };
 
- /**
+/**
  * Receives server pointer functions
  *
  * @method setCallbacks
@@ -224,7 +222,7 @@ OmicronManager.prototype.setCallbacks = function(
 	this.createSagePointer(this.config.inputServerIP);
 };
 
- /**
+/**
  * Manages incoming input server data
  *
  * @method runTracker
@@ -387,6 +385,7 @@ OmicronManager.prototype.runTracker = function() {
 
 			// if( omicronManager.showPointerToggle === false )
 			// return;
+			var timeSinceLastNonCritEvent = Date.now() - omicronManager.lastNonCritEventTime;
 
 			if (omicronManager.showPointerToggle && screenPos.x !== -1 && screenPos.y !== -1) {
 				var timestamp = e.timestamp / 1000;
@@ -420,7 +419,7 @@ OmicronManager.prototype.runTracker = function() {
 				}
 			}
 
-			if (timeSinceLastNonCritEvent >= nonCriticalEventDelay) {
+			if (timeSinceLastNonCritEvent >= omicronManager.nonCriticalEventDelay) {
 				omicronManager.pointerPosition(address, { pointerX: posX, pointerY: posY });
 				omicronManager.lastNonCritEventTime = Date.now();
 			}
@@ -433,7 +432,7 @@ OmicronManager.prototype.runTracker = function() {
 						omicronManager.pointerPress(address, posX, posY, { button: "left" });
 					} else {
 						// Wand Drag
-						if (timeSinceLastNonCritEvent >= nonCriticalEventDelay) {
+						if (timeSinceLastNonCritEvent >= omicronManager.nonCriticalEventDelay) {
 							omicronManager.pointerPosition(address, { pointerX: posX, pointerY: posY });
 							omicronManager.pointerMove(address, posX, posY, { deltaX: 0, deltaY: 0, button: "left" });
 
@@ -521,7 +520,7 @@ OmicronManager.prototype.runTracker = function() {
 	udp.bind(this.omicronDataPort);
 };
 
- /**
+/**
  * Manages pointer (serviceType = 0) type events
  *
  * @method processPointerEvent

@@ -90,12 +90,12 @@
 			port: 443,
 			secure: true
 		},
-                {
-                        name: "TestServer",
-                        host: "sage2server.evl.uic.edu",
-                        port: 443,
-                        secure: true
-                },
+		{
+			name: "TestServer",
+			host: "sage2server.evl.uic.edu",
+			port: 443,
+			secure: true
+		},
 		{
 			name: "CAVE2",
 			host: "lyra.evl.uic.edu",

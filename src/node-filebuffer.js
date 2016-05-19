@@ -21,7 +21,7 @@ var sageutils = require('../src/node-utils');    // provides utility functions
 function MDManager() {
 }
 
-function getEntryValue (data, entryStr, delim) {
+function getEntryValue(data, entryStr, delim) {
 	var position = data.indexOf(entryStr);
 	var entry = null;
 	var tempStr;
@@ -31,13 +31,12 @@ function getEntryValue (data, entryStr, delim) {
 		tempStr = data.slice(position);
 		tempPos = tempStr.indexOf(delim);
 		if (tempPos > -1) {
-			entry = tempStr.slice(0,tempPos);
+			entry = tempStr.slice(0, tempPos);
 			tempPos = tempPos + delim.length;
 		} else {
 			entry = tempStr;
 			tempPos = 0;
 		}
-		
 	}
 	return {value: entry, end: position + tempPos};
 }
@@ -47,25 +46,23 @@ MDManager.prototype.parse = function(data) {
 	var color = getEntryValue(data, ' _Color:_ ', '  \n').value;
 	var temp = getEntryValue(data, ' _Created On:_ ', '  \n');
 	var createdOn = parseInt(temp.value, 10);
-	//console.log("**" + createdOn + "**");
 	var texIdx = temp.end;
 	var text = data.slice(texIdx);
 	return {text: text, owner: owner, createdOn: createdOn, color: color};
-}
+};
 
-function FileBuffer (root){
-
+function FileBuffer(root) {
 	this.buffers = {};
 	this.files = {};
 	this.root = root;
 	this.textFileFolder = path.join(root, "notes");
 	this.mdManager = new MDManager();
-	if (!sageutils.folderExists(this.textFileFolder)){
+	if (!sageutils.folderExists(this.textFileFolder)) {
 		fs.mkdirSync(this.textFileFolder);
 	}
 }
 
-function customBuffer(data){
+function CustomBuffer(data) {
 	this.changeCount = 0;
 	this.appId = data.appId;
 	this.owner = data.owner;
@@ -73,23 +70,22 @@ function customBuffer(data){
 	this.color = data.color;
 	this.str = [];
 	this.caret = 0;
-	
 }
 
-customBuffer.prototype.insertStr = function(text){
+CustomBuffer.prototype.insertStr = function(text) {
 	var str = this.str.join("");
 	this.str = (str.slice(0, this.caret) + text + str.slice(this.caret)).split('');
 	this.caret = this.caret + text.length;
 	this.changeCount = this.changeCount + text.length;
-	var result = {index:this.caret-text.length, offset:text.length, deleteCount:0, data:text};
+	var result = {index: this.caret - text.length, offset: text.length, deleteCount: 0, data: text};
 	return result;
 };
 
-customBuffer.prototype.resetChange = function(){
+CustomBuffer.prototype.resetChange = function() {
 	this.changeCount = 0;
 };
 
-customBuffer.prototype.getData = function(){
+CustomBuffer.prototype.getData = function() {
 	var data = {
 		owner: this.owner,
 		createdOn: this.createdOn,
@@ -99,51 +95,57 @@ customBuffer.prototype.getData = function(){
 	return data;
 };
 
-customBuffer.prototype.insertChar = function(code, printable){
-	var result = {index:this.caret, offset:0, deleteCount:0, data:null};
-	if (printable){
+CustomBuffer.prototype.insertChar = function(code, printable) {
+	var result = {index: this.caret, offset: 0, deleteCount: 0, data: null};
+	if (printable) {
 		this.str.splice(this.caret, 0, String.fromCharCode(code));
 		this.caret = this.caret + 1;
 		this.changeCount = this.changeCount + 1;
 		result.offset = 1;
 		result.data = String.fromCharCode(code);
-	}else{
-		switch (code){
-			case 35://End
-				if (this.caret < this.str.length){
+	} else {
+		switch (code) {
+			case 35:// End
+
+				if (this.caret < this.str.length) {
 					result.offset = this.str.length - this.caret;
 					this.caret = this.str.length;
 				}
 				break;
-			case 36://Home
-				if (this.caret > 0){
+			case 36:// Home
+
+				if (this.caret > 0) {
 					result.offset = -this.caret;
 					this.caret = 0;
 				}
 				break;
-			case 37://left
-				if (this.caret > 0){
+			case 37:// left
+
+				if (this.caret > 0) {
 					this.caret = this.caret - 1;
 					result.offset = -1;
 				}
 				break;
-			case 39://right
-				if (this.caret < this.str.length){
+			case 39:// right
+
+				if (this.caret < this.str.length) {
 					this.caret = this.caret + 1;
 					result.offset = 1;
 				}
 				break;
-			case 8://backspace
-				if (this.caret > 0){
-					this.str.splice(this.caret-1, 1);
+			case 8:// backspace
+
+				if (this.caret > 0) {
+					this.str.splice(this.caret - 1, 1);
 					this.caret = this.caret - 1;
 					this.changeCount = this.changeCount + 1;
 					result.offset = -1;
 					result.deleteCount = 1;
 				}
 				break;
-			case 46://delete
-				if (this.caret < this.str.length){
+			case 46:// delete
+
+				if (this.caret < this.str.length) {
 					this.str.splice(this.caret, 1);
 					this.changeCount = this.changeCount + 1;
 					result.deleteCount = 1;
@@ -154,26 +156,26 @@ customBuffer.prototype.insertChar = function(code, printable){
 	return result;
 };
 
-FileBuffer.prototype.requestBuffer = function(data){
-	if ((data.appId.toString() in this.buffers)===false){
-		console.log("Creating customBuffer for:", data.appId);
-		var buf = new customBuffer(data);
+FileBuffer.prototype.requestBuffer = function(data) {
+	if ((data.appId.toString() in this.buffers) === false) {
+		console.log(sageutils.header("SAGE2") + "Creating buffer for:" + data.appId);
+		var buf = new CustomBuffer(data);
 		this.buffers[data.appId] = buf;
 	}
 };
 
-FileBuffer.prototype.editCredentialsForBuffer = function(data){
-	if ((data.appId.toString() in this.buffers)===true){
+FileBuffer.prototype.editCredentialsForBuffer = function(data) {
+	if ((data.appId.toString() in this.buffers) === true) {
 		var buf = this.buffers[data.appId];
 		buf.owner = data.owner;
 		buf.createdOn = data.createdOn;
 	}
 };
 
-FileBuffer.prototype.closeFileBuffer = function(appId){
-	if (this.buffers.hasOwnProperty(appId)){
+FileBuffer.prototype.closeFileBuffer = function(appId) {
+	if (this.buffers.hasOwnProperty(appId)) {
 		var buf = this.buffers[appId];
-		if (buf.changeCount > 0){
+		if (buf.changeCount > 0) {
 			this.writeToFile(appId);
 		}
 		delete this.buffers[appId];
@@ -181,56 +183,55 @@ FileBuffer.prototype.closeFileBuffer = function(appId){
 	}
 };
 
-FileBuffer.prototype.hasFileBufferForApp = function(appId){
+FileBuffer.prototype.hasFileBufferForApp = function(appId) {
 	return (appId.toString() in this.buffers);
 };
 
-FileBuffer.prototype.associateFile = function(data){
+FileBuffer.prototype.associateFile = function(data) {
 	var fileName = data.fileName;
-	if (fileName.indexOf('.'+data.extension, fileName.length - (data.extension.length + 1)) === -1) {
-			fileName += '.'+data.extension;
+	if (fileName.indexOf('.' + data.extension, fileName.length - (data.extension.length + 1)) === -1) {
+		fileName += '.' + data.extension;
 	}
-	var fileName = path.join(this.textFileFolder, fileName);
+	fileName = path.join(this.textFileFolder, fileName);
 	this.files[data.appId] = fileName;
-	console.log("file attached to buffer:", data.appId, fileName);
+	console.log(sageutils.header("SAGE2") + "File " + fileName + " attached to buffer of " + data.appId);
 };
 
-FileBuffer.prototype.writeToFile = function(appId){
-	if (this.buffers.hasOwnProperty(appId) && this.files.hasOwnProperty(appId)){
+FileBuffer.prototype.writeToFile = function(appId) {
+	if (this.buffers.hasOwnProperty(appId) && this.files.hasOwnProperty(appId)) {
 		var buffer = this.buffers[appId];
 		var fileName = this.files[appId];
 		var bufData = buffer.getData();
-		var prefix = " _Owner:_ " + bufData.owner + "  \n" 
+		var prefix = " _Owner:_ " + bufData.owner + "  \n"
 			+ " _Color:_ " + bufData.color + "  \n"
 			+ " _Created On:_ " + bufData.createdOn + "  \n";
-    	
+
 		var output = prefix + bufData.text;
-		
-        fs.writeFile(fileName, output, function (err) {
-        	if (err) {
-        		return console.log(err);
-        	}
-        	buffer.resetChange();
-        });
+		fs.writeFile(fileName, output, function(err) {
+			if (err) {
+				return console.log(err);
+			}
+			buffer.resetChange();
+		});
 	}
 };
 
-FileBuffer.prototype.insertChar = function(data){
-	if (this.buffers.hasOwnProperty(data.appId)){
+FileBuffer.prototype.insertChar = function(data) {
+	if (this.buffers.hasOwnProperty(data.appId)) {
 		var buffer = this.buffers[data.appId];
 		var update = buffer.insertChar(data.code, data.printable);
-		if (buffer.changeCount>15){
+		if (buffer.changeCount > 15) {
 			this.writeToFile(data.appId);
 		}
 		return update;
 	}
 };
 
-FileBuffer.prototype.insertStr = function(data){
-	if (this.buffers.hasOwnProperty(data.appId)){
+FileBuffer.prototype.insertStr = function(data) {
+	if (this.buffers.hasOwnProperty(data.appId)) {
 		var buffer = this.buffers[data.appId];
 		var update = buffer.insertStr(data.text);
-		if (buffer.changeCount>15){
+		if (buffer.changeCount > 15) {
 			this.writeToFile(data.appId);
 		}
 		return update;
@@ -239,16 +240,14 @@ FileBuffer.prototype.insertStr = function(data){
 
 FileBuffer.prototype.parse = function(data) {
 	try {
-    	if (typeof data !== 'string') {
-    		data = data.toString('utf8');
-    	}
-    	var parsedFileData = this.mdManager.parse(data);
-    	
+		if (typeof data !== 'string') {
+			data = data.toString('utf8');
+		}
+		var parsedFileData = this.mdManager.parse(data);
 		return parsedFileData;
 	} catch (e) {
 		console.log("Error :->", e);
 	}
-	
 };
 
 
