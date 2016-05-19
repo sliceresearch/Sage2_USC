@@ -2250,6 +2250,9 @@ Mostly fills out functionality and additional properties needed to operate.
 */
 function setupUiDrawCanvas() {
 	var uidzCanvas = document.getElementById('uiDrawZoneCanvas');
+	// set sizing
+	uidzCanvas.style.width = "500px";
+	uidzCanvas.style.width = "500px";
 	// tracking variables when performing draw commands.
 	uidzCanvas.pmx		= 0;
 	uidzCanvas.pmy		= 0;
@@ -2570,13 +2573,17 @@ function uiDrawSetCurrentStateAndShow(data) {
 	// clear out canvas
 	uiDrawCanvasBackgroundFlush("white");
 	// set the state
-	var workingDiv	= document.getElementById('uiDrawZoneCanvas');
-	var ctx			= workingDiv.getContext('2d');
+	var workingDiv = document.getElementById('uiDrawZoneCanvas');
+	workingDiv.width           = data.imageWidth;
+	workingDiv.height          = data.imageHeight;
+	workingDiv.style.width     = data.imageWidth + "px";
+	workingDiv.style.height    = data.imageHeight + "px";
 	workingDiv.imageToDraw.src = data.canvasImage;
+	var ctx = workingDiv.getContext('2d');
 	ctx.drawImage(workingDiv.imageToDraw, 0, 0);
 	// set variables to correctly send updates and allow removal as editor.
 	workingDiv.clientDest = data.clientDest;
-	workingDiv.appId = data.appId;
+	workingDiv.appId      = data.appId;
 	// show dialog
 	showDialog('uiDrawZone');
 }

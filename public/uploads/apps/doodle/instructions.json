@@ -3,6 +3,7 @@
 	"icon": "doodle.png",
 	"width": 500,
 	"height": 500,
+	"resize": "free",
 	"animation": false,
 	"sticky": true,
 	"dependencies": [

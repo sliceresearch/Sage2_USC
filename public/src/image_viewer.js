@@ -130,8 +130,35 @@ var image_viewer = SAGE2_App.extend({
 				url: cleanURL(this.state.src || this.state.img_url)
 			}
 		});
+		// Special callback: convert to a doodle.
+		entries.push({
+			description: "Make Doodle",
+			callback: "makeDoodle",
+			parameters: {}
+		});
 
 		return entries;
+	},
+
+	/**
+	* Called through context menu. Starts a doodle app with this image.
+	*
+	* @method makeDoodle
+	* @param responseObject {object} standard context values.
+	*/
+	makeDoodle: function(responseObject) {
+		if (isMaster) {
+			var data = {};
+			data.type    = "launchAppWithValues";
+			data.appName = "doodle";
+			data.func    = "initializationThroughDuplicate";
+			data.xLaunch = this.sage2_x + 100;
+			data.yLaunch = this.sage2_y;
+			data.params  =  {};
+			data.params.clientName    = responseObject.clientName;
+			data.params.imageSnapshot = cleanURL(this.state.src || this.state.img_url);
+			wsio.emit("csdMessage", data);
+		}
 	},
 
 	/**
