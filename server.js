@@ -855,6 +855,11 @@ function initializeExistingApps(wsio) {
 		if (SAGE2Items.renderSync.hasOwnProperty(key)) {
 			SAGE2Items.renderSync[key].clients[wsio.id] = {wsio: wsio, readyForNextFrame: false, blocklist: []};
 			calculateValidBlocks(SAGE2Items.applications.list[key], mediaBlockSize, SAGE2Items.renderSync[key]);
+
+			// Need to reset the animation loop
+			//   a new client could come while other clients were done rendering
+			//   (especially true for slow update apps, like the clock)
+			broadcast('animateCanvas', {id: SAGE2Items.applications.list[key].id, date: Date.now()});
 		}
 	}
 	for (key in SAGE2Items.portals.list) {
