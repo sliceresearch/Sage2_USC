@@ -289,35 +289,22 @@ function broadcast(dataObject) {
  * Pretty print a date object into string
  *
  * @method formatAMPM
- * @param date {Date} date to convert
+ * @param date {Object} momentjs object for time
  * @return {String} formatted date
  */
 function formatAMPM(date) {
-	var hours   = date.getHours();
-	var minutes = date.getMinutes();
-	var ampm    = hours >= 12 ? "pm" : "am";
-	hours       = hours % 12;
-	if (hours === 0) {
-		hours = 12;
-	}
-	var hh = hours.toString();
-	var mm = minutes < 10 ? "0" + minutes.toString() : minutes.toString();
-	return (hh + ":" + mm + ampm);
+	return date.format('h:mm a');
 }
 
 /**
  * Convert date into 24h string format
  *
  * @method format24Hr
- * @param date {Date} date to convert
+ * @param date {Object} momentjs object for time
  * @return {String} formatted date
  */
 function format24Hr(date) {
-	var hours   = date.getHours();
-	var minutes = date.getMinutes();
-	var hh = hours.toString();
-	var mm = minutes < 10 ? "0" + minutes.toString() : minutes.toString();
-	return (hh + ":" + mm);
+	return date.format('HH:mm');
 }
 
 /**

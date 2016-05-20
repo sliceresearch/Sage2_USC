@@ -347,7 +347,11 @@ function setupListeners() {
 	});
 
 	wsio.on('setSystemTime', function(data) {
-		ui.setTime(new Date(data.date));
+		var m = moment(data.date);
+		var local = new Date();
+		var offset = local.getTimezoneOffset() - data.offset;
+		m.add(offset, 'minutes');
+		ui.setTime(m);
 	});
 
 	wsio.on('addRemoteSite', function(data) {

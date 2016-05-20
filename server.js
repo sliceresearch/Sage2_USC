@@ -608,7 +608,8 @@ function initializeWSClient(wsio, reqConfig, reqVersion, reqTime, reqConsole) {
 		wsio.emit('setupSAGE2Version', SAGE2_version);
 	}
 	if (reqTime) {
-		wsio.emit('setSystemTime', {date: Date.now()});
+		var now = new Date();
+		wsio.emit('setSystemTime', {date: now.toJSON(), offset: now.getTimezoneOffset()});
 	}
 	if (reqConsole) {
 		wsio.emit('console', json5.stringify(config, null, 4));
@@ -4094,11 +4095,14 @@ function createRemoteConnection(wsURL, element, index) {
 // **************  System Time - Updated Every Minute *****************
 var cDate = new Date();
 setTimeout(function() {
+	var now;
 	setInterval(function() {
-		broadcast('setSystemTime', {date: Date.now()});
+		now = new Date();
+		broadcast('setSystemTime', {date: now.toJSON(), offset: now.getTimezoneOffset()});
 	}, 60000);
 
-	broadcast('setSystemTime', {date: Date.now()});
+	now = new Date();
+	broadcast('setSystemTime', {date: now.toJSON(), offset: now.getTimezoneOffset()});
 }, (61 - cDate.getSeconds()) * 1000);
 
 
