@@ -236,6 +236,7 @@ function SAGE2_interaction(wsio) {
 				formdata.append("file" + i.toString(), files[i]);
 				formdata.append("dropX", dropX);
 				formdata.append("dropY", dropY);
+				formdata.append("open",  true);
 
 				formdata.append("SAGE2_ptrName",  localStorage.SAGE2_ptrName);
 				formdata.append("SAGE2_ptrColor", localStorage.SAGE2_ptrColor);

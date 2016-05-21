@@ -657,6 +657,9 @@ function FileManager(wsio, mydiv, uniqueID) {
 		id: "uploadAPI",
 		view: "uploader",
 		upload: "/upload",  // POST url
+		formData: {
+			open: false // do not open after upload
+		},
 		on: {
 			onFileUpload: function(item) {
 				console.log('uploaded file', item.name);

@@ -3822,6 +3822,8 @@ function uploadForm(req, res) {
 	var form     = new formidable.IncomingForm();
 	// Drop position
 	var position = [ 0, 0 ];
+	// Open or not the file after upload
+	var openAfter = true;
 	// User information
 	var ptrName  = "";
 	var ptrColor = "";
@@ -3863,11 +3865,16 @@ function uploadForm(req, res) {
 		if (field === 'dropY') {
 			position[1] = parseInt(parseFloat(value) * config.totalHeight, 10);
 		}
+		// initial application window position
 		if (field === 'width') {
 			position[2] = parseInt(parseFloat(value) * config.totalWidth,  10);
 		}
 		if (field === 'height') {
 			position[3] = parseInt(parseFloat(value) * config.totalHeight,  10);
+		}
+		// open or not the file after upload
+		if (field === 'open') {
+			openAfter = (value === "true");
 		}
 	});
 
@@ -3901,11 +3908,11 @@ function uploadForm(req, res) {
 
 	form.on('end', function() {
 		// saves files in appropriate directory and broadcasts the items to the displays
-		manageUploadedFiles(this.openedFiles, position, ptrName, ptrColor);
+		manageUploadedFiles(this.openedFiles, position, ptrName, ptrColor, openAfter);
 	});
 }
 
-function manageUploadedFiles(files, position, ptrName, ptrColor) {
+function manageUploadedFiles(files, position, ptrName, ptrColor, openAfter) {
 	var fileKeys = Object.keys(files);
 	fileKeys.forEach(function(key) {
 		var file = files[key];
@@ -3920,37 +3927,40 @@ function manageUploadedFiles(files, position, ptrName, ptrColor) {
 			assets.addTag(appInstance.file, "SAGE2user",  ptrName);
 			assets.addTag(appInstance.file, "SAGE2color", ptrColor);
 
-			// Use the size from the drop information
-			if (position[2] && position[2] !== 0) {
-				appInstance.width = parseFloat(position[2]);
-			}
-			if (position[3] && position[3] !== 0) {
-				appInstance.height = parseFloat(position[3]);
-			}
-
-			// Use the position from the drop information
-			if (position[0] !== 0 || position[1] !== 0) {
-				appInstance.left = position[0] - appInstance.width / 2;
-				if (appInstance.left < 0) {
-					appInstance.left = 0;
+			// contains a flag to open the file or not
+			if (openAfter) {
+				// Use the size from the drop information
+				if (position[2] && position[2] !== 0) {
+					appInstance.width = parseFloat(position[2]);
 				}
-				appInstance.top  = position[1] - appInstance.height / 2;
-				if (appInstance.top < 0) {
-					appInstance.top = 0;
+				if (position[3] && position[3] !== 0) {
+					appInstance.height = parseFloat(position[3]);
 				}
-			}
 
-			appInstance.id = getUniqueAppId();
-			if (appInstance.animation) {
-				var i;
-				SAGE2Items.renderSync[appInstance.id] = {clients: {}, date: Date.now()};
-				for (i = 0; i < clients.length; i++) {
-					if (clients[i].clientType === "display") {
-						SAGE2Items.renderSync[appInstance.id].clients[clients[i].id] = {wsio: clients[i], readyForNextFrame: false, blocklist: []};
+				// Use the position from the drop information
+				if (position[0] !== 0 || position[1] !== 0) {
+					appInstance.left = position[0] - appInstance.width / 2;
+					if (appInstance.left < 0) {
+						appInstance.left = 0;
+					}
+					appInstance.top  = position[1] - appInstance.height / 2;
+					if (appInstance.top < 0) {
+						appInstance.top = 0;
 					}
 				}
+
+				appInstance.id = getUniqueAppId();
+				if (appInstance.animation) {
+					var i;
+					SAGE2Items.renderSync[appInstance.id] = {clients: {}, date: Date.now()};
+					for (i = 0; i < clients.length; i++) {
+						if (clients[i].clientType === "display") {
+							SAGE2Items.renderSync[appInstance.id].clients[clients[i].id] = {wsio: clients[i], readyForNextFrame: false, blocklist: []};
+						}
+					}
+				}
+				handleNewApplication(appInstance, videohandle);
 			}
-			handleNewApplication(appInstance, videohandle);
 
 			// send the update file list
 			broadcast('storedFileList', getSavedFilesList());
