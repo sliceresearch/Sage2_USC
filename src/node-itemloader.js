@@ -191,15 +191,16 @@ AppLoader.prototype.loadYoutubeFromURL = function(aUrl, callback) {
 			}
 		}
 
-		_this.loadVideoFromURL(aUrl, "video/youtube", info.formats[video.index].url, info.title, function(appInstance, videohandle) {
-			appInstance.data.video_url  = info.formats[video.index].url;
-			appInstance.data.video_type = video.type;
-			appInstance.data.audio_url  = info.formats[audio.index].url;
-			appInstance.data.audio_type = audio.type;
+		_this.loadVideoFromURL(aUrl, "video/youtube", info.formats[video.index].url, info.title,
+			function(appInstance, videohandle) {
+				appInstance.data.video_url  = info.formats[video.index].url;
+				appInstance.data.video_type = video.type;
+				appInstance.data.audio_url  = info.formats[audio.index].url;
+				appInstance.data.audio_type = audio.type;
 
-			appInstance.file = aUrl;
-			callback(appInstance, videohandle);
-		});
+				appInstance.file = aUrl;
+				callback(appInstance, videohandle);
+			});
 	});
 };
 
@@ -336,10 +337,11 @@ AppLoader.prototype.loadImageFromFile = function(file, mime_type, aUrl, external
 		var svgExif = assets.getExifData(file);
 
 		if (svgDims) {
-			this.loadImageFromServer(svgDims.width, svgDims.height, mime_type, aUrl, external_url, name, svgExif, function(appInstance) {
-				appInstance.file = file;
-				callback(appInstance);
-			});
+			this.loadImageFromServer(svgDims.width, svgDims.height, mime_type, aUrl, external_url, name, svgExif,
+				function(appInstance) {
+					appInstance.file = file;
+					callback(appInstance);
+				});
 		} else {
 			console.log("File not recognized:", file, mime_type, aUrl);
 		}

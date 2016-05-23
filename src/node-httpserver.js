@@ -116,7 +116,7 @@ HttpServer.prototype.redirect = function(res, aurl) {
 	// Do not allow iframe
 	header["X-Frame-Options"] = "DENY";
 	// 301 HTTP code for redirect: Moved Permanently
-	header["Location"] = aurl;
+	header.Location = aurl;
 	res.writeHead(301, header);
 	res.end();
 };
@@ -131,7 +131,7 @@ var hpkpPin1 = (function() {
 		}
 		return pin;
 	};
-})();
+}());
 
 var hpkpPin2 = (function() {
 	var pin;
@@ -143,7 +143,7 @@ var hpkpPin2 = (function() {
 		}
 		return pin;
 	};
-})();
+}());
 
 /**
  * Build an HTTP header object

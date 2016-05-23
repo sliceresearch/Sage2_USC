@@ -166,8 +166,7 @@ WebsocketIO.prototype.emit = function(name, data, attempts) {
 						console.log("WebsocketIO>\t---ERROR (ws.send1)---", name, err);
 					}
 				});
-			}
-			catch (e) {
+			} catch (e) {
 				console.log("WebsocketIO>\t---ERROR (try-catch)---", name);
 			}
 		} else {
@@ -182,8 +181,7 @@ WebsocketIO.prototype.emit = function(name, data, attempts) {
 						console.log("WebsocketIO>\t---ERROR (ws.send2)---", name, err);
 					}
 				});
-			}
-			catch (e) {
+			} catch (e) {
 				console.log("WebsocketIO>\t---ERROR (try-catch)---", name);
 			}
 		}

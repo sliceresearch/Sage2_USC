@@ -348,7 +348,8 @@ InteractableManager.prototype.getObjectZIndexList = function(layerId, otherLayer
 	for (i = 0; i < allLayerIds.length; i++) {
 		if (this.interactableObjects.hasOwnProperty(allLayerIds[i])) {
 			for (key in this.interactableObjects[allLayerIds[i]]) {
-				zIndexList[this.interactableObjects[allLayerIds[i]][key].id] = getZIndexOfObj(this.interactableObjects[allLayerIds[i]][key]);
+				zIndexList[this.interactableObjects[allLayerIds[i]][key].id] =
+					getZIndexOfObj(this.interactableObjects[allLayerIds[i]][key]);
 			}
 		}
 	}
@@ -390,7 +391,8 @@ InteractableManager.prototype.searchGeometry = function(point, layerId, ignoreLi
 		results = [];
 		for (i = this.layerOrder.length - 1; i >= 0; i--) {
 			tmp = this.layers[this.layerOrder[i]].objects.search([point.x, point.y, point.x, point.y]);
-			if (i < this.layerOrder.length - 1 && this.layers[this.layerOrder[i]].zIndex === this.layers[this.layerOrder[i + 1]].zIndex) {
+			if (i < this.layerOrder.length - 1 &&
+				this.layers[this.layerOrder[i]].zIndex === this.layers[this.layerOrder[i + 1]].zIndex) {
 				results[results.length - 1] = results[results.length - 1].concat(tmp);
 			} else {
 				results.push(tmp);
@@ -458,13 +460,13 @@ function getZIndexOfObj(obj) {
 	}
 	return null;
 }
+
 /**
 * Set method for the zIndex of an Object
 * @method setZIndexOfObj
 * @param obj {Object} pkg information of the geometric object
 * @param zIndex {Integer} determines ordering of the geometries within a given layers
 */
-
 function setZIndexOfObj(obj, zIndex) {
 	if (obj.hasOwnProperty("zIndex")) {
 		obj.zIndex = zIndex;
