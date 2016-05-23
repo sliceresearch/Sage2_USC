@@ -919,9 +919,11 @@ function UIBuilder(json_cfg, clientID) {
 				translate = "translate(" + pointer_data.left + "px," + pointer_data.top + "px)";
 			}
 
-			pointerElem.style.webkitTransform = translate;
-			pointerElem.style.mozTransform    = translate;
-			pointerElem.style.transform       = translate;
+			requestAnimationFrame(function() {
+				pointerElem.style.webkitTransform = translate;
+				pointerElem.style.mozTransform    = translate;
+				pointerElem.style.transform       = translate;
+			});
 		}
 	};
 
