@@ -142,7 +142,7 @@ var sticky_note = SAGE2_App.extend({
 				// down arrow
 			}
 		} else if (eventType === "widgetEvent") {
-			switch (data.identifier){
+			switch (data.identifier) {
 				case "DuplicateNote":
 					this.cloneData = this.text;
 					this.requestForClone = true;

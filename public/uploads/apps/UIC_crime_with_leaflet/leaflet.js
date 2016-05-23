@@ -124,11 +124,12 @@ var leaflet = SAGE2_App.extend({
 
 			// want to do this same thing when we reset the location
 			if (_this.state.whichMap === 1) {
-				_this.map = L.map(_this.element.id, {layers: [_this.map1], zoomControl: false}).setView([_this.state.center.lat, _this.state.center.lng], _this.state.zoomLevel);
+				_this.map = L.map(_this.element.id, {layers: [_this.map1], zoomControl: false}).setView(
+					[_this.state.center.lat, _this.state.center.lng], _this.state.zoomLevel);
 			} else {
-				_this.map = L.map(_this.element.id, {layers: [_this.map2], zoomControl: false}).setView([_this.state.center.lat, _this.state.center.lng], _this.state.zoomLevel);
+				_this.map = L.map(_this.element.id, {layers: [_this.map2], zoomControl: false}).setView(
+					[_this.state.center.lat, _this.state.center.lng], _this.state.zoomLevel);
 			}
-
 
 			/* Initialize the SVG layer */
 			_this.map._initPathRoot();
@@ -285,23 +286,25 @@ var leaflet = SAGE2_App.extend({
 
 		var _this = this;
 
-		// jscs:disable
+		/* eslint-disable brace-style */
 		var feature = this.g.selectAll("circle")
-			.data(collection)
-			.enter()
-			.append("svg:circle")
-			.style("stroke", function(d) { if (d.inLastMonth) { return "black"; } else { return "white"; } })
-			.style("stroke-width", function(d) { if  (d.inLastMonth) { return 6; } else { return 2; } })
-			.style("opacity", function(d) { if (d.inLastMonth) { return 1.0; } else { return 0.4; } })
-			.style("fill", function(d) { return d.color; })
-			.attr("r", 15);
-		// jscs:enable
+		.data(collection)
+		.enter()
+		.append("svg:circle")
+		.style("stroke", function(d) { if (d.inLastMonth) { return "black"; } else { return "white"; } })
+		.style("stroke-width", function(d) { if (d.inLastMonth) { return 6; } else { return 2; } })
+		.style("opacity", function(d) { if (d.inLastMonth) { return 1.0; } else { return 0.4; } })
+		.style("fill", function(d) { return d.color; })
+		.attr("r", 15);
+
+		/* eslint-enable brace-style */
 
 		var myTextColor;
-		if (this.whichMap === 2)
+		if (this.whichMap === 2) {
 			myTextColor = "black";
-		else
+		} else {
 			myTextColor = "white";
+		}
 
 
 		var feature2 = this.g.selectAll("text")
@@ -309,7 +312,9 @@ var leaflet = SAGE2_App.extend({
 			.enter()
 			.append("svg:text")
 			.style("fill", myTextColor)
-			.style("stroke", function(d) { return d.color; })
+			.style("stroke", function(d) {
+				return d.color;
+			})
 			.style("stroke-width", "1")
 			.style("font-size", "30px")
 			.style("font-family", "Arial")
