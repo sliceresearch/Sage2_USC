@@ -71,6 +71,9 @@ function Pointer() {
 		var appModeIconY       = Math.round(height * 0.044167);
 		this.appModeIconLoaded = false;
 
+		// Keep a copy of icon size to update width of snap
+		this.iconWidth = pointerIconSize;
+
 		var labelBGX = Math.round(height * 0.40);
 		var labelBGY = Math.round(height * 0.65);
 		var labelTextX    = Math.round(height * 0.5425);
@@ -181,6 +184,8 @@ function Pointer() {
 		// Get the size of the text and padding
 		this.labelBGWidth = this.labelText.node.getBoundingClientRect().width + labelBGHeight;
 		this.labelBG.attr({width: this.labelBGWidth});
+		// Update width of parent SVG (snap)
+		this.snap.attr({width: this.labelBGWidth + this.iconWidth});
 	};
 
 	/**

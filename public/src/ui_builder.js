@@ -275,7 +275,7 @@ function UIBuilder(json_cfg, clientID) {
 			this.offsetY = y * this.json_cfg.resolution.height + bordery;
 			this.titleBarHeight = this.json_cfg.ui.titleBarHeight;
 			this.titleTextSize  = this.json_cfg.ui.titleTextSize;
-			this.pointerWidth   = this.json_cfg.ui.pointerSize * 3;
+			this.pointerWidth   = this.json_cfg.ui.pointerSize;
 			this.pointerHeight  = this.json_cfg.ui.pointerSize;
 			this.widgetControlSize = this.json_cfg.ui.widgetControlSize;
 			this.pointerOffsetX = Math.round(0.27917 * this.pointerHeight);

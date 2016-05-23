@@ -55,7 +55,7 @@ function SAGE2_interaction(wsio) {
 	this.deltaX = 0;
 	this.deltaY = 0;
 	// Send frequency (frames per second)
-	this.sendFrequency = 25;
+	this.sendFrequency = 30;
 	// Timeout for when scrolling ends
 	this.scrollTimeId = null;
 
