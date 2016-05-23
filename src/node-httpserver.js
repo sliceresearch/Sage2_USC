@@ -30,7 +30,8 @@ var zlib = require('zlib');  // to enable HTTP compression
 var normalizeURL = require('normalizeurl');
 
 // SAGE2 own modules
-var sageutils = require('../src/node-utils');    // provides utility functions
+var sageutils  = require('../src/node-utils');    // provides utility functions
+var generateSW = require('../generate-service-worker.js');
 
 /**
  * SAGE HTTP request handlers for GET and POST
@@ -45,19 +46,8 @@ function HttpServer(publicDirectory) {
 	this.postFuncs = {};
 	this.onrequest = this.onreq.bind(this);
 
-	// Update the cache file
-	var fileTemplate = path.join(publicDirectory, "sage2.appcache.template");
-	var fileCache    = path.join(publicDirectory, "sage2.appcache");
-	fs.readFile(fileTemplate, 'utf8', function(err, data) {
-		if (err) {
-			console.log('Error reading', fileCache);
-			return;
-		}
-		// Change the date in comment, force to flush the cache
-		var result = data.replace(/# SAGE@start .*/, "# SAGE@start " + Date());
-		// write the resulting content
-		fs.writeFileSync(fileCache, result, 'utf8');
-	});
+	// Generate the service worker for caching
+	generateSW();
 }
 
 
