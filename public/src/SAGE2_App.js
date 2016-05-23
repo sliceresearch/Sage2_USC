@@ -198,7 +198,8 @@ var SAGE2_App = Class.extend({
 				(eventType === "pointerPress" || eventType === "pointerMove" ||
 				eventType === "pointerRelease" || eventType === "pointerScroll" ||
 				eventType === "keyboard" || eventType === "specialKey")) {
-			var itemIdx = parseInt((position.y - this.SAGE2StateSyncOptions.scroll) / Math.round(1.5 * this.config.ui.titleTextSize), 10);
+			var itemIdx = parseInt((position.y - this.SAGE2StateSyncOptions.scroll) /
+				Math.round(1.5 * this.config.ui.titleTextSize), 10);
 			var children = document.getElementById(this.id + "_statecontainer").childNodes;
 			var hoverChild = null;
 			var syncedPrev;
@@ -479,7 +480,12 @@ var SAGE2_App = Class.extend({
 
 		if (isMaster) {
 			var syncedState = this.SAGE2CopySyncedState(this.state, this.SAGE2StateOptions);
-			wsio.emit('updateAppState', {id: this.id, localState: this.state, remoteState: syncedState, updateRemote: updateRemote});
+			wsio.emit('updateAppState', {
+				id: this.id,
+				localState: this.state,
+				remoteState: syncedState,
+				updateRemote: updateRemote
+			});
 		}
 	},
 

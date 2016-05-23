@@ -24,6 +24,7 @@
  * @class SAGE2_BlockStreamingApp
  */
 var SAGE2_BlockStreamingApp = SAGE2_App.extend({
+
 	/**
 	* Init method, creates an 'canvas' tag in the DOM and setups up WebGL
 	*
@@ -433,7 +434,8 @@ var SAGE2_BlockStreamingApp = SAGE2_App.extend({
 
 				this.gl.activeTexture(this.gl.TEXTURE0);
 				this.gl.bindTexture(this.gl.TEXTURE_2D, rgbaTexture);
-				this.gl.texImage2D(this.gl.TEXTURE_2D, 0, this.gl.RGBA, bWidth, bHeight, 0, this.gl.RGBA, this.gl.UNSIGNED_BYTE, rgbaBuffer);
+				this.gl.texImage2D(this.gl.TEXTURE_2D, 0, this.gl.RGBA, bWidth, bHeight,
+					0, this.gl.RGBA, this.gl.UNSIGNED_BYTE, rgbaBuffer);
 
 				this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_MAG_FILTER, this.gl.LINEAR);
 				this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_MIN_FILTER, this.gl.LINEAR);
@@ -462,7 +464,8 @@ var SAGE2_BlockStreamingApp = SAGE2_App.extend({
 
 				this.gl.activeTexture(this.gl.TEXTURE0);
 				this.gl.bindTexture(this.gl.TEXTURE_2D, rgbTexture);
-				this.gl.texImage2D(this.gl.TEXTURE_2D, 0, this.gl.RGB, bWidth, bHeight, 0, this.gl.RGB, this.gl.UNSIGNED_BYTE, rgbBuffer);
+				this.gl.texImage2D(this.gl.TEXTURE_2D, 0, this.gl.RGB, bWidth, bHeight,
+					0, this.gl.RGB, this.gl.UNSIGNED_BYTE, rgbBuffer);
 
 				this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_MAG_FILTER, this.gl.LINEAR);
 				this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_MIN_FILTER, this.gl.LINEAR);

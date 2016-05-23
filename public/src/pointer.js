@@ -22,6 +22,7 @@
  * @constructor
  */
 function Pointer() {
+
 	// Variable definitions
 	this.div                = null;
 	this.snap               = null;

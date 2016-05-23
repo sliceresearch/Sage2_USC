@@ -131,7 +131,8 @@ function SAGE2WidgetControlInstance(instanceID, controlSpec) {
 		}
 		innerGeometry.slider = this.createSlider(leftMidOfBar.x, leftMidOfBar.y, d);
 	} else if (this.controlSpec.hasTextInput === true) {
-		d = makeWidgetBarOutlinePath(352, 368, dimensions.outerR, center, this.controlSpec.textInput.width, dimensions.buttonRadius);
+		d = makeWidgetBarOutlinePath(352, 368, dimensions.outerR,
+			center, this.controlSpec.textInput.width, dimensions.buttonRadius);
 		leftMidOfBar = polarToCartesian(dimensions.outerR, 0, center);
 		leftMidOfBar.x +=  dimensions.buttonRadius;
 		rightEndOfCircle = polarToCartesian(dimensions.outerR, 0, center);

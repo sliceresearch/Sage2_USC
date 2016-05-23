@@ -27,6 +27,7 @@ PDFJS.maxCanvasPixels = 67108864; // 8k2
  * @class pdf_viewer
  */
  var pdf_viewer = SAGE2_App.extend({
+
 	/**
 	* Init method, creates an 'img' tag in the DOM and a few canvas contexts to handle multiple redraws
 	*
@@ -305,9 +306,8 @@ PDFJS.maxCanvasPixels = 67108864; // 8k2
 			} else {
 				return;
 			}
-		}
-		// else check for these word options
-		else {
+		} else {
+			// else check for these word options
 			if (page === "first") {
 				if (this.state.page === 1) {
 					return;

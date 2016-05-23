@@ -28,6 +28,7 @@
  * @class SAGE2_WebGLApp
  */
 var SAGE2_WebGLApp = SAGE2_App.extend({
+
 	/**
 	* Init method, creates an 'canvas' tag in the DOM and setups up WebGL
 	*

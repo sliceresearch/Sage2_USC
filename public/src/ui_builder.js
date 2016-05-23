@@ -223,7 +223,8 @@ function UIBuilder(json_cfg, clientID) {
 						_this.bg.style.backgroundImage    = "url(" + bgImgFinal + ")";
 						_this.bg.style.backgroundPosition = "top left";
 						_this.bg.style.backgroundRepeat   = "no-repeat";
-						_this.bg.style.backgroundSize     = _this.json_cfg.resolution.width + "px " + _this.json_cfg.resolution.height + "px";
+						_this.bg.style.backgroundSize     = _this.json_cfg.resolution.width + "px " +
+							_this.json_cfg.resolution.height + "px";
 
 						_this.main.style.top    = "0px";
 						_this.main.style.left   = "0px";
@@ -1076,7 +1077,8 @@ function UIBuilder(json_cfg, clientID) {
 			// Update the button state
 			var menuState = data.menuState;
 			for (var buttonName in menuState.buttonState) {
-				this.radialMenus[data.menuID + "_menu"].setRadialButtonState(buttonName, menuState.buttonState[buttonName], menuState.color);
+				this.radialMenus[data.menuID + "_menu"].setRadialButtonState(
+					buttonName, menuState.buttonState[buttonName], menuState.color);
 			}
 
 			// State also contains new actions
@@ -1101,7 +1103,9 @@ function UIBuilder(json_cfg, clientID) {
 					var pointerY = data.y - rect.top - this.offsetY;
 
 					if (menu.visible) {
-						menu.onEvent(data.type, {x: pointerX, y: pointerY, windowX: rect.left, windowY: rect.top}, data.id, data.data);
+						menu.onEvent(data.type, {
+							x: pointerX, y: pointerY, windowX: rect.left, windowY: rect.top
+						}, data.id, data.data);
 					}
 				}
 			}

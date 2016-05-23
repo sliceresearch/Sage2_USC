@@ -196,7 +196,9 @@ function resetIdle() {
 	if (uiTimer) {
 		clearTimeout(uiTimer);
 		ui.showInterface();
-		uiTimer = setTimeout(function() { ui.hideInterface(); }, uiTimerDelay * 1000);
+		uiTimer = setTimeout(function() {
+			ui.hideInterface();
+		}, uiTimerDelay * 1000);
 	}
 }
 
@@ -321,7 +323,9 @@ function setupListeners() {
 		if (json_cfg.ui.auto_hide_ui) {
 			// default delay is 30s if not specified
 			uiTimerDelay = json_cfg.ui.auto_hide_delay ? parseInt(json_cfg.ui.auto_hide_delay, 10) : 30;
-			uiTimer      = setTimeout(function() { ui.hideInterface(); }, uiTimerDelay * 1000);
+			uiTimer = setTimeout(function() {
+				ui.hideInterface();
+			}, uiTimerDelay * 1000);
 		}
 		makeSvgBackgroundForWidgetConnectors(ui.main.style.width, ui.main.style.height);
 	});
@@ -331,7 +335,9 @@ function setupListeners() {
 			clearTimeout(uiTimer);
 			ui.showInterface();
 			uiTimerDelay = param.delay;
-			uiTimer      = setTimeout(function() { ui.hideInterface(); }, uiTimerDelay * 1000);
+			uiTimer = setTimeout(function() {
+				ui.hideInterface();
+			}, uiTimerDelay * 1000);
 		} else
 			if (ui.uiHidden === true) {
 				clearTimeout(uiTimer);
@@ -669,7 +675,8 @@ function setupListeners() {
 			var border = parseInt(selectedElem.parentNode.style.borderWidth || 0, 10);
 			app.sage2_x = (position_data.elemLeft + border + 1) * parentTransform.scale.x + parentTransform.translate.x;
 			app.sage2_x = Math.round(app.sage2_x);
-			app.sage2_y = (position_data.elemTop + ui.titleBarHeight + border) * parentTransform.scale.y + parentTransform.translate.y;
+			app.sage2_y = (position_data.elemTop + ui.titleBarHeight + border) * parentTransform.scale.y
+				+ parentTransform.translate.y;
 			app.sage2_y = Math.round(app.sage2_y);
 			app.sage2_width  = parseInt(position_data.elemWidth, 10) * parentTransform.scale.x;
 			app.sage2_height = parseInt(position_data.elemHeight, 10) * parentTransform.scale.y;
@@ -800,7 +807,8 @@ function setupListeners() {
 			var border = parseInt(selectedElem.parentNode.style.borderWidth || 0, 10);
 			app.sage2_x = (position_data.elemLeft + border + 1) * parentTransform.scale.x + parentTransform.translate.x;
 			app.sage2_x = Math.round(app.sage2_x);
-			app.sage2_y = (position_data.elemTop + ui.titleBarHeight + border) * parentTransform.scale.y + parentTransform.translate.y;
+			app.sage2_y = (position_data.elemTop + ui.titleBarHeight + border) * parentTransform.scale.y
+				+ parentTransform.translate.y;
 			app.sage2_y = Math.round(app.sage2_y);
 			app.sage2_width  = parseInt(position_data.elemWidth, 10) * parentTransform.scale.x;
 			app.sage2_height = parseInt(position_data.elemHeight, 10) * parentTransform.scale.y;
@@ -1442,7 +1450,9 @@ function createAppWindow(data, parentId, titleBarHeight, titleTextSize, offsetX,
 				wsio.emit('finishedRenderingAppFrame', {id: data.id});
 			}
 			if (data.application === "movie_player") {
-				setTimeout(function() { wsio.emit('requestVideoFrame', {id: data.id}); }, 500);
+				setTimeout(function() {
+					wsio.emit('requestVideoFrame', {id: data.id});
+				}, 500);
 			}
 		}
 	}
