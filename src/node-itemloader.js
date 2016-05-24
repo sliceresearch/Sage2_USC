@@ -448,7 +448,8 @@ AppLoader.prototype.loadPdfFromFile = function(file, mime_type, aUrl, external_u
 
 	var metadata         = {};
 	metadata.title       = "PDF Viewer";
-	metadata.version     = "1.0.0";
+	// metadata.version     = "1.0.0";
+	metadata.version     = "2.0.0";
 	metadata.description = "PDF viewer for SAGE2";
 	metadata.author      = "SAGE2";
 	metadata.license     = "SAGE2-Software-License";
@@ -463,11 +464,28 @@ AppLoader.prototype.loadPdfFromFile = function(file, mime_type, aUrl, external_u
 		icon: exif ? exif.SAGE2thumbnail : null,
 		type: mime_type,
 		url: external_url,
+
+		// V1 PDF viewer
+		// data: {
+		// 	doc_url: external_url,
+		// 	page: 1,
+		// 	numPagesShown: 1
+		// },
+
+		// V2 PDF viewer
 		data: {
 			doc_url: external_url,
-			page: 1,
-			numPagesShown: 1
+			currentPage: 1,
+			numberOfPageToShow: 1,
+			resizeValue: 1,
+			previousResizeValue: 1,
+			thumbnailHeight: 0,
+			thumbnailHorizontalPosition: 0,
+			horizontalOffset: 0,
+			marginButton: 10,
+			showingThumbnails: false
 		},
+
 		resrc:  null,
 		left:   this.titleBarHeight,
 		top:    1.5 * this.titleBarHeight,
