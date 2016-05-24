@@ -58,7 +58,7 @@ function OmicronManager(sysConfig) {
 	this.oinputserverSocket = null;
 	this.omicronDataPort = 9123;
 
-	this.eventDebug   = false;
+	this.eventDebug   = true;
 	this.gestureDebug = false;
 
 	this.pointerOffscreen  = false;
@@ -353,6 +353,17 @@ OmicronManager.prototype.runTracker = function() {
 		//    3 ExtraDataVector3Array,
 		//    4 ExtraDataString,
 		//    5 ExtraDataKinectSpeech
+		if (e.extraDataType == 0) {
+			e.extraDataSize = 0;
+		} else if (e.extraDataType == 1 || e.extraDataType == 2) {
+			e.extraDataSize = e.extraDataItems * 4;
+		} else if (e.extraDataType == 3) {
+			e.extraDataSize = e.extraDataItems * 4 * 3;
+		} else if (e.extraDataType == 4) {
+			e.extraDataSize = e.extraDataItems;
+		} else if (e.extraDataType == 5) {
+			e.extraDataSize = e.extraDataItems;
+		}
 
 		// var r_roll  = Math.asin(2.0*e.orx*e.ory + 2.0*e.orz*e.orw);
 		// var r_yaw   = Math.atan2(2.0*e.ory*e.orw-2.0*e.orx*e.orz , 1.0 - 2.0*e.ory*e.ory - 2.0*e.orz*e.orz);
@@ -618,8 +629,8 @@ OmicronManager.prototype.processPointerEvent = function(e, sourceID, posX, posY,
 		drawingManager.reEnableDrawingMode();
 	}
 
-	// If drawing don't do anything else
-	if (drawingManager.drawingMode) {
+	// Not an omicron gesture event
+	if (e.extraDataItems <= 2) {
 		return;
 	}
 
@@ -645,6 +656,12 @@ OmicronManager.prototype.processPointerEvent = function(e, sourceID, posX, posY,
 	var initX = 0;
 	var initY = 0;
 
+	var distance = 0;
+	var angle = 0;
+	var accelDistance = 0;
+	var accelX = 0;
+	var accelY = 0;
+
 	// As of 2015/11/13 all touch gesture events touch have an init value
 	// (zoomDelta moved to extraData index 4 instead of 2)
 	initX = msg.readFloatLE(offset); offset += 4;
@@ -664,12 +681,12 @@ OmicronManager.prototype.processPointerEvent = function(e, sourceID, posX, posY,
 					+ initX.toFixed(2) + "," + initY.toFixed(2) + ")");
 				}
 
-				var distance = Math.sqrt(Math.pow(Math.abs(posX - initX), 2) + Math.pow(Math.abs(posY - initY), 2));
-				var angle = Math.atan2(posY -  initY, posX - initX);
+				distance = Math.sqrt(Math.pow(Math.abs(posX - initX), 2) + Math.pow(Math.abs(posY - initY), 2));
+				angle = Math.atan2(posY -  initY, posX - initX);
 
-				var accelDistance = distance * omicronManager.acceleratedDragScale;
-				var accelX = posX + accelDistance * Math.cos(angle);
-				var accelY = posY + accelDistance * Math.sin(angle);
+				accelDistance = distance * omicronManager.acceleratedDragScale;
+				accelX = posX + accelDistance * Math.cos(angle);
+				accelY = posY + accelDistance * Math.sin(angle);
 
 				omicronManager.pointerPosition(address, { pointerX: accelX, pointerY: accelY });
 				omicronManager.pointerMove(address, accelX, accelY, { deltaX: 0, deltaY: 0, button: "left" });
@@ -718,7 +735,7 @@ OmicronManager.prototype.processPointerEvent = function(e, sourceID, posX, posY,
 					initY = omicronManager.initZoomPos[sourceID].initY;
 				}
 
-				var distance = Math.sqrt(Math.pow(Math.abs(posX - initX), 2) + Math.pow(Math.abs(posY - initY), 2));
+				distance = Math.sqrt(Math.pow(Math.abs(posX - initX), 2) + Math.pow(Math.abs(posY - initY), 2));
 
 				if (omicronManager.gestureDebug) {
 					console.log("Touch zoom at - (" + posX.toFixed(2) + "," + posY.toFixed(2) + ") initPos: ("
@@ -737,11 +754,11 @@ OmicronManager.prototype.processPointerEvent = function(e, sourceID, posX, posY,
 					}
 
 				}
-				var angle = Math.atan2(posY -  initY, posX - initX);
+				angle = Math.atan2(posY -  initY, posX - initX);
 
-				var accelDistance = distance * omicronManager.acceleratedDragScale;
-				var accelX = posX + accelDistance * Math.cos(angle);
-				var accelY = posY + accelDistance * Math.sin(angle);
+				accelDistance = distance * omicronManager.acceleratedDragScale;
+				accelX = posX + accelDistance * Math.cos(angle);
+				accelY = posY + accelDistance * Math.sin(angle);
 
 				omicronManager.pointerPosition(address, { pointerX: accelX, pointerY: accelY });
 				omicronManager.pointerMove(address, accelX, accelY, { deltaX: 0, deltaY: 0, button: "left" });
