@@ -58,7 +58,7 @@ function OmicronManager(sysConfig) {
 	this.oinputserverSocket = null;
 	this.omicronDataPort = 9123;
 
-	this.eventDebug   = true;
+	this.eventDebug   = false;
 	this.gestureDebug = false;
 
 	this.pointerOffscreen  = false;
@@ -135,6 +135,16 @@ function OmicronManager(sysConfig) {
 	if (this.config.touchOffset) {
 		this.touchOffset =  this.config.touchOffset;
 		console.log(sageutils.header('Omicron') + 'Touch points offset by: ', this.touchOffset);
+	}
+
+	if (this.config.eventDebug) {
+		this.eventDebug =  this.config.eventDebug;
+		console.log(sageutils.header('Omicron') + 'Event Debug Info: ', this.eventDebug);
+	}
+
+	if (this.config.gestureDebug) {
+		this.gestureDebug =  this.config.gestureDebug;
+		console.log(sageutils.header('Omicron') + 'Gesture Debug Info: ', this.gestureDebug);
 	}
 
 	if (sysConfig.resolution) {
