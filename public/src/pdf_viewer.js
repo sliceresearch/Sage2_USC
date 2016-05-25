@@ -118,7 +118,7 @@ function within (element, x, y) {
 		this.pageCurrentlyGenerated = {};
 		this.loaded = false;
 		this.TVALUE = 0.25;
-		this.displacement = 25;
+		this.displacement = 10;
 
 		// svg container, big as the application
 		this.container = d3.select(this.element).append("svg").attr("id", "container");
@@ -182,7 +182,7 @@ function within (element, x, y) {
 
 	obtainPageFromPDF: function(pdfFile, pageNumber, that, quality) {
 
-		var thumbnail = quality == that.TVALUE ? true : false;
+		var thumbnail = (quality === that.TVALUE) ? true : false;
 
 		pdfFile.getPage(pageNumber).then(function(page) {
 
@@ -193,7 +193,7 @@ function within (element, x, y) {
 
 			if (!that.gotInformation && !thumbnail) {
 				if (that.baseWidthPage == null) {
-					that.baseWidthPage = viewport.width;
+					that.baseWidthPage  = viewport.width;
 					that.baseHeightPage = viewport.height;
 				}
 				that.gotInformation = true;
@@ -225,7 +225,7 @@ function within (element, x, y) {
 			};
 
 			page.render(renderContext).then(function(pdf) {
-				var data = canvas.toDataURL("image/jpeg", 0.5).split(',');
+				var data = canvas.toDataURL("image/jpeg", 0.80).split(',');
 				var bin  = atob(data[1]);
 				var mime = data[0].split(':')[1].split(';')[0];
 				var buf  = new ArrayBuffer(bin.length);
