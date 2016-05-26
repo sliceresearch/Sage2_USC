@@ -49,7 +49,7 @@ var doodle = SAGE2_App.extend({
 
 		// If there are file contents, use the passed file values. It will overwrite the existing file.
 		if (data.state.contentsOfDoodleFile) {
-			this.changeTitleToOriginalCreatorAndTime({creationTime:data.state.fileName});
+			this.changeTitleToOriginalCreatorAndTime({creationTime: data.state.fileName});
 			this.setInitialCanvas(data.state.contentsOfDoodleFile);
 		}
 	},

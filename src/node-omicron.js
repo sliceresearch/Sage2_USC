@@ -27,6 +27,7 @@ var util      = require('util');
 var CoordinateCalculator = require('./node-coordinateCalculator');
 var OneEuroFilter        = require('./node-1euro');
 
+/* eslint consistent-this: ["error", "omicronManager"] */
 var omicronManager; // Handle to OmicronManager inside of udp blocks (instead of this)
 
 /**
@@ -44,7 +45,7 @@ function OmicronManager(sysConfig) {
 	this.wandLabel = "wandTracker";
 	this.wandColor = "rgba(250, 5, 5, 1.0)";
 
-	this.touchOffset = [ 0, 0 ];
+	this.touchOffset = [0, 0];
 	this.wandScaleDelta = 250;
 	this.acceleratedDragScale = 0;
 
@@ -378,7 +379,9 @@ OmicronManager.prototype.runTracker = function() {
 
 			// console.log("Wand Position: ("+e.posx+", "+e.posy+","+e.posz+")" );
 			// console.log("Wand Rotation: ("+e.orx+", "+e.ory+","+e.orz+","+e.orw+")" );
-			var screenPos = omicronManager.coordCalculator.wandToScreenCoordinates(e.posx, e.posy, e.posz, e.orx, e.ory, e.orz, e.orw);
+			var screenPos = omicronManager.coordCalculator.wandToScreenCoordinates(
+				e.posx, e.posy, e.posz, e.orx, e.ory, e.orz, e.orw
+			);
 			// console.log("Screen pos: ("+screenPos.x+", "+screenPos.y+")" );
 
 			address = omicronManager.config.inputServerIP;
@@ -440,7 +443,8 @@ OmicronManager.prototype.runTracker = function() {
 							omicronManager.lastNonCritEventTime = Date.now();
 						}
 					}
-				} else if (omicronManager.lastWandFlags === 0 && (e.flags & menuButton) === menuButton && omicronManager.showPointerToggle) {
+				} else if (omicronManager.lastWandFlags === 0 && (e.flags & menuButton) === menuButton &&
+							omicronManager.showPointerToggle) {
 					omicronManager.pointerPress(address, posX, posY, { button: "right" });
 				} else if (omicronManager.lastWandFlags === 0 && (e.flags & showHideButton) === showHideButton) {
 					if (!omicronManager.showPointerToggle) {
@@ -647,10 +651,18 @@ OmicronManager.prototype.processPointerEvent = function(e, sourceID, posX, posY,
 		if (e.flags === FLAG_SINGLE_TOUCH || e.flags === FLAG_MULTI_TOUCH) {
 			// Create pointer
 			if (address in omicronManager.sagePointers) {
-				omicronManager.showPointer(address, { label:  "Touch: " + sourceID, color: "rgba(242, 182, 15, 1.0)", sourceType: "Touch" });
+				omicronManager.showPointer(address, {
+					label:  "Touch: " + sourceID,
+					color: "rgba(242, 182, 15, 1.0)",
+					sourceType: "Touch"
+				});
 			} else {
 				omicronManager.createSagePointer(address);
-				omicronManager.showPointer(address, { label:  "Touch: " + sourceID, color: "rgba(242, 182, 15, 1.0)", sourceType: "Touch" });
+				omicronManager.showPointer(address, {
+					label:  "Touch: " + sourceID,
+					color: "rgba(242, 182, 15, 1.0)",
+					sourceType: "Touch"
+				});
 				omicronManager.pointerPress(address, posX, posY, { button: "left" });
 			}
 		} else if (e.flags === FLAG_FIVE_FINGER_HOLD) {
@@ -697,7 +709,10 @@ OmicronManager.prototype.processPointerEvent = function(e, sourceID, posX, posY,
 		console.log("\t UNKNOWN event type ", e.type);
 	}
 
-	if (emit > 2) { dstart = Date.now(); emit = 0; }
+	if (emit > 2) {
+		dstart = Date.now();
+		emit = 0;
+	}
 };
 
 module.exports = OmicronManager;

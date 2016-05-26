@@ -196,7 +196,10 @@ function getFullVersion(callback) {
 		var branch = stdout1.substring(0, stdout1.length - 1);
 		var cmd2 = "git log --date=\"short\" --format=\"%h|%ad\" -n 1";
 		exec(cmd2, { cwd: dirroot, timeout: 3000}, function(err2, stdout2, stderr2) {
-			if (err2) { callback(fullVersion); return; }
+			if (err2) {
+				callback(fullVersion);
+				return;
+			}
 
 			// parsing the results
 			var result = stdout2.replace(/\r?\n|\r/g, "");
@@ -496,8 +499,7 @@ function mkdirParent(dirPath) {
 	try {
 		fs.mkdirSync(dirPath);
 		made = dirPath;
-	}
-	catch (err0) {
+	} catch (err0) {
 		switch (err0.code) {
 			case 'ENOENT' : {
 				made = mkdirParent(path.dirname(dirPath));
@@ -508,8 +510,7 @@ function mkdirParent(dirPath) {
 				var stat;
 				try {
 					stat = fs.statSync(dirPath);
-				}
-				catch (err1) {
+				} catch (err1) {
 					throw err0;
 				}
 				if (!stat.isDirectory()) {
@@ -548,7 +549,9 @@ function monitorFolders(folders, excludes, callback) {
 			console.log(header("Monitor") + "watching folder " + folderpath);
 			var monitor = fsmonitor.watch(folderpath, {
 				// only matching: all true for now
-				matches:  function(relpath) {return true; },
+				matches:  function(relpath) {
+					return true;
+				},
 				// and excluding: nothing for now
 				excludes: function(relpath) {
 					return (excludes.indexOf(relpath) !== -1);

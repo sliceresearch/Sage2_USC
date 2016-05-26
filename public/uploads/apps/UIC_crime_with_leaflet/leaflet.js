@@ -101,6 +101,12 @@ var leaflet = SAGE2_App.extend({
 		this.dragging = false;
 		this.position = {x: 0, y: 0};
 
+		// store off the current starting point to be able to reset to it later
+		// new May 2016
+		this.saveStartLat = this.state.center.lat;
+		this.saveStartLng = this.state.center.lng;
+		this.saveStartZoom = this.state.zoomLevel;
+
 		var mapURL1 = 'http://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}';
 		var mapCopyright1 = 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS,' +
 			' AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community';
@@ -117,10 +123,12 @@ var leaflet = SAGE2_App.extend({
 
 
 			// want to do this same thing when we reset the location
-			if (_this.whichMap === 1) {
-				_this.map = L.map(_this.element.id, {layers: [_this.map1], zoomControl: false}).setView([41.869910, -87.65], 17);
+			if (_this.state.whichMap === 1) {
+				_this.map = L.map(_this.element.id, {layers: [_this.map1], zoomControl: false}).setView(
+					[_this.state.center.lat, _this.state.center.lng], _this.state.zoomLevel);
 			} else {
-				_this.map = L.map(_this.element.id, {layers: [_this.map2], zoomControl: false}).setView([41.869910, -87.65], 17);
+				_this.map = L.map(_this.element.id, {layers: [_this.map2], zoomControl: false}).setView(
+					[_this.state.center.lat, _this.state.center.lng], _this.state.zoomLevel);
 			}
 
 			/* Initialize the SVG layer */
@@ -150,7 +158,8 @@ var leaflet = SAGE2_App.extend({
 	},
 
 	resetMap: function() {
-		this.map.setView([41.869910, -87.65], 17);
+		//this.map.setView([41.869910, -87.65], 17); //original coordinates
+		this.map.setView([this.saveStartLat, this.saveStartLng], this.saveStartZoom); // new May 2016
 	},
 
 	changeMap: function() {
@@ -158,6 +167,7 @@ var leaflet = SAGE2_App.extend({
 
 		if (this.whichMap === 1) {
 			this.whichMap = 2;
+			this.state.whichMap = 2;
 			this.map.removeLayer(this.map1);
 			this.map2.addTo(this.map);
 
@@ -165,6 +175,7 @@ var leaflet = SAGE2_App.extend({
 			selectedOnes.style("fill", "black");
 		} else {
 			this.whichMap = 1;
+			this.state.whichMap = 1;
 			this.map.removeLayer(this.map2);
 			this.map1.addTo(this.map);
 
@@ -177,16 +188,20 @@ var leaflet = SAGE2_App.extend({
 		var z = this.map.getZoom();
 		if (z <= 19) {
 			this.map.setZoom(z + 1, {animate: false});
+			this.state.zoomLevel = z + 1; // new 5/2016
 		}
 		this.lastZoom = date;
+		this.refresh(date);
 	},
 
 	zoomOut: function(date) {
 		var z = this.map.getZoom();
 		if (z >= 3) {
 			this.map.setZoom(z - 1, {animate: false});
+			this.state.zoomLevel = z - 1; // new 5/2016
 		}
 		this.lastZoom = date;
+		this.refresh(date);
 	},
 
 	dealWithData: function(collection, today) {
@@ -271,24 +286,35 @@ var leaflet = SAGE2_App.extend({
 
 		var _this = this;
 
-		// jscs:disable
+		/* eslint-disable brace-style */
 		var feature = this.g.selectAll("circle")
-			.data(collection)
-			.enter()
-			.append("svg:circle")
-			.style("stroke", function(d) { if (d.inLastMonth) { return "black"; } else { return "white"; } })
-			.style("stroke-width", function(d) { if  (d.inLastMonth) { return 6; } else { return 2; } })
-			.style("opacity", function(d) { if (d.inLastMonth) { return 1.0; } else { return 0.4; } })
-			.style("fill", function(d) { return d.color; })
-			.attr("r", 15);
-		// jscs:enable
+		.data(collection)
+		.enter()
+		.append("svg:circle")
+		.style("stroke", function(d) { if (d.inLastMonth) { return "black"; } else { return "white"; } })
+		.style("stroke-width", function(d) { if (d.inLastMonth) { return 6; } else { return 2; } })
+		.style("opacity", function(d) { if (d.inLastMonth) { return 1.0; } else { return 0.4; } })
+		.style("fill", function(d) { return d.color; })
+		.attr("r", 15);
+
+		/* eslint-enable brace-style */
+
+		var myTextColor;
+		if (this.whichMap === 2) {
+			myTextColor = "black";
+		} else {
+			myTextColor = "white";
+		}
+
 
 		var feature2 = this.g.selectAll("text")
 			.data(collection)
 			.enter()
 			.append("svg:text")
-			.style("fill", "white")
-			.style("stroke", function(d) { return d.color; })
+			.style("fill", myTextColor)
+			.style("stroke", function(d) {
+				return d.color;
+			})
 			.style("stroke-width", "1")
 			.style("font-size", "30px")
 			.style("font-family", "Arial")
@@ -367,6 +393,9 @@ var leaflet = SAGE2_App.extend({
 			this.dragging = false;
 			this.position.x = pos.x;
 			this.position.y = pos.y;
+
+			this.state.center.lat = this.map.getCenter().lat; // new 5/2016
+			this.state.center.lng = this.map.getCenter().lng; // new 5/2016
 		} else if (eventType === "pointerScroll") {
 			var amount = data.wheelDelta;
 			var diff = date - this.lastZoom;

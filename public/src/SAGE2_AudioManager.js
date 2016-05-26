@@ -500,10 +500,12 @@ function setupListeners() {
 	});
 
 	wsio.on('connectedToRemoteSite', function(data) {
+		console.log('connectedToRemoteSite', data);
 		// Play an audio blop when a remote site comes up or down
-		if (data.connected) {
+		if (data.connected === "on") {
 			createjs.Sound.play("remote");
-		} else {
+		}
+		if (data.connected === "off") {
 			createjs.Sound.play("down");
 		}
 	});

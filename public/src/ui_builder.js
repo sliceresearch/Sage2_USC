@@ -223,7 +223,8 @@ function UIBuilder(json_cfg, clientID) {
 						_this.bg.style.backgroundImage    = "url(" + bgImgFinal + ")";
 						_this.bg.style.backgroundPosition = "top left";
 						_this.bg.style.backgroundRepeat   = "no-repeat";
-						_this.bg.style.backgroundSize     = _this.json_cfg.resolution.width + "px " + _this.json_cfg.resolution.height + "px";
+						_this.bg.style.backgroundSize     = _this.json_cfg.resolution.width + "px " +
+							_this.json_cfg.resolution.height + "px";
 
 						_this.main.style.top    = "0px";
 						_this.main.style.left   = "0px";
@@ -274,7 +275,7 @@ function UIBuilder(json_cfg, clientID) {
 			this.offsetY = y * this.json_cfg.resolution.height + bordery;
 			this.titleBarHeight = this.json_cfg.ui.titleBarHeight;
 			this.titleTextSize  = this.json_cfg.ui.titleTextSize;
-			this.pointerWidth   = this.json_cfg.ui.pointerSize * 3;
+			this.pointerWidth   = this.json_cfg.ui.pointerSize;
 			this.pointerHeight  = this.json_cfg.ui.pointerSize;
 			this.widgetControlSize = this.json_cfg.ui.widgetControlSize;
 			this.pointerOffsetX = Math.round(0.27917 * this.pointerHeight);
@@ -918,9 +919,11 @@ function UIBuilder(json_cfg, clientID) {
 				translate = "translate(" + pointer_data.left + "px," + pointer_data.top + "px)";
 			}
 
-			pointerElem.style.webkitTransform = translate;
-			pointerElem.style.mozTransform    = translate;
-			pointerElem.style.transform       = translate;
+			requestAnimationFrame(function() {
+				pointerElem.style.webkitTransform = translate;
+				pointerElem.style.mozTransform    = translate;
+				pointerElem.style.transform       = translate;
+			});
 		}
 	};
 
@@ -1076,7 +1079,8 @@ function UIBuilder(json_cfg, clientID) {
 			// Update the button state
 			var menuState = data.menuState;
 			for (var buttonName in menuState.buttonState) {
-				this.radialMenus[data.menuID + "_menu"].setRadialButtonState(buttonName, menuState.buttonState[buttonName], menuState.color);
+				this.radialMenus[data.menuID + "_menu"].setRadialButtonState(
+					buttonName, menuState.buttonState[buttonName], menuState.color);
 			}
 
 			// State also contains new actions
@@ -1101,7 +1105,9 @@ function UIBuilder(json_cfg, clientID) {
 					var pointerY = data.y - rect.top - this.offsetY;
 
 					if (menu.visible) {
-						menu.onEvent(data.type, {x: pointerX, y: pointerY, windowX: rect.left, windowY: rect.top}, data.id, data.data);
+						menu.onEvent(data.type, {
+							x: pointerX, y: pointerY, windowX: rect.left, windowY: rect.top
+						}, data.id, data.data);
 					}
 				}
 			}
@@ -1151,6 +1157,11 @@ function UIBuilder(json_cfg, clientID) {
 		if (this.json_cfg.ui.menubar !== undefined && this.json_cfg.ui.menubar.remoteDisconnectedColor !== undefined) {
 			disconnectedColor = this.json_cfg.ui.menubar.remoteDisconnectedColor;
 		}
+		var lockedColor = "rgba(230, 110, 0, 1.0)";
+		if (this.json_cfg.ui.menubar !== undefined && this.json_cfg.ui.menubar.remoteLockedColor !== undefined) {
+			lockedColor = this.json_cfg.ui.menubar.remoteLockedColor;
+		}
+		var unknownColor = "rgba(140, 140, 140, 1.0)";
 
 		var remote = document.createElement('div');
 		remote.id  = data.name;
@@ -1160,10 +1171,14 @@ function UIBuilder(json_cfg, clientID) {
 		remote.style.height = data.geometry.h.toString() + "px";
 		remote.style.left   = (-this.offsetX + data.geometry.x).toString() + "px";
 		remote.style.top    = (-this.offsetY + data.geometry.y).toString() + "px";
-		if (data.connected) {
+		if (data.connected === "on") {
 			remote.style.backgroundColor = connectedColor;
-		} else {
+		} else if (data.connected === "off") {
 			remote.style.backgroundColor = disconnectedColor;
+		} else if (data.connected === "locked") {
+			remote.style.backgroundColor = lockedColor;
+		} else {
+			remote.style.backgroundColor = unknownColor;
 		}
 
 		var color = "rgba(255, 255, 255, 1.0)";
@@ -1196,12 +1211,21 @@ function UIBuilder(json_cfg, clientID) {
 		if (this.json_cfg.ui.menubar !== undefined && this.json_cfg.ui.menubar.remoteDisconnectedColor !== undefined) {
 			disconnectedColor = this.json_cfg.ui.menubar.remoteDisconnectedColor;
 		}
+		var lockedColor = "rgba(230, 110, 0, 1.0)";
+		if (this.json_cfg.ui.menubar !== undefined && this.json_cfg.ui.menubar.remoteLockedColor !== undefined) {
+			lockedColor = this.json_cfg.ui.menubar.remoteLockedColor;
+		}
+		var unknownColor = "rgba(140, 140, 140, 1.0)";
 
 		var remote = document.getElementById(data.name);
-		if (data.connected) {
+		if (data.connected === "on") {
 			remote.style.backgroundColor = connectedColor;
-		} else {
+		} else if (data.connected === "off") {
 			remote.style.backgroundColor = disconnectedColor;
+		} else if (data.connected === "locked") {
+			remote.style.backgroundColor = lockedColor;
+		} else {
+			remote.style.backgroundColor = unknownColor;
 		}
 	};
 

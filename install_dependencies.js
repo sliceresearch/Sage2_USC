@@ -56,7 +56,10 @@ if (target_arg > 0 && process.argv.length > target_arg + 1) {
 }
 
 // Parsing node version numbers
-var nums = target.split('.').map(function(n) { return parseInt(n, 10); });
+var nums = target.split('.').map(function(n) {
+	return parseInt(n, 10);
+});
+
 // Node v0.10.40 and above
 if (nums[0] === 0 && nums[1] === 10 && nums[2] >= 40) {
 	console.log("Node version " + process.versions.node + ". Using binaries for 0.10.44+.");
