@@ -1344,24 +1344,7 @@ function createAppWindow(data, parentId, titleBarHeight, titleTextSize, offsetX,
 
 				// Sending the context menu info to the server
 				if (isMaster) {
-					var rmbData = {};
-					rmbData.app = newapp.id;
-					// If the application defines a menu function, use it
-					if (typeof newapp.getContextEntries === "function") {
-						rmbData.entries = newapp.getContextEntries();
-						rmbData.entries.push({
-							description: "Close App",
-							callback: "SAGE2DeleteElement", // better function name?
-							parameters: {}
-						});
-					} else {
-						rmbData.entries = [{
-							description: "Close App",
-							callback: "SAGE2DeleteElement", // better function name?
-							parameters: {}
-						}]
-					}
-					wsio.emit("dtuRmbContextMenuContents", rmbData);
+					newapp.getFullContextMenuAndUpdate();
 				}
 
 				applications[data.id]   = newapp;
@@ -1384,24 +1367,7 @@ function createAppWindow(data, parentId, titleBarHeight, titleTextSize, offsetX,
 
 			// Sending the context menu info to the server
 			if (isMaster) {
-				var rmbData = {};
-				rmbData.app = app.id;
-				// If the application defines a menu function, use it
-				if (typeof app.getContextEntries === "function") {
-					rmbData.entries = app.getContextEntries();
-					rmbData.entries.push({
-						description: "Close App",
-						callback: "SAGE2DeleteElement", // better function name?
-						parameters: {}
-					});
-				} else {
-					rmbData.entries = [{
-						description: "Close App",
-						callback: "SAGE2DeleteElement", // better function name?
-						parameters: {}
-					}]
-				}
-				wsio.emit("dtuRmbContextMenuContents", rmbData);
+				newapp.getFullContextMenuAndUpdate();
 			}
 
 			applications[data.id] = app;

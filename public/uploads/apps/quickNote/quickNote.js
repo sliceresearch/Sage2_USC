@@ -86,14 +86,10 @@ var quickNote = SAGE2_App.extend({
 
 		// Otherwise set the values using probably user input.
 		if (msgParams.clientName === undefined || msgParams.clientName === null || msgParams.clientName == "") {
-			msgParams.clientName = "Anonymous";
+			msgParams.clientName = "";
 		}
-		// If the color choice was not defined, default to lightyellow.
-		if (msgParams.colorChoice === undefined || msgParams.colorChoice === null || msgParams.colorChoice == "") {
-			this.backgroundChoice = "lightyellow";
-			this.element.style.background = "lightyellow";
-		} else {
-			// Else use the given color.
+		// If the color choice was defined, use the given color. RMB choices do not provide a color (currently)
+		if (msgParams.colorChoice !== undefined && msgParams.colorChoice !== null && msgParams.colorChoice !== "") {
 			this.backgroundChoice = msgParams.colorChoice;
 			this.element.style.background = msgParams.colorChoice;
 		}
@@ -149,93 +145,6 @@ var quickNote = SAGE2_App.extend({
 		this.saveNote(msgParams.creationTime);
 	},
 
-	/**
-	msgParams.clientName	Client input pointer name
-	msgParams.clientInput	What they typed for the note.
-	*/
-	// setMessage: function(msgParams) {
-	// 	// First remove potential new lines from input
-	// 	if (msgParams.clientInput) {
-	// 		msgParams.clientInput = msgParams.clientInput.replace(/\n/g, "");
-	// 	}
-	// 	// If defined by a file, use those values
-	// 	if (msgParams.fileDefined === true) {
-	// 		this.backgroundChoice   = msgParams.colorChoice;
-	// 		this.state.colorChoice  = this.backgroundChoice;
-	// 		this.state.clientInput  = msgParams.clientInput;
-	// 		this.state.creationTime = msgParams.clientName;
-	// 		this.element.style.background = msgParams.colorChoice;
-	// 		this.element.innerHTML        = msgParams.clientInput;
-	// 		this.formatAndSetTitle(this.state.creationTime);
-	// 		this.saveNote(msgParams.creationTime);
-	// 		return;
-	// 	}
-
-	// 	// Otherwise set the values using probably user input.
-	// 	if (msgParams.clientName === undefined || msgParams.clientName === null || msgParams.clientName == "") {
-	// 		msgParams.clientName = "Anonymous";
-	// 	}
-	// 	// If the color choice was not defined, default to lightyellow.
-	// 	if (msgParams.colorChoice === undefined || msgParams.colorChoice === null || msgParams.colorChoice == "") {
-	// 		this.backgroundChoice = "lightyellow";
-	// 		this.element.style.background = "lightyellow";
-	// 	} else {
-	// 		// Else use the given color.
-	// 		this.backgroundChoice = msgParams.colorChoice;
-	// 		this.element.style.background = msgParams.colorChoice;
-	// 	}
-
-	// 	this.element.innerHTML = msgParams.clientInput;
-
-	// 	this.state.clientName  = msgParams.clientName;
-	// 	this.state.clientInput = msgParams.clientInput;
-	// 	this.state.colorChoice = this.backgroundChoice;
-
-	// 	// if the creationTime has not been set, then fill it out.
-	// 	if (this.state.creationTime === null
-	// 		&& msgParams.serverDate !== undefined
-	// 		&& msgParams.serverDate !== null) {
-	// 		this.state.creationTime = new Date(msgParams.serverDate);
-	// 		// build the title string.
-	// 		var titleString = msgParams.clientName + "-QN-" + this.state.creationTime.getFullYear();
-	// 		if (this.state.creationTime.getMonth() < 9) {
-	// 			titleString += "0";
-	// 		}
-	// 		titleString += (this.state.creationTime.getMonth() + 1) + ""; // month +1 because starts at 0
-	// 		if (this.state.creationTime.getDate() < 10) {
-	// 			titleString += "0";
-	// 		}
-	// 		titleString += this.state.creationTime.getDate() + "-";
-	// 		if (this.state.creationTime.getHours() < 10) {
-	// 			titleString += "0";
-	// 		}
-	// 		titleString += this.state.creationTime.getHours();
-	// 		if (this.state.creationTime.getMinutes() < 10) {
-	// 			titleString += "0";
-	// 		}
-	// 		titleString += this.state.creationTime.getMinutes();
-	// 		if (this.state.creationTime.getSeconds() < 10) {
-	// 			titleString += "0";
-	// 		}
-	// 		titleString += this.state.creationTime.getSeconds();
-	// 		if (this.state.creationTime.getMilliseconds() < 10) {
-	// 			titleString += "0";
-	// 		}
-	// 		if (this.state.creationTime.getMilliseconds() < 100) {
-	// 			titleString += "0";
-	// 		}
-	// 		titleString += this.state.creationTime.getMilliseconds();
-	// 		// store it for later and update the tile.
-	// 		this.state.creationTime = titleString;
-	// 		this.formatAndSetTitle(this.state.creationTime);
-	// 	}
-	// 	// if loaded will include the creationTime
-	// 	if (msgParams.creationTime !== undefined && msgParams.creationTime !== null) {
-	// 		this.formatAndSetTitle(msgParams.creationTime);
-	// 	}
-	// 	this.saveNote(msgParams.creationTime);
-	// },
-
 	setColor: function(responseObject) {
 		this.backgroundChoice         = responseObject.color;
 		this.state.colorChoice        = this.backgroundChoice;
@@ -244,9 +153,6 @@ var quickNote = SAGE2_App.extend({
 	},
 
 	formatAndSetTitle: function(wholeName) {
-		// Preservers original functionality. Remove this when done with format handling.
-		//this.updateTitle(wholeName);
-
 		// Breaking apart whole name and using moment.js to make easier to read.
 		var parts  = wholeName.split("-"); // 0 name - 1 qn - 2 YYYYMMDD - 3 HHMMSSmmm
 		var author = parts[0];
@@ -262,7 +168,12 @@ var quickNote = SAGE2_App.extend({
 			minute: min
 		};
 		momentTime = moment(momentTime);
-		this.updateTitle(author + " @ " + momentTime.format("MMM Do, hh:mm A"));
+		// If the author is supposed to be Anonymouse, then omit author inclusion and marker.
+		if (author === "Anonymous") {
+			this.updateTitle(momentTime.format("MMM Do, hh:mm A"));
+		} else { // Otherwise have the name followed by @
+			this.updateTitle(author + " @ " + momentTime.format("MMM Do, hh:mm A"));
+		}
 	},
 
 	load: function(date) {
