@@ -515,26 +515,34 @@ var SAGE2MEP = {
 
 		// the point of substring(3) is because it probably has div
 		// TODO check if it could be canvas.
-		if (this.debug) {
-			console.log("erase me appid:" + appDivId.substring(3));
+		var appname = null;
+		var idx = appDivId.indexOf('app_');
+		if (idx >= 0) {
+			// extract the app_ part of the string
+			appname = appDivId.slice(idx);
 		}
 
-		var appElem = document.getElementById(appDivId.substring(3)); //TODO double check this
+		if (this.debug) {
+			console.log("erase me appid:" + appname);
+		}
+
+		// TODO double check this
+		var appElem = document.getElementById(appname);
 		// var appElemZone = document.getElementById(appDivId);
 		// var appWidth  = parseInt(appElemZone.style.width, 10);
 		// var appHeight = parseInt(appElemZone.style.height, 10);
 
 		var appLeftOffset = 0;
-		if (appElem.style.left != null) {
+		if (appElem && appElem.style.left != null) {
 			appLeftOffset = parseInt(appElem.style.left, 10);
 		}
 		var appTopOffset = 0;
-		if (appElem.style.top != null) {
+		if (appElem && appElem.style.top != null) {
 			appTopOffset = parseInt(appElem.style.top, 10);
 		}
 
 		// testing titlebar title bar offset
-		var titleBarDiv = document.getElementById(appDivId.substring(3) + "_title");
+		var titleBarDiv = document.getElementById(appname + "_title");
 		appTopOffset -= parseInt(titleBarDiv.style.height);
 
 		var appX = this.getXOfWebkitTranslate(appElem.style.WebkitTransform);
@@ -614,9 +622,15 @@ var SAGE2MEP = {
 
 		if (this.matvin) {
 			this.matvin = false; // dunno how necessary this is.
-			var appElem = document.getElementById(appDivId.substring(3));
-			appElem.style.WebkitTransform = this.matvinWebkit;
-			appElem.style.zIndex = this.matvinZ;
+			var appname = null;
+			var idx = appDivId.indexOf('app_');
+			if (idx >= 0) {
+				// extract the app_ part of the string
+				appname = appDivId.slice(idx);
+				var appElem = document.getElementById(appname);
+				appElem.style.WebkitTransform = this.matvinWebkit;
+				appElem.style.zIndex = this.matvinZ;
+			}
 		}
 
 
