@@ -6,6 +6,7 @@
 	"animation": true,
 	"resize": "free",
 	"dependencies": [
+		"scripts/leaflet.css",
 		"scripts/leaflet.js",
 		"policeDistricts.js"
 	],
