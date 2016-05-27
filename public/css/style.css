@@ -53,10 +53,21 @@ body {
 	position: absolute;
 	border: 1px solid #000000;
 	box-shadow: 8px 4px 15px #222222;
+
+	opacity: 1;
+	-webkit-transition: opacity 0.2s ease-in;
+	-moz-transition: opacity 0.2s ease-in;
+	-ms-transition: opacity 0.2s ease-in;
+	-o-transition: opacity 0.2s ease-in;
+	transition: opacity 0.2s ease-in;
 }
+.windowDisappear {
+	opacity: 0.0;
+}
+
 .windowItemNoBorder {
-        border: 1px solid rgba(0,0,0,0);
-        box-shadow: none;
+	border: 1px solid rgba(0,0,0,0);
+	box-shadow: none;
 }
 
 .windowTitle {
