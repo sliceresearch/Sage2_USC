@@ -267,6 +267,17 @@ function UIBuilder(json_cfg, clientID) {
 			// Calculate offsets for borders
 			var borderx  = (x + 1) * this.json_cfg.resolution.borders.left + x * this.json_cfg.resolution.borders.right;
 			var bordery  = (y + 1) * this.json_cfg.resolution.borders.top  + y * this.json_cfg.resolution.borders.bottom;
+
+			// Overlapping tile dimension in pixels to allow edge blending
+			// converted to negative values
+			// code provided by Larse Bilke
+			// larsbilke83@gmail.com
+			if (this.json_cfg.dimensions.tile_overlap.horizontal !== 0 ||
+				this.json_cfg.dimensions.tile_overlap.vertical !== 0) {
+				borderx = -x * this.json_cfg.dimensions.tile_overlap.horizontal;
+				bordery = -y * this.json_cfg.dimensions.tile_overlap.vertical;
+			}
+
 			// Position offsets plus borders offsets
 			this.offsetX = x * this.json_cfg.resolution.width + borderx;
 			this.offsetY = y * this.json_cfg.resolution.height + bordery;
