@@ -1,11 +1,11 @@
 @charset "UTF-8";
 
 /* SAGE2 is available for use under the SAGE2 Software License
- * 
+ *
  * University of Illinois at Chicago's Electronic Visualization Laboratory (EVL)
  * and University of Hawai'i at Manoa's Laboratory for Advanced Visualization and
  * Applications (LAVA)
- * 
+ *
  * See full text, terms and conditions in the LICENSE.txt included file
  *
  * Copyright (c) 2014
@@ -56,7 +56,7 @@ h2 {
 #displayUIDiv {
 	position: relative;
 	float: left;
-	margin: 10px 10px 0 10px;
+	margin: 10px 10px 0;
 	cursor: pointer;
 }
 
@@ -105,29 +105,29 @@ h2 {
 }
 
 #menuUI tr td:hover img {
-	-webkit-transform: scale(1.0);
-	-moz-transform: scale(1.0);
-	-ms-transform: scale(1.0);
-	transform: scale(1.0);
-	background-color: rgba(0,0,0,0);
+	-webkit-transform: scale(1);
+	-moz-transform: scale(1);
+	-ms-transform: scale(1);
+	transform: scale(1);
+	background-color: rgba(0, 0, 0, 0);
 }
 
 #menuUI tr td p {
 	white-space: nowrap;
 	display: inline;
-	padding: 2px 8px 2px 8px;
+	padding: 2px 8px;
 	color: #FFFFFF;
 	background-color: #787878;
 	border-radius: 8px;
-	opacity: 1.0;
+	opacity: 1;
 	cursor: default;
 	-webkit-transition: opacity 100ms ease-in-out;
 	-moz-transition: opacity 100ms ease-in-out;
 	transition: opacity 100ms ease-in-out;
 }
 
-#menuUI tr td:hover img + p{
-	opacity: 1.0;
+#menuUI tr td:hover img + p {
+	opacity: 1;
 }
 
 #textWidthTest {
@@ -143,6 +143,7 @@ h2 {
 	position: absolute;
 	border: solid 1px #6C6C6C;
 }
+
 .appWindowHover {
 	display: block;
 	position: absolute;
@@ -157,6 +158,7 @@ h2 {
 	-moz-box-sizing: border-box;
 	box-sizing: border-box;
 }
+
 .appWindowTitleHover {
 	position: absolute;
 	border: solid 1px #6C6C6C;
@@ -188,11 +190,9 @@ h2 {
 	user-drag: none;
 }
 
-
 .clear {
 	clear: both;
 }
-
 
 /***** Light Box    *****/
 #sage2pointerDialog {
@@ -296,16 +296,19 @@ h2 {
 	right: 10px;
 	bottom: 10px;
 }
+
 #fileCloseBtn {
 	position: absolute;
 	right: 75px;
 	bottom: 10px;
 }
+
 #fileDeleteBtn {
 	position: absolute;
 	left: 10px;
 	bottom: 10px;
 }
+
 #fileUploadBtn {
 	position: absolute;
 	left: 82px;
@@ -321,9 +324,8 @@ h2 {
 	transform: translate(-50%, -50%);
 }
 
-
 #arrangementItems {
-	margin: 10px 10px 66px 10px;
+	margin: 10px 10px 66px;
 	overflow: auto;
 }
 
@@ -351,8 +353,6 @@ h2 {
 	bottom: 10px;
 }
 
-
-
 #infoDialog {
 	top: 50%;
 	left: 50%;
@@ -361,28 +361,34 @@ h2 {
 	-ms-transform: translate(-50%, -50%);
 	transform: translate(-50%, -50%);
 }
+
 #infoItems {
-	margin: 5px 5px 45px 5px;
+	margin: 5px 5px 45px;
 	overflow: auto;
 }
+
 #helpContainer {
 	width: 100px;
 	float: left;
 	text-align: center;
 }
+
 #adminContainer {
 	width: 100px;
 	float: left;
 	text-align: center;
 }
+
 #infoContainer {
 	width: 100px;
 	text-align: center;
 }
+
 #ezNoteContainer {
 	width: 100px;
 	text-align: center;
 }
+
 #ezDrawContainer {
 	width: 100px;
 	text-align: center;
@@ -399,8 +405,9 @@ h2 {
 	right: 10px;
 	bottom: 10px;
 }
+
 #infoData {
-	margin: 10px 10px 10px 10px;
+	margin: 10px;
 }
 
 #settingsDialog {
@@ -411,6 +418,7 @@ h2 {
 	-ms-transform: translate(-50%, -50%);
 	transform: translate(-50%, -50%);
 }
+
 #settingsDialog2 {
 	top: 50%;
 	left: 50%;
@@ -421,7 +429,7 @@ h2 {
 }
 
 #settingsItems {
-	margin: 10px 10px 66px 10px;
+	margin: 10px 10px 66px;
 	overflow: auto;
 }
 
@@ -435,7 +443,7 @@ h2 {
 }
 
 #browserItems {
-	margin: 10px 10px 66px 10px;
+	margin: 10px 10px 66px;
 	overflow: auto;
 }
 
@@ -465,7 +473,6 @@ h2 {
 	right: 90px;
 	bottom: 10px;
 }
-
 
 #sage2PointerSettingsContainer {
 	width: 225px;
@@ -499,6 +506,7 @@ h2 {
 #screenShareResolution {
 	width: 100px;
 }
+
 #screenShareQuality {
 	width: 100px;
 }
@@ -508,6 +516,7 @@ h2 {
 	right: 10px;
 	bottom: 10px;
 }
+
 #settingsCloseBtn2 {
 	position: absolute;
 	right: 10px;
@@ -530,12 +539,12 @@ h2 {
 	left: 10px;
 	bottom: 10px;
 }
+
 #ffShareWindowBtn {
 	position: absolute;
 	right: 10px;
 	bottom: 10px;
 }
-
 
 #localfileDialog {
 	top: 40%;
@@ -544,7 +553,7 @@ h2 {
 	-moz-transform: translate(-50%, -50%);
 	-ms-transform: translate(-50%, -50%);
 	transform: translate(-50%, -50%);
-	width:  510px;
+	width: 510px;
 	height: 100px;
 }
 
@@ -555,10 +564,9 @@ h2 {
 }
 
 #localfileItems {
-	margin: 10px 10px 66px 10px;
+	margin: 10px 10px 66px;
 	overflow: auto;
 }
-
 
 #uploadDialog {
 	top: 50%;
@@ -570,16 +578,19 @@ h2 {
 	width: 310px;
 	height: 60px;
 }
+
 #localFilesBtn {
 	position: absolute;
 	left: 10px;
 	bottom: 10px;
 }
+
 #dropboxFilesBtn {
 	position: absolute;
 	left: 90px;
 	bottom: 10px;
 }
+
 #cancelFilesBtn {
 	position: absolute;
 	right: 10px;
@@ -595,7 +606,7 @@ h2 {
 	height: 100%;
 	background-color: #000000;
 	z-index: 10001;
-	opacity: .65;
+	opacity: 0.65;
 	cursor: default;
 }
 
@@ -621,15 +632,15 @@ h2 {
 	height: 80%;
 	border: solid 3px #000000;
 	color: #FFFFFF;
-	-moz-box-sizing:border-box;
-	-webkit-box-sizing:border-box;
-	box-sizing:border-box;
+	-moz-box-sizing: border-box;
+	-webkit-box-sizing: border-box;
+	box-sizing: border-box;
 
 	background: url('../images/trackpad.svg') no-repeat;
-    background-position: 50% 70%;
-    background-size: 55vh;
-    background-origin: content-box;
-    padding: 10px;
+	background-position: 50% 70%;
+	background-size: 55vh;
+	background-origin: content-box;
+	padding: 10px;
 }
 
 #sage2MobileButtons {
@@ -646,14 +657,14 @@ h2 {
 	font-size: 16px;
 
 	background: url('../images/mouse-left.svg') no-repeat;
-    background-position: 50% 0;
-    background-size: contain;
-    background-origin: content-box;
-    padding: 5px;
+	background-position: 50% 0;
+	background-size: contain;
+	background-origin: content-box;
+	padding: 5px;
 
-	-moz-box-sizing:border-box;
-	-webkit-box-sizing:border-box;
-	box-sizing:border-box;
+	-moz-box-sizing: border-box;
+	-webkit-box-sizing: border-box;
+	box-sizing: border-box;
 }
 
 #sage2MobileMiddleButton {
@@ -665,14 +676,14 @@ h2 {
 	font-size: 16px;
 
 	background: url('../images/switch.svg') no-repeat;
-    background-position: 50% 0;
-    background-size: contain;
-    background-origin: content-box;
-    padding: 5px;
+	background-position: 50% 0;
+	background-size: contain;
+	background-origin: content-box;
+	padding: 5px;
 
-	-moz-box-sizing:border-box;
-	-webkit-box-sizing:border-box;
-	box-sizing:border-box;
+	-moz-box-sizing: border-box;
+	-webkit-box-sizing: border-box;
+	box-sizing: border-box;
 }
 
 #sage2MobileMiddle2Button {
@@ -684,14 +695,14 @@ h2 {
 	font-size: 16px;
 
 	background: url('../images/spacebar.svg') no-repeat;
-    background-position: 50% 0;
-    background-size: contain;
-    background-origin: content-box;
-    padding: 5px;
+	background-position: 50% 0;
+	background-size: contain;
+	background-origin: content-box;
+	padding: 5px;
 
-	-moz-box-sizing:border-box;
-	-webkit-box-sizing:border-box;
-	box-sizing:border-box;
+	-moz-box-sizing: border-box;
+	-webkit-box-sizing: border-box;
+	box-sizing: border-box;
 }
 
 #sage2MobileRightButton {
@@ -703,14 +714,14 @@ h2 {
 	font-size: 16px;
 
 	background: url('../images/mouse-right.svg') no-repeat;
-    background-position: 50% 0;
-    background-size: contain;
-    background-origin: content-box;
-    padding: 5px;
+	background-position: 50% 0;
+	background-size: contain;
+	background-origin: content-box;
+	padding: 5px;
 
-	-moz-box-sizing:border-box;
-	-webkit-box-sizing:border-box;
-	box-sizing:border-box;
+	-moz-box-sizing: border-box;
+	-webkit-box-sizing: border-box;
+	box-sizing: border-box;
 }
 
 #uiNoteMaker {
@@ -720,7 +731,7 @@ h2 {
 	-moz-transform: translate(-50%, -50%);
 	-ms-transform: translate(-50%, -50%);
 	transform: translate(-50%, -50%);
-	text-align:center;
+	text-align: center;
 }
 
 #uiDrawZone {
@@ -733,36 +744,36 @@ h2 {
 }
 
 .uidzBarBox {
-	width: 	30px;
+	width: 30px;
 	height: 30px;
 	border: 1px solid black;
 }
+
 .uidzBarAll {
-	height: 		100%;
-	left: 			50%;
-	position: 		relative;
-	background: 	black;
+	height: 100%;
+	left: 50%;
+	position: relative;
+	background: black;
 	-webkit-transform: translate(-50%, 0);
 	-moz-transform: translate(-50%, 0);
 	-ms-transform: translate(-50%, 0);
 	transform: translate(-50%, 0);
 }
-.uidzBarS1{ width: 1px; }
-.uidzBarS2{ width: 2px; }
-.uidzBarS3{ width: 4px; }
-.uidzBarS4{ width: 8px; }
-.uidzBarS5{ width: 16px; }
-.uidzBarS6{ width: 32px; }
-.uidzBarS7{ width: 64px; }
 
-
+.uidzBarS1 { width: 1px; }
+.uidzBarS2 { width: 2px; }
+.uidzBarS3 { width: 4px; }
+.uidzBarS4 { width: 8px; }
+.uidzBarS5 { width: 16px; }
+.uidzBarS6 { width: 32px; }
+.uidzBarS7 { width: 64px; }
 
 .fileItem {
 	cursor: default;
 }
 
 .button {
-	padding: 10px 12px 10px 12px;
+	padding: 10px 12px;
 	border-radius: 12px;
 	color: #FFFFFF;
 	background-color: #787878;
@@ -799,7 +810,7 @@ h2 {
 .css-treeview ul,
 .css-treeview li {
 	padding: 0;
-	margin: 6px 3px 0 3px;
+	margin: 6px 3px 0;
 	list-style: none;
 	display: block;
 	white-space: nowrap;
@@ -817,8 +828,8 @@ h2 {
 .css-treeview input + label {
 	background: url('../images/dir-closed.svg') no-repeat;
 	background-size: 32px 17px;
-    padding: 3px 0 3px 42px;
-    background-position: 0 0;
+	padding: 3px 0 3px 42px;
+	background-position: 0 0;
 }
 
 .css-treeview input:checked + label {
