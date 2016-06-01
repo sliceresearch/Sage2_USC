@@ -246,12 +246,13 @@ var doodle = SAGE2_App.extend({
 			// store it for later and update the tile.
 			this.state.creationTime = titleString;
 			this.state.originalCreator = responseObject.clientName;
+			this.formatAndSetTitle(this.state.creationTime);
 		}
 		// if loaded will include the creationTime
 		if (responseObject.creationTime !== undefined && responseObject.creationTime !== null) {
 			this.state.creationTime = responseObject.creationTime;
+			this.formatAndSetTitle(this.state.creationTime);
 		}
-		this.formatAndSetTitle(this.state.creationTime);
 	},
 
 	formatAndSetTitle: function(wholeName) {

@@ -1412,7 +1412,7 @@ function createAppWindow(data, parentId, titleBarHeight, titleTextSize, offsetX,
 
 			// Sending the context menu info to the server
 			if (isMaster) {
-				newapp.getFullContextMenuAndUpdate();
+				app.getFullContextMenuAndUpdate();
 			}
 
 			applications[data.id] = app;

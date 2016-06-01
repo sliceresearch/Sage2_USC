@@ -849,7 +849,7 @@ var SAGE2_App = Class.extend({
 			if (typeof this.getContextEntries === "function") {
 				rmbData.entries = this.getContextEntries();
 				rmbData.entries.push({
-					description: "Close " + (document.getElementById(this.id + "_text")),
+					description: "Close " + (document.getElementById(this.id + "_text").textContent),
 					callback: "SAGE2DeleteElement", // better function name?
 					parameters: {}
 				});
