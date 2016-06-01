@@ -1494,8 +1494,8 @@ function createAppWindow(data, parentId, titleBarHeight, titleTextSize, offsetX,
 			} else if (resourceUrl.endsWith(".css")) {
 				loaderType = "link";
 			} else {
-				loaderType = null;
-				console.log('Dependencies> unknown file extension', resourceUrl);
+				console.log('Dependencies> unknown file extension, assuming script', resourceUrl);
+				loaderType = "script";
 			}
 
 			if (loaderType) {
@@ -1529,17 +1529,17 @@ function createAppWindow(data, parentId, titleBarHeight, titleTextSize, offsetX,
 				}
 
 				// is it a JS file
-				if (resourceUrl.endsWith(".js")) {
+				if (loaderType === "script") {
 					loader.type  = "text/javascript";
 					loader.async = false;
 					loader.src   = resourceUrl;
-				} else if (resourceUrl.endsWith(".css")) {
+				} else if (loaderType === "link") {
 					// is it a CSS file
 					loader.setAttribute("type", "text/css");
 					loader.setAttribute("rel",  "stylesheet");
 					loader.setAttribute("href", resourceUrl);
 				} else {
-					console.log('Dependencies> unknown file extension', resourceUrl);
+					console.log('Dependencies> unknown file type', resourceUrl);
 				}
 
 				// Finally, add it to the document to trigger the laod
