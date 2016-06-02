@@ -2599,6 +2599,7 @@ function wsCommand(wsio, data) {
 // **************  Launching Web Browser *****************
 
 function wsOpenNewWebpage(wsio, data) {
+	console.log(sageutils.header('Webview') + "opening " + data.url);
 	// Check if the web-browser is connected
 	if (webBrowserClient !== null) {
 		// then emit the command
