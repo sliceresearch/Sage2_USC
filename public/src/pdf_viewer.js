@@ -25,7 +25,7 @@ PDFJS.maxCanvasPixels = 67108864; // 8k2
 PDFJS.disableStream   = true;
 
 
-function deleteClick (item) {
+function deleteClick(item) {
 	item.clickReceived = null;
 }
 
@@ -37,7 +37,7 @@ function deleteClick (item) {
 // 	return d3.transform(g.attr("transform")).translate;
 // }
 
-function within (element, x, y) {
+function within(element, x, y) {
 	var translate = d3.transform(element.container.attr("transform")).translate;
 	var s = d3.transform(element.container.attr("transform")).scale[0];
 

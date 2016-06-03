@@ -111,7 +111,6 @@ var mediaBlockSize     = 512;
 var startTime          = Date.now();
 var pressingAlt        = true;
 
-
 // Add extra folders defined in the configuration file
 if (config.folders) {
 	config.folders.forEach(function(f) {
@@ -2162,7 +2161,7 @@ function wsRequestStoredFiles(wsio, data) {
 }
 
 function wsLoadApplication(wsio, data) {
-	var appData = {application: "custom_app", filename: data.application};
+	var appData = {application: "custom_app", filename: data.application, data: data.data}; // LUC
 	appLoader.loadFileFromLocalStorage(appData, function(appInstance) {
 		appInstance.id = getUniqueAppId();
 		if (appInstance.animation) {
@@ -2600,6 +2599,14 @@ function wsCommand(wsio, data) {
 
 function wsOpenNewWebpage(wsio, data) {
 	console.log(sageutils.header('Webview') + "opening " + data.url);
+
+	console.log('WSIO', wsio.id);
+	console.log('DATA', data);
+	wsLoadApplication(null,
+		{application: "/uploads/apps/Webview",
+		user: wsio.id,
+		position: [0, 0]});
+
 	// Check if the web-browser is connected
 	if (webBrowserClient !== null) {
 		// then emit the command

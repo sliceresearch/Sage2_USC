@@ -799,6 +799,8 @@ function SAGE2_interaction(wsio) {
 	* @param event {Object} key event
 	*/
 	this.pointerKeyDownMethod = function(event) {
+		console.log('Event', event);
+
 		var code = parseInt(event.keyCode, 10);
 		// exit if 'esc' key
 		if (code === 27) {
