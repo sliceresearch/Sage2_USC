@@ -2185,6 +2185,11 @@ function setupUiNoteMaker() {
 	sendButton.addEventListener('click', function() {
 		sendCsdMakeNote();
 	});
+	var closeButton = document.getElementById('uiNoteMakerCloseButton');
+	// click effect to cancel making a note
+	closeButton.addEventListener('click', function() {
+		hideDialog(openDialog);
+	});
 	// Add Color fields.
 	for (var i = 1; i <= 6; i++) {
 		workingDiv = document.getElementById("uinmColorPick" + i);
