@@ -6,18 +6,62 @@ const app = electron.app;
 // Module to create native browser window.
 const BrowserWindow = electron.BrowserWindow;
 
+// parsing command-line arguments
+var commander  = require('commander');
+var version    = require('./package.json').version;
+
+commander
+	.version(version)
+	.option('-d, --display <n>',   'Display client ID number (int)', parseInt, 0)
+	.option('-s, --server <s>',    'Server URL (string)', 'http://localhost:9292')
+	.option('-f, --fullscreen',    'Fullscreen (boolean)', false)
+	.option('-n, --no_decoration', 'Remove window decoration (boolean)', false)
+	.option('-x, --xorigin <n>',   'Window position x (int)', myParseInt, 0)
+	.option('-y, --yorigin <n>',   'Window position y (int)', myParseInt, 0)
+	.option('--width <n>',         'Window width (int)', myParseInt, 1280)
+	.option('--height <n>',        'Window height (int)', myParseInt, 720)
+	.option('--password <s>',      'Server password (string)', null)
+	.option('--hash <s>',          'Server password hash (string)', null)
+	.option('--cache',             'Clear the cache', false)
+	.option('--console',           'Open the devtools console', false)
+	.parse(process.argv);
+
+
 // app.commandLine.appendSwitch('enable-usermedia-screen-capturing');
 
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
 let mainWindow;
 
-function createWindow () {
+function openWindow() {
+	mainWindow.setBounds({
+		x: commander.xorigin,
+		y: commander.yorigin,
+		width:  commander.width,
+		height: commander.height
+	});
+	if (commander.fullscreen){
+		mainWindow.setFullScreen(true);
+	}
+
+	var location = commander.server + "/display.html?clientID=" + commander.display;
+	if (commander.hash) {
+		// add the password hash to the URL
+		location += '&hash=' + commander.hash;
+	}
+	mainWindow.loadURL(location);
+}
+
+function createWindow() {
 
 	var options = {
-		width: 1280,
-		height: 720,
-		frame: false
+		width:  commander.width,
+		height: commander.height,
+		frame:  !commander.no_decoration,
+		webPreferences: {
+			nodeIntegration: true,
+			webSecurity: true,
+		}
 	}
 	if (process.platform === 'darwin') {
 		// nothing yet
@@ -25,25 +69,27 @@ function createWindow () {
 		options.titleBarStyle = "hidden";
 	}
 
-	// webPreferences: {
-	// 	nodeIntegration: true,
-	// 	webSecurity: true,
-	// }
-
 	// Create the browser window.
 	mainWindow = new BrowserWindow(options);
 
-	// mainWindow.setFullScreen(true);
-	mainWindow.setPosition(0, 0);
-
-	// console.log('Process', process.argv);
-	// arg 0 : electron
-	// arg 1 : script
-	var location = process.argv[2] || "http://localhost:9292/display.html?clientID=0";
-	mainWindow.loadURL(location);
+	if (commander.cache) {
+		// clear the caches, useful to remove password cookies
+		const session = electron.session.defaultSession;
+		session.clearStorageData({
+				storages: ["appcache", "cookies", "local storage", "serviceworkers"]
+			}, function() {
+				console.log('Caches cleared')
+				openWindow();
+			}
+		);
+	} else {
+		openWindow();
+	}
 
 	// Open the DevTools.
-	// mainWindow.webContents.openDevTools();
+	if (commander.console) {
+		mainWindow.webContents.openDevTools();
+	}
 
 	// Emitted when the window is closed.
 	mainWindow.on('closed', function() {
@@ -54,8 +100,7 @@ function createWindow () {
 	});
 
 	mainWindow.webContents.on('will-navigate', function(ev) {
-		console.log('will-navigate')
-		ev.preventDefault();
+		// ev.preventDefault();
 	});
 }
 
@@ -81,3 +126,11 @@ app.on('activate', function () {
 });
 
 
+function myParseInt(str, defaultValue) {
+	var int = parseInt(str, 10);
+	if (typeof int == 'number') {
+		return int;
+	} else {
+		return defaultValue;
+	}
+}
