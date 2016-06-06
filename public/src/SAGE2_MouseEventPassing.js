@@ -68,8 +68,7 @@ var SAGE2MEP = {
 		// gets the pointer element that triggered this call
 		var pointerDiv = document.getElementById(user.id);
 
-		// convert the webkit translate set to a numerical value.
-		//    TODO webkit coordinates are over how much?
+		// Returns the value of x and y based on world space, not display space.
 		var xLocationOfPointerOnScreen = this.getXOfWebkitTranslate(pointerDiv.style.WebkitTransform);
 		var yLocationOfPointerOnScreen = this.getYOfWebkitTranslate(pointerDiv.style.WebkitTransform);
 
@@ -515,49 +514,64 @@ var SAGE2MEP = {
 
 		// the point of substring(3) is because it probably has div
 		// TODO check if it could be canvas.
-		if (this.debug) {
-			console.log("erase me appid:" + appDivId.substring(3));
+		var appname = null;
+		var idx = appDivId.indexOf('app_');
+		if (idx >= 0) {
+			// extract the app_ part of the string
+			appname = appDivId.slice(idx);
 		}
 
-		var appElem = document.getElementById(appDivId.substring(3)); //TODO double check this
+		// TODO double check this
+		var appElem = document.getElementById(appname);
 		// var appElemZone = document.getElementById(appDivId);
 		// var appWidth  = parseInt(appElemZone.style.width, 10);
 		// var appHeight = parseInt(appElemZone.style.height, 10);
 
+		/*
+		This section will find the offset for the app based on tiles.
+		appElem.style.left will always be a multiple of screen resolution based on tile position in world space.
+
+		style represents "origin", so it will never change.
+		translate represents postion adjustment from "origin", this will change as the app is moved.
+		*/
 		var appLeftOffset = 0;
-		if (appElem.style.left != null) {
+		if (appElem && appElem.style.left != null) {
 			appLeftOffset = parseInt(appElem.style.left, 10);
 		}
+		// Same applies to the appElem.style.top
 		var appTopOffset = 0;
-		if (appElem.style.top != null) {
+		if (appElem && appElem.style.top != null) {
 			appTopOffset = parseInt(appElem.style.top, 10);
 		}
 
-		// testing titlebar title bar offset
-		var titleBarDiv = document.getElementById(appDivId.substring(3) + "_title");
+		// For some reason the title bar height is applied to appElem.style.top. So much cut it out before doing position check.
+		var titleBarDiv = document.getElementById(appname + "_title");
 		appTopOffset -= parseInt(titleBarDiv.style.height);
 
+		// world space of app x and y.
 		var appX = this.getXOfWebkitTranslate(appElem.style.WebkitTransform);
 		var appY = this.getYOfWebkitTranslate(appElem.style.WebkitTransform);
+		// Save original values.
 		var appOriginalWebkit =  appElem.style.WebkitTransform; // webkit of the application not the zone
 		var appOriginalZ = appElem.style.zIndex;
-
+		// detect display, which is actually server specified tile size.
 		var displayWidth = parseInt(ui.bg.style.width, 10);   // TODO get the width of the current display
 		var displayHeight = parseInt(ui.bg.style.height, 10); // TODO get the width of the current display
 
+		/*
+		These values will always turn into 0 or some positive multiple of the server specified resolution.
+		*/
 		var displayLeft =  -appLeftOffset;
 		var displayTop =  -appTopOffset;
 		var displayRight = displayLeft + displayWidth;
 		var displayBottom = displayTop + displayHeight;
 
-		var horiCounter = 0; // setup counters for placing the value on display.
-		var vertCounter = 0;
-
-
 		/*
 		Adjust pointer values so it is on the display.
 		Necessary for the app position adjustment.
 		*/
+		var horiCounter = 0; // setup counters for placing the value on display.
+		var vertCounter = 0;
 		while (px < displayLeft) {
 			px += displayWidth;
 			horiCounter++;
@@ -614,9 +628,15 @@ var SAGE2MEP = {
 
 		if (this.matvin) {
 			this.matvin = false; // dunno how necessary this is.
-			var appElem = document.getElementById(appDivId.substring(3));
-			appElem.style.WebkitTransform = this.matvinWebkit;
-			appElem.style.zIndex = this.matvinZ;
+			var appname = null;
+			var idx = appDivId.indexOf('app_');
+			if (idx >= 0) {
+				// extract the app_ part of the string
+				appname = appDivId.slice(idx);
+				var appElem = document.getElementById(appname);
+				appElem.style.WebkitTransform = this.matvinWebkit;
+				appElem.style.zIndex = this.matvinZ;
+			}
 		}
 
 
@@ -664,5 +684,4 @@ var SAGE2MEP = {
 	}, //end initialize
 
 */
-
 

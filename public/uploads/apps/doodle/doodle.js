@@ -62,11 +62,21 @@ var doodle = SAGE2_App.extend({
 		if (initialImage === null || initialImage === undefined) {
 			return;
 		}
+		var _this = this;
+		this.imageToDraw.onload = function() {
+			/*
+			Resize app based on image size.
+			NOTE: Known bug: if the canvas is set based upon an image, the localhost may error if the display client is on another computer.
+			To avoid, have all display clients on one computer or use the actual hostname rather than localhost.
+			*/
+			_this.sendResize(_this.imageToDraw.naturalWidth, _this.imageToDraw.naturalHeight);
+		};
 		this.imageToDraw.src = initialImage;
 		this.drawCanvas.width = this.imageToDraw.width;
 		this.drawCanvas.height = this.imageToDraw.height;
 		this.ctx.drawImage(this.imageToDraw, 0, 0);
-		this.fitImageToAppSize();
+		// this.fitImageToAppSize();
+
 	},
 
 	/*
@@ -78,6 +88,8 @@ var doodle = SAGE2_App.extend({
 	Therefore the image should be limited by height.
 	Else, the app ratio is smaller, meaning the app has less width:height.
 	Therefore the image should be limited by width.
+
+	Currently unused, and should be removed eventually after the autosizing based off of imagesize is implemented and checked.
 	*/
 	fitImageToAppSize: function() {
 		var divWidth      = parseInt(this.element.style.width);
@@ -289,7 +301,7 @@ var doodle = SAGE2_App.extend({
 	},
 
 	resize: function(date) {
-		this.fitImageToAppSize();
+		// this.fitImageToAppSize();
 		// var workingDiv = document.getElementById(this.element.id);
 		// workingDiv.width = this.element.clientWidth + "px";
 		// workingDiv.height = this.element.clientHeight + "px";
