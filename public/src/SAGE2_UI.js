@@ -2315,10 +2315,25 @@ function setupUiDrawCanvas() {
 		}
 	);
 	// closes the draw area (but really hides it)
-	var closeButton = document.getElementById("uiDrawZoneCloseButton");
+	var closeButton = document.getElementById("uiDrawZoneCloseEditorButton");
 	closeButton.addEventListener('click',
 		function() {
 			hideDialog('uiDrawZone');
+		}
+	);
+	// closes the draw area (but really hides it)
+	var closeButton = document.getElementById("uiDrawZoneCloseDoodleButton");
+	closeButton.addEventListener('click',
+		function() {
+			hideDialog('uiDrawZone');
+			// Close the doodle on the wall.
+			var workingDiv	= document.getElementById('uiDrawZoneCanvas');
+			var data = {};
+			data.app = workingDiv.appId;
+			data.func = "SAGE2DeleteElement";
+			data.parameters = {};
+			data.parameters.clientName = document.getElementById('sage2PointerLabel').value;
+			wsio.emit('utdCallFunctionOnApp', data);
 		}
 	);
 	// initiate a launch app for quick additions of doodles.
