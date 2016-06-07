@@ -72,7 +72,9 @@ function createRemoteConnection(wsURL) {
 			remote.emit('command', command);
 
 			// Wait for 1sec to quit
-			setTimeout(function() { process.exit(0); }, 1000);
+			setTimeout(function() {
+				process.exit(0);
+			}, 1000);
 		});
 
 		remote.on('setupSAGE2Version', function(wsio, data) {

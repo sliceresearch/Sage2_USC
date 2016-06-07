@@ -1,39 +1,46 @@
 @font-face {
-  font-family: 'Arimo';
-  font-style: normal;
-  font-weight: 400;
-  src: local('Arimo'),
-        url(Arimo-Regular.woff2) format('woff2'),
-        url(Arimo-Regular.woff)  format('woff');
-  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2212, U+2215, U+E0FF, U+EFFD, U+F000;
+	font-family: 'Arimo';
+	font-style: normal;
+	font-weight: 400;
+	src:
+		local('Arimo'),
+		url(Arimo-Regular.woff2) format('woff2'),
+		url(Arimo-Regular.woff)  format('woff');
+	unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2212, U+2215, U+E0FF, U+EFFD, U+F000;
 }
 
 @font-face {
-  font-family: 'Arimo';
-  font-style: normal;
-  font-weight: 700;
-  src: local('Arimo Bold'), local('Arimo-Bold'),
-        url(Arimo-Bold.woff2) format('woff2'),
-        url(Arimo-Bold.woff)  format('woff');
-  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2212, U+2215, U+E0FF, U+EFFD, U+F000;
+	font-family: 'Arimo';
+	font-style: normal;
+	font-weight: 700;
+	src:
+		local('Arimo Bold'),
+		local('Arimo-Bold'),
+		url(Arimo-Bold.woff2) format('woff2'),
+		url(Arimo-Bold.woff)  format('woff');
+	unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2212, U+2215, U+E0FF, U+EFFD, U+F000;
 }
 
 @font-face {
-  font-family: 'Arimo';
-  font-style: italic;
-  font-weight: 400;
-  src: local('Arimo Italic'), local('Arimo-Italic'),
-        url(Arimo-Italic.woff2) format('woff2'),
-        url(Arimo-Italic.woff)  format('woff');
-  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2212, U+2215, U+E0FF, U+EFFD, U+F000;
+	font-family: 'Arimo';
+	font-style: italic;
+	font-weight: 400;
+	src:
+		local('Arimo Italic'),
+		local('Arimo-Italic'),
+		url(Arimo-Italic.woff2) format('woff2'),
+		url(Arimo-Italic.woff)  format('woff');
+	unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2212, U+2215, U+E0FF, U+EFFD, U+F000;
 }
 
 @font-face {
-  font-family: 'Arimo';
-  font-style: italic;
-  font-weight: 700;
-  src: local('Arimo Bold Italic'), local('Arimo-BoldItalic'),
-        url(Arimo-BoldItalic.woff2) format('woff2'),
-        url(Arimo-BoldItalic.woff)  format('woff');
-  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2212, U+2215, U+E0FF, U+EFFD, U+F000;
+	font-family: 'Arimo';
+	font-style: italic;
+	font-weight: 700;
+	src:
+		local('Arimo Bold Italic'),
+		local('Arimo-BoldItalic'),
+		url(Arimo-BoldItalic.woff2) format('woff2'),
+		url(Arimo-BoldItalic.woff)  format('woff');
+	unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2212, U+2215, U+E0FF, U+EFFD, U+F000;
 }

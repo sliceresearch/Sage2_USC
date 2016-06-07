@@ -9,6 +9,7 @@
 // Copyright (c) 2014-2015
 
 /* global ignoreFields, SAGE2WidgetControl, SAGE2MEP */
+/* global addStoredFileListEventHandler, removeStoredFileListEventHandler */
 
 /**
  * @module client
@@ -197,7 +198,8 @@ var SAGE2_App = Class.extend({
 				(eventType === "pointerPress" || eventType === "pointerMove" ||
 				eventType === "pointerRelease" || eventType === "pointerScroll" ||
 				eventType === "keyboard" || eventType === "specialKey")) {
-			var itemIdx = parseInt((position.y - this.SAGE2StateSyncOptions.scroll) / Math.round(1.5 * this.config.ui.titleTextSize), 10);
+			var itemIdx = parseInt((position.y - this.SAGE2StateSyncOptions.scroll) /
+				Math.round(1.5 * this.config.ui.titleTextSize), 10);
 			var children = document.getElementById(this.id + "_statecontainer").childNodes;
 			var hoverChild = null;
 			var syncedPrev;
@@ -478,7 +480,12 @@ var SAGE2_App = Class.extend({
 
 		if (isMaster) {
 			var syncedState = this.SAGE2CopySyncedState(this.state, this.SAGE2StateOptions);
-			wsio.emit('updateAppState', {id: this.id, localState: this.state, remoteState: syncedState, updateRemote: updateRemote});
+			wsio.emit('updateAppState', {
+				id: this.id,
+				localState: this.state,
+				remoteState: syncedState,
+				updateRemote: updateRemote
+			});
 		}
 	},
 
@@ -693,19 +700,22 @@ var SAGE2_App = Class.extend({
 			this.SAGE2Sync(true);
 		}
 
-		// update time
-		this.preDraw(date);
-		// measure actual frame rate
-		if (this.sec >= 1.0) {
-			this.fps       = this.frame_sec / this.sec;
-			this.frame_sec = 0;
-			this.sec       = 0;
-		}
-		// actual application draw
-		this.draw(date);
-		this.frame_sec++;
-		// update time and misc
-		this.postDraw(date);
+		var _this = this;
+		requestAnimationFrame(function () {
+			// update time
+			_this.preDraw(date);
+			// measure actual frame rate
+			if (_this.sec >= 1.0) {
+				_this.fps       = this.frame_sec / this.sec;
+				_this.frame_sec = 0;
+				_this.sec       = 0;
+			}
+			// actual application draw
+			_this.draw(date);
+			_this.frame_sec++;
+			// update time and misc
+			_this.postDraw(date);
+		});
 	},
 
 	/**
@@ -782,6 +792,26 @@ var SAGE2_App = Class.extend({
 	*/
 	applicationRPC: function(query, funcName, broadcast) {
 		wsio.emit('applicationRPC', {app: this.div.id, func: funcName, query: query, broadcast: broadcast});
+	},
+
+	/**
+	* Register a callback to be called when receiving a updated file list from server
+	*
+	* @method registerFileListHandler
+	* @param mth {Method} method on object to be called back
+	*/
+	registerFileListHandler: function(mth) {
+		addStoredFileListEventHandler(mth.bind(this));
+	},
+
+	/**
+	* Unregister a callback to be called when receiving a updated file list from server
+	*
+	* @method unregisterFileListHandler
+	* @param mth {Method} method on object to be called back
+	*/
+	unregisterFileListHandler: function(mth) {
+		removeStoredFileListEventHandler(mth.bind(this));
 	},
 
 	/**

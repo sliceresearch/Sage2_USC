@@ -56,7 +56,10 @@ function processRequest(wsio, data, config) {
 				// var loc = geojson.city + '/' + geojson.region + '/' + geojson.country;
 				if (data.broadcast === true) {
 					// send the data to all display nodes
-					module.parent.exports.broadcast('broadcast', {app: data.app, func: data.func, data: {location: geojson, err: null}});
+					module.parent.exports.broadcast('broadcast', {
+						app: data.app, func: data.func,
+						data: {location: geojson, err: null}
+					});
 				} else {
 					// send data to the master display node
 					wsio.emit('broadcast', {app: data.app, func: data.func, data: {location: geojson, err: null}});
@@ -80,7 +83,10 @@ function processRequest(wsio, data, config) {
 				var wjson = JSON.parse(body);
 				if (data.broadcast === true) {
 					// send the data to all display nodes
-					module.parent.exports.broadcast('broadcast', {app: data.app, func: data.func, data: {weather: wjson, err: null}});
+					module.parent.exports.broadcast('broadcast', {
+						app: data.app, func: data.func,
+						data: {weather: wjson, err: null}
+					});
 				} else {
 					// send data to the master display node
 					wsio.emit('broadcast', {app: data.app, func: data.func, data: {weather: wjson, err: null}});

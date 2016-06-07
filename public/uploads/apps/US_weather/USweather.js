@@ -181,10 +181,8 @@ var USweather = SAGE2_App.extend({
 			}
 		}
 
-		var _this = this;
-
 		if (this.gwin.numIconsLoaded === 16) {
-			_this.drawEverything(lat, lon, weather, weatherImage.src);
+			this.drawEverything(lat, lon, weather, weatherImage.src);
 		}
 	},
 
@@ -193,9 +191,12 @@ var USweather = SAGE2_App.extend({
 		var _this = this;
 		var replace;
 
+		/* eslint-disable max-len */
 		var url_part0 = "https://query.yahooapis.com/v1/public/";
 		var url_part1 = "yql?q=select%20temp_f%2C%20weather%2C%20icons%20from%20wunderground.currentobservation%20where%20location%3D'";
 		var url_part2 = "'%3B&format=json&env=store%3A%2F%2Fdatatables.org%2Falltableswithkeys&callback=";
+
+		/* eslint-enable max-len */
 
 		function getData(plat, plon, preplace) {
 			if (preplace === 1) {
@@ -487,6 +488,7 @@ var USweather = SAGE2_App.extend({
 		var path = this.resrcPath + "icons/";
 		var _this = this;
 
+		/* eslint-disable brace-style */
 		this.gwin.iconmostlycloudynight.src     = path + "mostlycloudy-night.svg";
 		this.gwin.iconmostlycloudynight.onload  = function() {_this.gwin.numIconsLoaded++; };
 		this.gwin.iconpartlycloudynight.src     = path + "partlycloudy-night.svg";
@@ -521,6 +523,8 @@ var USweather = SAGE2_App.extend({
 		this.gwin.iconclear.onload      = function() {_this.gwin.numIconsLoaded++; };
 		this.gwin.iconsunny.src         = path + "sunny.svg";
 		this.gwin.iconsunny.onload      = function() {_this.gwin.numIconsLoaded++; };
+
+		/* eslint-enable brace-style */
 	},
 
 	init: function(data) {
@@ -647,7 +651,7 @@ var USweather = SAGE2_App.extend({
 			this.nextMode();
 			this.refresh(date);
 		} else if (eventType === "widgetEvent") {
-			switch (data.identifier){
+			switch (data.identifier) {
 				case "Temperature":
 					this.state.mode = 0;
 					this.convertToTemp();

@@ -23,19 +23,6 @@
 
 /* global d3, SAGE2_policeDistricts, L */
 
-function addCSS(url, callback) {
-	var fileref = document.createElement("link");
-
-	if (callback) {
-		fileref.onload = callback;
-	}
-
-	fileref.setAttribute("rel", "stylesheet");
-	fileref.setAttribute("type", "text/css");
-	fileref.setAttribute("href", url);
-	document.head.appendChild(fileref);
-}
-
 var leaflet = SAGE2_App.extend({
 	getNewData: function(meSelf, beat, date) {
 
@@ -92,7 +79,6 @@ var leaflet = SAGE2_App.extend({
 		var myHeight = this.element.clientHeight;
 
 		this.element.id = "div" + data.id;
-		var _this = this;
 
 		this.maxFPS = 0.000023; // once every 12 hours
 
@@ -100,6 +86,12 @@ var leaflet = SAGE2_App.extend({
 		this.lastZoom = data.date;
 		this.dragging = false;
 		this.position = {x: 0, y: 0};
+
+		// store off the current starting point to be able to reset to it later
+		// new May 2016
+		this.saveStartLat = this.state.center.lat;
+		this.saveStartLng = this.state.center.lng;
+		this.saveStartZoom = this.state.zoomLevel;
 
 		var mapURL1 = 'http://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}';
 		var mapCopyright1 = 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS,' +
@@ -109,48 +101,48 @@ var leaflet = SAGE2_App.extend({
 		var mapCopyright2 = '&copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors,' +
 			' <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>';
 
-		// Load the CSS file for leaflet.js
-		addCSS(_this.resrcPath + "scripts/leaflet.css", function() {
-
-			_this.map1 = L.tileLayer(mapURL1, {attribution: mapCopyright1});
-			_this.map2 = L.tileLayer(mapURL2, {attribution: mapCopyright2});
+		this.map1 = L.tileLayer(mapURL1, {attribution: mapCopyright1});
+		this.map2 = L.tileLayer(mapURL2, {attribution: mapCopyright2});
 
 
-			// want to do this same thing when we reset the location
-			if (_this.whichMap === 1) {
-				_this.map = L.map(_this.element.id, {layers: [_this.map1], zoomControl: false}).setView([41.869910, -87.65], 17);
-			} else {
-				_this.map = L.map(_this.element.id, {layers: [_this.map2], zoomControl: false}).setView([41.869910, -87.65], 17);
-			}
+		// want to do this same thing when we reset the location
+		if (this.state.whichMap === 1) {
+			this.map = L.map(this.element.id, {layers: [this.map1], zoomControl: false}).setView(
+				[this.state.center.lat, this.state.center.lng], this.state.zoomLevel);
+		} else {
+			this.map = L.map(this.element.id, {layers: [this.map2], zoomControl: false}).setView(
+				[this.state.center.lat, this.state.center.lng], this.state.zoomLevel);
+		}
 
-			/* Initialize the SVG layer */
-			_this.map._initPathRoot();
+		/* Initialize the SVG layer */
+		this.map._initPathRoot();
 
-			/* We simply pick up the SVG from the map object */
-			_this.svg = d3.select(_this.map.getPanes().overlayPane).select("svg");
-			_this.g = _this.svg.append("g");
+		/* We simply pick up the SVG from the map object */
+		this.svg = d3.select(this.map.getPanes().overlayPane).select("svg");
+		this.g = this.svg.append("g");
 
-			for (var loopIdx = 0; loopIdx < SAGE2_policeDistricts.length; loopIdx++) {
-				_this.getNewData(_this, SAGE2_policeDistricts[loopIdx], data.date);
-			}
+		for (var loopIdx = 0; loopIdx < SAGE2_policeDistricts.length; loopIdx++) {
+			this.getNewData(this, SAGE2_policeDistricts[loopIdx], data.date);
+		}
 
-			// attach the SVG into the this.element node provided to us
-			var box = "0,0," + myWidth + "," + myHeight;
-			_this.svg = d3.select(_this.element).append("svg")
-				.attr("width",   myWidth)
-				.attr("height",  myHeight)
-				.attr("viewBox", box);
-		});
+		// attach the SVG into the this.element node provided to us
+		var box = "0,0," + myWidth + "," + myHeight;
+		this.svg = d3.select(this.element).append("svg")
+			.attr("width",   myWidth)
+			.attr("height",  myHeight)
+			.attr("viewBox", box);
 
+		// Build the wall UI
 		this.controls.addButton({label: "home", position: 6, identifier: "Home"});
 		this.controls.addButton({label: "view", position: 4, identifier: "View"});
 		this.controls.addButton({type: "zoom-in", position: 12, identifier: "ZoomIn"});
 		this.controls.addButton({type: "zoom-out", position: 11, identifier: "ZoomOut"});
-		this.controls.finishedAddingControls(); // Important
+		this.controls.finishedAddingControls();
 	},
 
 	resetMap: function() {
-		this.map.setView([41.869910, -87.65], 17);
+		//this.map.setView([41.869910, -87.65], 17); //original coordinates
+		this.map.setView([this.saveStartLat, this.saveStartLng], this.saveStartZoom); // new May 2016
 	},
 
 	changeMap: function() {
@@ -158,6 +150,7 @@ var leaflet = SAGE2_App.extend({
 
 		if (this.whichMap === 1) {
 			this.whichMap = 2;
+			this.state.whichMap = 2;
 			this.map.removeLayer(this.map1);
 			this.map2.addTo(this.map);
 
@@ -165,6 +158,7 @@ var leaflet = SAGE2_App.extend({
 			selectedOnes.style("fill", "black");
 		} else {
 			this.whichMap = 1;
+			this.state.whichMap = 1;
 			this.map.removeLayer(this.map2);
 			this.map1.addTo(this.map);
 
@@ -177,16 +171,20 @@ var leaflet = SAGE2_App.extend({
 		var z = this.map.getZoom();
 		if (z <= 19) {
 			this.map.setZoom(z + 1, {animate: false});
+			this.state.zoomLevel = z + 1; // new 5/2016
 		}
 		this.lastZoom = date;
+		this.refresh(date);
 	},
 
 	zoomOut: function(date) {
 		var z = this.map.getZoom();
 		if (z >= 3) {
 			this.map.setZoom(z - 1, {animate: false});
+			this.state.zoomLevel = z - 1; // new 5/2016
 		}
 		this.lastZoom = date;
+		this.refresh(date);
 	},
 
 	dealWithData: function(collection, today) {
@@ -269,26 +267,35 @@ var leaflet = SAGE2_App.extend({
 
 		});
 
-		var _this = this;
-
-		// jscs:disable
+		/* eslint-disable brace-style */
 		var feature = this.g.selectAll("circle")
-			.data(collection)
-			.enter()
-			.append("svg:circle")
-			.style("stroke", function(d) { if (d.inLastMonth) { return "black"; } else { return "white"; } })
-			.style("stroke-width", function(d) { if  (d.inLastMonth) { return 6; } else { return 2; } })
-			.style("opacity", function(d) { if (d.inLastMonth) { return 1.0; } else { return 0.4; } })
-			.style("fill", function(d) { return d.color; })
-			.attr("r", 15);
-		// jscs:enable
+		.data(collection)
+		.enter()
+		.append("svg:circle")
+		.style("stroke", function(d) { if (d.inLastMonth) { return "black"; } else { return "white"; } })
+		.style("stroke-width", function(d) { if (d.inLastMonth) { return 6; } else { return 2; } })
+		.style("opacity", function(d) { if (d.inLastMonth) { return 1.0; } else { return 0.4; } })
+		.style("fill", function(d) { return d.color; })
+		.attr("r", 15);
+
+		/* eslint-enable brace-style */
+
+		var myTextColor;
+		if (this.whichMap === 2) {
+			myTextColor = "black";
+		} else {
+			myTextColor = "white";
+		}
+
 
 		var feature2 = this.g.selectAll("text")
 			.data(collection)
 			.enter()
 			.append("svg:text")
-			.style("fill", "white")
-			.style("stroke", function(d) { return d.color; })
+			.style("fill", myTextColor)
+			.style("stroke", function(d) {
+				return d.color;
+			})
 			.style("stroke-width", "1")
 			.style("font-size", "30px")
 			.style("font-family", "Arial")
@@ -300,7 +307,10 @@ var leaflet = SAGE2_App.extend({
 				}
 			});
 
+		var _this = this;
+
 		this.map.on("viewreset", update);
+
 		update();
 
 		function update() {
@@ -333,13 +343,11 @@ var leaflet = SAGE2_App.extend({
 	},
 
 	draw: function(date) {
-		var _this = this;
-
 		if (this.allLoaded === 1) {
 			this.currentBeats = 0;
 
 			for (var loopIdx = 0; loopIdx < SAGE2_policeDistricts.length; loopIdx++) {
-				_this.getNewData(_this, SAGE2_policeDistricts[loopIdx], date);
+				this.getNewData(this, SAGE2_policeDistricts[loopIdx], date);
 			}
 		}
 	},
@@ -367,6 +375,9 @@ var leaflet = SAGE2_App.extend({
 			this.dragging = false;
 			this.position.x = pos.x;
 			this.position.y = pos.y;
+
+			this.state.center.lat = this.map.getCenter().lat; // new 5/2016
+			this.state.center.lng = this.map.getCenter().lng; // new 5/2016
 		} else if (eventType === "pointerScroll") {
 			var amount = data.wheelDelta;
 			var diff = date - this.lastZoom;

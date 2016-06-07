@@ -52,6 +52,10 @@ var applications = {};
 var dependencies = {};
 var dataSharingPortals = {};
 
+// Maintain the file list available on the server
+var storedFileList = null;
+var storedFileListEventHandlers = [];
+
 // UI object to build the element on the wall
 var ui;
 var uiTimer = null;
@@ -157,6 +161,31 @@ function setupFocusHandlers() {
 	});
 }
 
+/**
+ * Add a stored file list event handler
+ *
+ * @method addStoredFileListEventHandler
+ */
+function addStoredFileListEventHandler(callback) {
+	// Register the event handler and call it if we already have a stored file list available
+	storedFileListEventHandlers.push(callback);
+	if (storedFileList) {
+		callback(storedFileList);
+	}
+}
+
+/**
+ * Remove a stored file list event handler
+ *
+ * @method removeStoredFileListEventHandler
+ */
+function removeStoredFileListEventHandler(callback) {
+	var index = storedFileListEventHandlers.indexOf(callback);
+	if (index > -1) {
+		storedFileListEventHandlers.splice(index, 1);
+	}
+}
+
 
 /**
  * Idle function, show and hide the UI, triggered at uiTimerDelay sec delay
@@ -167,7 +196,9 @@ function resetIdle() {
 	if (uiTimer) {
 		clearTimeout(uiTimer);
 		ui.showInterface();
-		uiTimer = setTimeout(function() { ui.hideInterface(); }, uiTimerDelay * 1000);
+		uiTimer = setTimeout(function() {
+			ui.hideInterface();
+		}, uiTimerDelay * 1000);
 	}
 }
 
@@ -212,6 +243,7 @@ function SAGE2_init() {
 			session: session
 		};
 		wsio.emit('addClient', clientDescription);
+		wsio.emit('requestStoredFiles');
 	});
 
 	// Socket close event (ie server crashed)
@@ -293,7 +325,9 @@ function setupListeners() {
 		if (json_cfg.ui.auto_hide_ui) {
 			// default delay is 30s if not specified
 			uiTimerDelay = json_cfg.ui.auto_hide_delay ? parseInt(json_cfg.ui.auto_hide_delay, 10) : 30;
-			uiTimer      = setTimeout(function() { ui.hideInterface(); }, uiTimerDelay * 1000);
+			uiTimer = setTimeout(function() {
+				ui.hideInterface();
+			}, uiTimerDelay * 1000);
 		}
 		makeSvgBackgroundForWidgetConnectors(ui.main.style.width, ui.main.style.height);
 	});
@@ -303,7 +337,9 @@ function setupListeners() {
 			clearTimeout(uiTimer);
 			ui.showInterface();
 			uiTimerDelay = param.delay;
-			uiTimer      = setTimeout(function() { ui.hideInterface(); }, uiTimerDelay * 1000);
+			uiTimer = setTimeout(function() {
+				ui.hideInterface();
+			}, uiTimerDelay * 1000);
 		} else
 			if (ui.uiHidden === true) {
 				clearTimeout(uiTimer);
@@ -319,7 +355,11 @@ function setupListeners() {
 	});
 
 	wsio.on('setSystemTime', function(data) {
-		ui.setTime(new Date(data.date));
+		var m = moment(data.date);
+		var local = new Date();
+		var offset = local.getTimezoneOffset() - data.offset;
+		m.add(offset, 'minutes');
+		ui.setTime(m);
 	});
 
 	wsio.on('addRemoteSite', function(data) {
@@ -439,14 +479,20 @@ function setupListeners() {
 					windowTitle.style.backgroundColor = "#39C4A6";
 					windowIconSync.style.display = "block";
 					windowIconUnSync.style.display = "none";
-					console.log("sycned!");
 				} else {
 					windowTitle.style.backgroundColor = "#666666";
 					windowIconSync.style.display = "none";
 					windowIconUnSync.style.display = "block";
-					console.log("unsycned :(");
 				}
 			}
+		}
+	});
+
+	wsio.on('storedFileList', function(data) {
+		// Save the cached stored file list and update all the listeners
+		storedFileList = data;
+		for (var i = 0; i < storedFileListEventHandlers.length; i++) {
+			storedFileListEventHandlers[i](storedFileList);
 		}
 	});
 
@@ -544,15 +590,24 @@ function setupListeners() {
 		// Tell the application it is over
 		var app = applications[elem_data.elemId];
 		app.terminate();
+
 		// Remove the app from the list
 		delete applications[elem_data.elemId];
 
 		// Clean up the DOM
 		var deleteElemTitle = document.getElementById(elem_data.elemId + "_title");
+		var deleteElem = document.getElementById(elem_data.elemId);
+
+		// Set the CSS for fading out
+		deleteElem.classList.add('windowDisappear');
+
+		// Delete the titlebar
 		deleteElemTitle.parentNode.removeChild(deleteElemTitle);
 
-		var deleteElem = document.getElementById(elem_data.elemId);
-		deleteElem.parentNode.removeChild(deleteElem);
+		// When fade over, really delete the element
+		setTimeout(function() {
+			deleteElem.parentNode.removeChild(deleteElem);
+		}, 300);
 
 		// Clean up the UI DOM
 		if (elem_data.elemId in controlObjects) {
@@ -643,7 +698,8 @@ function setupListeners() {
 			var border = parseInt(selectedElem.parentNode.style.borderWidth || 0, 10);
 			app.sage2_x = (position_data.elemLeft + border + 1) * parentTransform.scale.x + parentTransform.translate.x;
 			app.sage2_x = Math.round(app.sage2_x);
-			app.sage2_y = (position_data.elemTop + ui.titleBarHeight + border) * parentTransform.scale.y + parentTransform.translate.y;
+			app.sage2_y = (position_data.elemTop + ui.titleBarHeight + border) * parentTransform.scale.y
+				+ parentTransform.translate.y;
 			app.sage2_y = Math.round(app.sage2_y);
 			app.sage2_width  = parseInt(position_data.elemWidth, 10) * parentTransform.scale.x;
 			app.sage2_height = parseInt(position_data.elemHeight, 10) * parentTransform.scale.y;
@@ -774,7 +830,8 @@ function setupListeners() {
 			var border = parseInt(selectedElem.parentNode.style.borderWidth || 0, 10);
 			app.sage2_x = (position_data.elemLeft + border + 1) * parentTransform.scale.x + parentTransform.translate.x;
 			app.sage2_x = Math.round(app.sage2_x);
-			app.sage2_y = (position_data.elemTop + ui.titleBarHeight + border) * parentTransform.scale.y + parentTransform.translate.y;
+			app.sage2_y = (position_data.elemTop + ui.titleBarHeight + border) * parentTransform.scale.y
+				+ parentTransform.translate.y;
 			app.sage2_y = Math.round(app.sage2_y);
 			app.sage2_width  = parseInt(position_data.elemWidth, 10) * parentTransform.scale.x;
 			app.sage2_height = parseInt(position_data.elemHeight, 10) * parentTransform.scale.y;
@@ -1007,7 +1064,6 @@ function setupListeners() {
 					}
 					break;
 				case "ShareApp":
-					console.log("SHARE APP");
 					break;
 				default:
 					app.SAGE2Event("widgetEvent", null, data.user, {identifier: ctrlId, action: action}, new Date(data.date));
@@ -1017,7 +1073,6 @@ function setupListeners() {
 			// Check whether a request for clone was made.
 			if (app.cloneable === true && app.requestForClone === true) {
 				app.requestForClone = false;
-				// console.log("cloning app:", appId, app.cloneData);
 				if (isMaster) {
 					wsio.emit('createAppClone', {id: appId, cloneData: app.cloneData});
 				}
@@ -1133,7 +1188,6 @@ function setupListeners() {
 	});
 
 	wsio.on('initializeDataSharingSession', function(data) {
-		// console.log(data);
 		dataSharingPortals[data.id] = new DataSharing(data);
 	});
 
@@ -1419,7 +1473,9 @@ function createAppWindow(data, parentId, titleBarHeight, titleTextSize, offsetX,
 				wsio.emit('finishedRenderingAppFrame', {id: data.id});
 			}
 			if (data.application === "movie_player") {
-				setTimeout(function() { wsio.emit('requestVideoFrame', {id: data.id}); }, 500);
+				setTimeout(function() {
+					wsio.emit('requestVideoFrame', {id: data.id});
+				}, 500);
 			}
 		}
 	}
@@ -1429,7 +1485,9 @@ function createAppWindow(data, parentId, titleBarHeight, titleTextSize, offsetX,
 		loadApplication();
 	} else {
 		var loadResource = function(idx) {
-			if (dependencies[data.resrc[idx]] !== undefined) {
+			var resourceUrl = data.resrc[idx];
+
+			if (dependencies[resourceUrl] !== undefined) {
 				if ((idx + 1) < data.resrc.length) {
 					loadResource(idx + 1);
 				} else {
@@ -1440,33 +1498,67 @@ function createAppWindow(data, parentId, titleBarHeight, titleTextSize, offsetX,
 				return;
 			}
 
-			dependencies[data.resrc[idx]] = false;
+			// Not loaded yet
+			dependencies[resourceUrl] = false;
 
-			var js = document.createElement("script");
-			js.addEventListener('error', function(event) {
-				console.log("Error loading script: " + data.resrc[idx]);
-			}, false);
-
-			js.addEventListener('load', function(event) {
-				dependencies[data.resrc[idx]] = true;
-
-				if ((idx + 1) < data.resrc.length) {
-					loadResource(idx + 1);
-				} else {
-					console.log("all resources loaded", data.id);
-					loadApplication();
-				}
-			});
-			js.type  = "text/javascript";
-			js.async = false;
-			if (data.resrc[idx].indexOf("http://")  === 0 ||
-				data.resrc[idx].indexOf("https://") === 0 ||
-				data.resrc[idx].indexOf("/") === 0) {
-				js.src = data.resrc[idx];
+			// Check the type
+			var loaderType;
+			if (resourceUrl.endsWith(".js")) {
+				loaderType = "script";
+			} else if (resourceUrl.endsWith(".css")) {
+				loaderType = "link";
 			} else {
-				js.src = url + "/" + data.resrc[idx];
+				console.log('Dependencies> unknown file extension, assuming script', resourceUrl);
+				loaderType = "script";
 			}
-			document.head.appendChild(js);
+
+			if (loaderType) {
+				// Create the DOM element to laod the resource
+				var loader = document.createElement(loaderType);
+
+				// Place an error handler
+				loader.addEventListener('error', function(event) {
+					console.log("Dependencies> Error loading", resourceUrl);
+				}, false);
+
+				// When done, try next dependency in the list
+				loader.addEventListener('load', function(event) {
+					// Success, mark as loaded
+					dependencies[data.resrc[idx]] = true;
+					if ((idx + 1) < data.resrc.length) {
+						// load the next one
+						loadResource(idx + 1);
+					} else {
+						// We are done
+						console.log("Dependencies> all resources loaded", data.id);
+						loadApplication();
+					}
+				});
+
+				// if not a full URL, add the local one
+				if (resourceUrl.indexOf("http://")  !== 0 &&
+					resourceUrl.indexOf("https://") !== 0 &&
+					resourceUrl.indexOf("/") !== 0) {
+					resourceUrl = url + "/" + resourceUrl;
+				}
+
+				// is it a JS file
+				if (loaderType === "script") {
+					loader.type  = "text/javascript";
+					loader.async = false;
+					loader.src   = resourceUrl;
+				} else if (loaderType === "link") {
+					// is it a CSS file
+					loader.setAttribute("type", "text/css");
+					loader.setAttribute("rel",  "stylesheet");
+					loader.setAttribute("href", resourceUrl);
+				} else {
+					console.log('Dependencies> unknown file type', resourceUrl);
+				}
+
+				// Finally, add it to the document to trigger the laod
+				document.head.appendChild(loader);
+			}
 		};
 		// Start loading the first resource
 		loadResource(0);

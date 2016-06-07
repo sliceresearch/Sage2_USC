@@ -167,7 +167,9 @@ function FileManager(wsio, mydiv, uniqueID) {
 					navigation: true,
 					scheme: {
 						// Generate an automatic index
-						$init: function(obj) { obj.index = this.count() + 1; }
+						$init: function(obj) {
+							obj.index = this.count() + 1;
+						}
 					},
 					on: {
 						// update index after sort or update
@@ -180,12 +182,18 @@ function FileManager(wsio, mydiv, uniqueID) {
 					},
 					columns: [
 						{id: "index", header: "",     width: 40, minWidth: 25, sort: "int"},
-						{id: "name",  header: "Name", minWidth: 180, sort: "text", fillspace: true},
-						{id: "user",  header: "User", width: 80, minWidth: 50, sort: "text", css: {'text-align': 'right'}},
-						{id: "size",  header: "Size", width: 80, minWidth: 50,  sort: sortBySize, css: {'text-align': 'right'}},
-						{id: "date",  header: "Date", width: 150, minWidth: 80, sort: sortByDate, css: {'text-align': 'center'}},
-						{id: "ago",   header: "Modified", width: 100, minWidth: 80, sort: sortByDate, css: {'text-align': 'right'}},
-						{id: "type",  header: "Type",     width: 80, minWidth: 50,  sort: "text", css: {'text-align': 'center'}}
+						{id: "name",  header: "Name", minWidth: 180,
+							sort: "text", fillspace: true},
+						{id: "user",  header: "User", width: 80, minWidth: 50,
+							sort: "text", css: {'text-align': 'right'}},
+						{id: "size",  header: "Size", width: 80, minWidth: 50,
+							sort: sortBySize, css: {'text-align': 'right'}},
+						{id: "date",  header: "Date", width: 150, minWidth: 80,
+							sort: sortByDate, css: {'text-align': 'center'}},
+						{id: "ago",   header: "Modified", width: 100, minWidth: 80,
+							sort: sortByDate, css: {'text-align': 'right'}},
+						{id: "type",  header: "Type", width: 80, minWidth: 50,
+							sort: "text", css: {'text-align': 'center'}}
 					],
 					data: [
 					]
@@ -508,7 +516,12 @@ function FileManager(wsio, mydiv, uniqueID) {
 			}
 			// Parse keywords
 			info = _this.allFiles[elt.id].exif.metadata.keywords || '';
-			metadata.config.elements.push({label: "Keywords", value: info.map(function(k) { return " " + k; }).toString()});
+			metadata.config.elements.push({
+				label: "Keywords",
+				value: info.map(function(k) {
+					return " " + k;
+				}).toString()
+			});
 			// Parse file types
 			info = _this.allFiles[elt.id].exif.metadata.fileTypes;
 			if (info.length === 0) {
@@ -657,6 +670,9 @@ function FileManager(wsio, mydiv, uniqueID) {
 		id: "uploadAPI",
 		view: "uploader",
 		upload: "/upload",  // POST url
+		formData: {
+			open: false // do not open after upload
+		},
 		on: {
 			onFileUpload: function(item) {
 				console.log('uploaded file', item.name);
@@ -912,7 +928,10 @@ function FileManager(wsio, mydiv, uniqueID) {
 			folder = this.mediaFolders[df];
 			if (myFile.sage2URL.startsWith(folder.url)) {
 				// Create a subfolder if needed
-				var filepath = myFile.sage2URL.split('/');
+
+				// var filepath = myFile.sage2URL.split('/');
+				var filepath = decodeURIComponent(myFile.sage2URL).split('/');
+
 				// Remove the fist two elements (root) and the last (filename)
 				var subdirArray = filepath.slice(2, -1);
 				var parent = folder.url;

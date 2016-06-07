@@ -1154,7 +1154,7 @@ function pointerClick(event) {
  */
 function handleClick(element) {
 	// Menu Buttons
-	if (element.id === "sage2pointer"      || element.id === "sage2pointerContainer" || element.id === "sage2pointerLabel") {
+	if (element.id === "sage2pointer"        || element.id === "sage2pointerContainer" || element.id === "sage2pointerLabel") {
 		interactor.startSAGE2Pointer(element.id);
 	} else if (element.id === "sharescreen"  || element.id === "sharescreenContainer"  || element.id === "sharescreenLabel") {
 		interactor.startScreenShare();
@@ -1177,13 +1177,13 @@ function handleClick(element) {
 				SAGE2_resize(1.0);
 			}
 		}
-	} else if (element.id === "arrangement"  || element.id === "arrangementContainer"  || element.id === "arrangementLabel") {
+	} else if (element.id === "arrangement" || element.id === "arrangementContainer" || element.id === "arrangementLabel") {
 		showDialog('arrangementDialog');
-	} else if (element.id === "settings"     || element.id === "settingsContainer"     || element.id === "settingsLabel") {
+	} else if (element.id === "settings"    || element.id === "settingsContainer"    || element.id === "settingsLabel") {
 		showDialog('settingsDialog');
-	} else if (element.id === "browser"      || element.id === "browserContainer"      || element.id === "browserLabel") {
+	} else if (element.id === "browser"     || element.id === "browserContainer"     || element.id === "browserLabel") {
 		showDialog('browserDialog');
-	} else if (element.id === "info"         || element.id === "infoContainer"         || element.id === "infoLabel") {
+	} else if (element.id === "info"        || element.id === "infoContainer"        || element.id === "infoLabel") {
 		// Fill up some information from the server
 		var infoData = document.getElementById('infoData');
 		// Clean up the existing values
@@ -1194,22 +1194,24 @@ function handleClick(element) {
 		var info2 = document.createElement('p');
 		info2.innerHTML = "<span style='font-weight:bold;'>Host</span>: " + displayUI.config.host;
 		var info3 = document.createElement('p');
-		info3.innerHTML = "<span style='font-weight:bold;'>Resolution</span>: " + displayUI.config.totalWidth + " x " +  displayUI.config.totalHeight + " pixels";
+		info3.innerHTML = "<span style='font-weight:bold;'>Resolution</span>: " +
+			displayUI.config.totalWidth + " x " +  displayUI.config.totalHeight + " pixels";
 		info3.innerHTML += " (" + displayUI.config.layout.columns + " by " + displayUI.config.layout.rows + " tiles";
 		info3.innerHTML += "  - " + displayUI.config.resolution.width + " x " + displayUI.config.resolution.height + ")";
 		infoData.appendChild(info2);
 		infoData.appendChild(info3);
 		if (sage2Version) {
 			var info5 = document.createElement('p');
-			info5.innerHTML  = "<span style='font-weight:bold;'>Version</span>: " + sage2Version.base + "-" + sage2Version.branch + "-"
+			info5.innerHTML  = "<span style='font-weight:bold;'>Version</span>: " +
+				sage2Version.base + "-" + sage2Version.branch + "-"
 				+ sage2Version.commit + " - " + sage2Version.date;
 			infoData.appendChild(info5);
 		}
 		// Finally show the dialog
 		showDialog('infoDialog');
-	} else if (element.id === "ezNote"         || element.id === "ezNoteContainer"         || element.id === "ezNoteLabel") {
+	} else if (element.id === "ezNote" || element.id === "ezNoteContainer" || element.id === "ezNoteLabel") {
 		showDialog('uiNoteMaker');
-	} else if (element.id === "ezDraw"         || element.id === "ezDrawContainer"         || element.id === "ezDrawLabel") {
+	} else if (element.id === "ezDraw" || element.id === "ezDrawContainer" || element.id === "ezDrawLabel") {
 		// clear drawzone
 		uiDrawCanvasBackgroundFlush('white');
 		var data = {};
@@ -1221,6 +1223,7 @@ function handleClick(element) {
 			clientName: document.getElementById('sage2PointerLabel').value
 		};
 		wsio.emit('csdMessage', data);
+
 		/*
 		Dialog will not be shown here.
 		Rather than show the dialog, the client will respond back, then it will be shown.
@@ -2050,7 +2053,9 @@ function setRmbContextMenuEntries(entriesToAdd, app) {
 					if (this.inputField === true) {
 						var inputField = document.getElementById(this.inputFieldId);
 						//dont do anything if there is nothing in the inputfield
-						if (inputField.value.length <= 0) { return; }
+						if (inputField.value.length <= 0) {
+							return;
+						}
 						//add the field clientInput to the parameters
 						this.parameters.clientInput = inputField.value;
 					}
@@ -2090,7 +2095,9 @@ function setRmbContextMenuEntries(entriesToAdd, app) {
 			inputField.value = "";
 			if (entriesToAdd[i].inputFieldSize) { // if specified state input field size
 				inputField.size = entriesToAdd[i].inputFieldSize;
-			} else { inputField.size = 5; }
+			} else {
+				inputField.size = 5;
+			}
 			// add the button effect to the input field to allow enter to send
 			workingDiv["buttonEffect" + inputField.id] =  entriesToAdd[i].buttonEffect;
 			workingDiv.appendChild(inputField);
@@ -2119,9 +2126,8 @@ function setRmbContextMenuEntries(entriesToAdd, app) {
 			var rmbcmeSpace = document.createElement('span');
 			rmbcmeSpace.innerHTML = "&nbsp&nbsp&nbsp";
 			workingDiv.appendChild(rmbcmeSpace);
-		}
-		// if no input field attach button effect to entire div instead of just OK button.
-		else {
+		} else {
+			// if no input field attach button effect to entire div instead of just OK button.
 			workingDiv.addEventListener('mousedown', entriesToAdd[i].buttonEffect);
 			// highlighting effect on mouseover
 			workingDiv.addEventListener('mouseover', function() {
@@ -2173,12 +2179,24 @@ function setupUiNoteMaker() {
 		workingDiv.addEventListener("click", function () {
 			setUiNoteColorSelect(this.colorNumber);
 		});
-		if (i === 1) { workingDiv.style.background = "lightyellow"; }
-		if (i === 2) { workingDiv.style.background = "lightblue"; }
-		if (i === 3) { workingDiv.style.background = "lightpink"; }
-		if (i === 4) { workingDiv.style.background = "lightgreen"; }
-		if (i === 5) { workingDiv.style.background = "lightsalmon"; }
-		if (i === 6) { workingDiv.style.background = "white"; }
+		if (i === 1) {
+			workingDiv.style.background = "lightyellow";
+		}
+		if (i === 2) {
+			workingDiv.style.background = "lightblue";
+		}
+		if (i === 3) {
+			workingDiv.style.background = "lightpink";
+		}
+		if (i === 4) {
+			workingDiv.style.background = "lightgreen";
+		}
+		if (i === 5) {
+			workingDiv.style.background = "lightsalmon";
+		}
+		if (i === 6) {
+			workingDiv.style.background = "white";
+		}
 	}
 	setUiNoteColorSelect(1);
 }
@@ -2217,7 +2235,9 @@ function sendCsdMakeNote() {
 	data.params.clientName = document.getElementById('sage2PointerLabel').value;
 	data.params.clientInput = workingDiv.value;
 	workingDiv.value = ""; // clear out the input field.
-	if (document.getElementById("uiNoteMakerCheckAnonymous").checked) { data.params.clientName = "Anonymous"; }
+	if (document.getElementById("uiNoteMakerCheckAnonymous").checked) {
+		data.params.clientName = "Anonymous";
+	}
 	data.params.colorChoice = "lightyellow";
 	for (var i = 1; i <= 6; i++) {
 		if (document.getElementById("uinmColorPick" + i).colorWasPicked) {
@@ -2251,9 +2271,11 @@ function setupUiDrawCanvas() {
 	// event handlers to create the lines
 	uidzCanvas.ongoingTouches = new Array();
 	uidzCanvas.addEventListener('touchstart', uiDrawTouchStart);
-	uidzCanvas.addEventListener('touchmove', uiDrawTouchMove);
-	uidzCanvas.addEventListener('touchend', uiDrawTouchEnd);
-	uidzCanvas.addEventListener('mouseup', function(event) { this.doDraw = false; });
+	uidzCanvas.addEventListener('touchmove',  uiDrawTouchMove);
+	uidzCanvas.addEventListener('touchend',   uiDrawTouchEnd);
+	uidzCanvas.addEventListener('mouseup',    function(event) {
+		this.doDraw = false;
+	});
 	uidzCanvas.addEventListener('mousemove',
 		function(event) {
 			if (this.doDraw) {

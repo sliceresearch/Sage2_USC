@@ -21,6 +21,7 @@
  * @class movie_player
  */
 var movie_player = SAGE2_BlockStreamingApp.extend({
+
 	/**
 	* Init method, creates an 'div' tag in the DOM
 	*

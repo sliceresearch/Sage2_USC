@@ -206,15 +206,29 @@ function _Date(obj) {
 }
 SAGE2types.Date = _Date;
 
-SAGE2types.isaLatLng = function(obj) { return obj instanceof SAGE2types.LatLng; };
-SAGE2types.isaInt    = function(obj) { return obj instanceof SAGE2types.Int; };
-SAGE2types.isaFloat  = function(obj) { return obj instanceof SAGE2types.Float; };
-SAGE2types.isaString = function(obj) { return obj instanceof SAGE2types.String; };
-SAGE2types.isaObject = function(obj) { return obj instanceof SAGE2types.Object; };
-SAGE2types.isaArray  = function(obj) { return obj instanceof SAGE2types.Array; };
-SAGE2types.isaDate   = function(obj) { return obj instanceof SAGE2types.Date; };
+SAGE2types.isaLatLng = function(obj) {
+	return obj instanceof SAGE2types.LatLng;
+};
+SAGE2types.isaInt = function(obj) {
+	return obj instanceof SAGE2types.Int;
+};
+SAGE2types.isaFloat = function(obj) {
+	return obj instanceof SAGE2types.Float;
+};
+SAGE2types.isaString = function(obj) {
+	return obj instanceof SAGE2types.String;
+};
+SAGE2types.isaObject = function(obj) {
+	return obj instanceof SAGE2types.Object;
+};
+SAGE2types.isaArray = function(obj) {
+	return obj instanceof SAGE2types.Array;
+};
+SAGE2types.isaDate = function(obj) {
+	return obj instanceof SAGE2types.Date;
+};
 
-SAGE2types.create    = function(val) {
+SAGE2types.create = function(val) {
 	if (_typeOf(val) === 'object') {
 		if (val.hasOwnProperty('lat') && val.hasOwnProperty('lng')) {
 			return new SAGE2types.LatLng(val.lat, val.lng);
@@ -289,35 +303,22 @@ function broadcast(dataObject) {
  * Pretty print a date object into string
  *
  * @method formatAMPM
- * @param date {Date} date to convert
+ * @param date {Object} momentjs object for time
  * @return {String} formatted date
  */
 function formatAMPM(date) {
-	var hours   = date.getHours();
-	var minutes = date.getMinutes();
-	var ampm    = hours >= 12 ? "pm" : "am";
-	hours       = hours % 12;
-	if (hours === 0) {
-		hours = 12;
-	}
-	var hh = hours.toString();
-	var mm = minutes < 10 ? "0" + minutes.toString() : minutes.toString();
-	return (hh + ":" + mm + ampm);
+	return date.format('h:mm a');
 }
 
 /**
  * Convert date into 24h string format
  *
  * @method format24Hr
- * @param date {Date} date to convert
+ * @param date {Object} momentjs object for time
  * @return {String} formatted date
  */
 function format24Hr(date) {
-	var hours   = date.getHours();
-	var minutes = date.getMinutes();
-	var hh = hours.toString();
-	var mm = minutes < 10 ? "0" + minutes.toString() : minutes.toString();
-	return (hh + ":" + mm);
+	return date.format('HH:mm');
 }
 
 /**

@@ -100,7 +100,8 @@
 			name: "CAVE2",
 			host: "lyra.evl.uic.edu",
 			port: 443,
-			secure: true
+			secure: true,
+			password: "evl123"
 		}
 	]
 }

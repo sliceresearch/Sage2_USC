@@ -66,6 +66,7 @@
 		"sanitizer": "latest",
 		"sanitize-filename": "latest",
 		"normalizeurl": "latest",
+		"sw-precache": "latest",
 		"ytdl-core": "latest"
 	},
 	"optionalDependencies": {
@@ -94,6 +95,7 @@
 	},
 	"scripts": {
 		"start":   "node server.js -l",
+		"sw":      "node generate-service-worker.js",
 		"monitor": "nodemon -e json,js,html -I -L -i public/uploads server.js -l",
 		"lint":    "grunt eslint",
 		"style":   "grunt jscs",
