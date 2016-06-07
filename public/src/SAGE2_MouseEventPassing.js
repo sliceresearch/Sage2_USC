@@ -213,6 +213,14 @@ var SAGE2MEP = {
 				} // end if a click needs to be made
 
 				break;
+			case "pointerScroll":
+				mouseEventToPass = new WheelEvent("wheel", {
+					deltaY: data.wheelDelta,
+					deltaMode: 0
+				});
+				point.currentElement.dispatchEvent(mouseEventToPass);
+				
+				break;
 			case "pointerDoubleClick":
 
 				if (this.debug) {

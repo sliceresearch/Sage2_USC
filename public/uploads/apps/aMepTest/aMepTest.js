@@ -15,11 +15,10 @@ var aMepTest = SAGE2_App.extend( {
         // data: contains initialization parameters, such as `x`, `y`, `width`, `height`, and `date`
         this.SAGE2Init("div", data);
 		this.element.id = "div" + data.id;
-
         this.resizeEvents = "continuous";
         this.passSAGE2PointerAsMouseEvents = true;
 
-        // initialize your variables
+        // Custom app variables initialization
         this.logSAGE2events = true;
         this.ci = 0;
         this.colors = ["pink", "lightblue", "lightgreen", "lightgray"];
@@ -33,6 +32,9 @@ var aMepTest = SAGE2_App.extend( {
 				if (thisObj.ci >= thisObj.colors.length) { thisObj.ci = 0; }
 			}
 		});
+        this.element.addEventListener("wheel", function (e) {
+            thisDiv.textContent = "scroll amount:" + e.deltaY;
+        });
     },
 
     //load function allows application to begin with a particular state.  Needed for remote site collaboration.
@@ -47,10 +49,11 @@ var aMepTest = SAGE2_App.extend( {
     },
 
     event: function(type, position, user, data, date) {
-
         if (this.logSAGE2events) {
             if (type == "pointerPress") {
-                console.log("SAGE2 event pointer press from:" + data.button);
+                console.log("SAGE2 event pointer press button:" + data.button);
+            } else if (type == "pointerScroll") {
+                console.log("SAGE2 event pointer scroll delta:" + data.wheelDelta);
             }
         } // end if logSAGE2events
     },
