@@ -154,12 +154,21 @@ var SAGE2MEP = {
 					console.log("webkit pointer location: " + xLocationOfPointerOnScreen + "," + yLocationOfPointerOnScreen);
 				}
 
+				// 0 is left, 1 middle, 2 right
+				var buttonValue = 0;
+				if (data.button == "middle") {
+					buttonValue = 1; 
+				} else if (data.button == "right") {
+					buttonValue = 2;
+				}
+
 				mouseEventToPass = new MouseEvent("mousedown", {
 					bubbles: true,
 					clientX: point.xCurrent,
 					clientY: point.yCurrent,
 					screenX: point.xCurrent,
 					screenY: point.yCurrent,
+					button: buttonValue,
 					// relatedTarget: point.previousElement,
 					// for: focus, mouse enter leave out over, drag
 					target: point.currentElement

@@ -5101,7 +5101,9 @@ function pointerPressOnApplication(uniqueID, pointerX, pointerY, data, obj, loca
 	if (btn === null) {
 		if (data.button === "right") {
 			var elemCtrl = SAGE2Items.widgets.list[obj.id + uniqueID + "_controls"];
-			if (!elemCtrl) {
+			if (remoteInteraction[uniqueID].appInteractionMode()) {
+				sendPointerPressToApplication(uniqueID, obj.data, pointerX, pointerY, data);
+			} else if (!elemCtrl) {
 				broadcast('requestNewControl', {elemId: obj.id, user_id: uniqueID,
 					user_label: sagePointers[uniqueID] ? sagePointers[uniqueID].label : "",
 					x: pointerX, y: pointerY, date: Date.now() });
