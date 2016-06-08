@@ -210,6 +210,9 @@ function OmicronManager(sysConfig) {
 		this.oinputserverSocket.on('error', function(e) {
 			console.log(sageutils.header('Omicron') + 'oinputserver connection error - code:', e.code);
 		});
+		this.oinputserverSocket.on('data', function(e) {
+			console.log(sageutils.header('Omicron') + 'oinputserver receiving data:', e);
+		});
 	}
 }
 
@@ -288,21 +291,24 @@ OmicronManager.prototype.setCallbacks = function(
  */
 OmicronManager.prototype.runTracker = function() {
 	var udp = dgram.createSocket("udp4");
-	var dstart = Date.now();
-	var emit   = 0;
-	this.nonCriticalEventDelay = 50;
-
-	// array to hold all the button values (1 - down, 0 = up)
-	// var buttons = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
-	// var mouse   = [0, 0, 0];
-	// var mousexy = [0.0, 0.0];
-	// var colorpt = [0.0, 0.0, 0.0];
-	// var mousez  = 0;
-	// var wandObjectList = []; // Mocap object list
-
-	this.lastNonCritEventTime = dstart;
-
+	
 	udp.on("message", function(msg, rinfo) {
+		omicronManager.processIncomingEvent(msg, rinfo);
+	});
+	
+	udp.on("listening", function() {
+		var address = udp.address();
+		console.log(sageutils.header('Omicron') + 'UDP listening ' + address.address + ":" + address.port);
+	});
+
+	udp.bind(this.omicronDataPort);
+}
+
+OmicronManager.prototype.processIncomingEvent = function(msg, rinfo) {
+		var dstart = Date.now();
+		var emit   = 0;
+		this.nonCriticalEventDelay = 50;
+		this.lastNonCritEventTime = dstart;
 		// console.log("UDP> got: " + msg + " from " + rinfo.address + ":" + rinfo.port);
 		// var out = util.format("UDP> msg from [%s:%d] %d bytes", rinfo.address,rinfo.port,msg.length);
 		// console.log(out);
@@ -583,14 +589,6 @@ OmicronManager.prototype.runTracker = function() {
 				}
 			}
 		} // ServiceTypeWand ends ///////////////////////////////////////////
-	});// end udp.on 'message'
-
-	udp.on("listening", function() {
-		var address = udp.address();
-		console.log(sageutils.header('Omicron') + 'UDP listening ' + address.address + ":" + address.port);
-	});
-
-	udp.bind(this.omicronDataPort);
 };
 
 /**
@@ -643,11 +641,6 @@ OmicronManager.prototype.processPointerEvent = function(e, sourceID, posX, posY,
 		drawingManager.reEnableDrawingMode();
 	}
 
-	// Not an omicron gesture event
-	if (e.extraDataItems <= 2) {
-		return;
-	}
-
 	// TouchGestureManager Flags:
 	// 1 << 18 = User flag start (as of 8/3/14)
 	// User << 1 = Unprocessed
@@ -678,18 +671,30 @@ OmicronManager.prototype.processPointerEvent = function(e, sourceID, posX, posY,
 
 	// As of 2015/11/13 all touch gesture events touch have an init value
 	// (zoomDelta moved to extraData index 4 instead of 2)
-	initX = msg.readFloatLE(offset); offset += 4;
-	initY = msg.readFloatLE(offset); offset += 4;
+	if (e.extraDataItems > 2) {
+		initX = msg.readFloatLE(offset); offset += 4;
+		initY = msg.readFloatLE(offset); offset += 4;
 
-	initX *= omicronManager.totalWidth;
-	initY *= omicronManager.totalHeight;
-
+		initX *= omicronManager.totalWidth;
+		initY *= omicronManager.totalHeight;
+	} else {
+		initX = posX;
+		initY = posY;
+	}
+	
 	var timeSinceLastNonCritEvent = Date.now() - omicronManager.lastNonCritEventTime;
 
 	if (e.type === 4) {
 		if (timeSinceLastNonCritEvent > omicronManager.nonCriticalEventDelay) {
 			// move
-			if (e.flags === FLAG_SINGLE_TOUCH) {
+			if (e.flags === FLAG_FIVE_FINGER_HOLD) {
+				if (omicronManager.gestureDebug) {
+					console.log("Touch move gesture: Five finger hold - " + Date.now());
+				}
+				omicronManager.pointerCloseGesture(address, posX, posY, Date.now(), 1);
+			} else if (e.flags === FLAG_MULTI_TOUCH) {
+				omicronManager.pointerPosition(address, { pointerX: posX, pointerY: posY });
+			} else {
 				if (omicronManager.gestureDebug) {
 					console.log("Touch move at - (" + posX.toFixed(2) + "," + posY.toFixed(2) + ") initPos: ("
 					+ initX.toFixed(2) + "," + initY.toFixed(2) + ")");
@@ -705,13 +710,6 @@ OmicronManager.prototype.processPointerEvent = function(e, sourceID, posX, posY,
 				omicronManager.pointerPosition(address, { pointerX: accelX, pointerY: accelY });
 				omicronManager.pointerMove(address, accelX, accelY, { deltaX: 0, deltaY: 0, button: "left" });
 				omicronManager.lastNonCritEventTime = Date.now();
-			} else if (e.flags === FLAG_FIVE_FINGER_HOLD) {
-				if (omicronManager.gestureDebug) {
-					console.log("Touch move gesture: Five finger hold - " + Date.now());
-				}
-				omicronManager.pointerCloseGesture(address, posX, posY, Date.now(), 1);
-			} else if (e.flags === FLAG_MULTI_TOUCH) {
-				omicronManager.pointerPosition(address, { pointerX: posX, pointerY: posY });
 			}
 		}
 	} else if (e.type === 15 && omicronManager.enableTwoFingerZoom) {
@@ -786,24 +784,7 @@ OmicronManager.prototype.processPointerEvent = function(e, sourceID, posX, posY,
 			+ initX.toFixed(2) + "," + initY.toFixed(2) + ") flags:" + e.flags);
 		}
 
-		if (e.flags === FLAG_SINGLE_TOUCH || e.flags === FLAG_MULTI_TOUCH) {
-			// Create pointer
-			if (address in omicronManager.sagePointers) {
-				omicronManager.showPointer(address, {
-					label:  "Touch: " + sourceID,
-					color: "rgba(242, 182, 15, 1.0)",
-					sourceType: "Touch"
-				});
-			} else {
-				omicronManager.createSagePointer(address);
-				omicronManager.showPointer(address, {
-					label:  "Touch: " + sourceID,
-					color: "rgba(242, 182, 15, 1.0)",
-					sourceType: "Touch"
-				});
-				omicronManager.pointerPress(address, posX, posY, { button: "left" });
-			}
-		} else if (e.flags === FLAG_FIVE_FINGER_HOLD) {
+		if (e.flags === FLAG_FIVE_FINGER_HOLD) {
 			if (omicronManager.gestureDebug) {
 				console.log("Touch down gesture: Five finger hold - " + Date.now());
 			}
@@ -824,9 +805,31 @@ OmicronManager.prototype.processPointerEvent = function(e, sourceID, posX, posY,
 				console.log("Touch gesture: Double Click");
 			}
 			omicronManager.pointerDblClick(address, posX, posY);
+		} else {
+			// Create pointer
+			if (address in omicronManager.sagePointers) {
+				omicronManager.showPointer(address, {
+					label:  "Touch: " + sourceID,
+					color: "rgba(242, 182, 15, 1.0)",
+					sourceType: "Touch"
+				});
+			} else {
+				omicronManager.createSagePointer(address);
+				omicronManager.showPointer(address, {
+					label:  "Touch: " + sourceID,
+					color: "rgba(242, 182, 15, 1.0)",
+					sourceType: "Touch"
+				});
+				omicronManager.pointerPress(address, posX, posY, { button: "left" });
+			}
 		}
 	} else if (e.type === 6) { // button up
-		if (e.flags === FLAG_SINGLE_TOUCH || e.flags === FLAG_MULTI_TOUCH) {
+		if (e.flags === FLAG_FIVE_FINGER_HOLD && omicronManager.enableFiveFingerCloseApp) {
+			if (omicronManager.gestureDebug) {
+				console.log("Touch up gesture: Five finger hold - " + Date.now());
+			}
+			omicronManager.pointerCloseGesture(address, posX, posY, Date.now(), 2);
+		} else {
 			// Hide pointer
 			omicronManager.hidePointer(address);
 
@@ -841,12 +844,7 @@ OmicronManager.prototype.processPointerEvent = function(e, sourceID, posX, posY,
 				console.log("Touch up at - (" + posX.toFixed(2) + "," + posY.toFixed(2) + ") initPos: ("
 				+ initX.toFixed(2) + "," + initY.toFixed(2) + ") flags:" + e.flags);
 			}
-		} else if (e.flags === FLAG_FIVE_FINGER_HOLD && omicronManager.enableFiveFingerCloseApp) {
-			if (omicronManager.gestureDebug) {
-				console.log("Touch up gesture: Five finger hold - " + Date.now());
-			}
-			omicronManager.pointerCloseGesture(address, posX, posY, Date.now(), 2);
-		}
+		} 
 	} else {
 		console.log("\t UNKNOWN event type ", e.type);
 	}
