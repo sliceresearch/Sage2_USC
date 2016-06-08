@@ -44,18 +44,25 @@ var photos = SAGE2_App.extend({
 		// Register a callback to handle file list from server
 		this.registerFileListHandler(this.fileList);
 
+		// Load the current list of images
 		this.loadInList();
 	},
 
 	// Callback from file manager
 	fileList: function(data) {
+		var slideshowUpdate = false;
 		// Create an array of images from the 'slideshow' user folder
 		this.slideshowList = [];
 		for (var i = data.images.length - 1; i >= 0; i--) {
 			// take only images from the slideshow folder in user directory
 			if (data.images[i].sage2URL.startsWith("/user/slideshow/")) {
 				this.slideshowList.push({name: data.images[i].sage2URL});
+				slideshowUpdate = true;
 			}
+		}
+		// If a new pic was added to the slideshow
+		if (slideshowUpdate && this.listFileNamePhotos === "slideshow") {
+			this.loadInList();
 		}
 	},
 
@@ -376,8 +383,6 @@ var photos = SAGE2_App.extend({
 		this.listFileNamePhotos = "";
 		this.listFileNameLibrary = "";
 
-
-
 		this.maxFPS = 30.0;
 		this.element.id = "div" + data.id;
 
@@ -467,8 +472,8 @@ var photos = SAGE2_App.extend({
 		if (eventType === "pointerRelease" && (data.button === "left")) {
 			this.nextAlbum();
 			this.refresh(date);
-		}		else if (eventType === "widgetEvent") {
-			if (data.ctrlId === "Next") {
+		} else if (eventType === "widgetEvent") {
+			if (data.identifier === "Next") {
 				this.nextAlbum();
 			} else {
 				this.setAlbum(data.identifier);
