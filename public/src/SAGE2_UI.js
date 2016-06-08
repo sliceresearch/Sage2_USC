@@ -2549,11 +2549,13 @@ function uiDrawSendLineCommand(xDest, yDest, xPrev, yPrev) {
 	var lineWidth	= parseInt(workingDiv.lineWidth);
 	var fillStyle	= document.getElementById('uiDrawColorPicker').value;
 	var strokeStyle	= document.getElementById('uiDrawColorPicker').value;
+	// If resize is greater than 0, its a 2^resize value, otherwise 1.
+	var modifier = (workingDiv.resizeCount > 0) ? (Math.pow(2, workingDiv.resizeCount)) : 1;
 	var dataForApp = {};
 	dataForApp.app			= workingDiv.appId;
 	dataForApp.func			= "drawLine";
-	dataForApp.data			= [xDest, yDest,
-								xPrev, yPrev,
+	dataForApp.data			= [xDest * modifier, yDest * modifier,
+								xPrev * modifier, yPrev * modifier,
 								lineWidth,
 								fillStyle, strokeStyle,
 								workingDiv.clientDest];
@@ -2610,22 +2612,54 @@ Must clear out canvas, set state, show dialog.
 
 Generally this happens when a user chooses to edit an existing doodle. Their canvas needs to be set
 	to the current state of the doodle before edits should be made.
+
+But, doodles can be made from images which have varying sizes. They must also be contained within view correctly.
 */
 function uiDrawSetCurrentStateAndShow(data) {
 	// clear out canvas
 	uiDrawCanvasBackgroundFlush("white");
+	var imageResolutionToBe = { w: data.imageWidth, h: data.imageHeight };
+	var imageLimit = {w: (window.innerWidth * 0.8), h: (window.innerHeight - 200)};
+	var resizeCount = 0;
+	while ( imageResolutionToBe.w > imageLimit.w) {
+		imageResolutionToBe.w /= 2;
+		imageResolutionToBe.h /= 2;
+		resizeCount++;
+	}
+	while (imageResolutionToBe.h > imageLimit.h) {
+		imageResolutionToBe.w /= 2;
+		imageResolutionToBe.h /= 2;
+		resizeCount++;
+	}
+
+	// Keeping the old code just in case for now // set the state
+	// var workingDiv = document.getElementById('uiDrawZoneCanvas');
+	// workingDiv.width           = data.imageWidth;
+	// workingDiv.height          = data.imageHeight;
+	// workingDiv.style.width     = data.imageWidth + "px";
+	// workingDiv.style.height    = data.imageHeight + "px";
+	// workingDiv.imageToDraw.src = data.canvasImage;
+	// var ctx = workingDiv.getContext('2d');
+	// ctx.drawImage(workingDiv.imageToDraw, 0, 0);
+	// // set variables to correctly send updates and allow removal as editor.
+	// workingDiv.clientDest = data.clientDest;
+	// workingDiv.appId      = data.appId;
+	// // show dialog
+	// showDialog('uiDrawZone');
+
 	// set the state
 	var workingDiv = document.getElementById('uiDrawZoneCanvas');
 	workingDiv.width           = data.imageWidth;
 	workingDiv.height          = data.imageHeight;
-	workingDiv.style.width     = data.imageWidth + "px";
-	workingDiv.style.height    = data.imageHeight + "px";
+	workingDiv.style.width     = imageResolutionToBe.w + "px";
+	workingDiv.style.height    = imageResolutionToBe.h + "px";
 	workingDiv.imageToDraw.src = data.canvasImage;
 	var ctx = workingDiv.getContext('2d');
 	ctx.drawImage(workingDiv.imageToDraw, 0, 0);
 	// set variables to correctly send updates and allow removal as editor.
-	workingDiv.clientDest = data.clientDest;
-	workingDiv.appId      = data.appId;
+	workingDiv.clientDest  = data.clientDest;
+	workingDiv.appId       = data.appId;
+	workingDiv.resizeCount = resizeCount;
 	// show dialog
 	showDialog('uiDrawZone');
 }

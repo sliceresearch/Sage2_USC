@@ -25,7 +25,6 @@ var aMepTest = SAGE2_App.extend( {
         var thisDiv = this.element;
         var thisObj = this;
         this.element.addEventListener("mousedown", function (e) {
-			// console.log("erase me, mousedown: " + e.button);
 			if (e.button === 2) {
 				thisDiv.style.background = thisObj.colors[thisObj.ci];
 				thisObj.ci++;
