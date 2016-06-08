@@ -835,7 +835,7 @@ var SAGE2_App = Class.extend({
 	},
 
 	/**
-	* Performs full fill of app context menu and sends update to server. 
+	* Performs full fill of app context menu and sends update to server.
 	* This provides one place(mostly) to change code for context menu.
 	*
 	* @method getFullContextMenuAndUpdate
@@ -858,10 +858,9 @@ var SAGE2_App = Class.extend({
 					description: "Close App",
 					callback: "SAGE2DeleteElement", // better function name?
 					parameters: {}
-				}]
+				}];
 			}
 			wsio.emit("dtuRmbContextMenuContents", rmbData);
 		}
-	},
-
+	}
 });

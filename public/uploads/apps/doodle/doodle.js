@@ -64,6 +64,7 @@ var doodle = SAGE2_App.extend({
 		}
 		var _this = this;
 		this.imageToDraw.onload = function() {
+
 			/*
 			Resize app based on image size.
 			NOTE: Known bug: if the canvas is set based upon an image, the localhost may error if the display client is on another computer.

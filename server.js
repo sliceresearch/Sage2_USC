@@ -7444,7 +7444,7 @@ function wsUtdCallFunctionOnApp(wsio, data) {
 	if (data.func === "SAGE2DeleteElement") {
 		deleteApplication(data.app);
 		return; // closing of applications are handled by the called function.
-	} 
+	}
 	// Using broadcast means the parameter must be in data.data
 	data.data = data.parameters;
 	// add the serverDate property
@@ -7615,7 +7615,7 @@ function csdLaunchAppWithValues(wsio, data) {
 		// stagger the start location to prevent them from stacking on top of each other.
 		// this is just a temporary solution.
 		// percents
-		appLoadData.position = [ csdDataStructure.xAppLaunchCoordinate, csdDataStructure.yAppLaunchCoordinate ];
+		appLoadData.position = [csdDataStructure.xAppLaunchCoordinate, csdDataStructure.yAppLaunchCoordinate];
 		// after launch reset position
 		csdDataStructure.xAppLaunchCoordinate += 600;
 		if (csdDataStructure.xAppLaunchCoordinate >= config.totalWidth - 500) {

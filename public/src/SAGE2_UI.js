@@ -1025,7 +1025,7 @@ function pointerPress(event) {
 		hideRmbContextMenuDiv();
 		clearContextMenu();
 		event.preventDefault();
-	} else if(event.target.id === "mainUI") {
+	} else if (event.target.id === "mainUI") {
 		hideRmbContextMenuDiv();
 		clearContextMenu();
 	}
@@ -2315,15 +2315,15 @@ function setupUiDrawCanvas() {
 		}
 	);
 	// closes the draw area (but really hides it)
-	var closeButton = document.getElementById("uiDrawZoneCloseEditorButton");
-	closeButton.addEventListener('click',
+	var closeEditorButton = document.getElementById("uiDrawZoneCloseEditorButton");
+	closeEditorButton.addEventListener('click',
 		function() {
 			hideDialog('uiDrawZone');
 		}
 	);
 	// closes the draw area (but really hides it)
-	var closeButton = document.getElementById("uiDrawZoneCloseDoodleButton");
-	closeButton.addEventListener('click',
+	var closeDoodleButton = document.getElementById("uiDrawZoneCloseDoodleButton");
+	closeDoodleButton.addEventListener('click',
 		function() {
 			hideDialog('uiDrawZone');
 			// Close the doodle on the wall.
@@ -2621,7 +2621,7 @@ function uiDrawSetCurrentStateAndShow(data) {
 	var imageResolutionToBe = { w: data.imageWidth, h: data.imageHeight };
 	var imageLimit = {w: (window.innerWidth * 0.8), h: (window.innerHeight - 200)};
 	var resizeCount = 0;
-	while ( imageResolutionToBe.w > imageLimit.w) {
+	while (imageResolutionToBe.w > imageLimit.w) {
 		imageResolutionToBe.w /= 2;
 		imageResolutionToBe.h /= 2;
 		resizeCount++;

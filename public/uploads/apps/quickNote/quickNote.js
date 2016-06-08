@@ -267,42 +267,42 @@ var quickNote = SAGE2_App.extend({
 		entry = {};
 		entry.description = "Blue";
 		entry.callback    = "setColor";
-		entry.parameters  = {color:"lightblue"};
+		entry.parameters  = { color: "lightblue"};
 		entry.entryColor  = "lightblue";
 		entries.push(entry);
 
 		entry = {};
 		entry.description = "Yellow";
 		entry.callback    = "setColor";
-		entry.parameters  = {color:"lightyellow"};
+		entry.parameters  = { color: "lightyellow"};
 		entry.entryColor  = "lightyellow";
 		entries.push(entry);
 
 		entry = {};
 		entry.description = "Pink";
 		entry.callback    = "setColor";
-		entry.parameters  = {color:"lightpink"};
+		entry.parameters  = { color: "lightpink"};
 		entry.entryColor  = "lightpink";
 		entries.push(entry);
 
 		entry = {};
 		entry.description = "Green";
 		entry.callback    = "setColor";
-		entry.parameters  = {color:"lightgreen"};
+		entry.parameters  = { color: "lightgreen"};
 		entry.entryColor  = "lightgreen";
 		entries.push(entry);
 
 		entry = {};
 		entry.description = "White";
 		entry.callback    = "setColor";
-		entry.parameters  = {color:"white"};
+		entry.parameters  = { color: "white"};
 		entry.entryColor  = "white";
 		entries.push(entry);
 
 		entry = {};
 		entry.description = "Orange";
 		entry.callback    = "setColor";
-		entry.parameters  = {color:"lightsalmon"};
+		entry.parameters  = { color: "lightsalmon"};
 		entry.entryColor  = "lightsalmon";
 		entries.push(entry);
 

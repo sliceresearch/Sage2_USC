@@ -157,7 +157,7 @@ var SAGE2MEP = {
 				// 0 is left, 1 middle, 2 right
 				var buttonValue = 0;
 				if (data.button == "middle") {
-					buttonValue = 1; 
+					buttonValue = 1;
 				} else if (data.button == "right") {
 					buttonValue = 2;
 				}
@@ -219,7 +219,7 @@ var SAGE2MEP = {
 					deltaMode: 0
 				});
 				point.currentElement.dispatchEvent(mouseEventToPass);
-				
+
 				break;
 			case "pointerDoubleClick":
 
