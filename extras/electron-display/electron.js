@@ -58,6 +58,7 @@ function createWindow() {
 		width:  commander.width,
 		height: commander.height,
 		frame:  !commander.no_decoration,
+		webaudio: false,
 		webPreferences: {
 			nodeIntegration: true,
 			webSecurity: true,
@@ -85,6 +86,9 @@ function createWindow() {
 	} else {
 		openWindow();
 	}
+
+	// Mute the audio (just in case)
+	mainWindow.webContents.setAudioMuted(true);
 
 	// Open the DevTools.
 	if (commander.console) {
