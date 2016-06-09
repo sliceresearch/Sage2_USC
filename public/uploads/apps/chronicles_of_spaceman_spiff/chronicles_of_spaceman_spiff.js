@@ -19,6 +19,7 @@
 
 var chronicles_of_spaceman_spiff = SAGE2_App.extend({
 
+
 	initApp: function()	{
 		this.nextCallbackFunc = this.nextCallback.bind(this);
 		this.prevCallbackFunc = this.prevCallback.bind(this);
@@ -27,23 +28,36 @@ var chronicles_of_spaceman_spiff = SAGE2_App.extend({
 		this.loadSuccessCallbackFunc = this.loadSuccessCallback.bind(this);
 	},
 
-	createURL: function(timeMachine)	{
-		// var aURL = 'http://www.gocomics.com/calvinandhobbes/2015/10/19/'
 
-		var baseURL = "http://www.gocomics.com/calvinandhobbes/";
+	createURL: function(timeMachine, cNum)	{
+
+		var thisComic = cNum;
+		console.log(cNum, timeMachine);
+
+
+		if (thisComic < 0) {
+			thisComic = 0;
+		}
+		if (thisComic >= this.comics.length) {
+			thisComic = 0;
+		}
+
+		var baseURL = this.comics[thisComic].comicUrl;
+		this.comicName = this.comics[thisComic].comicName;
+
 
 		if (timeMachine > 0) {
 			timeMachine = 0;
 		}
 
 		var today = new Date(new Date().getTime() + 24 * timeMachine * 60 * 60 * 1000);
-		var todayPrint;
+		// var todayPrint;
 
 		var todayDay     = today.getDate().toString();			// days are 1 - 31
 		var todayMonth   = (today.getMonth() + 1).toString();	// months are 0 - 11
 		var todayYear    = today.getFullYear().toString();		// year is correct
-		var todayHour    = today.getHours().toString();			// hours are 0-23
-		var todayMinutes = today.getMinutes().toString();		// minutes are 0-59
+		// var todayHour    = today.getHours().toString();			// hours are 0-23
+		// var todayMinutes = today.getMinutes().toString();		// minutes are 0-59
 
 		if (todayDay.length < 2) {
 			todayDay = "0" + todayDay;
@@ -53,11 +67,12 @@ var chronicles_of_spaceman_spiff = SAGE2_App.extend({
 			todayMonth = "0" + todayMonth;
 		}
 
-		if (todayMinutes.length < 2) {
-			todayMinutes = "0" + todayMinutes;
-		}
+		// if (todayMinutes.length < 2) {
+		// 	todayMinutes = "0" + todayMinutes;
+		// }
+
 		this.today = todayYear + '/' + todayMonth + '/' + todayDay;
-		this.todayPrint = todayYear + '/' + todayMonth + '/' + todayDay + ' ' + todayHour + ':' + todayMinutes;
+		// this.todayPrint = todayYear + '/' + todayMonth + '/' + todayDay + ' ' + todayHour + ':' + todayMinutes;
 		return (baseURL + this.today);
 	},
 
@@ -191,7 +206,8 @@ var chronicles_of_spaceman_spiff = SAGE2_App.extend({
 		}
 
 		this.drawBox(0, this.canvasHeight, 30, this.canvasWidth, "#fdae61", 1.0);
-		this.drawText(0.5 * this.canvasWidth, this.canvasHeight + 22, "classic Calvin and Hobbes", 24);
+		this.drawText(0.5 * this.canvasWidth, this.canvasHeight + 22, "gocomics.com - " +
+			this.comicName + " - " + this.today, 24);
 
 		this.drawBoxPrev(0, this.canvasHeight, 30, 50, "#fdae00", 1.0);
 		this.drawBoxNext(this.canvasWidth - 50, this.canvasHeight, 30, 50, "#fdae00", 1.0);
@@ -206,10 +222,10 @@ var chronicles_of_spaceman_spiff = SAGE2_App.extend({
 
 	update: function() {
 		// get new image
-		var newurl = this.createURL(this.state.timeDiff);
+		var newurl = this.createURL(this.state.timeDiff, this.state.whichComic);
 		//if (newurl !== this.URL) {
-			this.URL = newurl;
-			this.updateSlim();
+		this.URL = newurl;
+		this.updateSlim();
 		//}
 	},
 
@@ -265,7 +281,21 @@ var chronicles_of_spaceman_spiff = SAGE2_App.extend({
 		this.URL   = "";
 		this.today = "";
 
-		// update once per hour
+
+		this.comics = [];
+		this.comics[0] = {comicUrl: "http://www.gocomics.com/calvinandhobbes/",
+							comicName: "classic Calvin and Hobbes"};
+		this.comics[1] = {comicUrl: "http://www.gocomics.com/doonesbury/",
+							comicName: "Doonesbury"};
+		this.comics[2] = {comicUrl: "http://www.gocomics.com/dilbert-classics/",
+							comicName: "classic Dilbert"};
+		this.comics[3] = {comicUrl: "http://www.gocomics.com/wizard-of-id-classics/",
+							comicName: "classic Wizard of Id"};
+		this.comics[4] = {comicUrl: "http://www.gocomics.com/bloomcounty/",
+							comicName: "classic Bloom County"};
+
+
+		// update once per hour (55 mins)
 		this.maxFPS = 0.0003;
 
 		this.element.id = "div" + data.id;
@@ -288,6 +318,16 @@ var chronicles_of_spaceman_spiff = SAGE2_App.extend({
 		this.draw_d3(data.date);
 		this.controls.addButton({type: "next", position: 7, identifier: "Next"});
 		this.controls.addButton({type: "prev", position: 1, identifier: "Prev"});
+
+		this.controls.addButton({label: "C&H", position: 3, identifier: "CH"});
+		this.controls.addButton({label: "Dilb", position: 5, identifier: "Dil"});
+		this.controls.addButton({label: "WizId", position: 9, identifier: "Wiz"});
+		this.controls.addButton({label: "BlCo", position: 10, identifier: "Blm"});
+		this.controls.addButton({label: "Doon", position: 11, identifier: "Doon"});
+
+
+
+
 		this.controls.finishedAddingControls(); // Not adding controls but making the default buttons available
 
 		// Send the call to the master (i.e. plugin.js)
@@ -354,6 +394,21 @@ var chronicles_of_spaceman_spiff = SAGE2_App.extend({
 					break;
 				case "Prev":
 					this.showPreviousPage();
+					break;
+				case "Doon":
+					this.state.whichComic = 1;
+					break;
+				case "CH":
+					this.state.whichComic = 0;
+					break;
+				case "Dil":
+					this.state.whichComic = 2;
+					break;
+				case "Blm":
+					this.state.whichComic = 4;
+					break;
+				case "Wiz":
+					this.state.whichComic = 3;
 					break;
 				default:
 					console.log("No handler for:", data.identifier);
