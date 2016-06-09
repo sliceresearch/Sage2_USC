@@ -51,6 +51,7 @@ var chronicles_of_spaceman_spiff = SAGE2_App.extend({
 		}
 
 		var today = new Date(new Date().getTime() + 24 * timeMachine * 60 * 60 * 1000);
+
 		// var todayPrint;
 
 		var todayDay     = today.getDate().toString();			// days are 1 - 31
