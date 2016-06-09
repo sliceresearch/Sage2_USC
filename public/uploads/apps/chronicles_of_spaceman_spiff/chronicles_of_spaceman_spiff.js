@@ -376,7 +376,127 @@ var chronicles_of_spaceman_spiff = SAGE2_App.extend({
 		this.update();
 	},
 
+	/**
+	* To enable right click context menu support this function needs to be present with this format.
+	*
+	* Must return an array of entries. An entry is an object with three properties:
+	*	description: what is to be displayed to the viewer.
+	*	callback: String containing the name of the function to activate in the app. It must exist.
+	*	parameters: an object with specified datafields to be given to the function.
+	*		The following attributes will be automatically added by server.
+	*			serverDate, on the return back, server will fill this with time object.
+	*			clientId, unique identifier (ip and port) for the client that selected entry.
+	*			clientName, the name input for their pointer. Note: users are not required to do so.
+	*			clientInput, if entry is marked as input, the value will be in this property. See pdf_viewer.js for example.
+	*		Further parameters can be added. See pdf_view.js for example.
+	*/
+	getContextEntries: function() {
+		var entries = [];
+		var entry;
+
+		entry = {};
+		entry.description = "Previous Day";
+		entry.callback = "changeComic";
+		entry.parameters = {};
+		entry.parameters.page = "previous";
+		entries.push(entry);
+
+		entry = {};
+		entry.description = "Next Day";
+		entry.callback = "changeComic";
+		entry.parameters = {};
+		entry.parameters.page = "next";
+		entries.push(entry);
+
+		entry = {};
+		entry.description = "Calvin and Hobbes";
+		entry.callback = "changeComic";
+		entry.parameters = {};
+		entry.parameters.page = "CH";
+		entries.push(entry);
+
+		entry = {};
+		entry.description = "Dilbert";
+		entry.callback = "changeComic";
+		entry.parameters = {};
+		entry.parameters.page = "Dil";
+		entries.push(entry);
+
+		entry = {};
+		entry.description = "Wizard of Id";
+		entry.callback = "changeComic";
+		entry.parameters = {};
+		entry.parameters.page = "Wiz";
+		entries.push(entry);
+
+		entry = {};
+		entry.description = "Bloom County";
+		entry.callback = "changeComic";
+		entry.parameters = {};
+		entry.parameters.page = "Blm";
+		entries.push(entry);
+
+		entry = {};
+		entry.description = "Doonesbury";
+		entry.callback = "changeComic";
+		entry.parameters = {};
+		entry.parameters.page = "Dns";
+		entries.push(entry);
+
+		return entries;
+	},
+
+	/**
+	* Support function to allow page changing through right mouse context menu.
+	*
+	* @method changeThePage
+	* @param responseObject {Object} contains response from entry selection
+	*/
+	changeComic: function(responseObject) {
+		var page = responseObject.page;
+		if (page === "previous") {
+			this.showPreviousPage();
+		}
+		if (page === "next") {
+			this.showNextPage();
+		}
+
+		if (page === "CH") {
+			this.state.whichComic = 0;
+		}
+		if (page === "Dil") {
+			this.state.whichComic = 2;
+		}
+		if (page === "Wiz") {
+			this.state.whichComic = 3;
+		}
+		if (page === "Blm") {
+			this.state.whichComic = 4;
+		}
+		if (page === "Dns") {
+			this.state.whichComic = 1;
+		}
+		// This needs to be a new date for the extra function.
+		this.refresh(new Date(responseObject.serverDate));
+	},
+
+
+
 	event: function(eventType, position, user, data, date) {
+
+		// Left Arrow  - go back one day
+		// Right Arrow - go forward one day
+		if (eventType === "specialKey") {
+			if (data.code === 37 && data.state === "up") {
+				// Left Arrow
+				this.showPreviousPage();
+			} else if (data.code === 39 && data.state === "up") {
+				// Right Arrow
+				this.showNextPage();
+			}
+		}
+
+
 		if (eventType === "pointerPress" && (data.button === "left")) {
 			// pointer press
 		} else if (eventType === "pointerMove") {
