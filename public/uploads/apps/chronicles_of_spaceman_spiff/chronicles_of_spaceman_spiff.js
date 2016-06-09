@@ -12,7 +12,7 @@
 
 //
 // simple image of the day / calvin and hobbes comic viewer
-// Written by Andy Johnson - 2014
+// Written by Andy Johnson - 2014-2016
 //
 
 /* global d3 */
@@ -29,8 +29,6 @@ var chronicles_of_spaceman_spiff = SAGE2_App.extend({
 
 	createURL: function(timeMachine)	{
 		// var aURL = 'http://www.gocomics.com/calvinandhobbes/2015/10/19/'
-		// var aURL = 'http://www.gocomics.com/calvinandhobbes/2011/11/19/'
-		// var aURL = 'http://www.gocomics.com/calvinandhobbes/2011/11/13/'
 
 		var baseURL = "http://www.gocomics.com/calvinandhobbes/";
 
@@ -39,10 +37,13 @@ var chronicles_of_spaceman_spiff = SAGE2_App.extend({
 		}
 
 		var today = new Date(new Date().getTime() + 24 * timeMachine * 60 * 60 * 1000);
+		var todayPrint;
 
-		var todayDay   = today.getDate().toString();        // days are 1 - 31
-		var todayMonth = (today.getMonth() + 1).toString(); // months are 0 - 11
-		var todayYear  = today.getFullYear().toString();    // year is correct
+		var todayDay     = today.getDate().toString();			// days are 1 - 31
+		var todayMonth   = (today.getMonth() + 1).toString();	// months are 0 - 11
+		var todayYear    = today.getFullYear().toString();		// year is correct
+		var todayHour    = today.getHours().toString();			// hours are 0-23
+		var todayMinutes = today.getMinutes().toString();		// minutes are 0-59
 
 		if (todayDay.length < 2) {
 			todayDay = "0" + todayDay;
@@ -52,7 +53,11 @@ var chronicles_of_spaceman_spiff = SAGE2_App.extend({
 			todayMonth = "0" + todayMonth;
 		}
 
+		if (todayMinutes.length < 2) {
+			todayMinutes = "0" + todayMinutes;
+		}
 		this.today = todayYear + '/' + todayMonth + '/' + todayDay;
+		this.todayPrint = todayYear + '/' + todayMonth + '/' + todayDay + ' ' + todayHour + ':' + todayMinutes;
 		return (baseURL + this.today);
 	},
 
@@ -186,7 +191,7 @@ var chronicles_of_spaceman_spiff = SAGE2_App.extend({
 		}
 
 		this.drawBox(0, this.canvasHeight, 30, this.canvasWidth, "#fdae61", 1.0);
-		this.drawText(0.5 * this.canvasWidth, this.canvasHeight + 22, "classic Calvin and Hobbes - " + this.today, 24);
+		this.drawText(0.5 * this.canvasWidth, this.canvasHeight + 22, "classic Calvin and Hobbes", 24);
 
 		this.drawBoxPrev(0, this.canvasHeight, 30, 50, "#fdae00", 1.0);
 		this.drawBoxNext(this.canvasWidth - 50, this.canvasHeight, 30, 50, "#fdae00", 1.0);
@@ -202,10 +207,10 @@ var chronicles_of_spaceman_spiff = SAGE2_App.extend({
 	update: function() {
 		// get new image
 		var newurl = this.createURL(this.state.timeDiff);
-		if (newurl !== this.URL) {
+		//if (newurl !== this.URL) {
 			this.URL = newurl;
 			this.updateSlim();
-		}
+		//}
 	},
 
 	updateSlim: function() {
