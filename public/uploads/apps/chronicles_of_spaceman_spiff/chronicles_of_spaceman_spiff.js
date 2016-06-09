@@ -37,7 +37,6 @@ var chronicles_of_spaceman_spiff = SAGE2_App.extend({
 		}
 
 		var today = new Date(new Date().getTime() + 24 * timeMachine * 60 * 60 * 1000);
-		var todayPrint;
 
 		var todayDay     = today.getDate().toString();			// days are 1 - 31
 		var todayMonth   = (today.getMonth() + 1).toString();	// months are 0 - 11
@@ -207,10 +206,10 @@ var chronicles_of_spaceman_spiff = SAGE2_App.extend({
 	update: function() {
 		// get new image
 		var newurl = this.createURL(this.state.timeDiff);
-		//if (newurl !== this.URL) {
-			this.URL = newurl;
-			this.updateSlim();
-		//}
+		// if (newurl !== this.URL) {
+		this.URL = newurl;
+		this.updateSlim();
+		// }
 	},
 
 	updateSlim: function() {
