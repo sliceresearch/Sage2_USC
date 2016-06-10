@@ -104,7 +104,7 @@ var photos = SAGE2_App.extend({
 		this.bigList = d3.csv.parse(localData);
 		console.log(this.appName + "loaded in list of " + this.bigList.length + " images");
 
-		this.updateTitle("Photo Slideshow: " + this.photoAlbums[this.state.imageSet].name);
+		this.updateTitle("Slideshow: " + this.photoAlbums[this.state.imageSet].longName);
 		this.update();
 		this.drawEverything();
 	},
@@ -200,8 +200,17 @@ var photos = SAGE2_App.extend({
 			this.updateTitle("Photo Slideshow: user");
 		} else {
 			if (isMaster) {
-				this.listFileName = this.listFileNamePhotos;
-				d3.text(this.listFileName, this.listFileCallbackFunc);
+				if (this.listFileNamePhotos.startsWith("http")) {
+					// treat the list parameter as a public list of images
+					this.listFileName = this.listFileNamePhotos;
+					d3.text(this.listFileName, this.listFileCallbackFunc);
+				} else {
+					// treat the list parameter as a single image (eg a webcam image)
+					// and pretend we loaded in the list
+					this.listFileCallbackFunc("", "name\n" + this.listFileNamePhotos);
+				}
+
+
 			}
 		}
 	},
@@ -231,6 +240,7 @@ var photos = SAGE2_App.extend({
 
 	// choose a particular photo album
 	setAlbum: function(albumNumber) {
+		console.log("setting album to " + albumNumber);
 		this.bigList = null;
 		this.state.imageSet = +albumNumber;
 		this.chooseImagery(this.state.imageSet);
