@@ -27,16 +27,20 @@ function photoAlbums() {
 	var SAGE2_photoAlbums = [];
 	SAGE2_photoAlbums[0] = {list: "https://lyra.evl.uic.edu:9000/sagewalls/photos.txt",
 		location: "https://lyra.evl.uic.edu:9000/sagewalls/",
-		name: "sage"};
+		name: "sage",
+		longName: "SAGE2 Displays"};
 	SAGE2_photoAlbums[1] = {list: "https://lyra.evl.uic.edu:9000/webcam3.txt",
 		location: "http://cdn.abclocal.go.com/three/wls/webcam/",
-		name: "chi"};
+		name: "chi",
+		longName: "Chicago - Grant Park"};
 	SAGE2_photoAlbums[2] = {list: "https://lyra.evl.uic.edu:9000/webcam_lake.txt",
 		location: "http://www.glerl.noaa.gov/metdata/chi/",
-		name: "chi2"};
+		name: "chi2",
+		longName: "Chicago - View from the Lake"};
 	SAGE2_photoAlbums[3] = {list: "https://lyra.evl.uic.edu:9000/webcam_loop.txt",
 		location: "http://cdn.abclocal.go.com/three/wls/webcam/",
-		name: "chi3"};
+		name: "chi3",
+		longName: "Chicago - the Loop"};
 
 	// load timer is how long to show a single image in seconds before loading
 	// the next one or refreshing the current one
