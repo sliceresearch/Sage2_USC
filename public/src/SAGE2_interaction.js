@@ -479,11 +479,12 @@ function SAGE2_interaction(wsio) {
 	*/
 	this.captureDesktop = function(data) {
 		if (__SAGE2__.browser.isChrome === true) {
-			var constraints = {chromeMediaSource: 'desktop',
-								chromeMediaSourceId: data,
-								maxWidth: 1920, maxHeight: 1080,
-								maxFrameRate: 24,
-								minFrameRate: 3
+			var constraints = {
+				chromeMediaSource: 'desktop',
+				chromeMediaSourceId: data,
+				maxWidth: 1920, maxHeight: 1080,
+				maxFrameRate: 24,
+				minFrameRate: 3
 			};
 			navigator.getUserMedia({video: {mandatory: constraints, optional: []}, audio: false},
 				this.streamSuccess, this.streamFail);
