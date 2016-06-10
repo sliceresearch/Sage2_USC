@@ -416,6 +416,7 @@ function SAGE2_init() {
 		}
 	});
 
+	// This will startup the uiNote and uiDraw sections of the UI.
 	setupRmbContextMenuDiv();
 	setupUiNoteMaker();
 	setupUiDrawCanvas();
@@ -1960,11 +1961,6 @@ function reloadIfServerRunning(callback) {
  */
 function setupRmbContextMenuDiv() {
 	var workingDiv = document.getElementById('rmbContextMenu');
-	workingDiv.style.position = "absolute";
-	workingDiv.style.visibility = "hidden";
-	workingDiv.style.border = "1px solid black";
-	workingDiv.style.background = "white";
-	workingDiv.style.zIndex = 9999; // location matters. This is 1 lay below dialog but above the UI canvas.
 	// override rmb contextmenu calls.
 	document.addEventListener('contextmenu', function(e) {
 		// if a right click is made on canvas
@@ -2173,13 +2169,10 @@ Fills out some of the field properties.
 */
 function setupUiNoteMaker() {
 	var workingDiv = document.getElementById('uiNoteMaker');
-	workingDiv.style.border = "1px solid black";
 	var inputField = document.getElementById('uiNoteMakerInputField');
 	inputField.id = "uiNoteMakerInputField";
 	inputField.rows = 5;
 	inputField.cols = 20;
-	inputField.style.resize = 'none';
-	inputField.style.fontSize = '20px';
 	var sendButton = document.getElementById('uiNoteMakerSendButton');
 	// click effect to make a note on the display (app launch)
 	sendButton.addEventListener('click', function() {
@@ -2193,31 +2186,19 @@ function setupUiNoteMaker() {
 	// Add Color fields.
 	for (var i = 1; i <= 6; i++) {
 		workingDiv = document.getElementById("uinmColorPick" + i);
-		workingDiv.style.width = "65px";
-		workingDiv.style.height = "45px";
-		workingDiv.style.border = "1px solid black";
 		workingDiv.colorNumber = i;
 		workingDiv.colorWasPicked = false;
 		workingDiv.addEventListener("click", function () {
 			setUiNoteColorSelect(this.colorNumber);
 		});
-		if (i === 1) {
-			workingDiv.style.background = "lightyellow";
-		}
-		if (i === 2) {
-			workingDiv.style.background = "lightblue";
-		}
-		if (i === 3) {
-			workingDiv.style.background = "lightpink";
-		}
-		if (i === 4) {
-			workingDiv.style.background = "lightgreen";
-		}
-		if (i === 5) {
-			workingDiv.style.background = "lightsalmon";
-		}
-		if (i === 6) {
-			workingDiv.style.background = "white";
+		// This is necessary because for some strange reason, css values are not visible as properties.
+		switch (i) {
+			case 1: workingDiv.style.background = "lightyellow"; break;
+			case 2: workingDiv.style.background = "lightblue"; break;
+			case 3: workingDiv.style.background = "lightpink"; break;
+			case 4: workingDiv.style.background = "lightgreen"; break;
+			case 5: workingDiv.style.background = "lightsalmon"; break;
+			case 6: workingDiv.style.background = "white"; break;
 		}
 	}
 	setUiNoteColorSelect(1);
@@ -2275,9 +2256,6 @@ Mostly fills out functionality and additional properties needed to operate.
 */
 function setupUiDrawCanvas() {
 	var uidzCanvas = document.getElementById('uiDrawZoneCanvas');
-	// set sizing
-	uidzCanvas.style.width = "500px";
-	uidzCanvas.style.width = "500px";
 	// tracking variables when performing draw commands.
 	uidzCanvas.pmx		= 0;
 	uidzCanvas.pmy		= 0;
@@ -2353,65 +2331,77 @@ function setupUiDrawCanvas() {
 		}
 	);
 	// get the line adjustment working for the thickness buttons.
-	var thicknessSelectBox = document.getElementById('uidztp1');
-	thicknessSelectBox.addEventListener('mousedown',
-		function() {
+	var thicknessSelectBox;
+	for (var i = 1; i <= 6; i++) {
+		thicknessSelectBox = document.getElementById("uidztp" + i);
+		thicknessSelectBox.lineWidth = (i - 1);
+		thicknessSelectBox.addEventListener("mousedown", function() {
 			var workingDiv = document.getElementById('uiDrawZoneCanvas');
-			workingDiv.lineWidth = 1;
-			uiDrawSelectThickness('uidztp1');
+			workingDiv.lineWidth = Math.pow(2, this.lineWidth);
+			uiDrawSelectThickness('uidztp' + (this.lineWidth + 1));
 		});
-	// start the with 1px selected
-	uidzCanvas.lineWidth = 1;
-	thicknessSelectBox.style.border = "3px solid red";
-	// have to hard code each selection due to linewidth adjustment
-	// 2
-	thicknessSelectBox = document.getElementById('uidztp2');
-	thicknessSelectBox.addEventListener('mousedown',
-		function() {
-			var workingDiv = document.getElementById('uiDrawZoneCanvas');
-			workingDiv.lineWidth = 2;
-			uiDrawSelectThickness('uidztp2');
-		});
-	// next
-	thicknessSelectBox = document.getElementById('uidztp3');
-	thicknessSelectBox.addEventListener('mousedown',
-		function() {
-			var workingDiv = document.getElementById('uiDrawZoneCanvas');
-			workingDiv.lineWidth = 4;
-			uiDrawSelectThickness('uidztp3');
-		});
-	// next
-	thicknessSelectBox = document.getElementById('uidztp4');
-	thicknessSelectBox.addEventListener('mousedown',
-		function() {
-			var workingDiv = document.getElementById('uiDrawZoneCanvas');
-			workingDiv.lineWidth = 8;
-			uiDrawSelectThickness('uidztp4');
-		});
-	// next
-	thicknessSelectBox = document.getElementById('uidztp5');
-	thicknessSelectBox.addEventListener('mousedown',
-		function() {
-			var workingDiv = document.getElementById('uiDrawZoneCanvas');
-			workingDiv.lineWidth = 16;
-			uiDrawSelectThickness('uidztp5');
-		});
-	// next
-	thicknessSelectBox = document.getElementById('uidztp6');
-	thicknessSelectBox.addEventListener('mousedown',
-		function() {
-			var workingDiv = document.getElementById('uiDrawZoneCanvas');
-			workingDiv.lineWidth = 32;
-			uiDrawSelectThickness('uidztp6');
-		});
-	// next
-	thicknessSelectBox = document.getElementById('uidztp7');
-	thicknessSelectBox.addEventListener('mousedown',
-		function() {
-			var workingDiv = document.getElementById('uiDrawZoneCanvas');
-			workingDiv.lineWidth = 64;
-			uiDrawSelectThickness('uidztp7');
-		});
+		// Start with thicknes 1
+		if (i === 1) { thicknessSelectBox.style.border = "3px solid red";}
+	}
+	// var thicknessSelectBox = document.getElementById('uidztp1');
+	// thicknessSelectBox.addEventListener('mousedown',
+	// 	function() {
+	// 		var workingDiv = document.getElementById('uiDrawZoneCanvas');
+	// 		workingDiv.lineWidth = 1;
+	// 		uiDrawSelectThickness('uidztp1');
+	// 	});
+	// // start the with 1px selected
+	// uidzCanvas.lineWidth = 1;
+	// thicknessSelectBox.style.border = "3px solid red";
+	// // have to hard code each selection due to linewidth adjustment
+	// // 2
+	// thicknessSelectBox = document.getElementById('uidztp2');
+	// thicknessSelectBox.addEventListener('mousedown',
+	// 	function() {
+	// 		var workingDiv = document.getElementById('uiDrawZoneCanvas');
+	// 		workingDiv.lineWidth = 2;
+	// 		uiDrawSelectThickness('uidztp2');
+	// 	});
+	// // next
+	// thicknessSelectBox = document.getElementById('uidztp3');
+	// thicknessSelectBox.addEventListener('mousedown',
+	// 	function() {
+	// 		var workingDiv = document.getElementById('uiDrawZoneCanvas');
+	// 		workingDiv.lineWidth = 4;
+	// 		uiDrawSelectThickness('uidztp3');
+	// 	});
+	// // next
+	// thicknessSelectBox = document.getElementById('uidztp4');
+	// thicknessSelectBox.addEventListener('mousedown',
+	// 	function() {
+	// 		var workingDiv = document.getElementById('uiDrawZoneCanvas');
+	// 		workingDiv.lineWidth = 8;
+	// 		uiDrawSelectThickness('uidztp4');
+	// 	});
+	// // next
+	// thicknessSelectBox = document.getElementById('uidztp5');
+	// thicknessSelectBox.addEventListener('mousedown',
+	// 	function() {
+	// 		var workingDiv = document.getElementById('uiDrawZoneCanvas');
+	// 		workingDiv.lineWidth = 16;
+	// 		uiDrawSelectThickness('uidztp5');
+	// 	});
+	// // next
+	// thicknessSelectBox = document.getElementById('uidztp6');
+	// thicknessSelectBox.addEventListener('mousedown',
+	// 	function() {
+	// 		var workingDiv = document.getElementById('uiDrawZoneCanvas');
+	// 		workingDiv.lineWidth = 32;
+	// 		uiDrawSelectThickness('uidztp6');
+	// 	});
+	// // next
+	// thicknessSelectBox = document.getElementById('uidztp7');
+	// thicknessSelectBox.addEventListener('mousedown',
+	// 	function() {
+	// 		var workingDiv = document.getElementById('uiDrawZoneCanvas');
+	// 		workingDiv.lineWidth = 64;
+	// 		uiDrawSelectThickness('uidztp7');
+	// 	});
 }
 
 /**
@@ -2631,21 +2621,6 @@ function uiDrawSetCurrentStateAndShow(data) {
 		imageResolutionToBe.h /= 2;
 		resizeCount++;
 	}
-
-	// Keeping the old code just in case for now // set the state
-	// var workingDiv = document.getElementById('uiDrawZoneCanvas');
-	// workingDiv.width           = data.imageWidth;
-	// workingDiv.height          = data.imageHeight;
-	// workingDiv.style.width     = data.imageWidth + "px";
-	// workingDiv.style.height    = data.imageHeight + "px";
-	// workingDiv.imageToDraw.src = data.canvasImage;
-	// var ctx = workingDiv.getContext('2d');
-	// ctx.drawImage(workingDiv.imageToDraw, 0, 0);
-	// // set variables to correctly send updates and allow removal as editor.
-	// workingDiv.clientDest = data.clientDest;
-	// workingDiv.appId      = data.appId;
-	// // show dialog
-	// showDialog('uiDrawZone');
 
 	// set the state
 	var workingDiv = document.getElementById('uiDrawZoneCanvas');
