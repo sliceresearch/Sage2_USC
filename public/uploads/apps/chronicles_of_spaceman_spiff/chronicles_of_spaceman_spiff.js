@@ -15,7 +15,7 @@
 // Written by Andy Johnson - 2014-2016
 //
 
-/* global d3 */
+/* global d3, SAGE2_comics */
 
 var chronicles_of_spaceman_spiff = SAGE2_App.extend({
 
@@ -32,8 +32,6 @@ var chronicles_of_spaceman_spiff = SAGE2_App.extend({
 	createURL: function(timeMachine, cNum)	{
 
 		var thisComic = cNum;
-		console.log(cNum, timeMachine);
-
 
 		if (thisComic < 0) {
 			thisComic = 0;
@@ -435,6 +433,7 @@ var chronicles_of_spaceman_spiff = SAGE2_App.extend({
 		} else if (page === "latest") {
 			this.state.timeDiff = 0;
 		} else if (page === "NoOp") {
+			// noop
 		} else {
 			this.state.whichComic = page;
 		}
