@@ -480,7 +480,7 @@ var chronicles_of_spaceman_spiff = SAGE2_App.extend({
 					break;
 				default:
 					this.state.whichComic = data.identifier;
-					// console.log("No handler for:", data.identifier);
+					break;
 			}
 			this.refresh(date);
 		}
