@@ -3510,6 +3510,34 @@ function loadConfiguration() {
 	if (userConfig.dimensions === undefined) {
 		userConfig.dimensions = {};
 	}
+
+	// Overlapping tile dimension in pixels to allow edge blending
+	// tile_overlap = { horizontal: 20, vertical: 20}
+	// code provided by Larse Bilke
+	// larsbilke83@gmail.com
+	if (userConfig.dimensions.tile_overlap === undefined) {
+		userConfig.dimensions.tile_overlap = {
+			horizontal: 0,
+			vertical:   0
+		};
+	} else {
+		// Check the values
+		var hoverlap = parseInt(userConfig.dimensions.tile_overlap.horizontal, 10);
+		var voverlap = parseInt(userConfig.dimensions.tile_overlap.vertical,   10);
+		// If negative values, converted to positives
+		if (hoverlap < 0) {
+			hoverlap *= -1;
+		}
+		if (voverlap < 0) {
+			voverlap *= -1;
+		}
+		// Set the final values back into the configuration
+		userConfig.dimensions.tile_overlap = {
+			horizontal: hoverlap,
+			vertical:   voverlap
+		};
+	}
+
 	if (userConfig.dimensions.tile_borders === undefined) {
 		// set default values to 0
 		// first for pixel sizes

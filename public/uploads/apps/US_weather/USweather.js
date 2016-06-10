@@ -181,10 +181,8 @@ var USweather = SAGE2_App.extend({
 			}
 		}
 
-		var _this = this;
-
 		if (this.gwin.numIconsLoaded === 16) {
-			_this.drawEverything(lat, lon, weather, weatherImage.src);
+			this.drawEverything(lat, lon, weather, weatherImage.src);
 		}
 	},
 

@@ -6,13 +6,13 @@
 	"resize": "free",
 	"dependencies": [
 		"googlemapsInit.js",
-		"https://maps.googleapis.com/maps/api/js?v=3.exp&libraries=weather&callback=googleMapsForSAGE2Init"
+		"https://maps.googleapis.com/maps/api/js?v=3.exp&callback=googleMapsForSAGE2Init"
 	],
 	"load": {
 		"mapType":   "hybrid",
 		"zoomLevel": 8,
 		"center":    {"lat": 41.850033, "lng": -87.6500523},
-		"layer":     {"w": false, "t": false}
+		"layer":     {"t": false}
 	},
 	"title": "Google Maps",
 	"version": "1.1.0",

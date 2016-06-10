@@ -6,6 +6,7 @@
 	"resize": "free",
 	"animation": true,
 	"dependencies": [
+		"lib/ChemDoodleWeb.css",
 		"lib/ChemDoodleWeb.js"
 	],
 	"load": {

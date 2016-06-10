@@ -250,9 +250,6 @@ function UIBuilder(json_cfg, clientID) {
 	this.build = function() {
 		console.log("Buidling the UI for the display");
 
-		this.logoLoadedFunc = this.logoLoaded.bind(this);
-		this.watermarkLoadedFunc = this.watermarkLoaded.bind(this);
-
 		if (this.clientID === -1) {
 			this.offsetX = 0;
 			this.offsetY = 0;
@@ -270,6 +267,17 @@ function UIBuilder(json_cfg, clientID) {
 			// Calculate offsets for borders
 			var borderx  = (x + 1) * this.json_cfg.resolution.borders.left + x * this.json_cfg.resolution.borders.right;
 			var bordery  = (y + 1) * this.json_cfg.resolution.borders.top  + y * this.json_cfg.resolution.borders.bottom;
+
+			// Overlapping tile dimension in pixels to allow edge blending
+			// converted to negative values
+			// code provided by Larse Bilke
+			// larsbilke83@gmail.com
+			if (this.json_cfg.dimensions.tile_overlap.horizontal !== 0 ||
+				this.json_cfg.dimensions.tile_overlap.vertical !== 0) {
+				borderx = -x * this.json_cfg.dimensions.tile_overlap.horizontal;
+				bordery = -y * this.json_cfg.dimensions.tile_overlap.vertical;
+			}
+
 			// Position offsets plus borders offsets
 			this.offsetX = x * this.json_cfg.resolution.width + borderx;
 			this.offsetY = y * this.json_cfg.resolution.height + bordery;
@@ -305,24 +313,10 @@ function UIBuilder(json_cfg, clientID) {
 		// version id
 		var version = document.createElement('p');
 		version.id  = "version";
-		// logo and background watermark
-		var watermark;
-		var logo;
-		if (__SAGE2__.browser.isIE) {
-			watermark = document.createElement('img');
-			logo      = document.createElement('img');
-		} else {
-			watermark = document.createElement('object');
-			logo      = document.createElement('object');
-		}
-		watermark.id = "watermark";
-		logo.id = "logo";
 
 		this.upperBar.appendChild(this.clock);
 		this.upperBar.appendChild(machine);
 		this.upperBar.appendChild(version);
-		this.upperBar.appendChild(logo);
-		this.main.appendChild(watermark);
 		this.main.appendChild(this.upperBar);
 
 		var backgroundColor = "rgba(0, 0, 0, 0.5)";
@@ -372,25 +366,24 @@ function UIBuilder(json_cfg, clientID) {
 		version.style.mozTransform  = "translateY(-50%)";
 		version.style.transform  = "translateY(-50%)";
 
-		// Change the type before placing the event handler
-		logo.type = "image/svg+xml";
-		logo.addEventListener('load', this.logoLoadedFunc, false);
-		if (__SAGE2__.browser.isIE) {
-			logo.src  = "images/EVL-LAVA.svg";
-		} else {
-			logo.data = "images/EVL-LAVA.svg";
-		}
+		// Load the logo (shown top left corner)
+		var _this = this;
+		Snap.load("images/EVL-LAVA.svg", function(f) {
+			var logo = f.select("svg");
+			logo.node.id = 'logo';
+			_this.upperBar.appendChild(logo.node);
+			_this.logoLoaded();
+		});
 
+		// Load the background SVG if specified
 		if (this.json_cfg.background.watermark !== undefined) {
-			// Change the type before placing the event handler
-			watermark.type = "image/svg+xml";
-			watermark.addEventListener('load', this.watermarkLoadedFunc, false);
-			if (__SAGE2__.browser.isIE) {
-				// using an image tag in IE
-				watermark.src  = this.json_cfg.background.watermark.svg;
-			} else {
-				watermark.data = this.json_cfg.background.watermark.svg;
-			}
+			// Use snap to load the SVG
+			Snap.load(this.json_cfg.background.watermark.svg, function(f) {
+				var water = f.select("svg");
+				water.node.id = 'watermark';
+				_this.main.appendChild(water.node);
+				_this.watermarkLoaded();
+			});
 		}
 
 		if (this.json_cfg.ui.show_url) {
@@ -726,31 +719,35 @@ function UIBuilder(json_cfg, clientID) {
 	* @method logoLoaded
 	*/
 	this.logoLoaded = function(evt) {
-		var logo   = document.getElementById('logo');
-		var height = 0.95 * this.titleBarHeight;
 		var width;
-		if (__SAGE2__.browser.isIE) {
-			width = height * (logo.width / logo.height);
-			logo.style.backgroundColor = "rgba(255,255,255,0.75)";
-		} else {
-			var logoSVG = logo.getSVGDocument().querySelector('svg');
-			var bbox    = logoSVG.getBBox();
-			width = height * (bbox.width / bbox.height);
-			var textColor = "rgba(255, 255, 255, 1.0)";
-			if (this.json_cfg.ui.menubar !== undefined && this.json_cfg.ui.menubar.textColor !== undefined) {
-				textColor = this.json_cfg.ui.menubar.textColor;
-			}
-			this.changeSVGColor(logoSVG, "path", null, textColor);
+		var height = 0.95 * this.titleBarHeight;
+
+		// Set a default color in none specified
+		var textColor = "rgba(255, 255, 255, 1.0)";
+		if (this.json_cfg.ui.menubar !== undefined && this.json_cfg.ui.menubar.textColor !== undefined) {
+			textColor = this.json_cfg.ui.menubar.textColor;
 		}
+
+		// Get the loaded logo and change its color
+		var logo = document.getElementById('logo');
+		this.changeSVGColor(logo, "path", null, textColor);
+
+		// Update the size to fit in the titlebar
 		var rightOffset = this.offsetX - (this.json_cfg.resolution.width * (this.json_cfg.layout.columns - 1));
-		logo.width  = width;
-		logo.height = height;
-		logo.style.position   = "absolute";
+
+		var bbox = logo.getBBox();
+		width = height * (bbox.width / bbox.height);
+		logo.style.width    = width  + "px";
+		logo.style.height   = height + "px";
+		logo.style.position = "absolute";
+
 		if (this.clientID === -1) {
-			logo.style.right  = this.titleBarHeight.toString() + "px";
+			logo.style.right = this.titleBarHeight.toString() + "px";
 		} else {
-			logo.style.right  = (this.titleBarHeight + rightOffset).toString() + "px";
+			logo.style.right = (this.titleBarHeight + rightOffset).toString() + "px";
 		}
+
+		// Center the logo
 		logo.style.top = "50%";
 		logo.style.webkitTransform  = "translateY(-50%)";
 		logo.style.mozTransform     = "translateY(-50%)";
@@ -766,29 +763,23 @@ function UIBuilder(json_cfg, clientID) {
 		var width;
 		var height;
 		var watermark = document.getElementById('watermark');
-		if (__SAGE2__.browser.isIE) {
-			// using an image tag in IE
+		var bbox = watermark.getBBox();
+		if (bbox.width / bbox.height >= this.json_cfg.totalWidth / this.json_cfg.totalHeight) {
 			width  = this.json_cfg.totalWidth / 2;
-			height = watermark.height;
-			watermark.width = width;
+			height = width * bbox.height / bbox.width;
 		} else {
-			var watermarkSVG = watermark.getSVGDocument().querySelector('svg');
-			var bbox = watermarkSVG.getBBox();
-			if (bbox.width / bbox.height >= this.json_cfg.totalWidth / this.json_cfg.totalHeight) {
-				width  = this.json_cfg.totalWidth / 2;
-				height = width * bbox.height / bbox.width;
-			} else {
-				height = this.json_cfg.totalHeight / 2;
-				width  = height * bbox.width / bbox.height;
-			}
-			watermark.width  = width;
-			watermark.height = height;
-			// Also hide the cursor on top of the SVG (doesnt inherit from style body)
-			if (this.clientID !== -1) {
-				watermarkSVG.style.cursor = "none";
-			}
-			this.changeSVGColor(watermarkSVG, "path", null, this.json_cfg.background.watermark.color);
+			height = this.json_cfg.totalHeight / 2;
+			width  = height * bbox.width / bbox.height;
 		}
+		watermark.style.width  = width  + 'px';
+		watermark.style.height = height + 'px';
+
+		// Also hide the cursor on top of the SVG (doesnt inherit from style body)
+		if (this.clientID !== -1) {
+			watermark.style.cursor = "none";
+		}
+		this.changeSVGColor(watermark, "path", null, this.json_cfg.background.watermark.color);
+
 		watermark.style.opacity  = 0.4;
 		watermark.style.position = "absolute";
 		watermark.style.left     = ((this.json_cfg.totalWidth  / 2) - (width  / 2) - this.offsetX).toString() + "px";

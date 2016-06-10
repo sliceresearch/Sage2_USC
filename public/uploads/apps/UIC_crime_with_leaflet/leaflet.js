@@ -23,19 +23,6 @@
 
 /* global d3, SAGE2_policeDistricts, L */
 
-function addCSS(url, callback) {
-	var fileref = document.createElement("link");
-
-	if (callback) {
-		fileref.onload = callback;
-	}
-
-	fileref.setAttribute("rel", "stylesheet");
-	fileref.setAttribute("type", "text/css");
-	fileref.setAttribute("href", url);
-	document.head.appendChild(fileref);
-}
-
 var leaflet = SAGE2_App.extend({
 	getNewData: function(meSelf, beat, date) {
 
@@ -92,7 +79,6 @@ var leaflet = SAGE2_App.extend({
 		var myHeight = this.element.clientHeight;
 
 		this.element.id = "div" + data.id;
-		var _this = this;
 
 		this.maxFPS = 0.000023; // once every 12 hours
 
@@ -115,46 +101,43 @@ var leaflet = SAGE2_App.extend({
 		var mapCopyright2 = '&copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors,' +
 			' <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>';
 
-		// Load the CSS file for leaflet.js
-		addCSS(_this.resrcPath + "scripts/leaflet.css", function() {
-
-			_this.map1 = L.tileLayer(mapURL1, {attribution: mapCopyright1});
-			_this.map2 = L.tileLayer(mapURL2, {attribution: mapCopyright2});
+		this.map1 = L.tileLayer(mapURL1, {attribution: mapCopyright1});
+		this.map2 = L.tileLayer(mapURL2, {attribution: mapCopyright2});
 
 
-			// want to do this same thing when we reset the location
-			if (_this.state.whichMap === 1) {
-				_this.map = L.map(_this.element.id, {layers: [_this.map1], zoomControl: false}).setView(
-					[_this.state.center.lat, _this.state.center.lng], _this.state.zoomLevel);
-			} else {
-				_this.map = L.map(_this.element.id, {layers: [_this.map2], zoomControl: false}).setView(
-					[_this.state.center.lat, _this.state.center.lng], _this.state.zoomLevel);
-			}
+		// want to do this same thing when we reset the location
+		if (this.state.whichMap === 1) {
+			this.map = L.map(this.element.id, {layers: [this.map1], zoomControl: false}).setView(
+				[this.state.center.lat, this.state.center.lng], this.state.zoomLevel);
+		} else {
+			this.map = L.map(this.element.id, {layers: [this.map2], zoomControl: false}).setView(
+				[this.state.center.lat, this.state.center.lng], this.state.zoomLevel);
+		}
 
-			/* Initialize the SVG layer */
-			_this.map._initPathRoot();
+		/* Initialize the SVG layer */
+		this.map._initPathRoot();
 
-			/* We simply pick up the SVG from the map object */
-			_this.svg = d3.select(_this.map.getPanes().overlayPane).select("svg");
-			_this.g = _this.svg.append("g");
+		/* We simply pick up the SVG from the map object */
+		this.svg = d3.select(this.map.getPanes().overlayPane).select("svg");
+		this.g = this.svg.append("g");
 
-			for (var loopIdx = 0; loopIdx < SAGE2_policeDistricts.length; loopIdx++) {
-				_this.getNewData(_this, SAGE2_policeDistricts[loopIdx], data.date);
-			}
+		for (var loopIdx = 0; loopIdx < SAGE2_policeDistricts.length; loopIdx++) {
+			this.getNewData(this, SAGE2_policeDistricts[loopIdx], data.date);
+		}
 
-			// attach the SVG into the this.element node provided to us
-			var box = "0,0," + myWidth + "," + myHeight;
-			_this.svg = d3.select(_this.element).append("svg")
-				.attr("width",   myWidth)
-				.attr("height",  myHeight)
-				.attr("viewBox", box);
-		});
+		// attach the SVG into the this.element node provided to us
+		var box = "0,0," + myWidth + "," + myHeight;
+		this.svg = d3.select(this.element).append("svg")
+			.attr("width",   myWidth)
+			.attr("height",  myHeight)
+			.attr("viewBox", box);
 
+		// Build the wall UI
 		this.controls.addButton({label: "home", position: 6, identifier: "Home"});
 		this.controls.addButton({label: "view", position: 4, identifier: "View"});
 		this.controls.addButton({type: "zoom-in", position: 12, identifier: "ZoomIn"});
 		this.controls.addButton({type: "zoom-out", position: 11, identifier: "ZoomOut"});
-		this.controls.finishedAddingControls(); // Important
+		this.controls.finishedAddingControls();
 	},
 
 	resetMap: function() {
@@ -284,8 +267,6 @@ var leaflet = SAGE2_App.extend({
 
 		});
 
-		var _this = this;
-
 		/* eslint-disable brace-style */
 		var feature = this.g.selectAll("circle")
 		.data(collection)
@@ -326,7 +307,10 @@ var leaflet = SAGE2_App.extend({
 				}
 			});
 
+		var _this = this;
+
 		this.map.on("viewreset", update);
+
 		update();
 
 		function update() {
@@ -359,13 +343,11 @@ var leaflet = SAGE2_App.extend({
 	},
 
 	draw: function(date) {
-		var _this = this;
-
 		if (this.allLoaded === 1) {
 			this.currentBeats = 0;
 
 			for (var loopIdx = 0; loopIdx < SAGE2_policeDistricts.length; loopIdx++) {
-				_this.getNewData(_this, SAGE2_policeDistricts[loopIdx], date);
+				this.getNewData(this, SAGE2_policeDistricts[loopIdx], date);
 			}
 		}
 	},
