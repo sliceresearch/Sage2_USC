@@ -282,19 +282,7 @@ var chronicles_of_spaceman_spiff = SAGE2_App.extend({
 		this.URL   = "";
 		this.today = "";
 
-
-		this.comics = [];
-		this.comics[0] = {comicUrl: "http://www.gocomics.com/calvinandhobbes/",
-							comicName: "classic Calvin and Hobbes"};
-		this.comics[1] = {comicUrl: "http://www.gocomics.com/doonesbury/",
-							comicName: "Doonesbury"};
-		this.comics[2] = {comicUrl: "http://www.gocomics.com/dilbert-classics/",
-							comicName: "classic Dilbert"};
-		this.comics[3] = {comicUrl: "http://www.gocomics.com/wizard-of-id-classics/",
-							comicName: "classic Wizard of Id"};
-		this.comics[4] = {comicUrl: "http://www.gocomics.com/bloomcounty/",
-							comicName: "classic Bloom County"};
-
+		this.comics = SAGE2_comics;
 
 		// update once per hour (55 mins)
 		this.maxFPS = 0.0003;
@@ -316,18 +304,16 @@ var chronicles_of_spaceman_spiff = SAGE2_App.extend({
 		this.initApp();
 
 		// this.update();
+
+		this.sageUIbuttons = [3, 5, 9, 10, 11];
+
 		this.draw_d3(data.date);
 		this.controls.addButton({type: "next", position: 7, identifier: "Next"});
 		this.controls.addButton({type: "prev", position: 1, identifier: "Prev"});
 
-		this.controls.addButton({label: "C&H", position: 3, identifier: "CH"});
-		this.controls.addButton({label: "Dilb", position: 5, identifier: "Dil"});
-		this.controls.addButton({label: "WizId", position: 9, identifier: "Wiz"});
-		this.controls.addButton({label: "BlCo", position: 10, identifier: "Blm"});
-		this.controls.addButton({label: "Doon", position: 11, identifier: "Doon"});
-
-
-
+		for (var btnCtr = 0; btnCtr < this.comics.length; btnCtr++) {
+			this.controls.addButton({label: this.comics[btnCtr].label, position: this.sageUIbuttons[btnCtr], identifier: btnCtr});
+		}
 
 		this.controls.finishedAddingControls(); // Not adding controls but making the default buttons available
 
@@ -409,39 +395,27 @@ var chronicles_of_spaceman_spiff = SAGE2_App.extend({
 		entries.push(entry);
 
 		entry = {};
-		entry.description = "Calvin and Hobbes";
+		entry.description = "Latest";
 		entry.callback = "changeComic";
 		entry.parameters = {};
-		entry.parameters.page = "CH";
+		entry.parameters.page = "latest";
 		entries.push(entry);
 
 		entry = {};
-		entry.description = "Dilbert";
-		entry.callback = "changeComic";
+		entry.description = " ";
+		entry.callback = "NoOp";
 		entry.parameters = {};
-		entry.parameters.page = "Dil";
+		entry.parameters.page = "NoOp";
 		entries.push(entry);
 
-		entry = {};
-		entry.description = "Wizard of Id";
-		entry.callback = "changeComic";
-		entry.parameters = {};
-		entry.parameters.page = "Wiz";
-		entries.push(entry);
-
-		entry = {};
-		entry.description = "Bloom County";
-		entry.callback = "changeComic";
-		entry.parameters = {};
-		entry.parameters.page = "Blm";
-		entries.push(entry);
-
-		entry = {};
-		entry.description = "Doonesbury";
-		entry.callback = "changeComic";
-		entry.parameters = {};
-		entry.parameters.page = "Dns";
-		entries.push(entry);
+		for (var comicCounter = 0; comicCounter < this.comics.length; comicCounter++) {
+			entry = {};
+			entry.description = this.comics[comicCounter].comicName;
+			entry.callback = "changeComic";
+			entry.parameters = {};
+			entry.parameters.page = comicCounter;
+			entries.push(entry);
+		}
 
 		return entries;
 	},
@@ -456,26 +430,15 @@ var chronicles_of_spaceman_spiff = SAGE2_App.extend({
 		var page = responseObject.page;
 		if (page === "previous") {
 			this.showPreviousPage();
-		}
-		if (page === "next") {
+		} else if (page === "next") {
 			this.showNextPage();
+		} else if (page === "latest") {
+			this.state.timeDiff = 0;
+		} else if (page === "NoOp") {
+		} else {
+			this.state.whichComic = page;
 		}
 
-		if (page === "CH") {
-			this.state.whichComic = 0;
-		}
-		if (page === "Dil") {
-			this.state.whichComic = 2;
-		}
-		if (page === "Wiz") {
-			this.state.whichComic = 3;
-		}
-		if (page === "Blm") {
-			this.state.whichComic = 4;
-		}
-		if (page === "Dns") {
-			this.state.whichComic = 1;
-		}
 		// This needs to be a new date for the extra function.
 		this.refresh(new Date(responseObject.serverDate));
 	},
@@ -516,23 +479,9 @@ var chronicles_of_spaceman_spiff = SAGE2_App.extend({
 				case "Prev":
 					this.showPreviousPage();
 					break;
-				case "Doon":
-					this.state.whichComic = 1;
-					break;
-				case "CH":
-					this.state.whichComic = 0;
-					break;
-				case "Dil":
-					this.state.whichComic = 2;
-					break;
-				case "Blm":
-					this.state.whichComic = 4;
-					break;
-				case "Wiz":
-					this.state.whichComic = 3;
-					break;
 				default:
-					console.log("No handler for:", data.identifier);
+					this.state.whichComic = data.identifier;
+					//console.log("No handler for:", data.identifier);
 			}
 			this.refresh(date);
 		}

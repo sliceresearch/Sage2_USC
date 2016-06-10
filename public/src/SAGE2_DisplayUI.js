@@ -594,7 +594,7 @@ function underElement(elem, pageX, pageY) {
 	};
 	return ((pageX > elemPosition.left && pageX < elemPosition2.left) &&
 			(pageY  > elemPosition.top  && pageY < elemPosition2.top));
- }
+}
 
 
 /**

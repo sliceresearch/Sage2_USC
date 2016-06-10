@@ -126,29 +126,34 @@ function FileManager(wsio, mydiv, uniqueID) {
 		id: "layout",
 		css: { border: "solid 1px #565656;"},
 		rows: [
-			{ view: "toolbar", cols: [mymenu, mytoolbar]
+			{
+				view: "toolbar", cols: [mymenu, mytoolbar]
 			},
 			{ cols: [
-				{ rows: [
-					{id: "tree1",
-					view: "tree",
-					select: "select",
-					navigation: true,
-					drag: true,
-					minWidth: 120,
-					width: 180,
-					activeTitle: true, // close/open when selected
-					tooltip: mytip,
-					data: data_with_icon,
-					onContext: {} // required for context menu
-				},
-				{view: "resizer"},
-				{height: 160, rows: [
-					{type: "header", id: "drop_header", template: "Drop files below"},
-					{view: "list", id: "uploadlist", type: "uploader", scroll: 'y'}
-				]
-				}
-				]
+				{
+					rows: [
+						{
+							id: "tree1",
+							view: "tree",
+							select: "select",
+							navigation: true,
+							drag: true,
+							minWidth: 120,
+							width: 180,
+							activeTitle: true, // close/open when selected
+							tooltip: mytip,
+							data: data_with_icon,
+							onContext: {} // required for context menu
+						},
+						{
+							view: "resizer"},
+						{
+							height: 160, rows: [
+								{type: "header", id: "drop_header", template: "Drop files below"},
+								{view: "list", id: "uploadlist", type: "uploader", scroll: 'y'}
+							]
+						}
+					]
 				},
 				{
 					view: "resizer"
@@ -940,9 +945,10 @@ function FileManager(wsio, mydiv, uniqueID) {
 					var newid = parent + '/' + sub;
 					// if it doesnt already exist
 					if (!_this.tree.getItem(newid)) {
-						var newElement = {id: newid, value: sub,
-								icon: "folder", open: true, sage2URL: newid,
-								data: [], onContext: {}
+						var newElement = {
+							id: newid, value: sub,
+							icon: "folder", open: true, sage2URL: newid,
+							data: [], onContext: {}
 						};
 						// Add to the tree
 						_this.tree.parse({ parent: parent, data: newElement});
@@ -1085,9 +1091,10 @@ function FileManager(wsio, mydiv, uniqueID) {
 				path: values.folder});
 			// Build the tree item
 			var newid = item.sage2URL + '/' + values.folder;
-			var newElement = {id: newid, value: values.folder,
-					icon: "folder", open: true, sage2URL: newid,
-					data: [], onContext: {}
+			var newElement = {
+				id: newid, value: values.folder,
+				icon: "folder", open: true, sage2URL: newid,
+				data: [], onContext: {}
 			};
 			// Add to the tree
 			$$("tree1").parse({ parent: item.id, data: newElement });
@@ -1117,17 +1124,24 @@ function FileManager(wsio, mydiv, uniqueID) {
 							width: 400,
 							borderless: false,
 							elements: [
-								{view: "text", id: "folder_name", label: "Folder name", name: "folder"
+								{
+									view: "text", id: "folder_name", label: "Folder name", name: "folder"
 								},
-								{margin: 5, cols: [
-									{view: "button", value: "Cancel", click: function() {
-										this.getTopParentView().hide();
-									}},
-									{view: "button", value: "Create", type: "form", click: function() {
-										createFolder(list.getItem(listId), this.getFormView().getValues());
-										this.getTopParentView().hide();
-									}}
-								]}
+								{
+									margin: 5, cols: [
+										{
+											view: "button", value: "Cancel", click: function() {
+												this.getTopParentView().hide();
+											}
+										},
+										{
+											view: "button", value: "Create", type: "form", click: function() {
+												createFolder(list.getItem(listId), this.getFormView().getValues());
+												this.getTopParentView().hide();
+											}
+										}
+									]
+								}
 							],
 							elementsConfig: {
 								labelPosition: "top"
@@ -1166,10 +1180,11 @@ function FileManager(wsio, mydiv, uniqueID) {
 			// Build the tree item
 			//   folder Object {name: "system", path: "public/uploads/",
 			//                  url: "/uploads", upload: false}
-			var newElement = {id: folder.url, value: folder.name + ":" + folder.url,
-					icon: "home", open: true, sage2URL: folder.url, data: [],
-					tooltip: folder.name + " folder",
-					onContext: {}
+			var newElement = {
+				id: folder.url, value: folder.name + ":" + folder.url,
+				icon: "home", open: true, sage2URL: folder.url, data: [],
+				tooltip: folder.name + " folder",
+				onContext: {}
 			};
 			// Add the new folder item into the tree
 			this.tree.parse({ parent: null, data: newElement });

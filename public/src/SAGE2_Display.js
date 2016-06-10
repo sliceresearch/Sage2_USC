@@ -338,7 +338,7 @@ function setupListeners() {
 			uiTimer = setTimeout(function() {
 				ui.hideInterface();
 			}, uiTimerDelay * 1000);
-		} else
+		} else {
 			if (ui.uiHidden === true) {
 				clearTimeout(uiTimer);
 				uiTimer = null;
@@ -346,6 +346,7 @@ function setupListeners() {
 			} else {
 				ui.hideInterface();
 			}
+		}
 	});
 
 	wsio.on('setupSAGE2Version', function(version) {

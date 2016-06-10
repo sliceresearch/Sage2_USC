@@ -73,7 +73,7 @@ function within (element, x, y) {
  *
  * @class pdf_viewer
  */
- var pdf_viewer = SAGE2_App.extend({
+var pdf_viewer = SAGE2_App.extend({
 
 	modifyState: function(name, value) {
 		this.state[name] = value;
