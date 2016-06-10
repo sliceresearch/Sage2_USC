@@ -795,6 +795,22 @@ var SAGE2_App = Class.extend({
 	},
 
 	/**
+	* Entry point for a RPC callback into the app. Needed to keep state consistant
+	*
+	* @method callback
+	* @param func {Function} actual method to call
+	* @param data {Object} parameters sent from server
+	*/
+	callback: function(func, data) {
+		// Make to allow state modification
+		this.SAGE2UserModification = true;
+		// if app calls 'refresh', state will be updated
+		this[func](data);
+		// End tracking
+		this.SAGE2UserModification = false;
+	},
+
+	/**
 	* Register a callback to be called when receiving a updated file list from server
 	*
 	* @method registerFileListHandler

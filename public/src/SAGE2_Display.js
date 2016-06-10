@@ -282,16 +282,19 @@ function setupListeners() {
 	});
 
 	wsio.on('broadcast', function(data) {
-		if (applications[data.app] === undefined) {
+		var app = applications[data.app];
+		if (app === undefined) {
 			// should have better way to determine if app is loaded
 			//   or already killed
 			setTimeout(function() {
-				if (applications[data.app] && applications[data.app][data.func]) {
-					applications[data.app][data.func](data.data);
+				if (app && app[data.func]) {
+					// Send the call to the application
+					app.callback(data.func, data.data);
 				}
 			}, 500);
 		} else {
-			applications[data.app][data.func](data.data);
+			// Send the call to the application
+			app.callback(data.func, data.data);
 		}
 	});
 
