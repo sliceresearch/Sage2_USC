@@ -322,6 +322,26 @@ var generateAppThumbnails = function(infile, outfile, acolor, sizes, index, call
 	);
 };
 
+var generateHistologyThumbnails = function(infile, outfile, sizes, index, callback) {
+	// initial call, index is not specified
+	index = index || 0;
+	// are we done yet
+	if(index >= sizes.length) {
+		callback();
+		return;
+	}
+	var jpeg = infile.replace(".dzi", ".jpg");
+	imageMagick(jpeg+"[0]").bitdepth(8).flatten().command("convert").in("-resize", sizes[index]+"x"+sizes[index]).in("-gravity", "center").in("-background", "rgb(71,71,71)").in("-extent", sizes[index]+"x"+sizes[index]).write(outfile+'_'+sizes[index]+'.jpg', function(err) {
+		if (err) {
+			console.log("Assets> cannot generate "+sizes[index]+"x"+sizes[index]+" thumbnail for:", infile);
+			return;
+		}
+		// recursive call to generate the next size
+		generateHistologyThumbnails(infile, outfile, sizes, index+1, callback);
+	});
+};
+
+
 var generateRemoteSiteThumbnails = function(infile, outfile, sizes, index, callback) {
 	// initial call, index is not specified
 	index = index || 0;
@@ -410,7 +430,12 @@ var addFile = function(filename, exif, callback) {
 			callback();
 		});
 		anAsset.exif.SAGE2thumbnail = rthumb;
-	} else if (exif.MIMEType === 'application/custom') {
+	} else if (exif.MIMEType === 'application/xml') {
+		generateHistologyThumbnails(filename, thumb, [1024, 512, 256], null, function() {
+			callback();
+		});
+		anAsset.exif.SAGE2thumbnail = rthumb;
+	}else if (exif.MIMEType === 'application/custom') {
 		if (exif.icon === null || !sageutils.fileExists(exif.icon)) {
 			anAsset.exif.SAGE2thumbnail = path.join(AllAssets.rel, 'assets', 'apps', 'unknownapp');
 			callback();
@@ -541,6 +566,16 @@ var deleteVideo = function(filename) {
 		delete AllAssets.list[filepath];
 		saveAssets();
 	});
+};
+
+var deleteHistology = function(filename) {
+	console.log("Removing: " + filename);
+	var filepath = path.resolve(AllAssets.root, 'histology', filename);
+	var directory = path.resolve(AllAssets.root, 'histology', filename.replace(".dzi", ""));
+	deleteFolderRecursive(directory);
+	//fs.rmdir(directory, deletionAsync(filename, filepath));
+	fs.unlink(filepath, deletionAsync(filename, filepath));
+	fs.unlink(filepath.replace(".dzi", ".jpg"), deletionAsync(filename, filepath));
 };
 
 var addURL = function(aUrl, exif) {
@@ -764,10 +799,25 @@ var listApps = function() {
 	return result;
 };
 
+var listHistology = function() {
+	var result = [];
+	var keys = Object.keys(AllAssets.list);
+	for (var f in keys) {
+		var one = AllAssets.list[keys[f]];
+		if (one.exif.MIMEType.indexOf('application/xml') > -1) {
+			result.push(one);
+		}
+	}
+	return result;
+};
+
+
 var recursiveReaddirSync = function(aPath) {
 	var list     = [];
 	var excludes = [ '.DS_Store', 'Thumbs.db', 'passwd.json', 'assets', 'sessions', 'tmp', 'config' ];
+	var exludesSubDir = ['histology'];
 	var files, stats;
+	var parent = path.basename(aPath);
 
 	files = fs.readdirSync(aPath);
 	if (files.indexOf('instructions.json') >= 0) {
@@ -777,7 +827,7 @@ var recursiveReaddirSync = function(aPath) {
 		files.forEach(function(file) {
 			if (excludes.indexOf(file) === -1) {
 				stats = fs.lstatSync(path.join(aPath, file));
-				if (stats.isDirectory()) {
+				if (stats.isDirectory() && exludesSubDir.indexOf(parent) === -1) {
 					list = list.concat(recursiveReaddirSync(path.join(aPath, file)));
 				} else {
 					list.push(path.join(aPath, file));
@@ -1025,6 +1075,8 @@ exports.listImages = listImages;
 exports.listPDFs   = listPDFs;
 exports.listVideos = listVideos;
 exports.listApps   = listApps;
+exports.listHistology = listHistology;
+
 exports.addFile    = addFile;
 exports.addURL     = addURL;
 
@@ -1035,6 +1087,7 @@ exports.exifAsync   = exifAsync;
 exports.deleteImage = deleteImage;
 exports.deleteVideo = deleteVideo;
 exports.deletePDF   = deletePDF;
+exports.deleteHistology = deleteHistology;
 exports.deleteAsset = deleteAsset;
 exports.moveAsset   = moveAsset;
 

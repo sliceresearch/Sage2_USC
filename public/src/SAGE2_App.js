@@ -662,6 +662,15 @@ var SAGE2_App = Class.extend({
 		this.frame++;
 	},
 
+	save: function(data) {
+    	this.SAGE2Save(data);
+	},
+
+	SAGE2Save: function(data) {
+	    if(isMaster) {
+		    wsio.emit('saveAppData', {id: this.id, data: data});
+	    }
+	},
 	/**
 	* Change the title of the application window
 	*

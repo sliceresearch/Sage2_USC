@@ -675,6 +675,7 @@ function setupListeners(wsio) {
 
 	wsio.on('finishedRenderingAppFrame',            wsFinishedRenderingAppFrame);
 	wsio.on('updateAppState',                       wsUpdateAppState);
+	wsio.on('saveAppData',                          wsSaveAppData);
 	wsio.on('updateStateOptions',                   wsUpdateStateOptions);
 	wsio.on('appResize',                            wsAppResize);
 	wsio.on('appFullscreen',                        wsFullscreen);
@@ -1768,13 +1769,13 @@ function createAppFromDescription(app, callback) {
 	var appURL = url.parse(app.url);
 
 	if (appURL.hostname === config.host) {
-		if (app.application === "image_viewer" || app.application === "pdf_viewer" || app.application === "movie_player") {
+		if (app.application === "image_viewer" || app.application === "pdf_viewer" || app.application === "movie_player" || app.application === "histologyViewer") {
 			appLoader.loadFileFromLocalStorage({application: app.application, filename: appURL.path}, cloneApp);
 		} else {
 			appLoader.loadFileFromLocalStorage({application: "custom_app", filename: appURL.path}, cloneApp);
 		}
 	} else {
-		if (app.application === "image_viewer" || app.application === "pdf_viewer" || app.application === "movie_player") {
+		if (app.application === "image_viewer" || app.application === "pdf_viewer" || app.application === "movie_player" || app.application === "histologyViewer") {
 			appLoader.loadFileFromWebURL({url: app.url, type: app.type}, cloneApp);
 		} else {
 			appLoader.loadApplicationFromRemoteServer(app, cloneApp);
@@ -3605,6 +3606,7 @@ function getApplications() {
 
 function getSavedFilesList() {
 	// Build lists of assets
+	var uploadedHistology = assets.listHistology();
 	var uploadedImages = assets.listImages();
 	var uploadedVideos = assets.listVideos();
 	var uploadedPdfs   = assets.listPDFs();
@@ -3612,12 +3614,13 @@ function getSavedFilesList() {
 	var uploadedApps   = getApplications();
 
 	// Sort independently of case
+	uploadedHistology.sort(sageutils.compareFilename);
 	uploadedImages.sort(sageutils.compareFilename);
 	uploadedVideos.sort(sageutils.compareFilename);
 	uploadedPdfs.sort(sageutils.compareFilename);
 	savedSessions.sort(sageutils.compareFilename);
 
-	var list = {images: uploadedImages, videos: uploadedVideos, pdfs: uploadedPdfs,
+	var list = {histology: uploadedHistology, images: uploadedImages, videos: uploadedVideos, pdfs: uploadedPdfs,
 				sessions: savedSessions, applications: uploadedApps};
 
 	return list;
@@ -7283,5 +7286,11 @@ function showOrHideWidgetLinks(data) {
 		} else {
 			broadcast('hideWidgetToAppConnector', app);
 		}
+	}
+}
+
+function wsSaveAppData(wsio, data) {
+	if (wsio === masterDisplay && SAGE2Items.applications.list.hasOwnProperty(data.id)) {
+		registry.saveKey(data.data.file, data.data.annotations);
 	}
 }

@@ -27,6 +27,7 @@ var gm           = require('gm');
 var mime         = require('mime');
 var request      = require('request');
 var ytdl         = require('ytdl-core');
+var sharp     	 = require('sharp');
 var Videodemuxer = (process.arch !== 'arm') ? require('node-demux') : null;
 var mv           = require('mv');
 var sanitize     = require("sanitize-filename");
@@ -492,7 +493,9 @@ AppLoader.prototype.loadPdfFromFile = function(file, mime_type, aUrl, external_u
 	callback(appInstance);
 };
 
-AppLoader.prototype.loadAppFromFileFromRegistry = function(file, mime_type, aUrl, external_url, name, callback) {
+
+
+AppLoader.prototype.loadAppFromFileFromRegistry = function(file, mime_type, aUrl, external_url, name, callback, app) {
 	// Find the app!!
 	var appName = registry.getDefaultApp(file);
 	var localPath = getSAGE2Path(appName);
@@ -509,10 +512,84 @@ AppLoader.prototype.loadAppFromFileFromRegistry = function(file, mime_type, aUrl
 		var app_external_url = _this.hostOrigin + sageutils.encodeReservedURL(appUrl);
 
 		var appInstance = _this.readInstructionsFile(json_str, localPath, mime_type, app_external_url);
+		//var annotations = registry.getKey(url);
+		// XXX - Need to re-write this.
+	    // This is specific to Histology Viewer only!
+	    var app = registry.getDefaultAppFromMime(mime_type);
+	    if (app === "histologyViewer") {
+	    	appInstance.data = {
+		        absolute_url: external_url,
+		        relative_url: sageutils.encodeReservedURL(aUrl),
+		        annotations: null,
+		        zoom: null,
+		        panX: null,
+		        panY: null
+		    };
+	    }
+	      
 		appInstance.data.file = assets.getURL(file);
 		appInstance.file = file;
 		callback(appInstance);
 	});
+};
+
+
+AppLoader.prototype.loadHistologyFromFile = function(file, mime_type, aUrl, external_url, name, callback) {
+	// Find the app!!
+	var appName = "histologyViewer";
+	var annotations = registry.getKey(aUrl);
+	var exif = assets.getExifData(file);
+	var s2url = assets.getURL(file);
+	var appInstance = {
+		id: null,
+		title: name || "Histology Viewer",
+		main_script: "histologyViewer.js",
+		application: appName,
+		icon: exif ? exif.SAGE2thumbnail : null,
+		type: mime_type,
+		url: external_url,
+		resrc: null,
+		left: this.titleBarHeight,
+		top: 1.5 * this.titleBarHeight,
+		width: 800,
+		height: 224,
+		native_width: 800,
+		native_height: 224,
+		previous_left: null,
+		previous_top: null,
+		previous_width: null,
+		previous_height: null,
+		maximized: false,
+		aspect: 800.0/224.0,
+		animation: null,
+		metadata: exif.metadata,
+		resizeMode: "free",
+		sticky: false,
+		plugin: null,
+		file: file,
+		sage2URL: s2url,
+		MIMEType: mime_type || "application/xml",
+		version: "1.0.0",
+		description: "Histology Viewer for Pathology",
+		keywords: [ "openseadragon", "image", "viewer", "histology" ],
+	    fileTypes: [ "ndpi", "svs", "tif", "vms", "vmu", "scn", "mrxs", "tiff", "svslide", "bif", "dzi" ],
+	    directory: "histology",
+		author: "Victor Mateevitsi <mvictoras@gmail.com>",
+		license: "SAGE2-Software-License",
+		date: new Date(),
+		data: {
+			absolute_url: external_url,
+	        relative_url: sageutils.encodeReservedURL(aUrl),
+	        annotations: annotations,
+	        zoom: null,
+	        panX: null,
+	        panY: null
+		}
+	};
+	
+	appInstance.data.file = assets.getURL(file);
+	appInstance.file = file;
+	callback(appInstance);
 };
 
 
@@ -737,6 +814,7 @@ function getSAGE2URL(getName) {
 
 AppLoader.prototype.loadFileFromLocalStorage = function(file, callback) {
 	var localPath = getSAGE2Path(file.filename);
+	console.log("debug:",localPath);
 	// var mime_type = mime.lookup(file.filename);
 	var mime_type = assets.getMimeType(localPath);
 	var a_url     = assets.getURL(localPath);
@@ -841,6 +919,55 @@ AppLoader.prototype.loadApplication = function(appData, callback) {
 						callback(appInstance, null);
 					}
 			);
+		} else if (app === "histologyViewer") {
+			var extension = path.extname(appData.path);
+			if( extension === ".dzi" ) {
+				this.loadHistologyFromFile(appData.path, appData.type, appData.url, appData.external_url, appData.name, function(appInstance) {
+					callback(appInstance);
+				});
+			} else {
+				var _this = this;
+        		console.log(appData);
+				var basename = path.basename(appData.path, path.extname(appData.path));
+				var deepZoomFile = path.join(path.dirname(appData.path), basename + '.dzi');
+				var thumbFile = path.join(path.dirname(appData.path), basename + '.jpg');
+		        console.log("B: " + basename);
+		        console.log("D: " + deepZoomFile);
+		        console.log("T: " + thumbFile);
+        		if(!fs.existsSync(deepZoomFile)) {
+					sharp(appData.path).resize(1024).toFile(thumbFile, function(err) {
+						if(err) {
+						    console.error(err);
+						} else {
+						    console.log("Conversion (thumb) complete");
+						}
+				    });
+				    sharp(appData.path).tile(1024).toFile(deepZoomFile, function(err) {
+						if(err) {
+	            			console.error(err);
+						} else {
+							console.log("Conversion complete");
+				            fs.unlinkSync(appData.path);
+	            			exiftool.file(deepZoomFile, function(err2, data) {
+				            	if (err2) {
+				                	console.log("internal error", err2);
+				            	} else {
+					                console.log("EXIF> Adding", data.FileName);
+					                assets.addFile(data.SourceFile, data, function() { });
+					            }
+	            			});
+				            appData.url = path.join(path.dirname(appData.url), basename + '.dzi');
+				            appData.external_url = appData.url;
+				            appData.path = deepZoomFile;
+				            appData.name = basename + ".dzi";
+				            console.log(appData);
+	            			_this.loadHistologyFromFile(appData.path, appData.type, appData.url, appData.external_url, appData.name, function(appInstance) {
+				            	callback(appInstance);
+				            }.bind(_this));
+						}
+				    });
+				}
+			}
 		} else if (app === "custom_app") {
 			if (appData.compressed === true) {
 				var name = path.basename(appData.name, path.extname(appData.name));
@@ -927,10 +1054,22 @@ AppLoader.prototype.loadApplication = function(appData, callback) {
 				plugin: appData.application.plugin,
 				file: appData.application.file,
 				sage2URL: appData.application.sage2URL,
+				MIMEType: appData.application.MIMEType,
 				date: new Date()
 			};
 			if (appData.application.application === "pdf_viewer") {
 				anInstance.data.doc_url = anInstance.url;
+			}
+			else if (appData.application.application === "histologyViewer") {
+				var annotations = registry.getKey(appData.url);
+				anInstance.data = {
+					absolute_url: appData.external_url,
+			        relative_url: sageutils.encodeReservedURL(appData.url),
+			        annotations: annotations,
+			        zoom: null,
+			        panX: null,
+			        panY: null
+				}
 			}
 
 			this.scaleAppToFitDisplay(anInstance);

@@ -167,6 +167,28 @@ RegistryManager.prototype.getDirectory = function(file) {
 
 };
 
+RegistryManager.prototype.getKey = function(file) {
+  var data = [];
+  try {
+        data = this.db.getData("/apps/" + decodeURI(file));
+    } catch(error) {
+        console.error(error);
+    }
+
+    return data;
+}
+
+RegistryManager.prototype.saveKey = function(file, data) {
+  console.log(data);
+  try {
+        this.db.push("/apps/" + decodeURI(file), data, true);
+    } catch(error) {
+        console.error(error);
+    }
+}
+
+
+
 RegistryManager.prototype.setDefaultApplication = function(app, type) {
 };
 

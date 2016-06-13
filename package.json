@@ -65,6 +65,7 @@
 		"cheerio": "latest",
 		"sanitizer": "latest",
 		"sanitize-filename": "latest",
+		"sharp": "git://github.com/mvictoras/sharp.git#judgement",
 		"normalizeurl": "latest",
 		"ytdl-core": "latest"
 	},

@@ -1183,6 +1183,7 @@ function setupListeners() {
 }
 
 function createAppWindow(data, parentId, titleBarHeight, titleTextSize, offsetX, offsetY) {
+	console.log(data);
 	resetIdle();
 
 	var parent = document.getElementById(parentId);

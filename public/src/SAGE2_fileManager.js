@@ -60,6 +60,7 @@ function FileManager(wsio, mydiv, uniqueID) {
 		{id: "treeroot", value: "SAGE2", icon: "home", open: true, tooltip: "All the files",
 			data: [
 				{id: "Image:/", value: "Image", icon: "search", data: [], tooltip: "Show all the images"},
+				{id: "Histology:/", value: "Histology", icon: "search", data: [], tooltip: "Show all the multi resolution images"},
 				{id: "Video:/", value: "Video", icon: "search", data: [], tooltip: "Show all the videos"},
 				{id: "PDF:/", value: "PDF", icon: "search", data: [], tooltip: "Show all the PDFs"},
 				{id: "App:/", value: "Application", icon: "search", data: [], tooltip: "Show all the applications"},
@@ -422,6 +423,34 @@ function FileManager(wsio, mydiv, uniqueID) {
 			info = _this.allFiles[elt.id].exif.WhiteBalance || '';
 			metadata.config.elements.push({label: "White balance", value: info});
 
+		} else if (_this.allFiles[elt.id].exif.MIMEType.indexOf('application/xml') >= 0) {
+			metadata.config.elements.push({label: "Histology", type: "label"});
+
+			info = _this.allFiles[elt.id].exif.Make || '';
+			metadata.config.elements.push({label: "Make", value: info});
+			info = _this.allFiles[elt.id].exif.Model || '';
+			metadata.config.elements.push({label: "Camera", value: info});
+			info = _this.allFiles[elt.id].exif.LensID || _this.allFiles[elt.id].exif.LensInfo || '';
+			metadata.config.elements.push({label: "Lens", value: info});
+			info = _this.allFiles[elt.id].exif.ExposureTime || _this.allFiles[elt.id].exif.ShutterSpeedValue ||
+						_this.allFiles[elt.id].exif.ShutterSpeed || '';
+			metadata.config.elements.push({label: "Shutter speed", value: info});
+			info = _this.allFiles[elt.id].exif.FNumber || _this.allFiles[elt.id].exif.Aperture ||
+						_this.allFiles[elt.id].exif.ApertureValue || '';
+			metadata.config.elements.push({label: "Aperture", value: info});
+			info = _this.allFiles[elt.id].exif.ISO || '';
+			metadata.config.elements.push({label: "ISO", value: info});
+			info = _this.allFiles[elt.id].exif.ExposureProgram || '';
+			metadata.config.elements.push({label: "Program", value: info});
+			info = _this.allFiles[elt.id].exif.Flash || '';
+			metadata.config.elements.push({label: "Flash", value: info});
+			info = _this.allFiles[elt.id].exif.Megapixels || '';
+			metadata.config.elements.push({label: "Megapixels", value: info});
+			info = _this.allFiles[elt.id].exif.ColorSpace || '';
+			metadata.config.elements.push({label: "Color space", value: info});
+			info = _this.allFiles[elt.id].exif.WhiteBalance || '';
+			metadata.config.elements.push({label: "White balance", value: info});
+
 		} else if (_this.allFiles[elt.id].exif.MIMEType.indexOf('video') >= 0) {
 			metadata.config.elements.push({label: "Video", type: "label"});
 
@@ -608,6 +637,7 @@ function FileManager(wsio, mydiv, uniqueID) {
 	// Before the drop, test if it is a valid operation
 	this.tree.attachEvent("onBeforeDrop", function(context, ev) {
 		if (context.target.startsWith("Image:")   ||
+			context.target.startsWith("Histology:")   ||
 			context.target.startsWith("PDF:")     ||
 			context.target.startsWith("Video:")   ||
 			context.target.startsWith("App:")     ||
@@ -761,6 +791,8 @@ function FileManager(wsio, mydiv, uniqueID) {
 				response = "pdf_viewer";
 			} else if (elt.exif.MIMEType.indexOf('video') >= 0) {
 				response = "movie_player";
+			} else if (elt.exif.MIMEType.indexOf('xml') >= 0) {
+				response = "histologyViewer";
 			} else if (elt.exif.MIMEType.indexOf('sage2/session') >= 0) {
 				response = "load_session";
 			}
@@ -811,6 +843,10 @@ function FileManager(wsio, mydiv, uniqueID) {
 			_this.allTable.filter(function(obj) {
 				return _this.allFiles[obj.id].exif.MIMEType.indexOf('image') >= 0;
 			});
+		} else if (searchParam === "Histology:/") {
+			_this.allTable.filter(function(obj) {
+				return _this.allFiles[obj.id].exif.MIMEType.indexOf('application/xml') >= 0;
+			});
 		} else if (searchParam === "PDF:/") {
 			_this.allTable.filter(function(obj) {
 				return obj.type.toString() === "PDF";
@@ -846,6 +882,11 @@ function FileManager(wsio, mydiv, uniqueID) {
 			if (query[0] === "Image") {
 				_this.allTable.filter(function(obj) {
 					return (_this.allFiles[obj.id].exif.MIMEType.indexOf('image') >= 0) &&
+							(_this.allFiles[obj.id].sage2URL.lastIndexOf(query[1], 0) === 0);
+				});
+			} else if (query[0] === "Histology") {
+				_this.allTable.filter(function(obj) {
+					return (_this.allFiles[obj.id].exif.MIMEType.indexOf('application/xml') >= 0) &&
 							(_this.allFiles[obj.id].sage2URL.lastIndexOf(query[1], 0) === 0);
 				});
 			} else if (query[0] === "PDF") {
@@ -919,6 +960,11 @@ function FileManager(wsio, mydiv, uniqueID) {
 		// Add all the files in
 		for (i = 0; i < data.images.length; i++) {
 			f = data.images[i];
+			this.allFiles[f.id] = f;
+			this.createSubFolderForFile(f);
+		}
+		for (i = 0; i < data.histology.length; i++) {
+			f = data.histology[i];
 			this.allFiles[f.id] = f;
 			this.createSubFolderForFile(f);
 		}
@@ -1135,6 +1181,7 @@ function FileManager(wsio, mydiv, uniqueID) {
 		this.tree.attachEvent('onBeforeContextMenu', function(id, e, node) {
 			if (id === 'treeroot' ||
 				(id.indexOf('Image:/') >= 0) ||
+				(id.indexOf('Histology:/') >= 0) ||
 				(id.indexOf('Video:/') >= 0) ||
 				(id.indexOf('PDF:/') >= 0) ||
 				(id.indexOf('App:/') >= 0) ||
