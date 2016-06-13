@@ -25,9 +25,7 @@ config/custom.types
 
 # generated content
 doc/api
-
-# http cache
-public/sage2.appcache
+public/service-worker.js
 
 # Dependency directory
 node_modules

@@ -1,0 +1,19 @@
+{
+	"main_script": "Webview.js",
+	"icon": "Webview.png",
+	"width": 720,
+	"height": 1000,
+	"resize": "free",
+	"animation": false,
+	"dependencies": [
+	],
+	"load": {
+		"url": "http://nytimes.com"
+	},
+	"title": "Webview",
+	"version": "1.0.0",
+	"description": "SAGE2 application Webview",
+	"keywords": [ "sage2", "Webview" ],
+	"author": "Luc Renambot <renambot@gmail.com>",
+	"license": "SAGE2-Software-License"
+}

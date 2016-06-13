@@ -805,7 +805,9 @@ function setupListeners() {
 		dragCorner[0].style.left   = (Math.round(position_data.elemWidth) - cornerSize).toString()  + "px";
 
 		// if the element is a div or iframe, resize should use the style object
-		if (child[0].tagName.toLowerCase() === "div" || child[0].tagName.toLowerCase() === "iframe") {
+		if (child[0].tagName.toLowerCase() === "div" ||
+			child[0].tagName.toLowerCase() === "iframe" ||
+			child[0].tagName.toLowerCase() === "webview") {
 			child[0].style.width  = Math.round(position_data.elemWidth)  + "px";
 			child[0].style.height = Math.round(position_data.elemHeight) + "px";
 		} else {
