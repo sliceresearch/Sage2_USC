@@ -38,7 +38,9 @@ Class.prototype.construct = function() {};
  */
 Class.extend = function(def) {
 	var classDef = function() {
-		if (arguments[0] !== Class) { this.construct.apply(this, arguments); }
+		if (arguments[0] !== Class) {
+			this.construct.apply(this, arguments);
+		}
 	};
 
 	var proto = new this(Class);

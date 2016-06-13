@@ -2,15 +2,20 @@
 
 SAGE2_radarStations = [];
 SAGE2_radarStations[0] = {code:"LOT",
-						name:"Chi"};
+						name:"Chi",
+						longName:"Chicago, IL"};
 SAGE2_radarStations[1] = {code:"HMO",
-						name:"Haw"};
+						name:"Haw",
+						longName:"Molokai, HI"};
 SAGE2_radarStations[2] = {code:"NKX",
-						name:"San D"};
+						name:"San D",
+						longName:"San Diego, CA"};
 SAGE2_radarStations[3] = {code:"OKX",
-						name:"New Y"};
+						name:"New Y",
+						longName:"New York, NY"};
 SAGE2_radarStations[4] = {code:"GRK",
-						name:"Aus"};
+						name:"Aus",
+						longName:"Austin, TX"};
 
 // codes from http://www.glenallenweather.com/alink/15radar/radarstat.htm
 /*

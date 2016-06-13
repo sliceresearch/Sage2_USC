@@ -67,12 +67,13 @@
 		"sanitize-filename": "latest",
 		"sharp": "git://github.com/mvictoras/sharp.git#judgement",
 		"normalizeurl": "latest",
+		"sw-precache": "latest",
 		"ytdl-core": "latest"
 	},
-	"bundledDependencies": [
-		"websocketio",
-		"node-demux"
-	],
+	"optionalDependencies": {
+		"websocketio": "latest",
+		"node-demux" : "latest"
+	},
 	"devDependencies": {
 		"grunt": "latest",
 		"grunt-cli": "latest",
@@ -95,6 +96,7 @@
 	},
 	"scripts": {
 		"start":   "node server.js -l",
+		"sw":      "node generate-service-worker.js",
 		"monitor": "nodemon -e json,js,html -I -L -i public/uploads server.js -l",
 		"lint":    "grunt eslint",
 		"style":   "grunt jscs",
@@ -103,7 +105,8 @@
 		"newapp":  "grunt newapp",
 		"test":    "grunt all",
 		"in":      "node ./install_dependencies.js",
-		"inprod":  "node ./install_dependencies.js --prod"
+		"inprod":  "node ./install_dependencies.js --prod",
+		"indev":   "node ./install_dependencies.js --dev"
 	},
 	"license": "SAGE2-Software-License"
 }

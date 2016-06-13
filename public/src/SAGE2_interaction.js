@@ -55,7 +55,7 @@ function SAGE2_interaction(wsio) {
 	this.deltaX = 0;
 	this.deltaY = 0;
 	// Send frequency (frames per second)
-	this.sendFrequency = 25;
+	this.sendFrequency = 30;
 	// Timeout for when scrolling ends
 	this.scrollTimeId = null;
 
@@ -236,6 +236,7 @@ function SAGE2_interaction(wsio) {
 				formdata.append("file" + i.toString(), files[i]);
 				formdata.append("dropX", dropX);
 				formdata.append("dropY", dropY);
+				formdata.append("open",  true);
 
 				formdata.append("SAGE2_ptrName",  localStorage.SAGE2_ptrName);
 				formdata.append("SAGE2_ptrColor", localStorage.SAGE2_ptrColor);
@@ -250,7 +251,8 @@ function SAGE2_interaction(wsio) {
 				xhr.send(formdata);
 			} else {
 				// show message for 4 seconds
-				showSAGE2Message("File: " + files[i].name + " is too large (max size is " + (this.maxUploadSize / (1024 * 1024 * 1024)) + " GB)");
+				showSAGE2Message("File: " + files[i].name + " is too large (max size is " +
+					(this.maxUploadSize / (1024 * 1024 * 1024)) + " GB)");
 			}
 		}
 	};
@@ -416,6 +418,8 @@ function SAGE2_interaction(wsio) {
 				// post message to start chrome screen share
 				window.postMessage('SAGE2_capture_desktop', '*');
 			} else if (__SAGE2__.browser.isChrome === true && this.chromeDesktopCaptureEnabled !== true) {
+
+				/* eslint-disable max-len */
 				webix.confirm({
 					title: "Screen sharing",
 					ok: "Ok",
@@ -434,6 +438,9 @@ function SAGE2_interaction(wsio) {
 						webix.modalbox.hide(this);
 					}
 				});
+
+				/* eslint-enable max-len */
+
 			} else if (__SAGE2__.browser.isFirefox === true) {
 				// attempt to start firefox screen share
 				//   can replace 'screen' with 'window' (but need user choice ahead of time)
@@ -472,11 +479,12 @@ function SAGE2_interaction(wsio) {
 	*/
 	this.captureDesktop = function(data) {
 		if (__SAGE2__.browser.isChrome === true) {
-			var constraints = {chromeMediaSource: 'desktop',
-								chromeMediaSourceId: data,
-								maxWidth: 1920, maxHeight: 1080,
-								maxFrameRate: 24,
-								minFrameRate: 3
+			var constraints = {
+				chromeMediaSource: 'desktop',
+				chromeMediaSourceId: data,
+				maxWidth: 1920, maxHeight: 1080,
+				maxFrameRate: 24,
+				minFrameRate: 3
 			};
 			navigator.getUserMedia({video: {mandatory: constraints, optional: []}, audio: false},
 				this.streamSuccess, this.streamFail);

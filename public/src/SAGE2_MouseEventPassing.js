@@ -69,7 +69,8 @@ var SAGE2MEP = {
 		var pointerDiv = document.getElementById(user.id);
 
 		// convert the webkit translate set to a numerical value.
-		var xLocationOfPointerOnScreen = this.getXOfWebkitTranslate(pointerDiv.style.WebkitTransform); //TODO webkit coordinates are over how much?
+		//    TODO webkit coordinates are over how much?
+		var xLocationOfPointerOnScreen = this.getXOfWebkitTranslate(pointerDiv.style.WebkitTransform);
 		var yLocationOfPointerOnScreen = this.getYOfWebkitTranslate(pointerDiv.style.WebkitTransform);
 
 		// gets the element under the pointer coordinate. Some assumptions are made.
@@ -107,8 +108,8 @@ var SAGE2MEP = {
 					if (point && point.currentElement) {
 						point.currentElement.dispatchEvent(mouseEventToPass);
 					}
-				} // end if the current and previous element match
-				else {
+					// end if the current and previous element match
+				} else {
 					// since the current is different from previous, need to create and dispatch mouse over, enter, out, leave
 
 					// event order is : (first) over, enter, out, leave (last)
@@ -166,10 +167,11 @@ var SAGE2MEP = {
 				});
 				point.currentElement.dispatchEvent(mouseEventToPass);
 
-				point.elementPressed = point.currentElement; // There are some fringe cases where this can cause improper click events.
+				// There are some fringe cases where this can cause improper click events.
+				point.elementPressed = point.currentElement;
 
-				point.currentElement.focus(); // focus happens on mousedown
-
+				// focus happens on mousedown
+				point.currentElement.focus();
 
 				break;
 			case "pointerRelease":
@@ -278,16 +280,22 @@ var SAGE2MEP = {
 	*/
 	getIndexOfPointer: function(appIndex, userId) {
 		var i;
-		for (i = 0; i < this.pointerList[appIndex].length; i++) { // look through all pointers associated with that app, break on match.
+
+		// look through all pointers associated with that app, break on match.
+		for (i = 0; i < this.pointerList[appIndex].length; i++) {
 			if (this.pointerList[appIndex][i].id == userId) {
 				break;
 			}
 		}
-		if (i == this.pointerList[appIndex].length) { // if there was no match, create a pointer and add it.
+
+		// if there was no match, create a pointer and add it.
+		if (i == this.pointerList[appIndex].length) {
 			var np = this.generateNewPointer(userId);
 			this.pointerList[appIndex].push(np);
 		}
-		return i; // holds the index of the pointer for specified app.
+
+		// holds the index of the pointer for specified app.
+		return i;
 	}, // end getIndexOfPointer
 
 
@@ -321,9 +329,10 @@ var SAGE2MEP = {
 				allDivs[i].style.display = allDisplay[i];
 			}
 			return div;
-		} // if got the svg div.
-		else {
-			console.log("ERROR: somehow this point(" + px + "," + py + ") traversed up the entire html tag structure and didn't stop at html.");
+		} else {
+			// end if the current and previous element match
+			console.log("ERROR: somehow this point(" + px + "," + py +
+				") traversed up the entire html tag structure and didn't stop at html.");
 		}
 		return null;
 	}, // end get nonsvgatpoint
@@ -366,14 +375,18 @@ var SAGE2MEP = {
 
 
 	/*
-		This will generate and send all Enter events as necessary with the assumption that the current and previous elements are correct.
+		This will generate and send all Enter events as necessary with the assumption that
+			the current and previous elements are correct.
 		1. Check if previous element is an ancestor.
 		2. If it is, find the new divs starting with the current and send Enter events.
 		3. If NOT, first find the common ancestor.
 		4. Once the common ancestor has been found, send enter events from the top until it reaches the common ancestor.
 	*/
 	determineAndSendEnterEvents: function(point) {
-		if (point.previousElement == point.currentElement) { return; } // just in case
+		if (point.previousElement == point.currentElement) {
+			// just in case
+			return;
+		}
 		var isPreviousElementAncestor = false;
 		var cElem = point.currentElement.parentNode;
 		var pElem = point.previousElement;
@@ -406,9 +419,8 @@ var SAGE2MEP = {
 				cElem.dispatchEvent(mouseEventToPass);
 				cElem = cElem.parentNode;
 			}
-		} // end sending only the new div Enter events.
-
-		else {
+			// end sending only the new div Enter events.
+		} else {
 			// 3. finding the common ancestor
 			var foundCommonAncestor = false;
 			pElem = point.previousElement;
@@ -436,7 +448,9 @@ var SAGE2MEP = {
 			} // end while finding the common ancestor
 
 			if (!foundCommonAncestor) {
-				if (this.debug) {console.log("SAGE2MEP> ERROR: unable to find common ancestor."); }
+				if (this.debug) {
+					console.log("SAGE2MEP> ERROR: unable to find common ancestor.");
+				}
 				return;
 			}
 
@@ -501,20 +515,34 @@ var SAGE2MEP = {
 
 		// the point of substring(3) is because it probably has div
 		// TODO check if it could be canvas.
-		if (this.debug) { console.log("erase me appid:" + appDivId.substring(3)); }
+		var appname = null;
+		var idx = appDivId.indexOf('app_');
+		if (idx >= 0) {
+			// extract the app_ part of the string
+			appname = appDivId.slice(idx);
+		}
 
-		var appElem = document.getElementById(appDivId.substring(3)); //TODO double check this
+		if (this.debug) {
+			console.log("erase me appid:" + appname);
+		}
+
+		// TODO double check this
+		var appElem = document.getElementById(appname);
 		// var appElemZone = document.getElementById(appDivId);
 		// var appWidth  = parseInt(appElemZone.style.width, 10);
 		// var appHeight = parseInt(appElemZone.style.height, 10);
 
 		var appLeftOffset = 0;
-		if (appElem.style.left != null) { appLeftOffset = parseInt(appElem.style.left, 10); }
+		if (appElem && appElem.style.left != null) {
+			appLeftOffset = parseInt(appElem.style.left, 10);
+		}
 		var appTopOffset = 0;
-		if (appElem.style.top != null) { appTopOffset = parseInt(appElem.style.top, 10); }
+		if (appElem && appElem.style.top != null) {
+			appTopOffset = parseInt(appElem.style.top, 10);
+		}
 
 		// testing titlebar title bar offset
-		var titleBarDiv = document.getElementById(appDivId.substring(3) + "_title");
+		var titleBarDiv = document.getElementById(appname + "_title");
 		appTopOffset -= parseInt(titleBarDiv.style.height);
 
 		var appX = this.getXOfWebkitTranslate(appElem.style.WebkitTransform);
@@ -574,7 +602,8 @@ var SAGE2MEP = {
 
 		// get the element at point
 		var theElementAtThePointer = document.elementFromPoint(px, py);
-		// alert("halt  appoffset at:" + appLeftOffset + "," + appTopOffset +" pointer at:" + px + "," + py + "                     also look for the location of the appElem:" + translateString);
+		// alert("halt  appoffset at:" + appLeftOffset + "," + appTopOffset +
+		// " pointer at:" + px + "," + py + " also look for the location of the appElem:" + translateString);
 
 		// put everything back
 		appElem.style.WebkitTransform =  appOriginalWebkit;
@@ -593,9 +622,15 @@ var SAGE2MEP = {
 
 		if (this.matvin) {
 			this.matvin = false; // dunno how necessary this is.
-			var appElem = document.getElementById(appDivId.substring(3));
-			appElem.style.WebkitTransform = this.matvinWebkit;
-			appElem.style.zIndex = this.matvinZ;
+			var appname = null;
+			var idx = appDivId.indexOf('app_');
+			if (idx >= 0) {
+				// extract the app_ part of the string
+				appname = appDivId.slice(idx);
+				var appElem = document.getElementById(appname);
+				appElem.style.WebkitTransform = this.matvinWebkit;
+				appElem.style.zIndex = this.matvinZ;
+			}
 		}
 
 

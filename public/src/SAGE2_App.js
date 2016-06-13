@@ -9,6 +9,7 @@
 // Copyright (c) 2014-2015
 
 /* global ignoreFields, SAGE2WidgetControl, SAGE2MEP */
+/* global addStoredFileListEventHandler, removeStoredFileListEventHandler */
 
 /**
  * @module client
@@ -197,7 +198,8 @@ var SAGE2_App = Class.extend({
 				(eventType === "pointerPress" || eventType === "pointerMove" ||
 				eventType === "pointerRelease" || eventType === "pointerScroll" ||
 				eventType === "keyboard" || eventType === "specialKey")) {
-			var itemIdx = parseInt((position.y - this.SAGE2StateSyncOptions.scroll) / Math.round(1.5 * this.config.ui.titleTextSize), 10);
+			var itemIdx = parseInt((position.y - this.SAGE2StateSyncOptions.scroll) /
+				Math.round(1.5 * this.config.ui.titleTextSize), 10);
 			var children = document.getElementById(this.id + "_statecontainer").childNodes;
 			var hoverChild = null;
 			var syncedPrev;
@@ -291,6 +293,7 @@ var SAGE2_App = Class.extend({
 		} else {
 			this.SAGE2UserModification = true;
 			this.event(eventType, position, user_id, data, date);
+
 			if (this.passSAGE2PointerAsMouseEvents) {
 				SAGE2MEP.processAndPassEvents(this.element.id, eventType, position,
 					user_id, data, date);
@@ -477,7 +480,12 @@ var SAGE2_App = Class.extend({
 
 		if (isMaster) {
 			var syncedState = this.SAGE2CopySyncedState(this.state, this.SAGE2StateOptions);
-			wsio.emit('updateAppState', {id: this.id, localState: this.state, remoteState: syncedState, updateRemote: updateRemote});
+			wsio.emit('updateAppState', {
+				id: this.id,
+				localState: this.state,
+				remoteState: syncedState,
+				updateRemote: updateRemote
+			});
 		}
 	},
 
@@ -589,10 +597,15 @@ var SAGE2_App = Class.extend({
 	isHidden: function() {
 		var checkWidth  = this.config.resolution.width;
 		var checkHeight = this.config.resolution.height;
+		// Overview client covers all
 		if (clientID === -1) {
 			// set the resolution to be the whole display wall
 			checkWidth  *= this.config.layout.columns;
 			checkHeight *= this.config.layout.rows;
+		} else {
+			// multiply by the size of the tile
+			checkWidth  *= (this.config.displays[clientID].width  || 1);
+			checkHeight *= (this.config.displays[clientID].height || 1);
 		}
 		return (this.sage2_x > (ui.offsetX + checkWidth)  ||
 				(this.sage2_x + this.sage2_width) < ui.offsetX ||
@@ -696,19 +709,22 @@ var SAGE2_App = Class.extend({
 			this.SAGE2Sync(true);
 		}
 
-		// update time
-		this.preDraw(date);
-		// measure actual frame rate
-		if (this.sec >= 1.0) {
-			this.fps       = this.frame_sec / this.sec;
-			this.frame_sec = 0;
-			this.sec       = 0;
-		}
-		// actual application draw
-		this.draw(date);
-		this.frame_sec++;
-		// update time and misc
-		this.postDraw(date);
+		var _this = this;
+		requestAnimationFrame(function () {
+			// update time
+			_this.preDraw(date);
+			// measure actual frame rate
+			if (_this.sec >= 1.0) {
+				_this.fps       = this.frame_sec / this.sec;
+				_this.frame_sec = 0;
+				_this.sec       = 0;
+			}
+			// actual application draw
+			_this.draw(date);
+			_this.frame_sec++;
+			// update time and misc
+			_this.postDraw(date);
+		});
 	},
 
 	/**
@@ -788,6 +804,42 @@ var SAGE2_App = Class.extend({
 	},
 
 	/**
+	* Entry point for a RPC callback into the app. Needed to keep state consistant
+	*
+	* @method callback
+	* @param func {Function} actual method to call
+	* @param data {Object} parameters sent from server
+	*/
+	callback: function(func, data) {
+		// Make to allow state modification
+		this.SAGE2UserModification = true;
+		// if app calls 'refresh', state will be updated
+		this[func](data);
+		// End tracking
+		this.SAGE2UserModification = false;
+	},
+
+	/**
+	* Register a callback to be called when receiving a updated file list from server
+	*
+	* @method registerFileListHandler
+	* @param mth {Method} method on object to be called back
+	*/
+	registerFileListHandler: function(mth) {
+		addStoredFileListEventHandler(mth.bind(this));
+	},
+
+	/**
+	* Unregister a callback to be called when receiving a updated file list from server
+	*
+	* @method unregisterFileListHandler
+	* @param mth {Method} method on object to be called back
+	*/
+	unregisterFileListHandler: function(mth) {
+		removeStoredFileListEventHandler(mth.bind(this));
+	},
+
+	/**
 	* Prints message to local browser console and send to server.
 	*  Accept a string as parameter or multiple parameters
 	*
@@ -806,4 +858,5 @@ var SAGE2_App = Class.extend({
 		}
 		sage2Log({app: this.div.id, message: args});
 	}
+
 });

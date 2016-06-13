@@ -142,8 +142,8 @@ function insertTextIntoTextInputWidget(textInput, code, printable) {
 
 	if (printable) {
 		prefix = prefix + String.fromCharCode(code);
-	}else {
-		switch (code){
+	} else {
+		switch (code) {
 			case 37: // left
 				if (prefix.length > 0) {
 					suffix = prefix.slice(-1) + suffix;

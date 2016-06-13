@@ -219,7 +219,7 @@ var timezone = SAGE2_App.extend({
 				var millis  = now.getMilliseconds();
 
 				// Create a readable time (using moment.js)
-				var momentTime = moment({hour:hours, minute:minutes});
+				var momentTime = moment({hour: hours, minute: minutes});
 				var momentStr  = momentTime.format("hh:mm A");
 				// update the text for this clock
 				d3.select("#" + this.state.clocks[i].id + "TextAMPM").text(momentStr);
@@ -324,7 +324,8 @@ var timezone = SAGE2_App.extend({
 	},
 
 	localizeCity: function(city) {
-		var url = "https://maps.googleapis.com/maps/api/geocode/json?address=" + city + "&key=AIzaSyCtSvhdjFUTsAeefu3a99VxMs1igYKjk2I";
+		var url = "https://maps.googleapis.com/maps/api/geocode/json?address="
+			+ city + "&key=AIzaSyCtSvhdjFUTsAeefu3a99VxMs1igYKjk2I";
 		var _this = this;
 		d3.json(url, function(error, json) {
 			if (error) {
