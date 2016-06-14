@@ -118,7 +118,7 @@ var pdf_viewer = SAGE2_App.extend({
 		this.pageCurrentlyGenerated = {};
 		this.loaded = false;
 		this.TVALUE = 0.25;
-		this.displacement = 10;
+		this.displacement = this.state.marginButton;
 		this.title = data.title;
 
 		// svg container, big as the application
@@ -252,8 +252,12 @@ var pdf_viewer = SAGE2_App.extend({
 					theHeight = that.baseHeightPage * that.TVALUE;
 					dx = (theWidth + that.displacement * that.TVALUE) * (page.pageNumber - 1);
 
-					c = that.thumbnailsVisualizer.append("image").attr("x", dx).attr("y", 0)
-							.attr("width", theWidth).attr("height", theHeight).attr("xlink:href", source);
+					c = that.thumbnailsVisualizer.append("image")
+						.attr("x", dx)
+						.attr("y", 0)
+						.attr("width", theWidth)
+						.attr("height", theHeight + 2 * that.displacement)
+						.attr("xlink:href", source);
 
 					c.thumbnail = true;
 					c.container = that.thumbnailsVisualizer;
@@ -271,8 +275,12 @@ var pdf_viewer = SAGE2_App.extend({
 					theHeight = that.baseHeightPage * quality;
 					dx = (theWidth + that.displacement) * (page.pageNumber - 1);
 
-					c = that.imageVisualizer.groups[quality].append("image").attr("x", dx).attr("y", 0)
-						.attr("width", theWidth).attr("height", theHeight).attr("xlink:href", source);
+					c = that.imageVisualizer.groups[quality].append("image")
+						.attr("x", dx)
+						.attr("y", 0)
+						.attr("width", theWidth)
+						.attr("height", theHeight)
+						.attr("xlink:href", source);
 				}
 			});
 		});
@@ -512,7 +520,7 @@ var pdf_viewer = SAGE2_App.extend({
 
 	goToPage: function(page) {
 		var center = (this.baseWidthPage / 2) * (this.state.numberOfPageToShow - 1);
-		var dx = center - (this.baseWidthPage + this.displacement / 2) * (page - 1);
+		var dx = center - (this.baseWidthPage + this.displacement) * (page - 1);
 		this.modifyState("horizontalOffset", dx);
 		this.generateMissingPages();
 		this.modifyState("currentPage", page);
@@ -615,6 +623,98 @@ var pdf_viewer = SAGE2_App.extend({
 	},
 
 	/**
+	* To enable right click context menu support,
+	* this function needs to be present with this format.
+	*/
+	getContextEntries: function() {
+		var entries = [];
+		var entry;
+
+		entry = {};
+		entry.description = "First Page";
+		entry.callback = "changeThePage";
+		entry.parameters = {};
+		entry.parameters.page = "first";
+		entries.push(entry);
+
+		entry = {};
+		entry.description = "Previous Page";
+		entry.callback = "changeThePage";
+		entry.parameters = {};
+		entry.parameters.page = "previous";
+		entries.push(entry);
+
+		entry = {};
+		entry.description = "Next Page";
+		entry.callback = "changeThePage";
+		entry.parameters = {};
+		entry.parameters.page = "next";
+		entries.push(entry);
+
+		entry = {};
+		entry.description = "Last Page";
+		entry.callback = "changeThePage";
+		entry.parameters = {};
+		entry.parameters.page = "last";
+		entries.push(entry);
+
+		entry = {};
+		entry.description = "Jump To: ";
+		entry.callback = "changeThePage";
+		entry.parameters = {};
+		entry.inputField = true;
+		entry.inputFieldSize = 3;
+		entries.push(entry);
+
+		// Special callback: dowload the file
+		entries.push({
+			description: "Download",
+			callback: "SAGE2_download",
+			parameters: {
+				url: this.state.doc_url
+			}
+		});
+
+		return entries;
+	},
+
+	/**
+	* Support function to allow page changing through right mouse context menu.
+	*
+	* @method changeThePage
+	* @param responseObject {Object} contains response from entry selection
+	*/
+	changeThePage: function(responseObject) {
+		var page = responseObject.page;
+		// if the user did the input option
+		if (responseObject.clientInput) {
+			page = parseInt(responseObject.clientInput);
+			if (page > 0 && page <= this.pageDocument) {
+				this.goToPage(page);
+			}
+		} else {
+			// else check for these word options
+			if (page === "first") {
+				this.goToPage(1);
+			} else if (page === "previous") {
+				if (this.pageInCenter() === 1) {
+					return;
+				}
+				this.goToPage(this.pageInCenter() - 1);
+			} else if (page === "next") {
+				if (this.pageInCenter() === this.pageDocument) {
+					return;
+				}
+				this.goToPage(this.pageInCenter() + 1);
+			} else if (page === "last") {
+				this.goToPage(this.pageDocument);
+			}
+		}
+		// This needs to be a new date for the extra function.
+		this.refresh(new Date(responseObject.serverDate));
+	},
+
+	/**
 	* Handles event processing, arrow keys to navigate, and r to redraw
 	*
 	* @method event
@@ -654,14 +754,13 @@ var pdf_viewer = SAGE2_App.extend({
 				this.refresh(date);
 			} else if (data.code === 38 && data.state === "down") {
 				// Up Arrow
-				if (this.pageInCenter() == this.pageDocument) {
+				if (this.pageInCenter() === this.pageDocument) {
 					return;
 				}
 				this.goToPage(this.pageInCenter() + 1);
-
 			} else if (data.code === 40 && data.state === "down") {
 				// Down Arrow
-				if (this.pageInCenter() == 1) {
+				if (this.pageInCenter() === 1) {
 					return;
 				}
 				this.goToPage(this.pageInCenter() - 1);
