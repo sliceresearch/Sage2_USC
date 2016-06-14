@@ -90,8 +90,8 @@ var pdf_viewer = SAGE2_App.extend({
 		// Create div into the DOM
 		this.SAGE2Init("div", data);
 
-		// Set the background to black
-		this.element.style.backgroundColor = 'black';
+		// Set the background
+		this.element.style.backgroundColor = '#272822';
 
 		// move and resize callbacks
 		this.resizeEvents = "continuous";
@@ -119,6 +119,7 @@ var pdf_viewer = SAGE2_App.extend({
 		this.loaded = false;
 		this.TVALUE = 0.25;
 		this.displacement = 10;
+		this.title = data.title;
 
 		// svg container, big as the application
 		this.container = d3.select(this.element).append("svg").attr("id", "container");
@@ -177,6 +178,11 @@ var pdf_viewer = SAGE2_App.extend({
 			for (var i = 1; i <= _this.pageDocument; i++) {
 				_this.obtainPageFromPDF(solver, i, _this, _this.TVALUE);
 			}
+
+			// Update the title
+			var newTitle;
+			newTitle = _this.title + " - " + _this.state.currentPage + " / " + _this.pageDocument;
+			_this.updateTitle(newTitle);
 		});
 	},
 
@@ -313,7 +319,7 @@ var pdf_viewer = SAGE2_App.extend({
 		this.generateMissingPages();
 
 		this.container
-			.attr("width", this.element.clientWidth)
+			.attr("width",  this.element.clientWidth)
 			.attr("height", this.element.clientHeight);
 		this.refresh(date);
 	},
@@ -365,8 +371,8 @@ var pdf_viewer = SAGE2_App.extend({
 
 	leftClickDown: function(x, y, id) {
 		// setting the feedback button color
-		var pressedColor = "blue";
-		var defaultBg = "white";
+		var pressedColor = "gray";
+		var defaultBg    = "lightgray";
 
 		// taking a reference of the main object
 		var _this = this;
@@ -434,29 +440,6 @@ var pdf_viewer = SAGE2_App.extend({
 			this.inBarCommand = null;
 		}
 
-		/* for (var i in this.interactable) {
-			var item = this.interactable[i];
-			var position = {x: parseInt(item.attr("x")), y: parseInt(item.attr("y")),
-							w: parseInt(item.attr("width")), h: parseInt(item.attr("height")),
-							container: item.container};
-
-			if (this.state.showingThumbnails && item.thumbnail && within(position, x, y) && !item.hoverNumber) {
-
-				var x = parseInt(item.attr("x")) + parseInt(item.attr("width")) / 2;
-				var y = parseInt(item.attr("height")) / 2;
-
-				item.hoverNumber = this.thumbnailsVisualizer.append("text").style("dominant-baseline", "central").style("text-anchor","middle")
-					.style("font-weight", "bold").style("font-family", "Arimo")
-					.attr("x", x).attr("y", y).attr("font-size", "80px").text(item.page);
-
-				console.log(item);
-
-			} else if (this.state.showingThumbnails && item.hoverNumber && !within(position, x, y)) {
-				//item.hoverNumber.remove();
-				item.hoverNumber = null;
-			}
-		} */
-
 		var f = this.activeTouch[id];
 		if (f && this.state.showingThumbnails && f.item.thumbnail) {
 			var sx = d3.transform(f.item.container.attr("transform")).scale[0];
@@ -493,21 +476,22 @@ var pdf_viewer = SAGE2_App.extend({
 	addPage: function(that) {
 		if (that.state.numberOfPageToShow < that.pageDocument) {
 			that.modifyState("numberOfPageToShow", that.state.numberOfPageToShow + 1);
-			that.sendResize(that.baseWidthPage * that.state.numberOfPageToShow * that.state.resizeValue,
-				(that.baseHeightPage + that.commandBarG.height + that.state.thumbnailHeight) * that.state.resizeValue);
+			var neww = that.baseWidthPage * that.state.numberOfPageToShow * that.state.resizeValue;
+			var newh = (that.baseHeightPage + that.commandBarG.height + that.state.thumbnailHeight) * that.state.resizeValue;
+			that.sendResize(neww, newh);
 		}
 	},
 
 	removePage: function(that) {
 		if (that.state.numberOfPageToShow > 1) {
 			that.modifyState("numberOfPageToShow", that.state.numberOfPageToShow - 1);
-			that.sendResize(that.baseWidthPage * that.state.numberOfPageToShow * that.state.resizeValue,
-				(that.baseHeightPage + that.commandBarG.height + that.state.thumbnailHeight) * that.state.resizeValue);
+			var neww = that.baseWidthPage * that.state.numberOfPageToShow * that.state.resizeValue;
+			var newh = (that.baseHeightPage + that.commandBarG.height + that.state.thumbnailHeight) * that.state.resizeValue;
+			that.sendResize(neww, newh);
 		}
 	},
 
 	showThumbnails: function(that) {
-
 		that.modifyState("showingThumbnails", !that.state.showingThumbnails);
 		that.thumbnailsVisualizer.style("visibility", that.state.showingThumbnails ? "visible" : "hidden");
 		that.clickedThumbnail = true;
@@ -515,12 +499,9 @@ var pdf_viewer = SAGE2_App.extend({
 		var multiplier = that.state.showingThumbnails ? 0.25 : 0;
 		that.modifyState("thumbnailHeight", that.baseHeightPage * multiplier);
 
-		// var dy = (that.baseHeightPage + that.state.thumbnailHeight + 5000) * that.state.resizeValue;
-		that.sendResize(
-			that.baseWidthPage * that.state.numberOfPageToShow * that.state.resizeValue,
-			(that.baseHeightPage + that.commandBarG.height + that.state.thumbnailHeight) * that.state.resizeValue
-		);
-
+		var neww = that.baseWidthPage * that.state.numberOfPageToShow * that.state.resizeValue;
+		var newh = (that.baseHeightPage + that.commandBarG.height + that.state.thumbnailHeight) * that.state.resizeValue;
+		that.sendResize(neww, newh);
 	},
 
 	scaleThumbnailBar: function() {
@@ -536,6 +517,12 @@ var pdf_viewer = SAGE2_App.extend({
 		this.generateMissingPages();
 		this.modifyState("currentPage", page);
 		this.translateGroup(this.imageVisualizer, this.state.horizontalOffset, 0);
+
+		// Update the title
+		var newTitle;
+		newTitle = this.title + " - " + this.state.currentPage + " / " + this.pageDocument;
+		this.updateTitle(newTitle);
+
 		return dx;
 	},
 
@@ -551,7 +538,7 @@ var pdf_viewer = SAGE2_App.extend({
 			// this.commandBarG = this.container.append("g");
 		}
 
-		this.commandBarG.height = this.baseHeightPage * 0.2;
+		this.commandBarG.height = this.baseHeightPage * 0.1;
 		this.widthCommandButton = this.commandBarG.height - this.state.marginButton * 2;
 
 		// the background
@@ -559,7 +546,7 @@ var pdf_viewer = SAGE2_App.extend({
 			.attr("x", -3000).attr("y", 0)
 			.attr("height", this.commandBarG.height)
 			.attr("width", 10000)
-			.attr("fill", "black");
+			.attr("fill", "#272822");
 		this.commandBarBG.container = this.commandBarG;
 
 		// the minus button
@@ -568,7 +555,7 @@ var pdf_viewer = SAGE2_App.extend({
 			.attr("y", 0 + this.state.marginButton)
 			.attr("width", this.widthCommandButton)
 			.attr("height", this.widthCommandButton)
-			.attr("fill", "white");
+			.attr("fill", "lightgray");
 		this.minusButton.ico = this.commandBarG.append("image")
 			.attr("x", 0 + this.state.marginButton)
 			.attr("y", 0 + this.state.marginButton)
@@ -586,7 +573,7 @@ var pdf_viewer = SAGE2_App.extend({
 			.attr("y", 0 + this.state.marginButton)
 			.attr("width", this.widthCommandButton)
 			.attr("height", this.widthCommandButton)
-			.attr("fill", "white");
+			.attr("fill", "lightgray");
 		this.plusButton.ico = this.commandBarG.append("image")
 			.attr("x", parseInt(this.minusButton.attr("x")) + this.widthCommandButton + this.state.marginButton)
 			.attr("y", 0 + this.state.marginButton)
@@ -604,7 +591,7 @@ var pdf_viewer = SAGE2_App.extend({
 			.attr("y", 0 + this.state.marginButton)
 			.attr("width", this.widthCommandButton)
 			.attr("height", this.widthCommandButton)
-			.attr("fill", "white");
+			.attr("fill", "lightgray");
 		this.thumbnailsButton.ico = this.commandBarG.append("image")
 			.attr("x", parseInt(this.plusButton.attr("x")) + this.widthCommandButton + this.state.marginButton)
 			.attr("y", 0 + this.state.marginButton)
@@ -615,7 +602,6 @@ var pdf_viewer = SAGE2_App.extend({
 		this.thumbnailsButton.action = this.showThumbnails;
 		this.thumbnailsButton.container = this.commandBarG;
 		this.interactable.push(this.thumbnailsButton);
-
 	},
 
 	load: function(date) {
