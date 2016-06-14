@@ -434,7 +434,7 @@ AppLoader.prototype.loadVideoFromFile = function(file, mime_type, aUrl, external
 			_this.scaleAppToFitDisplay(appInstance);
 			callback(appInstance, video);
 		});
-		video.load(file, {decodeFirstFrame: true});
+		video.load(file, {decodeFirstFrame: true, colorspace: "yuv420p"});
 	}
 };
 
