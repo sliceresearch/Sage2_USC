@@ -25,49 +25,6 @@ PDFJS.maxCanvasPixels = 67108864; // 8k2
 PDFJS.disableStream   = true;
 
 
-function deleteClick (item) {
-	item.clickReceived = null;
-}
-
-// function getScale (g) {
-// 	return d3.transform(g.attr("transform")).scale;
-// }
-
-// function getTranslate (g) {
-// 	return d3.transform(g.attr("transform")).translate;
-// }
-
-function within (element, x, y) {
-	var translate = d3.transform(element.container.attr("transform")).translate;
-	var s = d3.transform(element.container.attr("transform")).scale[0];
-
-	var mX = (x - translate[0]);
-	var mY = (y - translate[1]);
-
-	mX /= s;
-	mY /= s;
-
-	return (mY >= element.y &&
-			mY <= (element.y + element.h) &&
-			mX >= element.x &&
-			mX <= (element.x + element.w));
-}
-
-// function moveImage (item, newPosition) {
-// 	if (newPosition.x) {
-// 		item.attr("x", newPosition.x);
-// 	}
-// 	if (newPosition.y) {
-// 		item.attr("y", newPosition.y);
-// 	}
-// 	if (newPosition.w) {
-// 		item.attr("width", newPosition.w);
-// 	}
-// 	if (newPosition.h) {
-// 		item.attr("height", newPosition.h);
-// 	}
-// }
-
 /**
  * PDF viewing application, based on pdf.js library
  *
@@ -95,7 +52,6 @@ var pdf_viewer = SAGE2_App.extend({
 
 		// move and resize callbacks
 		this.resizeEvents = "continuous";
-		this.moveEvents   = "continuous";
 
 		// SAGE2 Application Settings
 		//
@@ -105,21 +61,22 @@ var pdf_viewer = SAGE2_App.extend({
 		this.controls.finishedAddingControls();
 		this.enableControls = true;
 
-		this.activeTouch = [];
-		this.interactable = [];
-		this.widthScreen = 8160;
-		this.heightScreen = 2304;
-		this.heightTitle = 58;
+		this.activeTouch    = [];
+		this.interactable   = [];
+		this.widthScreen    = 8160;
+		this.heightScreen   = 2304;
+		this.heightTitle    = 58;
 		this.gotInformation = false;
-		this.pageDocument = 0;
-		this.baseWidthPage = null;
+		this.pageDocument   = 0;
+		this.baseWidthPage  = null;
 		this.baseHeightPage = null;
-		this.pageCurrentlyVisible = {};
+		this.pageCurrentlyVisible  = {};
 		this.pageCurrentlyGenerated = {};
 		this.loaded = false;
 		this.TVALUE = 0.25;
+		this.showUI = true;
+		this.title  = data.title;
 		this.displacement = this.state.marginButton;
-		this.title = data.title;
 
 		// svg container, big as the application
 		this.container = d3.select(this.element).append("svg").attr("id", "container");
@@ -171,6 +128,11 @@ var pdf_viewer = SAGE2_App.extend({
 			// memorize the number of page of the document
 			_this.pageDocument = solver.numPages;
 
+			// no UI needed when only one page
+			if (_this.pageDocument === 1) {
+				_this.showUI = false;
+			}
+
 			// load the first page the get the INFORMATION
 			_this.obtainPageFromPDF(solver, 1, _this, 1);
 
@@ -216,8 +178,9 @@ var pdf_viewer = SAGE2_App.extend({
 
 				that.loaded = true;
 
-				that.sendResize(that.baseWidthPage * that.state.numberOfPageToShow * that.state.resizeValue,
-					(that.baseHeightPage + that.commandBarG.height + that.state.thumbnailHeight) * that.state.resizeValue);
+				var neww = that.baseWidthPage * that.state.numberOfPageToShow * that.state.resizeValue;
+				var newh = (that.baseHeightPage + that.commandBarG.height + that.state.thumbnailHeight) * that.state.resizeValue;
+				that.sendResize(neww, newh);
 				return;
 			}
 
@@ -296,7 +259,6 @@ var pdf_viewer = SAGE2_App.extend({
 	},
 
 	resize: function(date) {
-
 		if (!this.loaded) {
 			return;
 		}
@@ -542,12 +504,15 @@ var pdf_viewer = SAGE2_App.extend({
 
 		if (this.commandBarG) {
 			this.commandBarG.selectAll("*").remove();
-		} else {
-			// this.commandBarG = this.container.append("g");
 		}
 
 		this.commandBarG.height = this.baseHeightPage * 0.1;
 		this.widthCommandButton = this.commandBarG.height - this.state.marginButton * 2;
+
+		if (!this.showUI) {
+			this.commandBarG.height = 0;
+			return;
+		}
 
 		// the background
 		this.commandBarBG = this.commandBarG.append("rect")
@@ -617,9 +582,7 @@ var pdf_viewer = SAGE2_App.extend({
 	},
 
 	draw: function(date) {
-	},
-
-	move: function(date) {
+		// pass
 	},
 
 	/**
@@ -725,16 +688,18 @@ var pdf_viewer = SAGE2_App.extend({
 	* @param date {Date} current time from the server
 	*/
 	event: function(eventType, position, user, data, date) {
-		// Left Click  - go back one page
-		// Right Click - go forward one page
 		if (eventType === "pointerPress" && (data.button === "left")) {
-			this.leftClickDown(position.x, position.y, user.id);
+			if (this.showUI) {
+				this.leftClickDown(position.x, position.y, user.id);
+			}
 		} else if (eventType === "pointerMove") {
-			this.leftClickMove(position.x, position.y, user.id);
-			// this.leftClickMove(position.x, position.y, user_id.id);
+			if (this.showUI) {
+				this.leftClickMove(position.x, position.y, user.id);
+			}
 		} else if (eventType === "pointerRelease" && (data.button === "left")) {
-			this.leftClickRelease(position.x, position.y, user.id);
-			// this.doubleLeftClickRelease(position.x, position.y, user_id.id);
+			if (this.showUI) {
+				this.leftClickRelease(position.x, position.y, user.id);
+			}
 		}
 
 		if (eventType === "specialKey") {
@@ -743,14 +708,12 @@ var pdf_viewer = SAGE2_App.extend({
 				this.modifyState("horizontalOffset", this.state.horizontalOffset - 60);
 				this.translateGroup(this.imageVisualizer, this.state.horizontalOffset, 0);
 				this.generateMissingPages();
-
 				this.refresh(date);
 			} else if (data.code === 37 && data.state === "down") {
 				// Left Arrow
 				this.modifyState("horizontalOffset", this.state.horizontalOffset + 60);
 				this.translateGroup(this.imageVisualizer, this.state.horizontalOffset, 0);
 				this.generateMissingPages();
-
 				this.refresh(date);
 			} else if (data.code === 38 && data.state === "down") {
 				// Up Arrow
@@ -768,3 +731,25 @@ var pdf_viewer = SAGE2_App.extend({
 		}
 	}
 });
+
+// Extra functions
+
+function deleteClick(item) {
+	item.clickReceived = null;
+}
+
+function within(element, x, y) {
+	var translate = d3.transform(element.container.attr("transform")).translate;
+	var s = d3.transform(element.container.attr("transform")).scale[0];
+
+	var mX = (x - translate[0]);
+	var mY = (y - translate[1]);
+
+	mX /= s;
+	mY /= s;
+
+	return (mY >= element.y &&
+			mY <= (element.y + element.h) &&
+			mX >= element.x &&
+			mX <= (element.x + element.w));
+}
