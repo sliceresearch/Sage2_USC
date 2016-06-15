@@ -964,7 +964,6 @@ function FileManager(wsio, mydiv, uniqueID) {
 			// } else {
 			// 	// console.log('Default search on:', searchParam);
 			// }
->>>>>>> master
 		}
 	}
 

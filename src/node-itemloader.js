@@ -511,10 +511,6 @@ AppLoader.prototype.loadPdfFromFile = function(file, mime_type, aUrl, external_u
 };
 
 
-<<<<<<< HEAD
-
-AppLoader.prototype.loadAppFromFileFromRegistry = function(file, mime_type, aUrl, external_url, name, callback, app) {
-=======
 AppLoader.prototype.loadNoteFromFile = function(file, mime_type, aUrl, external_url, name, callback) {
 	// Find the app. Look it the file name in the registry. Get path, navigate to the path's instruction.json file.
 	var appName = registry.getDefaultApp(file);
@@ -586,7 +582,6 @@ AppLoader.prototype.loadDoodleFromFile = function(file, mime_type, aUrl, externa
 
 
 AppLoader.prototype.loadAppFromFileFromRegistry = function(file, mime_type, aUrl, external_url, name, callback) {
->>>>>>> master
 	// Find the app!!
 	var appName = registry.getDefaultApp(file);
 	var localPath = getSAGE2Path(appName);
@@ -906,12 +901,6 @@ function getSAGE2URL(getName) {
 AppLoader.prototype.loadFileFromLocalStorage = function(file, callback) {
 	var mime_type;
 	var localPath = getSAGE2Path(file.filename);
-<<<<<<< HEAD
-	console.log("debug:",localPath);
-	// var mime_type = mime.lookup(file.filename);
-	var mime_type = assets.getMimeType(localPath);
-=======
->>>>>>> master
 	var a_url     = assets.getURL(localPath);
 	var mime_app  = registry.getMimeType(localPath);
 	if (mime_app) {
