@@ -267,7 +267,7 @@ function initializeSage2Server() {
 
 	// Add a flag into the configuration to denote password status (used on display side)
 	//   not protected by default
-	config.passordProtected = false;
+	config.passwordProtected = false;
 	// Check for the session password file
 	var userDocPath = path.join(sageutils.getHomeDirectory(), "Documents", "SAGE2_Media", "/");
 	var passwordFile = userDocPath + 'passwd.json';
@@ -279,7 +279,7 @@ function initializeSage2Server() {
 		fs.writeFileSync(passwordFile, JSON.stringify({pwd: global.__SESSION_ID}));
 		console.log(sageutils.header("Secure") + "Saved to file name " + passwordFile);
 		// the session is protected
-		config.passordProtected = true;
+		config.passwordProtected = true;
 	} else if (sageutils.fileExists(passwordFile)) {
 		// If a password file exists, load it
 		var passwordFileJsonString = fs.readFileSync(passwordFile, 'utf8');
@@ -288,7 +288,7 @@ function initializeSage2Server() {
 			global.__SESSION_ID = passwordFileJson.pwd;
 			console.log(sageutils.header("Secure") + "A sessionID was found: " + passwordFileJson.pwd);
 			// the session is protected
-			config.passordProtected = true;
+			config.passwordProtected = true;
 		} else {
 			console.log(sageutils.header("Secure") + "Invalid hash file " + passwordFile);
 		}
@@ -519,7 +519,7 @@ function closeWebSocketClient(wsio) {
 
 function wsAddClient(wsio, data) {
 	// Check for password
-	if (config.passordProtected) {
+	if (config.passwordProtected) {
 		if (!data.session || data.session !== global.__SESSION_ID) {
 			console.log(sageutils.header("WebsocketIO") + "wrong session hash - closing");
 			// Send a message back to server
