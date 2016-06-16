@@ -3851,7 +3851,13 @@ function setupHttpsOptions() {
 
 function sendConfig(req, res) {
 	var header = HttpServer.prototype.buildHeader();
-	header["Content-Type"] = "text/plain";
+	// Set type
+	header["Content-Type"] = "application/json";
+	// Allow CORS on the /config route
+	header['Access-Control-Allow-Origin' ]     = req.headers.origin;
+	header['Access-Control-Allow-Methods']     = "GET";
+	header['Access-Control-Allow-Headers']     = "X-Requested-With, X-HTTP-Method-Override, Content-Type, Accept";
+	header['Access-Control-Allow-Credentials'] = true;
 	res.writeHead(200, header);
 	// Adding the calculated version into the data structure
 	config.version = SAGE2_version;
