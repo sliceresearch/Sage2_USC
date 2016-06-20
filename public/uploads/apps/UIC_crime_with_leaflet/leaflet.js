@@ -144,10 +144,11 @@ var leaflet = SAGE2_App.extend({
 	},
 
 	getColorForMap: function(mapType) {
-		if (mapType === 2)
+		if (mapType === 2) {
 			return ("black");
-		else
-			return("white");
+		} else {
+			return ("white");
+		}
 	},
 
 	changeMap: function() {
@@ -156,14 +157,14 @@ var leaflet = SAGE2_App.extend({
 
 		if (this.state.whichMap === 1) {
 			this.state.whichMap = 2;
-			newTextColor = this.getColorForMap (this.state.whichMap);
+			newTextColor = this.getColorForMap(this.state.whichMap);
 			this.map.removeLayer(this.map1);
 			this.map2.addTo(this.map);
 			selectedOnes = this.g.selectAll("text");
 			selectedOnes.style("stroke", newTextColor);
 		} else { // whichMap should be 2
 			this.state.whichMap = 1;
-			newTextColor = this.getColorForMap (this.state.whichMap);
+			newTextColor = this.getColorForMap(this.state.whichMap);
 			this.map.removeLayer(this.map2);
 			this.map1.addTo(this.map);
 			selectedOnes = this.g.selectAll("text");
