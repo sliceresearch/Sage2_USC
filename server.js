@@ -1160,8 +1160,8 @@ function wsUpdateMediaStreamFrame(wsio, data) {
 		var checkWidth  = config.resolution.width;
 		var checkHeight = config.resolution.height;
 		// Check for irregular tiles
-		checkWidth  *= (config.displays[did].width  || 1);
-		checkHeight *= (config.displays[did].height || 1);
+		checkWidth  *= config.displays[did].width;
+		checkHeight *= config.displays[did].height;
 
 		// If the app window and the display overlap
 		if (doOverlap(left, top, stream.width, stream.height,
@@ -2475,9 +2475,9 @@ function calculateValidBlocks(app, blockSize, renderhandle) {
 					var offsetY = config.resolution.height * display.row;
 
 					if ((left + renderBlockWidth) >= offsetX &&
-						left <= (offsetX + config.resolution.width * (display.width || 1)) &&
+						left <= (offsetX + config.resolution.width * display.width) &&
 						(top + renderBlockHeight) >= offsetY &&
-						top  <= (offsetY + config.resolution.height * (display.height || 1))) {
+						top  <= (offsetY + config.resolution.height * display.height)) {
 						renderhandle.clients[key].blocklist.push(blockIdx);
 					}
 				}
@@ -3538,6 +3538,7 @@ function loadConfiguration() {
 		};
 	}
 
+	// Check the display border settings
 	if (userConfig.dimensions.tile_borders === undefined) {
 		// set default values to 0
 		// first for pixel sizes
@@ -3560,6 +3561,13 @@ function loadConfiguration() {
 		userConfig.resolution.borders.right  = Math.round(pixelsPerMeter * borderRight)  || 0;
 		userConfig.resolution.borders.bottom = Math.round(pixelsPerMeter * borderBottom) || 0;
 		userConfig.resolution.borders.top    = Math.round(pixelsPerMeter * borderTop)    || 0;
+	}
+
+	// Check the width and height of each display (in tile count)
+	// by default, a display covers one tile
+	for (var d = 0; d < userConfig.displays.length; d++) {
+		userConfig.displays[d].width  = parseInt(userConfig.displays[d].width)  || 1;
+		userConfig.displays[d].height = parseInt(userConfig.displays[d].height) || 1;
 	}
 
 	// legacy support for config port names
