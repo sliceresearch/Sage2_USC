@@ -1964,11 +1964,11 @@ function setupRmbContextMenuDiv() {
 	// override rmb contextmenu calls.
 	document.addEventListener('contextmenu', function(e) {
 		// if a right click is made on canvas
-		if (event.target.id === "sage2UICanvas") {
+		if (e.target.id === "sage2UICanvas") {
 			// get the location with respect to the display positioning.
-			var rect = event.target.getBoundingClientRect();
-			var pointerX = event.clientX - rect.left;
-			var pointerY = event.clientY - rect.top;
+			var rect = e.target.getBoundingClientRect();
+			var pointerX = e.clientX - rect.left;
+			var pointerY = e.clientY - rect.top;
 			pointerX = pointerX / displayUI.scale;
 			pointerY = pointerY / displayUI.scale;
 			var data = {};
