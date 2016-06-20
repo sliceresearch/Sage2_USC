@@ -63,8 +63,6 @@ var leaflet = SAGE2_App.extend({
 		this.map1 = null;
 		this.map2 = null;
 
-		this.whichMap = 1;
-
 		this.bigCollection = {};
 
 		this.numBeats = SAGE2_policeDistricts.length;
@@ -145,25 +143,31 @@ var leaflet = SAGE2_App.extend({
 		this.map.setView([this.saveStartLat, this.saveStartLng], this.saveStartZoom); // new May 2016
 	},
 
+	getColorForMap: function(mapType) {
+		if (mapType === 2)
+			return ("black");
+		else
+			return("white");
+	},
+
 	changeMap: function() {
 		var selectedOnes = null;
+		var newTextColor = "";
 
-		if (this.whichMap === 1) {
-			this.whichMap = 2;
+		if (this.state.whichMap === 1) {
 			this.state.whichMap = 2;
+			newTextColor = this.getColorForMap (this.state.whichMap);
 			this.map.removeLayer(this.map1);
 			this.map2.addTo(this.map);
-
 			selectedOnes = this.g.selectAll("text");
-			selectedOnes.style("fill", "black");
-		} else {
-			this.whichMap = 1;
+			selectedOnes.style("stroke", newTextColor);
+		} else { // whichMap should be 2
 			this.state.whichMap = 1;
+			newTextColor = this.getColorForMap (this.state.whichMap);
 			this.map.removeLayer(this.map2);
 			this.map1.addTo(this.map);
-
 			selectedOnes = this.g.selectAll("text");
-			selectedOnes.style("fill", "white");
+			selectedOnes.style("stroke", newTextColor);
 		}
 	},
 
@@ -280,22 +284,24 @@ var leaflet = SAGE2_App.extend({
 
 		/* eslint-enable brace-style */
 
-		var myTextColor;
-		if (this.whichMap === 2) {
-			myTextColor = "black";
-		} else {
-			myTextColor = "white";
-		}
+		var myStrokeColor;
 
+		myStrokeColor = this.getColorForMap(this.state.whichMap);
+
+		// if (this.state.whichMap === 2) {
+		// 	myStrokeColor = "black";
+		// } else {
+		// 	myStrokeColor = "white";
+		// }
 
 		var feature2 = this.g.selectAll("text")
 			.data(collection)
 			.enter()
 			.append("svg:text")
-			.style("fill", myTextColor)
-			.style("stroke", function(d) {
+			.style("fill", function(d) {
 				return d.color;
 			})
+			.style("stroke", myStrokeColor)
 			.style("stroke-width", "1")
 			.style("font-size", "30px")
 			.style("font-family", "Arial")
