@@ -272,16 +272,19 @@ var leaflet = SAGE2_App.extend({
 
 		});
 
+		var circleSize = 1;
+		circleSize = this.state.zoomLevel / 1.5;
+
 		/* eslint-disable brace-style */
 		var feature = this.g.selectAll("circle")
 		.data(collection)
 		.enter()
 		.append("svg:circle")
 		.style("stroke", function(d) { if (d.inLastMonth) { return "black"; } else { return "white"; } })
-		.style("stroke-width", function(d) { if (d.inLastMonth) { return 6; } else { return 2; } })
+		.style("stroke-width", function(d) { if (d.inLastMonth) { return 4; } else { return 2; } })
 		.style("opacity", function(d) { if (d.inLastMonth) { return 1.0; } else { return 0.4; } })
 		.style("fill", function(d) { return d.color; })
-		.attr("r", 15);
+		.attr("r", circleSize); // 15
 
 		/* eslint-enable brace-style */
 
@@ -289,11 +292,11 @@ var leaflet = SAGE2_App.extend({
 
 		myStrokeColor = this.getColorForMap(this.state.whichMap);
 
-		// if (this.state.whichMap === 2) {
-		// 	myStrokeColor = "black";
-		// } else {
-		// 	myStrokeColor = "white";
-		// }
+
+		var fontSize; // = "30px";
+		//base fontsize on this.state.zoomLevel
+		fontSize = (Math.round(this.state.zoomLevel * 1.5)).toString() + "px";
+
 
 		var feature2 = this.g.selectAll("text")
 			.data(collection)
@@ -304,7 +307,7 @@ var leaflet = SAGE2_App.extend({
 			})
 			.style("stroke", myStrokeColor)
 			.style("stroke-width", "1")
-			.style("font-size", "30px")
+			.style("font-size", fontSize)
 			.style("font-family", "Arial")
 			.style("text-anchor", "start")
 			.style("font-weight", "bold")
