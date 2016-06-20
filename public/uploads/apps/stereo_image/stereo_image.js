@@ -323,7 +323,7 @@ var stereo_image = SAGE2_App.extend({
 				this.refresh(date);
 			}
 		} else if (eventType === "widgetEvent") {
-			switch (data.identifier){
+			switch (data.identifier) {
 				case "PreviousStereoMode":
 					this.previousStereoMode(date);
 					break;

@@ -8,6 +8,8 @@
 //
 // Copyright (c) 2014
 
+/* global sagePointerEnabled, sagePointerDisabled */
+
 "use strict";
 
 /**
@@ -87,6 +89,7 @@ function sagePointer(wsio) {
 	this.setPointerId = function(id) {
 		this.uniqueID = id;
 	};
+
 	/**
 	*
 	* @method setPointerSensitivity
@@ -94,6 +97,7 @@ function sagePointer(wsio) {
 	this.setPointerSensitivity = function(value) {
 		this.sensitivity = value;
 	};
+
 	/**
 	*
 	* @method preventDefaultMethod
@@ -101,6 +105,7 @@ function sagePointer(wsio) {
 	this.preventDefaultMethod = function(event) {
 		event.preventDefault();
 	};
+
 	/**
 	*
 	* @method startSagePointerMethod
@@ -273,7 +278,11 @@ function sagePointer(wsio) {
 	*/
 	this.captureDesktop = function(mediaSourceId) {
 		var constraints = {chromeMediaSource: 'desktop', chromeMediaSourceId: mediaSourceId, maxWidth: 3840, maxHeight: 2160};
-		navigator.getUserMedia({video: {mandatory: constraints, optional: []}, audio: false}, this.streamSuccess, this.streamFail);
+		navigator.getUserMedia(
+			{video: {mandatory: constraints, optional: []},
+			audio: false},
+			this.streamSuccess, this.streamFail
+		);
 	};
 
 	/**
@@ -446,7 +455,9 @@ function sagePointer(wsio) {
 
 			var totalSize = 0;
 			var uploaded = 0;
-			for (var key in total) { totalSize += total[key]; uploaded += loaded[key]; }
+			for (var key in total) {
+				totalSize += total[key]; uploaded += loaded[key];
+			}
 			pc = Math.floor((uploaded / totalSize) * 100);
 			_this.fileDropText.textContent = "File upload... " + pc.toString() + "%";
 			// sagePointerApp has no progress bar
@@ -480,7 +491,8 @@ function sagePointer(wsio) {
 					xhr.upload.addEventListener('progress', onProgress);
 					xhr.send(formdata);
 				} else {
-					alert("File: " + files[i].name + " is too large (max size is " + (this.maxUploadSize / (1024 * 1024 * 1024)) + " GB)");
+					alert("File: " + files[i].name + " is too large (max size is " +
+						(this.maxUploadSize / (1024 * 1024 * 1024)) + " GB)");
 				}
 			}
 		} else if (url !== null || text !== null) {

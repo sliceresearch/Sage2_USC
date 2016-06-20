@@ -1,0 +1,51 @@
+{
+  name: "display-span-example",
+  host: "localhost",
+  port: 9090,
+  index_port: 9292,
+  background: {
+    color: "#333333",
+    watermark: {
+      svg: "images/sage2.svg",
+      color: "rgba(255, 255, 255, 0.5)"
+    }
+  },
+  ui: {
+    clock: 12,
+    show_version: true,
+    show_url: true,
+  },
+  resolution: {
+    width: 300,
+    height: 200
+  },
+  layout: {
+    rows: 3,
+    columns: 3
+  },
+  displays: [
+    {
+      row: 0,
+      column: 0,
+      width: 1,
+      height: 3
+    },
+    {
+      row: 0,
+      column: 1,
+      width: 2,
+      height: 2
+    },
+    {
+      row: 2,
+      column: 1,
+      width: 2,
+      height: 1
+    }
+  ],
+  alternate_hosts: [
+    "127.0.0.1"
+  ],
+  remote_sites: [
+  ]
+}

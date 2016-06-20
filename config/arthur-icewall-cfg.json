@@ -1,0 +1,70 @@
+{
+	"name": "Endeavour",
+	"host": "nishimoto.evl.uic.edu",
+	"port": 9090,
+	"index_port": 9292,
+	background: { 
+		image: {
+			url: "images/background/kamping_icewall.jpg",
+			style: "fit"
+		},
+		watermark: {
+			svg: "images/EVL-logo.svg",
+			color: "rgba(255, 255, 255, 0.2)"
+		},
+		clip: true
+	},
+	ui: {
+		clock: 12,
+		show_url: true,
+		show_version: true
+	},
+	resolution: {
+		width: 3072,
+		height: 1360
+	},
+	layout: {
+		rows: 1,
+		columns: 2
+	},
+	displays: [
+		{
+			row: 0,
+			column: 0
+		},
+		{
+			row: 0,
+			column: 1
+		}
+	],
+	alternate_hosts: [
+		"localhost",
+		"127.0.0.1"
+	],
+	remote_sites: [
+		{
+			name: "Cyber-Commons",
+			host: "iridium.evl.uic.edu",
+			port: 443,
+			secure: true
+		},
+		{
+			name: "CAVE2",
+			host: "lyra.evl.uic.edu",
+			port: 443,
+			secure: true
+		},
+		{
+			name: "PhD Room",
+			host: "dante.evl.uic.edu",
+			port: 443,
+			secure: true
+		},
+		{
+			name: "Green Room",
+			host: "mesaverde.evl.uic.edu",
+			port: 443,
+			secure: true
+		}
+	]
+}

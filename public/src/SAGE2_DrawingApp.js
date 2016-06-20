@@ -8,6 +8,8 @@
 //
 // Copyright (c) 2014-15
 
+/* global Kinetic, simplify */
+
 "use strict";
 
 /**
@@ -84,6 +86,9 @@ function SAGE2_init() {
 		// Setup message callbacks
 		setupListeners(wsio_global);
 
+		// Get the cookie for the session, if there's one
+		var session = getCookie("session");
+
 		var clientDescription = {
 			clientType: "sageDrawing",
 			requests: {
@@ -91,7 +96,8 @@ function SAGE2_init() {
 				version: true,
 				time: false,
 				console: false
-			}
+			},
+			session: session
 		};
 		wsio_global.emit('addClient', clientDescription);
 	});
@@ -175,7 +181,7 @@ function setupListeners(wsio) {
 		});
 		uigrp = new Kinetic.Group();
 		var xoffset = 15;
-		var labels = [ "Brush", "Eraser", "Previous", "Next", "New", " ", " ", " ", " ", " ", " ", " ", " ", "1/1" ];
+		var labels  = ["Brush", "Eraser", "Previous", "Next", "New", " ", " ", " ", " ", " ", " ", " ", " ", "1/1"];
 
 		function onMouseUp(evt) {
 			var id = evt.target.id();

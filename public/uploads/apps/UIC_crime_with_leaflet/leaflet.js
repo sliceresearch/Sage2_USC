@@ -23,19 +23,6 @@
 
 /* global d3, SAGE2_policeDistricts, L */
 
-function addCSS(url, callback) {
-	var fileref = document.createElement("link");
-
-	if (callback) {
-		fileref.onload = callback;
-	}
-
-	fileref.setAttribute("rel", "stylesheet");
-	fileref.setAttribute("type", "text/css");
-	fileref.setAttribute("href", url);
-	document.head.appendChild(fileref);
-}
-
 var leaflet = SAGE2_App.extend({
 	getNewData: function(meSelf, beat, date) {
 
@@ -76,8 +63,6 @@ var leaflet = SAGE2_App.extend({
 		this.map1 = null;
 		this.map2 = null;
 
-		this.whichMap = 1;
-
 		this.bigCollection = {};
 
 		this.numBeats = SAGE2_policeDistricts.length;
@@ -92,7 +77,6 @@ var leaflet = SAGE2_App.extend({
 		var myHeight = this.element.clientHeight;
 
 		this.element.id = "div" + data.id;
-		var mySelf = this;
 
 		this.maxFPS = 0.000023; // once every 12 hours
 
@@ -100,6 +84,12 @@ var leaflet = SAGE2_App.extend({
 		this.lastZoom = data.date;
 		this.dragging = false;
 		this.position = {x: 0, y: 0};
+
+		// store off the current starting point to be able to reset to it later
+		// new May 2016
+		this.saveStartLat = this.state.center.lat;
+		this.saveStartLng = this.state.center.lng;
+		this.saveStartZoom = this.state.zoomLevel;
 
 		var mapURL1 = 'http://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}';
 		var mapCopyright1 = 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS,' +
@@ -109,67 +99,76 @@ var leaflet = SAGE2_App.extend({
 		var mapCopyright2 = '&copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors,' +
 			' <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>';
 
-		// Load the CSS file for leaflet.js
-		addCSS(mySelf.resrcPath + "scripts/leaflet.css", function() {
-
-			mySelf.map1 = L.tileLayer(mapURL1, {attribution: mapCopyright1});
-			mySelf.map2 = L.tileLayer(mapURL2, {attribution: mapCopyright2});
+		this.map1 = L.tileLayer(mapURL1, {attribution: mapCopyright1});
+		this.map2 = L.tileLayer(mapURL2, {attribution: mapCopyright2});
 
 
-			// want to do this same thing when we reset the location
-			if (mySelf.whichMap === 1) {
-				mySelf.map = L.map(mySelf.element.id, {layers: [mySelf.map1], zoomControl: false}).setView([41.869910, -87.65], 17);
-			} else {
-				mySelf.map = L.map(mySelf.element.id, {layers: [mySelf.map2], zoomControl: false}).setView([41.869910, -87.65], 17);
-			}
+		// want to do this same thing when we reset the location
+		if (this.state.whichMap === 1) {
+			this.map = L.map(this.element.id, {layers: [this.map1], zoomControl: false}).setView(
+				[this.state.center.lat, this.state.center.lng], this.state.zoomLevel);
+		} else {
+			this.map = L.map(this.element.id, {layers: [this.map2], zoomControl: false}).setView(
+				[this.state.center.lat, this.state.center.lng], this.state.zoomLevel);
+		}
 
-			/* Initialize the SVG layer */
-			mySelf.map._initPathRoot();
+		/* Initialize the SVG layer */
+		this.map._initPathRoot();
 
-			/* We simply pick up the SVG from the map object */
-			mySelf.svg = d3.select(mySelf.map.getPanes().overlayPane).select("svg");
-			mySelf.g = mySelf.svg.append("g");
+		/* We simply pick up the SVG from the map object */
+		this.svg = d3.select(this.map.getPanes().overlayPane).select("svg");
+		this.g = this.svg.append("g");
 
-			for (var loopIdx = 0; loopIdx < SAGE2_policeDistricts.length; loopIdx++) {
-				mySelf.getNewData(mySelf, SAGE2_policeDistricts[loopIdx], data.date);
-			}
+		for (var loopIdx = 0; loopIdx < SAGE2_policeDistricts.length; loopIdx++) {
+			this.getNewData(this, SAGE2_policeDistricts[loopIdx], data.date);
+		}
 
-			// attach the SVG into the this.element node provided to us
-			var box = "0,0," + myWidth + "," + myHeight;
-			mySelf.svg = d3.select(mySelf.element).append("svg")
-				.attr("width",   myWidth)
-				.attr("height",  myHeight)
-				.attr("viewBox", box);
-		});
+		// attach the SVG into the this.element node provided to us
+		var box = "0,0," + myWidth + "," + myHeight;
+		this.svg = d3.select(this.element).append("svg")
+			.attr("width",   myWidth)
+			.attr("height",  myHeight)
+			.attr("viewBox", box);
 
+		// Build the wall UI
 		this.controls.addButton({label: "home", position: 6, identifier: "Home"});
 		this.controls.addButton({label: "view", position: 4, identifier: "View"});
 		this.controls.addButton({type: "zoom-in", position: 12, identifier: "ZoomIn"});
 		this.controls.addButton({type: "zoom-out", position: 11, identifier: "ZoomOut"});
-		this.controls.finishedAddingControls(); // Important
+		this.controls.finishedAddingControls();
 	},
 
 	resetMap: function() {
-		this.map.setView([41.869910, -87.65], 17);
+		//this.map.setView([41.869910, -87.65], 17); //original coordinates
+		this.map.setView([this.saveStartLat, this.saveStartLng], this.saveStartZoom); // new May 2016
+	},
+
+	getColorForMap: function(mapType) {
+		if (mapType === 2) {
+			return ("black");
+		} else {
+			return ("white");
+		}
 	},
 
 	changeMap: function() {
 		var selectedOnes = null;
+		var newTextColor = "";
 
-		if (this.whichMap === 1) {
-			this.whichMap = 2;
+		if (this.state.whichMap === 1) {
+			this.state.whichMap = 2;
+			newTextColor = this.getColorForMap(this.state.whichMap);
 			this.map.removeLayer(this.map1);
 			this.map2.addTo(this.map);
-
 			selectedOnes = this.g.selectAll("text");
-			selectedOnes.style("fill", "black");
-		} else {
-			this.whichMap = 1;
+			selectedOnes.style("stroke", newTextColor);
+		} else { // whichMap should be 2
+			this.state.whichMap = 1;
+			newTextColor = this.getColorForMap(this.state.whichMap);
 			this.map.removeLayer(this.map2);
 			this.map1.addTo(this.map);
-
 			selectedOnes = this.g.selectAll("text");
-			selectedOnes.style("fill", "white");
+			selectedOnes.style("stroke", newTextColor);
 		}
 	},
 
@@ -177,16 +176,20 @@ var leaflet = SAGE2_App.extend({
 		var z = this.map.getZoom();
 		if (z <= 19) {
 			this.map.setZoom(z + 1, {animate: false});
+			this.state.zoomLevel = z + 1; // new 5/2016
 		}
 		this.lastZoom = date;
+		this.refresh(date);
 	},
 
 	zoomOut: function(date) {
 		var z = this.map.getZoom();
 		if (z >= 3) {
 			this.map.setZoom(z - 1, {animate: false});
+			this.state.zoomLevel = z - 1; // new 5/2016
 		}
 		this.lastZoom = date;
+		this.refresh(date);
 	},
 
 	dealWithData: function(collection, today) {
@@ -269,28 +272,42 @@ var leaflet = SAGE2_App.extend({
 
 		});
 
-		var me = this;
+		var circleSize = 1;
+		circleSize = this.state.zoomLevel / 1.5;
 
-		// jscs:disable
+		/* eslint-disable brace-style */
 		var feature = this.g.selectAll("circle")
-			.data(collection)
-			.enter()
-			.append("svg:circle")
-			.style("stroke", function(d) { if (d.inLastMonth) { return "black"; } else { return "white"; } })
-			.style("stroke-width", function(d) { if  (d.inLastMonth) { return 6; } else { return 2; } })
-			.style("opacity", function(d) { if (d.inLastMonth) { return 1.0; } else { return 0.4; } })
-			.style("fill", function(d) { return d.color; })
-			.attr("r", 15);
-		// jscs:enable
+		.data(collection)
+		.enter()
+		.append("svg:circle")
+		.style("stroke", function(d) { if (d.inLastMonth) { return "black"; } else { return "white"; } })
+		.style("stroke-width", function(d) { if (d.inLastMonth) { return 4; } else { return 2; } })
+		.style("opacity", function(d) { if (d.inLastMonth) { return 1.0; } else { return 0.4; } })
+		.style("fill", function(d) { return d.color; })
+		.attr("r", circleSize); // 15
+
+		/* eslint-enable brace-style */
+
+		var myStrokeColor;
+
+		myStrokeColor = this.getColorForMap(this.state.whichMap);
+
+
+		var fontSize; // = "30px";
+		//base fontsize on this.state.zoomLevel
+		fontSize = (Math.round(this.state.zoomLevel * 1.5)).toString() + "px";
+
 
 		var feature2 = this.g.selectAll("text")
 			.data(collection)
 			.enter()
 			.append("svg:text")
-			.style("fill", "white")
-			.style("stroke", function(d) { return d.color; })
+			.style("fill", function(d) {
+				return d.color;
+			})
+			.style("stroke", myStrokeColor)
 			.style("stroke-width", "1")
-			.style("font-size", "30px")
+			.style("font-size", fontSize)
 			.style("font-family", "Arial")
 			.style("text-anchor", "start")
 			.style("font-weight", "bold")
@@ -300,23 +317,26 @@ var leaflet = SAGE2_App.extend({
 				}
 			});
 
+		var _this = this;
+
 		this.map.on("viewreset", update);
+
 		update();
 
 		function update() {
 			feature.attr("transform",
 				function(d) {
 					return "translate(" +
-						me.map.latLngToLayerPoint(d.LatLng).x + "," +
-						me.map.latLngToLayerPoint(d.LatLng).y + ")";
+						_this.map.latLngToLayerPoint(d.LatLng).x + "," +
+						_this.map.latLngToLayerPoint(d.LatLng).y + ")";
 				}
 			);
 
 			feature2.attr("transform",
 				function(d) {
 					return "translate(" +
-						(me.map.latLngToLayerPoint(d.LatLng).x + 20.0) + "," +
-						(me.map.latLngToLayerPoint(d.LatLng).y + 5.0) + ")";
+						(_this.map.latLngToLayerPoint(d.LatLng).x + 20.0) + "," +
+						(_this.map.latLngToLayerPoint(d.LatLng).y + 5.0) + ")";
 				}
 			);
 		}
@@ -333,13 +353,11 @@ var leaflet = SAGE2_App.extend({
 	},
 
 	draw: function(date) {
-		var mySelf = this;
-
 		if (this.allLoaded === 1) {
 			this.currentBeats = 0;
 
 			for (var loopIdx = 0; loopIdx < SAGE2_policeDistricts.length; loopIdx++) {
-				mySelf.getNewData(mySelf, SAGE2_policeDistricts[loopIdx], date);
+				this.getNewData(this, SAGE2_policeDistricts[loopIdx], date);
 			}
 		}
 	},
@@ -351,6 +369,87 @@ var leaflet = SAGE2_App.extend({
 		this.map.invalidateSize();
 
 		this.refresh(date);
+	},
+
+	/**
+	* To enable right click context menu support this function needs to be present with this format.
+	*
+	* Must return an array of entries. An entry is an object with three properties:
+	*	description: what is to be displayed to the viewer.
+	*	callback: String containing the name of the function to activate in the app. It must exist.
+	*	parameters: an object with specified datafields to be given to the function.
+	*		The following attributes will be automatically added by server.
+	*			serverDate, on the return back, server will fill this with time object.
+	*			clientId, unique identifier (ip and port) for the client that selected entry.
+	*			clientName, the name input for their pointer. Note: users are not required to do so.
+	*			clientInput, if entry is marked as input, the value will be in this property. See pdf_viewer.js for example.
+	*		Further parameters can be added. See pdf_view.js for example.
+	*/
+	getContextEntries: function() {
+		var entries = [];
+		var entry;
+
+		entry = {};
+		entry.description = "Change Map View";
+		entry.callback = "changeMapView";
+		entry.parameters = {};
+		entry.parameters.page = "change Map";
+		entries.push(entry);
+
+		entry = {};
+		entry.description = "Zoom in";
+		entry.callback = "changeMapView";
+		entry.parameters = {};
+		entry.parameters.page = "Zoom In";
+		entries.push(entry);
+
+		entry = {};
+		entry.description = "Zoom Out";
+		entry.callback = "changeMapView";
+		entry.parameters = {};
+		entry.parameters.page = "Zoom Out";
+		entries.push(entry);
+
+		entry = {};
+		entry.description = "Reset View";
+		entry.callback = "changeMapView";
+		entry.parameters = {};
+		entry.parameters.page = "Home";
+		entries.push(entry);
+
+
+		return entries;
+	},
+
+	/**
+	* Support function to allow page changing through right mouse context menu.
+	*
+	* @method changeThePage
+	* @param responseObject {Object} contains response from entry selection
+	*/
+	changeMapView: function(responseObject) {
+		var page = responseObject.page;
+
+		switch (page) {
+			case "Home":
+				this.resetMap();
+				break;
+			case "change Map":
+				this.changeMap();
+				break;
+			case "Zoom In":
+				this.zoomIn(new Date(responseObject.serverDate));
+				break;
+			case "Zoom Out":
+				this.zoomOut(new Date(responseObject.serverDate));
+				break;
+			default:
+				console.log("No handler for:", page);
+				return;
+		}
+
+		// This needs to be a new date for the extra function.
+		this.refresh(new Date(responseObject.serverDate));
 	},
 
 	event: function(eventType, pos, user, data, date) {
@@ -367,6 +466,9 @@ var leaflet = SAGE2_App.extend({
 			this.dragging = false;
 			this.position.x = pos.x;
 			this.position.y = pos.y;
+
+			this.state.center.lat = this.map.getCenter().lat; // new 5/2016
+			this.state.center.lng = this.map.getCenter().lng; // new 5/2016
 		} else if (eventType === "pointerScroll") {
 			var amount = data.wheelDelta;
 			var diff = date - this.lastZoom;

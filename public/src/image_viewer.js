@@ -21,6 +21,7 @@
  * @class image_viewer
  */
 var image_viewer = SAGE2_App.extend({
+
 	/**
 	* Init method, creates an 'img' tag in the DOM
 	*
@@ -67,6 +68,8 @@ var image_viewer = SAGE2_App.extend({
 	updateAppFromState: function() {
 		this.element.src  = cleanURL(this.state.src || this.state.img_url);
 
+		this.pre.innerHTML = this.syntaxHighlight(this.state.exif);
+
 		if (this.state.showExif === true) {
 			this.showLayer();
 		}
@@ -105,6 +108,7 @@ var image_viewer = SAGE2_App.extend({
 	* @param visibility {bool} became visible or hidden
 	*/
 	onVisible: function(visibility) {
+
 		/*
 		if (visibility) {
 			this.element.src = this.state.src;
@@ -112,6 +116,24 @@ var image_viewer = SAGE2_App.extend({
 			this.element.src = smallWhiteGIF();
 		}
 		*/
+	},
+
+	/**
+	* To enable right click context menu support this function needs to be present with this format.
+	*/
+	getContextEntries: function() {
+		var entries = [];
+
+		// Special callback: dowload the file
+		entries.push({
+			description: "Download",
+			callback: "SAGE2_download",
+			parameters: {
+				url: cleanURL(this.state.src || this.state.img_url)
+			}
+		});
+
+		return entries;
 	},
 
 	/**
@@ -156,6 +178,8 @@ var image_viewer = SAGE2_App.extend({
 			json = JSON.stringify(json, undefined, 4);
 		}
 		json = json.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+		/* eslint-disable max-len */
 		return json.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g,
 			function(match) {
 				var cls = 'color: darkorange;';
@@ -172,6 +196,8 @@ var image_viewer = SAGE2_App.extend({
 				}
 				return '<span style="' + cls + '">' + match + '</span>';
 			});
+
+		/* eslint-enable max-len */
 	},
 
 	/**
@@ -186,7 +212,8 @@ var image_viewer = SAGE2_App.extend({
 	*/
 	event: function(eventType, position, user_id, data, date) {
 		// Press 'i' to display EXIF information
-		if ((eventType === "keyboard" && data.character === "i") || (eventType === "widgetEvent" && data.identifier === "Info")) {
+		if ((eventType === "keyboard" && data.character === "i") ||
+			(eventType === "widgetEvent" && data.identifier === "Info")) {
 			if (this.isLayerHidden()) {
 				this.state.top = 0;
 				this.state.showExif = true;

@@ -24,12 +24,11 @@ var url          = require('url');
 
 var Unzip        = require('decompress-zip');
 var gm           = require('gm');
-var mime         = require('mime');
 var request      = require('request');
 var ytdl         = require('ytdl-core');
 var Videodemuxer = (process.arch !== 'arm') ? require('node-demux') : null;
-// require('node-demux');
 var mv           = require('mv');
+var sanitize     = require("sanitize-filename");
 
 var exiftool     = require('../src/node-exiftool');        // gets exif tags for images
 var assets       = require('../src/node-assets');          // asset management
@@ -117,6 +116,7 @@ AppLoader.prototype.loadImageFromURL = function(aUrl, mime_type, name, strictSSL
 					if (!err3) {
 						_this.loadImageFromFile(localPath, mime_type, aUrl, aUrl, name, function(appInstance) {
 							_this.scaleAppToFitDisplay(appInstance);
+							appInstance.file = localPath;
 							callback(appInstance);
 						});
 					}
@@ -126,6 +126,33 @@ AppLoader.prototype.loadImageFromURL = function(aUrl, mime_type, name, strictSSL
 
 		}
 	);
+};
+
+AppLoader.prototype.loadPdfFromURL = function(aUrl, mime_type, name, strictSSL, callback) {
+	var localPath = path.join(this.publicDir, "pdfs", name);
+	var _this = this;
+
+	var tmp = fs.createWriteStream(localPath);
+	tmp.on('error', function(err) {
+		if (err) {
+			throw err;
+		}
+	});
+	tmp.on('close', function() {
+		assets.exifAsync([localPath], function(err3) {
+			if (!err3) {
+				var appUrl = getSAGE2URL(localPath);
+				var app_external_url = _this.hostOrigin + sageutils.encodeReservedURL(appUrl);
+
+				_this.loadPdfFromFile(localPath, mime_type, appUrl, app_external_url, name, function(appInstance) {
+					_this.scaleAppToFitDisplay(appInstance);
+					appInstance.file = localPath;
+					callback(appInstance);
+				});
+			}
+		});
+	});
+	request({url: aUrl, strictSSL: strictSSL, headers: {'User-Agent': 'node'}}).pipe(tmp);
 };
 
 AppLoader.prototype.loadYoutubeFromURL = function(aUrl, callback) {
@@ -164,14 +191,16 @@ AppLoader.prototype.loadYoutubeFromURL = function(aUrl, callback) {
 			}
 		}
 
-		_this.loadVideoFromURL(aUrl, "video/youtube", info.formats[video.index].url, info.title, function(appInstance, videohandle) {
-			appInstance.data.video_url  = info.formats[video.index].url;
-			appInstance.data.video_type = video.type;
-			appInstance.data.audio_url  = info.formats[audio.index].url;
-			appInstance.data.audio_type = audio.type;
+		_this.loadVideoFromURL(aUrl, "video/youtube", info.formats[video.index].url, info.title,
+			function(appInstance, videohandle) {
+				appInstance.data.video_url  = info.formats[video.index].url;
+				appInstance.data.video_type = video.type;
+				appInstance.data.audio_url  = info.formats[audio.index].url;
+				appInstance.data.audio_type = audio.type;
 
-			callback(appInstance, videohandle);
-		});
+				appInstance.file = aUrl;
+				callback(appInstance, videohandle);
+			});
 	});
 };
 
@@ -179,31 +208,12 @@ AppLoader.prototype.loadVideoFromURL = function(aUrl, mime_type, source_url, nam
 	this.loadVideoFromFile(source_url, mime_type, aUrl, aUrl, name, callback);
 };
 
-
-AppLoader.prototype.loadPdfFromURL = function(aUrl, mime_type, name, strictSSL, callback) {
-	var local_url = "uploads/pdfs/" + name;
-	var localPath = path.join(this.publicDir, "pdfs", name);
-	var _this = this;
-
-	var tmp = fs.createWriteStream(localPath);
-	tmp.on('error', function(err) {
-		if (err) {
-			throw err;
-		}
-	});
-	tmp.on('close', function() {
-		_this.loadPdfFromFile(localPath, mime_type, local_url, aUrl, name, function(appInstance) {
-			callback(appInstance);
-		});
-	});
-	request({url: aUrl, strictSSL: strictSSL, headers: {'User-Agent': 'node'}}).pipe(tmp);
-};
-
-
 AppLoader.prototype.loadImageFromDataBuffer = function(buffer, width, height, mime_type, aUrl,
 	external_url, name, exif_data, callback) {
 
-	var source = buffer.toString("base64");
+	// var source = buffer.toString("base64");
+	var source = buffer;
+
 	var aspectRatio = width / height;
 
 	var metadata         = {};
@@ -218,7 +228,7 @@ AppLoader.prototype.loadImageFromDataBuffer = function(buffer, width, height, mi
 		id: null,
 		title: name,
 		application: "image_viewer",
-		icon: exif_data ? exif_data.SAGE2thumbnail : null,
+		icon: buffer,
 		type: mime_type,
 		url: external_url,
 		data: {
@@ -245,6 +255,7 @@ AppLoader.prototype.loadImageFromDataBuffer = function(buffer, width, height, mi
 		animation: false,
 		metadata: metadata,
 		sticky: false,
+		file: "",
 		date: new Date()
 	};
 	this.scaleAppToFitDisplay(appInstance);
@@ -308,7 +319,9 @@ AppLoader.prototype.loadImageFromFile = function(file, mime_type, aUrl, external
 		var dims = assets.getDimensions(file);
 		var exif = assets.getExifData(file);
 		if (dims) {
-			this.loadImageFromServer(dims.width, dims.height, mime_type, aUrl, external_url, exif.FileName, exif, function(appInstance) {
+			this.loadImageFromServer(dims.width, dims.height, mime_type, aUrl, external_url, exif.FileName, exif,
+				function(appInstance) {
+					appInstance.file = file;
 					callback(appInstance);
 				});
 		} else {
@@ -324,18 +337,21 @@ AppLoader.prototype.loadImageFromFile = function(file, mime_type, aUrl, external
 		var svgExif = assets.getExifData(file);
 
 		if (svgDims) {
-			this.loadImageFromServer(svgDims.width, svgDims.height, mime_type, aUrl, external_url, name, svgExif, function(appInstance) {
-				callback(appInstance);
-			});
+			this.loadImageFromServer(svgDims.width, svgDims.height, mime_type, aUrl, external_url, name, svgExif,
+				function(appInstance) {
+					appInstance.file = file;
+					callback(appInstance);
+				});
 		} else {
 			console.log("File not recognized:", file, mime_type, aUrl);
 		}
 	} else {
-		var localPath = path.join(this.publicDir, "tmp", name) + ".png";
+		var localPath = path.join(this.publicDir, "tmp", path.basename(name)) + ".png";
+		var localUrl  = getSAGE2URL(localPath);
 
 		imageMagick(file + "[0]").noProfile().bitdepth(8).flatten().setFormat("PNG").write(localPath, function(err, buffer) {
 			if (err) {
-				console.log("Error> processing image file", file);
+				console.log("Error> processing image file", file, localPath);
 				return;
 			}
 
@@ -343,11 +359,13 @@ AppLoader.prototype.loadImageFromFile = function(file, mime_type, aUrl, external
 			var imgDims = assets.getDimensions(file);
 			var imgExif = assets.getExifData(file);
 
-			if (dims) {
-				_this.loadImageFromServer(imgDims.width, imgDims.height, "image/png", aUrl + ".png",
-						external_url + ".png", name + ".png", imgExif, function(appInstance) {
-					callback(appInstance);
-				});
+			if (imgDims) {
+				_this.loadImageFromServer(imgDims.width, imgDims.height, "image/png", localUrl,
+					localUrl, name + ".png", imgExif, function(appInstance) {
+						appInstance.file = localPath;
+						callback(appInstance);
+					}
+				);
 			} else {
 				console.log("File not recognized:", file, mime_type, aUrl);
 			}
@@ -410,12 +428,13 @@ AppLoader.prototype.loadVideoFromFile = function(file, mime_type, aUrl, external
 				aspect:          native_width / native_height,
 				animation:       false,
 				metadata:        metadata,
+				file:            file,
 				date:            new Date()
 			};
 			_this.scaleAppToFitDisplay(appInstance);
 			callback(appInstance, video);
 		});
-		video.load(file, {decodeFirstFrame: true});
+		video.load(file, {decodeFirstFrame: true, colorspace: "yuv420p"});
 	}
 };
 
@@ -429,7 +448,8 @@ AppLoader.prototype.loadPdfFromFile = function(file, mime_type, aUrl, external_u
 
 	var metadata         = {};
 	metadata.title       = "PDF Viewer";
-	metadata.version     = "1.0.0";
+	// metadata.version     = "1.0.0";
+	metadata.version     = "2.0.0";
 	metadata.description = "PDF viewer for SAGE2";
 	metadata.author      = "SAGE2";
 	metadata.license     = "SAGE2-Software-License";
@@ -444,11 +464,28 @@ AppLoader.prototype.loadPdfFromFile = function(file, mime_type, aUrl, external_u
 		icon: exif ? exif.SAGE2thumbnail : null,
 		type: mime_type,
 		url: external_url,
+
+		// V1 PDF viewer
+		// data: {
+		// 	doc_url: external_url,
+		// 	page: 1,
+		// 	numPagesShown: 1
+		// },
+
+		// V2 PDF viewer
 		data: {
 			doc_url: external_url,
-			page: 1,
-			numPagesShown: 1
+			currentPage: 1,
+			numberOfPageToShow: 1,
+			resizeValue: 1,
+			previousResizeValue: 1,
+			thumbnailHeight: 0,
+			thumbnailHorizontalPosition: 0,
+			horizontalOffset: 0,
+			marginButton: 5,
+			showingThumbnails: false
 		},
+
 		resrc:  null,
 		left:   this.titleBarHeight,
 		top:    1.5 * this.titleBarHeight,
@@ -465,11 +502,83 @@ AppLoader.prototype.loadPdfFromFile = function(file, mime_type, aUrl, external_u
 		animation: false,
 		metadata: metadata,
 		sticky: false,
-		date:      new Date()
+		file: file,
+		date: new Date()
 	};
 	this.scaleAppToFitDisplay(appInstance);
 	callback(appInstance);
 };
+
+
+AppLoader.prototype.loadNoteFromFile = function(file, mime_type, aUrl, external_url, name, callback) {
+	// Find the app. Look it the file name in the registry. Get path, navigate to the path's instruction.json file.
+	var appName = registry.getDefaultApp(file);
+	var localPath = getSAGE2Path(appName);
+	var instructionsFile = path.join(localPath, "instructions.json");
+
+	// Will read the instruction file and then launch app with instructionfile parameters.
+	var _this = this;
+	fs.readFile(instructionsFile, 'utf8', function(err, json_str) {
+		if (err) {
+			console.log(sageutils.header("Loader") + "cannot read application file " + instructionsFile);
+			return;
+		}
+		var appUrl = getSAGE2URL(localPath);
+		var app_external_url = _this.hostOrigin + sageutils.encodeReservedURL(appUrl);
+		var appInstance = _this.readInstructionsFile(json_str, localPath, mime_type, app_external_url);
+		appInstance.data.file = assets.getURL(file);
+		appInstance.file = file;
+
+		// This will add the contents of the note to the send data values. Assuming the var is unique.
+		appInstance.data.contentsOfNoteFile = fs.readFileSync(file, 'utf8');
+		callback(appInstance);
+	});
+};
+
+
+AppLoader.prototype.loadDoodleFromFile = function(file, mime_type, aUrl, external_url, name, callback) {
+	// Find the app. Look it the file name in the registry. Get path, navigate to the path's instruction.json file.
+	var appName = registry.getDefaultApp(file);
+	var localPath = getSAGE2Path(appName);
+	var instructionsFile = path.join(localPath, "instructions.json");
+
+	// Will read the instruction file and then launch app with instructionfile parameters.
+	var _this = this;
+	fs.readFile(instructionsFile, 'utf8', function(err, json_str) {
+		if (err) {
+			console.log(sageutils.header("Loader") + "cannot read application file " + instructionsFile);
+			return;
+		}
+		var appUrl = getSAGE2URL(localPath);
+		var app_external_url = _this.hostOrigin + sageutils.encodeReservedURL(appUrl);
+		var appInstance = _this.readInstructionsFile(json_str, localPath, mime_type, app_external_url);
+		appInstance.data.file = assets.getURL(file);
+		appInstance.file = file;
+
+		// Making sure the file exist first
+		if (sageutils.fileExists(file)) {
+			var content = fs.readFileSync(file).toString('base64');
+			// This will add the contents of the note to the send data values.
+			// Assuming the var is unique.
+			appInstance.data.contentsOfDoodleFile = "data:image/png;base64," + content;
+		} else {
+			appInstance.data.contentsOfDoodleFile = null;
+		}
+
+		// Include the file name to reset to original
+		var fbasic = file;
+		while (fbasic.indexOf("/") > -1) {
+			fbasic = fbasic.substring(fbasic.indexOf("/") + 1);
+		}
+		while (fbasic.indexOf("\\") > -1) {
+			fbasic = fbasic.substring(fbasic.indexOf("\\") + 1);
+		}
+		fbasic = fbasic.substring(0, fbasic.indexOf(".doodle"));
+		appInstance.data.fileName = fbasic;
+		callback(appInstance);
+	});
+};
+
 
 AppLoader.prototype.loadAppFromFileFromRegistry = function(file, mime_type, aUrl, external_url, name, callback) {
 	// Find the app!!
@@ -480,7 +589,8 @@ AppLoader.prototype.loadAppFromFileFromRegistry = function(file, mime_type, aUrl
 	var _this = this;
 	fs.readFile(instructionsFile, 'utf8', function(err, json_str) {
 		if (err) {
-			throw err;
+			console.log(sageutils.header("Loader") + "cannot read application file " + instructionsFile);
+			return;
 		}
 
 		var appUrl = getSAGE2URL(localPath);
@@ -488,6 +598,7 @@ AppLoader.prototype.loadAppFromFileFromRegistry = function(file, mime_type, aUrl
 
 		var appInstance = _this.readInstructionsFile(json_str, localPath, mime_type, app_external_url);
 		appInstance.data.file = assets.getURL(file);
+		appInstance.file = file;
 		callback(appInstance);
 	});
 };
@@ -505,6 +616,7 @@ AppLoader.prototype.loadAppFromFile = function(file, mime_type, aUrl, external_u
 
 		var appInstance = _this.readInstructionsFile(json_str, zipFolder, mime_type, external_url);
 		_this.scaleAppToFitDisplay(appInstance);
+		appInstance.file = file;
 		callback(appInstance);
 	});
 };
@@ -529,6 +641,7 @@ AppLoader.prototype.loadZipAppFromFile = function(file, mime_type, aUrl, externa
 
 				var appInstance = _this.readInstructionsFile(json_str, zipFolder, mime_type, external_url);
 				_this.scaleAppToFitDisplay(appInstance);
+				appInstance.file = file;
 				callback(appInstance);
 			});
 		});
@@ -600,6 +713,7 @@ AppLoader.prototype.createMediaStream = function(source, type, encoding, name, c
 		animation: false,
 		sticky: false,
 		metadata: metadata,
+		file: "",
 		date: new Date()
 	};
 	this.scaleAppToFitDisplay(appInstance);
@@ -646,6 +760,7 @@ AppLoader.prototype.createMediaBlockStream = function(name, color, colorspace, w
 		animation: false,
 		sticky: false,
 		metadata: metadata,
+		file: "",
 		date: new Date()
 	};
 	this.scaleAppToFitDisplay(appInstance);
@@ -677,7 +792,8 @@ function getSAGE2Path(getName) {
 		if (pubdir.length === 2) {
 			// convert the URL into a path
 			var suburl = path.join('.', pubdir[1]);
-			pathname   = url.resolve(folder.path, suburl);
+			// pathname   = url.resolve(folder.path, suburl);
+			pathname = path.resolve(folder.path, suburl);
 			pathname   = decodeURIComponent(pathname);
 			break;
 		}
@@ -708,9 +824,18 @@ function getSAGE2URL(getName) {
 
 
 AppLoader.prototype.loadFileFromLocalStorage = function(file, callback) {
+	var mime_type;
 	var localPath = getSAGE2Path(file.filename);
-	var mime_type = mime.lookup(file.filename);
 	var a_url     = assets.getURL(localPath);
+	var mime_app  = registry.getMimeType(localPath);
+	if (mime_app) {
+		// if it's a type registred by an app, override the mime type
+		// in order to launch the right app
+		mime_type = mime_app;
+	} else {
+		// otherwise use the mime type from exiftool
+		mime_type = assets.getMimeType(localPath);
+	}
 	if (typeof a_url !== "string") {
 		console.log("AppLoader>	Cannot load app for file:", file);
 		return;
@@ -724,25 +849,32 @@ AppLoader.prototype.loadFileFromLocalStorage = function(file, callback) {
 };
 
 AppLoader.prototype.manageAndLoadUploadedFile = function(file, callback) {
+	// sanitize filename by remove odd charaters
+	var cleanFilename = sanitize(file.name);
+	// Clean up further the file names
+	cleanFilename = cleanFilename.replace(/[\$\%\^\&\(\)]/g, '_');
+
 	// Check if there is a matching application
-	var app = registry.getDefaultApp(file.name);
+	var app = registry.getDefaultApp(cleanFilename);
 	if (app === undefined || app === "") {
-		callback(null); return;
+		callback(null);
+		return;
 	}
-	var mime_type = mime.lookup(file.name);
-	var dir = registry.getDirectory(file.name);
+	var mime_type = registry.getMimeType(cleanFilename);
+	var dir = registry.getDirectory(cleanFilename);
+
 	if (!sageutils.folderExists(path.join(this.publicDir, dir))) {
 		fs.mkdirSync(path.join(this.publicDir, dir));
 	}
 
 	// Use the defautl folder plus type as destination:
 	//    SAGE2_Media/pdf/ for instance
-	var localPath   = path.join(this.publicDir, dir, file.name);
+	var localPath = path.join(this.publicDir, dir, cleanFilename);
 
 	// Filename exists, then add date
 	if (sageutils.fileExists(localPath)) {
 		// Add the date to filename
-		var filen  = file.name;
+		var filen  = cleanFilename;
 		var splits = filen.split('.');
 		var extension   = splits.pop();
 		var newfilename = splits.join('_') + "_" + Date.now() + '.' + extension;
@@ -755,82 +887,96 @@ AppLoader.prototype.manageAndLoadUploadedFile = function(file, callback) {
 		if (err1) {
 			throw err1;
 		}
-		// try to process all the files with exiftool
-		exiftool.file(localPath, function(err2, data) {
-			if (err2) {
-				console.log("internal error", err2);
-			} else {
-				assets.addFile(data.SourceFile, data, function() {
-					// get a valid URL for it
-					var aUrl = assets.getURL(data.SourceFile);
-					// calculate a complete URL with hostname
-					var external_url = url.resolve(_this.hostOrigin, aUrl);
+		if (app === "custom_app" && mime_type === "application/zip") {
+			// Compressed ZIP file, load directly
+			_this.loadApplication({location: "file", path: localPath, url: "", external_url: "",
+					type: mime_type, name: cleanFilename, compressed: true}, function(appInstance, handle) {
+				callback(appInstance, handle);
+			});
+		} else {
+			// try to process all the files with exiftool
+			exiftool.file(localPath, function(err2, data) {
+				if (err2) {
+					console.log("internal error", err2);
+				} else {
+					assets.addFile(data.SourceFile, data, function() {
+						// get a valid URL for it
+						var aUrl = assets.getURL(data.SourceFile);
+						// calculate a complete URL with hostname
+						var external_url = url.resolve(_this.hostOrigin, aUrl);
 
-					_this.loadApplication({location: "file", path: localPath, url: aUrl, external_url: external_url,
-							type: mime_type, name: file.name, compressed: true}, function(appInstance, handle) {
-						callback(appInstance, handle);
+						_this.loadApplication({location: "file", path: localPath, url: aUrl, external_url: external_url,
+								type: mime_type, name: cleanFilename, compressed: false}, function(appInstance, handle) {
+							callback(appInstance, handle);
+						});
 					});
-				});
-			}
-		});
-		// if (app === "image_viewer" || app === "movie_player" || app === "pdf_viewer") {
-		// } else {
-		// 	// get a valid URL for it
-		// 	var aUrl = assets.getURL(localPath);
-		// 	var external_url = null;
-		// 	console.log('Load', localPath, aUrl, mime_type, file.name, external_url)
-		// 	_this.loadApplication({location: "file", path: localPath, url: aUrl, external_url: external_url,
-		// 			type: mime_type, name: file.name, compressed: true}, function(appInstance, handle) {
-		// 		callback(appInstance, handle);
-		// 	});
-		// }
+				}
+			});
+		}
 	});
 };
 
 AppLoader.prototype.loadApplication = function(appData, callback) {
-	var app, dir;
+	var app;
 	if (appData.location === "file") {
 		app = registry.getDefaultAppFromMime(appData.type);
-		dir = registry.getDirectory(appData.type);
-
 		if (app === "image_viewer") {
 			this.loadImageFromFile(appData.path, appData.type, appData.url, appData.external_url, appData.name,
 					function(appInstance) {
-				callback(appInstance, null);
-			});
+						callback(appInstance, null);
+					}
+			);
 		} else if (app === "movie_player") {
 			this.loadVideoFromFile(appData.path, appData.type, appData.url, appData.external_url, appData.name,
 					function(appInstance, handle) {
-				callback(appInstance, handle);
-			});
+						callback(appInstance, handle);
+					}
+			);
 		} else if (app === "pdf_viewer") {
 			this.loadPdfFromFile(appData.path, appData.type, appData.url, appData.external_url, appData.name,
 					function(appInstance) {
-				callback(appInstance, null);
-			});
+						callback(appInstance, null);
+					}
+			);
+		} else if (app.indexOf("apps") >= 0 && app.indexOf("quickNote") >= 0) {
+			this.loadNoteFromFile(appData.path, appData.type, appData.url, appData.external_url, appData.name,
+					function(appInstance) {
+						callback(appInstance, null);
+					}
+			);
+		} else if (app.indexOf("apps") >= 0 && app.indexOf("doodle") >= 0) {
+			this.loadDoodleFromFile(appData.path, appData.type, appData.url, appData.external_url, appData.name,
+					function(appInstance) {
+						callback(appInstance, null);
+					}
+			);
 		} else if (app === "custom_app") {
 			if (appData.compressed === true) {
 				var name = path.basename(appData.name, path.extname(appData.name));
+				var dir  = registry.getDirectory(appData.type);
 				var futurePath = this.publicDir + dir + "/" + name;
-				var localPath = getSAGE2Path(futurePath);
+				var localPath  = getSAGE2Path(futurePath);
 				var aUrl = getSAGE2URL(localPath);
 				var external_url = this.hostOrigin + sageutils.encodeReservedURL(aUrl);
 
 				this.loadZipAppFromFile(appData.path, appData.type, aUrl, external_url, name,
 						function(appInstance) {
-					callback(appInstance, null);
-				});
+							callback(appInstance, null);
+						}
+				);
 			} else {
 				this.loadAppFromFile(appData.path, appData.type, appData.url, appData.external_url, appData.name,
 						function(appInstance) {
-					callback(appInstance, null);
-				});
+							callback(appInstance, null);
+						}
+				);
 			}
 		} else {
 			this.loadAppFromFileFromRegistry(appData.path, appData.type, appData.url, appData.external_url, appData.name,
 					function(appInstance) {
-				callback(appInstance);
-			});
+						callback(appInstance);
+					}
+			);
 		}
 	} else if (appData.location === "url") {
 		app = registry.getDefaultAppFromMime(appData.type);

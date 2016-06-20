@@ -21,6 +21,7 @@
  * @class media_stream
  */
 var media_stream = SAGE2_App.extend({
+
 	/**
 	* Init method, creates a 'img' tag in the DOM
 	*
@@ -43,6 +44,10 @@ var media_stream = SAGE2_App.extend({
 
 		this.img1.addEventListener('load', this.img1LoadedFunc, false);
 		this.img2.addEventListener('load', this.img2LoadedFunc, false);
+
+		this.resizeEvents = null;
+		this.moveEvents   = null;
+		this.date = data.date;
 	},
 
 	img1Loaded: function() {
@@ -52,9 +57,9 @@ var media_stream = SAGE2_App.extend({
 	},
 
 	img2Loaded: function() {
-		this.draw(this.date);
 		this.img2IsLoaded = true;
 		this.bufferId = 1;
+		this.draw(this.date);
 	},
 
 	/**
