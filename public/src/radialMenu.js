@@ -204,7 +204,9 @@ function RadialMenu() {
 
 		this.notEnoughThumbnailsToScroll = false; // Flag to stop scrolling if there are not enough thumbnails
 		this.dragThumbnailWindow = false;
-		this.thumbnailWindowPosition = { x: (this.radialMenuCenter.x * 2 + this.imageThumbSize / 2), y: 30 * this.radialMenuScale };
+		this.thumbnailWindowPosition = {
+			x: (this.radialMenuCenter.x * 2 + this.imageThumbSize / 2),
+			y: 30 * this.radialMenuScale };
 		this.thumbnailWindowDragPosition = { x: 0, y: 0 };
 		this.thumbnailWindowScrollOffset = { x: 0, y: 0 };
 		this.thumbnailWindowInitialScrollOffset = { x: 0, y: 0 };
@@ -403,6 +405,7 @@ function RadialMenu() {
 				this.ctx.stroke();
 			}
 		}
+
 		/*
 		for (i = 0; i < this.level2Buttons.length; i++) {
 			if (this.level2Buttons[i].isHidden() === false) {
@@ -450,7 +453,9 @@ function RadialMenu() {
 		var i;
 
 		if (this.thumbScrollWindowctx.redraw || this.currentMenuState === "radialMenu") {
-			this.thumbScrollWindowctx.clearRect(0, 0, this.thumbnailScrollWindowElement.width, this.thumbnailScrollWindowElement.height);
+			this.thumbScrollWindowctx.clearRect(0, 0,
+				this.thumbnailScrollWindowElement.width,
+				this.thumbnailScrollWindowElement.height);
 		}
 
 		if (this.windowInteractionMode === false) {
@@ -652,12 +657,16 @@ function RadialMenu() {
 								if (this.ctx.measureText(nextTestLine).width <= maxTextWidth) {
 									testLine = nextTestLine;
 								} else {
-									this.ctx.fillText(testLine, metadataTextPosX, metadataTextPosY + metadataLine * newTagSpacing + sameTagSpacing * line);
+									this.ctx.fillText(testLine,
+										metadataTextPosX,
+										metadataTextPosY + metadataLine * newTagSpacing + sameTagSpacing * line);
 									testLine = textWords[j] + " ";
 									line += 1;
 								}
 							}
-							this.ctx.fillText(testLine, metadataTextPosX, metadataTextPosY + metadataLine * newTagSpacing + sameTagSpacing * line);
+							this.ctx.fillText(testLine,
+								metadataTextPosX,
+								metadataTextPosY + metadataLine * newTagSpacing + sameTagSpacing * line);
 							if (line > 0) {
 								metadataLine++;
 							}
@@ -1037,7 +1046,12 @@ function RadialMenu() {
 					thumbnailButton = new ButtonWidget();
 					thumbnailButton.init(0, this.thumbScrollWindowctx, null);
 					curList = imageList[i];
-					data = {application: "image_viewer", filename: curList.filename, shortname: curList.exif.FileName, meta: curList.exif};
+					data = {
+						application: "image_viewer",
+						filename: curList.filename,
+						shortname: curList.exif.FileName,
+						meta: curList.exif
+					};
 					thumbnailButton.setData(data);
 					thumbnailButton.simpleTint = false;
 
@@ -1069,7 +1083,12 @@ function RadialMenu() {
 				thumbnailButton = new ButtonWidget();
 				thumbnailButton.init(0, this.thumbScrollWindowctx, null);
 				curList = pdfList[i];
-				data = {application: "pdf_viewer", filename: curList.filename, shortname: curList.exif.FileName, meta: curList.exif};
+				data = {
+					application: "pdf_viewer",
+					filename: curList.filename,
+					shortname: curList.exif.FileName,
+					meta: curList.exif
+				};
 				thumbnailButton.setData(data);
 				thumbnailButton.simpleTint = false;
 
@@ -1099,7 +1118,12 @@ function RadialMenu() {
 				thumbnailButton = new ButtonWidget();
 				thumbnailButton.init(0, this.thumbScrollWindowctx, null);
 				curList = videoList[i];
-				data = {application: "movie_player", filename: curList.filename, shortname: curList.exif.FileName, meta: curList.exif};
+				data = {
+					application: "movie_player",
+					filename: curList.filename,
+					shortname: curList.exif.FileName,
+					meta: curList.exif
+				};
 				thumbnailButton.setData(data);
 				thumbnailButton.simpleTint = false;
 
@@ -1128,7 +1152,12 @@ function RadialMenu() {
 			for (i = 0; i < appList.length; i++) {
 				thumbnailButton = new ButtonWidget();
 				thumbnailButton.init(0, this.thumbScrollWindowctx, null);
-				data = {application: "custom_app", filename: appList[i].filename, shortname: appList[i].exif.FileName, meta: appList[i].exif};
+				data = {
+					application: "custom_app",
+					filename: appList[i].filename,
+					shortname: appList[i].exif.FileName,
+					meta: appList[i].exif
+				};
 				thumbnailButton.setData(data);
 				thumbnailButton.simpleTint = false;
 				thumbnailButton.useBackgroundColor = false;
@@ -1199,7 +1228,8 @@ function RadialMenu() {
 					curRow++;
 				}
 			}
-			currentButton.setPosition(curColumn * (imageThumbnailSize + thumbnailSpacer), curRow * (imageThumbnailSize + thumbnailSpacer));
+			currentButton.setPosition(curColumn * (imageThumbnailSize + thumbnailSpacer),
+				curRow * (imageThumbnailSize + thumbnailSpacer));
 			curColumn++;
 		}
 	};
@@ -1248,7 +1278,6 @@ function RadialMenu() {
 			this.maxThumbnailScrollDistance = (neededColumns - maxCols) * (this.imageThumbSize * 2 + thumbSpacer);
 		}
 
-		// console.log("Radial Menu: updateThumbnailPositions max r: " + maxRows + " max c: " + maxCols + " needed c:" + neededColumns);
 		this.thumbnailGridSize = { x: maxRows, y: maxCols };
 		if (neededColumns > maxRows) {
 			this.notEnoughThumbnailsToScroll = false;
@@ -1541,6 +1570,7 @@ function ButtonWidget() {
 					// this.state = 6;
 				}
 			}
+
 			/*else if (this.state !== 2) {
 				if (this.state !== 1) {
 					this.state = 5;
