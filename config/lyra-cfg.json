@@ -203,12 +203,20 @@
 		"localhost",
 		"127.0.0.1",
 		"131.193.183.210",
+		"10.0.8.200",
+		"lyra.evlrn.uic.edu",
 		"lyra.evl.optiputer.net"
 	],
 	remote_sites: [
 		{
 			name: "Cyber-Commons",
 			host: "iridium.evl.uic.edu",
+			port: 443,
+			secure: true
+		},
+		{
+			name: "LAVA",
+			host: "pele.manoa.hawaii.edu",
 			port: 443,
 			secure: true
 		},
@@ -220,7 +228,7 @@
 		},
 		{
 			name: "BackWall",
-			host: "orion.evlrn.uic.edu",
+			host: "orion.evl.uic.edu",
 			port: 443,
 			secure: true
 		},
@@ -236,5 +244,14 @@
 			port: 443,
 			secure: true
 		}
+	],
+        // list of extra folders for assets and apps
+        folders: [
+                {
+                        name: "extras",
+                        url: "/extras",
+                        path: "/iridium_SSD/evldemo/extras/",
+                        upload: false
+                },
 	]
 }

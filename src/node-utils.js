@@ -20,7 +20,7 @@
 // require variables to be declared
 "use strict";
 
-var SAGE2_version = require('../package.json').version;
+var SAGE2_version = require('../package.json');
 
 var crypto  = require('crypto');              // https encryption
 var exec    = require('child_process').exec;  // execute external application
@@ -28,9 +28,14 @@ var fs      = require('fs');                  // filesystem access
 var path    = require('path');                // resolve directory paths
 var tls     = require('tls');                 // https encryption
 
+var querystring = require('querystring');     // utilities for dealing with URL
+
+// npm external modules
 var request   = require('request');           // http requests
 var semver    = require('semver');            // parse version numbers
 var fsmonitor = require('fsmonitor');         // file system monitoring
+var sanitizer = require('sanitizer');         // Caja's HTML Sanitizer as a Node.js module
+
 
 /**
  * Parse and store NodeJS version number: detect version 0.10.x or newer
@@ -153,7 +158,7 @@ function loadCABundle(filename) {
  * @return {String} version number as x.x.x
  */
 function getShortVersion() {
-	return SAGE2_version;
+	return SAGE2_version.version;
 }
 
 
@@ -177,7 +182,9 @@ function getNodeVersion() {
 function getFullVersion(callback) {
 	var fullVersion  = {base: "", branch: "", commit: "", date: ""};
 	// get the base version from package.json file
-	fullVersion.base = getShortVersion();
+	fullVersion.base = SAGE2_version.version;
+	// Pick up the date from package.json, if any
+	fullVersion.date = SAGE2_version.date || "";
 
 	// get to the root folder of the sources
 	var dirroot = path.resolve(__dirname, '..');
@@ -191,14 +198,17 @@ function getFullVersion(callback) {
 		var branch = stdout1.substring(0, stdout1.length - 1);
 		var cmd2 = "git log --date=\"short\" --format=\"%h|%ad\" -n 1";
 		exec(cmd2, { cwd: dirroot, timeout: 3000}, function(err2, stdout2, stderr2) {
-			if (err2) { callback(fullVersion); return; }
+			if (err2) {
+				callback(fullVersion);
+				return;
+			}
 
 			// parsing the results
 			var result = stdout2.replace(/\r?\n|\r/g, "");
 			var parse  = result.split("|");
 
 			// filling up the object
-			fullVersion.branch = branch; // branch.substring(1, branch.length-1);
+			fullVersion.branch = branch;
 			fullVersion.commit = parse[0];
 			fullVersion.date   = parse[1].replace(/-/g, "/");
 
@@ -229,6 +239,21 @@ function updateWithGIT(branch, callback) {
 	});
 }
 
+/**
+ * Cleanup URL from XSS attempts
+ *
+ * @method sanitizedURL
+ * @param aURL {String} a URL we received from a request
+ * @return {String} cleanup string
+ */
+function sanitizedURL(aURL) {
+	// convert HTML encoded content
+	// Node doc: It will try to use decodeURIComponent in the first place, but if that fails it falls back
+	// to a safer equivalent that doesn't throw on malformed URLs.
+	var decode = querystring.unescape(aURL);
+	// Then, remove the bad parts
+	return sanitizer.sanitize(decode);
+}
 
 /**
  * Utility function to create a header for console messages
@@ -476,8 +501,7 @@ function mkdirParent(dirPath) {
 	try {
 		fs.mkdirSync(dirPath);
 		made = dirPath;
-	}
-	catch (err0) {
+	} catch (err0) {
 		switch (err0.code) {
 			case 'ENOENT' : {
 				made = mkdirParent(path.dirname(dirPath));
@@ -488,8 +512,7 @@ function mkdirParent(dirPath) {
 				var stat;
 				try {
 					stat = fs.statSync(dirPath);
-				}
-				catch (err1) {
+				} catch (err1) {
 					throw err0;
 				}
 				if (!stat.isDirectory()) {
@@ -528,7 +551,9 @@ function monitorFolders(folders, excludes, callback) {
 			console.log(header("Monitor") + "watching folder " + folderpath);
 			var monitor = fsmonitor.watch(folderpath, {
 				// only matching: all true for now
-				matches:  function(relpath) {return true; },
+				matches:  function(relpath) {
+					return true;
+				},
 				// and excluding: nothing for now
 				excludes: function(relpath) {
 					return (excludes.indexOf(relpath) !== -1);
@@ -574,8 +599,9 @@ module.exports.deregisterSAGE2   = deregisterSAGE2;
 module.exports.loadCABundle      = loadCABundle;
 module.exports.monitorFolders    = monitorFolders;
 module.exports.getHomeDirectory  = getHomeDirectory;
-module.exports.encodeReservedURL = encodeReservedURL;
 module.exports.mkdirParent       = mkdirParent;
+module.exports.sanitizedURL      = sanitizedURL;
 
+module.exports.encodeReservedURL  = encodeReservedURL;
 module.exports.encodeReservedPath = encodeReservedPath;
 

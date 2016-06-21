@@ -24,26 +24,23 @@
 		show_version: true
 	},
 	resolution: {
-		width: 1920,
+		width: 11520,
 		height: 2160
 	},
 	layout: {
 		rows: 1,
-		columns: 2
+		columns: 1
 	},
 	displays: [
 		{
 			row: 0,
 			column: 0
-		},
-		{
-			row: 0,
-			column: 1
-		},
+		}
 	],
 	alternate_hosts: [
 		"localhost",
-		"127.0.0.1"
+		"127.0.0.1",
+		"mesaverde.evlrn.uic.edu",
 	],
 	remote_sites: [
 		{
@@ -58,21 +55,21 @@
 			port: 443,
 			secure: true
 		},
+                {
+                        name: "ANL",
+                        host: "display3d.mcs.anl.gov",
+                        port: 443,
+                        secure: true
+                },
 		{
-			name: "IceWall",
-			host: "thor.evl.uic.edu",
+			name: "OLED",
+			host: "taurus.evl.uic.edu",
 			port: 443,
 			secure: true
 		},
 		{
-			name: "LAVA1",
-			host: "canoe-samoa.ics.hawaii.edu",
-			port: 443,
-			secure: true
-		},
-		{
-			name: "LAVA2",
-			host: "canoe-lava-2.manoa.hawaii.edu",
+			name: "LAVA",
+			host: "pele.manoa.hawaii.edu",
 			port: 443,
 			secure: true
 		}

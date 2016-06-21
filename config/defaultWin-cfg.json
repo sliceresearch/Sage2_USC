@@ -13,6 +13,9 @@
 			color: "rgba(255, 255, 255, 0.5)"
 		}
 	},
+        audio: {
+                initialVolume: 8,
+        },
 	ui: {
 		clock: 12,
 		show_version: false,
@@ -41,7 +44,7 @@
 	remote_sites: [
 	],
 	dependencies: {
-		ImageMagick: "C:/Program Files/ImageMagick-6.9.1-Q16/",
+		ImageMagick: "C:/Program Files/ImageMagick-6.9.3-Q16/",
 		FFMpeg: "C:/Dev/ffmpeg-win64-shared/bin/"
     }
 }

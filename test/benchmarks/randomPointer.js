@@ -19,7 +19,7 @@ var crypto      = require('crypto');
 // custom node modules
 var websocketIO = require('websocketio');   // creates WebSocket server and clients
 
-var updateRate = 20;  // ~ fps
+var updateRate = 30;  // ~ fps
 var timeout    = 1000 / updateRate;
 
 // Bound random number
@@ -83,9 +83,9 @@ function createRemoteConnection(wsURL) {
 
 			// create timer
 			setInterval( function () {
-				// step between 0 and 10 pixels
-				var movementX = randomNumber(0,10);
-				var movementY = randomNumber(0,10);
+				// step between 0 and 30 pixels
+				var movementX = randomNumber(0, 30);
+				var movementY = randomNumber(0, 30);
 				// scaled up for wall size
 				var dx = Math.round(movementX*sensitivity);
 				var dy = Math.round(movementY*sensitivity);
@@ -105,6 +105,9 @@ function createRemoteConnection(wsURL) {
 	});
 
 }
+
+// Usage: node randomPointer.js [url]
+//    node randomPointer.js wss://localhost:443
 
 
 

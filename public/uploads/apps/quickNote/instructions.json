@@ -1,0 +1,24 @@
+{
+	"main_script": "quickNote.js",
+	"icon": "quickNote.png",
+	"width": 300,
+	"height": 150,
+	"animation": false,
+	"sticky": true,
+	"dependencies": [
+	],
+	"load": {
+		"clientName": "Quick Note",
+		"clientInput": "Loading note from user...",
+		"colorChoice": "lightyellow",
+		"creationTime": null
+	},
+	"title": "Quick Note",
+	"version": "1.0.0",
+	"description": "Quick Note",
+	"keywords": [ "note", "text", "postit" ],
+	"fileTypes": [ "note"],
+	"directory": "notes",
+	"author": "Dylan Kobayashi <dylank@hawaii.edu>",
+	"license": "SAGE2-Software-License"
+}

@@ -8,6 +8,11 @@
 //
 // Copyright (c) 2014
 
+/* global showSAGE2Message, showDialog */
+/* global cancelIdleCallback, requestIdleCallback */
+/* global showSAGE2PointerOverlayNoMouse, hideSAGE2PointerOverlayNoMouse */
+/* global pointerClick, sagePointerDisabled, sagePointerEnabled */
+
 "use strict";
 
 /**
@@ -32,11 +37,12 @@ function SAGE2_interaction(wsio) {
 	this.fileUploadComplete = null;
 	this.mediaStream = null;
 	this.mediaVideo  = null;
-	this.mediaResolution = 1;
-	this.mediaQuality    = 7;
+	this.mediaResolution = 2;
+	this.mediaQuality    = 9;
 	this.chromeDesktopCaptureEnabled = false;
 	this.broadcasting  = false;
-	this.videoTimer    = null;
+	this.gotRequest    = false;
+	// this.videoTimer    = null;
 	this.pix           = null;
 	this.chunk         = 32 * 1024; // 32 KB
 	this.maxUploadSize = 20 * (1024 * 1024 * 1024); // 20GB just as a precaution
@@ -49,10 +55,31 @@ function SAGE2_interaction(wsio) {
 	this.deltaX = 0;
 	this.deltaY = 0;
 	// Send frequency (frames per second)
-	this.sendFrequency = 25;
+	this.sendFrequency = 30;
 	// Timeout for when scrolling ends
 	this.scrollTimeId = null;
 
+	// Check if a domain cookie exists for the name
+	var cookieName = getCookie('SAGE2_ptrName');
+	if (cookieName) {
+		localStorage.SAGE2_ptrName = cookieName;
+	}
+	// Check if a domain cookie exists for the color
+	var cookieColor = getCookie('SAGE2_ptrColor');
+	if (cookieColor) {
+		localStorage.SAGE2_ptrColor = cookieColor;
+	}
+
+	if (!cookieName && !localStorage.SAGE2_ptrColor) {
+		showDialog('settingsDialog2');
+	}
+
+	// Post message to the Chrome extension to register the UI
+	if (__SAGE2__.browser.isChrome === true) {
+		window.postMessage('SAGE2_registerUI', '*');
+	}
+
+	// Deals with the name and color of the pointer
 	if (localStorage.SAGE2_ptrName  === undefined ||
 		localStorage.SAGE2_ptrName  === null ||
 		localStorage.SAGE2_ptrName  === "Default") {
@@ -67,6 +94,9 @@ function SAGE2_interaction(wsio) {
 		localStorage.SAGE2_ptrColor === null) {
 		localStorage.SAGE2_ptrColor = "#B4B4B4";
 	}
+
+	addCookie('SAGE2_ptrName',  localStorage.SAGE2_ptrName);
+	addCookie('SAGE2_ptrColor', localStorage.SAGE2_ptrColor);
 
 	document.getElementById('sage2PointerLabel').value = localStorage.SAGE2_ptrName;
 	document.getElementById('sage2PointerColor').value = localStorage.SAGE2_ptrColor;
@@ -181,7 +211,7 @@ function SAGE2_interaction(wsio) {
 				name = msgFromServer.files[k].name;
 				type = msgFromServer.files[k].type;
 				if (!msgFromServer.fields.good) {
-					showMessage('unrecognized file type: ' + name + ' ' + type);
+					showSAGE2Message('Unrecognized file type: ' + name + ' ' + type);
 				}
 			});
 
@@ -206,6 +236,11 @@ function SAGE2_interaction(wsio) {
 				formdata.append("file" + i.toString(), files[i]);
 				formdata.append("dropX", dropX);
 				formdata.append("dropY", dropY);
+				formdata.append("open",  true);
+
+				formdata.append("SAGE2_ptrName",  localStorage.SAGE2_ptrName);
+				formdata.append("SAGE2_ptrColor", localStorage.SAGE2_ptrColor);
+
 				var xhr = new XMLHttpRequest();
 				// add the request into the array
 				this.array_xhr.push(xhr);
@@ -216,8 +251,8 @@ function SAGE2_interaction(wsio) {
 				xhr.send(formdata);
 			} else {
 				// show message for 4 seconds
-				showMessage("File: " + files[i].name + " is too large (max size is " + (this.maxUploadSize / (1024 * 1024 * 1024)) + " GB)",
-					4000);
+				showSAGE2Message("File: " + files[i].name + " is too large (max size is " +
+					(this.maxUploadSize / (1024 * 1024 * 1024)) + " GB)");
 			}
 		}
 	};
@@ -287,7 +322,7 @@ function SAGE2_interaction(wsio) {
 			if (button.requestPointerLock) {
 				button.requestPointerLock();
 			} else {
-				console.log("No PointerLock support");
+				showSAGE2Message("No PointerLock support in this browser.<br> Google Chrome is preferred.");
 			}
 		} else {
 			console.log("No mouse detected - entering touch interface for SAGE2 Pointer");
@@ -378,23 +413,61 @@ function SAGE2_interaction(wsio) {
 	* @method startScreenShare
 	*/
 	this.startScreenShare = function() {
-		if (__SAGE2__.browser.isChrome === true && this.chromeDesktopCaptureEnabled === true) {
-			// post message to start chrome screen share
-			window.postMessage('capture_desktop', '*');
-		} else if (__SAGE2__.browser.isChrome === true && this.chromeDesktopCaptureEnabled !== true) {
-			if (window.confirm("Let's install the SAGE2 screen sharing extension for Chrome (or visit the help page).\n" +
-					"Once done, please reload the SAGE UI page")) {
-				window.open("https://chrome.google.com/webstore/detail/sage2-screen-capture/mbkfcmpjbkmmdcfocaclghbobhnjfpkk",
-					"Good luck!");
+		if (!this.broadcasting) {
+			if (__SAGE2__.browser.isChrome === true && this.chromeDesktopCaptureEnabled === true) {
+				// post message to start chrome screen share
+				window.postMessage('SAGE2_capture_desktop', '*');
+			} else if (__SAGE2__.browser.isChrome === true && this.chromeDesktopCaptureEnabled !== true) {
+
+				/* eslint-disable max-len */
+				webix.confirm({
+					title: "Screen sharing",
+					ok: "Ok",
+					cancel: "Cancel",
+					text:  "Let's install the SAGE2 screen sharing extension for Chrome (or visit the help page).<br>" +
+							"Once done, please reload the SAGE UI page",
+					width: "60%",
+					position: "center",
+					callback: function(confirm) {
+						if (confirm) {
+							window.open("https://chrome.google.com/webstore/detail/sage2-screen-capture/mbkfcmpjbkmmdcfocaclghbobhnjfpkk",
+								"Good luck!");
+						} else {
+							window.open("help/index.html", "Good luck!");
+						}
+						webix.modalbox.hide(this);
+					}
+				});
+
+				/* eslint-enable max-len */
+
+			} else if (__SAGE2__.browser.isFirefox === true) {
+				// attempt to start firefox screen share
+				//   can replace 'screen' with 'window' (but need user choice ahead of time)
+				showDialog('ffShareScreenDialog');
 			} else {
-				window.open("help/index.html", "Good luck!");
+				showSAGE2Message("Screen capture not supported in this browser.<br> Google Chrome is preferred.");
 			}
-		} else if (__SAGE2__.browser.isFirefox === true) {
-			// attempt to start firefox screen share
-			//   can replace 'screen' with 'window' (but need user choice ahead of time)
-			showDialog('ffShareScreenDialog');
 		} else {
-			alert("Cannot find screen capture support in this browser. Sorry.");
+			var _this = this;
+			// Create a modal window
+			webix.confirm({
+				title: "Screen sharing",
+				ok: "Confirm",
+				cancel: "Cancel",
+				text: "Already sharing content.<br> Press <strong style='font-weight:bold;'>Confirm</strong> " +
+					"to close the existing window and share another one.<br>" +
+					"Press <strong style='font-weight:bold;'>Cancel</strong> to continue sharing the existing window.",
+				width: "60%",
+				position: "center",
+				callback: function(confirm) {
+					if (confirm) {
+						_this.streamEnded();
+						_this.startScreenShare();
+					}
+					webix.modalbox.hide(this);
+				}
+			});
 		}
 	};
 
@@ -406,13 +479,15 @@ function SAGE2_interaction(wsio) {
 	*/
 	this.captureDesktop = function(data) {
 		if (__SAGE2__.browser.isChrome === true) {
-			console.log('captureDesktop');
-			var constraints = {chromeMediaSource: 'desktop',
-								chromeMediaSourceId: data,
-								maxWidth: 3840, maxHeight: 2160,
-								// minFrameRate:3, maxFrameRate: 30
+			var constraints = {
+				chromeMediaSource: 'desktop',
+				chromeMediaSourceId: data,
+				maxWidth: 1920, maxHeight: 1080,
+				maxFrameRate: 24,
+				minFrameRate: 3
 			};
-			navigator.getUserMedia({video: {mandatory: constraints, optional: []}, audio: false}, this.streamSuccess, this.streamFail);
+			navigator.getUserMedia({video: {mandatory: constraints, optional: []}, audio: false},
+				this.streamSuccess, this.streamFail);
 		} else if (__SAGE2__.browser.isFirefox === true) {
 			navigator.getUserMedia({video: {mediaSource: data}, audio: false},
 				this.streamSuccess, this.streamFail);
@@ -427,8 +502,6 @@ function SAGE2_interaction(wsio) {
 	*/
 	this.streamSuccessMethod = function(stream) {
 		console.log("media capture success!");
-
-		// TODO: must disable screen share button
 
 		this.mediaStream = stream;
 		this.mediaStream.onended = this.streamEnded;
@@ -448,14 +521,14 @@ function SAGE2_interaction(wsio) {
 		console.log("no access to media capture");
 
 		if (__SAGE2__.browser.isChrome === true) {
-			alert('Screen capture failed. Make sure to install and enable the Chrome SAGE2 extension.' +
+			showSAGE2Message('Screen capture failed.<br> Make sure to install and enable the Chrome SAGE2 extension.<br>' +
 				'See Window/Extension menu');
 		} else if (__SAGE2__.browser.isFirefox === true) {
-			alert('Screen capture failed.\nTo enable screen capture in Firefox:\n1- Open "about:config"\n' +
-				'2- Set "media.getusermedia.screensharing.enabled" to true\n' +
-				'3- Add your domain (or localhost) in "media.getusermedia.screensharing.allowed_domains" ');
+			showSAGE2Message('Screen capture failed. To enable screen capture in Firefox:<br>1- Open "about:config"<br>' +
+				'2- Set "media.getusermedia.screensharing.enabled" to true<br>' +
+				'3- Add your domain (or localhost) in "media.getusermedia.screensharing.allowed_domains"');
 		} else {
-			alert("Cannot find screen capture support in this browser. Sorry.");
+			showSAGE2Message("No screen capture support in this browser.<br> Google Chrome is preferred.");
 		}
 	};
 
@@ -467,10 +540,30 @@ function SAGE2_interaction(wsio) {
 	*/
 	this.streamEndedMethod = function(event) {
 		this.broadcasting = false;
-		if (this.videoTimer) {
-			clearInterval(this.videoTimer);
-		}
+		// if (this.videoTimer) {
+		// 	clearInterval(this.videoTimer);
+		// }
+		// cancelAnimationFrame(this.req);
+		cancelIdleCallback(this.req);
 		this.wsio.emit('stopMediaStream', {id: this.uniqueID + "|0"});
+	};
+
+	/**
+	* Using requestIdleCallback from Chrome for screen capture
+	*
+	* @method stepMethod
+	* @param deadline {Object} object containing timing information
+	*/
+	this.stepMethod = function(deadline) {
+		// if more than 10ms of freetime, go for it
+		if (deadline.timeRemaining() > 10) {
+			if (this.gotRequest) {
+				this.pix = this.captureMediaFrame();
+				this.sendMediaStreamFrame();
+			}
+		}
+		// and request again
+		this.req = requestIdleCallback(this.step);
 	};
 
 	/**
@@ -491,10 +584,10 @@ function SAGE2_interaction(wsio) {
 				return;
 			}
 
-			var widths = [	Math.min(852, mediaVideo.videoWidth),
-							Math.min(1280, mediaVideo.videoWidth),
-							Math.min(1920, mediaVideo.videoWidth),
-							mediaVideo.videoWidth];
+			var widths = [Math.min(852,  mediaVideo.videoWidth),
+						Math.min(1280, mediaVideo.videoWidth),
+						Math.min(1920, mediaVideo.videoWidth),
+						mediaVideo.videoWidth];
 
 			for (var i = 0; i < 4; i++) {
 				var height = parseInt(widths[i] * mediaVideo.videoHeight / mediaVideo.videoWidth, 10);
@@ -515,28 +608,28 @@ function SAGE2_interaction(wsio) {
 				width: mediaVideo.videoWidth, height: mediaVideo.videoHeight});
 
 			this.broadcasting = true;
+
+			// Using requestAnimationFrame
+			// var _this = this;
+			// var lastCapture = performance.now();
+			// function step(timestamp) {
+			// 	console.log('    update', timestamp - lastCapture);
+			// 	var interval = timestamp - lastCapture;
+			// 	// if (_this.broadcasting && interval >= 16) {
+			// 		lastCapture = timestamp;
+			// 		if (_this.gotRequest) {
+			// 			console.log('  Capture', timestamp);
+			// 			_this.pix = _this.captureMediaFrame();
+			// 			_this.sendMediaStreamFrame();
+			// 		}
+			// 		_this.req = requestAnimationFrame(step);
+			// 	// }
+			// }
+			// this.req = requestAnimationFrame(step);
+
+			// Request an idle callback for screencapture
+			this.req = requestIdleCallback(this.step);
 		}
-
-		// create a web worker to do the job
-		// this.worker = new Worker('src/SAGE2_Worker.js');
-		// this.worker.onmessage = function(evt) {
-		// 	if (event.data === 'work') {
-		// 		var mediaCtx = mediaCanvas.getContext('2d');
-		// 		mediaCtx.drawImage(mediaVideo, 0, 0, mediaCanvas.width, mediaCanvas.height);
-		// 		_this.pix = mediaCanvas.toDataURL("image/jpeg", (_this.mediaQuality / 10));
-		// 	}
-		// };
-		// this.worker.onerror = function(evt) {
-		// 	console.log('Got an error from worker', evt);
-		// };
-		// this.worker.postMessage("hello");
-
-		// var _this = this;
-		// this.videoTimer = setInterval(function() {
-		// var mediaCtx = mediaCanvas.getContext('2d');
-		// mediaCtx.drawImage(mediaVideo, 0, 0, mediaCanvas.width, mediaCanvas.height);
-		// _this.pix = mediaCanvas.toDataURL("image/jpeg", (_this.mediaQuality / 10));
-		// }, 100);
 	};
 
 	/**
@@ -549,9 +642,15 @@ function SAGE2_interaction(wsio) {
 		var mediaCanvas = document.getElementById('mediaCanvas');
 		var mediaCtx    = mediaCanvas.getContext('2d');
 
-		mediaCtx.clearRect(0, 0, mediaCanvas.width, mediaCanvas.height);
+		// mediaCtx.clearRect(0, 0, mediaCanvas.width, mediaCanvas.height);
 		mediaCtx.drawImage(mediaVideo, 0, 0, mediaCanvas.width, mediaCanvas.height);
 		return mediaCanvas.toDataURL("image/jpeg", (this.mediaQuality / 10));
+	};
+
+	this.requestMediaStreamFrame = function(argument) {
+		if (this.broadcasting) {
+			this.gotRequest = true;
+		}
 	};
 
 	/**
@@ -561,8 +660,8 @@ function SAGE2_interaction(wsio) {
 	*/
 	this.sendMediaStreamFrame = function() {
 		if (this.broadcasting) {
-			var frame = this.captureMediaFrame();
-			// var frame = this.pix;
+			// var frame = this.captureMediaFrame();
+			var frame = this.pix;
 			var raw   = atob(frame.split(",")[1]);  // base64 to string
 
 			if (raw.length > this.chunk) {
@@ -576,12 +675,12 @@ function SAGE2_interaction(wsio) {
 							piece: index, total: nchunks});
 					}, 4);
 				};
-
 				for (var i = 0; i < nchunks; i++) {
 					var start = i * this.chunk;
 					var end   = (i + 1) * this.chunk < raw.length ? (i + 1) * this.chunk : raw.length;
 					updateMediaStreamChunk(i, raw.substring(start, end));
 				}
+				this.gotRequest = false;
 			} else {
 				this.wsio.emit('updateMediaStreamFrame', {id: this.uniqueID + "|0", state:
 					{src: raw, type: "image/jpeg", encoding: "binary"}});
@@ -782,6 +881,13 @@ function SAGE2_interaction(wsio) {
 	*/
 	this.changeSage2PointerLabelMethod = function(event) {
 		localStorage.SAGE2_ptrName = event.target.value;
+
+		addCookie('SAGE2_ptrName', localStorage.SAGE2_ptrName);
+
+		// if it's an first time run, update the UI too
+		if (event.target.id === "sage2PointerLabelInit") {
+			document.getElementById('sage2PointerLabel').value = event.target.value;
+		}
 	};
 
 	/**
@@ -792,6 +898,13 @@ function SAGE2_interaction(wsio) {
 	*/
 	this.changeSage2PointerColorMethod = function(event) {
 		localStorage.SAGE2_ptrColor = event.target.value;
+
+		addCookie('SAGE2_ptrColor', localStorage.SAGE2_ptrColor);
+
+		// if it's an first time run, update the UI too
+		if (event.target.id === "sage2PointerColorInit") {
+			document.getElementById('sage2PointerColor').value = event.target.value;
+		}
 	};
 
 	/**
@@ -841,6 +954,7 @@ function SAGE2_interaction(wsio) {
 	this.changeSage2PointerColor     = this.changeSage2PointerColorMethod.bind(this);
 	this.changeScreenShareResolution = this.changeScreenShareResolutionMethod.bind(this);
 	this.changeScreenShareQuality    = this.changeScreenShareQualityMethod.bind(this);
+	this.step                        = this.stepMethod.bind(this);
 
 	document.addEventListener('pointerlockerror',        this.pointerLockError,  false);
 	document.addEventListener('mozpointerlockerror',     this.pointerLockError,  false);
@@ -849,7 +963,29 @@ function SAGE2_interaction(wsio) {
 
 	document.getElementById('sage2PointerLabel').addEventListener('input',      this.changeSage2PointerLabel,     false);
 	document.getElementById('sage2PointerColor').addEventListener('input',      this.changeSage2PointerColor,     false);
+	document.getElementById('sage2PointerLabelInit').addEventListener('input',  this.changeSage2PointerLabel,     false);
+	document.getElementById('sage2PointerColorInit').addEventListener('input',  this.changeSage2PointerColor,     false);
 	document.getElementById('screenShareResolution').addEventListener('change', this.changeScreenShareResolution, false);
 	document.getElementById('screenShareQuality').addEventListener('input',     this.changeScreenShareQuality,    false);
 	document.getElementById('mediaVideo').addEventListener('canplay',           this.streamCanPlay,               false);
+
+
+	// -----------
+	// Shim for requestIdleCallback (available on Chrome)
+	// -----------
+	window.requestIdleCallback = window.requestIdleCallback || function(cb) {
+		var start = Date.now();
+		return setTimeout(function() {
+			cb({
+				didTimeout: false,
+				timeRemaining: function() {
+					return Math.max(0, 50 - (Date.now() - start));
+				}
+			});
+		}, 1);
+	};
+	window.cancelIdleCallback =	window.cancelIdleCallback || function(id) {
+		clearTimeout(id);
+	};
+	// -----------
 }

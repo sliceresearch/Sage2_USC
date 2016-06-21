@@ -87,7 +87,11 @@ LiveVideoDecoder.prototype.initializeLiveDecoder = function(url) {
 		}
 
 		if (_this.onmetadata instanceof Function) {
-			_this.onmetadata(error, {width: _this.width, height: _this.height, numframes: _this.numframes, framerate: _this.framerate});
+			_this.onmetadata(error, {
+				width: _this.width, height: _this.height,
+				numframes: _this.numframes,
+				framerate: _this.framerate
+			});
 		}
 	});
 };

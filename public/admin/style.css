@@ -141,8 +141,15 @@ main {
 	z-index:10;
 }
 
-a, a:visited {
+a {
 	text-decoration: none;
+	font-style: italic;
+	color: #FFFFFF;
+}
+
+a:visited {
+	text-decoration: underline;
+	font-style: italic;
 	color: #FFFFFF;
 }
 

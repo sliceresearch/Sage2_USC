@@ -8,6 +8,22 @@
 //
 // Copyright (c) 2014-15
 
+/* global ignoreFields, hostAlias, SAGE2WidgetControlInstance */
+/* global makeSvgBackgroundForWidgetConnectors */
+/* global addStyleElementForTitleColor */
+/* global removeStyleElementForTitleColor */
+/* global clearConnectorColor */
+/* global moveWidgetToAppConnector */
+/* global showWidgetToAppConnectors */
+/* global getWidgetControlInstanceById */
+/* global mapMoveToSlider */
+/* global getPropertyHandle */
+/* global insertTextIntoTextInputWidget */
+/* global removeWidgetToAppConnector */
+/* global hideWidgetToAppConnectors */
+/* global createWidgetToAppConnector */
+/* global getTextFromTextInputWidget */
+
 "use strict";
 
 /**
@@ -39,6 +55,10 @@ var applications = {};
 var dependencies = {};
 var dataSharingPortals = {};
 
+// Maintain the file list available on the server
+var storedFileList = null;
+var storedFileListEventHandlers = [];
+
 // UI object to build the element on the wall
 var ui;
 var uiTimer = null;
@@ -51,6 +71,13 @@ window.onbeforeunload = function() {
 	}
 };
 
+/**
+ * When the page loads, SAGE2 starts
+ *
+ */
+window.addEventListener('load', function(event) {
+	SAGE2_init();
+});
 
 // Get Browser-Specifc Prefix
 function getBrowserPrefix() {
@@ -137,6 +164,31 @@ function setupFocusHandlers() {
 	});
 }
 
+/**
+ * Add a stored file list event handler
+ *
+ * @method addStoredFileListEventHandler
+ */
+function addStoredFileListEventHandler(callback) {
+	// Register the event handler and call it if we already have a stored file list available
+	storedFileListEventHandlers.push(callback);
+	if (storedFileList) {
+		callback(storedFileList);
+	}
+}
+
+/**
+ * Remove a stored file list event handler
+ *
+ * @method removeStoredFileListEventHandler
+ */
+function removeStoredFileListEventHandler(callback) {
+	var index = storedFileListEventHandlers.indexOf(callback);
+	if (index > -1) {
+		storedFileListEventHandlers.splice(index, 1);
+	}
+}
+
 
 /**
  * Idle function, show and hide the UI, triggered at uiTimerDelay sec delay
@@ -147,7 +199,9 @@ function resetIdle() {
 	if (uiTimer) {
 		clearTimeout(uiTimer);
 		ui.showInterface();
-		uiTimer = setTimeout(function() { ui.hideInterface(); }, uiTimerDelay * 1000);
+		uiTimer = setTimeout(function() {
+			ui.hideInterface();
+		}, uiTimerDelay * 1000);
 	}
 }
 
@@ -173,7 +227,12 @@ function SAGE2_init() {
 
 	wsio.open(function() {
 		console.log("Websocket opened");
+
 		setupListeners(wsio);
+
+		// Get the cookie for the session, if there's one
+		var session = getCookie("session");
+
 		var clientDescription = {
 			clientType: "display",
 			clientID: clientID,
@@ -183,10 +242,11 @@ function SAGE2_init() {
 				time: true,
 				console: false
 			},
-			isMobile: __SAGE2__.browser.isMobile
+			isMobile: __SAGE2__.browser.isMobile,
+			session: session
 		};
 		wsio.emit('addClient', clientDescription);
-		// log(JSON.stringify(__SAGE2__.browser));
+		wsio.emit('requestStoredFiles');
 	});
 
 	// Socket close event (ie server crashed)
@@ -317,16 +377,19 @@ function setupListeners(anWsio) {
 	});
 
 	anWsio.on('broadcast', function(data) {
-		if (applications[data.app] === undefined) {
+		var app = applications[data.app];
+		if (app === undefined) {
 			// should have better way to determine if app is loaded
 			//   or already killed
 			setTimeout(function() {
-				if (applications[data.app] && applications[data.app][data.func]) {
-					applications[data.app][data.func](data.data);
+				if (app && app[data.func]) {
+					// Send the call to the application
+					app.callback(data.func, data.data);
 				}
 			}, 500);
 		} else {
-			applications[data.app][data.func](data.data);
+			// Send the call to the application
+			app.callback(data.func, data.data);
 		}
 	});
 
@@ -358,7 +421,9 @@ function setupListeners(anWsio) {
 		if (json_cfg.ui.auto_hide_ui) {
 			// default delay is 30s if not specified
 			uiTimerDelay = json_cfg.ui.auto_hide_delay ? parseInt(json_cfg.ui.auto_hide_delay, 10) : 30;
-			uiTimer      = setTimeout(function() { ui.hideInterface(); }, uiTimerDelay * 1000);
+			uiTimer = setTimeout(function() {
+				ui.hideInterface();
+			}, uiTimerDelay * 1000);
 		}
 		makeSvgBackgroundForWidgetConnectors(ui.main.style.width, ui.main.style.height);
 	});
@@ -368,8 +433,10 @@ function setupListeners(anWsio) {
 			clearTimeout(uiTimer);
 			ui.showInterface();
 			uiTimerDelay = param.delay;
-			uiTimer      = setTimeout(function() { ui.hideInterface(); }, uiTimerDelay * 1000);
-		} else
+			uiTimer = setTimeout(function() {
+				ui.hideInterface();
+			}, uiTimerDelay * 1000);
+		} else {
 			if (ui.uiHidden === true) {
 				clearTimeout(uiTimer);
 				uiTimer = null;
@@ -377,6 +444,7 @@ function setupListeners(anWsio) {
 			} else {
 				ui.hideInterface();
 			}
+		}
 	});
 
 	anWsio.on('setupSAGE2Version', function(version) {
@@ -384,7 +452,11 @@ function setupListeners(anWsio) {
 	});
 
 	anWsio.on('setSystemTime', function(data) {
-		ui.setTime(new Date(data.date));
+		var m = moment(data.date);
+		var local = new Date();
+		var offset = local.getTimezoneOffset() - data.offset;
+		m.add(offset, 'minutes');
+		ui.setTime(m);
 	});
 
 	anWsio.on('addRemoteSite', function(data) {
@@ -492,14 +564,20 @@ function setupListeners(anWsio) {
 					windowTitle.style.backgroundColor = "#39C4A6";
 					windowIconSync.style.display = "block";
 					windowIconUnSync.style.display = "none";
-					console.log("sycned!");
 				} else {
 					windowTitle.style.backgroundColor = "#666666";
 					windowIconSync.style.display = "none";
 					windowIconUnSync.style.display = "block";
-					console.log("unsycned :(");
 				}
 			}
+		}
+	});
+
+	anWsio.on('storedFileList', function(data) {
+		// Save the cached stored file list and update all the listeners
+		storedFileList = data;
+		for (var i = 0; i < storedFileListEventHandlers.length; i++) {
+			storedFileListEventHandlers[i](storedFileList);
 		}
 	});
 
@@ -614,15 +692,24 @@ function setupListeners(anWsio) {
 		// Tell the application it is over
 		var app = applications[elem_data.elemId];
 		app.terminate();
+
 		// Remove the app from the list
 		delete applications[elem_data.elemId];
 
 		// Clean up the DOM
 		var deleteElemTitle = document.getElementById(elem_data.elemId + "_title");
+		var deleteElem = document.getElementById(elem_data.elemId);
+
+		// Set the CSS for fading out
+		deleteElem.classList.add('windowDisappear');
+
+		// Delete the titlebar
 		deleteElemTitle.parentNode.removeChild(deleteElemTitle);
 
-		var deleteElem = document.getElementById(elem_data.elemId);
-		deleteElem.parentNode.removeChild(deleteElem);
+		// When fade over, really delete the element
+		setTimeout(function() {
+			deleteElem.parentNode.removeChild(deleteElem);
+		}, 300);
 
 		// Clean up the UI DOM
 		if (elem_data.elemId in controlObjects) {
@@ -713,7 +800,8 @@ function setupListeners(anWsio) {
 			var border = parseInt(selectedElem.parentNode.style.borderWidth || 0, 10);
 			app.sage2_x = (position_data.elemLeft + border + 1) * parentTransform.scale.x + parentTransform.translate.x;
 			app.sage2_x = Math.round(app.sage2_x);
-			app.sage2_y = (position_data.elemTop + ui.titleBarHeight + border) * parentTransform.scale.y + parentTransform.translate.y;
+			app.sage2_y = (position_data.elemTop + ui.titleBarHeight + border) * parentTransform.scale.y
+				+ parentTransform.translate.y;
 			app.sage2_y = Math.round(app.sage2_y);
 			app.sage2_width  = parseInt(position_data.elemWidth, 10) * parentTransform.scale.x;
 			app.sage2_height = parseInt(position_data.elemHeight, 10) * parentTransform.scale.y;
@@ -817,8 +905,6 @@ function setupListeners(anWsio) {
 		selectedElemState.style.width = Math.round(position_data.elemWidth).toString() + "px";
 		selectedElemState.style.height = Math.round(position_data.elemHeight).toString() + "px";
 
-		var selectedElem = document.getElementById(position_data.elemId);
-
 		selectedElem.style.webkitTransform = translate;
 		selectedElem.style.mozTransform    = translate;
 		selectedElem.style.transform       = translate;
@@ -846,7 +932,8 @@ function setupListeners(anWsio) {
 			var border = parseInt(selectedElem.parentNode.style.borderWidth || 0, 10);
 			app.sage2_x = (position_data.elemLeft + border + 1) * parentTransform.scale.x + parentTransform.translate.x;
 			app.sage2_x = Math.round(app.sage2_x);
-			app.sage2_y = (position_data.elemTop + ui.titleBarHeight + border) * parentTransform.scale.y + parentTransform.translate.y;
+			app.sage2_y = (position_data.elemTop + ui.titleBarHeight + border) * parentTransform.scale.y
+				+ parentTransform.translate.y;
 			app.sage2_y = Math.round(app.sage2_y);
 			app.sage2_width  = parseInt(position_data.elemWidth, 10) * parentTransform.scale.x;
 			app.sage2_height = parseInt(position_data.elemHeight, 10) * parentTransform.scale.y;
@@ -1079,7 +1166,6 @@ function setupListeners(anWsio) {
 					}
 					break;
 				case "ShareApp":
-					console.log("SHARE APP");
 					break;
 				default:
 					app.SAGE2Event("widgetEvent", null, data.user, {identifier: ctrlId, action: action}, new Date(data.date));
@@ -1089,7 +1175,6 @@ function setupListeners(anWsio) {
 			// Check whether a request for clone was made.
 			if (app.cloneable === true && app.requestForClone === true) {
 				app.requestForClone = false;
-				console.log("cloning app:" + appId);
 				if (isMaster) {
 					anWsio.emit('createAppClone', {id: appId, cloneData: app.cloneData});
 				}
@@ -1154,14 +1239,13 @@ function setupListeners(anWsio) {
 				clearInterval(blinkControlHandle);
 				var app = applications[data.appId];
 				app.SAGE2Event("widgetEvent", null, data.user,
-					{identifier: ctrlId, action: "textEnter", text: getTextFromTextInputWidget(textInput)}, Date.now());
+					{identifier: ctrlId, action: "textEnter", text: getTextFromTextInputWidget(textInput)}, new Date(data.date));
 			}
 		}
 	});
 
 	anWsio.on('activateTextInputControl', function(data) {
 		var ctrl = null;
-		console.log("in activateTextInputContControl->", data);
 		if (data.prevTextInput) {
 			ctrl = getWidgetControlInstanceById(data.prevTextInput);
 		}
@@ -1333,6 +1417,7 @@ function createAppWindow(data, anWsio, parentId, titleBarHeight, titleTextSize, 
 	windowTitle.appendChild(windowIconClose);
 
 	var titleText = document.createElement("p");
+	titleText.id  = data.id + "_text";
 	titleText.style.lineHeight = Math.round(titleBarHeight) + "px";
 	titleText.style.fontSize   = Math.round(titleTextSize) + "px";
 	titleText.style.color      = "#FFFFFF";
@@ -1414,7 +1499,8 @@ function createAppWindow(data, anWsio, parentId, titleBarHeight, titleTextSize, 
 			height: data.height,
 			resrc: url,
 			state: data.data,
-			date: date
+			date: date,
+			title: data.title
 		};
 
 		// load new app
@@ -1427,6 +1513,25 @@ function createAppWindow(data, anWsio, parentId, titleBarHeight, titleTextSize, 
 				var newapp = new window[data.application]();
 				newapp.init(init);
 				newapp.refresh(date);
+
+				// Sending the context menu info to the server
+				if (isMaster) {
+					// If the application defines a menu function, use it
+					if (typeof newapp.getContextEntries === "function") {
+						wsio.emit('dtuRmbContextMenuContents', {
+							app: newapp.id,
+							entries: newapp.getContextEntries()
+						});
+					} else {
+						// Otherwise, send a default empty menu
+						wsio.emit('dtuRmbContextMenuContents', {
+							app: newapp.id,
+							entries: [{
+								description: "Not supported by this app"
+							}]
+						});
+					}
+				}
 
 				applications[data.id]   = newapp;
 				controlObjects[data.id] = newapp;
@@ -1444,8 +1549,26 @@ function createAppWindow(data, anWsio, parentId, titleBarHeight, titleTextSize, 
 			// load existing app
 			var app = new window[data.application]();
 			app.init(init);
-			// app.SAGE2Load(app.state, date);
 			app.refresh(date);
+
+			// Sending the context menu info to the server
+			if (isMaster) {
+				// If the application defines a menu function, use it
+				if (typeof app.getContextEntries === "function") {
+					wsio.emit('dtuRmbContextMenuContents', {
+						app: app.id,
+						entries: app.getContextEntries()
+					});
+				} else {
+					// Otherwise, send a default empty menu
+					wsio.emit('dtuRmbContextMenuContents', {
+						app: app.id,
+						entries: [{
+							description: "Not supported by this app"
+						}]
+					});
+				}
+			}
 
 			applications[data.id] = app;
 			controlObjects[data.id] = app;
@@ -1454,7 +1577,9 @@ function createAppWindow(data, anWsio, parentId, titleBarHeight, titleTextSize, 
 				anWsio.emit('finishedRenderingAppFrame', {id: data.id});
 			}
 			if (data.application === "movie_player") {
-				setTimeout(function() { anWsio.emit('requestVideoFrame', {id: data.id}); }, 500);
+				setTimeout(function() {
+					anWsio.emit('requestVideoFrame', {id: data.id});
+				}, 500);
 			}
 		}
 	}
@@ -1464,7 +1589,9 @@ function createAppWindow(data, anWsio, parentId, titleBarHeight, titleTextSize, 
 		loadApplication();
 	} else {
 		var loadResource = function(idx) {
-			if (dependencies[data.resrc[idx]] !== undefined) {
+			var resourceUrl = data.resrc[idx];
+
+			if (dependencies[resourceUrl] !== undefined) {
 				if ((idx + 1) < data.resrc.length) {
 					loadResource(idx + 1);
 				} else {
@@ -1475,62 +1602,71 @@ function createAppWindow(data, anWsio, parentId, titleBarHeight, titleTextSize, 
 				return;
 			}
 
-			dependencies[data.resrc[idx]] = false;
+			// Not loaded yet
+			dependencies[resourceUrl] = false;
 
-			var js = document.createElement("script");
-			js.addEventListener('error', function(event) {
-				console.log("Error loading script: " + data.resrc[idx]);
-			}, false);
-
-			js.addEventListener('load', function(event) {
-				dependencies[data.resrc[idx]] = true;
-
-				if ((idx + 1) < data.resrc.length) {
-					loadResource(idx + 1);
-				} else {
-					console.log("all resources loaded", data.id);
-					loadApplication();
-				}
-			});
-			js.type  = "text/javascript";
-			js.async = false;
-			if (data.resrc[idx].indexOf("http://")  === 0 ||
-				data.resrc[idx].indexOf("https://") === 0 ||
-				data.resrc[idx].indexOf("/") === 0) {
-				js.src = data.resrc[idx];
+			// Check the type
+			var loaderType;
+			if (resourceUrl.endsWith(".js")) {
+				loaderType = "script";
+			} else if (resourceUrl.endsWith(".css")) {
+				loaderType = "link";
 			} else {
-				js.src = url + "/" + data.resrc[idx];
+				console.log('Dependencies> unknown file extension, assuming script', resourceUrl);
+				loaderType = "script";
 			}
-			document.head.appendChild(js);
+
+			if (loaderType) {
+				// Create the DOM element to laod the resource
+				var loader = document.createElement(loaderType);
+
+				// Place an error handler
+				loader.addEventListener('error', function(event) {
+					console.log("Dependencies> Error loading", resourceUrl);
+				}, false);
+
+				// When done, try next dependency in the list
+				loader.addEventListener('load', function(event) {
+					// Success, mark as loaded
+					dependencies[data.resrc[idx]] = true;
+					if ((idx + 1) < data.resrc.length) {
+						// load the next one
+						loadResource(idx + 1);
+					} else {
+						// We are done
+						console.log("Dependencies> all resources loaded", data.id);
+						loadApplication();
+					}
+				});
+
+				// if not a full URL, add the local one
+				if (resourceUrl.indexOf("http://")  !== 0 &&
+					resourceUrl.indexOf("https://") !== 0 &&
+					resourceUrl.indexOf("/") !== 0) {
+					resourceUrl = url + "/" + resourceUrl;
+				}
+
+				// is it a JS file
+				if (loaderType === "script") {
+					loader.type  = "text/javascript";
+					loader.async = false;
+					loader.src   = resourceUrl;
+				} else if (loaderType === "link") {
+					// is it a CSS file
+					loader.setAttribute("type", "text/css");
+					loader.setAttribute("rel",  "stylesheet");
+					loader.setAttribute("href", resourceUrl);
+				} else {
+					console.log('Dependencies> unknown file type', resourceUrl);
+				}
+
+				// Finally, add it to the document to trigger the laod
+				document.head.appendChild(loader);
+			}
 		};
 		// Start loading the first resource
 		loadResource(0);
 	}
 
 	itemCount += 2;
-}
-
-function getTransform(elem) {
-	var transform = elem.style.transform;
-	var translate = {x: 0, y: 0};
-	var scale = {x: 1, y: 1};
-	if (transform) {
-		var tIdx = transform.indexOf("translate");
-		if (tIdx >= 0) {
-			var tStr = transform.substring(tIdx + 10, transform.length);
-			tStr = tStr.substring(0, tStr.indexOf(")"));
-			var tValue = tStr.split(",");
-			translate.x = parseFloat(tValue[0]);
-			translate.y = parseFloat(tValue[1]);
-		}
-		var sIdx = transform.indexOf("scale");
-		if (sIdx >= 0) {
-			var sStr = transform.substring(sIdx + 6, transform.length);
-			sStr = sStr.substring(0, sStr.indexOf(")"));
-			var sValue = sStr.split(",");
-			scale.x = parseFloat(sValue[0]);
-			scale.y = parseFloat(sValue[1]);
-		}
-	}
-	return {translate: translate, scale: scale};
 }

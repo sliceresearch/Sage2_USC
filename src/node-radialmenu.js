@@ -15,7 +15,6 @@
  * @submodule radialmenu
  */
 
-// require variables to be declared
 "use strict";
 
 // unused: var radialMenuCenter = { x: 210, y: 210 }; // scale applied in ctor
@@ -212,11 +211,18 @@ RadialMenu.prototype.generateGeometry = function(interactMgr, radialMenus) {
 * @method getInfo
 */
 RadialMenu.prototype.getInfo = function() {
-	return {id: this.pointerid, x: this.left, y: this.top, radialMenuSize: this.radialMenuSize,
-			thumbnailWindowSize: this.thumbnailWindowSize, radialMenuScale: this.radialMenuScale,
-			visible: this.visible, layout: this.radialButtons, thumbnailWindowState: this.thumbnailWindowState,
-			arrangementMenuState: this.showArrangementSubmenu
-			};
+	return {
+		id: this.pointerid,
+		x: this.left,
+		y: this.top,
+		radialMenuSize: this.radialMenuSize,
+		thumbnailWindowSize: this.thumbnailWindowSize,
+		radialMenuScale: this.radialMenuScale,
+		visible: this.visible,
+		layout: this.radialButtons,
+		thumbnailWindowState: this.thumbnailWindowState,
+		arrangementMenuState: this.showArrangementSubmenu
+	};
 };
 
 /**
@@ -470,7 +476,7 @@ RadialMenu.prototype.isEventOnMenu = function(data) {
 				(data.y > this.top - this.radialMenuSize.y / 2) &&
 				(data.y < this.top - this.radialMenuSize.y / 2 + this.thumbnailWindowSize.y)) {
 			// Else if over thumbnail window bounding box
-			if (isThumbnailWindowOpen()) {
+			if (this.isThumbnailWindowOpen()) {
 				return true;
 			}
 		}
@@ -507,7 +513,7 @@ RadialMenu.prototype.onEvent = function(data) {
 			}
 			return true;
 		}
-		if (isThumbnailWindowOpen() &&
+		if (this.isThumbnailWindowOpen() &&
 			(data.x > this.left + this.radialMenuSize.x / 2) &&
 			(data.x < this.left + this.radialMenuSize.x / 2 + this.thumbnailWindowSize.x) &&
 			(data.y > this.top - this.radialMenuSize.y / 2) &&

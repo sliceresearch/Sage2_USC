@@ -1,0 +1,23 @@
+{
+	"main_script": "doodle.js",
+	"icon": "doodle.png",
+	"width": 500,
+	"height": 500,
+	"animation": false,
+	"sticky": true,
+	"dependencies": [
+	],
+	"load": {
+		"imageSnapshot": "",
+		"originalCreator": "Anonymous",
+		"creationTime" : null
+	},
+	"title": "doodle",
+	"version": "1.0.0",
+	"description": "A quick doodle application",
+	"keywords": [ "draw", "drawing", "doodle" ],
+	"fileTypes": [ "doodle" ],
+	"directory": "notes",
+	"author": "Dylan Kobayashi <dylank@hawaii.edu>",
+	"license": "SAGE2-Software-License"
+}

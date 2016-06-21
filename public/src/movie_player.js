@@ -21,6 +21,7 @@
  * @class movie_player
  */
 var movie_player = SAGE2_BlockStreamingApp.extend({
+
 	/**
 	* Init method, creates an 'div' tag in the DOM
 	*
@@ -32,6 +33,9 @@ var movie_player = SAGE2_BlockStreamingApp.extend({
 
 		this.firstLoad();
 		this.initWidgets();
+
+		// Keep a copy of the title string
+		this.title = data.title;
 	},
 
 	/**
@@ -118,6 +122,23 @@ var movie_player = SAGE2_BlockStreamingApp.extend({
 	},
 
 	/**
+	* Overloading the postDraw call to update the title
+	*
+	* @method postDraw
+	* @param date {Date} current time from the server
+	*/
+	postDraw: function(date) {
+		this.prevDate = date;
+		this.frame++;
+
+		// new code: put current time in title bar
+		var duration = parseInt(1000 * (this.state.frame / this.state.framerate), 10);
+		var current  = formatHHMMSS(duration);
+		this.updateTitle(this.title + " - " + current);
+	},
+
+
+	/**
 	* Toggle between play and pause
 	*
 	* @method togglePlayPause
@@ -194,6 +215,75 @@ var movie_player = SAGE2_BlockStreamingApp.extend({
 		// must change play-pause button (should show 'play' icon)
 		this.playPauseBtn.state = 0;
 	},
+
+	/**
+	* To enable right click context menu support this function needs to be present with this format.
+	*
+	* Must return an array of entries. An entry is an object with three properties:
+	*	description: what is to be displayed to the viewer.
+	*	callback: String containing the name of the function to activate in the app. It must exist.
+	*	parameters: an object with specified datafields to be given to the function.
+	*		The following attributes will be automatically added by server.
+	*			serverDate, on the return back, server will fill this with time object.
+	*			clientId, unique identifier (ip and port) for the client that selected entry.
+	*			clientName, the name input for their pointer. Note: users are not required to do so.
+	*			clientInput, if entry is marked as input, the value will be in this property. See pdf_viewer.js for example.
+	*		Further parameters can be added. See pdf_view.js for example.
+	*/
+	getContextEntries: function() {
+		var entries = [];
+		var entry;
+
+		entry = {};
+		entry.description = "Play/Pause";
+		entry.callback = "contextTogglePlayPause";
+		entry.parameters = {};
+		entries.push(entry);
+
+		entry = {};
+		entry.description = "Stop";
+		entry.callback = "stopVideo";
+		entry.parameters = {};
+		entries.push(entry);
+
+		entry = {};
+		entry.description = "Mute";
+		entry.callback = "contextToggleMute";
+		entry.parameters = {};
+		entries.push(entry);
+
+		// Special callback: dowload the file
+		entries.push({
+			description: "Download",
+			callback: "SAGE2_download",
+			parameters: {
+				url: this.state.video_url
+			}
+		});
+
+		return entries;
+	},
+
+	/**
+	* Calls togglePlayPause passing the given time.
+	*
+	* @method contextTogglePlayPause
+	* @param responseObject {Object} contains response from entry selection
+	*/
+	contextTogglePlayPause: function(responseObject) {
+		this.togglePlayPause(new Date(responseObject.serverDate));
+	},
+
+	/**
+	* Calls togglePlayPause passing the given time.
+	*
+	* @method contextToggleMute
+	* @param responseObject {Object} contains response from entry selection
+	*/
+	contextToggleMute: function(responseObject) {
+		this.toggleMute(new Date(responseObject.serverDate));
+	},
+
 	/**
 	* Handles event processing, arrow keys to navigate, and r to redraw
 	*
@@ -227,10 +317,10 @@ var movie_player = SAGE2_BlockStreamingApp.extend({
 				// 1 start of video
 				this.stopVideo();
 			}
-			// else if (data.character === 'x') {
-			// 	// Press 'x' to close itself
-			// 	this.close();
-			// }
+		} else if (eventType === "specialKey") {
+			if (data.code === 80 && data.state === "up") { // P key
+				this.togglePlayPause(date);
+			}
 		} else if (eventType === "widgetEvent") {
 			switch (data.identifier) {
 				case "Loop":
