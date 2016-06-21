@@ -101,7 +101,7 @@ var flow = SAGE2_App.extend({
 		} else if (eventType === "pointerRelease" && (data.button === "left")) {
 			this.mouseDown = false;
 		} else if (eventType === "widgetEvent") {
-			switch (data.identifier){
+			switch (data.identifier) {
 				case "Speed":
 					console.log('Speed', this.speed);
 					this.flow.setTimeScale(this.speed);

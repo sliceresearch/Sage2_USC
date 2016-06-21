@@ -363,11 +363,6 @@ SAGE2DisplayUI.prototype.addAppWindow = function(data) {
 	var appIcon = document.createElement('img');
 	appIcon.id = data.id + "_icon";
 	appIcon.className = "appWindowIcon";
-	if (data.width < data.height) {
-		appIcon.style.width  = "100%";
-	} else {
-		appIcon.style.height = "100%";
-	}
 	appIcon.onerror = function(event) {
 		setTimeout(function() {
 			if (data.icon.startsWith('data:image')) {
@@ -594,7 +589,7 @@ function underElement(elem, pageX, pageY) {
 	};
 	return ((pageX > elemPosition.left && pageX < elemPosition2.left) &&
 			(pageY  > elemPosition.top  && pageY < elemPosition2.top));
- }
+}
 
 
 /**

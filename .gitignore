@@ -25,9 +25,7 @@ config/custom.types
 
 # generated content
 doc/api
-
-# http cache
-public/sage2.appcache
+public/service-worker.js
 
 # Dependency directory
 node_modules
@@ -45,4 +43,7 @@ public/images/background/*_[0-9]*.*
 
 # Users Environment Variables
 .lock-wscript
+
+.stylelintrc
+
 

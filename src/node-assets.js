@@ -95,6 +95,19 @@ Asset.prototype.setFilename = function(aFilename) {
  */
 Asset.prototype.setEXIF = function(exifdata) {
 	this.exif = exifdata;
+
+
+	var mime_type;
+	var mime_app  = registry.getMimeType(this.filename);
+	if (mime_app) {
+		// if it's a type registred by an app, override the mime type
+		// in order to launch the right app
+		mime_type = mime_app;
+	} else {
+		// otherwise use the mime type from exiftool
+		mime_type = this.exif.MIMEType;
+	}
+	this.sage2Type = mime_type;
 };
 
 /**
@@ -149,7 +162,7 @@ var initializeConfiguration = function(cfg) {
 };
 
 
-var listAssets = function() {
+var printAssets = function() {
 	var idx, keys, one;
 	idx = 0;
 	// Sort by name
@@ -178,8 +191,7 @@ var saveAssets = function(filename) {
 
 	try {
 		fs.writeFileSync(fullpath, JSON.stringify(AllAssets, null, 4));
-	}
-	catch (err) {
+	} catch (err) {
 		console.log(sageutils.header("Assets") + "error saving assets", err);
 	}
 };
@@ -198,7 +210,8 @@ var generateImageThumbnails = function(infile, outfile, sizes, index, callback) 
 		.in("-extent", sizes[index] + "x" + sizes[index])
 		.out("-quality", "70").write(outfile + '_' + sizes[index] + '.jpg', function(err) {
 			if (err) {
-				console.log(sageutils.header("Assets") + "cannot generate " + sizes[index] + "x" + sizes[index] + " thumbnail for:", infile);
+				console.log(sageutils.header("Assets") + "cannot generate " + sizes[index] +
+					"x" + sizes[index] + " thumbnail for:", infile);
 				return;
 			}
 			// recursive call to generate the next size
@@ -270,7 +283,8 @@ var generateVideoThumbnails = function(infile, outfile, width, height, sizes, in
 			.in("-extent", sizes[index] + "x" + sizes[index])
 			.out("-quality", "70").write(outfile + '_' + sizes[index] + '.jpg', function(err) {
 				if (err) {
-					console.log(sageutils.header("Assets") + "cannot generate " + sizes[index] + "x" + sizes[index] + " thumbnail for:", infile);
+					console.log(sageutils.header("Assets") + "cannot generate " + sizes[index] + "x" +
+						sizes[index] + " thumbnail for:", infile);
 					return;
 				}
 				fs.unlink(tmpImg, function(err2) {
@@ -313,7 +327,8 @@ var generateAppThumbnails = function(infile, outfile, acolor, sizes, index, call
 		.in("-draw", "circle " + circle).in("-draw", "image src-over " + img + " '" + infile + "'")
 		.out("-quality", "70").write(outfile + '_' + sizes[index] + '.jpg', function(err) {
 			if (err) {
-				console.log(sageutils.header("Assets") + "cannot generate " + sizes[index] + "x" + sizes[index] + " thumbnail for:", infile);
+				console.log(sageutils.header("Assets") + "cannot generate " + sizes[index] + "x" +
+					sizes[index] + " thumbnail for:", infile);
 				return;
 			}
 			// recursive call to generate the next size
@@ -352,7 +367,8 @@ var generateRemoteSiteThumbnails = function(infile, outfile, sizes, index, callb
 	imageMagick(sizes[index], sizes[index], connected).fill("#FFFFFF").font(font, fontSize)
 		.drawText(0, 0, infile, "Center").write(outfile + '_' + sizes[index] + '.jpg', function(err) {
 			if (err) {
-				console.log(sageutils.header("Assets") + "cannot generate " + sizes[index] + "x" + sizes[index] + " thumbnail for:", infile);
+				console.log(sageutils.header("Assets") + "cannot generate " + sizes[index] + "x" +
+					sizes[index] + " thumbnail for:", infile);
 				return;
 			}
 			finishedC = true;
@@ -365,7 +381,8 @@ var generateRemoteSiteThumbnails = function(infile, outfile, sizes, index, callb
 	imageMagick(sizes[index], sizes[index], disconnected).fill("#FFFFFF").font(font, fontSize).
 		drawText(0, 0, infile, "Center").write(outfile + '_disconnected_' + sizes[index] + '.jpg', function(err) {
 			if (err) {
-				console.log(sageutils.header("Assets") + "cannot generate " + sizes[index] + "x" + sizes[index] + " thumbnail for:", infile);
+				console.log(sageutils.header("Assets") + "cannot generate " + sizes[index] + "x" +
+					sizes[index] + " thumbnail for:", infile);
 				return;
 			}
 			finishedD = true;
@@ -405,6 +422,10 @@ var addFile = function(filename, exif, callback) {
 			callback();
 		});
 		anAsset.exif.SAGE2thumbnail = rthumb;
+	} else if (exif.MIMEType === 'text/plain') {
+		// Callback must be done otherwise the associated app will not launch
+		// Might be worth doing an else catch.
+		callback();
 	} else if (exif.MIMEType.indexOf('video/') > -1) {
 		generateVideoThumbnails(filename, thumb, exif.ImageWidth, exif.ImageHeight, [512, 256], null, function() {
 			callback();
@@ -446,7 +467,7 @@ var addFile = function(filename, exif, callback) {
 					var rgb = color({r: red, g: green, b: blue});
 					var hsv = rgb.hsv();
 					var ms = (hsv.s + 1) / 100;
-					var mv = hsv.v > 60 ? 1.0 : hsv.v > 30 ? 0.1: 0.01;
+					var mv = hsv.v > 60 ? 1.0 : hsv.v > 30 ? 0.1 : 0.01;
 					var ma = alpha / 255;
 					var weighted = rawCount * ms * mv * ma;
 					if (weighted > primaryValue) {
@@ -489,27 +510,14 @@ var addFile = function(filename, exif, callback) {
 	saveAssets();
 };
 
-var deletePDF = function(filename) {
-	var filepath = path.resolve(AllAssets.root, 'pdfs', filename);
-	fs.unlink(filepath, function(err) {
-		if (err) {
-			console.log("Server> error removing file:", filename, err);
-		}
-		console.log("Server> successfully deleted file:", filename);
-		// Delete the metadata
-		delete AllAssets.list[filepath];
-		saveAssets();
-	});
-};
-
 
 var deleteAsset = function(filename) {
 	var filepath = path.resolve(filename);
 	fs.unlink(filepath, function(err) {
 		if (err) {
-			console.log("Server> error removing file:", filename, err);
+			console.log(sageutils.header("Assets") + "error removing file: " + filename + err);
 		} else {
-			console.log("Server> successfully deleted file:", filename);
+			console.log(sageutils.header("Assets") + "successfully deleted file: " + filename);
 			// Delete the metadata
 			delete AllAssets.list[filepath];
 			saveAssets();
@@ -517,31 +525,6 @@ var deleteAsset = function(filename) {
 	});
 };
 
-var deleteImage = function(filename) {
-	var filepath = path.resolve(AllAssets.root, 'images', filename);
-	fs.unlink(filepath, function(err) {
-		if (err) {
-			console.log("Server> error removing file:", filename, err);
-		}
-		console.log("Server> successfully deleted file:", filename);
-		// Delete the metadata
-		delete AllAssets.list[filepath];
-		saveAssets();
-	});
-};
-
-var deleteVideo = function(filename) {
-	var filepath = path.resolve(AllAssets.root, 'videos', filename);
-	fs.unlink(filepath, function(err) {
-		if (err) {
-			console.log("Server> error removing file:", filename, err);
-		}
-		console.log("Server> successfully deleted file:", filename);
-		// Delete the metadata
-		delete AllAssets.list[filepath];
-		saveAssets();
-	});
-};
 
 var addURL = function(aUrl, exif) {
 	// Add the asset in the array
@@ -716,12 +699,49 @@ var exifAsync = function(cmds, cb) {
 // 	if (cmds.length>0) execNext();
 // };
 
+
+var listAssets = function() {
+	var pdfs   = [];
+	var videos = [];
+	var apps   = [];
+	var images = [];
+	var others = [];
+
+	// Get all the assets
+	var keys = Object.keys(AllAssets.list);
+	for (var f in keys) {
+		var one = AllAssets.list[keys[f]];
+		if (one.exif.MIMEType === 'application/custom') {
+			if (one.exif.metadata.fileTypes.length === 0) {
+				// exclude 'viewer' applications
+				apps.push(one);
+			}
+		} else if (registry.getDefaultApp(one.filename) === "pdf_viewer") {
+			pdfs.push(one);
+		} else if (registry.getDefaultApp(one.filename) === "image_viewer") {
+			images.push(one);
+		} else if (registry.getDefaultApp(one.filename) === "movie_player") {
+			videos.push(one);
+		} else {
+			others.push(one);
+		}
+	}
+	// Sort independently of case
+	images.sort(sageutils.compareFilename);
+	videos.sort(sageutils.compareFilename);
+	pdfs.sort(sageutils.compareFilename);
+	apps.sort(sageutils.compareFilename);
+	return {images: images, videos: videos, pdfs: pdfs,
+			applications: apps, others: others};
+};
+
 var listPDFs = function() {
 	var result = [];
 	var keys = Object.keys(AllAssets.list);
 	for (var f in keys) {
 		var one = AllAssets.list[keys[f]];
-		if (one.exif.MIMEType === 'application/pdf') {
+		if (one.exif.MIMEType !== 'application/custom' &&
+			registry.getDefaultApp(one.filename) === "pdf_viewer") {
 			result.push(one);
 		}
 	}
@@ -733,7 +753,8 @@ var listImages = function() {
 	var keys = Object.keys(AllAssets.list);
 	for (var f in keys) {
 		var one = AllAssets.list[keys[f]];
-		if (one.exif.MIMEType.indexOf('image/') > -1) {
+		if (one.exif.MIMEType !== 'application/custom' &&
+			registry.getDefaultApp(one.filename) === "image_viewer") {
 			result.push(one);
 		}
 	}
@@ -745,12 +766,14 @@ var listVideos = function() {
 	var keys = Object.keys(AllAssets.list);
 	for (var f in keys) {
 		var one = AllAssets.list[keys[f]];
-		if (one.exif.MIMEType.indexOf('video/') > -1) {
+		if (one.exif.MIMEType !== 'application/custom' &&
+			registry.getDefaultApp(one.filename) === "movie_player") {
 			result.push(one);
 		}
 	}
 	return result;
 };
+
 
 var listApps = function() {
 	var result = [];
@@ -761,12 +784,22 @@ var listApps = function() {
 			result.push(one);
 		}
 	}
+
+	// Remove 'viewer' apps
+	var i = result.length;
+	while (i--) {
+		if (result[i].exif.metadata.fileTypes &&
+			result[i].exif.metadata.fileTypes.length > 0) {
+			result.splice(i, 1);
+		}
+	}
+
 	return result;
 };
 
 var recursiveReaddirSync = function(aPath) {
 	var list     = [];
-	var excludes = [ '.DS_Store', 'Thumbs.db', 'passwd.json', 'assets', 'sessions', 'tmp', 'config' ];
+	var excludes = ['.DS_Store', 'Thumbs.db', 'passwd.json', 'assets', 'sessions', 'tmp', 'config'];
 	var files, stats;
 
 	files = fs.readdirSync(aPath);
@@ -1019,22 +1052,22 @@ exports.initialize     = initialize;
 exports.refresh        = refresh;
 exports.addAssetFolder = addAssetFolder;
 
-exports.listAssets = listAssets;
-exports.saveAssets = saveAssets;
-exports.listImages = listImages;
-exports.listPDFs   = listPDFs;
-exports.listVideos = listVideos;
-exports.listApps   = listApps;
-exports.addFile    = addFile;
-exports.addURL     = addURL;
+exports.printAssets = printAssets;
+exports.saveAssets  = saveAssets;
+
+exports.listImages  = listImages;
+exports.listPDFs    = listPDFs;
+exports.listVideos  = listVideos;
+exports.listApps    = listApps;
+exports.listAssets  = listAssets;
+
+exports.addFile     = addFile;
+exports.addURL      = addURL;
 
 exports.regenerateAssets = regenerateAssets;
 
 exports.exifAsync   = exifAsync;
 
-exports.deleteImage = deleteImage;
-exports.deleteVideo = deleteVideo;
-exports.deletePDF   = deletePDF;
 exports.deleteAsset = deleteAsset;
 exports.moveAsset   = moveAsset;
 

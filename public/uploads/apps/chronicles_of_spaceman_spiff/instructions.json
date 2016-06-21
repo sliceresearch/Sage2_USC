@@ -5,14 +5,16 @@
 	"height": 318,
 	"animation": true,
 	"dependencies": [
+		"comics.js"
 	],
 	"load": {
-		"timeDiff": 0
+		"timeDiff": 0,
+		"whichComic": 0
 	},
 	"plugin": "plugin.js",
 	"title": "Chronicles of Spaceman Spiff",
-	"version": "2.0.0",
-	"description": "Daily Calvin and Hobbes comic",
+	"version": "2.0.2",
+	"description": "Daily Calvin and Hobbes comic (and others)",
 	"keywords": [ "d3", "comic" ],
 	"author": "Andrew Johnson <lenzman@me.com>",
 	"license": "SAGE2-Software-License"

@@ -67,7 +67,7 @@ RegistryManager.prototype.mimeRegister = function(fileType) {
 
 	if (type === undefined || type === null || type === "" || type === 'application/custom') {
 		var map = {};
-		map['application/' + fileType] = [ fileType ];
+		map['application/' + fileType] = [fileType];
 		mime.define(map);
 		fs.appendFileSync(this.mimeFile, 'application/' + fileType + ' ' + fileType + '\n');
 		type = mime.lookup(fileType);
@@ -103,7 +103,7 @@ RegistryManager.prototype.register = function(name, types, directory, mimeType) 
 		}
 
 		var newApp = {};
-		newApp.applications = [ name ];
+		newApp.applications = [name];
 
 		// Check if the entry exists
 		try {
@@ -134,6 +134,10 @@ RegistryManager.prototype.push = function(key, value, overwrite) {
 	}
 };
 
+RegistryManager.prototype.getMimeType = function(file) {
+	return mime.lookup(file);
+};
+
 RegistryManager.prototype.getDefaultApp = function(file) {
 	var defaultApp = "";
 	var type = '/' + mime.lookup(file);
@@ -150,6 +154,9 @@ RegistryManager.prototype.getDefaultAppFromMime = function(type) {
 	try {
 		defaultApp = this.db.getData('/' + type + '/default');
 	} catch (error) {
+		if (type === "text/plain") {
+			return "uploads/apps/quickNote";
+		} // currently lack a better way to associate
 		console.error(sageutils.header("Registry") + "No default app for " + type);
 	}
 	return defaultApp;

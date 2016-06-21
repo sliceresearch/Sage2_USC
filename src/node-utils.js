@@ -20,7 +20,7 @@
 // require variables to be declared
 "use strict";
 
-var SAGE2_version = require('../package.json').version;
+var SAGE2_version = require('../package.json');
 
 var crypto  = require('crypto');              // https encryption
 var exec    = require('child_process').exec;  // execute external application
@@ -158,7 +158,7 @@ function loadCABundle(filename) {
  * @return {String} version number as x.x.x
  */
 function getShortVersion() {
-	return SAGE2_version;
+	return SAGE2_version.version;
 }
 
 
@@ -182,7 +182,9 @@ function getNodeVersion() {
 function getFullVersion(callback) {
 	var fullVersion  = {base: "", branch: "", commit: "", date: ""};
 	// get the base version from package.json file
-	fullVersion.base = getShortVersion();
+	fullVersion.base = SAGE2_version.version;
+	// Pick up the date from package.json, if any
+	fullVersion.date = SAGE2_version.date || "";
 
 	// get to the root folder of the sources
 	var dirroot = path.resolve(__dirname, '..');
@@ -196,14 +198,17 @@ function getFullVersion(callback) {
 		var branch = stdout1.substring(0, stdout1.length - 1);
 		var cmd2 = "git log --date=\"short\" --format=\"%h|%ad\" -n 1";
 		exec(cmd2, { cwd: dirroot, timeout: 3000}, function(err2, stdout2, stderr2) {
-			if (err2) { callback(fullVersion); return; }
+			if (err2) {
+				callback(fullVersion);
+				return;
+			}
 
 			// parsing the results
 			var result = stdout2.replace(/\r?\n|\r/g, "");
 			var parse  = result.split("|");
 
 			// filling up the object
-			fullVersion.branch = branch; // branch.substring(1, branch.length-1);
+			fullVersion.branch = branch;
 			fullVersion.commit = parse[0];
 			fullVersion.date   = parse[1].replace(/-/g, "/");
 
@@ -496,8 +501,7 @@ function mkdirParent(dirPath) {
 	try {
 		fs.mkdirSync(dirPath);
 		made = dirPath;
-	}
-	catch (err0) {
+	} catch (err0) {
 		switch (err0.code) {
 			case 'ENOENT' : {
 				made = mkdirParent(path.dirname(dirPath));
@@ -508,8 +512,7 @@ function mkdirParent(dirPath) {
 				var stat;
 				try {
 					stat = fs.statSync(dirPath);
-				}
-				catch (err1) {
+				} catch (err1) {
 					throw err0;
 				}
 				if (!stat.isDirectory()) {
@@ -548,7 +551,9 @@ function monitorFolders(folders, excludes, callback) {
 			console.log(header("Monitor") + "watching folder " + folderpath);
 			var monitor = fsmonitor.watch(folderpath, {
 				// only matching: all true for now
-				matches:  function(relpath) {return true; },
+				matches:  function(relpath) {
+					return true;
+				},
 				// and excluding: nothing for now
 				excludes: function(relpath) {
 					return (excludes.indexOf(relpath) !== -1);

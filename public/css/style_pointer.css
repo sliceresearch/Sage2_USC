@@ -28,10 +28,11 @@ body {
 	background-color: #EDEDED;
 }
 
-input, button {
+input,
+button {
 	font-size: 11px;
 }
-	
+
 #wrapper {
 	width: 100%;
 	margin: 0 auto;
@@ -80,9 +81,9 @@ input, button {
 
 .sageLabel {
 	display: inline-block;
-    width: 110px;
-    text-align: right;
-    padding: 3px 10px 3px 0;
+	width: 110px;
+	text-align: right;
+	padding: 3px 10px 3px 0;
 }
 
 .clear {

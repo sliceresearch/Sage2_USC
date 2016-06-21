@@ -38,6 +38,7 @@ var imageX = 0;
 var imageY = 0;
 var imageW = 0;
 var imageH = 0;
+var openUpload = true;
 
 function postForm(formData, callback) {
 	var httpsURL = wssURL.replace('wss', 'https');
@@ -63,7 +64,8 @@ function uploadPictures() {
 		dropX:  imageX.toString(),
 		dropY:  imageY.toString(),
 		width:  imageW.toString(),
-		height: imageH.toString()
+		height: imageH.toString(),
+		open:   openUpload ? "true" : "false"
 	};
 
 	postForm(formData, function(err) {
@@ -153,6 +155,7 @@ commander
 	.option('-s, --server <url>', 'URL SAGE2 server', 'localhost:9090')
 	.option('-p, --password <password>', 'Set the password to connect to SAGE2 server', '')
 	.option('-a, --hash <hash>', 'Use a hash instead of password')
+	.option('-n, --no_open', 'Do not open file after upload')
 	.option('[filename and extra parameters]', 'File to upload')
 	.parse(process.argv);
 
@@ -203,6 +206,10 @@ if (commander.args.length >= 3) {
 if (commander.args.length >= 5) {
 	imageW = parseFloat(commander.args[3]);
 	imageH = parseFloat(commander.args[4]);
+}
+
+if (commander.no_open) {
+	openUpload = false;
 }
 
 console.log('Client> uploading', imageFilename);

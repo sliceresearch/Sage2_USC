@@ -28,7 +28,6 @@ body {
 	text-align: center;
 }
 
-
 ul {
 	padding: 0;
 	margin-left: 20px;
@@ -39,18 +38,19 @@ li {
 	display: list-item;
 }
 
-input, button {
+input,
+button {
 	font-size: 11px;
 }
-
 
 /* Dialog (sagePointer lock) */
 dialog {
 	border: 1px solid rgba(0, 0, 0, 0.3);
 	border-radius: 6px;
 	box-shadow: 0 3px 7px rgba(0, 0, 0, 0.3);
-	margin:0 auto;
+	margin: 0 auto;
 }
+
 /* background behind the dialogs */
 dialog::backdrop {
 	top: 0;
@@ -59,16 +59,16 @@ dialog::backdrop {
 	bottom: 0;
 	background-color: rgba(0, 0, 0, 0.75);
 }
+
 /* Dialog for the fileBrowser */
 #lb_light {
-    width: 50%;
-    height: 50%;
+	width: 50%;
+	height: 50%;
 }
 
 #lb_pointer_help {
-    width: 50%;
+	width: 50%;
 }
-
 
 #wrapper {
 	width: 100%;
@@ -107,7 +107,10 @@ dialog::backdrop {
 	border: dashed 3px #54C238;
 }
 
-#sagePointer, #screenShare, #openWebpage, #layout {
+#sagePointer,
+#screenShare,
+#openWebpage,
+#layout {
 	float: left;
 	margin-top: 10px;
 	margin-left: 10px;
@@ -172,12 +175,12 @@ footer {
 	margin: 5px;
 	left: 10px;
 	text-align: left;
-    bottom: 0;
-    position: fixed;
-    white-space: nowrap;
-    width: 100%;
+	bottom: 0;
+	position: fixed;
+	white-space: nowrap;
+	width: 100%;
 	overflow: scroll;
-	z-index:-10;
+	z-index: -10;
 }
 
 footer li {
@@ -186,17 +189,17 @@ footer li {
 }
 
 .fileLabel {
-	display:inline-block;
-    width:125px;
-    text-align: right;
-    padding: 3px 5px 0 0;
+	display: inline-block;
+	width: 125px;
+	text-align: right;
+	padding: 3px 5px 0 0;
 }
 
 .sageLabel {
 	display: inline-block;
-    width: 110px;
-    text-align: right;
-    padding: 3px 10px 3px 0;
+	width: 110px;
+	text-align: right;
+	padding: 3px 10px 3px 0;
 }
 
 .fileItem {
@@ -212,7 +215,7 @@ footer li {
 	height: 100%;
 	background-color: #000000;
 	z-index: 1001;
-	opacity: .65;
+	opacity: 0.65;
 	cursor: default;
 }
 
@@ -220,12 +223,12 @@ footer li {
 	display: none;
 	position: absolute;
 	top: 25%;
-	left:25%;
+	left: 25%;
 	height: 50%;
 	width: 50%;
 	border: 4px solid #AAAAAA;
 	background-color: #FFFFFF;
-	z-index:1002;
+	z-index: 1002;
 	overflow: scroll;
 	cursor: default;
 }
@@ -234,8 +237,7 @@ footer li {
 	text-align: left;
 }
 
-
-/***********************************************/
+/* ********************************************* */
 .css-treeview {
 	font-size: 11px;
 	-moz-user-select: none;
@@ -247,7 +249,7 @@ footer li {
 .css-treeview ul,
 .css-treeview li {
 	padding: 0;
-	margin: 6px 3px 0 3px;
+	margin: 6px 3px 0;
 	list-style: none;
 }
 
@@ -262,8 +264,8 @@ footer li {
 
 .css-treeview input + label {
 	background: url('../images/dir-closed.png') no-repeat;
-    padding: 3px 0 3px 42px;
-    background-position: 0 0;
+	padding: 3px 0 3px 42px;
+	background-position: 0 0;
 }
 
 .css-treeview input:checked + label {

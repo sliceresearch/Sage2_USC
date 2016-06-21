@@ -87,6 +87,8 @@ var clock_svg = SAGE2_App.extend({
 		// Specify the type to enforce CSP rules
 		this.element.type = "image/svg+xml";
 
+		this.ready = false;
+
 		// application specific 'init'
 		var _this  = this;
 		// Callback when the SVG file is loaded
@@ -116,11 +118,8 @@ var clock_svg = SAGE2_App.extend({
 		this.element.setAttribute('data',   this.resrcPath + 'clock_svg.svg');
 		this.element.setAttribute('type',  'image/svg+xml');
 
-
 		// Customize the clock
 		this.setParameters();
-
-		this.ready = false;
 
 		// Draw once per second
 		this.maxFPS = 2.0;

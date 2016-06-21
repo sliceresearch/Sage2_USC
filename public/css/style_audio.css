@@ -35,10 +35,9 @@ h1 {
 	color: #FFFFFF;
 }
 
-
 h2 {
 	font-size: 14pt;
-	color:  #ADD8E6;
+	color: #ADD8E6;
 	margin: 10px;
 }
 
@@ -51,11 +50,16 @@ h4 {
 	color: #FFFFFF;
 }
 
-
-header, section, footer, aside, nav, main, article, figure {
+header,
+section,
+footer,
+aside,
+nav,
+main,
+article,
+figure {
 	display: block;
 }
-
 
 header {
 	font-size: 14pt;
@@ -70,9 +74,8 @@ footer {
 	text-align: left;
 	bottom: 0;
 	position: fixed;
-	z-index:-10;
+	z-index: -10;
 }
-
 
 p {
 	padding-left: 25px;
@@ -83,10 +86,10 @@ p {
 section ul {
 	margin-left: 25px;
 }
+
 section ol {
 	margin-left: 25px;
 }
-
 
 section li {
 	text-indent: 5px;
@@ -113,10 +116,10 @@ a:hover {
 
 body {
 	background: #333333;
-	width:  100%;
+	width: 100%;
 	height: 100%;
 	text-align: center;
-	min-width:500px;
+	min-width: 500px;
 }
 
 main {
@@ -125,7 +128,7 @@ main {
 	text-align: left;
 	padding: 10px;
 	display: inline-block;
-	z-index:10;
+	z-index: 10;
 }
 
 .siteType {
@@ -140,33 +143,32 @@ main {
 }
 
 #videos {
-	/*width: 920px;*/
 	width: 95%;
-    table-layout: fixed;
+	table-layout: fixed;
 	margin: 15px;
 	border: 1px solid white;
 	border-collapse: collapse;
 }
 
 td {
-	padding: 2px 2px 0px 2px;
+	padding: 2px 2px 0;
 }
 
 tr {
 	height: 24px;
 	border: 1px solid white;
-	padding: 2px 2px 0px 2px;
+	padding: 2px 2px 0;
 }
 
 .rowNoBorder {
 	border: 1px solid white;
 	border-bottom: none !important;
 }
+
 .rowWithBorder {
 	border: 1px solid white;
 	border-top: 1px solid #AAAAAA;
 }
-
 
 .videoTitle {
 	min-width: 200px;
@@ -194,7 +196,7 @@ tr {
 
 .videoVolumeSlider {
 	width: 98%;
-	opacity: .75;
+	opacity: 0.75;
 	padding-left: 1%;
 	background: transparent;
 	font-size: 1em;
@@ -204,12 +206,13 @@ tr {
 
 .videoVolumeSlider:focus {
 	outline: none;
-	opacity: .99;
+	opacity: 0.99;
 }
 
 /* Style of the volume slider in Wekit based browser */
 
-.videoVolumeSlider::-webkit-slider-runnable-track, .videoVolumeSlider::-webkit-slider-thumb {
+.videoVolumeSlider::-webkit-slider-runnable-track,
+.videoVolumeSlider::-webkit-slider-thumb {
 	-webkit-appearance: none;
 }
 
@@ -219,26 +222,27 @@ tr {
 	padding: 0;
 	height: 1.5em;
 	border-radius: 0.75em;
-	box-shadow: 0 1px 1px #ADD8E6, inset 0 .125em .125em #0d1112;
-	background: #7aa9b3;
+	box-shadow:
+		0 1px 1px #ADD8E6,
+		inset 0 0.125em 0.125em #0D1112;
+	background: #7AA9B3;
 }
-
 
 .videoVolumeSlider::-webkit-slider-thumb {
 	position: relative;
 	margin-top: -0.375em;
 	box-sizing: border-box;
 	border: solid 0.125em rgba(205, 224, 230, 0.5);
-	width:  2.25em;
+	width: 2.25em;
 	height: 2.25em;
 	border-radius: 50%;
-	box-shadow: 0 .125em .125em #3b4547;
-	background: -webkit-radial-gradient(#777777, rgba(119, 119, 119, 0) 70%) 50% 50%, -webkit-radial-gradient(#777777, rgba(119, 119, 119, 0) 70%) 50% 50%, -webkit-radial-gradient(at 50% 0, #777777, rgba(119, 119, 119, 0) 71%) 50% 0, -webkit-radial-gradient(at 50% 100%, #777777, rgba(119, 119, 119, 0) 71%) 50% 100%, -webkit-radial-gradient(at 0 50%, #777777, rgba(119, 119, 119, 0) 71%) 0 50%, -webkit-radial-gradient(at 100% 50%, #777777, rgba(119, 119, 119, 0) 71%) 100% 50%, -webkit-radial-gradient(rgba(59, 69, 71, 0) 50%, #3b4547 71%) 50% -0.25em #fff;
-	background: radial-gradient(#777777, rgba(119, 119, 119, 0) 70%) 50% 50%, radial-gradient(#777777, rgba(119, 119, 119, 0) 70%) 50% 50%, radial-gradient(at 50% 0, #777777, rgba(119, 119, 119, 0) 71%) 50% 0, radial-gradient(at 50% 100%, #777777, rgba(119, 119, 119, 0) 71%) 50% 100%, radial-gradient(at 0 50%, #777777, rgba(119, 119, 119, 0) 71%) 0 50%, radial-gradient(at 100% 50%, #777777, rgba(119, 119, 119, 0) 71%) 100% 50%, radial-gradient(rgba(59, 69, 71, 0) 50%, #3b4547 71%) 50% -0.25em #fff;
-	background-clip:   border-box;
+	box-shadow: 0 0.125em 0.125em #3B4547;
+	background: -webkit-radial-gradient(#777777, rgba(119, 119, 119, 0) 70%) 50% 50%, -webkit-radial-gradient(#777777, rgba(119, 119, 119, 0) 70%) 50% 50%, -webkit-radial-gradient(at 50% 0, #777777, rgba(119, 119, 119, 0) 71%) 50% 0, -webkit-radial-gradient(at 50% 100%, #777777, rgba(119, 119, 119, 0) 71%) 50% 100%, -webkit-radial-gradient(at 0 50%, #777777, rgba(119, 119, 119, 0) 71%) 0 50%, -webkit-radial-gradient(at 100% 50%, #777777, rgba(119, 119, 119, 0) 71%) 100% 50%, -webkit-radial-gradient(rgba(59, 69, 71, 0) 50%, #3B4547 71%) 50% -0.25em #FFFFFF;
+	background: radial-gradient(#777777, rgba(119, 119, 119, 0) 70%) 50% 50%, radial-gradient(#777777, rgba(119, 119, 119, 0) 70%) 50% 50%, radial-gradient(at 50% 0, #777777, rgba(119, 119, 119, 0) 71%) 50% 0, radial-gradient(at 50% 100%, #777777, rgba(119, 119, 119, 0) 71%) 50% 100%, radial-gradient(at 0 50%, #777777, rgba(119, 119, 119, 0) 71%) 0 50%, radial-gradient(at 100% 50%, #777777, rgba(119, 119, 119, 0) 71%) 100% 50%, radial-gradient(rgba(59, 69, 71, 0) 50%, #3B4547 71%) 50% -0.25em #FFFFFF;
+	background-clip: border-box;
 	background-origin: border-box;
 	background-repeat: no-repeat;
-	background-size: 100% .125em, .125em  100%,  50% 50%, 50% 50%, 50% 50%, 50% 50%,  115% 115%;
+	background-size: 100% 0.125em, 0.125em 100%, 50% 50%, 50% 50%, 50% 50%, 50% 50%, 115% 115%;
 	-webkit-filter: drop-shadow(0 1px #516570);
 	filter: drop-shadow(0 1px #516570);
 }
@@ -254,20 +258,20 @@ tr {
 	padding: 0.25em;
 	height: 1.5em;
 	border-radius: 0.75em;
-	box-shadow: 0 1px 1px #def3f8, inset 0 .125em .125em #0d1112;
-	background: #7aa9b3;
+	box-shadow: 0 1px 1px #DEF3F8, inset 0 0.125em 0.125em #0D1112;
+	background: #7AA9B3;
 }
 
 .videoVolumeSlider::-moz-range-thumb {
-  box-sizing: border-box;
-  border: solid 0.125em rgba(205, 224, 230, 0.5);
-  width:  2.25em;
-  height: 2.25em;
-  border-radius: 50%;
-  box-shadow: 0 .125em .125em #3b4547;
-  background: radial-gradient(#777777, rgba(119, 119, 119, 0) 70%) 50% 50%, radial-gradient(#777777, rgba(119, 119, 119, 0) 70%) 50% 50%, radial-gradient(at 50% 0, #777777, rgba(119, 119, 119, 0) 71%) 50% 0, radial-gradient(at 50% 100%, #777777, rgba(119, 119, 119, 0) 71%) 50% 100%, radial-gradient(at 0 50%, #777777, rgba(119, 119, 119, 0) 71%) 0 50%, radial-gradient(at 100% 50%, #777777, rgba(119, 119, 119, 0) 71%) 100% 50%, radial-gradient(rgba(59, 69, 71, 0) 50%, #3b4547 71%) 50% -0.25em #fff;
-  background-clip: border-box;
-  background-origin: border-box;
-  background-repeat: no-repeat;
-  background-size: 100% .125em, .125em  100%,  50% 50%, 50% 50%, 50% 50%, 50% 50%,  115% 115%;
+	box-sizing: border-box;
+	border: solid 0.125em rgba(205, 224, 230, 0.5);
+	width: 2.25em;
+	height: 2.25em;
+	border-radius: 50%;
+	box-shadow: 0 0.125em 0.125em #3B4547;
+	background: radial-gradient(#777777, rgba(119, 119, 119, 0) 70%) 50% 50%, radial-gradient(#777777, rgba(119, 119, 119, 0) 70%) 50% 50%, radial-gradient(at 50% 0, #777777, rgba(119, 119, 119, 0) 71%) 50% 0, radial-gradient(at 50% 100%, #777777, rgba(119, 119, 119, 0) 71%) 50% 100%, radial-gradient(at 0 50%, #777777, rgba(119, 119, 119, 0) 71%) 0 50%, radial-gradient(at 100% 50%, #777777, rgba(119, 119, 119, 0) 71%) 100% 50%, radial-gradient(rgba(59, 69, 71, 0) 50%, #3B4547 71%) 50% -0.25em #FFFFFF;
+	background-clip: border-box;
+	background-origin: border-box;
+	background-repeat: no-repeat;
+	background-size: 100% 0.125em, 0.125em 100%, 50% 50%, 50% 50%, 50% 50%, 50% 50%, 115% 115%;
 }

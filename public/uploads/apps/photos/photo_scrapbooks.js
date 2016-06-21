@@ -5,14 +5,14 @@
 // with a single webcam image it will reload the current image
 
 // list is the location of a text file that contains "name" as the first line,
-//       and then a list of image filenames to show, one per line
+//      and then a list of image filenames to show, one per line OR a single file
+//		name in the case of a webcam image
 // location gives the root directory of the images listed in list
 // name is what to name the button in the user interface for this album
+// longName is the name to show in the WebUI and in the title bar of the window
 
-// as an example the chi album reads the webcam3.txt file which has the name of a
-//       single image to reload from the URL given in location: http://cdn.abclocal.go.com/three/wls/webcam/"
-// name
-// Loopscape.jpg
+// as an example the chi album has a single image ColumbiaCam.jpg to reload from the URL
+// given in location: http://cdn.abclocal.go.com/three/wls/webcam/"
 //
 // whereas the photos.txt file for the sage album contains a list of images
 // name
@@ -27,16 +27,24 @@ function photoAlbums() {
 	var SAGE2_photoAlbums = [];
 	SAGE2_photoAlbums[0] = {list: "https://lyra.evl.uic.edu:9000/sagewalls/photos.txt",
 		location: "https://lyra.evl.uic.edu:9000/sagewalls/",
-		name: "sage"};
-	SAGE2_photoAlbums[1] = {list: "https://lyra.evl.uic.edu:9000/webcam3.txt",
+		name: "sage",
+		longName: "SAGE2 Displays"};
+	SAGE2_photoAlbums[1] = {list: "ColumbiaCam.jpg",
 		location: "http://cdn.abclocal.go.com/three/wls/webcam/",
-		name: "chi"};
-	SAGE2_photoAlbums[2] = {list: "https://lyra.evl.uic.edu:9000/webcam_lake.txt",
+		name: "chi",
+		longName: "Chicago - Grant Park"};
+	SAGE2_photoAlbums[2] = {list: "chi1.jpg",
 		location: "http://www.glerl.noaa.gov/metdata/chi/",
-		name: "chi2"};
-	SAGE2_photoAlbums[3] = {list: "https://lyra.evl.uic.edu:9000/webcam_loop.txt",
+		name: "chi2",
+		longName: "Chicago - View from the Lake"};
+	SAGE2_photoAlbums[3] = {list: "Loopscape.jpg",
 		location: "http://cdn.abclocal.go.com/three/wls/webcam/",
-		name: "chi3"};
+		name: "chi3",
+		longName: "Chicago - the Loop"};
+	SAGE2_photoAlbums[4] = {list: "fullsize.jpg",
+		location: "http://72.253.170.172/cgi-bin/",
+		name: "hilo",
+		longName: "Hilo HI Bay from the Pacific Tsunami Museum"};
 
 	// load timer is how long to show a single image in seconds before loading
 	// the next one or refreshing the current one
