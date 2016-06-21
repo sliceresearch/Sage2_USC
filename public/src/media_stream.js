@@ -21,6 +21,7 @@
  * @class media_stream
  */
 var media_stream = SAGE2_App.extend({
+
 	/**
 	* Init method, creates a 'img' tag in the DOM
 	*

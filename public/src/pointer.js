@@ -22,6 +22,7 @@
  * @constructor
  */
 function Pointer() {
+
 	// Variable definitions
 	this.div                = null;
 	this.snap               = null;
@@ -69,6 +70,9 @@ function Pointer() {
 		var appModeIconX       = Math.round(height * 0.0925);
 		var appModeIconY       = Math.round(height * 0.044167);
 		this.appModeIconLoaded = false;
+
+		// Keep a copy of icon size to update width of snap
+		this.iconWidth = pointerIconSize;
 
 		var labelBGX = Math.round(height * 0.40);
 		var labelBGY = Math.round(height * 0.65);
@@ -155,6 +159,8 @@ function Pointer() {
 		// Get the size of the text and padding
 		this.labelBGWidth = this.labelText.node.getBoundingClientRect().width + labelBGHeight;
 		this.labelBG.attr({width: this.labelBGWidth});
+		// Update width of parent SVG (snap)
+		this.snap.attr({width: this.labelBGWidth + this.iconWidth});
 	};
 
 	/**
@@ -180,6 +186,8 @@ function Pointer() {
 		// Get the size of the text and padding
 		this.labelBGWidth = this.labelText.node.getBoundingClientRect().width + labelBGHeight;
 		this.labelBG.attr({width: this.labelBGWidth});
+		// Update width of parent SVG (snap)
+		this.snap.attr({width: this.labelBGWidth + this.iconWidth});
 	};
 
 	/**
@@ -208,7 +216,7 @@ function Pointer() {
 	* Recalculate the boxe around the pointer label
 	*
 	* @method updateBox
-	* @param scle {Number} new scale for client -1
+	* @param scale {Number} new scale for client -1
 	*/
 	this.updateBox = function(scale) {
 		this.labelBG.attr({width: this.labelBGWidth / scale});

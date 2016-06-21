@@ -360,6 +360,51 @@ var radar = SAGE2_App.extend({
 		this.refresh(date);
 	},
 
+	/**
+	* To enable right click context menu support this function needs to be present with this format.
+	*
+	* Must return an array of entries. An entry is an object with three properties:
+	*	description: what is to be displayed to the viewer.
+	*	callback: String containing the name of the function to activate in the app. It must exist.
+	*	parameters: an object with specified datafields to be given to the function.
+	*		The following attributes will be automatically added by server.
+	*			serverDate, on the return back, server will fill this with time object.
+	*			clientId, unique identifier (ip and port) for the client that selected entry.
+	*			clientName, the name input for their pointer. Note: users are not required to do so.
+	*			clientInput, if entry is marked as input, the value will be in this property. See pdf_viewer.js for example.
+	*		Further parameters can be added. See pdf_view.js for example.
+	*/
+	getContextEntries: function() {
+		var entries = [];
+		var entry;
+
+		for (var comicCounter = 0; comicCounter < SAGE2_radarStations.length; comicCounter++) {
+			entry = {};
+			entry.description = SAGE2_radarStations[comicCounter].longName;
+			entry.callback = "changeStation";
+			entry.parameters = {};
+			entry.parameters.page = comicCounter;
+			entries.push(entry);
+		}
+
+		return entries;
+	},
+
+	/**
+	* Support function to allow page changing through right mouse context menu.
+	*
+	* @method changeThePage
+	* @param responseObject {Object} contains response from entry selection
+	*/
+	changeStation: function(responseObject) {
+		var page = responseObject.page;
+		this.setStation(page);
+		this.startup();
+
+		// This needs to be a new date for the extra function.
+		this.refresh(new Date(responseObject.serverDate));
+	},
+
 	event: function(eventType, pos, user, data, date) {
 		if (eventType === "pointerPress" && (data.button === "left")) {
 			// pointer press

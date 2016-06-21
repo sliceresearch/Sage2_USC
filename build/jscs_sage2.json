@@ -1,5 +1,4 @@
 {
-    "esnext": true,
     // "disallowSpacesInsideBrackets": true,
     "disallowSpacesInCallExpression": true,
     "disallowSpacesInsideArrayBrackets": true,
