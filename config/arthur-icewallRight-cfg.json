@@ -20,8 +20,16 @@
         maxWindowWidth: 8192,
         maxWindowHeight: 8192,
         noDropShadow: true,
-		auto_scale_ui: false,
+		auto_scale_ui: true,
 		calculate_viewing_distance: false
+	},
+	dimensions: {
+		// dimensions of one tile (can be overriden in displays section)
+		tile_width:  2.584,  // in meter, pixel area
+		tile_height: 1.093,  // in meter, pixel area
+		tile_borders: [ 0.004, 0.002, 0.002, 0.004 ], // mullions in meter, left, right, bottom, top
+		// prefered or common viewing distance to calculate UI sizes
+		viewing_distance: 0.97	// in meter
 	},
 	resolution: {
 		width: 1536,

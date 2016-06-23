@@ -3879,15 +3879,7 @@ function loadConfiguration() {
 			var targetVisualAcuity = 1; // degrees of arc
 
 			calcuatedWidgetControlSize = Math.tan((targetVisualAcuity * Math.PI / 180.0) / 2) * 2 * userDist * pixelsPerMeter;
-			
-			// Set the minimum widget control size to using the old scaling method (or a factor of it)
-			if (calcuatedWidgetControlSize < minimumWidgetControlSize) {
-				userConfig.ui.widgetControlSize = minimumWidgetControlSize;
-			} else if (calcuatedWidgetControlSize > Math.round(0.030 * minDim)) {
-				userConfig.ui.widgetControlSize = Math.round(0.030 * minDim);
-			} else {
-				userConfig.ui.widgetControlSize = calcuatedWidgetControlSize;
-			}
+
 			console.log(sageutils.header("auto_scale_ui") + "calcuatedWidgetControlSize: " + calcuatedWidgetControlSize + ".");
 			console.log(sageutils.header("auto_scale_ui") + "pixelsPerMeter: " + pixelsPerMeter + ".");
 		}
