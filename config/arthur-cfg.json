@@ -24,7 +24,7 @@
 		maxWindowWidth: 8192,
 		maxWindowHeight: 8192,
 		noDropShadow: true,
-		//widgetControlSize: 20,
+		widgetControlSize: 30,
 		auto_scale_ui: true,
 		calculate_viewing_distance: false,
 		reload_wallui_on_refresh: true

@@ -3859,15 +3859,16 @@ function loadConfiguration() {
 		// then for dimensions
 		userConfig.dimensions.tile_borders = { left: 0.0, right: 0.0, bottom: 0.0, top: 0.0};
 	} else {
-		var borderLeft, borderRight, borderBottom, borderTop, tileWidth;
+		var borderLeft, borderRight, borderBottom, borderTop, tileWidth, tileHeight;
 		// make sure the values are valid floats
 		borderLeft   = parseFloat(userConfig.dimensions.tile_borders.left)   || 0.0;
 		borderRight  = parseFloat(userConfig.dimensions.tile_borders.right)  || 0.0;
 		borderBottom = parseFloat(userConfig.dimensions.tile_borders.bottom) || 0.0;
 		borderTop    = parseFloat(userConfig.dimensions.tile_borders.top)    || 0.0;
 		tileWidth    = parseFloat(userConfig.dimensions.tile_width) || 0.0;
+		tileHeight   = parseFloat(userConfig.dimensions.tile_height) || 0.0;
 		// calculate pixel density (ppm) based on width
-		var pixelsPerMeter = userConfig.resolution.width / tileWidth;
+		var pixelsPerMeter = userConfig.resolution.height / tileHeight;
 		// calculate the widget control size based on dimensions and user distance
 		if (userConfig.ui.auto_scale_ui) {
 			var objectHeightMeters = 27 / pixelsPerMeter;
@@ -3875,6 +3876,10 @@ function loadConfiguration() {
 			var perceptualScalingFactor = 0.0213;
 			var userDist = userConfig.dimensions.viewing_distance;
 			var calcuatedWidgetControlSize = userDist * (perceptualScalingFactor * (userDist / objectHeightMeters));
+			var targetVisualAcuity = 1; // degrees of arc
+
+			calcuatedWidgetControlSize = Math.tan((targetVisualAcuity * Math.PI / 180.0) / 2) * 2 * userDist * pixelsPerMeter;
+			
 			// Set the minimum widget control size to using the old scaling method (or a factor of it)
 			if (calcuatedWidgetControlSize < minimumWidgetControlSize) {
 				userConfig.ui.widgetControlSize = minimumWidgetControlSize;
