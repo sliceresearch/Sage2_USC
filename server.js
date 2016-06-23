@@ -3883,6 +3883,8 @@ function loadConfiguration() {
 			} else {
 				userConfig.ui.widgetControlSize = calcuatedWidgetControlSize;
 			}
+			console.log(sageutils.header("auto_scale_ui") + "calcuatedWidgetControlSize: " + calcuatedWidgetControlSize + ".");
+			console.log(sageutils.header("auto_scale_ui") + "pixelsPerMeter: " + pixelsPerMeter + ".");
 		}
 		// calculate values in pixel now
 		userConfig.resolution.borders = {};

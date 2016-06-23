@@ -17,9 +17,11 @@
 		clock: 12,
 		show_version: false,
 		show_url: true,
-                maxWindowWidth: 8192,
-                maxWindowHeight: 8192,
-                noDropShadow: true
+        maxWindowWidth: 8192,
+        maxWindowHeight: 8192,
+        noDropShadow: true,
+		auto_scale_ui: false,
+		calculate_viewing_distance: false
 	},
 	resolution: {
 		width: 1536,
@@ -75,7 +77,7 @@
 			// SAGE listens for a sageinputserver to stream events
 			enable: true,
 			dataPort: 30005,
-			eventDebug: true,
+			eventDebug: false,
 
 			// Touch gestures
 			zoomGestureScale: 2000,

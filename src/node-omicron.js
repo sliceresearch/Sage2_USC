@@ -211,7 +211,8 @@ function OmicronManager(sysConfig) {
 			console.log(sageutils.header('Omicron') + 'oinputserver connection error - code:', e.code);
 		});
 		this.oinputserverSocket.on('data', function(e) {
-			console.log(sageutils.header('Omicron') + 'oinputserver receiving data:', e);
+			//console.log(sageutils.header('Omicron') + 'oinputserver receiving data:', e);
+			omicronManager.processIncomingEvent(e);
 		});
 	}
 }
@@ -307,7 +308,7 @@ OmicronManager.prototype.runTracker = function() {
 OmicronManager.prototype.processIncomingEvent = function(msg, rinfo) {
 		var dstart = Date.now();
 		var emit   = 0;
-		this.nonCriticalEventDelay = 50;
+		this.nonCriticalEventDelay = -1;
 		this.lastNonCritEventTime = dstart;
 		// console.log("UDP> got: " + msg + " from " + rinfo.address + ":" + rinfo.port);
 		// var out = util.format("UDP> msg from [%s:%d] %d bytes", rinfo.address,rinfo.port,msg.length);
@@ -652,9 +653,9 @@ OmicronManager.prototype.processPointerEvent = function(e, sourceID, posX, posY,
 	var User = 1 << 18;
 
 	var FLAG_SINGLE_TOUCH = User << 2;
-	// var FLAG_BIG_TOUCH = User << 3;
+	var FLAG_BIG_TOUCH = User << 3;
 	var FLAG_FIVE_FINGER_HOLD = User << 4;
-	// var FLAG_FIVE_FINGER_SWIPE = User << 5;
+	var FLAG_FIVE_FINGER_SWIPE = User << 5;
 	var FLAG_THREE_FINGER_HOLD = User << 6;
 	var FLAG_SINGLE_CLICK = User << 7;
 	var FLAG_DOUBLE_CLICK = User << 8;
@@ -683,18 +684,37 @@ OmicronManager.prototype.processPointerEvent = function(e, sourceID, posX, posY,
 	}
 	
 	var timeSinceLastNonCritEvent = Date.now() - omicronManager.lastNonCritEventTime;
-
-	if (e.type === 4) {
+	
+	var flagStrings = {};
+	flagStrings[FLAG_SINGLE_TOUCH] = "FLAG_SINGLE_TOUCH";
+	flagStrings[FLAG_BIG_TOUCH] = "FLAG_BIG_TOUCH";
+	flagStrings[FLAG_FIVE_FINGER_HOLD] = "FLAG_FIVE_FINGER_HOLD";
+	flagStrings[FLAG_FIVE_FINGER_SWIPE] = "FLAG_FIVE_FINGER_SWIPE";
+	flagStrings[FLAG_THREE_FINGER_HOLD] = "FLAG_THREE_FINGER_HOLD";
+	flagStrings[FLAG_SINGLE_CLICK] = "FLAG_SINGLE_CLICK";
+	flagStrings[FLAG_DOUBLE_CLICK] = "FLAG_DOUBLE_CLICK";
+	flagStrings[FLAG_MULTI_TOUCH] = "FLAG_MULTI_TOUCH";
+	
+	var typeStrings = {};
+	typeStrings[0] = "Select";
+	typeStrings[1] = "Toggle";
+	typeStrings[2] = "ChangeValue";
+	typeStrings[3] = "Update";
+	typeStrings[4] = "Move";
+	typeStrings[5] = "Down";
+	typeStrings[6] = "Up";
+	typeStrings[7] = "Trace/Connect";
+	typeStrings[8] = "Untrace/Disconnect";
+	typeStrings[9] = "Click";
+	typeStrings[15] = "Zoom";
+	typeStrings[18] = "Split";
+	typeStrings[21] = "Rotate";
+	
+	//console.log("Touch at - (" + posX.toFixed(2) + "," + posY.toFixed(2) + ") type:" + typeStrings[e.type] + " flags:" + flagStrings[e.flags]);
+			
+	if (e.type === 4) { // EventType: MOVE
 		if (timeSinceLastNonCritEvent > omicronManager.nonCriticalEventDelay) {
-			// move
-			if (e.flags === FLAG_FIVE_FINGER_HOLD) {
-				if (omicronManager.gestureDebug) {
-					console.log("Touch move gesture: Five finger hold - " + Date.now());
-				}
-				omicronManager.pointerCloseGesture(address, posX, posY, Date.now(), 1);
-			} else if (e.flags === FLAG_MULTI_TOUCH) {
-				omicronManager.pointerPosition(address, { pointerX: posX, pointerY: posY });
-			} else {
+			if( e.flags == 0 || e.flags == FLAG_SINGLE_TOUCH) { // Basic touch event, non-gesture
 				if (omicronManager.gestureDebug) {
 					console.log("Touch move at - (" + posX.toFixed(2) + "," + posY.toFixed(2) + ") initPos: ("
 					+ initX.toFixed(2) + "," + initY.toFixed(2) + ")");
@@ -712,6 +732,47 @@ OmicronManager.prototype.processPointerEvent = function(e, sourceID, posX, posY,
 				omicronManager.lastNonCritEventTime = Date.now();
 			}
 		}
+	} else if (e.type === 5) { // EventType: DOWN
+		if (omicronManager.gestureDebug) {
+			console.log("Touch down at - (" + posX.toFixed(2) + "," + posY.toFixed(2) + ") initPos: ("
+			+ initX.toFixed(2) + "," + initY.toFixed(2) + ") flags:" + e.flags);
+		}
+
+		if(e.flags == 0 || e.flags == FLAG_SINGLE_TOUCH) { // Basic touch event, non-gesture
+			// Create pointer
+			if (address in omicronManager.sagePointers) {
+				omicronManager.showPointer(address, {
+					label:  "Touch: " + sourceID,
+					color: "rgba(242, 182, 15, 1.0)",
+					sourceType: "Touch"
+				});
+			} else {
+				omicronManager.createSagePointer(address);
+				omicronManager.showPointer(address, {
+					label:  "Touch: " + sourceID,
+					color: "rgba(242, 182, 15, 1.0)",
+					sourceType: "Touch"
+				});
+				omicronManager.pointerPress(address, posX, posY, { button: "left" });
+			}
+		}
+	} else if (e.type === 6) { // EventType: UP
+		//if(e.flags == 0) { // Basic touch event, non-gesture
+			// Hide pointer
+			omicronManager.hidePointer(address);
+
+			// Release event
+			omicronManager.pointerRelease(address, posX, posY, { button: "left" });
+
+			omicronManager.initZoomPos[sourceID] = undefined;
+			omicronManager.pointerGestureState[sourceID] = undefined;
+
+			if (omicronManager.gestureDebug) {
+				// console.log("Touch release");
+				console.log("Touch up at - (" + posX.toFixed(2) + "," + posY.toFixed(2) + ") initPos: ("
+				+ initX.toFixed(2) + "," + initY.toFixed(2) + ") flags:" + e.flags);
+			}
+		//}
 	} else if (e.type === 15 && omicronManager.enableTwoFingerZoom) {
 		// zoom
 
@@ -777,76 +838,8 @@ OmicronManager.prototype.processPointerEvent = function(e, sourceID, posX, posY,
 				omicronManager.lastNonCritEventTime = Date.now();
 			}
 		}
-
-	} else if (e.type === 5) { // button down
-		if (omicronManager.gestureDebug) {
-			console.log("Touch down at - (" + posX.toFixed(2) + "," + posY.toFixed(2) + ") initPos: ("
-			+ initX.toFixed(2) + "," + initY.toFixed(2) + ") flags:" + e.flags);
-		}
-
-		if (e.flags === FLAG_FIVE_FINGER_HOLD) {
-			if (omicronManager.gestureDebug) {
-				console.log("Touch down gesture: Five finger hold - " + Date.now());
-			}
-			omicronManager.pointerCloseGesture(address, posX, posY, Date.now(), 0);
-		} else if (e.flags === FLAG_THREE_FINGER_HOLD && omicronManager.enableThreeFingerRightClick) {
-			if (omicronManager.gestureDebug) {
-				console.log("Touch gesture: Three finger hold");
-			}
-			// omicronManager.createRadialMenu( sourceID, posX, posY );
-			omicronManager.pointerPress(address, posX, posY, { button: "right" });
-		} else if (e.flags === FLAG_SINGLE_CLICK) {
-			if (omicronManager.gestureDebug) {
-				console.log("Touch gesture: Click");
-			}
-
-		} else if (e.flags === FLAG_DOUBLE_CLICK && omicronManager.enableDoubleClickMaximize) {
-			if (omicronManager.gestureDebug) {
-				console.log("Touch gesture: Double Click");
-			}
-			omicronManager.pointerDblClick(address, posX, posY);
-		} else {
-			// Create pointer
-			if (address in omicronManager.sagePointers) {
-				omicronManager.showPointer(address, {
-					label:  "Touch: " + sourceID,
-					color: "rgba(242, 182, 15, 1.0)",
-					sourceType: "Touch"
-				});
-			} else {
-				omicronManager.createSagePointer(address);
-				omicronManager.showPointer(address, {
-					label:  "Touch: " + sourceID,
-					color: "rgba(242, 182, 15, 1.0)",
-					sourceType: "Touch"
-				});
-				omicronManager.pointerPress(address, posX, posY, { button: "left" });
-			}
-		}
-	} else if (e.type === 6) { // button up
-		if (e.flags === FLAG_FIVE_FINGER_HOLD && omicronManager.enableFiveFingerCloseApp) {
-			if (omicronManager.gestureDebug) {
-				console.log("Touch up gesture: Five finger hold - " + Date.now());
-			}
-			omicronManager.pointerCloseGesture(address, posX, posY, Date.now(), 2);
-		} else {
-			// Hide pointer
-			omicronManager.hidePointer(address);
-
-			// Release event
-			omicronManager.pointerRelease(address, posX, posY, { button: "left" });
-
-			omicronManager.initZoomPos[sourceID] = undefined;
-			omicronManager.pointerGestureState[sourceID] = undefined;
-
-			if (omicronManager.gestureDebug) {
-				// console.log("Touch release");
-				console.log("Touch up at - (" + posX.toFixed(2) + "," + posY.toFixed(2) + ") initPos: ("
-				+ initX.toFixed(2) + "," + initY.toFixed(2) + ") flags:" + e.flags);
-			}
-		} 
 	} else {
-		console.log("\t UNKNOWN event type ", e.type);
+		console.log("\t UNKNOWN event type ", e.type, typeStrings[e.type]);
 	}
 
 	if (emit > 2) {

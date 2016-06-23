@@ -11,7 +11,7 @@
 		//watermark: {
 		//	svg: "images/EVL-LAVA.svg",
 		//	color: "rgba(255, 255, 255, 0.5)"
-		//}
+		//},
 		image: {
 			url: "images/background/kamping_4k.jpg",
 			style: "tile"
@@ -31,11 +31,11 @@
 	},
 	dimensions: {
 		// dimensions of one tile (can be overriden in displays section)
-		tile_width:  0.646,  // in meter, pixel area
-		tile_height: 1.093,  // in meter, pixel area
+		tile_width:  0.4,  // in meter, pixel area
+		tile_height: 0.64,  // in meter, pixel area
 		tile_borders: [ 0.002, 0.002, 0.002, 0.002 ], // mullions in meter, left, right, bottom, top
 		// prefered or common viewing distance to calculate UI sizes
-		viewing_distance: 1.0668	// in meter
+		viewing_distance: 0.71	// in meter
 	},
 	resolution: {
 		width: 2560,
@@ -57,7 +57,13 @@
 	remote_sites: [
 		{
 			name: "Cyber-Commons",
-			host: "inferno.evlrn.uic.edu",
+			host: "inferno.evl.uic.edu",
+			port: 443,
+			secure: true
+		},
+		{
+			name: "IceWall",
+			host: "thor.evl.uic.edu",
 			port: 443,
 			secure: true
 		},
@@ -69,7 +75,7 @@
 		},
 		{
 			name: "CAVE2-Wall",
-			host: "orion.evlrn.uic.edu",
+			host: "orion.evl.uic.edu",
 			port: 443,
 			secure: true
 		}
@@ -82,20 +88,19 @@
 		{
 			// Standard 'SAGE' connection
 			// SAGE listens for a sageinputserver to stream events
-			useSageInputServer: true,
-			dataPort: 30015,
-			
-			debug: false,
-			
+			enable: true,
+			dataPort: 30005,
+			eventDebug: false,
+
 			// Touch gestures
-			touchOffset: [ 0, 0 ], // in pixels
-			zoomGestureScale: 520,
-			acceleratedDragScale: 0,
-			
+			zoomGestureScale: 2000,
+			acceleratedDragScale: 3,
+			gestureDebug: false,
+
 			// Additional 'CAVE2' type connection
 			// SAGE connects to an oinputserver to get events
-			useOinputserver: false,
-			inputServerIP: "cave2tracker.evl.uic.edu",
+			useOinputserver: true,
+			inputServerIP: "127.0.0.1",
 			msgPort: 28000
 		}
 	},
