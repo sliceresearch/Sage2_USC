@@ -1960,7 +1960,6 @@ function reloadIfServerRunning(callback) {
  * Will set the values of the right mouse button(rmb) context menu div.
  */
 function setupRmbContextMenuDiv() {
-	var workingDiv = document.getElementById('rmbContextMenu');
 	// override rmb contextmenu calls.
 	document.addEventListener('contextmenu', function(e) {
 		// if a right click is made on canvas
@@ -2341,7 +2340,9 @@ function setupUiDrawCanvas() {
 			uiDrawSelectThickness('uidztp' + (this.lineWidth + 1));
 		});
 		// Start with thicknes 1
-		if (i === 1) { thicknessSelectBox.style.border = "3px solid red";}
+		if (i === 1) {
+			thicknessSelectBox.style.border = "3px solid red";
+		}
 	}
 	// var thicknessSelectBox = document.getElementById('uidztp1');
 	// thicknessSelectBox.addEventListener('mousedown',
