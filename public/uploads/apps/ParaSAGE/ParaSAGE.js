@@ -524,36 +524,50 @@ var ParaSAGE = SAGE2_App.extend({
 	pvwRequestDataSet: function(responseObject) {
 		var _this = this;
 		var fullpathFileList = [("" + responseObject.filename)];
-		_this.pvwConfig.session.call("pv.proxy.manager.create.reader", fullpathFileList)
-		.then(function(response) {
-			_this.pvwRender();
-			// After reading in a date set, ask the server what the id is.
-			// NOTE: currently each connection will makes a request for data, meaning x Displays amount of rendered datasets.
-			_this.pvwRequestProxyManagerList();
-		});
+		// If display is not master refresh screen after about when the view should have updated.
+		if (!isMaster) {
+			setTimeout(function() {
+				_this.pvwRender();
+			}, 1000);
+		} else {
+			_this.pvwConfig.session.call("pv.proxy.manager.create.reader", fullpathFileList)
+			.then(function(response) {
+				_this.pvwRender();
+				// After reading in a date set, ask the server what the id is.
+				// NOTE: currently each connection will makes a request for data, meaning x Displays amount of rendered datasets.
+				_this.pvwRequestProxyManagerList();
+			});
+		}
 	},
 
 	pvwToggleVisibilityOfData: function (responseObject) {
 		var _this = this;
-		var index = responseObject.index;
-		var dataToSend = [];
-		_this.activePipeLines[index].visible = _this.activePipeLines[index].visible ? 0 : 1; // switch 1 and 0. Works because 0 is false, non-zero is true
+		// If display is not master refresh screen after about when the view should have updated.
+		if (!isMaster) {
+			setTimeout(function() {
+				_this.pvwRender();
+			}, 1000);
+		} else {
+			var index = responseObject.index;
+			var dataToSend = [];
+			_this.activePipeLines[index].visible = _this.activePipeLines[index].visible ? 0 : 1; // switch 1 and 0. Works because 0 is false, non-zero is true
 
-		for (var i = 0; i < _this.activePipeLines[index].repNumbers.length; i++) {
-			dataToSend.push({
-				id: _this.activePipeLines[index].repNumbers[i],
-				name: "Visibility",
-				value: _this.activePipeLines[index].visible
+			for (var i = 0; i < _this.activePipeLines[index].repNumbers.length; i++) {
+				dataToSend.push({
+					id: _this.activePipeLines[index].repNumbers[i],
+					name: "Visibility",
+					value: _this.activePipeLines[index].visible
+				});
+			}
+
+			_this.pvwConfig.session.call("pv.proxy.manager.update", [dataToSend])
+			.then(function() {
+				_this.pvwRender(); // update the view
+			}, function(err) {
+				console.log('pipeline update error');
+				console.log(err);
 			});
 		}
-
-		_this.pvwConfig.session.call("pv.proxy.manager.update", [dataToSend])
-		.then(function() {
-			_this.pvwRender(); // update the view
-		}, function(err) {
-			console.log('pipeline update error');
-			console.log(err);
-		});
 	},
 
 	event: function(type, position, user, data, date) { },
