@@ -1103,6 +1103,13 @@ function touchStart(event) {
 
 		event.preventDefault();
 		event.stopPropagation();
+	} else if (event.target.id === "sage2MobileSpecialButton") {
+		interactor.pointerKeyDownMethod({keyCode: 32});
+		interactor.pointerKeyPressMethod({charCode: 32});
+		interactor.pointerKeyUpMethod({keyCode: 32});
+
+		event.preventDefault();
+		event.stopPropagation();
 	} else {
 		event.stopPropagation();
 	}

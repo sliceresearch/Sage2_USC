@@ -112,7 +112,7 @@ var modest = SAGE2_App.extend({
 			this.refresh(date);
 		} 
 		else if (eventType === "keyboard") {
-			if (data.character === "m" || data.character === "M") {
+			if (data.character === "m" || data.character === "M" || data.character === " ") {
 				if (this.state.mapType === "roadmap") {
 					this.state.mapType = "satellite";
 				}
