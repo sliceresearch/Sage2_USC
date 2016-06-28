@@ -1222,7 +1222,7 @@ function updateConfigFileToAccountForMonitorsAndResolution() {
 	}
 
 	cfg.displays = displays;
-	fs.writeFileSync(pathToWinDefaultConfig, JSON5.stringify(cfg));
+	fs.writeFileSync(pathToWinDefaultConfig, JSON5.stringify(cfg, null, 4)));
 }
 
 
