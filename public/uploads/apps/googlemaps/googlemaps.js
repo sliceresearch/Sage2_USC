@@ -37,7 +37,6 @@ var googlemaps = SAGE2_App.extend({
 	initializeWidgets: function() {
 		this.controls.addButton({label: "Map", position: 4, identifier: "Map"});
 		this.controls.addButton({type: "traffic", position: 3, identifier: "Traffic"});
-		this.controls.addButton({type: "weather", position: 5, identifier: "Weather"});
 		this.controls.addButton({type: "zoom-in", position: 12, identifier: "ZoomIn"});
 		this.controls.addButton({type: "zoom-out", position: 11, identifier: "ZoomOut"});
 		this.controls.addTextInput({value: "", label: "Addr", identifier: "Address"});
@@ -83,13 +82,7 @@ var googlemaps = SAGE2_App.extend({
 
 		// Extra layers
 		this.trafficLayer = new google.maps.TrafficLayer();
-		this.weatherLayer = new google.maps.weather.WeatherLayer({
-			temperatureUnits: google.maps.weather.TemperatureUnit.FAHRENHEIT
-		});
 
-		if (this.state.layer.w === true) {
-			this.weatherLayer.setMap(this.map);
-		}
 		if (this.state.layer.t === true) {
 			this.trafficLayer.setMap(this.map);
 			// add a timer updating the traffic tiles: 60sec
@@ -110,13 +103,6 @@ var googlemaps = SAGE2_App.extend({
 			scrollwheel: false
 		};
 		this.map.setOptions(mapOptions);
-
-		// weather layer
-		if (this.state.layer.w === true) {
-			this.weatherLayer.setMap(this.map);
-		} else {
-			this.weatherLayer.setMap(null);
-		}
 
 		// traffic layer
 		if (this.state.layer.t === true) {
@@ -154,8 +140,7 @@ var googlemaps = SAGE2_App.extend({
 
 	updateLayers: function() {
 		// to trigger an 'oberve' event, need to rebuild the layer field
-		this.state.layer = {w: this.weatherLayer.getMap() != null,
-							t: this.trafficLayer.getMap() != null};
+		this.state.layer = {t: this.trafficLayer.getMap() != null};
 	},
 
 	reloadTiles: function() {
@@ -229,10 +214,6 @@ var googlemaps = SAGE2_App.extend({
 				case "Map":
 					this.changeMapType();
 					break;
-				case "Weather":
-					console.log("reaching action for weather!!");
-					this.toggleWeather();
-					break;
 				case "Traffic":
 					this.toggleTraffic();
 					break;
@@ -273,9 +254,6 @@ var googlemaps = SAGE2_App.extend({
 				this.changeMapType();
 			} else if (data.character === "t") {
 				this.toggleTraffic();
-			} else if (data.character === "w") {
-				// add/remove weather layer
-				this.toggleWeather();
 			}
 
 			this.refresh(date);
@@ -316,14 +294,6 @@ var googlemaps = SAGE2_App.extend({
 			this.state.mapType = google.maps.MapTypeId.HYBRID;
 		}
 		this.map.setMapTypeId(this.state.mapType);
-	},
-	toggleWeather: function() {
-		if (this.weatherLayer.getMap() == null) {
-			this.weatherLayer.setMap(this.map);
-		} else {
-			this.weatherLayer.setMap(null);
-		}
-		this.updateLayers();
 	},
 	toggleTraffic: function() {
 		// add/remove traffic layer

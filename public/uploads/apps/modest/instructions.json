@@ -1,0 +1,21 @@
+{
+	"main_script": "modest.js",
+	"icon": "modestmaps.webp",
+	"width": 800,
+	"height": 381,
+	"resize": "free",
+	"dependencies": [
+		"scripts/modestmaps.min.js"
+	],
+	"load": {
+		"mapType":   "roadmap",
+		"zoomLevel": 14,
+		"center":    {"latitude": 37.7749295, "longitude": -122.4194155}
+	},
+	"title": "Modest Maps",
+	"version": "1.0.0",
+	"description": "Demo using the Modest Maps API",
+	"keywords": [ "maps", "modest", "geo" ],
+	"author": "Luc Renambot <renambot@gmail.com>",
+	"license": "SAGE2-Software-License"
+}

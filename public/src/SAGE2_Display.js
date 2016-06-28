@@ -366,7 +366,9 @@ function setupListeners() {
 	});
 
 	wsio.on('loadApplicationOptions', function(data) {
-		var fullSync = true;
+		//var fullSync = true;
+		var fullSync = false;
+
 		var windowTitle = document.getElementById(data.id + "_title");
 		var windowIconSync = document.getElementById(data.id + "_iconSync");
 		var windowIconUnSync = document.getElementById(data.id + "_iconUnSync");
@@ -1091,7 +1093,9 @@ function setupListeners() {
 	});
 
 	wsio.on('toggleSyncOptions', function(data) {
-		var fullSync = true;
+		//var fullSync = true;
+		var fullSync = false;
+		
 		var key;
 		var windowTitle = document.getElementById(data.id + "_title");
 		var windowIconSync = document.getElementById(data.id + "_iconSync");

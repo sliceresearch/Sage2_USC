@@ -6,7 +6,7 @@
 	"resize": "free",
 	"dependencies": [
 		"googlemapsInit.js",
-		"https://maps.googleapis.com/maps/api/js?v=3.exp&sensor=false&libraries=weather&callback=googleMapsForSAGE2Init"
+		"https://maps.googleapis.com/maps/api/js?v=3.exp&callback=googleMapsForSAGE2Init"
 	],
 	"load": {
 		"mapType":   "hybrid",
