@@ -602,7 +602,17 @@ h3 {
 
 #sage2MobileLeftButton {
 	float: left;
-	width: 50%;
+	width: 40%;
+	height: 100%;
+	border: solid 3px #000000;
+	-moz-box-sizing:border-box;
+	-webkit-box-sizing:border-box;
+	box-sizing:border-box;
+}
+
+#sage2MobileSpecialButton {
+	float: left;
+	width: 20%;
 	height: 100%;
 	border: solid 3px #000000;
 	-moz-box-sizing:border-box;
@@ -612,7 +622,7 @@ h3 {
 
 #sage2MobileRightButton {
 	float: left;
-	width: 50%;
+	width: 40%;
 	height: 100%;
 	border: solid 3px #000000;
 	-moz-box-sizing:border-box;

@@ -205,6 +205,13 @@ function SAGE2_interaction(wsio) {
 
 			this.wsio.emit('startSagePointer', {label: localStorage.SAGE2_ptrName, color: localStorage.SAGE2_ptrColor});
 
+			// emulate shift+tab to make mobile pointer in app interaction mode
+			this.wsio.emit('keyDown', {code: 16});
+			this.wsio.emit('keyDown', {code: 9});
+			this.wsio.emit('keyPress', {code: 9, character: String.fromCharCode(9)});
+			this.wsio.emit('keyUp', {code: 9});
+			this.wsio.emit('keyUp', {code: 16});
+
 			showSAGE2PointerOverlayNoMouse();
 		}
 	};
