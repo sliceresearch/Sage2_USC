@@ -115,7 +115,7 @@ module.exports = function(grunt) {
 					outdir: "./doc/api",
 					themedir: "./doc/theme",
 					paths: [ "." ],
-					exclude: "public/lib,public/uploads,doc,build"
+					exclude: "public/lib,public/uploads,doc,build,extras"
 				}
 			}
 		},
