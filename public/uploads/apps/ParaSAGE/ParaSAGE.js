@@ -39,6 +39,9 @@ var ParaSAGE = SAGE2_App.extend({
 		this.element.appendChild(this.imageFromPvw);
 		// Current implementation will ignore the canvas, since that will require additional time to draw.
 		this.isConnected = false;
+		// Experiemental PV render load reduction.
+		this.onlyRenderRequestFromMasterDisplay = true;
+
 		this.setupPvwConnection();
 		this.setupImageEventListerers();
 		this.updateTitle("ParaView [Not connected]");
@@ -75,6 +78,27 @@ var ParaSAGE = SAGE2_App.extend({
 			middle: false,
 			rmbScrollTracker: 0
 		};
+
+		if (this.onlyRenderRequestFromMasterDisplay) {
+			if (isMaster) {
+				wsio.emit("csdMessage", {
+					type: "setValue",
+					nameOfValue: "pvwRenderViewImage",
+					value:       "On app start will be blank so the value exists for the subscription request",
+					description: "Will hold the latest render image from ParaView"
+				});
+			} else {
+				var _this = this;
+				setTimeout( function() {
+					wsio.emit("csdMessage", {
+						type: "subscribeToValue",
+						nameOfValue: "pvwRenderViewImage",
+						app:         _this.id,
+						func:        "csdRenderViewUpdate"
+					});
+				}, 1000);
+			}
+		}
 	},
 
 	openWebSocketToPvwServer: function() {
@@ -163,7 +187,7 @@ var ParaSAGE = SAGE2_App.extend({
 		});
 	},
 
-	// Keep this as a just in case
+	// Keeping this as a just in case
 	pvwRequestDataSetCan: function() {
 		var _this = this;
 		var fullpathFileList = ["can.ex2"];
@@ -174,6 +198,7 @@ var ParaSAGE = SAGE2_App.extend({
 	},
 
 	pvwRender: function(fetch = true) {
+		if (this.onlyRenderRequestFromMasterDisplay && (!isMaster)) { return; }
 		var _this = this;
 		var renderCfg = {
 			size: [parseInt(_this.sage2_width), parseInt(_this.sage2_height)],
@@ -191,6 +216,13 @@ var ParaSAGE = SAGE2_App.extend({
 				_this.imageFromPvw.height = response.size[1];
 				_this.imageFromPvw.src = "data:image/" + response.format + "," + response.image;
 
+				wsio.emit("csdMessage", {
+					type: "setValue",
+					nameOfValue: "pvwRenderViewImage",
+					value: _this.imageFromPvw.src,
+					description: "Image received from ParaView scene render.",
+				});
+
 				_this.logInformation.imageRoundTrip = Number(new Date().getTime() - response.localTime) - response.workTime;
 				_this.logInformation.imageServerProcessing = Number(response.workTime);
 			}
@@ -201,6 +233,12 @@ var ParaSAGE = SAGE2_App.extend({
 				}, 0);
 			}
 		});
+	},
+
+	csdRenderViewUpdate: function(mostRecentRenderImage) {
+		this.imageFromPvw.width  = parseInt(this.sage2_width);
+		this.imageFromPvw.height = parseInt(this.sage2_height);
+		this.imageFromPvw.src    = mostRecentRenderImage;
 	},
 
 	pvwVcrPlay: function() {
@@ -259,9 +297,9 @@ var ParaSAGE = SAGE2_App.extend({
 		this.imageFromPvw.addEventListener("mouseover",  function(e) {
 			_this.imageEventHandler(e);
 		});
-		this.imageFromPvw.addEventListener("wheel",      function(e) {
-			_this.imageEventHandler(e);
-		});
+		// this.imageFromPvw.addEventListener("wheel",      function(e) {
+		// 	_this.imageEventHandler(e);
+		// });
 	},
 
 	imageEventHandler: function(evt) {
@@ -472,11 +510,11 @@ var ParaSAGE = SAGE2_App.extend({
 			entries.push(entry);
 		}
 
-		entry = {};
-		entry.description = "What does manager list do?";
-		entry.callback    = "pvwRequestProxyManagerList";
-		entry.parameters  = {};
-		entries.push(entry);
+		// entry = {};
+		// entry.description = "What does manager list do?";
+		// entry.callback    = "pvwRequestProxyManagerList";
+		// entry.parameters  = {};
+		// entries.push(entry);
 
 		for (i = 0; i < this.activePipeLines.length; i++) {
 			entry = {};
@@ -488,11 +526,11 @@ var ParaSAGE = SAGE2_App.extend({
 			entries.push(entry);
 		}
 
-		entry = {};
-		entry.description = "Backup data request Can";
-		entry.callback    = "pvwRequestDataSetCan";
-		entry.parameters  = {};
-		entries.push(entry);
+		// entry = {};
+		// entry.description = "Backup data request Can";
+		// entry.callback    = "pvwRequestDataSetCan";
+		// entry.parameters  = {};
+		// entries.push(entry);
 
 		for (i = 0; i < this.availableDataSetsOnServer.length; i++) {
 			entry = {};
