@@ -1040,7 +1040,7 @@ function RadialMenu() {
 		var curList;
 
 		if (imageList !== null) {
-			var validImages = 0;
+			// var validImages = 0;
 			for (i = 0; i < imageList.length; i++) {
 				if (imageList[i].filename.search("Thumbs.db") === -1) {
 					thumbnailButton = new ButtonWidget();
@@ -1074,7 +1074,7 @@ function RadialMenu() {
 
 					this.thumbnailButtons.push(thumbnailButton);
 					this.imageThumbnailButtons.push(thumbnailButton);
-					validImages++;
+					// validImages++;
 				}
 			}
 		}
