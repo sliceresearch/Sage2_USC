@@ -19,13 +19,13 @@ module.exports = function(grunt) {
 						"public/uploads/apps/tweetcloud2/plugin.js",
 						]
 				},
-				options: { config: "build/.eslintrc" }
+				options: { configFile: "build/.eslintrc" }
 			},
 			browserFiles: {
 				files: {
 					src: ['public/src/*.js', 'public/admin/*.js']
 				},
-				options: { config: "build/.eslint_client_rc" }
+				options: { configFile: "build/.eslint_client_rc" }
 			},
 			appsFiles: {
 				files: {
@@ -54,7 +54,7 @@ module.exports = function(grunt) {
 						"public/uploads/apps/zoom/zoom.js"
 					]
 				},
-				options: { config: "build/.eslint_client_rc" }
+				options: { configFile: "build/.eslint_client_rc" }
 			}
 		},
 		jscs: {
