@@ -9,7 +9,12 @@
 // Copyright (c) 2014-2015
 
 /**
+ * SAGE2 server
+ *
+ * @class server
  * @module server
+ * @submodule server-core
+ * @requires fs http https os path readline url formidable gm json5 qr-image sprint websocketio
  */
 
 
@@ -165,7 +170,11 @@ console.log(sageutils.header("SAGE2") + "SAGE2 Short Version:\t" + SAGE2_version
 // Initialize Server
 initializeSage2Server();
 
-
+/**
+ * initialize the SAGE2 server
+ *
+ * @method     initializeSage2Server
+ */
 function initializeSage2Server() {
 	// Remove API keys from being investigated further
 	// if (config.apis) delete config.apis;
@@ -402,6 +411,12 @@ function setUpDialogsAsInteractableObjects() {
 	interactMgr.addGeometry("rejectDataSharingRequest", "staticUI", "rectangle", rejectCancelGeometry, false, 2, null);
 }
 
+/**
+ * Send a message to all clients using websocket
+ * @method broadcast
+ * @param  name    {String}      name of the message
+ * @param  data    {Object}      data of the message
+ */
 function broadcast(name, data) {
 	wsioServer.broadcast(name, data);
 	wsioServerS.broadcast(name, data);
@@ -412,6 +427,13 @@ exports.config    = config;
 exports.broadcast = broadcast;
 exports.dirname   = path.join(__dirname, "node_modules");
 
+
+/**
+ * Print a message to all the web consoles
+ *
+ * @method     emitLog
+ * @param      {Object}  data    object to print
+ */
 function emitLog(data) {
 	if (wsioServer === null || wsioServerS === null) {
 		return;
@@ -446,12 +468,23 @@ process.on('uncaughtException', function(err) {
 });
 
 
-
+/**
+ * Callback when a client connects
+ *
+ * @method     openWebSocketClient
+ * @param      {Websocket}  wsio    The websocket for this client
+ */
 function openWebSocketClient(wsio) {
 	wsio.onclose(closeWebSocketClient);
 	wsio.on('addClient', wsAddClient);
 }
 
+/**
+ * Callback when a client closes
+ *
+ * @method     closeWebSocketClient
+ * @param      {Websocket}  wsio    websocket of the client
+ */
 function closeWebSocketClient(wsio) {
 	var i;
 	var key;
@@ -517,6 +550,13 @@ function closeWebSocketClient(wsio) {
 	removeElement(clients, wsio);
 }
 
+/**
+ * Callback that configures a new client
+ *
+ * @method     wsAddClient
+ * @param      {Websocket}  wsio    client's websocket
+ * @param      {Object}  data    initialization data
+ */
 function wsAddClient(wsio, data) {
 	// Check for password
 	if (config.passwordProtected) {
@@ -593,6 +633,16 @@ function wsAddClient(wsio, data) {
 	}
 }
 
+/**
+ * Sends the firt messages when client built
+ *
+ * @method     initializeWSClient
+ * @param      {Websocket}  wsio        client's websocket
+ * @param      {bool}  reqConfig   client requests configuration
+ * @param      {bool}  reqVersion  client requests version
+ * @param      {bool}  reqTime     client requests time information
+ * @param      {bool}  reqConsole  client requests console messages
+ */
 function initializeWSClient(wsio, reqConfig, reqVersion, reqTime, reqConsole) {
 	setupListeners(wsio);
 
@@ -647,6 +697,12 @@ function initializeWSClient(wsio, reqConfig, reqVersion, reqTime, reqConsole) {
 	}
 }
 
+/**
+ * Installs all the message callbacks on a websocket
+ *
+ * @method     setupListeners
+ * @param      {Websocket}  wsio    concerned websocket
+ */
 function setupListeners(wsio) {
 	wsio.on('registerInteractionClient',            wsRegisterInteractionClient);
 
@@ -775,7 +831,12 @@ function setupListeners(wsio) {
 	wsio.on('csdMessage',							wsCsdMessage);
 }
 
-// Ensures that new audioManager instances get metadata about all existing apps
+/**
+ * Ensures that new audioManager instances get metadata about all existing apps
+ *
+ * @method     initializeExistingAppsAudio
+ * @param      {Websocket}  wsio    client's websocket
+ */
 function initializeExistingAppsAudio(wsio) {
 	var key;
 	for (key in SAGE2Items.applications.list) {
@@ -783,6 +844,12 @@ function initializeExistingAppsAudio(wsio) {
 	}
 }
 
+/**
+ * Rebuilds the application widgets for a given client
+ *
+ * @method     initializeExistingControls
+ * @param      {Websocket}  wsio    client's websocket
+ */
 function initializeExistingControls(wsio) {
 	var i;
 	var uniqueID;
@@ -831,6 +898,12 @@ function initializeExistingControls(wsio) {
 	}
 }
 
+/**
+ * Rebuilds the pointers for a given client
+ *
+ * @method     initializeExistingSagePointers
+ * @param      {Websocket}  wsio    client's websocket
+ */
 function initializeExistingSagePointers(wsio) {
 	for (var key in sagePointers) {
 		if (sagePointers.hasOwnProperty(key)) {
@@ -840,6 +913,12 @@ function initializeExistingSagePointers(wsio) {
 	}
 }
 
+/**
+ * Rebuilds the wall radial menu for a given client
+ *
+ * @method     initializeExistingWallUI
+ * @param      {Websocket}  wsio    client's websocket
+ */
 function initializeExistingWallUI(wsio) {
 	var menuInfo;
 	if (config.ui.reload_wallui_on_refresh === false) {
