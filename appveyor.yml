@@ -76,6 +76,7 @@ install:
   - move sabi.bat SAGE2\Launcher.bat
   - move AUTHORS SAGE2
   - move sabi.js SAGE2
+  - move generate-service-worker.js SAGE2
   - move GO-scripts SAGE2
   - move Gruntfile.js SAGE2
   - move LICENSE.txt SAGE2
