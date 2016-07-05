@@ -23,7 +23,7 @@ var ParaSAGE = SAGE2_App.extend({
 		// Custom app variables initialization
 		this.element.style.background = "white"; // white washes the app.
 		// Info div for a larget notification zone
-		this.infoDiv = document.createElement('div');
+		this.infoDiv = document.createElement("div");
 		this.infoDiv.style.width     = "100%";
 		this.infoDiv.style.height    = "100%";
 		this.infoDiv.style.position  = "absolute";
@@ -33,7 +33,7 @@ var ParaSAGE = SAGE2_App.extend({
 		this.infoDiv.textContent     = "App performing initialization...";
 		this.element.appendChild(this.infoDiv);
 		// Image from ParaViewWeb
-		this.imageFromPvw = document.createElement('img');
+		this.imageFromPvw = document.createElement("img");
 		this.imageFromPvw.style.width  = "100%";
 		this.imageFromPvw.style.height = "100%";
 		this.element.appendChild(this.imageFromPvw);
@@ -41,6 +41,7 @@ var ParaSAGE = SAGE2_App.extend({
 		this.isConnected = false;
 		// Experiemental PV render load reduction.
 		this.onlyRenderRequestFromMasterDisplay = true;
+		this.orrfmdAttemptBinaryConversion      = true;
 
 		this.setupPvwConnection();
 		this.setupImageEventListerers();
@@ -66,7 +67,7 @@ var ParaSAGE = SAGE2_App.extend({
 			view: -1,
 			enableInteractions: true,
 			renderer: "image",
-			interactiveQuality: 30,
+			interactiveQuality: 10,
 			stillQuality: 100,
 			currentQuality: 100,
 			vcrPlayStatus: false
@@ -78,6 +79,7 @@ var ParaSAGE = SAGE2_App.extend({
 			middle: false,
 			rmbScrollTracker: 0
 		};
+		this.refreshCounter = 0;
 
 		if (this.onlyRenderRequestFromMasterDisplay) {
 			if (isMaster) {
@@ -216,12 +218,30 @@ var ParaSAGE = SAGE2_App.extend({
 				_this.imageFromPvw.height = response.size[1];
 				_this.imageFromPvw.src = "data:image/" + response.format + "," + response.image;
 
-				wsio.emit("csdMessage", {
-					type: "setValue",
-					nameOfValue: "pvwRenderViewImage",
-					value: _this.imageFromPvw.src,
-					description: "Image received from ParaView scene render.",
-				});
+				if (_this.orrfmdAttemptBinaryConversion) {
+					var satb = atob(response.image);
+					_this.refreshCounter++;
+					if (_this.refreshCounter > 100) {
+						_this.refreshCounter = 0;
+						// console.log("erase me, refresh counter 100");
+						// console.log("erase me, src length:" + _this.imageFromPvw.src.length);
+						// console.log("erase me, src format:" + response.format);
+						// console.log("erase me, satb length:" + satb.length + ". Difference=" + (satb.length - _this.imageFromPvw.src.length));
+					}
+					wsio.emit("csdMessage", {
+						type: "setValue",
+						nameOfValue: "pvwRenderViewImage",
+						value: satb,
+						description: "Image from ParaView in binary.",
+					});
+				} else {
+					wsio.emit("csdMessage", {
+						type: "setValue",
+						nameOfValue: "pvwRenderViewImage",
+						value: _this.imageFromPvw.src,
+						description: "Image from ParaView in binary.",
+					});
+				}
 
 				_this.logInformation.imageRoundTrip = Number(new Date().getTime() - response.localTime) - response.workTime;
 				_this.logInformation.imageServerProcessing = Number(response.workTime);
@@ -238,7 +258,11 @@ var ParaSAGE = SAGE2_App.extend({
 	csdRenderViewUpdate: function(mostRecentRenderImage) {
 		this.imageFromPvw.width  = parseInt(this.sage2_width);
 		this.imageFromPvw.height = parseInt(this.sage2_height);
-		this.imageFromPvw.src    = mostRecentRenderImage;
+		if (this.orrfmdAttemptBinaryConversion) {
+			this.imageFromPvw.src    = "data:image/jpeg;base64," + btoa(mostRecentRenderImage);
+		} else {
+			this.imageFromPvw.src    = mostRecentRenderImage;
+		}
 	},
 
 	pvwVcrPlay: function() {
@@ -303,14 +327,19 @@ var ParaSAGE = SAGE2_App.extend({
 	},
 
 	imageEventHandler: function(evt) {
+		if (!isMaster) {
+			return; // Only master displays sends commands to prevent overload. Here in case master gets reassigned.
+		}
 		// Old debug
 		// this.updateTitle( "Event(" + evt.type + ") pos(" + evt.x + "," + evt.y + ") move " + evt.movementX + "," + evt.movementY);
 
 		// Update quality based on the type of the event
-		if (evt.type === 'mouseup' || evt.type === 'dblclick' || evt.type === 'wheel') {
+		if (evt.type === "mouseup" || evt.type === "dblclick" || evt.type === "wheel") {
 			this.renderOptions.currentQuality = this.renderOptions.stillQuality;
-		} else {
+			// console.log("erase me, switching to still " + this.renderOptions.currentQuality);
+		} else if (evt.type === "mousedown") {
 			this.renderOptions.currentQuality = this.renderOptions.interactiveQuality;
+			// console.log("erase me, " + evt.type + " detected switching to animation " + this.renderOptions.currentQuality);
 		}
 
 		var buttonLeft;
@@ -352,7 +381,7 @@ var ParaSAGE = SAGE2_App.extend({
 		};
 
 		// Force wheel events into right click drag. For some reason scroll packet doesn't work.
-		if (evt.type === 'wheel') {
+		if (evt.type === "wheel") {
 			vtkWeb_event.action = "mousemove";
 			vtkWeb_event.buttonLeft = false;
 			vtkWeb_event.buttonRight = true;
@@ -370,6 +399,7 @@ var ParaSAGE = SAGE2_App.extend({
 		if (evt.type !== "wheel" && this.eatMouseEvent(vtkWeb_event)) {
 			return;
 		}
+		// console.log("erase me, does this flood with mousemove?");
 		this.button_state.action_pending = true;
 		var _this = this;
 		_this.pvwConfig.session.call("viewport.mouse.interaction", [vtkWeb_event])
@@ -446,7 +476,7 @@ var ParaSAGE = SAGE2_App.extend({
 			}
 			_this.getFullContextMenuAndUpdate();
 		}, function(err) {
-			console.log('pipeline error');
+			console.log("pipeline error");
 			console.log(err);
 		});
 	},
@@ -494,6 +524,45 @@ var ParaSAGE = SAGE2_App.extend({
 		entry.callback    = "pvwRender";
 		entry.parameters  = {};
 		entries.push(entry);
+
+		// Toggle only master render
+		if (this.onlyRenderRequestFromMasterDisplay) {
+			entry = {};
+			entry.description = "Toggle to: each display requests render.";
+			entry.callback    = "toggleRenderModeMasterOrAll";
+			entry.parameters  = {
+				toggle: (!this.onlyRenderRequestFromMasterDisplay)
+			};
+			entries.push(entry);
+		} else {
+			entry = {};
+			entry.description = "Toggle to: only master requests render.";
+			entry.callback    = "toggleRenderModeMasterOrAll";
+			entry.parameters  = {
+				toggle: (!this.onlyRenderRequestFromMasterDisplay)
+			};
+			entries.push(entry);
+		}
+		// Toggle binary conversion on master only render
+		if (this.onlyRenderRequestFromMasterDisplay) {
+			if (this.orrfmdAttemptBinaryConversion) {
+				entry = {};
+				entry.description = "Toggle to: transfer received string from ParaView";
+				entry.callback    = "toggleUseReceivedStringOrBinaryConvert";
+				entry.parameters  = {
+					toggle: (!this.orrfmdAttemptBinaryConversion)
+				};
+				entries.push(entry);
+			} else {
+				entry = {};
+				entry.description = "Toggle to: convert to binary then transfer received string from ParaView";
+				entry.callback    = "toggleUseReceivedStringOrBinaryConvert";
+				entry.parameters  = {
+					toggle: (!this.orrfmdAttemptBinaryConversion)
+				};
+				entries.push(entry);
+			}
+		}
 
 		// Switch out the play / pause option.
 		if (this.renderOptions.vcrPlayStatus) {
@@ -559,6 +628,16 @@ var ParaSAGE = SAGE2_App.extend({
 		this.pvwConfig.sessionURL = response.clientInput;
 	},
 
+	toggleRenderModeMasterOrAll: function(response) {
+		this.onlyRenderRequestFromMasterDisplay = response.toggle;
+		this.getFullContextMenuAndUpdate();
+	},
+
+	toggleUseReceivedStringOrBinaryConvert: function(response) {
+		this.orrfmdAttemptBinaryConversion = response.toggle;
+		this.getFullContextMenuAndUpdate();
+	},
+
 	pvwRequestDataSet: function(responseObject) {
 		var _this = this;
 		var fullpathFileList = [("" + responseObject.filename)];
@@ -602,7 +681,7 @@ var ParaSAGE = SAGE2_App.extend({
 			.then(function() {
 				_this.pvwRender(); // update the view
 			}, function(err) {
-				console.log('pipeline update error');
+				console.log("pipeline update error");
 				console.log(err);
 			});
 		}
