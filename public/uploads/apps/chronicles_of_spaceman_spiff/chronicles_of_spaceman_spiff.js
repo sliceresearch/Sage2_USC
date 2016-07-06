@@ -12,12 +12,13 @@
 
 //
 // simple image of the day / calvin and hobbes comic viewer
-// Written by Andy Johnson - 2014
+// Written by Andy Johnson - 2014-2016
 //
 
-/* global d3 */
+/* global d3, SAGE2_comics */
 
 var chronicles_of_spaceman_spiff = SAGE2_App.extend({
+
 
 	initApp: function()	{
 		this.nextCallbackFunc = this.nextCallback.bind(this);
@@ -27,12 +28,21 @@ var chronicles_of_spaceman_spiff = SAGE2_App.extend({
 		this.loadSuccessCallbackFunc = this.loadSuccessCallback.bind(this);
 	},
 
-	createURL: function(timeMachine)	{
-		// var aURL = 'http://www.gocomics.com/calvinandhobbes/2015/10/19/'
-		// var aURL = 'http://www.gocomics.com/calvinandhobbes/2011/11/19/'
-		// var aURL = 'http://www.gocomics.com/calvinandhobbes/2011/11/13/'
 
-		var baseURL = "http://www.gocomics.com/calvinandhobbes/";
+	createURL: function(timeMachine, cNum)	{
+
+		var thisComic = cNum;
+
+		if (thisComic < 0) {
+			thisComic = 0;
+		}
+		if (thisComic >= this.comics.length) {
+			thisComic = 0;
+		}
+
+		var baseURL = this.comics[thisComic].comicUrl;
+		this.comicName = this.comics[thisComic].comicName;
+
 
 		if (timeMachine > 0) {
 			timeMachine = 0;
@@ -40,9 +50,13 @@ var chronicles_of_spaceman_spiff = SAGE2_App.extend({
 
 		var today = new Date(new Date().getTime() + 24 * timeMachine * 60 * 60 * 1000);
 
-		var todayDay   = today.getDate().toString();        // days are 1 - 31
-		var todayMonth = (today.getMonth() + 1).toString(); // months are 0 - 11
-		var todayYear  = today.getFullYear().toString();    // year is correct
+		// var todayPrint;
+
+		var todayDay     = today.getDate().toString();			// days are 1 - 31
+		var todayMonth   = (today.getMonth() + 1).toString();	// months are 0 - 11
+		var todayYear    = today.getFullYear().toString();		// year is correct
+		// var todayHour    = today.getHours().toString();			// hours are 0-23
+		// var todayMinutes = today.getMinutes().toString();		// minutes are 0-59
 
 		if (todayDay.length < 2) {
 			todayDay = "0" + todayDay;
@@ -52,7 +66,12 @@ var chronicles_of_spaceman_spiff = SAGE2_App.extend({
 			todayMonth = "0" + todayMonth;
 		}
 
+		// if (todayMinutes.length < 2) {
+		// 	todayMinutes = "0" + todayMinutes;
+		// }
+
 		this.today = todayYear + '/' + todayMonth + '/' + todayDay;
+		// this.todayPrint = todayYear + '/' + todayMonth + '/' + todayDay + ' ' + todayHour + ':' + todayMinutes;
 		return (baseURL + this.today);
 	},
 
@@ -186,7 +205,8 @@ var chronicles_of_spaceman_spiff = SAGE2_App.extend({
 		}
 
 		this.drawBox(0, this.canvasHeight, 30, this.canvasWidth, "#fdae61", 1.0);
-		this.drawText(0.5 * this.canvasWidth, this.canvasHeight + 22, "classic Calvin and Hobbes - " + this.today, 24);
+		this.drawText(0.5 * this.canvasWidth, this.canvasHeight + 22, "gocomics.com - " +
+			this.comicName + " - " + this.today, 24);
 
 		this.drawBoxPrev(0, this.canvasHeight, 30, 50, "#fdae00", 1.0);
 		this.drawBoxNext(this.canvasWidth - 50, this.canvasHeight, 30, 50, "#fdae00", 1.0);
@@ -201,11 +221,11 @@ var chronicles_of_spaceman_spiff = SAGE2_App.extend({
 
 	update: function() {
 		// get new image
-		var newurl = this.createURL(this.state.timeDiff);
-		if (newurl !== this.URL) {
-			this.URL = newurl;
-			this.updateSlim();
-		}
+		var newurl = this.createURL(this.state.timeDiff, this.state.whichComic);
+		//if (newurl !== this.URL) {
+		this.URL = newurl;
+		this.updateSlim();
+		//}
 	},
 
 	updateSlim: function() {
@@ -260,7 +280,9 @@ var chronicles_of_spaceman_spiff = SAGE2_App.extend({
 		this.URL   = "";
 		this.today = "";
 
-		// update once per hour
+		this.comics = SAGE2_comics;
+
+		// update once per hour (55 mins)
 		this.maxFPS = 0.0003;
 
 		this.element.id = "div" + data.id;
@@ -280,9 +302,17 @@ var chronicles_of_spaceman_spiff = SAGE2_App.extend({
 		this.initApp();
 
 		// this.update();
+
+		this.sageUIbuttons = [3, 5, 9, 10, 11];
+
 		this.draw_d3(data.date);
 		this.controls.addButton({type: "next", position: 7, identifier: "Next"});
 		this.controls.addButton({type: "prev", position: 1, identifier: "Prev"});
+
+		for (var btnCtr = 0; btnCtr < this.comics.length; btnCtr++) {
+			this.controls.addButton({label: this.comics[btnCtr].label, position: this.sageUIbuttons[btnCtr], identifier: btnCtr});
+		}
+
 		this.controls.finishedAddingControls(); // Not adding controls but making the default buttons available
 
 		// Send the call to the master (i.e. plugin.js)
@@ -330,7 +360,105 @@ var chronicles_of_spaceman_spiff = SAGE2_App.extend({
 		this.update();
 	},
 
+	/**
+	* To enable right click context menu support this function needs to be present with this format.
+	*
+	* Must return an array of entries. An entry is an object with three properties:
+	*	description: what is to be displayed to the viewer.
+	*	callback: String containing the name of the function to activate in the app. It must exist.
+	*	parameters: an object with specified datafields to be given to the function.
+	*		The following attributes will be automatically added by server.
+	*			serverDate, on the return back, server will fill this with time object.
+	*			clientId, unique identifier (ip and port) for the client that selected entry.
+	*			clientName, the name input for their pointer. Note: users are not required to do so.
+	*			clientInput, if entry is marked as input, the value will be in this property. See pdf_viewer.js for example.
+	*		Further parameters can be added. See pdf_view.js for example.
+	*/
+	getContextEntries: function() {
+		var entries = [];
+		var entry;
+
+		entry = {};
+		entry.description = "Previous Day";
+		entry.callback = "changeComic";
+		entry.parameters = {};
+		entry.parameters.page = "previous";
+		entries.push(entry);
+
+		entry = {};
+		entry.description = "Next Day";
+		entry.callback = "changeComic";
+		entry.parameters = {};
+		entry.parameters.page = "next";
+		entries.push(entry);
+
+		entry = {};
+		entry.description = "Latest";
+		entry.callback = "changeComic";
+		entry.parameters = {};
+		entry.parameters.page = "latest";
+		entries.push(entry);
+
+		entry = {};
+		entry.description = " ";
+		entry.callback = "NoOp";
+		entry.parameters = {};
+		entry.parameters.page = "NoOp";
+		entries.push(entry);
+
+		for (var comicCounter = 0; comicCounter < this.comics.length; comicCounter++) {
+			entry = {};
+			entry.description = this.comics[comicCounter].comicName;
+			entry.callback = "changeComic";
+			entry.parameters = {};
+			entry.parameters.page = comicCounter;
+			entries.push(entry);
+		}
+
+		return entries;
+	},
+
+	/**
+	* Support function to allow page changing through right mouse context menu.
+	*
+	* @method changeThePage
+	* @param responseObject {Object} contains response from entry selection
+	*/
+	changeComic: function(responseObject) {
+		var page = responseObject.page;
+		if (page === "previous") {
+			this.showPreviousPage();
+		} else if (page === "next") {
+			this.showNextPage();
+		} else if (page === "latest") {
+			this.state.timeDiff = 0;
+		} else if (page === "NoOp") {
+			// noop
+		} else {
+			this.state.whichComic = page;
+		}
+
+		// This needs to be a new date for the extra function.
+		this.refresh(new Date(responseObject.serverDate));
+	},
+
+
+
 	event: function(eventType, position, user, data, date) {
+
+		// Left Arrow  - go back one day
+		// Right Arrow - go forward one day
+		if (eventType === "specialKey") {
+			if (data.code === 37 && data.state === "up") {
+				// Left Arrow
+				this.showPreviousPage();
+			} else if (data.code === 39 && data.state === "up") {
+				// Right Arrow
+				this.showNextPage();
+			}
+		}
+
+
 		if (eventType === "pointerPress" && (data.button === "left")) {
 			// pointer press
 		} else if (eventType === "pointerMove") {
@@ -351,7 +479,8 @@ var chronicles_of_spaceman_spiff = SAGE2_App.extend({
 					this.showPreviousPage();
 					break;
 				default:
-					console.log("No handler for:", data.identifier);
+					this.state.whichComic = data.identifier;
+					break;
 			}
 			this.refresh(date);
 		}

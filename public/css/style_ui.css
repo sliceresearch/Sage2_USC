@@ -181,10 +181,15 @@ h2 {
 	position: absolute;
 	left: 50%;
 	top: 50%;
+	max-height: 100%;
+	max-width: 100%;
+	height: auto;
+
 	-webkit-transform: translate(-50%, -50%);
 	-moz-transform: translate(-50%, -50%);
 	-ms-transform: translate(-50%, -50%);
 	transform: translate(-50%, -50%);
+
 	-webkit-user-drag: none;
 	-moz-user-drag: none;
 	user-drag: none;
