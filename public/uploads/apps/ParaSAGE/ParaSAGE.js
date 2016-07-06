@@ -40,8 +40,10 @@ var ParaSAGE = SAGE2_App.extend({
 		// Current implementation will ignore the canvas, since that will require additional time to draw.
 		this.isConnected = false;
 		// Experiemental PV render load reduction.
-		this.onlyRenderRequestFromMasterDisplay = true;
-		this.orrfmdAttemptBinaryConversion      = true;
+		this.onlyRenderRequestFromMasterDisplay  = false;
+		this.orrfmdAttemptBinaryConversion       = false;
+		this.reduceRenderResolutionOnInteraction = false;
+		this.reduceResolutionAmount = 10; // Divided by this number
 
 		this.setupPvwConnection();
 		this.setupImageEventListerers();
@@ -209,10 +211,19 @@ var ParaSAGE = SAGE2_App.extend({
 			quality: _this.renderOptions.currentQuality, // Might replace later with _this.renderOptions.vcrPlayStatus ? _this.renderOptions.interactiveQuality : _this.renderOptions.stillQuality
 			localTime: new Date().getTime()
 		};
+
+		// If doing a resolution reduction on interaction instead of quality alter the renderCfg values.
+		if (_this.reduceRenderResolutionOnInteraction
+			&& (_this.renderOptions.currentQuality == _this.renderOptions.interactiveQuality)) {
+			renderCfg.size = [parseInt(_this.sage2_width / _this.reduceResolutionAmount), parseInt(_this.sage2_height / _this.reduceResolutionAmount)];
+			renderCfg.quality = _this.renderOptions.stillQuality;
+		}
+
 		_this.pvwConfig.session.call("viewport.image.render", [renderCfg])
 		.then(function(response) {
 			_this.renderOptions.view = Number(response.global_id);
 			_this.lastMTime = response.mtime;
+			_this.button_state.action_pending = false; // For interaction cleanup.
 			if (response.hasOwnProperty("image") & response.image !== null) {
 				_this.imageFromPvw.width = response.size[0];
 				_this.imageFromPvw.height = response.size[1];
@@ -327,9 +338,6 @@ var ParaSAGE = SAGE2_App.extend({
 	},
 
 	imageEventHandler: function(evt) {
-		if (!isMaster) {
-			return; // Only master displays sends commands to prevent overload. Here in case master gets reassigned.
-		}
 		// Old debug
 		// this.updateTitle( "Event(" + evt.type + ") pos(" + evt.x + "," + evt.y + ") move " + evt.movementX + "," + evt.movementY);
 
@@ -395,6 +403,10 @@ var ParaSAGE = SAGE2_App.extend({
 			if (vtkWeb_event.buttonRight) {
 				this.button_state.rmbScrollTracker = vtkWeb_event.y;
 			}
+			if (this.reduceRenderResolutionOnInteraction) {
+				vtkWeb_event.x /= this.reduceResolutionAmount;
+				vtkWeb_event.y /= this.reduceResolutionAmount;
+			}
 		}
 		if (evt.type !== "wheel" && this.eatMouseEvent(vtkWeb_event)) {
 			return;
@@ -402,16 +414,22 @@ var ParaSAGE = SAGE2_App.extend({
 		// console.log("erase me, does this flood with mousemove?");
 		this.button_state.action_pending = true;
 		var _this = this;
-		_this.pvwConfig.session.call("viewport.mouse.interaction", [vtkWeb_event])
-		.then(function (res) {
-			if (res) {
-				_this.button_state.action_pending = false;
-				_this.pvwRender();
-			}
-		}, function(error) {
-			console.log("Call to viewport.mouse.interaction failed");
-			console.log(error);
-		});
+
+		// If not master, ask for a render view after a bit
+		if (isMaster) {
+			_this.pvwConfig.session.call("viewport.mouse.interaction", [vtkWeb_event])
+			.then(function (res) {
+				if (res) {
+					_this.button_state.action_pending = false;
+					_this.pvwRender();
+				}
+			}, function(error) {
+				console.log("Call to viewport.mouse.interaction failed");
+				console.log(error);
+			});
+		} else if (!isMaster && !this.onlyRenderRequestFromMasterDisplay) {
+			_this.pvwRender();
+		}
 	},
 
 	eatMouseEvent: function(event) {
@@ -563,6 +581,24 @@ var ParaSAGE = SAGE2_App.extend({
 				entries.push(entry);
 			}
 		}
+		// Toggle only master render
+		if (this.reduceRenderResolutionOnInteraction) {
+			entry = {};
+			entry.description = "Toggle to: use full resolution(but low quality) on interaction.";
+			entry.callback    = "toggleReduceResolutionOnInteraction";
+			entry.parameters  = {
+				toggle: (!this.reduceRenderResolutionOnInteraction)
+			};
+			entries.push(entry);
+		} else {
+			entry = {};
+			entry.description = "Toggle to: reduce resolution(but full quality) on interaction.";
+			entry.callback    = "toggleReduceResolutionOnInteraction";
+			entry.parameters  = {
+				toggle: (!this.reduceRenderResolutionOnInteraction)
+			};
+			entries.push(entry);
+		}
 
 		// Switch out the play / pause option.
 		if (this.renderOptions.vcrPlayStatus) {
@@ -635,6 +671,11 @@ var ParaSAGE = SAGE2_App.extend({
 
 	toggleUseReceivedStringOrBinaryConvert: function(response) {
 		this.orrfmdAttemptBinaryConversion = response.toggle;
+		this.getFullContextMenuAndUpdate();
+	},
+
+	toggleReduceResolutionOnInteraction: function(response) {
+		this.reduceRenderResolutionOnInteraction = response.toggle;
 		this.getFullContextMenuAndUpdate();
 	},
 
