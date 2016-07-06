@@ -93,7 +93,7 @@ var ParaSAGE = SAGE2_App.extend({
 				});
 			} else {
 				var _this = this;
-				setTimeout( function() {
+				setTimeout(function() {
 					wsio.emit("csdMessage", {
 						type: "subscribeToValue",
 						nameOfValue: "pvwRenderViewImage",
@@ -202,7 +202,9 @@ var ParaSAGE = SAGE2_App.extend({
 	},
 
 	pvwRender: function(fetch = true) {
-		if (this.onlyRenderRequestFromMasterDisplay && (!isMaster)) { return; }
+		if (this.onlyRenderRequestFromMasterDisplay && (!isMaster)) {
+			return; // If not master, will get their updates from the subscription method.
+		}
 		var _this = this;
 		var renderCfg = {
 			size: [parseInt(_this.sage2_width), parseInt(_this.sage2_height)],
@@ -215,7 +217,10 @@ var ParaSAGE = SAGE2_App.extend({
 		// If doing a resolution reduction on interaction instead of quality alter the renderCfg values.
 		if (_this.reduceRenderResolutionOnInteraction
 			&& (_this.renderOptions.currentQuality == _this.renderOptions.interactiveQuality)) {
-			renderCfg.size = [parseInt(_this.sage2_width / _this.reduceResolutionAmount), parseInt(_this.sage2_height / _this.reduceResolutionAmount)];
+			renderCfg.size = [
+				parseInt(_this.sage2_width / _this.reduceResolutionAmount),
+				parseInt(_this.sage2_height / _this.reduceResolutionAmount)
+			];
 			renderCfg.quality = _this.renderOptions.stillQuality;
 		}
 
@@ -243,14 +248,14 @@ var ParaSAGE = SAGE2_App.extend({
 						type: "setValue",
 						nameOfValue: "pvwRenderViewImage",
 						value: satb,
-						description: "Image from ParaView in binary.",
+						description: "Image from ParaView in binary."
 					});
 				} else {
 					wsio.emit("csdMessage", {
 						type: "setValue",
 						nameOfValue: "pvwRenderViewImage",
 						value: _this.imageFromPvw.src,
-						description: "Image from ParaView in binary.",
+						description: "Image from ParaView in binary."
 					});
 				}
 
