@@ -16,7 +16,8 @@ module.exports = function(grunt) {
 						"src/*.js",
 						"bin/*.js",
 						"public/uploads/apps/welcome/plugin.js",
-						"public/uploads/apps/tweetcloud2/plugin.js",
+						"public/uploads/apps/chronicles_of_spaceman_spiff/plugin.js",
+						"public/uploads/apps/chemViewer/plugin.js"
 						]
 				},
 				options: { configFile: "build/.eslintrc" }
@@ -65,7 +66,8 @@ module.exports = function(grunt) {
 					"src/*.js",
 					"bin/*.js",
 					"public/uploads/apps/welcome/plugin.js",
-					"public/uploads/apps/tweetcloud2/plugin.js",
+					"public/uploads/apps/chronicles_of_spaceman_spiff/plugin.js",
+					"public/uploads/apps/chemViewer/plugin.js"
 					],
 				options: { config: "build/jscs_server.json" }
 			},
