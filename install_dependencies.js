@@ -81,7 +81,7 @@ if (nums[0] === 5 && ((nums[1] === 1 && nums[2] >=  0) || (nums[1] > 1))) {
 	target = "5.10.1";
 }
 // Node v6.0.0 and above
-if (nums[0] === 6 && nums[1] === 0 && nums[2] >= 0) {
+if (nums[0] === 6 && nums[1] >= 0 && nums[2] >= 0) {
 	console.log("Node version " + process.versions.node + ". Using binaries for 6.0.0+.");
 	target = "6.0.0";
 }

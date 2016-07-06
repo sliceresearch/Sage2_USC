@@ -643,9 +643,12 @@ var exifAsync = function(cmds, cb) {
 					instructions.directory !== null && instructions.directory !== "") {
 				metadata.fileTypes = instructions.fileTypes;
 				metadata.directory = instructions.directory;
+				metadata.removeFromLauncher = !!instructions.removeFromLauncher; // convert to bool
 			} else {
 				metadata.fileTypes = [];
+				metadata.removeFromLauncher = false;
 			}
+
 			var exif = {FileName: app, icon: appIcon, MIMEType: "application/custom", metadata: metadata};
 
 			addFile(file, exif, function() {
@@ -712,7 +715,7 @@ var listAssets = function() {
 	for (var f in keys) {
 		var one = AllAssets.list[keys[f]];
 		if (one.exif.MIMEType === 'application/custom') {
-			if (one.exif.metadata.fileTypes.length === 0) {
+			if (!one.exif.metadata.removeFromLauncher) {
 				// exclude 'viewer' applications
 				apps.push(one);
 			}
@@ -788,8 +791,7 @@ var listApps = function() {
 	// Remove 'viewer' apps
 	var i = result.length;
 	while (i--) {
-		if (result[i].exif.metadata.fileTypes &&
-			result[i].exif.metadata.fileTypes.length > 0) {
+		if (result[i].exif.metadata.removeFromLauncher) {
 			result.splice(i, 1);
 		}
 	}

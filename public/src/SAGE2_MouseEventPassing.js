@@ -90,6 +90,7 @@ var SAGE2MEP = {
 
 
 		var mouseEventToPass;
+		var buttonValue;
 
 		switch (type) {
 
@@ -157,7 +158,7 @@ var SAGE2MEP = {
 				}
 
 				// 0 is left, 1 middle, 2 right
-				var buttonValue = 0;
+				buttonValue = 0;
 				if (data.button == "middle") {
 					buttonValue = 1;
 				} else if (data.button == "right") {
@@ -186,7 +187,7 @@ var SAGE2MEP = {
 				break;
 			case "pointerRelease":
 				// 0 is left, 1 middle, 2 right
-				var buttonValue = 0;
+				buttonValue = 0;
 				if (data.button == "middle") {
 					buttonValue = 1;
 				} else if (data.button == "right") {

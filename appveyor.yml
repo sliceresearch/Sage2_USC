@@ -25,8 +25,8 @@ init:
   - dir C:\Dev\ffmpeg-win64-dev\lib
 
 install:
-  - ps: Get-NodeJsLatestBuild 6.0
-  - ps: Install-Product node 6.0.0 x64
+  - ps: Get-NodeJsLatestBuild 6.2
+  - ps: Install-Product node 6.2.1 x64
   - dir C:\avvm\node
   - node -v
   - cd %APPVEYOR_BUILD_FOLDER%
@@ -42,8 +42,8 @@ install:
   - copy ffmpeg-3.0.1-win64-shared\bin\*.dll bin\
   - copy ffmpeg-3.0.1-win64-shared\bin\*.exe bin\
   - rmdir /Q /S ffmpeg-3.0.1-win64-shared
-  - curl -LsSO http://www.sno.phy.queensu.ca/~phil/exiftool/exiftool-10.16.zip
-  - 7z x exiftool-10.16.zip > nul
+  - curl -LsSO http://www.sno.phy.queensu.ca/~phil/exiftool/exiftool-10.20.zip
+  - 7z x exiftool-10.20.zip > nul
   - move exiftool(-k).exe bin\exiftool.exe
   - move bin\sage2.bat sage2.bat
   - move bin\sabi.bat sabi.bat
@@ -90,6 +90,7 @@ install:
   - move package.json SAGE2
   - move public SAGE2
   - move server.js SAGE2
+  - move generate-service-worker.js SAGE2
   - move src SAGE2
   #- Push to the binary repo
   - cd SAGE2

@@ -23,6 +23,8 @@ var chemViewer = SAGE2_App.extend({
 
 		// Set the background to black
 		this.element.style.backgroundColor = 'black';
+		// Keep a copy of the title (app name)
+		this.title = data.title;
 
 		// Add a canvas into the div, instead of asking for a canvas
 		//   offers better control since ChemDoodle modifies the DOM
@@ -35,20 +37,20 @@ var chemViewer = SAGE2_App.extend({
 		var increment = Math.PI / 15;
 		this.xIncrement = increment;
 		this.yIncrement = increment;
-		this.zIncrement = increment;
 
 		// move and resize callbacks
 		this.resizeEvents = "onfinish";
 
-		// SAGE2 Application Settings
-		//
-		this.ready = false;
+		// SAGE2 Application
+		this.repaint  = false;
+		this.dragging = false;
+		this.lastPosition = null;
 
 		// setup component
 		this.cartoonTransformer = new ChemDoodle.ViewerCanvas3D(data.id + "_canvas",
 			data.width, data.height);
-		// set the ligand atom/bond representation to 'van der Waals Spheres'
-		this.cartoonTransformer.specs.set3DRepresentation('van der Waals Spheres');
+		// set the ligand atom/bond representation to 'Ball and Stick'
+		this.cartoonTransformer.specs.set3DRepresentation('Ball and Stick');
 		// set the background color to black
 		this.cartoonTransformer.specs.backgroundColor = '#000000';
 		// display shapely colors for the residues
@@ -59,47 +61,129 @@ var chemViewer = SAGE2_App.extend({
 		// ... but only show nucleic acid atoms within 5 Angstroms of a ligand atom
 		this.cartoonTransformer.specs.macro_atomToLigandDistance = 5;
 
-		// data (pdb_2OEY) is already loaded by the script tag in the header, loading file 2OEY.js
-		// this file is a digested and optimized PDB file created by ChemDoodle desktop,
-		// it will load much faster than the corresponding PDB file
-		var mol;
-		// mol = pdb_2OEY;
-		// var molFile = '9570133\n  CHEMDOOD06280922273D\n\n 68 73  0     0  0  0  0  0  0999 V2000\n   -2.7594    4.7937    4.9660 Cl  0  0  0  0  0  0  0  0  0  0  0  0\n    0.1713   12.3898    1.1610 Cl  0  0  0  0  0  0  0  0  0  0  0  0\n    3.9321    2.3762    5.3236 O   0  0  0  0  0  0  0  0  0  0  0  0\n   -5.6821   12.1494   -3.0690 O   0  0  0  0  0  0  0  0  0  0  0  0\n    3.3046    2.3031    7.6295 N   0  0  0  0  0  0  0  0  0  0  0  0\n   -4.0418   13.5130   -4.1490 N   0  0  0  0  0  0  0  0  0  0  0  0\n    0.2397    4.4446    5.3491 N   0  0  0  0  0  0  0  0  0  0  0  0\n   -2.4255   12.0044   -0.3787 N   0  0  0  0  0  0  0  0  0  0  0  0\n    2.2198    2.7741    8.3844 N   0  0  0  0  0  0  0  0  0  0  0  0\n   -2.7320   13.9210   -3.8549 N   0  0  0  0  0  0  0  0  0  0  0  0\n    1.4187    3.8201    5.1425 N   0  0  0  0  0  0  0  0  0  0  0  0\n   -3.5588   11.9239   -1.0942 N   0  0  0  0  0  0  0  0  0  0  0  0\n   -0.9049    7.6732    2.9143 C   0  0  0  0  0  0  0  0  0  0  0  0\n   -1.2872    8.7871    2.0739 C   0  0  0  0  0  0  0  0  0  0  0  0\n   -0.1634    5.5180    4.5392 C   0  0  0  0  0  0  0  0  0  0  0  0\n   -2.0253   10.9339    0.4523 C   0  0  0  0  0  0  0  0  0  0  0  0\n    1.9373    3.3330    6.2089 C   0  0  0  0  0  0  0  0  0  0  0  0\n   -3.5108   12.5947   -2.1937 C   0  0  0  0  0  0  0  0  0  0  0  0\n   -1.8843    6.8557    3.4783 C   0  0  0  0  0  0  0  0  0  0  0  0\n   -0.4837    9.9258    2.0156 C   0  0  0  0  0  0  0  0  0  0  0  0\n    0.4440    7.4167    3.1601 C   0  0  0  0  0  0  0  0  0  0  0  0\n   -2.4599    8.7219    1.3215 C   0  0  0  0  0  0  0  0  0  0  0  0\n    1.4021    3.3818    7.5816 C   0  0  0  0  0  0  0  0  0  0  0  0\n   -2.3923   13.4003   -2.7165 C   0  0  0  0  0  0  0  0  0  0  0  0\n    3.2218    2.5988    6.2757 C   0  0  0  0  0  0  0  0  0  0  0  0\n   -4.6082   12.6920   -3.1835 C   0  0  0  0  0  0  0  0  0  0  0  0\n   -1.5149    5.7816    4.2879 C   0  0  0  0  0  0  0  0  0  0  0  0\n   -0.8526   10.9991    1.2047 C   0  0  0  0  0  0  0  0  0  0  0  0\n    0.8133    6.3428    3.9700 C   0  0  0  0  0  0  0  0  0  0  0  0\n   -2.8290    9.7954    0.5108 C   0  0  0  0  0  0  0  0  0  0  0  0\n    4.3645    1.6047    8.1858 C   0  0  0  0  0  0  0  0  0  0  0  0\n   -4.7107   13.8957   -5.3008 C   0  0  0  0  0  0  0  0  0  0  0  0\n    0.1208    4.0381    7.9279 C   0  0  0  0  0  0  0  0  0  0  0  0\n   -1.1027   13.5525   -2.0051 C   0  0  0  0  0  0  0  0  0  0  0  0\n    5.4188    1.1603    7.3797 C   0  0  0  0  0  0  0  0  0  0  0  0\n   -6.0179   13.4556   -5.5382 C   0  0  0  0  0  0  0  0  0  0  0  0\n    4.3912    1.3364    9.5591 C   0  0  0  0  0  0  0  0  0  0  0  0\n   -4.0857   14.7258   -6.2385 C   0  0  0  0  0  0  0  0  0  0  0  0\n    6.4854    0.4571    7.9395 C   0  0  0  0  0  0  0  0  0  0  0  0\n   -6.6910   13.8405   -6.6977 C   0  0  0  0  0  0  0  0  0  0  0  0\n    5.4580    0.6334   10.1190 C   0  0  0  0  0  0  0  0  0  0  0  0\n   -4.7590   15.1109   -7.3978 C   0  0  0  0  0  0  0  0  0  0  0  0\n    6.5052    0.1938    9.3092 C   0  0  0  0  0  0  0  0  0  0  0  0\n   -6.0616   14.6683   -7.6275 C   0  0  0  0  0  0  0  0  0  0  0  0\n   -2.9440    7.0496    3.3306 H   0  0  0  0  0  0  0  0  0  0  0  0\n    0.4191   10.0186    2.6146 H   0  0  0  0  0  0  0  0  0  0  0  0\n    1.2426    8.0068    2.7190 H   0  0  0  0  0  0  0  0  0  0  0  0\n   -3.1003    7.8442    1.3098 H   0  0  0  0  0  0  0  0  0  0  0  0\n    1.8722    6.1688    4.1457 H   0  0  0  0  0  0  0  0  0  0  0  0\n   -3.7458    9.7027   -0.0652 H   0  0  0  0  0  0  0  0  0  0  0  0\n   -0.5336    3.8483    5.6286 H   0  0  0  0  0  0  0  0  0  0  0  0\n   -2.1470   12.9124   -0.0240 H   0  0  0  0  0  0  0  0  0  0  0  0\n    0.1083    5.0923    7.6446 H   0  0  0  0  0  0  0  0  0  0  0  0\n   -0.7326    3.4808    7.5372 H   0  0  0  0  0  0  0  0  0  0  0  0\n    0.0189    4.0183    9.0198 H   0  0  0  0  0  0  0  0  0  0  0  0\n   -0.4226   14.1022   -2.6678 H   0  0  0  0  0  0  0  0  0  0  0  0\n   -1.2066   14.1725   -1.1131 H   0  0  0  0  0  0  0  0  0  0  0  0\n   -0.6200   12.5914   -1.8221 H   0  0  0  0  0  0  0  0  0  0  0  0\n    5.4926    1.3152    6.3135 H   0  0  0  0  0  0  0  0  0  0  0  0\n   -6.5862   12.8152   -4.8801 H   0  0  0  0  0  0  0  0  0  0  0  0\n    3.5914    1.6647   10.2178 H   0  0  0  0  0  0  0  0  0  0  0  0\n   -3.0717   15.0881   -6.0901 H   0  0  0  0  0  0  0  0  0  0  0  0\n    7.3017    0.1139    7.3104 H   0  0  0  0  0  0  0  0  0  0  0  0\n   -7.7055   13.4967   -6.8783 H   0  0  0  0  0  0  0  0  0  0  0  0\n    5.4736    0.4281   11.1854 H   0  0  0  0  0  0  0  0  0  0  0  0\n   -4.2692   15.7553   -8.1220 H   0  0  0  0  0  0  0  0  0  0  0  0\n    7.3358   -0.3536    9.7450 H   0  0  0  0  0  0  0  0  0  0  0  0\n   -6.5858   14.9681   -8.5302 H   0  0  0  0  0  0  0  0  0  0  0  0\n  1 27  1  0  0  0  0\n  2 28  1  0  0  0  0\n  3 25  2  0  0  0  0\n  4 26  2  0  0  0  0\n  5  9  1  0  0  0  0\n  5 25  1  0  0  0  0\n  5 31  1  0  0  0  0\n  6 10  1  0  0  0  0\n  6 26  1  0  0  0  0\n  6 32  1  0  0  0  0\n  7 11  1  0  0  0  0\n  7 15  1  0  0  0  0\n  7 51  1  0  0  0  0\n  8 12  1  0  0  0  0\n  8 16  1  0  0  0  0\n  8 52  1  0  0  0  0\n  9 23  2  0  0  0  0\n 10 24  2  0  0  0  0\n 11 17  2  0  0  0  0\n 12 18  2  0  0  0  0\n 13 14  1  0  0  0  0\n 13 19  2  0  0  0  0\n 13 21  1  0  0  0  0\n 14 20  2  0  0  0  0\n 14 22  1  0  0  0  0\n 15 27  2  0  0  0  0\n 15 29  1  0  0  0  0\n 16 28  2  0  0  0  0\n 16 30  1  0  0  0  0\n 17 23  1  0  0  0  0\n 17 25  1  0  0  0  0\n 18 24  1  0  0  0  0\n 18 26  1  0  0  0  0\n 19 27  1  0  0  0  0\n 19 45  1  0  0  0  0\n 20 28  1  0  0  0  0\n 20 46  1  0  0  0  0\n 21 29  2  0  0  0  0\n 21 47  1  0  0  0  0\n 22 30  2  0  0  0  0\n 22 48  1  0  0  0  0\n 23 33  1  0  0  0  0\n 24 34  1  0  0  0  0\n 29 49  1  0  0  0  0\n 30 50  1  0  0  0  0\n 31 35  2  0  0  0  0\n 31 37  1  0  0  0  0\n 32 36  2  0  0  0  0\n 32 38  1  0  0  0  0\n 33 53  1  0  0  0  0\n 33 54  1  0  0  0  0\n 33 55  1  0  0  0  0\n 34 56  1  0  0  0  0\n 34 57  1  0  0  0  0\n 34 58  1  0  0  0  0\n 35 39  1  0  0  0  0\n 35 59  1  0  0  0  0\n 36 40  1  0  0  0  0\n 36 60  1  0  0  0  0\n 37 41  2  0  0  0  0\n 37 61  1  0  0  0  0\n 38 42  2  0  0  0  0\n 38 62  1  0  0  0  0\n 39 43  2  0  0  0  0\n 39 63  1  0  0  0  0\n 40 44  2  0  0  0  0\n 40 64  1  0  0  0  0\n 41 43  1  0  0  0  0\n 41 65  1  0  0  0  0\n 42 44  1  0  0  0  0\n 42 66  1  0  0  0  0\n 43 67  1  0  0  0  0\n 44 68  1  0  0  0  0\nM  END\n\n';
-		// mol = ChemDoodle.readMOL(molFile, 1);
+		this.cartoonTransformer.specs.atoms_resolution_3D = 20;
+		this.cartoonTransformer.specs.compass_display = true;
+		this.cartoonTransformer.specs.proteins_ribbonCartoonize = true;
+
+		// Is it loaded from an asset or as an application
+		if (data.state.file && data.state.file.length > 0) {
+			// asset to load
+			var toLoad = data.state.file;
+			// get last element
+			var name = toLoad.split('/').slice(-1)[0];
+			this.loadMolecule(toLoad, name);
+		} else {
+			// loaded as an app, default molecule
+			this.loadMolecule(this.resrcPath + "data/aspirin.pdb", "aspirin.pdb");
+		}
+
+		// Control the frame rate for an animation application
+		this.maxFPS = 30.0;
+	},
+
+	/**
+	 * Loads a molecule from a URL
+	 *
+	 * @method     loadMolecule
+	 * @param      {String}  filename  The filename
+	 * @param      {String}  title     The title
+	 */
+	loadMolecule: function (filename, title) {
+		this.ready = false;
 		var _this = this;
-		readFile(this.resrcPath + "data/3MJ9.pdb", function(err, data) {
-			mol = ChemDoodle.readPDB(data);
+		readFile(filename, function(err, data) {
+			var mol = ChemDoodle.readPDB(data);
 			// set the residue specs to control the atoms and bonds for the nucleic acid
 			mol.residueSpecs = new ChemDoodle.structures.VisualSpecifications();
 			// set representation of nucleic acid atoms and bonds to 'Wireframe'
 			mol.residueSpecs.set3DRepresentation('Wireframe');
 			_this.cartoonTransformer.loadMolecule(mol);
 			_this.ready = true;
+			// Update the title bar
+			var newTitle;
+			newTitle = _this.title + " - " + title;
+			_this.updateTitle(newTitle);
 		}, 'TEXT');
-
-		// Control the frame rate for an animation application
-		this.maxFPS = 20.0;
-		// Not adding controls but making the default buttons available
-		this.controls.finishedAddingControls();
-		this.enableControls = true;
 	},
 
-	draw: function(date) {
-		if (this.ready && this.state.ismoving) {
-			var matrix = [];
-			var xAxis = [1, 0, 0];
-			var yAxis = [0, 1, 0];
-			var zAxis = [0, 0, 1];
-			ChemDoodle.lib.mat4.identity(matrix);
-			this.state.rotation += this.xIncrement * this.dt;
-			ChemDoodle.lib.mat4.rotate(matrix, this.state.rotation, xAxis);
-			ChemDoodle.lib.mat4.rotate(matrix, this.state.rotation, yAxis);
-			ChemDoodle.lib.mat4.rotate(matrix, this.state.rotation, zAxis);
-			ChemDoodle.lib.mat4.set(matrix, this.cartoonTransformer.rotationMatrix);
-			this.cartoonTransformer.repaint();
+	/**
+	 * Loads a molecule from a data string
+	 *
+	 * @method     loadMoleculeFromString
+	 * @param      {String}  data      The data
+	 * @param      {String}  title     The title
+	 */
+	loadMoleculeFromString: function (response) {
+		if (response.err) {
+			console.log('Problem:', response.err);
+		} else {
+			var data  = response.data;
+			var title = response.name + '.pdb';
+			console.log('Got back', title);
+
+			var mol = ChemDoodle.readPDB(data);
+			// set the residue specs to control the atoms and bonds for the nucleic acid
+			mol.residueSpecs = new ChemDoodle.structures.VisualSpecifications();
+			// set representation of nucleic acid atoms and bonds to 'Wireframe'
+			mol.residueSpecs.set3DRepresentation('Wireframe');
+			this.cartoonTransformer.loadMolecule(mol);
+			this.ready = true;
+			// Update the title bar
+			var newTitle;
+			newTitle = this.title + " - " + title;
+			this.updateTitle(newTitle);
 		}
 	},
 
+	/**
+	 * Draws a molecule.
+	 *
+	 * @method     drawMolecule
+	 */
+	drawMolecule: function () {
+		var matrix = [];
+		// var xAxis = [1, 0, 0];
+		var yAxis = [0, 1, 0];
+		var zAxis = [0, 0, 1];
+		// identity matrix
+		ChemDoodle.lib.mat4.identity(matrix);
+		// increase the rotation angle
+		if (this.state.ismoving) {
+			this.state.rotationx += this.xIncrement * this.dt;
+			this.state.rotationy += this.yIncrement * this.dt;
+		}
+		// build the rotation matrix
+		ChemDoodle.lib.mat4.rotate(matrix, this.state.rotationx, zAxis);
+		ChemDoodle.lib.mat4.rotate(matrix, this.state.rotationy, yAxis);
+		// ChemDoodle.lib.mat4.rotate(matrix, this.state.rotation, zAxis);
+		// build the scaling vector
+		var scaling = [this.state.scale, this.state.scale, this.state.scale];
+		ChemDoodle.lib.mat4.scale(matrix, scaling);
+		// apply the new matrix
+		ChemDoodle.lib.mat4.set(matrix, this.cartoonTransformer.rotationMatrix);
+		// redraw
+		this.cartoonTransformer.repaint();
+	},
+
+	/**
+	 * SAGE2 draw callback
+	 *
+	 * @method     draw
+	 * @param      {<type>}  date    The date
+	 */
+	draw: function(date) {
+		if (this.ready && (this.state.ismoving || this.dragging || this.repaint)) {
+			this.drawMolecule();
+		}
+		this.repaint = false;
+	},
+
+	/**
+	 * SAGE2 resize callback
+	 *
+	 * @method     resize
+	 * @param      {<type>}  date    The date
+	 */
 	resize: function(date) {
 		if (this.ready) {
 			this.cartoonTransformer.resize(this.sage2_width, this.sage2_height);
@@ -108,21 +192,267 @@ var chemViewer = SAGE2_App.extend({
 		}
 	},
 
+
+	/**
+	 * Gets the context entries, to enable right click context menu
+	 *
+	 * @method     getContextEntries
+	 * @return     {Array}  The context entries.
+	 */
+	getContextEntries: function() {
+		var entries = [];
+
+		// Various functions
+		entries.push({
+			description: "Reset the view",
+			callback: "resetView",
+			parameters: {
+			}
+		});
+
+		entries.push({
+			description: "Toggle auto-rotate",
+			callback: "autoRotate",
+			parameters: {
+			}
+		});
+
+		entries.push({
+			description: "Toggle labels",
+			callback: "updateStyle",
+			parameters: {
+				style: "Labels"
+			}
+		});
+
+		// Special entry for separator, a horizontal line
+		entries.push({
+			description: "separator"
+		});
+
+		// Drawing modes
+		entries.push({
+			description: "Draw lines",
+			callback: "updateStyle",
+			parameters: {
+				style: "Line"
+			}
+		});
+		entries.push({
+			description: "Draw van der Waals Spheres",
+			callback: "updateStyle",
+			parameters: {
+				style: "van der Waals Spheres"
+			}
+		});
+		entries.push({
+			description: "Draw wireframe",
+			callback: "updateStyle",
+			parameters: {
+				style: "Wireframe"
+			}
+		});
+		entries.push({
+			description: "Draw ball and stick",
+			callback: "updateStyle",
+			parameters: {
+				style: "Ball and Stick"
+			}
+		});
+		entries.push({
+			description: "Draw stick",
+			callback: "updateStyle",
+			parameters: {
+				style: "Stick"
+			}
+		});
+
+		// Special entry for separator, a horizontal line
+		entries.push({
+			description: "separator"
+		});
+
+		entries.push({
+			description: "Enter PDB ID:",
+			callback: "searchPDB",
+			parameters: {},
+			inputField: true,
+			inputFieldSize: 20
+		});
+
+		// Special entry for separator, a horizontal line
+		entries.push({
+			description: "separator"
+		});
+
+		// Select various molecules
+		entries.push({
+			description: "aspirin",
+			callback: "changeMolecule",
+			parameters: {
+				name: "aspirin.pdb"
+			}
+		});
+
+		entries.push({
+			description: "hemoglobin",
+			callback: "changeMolecule",
+			parameters: {
+				name: "hemoglobin.pdb"
+			}
+		});
+
+		entries.push({
+			description: "DNA",
+			callback: "changeMolecule",
+			parameters: {
+				name: "DNA.pdb"
+			}
+		});
+
+		entries.push({
+			description: "3MJ9",
+			callback: "changeMolecule",
+			parameters: {
+				name: "3MJ9.pdb"
+			}
+		});
+
+		entries.push({
+			description: "alcohol dehydrogenase",
+			callback: "changeMolecule",
+			parameters: {
+				name: "alcohol_dehydrogenase.pdb"
+			}
+		});
+
+		entries.push({
+			description: "Nanotube",
+			callback: "changeMolecule",
+			parameters: {
+				name: "Nanotube.pdb"
+			}
+		});
+
+		// All done
+		return entries;
+	},
+
+	/**
+	 * search online for a PDB file
+	 *
+	 * @method     searchPDB
+	 * @param      {Object}  responseObject  The response object
+	 */
+	searchPDB: function(responseObject) {
+		var molName = responseObject.clientInput;
+		console.log('Search for', molName);
+		if (isMaster && molName) {
+			var baseURL  = "http://www.pdb.org/pdb/download/downloadFile.do?fileFormat=pdb&compression=NO";
+			var queryURL = baseURL + "&structureId=" + molName;
+			this.applicationRPC({url: queryURL, name: molName}, "loadMoleculeFromString", true);
+		}
+	},
+
+	/**
+	 * Change the drawing style
+	 *
+	 * @method     updateStyle
+	 * @param      {Object}  responseObject  The response object
+	 */
+	updateStyle: function(responseObject) {
+		var style = responseObject.style;
+		if (style === "Labels") {
+			// Flip the labels value
+			var current = this.cartoonTransformer.specs.atoms_displayLabels_3D;
+			this.cartoonTransformer.specs.atoms_displayLabels_3D = !current;
+		} else {
+			this.cartoonTransformer.specs.set3DRepresentation(style);
+		}
+		this.drawMolecule();
+	},
+
+	/**
+	 * reset view, mainly the angle of rotation
+	 *
+	 * @method     resetView
+	 * @param      {Object}  responseObject  The response object
+	 */
+	resetView: function(responseObject) {
+		this.state.rotationx = 0;
+		this.state.rotationy = 0;
+		this.state.scale     = 1;
+		this.drawMolecule();
+	},
+
+	/**
+	 * Support function to change molecule through right mouse context menu
+	 *
+	 * @method     changeMolecule
+	 * @param      {Object}  responseObject  The response object
+	 */
+	changeMolecule: function(responseObject) {
+		var mol = responseObject.name;
+		this.state.rotationx = 0;
+		this.state.rotationy = 0;
+		this.state.scale     = 1;
+		this.loadMolecule(this.resrcPath + "data/" + mol, mol);
+	},
+
+	/**
+	 * Switch on/off auto-rotation
+	 *
+	 * @method     autoRotate
+	 * @param      {Object}  responseObject  The response object
+	 */
+	autoRotate: function(responseObject) {
+		this.state.ismoving = !this.state.ismoving;
+	},
+
+	/**
+	 * Event handler
+	 *
+	 * @method     event
+	 * @param      {String}  eventType  The event type
+	 * @param      {Object}  position   The position .x .y
+	 * @param      {String}  user_id    The user identifier
+	 * @param      {Object}  data       The data for buttons
+	 * @param      {Date}  date       The date
+	 */
 	event: function(eventType, position, user_id, data, date) {
+		if (!this.ready) {
+			return;
+		}
 		if (eventType === "pointerPress" && (data.button === "left")) {
-			// comment
+			this.dragging = true;
+			this.lastPosition = position;
 		} else if (eventType === "pointerMove" && this.dragging) {
-			// comment
+			this.state.rotationx += (position.x - this.lastPosition.x) * 0.01;
+			this.state.rotationy -= (position.y - this.lastPosition.y) * 0.01;
+			this.lastPosition = position;
+			this.repaint = true;
 		} else if (eventType === "pointerRelease" && (data.button === "left")) {
-			// comment
+			this.dragging = false;
 		} else if (eventType === "pointerScroll") {
-			// Scroll events for zoom
+			// update the scale amount
+			this.state.scale += data.wheelDelta / 1000.0;
+			// put some limits to scale [0-4]
+			if (this.state.scale <= 0.01) {
+				this.state.scale = 0.01;
+			} else if (this.state.scale > 4.0) {
+				this.state.scale = 4.0;
+			}
+			this.repaint = true;
 		} else if (eventType === "widgetEvent") {
 			// comment
 		} else if (eventType === "keyboard") {
 			if (data.character === " ") {
-				this.state.ismoving = !this.state.ismoving;
-				this.refresh(date);
+				this.autoRotate();
+				this.repaint = true;
+			}
+			if (data.character === "r") {
+				this.resetView();
+				this.repaint = true;
 			}
 		} else if (eventType === "specialKey") {
 			if (data.code === 37 && data.state === "down") { // left

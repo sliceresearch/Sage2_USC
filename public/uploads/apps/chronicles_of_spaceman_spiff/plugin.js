@@ -27,20 +27,20 @@ function processRequest(wsio, data, config) {
 			var results = [];
 			parsedHTML('.strip').map(function(i, foo) {
 				var elt = $(foo);
-				results.push(elt.attr('src'))
+				results.push(elt.attr('src'));
 			});
-			var bigImage = results.splice(-1)[0]
+			var bigImage = results.splice(-1)[0];
 
 			request({url: bigImage, encoding: 'base64'}, function(err, resp, img) {
 				if (data.broadcast === true) {
 					// get the broadcast function from main module
 					// send the data to all display nodes
 					module.parent.exports.broadcast('broadcast',
-						{app: data.app, func: data.func, data: {image: img, url:bigImage, err: null}});
+						{app: data.app, func: data.func, data: {image: img, url: bigImage, err: null}});
 				} else {
 					// send data to the master display node
 					wsio.emit('broadcast', {app: data.app, func: data.func,
-						data: {image: img, url:bigImage, err: null}});
+						data: {image: img, url: bigImage, err: null}});
 				}
 			});
 		}

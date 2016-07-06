@@ -2090,6 +2090,7 @@ function setRmbContextMenuEntries(data) {
 	var workingDiv;
 	for (i = 0; i < entriesToAdd.length; i++) {
 		workingDiv = document.createElement('div');
+		// unique entry id
 		workingDiv.id = 'rmbContextMenuEntry' + i; // unique entry id
 		if (typeof entriesToAdd[i].entryColor === "string") {
 			workingDiv.startingBgColor = entriesToAdd[i].entryColor; // use given color if specified
@@ -2097,7 +2098,12 @@ function setRmbContextMenuEntries(data) {
 			workingDiv.startingBgColor = "#FFF8E1"; // start as off-white color
 		}
 		workingDiv.style.background = workingDiv.startingBgColor;
-		workingDiv.innerHTML = "&nbsp&nbsp&nbsp" + entriesToAdd[i].description + "&nbsp&nbsp&nbsp";
+		// special case for a separator (line) entry
+		if (entriesToAdd[i].description === "separator") {
+			workingDiv.innerHTML = "<hr>";
+		} else {
+			workingDiv.innerHTML = "&nbsp&nbsp&nbsp" + entriesToAdd[i].description + "&nbsp&nbsp&nbsp";
+		}
 		// add input field if app says to.
 		workingDiv.inputField = false;
 		if (entriesToAdd[i].inputField === true) {
