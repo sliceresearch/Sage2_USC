@@ -3945,6 +3945,7 @@ function uploadForm(req, res) {
 	});
 
 	form.on('end', function() {
+		console.log("upload end!!!!!!!!!!!!!!!");
 		// saves files in appropriate directory and broadcasts the items to the displays
 		manageUploadedFiles(this.openedFiles, position, ptrName, ptrColor, openAfter);
 	});
@@ -3955,7 +3956,7 @@ function manageUploadedFiles(files, position, ptrName, ptrColor, openAfter) {
 	fileKeys.forEach(function(key) {
 		var file = files[key];
 		appLoader.manageAndLoadUploadedFile(file, function(appInstance, videohandle) {
-
+			console.log("Coming to this part!");
 			if (appInstance === null) {
 				console.log(sageutils.header("Upload") + 'unrecognized file type: ' + file.name + ' ' + file.type);
 				return;
@@ -3964,7 +3965,8 @@ function manageUploadedFiles(files, position, ptrName, ptrColor, openAfter) {
 			// Add user information into exif data
 			assets.addTag(appInstance.file, "SAGE2user",  ptrName);
 			assets.addTag(appInstance.file, "SAGE2color", ptrColor);
-
+			// send the update file list
+			broadcast('storedFileList', getSavedFilesList());
 			// contains a flag to open the file or not
 			if (openAfter) {
 				// Use the size from the drop information
@@ -4002,8 +4004,7 @@ function manageUploadedFiles(files, position, ptrName, ptrColor, openAfter) {
 				handleNewApplication(appInstance, videohandle);
 			}
 
-			// send the update file list
-			broadcast('storedFileList', getSavedFilesList());
+			
 		});
 	});
 }
@@ -7424,6 +7425,7 @@ function showOrHideWidgetLinks(data) {
 
 function wsSaveAppData(wsio, data) {
 	if (wsio === masterDisplay && SAGE2Items.applications.list.hasOwnProperty(data.id)) {
+		console.log("Save key to:" + data.data.file);
 		registry.saveKey(data.data.file, data.data.annotations);
 	}
 }

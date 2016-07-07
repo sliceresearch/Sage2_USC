@@ -876,6 +876,10 @@ var recursiveReaddirSync = function(aPath) {
 };
 
 var refresh = function(root, callback) {
+	var fileTypes = [ "ndpi", "svs", "tif", "vms", "vmu", "scn", "mrxs", "tiff", "svslide", "bif", "dzi" ];
+	var histDirectory = "histology";
+	registry.register("histologyViewer", fileTypes, histDirectory, false);
+
 	var uploaded = recursiveReaddirSync(root);
 
 	var thelist = [];
