@@ -63,8 +63,6 @@ var leaflet = SAGE2_App.extend({
 		this.map1 = null;
 		this.map2 = null;
 
-		this.whichMap = 1;
-
 		this.bigCollection = {};
 
 		this.numBeats = SAGE2_policeDistricts.length;
@@ -145,25 +143,32 @@ var leaflet = SAGE2_App.extend({
 		this.map.setView([this.saveStartLat, this.saveStartLng], this.saveStartZoom); // new May 2016
 	},
 
+	getColorForMap: function(mapType) {
+		if (mapType === 2) {
+			return ("black");
+		} else {
+			return ("white");
+		}
+	},
+
 	changeMap: function() {
 		var selectedOnes = null;
+		var newTextColor = "";
 
-		if (this.whichMap === 1) {
-			this.whichMap = 2;
+		if (this.state.whichMap === 1) {
 			this.state.whichMap = 2;
+			newTextColor = this.getColorForMap(this.state.whichMap);
 			this.map.removeLayer(this.map1);
 			this.map2.addTo(this.map);
-
 			selectedOnes = this.g.selectAll("text");
-			selectedOnes.style("fill", "black");
-		} else {
-			this.whichMap = 1;
+			selectedOnes.style("stroke", newTextColor);
+		} else { // whichMap should be 2
 			this.state.whichMap = 1;
+			newTextColor = this.getColorForMap(this.state.whichMap);
 			this.map.removeLayer(this.map2);
 			this.map1.addTo(this.map);
-
 			selectedOnes = this.g.selectAll("text");
-			selectedOnes.style("fill", "white");
+			selectedOnes.style("stroke", newTextColor);
 		}
 	},
 
@@ -267,37 +272,42 @@ var leaflet = SAGE2_App.extend({
 
 		});
 
+		var circleSize = 1;
+		circleSize = this.state.zoomLevel / 1.5;
+
 		/* eslint-disable brace-style */
 		var feature = this.g.selectAll("circle")
 		.data(collection)
 		.enter()
 		.append("svg:circle")
 		.style("stroke", function(d) { if (d.inLastMonth) { return "black"; } else { return "white"; } })
-		.style("stroke-width", function(d) { if (d.inLastMonth) { return 6; } else { return 2; } })
+		.style("stroke-width", function(d) { if (d.inLastMonth) { return 4; } else { return 2; } })
 		.style("opacity", function(d) { if (d.inLastMonth) { return 1.0; } else { return 0.4; } })
 		.style("fill", function(d) { return d.color; })
-		.attr("r", 15);
+		.attr("r", circleSize); // 15
 
 		/* eslint-enable brace-style */
 
-		var myTextColor;
-		if (this.whichMap === 2) {
-			myTextColor = "black";
-		} else {
-			myTextColor = "white";
-		}
+		var myStrokeColor;
+
+		myStrokeColor = this.getColorForMap(this.state.whichMap);
+
+
+		var fontSize; // = "30px";
+		//base fontsize on this.state.zoomLevel
+		fontSize = (Math.round(this.state.zoomLevel * 1.5)).toString() + "px";
 
 
 		var feature2 = this.g.selectAll("text")
 			.data(collection)
 			.enter()
 			.append("svg:text")
-			.style("fill", myTextColor)
-			.style("stroke", function(d) {
+			.style("fill", function(d) {
 				return d.color;
 			})
+			.style("stroke", myStrokeColor)
 			.style("stroke-width", "1")
-			.style("font-size", "30px")
+			.style("font-size", fontSize)
 			.style("font-family", "Arial")
 			.style("text-anchor", "start")
 			.style("font-weight", "bold")
@@ -359,6 +369,87 @@ var leaflet = SAGE2_App.extend({
 		this.map.invalidateSize();
 
 		this.refresh(date);
+	},
+
+	/**
+	* To enable right click context menu support this function needs to be present with this format.
+	*
+	* Must return an array of entries. An entry is an object with three properties:
+	*	description: what is to be displayed to the viewer.
+	*	callback: String containing the name of the function to activate in the app. It must exist.
+	*	parameters: an object with specified datafields to be given to the function.
+	*		The following attributes will be automatically added by server.
+	*			serverDate, on the return back, server will fill this with time object.
+	*			clientId, unique identifier (ip and port) for the client that selected entry.
+	*			clientName, the name input for their pointer. Note: users are not required to do so.
+	*			clientInput, if entry is marked as input, the value will be in this property. See pdf_viewer.js for example.
+	*		Further parameters can be added. See pdf_view.js for example.
+	*/
+	getContextEntries: function() {
+		var entries = [];
+		var entry;
+
+		entry = {};
+		entry.description = "Change Map View";
+		entry.callback = "changeMapView";
+		entry.parameters = {};
+		entry.parameters.page = "change Map";
+		entries.push(entry);
+
+		entry = {};
+		entry.description = "Zoom in";
+		entry.callback = "changeMapView";
+		entry.parameters = {};
+		entry.parameters.page = "Zoom In";
+		entries.push(entry);
+
+		entry = {};
+		entry.description = "Zoom Out";
+		entry.callback = "changeMapView";
+		entry.parameters = {};
+		entry.parameters.page = "Zoom Out";
+		entries.push(entry);
+
+		entry = {};
+		entry.description = "Reset View";
+		entry.callback = "changeMapView";
+		entry.parameters = {};
+		entry.parameters.page = "Home";
+		entries.push(entry);
+
+
+		return entries;
+	},
+
+	/**
+	* Support function to allow page changing through right mouse context menu.
+	*
+	* @method changeThePage
+	* @param responseObject {Object} contains response from entry selection
+	*/
+	changeMapView: function(responseObject) {
+		var page = responseObject.page;
+
+		switch (page) {
+			case "Home":
+				this.resetMap();
+				break;
+			case "change Map":
+				this.changeMap();
+				break;
+			case "Zoom In":
+				this.zoomIn(new Date(responseObject.serverDate));
+				break;
+			case "Zoom Out":
+				this.zoomOut(new Date(responseObject.serverDate));
+				break;
+			default:
+				console.log("No handler for:", page);
+				return;
+		}
+
+		// This needs to be a new date for the extra function.
+		this.refresh(new Date(responseObject.serverDate));
 	},
 
 	event: function(eventType, pos, user, data, date) {

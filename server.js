@@ -9,7 +9,12 @@
 // Copyright (c) 2014-2015
 
 /**
+ * SAGE2 server
+ *
+ * @class server
  * @module server
+ * @submodule server-core
+ * @requires fs http https os path readline url formidable gm json5 qr-image sprint websocketio
  */
 
 
@@ -187,7 +192,11 @@ console.log(sageutils.header("SAGE2") + "SAGE2 Short Version:\t" + SAGE2_version
 // Initialize Server
 initializeSage2Server();
 
-
+/**
+ * initialize the SAGE2 server
+ *
+ * @method     initializeSage2Server
+ */
 function initializeSage2Server() {
 	// Remove API keys from being investigated further
 	// if (config.apis) delete config.apis;
@@ -289,7 +298,7 @@ function initializeSage2Server() {
 
 	// Add a flag into the configuration to denote password status (used on display side)
 	//   not protected by default
-	config.passordProtected = false;
+	config.passwordProtected = false;
 	// Check for the session password file
 	var userDocPath = path.join(sageutils.getHomeDirectory(), "Documents", "SAGE2_Media", "/");
 	var passwordFile = userDocPath + 'passwd.json';
@@ -301,7 +310,7 @@ function initializeSage2Server() {
 		fs.writeFileSync(passwordFile, JSON.stringify({pwd: global.__SESSION_ID}));
 		console.log(sageutils.header("Secure") + "Saved to file name " + passwordFile);
 		// the session is protected
-		config.passordProtected = true;
+		config.passwordProtected = true;
 	} else if (sageutils.fileExists(passwordFile)) {
 		// If a password file exists, load it
 		var passwordFileJsonString = fs.readFileSync(passwordFile, 'utf8');
@@ -310,7 +319,7 @@ function initializeSage2Server() {
 			global.__SESSION_ID = passwordFileJson.pwd;
 			console.log(sageutils.header("Secure") + "A sessionID was found: " + passwordFileJson.pwd);
 			// the session is protected
-			config.passordProtected = true;
+			config.passwordProtected = true;
 		} else {
 			console.log(sageutils.header("Secure") + "Invalid hash file " + passwordFile);
 		}
@@ -551,6 +560,12 @@ function setUpDialogsAsInteractableObjects() {
 	interactMgr.addGeometry("rejectDataSharingRequest", "staticUI", "rectangle", rejectCancelGeometry, false, 2, null);
 }
 
+/**
+ * Send a message to all clients using websocket
+ * @method broadcast
+ * @param  name    {String}      name of the message
+ * @param  data    {Object}      data of the message
+ */
 function broadcast(name, data) {
 	wsioServer.broadcast(name, data);
 	wsioServerS.broadcast(name, data);
@@ -561,6 +576,13 @@ exports.config    = config;
 exports.broadcast = broadcast;
 exports.dirname   = path.join(__dirname, "node_modules");
 
+
+/**
+ * Print a message to all the web consoles
+ *
+ * @method     emitLog
+ * @param      {Object}  data    object to print
+ */
 function emitLog(data) {
 	if (wsioServer === null || wsioServerS === null) {
 		return;
@@ -595,12 +617,23 @@ process.on('uncaughtException', function(err) {
 });
 
 
-
+/**
+ * Callback when a client connects
+ *
+ * @method     openWebSocketClient
+ * @param      {Websocket}  wsio    The websocket for this client
+ */
 function openWebSocketClient(wsio) {
 	wsio.onclose(closeWebSocketClient);
 	wsio.on('addClient', wsAddClient);
 }
 
+/**
+ * Callback when a client closes
+ *
+ * @method     closeWebSocketClient
+ * @param      {Websocket}  wsio    websocket of the client
+ */
 function closeWebSocketClient(wsio) {
 	var i;
 	var key;
@@ -672,9 +705,16 @@ function closeWebSocketClient(wsio) {
 
 }
 
+/**
+ * Callback that configures a new client
+ *
+ * @method     wsAddClient
+ * @param      {Websocket}  wsio    client's websocket
+ * @param      {Object}  data    initialization data
+ */
 function wsAddClient(wsio, data) {
 	// Check for password
-	if (config.passordProtected) {
+	if (config.passwordProtected) {
 		if (!data.session || data.session !== global.__SESSION_ID) {
 			console.log(sageutils.header("WebsocketIO") + "wrong session hash - closing");
 			// Send a message back to server
@@ -750,6 +790,16 @@ function wsAddClient(wsio, data) {
 	}
 }
 
+/**
+ * Sends the firt messages when client built
+ *
+ * @method     initializeWSClient
+ * @param      {Websocket}  wsio        client's websocket
+ * @param      {bool}  reqConfig   client requests configuration
+ * @param      {bool}  reqVersion  client requests version
+ * @param      {bool}  reqTime     client requests time information
+ * @param      {bool}  reqConsole  client requests console messages
+ */
 function initializeWSClient(wsio, reqConfig, reqVersion, reqTime, reqConsole) {
 	setupListeners(wsio);
 
@@ -778,6 +828,8 @@ function initializeWSClient(wsio, reqConfig, reqVersion, reqTime, reqConsole) {
 		initializeRemoteServerInfo(wsio);
 		initializeExistingWallUI(wsio);
 		setTimeout(initializeExistingControls, 6000, wsio); // why can't this be done immediately with the rest?
+	} else if (wsio.clientType === "audioManager") {
+		initializeExistingAppsAudio(wsio);
 	} else if (wsio.clientType === "sageUI") {
 		createSagePointer(wsio.id);
 		var key;
@@ -802,6 +854,12 @@ function initializeWSClient(wsio, reqConfig, reqVersion, reqTime, reqConsole) {
 	}
 }
 
+/**
+ * Installs all the message callbacks on a websocket
+ *
+ * @method     setupListeners
+ * @param      {Websocket}  wsio    concerned websocket
+ */
 function setupListeners(wsio) {
 	wsio.on('registerInteractionClient',            wsRegisterInteractionClient);
 
@@ -946,6 +1004,25 @@ function setupListeners(wsio) {
 	wsio.on('csdMessage',							wsCsdMessage);
 }
 
+/**
+ * Ensures that new audioManager instances get metadata about all existing apps
+ *
+ * @method     initializeExistingAppsAudio
+ * @param      {Websocket}  wsio    client's websocket
+ */
+function initializeExistingAppsAudio(wsio) {
+	var key;
+	for (key in SAGE2Items.applications.list) {
+		wsio.emit('createAppWindow', SAGE2Items.applications.list[key]);
+	}
+}
+
+/**
+ * Rebuilds the application widgets for a given client
+ *
+ * @method     initializeExistingControls
+ * @param      {Websocket}  wsio    client's websocket
+ */
 function initializeExistingControls(wsio) {
 	var i;
 	var uniqueID;
@@ -994,6 +1071,12 @@ function initializeExistingControls(wsio) {
 	}
 }
 
+/**
+ * Rebuilds the pointers for a given client
+ *
+ * @method     initializeExistingSagePointers
+ * @param      {Websocket}  wsio    client's websocket
+ */
 function initializeExistingSagePointers(wsio) {
 	for (var key in sagePointers) {
 		if (sagePointers.hasOwnProperty(key)) {
@@ -1003,6 +1086,12 @@ function initializeExistingSagePointers(wsio) {
 	}
 }
 
+/**
+ * Rebuilds the wall radial menu for a given client
+ *
+ * @method     initializeExistingWallUI
+ * @param      {Websocket}  wsio    client's websocket
+ */
 function initializeExistingWallUI(wsio) {
 	var menuInfo;
 	if (config.ui.reload_wallui_on_refresh === false) {
@@ -1397,8 +1486,8 @@ function wsUpdateMediaStreamFrame(wsio, data) {
 		var checkWidth  = config.resolution.width;
 		var checkHeight = config.resolution.height;
 		// Check for irregular tiles
-		checkWidth  *= (config.displays[did].width  || 1);
-		checkHeight *= (config.displays[did].height || 1);
+		checkWidth  *= config.displays[did].width;
+		checkHeight *= config.displays[did].height;
 
 		// If the app window and the display overlap
 		if (doOverlap(left, top, stream.width, stream.height,
@@ -2789,9 +2878,9 @@ function calculateValidBlocks(app, blockSize, renderhandle) {
 					var offsetY = config.resolution.height * display.row;
 
 					if ((left + renderBlockWidth) >= offsetX &&
-						left <= (offsetX + config.resolution.width * (display.width || 1)) &&
+						left <= (offsetX + config.resolution.width * display.width) &&
 						(top + renderBlockHeight) >= offsetY &&
-						top  <= (offsetY + config.resolution.height * (display.height || 1))) {
+						top  <= (offsetY + config.resolution.height * display.height)) {
 						renderhandle.clients[key].blocklist.push(blockIdx);
 					}
 				}
@@ -3852,6 +3941,7 @@ function loadConfiguration() {
 		};
 	}
 
+	// Check the display border settings
 	if (userConfig.dimensions.tile_borders === undefined) {
 		// set default values to 0
 		// first for pixel sizes
@@ -3889,6 +3979,13 @@ function loadConfiguration() {
 		userConfig.resolution.borders.right  = Math.round(pixelsPerMeter * borderRight)  || 0;
 		userConfig.resolution.borders.bottom = Math.round(pixelsPerMeter * borderBottom) || 0;
 		userConfig.resolution.borders.top    = Math.round(pixelsPerMeter * borderTop)    || 0;
+	}
+
+	// Check the width and height of each display (in tile count)
+	// by default, a display covers one tile
+	for (var d = 0; d < userConfig.displays.length; d++) {
+		userConfig.displays[d].width  = parseInt(userConfig.displays[d].width)  || 1;
+		userConfig.displays[d].height = parseInt(userConfig.displays[d].height) || 1;
 	}
 
 	// legacy support for config port names
@@ -4053,7 +4150,10 @@ function sliceBackgroundImage(fileName, outputBaseName) {
 		var output_ext  = path.extname(fileName);
 		var output_base = path.basename(outputBaseName, input_ext);
 		var output = path.join(output_dir, output_base + "_" + i.toString() + output_ext);
-		imageMagick(fileName).crop(config.resolution.width, config.resolution.height, x, y).write(output, function(err) {
+		imageMagick(fileName).crop(
+			config.resolution.width * config.displays[i].width,
+			config.resolution.height * config.displays[i].height, x, y)
+		.write(output, function(err) {
 			if (err) {
 				console.log("error slicing image", err); // throw err;
 			}
@@ -4177,7 +4277,13 @@ function setupHttpsOptions() {
 
 function sendConfig(req, res) {
 	var header = HttpServer.prototype.buildHeader();
-	header["Content-Type"] = "text/plain";
+	// Set type
+	header["Content-Type"] = "application/json";
+	// Allow CORS on the /config route
+	header['Access-Control-Allow-Origin' ]     = req.headers.origin;
+	header['Access-Control-Allow-Methods']     = "GET";
+	header['Access-Control-Allow-Headers']     = "X-Requested-With, X-HTTP-Method-Override, Content-Type, Accept";
+	header['Access-Control-Allow-Credentials'] = true;
 	res.writeHead(200, header);
 	// Adding the calculated version into the data structure
 	config.version = SAGE2_version;
@@ -5459,6 +5565,11 @@ function pointerPressOnApplication(uniqueID, pointerX, pointerY, data, obj, loca
 		if (data.button === "right") {
 			var elemCtrl = SAGE2Items.widgets.list[obj.id + uniqueID + "_controls"];
 			if (!elemCtrl) {
+				// if no UI element, send event to app if in interaction mode
+				if (remoteInteraction[uniqueID].appInteractionMode()) {
+					sendPointerPressToApplication(uniqueID, obj.data, pointerX, pointerY, data);
+				}
+				// Request a control (do not know in advance)
 				broadcast('requestNewControl', {elemId: obj.id, user_id: uniqueID,
 					user_label: sagePointers[uniqueID] ? sagePointers[uniqueID].label : "",
 					x: pointerX, y: pointerY, date: Date.now() });

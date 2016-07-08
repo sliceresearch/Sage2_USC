@@ -16,16 +16,17 @@ module.exports = function(grunt) {
 						"src/*.js",
 						"bin/*.js",
 						"public/uploads/apps/welcome/plugin.js",
-						"public/uploads/apps/tweetcloud2/plugin.js",
+						"public/uploads/apps/chronicles_of_spaceman_spiff/plugin.js",
+						"public/uploads/apps/chemViewer/plugin.js"
 						]
 				},
-				options: { config: "build/.eslintrc" }
+				options: { configFile: "build/.eslintrc" }
 			},
 			browserFiles: {
 				files: {
 					src: ['public/src/*.js', 'public/admin/*.js']
 				},
-				options: { config: "build/.eslint_client_rc" }
+				options: { configFile: "build/.eslint_client_rc" }
 			},
 			appsFiles: {
 				files: {
@@ -54,7 +55,7 @@ module.exports = function(grunt) {
 						"public/uploads/apps/zoom/zoom.js"
 					]
 				},
-				options: { config: "build/.eslint_client_rc" }
+				options: { configFile: "build/.eslint_client_rc" }
 			}
 		},
 		jscs: {
@@ -65,7 +66,8 @@ module.exports = function(grunt) {
 					"src/*.js",
 					"bin/*.js",
 					"public/uploads/apps/welcome/plugin.js",
-					"public/uploads/apps/tweetcloud2/plugin.js",
+					"public/uploads/apps/chronicles_of_spaceman_spiff/plugin.js",
+					"public/uploads/apps/chemViewer/plugin.js"
 					],
 				options: { config: "build/jscs_server.json" }
 			},
@@ -115,7 +117,7 @@ module.exports = function(grunt) {
 					outdir: "./doc/api",
 					themedir: "./doc/theme",
 					paths: [ "." ],
-					exclude: "public/lib,public/uploads,doc,build"
+					exclude: "public/lib,public/uploads,doc,build,extras"
 				}
 			}
 		},

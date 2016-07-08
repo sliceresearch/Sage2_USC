@@ -216,21 +216,26 @@ function UIBuilder(json_cfg, clientID) {
 								_this.json_cfg.background.image.url.substring(ext);
 						}
 
-						_this.bg.style.top    = "0px";
-						_this.bg.style.left   = "0px";
-						_this.bg.style.width  = _this.json_cfg.resolution.width + "px";
-						_this.bg.style.height = _this.json_cfg.resolution.height + "px";
+						_this.bg.style.top    = 0;
+						_this.bg.style.left   = 0;
+						_this.bg.style.width  = _this.json_cfg.resolution.width *
+							(_this.json_cfg.displays[_this.clientID].width || 1) + "px";
+						_this.bg.style.height = _this.json_cfg.resolution.height *
+							(_this.json_cfg.displays[_this.clientID].height || 1) + "px";
 
 						_this.bg.style.backgroundImage    = "url(" + bgImgFinal + ")";
 						_this.bg.style.backgroundPosition = "top left";
 						_this.bg.style.backgroundRepeat   = "no-repeat";
-						_this.bg.style.backgroundSize     = _this.json_cfg.resolution.width + "px " +
-							_this.json_cfg.resolution.height + "px";
+						_this.bg.style.backgroundSize     = _this.json_cfg.resolution.width *
+							(_this.json_cfg.displays[_this.clientID].width || 1) + "px " +
+							_this.json_cfg.resolution.height * (_this.json_cfg.displays[_this.clientID].height || 1) + "px";
 
-						_this.main.style.top    = "0px";
-						_this.main.style.left   = "0px";
-						_this.main.style.width  = _this.json_cfg.resolution.width  + "px";
-						_this.main.style.height = _this.json_cfg.resolution.height + "px";
+						_this.main.style.top    = 0;
+						_this.main.style.left   = 0;
+						_this.main.style.width  = _this.json_cfg.resolution.width *
+							(_this.json_cfg.displays[_this.clientID].width || 1)  + "px";
+						_this.main.style.height = _this.json_cfg.resolution.height *
+							(_this.json_cfg.displays[_this.clientID].height || 1) + "px";
 					}
 				}, false);
 				bgImg.src = this.json_cfg.background.image.url;
@@ -406,7 +411,7 @@ function UIBuilder(json_cfg, clientID) {
 				url = this.json_cfg.url;
 			}
 			// If the SAGE2 session is password protected, add a lock symbol
-			if (this.json_cfg.passordProtected) {
+			if (this.json_cfg.passwordProtected) {
 				// not portable: machine.innerHTML = url + " &#128274;";
 				machine.innerHTML = url + " <span><img style=\"vertical-align: text-top;\" src=\"images/lock.png\" height=" +
 					this.titleTextSize + "/></span>";

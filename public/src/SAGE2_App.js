@@ -753,6 +753,7 @@ var SAGE2_App = Class.extend({
 		msgObject.id     = this.id;
 		msgObject.width  = newWidth;
 		msgObject.height = newHeight;
+		msgObject.keepRatio = false;
 		// Send the message to the server
 		wsio.emit('appResize', msgObject);
 	},
@@ -792,6 +793,22 @@ var SAGE2_App = Class.extend({
 	*/
 	applicationRPC: function(query, funcName, broadcast) {
 		wsio.emit('applicationRPC', {app: this.div.id, func: funcName, query: query, broadcast: broadcast});
+	},
+
+	/**
+	* Entry point for a RPC callback into the app. Needed to keep state consistant
+	*
+	* @method callback
+	* @param func {Function} actual method to call
+	* @param data {Object} parameters sent from server
+	*/
+	callback: function(func, data) {
+		// Make to allow state modification
+		this.SAGE2UserModification = true;
+		// if app calls 'refresh', state will be updated
+		this[func](data);
+		// End tracking
+		this.SAGE2UserModification = false;
 	},
 
 	/**

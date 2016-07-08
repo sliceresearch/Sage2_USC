@@ -20,7 +20,7 @@
 // require variables to be declared
 "use strict";
 
-var SAGE2_version = require('../package.json').version;
+var SAGE2_version = require('../package.json');
 
 var crypto  = require('crypto');              // https encryption
 var exec    = require('child_process').exec;  // execute external application
@@ -158,7 +158,7 @@ function loadCABundle(filename) {
  * @return {String} version number as x.x.x
  */
 function getShortVersion() {
-	return SAGE2_version;
+	return SAGE2_version.version;
 }
 
 
@@ -182,7 +182,9 @@ function getNodeVersion() {
 function getFullVersion(callback) {
 	var fullVersion  = {base: "", branch: "", commit: "", date: ""};
 	// get the base version from package.json file
-	fullVersion.base = getShortVersion();
+	fullVersion.base = SAGE2_version.version;
+	// Pick up the date from package.json, if any
+	fullVersion.date = SAGE2_version.date || "";
 
 	// get to the root folder of the sources
 	var dirroot = path.resolve(__dirname, '..');
@@ -206,7 +208,7 @@ function getFullVersion(callback) {
 			var parse  = result.split("|");
 
 			// filling up the object
-			fullVersion.branch = branch; // branch.substring(1, branch.length-1);
+			fullVersion.branch = branch;
 			fullVersion.commit = parse[0];
 			fullVersion.date   = parse[1].replace(/-/g, "/");
 
