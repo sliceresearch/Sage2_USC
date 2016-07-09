@@ -1068,8 +1068,9 @@ function RadialMenu() {
 					} else {
 						thumbnailButton.setButtonImage(radialMenuIcons["images/ui/images.svg"]);
 					}
+
 					// File has a bad filename for thumbnails, set default icon
-					if (imageList[i].exif.SAGE2thumbnail.match(invalidFilenameRegex) !== null) {
+					if (imageList[i].exif.SAGE2thumbnail !== undefined && imageList[i].exif.SAGE2thumbnail.match(invalidFilenameRegex) !== null) {
 						thumbnailButton.setButtonImage(radialMenuIcons["images/ui/images.svg"]);
 					}
 
@@ -1107,7 +1108,7 @@ function RadialMenu() {
 					thumbnailButton.setButtonImage(radialMenuIcons["images/ui/pdfs.svg"]);
 				}
 				// File has a bad filename for thumbnails, set default icon
-				if (pdfList[i].exif.SAGE2thumbnail.match(invalidFilenameRegex) !== null) {
+				if (pdfList[i].exif.SAGE2thumbnail !== undefined && pdfList[i].exif.SAGE2thumbnail.match(invalidFilenameRegex) !== null) {
 					thumbnailButton.setButtonImage(radialMenuIcons["images/ui/pdfs.svg"]);
 				}
 
@@ -1143,7 +1144,7 @@ function RadialMenu() {
 					thumbnailButton.setButtonImage(radialMenuIcons["images/ui/videos.svg"]);
 				}
 				// File has a bad filename for thumbnails, set default icon
-				if (videoList[i].exif.SAGE2thumbnail.match(invalidFilenameRegex) !== null) {
+				if (videoList[i].exif.SAGE2thumbnail !== undefined && videoList[i].exif.SAGE2thumbnail.match(invalidFilenameRegex) !== null) {
 					thumbnailButton.setButtonImage(radialMenuIcons["images/ui/videos.svg"]);
 				}
 
@@ -1178,7 +1179,7 @@ function RadialMenu() {
 					thumbnailButton.setButtonImage(radialMenuIcons["images/ui/applauncher.svg"]);
 				}
 				// File has a bad filename for thumbnails, set default icon
-				if (appList[i].exif.SAGE2thumbnail.match(invalidFilenameRegex) !== null) {
+				if (appList[i].exif.SAGE2thumbnail !== undefined && appList[i].exif.SAGE2thumbnail.match(invalidFilenameRegex) !== null) {
 					thumbnailButton.setButtonImage(radialMenuIcons["images/ui/applauncher.svg"]);
 				}
 
