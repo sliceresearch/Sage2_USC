@@ -419,12 +419,12 @@ RadialMenu.prototype.setPosition = function(data) {
 
 		var buttonRadius = 25 * this.radialMenuScale;
 		var angle = (90 + this.buttonAngle * buttonInfo.radialPosition) * (Math.PI / 180);
-		var position = {x: this.left - (this.menuRadius - buttonRadius / 2) * this.radialMenuScale * Math.cos(angle),
-						y: this.top - (this.menuRadius - buttonRadius / 2) * this.radialMenuScale * Math.sin(angle) };
+		var position = {x: this.left - (this.menuRadius) * this.radialMenuScale * Math.cos(angle),
+						y: this.top - (this.menuRadius) * this.radialMenuScale * Math.sin(angle) };
 
 		if (buttonInfo.radialLevel === 0) {
-			position = {x: this.left - (0 - buttonRadius / 2) * this.radialMenuScale * Math.cos(angle),
-						y: this.top - (0 - buttonRadius / 2) * this.radialMenuScale * Math.sin(angle) };
+			position = {x: this.left - buttonRadius / 2 * this.radialMenuScale,
+						y: this.top - buttonRadius / 2 * this.radialMenuScale};
 		} else if (buttonInfo.radialLevel === 2) {
 			position = {x: this.left - (this.menuRadius * 1.6 - buttonRadius / 2) * this.radialMenuScale * Math.cos(angle),
 						y: this.top - (this.menuRadius * 1.6 - buttonRadius / 2) * this.radialMenuScale * Math.sin(angle) };
@@ -432,7 +432,7 @@ RadialMenu.prototype.setPosition = function(data) {
 
 		// console.log("setPosition: " + buttonName + " " +menuRadius * Math.cos(angle) + " " + menuRadius * Math.sin(angle) );
 		this.interactMgr.editGeometry(this.id + "_menu_radial_button_" + buttonName, "radialMenus",
-									"circle", {x: position.x, y: position.y, r: buttonRadius});
+									"rectangle", {x: position.x, y: position.y, w: buttonRadius * 2, h: buttonRadius * 2});
 		this.interactMgr.editVisibility(this.id + "_menu_radial_button_" + buttonName, "radialMenus", true);
 	}
 	// console.log("done");
