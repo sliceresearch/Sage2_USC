@@ -176,7 +176,8 @@ function OmicronManager(sysConfig) {
 
 	// For accepting input server connection
 	var server = net.createServer(function(socket) {
-		console.log(sageutils.header('Omicron') + 'Input server "' + socket.remoteAddress + '" connected on port ' + socket.remotePort);
+		console.log(sageutils.header('Omicron') + 'Input server "' +
+			socket.remoteAddress + '" connected on port ' + socket.remotePort);
 
 		socket.on('error', function(e) {
 			console.log(sageutils.header('Omicron') + 'Input server disconnected');
@@ -194,11 +195,13 @@ function OmicronManager(sysConfig) {
 			msgPort = this.config.msgPort;
 		}
 
-		console.log(sageutils.header('Omicron') + 'Connecting to Omicron oinputserver at "' + omicronManager.config.inputServerIP +
-				'" on msgPort: ' + msgPort + '.');
+		console.log(sageutils.header('Omicron') + 'Connecting to Omicron oinputserver at "' +
+			omicronManager.config.inputServerIP + '" on msgPort: ' + msgPort + '.');
+
 		this.oinputserverSocket = net.connect(msgPort, this.config.inputServerIP,  function() {
 			// 'connect' listener
-			console.log(sageutils.header('Omicron') + 'Connection Successful. Requesting data on port ', omicronManager.omicronDataPort);
+			console.log(sageutils.header('Omicron') +
+				'Connection Successful. Requesting data on port ', omicronManager.omicronDataPort);
 
 			var sendbuf = util.format("omicron_data_on,%d\n", omicronManager.omicronDataPort);
 			omicronManager.oinputserverSocket.write(sendbuf);
@@ -303,7 +306,7 @@ OmicronManager.prototype.runTracker = function() {
 	});
 
 	udp.bind(this.omicronDataPort);
-}
+};
 
 OmicronManager.prototype.processIncomingEvent = function(msg, rinfo) {
 	var dstart = Date.now();
@@ -631,13 +634,13 @@ OmicronManager.prototype.processPointerEvent = function(e, sourceID, posX, posY,
 
 	if (isOInput && drawingManager.drawingMode) {
 		// If the touch is coming from oinput send it to node-drawing and stop after that
-		drawingManager.pointerEvent(e,sourceID,posX,posY,touchWidth,touchHeight);
+		drawingManager.pointerEvent(e, sourceID, posX, posY, touchWidth, touchHeight);
 		return;
 	}
 
 	// If the user touches on the palette with drawing disabled, enable it
-	if ((!drawingManager.drawingMode) && drawingManager.touchInsidePalette(posX,posY) && e.type === 5
-		&& isOInput) {
+	if ((!drawingManager.drawingMode) && drawingManager.touchInsidePalette(posX, posY)
+		&& e.type === 5 && isOInput) {
 		drawingManager.reEnableDrawingMode();
 	}
 
@@ -800,7 +803,8 @@ OmicronManager.prototype.processPointerEvent = function(e, sourceID, posX, posY,
 				// Zoom move
 				omicronManager.pointerScroll(address, { wheelDelta: -zoomDelta * omicronManager.touchZoomScale });
 
-				if (omicronManager.initZoomPos[sourceID] !== undefined && omicronManager.pointerGestureState[sourceID] === "zoom") {
+				if (omicronManager.initZoomPos[sourceID] !== undefined &&
+					omicronManager.pointerGestureState[sourceID] === "zoom") {
 					initX = omicronManager.initZoomPos[sourceID].initX;
 					initY = omicronManager.initZoomPos[sourceID].initY;
 				}

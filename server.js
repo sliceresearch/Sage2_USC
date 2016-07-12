@@ -435,8 +435,8 @@ function drawingRemove(clientWebSocket, drawingObject) {
 	clientWebSocket.emit("drawingRemove", drawingObject);
 }
 
-function sendTouchToPalette(paletteID,x,y) {
-	var ePosition = {x: x , y: y};
+function sendTouchToPalette(paletteID, x, y) {
+	var ePosition = {x: x, y: y};
 	var eUser = {id: 1, label: "Touch", color: "none"};
 
 	var event = {
@@ -450,8 +450,8 @@ function sendTouchToPalette(paletteID,x,y) {
 
 	broadcast('eventInItem', event);
 }
-function sendDragToPalette(paletteID,x,y) {
-	var ePosition = {x: x , y: y};
+function sendDragToPalette(paletteID, x, y) {
+	var ePosition = {x: x, y: y};
 	var eUser = {id: 1, label: "Touch", color: "none"};
 
 	var event = {
@@ -466,8 +466,8 @@ function sendDragToPalette(paletteID,x,y) {
 	broadcast('eventInItem', event);
 }
 
-function sendStyleToPalette(paletteID,style) {
-	var ePosition = {x: 0 , y: 0};
+function sendStyleToPalette(paletteID, style) {
+	var ePosition = {x: 0, y: 0};
 	var eUser = {id: 1, label: "Touch", color: "none"};
 
 	var event = {
@@ -483,7 +483,7 @@ function sendStyleToPalette(paletteID,style) {
 }
 
 function sendSessionListToPalette(paletteID, data) {
-	var ePosition = {x: 0 , y: 0};
+	var ePosition = {x: 0, y: 0};
 	var eUser = {id: 1, label: "Touch", color: "none"};
 
 	var event = {
@@ -499,8 +499,8 @@ function sendSessionListToPalette(paletteID, data) {
 
 }
 
-function sendChangeToPalette(paletteID,data) {
-	var ePosition = {x: 0 , y: 0};
+function sendChangeToPalette(paletteID, data) {
+	var ePosition = {x: 0, y: 0};
 	var eUser = {id: 1, label: "Touch", color: "none"};
 
 	var event = {
@@ -515,7 +515,7 @@ function sendChangeToPalette(paletteID,data) {
 	broadcast('eventInItem', event);
 }
 
-function movePaletteTo(paletteID,x,y, w, h) {
+function movePaletteTo(paletteID, x, y, w, h) {
 	SAGE2Items.applications.list[paletteID].left = x;
 	SAGE2Items.applications.list[paletteID].top = y;
 	var moveApp = {
@@ -527,7 +527,7 @@ function movePaletteTo(paletteID,x,y, w, h) {
 		date: new Date()
 	};
 
-	moveApplicationWindow(null,moveApp, null);
+	moveApplicationWindow(null, moveApp, null);
 }
 
 
@@ -1172,27 +1172,27 @@ function wsDisableDrawingMode(wsio, data) {
 }
 
 
-function wsClearDrawingCanvas(wsio,data) {
+function wsClearDrawingCanvas(wsio, data) {
 	drawingManager.clearDrawingCanvas();
 }
 
-function wsChangeStyle(wsio,data) {
+function wsChangeStyle(wsio, data) {
 	drawingManager.changeStyle(data);
 }
 
-function wsUndoLastDrawing(wsio,data) {
+function wsUndoLastDrawing(wsio, data) {
 	drawingManager.undoLastDrawing();
 }
 
-function wsRedoDrawing(wsio,data) {
+function wsRedoDrawing(wsio, data) {
 	drawingManager.redoDrawing();
 }
 
-function wsLoadDrawings(wsio,data) {
+function wsLoadDrawings(wsio, data) {
 	drawingManager.loadDrawings(data);
 }
 
-function wsGetSessionsList(wsio,data) {
+function wsGetSessionsList(wsio, data) {
 	var allDrawings = getAllDrawingsessions();
 	drawingManager.gotSessionsList(allDrawings);
 }
@@ -1209,7 +1209,7 @@ function wsDisablePaintingMode(wsio, data) {
 	drawingManager.disablePaintingMode();
 }
 function wsSaveScreenshot(wsio, data) {
-	saveScreenshot(data["screenshot"]);
+	saveScreenshot(data.screenshot);
 }
 
 function wsSelectionModeOnOff(wsio, data) {
@@ -2057,8 +2057,7 @@ function saveDrawingSession(data) {
 	try {
 		fs.writeFileSync(fullpath, JSON.stringify(data, null, 4));
 		console.log(sageutils.header("Session") + "saved drawing session file to " + fullpath);
-	}
-	catch (err) {
+	} catch (err) {
 		console.log(sageutils.header("Session") + "error saving", err);
 	}
 }
@@ -2115,8 +2114,7 @@ function saveScreenshot(data) {
 	try {
 		fs.writeFile(fullpath, buf);
 		console.log(sageutils.header("Session") + "saved screenshot file to " + fullpath);
-	}
-	catch (err) {
+	} catch (err) {
 		console.log(sageutils.header("Session") + "error saving", err);
 	}
 }
@@ -3949,20 +3947,20 @@ function loadConfiguration() {
 		// then for dimensions
 		userConfig.dimensions.tile_borders = { left: 0.0, right: 0.0, bottom: 0.0, top: 0.0};
 	} else {
-		var borderLeft, borderRight, borderBottom, borderTop, tileWidth, tileHeight;
+		var borderLeft, borderRight, borderBottom, borderTop, tileHeight; // tileWidth,
 		// make sure the values are valid floats
 		borderLeft   = parseFloat(userConfig.dimensions.tile_borders.left)   || 0.0;
 		borderRight  = parseFloat(userConfig.dimensions.tile_borders.right)  || 0.0;
 		borderBottom = parseFloat(userConfig.dimensions.tile_borders.bottom) || 0.0;
 		borderTop    = parseFloat(userConfig.dimensions.tile_borders.top)    || 0.0;
-		tileWidth    = parseFloat(userConfig.dimensions.tile_width) || 0.0;
+		// tileWidth    = parseFloat(userConfig.dimensions.tile_width) || 0.0;
 		tileHeight   = parseFloat(userConfig.dimensions.tile_height) || 0.0;
 		// calculate pixel density (ppm) based on width
 		var pixelsPerMeter = userConfig.resolution.height / tileHeight;
 		// calculate the widget control size based on dimensions and user distance
 		if (userConfig.ui.auto_scale_ui) {
 			var objectHeightMeters = 27 / pixelsPerMeter;
-			var minimumWidgetControlSize = 20; // Min button size for text readability (also for touch wall)
+			// var minimumWidgetControlSize = 20; // Min button size for text readability (also for touch wall)
 			var perceptualScalingFactor = 0.0213;
 			var userDist = userConfig.dimensions.viewing_distance;
 			var calcuatedWidgetControlSize = userDist * (perceptualScalingFactor * (userDist / objectHeightMeters));
@@ -6255,9 +6253,9 @@ function moveAndResizeApplicationWindow(resizeApp, portalId) {
 		titleBarHeight = remoteSharingSessions[portalId].portal.titleBarHeight;
 	}
 	var im = findInteractableManager(resizeApp.elemId);
-	drawingManager.applicationMoved(resizeApp.elemId,resizeApp.elemLeft,resizeApp.elemTop);
+	drawingManager.applicationMoved(resizeApp.elemId, resizeApp.elemLeft, resizeApp.elemTop);
 	drawingManager.applicationResized(resizeApp.elemId, resizeApp.elemWidth, resizeApp.elemHeight + titleBarHeight,
-										{x: resizeApp.elemLeft,y: resizeApp.elemTop});
+										{x: resizeApp.elemLeft, y: resizeApp.elemTop});
 	im.editGeometry(resizeApp.elemId, "applications", "rectangle",
 		{x: resizeApp.elemLeft, y: resizeApp.elemTop, w: resizeApp.elemWidth, h: resizeApp.elemHeight + titleBarHeight});
 	handleApplicationResize(resizeApp.elemId);

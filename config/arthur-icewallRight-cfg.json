@@ -100,7 +100,7 @@
 		}
 	},
 	dependencies: {
-		ImageMagick: "C:/Program Files/ImageMagick-6.9.3-Q16/",
-		FFMpeg: "C:/Dev/ffmpeg-win64-shared/bin/"
+		ImageMagick: "",
+		FFMpeg: ""
     }
 }

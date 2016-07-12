@@ -853,12 +853,13 @@ function UIBuilder(json_cfg, clientID) {
 				for (s in drawingObject.style) {
 					newDraw.style(s, drawingObject.style[s]);
 				}
-				var lineFunction = d3.svg.line()
-                         .x(function(d) { return d.x; })
-                         .y(function(d) { return d.y; })
-                         .interpolate("basis");
+				var lineFunction = d3.svg.line().x(function(d) {
+					return d.x;
+				})
+				.y(function(d) {
+					return d.y;
+				}).interpolate("basis");
 				newDraw.attr("d", lineFunction(drawingObject.options.points));
-
 			}
 
 			if (drawingObject.type == "circle") {
@@ -928,8 +929,12 @@ function UIBuilder(json_cfg, clientID) {
 				if (drawingObject.type == "path") {
 
 					var lineFunction = d3.svg.line()
-										.x(function(d) { return d.x; })
-										.y(function(d) { return d.y; })
+										.x(function(d) {
+											return d.x;
+										})
+										.y(function(d) {
+											return d.y;
+										})
 										.interpolate("basis");
 
 					toUpdate.attr("d", lineFunction(drawingObject.options.points));
@@ -941,7 +946,7 @@ function UIBuilder(json_cfg, clientID) {
 					this.drawObject(drawingObject);
 				}
 			}
-		}else {
+		} else {
 			this.drawObject(drawingObject);
 		}
 	};
@@ -952,6 +957,7 @@ function UIBuilder(json_cfg, clientID) {
 			d3.select("#" + drawingObject.id).remove();
 		}
 	};
+
 	/**
 	* Create a pointer
 	*
