@@ -129,7 +129,7 @@ function RadialMenu(id, ptrID, config) {
 
 	this.buttonAngle = 36; // Degrees of separation between each radial button position
 	this.menuButtonSize = 100;
-	this.menuRadius = 110;
+	this.menuRadius = 95;
 
 	this.pointersOnMenu = {}; // Stores the pointerIDs that are on the menu, but not on a button
 
@@ -417,17 +417,17 @@ RadialMenu.prototype.setPosition = function(data) {
 
 		var buttonInfo = this.radialButtons[buttonName];
 
-		var buttonRadius = 25 * this.radialMenuScale;
+		var buttonRadius = this.menuButtonSize / 4 * this.radialMenuScale;
 		var angle = (90 + this.buttonAngle * buttonInfo.radialPosition) * (Math.PI / 180);
-		var position = {x: this.left - (this.menuRadius) * this.radialMenuScale * Math.cos(angle),
-						y: this.top - (this.menuRadius) * this.radialMenuScale * Math.sin(angle) };
+		var position = {x: this.left - buttonRadius - this.menuRadius * this.radialMenuScale * Math.cos(angle),
+						y: this.top - buttonRadius - this.menuRadius * this.radialMenuScale * Math.sin(angle) };
 
 		if (buttonInfo.radialLevel === 0) {
-			position = {x: this.left - buttonRadius / 2 * this.radialMenuScale,
-						y: this.top - buttonRadius / 2 * this.radialMenuScale};
+			position = {x: this.left - buttonRadius,
+						y: this.top - buttonRadius};
 		} else if (buttonInfo.radialLevel === 2) {
-			position = {x: this.left - (this.menuRadius * 1.6 - buttonRadius / 2) * this.radialMenuScale * Math.cos(angle),
-						y: this.top - (this.menuRadius * 1.6 - buttonRadius / 2) * this.radialMenuScale * Math.sin(angle) };
+			position = {x: this.left - buttonRadius - (this.menuRadius * 1.6) * this.radialMenuScale * Math.cos(angle),
+						y: this.top - buttonRadius - (this.menuRadius * 1.6) * this.radialMenuScale * Math.sin(angle) };
 		}
 
 		// console.log("setPosition: " + buttonName + " " +menuRadius * Math.cos(angle) + " " + menuRadius * Math.sin(angle) );
