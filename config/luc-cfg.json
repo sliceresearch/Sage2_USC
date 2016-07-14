@@ -11,6 +11,7 @@
 	"ui": {
 		"clock": 24,
 		"show_url": true,
+		"noDropShadow": true,
 		"show_version": true
 	},
 	"resolution": {
