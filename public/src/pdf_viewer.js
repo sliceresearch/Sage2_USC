@@ -63,9 +63,6 @@ var pdf_viewer = SAGE2_App.extend({
 
 		this.activeTouch    = [];
 		this.interactable   = [];
-		this.widthScreen    = 8160;
-		this.heightScreen   = 2304;
-		this.heightTitle    = 58;
 		this.gotInformation = false;
 		this.pageDocument   = 0;
 		this.baseWidthPage  = null;
@@ -76,7 +73,10 @@ var pdf_viewer = SAGE2_App.extend({
 		this.TVALUE = 0.25;
 		this.showUI = true;
 		this.title  = data.title;
-		this.displacement = this.state.marginButton;
+
+		// disable gap between pages (bug in scaling)
+		// this.displacement = this.state.marginButton;
+		this.displacement = 0;
 
 		// svg container, big as the application
 		this.container = d3.select(this.element).append("svg").attr("id", "container");
@@ -94,7 +94,7 @@ var pdf_viewer = SAGE2_App.extend({
 		}
 
 		// this.imageVisualizer = this.container.append("g");
-		// array used to store the svg image item used to visuaize the images
+		// array used to store the svg image item used to visualize the images
 		this.imageViewers = {};
 		// array containing the image links
 		this.imagesLink = {};
@@ -197,7 +197,7 @@ var pdf_viewer = SAGE2_App.extend({
 				return;
 			}
 
-			canvas.width = viewport.width;
+			canvas.width  = viewport.width;
 			canvas.height = viewport.height;
 
 			// rendering the page
@@ -207,7 +207,11 @@ var pdf_viewer = SAGE2_App.extend({
 			};
 
 			page.render(renderContext).then(function(pdf) {
-				var data = canvas.toDataURL("image/jpeg", 0.80).split(',');
+				// Render as a JPEG, 80%
+				// var data = canvas.toDataURL("image/jpeg", 0.80).split(',');
+				// Render as a PNG
+				var data = canvas.toDataURL().split(',');
+
 				var bin  = atob(data[1]);
 				var mime = data[0].split(':')[1].split(';')[0];
 				var buf  = new ArrayBuffer(bin.length);
@@ -226,13 +230,13 @@ var pdf_viewer = SAGE2_App.extend({
 
 					theWidth  = that.baseWidthPage  * that.TVALUE;
 					theHeight = that.baseHeightPage * that.TVALUE;
-					dx = (theWidth + that.displacement * that.TVALUE) * (page.pageNumber - 1);
+					dx = (theWidth + that.state.marginButton * that.TVALUE) * (page.pageNumber - 1);
 
 					c = that.thumbnailsVisualizer.append("image")
 						.attr("x", dx)
 						.attr("y", 0)
-						.attr("width", theWidth)
-						.attr("height", theHeight + 2 * that.displacement)
+						.attr("width",  theWidth)
+						.attr("height", theHeight + 2 * that.state.marginButton)
 						.attr("xlink:href", source);
 
 					c.thumbnail = true;
@@ -334,7 +338,7 @@ var pdf_viewer = SAGE2_App.extend({
 		// calculate page in view
 		var halfRange = Math.floor(this.state.numberOfPageToShow / 2);
 		for (var i = this.pageInCenter() - halfRange - 1; i <= this.pageInCenter() + halfRange + 1; i++) {
-			if (i > 0 && i <= this.pageDocument && this.pageCurrentlyVisible[q].indexOf(i) == -1) {
+			if (i > 0 && i <= this.pageDocument && this.pageCurrentlyVisible[q].indexOf(i) === -1) {
 				this.pageCurrentlyVisible[q].push(i);
 				this.SAGE2Sync(true);
 			}
@@ -343,7 +347,7 @@ var pdf_viewer = SAGE2_App.extend({
 		// generate page not already loaded
 		for (var index in this.pageCurrentlyVisible[q]) {
 			var pageIndex = this.pageCurrentlyVisible[q][index];
-			if (this.pageCurrentlyGenerated[q].indexOf(pageIndex) == -1) {
+			if (this.pageCurrentlyGenerated[q].indexOf(pageIndex) === -1) {
 				this.pageCurrentlyGenerated[q].push(pageIndex);
 				this.SAGE2Sync(true);
 				this.obtainPageFromPDF(this.solver, pageIndex, this, q);
@@ -494,8 +498,9 @@ var pdf_viewer = SAGE2_App.extend({
 	},
 
 	goToPage: function(page) {
-		var center = (this.baseWidthPage / 2) * (this.state.numberOfPageToShow - 1);
-		var dx = center - (this.baseWidthPage + this.displacement) * (page - 1);
+		// var center = (this.baseWidthPage / 2) * (this.state.numberOfPageToShow - 1);
+		// var dx = center - (this.baseWidthPage + this.displacement) * (page - 1);
+		var dx = -1 * (this.baseWidthPage + this.displacement) * (page - 1);
 		this.modifyState("horizontalOffset", dx);
 		this.generateMissingPages();
 		this.modifyState("currentPage", page);
@@ -714,10 +719,13 @@ var pdf_viewer = SAGE2_App.extend({
 		}
 
 		if (eventType === "specialKey") {
-			var newOffset, center, minOffset;
+			var newOffset, center, minOffset, step;
 			if (data.code === 39 && data.state === "down") {
 				// Right Arrow
-				newOffset = this.state.horizontalOffset - 60;
+				// calculate a offset amount
+				step = (this.baseWidthPage + this.displacement) / 10;
+				// apply offset
+				newOffset = this.state.horizontalOffset - step;
 				center = (this.baseWidthPage / 2) * (this.state.numberOfPageToShow - 1);
 				minOffset = center - (this.baseWidthPage + this.displacement) * (this.pageDocument - 1);
 				if (newOffset < minOffset) {
@@ -729,7 +737,10 @@ var pdf_viewer = SAGE2_App.extend({
 				this.refresh(date);
 			} else if (data.code === 37 && data.state === "down") {
 				// Left Arrow
-				newOffset = this.state.horizontalOffset + 60;
+				// calculate a offset amount
+				step = (this.baseWidthPage + this.displacement) / 10;
+				// apply offset
+				newOffset = this.state.horizontalOffset + step;
 				center = (this.baseWidthPage / 2) * (this.state.numberOfPageToShow - 1);
 				if (newOffset > center) {
 					newOffset = center;
