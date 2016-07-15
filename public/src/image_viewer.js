@@ -65,7 +65,7 @@ var image_viewer = SAGE2_App.extend({
 	* @method updateAppFromState
 	*/
 	updateAppFromState: function() {
-		this.element.src  = cleanURL(this.state.src);
+		this.element.src  = cleanURL(this.state.img_url);
 
 		if (this.state.showExif === true) {
 			this.showLayer();
@@ -106,7 +106,7 @@ var image_viewer = SAGE2_App.extend({
 	*/
 	onVisible: function(visibility) {
 		if (visibility) {
-			this.element.src = this.state.src;
+			this.element.src = this.state.img_url;
 		} else {
 			this.element.src = smallWhiteGIF();
 		}
