@@ -349,6 +349,7 @@ var ParaSAGE = SAGE2_App.extend({
 		this.infoDiv.textContent = message;
 		this.infoDiv.style.width = "100%";
 		this.infoDiv.style.height = "100%";
+		this.infoDiv.style.background = "white";
 	},
 
 	hideInfoDiv: function() {
@@ -857,6 +858,16 @@ var ParaSAGE = SAGE2_App.extend({
 					description: "Using this as a way to notify non-master displays of pvw information only master will see"
 				});
 
+			}, function(err) {
+				console.log("Unable to create reader:" + err);
+				// Currently just trying to see if error case activates.
+				_this.hideInfoDiv();
+				wsio.emit("csdMessage", {
+					type: "setValue",
+					nameOfValue: "pvwStatusUpdate",
+					value:       "infoHide",
+					description: "Using this as a way to notify non-master displays of pvw information only master will see"
+				});
 			});
 		}
 	},
