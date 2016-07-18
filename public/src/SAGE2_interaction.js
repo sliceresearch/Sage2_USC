@@ -42,7 +42,6 @@ function SAGE2_interaction(wsio) {
 	this.chromeDesktopCaptureEnabled = false;
 	this.broadcasting  = false;
 	this.gotRequest    = false;
-	// this.videoTimer    = null;
 	this.pix           = null;
 	this.chunk         = 32 * 1024; // 32 KB
 	this.maxUploadSize = 20 * (1024 * 1024 * 1024); // 20GB just as a precaution
@@ -540,9 +539,6 @@ function SAGE2_interaction(wsio) {
 	*/
 	this.streamEndedMethod = function(event) {
 		this.broadcasting = false;
-		// if (this.videoTimer) {
-		// 	clearInterval(this.videoTimer);
-		// }
 		// cancelAnimationFrame(this.req);
 		cancelIdleCallback(this.req);
 		this.wsio.emit('stopMediaStream', {id: this.uniqueID + "|0"});

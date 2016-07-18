@@ -63,9 +63,6 @@ var pdf_viewer = SAGE2_App.extend({
 
 		this.activeTouch    = [];
 		this.interactable   = [];
-		this.widthScreen    = 8160;
-		this.heightScreen   = 2304;
-		this.heightTitle    = 58;
 		this.gotInformation = false;
 		this.pageDocument   = 0;
 		this.baseWidthPage  = null;
@@ -76,7 +73,10 @@ var pdf_viewer = SAGE2_App.extend({
 		this.TVALUE = 0.25;
 		this.showUI = true;
 		this.title  = data.title;
-		this.displacement = this.state.marginButton;
+
+		// disable gap between pages (bug in scaling)
+		// this.displacement = this.state.marginButton;
+		this.displacement = 0;
 
 		// svg container, big as the application
 		this.container = d3.select(this.element).append("svg").attr("id", "container");
@@ -94,7 +94,7 @@ var pdf_viewer = SAGE2_App.extend({
 		}
 
 		// this.imageVisualizer = this.container.append("g");
-		// array used to store the svg image item used to visuaize the images
+		// array used to store the svg image item used to visualize the images
 		this.imageViewers = {};
 		// array containing the image links
 		this.imagesLink = {};
@@ -142,10 +142,23 @@ var pdf_viewer = SAGE2_App.extend({
 			}
 
 			// Update the title
-			var newTitle;
-			newTitle = _this.title + " - " + _this.state.currentPage + " / " + _this.pageDocument;
-			_this.updateTitle(newTitle);
+			_this.changeTitle();
 		});
+	},
+
+	/**
+	 * Update the tile with current page number
+	 *
+	 * @method     changeTitle
+	 */
+	changeTitle: function() {
+		// Get the page in center of the screen
+		var currentNumber = this.pageInCenter();
+		// Boundaries check
+		currentNumber = (currentNumber < 1) ? 1 : currentNumber;
+		currentNumber = (currentNumber > this.pageDocument) ? this.pageDocument : currentNumber;
+		var newTitle  = this.title + " (page " + currentNumber + " of " + this.pageDocument + ")";
+		this.updateTitle(newTitle);
 	},
 
 	obtainPageFromPDF: function(pdfFile, pageNumber, that, quality) {
@@ -184,7 +197,7 @@ var pdf_viewer = SAGE2_App.extend({
 				return;
 			}
 
-			canvas.width = viewport.width;
+			canvas.width  = viewport.width;
 			canvas.height = viewport.height;
 
 			// rendering the page
@@ -194,7 +207,11 @@ var pdf_viewer = SAGE2_App.extend({
 			};
 
 			page.render(renderContext).then(function(pdf) {
-				var data = canvas.toDataURL("image/jpeg", 0.80).split(',');
+				// Render as a JPEG, 80%
+				// var data = canvas.toDataURL("image/jpeg", 0.80).split(',');
+				// Render as a PNG
+				var data = canvas.toDataURL().split(',');
+
 				var bin  = atob(data[1]);
 				var mime = data[0].split(':')[1].split(';')[0];
 				var buf  = new ArrayBuffer(bin.length);
@@ -213,13 +230,13 @@ var pdf_viewer = SAGE2_App.extend({
 
 					theWidth  = that.baseWidthPage  * that.TVALUE;
 					theHeight = that.baseHeightPage * that.TVALUE;
-					dx = (theWidth + that.displacement * that.TVALUE) * (page.pageNumber - 1);
+					dx = (theWidth + that.state.marginButton * that.TVALUE) * (page.pageNumber - 1);
 
 					c = that.thumbnailsVisualizer.append("image")
 						.attr("x", dx)
 						.attr("y", 0)
-						.attr("width", theWidth)
-						.attr("height", theHeight + 2 * that.displacement)
+						.attr("width",  theWidth)
+						.attr("height", theHeight + 2 * that.state.marginButton)
 						.attr("xlink:href", source);
 
 					c.thumbnail = true;
@@ -297,7 +314,7 @@ var pdf_viewer = SAGE2_App.extend({
 	translateGroup: function(g, dx, dy, s, animated) {
 		dx = (dx == null) ? parseFloat(d3.transform(g.attr("transform")).translate[0]) : dx;
 		dy = (dy == null) ? parseFloat(d3.transform(g.attr("transform")).translate[1]) : dy;
-		s  = (s == null)  ? parseFloat(d3.transform(g.attr("transform")).scale[0]) : s;
+		s  = (s  == null) ? parseFloat(d3.transform(g.attr("transform")).scale[0])     : s;
 		var tDuration = animated ? 200 : 0;
 		g.transition().attr("transform",
 			"translate(" + dx * this.state.resizeValue + ", " + dy +
@@ -321,7 +338,7 @@ var pdf_viewer = SAGE2_App.extend({
 		// calculate page in view
 		var halfRange = Math.floor(this.state.numberOfPageToShow / 2);
 		for (var i = this.pageInCenter() - halfRange - 1; i <= this.pageInCenter() + halfRange + 1; i++) {
-			if (i > 0 && i <= this.pageDocument && this.pageCurrentlyVisible[q].indexOf(i) == -1) {
+			if (i > 0 && i <= this.pageDocument && this.pageCurrentlyVisible[q].indexOf(i) === -1) {
 				this.pageCurrentlyVisible[q].push(i);
 				this.SAGE2Sync(true);
 			}
@@ -330,7 +347,7 @@ var pdf_viewer = SAGE2_App.extend({
 		// generate page not already loaded
 		for (var index in this.pageCurrentlyVisible[q]) {
 			var pageIndex = this.pageCurrentlyVisible[q][index];
-			if (this.pageCurrentlyGenerated[q].indexOf(pageIndex) == -1) {
+			if (this.pageCurrentlyGenerated[q].indexOf(pageIndex) === -1) {
 				this.pageCurrentlyGenerated[q].push(pageIndex);
 				this.SAGE2Sync(true);
 				this.obtainPageFromPDF(this.solver, pageIndex, this, q);
@@ -481,18 +498,13 @@ var pdf_viewer = SAGE2_App.extend({
 	},
 
 	goToPage: function(page) {
-		var center = (this.baseWidthPage / 2) * (this.state.numberOfPageToShow - 1);
-		var dx = center - (this.baseWidthPage + this.displacement) * (page - 1);
+		// var center = (this.baseWidthPage / 2) * (this.state.numberOfPageToShow - 1);
+		// var dx = center - (this.baseWidthPage + this.displacement) * (page - 1);
+		var dx = -1 * (this.baseWidthPage + this.displacement) * (page - 1);
 		this.modifyState("horizontalOffset", dx);
 		this.generateMissingPages();
 		this.modifyState("currentPage", page);
 		this.translateGroup(this.imageVisualizer, this.state.horizontalOffset, 0);
-
-		// Update the title
-		var newTitle;
-		newTitle = this.title + " - " + this.state.currentPage + " / " + this.pageDocument;
-		this.updateTitle(newTitle);
-
 		return dx;
 	},
 
@@ -582,7 +594,8 @@ var pdf_viewer = SAGE2_App.extend({
 	},
 
 	draw: function(date) {
-		// pass
+		// Update the title
+		this.changeTitle();
 	},
 
 	/**
@@ -691,44 +704,88 @@ var pdf_viewer = SAGE2_App.extend({
 		if (eventType === "pointerPress" && (data.button === "left")) {
 			if (this.showUI) {
 				this.leftClickDown(position.x, position.y, user.id);
+				this.refresh(date);
 			}
 		} else if (eventType === "pointerMove") {
 			if (this.showUI) {
 				this.leftClickMove(position.x, position.y, user.id);
+				this.refresh(date);
 			}
 		} else if (eventType === "pointerRelease" && (data.button === "left")) {
 			if (this.showUI) {
 				this.leftClickRelease(position.x, position.y, user.id);
+				this.refresh(date);
 			}
 		}
 
 		if (eventType === "specialKey") {
+			var newOffset, center, minOffset, step;
 			if (data.code === 39 && data.state === "down") {
 				// Right Arrow
-				this.modifyState("horizontalOffset", this.state.horizontalOffset - 60);
+				// calculate a offset amount
+				step = (this.baseWidthPage + this.displacement) / 10;
+				// apply offset
+				newOffset = this.state.horizontalOffset - step;
+				center = (this.baseWidthPage / 2) * (this.state.numberOfPageToShow - 1);
+				minOffset = center - (this.baseWidthPage + this.displacement) * (this.pageDocument - 1);
+				if (newOffset < minOffset) {
+					newOffset = minOffset;
+				}
+				this.modifyState("horizontalOffset", newOffset);
 				this.translateGroup(this.imageVisualizer, this.state.horizontalOffset, 0);
 				this.generateMissingPages();
 				this.refresh(date);
 			} else if (data.code === 37 && data.state === "down") {
 				// Left Arrow
-				this.modifyState("horizontalOffset", this.state.horizontalOffset + 60);
+				// calculate a offset amount
+				step = (this.baseWidthPage + this.displacement) / 10;
+				// apply offset
+				newOffset = this.state.horizontalOffset + step;
+				center = (this.baseWidthPage / 2) * (this.state.numberOfPageToShow - 1);
+				if (newOffset > center) {
+					newOffset = center;
+				}
+				this.modifyState("horizontalOffset", newOffset);
 				this.translateGroup(this.imageVisualizer, this.state.horizontalOffset, 0);
 				this.generateMissingPages();
 				this.refresh(date);
 			} else if (data.code === 38 && data.state === "down") {
 				// Up Arrow
-				if (this.pageInCenter() === this.pageDocument) {
+				if (this.state.currentPage === this.pageDocument) {
 					return;
 				}
-				this.goToPage(this.pageInCenter() + 1);
+				this.goToPage(this.state.currentPage + 1);
+				this.refresh(date);
 			} else if (data.code === 40 && data.state === "down") {
 				// Down Arrow
-				if (this.pageInCenter() === 1) {
+				if (this.state.currentPage === 1) {
 					return;
 				}
-				this.goToPage(this.pageInCenter() - 1);
+				this.goToPage(this.state.currentPage - 1);
+				this.refresh(date);
 			}
 		}
+
+		// Keyboard:
+		//   spacebar - next
+		//   1/f - first
+		//   0/l - last
+		if (eventType === "keyboard") {
+			if (data.character === " ") {
+				if (this.state.currentPage === this.pageDocument) {
+					return;
+				}
+				this.goToPage(this.state.currentPage + 1);
+				this.refresh(date);
+			} else if (data.character === "1" || data.character === "f") {
+				this.goToPage(1);
+				this.refresh(date);
+			} else if (data.character === "0" || data.character === "l") {
+				this.goToPage(this.pageDocument);
+				this.refresh(date);
+			}
+		}
+
 	}
 });
 

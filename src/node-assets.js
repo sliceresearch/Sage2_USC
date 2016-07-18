@@ -23,6 +23,7 @@
 
 var fs        = require('fs');
 var path      = require('path');
+var os        = require('os');
 
 var color     = require('color');
 var ffmpeg    = require('fluent-ffmpeg');     // ffmpeg
@@ -220,15 +221,18 @@ var generateImageThumbnails = function(infile, outfile, sizes, index, callback) 
 	);
 };
 
-var generatePdfThumbnailsHelper = function(buffer, infile, outfile, sizes, index, callback) {
+var generatePdfThumbnailsHelper = function(intermediate, infile, outfile, sizes, index, callback) {
 	// initial call, index is not specified
 	index = index || 0;
 	// are we done yet
 	if (index >= sizes.length) {
+		// delete the temp fie
+		fs.unlinkSync(intermediate);
+		// we are done, trigger the callback
 		callback();
 		return;
 	}
-	imageMagick(buffer).in("-density", "96").in("-depth", "8").in("-quality", "70")
+	imageMagick(intermediate).in("-density", "96").in("-depth", "8").in("-quality", "70")
 		.in("-resize", sizes[index] + "x" + sizes[index]).in("-gravity", "center")
 		.in("-background", "rgb(71,71,71)").in("-extent", sizes[index] + "x" + sizes[index])
 		.out("-quality", "70").write(outfile + '_' + sizes[index] + '.jpg', function(err) {
@@ -238,20 +242,22 @@ var generatePdfThumbnailsHelper = function(buffer, infile, outfile, sizes, index
 				return;
 			}
 			// recursive call to generate the next size
-			generatePdfThumbnailsHelper(buffer, infile, outfile, sizes, index + 1, callback);
+			generatePdfThumbnailsHelper(intermediate, infile, outfile, sizes, index + 1, callback);
 		}
 	);
 };
 
 var generatePdfThumbnails = function(infile, outfile, width, height, sizes, index, callback) {
+	// create a temporary file (cant use the buffer API since GS spits out on stdout)
+	var tmpfile = path.join(os.tmpdir(), path.basename(infile) + ".jpg");
 	imageMagick(width, height, "#ffffff").append(infile + "[0]").colorspace("RGB").noProfile().flatten()
-	.toBuffer("PNG", function(err, buffer) {
+	.write(tmpfile, function(err, buffer) {
 		if (err) {
 			console.log(sageutils.header("Assets") + "cannot generate thumbnails for:" + infile + ' -- ' + err);
 			return;
 		}
 
-		generatePdfThumbnailsHelper(buffer, infile, outfile, sizes, index, callback);
+		generatePdfThumbnailsHelper(tmpfile, infile, outfile, sizes, index, callback);
 	});
 };
 
@@ -643,9 +649,12 @@ var exifAsync = function(cmds, cb) {
 					instructions.directory !== null && instructions.directory !== "") {
 				metadata.fileTypes = instructions.fileTypes;
 				metadata.directory = instructions.directory;
+				metadata.removeFromLauncher = !!instructions.removeFromLauncher; // convert to bool
 			} else {
 				metadata.fileTypes = [];
+				metadata.removeFromLauncher = false;
 			}
+
 			var exif = {FileName: app, icon: appIcon, MIMEType: "application/custom", metadata: metadata};
 
 			addFile(file, exif, function() {
@@ -712,7 +721,7 @@ var listAssets = function() {
 	for (var f in keys) {
 		var one = AllAssets.list[keys[f]];
 		if (one.exif.MIMEType === 'application/custom') {
-			if (one.exif.metadata.fileTypes.length === 0) {
+			if (!one.exif.metadata.removeFromLauncher) {
 				// exclude 'viewer' applications
 				apps.push(one);
 			}
@@ -788,8 +797,7 @@ var listApps = function() {
 	// Remove 'viewer' apps
 	var i = result.length;
 	while (i--) {
-		if (result[i].exif.metadata.fileTypes &&
-			result[i].exif.metadata.fileTypes.length > 0) {
+		if (result[i].exif.metadata.removeFromLauncher) {
 			result.splice(i, 1);
 		}
 	}

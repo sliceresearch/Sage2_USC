@@ -53,8 +53,8 @@ install:
   - copy bin\gswin64c.exe bin\gswin32c.exe
   - xcopy /S /I /Y /Q gs\lib lib
   - rmdir /Q /S gs
-  - curl -LsSO http://www.imagemagick.org/download/binaries/ImageMagick-6.9.4-9-portable-Q16-x64.zip
-  - 7z x -y ImageMagick-6.9.4-9-portable-Q16-x64.zip -oim > nul
+  - curl -LsSO http://www.imagemagick.org/download/binaries/ImageMagick-6.9.5-0-portable-Q16-x64.zip
+  - 7z x -y ImageMagick-6.9.5-0-portable-Q16-x64.zip -oim > nul
   - rmdir /Q /S im\www im\images
   - copy im\* bin
   - rmdir /Q /S im
@@ -88,6 +88,7 @@ install:
   - move package.json SAGE2
   - move public SAGE2
   - move server.js SAGE2
+  - move generate-service-worker.js SAGE2
   - move src SAGE2
   - ren SAGE2 SAGE2-%APPVEYOR_BUILD_VERSION%
   - 7z a -sfx7z.sfx SAGE2-win64-%APPVEYOR_BUILD_VERSION%-%APPVEYOR_REPO_BRANCH%.exe SAGE2-%APPVEYOR_BUILD_VERSION% > nul
