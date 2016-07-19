@@ -26,6 +26,10 @@ var url  = require('url');
 var mime = require('mime');
 var zlib = require('zlib');  // to enable HTTP compression
 
+// Using the debug package to track HTTP request
+//   to see request: env DEBUG=sage2http node server.js ....
+var debug = require('debug')('sage2http');
+
 // External package to clean up URL requests
 var normalizeURL = require('normalizeurl');
 
@@ -255,10 +259,6 @@ HttpServer.prototype.onreq = function(req, res) {
 			return;
 		}
 
-		// var protocol = req.connection.encrypted ? 'https' : 'http';
-		// var fullUrl  = protocol + '://' + req.headers.host + req.url;
-		// console.log('Request>	', fullUrl);
-
 		// redirect root path to index.html
 		if (getName === "/") {
 			this.redirect(res, "index.html");
@@ -308,6 +308,11 @@ HttpServer.prototype.onreq = function(req, res) {
 
 		// Converting to an actual path
 		pathname = path.resolve(pathname);
+
+		// Track requests and responses
+		debug('request', (req.connection.encrypted ? 'https' : 'http') + '://' + req.headers.host + req.url);
+		debug('response', pathname);
+
 
 		// //////////////////////
 		// Are we trying to session management

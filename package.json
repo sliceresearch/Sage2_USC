@@ -68,6 +68,7 @@
 		"sanitize-filename": "latest",
 		"normalizeurl": "latest",
 		"sw-precache": "latest",
+		"debug": "latest",
 		"ytdl-core": "latest"
 	},
 	"optionalDependencies": {
