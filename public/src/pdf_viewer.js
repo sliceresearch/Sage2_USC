@@ -61,6 +61,7 @@ var pdf_viewer = SAGE2_App.extend({
 		this.controls.finishedAddingControls();
 		this.enableControls = true;
 
+		this.isShift        = false;
 		this.activeTouch    = [];
 		this.interactable   = [];
 		this.gotInformation = false;
@@ -720,48 +721,64 @@ var pdf_viewer = SAGE2_App.extend({
 
 		if (eventType === "specialKey") {
 			var newOffset, center, minOffset, step;
+
+			// Shift key
+			if (data.code === 16) {
+				this.isShift = (data.state === "down");
+			}
+
 			if (data.code === 39 && data.state === "down") {
 				// Right Arrow
-				// calculate a offset amount
-				step = (this.baseWidthPage + this.displacement) / 10;
-				// apply offset
-				newOffset = this.state.horizontalOffset - step;
-				center = (this.baseWidthPage / 2) * (this.state.numberOfPageToShow - 1);
-				minOffset = center - (this.baseWidthPage + this.displacement) * (this.pageDocument - 1);
-				if (newOffset < minOffset) {
-					newOffset = minOffset;
+
+				if (this.isShift) {
+					// calculate a offset amount
+					step = (this.baseWidthPage + this.displacement) / 10;
+					// apply offset
+					newOffset = this.state.horizontalOffset - step;
+					center = (this.baseWidthPage / 2) * (this.state.numberOfPageToShow - 1);
+					minOffset = center - (this.baseWidthPage + this.displacement) * (this.pageDocument - 1);
+					if (newOffset < minOffset) {
+						newOffset = minOffset;
+					}
+					this.modifyState("horizontalOffset", newOffset);
+					this.translateGroup(this.imageVisualizer, this.state.horizontalOffset, 0);
+					this.generateMissingPages();
+				} else {
+					if (this.state.currentPage === this.pageDocument) {
+						return;
+					}
+					this.goToPage(this.state.currentPage + 1);
 				}
-				this.modifyState("horizontalOffset", newOffset);
-				this.translateGroup(this.imageVisualizer, this.state.horizontalOffset, 0);
-				this.generateMissingPages();
 				this.refresh(date);
 			} else if (data.code === 37 && data.state === "down") {
 				// Left Arrow
-				// calculate a offset amount
-				step = (this.baseWidthPage + this.displacement) / 10;
-				// apply offset
-				newOffset = this.state.horizontalOffset + step;
-				center = (this.baseWidthPage / 2) * (this.state.numberOfPageToShow - 1);
-				if (newOffset > center) {
-					newOffset = center;
+
+				if (this.isShift) {
+					// calculate a offset amount
+					step = (this.baseWidthPage + this.displacement) / 10;
+					// apply offset
+					newOffset = this.state.horizontalOffset + step;
+					center = (this.baseWidthPage / 2) * (this.state.numberOfPageToShow - 1);
+					if (newOffset > center) {
+						newOffset = center;
+					}
+					this.modifyState("horizontalOffset", newOffset);
+					this.translateGroup(this.imageVisualizer, this.state.horizontalOffset, 0);
+					this.generateMissingPages();
+				} else {
+					if (this.state.currentPage === 1) {
+						return;
+					}
+					this.goToPage(this.state.currentPage - 1);
 				}
-				this.modifyState("horizontalOffset", newOffset);
-				this.translateGroup(this.imageVisualizer, this.state.horizontalOffset, 0);
-				this.generateMissingPages();
 				this.refresh(date);
 			} else if (data.code === 38 && data.state === "down") {
 				// Up Arrow
-				if (this.state.currentPage === this.pageDocument) {
-					return;
-				}
-				this.goToPage(this.state.currentPage + 1);
+				this.goToPage(1);
 				this.refresh(date);
 			} else if (data.code === 40 && data.state === "down") {
 				// Down Arrow
-				if (this.state.currentPage === 1) {
-					return;
-				}
-				this.goToPage(this.state.currentPage - 1);
+				this.goToPage(this.pageDocument);
 				this.refresh(date);
 			}
 		}
