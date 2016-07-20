@@ -13,7 +13,7 @@ var vega_vis_app = SAGE2_App.extend( {
 		this.vis = d3.select(this.element).append("vis"+this.id);
 
 		// Set the background to black
-		this.element.style.backgroundColor = 'white';
+		this.element.style.backgroundColor = '#111111';//'ghostwhite';//'#f2f2f2';
 
 		// move and resize callbacks
 		this.resizeEvents = "continuous";
@@ -34,6 +34,25 @@ var vega_vis_app = SAGE2_App.extend( {
 
 		this.initBarSpec();
 		this.initLineSpec();
+
+		if(this.state.type == "bar"){
+		
+			this.barSpec.marks[0].properties.update.fill.value = this.state.color; //"red"; 
+			this.barSpec.axes[0].title = this.state.x;
+			this.barSpec.axes[1].title = this.state.y;
+			this.barSpec.data[0].values = this.state.data;
+			this.parseBar(this.barSpec);
+
+		}
+		if( this.state.type == "line"){
+
+			//this.linSpec.marks[0]
+			this.lineSpec.axes[0].title = this.state.x;
+			this.lineSpec.axes[1].title = this.state.y;
+			this.lineSpec.data[0].values = this.state.data;
+			this.parseLine(this.lineSpec);
+		}
+
 		//updated = true; 
 
 		//this.spec = "uploads/apps/vega_vis_app/data/spec.json";
@@ -55,41 +74,48 @@ var vega_vis_app = SAGE2_App.extend( {
 	draw: function(date) {
 		console.log('vega_vis_app> Draw with state value', this.state.value);
 
-		//this.spec = this.state.specFile;//"uploads/apps/vega_vis_app/data/spec.json";
-		//console.log(this.spec);
-		if(this.state.type == "bar"){
+		// //this.spec = this.state.specFile;//"uploads/apps/vega_vis_app/data/spec.json";
+		// console.log(this.spec);
+		// if(this.state.type == "bar"){
 		
-			this.barSpec.marks[0].properties.update.fill.value = this.state.color; //"red"; 
-			this.barSpec.axes[0].title = this.state.x;
-			this.barSpec.axes[1].title = this.state.y;
-			this.barSpec.data[0].values = this.state.data;
-			this.parseBar(this.barSpec);
+		// 	this.barSpec.marks[0].properties.update.fill.value = this.state.color; //"red"; 
+		// 	this.barSpec.axes[0].title = this.state.x;
+		// 	this.barSpec.axes[1].title = this.state.y;
+		// 	this.barSpec.data[0].values = this.state.data;
+		// 	this.parseBar(this.barSpec);
 
-		}
-		if( this.state.type == "line"){
+		// }
+		// if( this.state.type == "line"){
 
-			//this.linSpec.marks[0]
-			this.lineSpec.axes[0].title = this.state.x;
-			this.lineSpec.axes[1].title = this.state.y;
-			this.lineSpec.data[0].values = this.state.data;
-			this.parseLine(this.lineSpec);
-		}
+		// 	//this.linSpec.marks[0]
+		// 	this.lineSpec.axes[0].title = this.state.x;
+		// 	this.lineSpec.axes[1].title = this.state.y;
+		// 	this.lineSpec.data[0].values = this.state.data;
+		// 	this.parseLine(this.lineSpec);
+		// }
 
 	},
 
 	resize: function(date) {
-		// updated = false;
-		if( this.element.clientWidth > 400 ){
-  			this.view.width(this.element.clientWidth-60);
-  			updated = true;
+		if( this.state.type == "bar"){
+			// updated = false;
+			if( this.element.clientWidth > 400 ){
+	  			this.view.width(this.element.clientWidth-this.paddingWidth);
+	  			updated = true;
+	  		}
+	  		if( this.element.clientWidth > 400 ){
+	  			this.view.height(this.element.clientHeight-this.paddingHeight);
+	  			updated = true;	
+	  		}
+	  		if( updated )
+	  			this.view.renderer('svg').update();
   		}
-  		if( this.element.clientWidth > 400 ){
-  			this.view.height(this.element.clientHeight-60);
-  			updated = true;	
+  		else if( this.state.type == "line"){
+			this.svg.attr('width',  this.element.clientWidth + "px");
+			this.svg.attr('height', this.element.clientHeight + "px");
+			//this.view.renderer('svg').update();
+			this.refresh(date);
   		}
-  		if( updated )
-  			this.view.renderer('svg').update();
-
   // 		console.log(this.view);
 
   // 		this.svg.attr('width',  this.element.clientWidth + "px");
@@ -154,12 +180,12 @@ var vega_vis_app = SAGE2_App.extend( {
 		this.view.update();
   		
 		//set width and height appropriately
-		paddingWidth = this.barSpec.padding.left + this.barSpec.padding.right;
-		paddingHeight = this.barSpec.padding.top + this.barSpec.padding.bottom;
-  		this.view.width(this.element.clientWidth-paddingWidth).height(this.element.clientHeight-paddingHeight).renderer('svg').update();
+		this.paddingWidth = this.barSpec.padding.left + this.barSpec.padding.right;
+		this.paddingHeight = this.barSpec.padding.top + this.barSpec.padding.bottom;
+  		this.view.width(this.element.clientWidth-this.paddingWidth).height(this.element.clientHeight-this.paddingHeight).renderer('svg').update();
   		
   		this.box = "0,0," + this.element.clientWidth + "," + this.element.clientHeight;
-  		d3.select("vis"+this.id).select("div").select("svg").attr("viewBox", this.box);
+  		//d3.select("vis"+this.id).select("div").select("svg").attr("viewBox", this.box);
   		// this.svg = d3.select("vis"+this.id)[0][0];
   		// console.log(this.view);
   		//d3.select(".marks").attr("id", "svg"+this.id).attr("viewBox", this.box);
@@ -203,15 +229,23 @@ var vega_vis_app = SAGE2_App.extend( {
   	
 
 		//set width and height appropriately
-		paddingWidth = this.lineSpec.padding.left + this.lineSpec.padding.right;
-		paddingHeight = this.lineSpec.padding.top + this.lineSpec.padding.bottom;
-  		this.view.width(this.element.clientWidth-paddingWidth).height(this.element.clientHeight-paddingHeight).renderer('svg').update();
-		// this.view.viewport([0,0,this.element.clientWidth, this.element.clientHeight]);
+		this.paddingWidth = this.lineSpec.padding.left + this.lineSpec.padding.right;
+	 	this.paddingHeight = this.lineSpec.padding.top + this.lineSpec.padding.bottom;
+		this.view.width(this.element.clientWidth-this.paddingWidth).height(this.element.clientHeight-this.paddingHeight).renderer('svg').update();
+
+
 		this.view.renderer('svg').update();
 
 		this.box = "0,0," + this.element.clientWidth + "," + this.element.clientHeight;
-  		d3.select("vis"+this.id).select("div").select("svg").attr("viewBox", this.box);
+		this.svg = d3.select("vis"+this.id).select("div").select("svg");
+  		this.svg.attr("viewBox", this.box);
 
+  		console.log(this.lineSpec.padding.left);
+
+		//set width and height appropriately
+		// this.paddingWidth = this.lineSpec.padding.left + this.lineSpec.padding.right;
+	 // 	this.paddingHeight = this.lineSpec.padding.top + this.lineSpec.padding.bottom;
+		// this.view.width(this.element.clientWidth-this.paddingWidth).height(this.element.clientHeight-this.paddingHeight).renderer('svg').update();
 
 	},
 
@@ -226,10 +260,9 @@ var vega_vis_app = SAGE2_App.extend( {
 	initLineSpec: function(){
 		this.lineSpec = 
 		  {
-			  "width": 1240,
-			  "height": 530,
+			  "width": 1240,//1260
+			  "height": 530,//530,
   			  "padding": {"top": 10, "left": 60, "bottom": 60, "right": 30},
-
 			  "data": [
 			    {
 			      "name": "table",
@@ -267,8 +300,31 @@ var vega_vis_app = SAGE2_App.extend( {
 			    }
 			  ],
 			  "axes": [
-			    {"type": "x", "scale": "x", "tickSizeEnd": 0},
-			    {"type": "y", "scale": "y"}
+			    {"type": "x", 
+			    "scale": "x", 
+			    "tickSizeEnd": 0,
+			     "properties": {
+			        "labels": {
+				    	"fill": {"value": "white"}
+				    },
+					"axis": {
+		        		 "stroke": {"value": "white"},
+		        		 "strokeWidth": {"value": 1.0}
+		       		}
+			    }
+			},
+			    {"type": "y", 
+			    "scale": "y",
+			   "properties": {
+			        "labels": {
+				    	"fill": {"value": "white"}
+				    },
+					"axis": {
+		        		 "stroke": {"value": "white"},
+		        		 "strokeWidth": {"value": 1.0}
+		       		}
+			    }
+			}
 			  ],
 			  "marks": [
 			    {
@@ -285,7 +341,8 @@ var vega_vis_app = SAGE2_App.extend( {
 			              "x": {"scale": "x", "field": "x"},
 			              "y": {"scale": "y", "field": "y"},
 			              "stroke": {"scale": "color", "field": "id"},
-			              "strokeWidth": {"value": 4}
+			              "strokeWidth": {"value": 4},
+
 			            }
 			          }
 			        },
@@ -298,7 +355,7 @@ var vega_vis_app = SAGE2_App.extend( {
 			            "enter": {
 			              "x": {"scale": "x", "field": "x", "offset": 2},
 			              "y": {"scale": "y", "field": "y"},
-			              "fill": {"scale": "color", "field": "id"},
+			              "fill": {"scale": "color", "field": "id", "value": "white"},
 			              "text": {"field": "id"},
 			              "baseline": {"value": "middle"}
 			            }
@@ -358,13 +415,13 @@ var vega_vis_app = SAGE2_App.extend( {
 			    	"scale": "x",
 				    "properties": {
 				      	 "ticks": {
-				         "stroke": {"value": "black"}
+				         "stroke": {"value": "white"}
 				       },
 				       "majorTicks": {
 				         "strokeWidth": {"value": 1}
 				       },
 				       "labels": {
-				         "fill": {"value": "black"},
+				         "fill": {"value": "white"},
 				         "angle": {"value": 50},
 				         "fontSize": {"value": 10},
 				         "align": {"value": "left"},
@@ -373,12 +430,32 @@ var vega_vis_app = SAGE2_App.extend( {
 				         "fontSize": {"value": 16}
 				       },
 				       "axis": {
-				         "stroke": {"value": "black"},
+				         "stroke": {"value": "white"},
 				         "strokeWidth": {"value": 1.0}
 				       }
 				     }
 				},
-			    {"type": "y", "scale": "y"}
+			    {"type": "y", 
+			    "scale": "y",
+				    "properties": {
+				      	 "ticks": {
+				         "stroke": {"value": "white"}
+				       },
+				       "majorTicks": {
+				         "strokeWidth": {"value": 1}
+				       },
+				       "labels": {
+				         "fill": {"value": "white"},
+				         "fontSize": {"value": 10} 
+				         			       },
+				       "title": {
+				         "fontSize": {"value": 16}
+				       },
+				       "axis": {
+				         "stroke": {"value": "white"},
+				         "strokeWidth": {"value": 1.0}
+				       }
+				     }}
 			  ],
 			  "marks": [
 			    {

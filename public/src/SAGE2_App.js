@@ -843,7 +843,7 @@ var SAGE2_App = Class.extend({
 			id: this.id
 		};
 		if( isMaster ){
-			console.log("close child");
+			console.log("close child" + child.childId);
 			closeLinkedChildApp(data); //defined in runtime
 		}
 	},
@@ -972,35 +972,36 @@ var SAGE2_App = Class.extend({
 		console.log("sage2 monitoring event");
 
 		if( data.whichType == "childMonitoring"){
-			if (typeof this.childMonitorEvent != "undefined") { 
+			console.log("child monitoring " + this.childMonitorEvent);
 
-				if( data.type == "childCloseEvent" ){//remove child
-					for(i = 0; i < this.childList.length; i++)
-						if( this.childList[i].childId == data.childId )
-							this.childList.splice(i, 1);
-				}
-				if (data.type == "childOpenEvent") {
-					if( data.data.success ){ 
-						console.log("child app launch success " + data.childId);
-						this.childList[this.childList.length-1].childId = data.childId; //put the id into the obj
-					}
-					else{
-						console.log("child app launch failure " + data.childId + " success: " + data.data.success );
-
-						//remove the child
-						this.childList.splice(this.childList.length-1, 1);
-					}
-				}
-	    		this.childMonitorEvent(data.childId, data.type, data.data, data.date); 
+			if( data.type == "childCloseEvent" ){//remove child
+				for(i = 0; i < this.childList.length; i++)
+					if( this.childList[i].childId == data.childId )
+						this.childList.splice(i, 1);
 			}
+			if (data.type == "childOpenEvent") {
+				console.log("child open event");
+				if( data.data.success ){ 
+					console.log("child app launch success " + data.childId);
+					this.childList[this.childList.length-1].childId = data.childId; //put the id into the obj
+				}
+				else{
+					console.log("child app launch failure " + data.childId + " success: " + data.data.success );
+
+					//remove the child
+					this.childList.splice(this.childList.length-1, 1);
+				}
+			}
+			if( typeof this.childMonitorEvent != "undefined") { 
+    			this.childMonitorEvent(data.childId, data.type, data.data, data.date); 
+    		}
 		} else if( data.whichType == "parentMonitoring"){
-			if (typeof this.parentMonitorEvent != "undefined") { 
-
-				if( data.type == "parentClose" ){//remove child
-					this.parentApp = null;
-				}
-	    		this.parentMonitorEvent(data.parentId, data.type, data.data, data.date); 
+			if( data.type == "parentClose" ){//remove child
+				this.parentApp = null;
 			}
+			if (typeof this.parentMonitorEvent != "undefined") {
+    			this.parentMonitorEvent(data.parentId, data.type, data.data, data.date); 
+    		}
 		}
 	},
 
