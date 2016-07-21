@@ -57,9 +57,6 @@ var pdf_viewer = SAGE2_App.extend({
 		//
 		// Control the frame rate for an animation application
 		this.maxFPS = 2.0;
-		// Not adding controls but making the default buttons available
-		this.controls.finishedAddingControls();
-		this.enableControls = true;
 
 		this.isShift        = false;
 		this.activeTouch    = [];
@@ -144,7 +141,33 @@ var pdf_viewer = SAGE2_App.extend({
 
 			// Update the title
 			_this.changeTitle();
+
+			// Build the wall UI
+			_this.addWidgetControlsToPdfViewer();
 		});
+	},
+
+	/**
+	* Adds custom widgets to app
+	*
+	* @method addWidgetControlsToPdfViewer
+	*/
+	addWidgetControlsToPdfViewer: function() {
+		if (this.pageDocument > 1) {
+			this.controls.addButton({type: "fastforward", position: 6, identifier: "LastPage"});
+			this.controls.addButton({type: "rewind",      position: 2, identifier: "FirstPage"});
+			this.controls.addButton({type: "prev",        position: 3, identifier: "PreviousPage"});
+			this.controls.addButton({type: "next",        position: 5, identifier: "NextPage"});
+			this.controls.addSlider({
+				minimum: 1,
+				maximum: this.pageDocument,
+				increments: 1,
+				property: "this.state.currentPage",
+				label: "Page",
+				identifier: "Page"
+			});
+		}
+		this.controls.finishedAddingControls();
 	},
 
 	/**
@@ -591,7 +614,7 @@ var pdf_viewer = SAGE2_App.extend({
 	},
 
 	load: function(date) {
-		this.updateAppFromState(date);
+		// this.updateAppFromState(date);
 	},
 
 	draw: function(date) {
@@ -801,6 +824,41 @@ var pdf_viewer = SAGE2_App.extend({
 				this.goToPage(this.pageDocument);
 				this.refresh(date);
 			}
+		}
+
+		if (eventType === "widgetEvent") {
+			switch (data.identifier) {
+				case "LastPage":
+					this.goToPage(this.pageDocument);
+					break;
+				case "FirstPage":
+					this.goToPage(1);
+					break;
+				case "PreviousPage":
+					if (this.state.currentPage === 1) {
+						return;
+					}
+					this.goToPage(this.state.currentPage - 1);
+					break;
+				case "NextPage":
+					if (this.state.currentPage === this.pageDocument) {
+						return;
+					}
+					this.goToPage(this.state.currentPage + 1);
+					break;
+				case "Page":
+					switch (data.action) {
+						case "sliderRelease":
+							this.goToPage(this.state.currentPage);
+							break;
+						default:
+							return;
+					}
+					break;
+				default:
+					return;
+			}
+			this.refresh(date);
 		}
 
 	}
