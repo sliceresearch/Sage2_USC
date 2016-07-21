@@ -500,10 +500,16 @@ function SAGE2_interaction(wsio) {
 	* @param stream {Object} media stream
 	*/
 	this.streamSuccessMethod = function(stream) {
-		console.log("media capture success!");
-
 		this.mediaStream = stream;
-		this.mediaStream.onended = this.streamEnded;
+
+		// deprecated:
+		// this.mediaStream.onended = this.streamEnded;
+		// Get list of tracks and set the handler on the track
+		var tracks = stream.getTracks();
+		if (tracks.length > 0) {
+			// Place the callback when the track is ended
+			tracks[0].onended = this.streamEnded;
+		}
 
 		var mediaVideo = document.getElementById('mediaVideo');
 		mediaVideo.src = window.URL.createObjectURL(this.mediaStream);
