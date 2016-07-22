@@ -32,7 +32,7 @@ var ParaSAGE = SAGE2_App.extend({
 	setupVariables: function() {
 		// Experiemental PV render load reduction.
 		this.onlyRenderRequestFromMasterDisplay  = false;
-		this.orrfmdAttemptBinaryConversion       = false;
+		this.orrfmdAttemptBinaryConversion       = true;
 		this.orrfmdDataPassInitialized           = false; // needs to alway start false.
 		this.reduceRenderResolutionOnInteraction = false;
 		this.reduceResolutionAmount              = 10; // Divided dimensions by this number
@@ -75,7 +75,16 @@ var ParaSAGE = SAGE2_App.extend({
 			interactiveQuality: 10,
 			stillQuality: 100,
 			currentQuality: 100,
-			vcrPlayStatus: false
+			vcrPlayStatus: false,
+			vcrFrameData: [],
+			vcrCurrentFrame: 0,
+			vcrViewChanged: true,
+			vcrFrameBeingFetched: -1,
+
+			vcrStartingHighResFetch: -1,
+			vcrHasAllLowResImages: false, 
+			vcrGettingHighResImages: false, 
+			vcrIndexOfHighResFetch: -1
 		};
 		this.button_state = {
 			action_pending: false,
@@ -109,7 +118,26 @@ var ParaSAGE = SAGE2_App.extend({
 				});
 			}, 1000);
 		}
-	},
+		// setup listener for the render view image
+		if (isMaster) {
+			wsio.emit("csdMessage", {
+				type:        "setValue",
+				nameOfValue: "pvwRenderViewImage",
+				value:       "On app start will be blank so the value exists for the subscription request",
+				description: "Will hold the latest render image from ParaView"
+			});
+		} else {
+			var _this = this;
+			setTimeout(function() {
+				wsio.emit("csdMessage", {
+					type:        "subscribeToValue",
+					nameOfValue: "pvwRenderViewImage",
+					app:         _this.id,
+					func:        "csdRenderViewUpdate"
+				});
+			}, 1000);
+		}
+	}, // setupVariables
 
 	openWebSocketToPvwServer: function() {
 		var _this = this;
@@ -263,40 +291,46 @@ var ParaSAGE = SAGE2_App.extend({
 				_this.imageFromPvw.height = response.size[1];
 				_this.imageFromPvw.src = "data:image/" + response.format + "," + response.image;
 
-				if (_this.orrfmdAttemptBinaryConversion) {
-					var satb = atob(response.image);
-					_this.refreshCounter++;
-					if (_this.refreshCounter > 100) {
-						_this.refreshCounter = 0;
-						// console.log("erase me, refresh counter 100");
-						// console.log("erase me, src length:" + _this.imageFromPvw.src.length);
-						// console.log("erase me, src format:" + response.format);
-						// console.log("erase me, satb length:" + satb.length + ". Difference=" + (satb.length - _this.imageFromPvw.src.length));
+				// if only render request fro master display binary conversion
+				if (_this.onlyRenderRequestFromMasterDisplay) {
+					if (_this.orrfmdAttemptBinaryConversion) {
+						var satb = atob(response.image);
+						// use the following to debug size difference
+						// _this.refreshCounter++;
+						// if (_this.refreshCounter > 100) {
+						// 	_this.refreshCounter = 0;
+						// 	console.log("erase me, refresh counter 100");
+						// 	console.log("erase me, src length:" + _this.imageFromPvw.src.length);
+						// 	console.log("erase me, src format:" + response.format);
+						// 	console.log("erase me, satb length:" + satb.length + ". Difference=" + (satb.length - _this.imageFromPvw.src.length));
+						// }
+						wsio.emit("csdMessage", {
+							type: "setValue",
+							nameOfValue: "pvwRenderViewImage",
+							value: satb,
+							description: "Image from ParaView in binary."
+						});
 					}
-					wsio.emit("csdMessage", {
-						type: "setValue",
-						nameOfValue: "pvwRenderViewImage",
-						value: satb,
-						description: "Image from ParaView in binary."
-					});
-				} else {
-					wsio.emit("csdMessage", {
-						type: "setValue",
-						nameOfValue: "pvwRenderViewImage",
-						value: _this.imageFromPvw.src,
-						description: "Image from ParaView in binary."
-					});
+					else {
+						wsio.emit("csdMessage", {
+							type: "setValue",
+							nameOfValue: "pvwRenderViewImage",
+							value: _this.imageFromPvw.src,
+							description: "Image from ParaView in binary."
+						});
+					}
 				}
 
 				_this.logInformation.imageRoundTrip = Number(new Date().getTime() - response.localTime) - response.workTime;
 				_this.logInformation.imageServerProcessing = Number(response.workTime);
 			}
+			// cant tell if this is causing problems.
 			// If server still doing renders need to grab next frame
-			if (response.stale === true) {
-				setTimeout(function() {
-					_this.pvwRender();
-				}, 0);
-			}
+			// if (response.stale === true) {
+			// 	setTimeout(function() {
+			// 		_this.pvwRender();
+			// 	}, 0);
+			// }
 		});
 	},
 
@@ -319,6 +353,9 @@ var ParaSAGE = SAGE2_App.extend({
 			this.imageFromPvw.src    = mostRecentRenderImage;
 		}
 
+		if (this.packetTimeCheck) {
+			console.log("erase me, Time Diff:" + (Date.now() - this.packetTimeCheck));
+		}
 		// Remote information if it might be blocking the view.
 		this.hideInfoDiv();
 	},
@@ -334,7 +371,73 @@ var ParaSAGE = SAGE2_App.extend({
 			// console.log("Potential error: render update sent to master display.");
 			return;
 		}
-		if (statusMessage == "pvwRender") {
+
+		if (statusMessage.indexOf("$!") == 0) {
+			var res = "";
+			var format = "";
+			var frame = -1;
+			res    = statusMessage.substring(statusMessage.indexOf(":") + 1, statusMessage.indexOf("::"));
+			format = statusMessage.substring(statusMessage.indexOf("::") + 2, statusMessage.indexOf(":::"));
+			frame  = parseInt(statusMessage.substring(statusMessage.indexOf(":::") + 3, statusMessage.indexOf("::::")));
+
+			if (res == "low") {
+				res = "imgLowRes";
+			} else {
+				res = "imgHighRes";
+			}
+
+			try{
+				if (format == "bin") {
+					this.renderOptions.vcrFrameData[frame][res] = "data:image/jpeg;base64," 
+						+ btoa(statusMessage.substring(statusMessage.indexOf("::::") + 4));
+				} else {
+					this.renderOptions.vcrFrameData[frame][res] = statusMessage.substring(statusMessage.indexOf("::::") + 4);
+				}
+			} catch (e) {
+				console.log();
+				console.log();
+				console.log(e);
+				console.log(statusMessage.substring(0,20));
+				console.log(frame);
+				console.log(res);
+				console.dir(this.renderOptions.vcrFrameData);
+				console.log();
+				console.log();
+			}
+
+			// only on low res show the images.
+			if (res == "imgLowRes") {
+				this.imageFromPvw.src = this.renderOptions.vcrFrameData[frame][res];
+			}
+
+			if (this.packetTimeCheck) {
+				console.log("erase me, time diff:" + (Date.now() - this.packetTimeCheck));
+			}
+		} else if (statusMessage.indexOf("showAnimationFrame") !== -1) {
+			var res = "";
+			var frame = -1;
+			res    = statusMessage.substring(statusMessage.indexOf(":") + 1, statusMessage.indexOf("::"));
+			frame  = parseInt(statusMessage.substring(statusMessage.indexOf("::") + 2));
+			this.imageFromPvw.src = this.renderOptions.vcrFrameData[frame][res];
+		} else if (statusMessage.indexOf("resetVcrImageCache") !== -1) {
+			console.log("erase me, resetting vcr cache");
+			this.renderOptions.vcrFrameData = [];
+			var frameAmount = parseInt(statusMessage.substring(statusMessage.indexOf(":") + 1));
+			for (var i = 0; i < frameAmount; i++) {
+				this.renderOptions.vcrFrameData.push({
+					time: 0,
+					imgLowRes: null,
+					imgHighRes: null
+				});
+			}
+		} else if (statusMessage.indexOf("pvwRender") !== -1) {
+			if (statusMessage.indexOf("stillQuality") !== -1) {
+				this.renderOptions.currentQuality = this.renderOptions.stillQuality;
+			}
+			else if (statusMessage.indexOf("interactiveQuality") !== -1) {
+				this.renderOptions.currentQuality = this.renderOptions.interactiveQuality;
+			}
+
 			this.pvwRender();
 		} else if (statusMessage.indexOf("infoShow:") == 0) {
 			var infoShow = statusMessage.substring(statusMessage.indexOf(":") + 1);
@@ -342,6 +445,9 @@ var ParaSAGE = SAGE2_App.extend({
 			this.showInfoDiv(infoShow);
 		} else if (statusMessage.indexOf("infoHide") == 0) {
 			this.hideInfoDiv();
+		} else if (statusMessage.indexOf("showTime") !== -1) {
+			this.packetTimeCheck = Date.now();
+			console.log("erase me, time log:" + this.packetTimeCheck);
 		}
 	},
 
@@ -359,34 +465,473 @@ var ParaSAGE = SAGE2_App.extend({
 	},
 
 	pvwVcrPlay: function() {
+		if (!isMaster) { return; }
+		if (this.renderOptions.vcrFrameData.length < 2) { return; }
 		this.renderOptions.vcrPlayStatus = true;
 		this.getFullContextMenuAndUpdate(); // Check inside to swap Play / Pause
 		this.pvwRunAnimationLoop();
 	},
 
 	pvwVcrStop: function() {
+		if (!isMaster) { return; }
 		var _this = this;
 		_this.renderOptions.vcrPlayStatus = false;
 		_this.getFullContextMenuAndUpdate(); // Check inside to swap Play / Pause
 		_this.renderOptions.currentQuality = _this.renderOptions.stillQuality;
-		setTimeout(function() {
-			_this.pvwRender();
-		}, 50);
+
+		if (_this.renderOptions.vcrCurrentFrame != -1
+			&& _this.renderOptions.vcrFrameData.length > _this.renderOptions.vcrCurrentFrame
+			&& _this.renderOptions.vcrFrameData[_this.renderOptions.vcrCurrentFrame].imgHighRes != null) {
+			_this.imageFromPvw.src = _this.renderOptions.vcrFrameData[_this.renderOptions.vcrCurrentFrame].imgHighRes;
+		} else {
+			setTimeout(function() {
+				_this.pvwRender();
+				// Tell the other displays to render
+				wsio.emit("csdMessage", {
+					type: "setValue",
+					nameOfValue: "pvwStatusUpdate",
+					value:       "pvwRender.stillQuality",
+					description: "Using this as a way to notify non-master displays of pvw information only master will see"
+				});
+			}, 1);
+		}
 	},
+	pvwRunAnimationLoopOriginal: function() {
+		var _this = this;
+
+		// If the view was changed, then the images are old and need to be recollected.
+		if (_this.renderOptions.vcrViewChanged) {
+			for (var i = 0; i < _this.renderOptions.vcrFrameData.length; i++) {
+				_this.renderOptions.vcrFrameData[i].imgLowRes = null;
+				_this.renderOptions.vcrFrameData[i].imgHighRes = null;
+			}
+			_this.renderOptions.vcrViewChanged = false;
+		}
+
+		if (_this.renderOptions.vcrPlayStatus) {
+			// move to the next frame. Because interaction is on the last viewed frame.
+			_this.renderOptions.vcrCurrentFrame++;
+			if (_this.renderOptions.vcrCurrentFrame >= _this.renderOptions.vcrFrameData.length) {
+				_this.renderOptions.vcrCurrentFrame = 0;
+			}
+			var vcrCurrentFrame = _this.renderOptions.vcrCurrentFrame;
+			var vcrFrameData = _this.renderOptions.vcrFrameData;
+			var vcrFrameBeingFetched = _this.renderOptions.vcrFrameBeingFetched;
+			// if have imgLowRes
+			if (vcrFrameData[vcrCurrentFrame].imgLowRes != null) {
+				// if have imgHighRes
+				if (vcrFrameData[vcrCurrentFrame].imgHighRes != null) {
+					_this.imageFromPvw.src = vcrFrameData[vcrCurrentFrame].imgHighRes;
+				} else { // else do not have imgHighRes, fetch it.
+					_this.imageFromPvw.src = vcrFrameData[vcrCurrentFrame].imgLowRes;
+					if (vcrFrameBeingFetched == -1) {
+						_this.renderOptions.vcrFrameBeingFetched = _this.renderOptions.vcrCurrentFrame;
+						// fetch this frame in high res
+						_this.pvwConfig.session.call("pv.vcr.action", ["next"])
+						.then(function(timeValue) {
+							// If the time value matches, then render it
+							if (timeValue == _this.renderOptions.vcrFrameData[_this.renderOptions.vcrCurrentFrame].time) {
+								_this.renderOptions.currentQuality = _this.renderOptions.stillQuality;
+								_this.vcrRenderCallOriginal();
+								// Tell the other displays to render
+								// wsio.emit("csdMessage", {
+								// 	type: "setValue",
+								// 	nameOfValue: "pvwStatusUpdate",
+								// 	value:       "pvwRender.stillQuality",
+								// 	description: "Using this as a way to notify non-master displays of pvw information only master will see"
+								// });
+							} else {
+								console.log("erase me, or not time mismatch");
+								_this.renderOptions.vcrFrameBeingFetched = -1;
+							}
+						});
+					}
+				}
+				// recur this function
+				setTimeout(function() {
+					_this.pvwRunAnimationLoopOriginal();
+				}, 50);
+			} else if (vcrFrameBeingFetched == -1) { // Else do not have low res image AND not fetching, so can fetch it.
+				_this.renderOptions.vcrFrameBeingFetched = vcrCurrentFrame;
+				// first PVW needs to move to the next frame.
+				_this.pvwConfig.session.call("pv.vcr.action", ["next"])
+				.then(function(timeValue) {
+					_this.renderOptions.currentQuality = _this.renderOptions.interactiveQuality;
+					_this.vcrRenderCallOriginal();
+					// // Tell the other displays to render
+					// wsio.emit("csdMessage", {
+					// 	type: "setValue",
+					// 	nameOfValue: "pvwStatusUpdate",
+					// 	value:       "pvwRender.interactiveQuality",
+					// 	description: "Using this as a way to notify non-master displays of pvw information only master will see"
+					// });
+					// recur this function
+					setTimeout(function() {
+						_this.pvwRunAnimationLoopOriginal();
+					}, 50); // ms where 50 is 1/20 second
+				});
+			} else { // do not have lowResImage AND currently fetching, so don't do anything.
+				_this.renderOptions.vcrCurrentFrame--; // don't go faster than fetch.
+				// recur this function
+				setTimeout(function() {
+					_this.pvwRunAnimationLoopOriginal();
+				}, 50);
+			}
+
+
+			// _this.pvwConfig.session.call("pv.vcr.action", ["next"])
+			// .then(function(timeValue) {
+			// 	_this.renderOptions.currentQuality = _this.renderOptions.interactiveQuality;
+			// 	_this.pvwRender();
+			// 	// Tell the other displays to render
+			// 	wsio.emit("csdMessage", {
+			// 		type: "setValue",
+			// 		nameOfValue: "pvwStatusUpdate",
+			// 		value:       "pvwRender.interactiveQuality",
+			// 		description: "Using this as a way to notify non-master displays of pvw information only master will see"
+			// 	});
+			// 	setTimeout(function() {
+			// 		_this.pvwRunAnimationLoop();
+			// 	}, 50); // ms where 50 is 1/20 second
+			// });
+		} // if vcrPlayStatus
+	}, // pvwRunAnimationLoop
+
+	/*
+	Overview (master only)
+		
+		view change variable triggered when sending
+			interaction packet
+			load
+			visibility toggle on data
+
+		if (view has changed) {
+			clear out the cached images.
+			this probably needs notification of other displays.
+			set view has not changed.
+
+			also reset other new variables to track, mentioned below following Need
+		}
+
+		Need
+			current frame (usually based off of time?)
+				current frame usually starts at +1 since.
+			retrieving high res status
+			high res retrieve index
+			have all high res values.
+			have all low res status
+
+		if (playing) {
+			if (have low res image of current frame) {
+
+				if (have all high res values) {
+					how high res image
+				} else {
+					show low res image
+
+					if (have all low res) {
+						if ( NOT retriving high res) {
+							set retriving high res to true.
+							reset to 0 frame.
+							then render request
+								save image
+								increase high res status index.
+								canceli 
+						}
+					}
+					else do not have all low res {
+						do nothing, let the cycle fill out the lower res values.
+						actually console log this, unsure if this should ever happen.
+					}
+				}
+				call this function slightly later
+
+			}
+			else do not have low res image of current frame{
+				request vcr next
+				then {
+					show it render
+					store it.
+					increase current frame value
+
+					call this function slightly later
+
+				}
+			}
+		}
+		else not playing so don't do anything.
+	*/
 
 	pvwRunAnimationLoop: function() {
 		var _this = this;
+		// If the view was changed, then the images are old and need to be recollected.
+		if (_this.renderOptions.vcrViewChanged) {
+			for (var i = 0; i < _this.renderOptions.vcrFrameData.length; i++) {
+				_this.renderOptions.vcrFrameData[i].imgLowRes = null;
+				_this.renderOptions.vcrFrameData[i].imgHighRes = null;
+			}
+			// _this.renderOptions.vcrPlayStatus           = false; // How to prevent playing if currently as opposed to prevent 1st play.
+			_this.renderOptions.vcrViewChanged          = false;
+			_this.renderOptions.vcrHasAllLowResImages   = false;
+			_this.renderOptions.vcrHasAllHighResImages  = false;
+			_this.renderOptions.vcrGettingHighResImages = false;
+			_this.renderOptions.vcrStartingHighResFetch = -1;
+			_this.renderOptions.vcrIndexOfHighResFetch  = -1;
+
+			// Tell the other displays to render
+			wsio.emit("csdMessage", {
+				type: "setValue",
+				nameOfValue: "pvwStatusUpdate",
+				value:       "resetVcrImageCache:" + _this.renderOptions.vcrFrameData.length,
+				description: "Using this as a way to notify non-master displays of pvw information only master will see"
+			});
+
+		}
+		// If playing, because this is a recursive function, user might have caused a control change.
 		if (_this.renderOptions.vcrPlayStatus) {
-			_this.pvwConfig.session.call("pv.vcr.action", ["next"])
-			.then(function(timeValue) {
-				_this.renderOptions.currentQuality = _this.renderOptions.interactiveQuality;
-				_this.pvwRender();
+			// move to the next frame. Because vcr controls always cause frame movement.
+			_this.renderOptions.vcrCurrentFrame++;
+			if (_this.renderOptions.vcrCurrentFrame >= _this.renderOptions.vcrFrameData.length) {
+				_this.renderOptions.vcrCurrentFrame = 0;
+			}
+			var cFrame     = _this.renderOptions.vcrCurrentFrame;
+			var fData      = _this.renderOptions.vcrFrameData;
+			var vcrFrameBeingFetched = _this.renderOptions.vcrFrameBeingFetched;
+			// if have low res
+			if (fData[cFrame].imgLowRes != null) {
+				if (_this.renderOptions.vcrHasAllHighResImages) {
+					// if have high res image, show it
+					wsio.emit("csdMessage", {
+						type:        "setValue",
+						nameOfValue: "pvwStatusUpdate",
+						value:       "showAnimationFrame:imgHighRes::" + cFrame,
+						description: "Using this as a way to notify non-master displays of pvw information only master will see"
+					});
+					_this.imageFromPvw.src = fData[cFrame].imgHighRes;
+				} else {
+					// does not have high res image so show low res
+					wsio.emit("csdMessage", {
+						type:        "setValue",
+						nameOfValue: "pvwStatusUpdate",
+						value:       "showAnimationFrame:imgLowRes::" + cFrame,
+						description: "Using this as a way to notify non-master displays of pvw information only master will see"
+					});
+					_this.imageFromPvw.src = fData[cFrame].imgLowRes;
+
+					// if this var is false, see if because 1st time activation.
+					if (!_this.renderOptions.vcrHasAllLowResImages) {
+						var didGetLowImage = true;
+						for (var i = 0; i < fData.length; i++) {
+							if (fData[i].imgLowRes == null) {
+								console.log("Full cycled, but missing lower res index:" + i);
+								didGetLowImage = false;
+								break;
+							}
+						}
+						if (didGetLowImage) {
+							_this.renderOptions.vcrHasAllLowResImages = true;
+						}
+					}
+					if (_this.renderOptions.vcrHasAllLowResImages) {
+						if (!_this.renderOptions.vcrGettingHighResImages) {
+							console.log("erase me, starting high res image grab");
+							_this.renderOptions.vcrGettingHighResImages = true;
+							_this.renderOptions.vcrStartingHighResFetch = cFrame;
+							_this.renderOptions.vcrIndexOfHighResFetch  = cFrame; // start from the current frame
+
+							_this.pvwConfig.session.call("pv.vcr.action", ["next"])
+							.then(function(timeValue) {
+								_this.renderOptions.currentQuality = _this.renderOptions.stillQuality;
+								_this.vcrRenderCall();
+							});
+						}
+					} else {
+						console.log("Error? Has low frame, but missing some");
+						// let the animation cycle through should recollect on next pass?
+					}
+				} // else doesn't have all high rest
+
+				_this.renderOptions.vcrCurrentFrame++;
+				// recur this function
 				setTimeout(function() {
 					_this.pvwRunAnimationLoop();
-				}, 50); // ms where 50 is 1/20 second
-			});
+				}, 50);
+
+			} else { // do not have low res image
+				// first PVW needs to move to the next frame.
+				_this.pvwConfig.session.call("pv.vcr.action", ["next"])
+				.then(function(timeValue) {
+					_this.renderOptions.currentQuality = _this.renderOptions.interactiveQuality;
+					_this.vcrRenderCall();
+					// vcr render call will recur this function;
+				});
+			} // else do not have low res image
+		} // if vcrPlayStatus
+	}, // pvwRunAnimationLoop
+
+
+	vcrRenderCall: function() {
+		var _this = this;
+		var renderCfg = {
+			size: [parseInt(_this.sage2_width), parseInt(_this.sage2_height)],
+			view: Number(_this.renderOptions.view),
+			mtime: 0,
+			quality: _this.renderOptions.currentQuality, // Might replace later with _this.renderOptions.vcrPlayStatus ? _this.renderOptions.interactiveQuality : _this.renderOptions.stillQuality
+			localTime: new Date().getTime()
+		};
+		// If doing a resolution reduction on interaction instead of quality alter the renderCfg values.
+		if (_this.reduceRenderResolutionOnInteraction
+			&& (_this.renderOptions.currentQuality == _this.renderOptions.interactiveQuality)) {
+			renderCfg.size = [
+				parseInt(_this.sage2_width / _this.reduceResolutionAmount),
+				parseInt(_this.sage2_height / _this.reduceResolutionAmount)
+			];
+			renderCfg.quality = _this.renderOptions.stillQuality;
 		}
-	},
+		// render call
+		_this.pvwConfig.session.call("viewport.image.render", [renderCfg])
+		.then(function(response) {
+			_this.renderOptions.view = Number(response.global_id);
+			if (response.hasOwnProperty("image") & response.image !== null) {
+				if (_this.renderOptions.currentQuality == _this.renderOptions.stillQuality) {
+					if (!_this.renderOptions.vcrGettingHighResImages) {
+						console.log("Error got a high res image _this.renderOptions.vcrGettingHighResImages" + _this.renderOptions.vcrGettingHighResImages);
+					}
+					// if this is -1 then a view change occured and this is a lagged update. don't show it.
+					if (_this.renderOptions.vcrIndexOfHighResFetch != -1) {
+						_this.imageFromPvw.src = "data:image/" + response.format + "," + response.image;
+						_this.renderOptions.vcrFrameData[_this.renderOptions.vcrIndexOfHighResFetch].imgHighRes = _this.imageFromPvw.src;
+
+						var dataToSend = "";
+						if (_this.orrfmdAttemptBinaryConversion) {
+							var dataToSend = atob(response.image);
+							var tdiff = Date.now();
+							console.log("erase me, Conversion time(ms):" + (Date.now() - tdiff) );
+							console.log("erase me, src format:" + response.format);
+							console.log("erase me, dataToSend length:" + dataToSend.length + ". Difference=" + (dataToSend.length - _this.imageFromPvw.src.length));
+							console.log("erase me, dataToSend type:" + (typeof dataToSend));
+							console.dir(dataToSend);
+						} else {
+							// full image string ready to set
+							dataToSend = _this.imageFromPvw.src;
+						}
+						wsio.emit("csdMessage", {
+							type:        "setValue",
+							nameOfValue: "pvwStatusUpdate",
+							value:       "showTime",
+							description: "Using this as a way to notify non-master displays of pvw information only master will see"
+						});
+						wsio.emit("csdMessage", {
+							type:        "setValue",
+							nameOfValue: "pvwStatusUpdate",
+							value:       "$!:hi::" + (_this.orrfmdAttemptBinaryConversion ? "bin" : "str")
+											+ ":::" + _this.renderOptions.vcrIndexOfHighResFetch + "::::" + dataToSend,
+							description: "Using this as a way to notify non-master displays of pvw information only master will see"
+						});
+
+						_this.renderOptions.vcrIndexOfHighResFetch++;
+						if (_this.renderOptions.vcrIndexOfHighResFetch >= _this.renderOptions.vcrFrameData.length) {
+							_this.renderOptions.vcrIndexOfHighResFetch = 0;
+						}
+						if (_this.renderOptions.vcrIndexOfHighResFetch != _this.renderOptions.vcrStartingHighResFetch) {
+							_this.pvwConfig.session.call("pv.vcr.action", ["next"])
+							.then(function(timeValue) {
+								// only render request if fetching view hasn't reset.
+								if (_this.renderOptions.vcrIndexOfHighResFetch != -1) {
+									_this.renderOptions.currentQuality = _this.renderOptions.stillQuality;
+									_this.vcrRenderCall();
+								}
+							});
+						} else {
+							_this.renderOptions.vcrHasAllHighResImages = true;
+						}
+					}
+				} else {
+					_this.imageFromPvw.src = "data:image/" + response.format + "," + response.image;
+					_this.renderOptions.vcrFrameData[_this.renderOptions.vcrCurrentFrame].imgLowRes = _this.imageFromPvw.src;
+					
+					var dataToSend = "";
+					if (_this.orrfmdAttemptBinaryConversion) {
+						var dataToSend = atob(response.image);
+						var tdiff = Date.now();
+						// console.log("erase me, Conversion time(ms):" + (Date.now() - tdiff) );
+						// console.log("erase me, src format:" + response.format);
+						// console.log("erase me, dataToSend length:" + dataToSend.length + ". Difference=" + (dataToSend.length - _this.imageFromPvw.src.length));
+						// console.log("erase me, dataToSend type:" + (typeof dataToSend));
+						// console.dir(dataToSend);
+					} else {
+						// full image string ready to set
+						dataToSend = _this.imageFromPvw.src;
+					}
+					wsio.emit("csdMessage", {
+						type:        "setValue",
+						nameOfValue: "pvwStatusUpdate",
+						value:       "showTime",
+						description: "Using this as a way to notify non-master displays of pvw information only master will see"
+					});
+
+					wsio.emit("csdMessage", {
+						type:        "setValue",
+						nameOfValue: "pvwStatusUpdate",
+						value:       "$!:low::" + (_this.orrfmdAttemptBinaryConversion ? "bin" : "str")
+										+ ":::" + _this.renderOptions.vcrCurrentFrame + "::::" + dataToSend,
+						description: "Using this as a way to notify non-master displays of pvw information only master will see"
+					});
+					// wsio.emit("csdMessage", {
+					// 	type: "setValue",
+					// 	nameOfValue: "pvwRenderViewImage",
+					// 	value: dataToSend,
+					// 	description: "Image from ParaView in binary."
+					// });
+					_this.pvwRunAnimationLoop();
+				}
+			} // if valid image
+		}); // then response
+	}, // vcrRenderCall
+
+	vcrRenderCallOriginal: function() {
+		var _this = this;
+		var renderCfg = {
+			size: [parseInt(_this.sage2_width), parseInt(_this.sage2_height)],
+			view: Number(_this.renderOptions.view),
+			mtime: 0,
+			quality: _this.renderOptions.currentQuality, // Might replace later with _this.renderOptions.vcrPlayStatus ? _this.renderOptions.interactiveQuality : _this.renderOptions.stillQuality
+			localTime: new Date().getTime()
+		};
+
+		// If doing a resolution reduction on interaction instead of quality alter the renderCfg values.
+		if (_this.reduceRenderResolutionOnInteraction
+			&& (_this.renderOptions.currentQuality == _this.renderOptions.interactiveQuality)) {
+			renderCfg.size = [
+				parseInt(_this.sage2_width / _this.reduceResolutionAmount),
+				parseInt(_this.sage2_height / _this.reduceResolutionAmount)
+			];
+			renderCfg.quality = _this.renderOptions.stillQuality;
+		}
+
+		_this.pvwConfig.session.call("viewport.image.render", [renderCfg])
+		.then(function(response) {
+			_this.renderOptions.view = Number(response.global_id);
+			if (response.hasOwnProperty("image") & response.image !== null) {
+				// set the image
+				//_this.imageFromPvw.src = "data:image/" + response.format + "," + response.image;
+
+				// If this is for a frame fetch
+				if (_this.renderOptions.vcrFrameBeingFetched > -1) {
+					if (_this.renderOptions.currentQuality == _this.renderOptions.stillQuality) {
+						_this.imageFromPvw.src = "data:image/" + response.format + "," + response.image;
+						_this.renderOptions.vcrFrameData[_this.renderOptions.vcrFrameBeingFetched].imgHighRes = _this.imageFromPvw.src;
+					} else {
+						_this.imageFromPvw.src = "data:image/" + response.format + "," + response.image;
+						_this.renderOptions.vcrFrameData[_this.renderOptions.vcrFrameBeingFetched].imgLowRes = _this.imageFromPvw.src;
+					}
+					_this.renderOptions.vcrFrameBeingFetched = -1; // allow more frames to be fetched
+				} else {
+					console.log("erase me, ? or not this is an error vcrRenderCall but vcrFrameBeingFetched " + _this.renderOptions.vcrFrameBeingFetched);
+				}
+			} // if valid image
+		}); // then response
+	}, // vcrRenderCall
 
 	setupImageEventListerers: function() {
 		var _this = this;
@@ -420,6 +965,34 @@ var ParaSAGE = SAGE2_App.extend({
 	},
 
 	imageEventHandler: function(evt) {
+		var _this = this;
+		// due to animation caching, the view might not be on the correct frame.
+		if (isMaster
+				&& !this.renderOptions.vcrViewChanged
+				&& (this.renderOptions.vcrStartingHighResFetch != -1)
+				// && (this.renderOptions.vcrStartingHighResFetch != this.renderOptions.vcrIndexOfHighResFetch)
+				) {
+			// because of weird timing of low vs high res, just reset to 0, send that many offset commands.
+			this.renderOptions.vcrViewChanged = true;
+
+			_this.pvwConfig.session.call("pv.vcr.action", ["first"])
+			.then(function(timeValue) {
+				// send next frame requests equivalent to number of offset.
+				for (var i = 0; i < _this.renderOptions.vcrCurrentFrame; i++) {
+					_this.pvwConfig.session.call("pv.vcr.action", ["next"])
+					.then(function(timeValue) {
+						},
+						function(err) {
+							console.log("Unexpected error next frame to match animation:" + err);
+						}
+					);
+				}
+
+			}, function(err) {
+				console.log("Unexpected error on interaction view matching for animation:" + err);
+			});
+
+		}
 		// Old debug
 		// this.updateTitle( "Event(" + evt.type + ") pos(" + evt.x + "," + evt.y + ") move " + evt.movementX + "," + evt.movementY);
 
@@ -431,20 +1004,7 @@ var ParaSAGE = SAGE2_App.extend({
 			this.renderOptions.currentQuality = this.renderOptions.interactiveQuality;
 			// console.log("erase me, " + evt.type + " detected switching to animation " + this.renderOptions.currentQuality);
 
-
-			// // weird ass compensation for paraview jump effect
-			// _this.pvwConfig.session.call("viewport.camera.get", [Number(_this.renderOptions.view)])
-			// .then(function(reply) {
-			// 	/*
-			// 		reply is: {
-			// 			focal:[],
-			// 			position:[],
-			// 			up: []
-			// 		}
-			// 	*/
-			// });
-
-			// render request first. hopefully this fixes the forward jump from what seems to be resolution shift.
+			// render request first. This fixes the forward jump from what seems to be resolution shift.
 			this.pvwRender();
 		}
 
@@ -512,14 +1072,12 @@ var ParaSAGE = SAGE2_App.extend({
 		}
 		// console.log("erase me, does this flood with mousemove?");
 		this.button_state.action_pending = true;
-		var _this = this;
 
 		// If not master, ask for a render view after a bit
 		_this.pvwConfig.session.call("viewport.mouse.interaction", [vtkWeb_event])
 		.then(function (res) {
 			if (res) {
 				_this.button_state.action_pending = false;
-				_this.pvwRender();
 				// Tell the other displays to render
 				wsio.emit("csdMessage", {
 					type: "setValue",
@@ -527,6 +1085,22 @@ var ParaSAGE = SAGE2_App.extend({
 					value:       "pvwRender",
 					description: "Using this as a way to notify non-master displays of pvw information only master will see"
 				});
+				_this.pvwRender();
+				_this.renderOptions.vcrViewChanged = true;
+
+				if (evt.type == "mouseup") {
+					setTimeout(function() {
+						// Tell the other displays to render
+						wsio.emit("csdMessage", {
+							type: "setValue",
+							nameOfValue: "pvwStatusUpdate",
+							value:       "pvwRender",
+							description: "Using this as a way to notify non-master displays of pvw information only master will see"
+						});
+						_this.pvwRender();
+					}, 100);
+				}
+
 			}
 		}, function(error) {
 			console.log("Call to viewport.mouse.interaction failed");
@@ -837,7 +1411,7 @@ var ParaSAGE = SAGE2_App.extend({
 		if (isMaster) {
 			_this.pvwConfig.session.call("pv.proxy.manager.create.reader", fullpathFileList)
 			.then(function(response) {
-				_this.pvwRender();
+				_this.pvwVcrStop();
 				// After reading in a date set, ask the server what the id is.
 				// NOTE: currently each connection will makes a request for data, meaning x Displays amount of rendered datasets.
 				_this.pvwRequestProxyManagerList();
@@ -849,14 +1423,43 @@ var ParaSAGE = SAGE2_App.extend({
 					description: "Using this as a way to notify non-master displays of pvw information only master will see"
 				});
 
-				_this.hideInfoDiv();
-				// Tell the other displays to hide info div
-				wsio.emit("csdMessage", {
-					type: "setValue",
-					nameOfValue: "pvwStatusUpdate",
-					value:       "infoHide",
-					description: "Using this as a way to notify non-master displays of pvw information only master will see"
+				// Need to know how many frames in dataset. setup variables for a new dataset.
+				_this.renderOptions.vcrFrameData = [];
+				_this.renderOptions.vcrFrameData.push({
+					time: 0,
+					imgLowRes: null,
+					imgHighRes: null
 				});
+				_this.renderOptions.vcrCurrentFrame = 0;
+				_this.renderOptions.vcrViewChanged = true;
+
+				// reset to beginning, then activate recursive function to get the rest of the frames.
+				setTimeout(function() {
+					_this.pvwConfig.session.call("pv.vcr.action", ["first"])
+					.then(function(timeValue) {
+						setTimeout(function() { _this.pvwGetFrameAmount(); }, 10);
+					}, function(err) {
+						// console.log("Not really an error, loaded dataset doesn't have animation frames:" + err);
+						// Tell the other displays to hide info div
+						wsio.emit("csdMessage", {
+							type: "setValue",
+							nameOfValue: "pvwStatusUpdate",
+							value:       "infoHide",
+							description: "Using this as a way to notify non-master displays of pvw information only master will see"
+						});
+						_this.hideInfoDiv();
+						// Tell the other displays to render
+						wsio.emit("csdMessage", {
+							type: "setValue",
+							nameOfValue: "pvwStatusUpdate",
+							value:       "pvwRender",
+							description: "Using this as a way to notify non-master displays of pvw information only master will see"
+						});
+						_this.pvwRender(); // update the view
+					});
+				}, 1000); // get the frames after render requests are made (supposedly)
+
+
 
 			}, function(err) {
 				console.log("Unable to create reader:" + err);
@@ -870,6 +1473,52 @@ var ParaSAGE = SAGE2_App.extend({
 				});
 			});
 		}
+	},
+
+	/*
+		First call to this function will be after a data load.
+		And it will be after getting a response to the first frame, timeValue 0.
+
+		NOTE this actually causes a cycle through all frames.
+		If interaction occurs while the frames are being cycled, then the interaction will see the cycle happening.
+
+	*/
+	pvwGetFrameAmount: function() {
+		var _this = this;
+		_this.pvwConfig.session.call("pv.vcr.action", ["next"])
+		.then(function(timeValue) {
+			if (timeValue > 0) {
+				_this.renderOptions.vcrFrameData.push({
+					time: timeValue,
+					imgLowRes: null,
+					imgHighRes: null
+				});
+				_this.pvwGetFrameAmount();
+			} else {
+				console.log("erase me, frames:" + _this.renderOptions.vcrFrameData.length);
+				console.log("erase me, time:" + timeValue);
+
+				_this.hideInfoDiv();
+				// Tell the other displays to hide info div
+				wsio.emit("csdMessage", {
+					type: "setValue",
+					nameOfValue: "pvwStatusUpdate",
+					value:       "infoHide",
+					description: "Using this as a way to notify non-master displays of pvw information only master will see"
+				});
+
+				// Tell the other displays to render
+				wsio.emit("csdMessage", {
+					type: "setValue",
+					nameOfValue: "pvwStatusUpdate",
+					value:       "pvwRender",
+					description: "Using this as a way to notify non-master displays of pvw information only master will see"
+				});
+				_this.pvwRender(); // update the view
+			}
+		}, function(err) {
+			console.log("Error getting frames:" + err);
+		});
 	},
 
 	pvwToggleVisibilityOfData: function (responseObject) {
@@ -892,13 +1541,18 @@ var ParaSAGE = SAGE2_App.extend({
 			_this.pvwConfig.session.call("pv.proxy.manager.update", [dataToSend])
 			.then(function() {
 				_this.pvwRender(); // update the view
-				// Tell the other displays to render
-				wsio.emit("csdMessage", {
-					type: "setValue",
-					nameOfValue: "pvwStatusUpdate",
-					value:       "pvwRender",
-					description: "Using this as a way to notify non-master displays of pvw information only master will see"
-				});
+				setTimeout(function() {
+					_this.pvwRender(); // update the view
+					// Tell the other displays to render
+					wsio.emit("csdMessage", {
+						type: "setValue",
+						nameOfValue: "pvwStatusUpdate",
+						value:       "pvwRender",
+						description: "Using this as a way to notify non-master displays of pvw information only master will see"
+					});
+				}, 400);
+
+				_this.renderOptions.vcrViewChanged = true;
 			}, function(err) {
 				console.log("pipeline update error");
 				console.log(err);
