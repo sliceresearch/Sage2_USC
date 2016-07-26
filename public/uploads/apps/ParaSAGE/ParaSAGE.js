@@ -36,7 +36,7 @@ var ParaSAGE = SAGE2_App.extend({
 		this.orrfmdDataPassInitialized           = false; // needs to alway start false.
 		this.reduceRenderResolutionOnInteraction = false;
 		this.reduceResolutionAmount              = 10; // Divided dimensions by this number
-		this.preventPacketSendingToPvw           = false;
+		this.onlyGetLowResAnimationFrames        = true; // Needed for testing on large resolutions.
 		// Info div for a larget notification zone
 		this.infoDiv = document.createElement("div");
 		this.infoDiv.style.width     = "100%";
@@ -715,7 +715,10 @@ var ParaSAGE = SAGE2_App.extend({
 						}
 					}
 					if (_this.renderOptions.vcrHasAllLowResImages) {
-						if (_this.otherDisplaysGotFrame >= _this.otherDisplayClients && !_this.renderOptions.vcrGettingHighResImages) { // wait until all displays get frame
+						if (_this.otherDisplaysGotFrame >= _this.otherDisplayClients
+								&& !_this.renderOptions.vcrGettingHighResImages
+								&& !_this.onlyGetLowResAnimationFrames // OK to high res grab?
+								) { // wait until all displays get frame
 							_this.otherDisplaysGotFrame = 0;
 							_this.renderOptions.vcrGettingHighResImages = true;
 							_this.renderOptions.vcrStartingHighResFetch = cFrame;
