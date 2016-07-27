@@ -10,7 +10,7 @@
  * @submodule oneEuroFilter
  */
 
- // require variables to be declared
+// require variables to be declared
 "use strict";
 
 function lowPassFilter(alpha, initval) {

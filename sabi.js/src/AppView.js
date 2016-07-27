@@ -55,9 +55,10 @@ Views.AppView = Backbone.View.extend({
     this.render();
   },
 
-  load: function(filename) {
+  load: function(cfg) { //changed to the contents of the config file.
+  //load: function(filename) {
     // Get the configuration file from the web server
-    // var	objXml = new XMLHttpRequest();
+    // var  objXml = new XMLHttpRequest();
     // console.log('Trying to load file: ', filename);
     // objXml.open("GET",filename,false);
     // objXml.send(null);
@@ -66,16 +67,20 @@ Views.AppView = Backbone.View.extend({
     // // Parse the JSON file got from the server
     // this.cfg = JSON.parse(data);
 
-    var objXml = new XMLHttpRequest();
-    console.log('Trying to load file: ', filename);
-    var _this = this;
-    objXml.open("GET",filename, true);
-    objXml.onload = function() {
-      var data = objXml.response;
-      // Parse the JSON file got from the server
-      _this.cfg = JSON.parse(data);
-    };
-    objXml.send(null);
+    // var objXml = new XMLHttpRequest();
+    // console.log('Trying to load file: ', filename);
+    // var _this = this;
+    // objXml.open("GET",filename, true);
+    // objXml.onload = function() {
+    //   var data = objXml.response;
+    //   // Parse the JSON file got from the server
+    //   _this.cfg = JSON.parse(data);
+    // };
+    // objXml.send(null);
+
+    this.cfg = cfg;
+    console.dir(cfg);
+
   },
 
   sendCall: function (namefunc, param) {
@@ -245,14 +250,15 @@ Views.AppView = Backbone.View.extend({
         console.log("OpenURL", actions[act].openurl);
         window.open(actions[act].openurl, "_parent");
     }
-    else if (actions[act].ignore) { //dkedit
+    else if (actions[act].ignore) { // dkedit
         console.log("ignoring pressed event for:" + id);
     }
-    else if (actions[act].sendData) {//dkedit
-      //going to overload the action with datasending.
+    else if (actions[act].sendData) { // dkedit
+      // Going to overload the action with datasending.
       var dataToSend = document.getElementById(actions[act].dataID).value;
-      console.log("Client side check for value collected plain:" + dataToSend + ". md5:" + md5(dataToSend));
-      this.sendCall( actions[act].sendPurpose, [ md5(dataToSend) ]);
+      var encoded    = md5(dataToSend);
+      console.log("Client side check for value collected plain:" + dataToSend + ". md5:" + encoded);
+      this.sendCall( actions[act].sendPurpose, [ encoded ]);
     }
     else {
         // The action is a script on a machine (remote or local)
@@ -267,7 +273,7 @@ Views.AppView = Backbone.View.extend({
           });
         }
         else {
-          //console.log("Should trigger:", actions[act].script);
+          // console.log("Should trigger:", actions[act].script);
           if (actions[act].return == "process")
             this.sendCallandProcess('action', [act, actions[act].script]);
           else

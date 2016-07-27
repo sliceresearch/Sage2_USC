@@ -44,7 +44,7 @@ function InteractableManager() {
 */
 InteractableManager.prototype.addLayer = function(id, zIndex) {
 	zIndex = (zIndex === undefined || zIndex === null) ? this.layerOrder.length : zIndex;
-	this.layers[id] = {objects: new RBush(6, ['.x1', '.y1', '.x2', '.y2']), zIndex: zIndex};
+	this.layers[id] = {objects: new RBush(6), zIndex: zIndex};
 	this.interactableObjects[id] = {};
 
 	var _this = this;
@@ -94,15 +94,15 @@ InteractableManager.prototype.addGeometry = function(id, layerId, type, geometry
 		data:     data
 	};
 	if (type === "circle") {
-		pkg.x1 = geometry.x - geometry.r;
-		pkg.y1 = geometry.y - geometry.r;
-		pkg.x2 = geometry.x + geometry.r;
-		pkg.y2 = geometry.y + geometry.r;
+		pkg.minX = geometry.x - geometry.r;
+		pkg.minY = geometry.y - geometry.r;
+		pkg.maxX = geometry.x + geometry.r;
+		pkg.maxY = geometry.y + geometry.r;
 	} else {
-		pkg.x1 = geometry.x;
-		pkg.y1 = geometry.y;
-		pkg.x2 = geometry.x + geometry.w;
-		pkg.y2 = geometry.y + geometry.h;
+		pkg.minX = geometry.x;
+		pkg.minY = geometry.y;
+		pkg.maxX = geometry.x + geometry.w;
+		pkg.maxY = geometry.y + geometry.h;
 	}
 
 	this.layers[layerId].objects.insert(pkg);
@@ -135,15 +135,15 @@ InteractableManager.prototype.addComplexGeometry = function(id, layerId, shapeDa
 			data:     data
 		};
 		if (type === "circle") {
-			pkg.x1 = geometry.x - geometry.r;
-			pkg.y1 = geometry.y - geometry.r;
-			pkg.x2 = geometry.x + geometry.r;
-			pkg.y2 = geometry.y + geometry.r;
+			pkg.minX = geometry.x - geometry.r;
+			pkg.minY = geometry.y - geometry.r;
+			pkg.maxX = geometry.x + geometry.r;
+			pkg.maxY = geometry.y + geometry.r;
 		} else {
-			pkg.x1 = geometry.x;
-			pkg.y1 = geometry.y;
-			pkg.x2 = geometry.x + geometry.w;
-			pkg.y2 = geometry.y + geometry.h;
+			pkg.minX = geometry.x;
+			pkg.minY = geometry.y;
+			pkg.maxX = geometry.x + geometry.w;
+			pkg.maxY = geometry.y + geometry.h;
 		}
 		this.layers[layerId].objects.insert(pkg);
 		complexPkg[key] = pkg;
@@ -189,15 +189,15 @@ InteractableManager.prototype.editGeometry = function(id, layerId, type, geometr
 		pkg.type = type;
 		pkg.geometry = geometry;
 		if (type === "circle") {
-			pkg.x1 = geometry.x - geometry.r;
-			pkg.y1 = geometry.y - geometry.r;
-			pkg.x2 = geometry.x + geometry.r;
-			pkg.y2 = geometry.y + geometry.r;
+			pkg.minX = geometry.x - geometry.r;
+			pkg.minY = geometry.y - geometry.r;
+			pkg.maxX = geometry.x + geometry.r;
+			pkg.maxY = geometry.y + geometry.r;
 		} else {
-			pkg.x1 = geometry.x;
-			pkg.y1 = geometry.y;
-			pkg.x2 = geometry.x + geometry.w;
-			pkg.y2 = geometry.y + geometry.h;
+			pkg.minX = geometry.x;
+			pkg.minY = geometry.y;
+			pkg.maxX = geometry.x + geometry.w;
+			pkg.maxY = geometry.y + geometry.h;
 		}
 
 		this.layers[layerId].objects.insert(pkg);
@@ -224,15 +224,15 @@ InteractableManager.prototype.editComplexGeometry = function(id, layerId, shapeD
 			var geometry = shapeData[key].geometry;
 			pkg.geometry = geometry;
 			if (pkg.type === "circle") {
-				pkg.x1 = geometry.x - geometry.r;
-				pkg.y1 = geometry.y - geometry.r;
-				pkg.x2 = geometry.x + geometry.r;
-				pkg.y2 = geometry.y + geometry.r;
+				pkg.minX = geometry.x - geometry.r;
+				pkg.minY = geometry.y - geometry.r;
+				pkg.maxX = geometry.x + geometry.r;
+				pkg.maxY = geometry.y + geometry.r;
 			} else {
-				pkg.x1 = geometry.x;
-				pkg.y1 = geometry.y;
-				pkg.x2 = geometry.x + geometry.w;
-				pkg.y2 = geometry.y + geometry.h;
+				pkg.minX = geometry.x;
+				pkg.minY = geometry.y;
+				pkg.maxX = geometry.x + geometry.w;
+				pkg.maxY = geometry.y + geometry.h;
 			}
 			this.layers[layerId].objects.insert(pkg);
 		}
@@ -267,6 +267,9 @@ InteractableManager.prototype.hasObjectWithId = function(id) {
 */
 InteractableManager.prototype.editVisibility = function(id, layerId, visible, partId) {
 	var pkg = this.interactableObjects[layerId][id];
+	if (!pkg) {
+		return;
+	}
 	if (pkg.hasOwnProperty("visible")) {
 		pkg.visible = visible;
 	} else {
@@ -345,7 +348,8 @@ InteractableManager.prototype.getObjectZIndexList = function(layerId, otherLayer
 	for (i = 0; i < allLayerIds.length; i++) {
 		if (this.interactableObjects.hasOwnProperty(allLayerIds[i])) {
 			for (key in this.interactableObjects[allLayerIds[i]]) {
-				zIndexList[this.interactableObjects[allLayerIds[i]][key].id] = getZIndexOfObj(this.interactableObjects[allLayerIds[i]][key]);
+				zIndexList[this.interactableObjects[allLayerIds[i]][key].id] =
+					getZIndexOfObj(this.interactableObjects[allLayerIds[i]][key]);
 			}
 		}
 	}
@@ -379,15 +383,16 @@ InteractableManager.prototype.searchGeometry = function(point, layerId, ignoreLi
 	if (layerId !== undefined && layerId !== null) {
 		// just in case
 		if (this.layers[layerId]) {
-			results.push(this.layers[layerId].objects.search([point.x, point.y, point.x, point.y]));
+			results.push(this.layers[layerId].objects.search({minX: point.x, minY: point.y, maxX: point.x, maxY: point.y}));
 		}
 	} else {
 		var i;
 		var tmp;
 		results = [];
 		for (i = this.layerOrder.length - 1; i >= 0; i--) {
-			tmp = this.layers[this.layerOrder[i]].objects.search([point.x, point.y, point.x, point.y]);
-			if (i < this.layerOrder.length - 1 && this.layers[this.layerOrder[i]].zIndex === this.layers[this.layerOrder[i + 1]].zIndex) {
+			tmp = this.layers[this.layerOrder[i]].objects.search({minX: point.x, minY: point.y, maxX: point.x, maxY: point.y});
+			if (i < this.layerOrder.length - 1 &&
+				this.layers[this.layerOrder[i]].zIndex === this.layers[this.layerOrder[i + 1]].zIndex) {
 				results[results.length - 1] = results[results.length - 1].concat(tmp);
 			} else {
 				results.push(tmp);
@@ -448,21 +453,20 @@ function findTopmostGeometry(point, geometryList, ignoreList) {
 function getZIndexOfObj(obj) {
 	if (obj.hasOwnProperty("zIndex")) {
 		return obj.zIndex;
-	} else {
-		var lst = Object.getOwnPropertyNames(obj);
-		if (lst.length > 0) {
-			return obj[lst[0]].zIndex;
-		}
-		return null;
 	}
+	var lst = Object.getOwnPropertyNames(obj);
+	if (lst.length > 0) {
+		return obj[lst[0]].zIndex;
+	}
+	return null;
 }
+
 /**
 * Set method for the zIndex of an Object
 * @method setZIndexOfObj
 * @param obj {Object} pkg information of the geometric object
 * @param zIndex {Integer} determines ordering of the geometries within a given layers
 */
-
 function setZIndexOfObj(obj, zIndex) {
 	if (obj.hasOwnProperty("zIndex")) {
 		obj.zIndex = zIndex;

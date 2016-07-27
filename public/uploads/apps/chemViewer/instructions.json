@@ -1,0 +1,25 @@
+{
+	"main_script": "chemViewer.js",
+	"icon": "chemViewer.png",
+	"width": 800,
+	"height": 600,
+	"resize": "free",
+	"animation": true,
+	"dependencies": [
+		"lib/ChemDoodleWeb.css",
+		"lib/ChemDoodleWeb.js"
+	],
+	"load": {
+		"rotation": 0,
+		"ismoving": true
+	},
+	"title": "ChemViewer",
+	"version": "1.0.0",
+	"fileTypes": [ "pdb" ],
+	"directory": "molecules",
+	"removeFromLauncher": false,
+	"description": "SAGE2 application based on ChemDoodle Web Components",
+	"keywords": [ "sage2", "ChemViewer", "ChemDoodleWeb", "chemistry", "PDB" ],
+	"author": "Luc Renambot <renambot@gmail.com>",
+	"license": "SAGE2-Software-License"
+}

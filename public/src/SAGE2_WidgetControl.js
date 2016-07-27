@@ -8,6 +8,8 @@
 //
 // Copyright (c) 2014
 
+/* global SAGE2WidgetButtonTypes */
+
 "use strict";
 
 /**
@@ -257,7 +259,8 @@ SAGE2WidgetControl.prototype.addTextInput = function(data) {
 *	data
 *		.appHandle
 *		.property - appHandle and preperty are used to bind a property of the app to the slider
-*		for example, if you want to bind this.state.currentPage to the slider, then send appHandle:this, property:"state.currentPage"
+*		for example, if you want to bind this.state.currentPage to the slider, then send appHandle:this,
+*			property:"state.currentPage"
 *		.begin - the minimum value that the proerty will take
 *		.end - the maximum value the property will take
 *		.increments - step value for the proerty
@@ -310,7 +313,8 @@ SAGE2WidgetControl.prototype.addColorPalette = function(data) {
 
 		if (data.colorList === null || data.colorList === undefined) {
 			return;
-		} else if (data.colorList.length === 0) {
+		}
+		if (data.colorList.length === 0) {
 			return;
 		}
 

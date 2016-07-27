@@ -3,31 +3,31 @@ var MAX_DELTA_TIME = 0.2;
 var PRESIMULATION_DELTA_TIME = 0.1;
 
 var QUALITY_LEVELS = [
-{
-	resolution: [256, 256],
-	diameter: 0.03,
-	alpha: 0.5
-}, {
-	resolution: [512, 256],
-	diameter: 0.025,
-	alpha: 0.4
-}, {
-	resolution: [512, 512],
-	diameter: 0.02,
-	alpha: 0.3
-}, {
-	resolution: [1024, 512],
-	diameter: 0.015,
-	alpha: 0.25
-}, {
-	resolution: [1024, 1024],
-	diameter: 0.0125,
-	alpha: 0.2
-}, {
-	resolution: [2048, 1024],
-	diameter: 0.01,
-	alpha: 0.2
-},
+	{
+		resolution: [256, 256],
+		diameter: 0.03,
+		alpha: 0.5
+	}, {
+		resolution: [512, 256],
+		diameter: 0.025,
+		alpha: 0.4
+	}, {
+		resolution: [512, 512],
+		diameter: 0.02,
+		alpha: 0.3
+	}, {
+		resolution: [1024, 512],
+		diameter: 0.015,
+		alpha: 0.25
+	}, {
+		resolution: [1024, 1024],
+		diameter: 0.0125,
+		alpha: 0.2
+	}, {
+		resolution: [2048, 1024],
+		diameter: 0.01,
+		alpha: 0.2
+	}
 ];
 
 var OPACITY_TEXTURE_RESOLUTION = 1024;
@@ -226,7 +226,7 @@ var premultiplyMatrix = function(out, matrixA, matrixB) { // out = matrixB * mat
 	var b2 = matrixB[2];
 	var b6 = matrixB[6];
 	var b10 = matrixB[10];
-	var b14 = matrixB[14]
+	var b14 = matrixB[14];
 	var b3 = matrixB[3];
 	var b7 = matrixB[7];
 	var b11 = matrixB[11];
@@ -410,9 +410,9 @@ var randomPointInSphere = function() {
 	var phi = Math.random() * 2.0 * Math.PI;
 
 	return [
-	Math.pow(lambda, 1 / 3) * Math.sqrt(1.0 - u * u) * Math.cos(phi),
-	Math.pow(lambda, 1 / 3) * Math.sqrt(1.0 - u * u) * Math.sin(phi),
-	Math.pow(lambda, 1 / 3) * u
+		Math.pow(lambda, 1 / 3) * Math.sqrt(1.0 - u * u) * Math.cos(phi),
+		Math.pow(lambda, 1 / 3) * Math.sqrt(1.0 - u * u) * Math.sin(phi),
+		Math.pow(lambda, 1 / 3) * u
 	];
 };
 

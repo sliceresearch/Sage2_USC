@@ -6,7 +6,9 @@
 //
 // See full text, terms and conditions in the LICENSE.txt included file
 //
-// Copyright (c) 2014
+// Copyright (c) 2014-16
+
+/* global hostAlias */
 
 "use strict";
 
@@ -30,7 +32,15 @@ __SAGE2__.version = "1.0.0";
 
 
 /**
- * Initializes global settings: random genrator, ...
+ * In Strict mode Webix doesn't use "eval"
+ * Should be enabled if Content Security Policy is switched on for the application
+ * or if the application runs in a "strict" mode
+ * The flag should be enabled before Webix files are included into the page
+ */
+window.webix_strict = true;
+
+/**
+ * Initializes global settings: random generator, ...
  *
  * @method SAGE2_initialize
  * @param data_seed {Date} seed number
@@ -196,33 +206,49 @@ function _Date(obj) {
 }
 SAGE2types.Date = _Date;
 
-SAGE2types.isaLatLng = function(obj) { return obj instanceof SAGE2types.LatLng; };
-SAGE2types.isaInt    = function(obj) { return obj instanceof SAGE2types.Int; };
-SAGE2types.isaFloat  = function(obj) { return obj instanceof SAGE2types.Float; };
-SAGE2types.isaString = function(obj) { return obj instanceof SAGE2types.String; };
-SAGE2types.isaObject = function(obj) { return obj instanceof SAGE2types.Object; };
-SAGE2types.isaArray  = function(obj) { return obj instanceof SAGE2types.Array; };
-SAGE2types.isaDate   = function(obj) { return obj instanceof SAGE2types.Date; };
+SAGE2types.isaLatLng = function(obj) {
+	return obj instanceof SAGE2types.LatLng;
+};
+SAGE2types.isaInt = function(obj) {
+	return obj instanceof SAGE2types.Int;
+};
+SAGE2types.isaFloat = function(obj) {
+	return obj instanceof SAGE2types.Float;
+};
+SAGE2types.isaString = function(obj) {
+	return obj instanceof SAGE2types.String;
+};
+SAGE2types.isaObject = function(obj) {
+	return obj instanceof SAGE2types.Object;
+};
+SAGE2types.isaArray = function(obj) {
+	return obj instanceof SAGE2types.Array;
+};
+SAGE2types.isaDate = function(obj) {
+	return obj instanceof SAGE2types.Date;
+};
 
-SAGE2types.create    = function(val) {
+SAGE2types.create = function(val) {
 	if (_typeOf(val) === 'object') {
 		if (val.hasOwnProperty('lat') && val.hasOwnProperty('lng')) {
 			return new SAGE2types.LatLng(val.lat, val.lng);
-		} else {
-			return new SAGE2types.Object(val);
 		}
-	} else if (_typeOf(val) === 'array') {
+		return new SAGE2types.Object(val);
+	}
+	if (_typeOf(val) === 'array') {
 		return new SAGE2types.Array(val);
-	} else if (_typeOf(val) === 'number') {
+	}
+	if (_typeOf(val) === 'number') {
 		var v = parseInt(val);
 		if (v === val) {
 			return new SAGE2types.Int(val);
-		} else {
-			return new SAGE2types.Float(val);
 		}
-	} else if (_typeOf(val) === 'string') {
+		return new SAGE2types.Float(val);
+	}
+	if (_typeOf(val) === 'string') {
 		return new SAGE2types.String(val);
-	} else if (_typeOf(val) === 'date') {
+	}
+	if (_typeOf(val) === 'date') {
 		return new SAGE2types.Date(val);
 	}
 	return null;
@@ -277,35 +303,22 @@ function broadcast(dataObject) {
  * Pretty print a date object into string
  *
  * @method formatAMPM
- * @param date {Date} date to convert
+ * @param date {Object} momentjs object for time
  * @return {String} formatted date
  */
 function formatAMPM(date) {
-	var hours   = date.getHours();
-	var minutes = date.getMinutes();
-	var ampm    = hours >= 12 ? "pm" : "am";
-	hours       = hours % 12;
-	if (hours === 0) {
-		hours = 12;
-	}
-	var hh = hours.toString();
-	var mm = minutes < 10 ? "0" + minutes.toString() : minutes.toString();
-	return (hh + ":" + mm + ampm);
+	return date.format('h:mm a');
 }
 
 /**
  * Convert date into 24h string format
  *
  * @method format24Hr
- * @param date {Date} date to convert
+ * @param date {Object} momentjs object for time
  * @return {String} formatted date
  */
 function format24Hr(date) {
-	var hours   = date.getHours();
-	var minutes = date.getMinutes();
-	var hh = hours.toString();
-	var mm = minutes < 10 ? "0" + minutes.toString() : minutes.toString();
-	return (hh + ":" + mm);
+	return date.format('HH:mm');
 }
 
 /**
@@ -316,8 +329,8 @@ function format24Hr(date) {
  * @return {String} formatted duration
  */
 function formatHHMMSS(duration) {
-	var ss = parseInt((duration / 1000) % 60,         10);
-	var mm = parseInt((duration / (1000 * 60)) % 60,    10);
+	var ss = parseInt((duration / 1000) % 60,             10);
+	var mm = parseInt((duration / (1000 * 60)) % 60,      10);
 	var hh = parseInt((duration / (1000 * 60 * 60)) % 24, 10);
 
 	hh = (hh < 10) ? "0" + hh : hh;
@@ -598,6 +611,21 @@ function deleteElement(id) {
 	}
 }
 
+/**
+ * Remove of children of a DOM element
+ *
+ * @method removeAllChildren
+ * @param node {Element|String} id or node to be processed
+ */
+function removeAllChildren(node) {
+	// if the parameter a string, look it up
+	var elt = (typeof node === "string") ? document.getElementById(node) : node;
+	// remove one child at a time
+	while (elt.lastChild) {
+		elt.removeChild(elt.lastChild);
+	}
+}
+
 
 /**
  * Cleanup a URL and replace the origin to match the client (to mitigate CORS problems, cross-origin resource sharing)
@@ -753,3 +781,76 @@ Math.seed = function(s) {
 		return s / m;
 	};
 };
+
+/**
+ * Add a key-value pair as a cookie
+ *
+ * @method addCookie
+ * @param sKey {String} key
+ * @param sValue {String} value
+ * @return {Boolean} true/false
+ */
+function addCookie(sKey, sValue) {
+	if (!sKey) {
+		return false;
+	}
+	var domain;
+	if (window.location.hostname === "127.0.0.1") {
+		domain = "127.0.0.1";
+	} else {
+		domain = window.location.hostname.split('.').slice(-2).join(".");
+	}
+	document.cookie = encodeURIComponent(sKey) + "=" + encodeURIComponent(sValue) +
+		"; expires=Fri, 31 Dec 9999 23:59:59 GMT" +
+		"; domain=" + domain +
+		"; path=/";
+	return true;
+}
+
+/**
+ * Return a cookie value for given key
+ *
+ * @method getCookie
+ * @param sKey {String} key
+ * @return {String} value found or null
+ */
+function getCookie(sKey) {
+	if (!sKey) {
+		return null;
+	}
+	return decodeURIComponent(document.cookie.replace(new RegExp("(?:(?:^|.*;)\\s*" +
+				encodeURIComponent(sKey).replace(/[\-\.\+\*]/g, "\\$&") + "\\s*\\=\\s*([^;]*).*$)|^.*$"), "$1"))
+		|| null;
+}
+
+/**
+ * Extract translate and scale from a DOM element
+ *
+ * @method getTransform
+ * @param elem {Object} DOM element
+ * @return {Object} contains translate and scale specification
+ */
+function getTransform(elem) {
+	var transform = elem.style.transform;
+	var translate = {x: 0, y: 0};
+	var scale = {x: 1, y: 1};
+	if (transform) {
+		var tIdx = transform.indexOf("translate");
+		if (tIdx >= 0) {
+			var tStr = transform.substring(tIdx + 10, transform.length);
+			tStr = tStr.substring(0, tStr.indexOf(")"));
+			var tValue = tStr.split(",");
+			translate.x = parseFloat(tValue[0]);
+			translate.y = parseFloat(tValue[1]);
+		}
+		var sIdx = transform.indexOf("scale");
+		if (sIdx >= 0) {
+			var sStr = transform.substring(sIdx + 6, transform.length);
+			sStr = sStr.substring(0, sStr.indexOf(")"));
+			var sValue = sStr.split(",");
+			scale.x = parseFloat(sValue[0]);
+			scale.y = parseFloat(sValue[1]);
+		}
+	}
+	return {translate: translate, scale: scale};
+}

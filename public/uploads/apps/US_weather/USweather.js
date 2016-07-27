@@ -181,21 +181,22 @@ var USweather = SAGE2_App.extend({
 			}
 		}
 
-		var mySelf = this;
-
 		if (this.gwin.numIconsLoaded === 16) {
-			mySelf.drawEverything(lat, lon, weather, weatherImage.src);
+			this.drawEverything(lat, lon, weather, weatherImage.src);
 		}
 	},
 
 	updateOutsideTemp: function() {
 		var lat, lon;
-		var MeSelf = this;
+		var _this = this;
 		var replace;
 
+		/* eslint-disable max-len */
 		var url_part0 = "https://query.yahooapis.com/v1/public/";
 		var url_part1 = "yql?q=select%20temp_f%2C%20weather%2C%20icons%20from%20wunderground.currentobservation%20where%20location%3D'";
 		var url_part2 = "'%3B&format=json&env=store%3A%2F%2Fdatatables.org%2Falltableswithkeys&callback=";
+
+		/* eslint-enable max-len */
 
 		function getData(plat, plon, preplace) {
 			if (preplace === 1) {
@@ -214,7 +215,7 @@ var USweather = SAGE2_App.extend({
 						console.log("NO DATA at " + plat + " " + plon);
 						return;
 					}
-					MeSelf.makeCallbackFunc(plat, plon, response);
+					_this.makeCallbackFunc(plat, plon, response);
 				}
 			);
 		}
@@ -485,42 +486,45 @@ var USweather = SAGE2_App.extend({
 	// load in all of the weather icons at startup time
 	loadInIcons: function() {
 		var path = this.resrcPath + "icons/";
-		var self = this;
+		var _this = this;
 
+		/* eslint-disable brace-style */
 		this.gwin.iconmostlycloudynight.src     = path + "mostlycloudy-night.svg";
-		this.gwin.iconmostlycloudynight.onload  = function() {self.gwin.numIconsLoaded++; };
+		this.gwin.iconmostlycloudynight.onload  = function() {_this.gwin.numIconsLoaded++; };
 		this.gwin.iconpartlycloudynight.src     = path + "partlycloudy-night.svg";
-		this.gwin.iconpartlycloudynight.onload  = function() {self.gwin.numIconsLoaded++; };
+		this.gwin.iconpartlycloudynight.onload  = function() {_this.gwin.numIconsLoaded++; };
 		this.gwin.iconclearnight.src            = path + "clear-night.svg";
-		this.gwin.iconclearnight.onload         = function() {self.gwin.numIconsLoaded++; };
+		this.gwin.iconclearnight.onload         = function() {_this.gwin.numIconsLoaded++; };
 
 
 		this.gwin.iconsnow.src          = path + "snow.svg";
-		this.gwin.iconsnow.onload       = function() {self.gwin.numIconsLoaded++; };
+		this.gwin.iconsnow.onload       = function() {_this.gwin.numIconsLoaded++; };
 		this.gwin.iconunknown.src       = path + "unknown.svg";
-		this.gwin.iconunknown.onload    = function() {self.gwin.numIconsLoaded++; };
+		this.gwin.iconunknown.onload    = function() {_this.gwin.numIconsLoaded++; };
 		this.gwin.iconstorms.src        = path + "storms.svg";
-		this.gwin.iconstorms.onload     = function() {self.gwin.numIconsLoaded++; };
+		this.gwin.iconstorms.onload     = function() {_this.gwin.numIconsLoaded++; };
 		this.gwin.icontstorms.src       = path + "tstorms.svg";
-		this.gwin.icontstorms.onload    = function() {self.gwin.numIconsLoaded++; };
+		this.gwin.icontstorms.onload    = function() {_this.gwin.numIconsLoaded++; };
 		this.gwin.iconmostlycloudy.src  = path + "mostlycloudy.svg";
-		this.gwin.iconmostlycloudy.onload = function() {self.gwin.numIconsLoaded++; };
+		this.gwin.iconmostlycloudy.onload = function() {_this.gwin.numIconsLoaded++; };
 		this.gwin.iconpartlycloudy.src  = path + "partlycloudy.svg";
-		this.gwin.iconpartlycloudy.onload = function() {self.gwin.numIconsLoaded++; };
+		this.gwin.iconpartlycloudy.onload = function() {_this.gwin.numIconsLoaded++; };
 		this.gwin.iconrain.src          = path + "rain.svg";
-		this.gwin.iconrain.onload       = function() {self.gwin.numIconsLoaded++; };
+		this.gwin.iconrain.onload       = function() {_this.gwin.numIconsLoaded++; };
 		this.gwin.iconfog.src           = path + "fog.svg";
-		this.gwin.iconfog.onload        = function() {self.gwin.numIconsLoaded++; };
+		this.gwin.iconfog.onload        = function() {_this.gwin.numIconsLoaded++; };
 		this.gwin.iconhazy.src          = path + "hazy.svg";
-		this.gwin.iconhazy.onload       = function() {self.gwin.numIconsLoaded++; };
+		this.gwin.iconhazy.onload       = function() {_this.gwin.numIconsLoaded++; };
 		this.gwin.iconsleet.src         = path + "sleet.svg";
-		this.gwin.iconsleet.onload      = function() {self.gwin.numIconsLoaded++; };
+		this.gwin.iconsleet.onload      = function() {_this.gwin.numIconsLoaded++; };
 		this.gwin.iconcloudy.src        = path + "cloudy.svg";
-		this.gwin.iconcloudy.onload     = function() {self.gwin.numIconsLoaded++; };
+		this.gwin.iconcloudy.onload     = function() {_this.gwin.numIconsLoaded++; };
 		this.gwin.iconclear.src         = path + "clear.svg";
-		this.gwin.iconclear.onload      = function() {self.gwin.numIconsLoaded++; };
+		this.gwin.iconclear.onload      = function() {_this.gwin.numIconsLoaded++; };
 		this.gwin.iconsunny.src         = path + "sunny.svg";
-		this.gwin.iconsunny.onload      = function() {self.gwin.numIconsLoaded++; };
+		this.gwin.iconsunny.onload      = function() {_this.gwin.numIconsLoaded++; };
+
+		/* eslint-enable brace-style */
 	},
 
 	init: function(data) {
@@ -638,6 +642,77 @@ var USweather = SAGE2_App.extend({
 		this.refresh(date);
 	},
 
+	/**
+	* To enable right click context menu support this function needs to be present with this format.
+	*
+	* Must return an array of entries. An entry is an object with three properties:
+	*	description: what is to be displayed to the viewer.
+	*	callback: String containing the name of the function to activate in the app. It must exist.
+	*	parameters: an object with specified datafields to be given to the function.
+	*		The following attributes will be automatically added by server.
+	*			serverDate, on the return back, server will fill this with time object.
+	*			clientId, unique identifier (ip and port) for the client that selected entry.
+	*			clientName, the name input for their pointer. Note: users are not required to do so.
+	*			clientInput, if entry is marked as input, the value will be in this property. See pdf_viewer.js for example.
+	*		Further parameters can be added. See pdf_view.js for example.
+	*/
+	getContextEntries: function() {
+		var entries = [];
+		var entry;
+
+		entry = {};
+		entry.description = "Color";
+		entry.callback = "changeView";
+		entry.parameters = {};
+		entry.parameters.page = "color";
+		entries.push(entry);
+
+		entry = {};
+		entry.description = "Weather";
+		entry.callback = "changeView";
+		entry.parameters = {};
+		entry.parameters.page = "weather";
+		entries.push(entry);
+
+		entry = {};
+		entry.description = "Temperature";
+		entry.callback = "changeView";
+		entry.parameters = {};
+		entry.parameters.page = "temperature";
+		entries.push(entry);
+
+		return entries;
+	},
+
+	/**
+	* Support function to allow page changing through right mouse context menu.
+	*
+	* @method changeThePage
+	* @param responseObject {Object} contains response from entry selection
+	*/
+	changeView: function(responseObject) {
+		var page = responseObject.page;
+
+		if (page === "color") {
+			this.state.mode = 2;
+			this.convertToNone();
+			// this.refresh(date);
+		}
+		if (page === "weather") {
+			this.state.mode = 1;
+			this.convertToIcon();
+			// this.refresh(date);
+		}
+		if (page === "temperature") {
+			this.state.mode = 0;
+			this.convertToTemp();
+			// this.refresh(date);
+		}
+
+		// This needs to be a new date for the extra function.
+		this.refresh(new Date(responseObject.serverDate));
+	},
+
 	event: function(eventType, pos, user, data, date) {
 		if (eventType === "pointerPress" && (data.button === "left")) {
 			// pointer press
@@ -647,7 +722,7 @@ var USweather = SAGE2_App.extend({
 			this.nextMode();
 			this.refresh(date);
 		} else if (eventType === "widgetEvent") {
-			switch (data.identifier){
+			switch (data.identifier) {
 				case "Temperature":
 					this.state.mode = 0;
 					this.convertToTemp();

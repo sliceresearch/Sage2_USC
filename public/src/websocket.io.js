@@ -36,6 +36,7 @@ function WebsocketIO(url) {
 	 * @type WebSocket
 	 */
 	this.ws = null;
+
 	/**
 	 * list of messages to be handled (name + callback)
 	 *
@@ -43,6 +44,7 @@ function WebsocketIO(url) {
 	 * @type Object
 	 */
 	this.messages = {};
+
 	/**
 	 * number of aliases created for listeners
 	 *
@@ -50,6 +52,7 @@ function WebsocketIO(url) {
 	 * @type Integer
 	 */
 	this.aliasCount = 1;
+
 	/**
 	 * list of listeners on other side of connection
 	 *
@@ -57,6 +60,7 @@ function WebsocketIO(url) {
 	 * @type Object
 	 */
 	this.remoteListeners = {"#WSIO#addListener": "0000"};
+
 	/**
 	 * list of local listeners on this side of connection
 	 *
@@ -93,9 +97,8 @@ function WebsocketIO(url) {
 				if (fName === "#WSIO#addListener") {
 					_this.remoteListeners[msg.d.listener] = msg.d.alias;
 					return;
-				} else {
-					_this.messages[fName](msg.d);
 				}
+				_this.messages[fName](msg.d);
 			} else {
 				var uInt8 = new Uint8Array(message.data);
 				var func  = String.fromCharCode(uInt8[0]) +

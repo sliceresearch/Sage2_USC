@@ -25,6 +25,7 @@ config/custom.types
 
 # generated content
 doc/api
+public/service-worker.js
 
 # Dependency directory
 node_modules
@@ -42,4 +43,7 @@ public/images/background/*_[0-9]*.*
 
 # Users Environment Variables
 .lock-wscript
+
+.stylelintrc
+
 

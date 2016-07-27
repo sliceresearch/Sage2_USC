@@ -228,18 +228,18 @@ SAGE2DisplayUI.prototype.resizeAppWindows = function(event) {
 	for (key in this.applications) {
 		var appWindow = document.getElementById(key);
 		var appWindowTitle = document.getElementById(key + "_title");
-		var appWindowArea = document.getElementById(key + "_area");
+		var appWindowArea  = document.getElementById(key + "_area");
 
-		appWindow.style.width = Math.round(this.applications[key].width * this.scale) + "px";
+		appWindow.style.width  = Math.round(this.applications[key].width * this.scale) + "px";
 		appWindow.style.height = Math.round((this.applications[key].height + this.config.ui.titleBarHeight) * this.scale) + "px";
-		appWindow.style.left = Math.round(this.applications[key].left * this.scale) + "px";
-		appWindow.style.top = Math.round(this.applications[key].top * this.scale) + "px";
+		appWindow.style.left   = Math.round(this.applications[key].left * this.scale) + "px";
+		appWindow.style.top    = Math.round(this.applications[key].top * this.scale) + "px";
 
-		appWindowTitle.style.width = Math.round(this.applications[key].width * this.scale) + "px";
+		appWindowTitle.style.width  = Math.round(this.applications[key].width * this.scale) + "px";
 		appWindowTitle.style.height = Math.round(this.config.ui.titleBarHeight * this.scale) + "px";
 
-		appWindowArea.style.top = Math.round(this.config.ui.titleBarHeight * this.scale) + "px";
-		appWindowArea.style.width = Math.round(this.applications[key].width * this.scale) + "px";
+		appWindowArea.style.top    = Math.round(this.config.ui.titleBarHeight * this.scale) + "px";
+		appWindowArea.style.width  = Math.round(this.applications[key].width * this.scale) + "px";
 		appWindowArea.style.height = Math.round(this.applications[key].height * this.scale) + "px";
 	}
 };
@@ -337,11 +337,11 @@ SAGE2DisplayUI.prototype.addAppWindow = function(data) {
 
 	var appWindow = document.createElement('div');
 	appWindow.id = data.id;
-	appWindow.className = "appWindow";
-	appWindow.style.width = Math.round(data.width * this.scale) + "px";
+	appWindow.className    = "appWindow";
+	appWindow.style.width  = Math.round(data.width * this.scale) + "px";
 	appWindow.style.height = Math.round((data.height + this.config.ui.titleBarHeight) * this.scale) + "px";
-	appWindow.style.left = Math.round(data.left * this.scale) + "px";
-	appWindow.style.top = Math.round(data.top * this.scale) + "px";
+	appWindow.style.left   = Math.round(data.left * this.scale) + "px";
+	appWindow.style.top    = Math.round(data.top * this.scale) + "px";
 	appWindow.style.zIndex = this.appCount;
 
 	var appWindowTitle = document.createElement('div');
@@ -351,7 +351,6 @@ SAGE2DisplayUI.prototype.addAppWindow = function(data) {
 	appWindowTitle.style.top    = "0px";
 	appWindowTitle.style.width  = Math.round(data.width * this.scale) + "px";
 	appWindowTitle.style.height = Math.round(this.config.ui.titleBarHeight * this.scale) + "px";
-	appWindowTitle.style.backgroundColor = "rgba(230, 230, 230, 1.0)";
 
 	var appWindowArea = document.createElement('div');
 	appWindowArea.id = data.id + "_area";
@@ -360,24 +359,26 @@ SAGE2DisplayUI.prototype.addAppWindow = function(data) {
 	appWindowArea.style.top    = Math.round(this.config.ui.titleBarHeight * this.scale) + "px";
 	appWindowArea.style.width  = Math.round(data.width * this.scale) + "px";
 	appWindowArea.style.height = Math.round(data.height * this.scale) + "px";
-	appWindowArea.style.backgroundColor = "rgba(72, 72, 72, 1.0)";
 
 	var appIcon = document.createElement('img');
 	appIcon.id = data.id + "_icon";
 	appIcon.className = "appWindowIcon";
-	if (data.width < data.height) {
-		appIcon.style.width  = "100%";
-	} else {
-		appIcon.style.height = "100%";
-	}
 	appIcon.onerror = function(event) {
 		setTimeout(function() {
-			appIcon.src = data.icon + "_512.jpg";
+			if (data.icon.startsWith('data:image')) {
+				appIcon.src = data.icon;
+			} else {
+				appIcon.src = data.icon + "_512.jpg";
+			}
 		}, 1000);
 	};
 
 	if (data.icon) {
-		appIcon.src = data.icon + "_512.jpg";
+		if (data.icon.startsWith('data:image')) {
+			appIcon.src = data.icon;
+		} else {
+			appIcon.src = data.icon + "_512.jpg";
+		}
 	} else if (data.application === "media_stream" || data.application === "media_block_stream") {
 		appIcon.src = this.generateMediaStreamIcon(data.title, data.color);
 	} else {
@@ -576,6 +577,55 @@ SAGE2DisplayUI.prototype.pointerPress = function(btn) {
 SAGE2DisplayUI.prototype.pointerRelease = function(btn) {
 	if (btn !== "right") {
 		this.wsio.emit('pointerRelease', {button: btn});
+	}
+};
+
+
+function underElement(elem, pageX, pageY) {
+	var elemPosition   = {top: elem.offsetTop, left: elem.offsetLeft};
+	var elemPosition2  = {
+		top:  elemPosition.top  + elem.clientHeight,
+		left: elemPosition.left + elem.clientWidth
+	};
+	return ((pageX > elemPosition.left && pageX < elemPosition2.left) &&
+			(pageY  > elemPosition.top  && pageY < elemPosition2.top));
+}
+
+
+/**
+ * Highlight the top most application under the cursor
+ *
+ * @method highlightApplication
+ * @param x {Number} x value
+ * @param y {Number} y value
+ */
+SAGE2DisplayUI.prototype.highlightApplication = function(x, y) {
+	var topApp   = null;
+	var topLevel = -1;
+	for (var a in this.applications) {
+		var app = document.getElementById(this.applications[a].id);
+		if (app) {
+			var isapp = underElement(app, x, y);
+			if (isapp) {
+				var zi = parseInt(app.style.zIndex, 10);
+				if (zi >= topLevel) {
+					topLevel = zi;
+					topApp = app;
+				}
+			}
+			// remove decoration
+			app.className = "appWindow";
+			var area = document.getElementById(this.applications[a].id + "_title");
+			area.className = "appWindowTitle";
+		}
+	}
+	// Once we checked all the application, we can draw the top one
+	// with decoration
+	if (topApp) {
+		// Since we have only one class, we dont have to use classList
+		topApp.className = "appWindowHover";
+		var title = document.getElementById(topApp.id + "_title");
+		title.className = "appWindowTitleHover";
 	}
 };
 

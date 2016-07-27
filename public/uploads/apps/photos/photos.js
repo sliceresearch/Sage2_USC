@@ -15,7 +15,7 @@
 // Written by Andy Johnson - 2014
 //
 
-/* global d3 */
+/* global d3, photoAlbums */
 
 
 var photos = SAGE2_App.extend({
@@ -23,7 +23,7 @@ var photos = SAGE2_App.extend({
 	// choose a specific image library from those loaded to cycle through
 
 	chooseImagery: function(selection) {
-		this.listFileNamePhotos = this.photoAlbums[selection].list;
+		this.listFileNamePhotos  = this.photoAlbums[selection].list;
 		this.listFileNameLibrary = this.photoAlbums[selection].location;
 	},
 
@@ -41,16 +41,38 @@ var photos = SAGE2_App.extend({
 
 		this.chooseImagery(this.state.imageSet);
 
+		// Register a callback to handle file list from server
+		this.registerFileListHandler(this.fileList);
+
+		// Load the current list of images
 		this.loadInList();
+	},
+
+	// Callback from file manager
+	fileList: function(data) {
+		var slideshowUpdate = false;
+		// Create an array of images from the 'slideshow' user folder
+		this.slideshowList = [];
+		for (var i = data.images.length - 1; i >= 0; i--) {
+			// take only images from the slideshow folder in user directory
+			if (data.images[i].sage2URL.startsWith("/user/slideshow/")) {
+				this.slideshowList.push({name: data.images[i].sage2URL});
+				slideshowUpdate = true;
+			}
+		}
+		// If a new pic was added to the slideshow
+		if (slideshowUpdate && this.listFileNamePhotos === "slideshow") {
+			this.loadInList();
+		}
 	},
 
 	imageLoadCallback: function() {
 		this.imageTemp = this.image2; // hold onto 2
-		this.image2 = this.image1; // image2 is the previous image (needed for fading)
+		this.image2    = this.image1; // image2 is the previous image (needed for fading)
 
 		this.okToDraw = this.fadeCount;
-		this.image1 = this.image3; // image1 is now the new image
-		this.image3 = this.imageTemp;
+		this.image1   = this.image3;    // image1 is now the new image
+		this.image3   = this.imageTemp;
 	},
 
 	imageLoadFailedCallback: function() {
@@ -82,6 +104,7 @@ var photos = SAGE2_App.extend({
 		this.bigList = d3.csv.parse(localData);
 		console.log(this.appName + "loaded in list of " + this.bigList.length + " images");
 
+		this.updateTitle("Slideshow: " + this.photoAlbums[this.state.imageSet].longName);
 		this.update();
 		this.drawEverything();
 	},
@@ -169,11 +192,27 @@ var photos = SAGE2_App.extend({
 	// the master loads in the text file containing ths list of images in this photo album
 
 	loadInList: function() {
-		if (isMaster) {
-			this.listFileName = this.listFileNamePhotos;
-			d3.text(this.listFileName, this.listFileCallbackFunc);
-		}
+		if (this.listFileNamePhotos === "slideshow") {
+			// Special case: slideshow filder from server
+			this.bigList = this.slideshowList;
+			this.update();
+			this.drawEverything();
+			this.updateTitle("Photo Slideshow: user");
+		} else {
+			if (isMaster) {
+				if (this.listFileNamePhotos.startsWith("http")) {
+					// treat the list parameter as a public list of images
+					this.listFileName = this.listFileNamePhotos;
+					d3.text(this.listFileName, this.listFileCallbackFunc);
+				} else {
+					// treat the list parameter as a single image (eg a webcam image)
+					// and pretend we loaded in the list
+					this.listFileCallbackFunc("", "name\n" + this.listFileNamePhotos);
+				}
 
+
+			}
+		}
 	},
 
 	// choose a random image from the current photo album
@@ -201,6 +240,7 @@ var photos = SAGE2_App.extend({
 
 	// choose a particular photo album
 	setAlbum: function(albumNumber) {
+		console.log("setting album to " + albumNumber);
 		this.bigList = null;
 		this.state.imageSet = +albumNumber;
 		this.chooseImagery(this.state.imageSet);
@@ -242,10 +282,11 @@ var photos = SAGE2_App.extend({
 
 			// ideally this random number should come from the master to guarantee identical values across clients
 
-			this.fileName = this.listFileNameLibrary + escape(this.bigList[this.state.counter].name) +
-								'?' + Math.floor(Math.random() * 10000000);
-
-			this.broadcast("updateNode", {data: this.fileName});
+			if (this.bigList.length > 0) {
+				this.fileName = this.listFileNameLibrary + escape(this.bigList[this.state.counter].name) +
+									'?' + Math.floor(Math.random() * 10000000);
+				this.broadcast("updateNode", {data: this.fileName});
+			}
 		}
 	},
 
@@ -317,6 +358,14 @@ var photos = SAGE2_App.extend({
 			this.canvasBackground = settings.background;
 		}
 
+		// Add an extra slideshow: will load images from the 'slideshow' user folder
+		this.photoAlbums.push({
+			list:     "slideshow",
+			location: "",
+			name:     "slideshow",
+			longName: "Local Slideshow"
+		});
+
 		this.URL1  = "";
 		this.URL1a = "";
 		this.URL1b = "";
@@ -325,6 +374,7 @@ var photos = SAGE2_App.extend({
 		this.timeDiff = 0;
 
 		this.bigList = null;
+		this.slideshowList = null;
 
 		this.okToDraw = this.fadeCount;
 		this.forceRedraw = 1;
@@ -343,8 +393,6 @@ var photos = SAGE2_App.extend({
 
 		this.listFileNamePhotos = "";
 		this.listFileNameLibrary = "";
-
-
 
 		this.maxFPS = 30.0;
 		this.element.id = "div" + data.id;
@@ -420,6 +468,56 @@ var photos = SAGE2_App.extend({
 		this.refresh(date);
 	},
 
+	quit: function() {
+		// Remove callback
+		this.unregisterFileListHandler(this.fileList);
+	},
+
+	/**
+	* To enable right click context menu support this function needs to be present with this format.
+	*
+	* Must return an array of entries. An entry is an object with three properties:
+	*	description: what is to be displayed to the viewer.
+	*	callback: String containing the name of the function to activate in the app. It must exist.
+	*	parameters: an object with specified datafields to be given to the function.
+	*		The following attributes will be automatically added by server.
+	*			serverDate, on the return back, server will fill this with time object.
+	*			clientId, unique identifier (ip and port) for the client that selected entry.
+	*			clientName, the name input for their pointer. Note: users are not required to do so.
+	*			clientInput, if entry is marked as input, the value will be in this property. See pdf_viewer.js for example.
+	*		Further parameters can be added. See pdf_view.js for example.
+	*/
+	getContextEntries: function() {
+		var entries = [];
+		var entry;
+
+		for (var albumCounter = 0; albumCounter < this.photoAlbums.length; albumCounter++) {
+			entry = {};
+			entry.description = this.photoAlbums[albumCounter].longName;
+			entry.callback = "changeSlideshow";
+			entry.parameters = {};
+			entry.parameters.page = albumCounter;
+			entries.push(entry);
+		}
+
+		return entries;
+	},
+
+	/**
+	* Support function to allow page changing through right mouse context menu.
+	*
+	* @method changeThePage
+	* @param responseObject {Object} contains response from entry selection
+	*/
+	changeSlideshow: function(responseObject) {
+		var page = responseObject.page;
+		this.setAlbum(page);
+
+		// This needs to be a new date for the extra function.
+		this.refresh(new Date(responseObject.serverDate));
+	},
+
+
 	event: function(eventType, pos, user, data, date) {
 		if (eventType === "pointerPress" && (data.button === "left")) {
 			// pointer press
@@ -430,8 +528,8 @@ var photos = SAGE2_App.extend({
 		if (eventType === "pointerRelease" && (data.button === "left")) {
 			this.nextAlbum();
 			this.refresh(date);
-		}		else if (eventType === "widgetEvent") {
-			if (data.ctrlId === "Next") {
+		} else if (eventType === "widgetEvent") {
+			if (data.identifier === "Next") {
 				this.nextAlbum();
 			} else {
 				this.setAlbum(data.identifier);

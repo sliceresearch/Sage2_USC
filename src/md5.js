@@ -17,12 +17,12 @@
  * See http://pajhome.org.uk/crypt/md5 for more info.
  */
 
- /*jslint bitwise: true */
- /*global unescape */
+/* jslint bitwise: true */
+/* global unescape */
 
- /* Modified to work with noderequire 2015 04 13 */
+/* Modified to work with noderequire 2015 04 13 */
 
- 'use strict';
+'use strict';
 
 /*
 * Add integers, wrapping at 2^32. This uses 16-bit operations internally
@@ -64,6 +64,7 @@ function md5_ii(a, b, c, d, x, s, t) {
 * Calculate the MD5 of an array of little-endian words, and a bit length.
 */
 function binl_md5(x, len) {
+
 	/* append padding */
 	x[len >> 5] |= 0x80 << (len % 32);
 	x[(((len + 64) >>> 9) << 4) + 14] = len;

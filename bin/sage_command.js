@@ -13,8 +13,6 @@
 /**
  * Send a command to a SAGE2 server
  *
- * ./sage_command.js <url> <command> [params]
- *
  * @class command
  * @module commands
  * @submodule command
@@ -22,11 +20,12 @@
 
 "use strict";
 
-var path        = require('path');                // file path extraction and creation
-var json5       = require('json5');               // JSON5 parsing
+var json5     = require('json5');            // JSON5 parsing
+var commander = require('commander');        // parsing command-line arguments
 
 // custom node modules
-var websocketIO = require('websocketio');   // creates WebSocket server and clients
+var WebsocketIO = require('websocketio');    // creates WebSocket server and clients
+var md5         = require('../src/md5');     // return standard md5 hash of given param
 
 var connection;
 var command;
@@ -34,8 +33,16 @@ var wssURL;
 
 // create the websocket connection and start the timer
 function createRemoteConnection(wsURL) {
-	var remote = new websocketIO(wsURL, false, function() {
+	var remote = new WebsocketIO(wsURL, false, function() {
 		console.log("Client> connecting to ", wsURL);
+
+		// Grab the password passed from the command line
+		var session;
+		if (commander.hash && commander.hash !== '') {
+			session = commander.hash;
+		} else {
+			session = md5.getHash(commander.password);
+		}
 
 		var clientDescription = {
 			clientType: "commandline",
@@ -44,7 +51,8 @@ function createRemoteConnection(wsURL) {
 				version: false,
 				time:    false,
 				console: true
-			}
+			},
+			session: session
 		};
 
 		remote.onclose(function() {
@@ -52,7 +60,10 @@ function createRemoteConnection(wsURL) {
 		});
 
 		remote.on('console', function(wsio, data) {
-			if (data.length<100) process.stdout.write(data);
+			// just to filter a bit the long outputs
+			if (data.length < 256) {
+				process.stdout.write(data);
+			}
 		});
 
 		remote.on('initialize', function(wsio, data) {
@@ -61,7 +72,9 @@ function createRemoteConnection(wsURL) {
 			remote.emit('command', command);
 
 			// Wait for 1sec to quit
-			setTimeout(function() { process.exit(0); }, 1000);
+			setTimeout(function() {
+				process.exit(0);
+			}, 1000);
 		});
 
 		remote.on('setupSAGE2Version', function(wsio, data) {
@@ -86,37 +99,43 @@ function createRemoteConnection(wsURL) {
 // default URL
 wssURL = "wss://localhost:443";
 
+commander
+	.version("1.0.0")
+	.option('-s, --server <url>', 'URL SAGE2 server', 'localhost:9090')
+	.option('-p, --password <password>', 'Set the password to connect to SAGE2 server', '')
+	.option('-a, --hash <hash>', 'Use a hash instead of password')
+	.option('[command]', 'Command to send to SAGE2')
+	.parse(process.argv);
+
+// Extra help with examples
+commander.on('--help', function() {
+	console.log('  Examples:');
+	console.log('');
+	console.log('    $ sage_shell.js -s localhost:9090 -p tutu load demo');
+	console.log('    $ sage_shell.js -s wss://localhost:9090 -a bd8cd8ae21342q991 clear');
+	console.log('');
+});
+
+
 if (process.argv.length === 2) {
-	console.log('');
-	console.log('Usage> sage_command.js <url> <command> [paramaters]');
-	console.log('');
-	console.log('Example>     ./sage_command.js localhost:9090 load demo');
-	console.log('');
+	commander.help();
 	process.exit(0);
 }
 
-if (process.argv.length === 3 && ( (process.argv[2] === '-h') || (process.argv[2] === '--help') ) ) {
-	console.log('');
-	console.log('Usage> sage_command.js <url> <command> [paramaters]');
-	console.log('');
-	console.log('Example>     ./sage_command.js localhost:9090 load demo');
-	console.log('');
-	process.exit(0);
-}
 
 // If there's an argument, use it as a url
 //     wss://hostname:portnumber
-if (process.argv.length >= 3) {
-	wssURL = process.argv[2];
-	if (wssURL.indexOf('wss://')>=0) {
+if (commander.server) {
+	wssURL = commander.server;
+	if (wssURL.indexOf('wss://') >= 0) {
 		// all good
-	} else if (wssURL.indexOf('ws://')>=0) {
+	} else if (wssURL.indexOf('ws://') >= 0) {
 		console.log('Client> switching to wss:// protocol');
 		wssURL = wssURL.replace('ws', 'wss');
-	} else if (wssURL.indexOf('http://')>=0) {
+	} else if (wssURL.indexOf('http://') >= 0) {
 		console.log('Client> switching to wss:// protocol');
 		wssURL = wssURL.replace('http', 'wss');
-	} else if (wssURL.indexOf('https://')>=0) {
+	} else if (wssURL.indexOf('https://') >= 0) {
 		console.log('Client> switching to wss:// protocol');
 		wssURL = wssURL.replace('https', 'wss');
 	} else {
@@ -124,11 +143,10 @@ if (process.argv.length >= 3) {
 	}
 }
 
-if (process.argv.length >= 4) {
-	// Remove the first paramaters
-	process.argv.splice(0, 3);
+
+if (commander.args.length > 0) {
 	// take all the rest
-	command = process.argv.join(' ');
+	command = commander.args.join(' ');
 } else {
 	// default command if none specified
 	command = "help";

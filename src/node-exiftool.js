@@ -36,7 +36,7 @@ var spawnSync    = ChildProcess.spawnSync; // || require('spawn-sync');
  */
 function fileSpawn(filename, done) {
 	// The dash specifies to read data from stdin
-	var exif = ChildProcess.spawn('exiftool', ['-json', '-filesize#', '-all', filename]);
+	var exif = ChildProcess.spawn('exiftool', ['-json', '-m', '-filesize#', '-all', filename]);
 
 	// Check for error because of the child process not being found / launched
 	exif.on('error', function(err) {
@@ -74,11 +74,31 @@ function fileSpawn(filename, done) {
  * @param done {Function} executed when done, done(error, metadata)
  */
 function file(filename, done) {
-	ChildProcess.exec('exiftool -json -filesize# -all \"' + filename + '\"', function(error, stdout, stderr) {
+	ChildProcess.exec('exiftool -m -json -filesize# -all \"' + filename + '\"', function(error, stdout, stderr) {
+		var metadata;
 		if (error !== null) {
-			done(error);
+			if (stdout && stderr.length === 0) {
+				// There's some output, it might just be an unknown file type
+				metadata = JSON.parse(stdout);
+				if ('SourceFile' in metadata[0]) {
+					if (metadata[0].Error) {
+						// if there was an error because unknown file type, delete it
+						delete metadata[0].Error;
+					}
+					// Add a dummy type
+					metadata[0].MIMEType = 'text/plain';
+					metadata[0].FileType = 'text/plain';
+					done(null, metadata[0]);
+				} else {
+					// unknown data
+					done(error);
+				}
+			} else {
+				// No output, it's really an error
+				done(error);
+			}
 		} else {
-			var metadata = JSON.parse(stdout);
+			metadata = JSON.parse(stdout);
 			done(null, metadata[0]);
 		}
 	});
@@ -95,18 +115,16 @@ function file(filename, done) {
  * @return {Object} return object as {err:String, metadata:Object)
  */
 function fileSync(filename) {
-	var result = spawnSync('exiftool', ['-json', '-filesize#', '-all', filename]);
+	var result = spawnSync('exiftool', ['-json', '-m', '-filesize#', '-all', filename]);
 	// Note, status code will always equal 0 if using busy waiting fallback
 	if (result.statusCode && result.statusCode !== 0) {
 		return {err: 'Fatal Error: Unable to load exiftool. ' + result.stderr, metadata: null};
-	} else {
-		if (result.stdout.length !== 0) {
-			var metadata = JSON.parse(result.stdout);
-			return {err: null, metadata: metadata[0]};
-		} else {
-			return {err: result.stderr.toString(), metadata: null};
-		}
 	}
+	if (result.stdout.length !== 0) {
+		var metadata = JSON.parse(result.stdout);
+		return {err: null, metadata: metadata[0]};
+	}
+	return {err: result.stderr.toString(), metadata: null};
 }
 
 /**
@@ -118,16 +136,15 @@ function fileSync(filename) {
  */
 function bufferSync(source) {
 	var result = spawnSync('exiftool',
-							['-json', '-filesize#', '-all', '-'],
+							['-json', '-m', '-filesize#', '-all', '-'],
 							{input: source, encoding: null});
 
 	// Note, status code will always equal 0 if using busy waiting fallback
 	if (result.statusCode && result.statusCode !== 0) {
 		return {err: 'Fatal Error: Unable to load exiftool. ' + result.stderr, metadata: null};
-	} else {
-		var metadata = JSON.parse(result.stdout);
-		return {err: null, metadata: metadata[0]};
 	}
+	var metadata = JSON.parse(result.stdout);
+	return {err: null, metadata: metadata[0]};
 }
 
 /**
@@ -139,7 +156,7 @@ function bufferSync(source) {
  */
 function buffer(source, callback) {
 	// The dash specifies to read data from stdin
-	var exif = ChildProcess.spawn('exiftool', ['-json', '-filesize#', '-all', '-'], {stdin: 'pipe'});
+	var exif = ChildProcess.spawn('exiftool', ['-json', '-m', '-filesize#', '-all', '-'], {stdin: 'pipe'});
 
 	// Check for error because of the child process not being found / launched
 	exif.on('error', function(err) {

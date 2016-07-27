@@ -8,8 +8,8 @@
 //
 // Copyright (c) 2014-2015
 
-// we use arguments and callee to build inheritance
-/*eslint-disable use-strict, strict, global-strict */
+/* global ignoreFields, SAGE2WidgetControl, SAGE2MEP */
+/* global addStoredFileListEventHandler, removeStoredFileListEventHandler */
 
 /**
  * @module client
@@ -76,6 +76,8 @@ var SAGE2_App = Class.extend({
 		// Modify state sync options
 		this.SAGE2StateSyncOptions = {visible: false, hover: null, press: {name: null, value: null}, scroll: 0};
 
+		// Enabling this will attempt to convert SAGE2 pointer as mouse events as much as possible.
+		this.passSAGE2PointerAsMouseEvents = false;
 	},
 
 	/**
@@ -198,7 +200,8 @@ var SAGE2_App = Class.extend({
 				(eventType === "pointerPress" || eventType === "pointerMove" ||
 				eventType === "pointerRelease" || eventType === "pointerScroll" ||
 				eventType === "keyboard" || eventType === "specialKey")) {
-			var itemIdx = parseInt((position.y - this.SAGE2StateSyncOptions.scroll) / Math.round(1.5 * this.config.ui.titleTextSize), 10);
+			var itemIdx = parseInt((position.y - this.SAGE2StateSyncOptions.scroll) /
+				Math.round(1.5 * this.config.ui.titleTextSize), 10);
 			var children = document.getElementById(this.id + "_statecontainer").childNodes;
 			var hoverChild = null;
 			var syncedPrev;
@@ -292,6 +295,11 @@ var SAGE2_App = Class.extend({
 		} else {
 			this.SAGE2UserModification = true;
 			this.event(eventType, position, user_id, data, date);
+
+			if (this.passSAGE2PointerAsMouseEvents) {
+				SAGE2MEP.processAndPassEvents(this.element.id, eventType, position,
+					user_id, data, date);
+			}
 			this.SAGE2UserModification = false;
 		}
 	},
@@ -385,6 +393,9 @@ var SAGE2_App = Class.extend({
 	},
 
 	SAGE2UpdateAppOption: function(name, parent, save) {
+		if (!(name in save)) {
+			save[name] = {_name: name, _value: {textContent: ""}, _sync: true};
+		}
 		if (typeof parent[name] === "number") {
 			save[name]._value.textContent = parent[name].toString();
 		} else if (typeof parent[name] === "boolean") {
@@ -471,7 +482,12 @@ var SAGE2_App = Class.extend({
 
 		if (isMaster) {
 			var syncedState = this.SAGE2CopySyncedState(this.state, this.SAGE2StateOptions);
-			wsio.emit('updateAppState', {id: this.id, localState: this.state, remoteState: syncedState, updateRemote: updateRemote});
+			wsio.emit('updateAppState', {
+				id: this.id,
+				localState: this.state,
+				remoteState: syncedState,
+				updateRemote: updateRemote
+			});
 		}
 	},
 
@@ -526,6 +542,9 @@ var SAGE2_App = Class.extend({
 	*/
 	showLayer: function() {
 		if (this.layer) {
+			// before showing, make sure to update the size
+			this.layer.style.width  = this.div.clientWidth  + 'px';
+			this.layer.style.height = this.div.clientHeight + 'px';
 			// Reset its top position, just in case
 			this.layer.style.top = "0px";
 			this.layer.style.display = "block";
@@ -567,9 +586,8 @@ var SAGE2_App = Class.extend({
 	isLayerHidden: function() {
 		if (this.layer) {
 			return (this.layer.style.display === "none");
-		} else {
-			return false;
 		}
+		return false;
 	},
 
 	/**
@@ -581,10 +599,15 @@ var SAGE2_App = Class.extend({
 	isHidden: function() {
 		var checkWidth  = this.config.resolution.width;
 		var checkHeight = this.config.resolution.height;
+		// Overview client covers all
 		if (clientID === -1) {
 			// set the resolution to be the whole display wall
 			checkWidth  *= this.config.layout.columns;
 			checkHeight *= this.config.layout.rows;
+		} else {
+			// multiply by the size of the tile
+			checkWidth  *= (this.config.displays[clientID].width  || 1);
+			checkHeight *= (this.config.displays[clientID].height || 1);
 		}
 		return (this.sage2_x > (ui.offsetX + checkWidth)  ||
 				(this.sage2_x + this.sage2_width) < ui.offsetX ||
@@ -655,6 +678,19 @@ var SAGE2_App = Class.extend({
 	},
 
 	/**
+	* Change the title of the application window
+	*
+	* @method updateTitle
+	* @param title {String} new title string
+	*/
+	updateTitle: function(title) {
+		var titleText = document.getElementById(this.id + "_text");
+		if (titleText) {
+			titleText.textContent = title;
+		}
+	},
+
+	/**
 	* Internal method for an actual draw loop (predraw, draw, postdraw).
 	*  draw is called as needed
 	*
@@ -666,19 +702,22 @@ var SAGE2_App = Class.extend({
 			this.SAGE2Sync(true);
 		}
 
-		// update time
-		this.preDraw(date);
-		// measure actual frame rate
-		if (this.sec >= 1.0) {
-			this.fps       = this.frame_sec / this.sec;
-			this.frame_sec = 0;
-			this.sec       = 0;
-		}
-		// actual application draw
-		this.draw(date);
-		this.frame_sec++;
-		// update time and misc
-		this.postDraw(date);
+		var _this = this;
+		requestAnimationFrame(function () {
+			// update time
+			_this.preDraw(date);
+			// measure actual frame rate
+			if (_this.sec >= 1.0) {
+				_this.fps       = this.frame_sec / this.sec;
+				_this.frame_sec = 0;
+				_this.sec       = 0;
+			}
+			// actual application draw
+			_this.draw(date);
+			_this.frame_sec++;
+			// update time and misc
+			_this.postDraw(date);
+		});
 	},
 
 	/**
@@ -716,6 +755,7 @@ var SAGE2_App = Class.extend({
 		msgObject.id     = this.id;
 		msgObject.width  = newWidth;
 		msgObject.height = newHeight;
+		msgObject.keepRatio = false;
 		// Send the message to the server
 		wsio.emit('appResize', msgObject);
 	},
@@ -755,6 +795,42 @@ var SAGE2_App = Class.extend({
 	*/
 	applicationRPC: function(query, funcName, broadcast) {
 		wsio.emit('applicationRPC', {app: this.div.id, func: funcName, query: query, broadcast: broadcast});
+	},
+
+	/**
+	* Entry point for a RPC callback into the app. Needed to keep state consistant
+	*
+	* @method callback
+	* @param func {Function} actual method to call
+	* @param data {Object} parameters sent from server
+	*/
+	callback: function(func, data) {
+		// Make to allow state modification
+		this.SAGE2UserModification = true;
+		// if app calls 'refresh', state will be updated
+		this[func](data);
+		// End tracking
+		this.SAGE2UserModification = false;
+	},
+
+	/**
+	* Register a callback to be called when receiving a updated file list from server
+	*
+	* @method registerFileListHandler
+	* @param mth {Method} method on object to be called back
+	*/
+	registerFileListHandler: function(mth) {
+		addStoredFileListEventHandler(mth.bind(this));
+	},
+
+	/**
+	* Unregister a callback to be called when receiving a updated file list from server
+	*
+	* @method unregisterFileListHandler
+	* @param mth {Method} method on object to be called back
+	*/
+	unregisterFileListHandler: function(mth) {
+		removeStoredFileListEventHandler(mth.bind(this));
 	},
 
 	/**
@@ -810,4 +886,5 @@ var SAGE2_App = Class.extend({
 	requestAppMonitoring: function(){
 		wsio.emit('requestSAGE2AppMonitoring', {appId: this.id});
 	}
+
 });

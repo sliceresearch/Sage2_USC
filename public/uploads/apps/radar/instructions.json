@@ -11,7 +11,7 @@
 		"currentStation": 0
 	},
 	"title": "Radar Maps",
-	"version": "1.3",
+	"version": "1.3.1",
 	"description": "Radar maps of various locations",
 	"keywords": [ "maps", "d3", "geo", "weather" ],
 	"author": "Andrew Johnson <lenzman@me.com>",

@@ -1,6 +1,7 @@
 {
 	"name": "SAGE2",
 	"version": "1.0.0",
+	"date": "2015-11-02",
 	"private": true,
 	"description": "A cluster-based html viewer used for displaying elements across multiple browser windows",
 	"keywords": [
@@ -53,20 +54,26 @@
 		"imageinfo": "latest",
 		"json5": "latest",
 		"mime": "latest",
-		"node-demux": "latest",
 		"node-json-db": "latest",
 		"qr-image": "latest",
-		"rbush": "latest",
+		"rbush": ">=2",
 		"request": "latest",
 		"sprint": "^0.3.1",
 		"twit": "latest",
 		"mv": "latest",
-		"websocketio": "latest",
 		"semver": "latest",
 		"fsmonitor": "latest",
 		"cheerio": "latest",
-		"ytdl-core": "latest",
-		"net-snmp": "latest"
+		"net-snmp": "latest",
+		"sanitizer": "latest",
+		"sanitize-filename": "latest",
+		"normalizeurl": "latest",
+		"sw-precache": "latest",
+		"ytdl-core": "latest"
+	},
+	"optionalDependencies": {
+		"websocketio": "latest",
+		"node-demux" : "latest"
 	},
 	"devDependencies": {
 		"grunt": "latest",
@@ -90,15 +97,17 @@
 	},
 	"scripts": {
 		"start":   "node server.js -l",
-		"monitor": "./node_modules/.bin/nodemon -e json,js,html -I -L -i public/uploads server.js -l",
-		"lint":    "./node_modules/.bin/grunt eslint",
-		"style":   "./node_modules/.bin/grunt jscs",
-		"doc":     "./node_modules/.bin/grunt yuidoc",
-		"mini":    "./node_modules/.bin/grunt uglify --verbose",
-		"newapp":  "./node_modules/.bin/grunt newapp",
-		"test":    "./node_modules/.bin/grunt all",
+		"sw":      "node generate-service-worker.js",
+		"monitor": "nodemon -e json,js,html -I -L -i public/uploads server.js -l",
+		"lint":    "grunt eslint",
+		"style":   "grunt jscs",
+		"doc":     "grunt yuidoc",
+		"mini":    "grunt uglify --verbose",
+		"newapp":  "grunt newapp",
+		"test":    "grunt all",
 		"in":      "node ./install_dependencies.js",
-		"inprod":  "node ./install_dependencies.js --prod"
+		"inprod":  "node ./install_dependencies.js --prod",
+		"indev":   "node ./install_dependencies.js --dev"
 	},
 	"license": "SAGE2-Software-License"
 }

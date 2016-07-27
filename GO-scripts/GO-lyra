@@ -1,6 +1,9 @@
 #!/bin/bash
 
 tentakel pkill -HUP chrome
+tentakel pkill -9 chrome
+
+sleep 2
 
 #tentakel rm -fr   /scratch/evl/evldemo/chrome
 #tentakel mkdir -p /scratch/evl/evldemo/chrome
