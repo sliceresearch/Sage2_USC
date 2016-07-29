@@ -182,7 +182,7 @@ var SAGE2MEP = {
 				point.elementPressed = point.currentElement;
 
 				// focus happens on mousedown
-				point.currentElement.focus();
+				// point.currentElement.focus();
 
 				break;
 			case "pointerRelease":
@@ -226,12 +226,21 @@ var SAGE2MEP = {
 
 				break;
 			case "pointerScroll":
-				mouseEventToPass = new WheelEvent("wheel", {
-					deltaY: data.wheelDelta,
-					deltaMode: 0
-				});
-				point.currentElement.dispatchEvent(mouseEventToPass);
-
+				var scrollContainer = this.getScrollContainerIfExists(appId, point.currentElement);
+				if (scrollContainer != null) { // scroll container detected
+					scrollContainer.scrollTop += data.wheelDelta;
+					if (scrollContainer.scrollTop < 0) {
+						scrollContainer.scrollTop = 0;
+					} else if (scrollContainer.scrollTop > scrollContainer.scrollHeight) {
+						scrollContainer.scrollTop = scrollContainer.scrollHeight;
+					}
+				} else { // no scroll
+					mouseEventToPass = new WheelEvent("wheel", {
+						deltaY: data.wheelDelta,
+						deltaMode: 0
+					});
+					point.currentElement.dispatchEvent(mouseEventToPass);
+				}
 				break;
 			case "pointerDoubleClick":
 
@@ -670,6 +679,22 @@ var SAGE2MEP = {
 
 
 	}, // end moveAppWhereItWasIfNecessary
+
+	getScrollContainerIfExists: function(appId, elementScrolledOn) {
+		var appContainter = document.getElementById(appId).parentNode;
+		var divWithScroll = null;
+		var elemToLookForScroll = elementScrolledOn;
+
+		while (elemToLookForScroll != appContainter) {
+			if (elemToLookForScroll.scrollHeight > elemToLookForScroll.offsetHeight) {
+				divWithScroll = elemToLookForScroll;
+				break;
+			}
+			elemToLookForScroll = elemToLookForScroll.parentNode;
+		}
+
+		return divWithScroll;
+	},
 
 	/*
 		This will generate an object with the properties necessary to track one SAGE pointer.

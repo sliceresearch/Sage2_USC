@@ -14,15 +14,13 @@
 
 var ParaSAGE = SAGE2_App.extend({
 	init: function(data) {
-		// data: contains initialization parameters, such as `x`, `y`, `width`, `height`, and `date`
 		this.SAGE2Init("div", data);
-		this.element.id = "div" + data.id;
+		this.element.id   = "div" + data.id;
 		this.resizeEvents = "continous";
 		this.passSAGE2PointerAsMouseEvents = true;
 
 		// Custom app variables initialization
-		this.element.style.background = "white"; // white washes the app.
-
+		this.element.style.background = "white"; // default is transparent
 		this.setupVariables();
 		this.setupImageEventListerers();
 		this.updateTitle("ParaView [Not connected]");
@@ -30,14 +28,15 @@ var ParaSAGE = SAGE2_App.extend({
 	},
 
 	setupVariables: function() {
-		// Experiemental PV render load reduction.
+		// Toggles
 		this.onlyRenderRequestFromMasterDisplay  = false;
 		this.orrfmdAttemptBinaryConversion       = true;
-		this.orrfmdDataPassInitialized           = false; // needs to alway start false.
+		this.orrfmdDataPassInitialized           = false;
 		this.reduceRenderResolutionOnInteraction = false;
 		this.reduceResolutionAmount              = 10; // Divided dimensions by this number
-		this.onlyGetLowResAnimationFrames        = true; // Needed for testing on large resolutions.
-		// Info div for a larget notification zone
+		this.onlyGetLowResAnimationFrames        = true; // prevent high res background cache and switch, no toggle setup
+
+		// Info div for a large notification zone
 		this.infoDiv = document.createElement("div");
 		this.infoDiv.style.width     = "100%";
 		this.infoDiv.style.height    = "100%";
@@ -47,24 +46,21 @@ var ParaSAGE = SAGE2_App.extend({
 		this.infoDiv.style.fontSize  = ui.titleTextSize;
 		this.infoDiv.textContent     = "App performing initialization...";
 		this.element.appendChild(this.infoDiv);
+
 		// Image from ParaViewWeb
 		this.imageFromPvw = document.createElement("img");
 		this.imageFromPvw.style.width  = "100%";
 		this.imageFromPvw.style.height = "100%";
 		this.element.appendChild(this.imageFromPvw);
-		// Current implementation will ignore the canvas, since that will require additional time to draw.
-		this.isConnected = false;
-		// Data storage for pvw
+
+		// Connection variables
+		this.isConnected               = false;
 		this.availableDataSetsOnServer = [];
-		this.activePipeLines = [];
-		this.pvwConfig   = {
+		this.activePipeLines           = [];
+		this.pvwConfig                 = {
 			application: "visualizer",
 			sessionURL:  "ws://10.232.6.218:8080/ws",
-			secret:      "vtkweb-secret" // because for some reason it is always this value. note: unsure what happens if this changes.
-		};
-		this.logInformation = {
-			imageRoundTrip:        -1,
-			imageServerProcessing: -1
+			secret:      "vtkweb-secret" // because for some reason it is always this value
 		};
 		this.lastMTime     = 0;
 		this.renderOptions = {
@@ -82,27 +78,26 @@ var ParaSAGE = SAGE2_App.extend({
 			vcrFrameBeingFetched: -1,
 
 			vcrStartingHighResFetch: -1,
-			vcrHasAllLowResImages: false, 
-			vcrGettingHighResImages: false, 
+			vcrHasAllLowResImages: false,
+			vcrGettingHighResImages: false,
 			vcrIndexOfHighResFetch: -1
 		};
 		this.button_state = {
 			action_pending: false,
-			left:    false,
-			right:   false,
+			left:   false,
+			right:  false,
 			middle: false,
 			rmbScrollTracker: 0
 		};
-		this.refreshCounter = 0;
-		this.cameraPositionOnMouseDown = {};
 		this.toggleRenderModeMasterOrAll({
-			toggle:this.onlyRenderRequestFromMasterDisplay
+			toggle: this.onlyRenderRequestFromMasterDisplay
 		});
-		this.otherDisplayClients = 0;
+		this.otherDisplayClients   = 0;
 		this.otherDisplaysGotFrame = -1;
 
-		// Always setup the status update listeners.
-		if (isMaster) {
+		var _this = this;
+		// Status update listeners
+		if (isMaster) { // master must creates value first.
 			wsio.emit("csdMessage", {
 				type: "setValue",
 				nameOfValue: "pvwStatusUpdate",
@@ -110,7 +105,6 @@ var ParaSAGE = SAGE2_App.extend({
 				description: "Using this as a way to notify non-master displays of pvw information only master will see"
 			});
 		} else {
-			var _this = this;
 			setTimeout(function() {
 				wsio.emit("csdMessage", {
 					type: "subscribeToValue",
@@ -118,9 +112,9 @@ var ParaSAGE = SAGE2_App.extend({
 					app:         _this.id,
 					func:        "csdPvwStatusUpdate"
 				});
-			}, 1000);
+			}, 1000); // subscribe to value after master
 		}
-		// setup listener for the render view image
+		// Render view listener
 		if (isMaster) {
 			wsio.emit("csdMessage", {
 				type:        "setValue",
@@ -129,7 +123,6 @@ var ParaSAGE = SAGE2_App.extend({
 				description: "Will hold the latest render image from ParaView"
 			});
 		} else {
-			var _this = this;
 			setTimeout(function() {
 				wsio.emit("csdMessage", {
 					type:        "subscribeToValue",
@@ -154,7 +147,6 @@ var ParaSAGE = SAGE2_App.extend({
 				func:        "csdDisplayCheckin"
 			});
 		} else {
-			var _this = this;
 			setTimeout(function() {
 				wsio.emit("csdMessage", {
 					type:        "setValue",
@@ -166,6 +158,16 @@ var ParaSAGE = SAGE2_App.extend({
 		}
 	}, // setupVariables
 
+	/*
+		Creates a connection PVW server.
+		Checks is stated sessionURL has ws.
+			If not, it can't connect. ws is needed as part of address to specify protocol.
+		Changes the title and sets info div to display status.
+		Connection properties set. new autobahn.Connection
+		On open, set title, update visuals. Call afterConnection()
+		On close, set title, updaate visuals.
+		Finally tries ot open connection.
+	*/
 	openWebSocketToPvwServer: function() {
 		var _this = this;
 		if (_this.pvwConfig.sessionURL.indexOf("ws") < 0) {
@@ -219,37 +221,10 @@ var ParaSAGE = SAGE2_App.extend({
 		_this.pvwConfig.connection.open();
 	},
 
+	// This gets called after connection to PVW is established.
 	afterConnection: function() {
-		var _this = this;
-		_this.pvwRender();
-		_this.getAvailableDataSetsOnServer();
-
-
-
-        // var cam =  m_viewer.renderWindow().activeRenderer().camera(),
-        //     fp_ = cam.focalPoint(),
-        //     up_ = cam.viewUpDirection(),
-        //     pos_ = cam.position(),
-        //     fp = [fp_[0], fp_[1], fp_[2]],
-        //     up = [up_[0], up_[1], up_[2]],
-        //     pos = [pos_[0], pos_[1], pos_[2]];
-        // m_session.call("viewport.camera.update", [Number(m_options.view), fp, up, pos]);
-
-	    // @exportRpc("viewport.camera.get")
-	    // def getCamera(self, view_id):
-	    //     view = self.getView(view_id)
-	    //     return {
-	    //         focal: view.CameraFocalPoint,
-	    //         up: view.CameraViewUp,
-	    //         position: view.CameraPosition
-	    //     }
-
-		// _this.pvwConfig.session.call("viewport.camera.get", [Number(_this.renderOptions.view)])
-		// .then(function(reply) {
-		// 	console.log("erase me, got response to viewport.camera.get");
-		// 	console.dir(reply);
-		// });
-
+		this.pvwRender();
+		this.getAvailableDataSetsOnServer();
 	},
 
 	/*
@@ -262,6 +237,10 @@ var ParaSAGE = SAGE2_App.extend({
 		label   []
 		path    []
 	}
+	Note: documentation doesn't correctly describe.
+		http://paraviewweb.kitware.com/#!/api/protocols.ParaViewWebFilterList
+
+	This is necessary to know what datasets are available and seed the context menu
 	*/
 	getAvailableDataSetsOnServer: function() {
 		var _this = this;
@@ -275,7 +254,6 @@ var ParaSAGE = SAGE2_App.extend({
 		});
 	},
 
-	// Keeping this as a just in case
 	pvwRequestDataSetCan: function() {
 		var _this = this;
 		var fullpathFileList = ["can.ex2"];
@@ -285,6 +263,19 @@ var ParaSAGE = SAGE2_App.extend({
 		});
 	},
 
+
+	/*
+		Primary means to get view of scene.
+		TODO: double check necessity of parameter fetch.
+		Makes render config object.
+		Send to PVW.
+			http://paraviewweb.kitware.com/#!/api/protocols.ParaViewWebViewPortImageDelivery
+		then()
+			track view id, mtime, allow interaction,
+			if an image came back, show it.
+
+		TODO call again if render is behind, check with response.stale
+	*/
 	pvwRender: function(fetch = true) {
 		if (this.onlyRenderRequestFromMasterDisplay && (!isMaster)) {
 			return; // If not master, will get their updates from the subscription method.
@@ -318,27 +309,17 @@ var ParaSAGE = SAGE2_App.extend({
 				_this.imageFromPvw.height = response.size[1];
 				_this.imageFromPvw.src = "data:image/" + response.format + "," + response.image;
 
-				// if only render request fro master display binary conversion
+				// if only render request from master display binary conversion
 				if (_this.onlyRenderRequestFromMasterDisplay) {
 					if (_this.orrfmdAttemptBinaryConversion) {
 						var satb = atob(response.image);
-						// use the following to debug size difference
-						// _this.refreshCounter++;
-						// if (_this.refreshCounter > 100) {
-						// 	_this.refreshCounter = 0;
-						// 	console.log("erase me, refresh counter 100");
-						// 	console.log("erase me, src length:" + _this.imageFromPvw.src.length);
-						// 	console.log("erase me, src format:" + response.format);
-						// 	console.log("erase me, satb length:" + satb.length + ". Difference=" + (satb.length - _this.imageFromPvw.src.length));
-						// }
 						wsio.emit("csdMessage", {
 							type: "setValue",
 							nameOfValue: "pvwRenderViewImage",
 							value: satb,
 							description: "Image from ParaView in binary."
 						});
-					}
-					else {
+					} else {
 						wsio.emit("csdMessage", {
 							type: "setValue",
 							nameOfValue: "pvwRenderViewImage",
@@ -347,29 +328,16 @@ var ParaSAGE = SAGE2_App.extend({
 						});
 					}
 				}
-
-				_this.logInformation.imageRoundTrip = Number(new Date().getTime() - response.localTime) - response.workTime;
-				_this.logInformation.imageServerProcessing = Number(response.workTime);
 			}
-			// cant tell if this is causing problems.
-			// If server still doing renders need to grab next frame
-			// if (response.stale === true) {
-			// 	setTimeout(function() {
-			// 		_this.pvwRender();
-			// 	}, 0);
-			// }
-		});
-	},
+		}); //then
+	}, // pvwRender
 
 	/*
-		This should only be activated on non-master displays.
-		Just in case a catch was put in.
+		If only master is to make the request, this method is what gets the image to other display clients.
 		Note: this exhibits conditional errors when screens are refreshed instead of the server being reset.
 	*/
 	csdRenderViewUpdate: function(mostRecentRenderImage) {
 		if (isMaster) {
-			// Currently updates are echo'd back to sender, which eats extra time.
-			// console.log("Potential error: render update sent to master display.");
 			return;
 		}
 		this.imageFromPvw.width  = parseInt(this.sage2_width);
@@ -379,30 +347,22 @@ var ParaSAGE = SAGE2_App.extend({
 		} else {
 			this.imageFromPvw.src    = mostRecentRenderImage;
 		}
-
-		if (this.packetTimeCheck) {
-			console.log("erase me, Time Diff:" + (Date.now() - this.packetTimeCheck));
-		}
-		// Remote information if it might be blocking the view.
 		this.hideInfoDiv();
 	},
 
 	/*
-		This should only be activated on non-master displays.
-		Just in case a catch was put in.
+		Function is called when master sends csdPvwStatusUpdate.
 		Note: this exhibits conditional errors when screens are refreshed instead of the server being reset.
 	*/
 	csdPvwStatusUpdate: function(statusMessage) {
 		if (isMaster) {
-			// Currently updates are echo'd back to sender, which eats extra time.
-			// console.log("Potential error: render update sent to master display.");
 			return;
 		}
-
+		var res = null;
+		var frame = null;
+		// messages with $! are for $howing !mage in an animation. Master sends it.
 		if (statusMessage.indexOf("$!") == 0) {
-			var res = "";
 			var format = "";
-			var frame = -1;
 			res    = statusMessage.substring(statusMessage.indexOf(":") + 1, statusMessage.indexOf("::"));
 			format = statusMessage.substring(statusMessage.indexOf("::") + 2, statusMessage.indexOf(":::"));
 			frame  = parseInt(statusMessage.substring(statusMessage.indexOf(":::") + 3, statusMessage.indexOf("::::")));
@@ -413,9 +373,9 @@ var ParaSAGE = SAGE2_App.extend({
 				res = "imgHighRes";
 			}
 
-			try{
+			try {
 				if (format == "bin") {
-					this.renderOptions.vcrFrameData[frame][res] = "data:image/jpeg;base64," 
+					this.renderOptions.vcrFrameData[frame][res] = "data:image/jpeg;base64,"
 						+ btoa(statusMessage.substring(statusMessage.indexOf("::::") + 4));
 				} else {
 					this.renderOptions.vcrFrameData[frame][res] = statusMessage.substring(statusMessage.indexOf("::::") + 4);
@@ -424,7 +384,7 @@ var ParaSAGE = SAGE2_App.extend({
 				console.log();
 				console.log();
 				console.log(e);
-				console.log(statusMessage.substring(0,20));
+				console.log(statusMessage.substring(0, 120));
 				console.log(frame);
 				console.log(res);
 				console.dir(this.renderOptions.vcrFrameData);
@@ -441,10 +401,8 @@ var ParaSAGE = SAGE2_App.extend({
 				console.log("erase me, time diff:" + (Date.now() - this.packetTimeCheck));
 			}
 		} else if (statusMessage.indexOf("showAnimationFrame") !== -1) {
-			var res = "";
-			var frame = -1;
-			res    = statusMessage.substring(statusMessage.indexOf(":") + 1, statusMessage.indexOf("::"));
-			frame  = parseInt(statusMessage.substring(statusMessage.indexOf("::") + 2));
+			res   = statusMessage.substring(statusMessage.indexOf(":") + 1, statusMessage.indexOf("::"));
+			frame = parseInt(statusMessage.substring(statusMessage.indexOf("::") + 2));
 			this.imageFromPvw.src = this.renderOptions.vcrFrameData[frame][res];
 		} else if (statusMessage.indexOf("resetVcrImageCache") !== -1) {
 			console.log("erase me, resetting vcr cache");
@@ -458,8 +416,8 @@ var ParaSAGE = SAGE2_App.extend({
 				});
 			}
 		} else if (statusMessage.indexOf("renderVcr") !== -1) {
-			var res = statusMessage.substring(statusMessage.indexOf(":") + 1, statusMessage.indexOf("::"));
-			var frame = parseInt(statusMessage.substring(statusMessage.indexOf("::") + 2));
+			res = statusMessage.substring(statusMessage.indexOf(":") + 1, statusMessage.indexOf("::"));
+			frame = parseInt(statusMessage.substring(statusMessage.indexOf("::") + 2));
 			var _this = this;
 			if (res.indexOf("Low")) {
 				_this.renderOptions.currentQuality = _this.renderOptions.interactiveQuality;
@@ -470,7 +428,7 @@ var ParaSAGE = SAGE2_App.extend({
 				size: [parseInt(_this.sage2_width), parseInt(_this.sage2_height)],
 				view: Number(_this.renderOptions.view),
 				mtime: 0,
-				quality: _this.renderOptions.currentQuality, // Might replace later with _this.renderOptions.vcrPlayStatus ? _this.renderOptions.interactiveQuality : _this.renderOptions.stillQuality
+				quality: _this.renderOptions.currentQuality,
 				localTime: new Date().getTime()
 			};
 			// If doing a resolution reduction on interaction instead of quality alter the renderCfg values.
@@ -503,11 +461,9 @@ var ParaSAGE = SAGE2_App.extend({
 		} else if (statusMessage.indexOf("pvwRender") !== -1) {
 			if (statusMessage.indexOf("stillQuality") !== -1) {
 				this.renderOptions.currentQuality = this.renderOptions.stillQuality;
-			}
-			else if (statusMessage.indexOf("interactiveQuality") !== -1) {
+			} else if (statusMessage.indexOf("interactiveQuality") !== -1) {
 				this.renderOptions.currentQuality = this.renderOptions.interactiveQuality;
 			}
-
 			this.pvwRender();
 		} else if (statusMessage.indexOf("infoShow:") == 0) {
 			var infoShow = statusMessage.substring(statusMessage.indexOf(":") + 1);
@@ -521,43 +477,57 @@ var ParaSAGE = SAGE2_App.extend({
 		}
 	},
 
+	/*
+		Non-master display clients activate this on master display on startup.
+
+		ONLY master display cares about amount of other displays.
+		This unfortunately means things will break if master switches.
+		This potentially causes problems with multiple active ParaSAGE apps.
+	*/
 	csdDisplayCheckin: function(message) {
-		// ONLY master display tracks other displays. This unfortunately means things will break if master switches.
-		if (!isMaster) { return; }
+		if (!isMaster) {
+			return;
+		}
 		if (message.indexOf("clientDisplayInitialCheckIn") !== -1) {
 			this.otherDisplayClients++;
-			this.updateTitle("ERASE ME, otherDisplayClients:" + this.otherDisplayClients); 
+			this.updateTitle("ERASE ME, otherDisplayClients:" + this.otherDisplayClients);
 		} else if (message.indexOf("otherDisplaysGotFrame") !== -1) {
 			this.otherDisplaysGotFrame++;
 		}
 	},
 
 	showInfoDiv: function(message) {
-		this.infoDiv.textContent = message;
-		this.infoDiv.style.width = "100%";
-		this.infoDiv.style.height = "100%";
+		this.infoDiv.textContent      = message;
+		this.infoDiv.style.width      = "100%";
+		this.infoDiv.style.height     = "100%";
 		this.infoDiv.style.background = "white";
 	},
 
 	hideInfoDiv: function() {
-		this.infoDiv.textContent = "";
-		this.infoDiv.style.width = "0%";
+		this.infoDiv.textContent  = "";
+		this.infoDiv.style.width  = "0%";
 		this.infoDiv.style.height = "0%";
 	},
 
 	pvwVcrPlay: function() {
-		if (!isMaster) { return; }
-		if (this.renderOptions.vcrFrameData.length < 2) { return; }
+		if (!isMaster) {
+			return;
+		}
+		if (this.renderOptions.vcrFrameData.length < 2) {
+			return;
+		} // Don't allow playing if only 1 frame.
 		this.renderOptions.vcrPlayStatus = true;
-		this.getFullContextMenuAndUpdate(); // Check inside to swap Play / Pause
+		this.getFullContextMenuAndUpdate(); // swap Play / Pause
 		this.pvwRunAnimationLoop();
 	},
 
 	pvwVcrStop: function() {
-		if (!isMaster) { return; }
+		if (!isMaster) {
+			return;
+		}
 		var _this = this;
 		_this.renderOptions.vcrPlayStatus = false;
-		_this.getFullContextMenuAndUpdate(); // Check inside to swap Play / Pause
+		_this.getFullContextMenuAndUpdate(); // swap Play / Pause
 		_this.renderOptions.currentQuality = _this.renderOptions.stillQuality;
 
 		if (_this.renderOptions.vcrCurrentFrame != -1
@@ -580,75 +550,39 @@ var ParaSAGE = SAGE2_App.extend({
 
 	/*
 	Overview (master only)
-		
-		view change variable triggered when sending
-			interaction packet
-			load
-			visibility toggle on data
-
-		if (view has changed) {
-			clear out the cached images.
-			this probably needs notification of other displays.
-			set view has not changed.
-
-			also reset other new variables to track, mentioned below following Need
-		}
-
-		Need
-			current frame (usually based off of time?)
-				current frame usually starts at +1 since.
-			retrieving high res status
-			high res retrieve index
-			have all high res values.
-			have all low res status
-
-		if (playing) {
-			if (have low res image of current frame) {
-
-				if (have all high res values) {
-					how high res image
-				} else {
+		if the animation view has changed, then all cached images are invalid.
+			reset all caching variables.
+			dump cache
+			tell other displays to do this too.
+		if playing - reminder this is a recusive function
+			increase the current frame
+			if have low res image
+				if have all high res images
+					show high res
+				else
+					tell all displays to show this low res image
 					show low res image
-
-					if (have all low res) {
-						if ( NOT retriving high res) {
-							set retriving high res to true.
-							reset to 0 frame.
-							then render request
-								save image
-								increase high res status index.
-								canceli 
-						}
-					}
-					else do not have all low res {
-						do nothing, let the cycle fill out the lower res values.
-						actually console log this, unsure if this should ever happen.
-					}
-				}
-				call this function slightly later
-
-			}
-			else do not have low res image of current frame{
-				request vcr next
-				then {
-					show it render
-					store it.
-					increase current frame value
-
-					call this function slightly later
-
-				}
-			}
-		}
-		else not playing so don't do anything.
+					determine if all low res images were collected
+					if have all low res and all other displays have reported frame collection
+						reset control values
+						begin high res frame grab
+				recur function
+			else
+				if all other displays are reported as frame collected
+					reset control values
+					begin grab of next frame in animation
+				else
+					reduce frame (since frame is always increased first)
+					recur function
 	*/
 
 	pvwRunAnimationLoop: function() {
 		var _this = this;
+		var i;
 		// If the view was changed, then the images are old and need to be recollected.
 		if (_this.renderOptions.vcrViewChanged) {
-			for (var i = 0; i < _this.renderOptions.vcrFrameData.length; i++) {
-				_this.renderOptions.vcrFrameData[i].imgLowRes = null;
+			for (i = 0; i < _this.renderOptions.vcrFrameData.length; i++) {
+				_this.renderOptions.vcrFrameData[i].imgLowRes  = null;
 				_this.renderOptions.vcrFrameData[i].imgHighRes = null;
 			}
 			// _this.renderOptions.vcrPlayStatus           = false; // How to prevent playing if currently as opposed to prevent 1st play.
@@ -676,9 +610,8 @@ var ParaSAGE = SAGE2_App.extend({
 			if (_this.renderOptions.vcrCurrentFrame >= _this.renderOptions.vcrFrameData.length) {
 				_this.renderOptions.vcrCurrentFrame = 0;
 			}
-			var cFrame     = _this.renderOptions.vcrCurrentFrame;
-			var fData      = _this.renderOptions.vcrFrameData;
-			var vcrFrameBeingFetched = _this.renderOptions.vcrFrameBeingFetched;
+			var cFrame = _this.renderOptions.vcrCurrentFrame;
+			var fData  = _this.renderOptions.vcrFrameData;
 			// if have low res
 			if (fData[cFrame].imgLowRes != null) {
 				if (_this.renderOptions.vcrHasAllHighResImages) {
@@ -703,7 +636,7 @@ var ParaSAGE = SAGE2_App.extend({
 					// if this var is false, see if because 1st time activation.
 					if (!_this.renderOptions.vcrHasAllLowResImages) {
 						var didGetLowImage = true;
-						for (var i = 0; i < fData.length; i++) {
+						for (i = 0; i < fData.length; i++) {
 							if (fData[i].imgLowRes == null) {
 								console.log("Full cycled, but missing lower res index:" + i);
 								didGetLowImage = false;
@@ -736,7 +669,6 @@ var ParaSAGE = SAGE2_App.extend({
 					}
 				} // else doesn't have all high rest
 
-				_this.renderOptions.vcrCurrentFrame++;
 				// recur this function
 				setTimeout(function() {
 					_this.pvwRunAnimationLoop();
@@ -752,7 +684,8 @@ var ParaSAGE = SAGE2_App.extend({
 							type:        "setValue",
 							nameOfValue: "pvwStatusUpdate",
 							value:       "renderVcr:imgLowRes::" + cFrame,
-							description: "Using this as a way to notify non-master displays of pvw information only master will see"
+							description: ("Using this as a way to notify" +
+								" non-master displays of pvw information only master will see")
 						});
 						_this.renderOptions.currentQuality = _this.renderOptions.interactiveQuality;
 						_this.vcrRenderCall();
@@ -761,7 +694,7 @@ var ParaSAGE = SAGE2_App.extend({
 				} else {
 					_this.renderOptions.vcrCurrentFrame--;
 					if (_this.renderOptions.vcrCurrentFrame < 0) {
-						_this.renderOptions.vcrCurrentFrame = _this.renderOptions.vcrFrameData.length -1;
+						_this.renderOptions.vcrCurrentFrame = _this.renderOptions.vcrFrameData.length - 1;
 					}
 					setTimeout(function() {
 						_this.pvwRunAnimationLoop();
@@ -772,6 +705,33 @@ var ParaSAGE = SAGE2_App.extend({
 	}, // pvwRunAnimationLoop
 
 
+	/*
+		This is how frames are grabbed for animation playing.
+		Functionally differnet from pvwRender.
+
+		make render config
+		if on high res fetch
+			tell other displays which frame this is
+		send render request to PVW
+		then()
+			if an image is returned
+				if it was high res
+					if index != -1, -1 indicates view changed so cache is bad
+						cache the image
+						binary convert if necessary
+						TODO master display distribution removed due to potential bug
+						increase render index
+						if not done grabbing high res images
+							start next frame grab
+							TODO: just caught this, 7/28, need to wait for other displays.
+							recur this function
+						else
+							set high res cache status
+				else
+					it must be low res so cache appropriately
+					display image
+					recur pvwRunAnimationLoop
+	*/
 	vcrRenderCall: function() {
 		var _this = this;
 		var renderCfg = {
@@ -807,39 +767,25 @@ var ParaSAGE = SAGE2_App.extend({
 			if (response.hasOwnProperty("image") & response.image !== null) {
 				if (_this.renderOptions.currentQuality == _this.renderOptions.stillQuality) {
 					if (!_this.renderOptions.vcrGettingHighResImages) {
-						console.log("Error got a high res image _this.renderOptions.vcrGettingHighResImages" + _this.renderOptions.vcrGettingHighResImages);
+						console.log("Error got a high res image _this.renderOptions.vcrGettingHighResImages"
+							+ _this.renderOptions.vcrGettingHighResImages);
 					}
 					// if this is -1 then a view change occured and this is a lagged update. don't show it.
 					if (_this.renderOptions.vcrIndexOfHighResFetch != -1) {
 						_this.imageFromPvw.src = "data:image/" + response.format + "," + response.image;
-						_this.renderOptions.vcrFrameData[_this.renderOptions.vcrIndexOfHighResFetch].imgHighRes = _this.imageFromPvw.src;
+						var iohrFrame = _this.renderOptions.vcrIndexOfHighResFetch;
+						var vfd = _this.renderOptions.vcrFrameData;
+						vfd[iohrFrame].imgHighRes = _this.imageFromPvw.src;
 
+						/* Removed while not fully implemented.
 						var dataToSend = "";
 						if (_this.orrfmdAttemptBinaryConversion) {
-							var dataToSend = atob(response.image);
+							dataToSend = atob(response.image);
 							var tdiff = Date.now();
-							// console.log("erase me, Conversion time(ms):" + (Date.now() - tdiff) );
-							// console.log("erase me, src format:" + response.format);
-							// console.log("erase me, dataToSend length:" + dataToSend.length + ". Difference=" + (dataToSend.length - _this.imageFromPvw.src.length));
-							// console.log("erase me, dataToSend type:" + (typeof dataToSend));
-							// console.dir(dataToSend);
 						} else {
 							// full image string ready to set
 							dataToSend = _this.imageFromPvw.src;
-						}
-						// wsio.emit("csdMessage", {
-						// 	type:        "setValue",
-						// 	nameOfValue: "pvwStatusUpdate",
-						// 	value:       "showTime",
-						// 	description: "Using this as a way to notify non-master displays of pvw information only master will see"
-						// });
-						// wsio.emit("csdMessage", {
-						// 	type:        "setValue",
-						// 	nameOfValue: "pvwStatusUpdate",
-						// 	value:       "$!:hi::" + (_this.orrfmdAttemptBinaryConversion ? "bin" : "str")
-						// 					+ ":::" + _this.renderOptions.vcrIndexOfHighResFetch + "::::" + dataToSend,
-						// 	description: "Using this as a way to notify non-master displays of pvw information only master will see"
-						// });
+						} // */
 
 						_this.renderOptions.vcrIndexOfHighResFetch++;
 						if (_this.renderOptions.vcrIndexOfHighResFetch >= _this.renderOptions.vcrFrameData.length) {
@@ -861,46 +807,27 @@ var ParaSAGE = SAGE2_App.extend({
 				} else {
 					_this.imageFromPvw.src = "data:image/" + response.format + "," + response.image;
 					_this.renderOptions.vcrFrameData[_this.renderOptions.vcrCurrentFrame].imgLowRes = _this.imageFromPvw.src;
-					
+
+					/* Removed while not fully implemented
 					var dataToSend = "";
 					if (_this.orrfmdAttemptBinaryConversion) {
-						var dataToSend = atob(response.image);
+						dataToSend = atob(response.image);
 						var tdiff = Date.now();
-						// console.log("erase me, Conversion time(ms):" + (Date.now() - tdiff) );
-						// console.log("erase me, src format:" + response.format);
-						// console.log("erase me, dataToSend length:" + dataToSend.length + ". Difference=" + (dataToSend.length - _this.imageFromPvw.src.length));
-						// console.log("erase me, dataToSend type:" + (typeof dataToSend));
-						// console.dir(dataToSend);
 					} else {
 						// full image string ready to set
 						dataToSend = _this.imageFromPvw.src;
-					}
-					// wsio.emit("csdMessage", {
-					// 	type:        "setValue",
-					// 	nameOfValue: "pvwStatusUpdate",
-					// 	value:       "showTime",
-					// 	description: "Using this as a way to notify non-master displays of pvw information only master will see"
-					// });
-
-					// wsio.emit("csdMessage", {
-					// 	type:        "setValue",
-					// 	nameOfValue: "pvwStatusUpdate",
-					// 	value:       "$!:low::" + (_this.orrfmdAttemptBinaryConversion ? "bin" : "str")
-					// 					+ ":::" + _this.renderOptions.vcrCurrentFrame + "::::" + dataToSend,
-					// 	description: "Using this as a way to notify non-master displays of pvw information only master will see"
-					// });
-					// wsio.emit("csdMessage", {
-					// 	type: "setValue",
-					// 	nameOfValue: "pvwRenderViewImage",
-					// 	value: dataToSend,
-					// 	description: "Image from ParaView in binary."
-					// });
+					} // */
 					_this.pvwRunAnimationLoop();
 				}
 			} // if valid image
 		}); // then response
 	}, // vcrRenderCall
 
+	/*
+		This was started as a means to implement high res render waiting.
+		It isn't actually called.
+		TODO correctly call this in vcrRenderCall
+	*/
 	vcrMasterDisplayWaitForEveryoneToGetFrames: function() {
 		var _this = this;
 		// if this is -1 then a view change occured and this is a lagged update. don't show it.
@@ -923,10 +850,13 @@ var ParaSAGE = SAGE2_App.extend({
 				_this.renderOptions.vcrHasAllHighResImages = true;
 			}
 		} else if (_this.renderOptions.vcrIndexOfHighResFetch != -1) {
-			setTimeout(function() { _this.vcrMasterDisplayWaitForEveryoneToGetFrames(); }, 500);
+			setTimeout(function() {
+				_this.vcrMasterDisplayWaitForEveryoneToGetFrames();
+			}, 500);
 		}
 	},
 
+	// Setup javascript event triggers.
 	setupImageEventListerers: function() {
 		var _this = this;
 		this.imageFromPvw.addEventListener("click",      function(e) {
@@ -953,11 +883,34 @@ var ParaSAGE = SAGE2_App.extend({
 		this.imageFromPvw.addEventListener("mouseover",  function(e) {
 			_this.imageEventHandler(e);
 		});
-		// this.imageFromPvw.addEventListener("wheel",      function(e) {
-		// 	_this.imageEventHandler(e);
-		// });
 	},
 
+	/*
+		function to handle interaction
+
+		set view change status to invalidate animation cache
+		to preserve the view based on animation frame
+			set to first frame, then advance a number of times equal to animation frame
+		if an event that end interaction
+			set render quality to high
+		else if a mouse down
+			set to interactive quality
+			render()    * IMPORTANT *
+		if not master
+			stop, above was important to know render quality.
+		detect button status
+		create PVW compliant event object
+		normalize x and y coordinates to 1.
+			this removes the need to know exact coordinate changes or if frames were missed
+		send to PVW
+		then()
+			render
+			notify other displays to render
+			if the event was mouse up
+				render again slightly later
+				tell other displays to also render.©
+				This is because PVW seems to have a delayed time when switching resolution quality.
+	*/
 	imageEventHandler: function(evt) {
 		var _this = this;
 		// due to animation caching, the view might not be on the correct frame.
@@ -968,36 +921,29 @@ var ParaSAGE = SAGE2_App.extend({
 				) {
 			// because of weird timing of low vs high res, just reset to 0, send that many offset commands.
 			this.renderOptions.vcrViewChanged = true;
-
 			_this.pvwConfig.session.call("pv.vcr.action", ["first"])
 			.then(function(timeValue) {
 				// send next frame requests equivalent to number of offset.
 				for (var i = 0; i < _this.renderOptions.vcrCurrentFrame; i++) {
 					_this.pvwConfig.session.call("pv.vcr.action", ["next"])
 					.then(function(timeValue) {
-						},
-						function(err) {
-							console.log("Unexpected error next frame to match animation:" + err);
-						}
+					},
+					function(err) {
+						console.log("Unexpected error next frame to match animation:" + err);
+					}
 					);
 				}
-
 			}, function(err) {
 				console.log("Unexpected error on interaction view matching for animation:" + err);
 			});
 
 		}
-		// Old debug
-		// this.updateTitle( "Event(" + evt.type + ") pos(" + evt.x + "," + evt.y + ") move " + evt.movementX + "," + evt.movementY);
 
 		// Update quality based on the type of the event
 		if (evt.type === "mouseup" || evt.type === "dblclick" || evt.type === "wheel") {
 			this.renderOptions.currentQuality = this.renderOptions.stillQuality;
-			// console.log("erase me, switching to still " + this.renderOptions.currentQuality);
 		} else if (evt.type === "mousedown") {
 			this.renderOptions.currentQuality = this.renderOptions.interactiveQuality;
-			// console.log("erase me, " + evt.type + " detected switching to animation " + this.renderOptions.currentQuality);
-
 			// render request first. This fixes the forward jump from what seems to be resolution shift.
 			this.pvwRender();
 		}
@@ -1045,7 +991,7 @@ var ParaSAGE = SAGE2_App.extend({
 			buttonRight:  buttonRight
 		};
 
-		// Force wheel events into right click drag. For some reason scroll packet doesn't work.
+		// TODO remove wheel later, as it isn't actually implemented in PVW
 		if (evt.type === "wheel") {
 			vtkWeb_event.action = "mousemove";
 			vtkWeb_event.buttonLeft = false;
@@ -1061,6 +1007,7 @@ var ParaSAGE = SAGE2_App.extend({
 				this.button_state.rmbScrollTracker = vtkWeb_event.y;
 			}
 		}
+		// prevent event flooding
 		if (evt.type !== "wheel" && this.eatMouseEvent(vtkWeb_event)) {
 			return;
 		}
@@ -1089,7 +1036,8 @@ var ParaSAGE = SAGE2_App.extend({
 							type: "setValue",
 							nameOfValue: "pvwStatusUpdate",
 							value:       "pvwRender",
-							description: "Using this as a way to notify non-master displays of pvw information only master will see"
+							description: "Using this as a way to notify non-master"
+								+ " displays of pvw information only master will see"
 						});
 						_this.pvwRender();
 					}, 100);
@@ -1102,6 +1050,7 @@ var ParaSAGE = SAGE2_App.extend({
 		});
 	},
 
+	// Basically this prevents event flooding
 	eatMouseEvent: function(event) {
 		var force_event = (this.button_state.left !== event.buttonLeft
 			|| this.button_state.right  !== event.buttonRight
@@ -1118,30 +1067,32 @@ var ParaSAGE = SAGE2_App.extend({
 		return false;
 	},
 
+	/*
+		This queries for active datasets.
+		Data is
+		{
+			[
+				{
+					id: string number
+					name: "filename"
+					parent: ??? dunno ???
+					rep: string number
+					visible: string 1 or 0.
+				}
+			{}
+			...
+			]
+			view: ""
+		}
+		http://paraviewweb.kitware.com/#!/api/protocols.ParaViewWebProxyManager
+
+		There are cases when double loads are possible.
+		This function makes visibility toggles possible.
+	*/
 	pvwRequestProxyManagerList: function (response) {
 		var _this = this;
 		_this.pvwConfig.session.call("pv.proxy.manager.list", [])
 		.then(function(data) {
-
-			/*
-			Data is
-			{
-				[
-					{
-						id: string number
-						name: "filename"
-						parent: ??? dunno ???
-						rep: string number
-						visible: string 1 or 0.
-					}
-				{}
-				...
-				]
-				view: ""
-			}
-			*/
-			// This can be more efficient if, it prevented context update on no change.
-			// The load data could be more efficient, if it prevented multiple requests (isMaster) and prevent double loads (alreayd loaded).
 			var alreadyKnownPipeline = false;
 			for (var responseIndex = 0; responseIndex < data.sources.length; responseIndex++) {
 				alreadyKnownPipeline = false;
@@ -1170,7 +1121,7 @@ var ParaSAGE = SAGE2_App.extend({
 	},
 
 	/*
-	Context menu callbacks defined *mostly* below.
+	Context menu callbacks defined below.
 	*/
 	getContextEntries: function() {
 		var entries = [];
@@ -1291,12 +1242,6 @@ var ParaSAGE = SAGE2_App.extend({
 			entries.push(entry);
 		}
 
-		// entry = {};
-		// entry.description = "What does manager list do?";
-		// entry.callback    = "pvwRequestProxyManagerList";
-		// entry.parameters  = {};
-		// entries.push(entry);
-
 		for (i = 0; i < this.activePipeLines.length; i++) {
 			entry = {};
 			entry.description = "Toggle visibility of " + this.activePipeLines[i].filename;
@@ -1306,12 +1251,6 @@ var ParaSAGE = SAGE2_App.extend({
 			};
 			entries.push(entry);
 		}
-
-		// entry = {};
-		// entry.description = "Backup data request Can";
-		// entry.callback    = "pvwRequestDataSetCan";
-		// entry.parameters  = {};
-		// entries.push(entry);
 
 		for (i = 0; i < this.availableDataSetsOnServer.length; i++) {
 			entry = {};
@@ -1326,6 +1265,10 @@ var ParaSAGE = SAGE2_App.extend({
 		return entries;
 	},
 
+	/*
+		Zooms to ensure active datasets are visible.
+		ONLY zooms, meaning the camera moves forward or back. No rotation.
+	*/
 	resetCamera: function(response) {
 		var _this = this;
 		if (isMaster) {
@@ -1343,12 +1286,12 @@ var ParaSAGE = SAGE2_App.extend({
 		}
 	},
 
-	// receive an from the webui use .clientInput for what they typed
+	// use .clientInput for what they typed
 	setWidth: function(response) {
 		this.sendResize(parseInt(response.clientInput), this.sage2_height);
 	},
 
-	// receive an from the webui use .clientInput for what they typed
+	// use .clientInput for what they typed
 	setHeight: function(response) {
 		this.sendResize(this.sage2_width, parseInt(response.clientInput));
 	},
@@ -1431,7 +1374,9 @@ var ParaSAGE = SAGE2_App.extend({
 				setTimeout(function() {
 					_this.pvwConfig.session.call("pv.vcr.action", ["first"])
 					.then(function(timeValue) {
-						setTimeout(function() { _this.pvwGetFrameAmount(); }, 10);
+						setTimeout(function() {
+							_this.pvwGetFrameAmount();
+						}, 10);
 					}, function(err) {
 						// console.log("Not really an error, loaded dataset doesn't have animation frames:" + err);
 						// Tell the other displays to hide info div
@@ -1439,7 +1384,8 @@ var ParaSAGE = SAGE2_App.extend({
 							type: "setValue",
 							nameOfValue: "pvwStatusUpdate",
 							value:       "infoHide",
-							description: "Using this as a way to notify non-master displays of pvw information only master will see"
+							description: "Using this as a way to notify non-master"
+								+ " displays of pvw information only master will see"
 						});
 						_this.hideInfoDiv();
 						// Tell the other displays to render
@@ -1447,7 +1393,8 @@ var ParaSAGE = SAGE2_App.extend({
 							type: "setValue",
 							nameOfValue: "pvwStatusUpdate",
 							value:       "pvwRender",
-							description: "Using this as a way to notify non-master displays of pvw information only master will see"
+							description: "Using this as a way to notify non-master"
+								+ " displays of pvw information only master will see"
 						});
 						_this.pvwRender(); // update the view
 					});
