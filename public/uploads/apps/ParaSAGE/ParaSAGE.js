@@ -11,6 +11,7 @@
 "use strict";
 
 /* global autobahn */
+// This states autobahn is a variabled defined in another file. For PVW connection.
 
 var ParaSAGE = SAGE2_App.extend({
 	init: function(data) {
@@ -19,7 +20,7 @@ var ParaSAGE = SAGE2_App.extend({
 		this.resizeEvents = "continous";
 		this.passSAGE2PointerAsMouseEvents = true;
 
-		// Custom app variables initialization
+		// App specific variables initialization
 		this.element.style.background = "white"; // default is transparent
 		this.setupVariables();
 		this.setupImageEventListerers();
@@ -254,14 +255,15 @@ var ParaSAGE = SAGE2_App.extend({
 		});
 	},
 
-	pvwRequestDataSetCan: function() {
-		var _this = this;
-		var fullpathFileList = ["can.ex2"];
-		_this.pvwConfig.session.call("pv.proxy.manager.create.reader", fullpathFileList)
-		.then(function(response) {
-			_this.pvwRender();
-		});
-	},
+	// // Example on how to load datasets.
+	// pvwRequestDataSetCan: function() {
+	// 	var _this = this;
+	// 	var fullpathFileList = ["can.ex2"];
+	// 	_this.pvwConfig.session.call("pv.proxy.manager.create.reader", fullpathFileList)
+	// 	.then(function(response) {
+	// 		_this.pvwRender();
+	// 	});
+	// },
 
 
 	/*
@@ -490,7 +492,7 @@ var ParaSAGE = SAGE2_App.extend({
 		}
 		if (message.indexOf("clientDisplayInitialCheckIn") !== -1) {
 			this.otherDisplayClients++;
-			this.updateTitle("ERASE ME, otherDisplayClients:" + this.otherDisplayClients);
+			// this.updateTitle("ERASE ME, otherDisplayClients:" + this.otherDisplayClients);
 		} else if (message.indexOf("otherDisplaysGotFrame") !== -1) {
 			this.otherDisplaysGotFrame++;
 		}
@@ -826,35 +828,36 @@ var ParaSAGE = SAGE2_App.extend({
 	/*
 		This was started as a means to implement high res render waiting.
 		It isn't actually called.
-		TODO correctly call this in vcrRenderCall
+		TODO correctly call this in vcrRenderCall [work in progress for high res animation vcr timing]
+		Will be needed to handle network saturation issues.
 	*/
-	vcrMasterDisplayWaitForEveryoneToGetFrames: function() {
-		var _this = this;
-		// if this is -1 then a view change occured and this is a lagged update. don't show it.
-		if (_this.renderOptions.vcrIndexOfHighResFetch != -1 && _this.otherDisplaysGotFrame >= _this.otherDisplayClients) {
-			_this.otherDisplaysGotFrame = 0;
-			_this.renderOptions.vcrIndexOfHighResFetch++;
-			if (_this.renderOptions.vcrIndexOfHighResFetch >= _this.renderOptions.vcrFrameData.length) {
-				_this.renderOptions.vcrIndexOfHighResFetch = 0;
-			}
-			if (_this.renderOptions.vcrIndexOfHighResFetch != _this.renderOptions.vcrStartingHighResFetch) {
-				_this.pvwConfig.session.call("pv.vcr.action", ["next"])
-				.then(function(timeValue) {
-					// only render request if fetching view hasn't reset.
-					if (_this.renderOptions.vcrIndexOfHighResFetch != -1) {
-						_this.renderOptions.currentQuality = _this.renderOptions.stillQuality;
-						_this.vcrRenderCall();
-					}
-				});
-			} else {
-				_this.renderOptions.vcrHasAllHighResImages = true;
-			}
-		} else if (_this.renderOptions.vcrIndexOfHighResFetch != -1) {
-			setTimeout(function() {
-				_this.vcrMasterDisplayWaitForEveryoneToGetFrames();
-			}, 500);
-		}
-	},
+	// vcrMasterDisplayWaitForEveryoneToGetFrames: function() {
+	// 	var _this = this;
+	// 	// if this is -1 then a view change occured and this is a lagged update. don't show it.
+	// 	if (_this.renderOptions.vcrIndexOfHighResFetch != -1 && _this.otherDisplaysGotFrame >= _this.otherDisplayClients) {
+	// 		_this.otherDisplaysGotFrame = 0;
+	// 		_this.renderOptions.vcrIndexOfHighResFetch++;
+	// 		if (_this.renderOptions.vcrIndexOfHighResFetch >= _this.renderOptions.vcrFrameData.length) {
+	// 			_this.renderOptions.vcrIndexOfHighResFetch = 0;
+	// 		}
+	// 		if (_this.renderOptions.vcrIndexOfHighResFetch != _this.renderOptions.vcrStartingHighResFetch) {
+	// 			_this.pvwConfig.session.call("pv.vcr.action", ["next"])
+	// 			.then(function(timeValue) {
+	// 				// only render request if fetching view hasn't reset.
+	// 				if (_this.renderOptions.vcrIndexOfHighResFetch != -1) {
+	// 					_this.renderOptions.currentQuality = _this.renderOptions.stillQuality;
+	// 					_this.vcrRenderCall();
+	// 				}
+	// 			});
+	// 		} else {
+	// 			_this.renderOptions.vcrHasAllHighResImages = true;
+	// 		}
+	// 	} else if (_this.renderOptions.vcrIndexOfHighResFetch != -1) {
+	// 		setTimeout(function() {
+	// 			_this.vcrMasterDisplayWaitForEveryoneToGetFrames();
+	// 		}, 500);
+	// 	}
+	// },
 
 	// Setup javascript event triggers.
 	setupImageEventListerers: function() {
@@ -991,23 +994,33 @@ var ParaSAGE = SAGE2_App.extend({
 			buttonRight:  buttonRight
 		};
 
-		// TODO remove wheel later, as it isn't actually implemented in PVW
-		if (evt.type === "wheel") {
-			vtkWeb_event.action = "mousemove";
-			vtkWeb_event.buttonLeft = false;
-			vtkWeb_event.buttonRight = true;
-			vtkWeb_event.buttonMiddle = false;
-			vtkWeb_event.x = 0;
-			vtkWeb_event.y = evt.deltaY / 100 + this.button_state.rmbScrollTracker;
-			this.button_state.rmbScrollTracker = vtkWeb_event.y;
-		} else { // The x and y should be given relative to app position when using SAGE2MEP.
+		if (evt.type != "wheel") { // The x and y should be given relative to app position when using SAGE2MEP.
 			vtkWeb_event.x = evt.x / parseInt(this.sage2_width);
 			vtkWeb_event.y = 1.0 - (evt.y / parseInt(this.sage2_height));
 			if (vtkWeb_event.buttonRight) {
 				this.button_state.rmbScrollTracker = vtkWeb_event.y;
 			}
 		}
-		// prevent event flooding
+
+		// PVW doesn't respond to wheel values.
+		// if (evt.type === "wheel") {
+		// 	// vtkWeb_event.action = "mousemove";
+		// 	// vtkWeb_event.buttonLeft = false;
+		// 	// vtkWeb_event.buttonRight = true;
+		// 	// vtkWeb_event.buttonMiddle = false;
+		// 	// vtkWeb_event.x = 0;
+		// 	// vtkWeb_event.y = evt.deltaY / 100 + this.button_state.rmbScrollTracker;
+		// 	// this.button_state.rmbScrollTracker = vtkWeb_event.y;
+		// } else { // The x and y should be given relative to app position when using SAGE2MEP.
+		// 	vtkWeb_event.x = evt.x / parseInt(this.sage2_width);
+		// 	vtkWeb_event.y = 1.0 - (evt.y / parseInt(this.sage2_height));
+		// 	if (vtkWeb_event.buttonRight) {
+		// 		this.button_state.rmbScrollTracker = vtkWeb_event.y;
+		// 	}
+		// }
+
+
+		// prevent pvw mouse event flooding
 		if (evt.type !== "wheel" && this.eatMouseEvent(vtkWeb_event)) {
 			return;
 		}
@@ -1029,6 +1042,7 @@ var ParaSAGE = SAGE2_App.extend({
 				_this.pvwRender();
 				_this.renderOptions.vcrViewChanged = true;
 
+				// Need a delayed render on switch from low res to high res. Unknown exactly why.
 				if (evt.type == "mouseup") {
 					setTimeout(function() {
 						// Tell the other displays to render
@@ -1050,7 +1064,7 @@ var ParaSAGE = SAGE2_App.extend({
 		});
 	},
 
-	// Basically this prevents event flooding
+	// Basically this prevents pvw event flooding
 	eatMouseEvent: function(event) {
 		var force_event = (this.button_state.left !== event.buttonLeft
 			|| this.button_state.right  !== event.buttonRight
@@ -1423,11 +1437,13 @@ var ParaSAGE = SAGE2_App.extend({
 		NOTE this actually causes a cycle through all frames.
 		If interaction occurs while the frames are being cycled, then the interaction will see the cycle happening.
 
+		PVW doesn't have a means to ask which frame the data is on.
+		This will attempt to go through the animation and add an entry per "next" response.
 	*/
 	pvwGetFrameAmount: function() {
 		var _this = this;
 		_this.pvwConfig.session.call("pv.vcr.action", ["next"])
-		.then(function(timeValue) {
+		.then(function(timeValue) { // where is PVW getting this from? What is it as well. Doesn't seem to be data time.
 			if (timeValue > 0) {
 				_this.renderOptions.vcrFrameData.push({
 					time: timeValue,
@@ -1516,10 +1532,6 @@ var ParaSAGE = SAGE2_App.extend({
 
 	quit: function() { }
 });
-
-
-
-
 
 
 
