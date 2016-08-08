@@ -181,9 +181,9 @@ DrawingManager.prototype.removeWebSocket = function(wsio) {
 	var position = this.clientIDandSockets[clientID].indexOf(wsio);
 	if (position > -1) {
 		this.clientIDandSockets[clientID].splice(position, 1);
-		console.log("Socket removed from drawingManager");
+		console.log("DrawingManager>	Socket removed from drawingManager");
 	} else {
-		console.log("Attempt to remove a socket from drawingManager, but not present");
+		console.log("DrawingManager>	Attempt to remove a socket from drawingManager, but not present");
 	}
 
 };
@@ -276,7 +276,7 @@ DrawingManager.prototype.changeStyle = function(data) {
 };
 
 DrawingManager.prototype.enableDrawingMode = function(data) {
-	console.log("Drawing mode enabled");
+	console.log("DrawingManager>	Drawing mode enabled");
 	this.drawingMode = true;
 	this.paletteID = data.id;
 	this.sendStyleToPalette(this.paletteID, this.style);
@@ -284,14 +284,14 @@ DrawingManager.prototype.enableDrawingMode = function(data) {
 };
 
 DrawingManager.prototype.reEnableDrawingMode = function(data) {
-	console.log("Drawing mode reEnabled");
+	console.log("DrawingManager>	Drawing mode reEnabled");
 	this.drawingMode = true;
 	this.sendStyleToPalette(this.paletteID, this.style);
 	this.sendModesToPalette();
 };
 
 DrawingManager.prototype.disableDrawingMode = function(data) {
-	console.log("Drawing mode disabled");
+	console.log("DrawingManager>	Drawing mode disabled");
 	this.drawingMode = false;
 	// this.paletteID = null;
 	this.sendModesToPalette();
@@ -680,7 +680,7 @@ DrawingManager.prototype.updateTimer = function() {
 	for (var i in this.lastTimeSeen) {
 		var e = this.lastTimeSeen[i];
 		if (t - e > this.TIMEOUT_TIME) {
-			console.log("Timeout for id: " + i);
+			console.log("DrawingManager>	Timeout for id: " + i);
 			timouted.push(i);
 			break;
 		}
@@ -1129,9 +1129,8 @@ DrawingManager.prototype.checkInvolvedClient = function(posX, posY) {
 
 	}
 
-	console.log("No single client involved");
+	console.log("DrawingManager>	No single client involved");
 	return;
-
 };
 
 DrawingManager.prototype.saveDrawings = function() {
