@@ -356,15 +356,15 @@ HttpServer.prototype.onreq = function(req, res) {
 
 			if (path.extname(pathname) === ".html") {
 				// Do not allow iframe
-				header["X-Frame-Options"] = "DENY";
+				header['X-Frame-Options'] = 'DENY';
 			}
 
-			header["Access-Control-Allow-Headers" ] = "Range";
-			header["Access-Control-Expose-Headers"] = "Accept-Ranges, Content-Encoding, Content-Length, Content-Range";
+			header['Access-Control-Allow-Headers']  = 'Range';
+			header['Access-Control-Expose-Headers'] = 'Accept-Ranges, Content-Encoding, Content-Length, Content-Range';
 			if (req.headers.origin !== undefined) {
 				header['Access-Control-Allow-Origin' ]     = req.headers.origin;
-				header['Access-Control-Allow-Methods']     = "GET";
-				header['Access-Control-Allow-Headers']     = "X-Requested-With, X-HTTP-Method-Override, Content-Type, Accept";
+				header['Access-Control-Allow-Methods']     = 'GET';
+				header['Access-Control-Allow-Headers']     = 'X-Requested-With, X-HTTP-Method-Override, Content-Type, Accept';
 				header['Access-Control-Allow-Credentials'] = true;
 			}
 
@@ -377,8 +377,10 @@ HttpServer.prototype.onreq = function(req, res) {
 			} else {
 				// No caching at all
 				header['Cache-Control'] = 'no-cache, no-store, must-revalidate';
+				/* eslint-disable */
 				header['Pragma']        = 'no-cache';
 				header['Expires']       = '0';
+				/* eslint-enable */
 			}
 
 			// Useful Cache-Control response headers include:
