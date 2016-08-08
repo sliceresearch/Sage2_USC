@@ -203,7 +203,7 @@ function setupListeners() {
 		// Array of assets to preload
 		var soundAssets = [
 			{id: "startup",   src: jingle,          defaultPlayProps: defaults},
-			{id: "newapp",    src: "newapp.mp3",    defaultPlayProps: defaults},
+			{id: "newapp",    src: "newapp2.mp3",   defaultPlayProps: defaults},
 			{id: "deleteapp", src: "deleteapp.mp3", defaultPlayProps: defaults},
 			{id: "remote",    src: "remote.mp3",    defaultPlayProps: lowdefaults},
 			{id: "send",      src: "send.mp3",      defaultPlayProps: defaults},
@@ -351,8 +351,13 @@ function setupListeners() {
 			volumeSlider.min   = 0;
 			volumeSlider.max   = 1;
 			volumeSlider.step  = 0.05;
+			// Set the initial value
 			volumeSlider.value = initialVolume / 10;
+			// Setup a callback for slider
 			volumeSlider.addEventListener('input', changeVolume, false);
+			// set the initial volume
+			changeVolume({target: volumeSlider});
+			// Add slider to the DOM
 			volume.appendChild(volumeSlider);
 
 			videoRow2.appendChild(volume);
@@ -546,7 +551,9 @@ function changeVolume(event) {
 	var volumeSlider = event.target;
 	var vol = volumeSlider.value;
 	wsio.emit("setVolume", {id: volumeSlider.appid, level: vol});
-	changeVideoVolume(volumeSlider.appid, vol);
+
+	// Dont need to change volume since the server will send message
+	// changeVideoVolume(volumeSlider.appid, vol);
 }
 
 /**

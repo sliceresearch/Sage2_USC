@@ -8,7 +8,7 @@
 //
 // Copyright (c) 2014
 
-/* global Pointer, dataSharingPortals, createDrawingElement, RadialMenu */
+/* global Pointer, dataSharingPortals, createDrawingElement, RadialMenu, d3 */
 
 "use strict";
 
@@ -56,6 +56,7 @@ function UIBuilder(json_cfg, clientID) {
 	this.ratio          = "fit";
 	this.scale          = 1;
 
+	this.drawingSvg = null;
 	this.pointerItems   = {};
 	this.radialMenus    = {};
 
@@ -215,21 +216,26 @@ function UIBuilder(json_cfg, clientID) {
 								_this.json_cfg.background.image.url.substring(ext);
 						}
 
-						_this.bg.style.top    = "0px";
-						_this.bg.style.left   = "0px";
-						_this.bg.style.width  = _this.json_cfg.resolution.width + "px";
-						_this.bg.style.height = _this.json_cfg.resolution.height + "px";
+						_this.bg.style.top    = 0;
+						_this.bg.style.left   = 0;
+						_this.bg.style.width  = _this.json_cfg.resolution.width *
+							(_this.json_cfg.displays[_this.clientID].width || 1) + "px";
+						_this.bg.style.height = _this.json_cfg.resolution.height *
+							(_this.json_cfg.displays[_this.clientID].height || 1) + "px";
 
 						_this.bg.style.backgroundImage    = "url(" + bgImgFinal + ")";
 						_this.bg.style.backgroundPosition = "top left";
 						_this.bg.style.backgroundRepeat   = "no-repeat";
-						_this.bg.style.backgroundSize     = _this.json_cfg.resolution.width + "px " +
-							_this.json_cfg.resolution.height + "px";
+						_this.bg.style.backgroundSize     = _this.json_cfg.resolution.width *
+							(_this.json_cfg.displays[_this.clientID].width || 1) + "px " +
+							_this.json_cfg.resolution.height * (_this.json_cfg.displays[_this.clientID].height || 1) + "px";
 
-						_this.main.style.top    = "0px";
-						_this.main.style.left   = "0px";
-						_this.main.style.width  = _this.json_cfg.resolution.width  + "px";
-						_this.main.style.height = _this.json_cfg.resolution.height + "px";
+						_this.main.style.top    = 0;
+						_this.main.style.left   = 0;
+						_this.main.style.width  = _this.json_cfg.resolution.width *
+							(_this.json_cfg.displays[_this.clientID].width || 1)  + "px";
+						_this.main.style.height = _this.json_cfg.resolution.height *
+							(_this.json_cfg.displays[_this.clientID].height || 1) + "px";
 					}
 				}, false);
 				bgImg.src = this.json_cfg.background.image.url;
@@ -405,7 +411,7 @@ function UIBuilder(json_cfg, clientID) {
 				url = this.json_cfg.url;
 			}
 			// If the SAGE2 session is password protected, add a lock symbol
-			if (this.json_cfg.passordProtected) {
+			if (this.json_cfg.passwordProtected) {
 				// not portable: machine.innerHTML = url + " &#128274;";
 				machine.innerHTML = url + " <span><img style=\"vertical-align: text-top;\" src=\"images/lock.png\" height=" +
 					this.titleTextSize + "/></span>";
@@ -804,6 +810,151 @@ function UIBuilder(json_cfg, clientID) {
 			if (fillColor) {
 				elements[i].style.fill   = fillColor;
 			}
+		}
+	};
+
+	this.drawingInit = function(data) {
+		console.log("toCreateSVG");
+		if (!this.drawingSvg) {
+			this.drawingSvg = d3.select("#main").append("svg").attr("id", "drawingSVG");
+			this.drawingSvg.attr("height", parseInt(this.main.style.height));
+			this.drawingSvg.attr("width", parseInt(this.main.style.width));
+			this.drawingSvg.style("position", "absolute");
+			this.drawingSvg.style("z-index", "3").style("visibility", "hidden");
+
+		}
+		this.drawingSvg.selectAll("*").remove();
+		var r = this.drawingSvg.append("rect").attr("width", parseInt(this.main.style.width));
+		r.attr("height", parseInt(this.main.style.height) * 0.1);
+		r.attr("y", parseInt(this.main.style.height) * 0.9);
+		r.attr("fill", "white").style("opacity", 0.2);
+		this.drawingSvg.append("text").style("dominant-baseline", "middle").style("text-anchor", "middle")
+			.text("Tap here to recall the palette")
+			.attr("x", parseInt(this.main.style.width) * 0.5).attr("y", parseInt(this.main.style.height) * 0.925)
+			.attr("fill", "white")
+			.style("font-family", "arial").style("font-size", "5vmin").style("opacity", 0.2);
+		for (var d in data) {
+			var drawing = data[d];
+			this.drawObject(drawing);
+		}
+	};
+
+	/**
+	* Draws a drawing object gotten from the server to the tile's drawingSvg
+	*
+	* @method drawObject
+	* @param drawingObject {object} drawing object
+	*/
+	this.drawObject = function(drawingObject) {
+		var newDraw, s;
+		if (this.drawingSvg) {
+			if (drawingObject.type == "path") {
+				newDraw = d3.select("#drawingSVG").append("path").attr("id", drawingObject.id);
+				for (s in drawingObject.style) {
+					newDraw.style(s, drawingObject.style[s]);
+				}
+				var lineFunction = d3.svg.line().x(function(d) {
+					return d.x;
+				})
+				.y(function(d) {
+					return d.y;
+				}).interpolate("basis");
+				newDraw.attr("d", lineFunction(drawingObject.options.points));
+			}
+
+			if (drawingObject.type == "circle") {
+				newDraw = d3.select("#drawingSVG").append("circle").attr("id", drawingObject.id);
+				for (s in drawingObject.style) {
+					if (s != "stroke-width") {
+						newDraw.style(s, drawingObject.style[s]);
+					}
+				}
+				var point = drawingObject.options.points[0];
+				var r = parseInt(drawingObject.style["stroke-width"]) / 2 + "px" || "3px";
+				var fill = drawingObject.style.stroke || "white";
+				newDraw.attr("cx", point.x).attr("cy", point.y).attr("r", r).style("fill", fill);
+			}
+			if (drawingObject.type == "rect") {
+				newDraw = d3.select("#drawingSVG").append("rect").attr("id", drawingObject.id);
+				for (s in drawingObject.style) {
+					newDraw.style(s, drawingObject.style[s]);
+				}
+				var start = drawingObject.options.points[0];
+				var end = drawingObject.options.points[1];
+				var w = end.x - start.x;
+				var h = end.y - start.y;
+				newDraw.attr("x", start.x).attr("y", start.y).attr("width", w).attr("height", h);
+
+				var lw = w * 0.1;
+				var lh = h * 0.1;
+				var lx = w - lw;
+				var ly = h - lh;
+
+				d3.select("#drawingSVG").append("rect").attr("id", drawingObject.id + "b")
+					.attr("x", start.x + lx).attr("y", start.y + ly)
+					.attr("width", lw).attr("height", lh)
+					.attr("fill", "white").style("opacity", 0.2);
+			}
+
+
+		}
+	};
+
+	/**
+	* update a drawing object already drawn in the drawingSvg
+	*
+	* @method updateObject
+	* @param drawingObject {object} drawing object
+	*/
+	this.updateObject = function(drawingObject) {
+		var toUpdate;
+		if (!d3.select("#" + drawingObject.id).empty()) {
+			if (this.drawingSvg) {
+
+				toUpdate = d3.select("#" + drawingObject.id);
+
+
+				// If drawing changed type redraw it
+				if (drawingObject.type != toUpdate.node().tagName.toLowerCase()) {
+					toUpdate.remove();
+					this.drawObject(drawingObject);
+					return;
+				}
+
+				if (drawingObject.type == "circle") {
+					var point = drawingObject.options.points[0];
+					toUpdate.attr("cx", point.x).attr("cy", point.y);
+				}
+
+				if (drawingObject.type == "path") {
+
+					var lineFunction = d3.svg.line()
+										.x(function(d) {
+											return d.x;
+										})
+										.y(function(d) {
+											return d.y;
+										})
+										.interpolate("basis");
+
+					toUpdate.attr("d", lineFunction(drawingObject.options.points));
+				}
+				if (drawingObject.type == "rect") {
+
+					toUpdate.remove();
+					d3.select("#" + drawingObject.id + "b").remove();
+					this.drawObject(drawingObject);
+				}
+			}
+		} else {
+			this.drawObject(drawingObject);
+		}
+	};
+
+	this.removeObject = function(group) {
+		for (var i in group) {
+			var drawingObject = group[i];
+			d3.select("#" + drawingObject.id).remove();
 		}
 	};
 

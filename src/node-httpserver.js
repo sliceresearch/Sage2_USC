@@ -26,6 +26,10 @@ var url  = require('url');
 var mime = require('mime');
 var zlib = require('zlib');  // to enable HTTP compression
 
+// Using the debug package to track HTTP request
+//   to see request: env DEBUG=sage2http node server.js ....
+var debug = require('debug')('sage2http');
+
 // External package to clean up URL requests
 var normalizeURL = require('normalizeurl');
 
@@ -106,8 +110,10 @@ HttpServer.prototype.redirect = function(res, aurl) {
 	// Do not allow iframe
 	header["X-Frame-Options"] = "DENY";
 	// 301 HTTP code for redirect: Moved Permanently
+	//    causes issue with caching and cookies
+	// 302 HTTP code for found: redirect
 	header.Location = aurl;
-	res.writeHead(301, header);
+	res.writeHead(302, header);
 	res.end();
 };
 
@@ -255,10 +261,6 @@ HttpServer.prototype.onreq = function(req, res) {
 			return;
 		}
 
-		// var protocol = req.connection.encrypted ? 'https' : 'http';
-		// var fullUrl  = protocol + '://' + req.headers.host + req.url;
-		// console.log('Request>	', fullUrl);
-
 		// redirect root path to index.html
 		if (getName === "/") {
 			this.redirect(res, "index.html");
@@ -309,6 +311,11 @@ HttpServer.prototype.onreq = function(req, res) {
 		// Converting to an actual path
 		pathname = path.resolve(pathname);
 
+		// Track requests and responses
+		debug('request', (req.connection.encrypted ? 'https' : 'http') + '://' + req.headers.host + req.url);
+		debug('response', pathname);
+
+
 		// //////////////////////
 		// Are we trying to session management
 		// //////////////////////
@@ -349,15 +356,15 @@ HttpServer.prototype.onreq = function(req, res) {
 
 			if (path.extname(pathname) === ".html") {
 				// Do not allow iframe
-				header["X-Frame-Options"] = "DENY";
+				header['X-Frame-Options'] = 'DENY';
 			}
 
-			header["Access-Control-Allow-Headers" ] = "Range";
-			header["Access-Control-Expose-Headers"] = "Accept-Ranges, Content-Encoding, Content-Length, Content-Range";
+			header['Access-Control-Allow-Headers']  = 'Range';
+			header['Access-Control-Expose-Headers'] = 'Accept-Ranges, Content-Encoding, Content-Length, Content-Range';
 			if (req.headers.origin !== undefined) {
 				header['Access-Control-Allow-Origin' ]     = req.headers.origin;
-				header['Access-Control-Allow-Methods']     = "GET";
-				header['Access-Control-Allow-Headers']     = "X-Requested-With, X-HTTP-Method-Override, Content-Type, Accept";
+				header['Access-Control-Allow-Methods']     = 'GET';
+				header['Access-Control-Allow-Headers']     = 'X-Requested-With, X-HTTP-Method-Override, Content-Type, Accept';
 				header['Access-Control-Allow-Credentials'] = true;
 			}
 
@@ -368,7 +375,12 @@ HttpServer.prototype.onreq = function(req, res) {
 				// No persistent copy - must check
 				header['Cache-Control'] = 'no-store, must-revalidate, max-age=604800';
 			} else {
-				header['Cache-Control'] = 'no-cache';
+				// No caching at all
+				header['Cache-Control'] = 'no-cache, no-store, must-revalidate';
+				/* eslint-disable */
+				header['Pragma']        = 'no-cache';
+				header['Expires']       = '0';
+				/* eslint-enable */
 			}
 
 			// Useful Cache-Control response headers include:

@@ -1,0 +1,15 @@
+{
+	"main_script": "WhiteboardPalette.js",
+	"icon": "WhiteboardPalette.png",
+	"width": 400,
+	"height": 600,
+	"resize": "free",
+	"dependencies": [
+	],
+	"title": "WhiteboardPalette",
+	"version": "1.0.0",
+	"description": "SAGE2 application WhiteboardPalette",
+	"keywords": [ "sage2", "WhiteboardPalette", "whiteboard", "writing", "drawing" ],
+	"author": "Filippo Pellolio <fpello2@uic.edu>",
+	"license": "SAGE2-Software-License"
+}

@@ -753,6 +753,7 @@ var SAGE2_App = Class.extend({
 		msgObject.id     = this.id;
 		msgObject.width  = newWidth;
 		msgObject.height = newHeight;
+		msgObject.keepRatio = false;
 		// Send the message to the server
 		wsio.emit('appResize', msgObject);
 	},
