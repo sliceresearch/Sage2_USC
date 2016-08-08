@@ -39,7 +39,12 @@ function generate() {
 			rootDir + '/images/ui/*.svg',
 			rootDir + '/images/radialMenu/*.svg',
 			rootDir + '/images/appUi/*.svg',
-			rootDir + '/*.html',
+			// HTML pages
+			rootDir + 'audioManager.html',
+			rootDir + 'index.html',
+			rootDir + 'display.html',
+			rootDir + 'sageUI.html',
+			// not caching session.html
 			rootDir + '/lib/webix/webix.js',
 			rootDir + '/lib/webix/webix.css',
 			rootDir + '/lib/webix/skins/compact.css',

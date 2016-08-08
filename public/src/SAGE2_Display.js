@@ -305,6 +305,8 @@ function setupListeners() {
 		document.head.appendChild(js);
 	});
 
+
+
 	wsio.on('setupDisplayConfiguration', function(json_cfg) {
 		var i;
 		var http_port;
@@ -380,6 +382,18 @@ function setupListeners() {
 				ui.connectedToRemoteSite(data);
 			}, 1000);
 		}
+	});
+
+	wsio.on('drawingInit', function(data) {
+		ui.drawingInit(data);
+	});
+
+	wsio.on('drawingUpdate', function(data) {
+		ui.updateObject(data);
+	});
+
+	wsio.on('drawingRemove', function(data) {
+		ui.removeObject(data);
 	});
 
 	wsio.on('createSagePointer', function(pointer_data) {

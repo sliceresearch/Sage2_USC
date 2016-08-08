@@ -203,7 +203,7 @@ function setupListeners() {
 		// Array of assets to preload
 		var soundAssets = [
 			{id: "startup",   src: jingle,          defaultPlayProps: defaults},
-			{id: "newapp",    src: "newapp.mp3",    defaultPlayProps: defaults},
+			{id: "newapp",    src: "newapp2.mp3",   defaultPlayProps: defaults},
 			{id: "deleteapp", src: "deleteapp.mp3", defaultPlayProps: defaults},
 			{id: "remote",    src: "remote.mp3",    defaultPlayProps: lowdefaults},
 			{id: "send",      src: "send.mp3",      defaultPlayProps: defaults},

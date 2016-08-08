@@ -1,0 +1,69 @@
+/*
+	based on default configuration of the server - Windows
+*/
+{
+	name: "Whiteboard",
+	host: "localhost",
+	port: 9292,
+	index_port: 9090,
+	background: {
+		color: "#333333",
+		watermark: {
+			svg: "images/EVL-LAVA.svg",
+			color: "rgba(255, 255, 255, 0.5)"
+		}
+	},
+	ui: {
+		clock: 12,
+		show_version: true,
+		show_url: true,
+		widgetControlSize: 20,
+		auto_scale_ui: true,
+		calculate_viewing_distance: false
+	},
+	resolution: {
+		width: 2000,
+		height: 1200
+
+	},
+	layout: {
+		rows: 1,
+		columns: 1
+	},
+	displays: [
+		{
+			row: 0,
+			column: 0
+		}
+	],
+	alternate_hosts: [
+		"whiteboard.evl.uic.edu"
+	],
+	remote_sites: [
+	],
+	dependencies: {
+		
+    },
+	// for experimental features: true/false
+	experimental: {
+		omicron: { // enable omicron input module
+			enable: true,
+			host: "whiteboard.evl.uic.edu",
+			dataPort: 35000,
+			
+			debug: false,
+			
+			// Touch gestures
+			touchOffset: [ 0, 0 ], //-100 in pixels
+			zoomGestureScale: 200,
+			acceleratedDragScale: 0,
+			
+			// Note if the following is enabled the server will attempt
+			// to connect to the specified Omicron oinputserver
+			// (By default the server listens for an Omicron sageinputserver to connect to it)
+			useOinputserver: true,
+			inputServerIP: "131.193.183.207",
+			msgPort: 28000
+		}
+	}
+}

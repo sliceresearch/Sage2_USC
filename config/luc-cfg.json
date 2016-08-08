@@ -11,6 +11,7 @@
 	"ui": {
 		"clock": 24,
 		"show_url": true,
+		"noDropShadow": true,
 		"show_version": true
 	},
 	"resolution": {
@@ -58,7 +59,7 @@
                         name: "another",
                         url: "/another",
                         path: "/Users/luc/Desktop/another/",
-                        upload: true
+                        upload: false
                 },
                 {
                         name: "another1",

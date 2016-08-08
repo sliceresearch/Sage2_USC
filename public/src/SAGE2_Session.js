@@ -90,7 +90,7 @@ function keyDownDKHandler(event) {
 	}
 }
 
-function processAndRedirect(session, location, hash) {
+function processAndRedirect(session, relocation, hash) {
 	if (hash == null) {
 		hash = md5(session);
 	}
@@ -100,7 +100,7 @@ function processAndRedirect(session, location, hash) {
 	addCookie('session', hash);
 
 	// redirect to the asked page
-	window.location.href = location;
+	window.location.href = relocation;
 }
 
 function buttonSubmit() {
