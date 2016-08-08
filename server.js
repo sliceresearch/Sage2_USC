@@ -118,25 +118,6 @@ var startTime          = Date.now();
 var drawingManager;
 var pressingAlt        = true;
 
-
-
-// Global variable for all media folders
-global.mediaFolders = {};
-// System folder, defined within SAGE2 installation
-mediaFolders.system =	{
-	name: "system",
-	path: "public/uploads/",
-	url:  "/uploads",
-	upload: false
-};
-// Home directory, defined as ~/Documents/SAGE2_Media or equivalent
-mediaFolders.user =	{
-	name: "user",
-	path: path.join(sageutils.getHomeDirectory(), "Documents", "SAGE2_Media", "/"),
-	url:  "/user",
-	upload: true
-};
-
 // Add extra folders defined in the configuration file
 if (config.folders) {
 	config.folders.forEach(function(f) {
