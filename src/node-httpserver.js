@@ -110,8 +110,10 @@ HttpServer.prototype.redirect = function(res, aurl) {
 	// Do not allow iframe
 	header["X-Frame-Options"] = "DENY";
 	// 301 HTTP code for redirect: Moved Permanently
+	//    causes issue with caching and cookies
+	// 302 HTTP code for found: redirect
 	header.Location = aurl;
-	res.writeHead(301, header);
+	res.writeHead(302, header);
 	res.end();
 };
 
@@ -373,7 +375,10 @@ HttpServer.prototype.onreq = function(req, res) {
 				// No persistent copy - must check
 				header['Cache-Control'] = 'no-store, must-revalidate, max-age=604800';
 			} else {
-				header['Cache-Control'] = 'no-cache';
+				// No caching at all
+				header['Cache-Control'] = 'no-cache, no-store, must-revalidate';
+				header['Pragma']        = 'no-cache';
+				header['Expires']       = '0';
 			}
 
 			// Useful Cache-Control response headers include:
