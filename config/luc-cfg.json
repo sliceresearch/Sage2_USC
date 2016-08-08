@@ -59,7 +59,7 @@
                         name: "another",
                         url: "/another",
                         path: "/Users/luc/Desktop/another/",
-                        upload: true
+                        upload: false
                 },
                 {
                         name: "another1",
