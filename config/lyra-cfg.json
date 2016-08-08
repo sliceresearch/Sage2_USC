@@ -210,9 +210,10 @@
 	remote_sites: [
 		{
 			name: "Cyber-Commons",
-			host: "iridium.evl.uic.edu",
+			host: "inferno.evl.uic.edu",
 			port: 443,
-			secure: true
+			secure: true,
+			password: "evl123"
 		},
 		{
 			name: "LAVA",
@@ -252,6 +253,6 @@
                         url: "/extras",
                         path: "/iridium_SSD/evldemo/extras/",
                         upload: false
-                },
+                }
 	]
 }
