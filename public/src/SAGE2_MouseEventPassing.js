@@ -237,6 +237,7 @@ var SAGE2MEP = {
 				} else { // no scroll
 					mouseEventToPass = new WheelEvent("wheel", {
 						deltaY: data.wheelDelta,
+						bubbles: true,
 						deltaMode: 0
 					});
 					point.currentElement.dispatchEvent(mouseEventToPass);
