@@ -12,6 +12,12 @@
 
 /* global google */
 
+//
+// The instruction.json file contains a default key to access the Google Maps API.
+// The key is shared amongst thw whole SAGE2 community (25,000 map loads / day)
+// Replace it with your key as soon as possible
+//
+
 var googlemaps = SAGE2_App.extend({
 	init: function(data) {
 		this.SAGE2Init("div", data);
