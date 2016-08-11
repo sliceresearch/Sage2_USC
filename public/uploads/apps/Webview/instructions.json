@@ -2,13 +2,13 @@
 	"main_script": "Webview.js",
 	"icon": "Webview.png",
 	"width": 720,
-	"height": 1000,
+	"height": 900,
 	"resize": "free",
 	"animation": false,
 	"dependencies": [
 	],
 	"load": {
-		"url": "http://nytimes.com"
+		"url": "https://news.google.com"
 	},
 	"title": "Webview",
 	"version": "1.0.0",
