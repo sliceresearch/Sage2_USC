@@ -107,15 +107,15 @@ var USweather = SAGE2_App.extend({
 
 		// Chicago
 		this.gwin.sampleSVG.append("svg:rect")
-		.style("fill", "yellow")
-		.style("fill-opacity", 1)
-		.style("stroke", "black")
-		.attr("x", this.gwin.projection([-87.6500500, 41.8500300])[0] - rad / 2)
-		.attr("y", this.gwin.projection([-87.6500500, 41.8500300])[1] - rad / 2)
-		.attr("rx", 8)
-		.attr("ry", 8)
-		.attr("height", rad)
-		.attr("width", rad);
+			.style("fill", "yellow")
+			.style("fill-opacity", 1)
+			.style("stroke", "black")
+			.attr("x", this.gwin.projection([-87.6500500, 41.8500300])[0] - rad / 2)
+			.attr("y", this.gwin.projection([-87.6500500, 41.8500300])[1] - rad / 2)
+			.attr("rx", 8)
+			.attr("ry", 8)
+			.attr("height", rad)
+			.attr("width", rad);
 	},
 
 

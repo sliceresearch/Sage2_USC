@@ -19,7 +19,6 @@
 		auto_hide_ui: true,
 		auto_hide_delay: 20,
 		noDropShadow: true,
-		// User specified values (in pixel)
 		titleBarHeight: 60,
 		titleTextSize:  38,
 		pointerSize:   100
@@ -64,7 +63,8 @@
 			name: "CAVE2",
 			host: "lyra.evl.uic.edu",
 			port: 443,
-			secure: true
+			secure: true,
+			password: "evl123"
 		},
 		{
 			name: "IceWall",

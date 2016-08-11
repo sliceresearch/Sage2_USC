@@ -1,0 +1,36 @@
+#!/bin/bash
+
+pkill -9 electron
+
+
+server="preeka.evl.uic.edu"
+
+i=0
+idx=`expr $i + 1`
+env DISPLAY=:0.$i $PWD/node_modules/.bin/electron $PWD/electron.js -d $idx -n -s http://$server -x 0 -y 0 --width 2560 --height 1600 &
+
+i=1
+idx=`expr $i + 1`
+env DISPLAY=:0.$i $PWD/node_modules/.bin/electron $PWD/electron.js -d $idx -n -s http://$server -x 0 -y 0 --width 2560 --height 1600 &
+
+i=2
+idx=`expr $i + 1`
+env DISPLAY=:0.$i $PWD/node_modules/.bin/electron $PWD/electron.js -d $idx -n -s http://$server -x 0 -y 0 --width 2560 --height 1600 &
+
+i=3
+idx=`expr $i + 1`
+env DISPLAY=:0.$i $PWD/node_modules/.bin/electron $PWD/electron.js -d $idx -n -s http://$server -x 0 -y 0 --width 2560 --height 1600 &
+
+i=4
+idx=0
+env DISPLAY=:0.$i $PWD/node_modules/.bin/electron $PWD/electron.js -d $idx -n -s http://$server -x 0 -y 0 --width 2560 --height 1600 &
+
+
+#sleep 5
+
+#for i in {1..36}
+#do
+	#node=`printf lyra-%02d $i`
+	#ssh -fx $node "env DISPLAY=:0.0 xdotool mousemove --sync 100 100; env DISPLAY=:0.0 xdotool mousemove --sync 10 10"
+#done
+

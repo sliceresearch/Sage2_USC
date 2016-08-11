@@ -68,12 +68,12 @@ var radar = SAGE2_App.extend({
 
 	drawImage: function(theImage) {
 		this.sampleSVG.append("image")
-		.attr("xlink:href", theImage)
-		.attr("opacity", 1)
-		.attr("x", 0)
-		.attr("y", 0)
-		.attr("width", this.canvasWidth)
-		.attr("height", this.canvasHeight);
+			.attr("xlink:href", theImage)
+			.attr("opacity", 1)
+			.attr("x", 0)
+			.attr("y", 0)
+			.attr("width", this.canvasWidth)
+			.attr("height", this.canvasHeight);
 	},
 
 
@@ -303,9 +303,9 @@ var radar = SAGE2_App.extend({
 		// attach the SVG into the this.element node provided to us
 		var box = "0,0," + data.width + "," + data.height;
 		this.svg = d3.select(this.element).append("svg:svg")
-						.attr("width",   divWidth)
-						.attr("height",  divHeight)
-						.attr("viewBox", box);
+			.attr("width",   divWidth)
+			.attr("height",  divHeight)
+			.attr("viewBox", box);
 		this.sampleSVG = this.svg;
 
 
@@ -341,13 +341,13 @@ var radar = SAGE2_App.extend({
 		this.canvasHeight = y;
 
 		this.sampleSVG.append("svg:rect")
-				.style("stroke", "black")
-				.style("fill", "black")
-				.style("fill-opacity", 1)
-				.attr("x", 0)
-				.attr("y", 0)
-				.attr("height", y)
-				.attr("width", x);
+			.style("stroke", "black")
+			.style("fill", "black")
+			.style("fill-opacity", 1)
+			.attr("x", 0)
+			.attr("y", 0)
+			.attr("height", y)
+			.attr("width", x);
 	},
 
 	draw: function(date) {

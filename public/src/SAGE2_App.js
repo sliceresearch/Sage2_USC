@@ -93,7 +93,7 @@ var SAGE2_App = Class.extend({
 		this.element = document.createElement(type);
 		this.element.className = "sageItem";
 		this.element.style.zIndex = "0";
-		if (type === "div") {
+		if (type === "div" || type === "webview") {
 			this.element.style.width  = data.width  + "px";
 			this.element.style.height = data.height + "px";
 		} else {
