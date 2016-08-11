@@ -400,10 +400,10 @@ var photos = SAGE2_App.extend({
 		// attach the SVG into the this.element node provided to us
 		var box = "0,0," + this.canvasWidth + "," + this.canvasHeight;
 		this.svg = d3.select(this.element).append("svg:svg")
-					.attr("width",   data.width)
-					.attr("height",  data.height)
-					.attr("viewBox", box)
-					.attr("preserveAspectRatio", "xMinYMin meet"); // new
+			.attr("width",   data.width)
+			.attr("height",  data.height)
+			.attr("viewBox", box)
+			.attr("preserveAspectRatio", "xMinYMin meet"); // new
 
 		this.svg.append("svg:rect")
 			.style("stroke", this.canvasBackground)

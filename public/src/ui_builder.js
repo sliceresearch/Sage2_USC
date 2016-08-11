@@ -855,8 +855,7 @@ function UIBuilder(json_cfg, clientID) {
 				}
 				var lineFunction = d3.svg.line().x(function(d) {
 					return d.x;
-				})
-				.y(function(d) {
+				}).y(function(d) {
 					return d.y;
 				}).interpolate("basis");
 				newDraw.attr("d", lineFunction(drawingObject.options.points));
@@ -929,13 +928,13 @@ function UIBuilder(json_cfg, clientID) {
 				if (drawingObject.type == "path") {
 
 					var lineFunction = d3.svg.line()
-										.x(function(d) {
-											return d.x;
-										})
-										.y(function(d) {
-											return d.y;
-										})
-										.interpolate("basis");
+						.x(function(d) {
+							return d.x;
+						})
+						.y(function(d) {
+							return d.y;
+						})
+						.interpolate("basis");
 
 					toUpdate.attr("d", lineFunction(drawingObject.options.points));
 				}

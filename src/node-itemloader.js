@@ -603,8 +603,7 @@ AppLoader.prototype.loadAppFromFileFromRegistry = function(file, mime_type, aUrl
 	});
 };
 
-
-AppLoader.prototype.loadAppFromFile = function(file, mime_type, aUrl, external_url, name, callback) {
+AppLoader.prototype.loadAppFromFile = function(file, mime_type, aUrl, external_url, name, data, callback) {
 	var _this = this;
 	var zipFolder = file;
 
@@ -615,6 +614,8 @@ AppLoader.prototype.loadAppFromFile = function(file, mime_type, aUrl, external_u
 		}
 
 		var appInstance = _this.readInstructionsFile(json_str, zipFolder, mime_type, external_url);
+		sageutils.mergeObjects(data, appInstance.data);
+
 		_this.scaleAppToFitDisplay(appInstance);
 		appInstance.file = file;
 		callback(appInstance);
@@ -843,7 +844,7 @@ AppLoader.prototype.loadFileFromLocalStorage = function(file, callback) {
 	var external_url = url.resolve(this.hostOrigin, a_url);
 
 	this.loadApplication({location: "file", path: localPath, url: a_url, external_url: external_url,
-			type: mime_type, name: file.filename, compressed: false}, function(appInstance, handle) {
+			type: mime_type, name: file.filename, compressed: false, data: file.data}, function(appInstance, handle) {
 		callback(appInstance, handle);
 	});
 };
@@ -965,7 +966,7 @@ AppLoader.prototype.loadApplication = function(appData, callback) {
 						}
 				);
 			} else {
-				this.loadAppFromFile(appData.path, appData.type, appData.url, appData.external_url, appData.name,
+				this.loadAppFromFile(appData.path, appData.type, appData.url, appData.external_url, appData.name, appData.data,
 						function(appInstance) {
 							callback(appInstance, null);
 						}

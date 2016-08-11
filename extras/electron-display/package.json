@@ -1,0 +1,24 @@
+{
+  "name": "SAGE2_Display",
+  "version": "1.1.0",
+  "description": "SAGE2 display client",
+  "main": "electron.js",
+  "scripts": {
+    "start": "electron electron.js",
+    "d0": "electron electron.js -s http://localhost:9292 -d 0",
+    "d1": "electron electron.js -s http://localhost:9292 -d 1"
+  },
+  "keywords": [
+    "Electron",
+    "SAGE2"
+  ],
+  "devDependencies": {
+    "electron-prebuilt": "latest",
+    "electron-packager": "latest"
+  },
+  "dependencies": {
+	"commander": "latest"
+  },
+  "author": "Luc Renambot <renambot@uic.edu>",
+  "license": "SAGE2-Software-License"
+}
