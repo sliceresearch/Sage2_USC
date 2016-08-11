@@ -251,14 +251,14 @@ var generatePdfThumbnails = function(infile, outfile, width, height, sizes, inde
 	// create a temporary file (cant use the buffer API since GS spits out on stdout)
 	var tmpfile = path.join(os.tmpdir(), path.basename(infile) + ".jpg");
 	imageMagick(width, height, "#ffffff").append(infile + "[0]").colorspace("RGB").noProfile().flatten()
-	.write(tmpfile, function(err, buffer) {
-		if (err) {
-			console.log(sageutils.header("Assets") + "cannot generate thumbnails for:" + infile + ' -- ' + err);
-			return;
-		}
+		.write(tmpfile, function(err, buffer) {
+			if (err) {
+				console.log(sageutils.header("Assets") + "cannot generate thumbnails for:" + infile + ' -- ' + err);
+				return;
+			}
 
-		generatePdfThumbnailsHelper(tmpfile, infile, outfile, sizes, index, callback);
-	});
+			generatePdfThumbnailsHelper(tmpfile, infile, outfile, sizes, index, callback);
+		});
 };
 
 var generateVideoThumbnails = function(infile, outfile, width, height, sizes, index, callback) {
@@ -277,39 +277,39 @@ var generateVideoThumbnails = function(infile, outfile, width, height, sizes, in
 	}
 
 	ffmpeg(infile)
-	.on('error', function(err) {
-		console.log(sageutils.header("Assets") + 'Error processing ' + infile);
-		// recursive call to generate the next size
-		generateVideoThumbnails(infile, outfile, width, height, sizes, index + 1, callback);
-	})
-	.on('end', function() {
-		var tmpImg = outfile + '_' + size + '_1.jpg';
-		imageMagick(tmpImg).command("convert").in("-resize", sizes[index] + "x" + sizes[index])
-			.in("-gravity", "center").in("-background", "rgb(71,71,71)")
-			.in("-extent", sizes[index] + "x" + sizes[index])
-			.out("-quality", "70").write(outfile + '_' + sizes[index] + '.jpg', function(err) {
-				if (err) {
-					console.log(sageutils.header("Assets") + "cannot generate " + sizes[index] + "x" +
-						sizes[index] + " thumbnail for:", infile);
-					return;
-				}
-				fs.unlink(tmpImg, function(err2) {
-					if (err2) {
-						// throw err2;
-						console.log('Error', err2);
+		.on('error', function(err) {
+			console.log(sageutils.header("Assets") + 'Error processing ' + infile);
+			// recursive call to generate the next size
+			generateVideoThumbnails(infile, outfile, width, height, sizes, index + 1, callback);
+		})
+		.on('end', function() {
+			var tmpImg = outfile + '_' + size + '_1.jpg';
+			imageMagick(tmpImg).command("convert").in("-resize", sizes[index] + "x" + sizes[index])
+				.in("-gravity", "center").in("-background", "rgb(71,71,71)")
+				.in("-extent", sizes[index] + "x" + sizes[index])
+				.out("-quality", "70").write(outfile + '_' + sizes[index] + '.jpg', function(err) {
+					if (err) {
+						console.log(sageutils.header("Assets") + "cannot generate " + sizes[index] + "x" +
+							sizes[index] + " thumbnail for:", infile);
+						return;
 					}
-				});
-				// recursive call to generate the next size
-				generateVideoThumbnails(infile, outfile, width, height, sizes, index + 1, callback);
-			}
-		);
-	})
-	.screenshots({
-		timestamps: ["10%"],
-		filename: path.basename(outfile) + "_%r_%i.jpg",
-		folder: path.dirname(outfile),
-		size: size
-	});
+					fs.unlink(tmpImg, function(err2) {
+						if (err2) {
+							// throw err2;
+							console.log('Error', err2);
+						}
+					});
+					// recursive call to generate the next size
+					generateVideoThumbnails(infile, outfile, width, height, sizes, index + 1, callback);
+				}
+			);
+		})
+		.screenshots({
+			timestamps: ["10%"],
+			filename: path.basename(outfile) + "_%r_%i.jpg",
+			folder: path.dirname(outfile),
+			size: size
+		});
 };
 
 var generateAppThumbnails = function(infile, outfile, acolor, sizes, index, callback) {
