@@ -378,7 +378,8 @@ function FileManager(wsio, mydiv, uniqueID) {
 					width: 400,
 					borderless: false,
 					elements: [
-						{view: "text", id: "web_url", label: "Type a URL", name: "url"
+						{
+							view: "text", id: "web_url", label: "Type a URL", name: "url"
 						},
 						{margin: 5, cols: [
 							{view: "button", value: "Cancel", click: function() {
@@ -386,8 +387,6 @@ function FileManager(wsio, mydiv, uniqueID) {
 							}},
 							{view: "button", value: "Create", type: "form", click: function() {
 								var data = this.getFormView().getValues();
-								console.log('Webview', data.url);
-								window.open(data.url, '_blank');
 								wsio.emit('openNewWebpage', {
 									url: data.url,
 									user: this.uniqueID
