@@ -1722,7 +1722,7 @@ function wsUpdateAppState(wsio, data) {
 	if (wsio === masterDisplay && SAGE2Items.applications.list.hasOwnProperty(data.id)) {
 		var app = SAGE2Items.applications.list[data.id];
 
-		mergeObjects(data.localState, app.data, ['doc_url', 'video_url', 'video_type', 'audio_url', 'audio_type']);
+		sageutils.mergeObjects(data.localState, app.data, ['doc_url', 'video_url', 'video_type', 'audio_url', 'audio_type']);
 
 		if (data.updateRemote === true) {
 			var ts;
@@ -2170,7 +2170,7 @@ function createAppFromDescription(app, callback) {
 		appInstance.previous_width  = app.previous_width;
 		appInstance.previous_height = app.previous_height;
 		appInstance.maximized       = app.maximized;
-		mergeObjects(app.data, appInstance.data, ['doc_url', 'video_url', 'video_type', 'audio_url', 'audio_type']);
+		sageutils.mergeObjects(app.data, appInstance.data, ['doc_url', 'video_url', 'video_type', 'audio_url', 'audio_type']);
 
 		callback(appInstance, videohandle);
 	};
@@ -2544,7 +2544,7 @@ function wsRequestStoredFiles(wsio, data) {
 }
 
 function wsLoadApplication(wsio, data) {
-	var appData = {application: "custom_app", filename: data.application, data: data.data}; // LUC
+	var appData = {application: "custom_app", filename: data.application, data: data.data};
 	appLoader.loadFileFromLocalStorage(appData, function(appInstance) {
 		appInstance.id = getUniqueAppId();
 		if (appInstance.animation) {
@@ -2983,11 +2983,11 @@ function wsCommand(wsio, data) {
 function wsOpenNewWebpage(wsio, data) {
 	console.log(sageutils.header('Webview') + "opening " + data.url);
 
-	console.log('WSIO', wsio.id);
-	console.log('DATA', data);
 	wsLoadApplication(null,
 		{application: "/uploads/apps/Webview",
 		user: wsio.id,
+		// pass the url in the data object
+		data: data,
 		position: [0, 0]});
 
 	// Check if the web-browser is connected
@@ -3099,7 +3099,7 @@ function wsAddNewElementFromRemoteServer(wsio, data) {
 			appInstance.id = getUniqueAppId();
 		}
 
-		mergeObjects(data.data, appInstance.data, ['video_url', 'video_type', 'audio_url', 'audio_type']);
+		sageutils.mergeObjects(data.data, appInstance.data, ['video_url', 'video_type', 'audio_url', 'audio_type']);
 
 		handleNewApplication(appInstance, videohandle);
 
@@ -3137,7 +3137,7 @@ function wsAddNewSharedElementFromRemoteServer(wsio, data) {
 			appInstance.id = data.id;
 		}
 
-		mergeObjects(data.application.data, appInstance.data, ['video_url', 'video_type', 'audio_url', 'audio_type']);
+		sageutils.mergeObjects(data.application.data, appInstance.data, ['video_url', 'video_type', 'audio_url', 'audio_type']);
 
 		handleNewApplication(appInstance, videohandle);
 
@@ -3666,7 +3666,8 @@ function wsUpdateApplicationState(wsio, data) {
 			oldMuted = app.data.muted;
 		}
 
-		var modified = mergeObjects(data.state, app.data, ['doc_url', 'video_url', 'video_type', 'audio_url', 'audio_type']);
+		var modified = sageutils.mergeObjects(data.state, app.data,
+			['doc_url', 'video_url', 'video_type', 'audio_url', 'audio_type']);
 		if (modified === true) {
 			// update video demuxer based on state
 			if (app.application === "movie_player") {
@@ -4139,13 +4140,13 @@ function sliceBackgroundImage(fileName, outputBaseName) {
 		var output_base = path.basename(outputBaseName, input_ext);
 		var output = path.join(output_dir, output_base + "_" + i.toString() + output_ext);
 		imageMagick(fileName).crop(
-			config.resolution.width * config.displays[i].width,
-			config.resolution.height * config.displays[i].height, x, y)
-		.write(output, function(err) {
-			if (err) {
-				console.log("error slicing image", err); // throw err;
-			}
-		});
+				config.resolution.width * config.displays[i].width,
+				config.resolution.height * config.displays[i].height, x, y)
+			.write(output, function(err) {
+				if (err) {
+					console.log("error slicing image", err); // throw err;
+				}
+			});
 	}
 }
 
@@ -5106,28 +5107,6 @@ function byteBufferToString(buf) {
 	}
 
 	return str;
-}
-
-function mergeObjects(a, b, ignore) {
-	var ig = ignore || [];
-	var modified = false;
-	// test in case of old sessions
-	if (a === undefined || b === undefined) {
-		return modified;
-	}
-	for (var key in b) {
-		if (a[key] !== undefined && ig.indexOf(key) < 0) {
-			var aRecurse = (a[key] === null || a[key] instanceof Array || typeof a[key] !== "object") ? false : true;
-			var bRecurse = (b[key] === null || b[key] instanceof Array || typeof b[key] !== "object") ? false : true;
-			if (aRecurse && bRecurse) {
-				modified = mergeObjects(a[key], b[key]) || modified;
-			} else if (!aRecurse && !bRecurse && a[key] !== b[key]) {
-				b[key] = a[key];
-				modified = true;
-			}
-		}
-	}
-	return modified;
 }
 
 function addEventToUserLog(id, data) {
