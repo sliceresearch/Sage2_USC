@@ -19,6 +19,10 @@
   "dependencies": {
 	"commander": "latest"
   },
+  "repository": {
+    "type": "git",
+    "url": "https://bitbucket.org/sage2/sage2/"
+  },
   "author": "Luc Renambot <renambot@uic.edu>",
-  "license": "SAGE2-Software-License"
+  "license": "SEE LICENSE IN LICENSE.txt"
 }
