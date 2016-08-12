@@ -1418,21 +1418,7 @@ function createAppWindow(data, parentId, titleBarHeight, titleTextSize, offsetX,
 
 				// Sending the context menu info to the server
 				if (isMaster) {
-					// If the application defines a menu function, use it
-					if (typeof newapp.getContextEntries === "function") {
-						wsio.emit('dtuRmbContextMenuContents', {
-							app: newapp.id,
-							entries: newapp.getContextEntries()
-						});
-					} else {
-						// Otherwise, send a default empty menu
-						wsio.emit('dtuRmbContextMenuContents', {
-							app: newapp.id,
-							entries: [{
-								description: "Not supported by this app"
-							}]
-						});
-					}
+					newapp.getFullContextMenuAndUpdate();
 				}
 
 				applications[data.id]   = newapp;
@@ -1455,21 +1441,7 @@ function createAppWindow(data, parentId, titleBarHeight, titleTextSize, offsetX,
 
 			// Sending the context menu info to the server
 			if (isMaster) {
-				// If the application defines a menu function, use it
-				if (typeof app.getContextEntries === "function") {
-					wsio.emit('dtuRmbContextMenuContents', {
-						app: app.id,
-						entries: app.getContextEntries()
-					});
-				} else {
-					// Otherwise, send a default empty menu
-					wsio.emit('dtuRmbContextMenuContents', {
-						app: app.id,
-						entries: [{
-							description: "Not supported by this app"
-						}]
-					});
-				}
+				app.getFullContextMenuAndUpdate();
 			}
 
 			applications[data.id] = app;

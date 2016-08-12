@@ -7860,6 +7860,8 @@ function wsUtdRequestRmbContextMenu(wsio, data) {
 		if (SAGE2Items.applications.list[obj.data.id].contextMenu) {
 			// If we already have the menu info, send it
 			wsio.emit('dtuRmbContextMenuContents', {
+				x: data.xClick,
+				y: data.yClick,
 				app: obj.data.id,
 				entries: SAGE2Items.applications.list[obj.data.id].contextMenu
 			});
@@ -7879,6 +7881,10 @@ function wsUtdRequestRmbContextMenu(wsio, data) {
  * Asks for rmb context menu from app under x,y coordinate.
  */
 function wsUtdCallFunctionOnApp(wsio, data) {
+	if (data.func === "SAGE2DeleteElement") {
+		deleteApplication(data.app);
+		return; // closing of applications are handled by the called function.
+	}
 	// Using broadcast means the parameter must be in data.data
 	data.data = data.parameters;
 	// add the serverDate property
@@ -8042,23 +8048,28 @@ function csdLaunchAppWithValues(wsio, data) {
 	appLoadData.user = wsio.id; // needed for the wsLoadApplication function
 	var whatTheNewAppIdShouldBe = "app_" + getUniqueAppId.count;
 
-	// stagger the start location to prevent them from stacking on top of each other.
-	// this is just a temporary solution.
-	// percents
-	appLoadData.position = [csdDataStructure.xAppLaunchCoordinate, csdDataStructure.yAppLaunchCoordinate];
-	// after launch reset position
-	csdDataStructure.xAppLaunchCoordinate += 600;
-	if (csdDataStructure.xAppLaunchCoordinate >= config.totalWidth - 500) {
-		csdDataStructure.yAppLaunchCoordinate += 600;
-		csdDataStructure.xAppLaunchCoordinate = 10;
-		if (csdDataStructure.yAppLaunchCoordinate >= config.totalHeight - 500) {
-			csdDataStructure.yAppLaunchCoordinate = 100;
+	// If the launch location is defined, use it, otherwise use the stagger position.
+	if (data.xLaunch !== null && data.xLaunch !== undefined) {
+		appLoadData.position = [data.xLaunch, data.yLaunch];
+	} else {
+		// stagger the start location to prevent them from stacking on top of each other.
+		// this is just a temporary solution.
+		// percents
+		appLoadData.position = [csdDataStructure.xAppLaunchCoordinate, csdDataStructure.yAppLaunchCoordinate];
+		// after launch reset position
+		csdDataStructure.xAppLaunchCoordinate += 600;
+		if (csdDataStructure.xAppLaunchCoordinate >= config.totalWidth - 500) {
+			csdDataStructure.yAppLaunchCoordinate += 600;
+			csdDataStructure.xAppLaunchCoordinate = 10;
+			if (csdDataStructure.yAppLaunchCoordinate >= config.totalHeight - 500) {
+				csdDataStructure.yAppLaunchCoordinate = 100;
+			}
 		}
 	}
 
 	// call the previously made wsLoadApplication funciton and give it the required data.
 	wsLoadApplication(wsio, appLoadData);
-	// if a data.func is defined make a delayed call to it on the app.
+	// if a data.func is defined make a delayed call to it on the app. Otherwise, its just an app launch.
 	if (data.func !== undefined) {
 		setTimeout(
 			function() {

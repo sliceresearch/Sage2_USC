@@ -43,6 +43,7 @@ module.exports = function(grunt) {
 						"public/uploads/apps/flow/shared.js",
 						"public/uploads/apps/googlemaps/googlemaps.js",
 						"public/uploads/apps/notepad/notepad.js",
+						"public/uploads/apps/ParaSAGE/ParaSAGE.js",
 						"public/uploads/apps/photos/photos.js",
 						"public/uploads/apps/photos/photo_scrapbooks.js",
 						"public/uploads/apps/quickNote/quickNote.js",

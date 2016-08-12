@@ -68,8 +68,7 @@ var SAGE2MEP = {
 		// gets the pointer element that triggered this call
 		var pointerDiv = document.getElementById(user.id);
 
-		// convert the webkit translate set to a numerical value.
-		//    TODO webkit coordinates are over how much?
+		// Returns the value of x and y based on world space, not display space.
 		var xLocationOfPointerOnScreen = this.getXOfWebkitTranslate(pointerDiv.style.WebkitTransform);
 		var yLocationOfPointerOnScreen = this.getYOfWebkitTranslate(pointerDiv.style.WebkitTransform);
 
@@ -91,6 +90,7 @@ var SAGE2MEP = {
 
 
 		var mouseEventToPass;
+		var buttonValue;
 
 		switch (type) {
 
@@ -103,6 +103,8 @@ var SAGE2MEP = {
 						clientY: point.yCurrent,
 						screenX: point.xCurrent,
 						screenY: point.yCurrent,
+						movementX: (point.xCurrent - point.xPrevious),
+						movementY: (point.yCurrent - point.yPrevious),
 						target: point.currentElement
 					});
 					if (point && point.currentElement) {
@@ -155,12 +157,21 @@ var SAGE2MEP = {
 					console.log("webkit pointer location: " + xLocationOfPointerOnScreen + "," + yLocationOfPointerOnScreen);
 				}
 
+				// 0 is left, 1 middle, 2 right
+				buttonValue = 0;
+				if (data.button == "middle") {
+					buttonValue = 1;
+				} else if (data.button == "right") {
+					buttonValue = 2;
+				}
+
 				mouseEventToPass = new MouseEvent("mousedown", {
 					bubbles: true,
 					clientX: point.xCurrent,
 					clientY: point.yCurrent,
 					screenX: point.xCurrent,
 					screenY: point.yCurrent,
+					button: buttonValue,
 					// relatedTarget: point.previousElement,
 					// for: focus, mouse enter leave out over, drag
 					target: point.currentElement
@@ -171,16 +182,24 @@ var SAGE2MEP = {
 				point.elementPressed = point.currentElement;
 
 				// focus happens on mousedown
-				point.currentElement.focus();
+				// point.currentElement.focus();
 
 				break;
 			case "pointerRelease":
+				// 0 is left, 1 middle, 2 right
+				buttonValue = 0;
+				if (data.button == "middle") {
+					buttonValue = 1;
+				} else if (data.button == "right") {
+					buttonValue = 2;
+				}
 				mouseEventToPass = new MouseEvent("mouseup", {
 					bubbles: true,
 					clientX: point.xCurrent,
 					clientY: point.yCurrent,
 					screenX: point.xCurrent,
 					screenY: point.yCurrent,
+					button: buttonValue,
 					// relatedTarget: point.previousElement
 					//for: focus, mouse enter leave out over, drag
 					target: point.currentElement
@@ -195,6 +214,7 @@ var SAGE2MEP = {
 						clientY: point.yCurrent,
 						screenX: point.xCurrent,
 						screenY: point.yCurrent,
+						button: buttonValue,
 						// relatedTarget: point.previousElement
 						//for: focus, mouse enter leave out over, drag
 						target: point.currentElement
@@ -204,6 +224,24 @@ var SAGE2MEP = {
 					point.lastClickedElement = point.currentElement;
 				} // end if a click needs to be made
 
+				break;
+			case "pointerScroll":
+				var scrollContainer = this.getScrollContainerIfExists(appId, point.currentElement);
+				if (scrollContainer != null) { // scroll container detected
+					scrollContainer.scrollTop += data.wheelDelta;
+					if (scrollContainer.scrollTop < 0) {
+						scrollContainer.scrollTop = 0;
+					} else if (scrollContainer.scrollTop > scrollContainer.scrollHeight) {
+						scrollContainer.scrollTop = scrollContainer.scrollHeight;
+					}
+				} else { // no scroll
+					mouseEventToPass = new WheelEvent("wheel", {
+						deltaY: data.wheelDelta,
+						bubbles: true,
+						deltaMode: 0
+					});
+					point.currentElement.dispatchEvent(mouseEventToPass);
+				}
 				break;
 			case "pointerDoubleClick":
 
@@ -522,50 +560,57 @@ var SAGE2MEP = {
 			appname = appDivId.slice(idx);
 		}
 
-		if (this.debug) {
-			console.log("erase me appid:" + appname);
-		}
-
 		// TODO double check this
 		var appElem = document.getElementById(appname);
 		// var appElemZone = document.getElementById(appDivId);
 		// var appWidth  = parseInt(appElemZone.style.width, 10);
 		// var appHeight = parseInt(appElemZone.style.height, 10);
 
+		/*
+		This section will find the offset for the app based on tiles.
+		appElem.style.left will always be a multiple of screen resolution based on tile position in world space.
+
+		style represents "origin", so it will never change.
+		translate represents postion adjustment from "origin", this will change as the app is moved.
+		*/
 		var appLeftOffset = 0;
 		if (appElem && appElem.style.left != null) {
 			appLeftOffset = parseInt(appElem.style.left, 10);
 		}
+		// Same applies to the appElem.style.top
 		var appTopOffset = 0;
 		if (appElem && appElem.style.top != null) {
 			appTopOffset = parseInt(appElem.style.top, 10);
 		}
 
-		// testing titlebar title bar offset
+		// For some reason the title bar height is applied to appElem.style.top. So much cut it out before doing position check.
 		var titleBarDiv = document.getElementById(appname + "_title");
 		appTopOffset -= parseInt(titleBarDiv.style.height);
 
+		// world space of app x and y.
 		var appX = this.getXOfWebkitTranslate(appElem.style.WebkitTransform);
 		var appY = this.getYOfWebkitTranslate(appElem.style.WebkitTransform);
+		// Save original values.
 		var appOriginalWebkit =  appElem.style.WebkitTransform; // webkit of the application not the zone
 		var appOriginalZ = appElem.style.zIndex;
-
+		// detect display, which is actually server specified tile size.
 		var displayWidth = parseInt(ui.bg.style.width, 10);   // TODO get the width of the current display
 		var displayHeight = parseInt(ui.bg.style.height, 10); // TODO get the width of the current display
 
+		/*
+		These values will always turn into 0 or some positive multiple of the server specified resolution.
+		*/
 		var displayLeft =  -appLeftOffset;
 		var displayTop =  -appTopOffset;
 		var displayRight = displayLeft + displayWidth;
 		var displayBottom = displayTop + displayHeight;
 
-		var horiCounter = 0; // setup counters for placing the value on display.
-		var vertCounter = 0;
-
-
 		/*
 		Adjust pointer values so it is on the display.
 		Necessary for the app position adjustment.
 		*/
+		var horiCounter = 0; // setup counters for placing the value on display.
+		var vertCounter = 0;
 		while (px < displayLeft) {
 			px += displayWidth;
 			horiCounter++;
@@ -636,6 +681,22 @@ var SAGE2MEP = {
 
 	}, // end moveAppWhereItWasIfNecessary
 
+	getScrollContainerIfExists: function(appId, elementScrolledOn) {
+		var appContainter = document.getElementById(appId).parentNode;
+		var divWithScroll = null;
+		var elemToLookForScroll = elementScrolledOn;
+
+		while (elemToLookForScroll != appContainter) {
+			if (elemToLookForScroll.scrollHeight > elemToLookForScroll.offsetHeight) {
+				divWithScroll = elemToLookForScroll;
+				break;
+			}
+			elemToLookForScroll = elemToLookForScroll.parentNode;
+		}
+
+		return divWithScroll;
+	},
+
 	/*
 		This will generate an object with the properties necessary to track one SAGE pointer.
 			id = should be the id of the pointer from user.id; all user.id are unique. This includes reconnects.
@@ -678,5 +739,4 @@ var SAGE2MEP = {
 	}, //end initialize
 
 */
-
 
