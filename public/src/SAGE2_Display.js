@@ -243,7 +243,6 @@ function SAGE2_init() {
 			session: session
 		};
 		wsio.emit('addClient', clientDescription);
-		wsio.emit('requestStoredFiles');
 	});
 
 	// Socket close event (ie server crashed)
@@ -275,6 +274,9 @@ function setupListeners() {
 
 		// Global initialization
 		SAGE2_initialize(startTime);
+
+		// Request list of assets
+		wsio.emit('requestStoredFiles');
 	});
 
 	wsio.on('setAsMasterDisplay', function() {
