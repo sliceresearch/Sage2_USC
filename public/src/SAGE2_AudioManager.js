@@ -58,6 +58,7 @@ function SAGE2_init() {
 	// SoundJS library
 	//
 	// Load the SoundJS library and plugins
+	// createjs.Sound.registerPlugins([ createjs.WebAudioPlugin ]);
 	if (!createjs.Sound.initializeDefaultPlugins()) {
 		console.log('SoundJS> cannot load library');
 		return;
@@ -70,8 +71,6 @@ function SAGE2_init() {
 	SAGE2_browser();
 
 	wsio = new WebsocketIO();
-
-	console.log("Connected to server: ", window.location.origin);
 
 	wsio.open(function() {
 		console.log("Websocket opened");
@@ -505,7 +504,6 @@ function setupListeners() {
 	});
 
 	wsio.on('connectedToRemoteSite', function(data) {
-		console.log('connectedToRemoteSite', data);
 		// Play an audio blop when a remote site comes up or down
 		if (data.connected === "on") {
 			createjs.Sound.play("remote");
