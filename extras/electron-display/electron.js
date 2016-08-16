@@ -14,6 +14,7 @@ commander
 	.version(version)
 	.option('-d, --display <n>',   'Display client ID number (int)', parseInt, 0)
 	.option('-s, --server <s>',    'Server URL (string)', 'http://localhost:9292')
+	.option('-a, --audio',         'Open the audio manager (instead of display)', false)
 	.option('-f, --fullscreen',    'Fullscreen (boolean)', false)
 	.option('-n, --no_decoration', 'Remove window decoration (boolean)', false)
 	.option('-x, --xorigin <n>',   'Window position x (int)', myParseInt, 0)
@@ -40,14 +41,29 @@ function openWindow() {
 		width:  commander.width,
 		height: commander.height
 	});
-	if (commander.fullscreen){
+	if (commander.fullscreen) {
 		mainWindow.setFullScreen(true);
 	}
 
-	var location = commander.server + "/display.html?clientID=" + commander.display;
-	if (commander.hash) {
-		// add the password hash to the URL
-		location += '&hash=' + commander.hash;
+	var location = commander.server;
+	if (commander.audio) {
+		location = location + "/audioManager.html";
+		if (commander.hash) {
+			// add the password hash to the URL
+			location += '?hash=' + commander.hash;
+		} else if (commander.password) {
+			// add the password hash to the URL
+			location += '?session=' + commander.password;
+		}
+	} else {
+		location = location + "/display.html?clientID=" + commander.display;
+		if (commander.hash) {
+			// add the password hash to the URL
+			location += '&hash=' + commander.hash;
+		} else if (commander.password) {
+			// add the password hash to the URL
+			location += '?session=' + commander.password;
+		}
 	}
 	mainWindow.loadURL(location);
 }
@@ -58,10 +74,10 @@ function createWindow() {
 		width:  commander.width,
 		height: commander.height,
 		frame:  !commander.no_decoration,
-		webaudio: false,
 		webPreferences: {
 			nodeIntegration: true,
 			webSecurity: true,
+			// webaudio: commander.audio
 		}
 	}
 	if (process.platform === 'darwin') {
