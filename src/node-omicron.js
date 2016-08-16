@@ -308,6 +308,28 @@ OmicronManager.prototype.runTracker = function() {
 	udp.bind(this.omicronDataPort);
 };
 
+OmicronManager.prototype.sageToOmicronEvent = function(uniqueID, pointerX, pointerY, data, type) {
+	var e = {};
+	e.timestamp = Date.now();
+	e.sourceId = 42;
+	e.serviceType = 0; // 0 = pointer
+	e.type = type;
+	e.flags = 0;
+	e.posx = pointerX;
+	e.posy = pointerY;
+	e.posz = 0;
+	e.orw = 0;
+	e.orx = 0;
+	e.ory = 0;
+	e.orz = 0;
+	e.extraDataType = 0;
+	e.extraDataItems = 0;
+	e.extraDataMask = 0;
+	e.extraDataSize = 0;
+
+	return e;
+};
+
 OmicronManager.prototype.processIncomingEvent = function(msg, rinfo) {
 	var dstart = Date.now();
 	var emit   = 0;

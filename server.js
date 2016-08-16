@@ -5200,6 +5200,16 @@ function pointerPress(uniqueID, pointerX, pointerY, data) {
 		broadcast('changeSagePointerMode', {id: sagePointers[uniqueID].id, mode: remoteInteraction[uniqueID].interactionMode});
 	}
 
+	// Whiteboard app
+	// If the user touches on the palette with drawing disabled, enable it
+	if ((!drawingManager.drawingMode) && drawingManager.touchInsidePalette(pointerX, pointerY)) {
+		drawingManager.reEnableDrawingMode();
+		console.log(sageutils.header("DrawingManager") + " re-enabled drawing mode");
+	}
+	if (drawingManager.drawingMode) {
+		drawingManager.pointerEvent(omicronManager.sageToOmicronEvent(uniqueID, pointerX, pointerY, data, 5), uniqueID, pointerX, pointerY, 10, 10);
+	}
+
 	var obj = interactMgr.searchGeometry({x: pointerX, y: pointerY});
 
 	if (obj === null) {
@@ -5804,6 +5814,11 @@ function pointerMove(uniqueID, pointerX, pointerY, data) {
 		return;
 	}
 
+	// Whiteboard app
+	if (drawingManager.drawingMode) {
+		drawingManager.pointerEvent(omicronManager.sageToOmicronEvent(uniqueID, pointerX, pointerY, data, 4), uniqueID, pointerX, pointerY, 10, 10);
+	}
+
 	// Trick: press ALT key while moving switches interaction mode
 	if (sagePointers[uniqueID] && remoteInteraction[uniqueID].ALT && pressingAlt) {
 		remoteInteraction[uniqueID].toggleModes();
@@ -6318,6 +6333,11 @@ function sendPointerMoveToApplication(uniqueID, app, pointerX, pointerY, data) {
 function pointerRelease(uniqueID, pointerX, pointerY, data) {
 	if (sagePointers[uniqueID] === undefined) {
 		return;
+	}
+
+	// Whiteboard app
+	if (drawingManager.drawingMode) {
+		drawingManager.pointerEvent(omicronManager.sageToOmicronEvent(uniqueID, pointerX, pointerY, data, 6), uniqueID, pointerX, pointerY, 10, 10);
 	}
 
 	// If obj is undefined (as in this case, will search for radial menu using uniqueID

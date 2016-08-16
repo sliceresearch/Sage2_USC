@@ -942,13 +942,13 @@ DrawingManager.prototype.pointerEvent = function(e, sourceId, posX, posY, w, h) 
 
 
 	if (e.type == 5) {
-		this.touchDown(e, sourceId, posX, posY, w, h);
+		this.touchDown(e, e.sourceId, posX, posY, w, h);
 		this.lastTimeSeen[e.sourceId] = new Date();
 	} else if (e.type == 4) {
-		this.touchMove(e, sourceId, posX, posY, w, h);
+		this.touchMove(e, e.sourceId, posX, posY, w, h);
 		this.lastTimeSeen[e.sourceId] = new Date();
 	} else if (e.type == 6) {
-		this.touchRelease(e, sourceId, posX, posY, w, h);
+		this.touchRelease(e, e.sourceId, posX, posY, w, h);
 		delete this.lastTimeSeen[e.sourceId];
 	}
 
