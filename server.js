@@ -5204,7 +5204,6 @@ function pointerPress(uniqueID, pointerX, pointerY, data) {
 	// If the user touches on the palette with drawing disabled, enable it
 	if ((!drawingManager.drawingMode) && drawingManager.touchInsidePalette(pointerX, pointerY)) {
 		drawingManager.reEnableDrawingMode();
-		console.log(sageutils.header("DrawingManager") + " re-enabled drawing mode");
 	}
 	if (drawingManager.drawingMode) {
 		drawingManager.pointerEvent(omicronManager.sageToOmicronEvent(uniqueID, pointerX, pointerY, data, 5), uniqueID, pointerX, pointerY, 10, 10);

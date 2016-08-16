@@ -416,18 +416,20 @@ DrawingManager.prototype.createNewDraw = function(e, posX, posY) {
 	this.drawState.push(this.newDrawingObject[drawingId]);
 
 	this.idAssociatedToAction[e.sourceId] = [drawingId];
-
 };
 
 DrawingManager.prototype.updateDrawingObject = function(e, posX, posY) {
+
 	if (!this.existsId(e.sourceId)) {
 		this.createNewDraw(e, posX, posY);
 		this.idAssociatedToAction[e.sourceId] = [drawingId];
 	}
 
 	var drawingId = this.dictionaryId[e.sourceId];
-	// var lastPointId = this.newDrawingObject[drawingId].options.points.length - 1;
-	var lastPoint = this.newDrawingObject[drawingId].options.points.lastPointId;
+
+	var lastPointId = this.newDrawingObject[drawingId].options.points.length - 1;
+	var lastPoint = this.newDrawingObject[drawingId].options.points[lastPointId];
+
 	if (this.distance(lastPoint, {x: posX, y: posY}) > 0.5) {
 		this.newDrawingObject[drawingId].type = "path";
 		this.newDrawingObject[drawingId].options.points.push({x: posX, y: posY});
@@ -940,11 +942,10 @@ DrawingManager.prototype.touchRelease = function(e, sourceId, posX, posY, w, h) 
 // Called from node drawing when a touch interaction happens, entry point for touches
 DrawingManager.prototype.pointerEvent = function(e, sourceId, posX, posY, w, h) {
 
-
 	if (e.type == 5) {
 		this.touchDown(e, e.sourceId, posX, posY, w, h);
 		this.lastTimeSeen[e.sourceId] = new Date();
-	} else if (e.type == 4) {
+	} else if (e.type == 4 && this.lastTimeSeen[e.sourceId] !== undefined) {
 		this.touchMove(e, e.sourceId, posX, posY, w, h);
 		this.lastTimeSeen[e.sourceId] = new Date();
 	} else if (e.type == 6) {
