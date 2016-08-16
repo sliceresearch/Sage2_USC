@@ -7612,10 +7612,11 @@ function findApplicationPortal(app) {
 
 // **************  Omicron section *****************
 var omicronRunning = false;
+var omicronManager = new Omicron(config);
+omicronManager.linkDrawingManager(drawingManager);
+
 if (config.experimental && config.experimental.omicron &&
 	(config.experimental.omicron.enable === true || config.experimental.omicron.useSageInputServer === true)) {
-	var omicronManager = new Omicron(config);
-	omicronManager.linkDrawingManager(drawingManager);
 
 	var closeGestureDelay = 1500;
 
