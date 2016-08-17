@@ -497,18 +497,21 @@ function sendChangeToPalette(paletteID, data) {
 }
 
 function movePaletteTo(paletteID, x, y, w, h) {
-	SAGE2Items.applications.list[paletteID].left = x;
-	SAGE2Items.applications.list[paletteID].top = y;
-	var moveApp = {
-		elemId: paletteID,
-		elemLeft: x,
-		elemTop: y,
-		elemWidth: w,
-		elemHeight: h,
-		date: new Date()
-	};
+	var paletteApp = SAGE2Items.applications.list[paletteID];
+	if (paletteApp !== undefined) {
+		paletteApp.left = x;
+		paletteApp.top = y;
+		var moveApp = {
+			elemId: paletteID,
+			elemLeft: x,
+			elemTop: y,
+			elemWidth: w,
+			elemHeight: h,
+			date: new Date()
+		};
 
-	moveApplicationWindow(null, moveApp, null);
+		moveApplicationWindow(null, moveApp, null);
+	}
 }
 
 
@@ -3938,6 +3941,13 @@ function loadConfiguration() {
 		};
 	}
 
+	// Tile config Basic mode
+	// var aspectRatio = parseFloat(userConfig.dimensions.aspect_ratio) || 1.77778;
+	if (userConfig.dimensions.tile_diagonal_inches !== undefined) {
+		var tile_diagonal_meters = userConfig.dimensions.tile_diagonal_inches * 0.0254;
+		tileHeight = tile_diagonal_meters * 0.49;
+	}
+
 	// Check the display border settings
 	if (userConfig.dimensions.tile_borders === undefined) {
 		// set default values to 0
@@ -3954,28 +3964,31 @@ function loadConfiguration() {
 		borderTop    = parseFloat(userConfig.dimensions.tile_borders.top)    || 0.0;
 		// tileWidth    = parseFloat(userConfig.dimensions.tile_width) || 0.0;
 		tileHeight   = parseFloat(userConfig.dimensions.tile_height) || 0.0;
-		// calculate pixel density (ppm) based on width
-		var pixelsPerMeter = userConfig.resolution.height / tileHeight;
-		// calculate the widget control size based on dimensions and user distance
-		if (userConfig.ui.auto_scale_ui) {
-			var objectHeightMeters = 27 / pixelsPerMeter;
-			// var minimumWidgetControlSize = 20; // Min button size for text readability (also for touch wall)
-			var perceptualScalingFactor = 0.0213;
-			var userDist = userConfig.dimensions.viewing_distance;
-			var calcuatedWidgetControlSize = userDist * (perceptualScalingFactor * (userDist / objectHeightMeters));
-			var targetVisualAcuity = 1; // degrees of arc
 
-			calcuatedWidgetControlSize = Math.tan((targetVisualAcuity * Math.PI / 180.0) / 2) * 2 * userDist * pixelsPerMeter;
-
-			console.log(sageutils.header("auto_scale_ui") + "calcuatedWidgetControlSize: " + calcuatedWidgetControlSize + ".");
-			console.log(sageutils.header("auto_scale_ui") + "pixelsPerMeter: " + pixelsPerMeter + ".");
-		}
 		// calculate values in pixel now
 		userConfig.resolution.borders = {};
 		userConfig.resolution.borders.left   = Math.round(pixelsPerMeter * borderLeft)   || 0;
 		userConfig.resolution.borders.right  = Math.round(pixelsPerMeter * borderRight)  || 0;
 		userConfig.resolution.borders.bottom = Math.round(pixelsPerMeter * borderBottom) || 0;
 		userConfig.resolution.borders.top    = Math.round(pixelsPerMeter * borderTop)    || 0;
+	}
+
+	// calculate pixel density (ppm) based on width
+	var pixelsPerMeter = userConfig.resolution.height / tileHeight;
+
+	// calculate the widget control size based on dimensions and user distance
+	if (userConfig.ui.auto_scale_ui && tileHeight !== undefined) {
+		var objectHeightMeters = 27 / pixelsPerMeter;
+		// var minimumWidgetControlSize = 20; // Min button size for text readability (also for touch wall)
+		var perceptualScalingFactor = 0.0213;
+		var userDist = userConfig.dimensions.viewing_distance;
+		var calcuatedWidgetControlSize = userDist * (perceptualScalingFactor * (userDist / objectHeightMeters));
+		var targetVisualAcuity = 1; // degrees of arc
+
+		calcuatedWidgetControlSize = Math.tan((targetVisualAcuity * Math.PI / 180.0) / 2) * 2 * userDist * pixelsPerMeter;
+
+		console.log(sageutils.header("auto_scale_ui") + "calcuatedWidgetControlSize: " + calcuatedWidgetControlSize + ".");
+		console.log(sageutils.header("auto_scale_ui") + "pixelsPerMeter: " + pixelsPerMeter + ".");
 	}
 
 	// Check the width and height of each display (in tile count)
