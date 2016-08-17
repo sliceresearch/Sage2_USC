@@ -49,6 +49,7 @@ var WhiteboardPalette = SAGE2_App.extend({
 		this.SAGE2Init("div", data);
 		this.paletteMode = "default";
 		this.drawingMode = true;
+		this.eraserMode = false;
 		this.svg = d3.select(this.element).append("svg").attr("id", "paletteSVG");
 		this.drawingSVG = d3.select("#drawingSVG");
 		this.drawingSVG.style("visibility", "visible");
@@ -115,8 +116,9 @@ var WhiteboardPalette = SAGE2_App.extend({
 				{name: "Color3", action: this.changeColor, parent: this, backgroundColor: "#779ECB", r: 12, c: 1, cSpan: 1, rSpan: 5},
 				{name: "Color4", action: this.changeColor, parent: this, backgroundColor: "#C23B22", r: 17, c: 1, cSpan: 1, rSpan: 5},
 				{name: "Color5", action: this.changeColor, parent: this, backgroundColor: "white", r: 17, c: 2, cSpan: 1, rSpan: 5},
-				{name: "Color6", action: this.colorPicker, parent: this, icon: path + "/color-picker.png", r: 12, c: 3, cSpan: 3, rSpan: 10},
-
+				{name: "Color6", action: this.colorPicker, parent: this, icon: path + "/color-picker.png", r: 12, c: 3, cSpan: 1.5, rSpan: 10},
+				{name: "Color7", action: this.eraserMode ? this.disableEraserMode : this.enableEraserMode, parent: this, icon: path + "/color-picker.png", r: 12, c: 4.5, cSpan: 1.5, rSpan: 10},
+				
 				{name: "selectionModeButton", action: this.selectionModeOnOff, parent: this, icon: path + "/selection.png", r: 24, c: 0, cSpan: 2, rSpan:10},
 				{name: "enablePaint",
 						action: this.paintingMode ? this.disablePaintingMode : this.enablePaintingMode,
@@ -369,6 +371,12 @@ var WhiteboardPalette = SAGE2_App.extend({
 		wsio.emit("disableDrawingMode", null);
 		console.log("dis");
 	},
+	enableEraserMode: function() {
+		wsio.emit("enableEraserMode", {id: this.parent.id});
+	},
+	disableEraserMode: function() {
+		wsio.emit("disableEraserMode", null);
+	},
 	selectionModeOnOff: function() {
 		wsio.emit("selectionModeOnOff", null);
 	},
@@ -463,6 +471,7 @@ var WhiteboardPalette = SAGE2_App.extend({
 		} else if (eventType === "modeChange") {
 			this.paintingMode = data.paintingMode;
 			this.drawingMode = data.drawingMode;
+			this.eraserMode = data.eraserMode;
 			this.createPalette();
 		} else if (eventType === "sessionsList") {
 			this.paletteMode = "sessionsList";

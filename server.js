@@ -905,6 +905,8 @@ function setupListeners(wsio) {
 	wsio.on('updatePalettePosition',				wsUpdatePalettePosition);
 	wsio.on('enableDrawingMode',					wsEnableDrawingMode);
 	wsio.on('disableDrawingMode',					wsDisableDrawingMode);
+	wsio.on('enableEraserMode',						wsEnableEraserMode);
+	wsio.on('disableEraserMode',					wsDisableEraserMode);
 	wsio.on('clearDrawingCanvas',					wsClearDrawingCanvas);
 	wsio.on('changeStyle',							wsChangeStyle);
 	wsio.on('undoLastDrawing',						wsUndoLastDrawing);
@@ -1150,6 +1152,13 @@ function wsEnableDrawingMode(wsio, data) {
 }
 function wsDisableDrawingMode(wsio, data) {
 	drawingManager.disableDrawingMode(data);
+}
+
+function wsEnableEraserMode(wsio, data) {
+	drawingManager.enableEraserMode(data);
+}
+function wsDisableEraserMode(wsio, data) {
+	drawingManager.disableEraserMode(data);
 }
 
 

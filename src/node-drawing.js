@@ -169,10 +169,21 @@ DrawingManager.prototype.selectionModeOnOff = function() {
 };
 
 DrawingManager.prototype.sendModesToPalette = function() {
-	var data = {drawingMode: this.drawingMode, paintingMode: this.paintingMode};
+	var data = {drawingMode: this.drawingMode, paintingMode: this.paintingMode, eraserMode: this.eraserMode};
 	this.sendChangeToPalette(this.paletteID, data);
 };
 
+DrawingManager.prototype.enableEraserMode = function() {
+	this.eraserMode = true;
+	this.sendModesToPalette();
+	console.log("DrawingManager.prototype.enableEraserMode");
+};
+
+DrawingManager.prototype.disableEraserMode = function() {
+	this.eraserMode = false;
+	this.sendModesToPalette();
+	console.log("DrawingManager.prototype.disableEraserMode");
+};
 
 DrawingManager.prototype.removeWebSocket = function(wsio) {
 
@@ -869,6 +880,15 @@ DrawingManager.prototype.touchMove = function(e, sourceId, posX, posY, w, h) {
 	if ((!this.paintingMode) && (Math.max(w, h) >= this.ERASER_SIZE)) {
 		action = "eraser";
 		this.actionXTouch[e.sourceId] = action;
+	}
+
+	if (this.eraserMode) {
+		w = this.ERASER_SIZE / 4;
+		h = this.ERASER_SIZE / 4;
+		action = "eraser";
+		this.actionXTouch[e.sourceId] = action;
+		this.eraseArea(posX, posY, w, h);
+		return;
 	}
 
 	// An eraser can never go back to be a drawing
