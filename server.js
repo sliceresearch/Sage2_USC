@@ -1139,12 +1139,11 @@ function initializeRemoteServerInfo(wsio) {
 
 // The functions just call their associated method in the drawing manager
 function wsUpdatePalettePosition(wsio, data) {
-	var whiteboardApp = interactMgr.getObject(drawingManager.paletteID, "applications");
 	drawingManager.updatePalettePosition({
-		startX: whiteboardApp.x1,
-		endX: whiteboardApp.x2,
-		startY: whiteboardApp.y1,
-		endY: whiteboardApp.y2});
+		startX: data.x,
+		endX: data.x + data.w,
+		startY: data.y,
+		endY: data.y + data.h});
 }
 
 function wsEnableDrawingMode(wsio, data) {
@@ -5578,7 +5577,9 @@ function pointerPressOnApplication(uniqueID, pointerX, pointerY, data, obj, loca
 
 	switch (btn.id) {
 		case "titleBar":
-			selectApplicationForMove(uniqueID, obj.data, pointerX, pointerY, portalId);
+			if (drawingManager.paletteID !== uniqueID) {
+				selectApplicationForMove(uniqueID, obj.data, pointerX, pointerY, portalId);
+			}
 			break;
 		case "dragCorner":
 			selectApplicationForResize(uniqueID, obj.data, pointerX, pointerY, portalId);

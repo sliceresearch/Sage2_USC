@@ -176,13 +176,11 @@ DrawingManager.prototype.sendModesToPalette = function() {
 DrawingManager.prototype.enableEraserMode = function() {
 	this.eraserMode = true;
 	this.sendModesToPalette();
-	console.log("DrawingManager.prototype.enableEraserMode");
 };
 
 DrawingManager.prototype.disableEraserMode = function() {
 	this.eraserMode = false;
 	this.sendModesToPalette();
-	console.log("DrawingManager.prototype.disableEraserMode");
 };
 
 DrawingManager.prototype.removeWebSocket = function(wsio) {
@@ -287,7 +285,7 @@ DrawingManager.prototype.changeStyle = function(data) {
 };
 
 DrawingManager.prototype.enableDrawingMode = function(data) {
-	console.log("DrawingManager>	Drawing mode enabled");
+	// console.log("DrawingManager>	Drawing mode enabled");
 	this.drawingMode = true;
 	this.paletteID = data.id;
 	this.sendStyleToPalette(this.paletteID, this.style);
@@ -295,14 +293,14 @@ DrawingManager.prototype.enableDrawingMode = function(data) {
 };
 
 DrawingManager.prototype.reEnableDrawingMode = function(data) {
-	console.log("DrawingManager>	Drawing mode reEnabled");
+	// console.log("DrawingManager>	Drawing mode reEnabled");
 	this.drawingMode = true;
 	this.sendStyleToPalette(this.paletteID, this.style);
 	this.sendModesToPalette();
 };
 
 DrawingManager.prototype.disableDrawingMode = function(data) {
-	console.log("DrawingManager>	Drawing mode disabled");
+	// console.log("DrawingManager>	Drawing mode disabled");
 	this.drawingMode = false;
 	// this.paletteID = null;
 	this.sendModesToPalette();
@@ -721,6 +719,7 @@ DrawingManager.prototype.detectDownAction = function(posX, posY, w, h) {
 		return "ignored";
 
 	}
+
 	if (this.touchInsidePalette(posX, posY)) {
 		return "usePalette";
 	}
@@ -1085,8 +1084,9 @@ DrawingManager.prototype.updatePalettePosition = function(data) {
 };
 
 DrawingManager.prototype.applicationMoved = function(id, newX, newY) {
-	var oldX = this.interactMgr.getObject(id, "applications").x1;
-	var oldY = this.interactMgr.getObject(id, "applications").y1;
+	var appObj = this.interactMgr.getObject(id, "applications");
+	var oldX = appObj.x1;
+	var oldY = appObj.y1;
 	var dx = newX - oldX;
 	var dy = newY - oldY;
 
@@ -1106,6 +1106,11 @@ DrawingManager.prototype.applicationMoved = function(id, newX, newY) {
 	if (toMove != []) {
 		this.updateWithGroupDrawingObject(toMove);
 	}
+
+	this.palettePosition.startX = appObj.geometry.x;
+	this.palettePosition.startY = appObj.geometry.y + this.TITLE_BAR_HEIGHT;
+	this.palettePosition.endX = appObj.geometry.x + appObj.geometry.w;
+	this.palettePosition.endY = appObj.geometry.y + appObj.geometry.h;
 };
 
 DrawingManager.prototype.applicationResized = function(id, newW, newH, origin) {
