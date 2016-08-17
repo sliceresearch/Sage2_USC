@@ -442,7 +442,7 @@ OmicronManager.prototype.processIncomingEvent = function(msg, rinfo) {
 	// Appending sourceID to pointer address ID
 	var address = sourceID;
 	if (rinfo !== undefined) {
-		var address = rinfo.address + ":" + sourceID;
+		address = rinfo.address + ":" + sourceID;
 	}
 
 	// ServiceTypePointer

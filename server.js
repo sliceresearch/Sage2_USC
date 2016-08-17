@@ -5215,7 +5215,8 @@ function pointerPress(uniqueID, pointerX, pointerY, data) {
 		drawingManager.reEnableDrawingMode();
 	}
 	if (drawingManager.drawingMode) {
-		drawingManager.pointerEvent(omicronManager.sageToOmicronEvent(uniqueID, pointerX, pointerY, data, 5), uniqueID, pointerX, pointerY, 10, 10);
+		drawingManager.pointerEvent(
+			omicronManager.sageToOmicronEvent(uniqueID, pointerX, pointerY, data, 5), uniqueID, pointerX, pointerY, 10, 10);
 	}
 
 	var obj = interactMgr.searchGeometry({x: pointerX, y: pointerY});
@@ -5824,7 +5825,8 @@ function pointerMove(uniqueID, pointerX, pointerY, data) {
 
 	// Whiteboard app
 	if (drawingManager.drawingMode) {
-		drawingManager.pointerEvent(omicronManager.sageToOmicronEvent(uniqueID, pointerX, pointerY, data, 4), uniqueID, pointerX, pointerY, 10, 10);
+		drawingManager.pointerEvent(
+			omicronManager.sageToOmicronEvent(uniqueID, pointerX, pointerY, data, 4), uniqueID, pointerX, pointerY, 10, 10);
 	}
 
 	// Trick: press ALT key while moving switches interaction mode
@@ -6345,7 +6347,8 @@ function pointerRelease(uniqueID, pointerX, pointerY, data) {
 
 	// Whiteboard app
 	if (drawingManager.drawingMode) {
-		drawingManager.pointerEvent(omicronManager.sageToOmicronEvent(uniqueID, pointerX, pointerY, data, 6), uniqueID, pointerX, pointerY, 10, 10);
+		drawingManager.pointerEvent(
+			omicronManager.sageToOmicronEvent(uniqueID, pointerX, pointerY, data, 6), uniqueID, pointerX, pointerY, 10, 10);
 	}
 
 	// If obj is undefined (as in this case, will search for radial menu using uniqueID
