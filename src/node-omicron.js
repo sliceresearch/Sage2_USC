@@ -81,7 +81,9 @@ function OmicronManager(sysConfig) {
 	this.wandXFilter = new OneEuroFilter(freq, mincutoff, beta, dcutoff);
 	this.wandYFilter = new OneEuroFilter(freq, mincutoff, beta, dcutoff);
 
-	this.config = sysConfig.experimental.omicron;
+	if (sysConfig.experimental !== undefined) {
+		this.config = sysConfig.experimental.omicron;
+	}
 
 	this.coordCalculator = new CoordinateCalculator(this.config);
 
@@ -102,6 +104,22 @@ function OmicronManager(sysConfig) {
 	this.enableTwoFingerWindowDrag = false;
 	this.enableTwoFingerZoom = true;
 	this.enableFiveFingerCloseApp = false;
+
+	// Default config
+	if (this.config === undefined) {
+		this.config = {};
+		this.config.enable = false;
+		this.config.dataPort = 30005;
+		this.config.eventDebug = false;
+
+		this.config.zoomGestureScale = 2000;
+		this.config.acceleratedDragScale = 3;
+		this.config.gestureDebug = false;
+
+		this.config.useOinputserver = false;
+		this.config.inputServerIP = "127.0.0.1";
+		this.config.msgPort = 28000;
+	}
 
 	if (this.config.enableDoubleClickMaximize !== undefined) {
 		this.enableDoubleClickMaximize = this.config.enableDoubleClickMaximize;
