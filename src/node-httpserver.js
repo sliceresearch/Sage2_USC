@@ -123,7 +123,7 @@ var hpkpPin1 = (function() {
 		if (!pin) {
 			pin = fs.readFileSync(path.join("keys", "pin1.sha256"), {encoding: 'utf8'});
 			pin = pin.trim();
-			console.log('PIN1', pin);
+			// console.log('PIN1', pin);
 		}
 		return pin;
 	};
@@ -135,7 +135,7 @@ var hpkpPin2 = (function() {
 		if (!pin) {
 			pin = fs.readFileSync(path.join("keys", "pin2.sha256"), {encoding: 'utf8'});
 			pin = pin.trim();
-			console.log('PIN2', pin);
+			// console.log('PIN2', pin);
 		}
 		return pin;
 	};
