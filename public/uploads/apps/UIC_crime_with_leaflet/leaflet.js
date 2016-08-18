@@ -305,6 +305,7 @@ var leaflet = SAGE2_App.extend({
 				return d.color;
 			})
 			.attr("r", circleSize);
+
 		/* eslint-enable brace-style */
 
 		var myStrokeColor;
