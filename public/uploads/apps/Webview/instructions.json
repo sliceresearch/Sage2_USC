@@ -8,7 +8,7 @@
 	"dependencies": [
 	],
 	"load": {
-		"url": "https://news.google.com"
+		"url": "/uploads/web/index.html"
 	},
 	"title": "Webview",
 	"version": "1.0.0",
