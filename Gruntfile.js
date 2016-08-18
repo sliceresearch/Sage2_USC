@@ -197,7 +197,9 @@ module.exports = function(grunt) {
 		// use ir or get the name from command line
 		var newapp   = appname || grunt.option('name');
 		// calculate new paths
-		var appdir   = path.join(__dirname, "public", "uploads", "apps", newapp);
+		var homeDir  = process.env[(process.platform === 'win32') ? 'USERPROFILE' : 'HOME'];
+		var sageDir  = path.join(homeDir, "Documents", "SAGE2_Media", "/");
+		var appdir   = path.join(sageDir, "apps", newapp);
 		var templdir = path.join(__dirname, "doc", "templates");
 		// create the application folder
 		fs.mkdirSync(appdir);
