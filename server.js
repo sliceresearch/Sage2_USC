@@ -153,7 +153,8 @@ for (var folder in mediaFolders) {
 		}
 		console.log(sageutils.header('Folders') + 'upload to ' + f.path);
 	}
-	var newdirs = ["apps", "assets", "images", "pdfs", "tmp", "videos", "config", "whiteboard"];
+	var newdirs = ["apps", "assets", "images", "pdfs",
+		"tmp", "videos", "config", "whiteboard", "web"];
 
 	newdirs.forEach(function(d) {
 		var newsubdir = path.join(mediaFolders[f.name].path, d);
@@ -312,7 +313,8 @@ function initializeSage2Server() {
 		listOfFolders.push(mediaFolders[lf].path);
 	}
 	// try to exclude some folders from the monitoring
-	var excludes = ['.DS_Store', 'Thumbs.db', 'passwd.json', 'assets', 'apps', 'tmp', 'config'];
+	var excludes = ['.DS_Store', 'Thumbs.db', 'passwd.json',
+		'assets', 'apps', 'tmp', 'config', 'web'];
 	sageutils.monitorFolders(listOfFolders, excludes,
 		function(change) {
 			// console.log(sageutils.header("Monitor") + "Changes detected in", this.root);
