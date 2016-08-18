@@ -311,7 +311,7 @@ function SAGE2_interaction(wsio) {
 		if (hasMouse) {
 			var button = document.getElementById(buttonId);
 			button.addEventListener('pointerlockchange', function(e) {
-				console.log(e);
+				console.log('Pointerlockchange>', e);
 			});
 			button.requestPointerLock = button.requestPointerLock       ||
 										button.mozRequestPointerLock    ||
@@ -802,8 +802,7 @@ function SAGE2_interaction(wsio) {
 	* @param event {Object} key event
 	*/
 	this.pointerKeyDownMethod = function(event) {
-		console.log('Event', event);
-
+		// Get the code of the event
 		var code = parseInt(event.keyCode, 10);
 		// exit if 'esc' key
 		if (code === 27) {
@@ -924,7 +923,7 @@ function SAGE2_interaction(wsio) {
 			var mediaCanvas = document.getElementById('mediaCanvas');
 			mediaCanvas.width  = parseInt(res[0], 10);
 			mediaCanvas.height = parseInt(res[1], 10);
-			console.log("media resolution: " + event.target.options[this.mediaResolution].value);
+			console.log("Media resolution: " + event.target.options[this.mediaResolution].value);
 		}
 	};
 

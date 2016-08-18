@@ -7,8 +7,13 @@
 	"animation": true,
 	"dependencies": [
 	],
+	"load": {
+		"content": []
+	},
+	"fileTypes": [ "txt" ],
+	"directory": "text",
 	"title": "Notepad",
-	"version": "1.0.0",
+	"version": "1.2.3",
 	"description": "A multi-user notepad application",
 	"keywords": [ "notepad", "collaborative", "text" ],
 	"author": "Krishna Bharadwaj <krishnaknbharadwaj@gmail.com>",

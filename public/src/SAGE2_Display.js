@@ -931,10 +931,11 @@ function setupListeners() {
 	});
 
 	wsio.on('eventInItem', function(event_data) {
-		var date = new Date(event_data.date);
-		var app  = applications[event_data.id];
-
-		app.SAGE2Event(event_data.type, event_data.position, event_data.user, event_data.data, date);
+		var app = applications[event_data.id];
+		if (app) {
+			var date = new Date(event_data.date);
+			app.SAGE2Event(event_data.type, event_data.position, event_data.user, event_data.data, date);
+		}
 	});
 
 	wsio.on('requestNewControl', function(data) {
