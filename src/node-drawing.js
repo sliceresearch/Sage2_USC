@@ -1075,11 +1075,11 @@ DrawingManager.prototype.updatePalettePosition = function(data) {
 	this.palettePosition.endX = data.endX;
 	this.palettePosition.endY = data.endY;
 	if (this.palettePosition.startY < 200) {
-		// this.movePaletteTo(this.paletteID
-		//						, this.palettePosition.startX
-		//						, this.palettePosition.startY + 600
-		//						, this.palettePosition.endX - this.palettePosition.startX
-		//						, this.palettePosition.endY - this.palettePosition.startY);
+		// this.movePaletteTo(this.paletteID,
+		// 	this.palettePosition.startX,
+		// 	this.palettePosition.startY + 600m,
+		// 	this.palettePosition.endX - this.palettePosition.startX,
+		// 	this.palettePosition.endY - this.palettePosition.startY);
 	}
 };
 
