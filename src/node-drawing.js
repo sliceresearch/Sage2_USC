@@ -12,6 +12,8 @@ function DrawingManager(config) {
 	this.style = {fill: "none", stroke: "white", "stroke-width": "5px", "stroke-linecap": "round"};
 	this.selectionBoxStyle = {fill: "none", stroke: "white", "stroke-width": "5px", "stroke-dasharray": "10,10"};
 	this.drawingMode = false;
+	this.eraserMode = false;
+	this.pointerColorMode = true;
 	this.drawState = [{id: "drawing_1", type: "path",
 		options: { points: [{x: 100, y: 200}, {x: 200, y: 300}] }, style: this.style}];
 	this.drawingsUndone = [];
@@ -169,7 +171,11 @@ DrawingManager.prototype.selectionModeOnOff = function() {
 };
 
 DrawingManager.prototype.sendModesToPalette = function() {
-	var data = {drawingMode: this.drawingMode, paintingMode: this.paintingMode, eraserMode: this.eraserMode};
+	var data = {
+		drawingMode: this.drawingMode,
+		paintingMode: this.paintingMode,
+		eraserMode: this.eraserMode,
+		pointerColorMode: this.pointerColorMode};
 	this.sendChangeToPalette(this.paletteID, data);
 };
 
@@ -180,6 +186,16 @@ DrawingManager.prototype.enableEraserMode = function() {
 
 DrawingManager.prototype.disableEraserMode = function() {
 	this.eraserMode = false;
+	this.sendModesToPalette();
+};
+
+DrawingManager.prototype.enablePointerColorMode = function() {
+	this.pointerColorMode = true;
+	this.sendModesToPalette();
+};
+
+DrawingManager.prototype.disablePointerColorMode = function() {
+	this.pointerColorMode = false;
 	this.sendModesToPalette();
 };
 
@@ -282,6 +298,8 @@ DrawingManager.prototype.redoDrawing = function() {
 DrawingManager.prototype.changeStyle = function(data) {
 	this.style[data.name] = data.value;
 	this.sendStyleToPalette(this.paletteID, this.style);
+	this.pointerColorMode = false;
+	this.sendModesToPalette();
 };
 
 DrawingManager.prototype.enableDrawingMode = function(data) {
@@ -422,6 +440,10 @@ DrawingManager.prototype.createNewDraw = function(e, posX, posY) {
 	this.newDrawingObject[drawingId].options = { points: [{x: posX, y: posY}] };
 	this.newDrawingObject[drawingId].style = this.copy(this.style);
 
+	if (this.pointerColorMode && e.extraDataString !== undefined) {
+		this.newDrawingObject[drawingId].style.stroke = e.extraDataString;
+	}
+
 	this.drawState.push(this.newDrawingObject[drawingId]);
 
 	this.idAssociatedToAction[e.sourceId] = [drawingId];
@@ -456,6 +478,10 @@ DrawingManager.prototype.updateDrawingObject = function(e, posX, posY) {
 		var newDraw = {};
 		newDraw.type = "path";
 		newDraw.style = this.newDrawingObject[drawingId].style;
+
+		if (this.pointerColorMode && e.extraDataString !== undefined) {
+			newDraw.style.stroke = e.extraDataString;
+		}
 		newDraw.options = {};
 		newDraw.options.points = secondPart;
 		newDraw.id = id;

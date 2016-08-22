@@ -912,6 +912,8 @@ function setupListeners(wsio) {
 	wsio.on('disableDrawingMode',					wsDisableDrawingMode);
 	wsio.on('enableEraserMode',						wsEnableEraserMode);
 	wsio.on('disableEraserMode',					wsDisableEraserMode);
+	wsio.on('enablePointerColorMode',						wsEnablePointerColorMode);
+	wsio.on('disablePointerColorMode',					wsDisablePointerColorMode);
 	wsio.on('clearDrawingCanvas',					wsClearDrawingCanvas);
 	wsio.on('changeStyle',							wsChangeStyle);
 	wsio.on('undoLastDrawing',						wsUndoLastDrawing);
@@ -1163,6 +1165,13 @@ function wsEnableEraserMode(wsio, data) {
 }
 function wsDisableEraserMode(wsio, data) {
 	drawingManager.disableEraserMode(data);
+}
+
+function wsEnablePointerColorMode(wsio, data) {
+	drawingManager.enablePointerColorMode(data);
+}
+function wsDisablePointerColorMode(wsio, data) {
+	drawingManager.disablePointerColorMode(data);
 }
 
 
@@ -3944,10 +3953,25 @@ function loadConfiguration() {
 	}
 
 	// Tile config Basic mode
-	// var aspectRatio = parseFloat(userConfig.dimensions.aspect_ratio) || 1.77778;
+	var aspectRatioConfig = userConfig.dimensions.aspect_ratio;
+	var aspectRatio = 1.7778; // 16:9
+	var userDefinedAspectRatio = false;
+	if (aspectRatioConfig !== undefined) {
+		var ratioParsed = aspectRatioConfig.split(":");
+		aspectRatio = (parseFloat(ratioParsed[0]) / parseFloat(ratioParsed[1])) || aspectRatio;
+		userDefinedAspectRatio = true;
+		console.log(sageutils.header("UI") + "User defined aspect ratio: " + aspectRatio);
+	}
+
+	var tileHeight = 0.0;
 	if (userConfig.dimensions.tile_diagonal_inches !== undefined) {
 		var tile_diagonal_meters = userConfig.dimensions.tile_diagonal_inches * 0.0254;
-		tileHeight = tile_diagonal_meters * 0.49;
+		tileHeight = tile_diagonal_meters * aspectRatio;
+	}
+
+	if (userConfig.dimensions.tileHeight) {
+		// tileWidth    = parseFloat(userConfig.dimensions.tile_width) || 0.0;
+		tileHeight   = parseFloat(userConfig.dimensions.tile_height) || 0.0;
 	}
 
 	// Check the display border settings
@@ -3958,14 +3982,12 @@ function loadConfiguration() {
 		// then for dimensions
 		userConfig.dimensions.tile_borders = { left: 0.0, right: 0.0, bottom: 0.0, top: 0.0};
 	} else {
-		var borderLeft, borderRight, borderBottom, borderTop, tileHeight; // tileWidth,
+		var borderLeft, borderRight, borderBottom, borderTop; // tileWidth,
 		// make sure the values are valid floats
 		borderLeft   = parseFloat(userConfig.dimensions.tile_borders.left)   || 0.0;
 		borderRight  = parseFloat(userConfig.dimensions.tile_borders.right)  || 0.0;
 		borderBottom = parseFloat(userConfig.dimensions.tile_borders.bottom) || 0.0;
 		borderTop    = parseFloat(userConfig.dimensions.tile_borders.top)    || 0.0;
-		// tileWidth    = parseFloat(userConfig.dimensions.tile_width) || 0.0;
-		tileHeight   = parseFloat(userConfig.dimensions.tile_height) || 0.0;
 
 		// calculate values in pixel now
 		userConfig.resolution.borders = {};
@@ -3977,6 +3999,10 @@ function loadConfiguration() {
 
 	// calculate pixel density (ppm) based on width
 	var pixelsPerMeter = userConfig.resolution.height / tileHeight;
+	if (userDefinedAspectRatio == false) {
+		aspectRatio = userConfig.resolution.width / userConfig.resolution.height;
+		console.log(sageutils.header("UI") + "Resolution defined aspect ratio: " + aspectRatio);
+	}
 
 	// calculate the widget control size based on dimensions and user distance
 	if (userConfig.ui.auto_scale_ui && tileHeight !== undefined) {
@@ -3989,8 +4015,8 @@ function loadConfiguration() {
 
 		calcuatedWidgetControlSize = Math.tan((targetVisualAcuity * Math.PI / 180.0) / 2) * 2 * userDist * pixelsPerMeter;
 
-		console.log(sageutils.header("auto_scale_ui") + "calcuatedWidgetControlSize: " + calcuatedWidgetControlSize + ".");
-		console.log(sageutils.header("auto_scale_ui") + "pixelsPerMeter: " + pixelsPerMeter + ".");
+		console.log(sageutils.header("UI") + "widgetControlSize: " + calcuatedWidgetControlSize);
+		console.log(sageutils.header("UI") + "pixelsPerMeter: " + pixelsPerMeter);
 	}
 
 	// Check the width and height of each display (in tile count)
@@ -5223,6 +5249,8 @@ function pointerPress(uniqueID, pointerX, pointerY, data) {
 		broadcast('changeSagePointerMode', {id: sagePointers[uniqueID].id, mode: remoteInteraction[uniqueID].interactionMode});
 	}
 
+	var color = sagePointers[uniqueID] ? sagePointers[uniqueID].color : null;
+
 	// Whiteboard app
 	// If the user touches on the palette with drawing disabled, enable it
 	if ((!drawingManager.drawingMode) && drawingManager.touchInsidePalette(pointerX, pointerY)) {
@@ -5230,7 +5258,8 @@ function pointerPress(uniqueID, pointerX, pointerY, data) {
 	}
 	if (drawingManager.drawingMode) {
 		drawingManager.pointerEvent(
-			omicronManager.sageToOmicronEvent(uniqueID, pointerX, pointerY, data, 5), uniqueID, pointerX, pointerY, 10, 10);
+			omicronManager.sageToOmicronEvent(uniqueID, pointerX, pointerY, data, 5, color),
+			uniqueID, pointerX, pointerY, 10, 10);
 	}
 
 	var obj = interactMgr.searchGeometry({x: pointerX, y: pointerY});
@@ -5240,7 +5269,6 @@ function pointerPress(uniqueID, pointerX, pointerY, data) {
 		return;
 	}
 	var prevInteractionItem = remoteInteraction[uniqueID].getPreviousInteractionItem();
-	var color = sagePointers[uniqueID] ? sagePointers[uniqueID].color : null;
 	var localPt = globalToLocal(pointerX, pointerY, obj.type, obj.geometry);
 
 	switch (obj.layerId) {
@@ -5841,8 +5869,10 @@ function pointerMove(uniqueID, pointerX, pointerY, data) {
 
 	// Whiteboard app
 	if (drawingManager.drawingMode) {
+		var color = sagePointers[uniqueID] ? sagePointers[uniqueID].color : null;
 		drawingManager.pointerEvent(
-			omicronManager.sageToOmicronEvent(uniqueID, pointerX, pointerY, data, 4), uniqueID, pointerX, pointerY, 10, 10);
+			omicronManager.sageToOmicronEvent(uniqueID, pointerX, pointerY, data, 4, color),
+			uniqueID, pointerX, pointerY, 10, 10);
 	}
 
 	// Trick: press ALT key while moving switches interaction mode
@@ -6363,8 +6393,10 @@ function pointerRelease(uniqueID, pointerX, pointerY, data) {
 
 	// Whiteboard app
 	if (drawingManager.drawingMode) {
+		var color = sagePointers[uniqueID] ? sagePointers[uniqueID].color : null;
 		drawingManager.pointerEvent(
-			omicronManager.sageToOmicronEvent(uniqueID, pointerX, pointerY, data, 6), uniqueID, pointerX, pointerY, 10, 10);
+			omicronManager.sageToOmicronEvent(uniqueID, pointerX, pointerY, data, 6, color),
+			uniqueID, pointerX, pointerY, 10, 10);
 	}
 
 	// If obj is undefined (as in this case, will search for radial menu using uniqueID
