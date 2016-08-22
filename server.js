@@ -912,6 +912,8 @@ function setupListeners(wsio) {
 	wsio.on('disableDrawingMode',					wsDisableDrawingMode);
 	wsio.on('enableEraserMode',						wsEnableEraserMode);
 	wsio.on('disableEraserMode',					wsDisableEraserMode);
+	wsio.on('enablePointerColorMode',						wsEnablePointerColorMode);
+	wsio.on('disablePointerColorMode',					wsDisablePointerColorMode);
 	wsio.on('clearDrawingCanvas',					wsClearDrawingCanvas);
 	wsio.on('changeStyle',							wsChangeStyle);
 	wsio.on('undoLastDrawing',						wsUndoLastDrawing);
@@ -1163,6 +1165,13 @@ function wsEnableEraserMode(wsio, data) {
 }
 function wsDisableEraserMode(wsio, data) {
 	drawingManager.disableEraserMode(data);
+}
+
+function wsEnablePointerColorMode(wsio, data) {
+	drawingManager.enablePointerColorMode(data);
+}
+function wsDisablePointerColorMode(wsio, data) {
+	drawingManager.disablePointerColorMode(data);
 }
 
 
@@ -5240,6 +5249,8 @@ function pointerPress(uniqueID, pointerX, pointerY, data) {
 		broadcast('changeSagePointerMode', {id: sagePointers[uniqueID].id, mode: remoteInteraction[uniqueID].interactionMode});
 	}
 
+	var color = sagePointers[uniqueID] ? sagePointers[uniqueID].color : null;
+
 	// Whiteboard app
 	// If the user touches on the palette with drawing disabled, enable it
 	if ((!drawingManager.drawingMode) && drawingManager.touchInsidePalette(pointerX, pointerY)) {
@@ -5247,7 +5258,8 @@ function pointerPress(uniqueID, pointerX, pointerY, data) {
 	}
 	if (drawingManager.drawingMode) {
 		drawingManager.pointerEvent(
-			omicronManager.sageToOmicronEvent(uniqueID, pointerX, pointerY, data, 5), uniqueID, pointerX, pointerY, 10, 10);
+			omicronManager.sageToOmicronEvent(uniqueID, pointerX, pointerY, data, 5, color),
+			uniqueID, pointerX, pointerY, 10, 10);
 	}
 
 	var obj = interactMgr.searchGeometry({x: pointerX, y: pointerY});
@@ -5257,7 +5269,6 @@ function pointerPress(uniqueID, pointerX, pointerY, data) {
 		return;
 	}
 	var prevInteractionItem = remoteInteraction[uniqueID].getPreviousInteractionItem();
-	var color = sagePointers[uniqueID] ? sagePointers[uniqueID].color : null;
 	var localPt = globalToLocal(pointerX, pointerY, obj.type, obj.geometry);
 
 	switch (obj.layerId) {
@@ -5858,8 +5869,10 @@ function pointerMove(uniqueID, pointerX, pointerY, data) {
 
 	// Whiteboard app
 	if (drawingManager.drawingMode) {
+		var color = sagePointers[uniqueID] ? sagePointers[uniqueID].color : null;
 		drawingManager.pointerEvent(
-			omicronManager.sageToOmicronEvent(uniqueID, pointerX, pointerY, data, 4), uniqueID, pointerX, pointerY, 10, 10);
+			omicronManager.sageToOmicronEvent(uniqueID, pointerX, pointerY, data, 4, color),
+			uniqueID, pointerX, pointerY, 10, 10);
 	}
 
 	// Trick: press ALT key while moving switches interaction mode
@@ -6380,8 +6393,10 @@ function pointerRelease(uniqueID, pointerX, pointerY, data) {
 
 	// Whiteboard app
 	if (drawingManager.drawingMode) {
+		var color = sagePointers[uniqueID] ? sagePointers[uniqueID].color : null;
 		drawingManager.pointerEvent(
-			omicronManager.sageToOmicronEvent(uniqueID, pointerX, pointerY, data, 6), uniqueID, pointerX, pointerY, 10, 10);
+			omicronManager.sageToOmicronEvent(uniqueID, pointerX, pointerY, data, 6, color),
+			uniqueID, pointerX, pointerY, 10, 10);
 	}
 
 	// If obj is undefined (as in this case, will search for radial menu using uniqueID
