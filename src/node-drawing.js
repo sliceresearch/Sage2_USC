@@ -999,17 +999,18 @@ DrawingManager.prototype.pointerEvent = function(e, sourceId, posX, posY, w, h) 
 	}
 
 	// console.log( e.type+": "+this.actionXTouch[e.sourceId]  );
+	if (this.lastTimeSeen[e.sourceId] !== undefined) {
+		if (this.actionXTouch[e.sourceId] == "drawing") {
+			var drawingId = this.dictionaryId[e.sourceId];
+			var involvedClient = this.checkInvolvedClient(posX, posY);
+			var manipulatedObject = this.manipulateDrawingObject(this.newDrawingObject[drawingId], involvedClient);
 
-	if (this.actionXTouch[e.sourceId] == "drawing") {
-		var drawingId = this.dictionaryId[e.sourceId];
-		var involvedClient = this.checkInvolvedClient(posX, posY);
-		var manipulatedObject = this.manipulateDrawingObject(this.newDrawingObject[drawingId], involvedClient);
+			this.update(manipulatedObject, involvedClient);
+		}
 
-		this.update(manipulatedObject, involvedClient);
+		// Timeout
+		this.updateTimer(e, posX, posY);
 	}
-
-	// Timeout
-	this.updateTimer(e, posX, posY);
 };
 
 DrawingManager.prototype.linkToApplication = function(touchId) {

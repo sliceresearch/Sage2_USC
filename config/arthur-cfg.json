@@ -86,9 +86,10 @@
 		}
 	],
 	// for experimental features: true/false
+	/*
 	experimental: {
 		webbrowser: false,  // enable the awesomium module
-	
+		
 		omicron: // enable omicron input module
 		{
 			// Standard 'SAGE' connection
@@ -108,7 +109,9 @@
 			inputServerIP: "127.0.0.1",
 			msgPort: 28000
 		}
+		
 	},
+	*/
 	dependencies: {
 		ImageMagick: "",
 		FFMpeg: "C:/Dev/ffmpeg-win64-shared/bin/"
