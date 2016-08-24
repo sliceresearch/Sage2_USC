@@ -12,6 +12,8 @@ function DrawingManager(config) {
 	this.style = {fill: "none", stroke: "white", "stroke-width": "5px", "stroke-linecap": "round"};
 	this.selectionBoxStyle = {fill: "none", stroke: "white", "stroke-width": "5px", "stroke-dasharray": "10,10"};
 	this.drawingMode = false;
+	this.eraserMode = false;
+	this.pointerColorMode = true;
 	this.drawState = [{id: "drawing_1", type: "path",
 		options: { points: [{x: 100, y: 200}, {x: 200, y: 300}] }, style: this.style}];
 	this.drawingsUndone = [];
@@ -169,10 +171,33 @@ DrawingManager.prototype.selectionModeOnOff = function() {
 };
 
 DrawingManager.prototype.sendModesToPalette = function() {
-	var data = {drawingMode: this.drawingMode, paintingMode: this.paintingMode};
+	var data = {
+		drawingMode: this.drawingMode,
+		paintingMode: this.paintingMode,
+		eraserMode: this.eraserMode,
+		pointerColorMode: this.pointerColorMode};
 	this.sendChangeToPalette(this.paletteID, data);
 };
 
+DrawingManager.prototype.enableEraserMode = function() {
+	this.eraserMode = true;
+	this.sendModesToPalette();
+};
+
+DrawingManager.prototype.disableEraserMode = function() {
+	this.eraserMode = false;
+	this.sendModesToPalette();
+};
+
+DrawingManager.prototype.enablePointerColorMode = function() {
+	this.pointerColorMode = true;
+	this.sendModesToPalette();
+};
+
+DrawingManager.prototype.disablePointerColorMode = function() {
+	this.pointerColorMode = false;
+	this.sendModesToPalette();
+};
 
 DrawingManager.prototype.removeWebSocket = function(wsio) {
 
@@ -273,10 +298,12 @@ DrawingManager.prototype.redoDrawing = function() {
 DrawingManager.prototype.changeStyle = function(data) {
 	this.style[data.name] = data.value;
 	this.sendStyleToPalette(this.paletteID, this.style);
+	this.pointerColorMode = false;
+	this.sendModesToPalette();
 };
 
 DrawingManager.prototype.enableDrawingMode = function(data) {
-	console.log("DrawingManager>	Drawing mode enabled");
+	// console.log("DrawingManager>	Drawing mode enabled");
 	this.drawingMode = true;
 	this.paletteID = data.id;
 	this.sendStyleToPalette(this.paletteID, this.style);
@@ -284,14 +311,14 @@ DrawingManager.prototype.enableDrawingMode = function(data) {
 };
 
 DrawingManager.prototype.reEnableDrawingMode = function(data) {
-	console.log("DrawingManager>	Drawing mode reEnabled");
+	// console.log("DrawingManager>	Drawing mode reEnabled");
 	this.drawingMode = true;
 	this.sendStyleToPalette(this.paletteID, this.style);
 	this.sendModesToPalette();
 };
 
 DrawingManager.prototype.disableDrawingMode = function(data) {
-	console.log("DrawingManager>	Drawing mode disabled");
+	// console.log("DrawingManager>	Drawing mode disabled");
 	this.drawingMode = false;
 	// this.paletteID = null;
 	this.sendModesToPalette();
@@ -413,21 +440,27 @@ DrawingManager.prototype.createNewDraw = function(e, posX, posY) {
 	this.newDrawingObject[drawingId].options = { points: [{x: posX, y: posY}] };
 	this.newDrawingObject[drawingId].style = this.copy(this.style);
 
+	if (this.pointerColorMode && e.extraDataString !== undefined) {
+		this.newDrawingObject[drawingId].style.stroke = e.extraDataString;
+	}
+
 	this.drawState.push(this.newDrawingObject[drawingId]);
 
 	this.idAssociatedToAction[e.sourceId] = [drawingId];
-
 };
 
 DrawingManager.prototype.updateDrawingObject = function(e, posX, posY) {
+
 	if (!this.existsId(e.sourceId)) {
 		this.createNewDraw(e, posX, posY);
 		this.idAssociatedToAction[e.sourceId] = [drawingId];
 	}
 
 	var drawingId = this.dictionaryId[e.sourceId];
-	// var lastPointId = this.newDrawingObject[drawingId].options.points.length - 1;
-	var lastPoint = this.newDrawingObject[drawingId].options.points.lastPointId;
+
+	var lastPointId = this.newDrawingObject[drawingId].options.points.length - 1;
+	var lastPoint = this.newDrawingObject[drawingId].options.points[lastPointId];
+
 	if (this.distance(lastPoint, {x: posX, y: posY}) > 0.5) {
 		this.newDrawingObject[drawingId].type = "path";
 		this.newDrawingObject[drawingId].options.points.push({x: posX, y: posY});
@@ -445,6 +478,10 @@ DrawingManager.prototype.updateDrawingObject = function(e, posX, posY) {
 		var newDraw = {};
 		newDraw.type = "path";
 		newDraw.style = this.newDrawingObject[drawingId].style;
+
+		if (this.pointerColorMode && e.extraDataString !== undefined) {
+			newDraw.style.stroke = e.extraDataString;
+		}
 		newDraw.options = {};
 		newDraw.options.points = secondPart;
 		newDraw.id = id;
@@ -708,6 +745,7 @@ DrawingManager.prototype.detectDownAction = function(posX, posY, w, h) {
 		return "ignored";
 
 	}
+
 	if (this.touchInsidePalette(posX, posY)) {
 		return "usePalette";
 	}
@@ -869,6 +907,15 @@ DrawingManager.prototype.touchMove = function(e, sourceId, posX, posY, w, h) {
 		this.actionXTouch[e.sourceId] = action;
 	}
 
+	if (this.eraserMode) {
+		w = this.ERASER_SIZE / 4;
+		h = this.ERASER_SIZE / 4;
+		action = "eraser";
+		this.actionXTouch[e.sourceId] = action;
+		this.eraseArea(posX, posY, w, h);
+		return;
+	}
+
 	// An eraser can never go back to be a drawing
 	if (action == "eraser") {
 		this.eraseArea(posX, posY, w, h);
@@ -940,30 +987,30 @@ DrawingManager.prototype.touchRelease = function(e, sourceId, posX, posY, w, h) 
 // Called from node drawing when a touch interaction happens, entry point for touches
 DrawingManager.prototype.pointerEvent = function(e, sourceId, posX, posY, w, h) {
 
-
 	if (e.type == 5) {
-		this.touchDown(e, sourceId, posX, posY, w, h);
+		this.touchDown(e, e.sourceId, posX, posY, w, h);
 		this.lastTimeSeen[e.sourceId] = new Date();
-	} else if (e.type == 4) {
-		this.touchMove(e, sourceId, posX, posY, w, h);
+	} else if (e.type == 4 && this.lastTimeSeen[e.sourceId] !== undefined) {
+		this.touchMove(e, e.sourceId, posX, posY, w, h);
 		this.lastTimeSeen[e.sourceId] = new Date();
 	} else if (e.type == 6) {
-		this.touchRelease(e, sourceId, posX, posY, w, h);
+		this.touchRelease(e, e.sourceId, posX, posY, w, h);
 		delete this.lastTimeSeen[e.sourceId];
 	}
 
 	// console.log( e.type+": "+this.actionXTouch[e.sourceId]  );
+	if (this.lastTimeSeen[e.sourceId] !== undefined) {
+		if (this.actionXTouch[e.sourceId] == "drawing") {
+			var drawingId = this.dictionaryId[e.sourceId];
+			var involvedClient = this.checkInvolvedClient(posX, posY);
+			var manipulatedObject = this.manipulateDrawingObject(this.newDrawingObject[drawingId], involvedClient);
 
-	if (this.actionXTouch[e.sourceId] == "drawing") {
-		var drawingId = this.dictionaryId[e.sourceId];
-		var involvedClient = this.checkInvolvedClient(posX, posY);
-		var manipulatedObject = this.manipulateDrawingObject(this.newDrawingObject[drawingId], involvedClient);
+			this.update(manipulatedObject, involvedClient);
+		}
 
-		this.update(manipulatedObject, involvedClient);
+		// Timeout
+		this.updateTimer(e, posX, posY);
 	}
-
-	// Timeout
-	this.updateTimer(e, posX, posY);
 };
 
 DrawingManager.prototype.linkToApplication = function(touchId) {
@@ -1051,21 +1098,22 @@ DrawingManager.prototype.isOnPalette = function(posX, posY) {
 
 DrawingManager.prototype.updatePalettePosition = function(data) {
 	this.palettePosition.startX = data.startX;
-	this.palettePosition.startY = data.startY + this.TITLE_BAR_HEIGHT;
+	this.palettePosition.startY = data.startY;
 	this.palettePosition.endX = data.endX;
 	this.palettePosition.endY = data.endY;
 	if (this.palettePosition.startY < 200) {
-		this.movePaletteTo(this.paletteID
-								, this.palettePosition.startX
-								, this.palettePosition.startY + 600
-								, this.palettePosition.endX - this.palettePosition.startX
-								, this.palettePosition.endY - this.palettePosition.startY);
+		// this.movePaletteTo(this.paletteID,
+		// 	this.palettePosition.startX,
+		// 	this.palettePosition.startY + 600m,
+		// 	this.palettePosition.endX - this.palettePosition.startX,
+		// 	this.palettePosition.endY - this.palettePosition.startY);
 	}
 };
 
 DrawingManager.prototype.applicationMoved = function(id, newX, newY) {
-	var oldX = this.interactMgr.getObject(id, "applications").x1;
-	var oldY = this.interactMgr.getObject(id, "applications").y1;
+	var appObj = this.interactMgr.getObject(id, "applications");
+	var oldX = appObj.x1;
+	var oldY = appObj.y1;
 	var dx = newX - oldX;
 	var dy = newY - oldY;
 
@@ -1085,6 +1133,11 @@ DrawingManager.prototype.applicationMoved = function(id, newX, newY) {
 	if (toMove != []) {
 		this.updateWithGroupDrawingObject(toMove);
 	}
+
+	this.palettePosition.startX = appObj.geometry.x;
+	this.palettePosition.startY = appObj.geometry.y + this.TITLE_BAR_HEIGHT;
+	this.palettePosition.endX = appObj.geometry.x + appObj.geometry.w;
+	this.palettePosition.endY = appObj.geometry.y + appObj.geometry.h;
 };
 
 DrawingManager.prototype.applicationResized = function(id, newW, newH, origin) {

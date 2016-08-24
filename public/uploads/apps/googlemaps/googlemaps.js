@@ -87,6 +87,8 @@ var googlemaps = SAGE2_App.extend({
 		this.map = new google.maps.Map(this.element, mapOptions);
 		this.map.setTilt(45);
 
+		var _this  = this;
+
 		// Extra layers
 		this.trafficLayer = new google.maps.TrafficLayer();
 
@@ -94,6 +96,26 @@ var googlemaps = SAGE2_App.extend({
 			this.trafficLayer.setMap(this.map);
 			// add a timer updating the traffic tiles: 60sec
 			this.trafficTimer = setInterval(this.trafficCB, 60 * 1000);
+		}
+
+		// Passed a GeoJSON file as parameter
+		if (this.state.file) {
+			// change default rendering
+			this.map.data.setStyle({
+				fillColor: 'green',
+				strokeWeight: 1
+			});
+			// select raodmap
+			this.state.mapType = google.maps.MapTypeId.ROADMAP;
+			this.map.setMapTypeId(this.state.mapType);
+			// zoom to show all the features
+			var bounds = new google.maps.LatLngBounds();
+			this.map.data.addListener('addfeature', function(e) {
+				processPoints(e.feature.getGeometry(), bounds.extend, bounds);
+				_this.map.fitBounds(bounds);
+			});
+			// load GeoJSON and enable data layer
+			this.map.data.loadGeoJson(this.state.file);
 		}
 	},
 
@@ -395,3 +417,23 @@ var googlemaps = SAGE2_App.extend({
 	}
 
 });
+
+/**
+ * Extra function to process the bounds of map when adding data
+ *
+ * @method     processPoints
+ * @param      {Object}    geometry  The geometry
+ * @param      {Function}  callback  The callback
+ * @param      {Object}    thisArg   The this argument
+ */
+function processPoints(geometry, callback, thisArg) {
+	if (geometry instanceof google.maps.LatLng) {
+		callback.call(thisArg, geometry);
+	} else if (geometry instanceof google.maps.Data.Point) {
+		callback.call(thisArg, geometry.get());
+	} else {
+		geometry.getArray().forEach(function(g) {
+			processPoints(g, callback, thisArg);
+		});
+	}
+}

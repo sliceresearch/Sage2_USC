@@ -1,0 +1,14 @@
+{
+  "name": "APPNAME",
+  "version": "1.0.0",
+  "main": "APPNAME.js",
+  "devDependencies": {
+    "eslint": "latest"
+  },
+  "scripts": {
+    "lint": "eslint -c eslintrc APPNAME.js"
+  },
+  "author": "FIRSTNAME LASTNAME <EMAIL>",
+  "license": "BSD-2-Clause",
+  "description": "SAGE2 application APPNAME"
+}

@@ -109,5 +109,5 @@
 		"inprod":  "node ./install_dependencies.js --prod",
 		"indev":   "node ./install_dependencies.js --dev"
 	},
-	"license": "SAGE2-Software-License"
+	"license": "SEE LICENSE IN LICENSE.txt"
 }

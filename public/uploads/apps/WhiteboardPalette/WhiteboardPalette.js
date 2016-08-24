@@ -49,6 +49,8 @@ var WhiteboardPalette = SAGE2_App.extend({
 		this.SAGE2Init("div", data);
 		this.paletteMode = "default";
 		this.drawingMode = true;
+		this.eraserMode = false;
+		this.pointerColorMode = false;
 		this.svg = d3.select(this.element).append("svg").attr("id", "paletteSVG");
 		this.drawingSVG = d3.select("#drawingSVG");
 		this.drawingSVG.style("visibility", "visible");
@@ -80,8 +82,8 @@ var WhiteboardPalette = SAGE2_App.extend({
 		this.enableControls = true;
 	},
 
-	updatePalettePosition: function() {
-		wsio.emit("updatePalettePosition", null);
+	updatePalettePosition: function() {		
+		wsio.emit("updatePalettePosition", {x: this.sage2_x, y: this.sage2_y, w: this.sage2_width, h: this.sage2_height});
 	},
 
 	sendStyleToServer: function(name, value) {
@@ -115,8 +117,10 @@ var WhiteboardPalette = SAGE2_App.extend({
 				{name: "Color3", action: this.changeColor, parent: this, backgroundColor: "#779ECB", r: 12, c: 1, cSpan: 1, rSpan: 5},
 				{name: "Color4", action: this.changeColor, parent: this, backgroundColor: "#C23B22", r: 17, c: 1, cSpan: 1, rSpan: 5},
 				{name: "Color5", action: this.changeColor, parent: this, backgroundColor: "white", r: 17, c: 2, cSpan: 1, rSpan: 5},
-				{name: "Color6", action: this.colorPicker, parent: this, icon: path + "/color-picker.png", r: 12, c: 3, cSpan: 3, rSpan: 10},
-
+				{name: "ColorPointer", action: this.pointerColorMode ? this.disablePointerColorMode : this.enablePointerColorMode, parent: this, icon: this.pointerColorMode ? path + "/pointer_active.png" : path + "/pointer.png", r: 12, c: 2, cSpan: 1, rSpan: 5},
+				{name: "ColorPicker", action: this.colorPicker, parent: this, icon: path + "/color-picker.png", r: 12, c: 3, cSpan: 1.5, rSpan: 10},
+				{name: "Eraser", action: this.eraserMode ? this.disableEraserMode : this.enableEraserMode, parent: this, icon: this.eraserMode ? path + "/eraser_active.png" : path + "/eraser.png", r: 12, c: 4.5, cSpan: 1.5, rSpan: 10},
+				
 				{name: "selectionModeButton", action: this.selectionModeOnOff, parent: this, icon: path + "/selection.png", r: 24, c: 0, cSpan: 2, rSpan:10},
 				{name: "enablePaint",
 						action: this.paintingMode ? this.disablePaintingMode : this.enablePaintingMode,
@@ -273,6 +277,7 @@ var WhiteboardPalette = SAGE2_App.extend({
 	colorPicker: function() {
 		this.parent.paletteMode = "colorPicker";
 		this.parent.createPalette();
+		this.parent.disableEraserMode();
 	},
 	changeHue: function() {
 		this.parent.hue = this.hue;
@@ -321,8 +326,7 @@ var WhiteboardPalette = SAGE2_App.extend({
 	changeColor: function() {
 		this.parent.strokeColor = this.selectedColor || this.backgroundColor;
 		this.parent.sendStyleToServer("stroke", this.parent.strokeColor);
-
-
+		this.parent.disableEraserMode();
 	},
 	clearCanvas: function() {
 		wsio.emit("clearDrawingCanvas", null);
@@ -363,11 +367,23 @@ var WhiteboardPalette = SAGE2_App.extend({
 	},
 	enableDrawingMode: function() {
 		wsio.emit("enableDrawingMode", {id: this.parent.id});
-		console.log("en");
+		// console.log("en");
 	},
 	disableDrawingMode: function() {
 		wsio.emit("disableDrawingMode", null);
-		console.log("dis");
+		// console.log("dis");
+	},
+	enableEraserMode: function() {
+		wsio.emit("enableEraserMode", {id: this.parent.id});
+	},
+	disableEraserMode: function() {
+		wsio.emit("disableEraserMode", null);
+	},
+	enablePointerColorMode: function() {
+		wsio.emit("enablePointerColorMode", {id: this.parent.id});
+	},
+	disablePointerColorMode: function() {
+		wsio.emit("disablePointerColorMode", null);
 	},
 	selectionModeOnOff: function() {
 		wsio.emit("selectionModeOnOff", null);
@@ -379,7 +395,7 @@ var WhiteboardPalette = SAGE2_App.extend({
 	},
 
 	draw: function(date) {
-		console.log('WhiteboardPalette> Draw with state value', this.state.value);
+		// console.log('WhiteboardPalette> Draw with state value', this.state.value);
 		// this.updateTutorial();
 	},
 
@@ -452,7 +468,7 @@ var WhiteboardPalette = SAGE2_App.extend({
 	event: function(eventType, position, user_id, data, date) {
 		if (eventType === "pointerPress" && (data.button === "left")) {
 			this.handlePaletteTouch(position.x, position.y);
-			console.log(position.x, position.y);
+			// console.log(position.x, position.y);
 		} else if (eventType === "pointerDrag") {
 			this.handlePaletteDrag(position.x, position.y);
 		} else if (eventType === "styleChange") {
@@ -463,6 +479,8 @@ var WhiteboardPalette = SAGE2_App.extend({
 		} else if (eventType === "modeChange") {
 			this.paintingMode = data.paintingMode;
 			this.drawingMode = data.drawingMode;
+			this.eraserMode = data.eraserMode;
+			this.pointerColorMode = data.pointerColorMode;
 			this.createPalette();
 		} else if (eventType === "sessionsList") {
 			this.paletteMode = "sessionsList";

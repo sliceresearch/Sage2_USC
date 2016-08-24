@@ -243,7 +243,6 @@ function SAGE2_init() {
 			session: session
 		};
 		wsio.emit('addClient', clientDescription);
-		wsio.emit('requestStoredFiles');
 	});
 
 	// Socket close event (ie server crashed)
@@ -275,6 +274,9 @@ function setupListeners() {
 
 		// Global initialization
 		SAGE2_initialize(startTime);
+
+		// Request list of assets
+		wsio.emit('requestStoredFiles');
 	});
 
 	wsio.on('setAsMasterDisplay', function() {
@@ -929,10 +931,11 @@ function setupListeners() {
 	});
 
 	wsio.on('eventInItem', function(event_data) {
-		var date = new Date(event_data.date);
-		var app  = applications[event_data.id];
-
-		app.SAGE2Event(event_data.type, event_data.position, event_data.user, event_data.data, date);
+		var app = applications[event_data.id];
+		if (app) {
+			var date = new Date(event_data.date);
+			app.SAGE2Event(event_data.type, event_data.position, event_data.user, event_data.data, date);
+		}
 	});
 
 	wsio.on('requestNewControl', function(data) {

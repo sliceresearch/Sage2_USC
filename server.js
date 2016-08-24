@@ -153,7 +153,8 @@ for (var folder in mediaFolders) {
 		}
 		console.log(sageutils.header('Folders') + 'upload to ' + f.path);
 	}
-	var newdirs = ["apps", "assets", "images", "pdfs", "tmp", "videos", "config", "whiteboard"];
+	var newdirs = ["apps", "assets", "images", "pdfs",
+		"tmp", "videos", "config", "whiteboard", "web"];
 
 	newdirs.forEach(function(d) {
 		var newsubdir = path.join(mediaFolders[f.name].path, d);
@@ -312,7 +313,8 @@ function initializeSage2Server() {
 		listOfFolders.push(mediaFolders[lf].path);
 	}
 	// try to exclude some folders from the monitoring
-	var excludes = ['.DS_Store', 'Thumbs.db', 'passwd.json', 'assets', 'apps', 'tmp', 'config'];
+	var excludes = ['.DS_Store', 'Thumbs.db', 'passwd.json',
+		'assets', 'apps', 'tmp', 'config', 'web'];
 	sageutils.monitorFolders(listOfFolders, excludes,
 		function(change) {
 			// console.log(sageutils.header("Monitor") + "Changes detected in", this.root);
@@ -497,18 +499,21 @@ function sendChangeToPalette(paletteID, data) {
 }
 
 function movePaletteTo(paletteID, x, y, w, h) {
-	SAGE2Items.applications.list[paletteID].left = x;
-	SAGE2Items.applications.list[paletteID].top = y;
-	var moveApp = {
-		elemId: paletteID,
-		elemLeft: x,
-		elemTop: y,
-		elemWidth: w,
-		elemHeight: h,
-		date: new Date()
-	};
+	var paletteApp = SAGE2Items.applications.list[paletteID];
+	if (paletteApp !== undefined) {
+		paletteApp.left = x;
+		paletteApp.top = y;
+		var moveApp = {
+			elemId: paletteID,
+			elemLeft: x,
+			elemTop: y,
+			elemWidth: w,
+			elemHeight: h,
+			date: new Date()
+		};
 
-	moveApplicationWindow(null, moveApp, null);
+		moveApplicationWindow(null, moveApp, null);
+	}
 }
 
 
@@ -905,6 +910,10 @@ function setupListeners(wsio) {
 	wsio.on('updatePalettePosition',				wsUpdatePalettePosition);
 	wsio.on('enableDrawingMode',					wsEnableDrawingMode);
 	wsio.on('disableDrawingMode',					wsDisableDrawingMode);
+	wsio.on('enableEraserMode',						wsEnableEraserMode);
+	wsio.on('disableEraserMode',					wsDisableEraserMode);
+	wsio.on('enablePointerColorMode',						wsEnablePointerColorMode);
+	wsio.on('disablePointerColorMode',					wsDisablePointerColorMode);
 	wsio.on('clearDrawingCanvas',					wsClearDrawingCanvas);
 	wsio.on('changeStyle',							wsChangeStyle);
 	wsio.on('undoLastDrawing',						wsUndoLastDrawing);
@@ -1137,12 +1146,11 @@ function initializeRemoteServerInfo(wsio) {
 
 // The functions just call their associated method in the drawing manager
 function wsUpdatePalettePosition(wsio, data) {
-	var whiteboardApp = interactMgr.getObject(drawingManager.paletteID, "applications");
 	drawingManager.updatePalettePosition({
-		startX: whiteboardApp.x1,
-		endX: whiteboardApp.x2,
-		startY: whiteboardApp.y1,
-		endY: whiteboardApp.y2});
+		startX: data.x,
+		endX: data.x + data.w,
+		startY: data.y,
+		endY: data.y + data.h});
 }
 
 function wsEnableDrawingMode(wsio, data) {
@@ -1150,6 +1158,20 @@ function wsEnableDrawingMode(wsio, data) {
 }
 function wsDisableDrawingMode(wsio, data) {
 	drawingManager.disableDrawingMode(data);
+}
+
+function wsEnableEraserMode(wsio, data) {
+	drawingManager.enableEraserMode(data);
+}
+function wsDisableEraserMode(wsio, data) {
+	drawingManager.disableEraserMode(data);
+}
+
+function wsEnablePointerColorMode(wsio, data) {
+	drawingManager.enablePointerColorMode(data);
+}
+function wsDisablePointerColorMode(wsio, data) {
+	drawingManager.disablePointerColorMode(data);
 }
 
 
@@ -3930,6 +3952,28 @@ function loadConfiguration() {
 		};
 	}
 
+	// Tile config Basic mode
+	var aspectRatioConfig = userConfig.dimensions.aspect_ratio;
+	var aspectRatio = 1.7778; // 16:9
+	var userDefinedAspectRatio = false;
+	if (aspectRatioConfig !== undefined) {
+		var ratioParsed = aspectRatioConfig.split(":");
+		aspectRatio = (parseFloat(ratioParsed[0]) / parseFloat(ratioParsed[1])) || aspectRatio;
+		userDefinedAspectRatio = true;
+		console.log(sageutils.header("UI") + "User defined aspect ratio: " + aspectRatio);
+	}
+
+	var tileHeight = 0.0;
+	if (userConfig.dimensions.tile_diagonal_inches !== undefined) {
+		var tile_diagonal_meters = userConfig.dimensions.tile_diagonal_inches * 0.0254;
+		tileHeight = tile_diagonal_meters * aspectRatio;
+	}
+
+	if (userConfig.dimensions.tileHeight) {
+		// tileWidth    = parseFloat(userConfig.dimensions.tile_width) || 0.0;
+		tileHeight   = parseFloat(userConfig.dimensions.tile_height) || 0.0;
+	}
+
 	// Check the display border settings
 	if (userConfig.dimensions.tile_borders === undefined) {
 		// set default values to 0
@@ -3938,36 +3982,41 @@ function loadConfiguration() {
 		// then for dimensions
 		userConfig.dimensions.tile_borders = { left: 0.0, right: 0.0, bottom: 0.0, top: 0.0};
 	} else {
-		var borderLeft, borderRight, borderBottom, borderTop, tileHeight; // tileWidth,
+		var borderLeft, borderRight, borderBottom, borderTop; // tileWidth,
 		// make sure the values are valid floats
 		borderLeft   = parseFloat(userConfig.dimensions.tile_borders.left)   || 0.0;
 		borderRight  = parseFloat(userConfig.dimensions.tile_borders.right)  || 0.0;
 		borderBottom = parseFloat(userConfig.dimensions.tile_borders.bottom) || 0.0;
 		borderTop    = parseFloat(userConfig.dimensions.tile_borders.top)    || 0.0;
-		// tileWidth    = parseFloat(userConfig.dimensions.tile_width) || 0.0;
-		tileHeight   = parseFloat(userConfig.dimensions.tile_height) || 0.0;
-		// calculate pixel density (ppm) based on width
-		var pixelsPerMeter = userConfig.resolution.height / tileHeight;
-		// calculate the widget control size based on dimensions and user distance
-		if (userConfig.ui.auto_scale_ui) {
-			var objectHeightMeters = 27 / pixelsPerMeter;
-			// var minimumWidgetControlSize = 20; // Min button size for text readability (also for touch wall)
-			var perceptualScalingFactor = 0.0213;
-			var userDist = userConfig.dimensions.viewing_distance;
-			var calcuatedWidgetControlSize = userDist * (perceptualScalingFactor * (userDist / objectHeightMeters));
-			var targetVisualAcuity = 1; // degrees of arc
 
-			calcuatedWidgetControlSize = Math.tan((targetVisualAcuity * Math.PI / 180.0) / 2) * 2 * userDist * pixelsPerMeter;
-
-			console.log(sageutils.header("auto_scale_ui") + "calcuatedWidgetControlSize: " + calcuatedWidgetControlSize + ".");
-			console.log(sageutils.header("auto_scale_ui") + "pixelsPerMeter: " + pixelsPerMeter + ".");
-		}
 		// calculate values in pixel now
 		userConfig.resolution.borders = {};
 		userConfig.resolution.borders.left   = Math.round(pixelsPerMeter * borderLeft)   || 0;
 		userConfig.resolution.borders.right  = Math.round(pixelsPerMeter * borderRight)  || 0;
 		userConfig.resolution.borders.bottom = Math.round(pixelsPerMeter * borderBottom) || 0;
 		userConfig.resolution.borders.top    = Math.round(pixelsPerMeter * borderTop)    || 0;
+	}
+
+	// calculate pixel density (ppm) based on width
+	var pixelsPerMeter = userConfig.resolution.height / tileHeight;
+	if (userDefinedAspectRatio == false) {
+		aspectRatio = userConfig.resolution.width / userConfig.resolution.height;
+		console.log(sageutils.header("UI") + "Resolution defined aspect ratio: " + aspectRatio);
+	}
+
+	// calculate the widget control size based on dimensions and user distance
+	if (userConfig.ui.auto_scale_ui && tileHeight !== undefined) {
+		var objectHeightMeters = 27 / pixelsPerMeter;
+		// var minimumWidgetControlSize = 20; // Min button size for text readability (also for touch wall)
+		var perceptualScalingFactor = 0.0213;
+		var userDist = userConfig.dimensions.viewing_distance;
+		var calcuatedWidgetControlSize = userDist * (perceptualScalingFactor * (userDist / objectHeightMeters));
+		var targetVisualAcuity = 1; // degrees of arc
+
+		calcuatedWidgetControlSize = Math.tan((targetVisualAcuity * Math.PI / 180.0) / 2) * 2 * userDist * pixelsPerMeter;
+
+		console.log(sageutils.header("UI") + "widgetControlSize: " + calcuatedWidgetControlSize);
+		console.log(sageutils.header("UI") + "pixelsPerMeter: " + pixelsPerMeter);
 	}
 
 	// Check the width and height of each display (in tile count)
@@ -5200,6 +5249,19 @@ function pointerPress(uniqueID, pointerX, pointerY, data) {
 		broadcast('changeSagePointerMode', {id: sagePointers[uniqueID].id, mode: remoteInteraction[uniqueID].interactionMode});
 	}
 
+	var color = sagePointers[uniqueID] ? sagePointers[uniqueID].color : null;
+
+	// Whiteboard app
+	// If the user touches on the palette with drawing disabled, enable it
+	if ((!drawingManager.drawingMode) && drawingManager.touchInsidePalette(pointerX, pointerY)) {
+		drawingManager.reEnableDrawingMode();
+	}
+	if (drawingManager.drawingMode) {
+		drawingManager.pointerEvent(
+			omicronManager.sageToOmicronEvent(uniqueID, pointerX, pointerY, data, 5, color),
+			uniqueID, pointerX, pointerY, 10, 10);
+	}
+
 	var obj = interactMgr.searchGeometry({x: pointerX, y: pointerY});
 
 	if (obj === null) {
@@ -5207,7 +5269,6 @@ function pointerPress(uniqueID, pointerX, pointerY, data) {
 		return;
 	}
 	var prevInteractionItem = remoteInteraction[uniqueID].getPreviousInteractionItem();
-	var color = sagePointers[uniqueID] ? sagePointers[uniqueID].color : null;
 	var localPt = globalToLocal(pointerX, pointerY, obj.type, obj.geometry);
 
 	switch (obj.layerId) {
@@ -5559,7 +5620,9 @@ function pointerPressOnApplication(uniqueID, pointerX, pointerY, data, obj, loca
 
 	switch (btn.id) {
 		case "titleBar":
-			selectApplicationForMove(uniqueID, obj.data, pointerX, pointerY, portalId);
+			if (drawingManager.paletteID !== uniqueID) {
+				selectApplicationForMove(uniqueID, obj.data, pointerX, pointerY, portalId);
+			}
 			break;
 		case "dragCorner":
 			selectApplicationForResize(uniqueID, obj.data, pointerX, pointerY, portalId);
@@ -5802,6 +5865,14 @@ function selectPortalForResize(uniqueID, portal, pointerX, pointerY) {
 function pointerMove(uniqueID, pointerX, pointerY, data) {
 	if (sagePointers[uniqueID] === undefined) {
 		return;
+	}
+
+	// Whiteboard app
+	if (drawingManager.drawingMode) {
+		var color = sagePointers[uniqueID] ? sagePointers[uniqueID].color : null;
+		drawingManager.pointerEvent(
+			omicronManager.sageToOmicronEvent(uniqueID, pointerX, pointerY, data, 4, color),
+			uniqueID, pointerX, pointerY, 10, 10);
 	}
 
 	// Trick: press ALT key while moving switches interaction mode
@@ -6318,6 +6389,14 @@ function sendPointerMoveToApplication(uniqueID, app, pointerX, pointerY, data) {
 function pointerRelease(uniqueID, pointerX, pointerY, data) {
 	if (sagePointers[uniqueID] === undefined) {
 		return;
+	}
+
+	// Whiteboard app
+	if (drawingManager.drawingMode) {
+		var color = sagePointers[uniqueID] ? sagePointers[uniqueID].color : null;
+		drawingManager.pointerEvent(
+			omicronManager.sageToOmicronEvent(uniqueID, pointerX, pointerY, data, 6, color),
+			uniqueID, pointerX, pointerY, 10, 10);
 	}
 
 	// If obj is undefined (as in this case, will search for radial menu using uniqueID
@@ -7593,10 +7672,11 @@ function findApplicationPortal(app) {
 
 // **************  Omicron section *****************
 var omicronRunning = false;
+var omicronManager = new Omicron(config);
+omicronManager.linkDrawingManager(drawingManager);
+
 if (config.experimental && config.experimental.omicron &&
 	(config.experimental.omicron.enable === true || config.experimental.omicron.useSageInputServer === true)) {
-	var omicronManager = new Omicron(config);
-	omicronManager.linkDrawingManager(drawingManager);
 
 	var closeGestureDelay = 1500;
 

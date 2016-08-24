@@ -13,29 +13,34 @@
 		//	color: "rgba(255, 255, 255, 0.5)"
 		//},
 		image: {
-			url: "images/background/kamping_4k.jpg",
+			url: "user/images/background/kamping_4k.jpg",
 			style: "tile"
 		},
 	},
 	ui: {
 		clock: 12,
-		show_version: false,
+		show_version: true,
 		show_url: true,
 		maxWindowWidth: 8192,
 		maxWindowHeight: 8192,
 		noDropShadow: true,
-		widgetControlSize: 30,
-		auto_scale_ui: true,
-		calculate_viewing_distance: false,
-		reload_wallui_on_refresh: true
+		// widgetControlSize: 30,
+		auto_scale_ui: true
 	},
 	dimensions: {
 		// dimensions of one tile (can be overriden in displays section)
-		tile_width:  0.4,  // in meter, pixel area
-		tile_height: 0.64,  // in meter, pixel area
+		// Basic
+		tile_diagonal_inches: 29.75, // in inches, screen size/pixel area
+		aspect_ratio: "16:10", // default: 16:9
+
+		// Advanced
+		tile_width: 0.64,  // in meter, pixel area (overrides aspect_ratio and diagonal)
+		tile_height: 0.4,  // in meter, pixel area (overrides aspect_ratio and diagonal)
+
 		tile_borders: [ 0.002, 0.002, 0.002, 0.002 ], // mullions in meter, left, right, bottom, top
+
 		// prefered or common viewing distance to calculate UI sizes
-		viewing_distance: 0.71	// in meter
+		viewing_distance: 0.71	// in meters
 	},
 	resolution: {
 		width: 2560,
@@ -81,9 +86,10 @@
 		}
 	],
 	// for experimental features: true/false
+	/*
 	experimental: {
 		webbrowser: false,  // enable the awesomium module
-	
+		
 		omicron: // enable omicron input module
 		{
 			// Standard 'SAGE' connection
@@ -103,7 +109,9 @@
 			inputServerIP: "127.0.0.1",
 			msgPort: 28000
 		}
+		
 	},
+	*/
 	dependencies: {
 		ImageMagick: "",
 		FFMpeg: "C:/Dev/ffmpeg-win64-shared/bin/"
