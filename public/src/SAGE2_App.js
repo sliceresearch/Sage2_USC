@@ -885,7 +885,7 @@ var SAGE2_App = Class.extend({
 
 	requestAppMonitoring: function(){
 		wsio.emit('requestSAGE2AppMonitoring', {appId: this.id});
-	}
+	},
 
 	/**
 	* Performs full fill of app context menu and sends update to server.
