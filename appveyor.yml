@@ -25,7 +25,7 @@ init:
 
 install:
   - ps: Get-NodeJsLatestBuild 6.2
-  - ps: Install-Product node 6.2.1 x64
+  - ps: Install-Product node 6.2.2 x64
   - dir C:\avvm\node
   - node -v
   - cd %APPVEYOR_BUILD_FOLDER%
@@ -41,8 +41,8 @@ install:
   - copy ffmpeg-3.0.1-win64-shared\bin\*.dll bin\
   - copy ffmpeg-3.0.1-win64-shared\bin\*.exe bin\
   - rmdir /Q /S ffmpeg-3.0.1-win64-shared
-  - curl -LsSO http://www.sno.phy.queensu.ca/~phil/exiftool/exiftool-10.20.zip
-  - 7z x exiftool-10.20.zip > nul
+  - curl -LsSO http://www.sno.phy.queensu.ca/~phil/exiftool/exiftool-10.25.zip
+  - 7z x exiftool-10.25.zip > nul
   - move exiftool(-k).exe bin\exiftool.exe
   - move bin\sage2.bat sage2.bat
   - move bin\sabi.bat sabi.bat
@@ -53,8 +53,8 @@ install:
   - copy bin\gswin64c.exe bin\gswin32c.exe
   - xcopy /S /I /Y /Q gs\lib lib
   - rmdir /Q /S gs
-  - curl -LsSO http://www.imagemagick.org/download/binaries/ImageMagick-6.9.4-10-portable-Q16-x64.zip
-  - 7z x -y ImageMagick-6.9.4-10-portable-Q16-x64.zip -oim > nul
+  - curl -LsSO http://www.imagemagick.org/download/binaries/ImageMagick-6.9.5-7-portable-Q16-x64.zip
+  - 7z x -y ImageMagick-6.9.5-7-portable-Q16-x64.zip -oim > nul
   - rmdir /Q /S im\www im\images
   - copy im\* bin
   - rmdir /Q /S im

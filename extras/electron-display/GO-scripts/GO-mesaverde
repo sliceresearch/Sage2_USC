@@ -1,0 +1,8 @@
+#!/bin/bash
+
+pkill -9 electron
+
+
+server="mesaverde.evl.uic.edu"
+
+$PWD/node_modules/.bin/electron $PWD/electron.js -d 0 -n -x 0 -y 0 --width 11520 --height 2160 -s http://$server &

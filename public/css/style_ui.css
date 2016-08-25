@@ -729,23 +729,84 @@ h2 {
 	box-sizing: border-box;
 }
 
+/*
+The z-index is very important.
+9999 is 1 layer below dialog, but one above UI canvas.
+*/
+#rmbContextMenu {
+	position:  absolute;
+	visibility: hidden;
+	border:     1px solid black;
+	background: white;
+	z-index:    9999;
+}
+
 #uiNoteMaker {
-	top: 50%;
-	left: 50%;
+	border:            1px solid black;
+	top:               50%;
+	left:              50%;
 	-webkit-transform: translate(-50%, -50%);
-	-moz-transform: translate(-50%, -50%);
-	-ms-transform: translate(-50%, -50%);
-	transform: translate(-50%, -50%);
-	text-align: center;
+	-moz-transform:    translate(-50%, -50%);
+	-ms-transform:     translate(-50%, -50%);
+	transform:         translate(-50%, -50%);
+	text-align:        center;
+}
+
+#uiNoteMakerInputField {
+	resize: none;
+	font-size: 20px;
+}
+
+.uinmColorPickBlock {
+	width: 	65px;
+	height: 45px;
+	border: 1px solid black;
 }
 
 #uiDrawZone {
-	top: 50%;
-	left: 50%;
+	top:               50%;
+	left:              50%;
 	-webkit-transform: translate(-50%, -50%);
-	-moz-transform: translate(-50%, -50%);
-	-ms-transform: translate(-50%, -50%);
-	transform: translate(-50%, -50%);
+	-moz-transform:    translate(-50%, -50%);
+	-ms-transform:     translate(-50%, -50%);
+	transform:         translate(-50%, -50%);
+}
+
+#uiDrawZoneCanvas {
+	border:            1px solid black;
+	width:             500px;
+	height:            500px;
+	position:          relative;
+	left:              50%;
+	-webkit-transform: translate(-50%, 0);
+	-moz-transform:    translate(-50%, 0);
+	-ms-transform:     translate(-50%, 0);
+	transform:         translate(-50%, 0);
+}
+
+#uiDrawZoneCloseDoodleButton {
+	position:   relative;
+	text-align: left;
+	left:       5%
+}
+
+#uiDrawZoneCloseEditorButton {
+	position:   relative;
+	float:      right;
+	top:        -10px;
+	text-align: right;
+	right:      5%
+}
+
+#uiDrawZoneEraseReference {
+	position:       absolute;
+	top:            -100;
+	left:           -100;
+	width:          1;
+	border:         1px solid black;
+	border-radius:  50%;
+	z-index:        10003;
+	pointer-events: none;
 }
 
 .uidzBarBox {

@@ -43,8 +43,9 @@ function RadialMenu(id, ptrID, config) {
 	this.maximumMenuRadiusMeters;
 
 	if (config.ui.auto_scale_ui) {
-		this.radialMenuScale = 1;
 
+		// this.radialMenuScale = 1;
+		/*
 		var borderLeft, borderRight, borderBottom, borderTop;
 		var tileBorders = config.dimensions.tile_borders;
 		if (tileBorders) {
@@ -104,6 +105,7 @@ function RadialMenu(id, ptrID, config) {
 		if (totalContentWindowSize.h > totalWallDimensionsMeters.h) {
 			this.radialMenuScale = totalWallDimensionsMeters.h * 0.9 / thumbnailWindowDefaultSize.y * pixelsPerMeter;
 		}
+		*/
 		console.log("node-radialMenu: this.radialMenuScale = " + this.radialMenuScale);
 	}
 
@@ -127,7 +129,7 @@ function RadialMenu(id, ptrID, config) {
 
 	this.buttonAngle = 36; // Degrees of separation between each radial button position
 	this.menuButtonSize = 100;
-	this.menuRadius = 110;
+	this.menuRadius = 95;
 
 	this.pointersOnMenu = {}; // Stores the pointerIDs that are on the menu, but not on a button
 
@@ -415,22 +417,22 @@ RadialMenu.prototype.setPosition = function(data) {
 
 		var buttonInfo = this.radialButtons[buttonName];
 
-		var buttonRadius = 25 * this.radialMenuScale;
+		var buttonRadius = this.menuButtonSize / 4 * this.radialMenuScale;
 		var angle = (90 + this.buttonAngle * buttonInfo.radialPosition) * (Math.PI / 180);
-		var position = {x: this.left - (this.menuRadius - buttonRadius / 2) * this.radialMenuScale * Math.cos(angle),
-						y: this.top - (this.menuRadius - buttonRadius / 2) * this.radialMenuScale * Math.sin(angle) };
+		var position = {x: this.left - buttonRadius - this.menuRadius * this.radialMenuScale * Math.cos(angle),
+						y: this.top - buttonRadius - this.menuRadius * this.radialMenuScale * Math.sin(angle) };
 
 		if (buttonInfo.radialLevel === 0) {
-			position = {x: this.left - (0 - buttonRadius / 2) * this.radialMenuScale * Math.cos(angle),
-						y: this.top - (0 - buttonRadius / 2) * this.radialMenuScale * Math.sin(angle) };
+			position = {x: this.left - buttonRadius,
+						y: this.top - buttonRadius};
 		} else if (buttonInfo.radialLevel === 2) {
-			position = {x: this.left - (this.menuRadius * 1.6 - buttonRadius / 2) * this.radialMenuScale * Math.cos(angle),
-						y: this.top - (this.menuRadius * 1.6 - buttonRadius / 2) * this.radialMenuScale * Math.sin(angle) };
+			position = {x: this.left - buttonRadius - (this.menuRadius * 1.6) * this.radialMenuScale * Math.cos(angle),
+						y: this.top - buttonRadius - (this.menuRadius * 1.6) * this.radialMenuScale * Math.sin(angle) };
 		}
 
 		// console.log("setPosition: " + buttonName + " " +menuRadius * Math.cos(angle) + " " + menuRadius * Math.sin(angle) );
 		this.interactMgr.editGeometry(this.id + "_menu_radial_button_" + buttonName, "radialMenus",
-									"circle", {x: position.x, y: position.y, r: buttonRadius});
+									"rectangle", {x: position.x, y: position.y, w: buttonRadius * 2, h: buttonRadius * 2});
 		this.interactMgr.editVisibility(this.id + "_menu_radial_button_" + buttonName, "radialMenus", true);
 	}
 	// console.log("done");

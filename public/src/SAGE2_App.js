@@ -95,7 +95,7 @@ var SAGE2_App = Class.extend({
 		this.element = document.createElement(type);
 		this.element.className = "sageItem";
 		this.element.style.zIndex = "0";
-		if (type === "div") {
+		if (type === "div" || type === "webview") {
 			this.element.style.width  = data.width  + "px";
 			this.element.style.height = data.height + "px";
 		} else {
@@ -887,4 +887,33 @@ var SAGE2_App = Class.extend({
 		wsio.emit('requestSAGE2AppMonitoring', {appId: this.id});
 	}
 
+	/**
+	* Performs full fill of app context menu and sends update to server.
+	* This provides one place(mostly) to change code for context menu.
+	*
+	* @method getFullContextMenuAndUpdate
+	*/
+	getFullContextMenuAndUpdate: function() {
+		// Send one update to the server
+		if (isMaster) {
+			var rmbData = {};
+			rmbData.app = this.id;
+			// If the application defines a menu function, use it
+			if (typeof this.getContextEntries === "function") {
+				rmbData.entries = this.getContextEntries();
+				rmbData.entries.push({
+					description: "Close " + (document.getElementById(this.id + "_text").textContent),
+					callback: "SAGE2DeleteElement", // better function name?
+					parameters: {}
+				});
+			} else {
+				rmbData.entries = [{
+					description: "Close App",
+					callback: "SAGE2DeleteElement", // better function name?
+					parameters: {}
+				}];
+			}
+			wsio.emit("dtuRmbContextMenuContents", rmbData);
+		}
+	}
 });

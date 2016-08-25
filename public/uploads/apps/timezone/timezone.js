@@ -100,26 +100,26 @@ var timezone = SAGE2_App.extend({
 	createCaption: function(clock) {
 		var top = "95%";
 		var textdiv = d3.select(this.element).select("#" + clock.id)
-						.append("div")
-						.attr("id", clock.id + "textDiv")
-						.style("height", "15%")
-						.style("top", top)
-						.style("position", "absolute")
-						.style("width", "100%");
+			.append("div")
+			.attr("id", clock.id + "textDiv")
+			.style("height", "15%")
+			.style("top", top)
+			.style("position", "absolute")
+			.style("width", "100%");
 		var textAMPM = textdiv.append("p")
-						.attr("id", clock.id + "TextAMPM")
-						.style("color", "#d3d3d3")
-						.style("top", "-1em")
-						.style("position", "absolute")
-						.style("white-space", "nowrap")
-						.text("00:00 PM");
+			.attr("id", clock.id + "TextAMPM")
+			.style("color", "#d3d3d3")
+			.style("top", "-1em")
+			.style("position", "absolute")
+			.style("white-space", "nowrap")
+			.text("00:00 PM");
 		var text = textdiv.append("p")
-						.attr("id", clock.id + "Text")
-						.style("color", "white")
-						.style("position", "absolute")
-						.style("top", "0.2em")
-						.style("white-space", "nowrap")
-						.text(clock.name.split(',')[0]);
+			.attr("id", clock.id + "Text")
+			.style("color", "white")
+			.style("position", "absolute")
+			.style("top", "0.2em")
+			.style("white-space", "nowrap")
+			.text(clock.name.split(',')[0]);
 		this.setCaptionSize(textdiv, text, textAMPM);
 		this.resizeCaption();
 		this.updateAllCaption();
@@ -148,12 +148,12 @@ var timezone = SAGE2_App.extend({
 
 	createClockPage: function() {
 		this.clockDiv = d3.select(this.element)
-							.append("div")
-							.attr("id", "clocks")
-							.style("width", "100%")
-							.style("height", "85%")
-							.style("top", "2%")
-							.style("position", "absolute");
+			.append("div")
+			.attr("id", "clocks")
+			.style("width", "100%")
+			.style("height", "85%")
+			.style("top", "2%")
+			.style("position", "absolute");
 		this.addAllClocks();
 		this.createButtons();
 	},

@@ -63,7 +63,8 @@ var HttpServer          = require('./src/node-httpserver');       // creates web
 var InteractableManager = require('./src/node-interactable');     // handles geometry and determining which object a point is over
 var Interaction         = require('./src/node-interaction');      // handles sage interaction (move, resize, etc.)
 var Loader              = require('./src/node-itemloader');       // handles sage item creation
-var Omicron             = require('./src/node-omicron');          // handles Omicron input events
+var Omicron             = require('./src/node-omicron');
+var Drawing             = require('./src/node-drawing');          // handles Omicron input events
 var Radialmenu          = require('./src/node-radialmenu');       // radial menu
 var Sage2ItemList       = require('./src/node-sage2itemlist');    // list of SAGE2 items
 var Sagepointer         = require('./src/node-sagepointer');      // handles sage pointers (creation, location, etc.)
@@ -115,8 +116,8 @@ var appLoader          = null;
 var interactMgr        = new InteractableManager();
 var mediaBlockSize     = 512;
 var startTime          = Date.now();
+var drawingManager;
 var pressingAlt        = true;
-
 
 // Add extra folders defined in the configuration file
 if (config.folders) {
@@ -133,7 +134,7 @@ if (config.folders) {
 var publicDirectory  = "public";
 var uploadsDirectory = path.join(publicDirectory, "uploads");
 var sessionDirectory = path.join(publicDirectory, "sessions");
-
+var whiteboardDirectory = sessionDirectory;
 // Validate all the media folders
 for (var folder in mediaFolders) {
 	var f = mediaFolders[folder];
@@ -147,12 +148,15 @@ for (var folder in mediaFolders) {
 		uploadsDirectory = f.path;
 		mainFolder = f;
 		sessionDirectory = path.join(uploadsDirectory, "sessions");
+		whiteboardDirectory = path.join(uploadsDirectory, "whiteboard");
 		if (!sageutils.folderExists(sessionDirectory)) {
 			sageutils.mkdirParent(sessionDirectory);
 		}
 		console.log(sageutils.header('Folders') + 'upload to ' + f.path);
 	}
-	var newdirs = ["apps", "assets", "images", "pdfs", "tmp", "videos", "config"];
+	var newdirs = ["apps", "assets", "images", "pdfs",
+		"tmp", "videos", "config", "whiteboard", "web"];
+
 	newdirs.forEach(function(d) {
 		var newsubdir = path.join(mediaFolders[f.name].path, d);
 		if (!sageutils.folderExists(newsubdir)) {
@@ -310,7 +314,8 @@ function initializeSage2Server() {
 		listOfFolders.push(mediaFolders[lf].path);
 	}
 	// try to exclude some folders from the monitoring
-	var excludes = ['.DS_Store', 'Thumbs.db', 'passwd.json', 'assets', 'apps', 'tmp', 'config'];
+	var excludes = ['.DS_Store', 'Thumbs.db', 'passwd.json',
+		'assets', 'apps', 'tmp', 'config', 'web'];
 	sageutils.monitorFolders(listOfFolders, excludes,
 		function(change) {
 			// console.log(sageutils.header("Monitor") + "Changes detected in", this.root);
@@ -381,7 +386,137 @@ function initializeSage2Server() {
 	wsioServerS = new WebsocketIO.Server({server: sage2ServerS});
 	wsioServer.onconnection(openWebSocketClient);
 	wsioServerS.onconnection(openWebSocketClient);
+	drawingManager = new Drawing(config);
+	drawingManager.setCallbacks(
+								drawingInit,
+								drawingUpdate,
+								drawingRemove,
+								sendTouchToPalette,
+								sendDragToPalette,
+								sendStyleToPalette,
+								sendChangeToPalette,
+								movePaletteTo,
+								saveDrawingSession,
+								loadDrawingSession,
+								sendSessionListToPalette
+								);
+	// Link the interactable manager to the drawing manager
+	drawingManager.linkInteractableManager(interactMgr);
 }
+
+
+/************************Whiteboard Callbacks************************/
+
+function drawingInit(clientWebSocket, drawState) {
+	clientWebSocket.emit("drawingInit", drawState);
+}
+
+function drawingUpdate(clientWebSocket, drawingObject) {
+	clientWebSocket.emit("drawingUpdate", drawingObject);
+}
+
+function drawingRemove(clientWebSocket, drawingObject) {
+	clientWebSocket.emit("drawingRemove", drawingObject);
+}
+
+function sendTouchToPalette(paletteID, x, y) {
+	var ePosition = {x: x, y: y};
+	var eUser = {id: 1, label: "Touch", color: "none"};
+
+	var event = {
+		id: paletteID,
+		type: "pointerPress",
+		position: ePosition,
+		user: eUser,
+		data: {button: "left"},
+		date: Date.now()
+	};
+
+	broadcast('eventInItem', event);
+}
+function sendDragToPalette(paletteID, x, y) {
+	var ePosition = {x: x, y: y};
+	var eUser = {id: 1, label: "Touch", color: "none"};
+
+	var event = {
+		id: paletteID,
+		type: "pointerDrag",
+		position: ePosition,
+		user: eUser,
+		data: {button: "left"},
+		date: Date.now()
+	};
+
+	broadcast('eventInItem', event);
+}
+
+function sendStyleToPalette(paletteID, style) {
+	var ePosition = {x: 0, y: 0};
+	var eUser = {id: 1, label: "Touch", color: "none"};
+
+	var event = {
+		id: paletteID,
+		type: "styleChange",
+		position: ePosition,
+		user: eUser,
+		data: {style: style},
+		date: Date.now()
+	};
+
+	broadcast('eventInItem', event);
+}
+
+function sendSessionListToPalette(paletteID, data) {
+	var ePosition = {x: 0, y: 0};
+	var eUser = {id: 1, label: "Touch", color: "none"};
+
+	var event = {
+		id: paletteID,
+		type: "sessionsList",
+		position: ePosition,
+		user: eUser,
+		data: data,
+		date: Date.now()
+	};
+
+	broadcast('eventInItem', event);
+
+}
+
+function sendChangeToPalette(paletteID, data) {
+	var ePosition = {x: 0, y: 0};
+	var eUser = {id: 1, label: "Touch", color: "none"};
+
+	var event = {
+		id: paletteID,
+		type: "modeChange",
+		position: ePosition,
+		user: eUser,
+		data: data,
+		date: Date.now()
+	};
+
+	broadcast('eventInItem', event);
+}
+
+function movePaletteTo(paletteID, x, y, w, h) {
+	var paletteApp = SAGE2Items.applications.list[paletteID];
+	if (paletteApp !== undefined) {
+		paletteApp.left = x;
+		paletteApp.top = y;
+		var moveApp = {
+			elemId: paletteID,
+			elemLeft: x,
+			elemTop: y,
+			elemWidth: w,
+			elemHeight: h,
+			date: new Date()
+		};
+
+		moveApplicationWindow(null, moveApp, null);
+	}
+}
+
 
 function setUpDialogsAsInteractableObjects() {
 	var dialogGeometry = {
@@ -551,6 +686,12 @@ function closeWebSocketClient(wsio) {
 	}
 
 	removeElement(clients, wsio);
+
+	// Unregistering the client from the drawingManager
+	if (wsio.clientType === "display") {
+		drawingManager.removeWebSocket(wsio);
+	}
+
 }
 
 /**
@@ -628,7 +769,9 @@ function wsAddClient(wsio, data) {
 
 	clients.push(wsio);
 	initializeWSClient(wsio, data.requests.config, data.requests.version, data.requests.time, data.requests.console);
-
+	if (wsio.clientType === "display") {
+		drawingManager.init(wsio);
+	}
 	// Check if there's a new pointer for a mobile client
 	if (data.browser && data.browser.isMobile && remoteInteraction[wsio.id]) {
 		// for mobile clients, default to window interaction mode
@@ -765,6 +908,26 @@ function setupListeners(wsio) {
 	wsio.on('radialMenuMoved',                      wsRadialMenuMoved);
 	wsio.on('removeRadialMenu',                     wsRemoveRadialMenu);
 	wsio.on('radialMenuWindowToggle',               wsRadialMenuThumbnailWindow);
+
+	// DrawingState messages, should they have their own section?
+	wsio.on('updatePalettePosition',				wsUpdatePalettePosition);
+	wsio.on('enableDrawingMode',					wsEnableDrawingMode);
+	wsio.on('disableDrawingMode',					wsDisableDrawingMode);
+	wsio.on('enableEraserMode',						wsEnableEraserMode);
+	wsio.on('disableEraserMode',					wsDisableEraserMode);
+	wsio.on('enablePointerColorMode',						wsEnablePointerColorMode);
+	wsio.on('disablePointerColorMode',					wsDisablePointerColorMode);
+	wsio.on('clearDrawingCanvas',					wsClearDrawingCanvas);
+	wsio.on('changeStyle',							wsChangeStyle);
+	wsio.on('undoLastDrawing',						wsUndoLastDrawing);
+	wsio.on('redoDrawing',							wsRedoDrawing);
+	wsio.on('loadDrawings',							wsLoadDrawings);
+	wsio.on('getSessionsList',						wsGetSessionsList);
+	wsio.on('saveDrawings',							wsSaveDrawings);
+	wsio.on('enablePaintingMode',					wsEnablePaintingMode);
+	wsio.on('disablePaintingMode',					wsDisablePaintingMode);
+	wsio.on('saveScreenshot',						wsSaveScreenshot);
+	wsio.on('selectionModeOnOff',					wsSelectionModeOnOff);
 
 	wsio.on('addNewWebElement',                     wsAddNewWebElement);
 
@@ -984,6 +1147,83 @@ function initializeRemoteServerInfo(wsio) {
 		var site = {name: remoteSites[i].name, connected: remoteSites[i].connected, geometry: remoteSites[i].geometry};
 		wsio.emit('addRemoteSite', site);
 	}
+}
+
+// **************  Drawing Functions *****************
+
+// The functions just call their associated method in the drawing manager
+function wsUpdatePalettePosition(wsio, data) {
+	drawingManager.updatePalettePosition({
+		startX: data.x,
+		endX: data.x + data.w,
+		startY: data.y,
+		endY: data.y + data.h});
+}
+
+function wsEnableDrawingMode(wsio, data) {
+	drawingManager.enableDrawingMode(data);
+}
+function wsDisableDrawingMode(wsio, data) {
+	drawingManager.disableDrawingMode(data);
+}
+
+function wsEnableEraserMode(wsio, data) {
+	drawingManager.enableEraserMode(data);
+}
+function wsDisableEraserMode(wsio, data) {
+	drawingManager.disableEraserMode(data);
+}
+
+function wsEnablePointerColorMode(wsio, data) {
+	drawingManager.enablePointerColorMode(data);
+}
+function wsDisablePointerColorMode(wsio, data) {
+	drawingManager.disablePointerColorMode(data);
+}
+
+
+function wsClearDrawingCanvas(wsio, data) {
+	drawingManager.clearDrawingCanvas();
+}
+
+function wsChangeStyle(wsio, data) {
+	drawingManager.changeStyle(data);
+}
+
+function wsUndoLastDrawing(wsio, data) {
+	drawingManager.undoLastDrawing();
+}
+
+function wsRedoDrawing(wsio, data) {
+	drawingManager.redoDrawing();
+}
+
+function wsLoadDrawings(wsio, data) {
+	drawingManager.loadDrawings(data);
+}
+
+function wsGetSessionsList(wsio, data) {
+	var allDrawings = getAllDrawingsessions();
+	drawingManager.gotSessionsList(allDrawings);
+}
+
+function wsSaveDrawings(wsio, data) {
+	drawingManager.saveDrawings();
+}
+
+function wsEnablePaintingMode(wsio, data) {
+	drawingManager.enablePaintingMode();
+}
+
+function wsDisablePaintingMode(wsio, data) {
+	drawingManager.disablePaintingMode();
+}
+function wsSaveScreenshot(wsio, data) {
+	saveScreenshot(data.screenshot);
+}
+
+function wsSelectionModeOnOff(wsio, data) {
+	drawingManager.selectionModeOnOff();
 }
 
 // **************  Sage Pointer Functions *****************
@@ -1511,7 +1751,7 @@ function wsUpdateAppState(wsio, data) {
 	if (wsio === masterDisplay && SAGE2Items.applications.list.hasOwnProperty(data.id)) {
 		var app = SAGE2Items.applications.list[data.id];
 
-		mergeObjects(data.localState, app.data, ['doc_url', 'video_url', 'video_type', 'audio_url', 'audio_type']);
+		sageutils.mergeObjects(data.localState, app.data, ['doc_url', 'video_url', 'video_type', 'audio_url', 'audio_type']);
 
 		if (data.updateRemote === true) {
 			var ts;
@@ -1814,6 +2054,81 @@ function deleteSession(filename) {
 	}
 }
 
+function saveDrawingSession(data) {
+	var now = new Date();
+	var filename = "drawingSession" + now.getTime();
+
+	var fullpath = path.join(sessionDirectory, filename);
+	// if it doesn't end in .json, add it
+	if (fullpath.indexOf(".json", fullpath.length - 5) === -1) {
+		fullpath += '.json';
+	}
+
+	try {
+		fs.writeFileSync(fullpath, JSON.stringify(data, null, 4));
+		console.log(sageutils.header("Session") + "saved drawing session file to " + fullpath);
+	} catch (err) {
+		console.log(sageutils.header("Session") + "error saving", err);
+	}
+}
+
+function getAllDrawingsessions() {
+	var allNames = fs.readdirSync(sessionDirectory);
+	var res = [];
+	for (var i in allNames) {
+		if (allNames[i].indexOf("drawingSession") != -1) {
+			res.push(allNames[i]);
+		}
+	}
+	return res;
+}
+
+function loadDrawingSession(filename) {
+
+	if (filename == null) {
+		console.log("Filename does not exist");
+		filename = "drawingSession";
+	}
+
+	var fullpath;
+	if (sageutils.fileExists(path.resolve(filename))) {
+		fullpath = filename;
+	} else {
+		fullpath = path.join(sessionDirectory, filename);
+	}
+
+	// if it doesn't end in .json, add it
+	if (fullpath.indexOf(".json", fullpath.length - 5) === -1) {
+		fullpath += '.json';
+	}
+
+	fs.readFile(fullpath, function(err, data) {
+		if (err) {
+			console.log("Error reading DrawingState: ", err);
+		} else {
+			console.log("Reading DrawingState from " + fullpath);
+			var j = JSON.parse(data);
+			drawingManager.loadOldState(j);
+		}
+	});
+
+}
+
+function saveScreenshot(data) {
+	var now = new Date();
+	// Assign a unique name
+	var filename = "screenshot" + now.getTime() + '.png';
+	var img = data.replace("data:image/png;base64,", "");
+	var fullpath = path.join(whiteboardDirectory, filename);
+	var buf = new Buffer(img, 'base64');
+	try {
+		fs.writeFile(fullpath, buf);
+		console.log(sageutils.header("Session") + "saved screenshot file to " + fullpath);
+	} catch (err) {
+		console.log(sageutils.header("Session") + "error saving", err);
+	}
+}
+
 function saveSession(filename) {
 	filename = filename || 'default.json';
 
@@ -1884,7 +2199,7 @@ function createAppFromDescription(app, callback) {
 		appInstance.previous_width  = app.previous_width;
 		appInstance.previous_height = app.previous_height;
 		appInstance.maximized       = app.maximized;
-		mergeObjects(app.data, appInstance.data, ['doc_url', 'video_url', 'video_type', 'audio_url', 'audio_type']);
+		sageutils.mergeObjects(app.data, appInstance.data, ['doc_url', 'video_url', 'video_type', 'audio_url', 'audio_type']);
 
 		callback(appInstance, videohandle);
 	};
@@ -2258,7 +2573,7 @@ function wsRequestStoredFiles(wsio, data) {
 }
 
 function wsLoadApplication(wsio, data) {
-	var appData = {application: "custom_app", filename: data.application};
+	var appData = {application: "custom_app", filename: data.application, data: data.data};
 	appLoader.loadFileFromLocalStorage(appData, function(appInstance) {
 		appInstance.id = getUniqueAppId();
 		if (appInstance.animation) {
@@ -2695,6 +3010,15 @@ function wsCommand(wsio, data) {
 // **************  Launching Web Browser *****************
 
 function wsOpenNewWebpage(wsio, data) {
+	console.log(sageutils.header('Webview') + "opening " + data.url);
+
+	wsLoadApplication(null,
+		{application: "/uploads/apps/Webview",
+		user: wsio.id,
+		// pass the url in the data object
+		data: data,
+		position: [0, 0]});
+
 	// Check if the web-browser is connected
 	if (webBrowserClient !== null) {
 		// then emit the command
@@ -2804,7 +3128,7 @@ function wsAddNewElementFromRemoteServer(wsio, data) {
 			appInstance.id = getUniqueAppId();
 		}
 
-		mergeObjects(data.data, appInstance.data, ['video_url', 'video_type', 'audio_url', 'audio_type']);
+		sageutils.mergeObjects(data.data, appInstance.data, ['video_url', 'video_type', 'audio_url', 'audio_type']);
 
 		handleNewApplication(appInstance, videohandle);
 
@@ -2842,7 +3166,7 @@ function wsAddNewSharedElementFromRemoteServer(wsio, data) {
 			appInstance.id = data.id;
 		}
 
-		mergeObjects(data.application.data, appInstance.data, ['video_url', 'video_type', 'audio_url', 'audio_type']);
+		sageutils.mergeObjects(data.application.data, appInstance.data, ['video_url', 'video_type', 'audio_url', 'audio_type']);
 
 		handleNewApplication(appInstance, videohandle);
 
@@ -3371,7 +3695,8 @@ function wsUpdateApplicationState(wsio, data) {
 			oldMuted = app.data.muted;
 		}
 
-		var modified = mergeObjects(data.state, app.data, ['doc_url', 'video_url', 'video_type', 'audio_url', 'audio_type']);
+		var modified = sageutils.mergeObjects(data.state, app.data,
+			['doc_url', 'video_url', 'video_type', 'audio_url', 'audio_type']);
 		if (modified === true) {
 			// update video demuxer based on state
 			if (app.application === "movie_player") {
@@ -3634,6 +3959,28 @@ function loadConfiguration() {
 		};
 	}
 
+	// Tile config Basic mode
+	var aspectRatioConfig = userConfig.dimensions.aspect_ratio;
+	var aspectRatio = 1.7778; // 16:9
+	var userDefinedAspectRatio = false;
+	if (aspectRatioConfig !== undefined) {
+		var ratioParsed = aspectRatioConfig.split(":");
+		aspectRatio = (parseFloat(ratioParsed[0]) / parseFloat(ratioParsed[1])) || aspectRatio;
+		userDefinedAspectRatio = true;
+		console.log(sageutils.header("UI") + "User defined aspect ratio: " + aspectRatio);
+	}
+
+	var tileHeight = 0.0;
+	if (userConfig.dimensions.tile_diagonal_inches !== undefined) {
+		var tile_diagonal_meters = userConfig.dimensions.tile_diagonal_inches * 0.0254;
+		tileHeight = tile_diagonal_meters * aspectRatio;
+	}
+
+	if (userConfig.dimensions.tileHeight) {
+		// tileWidth    = parseFloat(userConfig.dimensions.tile_width) || 0.0;
+		tileHeight   = parseFloat(userConfig.dimensions.tile_height) || 0.0;
+	}
+
 	// Check the display border settings
 	if (userConfig.dimensions.tile_borders === undefined) {
 		// set default values to 0
@@ -3642,21 +3989,41 @@ function loadConfiguration() {
 		// then for dimensions
 		userConfig.dimensions.tile_borders = { left: 0.0, right: 0.0, bottom: 0.0, top: 0.0};
 	} else {
-		var borderLeft, borderRight, borderBottom, borderTop, tileWidth;
+		var borderLeft, borderRight, borderBottom, borderTop; // tileWidth,
 		// make sure the values are valid floats
 		borderLeft   = parseFloat(userConfig.dimensions.tile_borders.left)   || 0.0;
 		borderRight  = parseFloat(userConfig.dimensions.tile_borders.right)  || 0.0;
 		borderBottom = parseFloat(userConfig.dimensions.tile_borders.bottom) || 0.0;
 		borderTop    = parseFloat(userConfig.dimensions.tile_borders.top)    || 0.0;
-		tileWidth    = parseFloat(userConfig.dimensions.tile_width) || 0.0;
-		// calculate pixel density (ppm) based on width
-		var pixelsPerMeter = userConfig.resolution.width / tileWidth;
+
 		// calculate values in pixel now
 		userConfig.resolution.borders = {};
 		userConfig.resolution.borders.left   = Math.round(pixelsPerMeter * borderLeft)   || 0;
 		userConfig.resolution.borders.right  = Math.round(pixelsPerMeter * borderRight)  || 0;
 		userConfig.resolution.borders.bottom = Math.round(pixelsPerMeter * borderBottom) || 0;
 		userConfig.resolution.borders.top    = Math.round(pixelsPerMeter * borderTop)    || 0;
+	}
+
+	// calculate pixel density (ppm) based on width
+	var pixelsPerMeter = userConfig.resolution.height / tileHeight;
+	if (userDefinedAspectRatio == false) {
+		aspectRatio = userConfig.resolution.width / userConfig.resolution.height;
+		console.log(sageutils.header("UI") + "Resolution defined aspect ratio: " + aspectRatio);
+	}
+
+	// calculate the widget control size based on dimensions and user distance
+	if (userConfig.ui.auto_scale_ui && tileHeight !== undefined) {
+		var objectHeightMeters = 27 / pixelsPerMeter;
+		// var minimumWidgetControlSize = 20; // Min button size for text readability (also for touch wall)
+		var perceptualScalingFactor = 0.0213;
+		var userDist = userConfig.dimensions.viewing_distance;
+		var calcuatedWidgetControlSize = userDist * (perceptualScalingFactor * (userDist / objectHeightMeters));
+		var targetVisualAcuity = 1; // degrees of arc
+
+		calcuatedWidgetControlSize = Math.tan((targetVisualAcuity * Math.PI / 180.0) / 2) * 2 * userDist * pixelsPerMeter;
+
+		console.log(sageutils.header("UI") + "widgetControlSize: " + calcuatedWidgetControlSize);
+		console.log(sageutils.header("UI") + "pixelsPerMeter: " + pixelsPerMeter);
 	}
 
 	// Check the width and height of each display (in tile count)
@@ -3829,13 +4196,13 @@ function sliceBackgroundImage(fileName, outputBaseName) {
 		var output_base = path.basename(outputBaseName, input_ext);
 		var output = path.join(output_dir, output_base + "_" + i.toString() + output_ext);
 		imageMagick(fileName).crop(
-			config.resolution.width * config.displays[i].width,
-			config.resolution.height * config.displays[i].height, x, y)
-		.write(output, function(err) {
-			if (err) {
-				console.log("error slicing image", err); // throw err;
-			}
-		});
+				config.resolution.width * config.displays[i].width,
+				config.resolution.height * config.displays[i].height, x, y)
+			.write(output, function(err) {
+				if (err) {
+					console.log("error slicing image", err); // throw err;
+				}
+			});
 	}
 }
 
@@ -4798,28 +5165,6 @@ function byteBufferToString(buf) {
 	return str;
 }
 
-function mergeObjects(a, b, ignore) {
-	var ig = ignore || [];
-	var modified = false;
-	// test in case of old sessions
-	if (a === undefined || b === undefined) {
-		return modified;
-	}
-	for (var key in b) {
-		if (a[key] !== undefined && ig.indexOf(key) < 0) {
-			var aRecurse = (a[key] === null || a[key] instanceof Array || typeof a[key] !== "object") ? false : true;
-			var bRecurse = (b[key] === null || b[key] instanceof Array || typeof b[key] !== "object") ? false : true;
-			if (aRecurse && bRecurse) {
-				modified = mergeObjects(a[key], b[key]) || modified;
-			} else if (!aRecurse && !bRecurse && a[key] !== b[key]) {
-				b[key] = a[key];
-				modified = true;
-			}
-		}
-	}
-	return modified;
-}
-
 function addEventToUserLog(id, data) {
 	var key;
 	for (key in users) {
@@ -4911,6 +5256,19 @@ function pointerPress(uniqueID, pointerX, pointerY, data) {
 		broadcast('changeSagePointerMode', {id: sagePointers[uniqueID].id, mode: remoteInteraction[uniqueID].interactionMode});
 	}
 
+	var color = sagePointers[uniqueID] ? sagePointers[uniqueID].color : null;
+
+	// Whiteboard app
+	// If the user touches on the palette with drawing disabled, enable it
+	if ((!drawingManager.drawingMode) && drawingManager.touchInsidePalette(pointerX, pointerY)) {
+		drawingManager.reEnableDrawingMode();
+	}
+	if (drawingManager.drawingMode) {
+		drawingManager.pointerEvent(
+			omicronManager.sageToOmicronEvent(uniqueID, pointerX, pointerY, data, 5, color),
+			uniqueID, pointerX, pointerY, 10, 10);
+	}
+
 	var obj = interactMgr.searchGeometry({x: pointerX, y: pointerY});
 
 	if (obj === null) {
@@ -4918,7 +5276,6 @@ function pointerPress(uniqueID, pointerX, pointerY, data) {
 		return;
 	}
 	var prevInteractionItem = remoteInteraction[uniqueID].getPreviousInteractionItem();
-	var color = sagePointers[uniqueID] ? sagePointers[uniqueID].color : null;
 	var localPt = globalToLocal(pointerX, pointerY, obj.type, obj.geometry);
 
 	switch (obj.layerId) {
@@ -5270,7 +5627,9 @@ function pointerPressOnApplication(uniqueID, pointerX, pointerY, data, obj, loca
 
 	switch (btn.id) {
 		case "titleBar":
-			selectApplicationForMove(uniqueID, obj.data, pointerX, pointerY, portalId);
+			if (drawingManager.paletteID !== uniqueID) {
+				selectApplicationForMove(uniqueID, obj.data, pointerX, pointerY, portalId);
+			}
 			break;
 		case "dragCorner":
 			selectApplicationForResize(uniqueID, obj.data, pointerX, pointerY, portalId);
@@ -5513,6 +5872,14 @@ function selectPortalForResize(uniqueID, portal, pointerX, pointerY) {
 function pointerMove(uniqueID, pointerX, pointerY, data) {
 	if (sagePointers[uniqueID] === undefined) {
 		return;
+	}
+
+	// Whiteboard app
+	if (drawingManager.drawingMode) {
+		var color = sagePointers[uniqueID] ? sagePointers[uniqueID].color : null;
+		drawingManager.pointerEvent(
+			omicronManager.sageToOmicronEvent(uniqueID, pointerX, pointerY, data, 4, color),
+			uniqueID, pointerX, pointerY, 10, 10);
 	}
 
 	// Trick: press ALT key while moving switches interaction mode
@@ -5891,6 +6258,7 @@ function moveApplicationWindow(uniqueID, moveApp, portalId) {
 				attachAppIfSticky(backgroundObj.data, moveApp.elemId);
 			}
 		}
+		drawingManager.applicationMoved(moveApp.elemId, moveApp.elemLeft, moveApp.elemTop);
 		im.editGeometry(moveApp.elemId, "applications", "rectangle",
 			{x: moveApp.elemLeft, y: moveApp.elemTop, w: moveApp.elemWidth, h: moveApp.elemHeight + titleBarHeight});
 		broadcast('setItemPosition', moveApp);
@@ -5932,6 +6300,9 @@ function moveAndResizeApplicationWindow(resizeApp, portalId) {
 		titleBarHeight = remoteSharingSessions[portalId].portal.titleBarHeight;
 	}
 	var im = findInteractableManager(resizeApp.elemId);
+	drawingManager.applicationMoved(resizeApp.elemId, resizeApp.elemLeft, resizeApp.elemTop);
+	drawingManager.applicationResized(resizeApp.elemId, resizeApp.elemWidth, resizeApp.elemHeight + titleBarHeight,
+										{x: resizeApp.elemLeft, y: resizeApp.elemTop});
 	im.editGeometry(resizeApp.elemId, "applications", "rectangle",
 		{x: resizeApp.elemLeft, y: resizeApp.elemTop, w: resizeApp.elemWidth, h: resizeApp.elemHeight + titleBarHeight});
 	handleApplicationResize(resizeApp.elemId);
@@ -6025,6 +6396,14 @@ function sendPointerMoveToApplication(uniqueID, app, pointerX, pointerY, data) {
 function pointerRelease(uniqueID, pointerX, pointerY, data) {
 	if (sagePointers[uniqueID] === undefined) {
 		return;
+	}
+
+	// Whiteboard app
+	if (drawingManager.drawingMode) {
+		var color = sagePointers[uniqueID] ? sagePointers[uniqueID].color : null;
+		drawingManager.pointerEvent(
+			omicronManager.sageToOmicronEvent(uniqueID, pointerX, pointerY, data, 6, color),
+			uniqueID, pointerX, pointerY, 10, 10);
 	}
 
 	// If obj is undefined (as in this case, will search for radial menu using uniqueID
@@ -7300,8 +7679,11 @@ function findApplicationPortal(app) {
 
 // **************  Omicron section *****************
 var omicronRunning = false;
-if (config.experimental && config.experimental.omicron && config.experimental.omicron.enable === true) {
-	var omicronManager = new Omicron(config);
+var omicronManager = new Omicron(config);
+omicronManager.linkDrawingManager(drawingManager);
+
+if (config.experimental && config.experimental.omicron &&
+	(config.experimental.omicron.enable === true || config.experimental.omicron.useSageInputServer === true)) {
 
 	var closeGestureDelay = 1500;
 
@@ -7320,6 +7702,7 @@ if (config.experimental && config.experimental.omicron && config.experimental.om
 		pointerRelease,
 		pointerScrollStart,
 		pointerScroll,
+		pointerScrollEnd,
 		pointerDblClick,
 		pointerCloseGesture,
 		keyDown,
@@ -7576,6 +7959,8 @@ function wsUtdRequestRmbContextMenu(wsio, data) {
 		if (SAGE2Items.applications.list[obj.data.id].contextMenu) {
 			// If we already have the menu info, send it
 			wsio.emit('dtuRmbContextMenuContents', {
+				x: data.xClick,
+				y: data.yClick,
 				app: obj.data.id,
 				entries: SAGE2Items.applications.list[obj.data.id].contextMenu
 			});
@@ -7595,6 +7980,10 @@ function wsUtdRequestRmbContextMenu(wsio, data) {
  * Asks for rmb context menu from app under x,y coordinate.
  */
 function wsUtdCallFunctionOnApp(wsio, data) {
+	if (data.func === "SAGE2DeleteElement") {
+		deleteApplication(data.app);
+		return; // closing of applications are handled by the called function.
+	}
 	// Using broadcast means the parameter must be in data.data
 	data.data = data.parameters;
 	// add the serverDate property
@@ -7758,23 +8147,28 @@ function csdLaunchAppWithValues(wsio, data) {
 	appLoadData.user = wsio.id; // needed for the wsLoadApplication function
 	var whatTheNewAppIdShouldBe = "app_" + getUniqueAppId.count;
 
-	// stagger the start location to prevent them from stacking on top of each other.
-	// this is just a temporary solution.
-	// percents
-	appLoadData.position = [csdDataStructure.xAppLaunchCoordinate, csdDataStructure.yAppLaunchCoordinate];
-	// after launch reset position
-	csdDataStructure.xAppLaunchCoordinate += 600;
-	if (csdDataStructure.xAppLaunchCoordinate >= config.totalWidth - 500) {
-		csdDataStructure.yAppLaunchCoordinate += 600;
-		csdDataStructure.xAppLaunchCoordinate = 10;
-		if (csdDataStructure.yAppLaunchCoordinate >= config.totalHeight - 500) {
-			csdDataStructure.yAppLaunchCoordinate = 100;
+	// If the launch location is defined, use it, otherwise use the stagger position.
+	if (data.xLaunch !== null && data.xLaunch !== undefined) {
+		appLoadData.position = [data.xLaunch, data.yLaunch];
+	} else {
+		// stagger the start location to prevent them from stacking on top of each other.
+		// this is just a temporary solution.
+		// percents
+		appLoadData.position = [csdDataStructure.xAppLaunchCoordinate, csdDataStructure.yAppLaunchCoordinate];
+		// after launch reset position
+		csdDataStructure.xAppLaunchCoordinate += 600;
+		if (csdDataStructure.xAppLaunchCoordinate >= config.totalWidth - 500) {
+			csdDataStructure.yAppLaunchCoordinate += 600;
+			csdDataStructure.xAppLaunchCoordinate = 10;
+			if (csdDataStructure.yAppLaunchCoordinate >= config.totalHeight - 500) {
+				csdDataStructure.yAppLaunchCoordinate = 100;
+			}
 		}
 	}
 
 	// call the previously made wsLoadApplication funciton and give it the required data.
 	wsLoadApplication(wsio, appLoadData);
-	// if a data.func is defined make a delayed call to it on the app.
+	// if a data.func is defined make a delayed call to it on the app. Otherwise, its just an app launch.
 	if (data.func !== undefined) {
 		setTimeout(
 			function() {

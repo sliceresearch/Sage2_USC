@@ -1,7 +1,7 @@
 {
-	"host": "131.193.77.235",
+	"host": "airluc.evl.uic.edu",
 	"port": 9090,
-	"index_port": 80,
+	"index_port": 9292,
 	"background": {
 		"image": {
 			"url": "images/background/evl1.jpg",
@@ -11,6 +11,7 @@
 	"ui": {
 		"clock": 24,
 		"show_url": true,
+		"noDropShadow": true,
 		"show_version": true
 	},
 	"resolution": {
@@ -58,7 +59,7 @@
                         name: "another",
                         url: "/another",
                         path: "/Users/luc/Desktop/another/",
-                        upload: true
+                        upload: false
                 },
                 {
                         name: "another1",

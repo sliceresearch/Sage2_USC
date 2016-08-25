@@ -311,7 +311,7 @@ function SAGE2_interaction(wsio) {
 		if (hasMouse) {
 			var button = document.getElementById(buttonId);
 			button.addEventListener('pointerlockchange', function(e) {
-				console.log(e);
+				console.log('Pointerlockchange>', e);
 			});
 			button.requestPointerLock = button.requestPointerLock       ||
 										button.mozRequestPointerLock    ||
@@ -500,10 +500,16 @@ function SAGE2_interaction(wsio) {
 	* @param stream {Object} media stream
 	*/
 	this.streamSuccessMethod = function(stream) {
-		console.log("media capture success!");
-
 		this.mediaStream = stream;
-		this.mediaStream.onended = this.streamEnded;
+
+		// deprecated:
+		// this.mediaStream.onended = this.streamEnded;
+		// Get list of tracks and set the handler on the track
+		var tracks = stream.getTracks();
+		if (tracks.length > 0) {
+			// Place the callback when the track is ended
+			tracks[0].onended = this.streamEnded;
+		}
 
 		var mediaVideo = document.getElementById('mediaVideo');
 		mediaVideo.src = window.URL.createObjectURL(this.mediaStream);
@@ -796,6 +802,7 @@ function SAGE2_interaction(wsio) {
 	* @param event {Object} key event
 	*/
 	this.pointerKeyDownMethod = function(event) {
+		// Get the code of the event
 		var code = parseInt(event.keyCode, 10);
 		// exit if 'esc' key
 		if (code === 27) {
@@ -916,7 +923,7 @@ function SAGE2_interaction(wsio) {
 			var mediaCanvas = document.getElementById('mediaCanvas');
 			mediaCanvas.width  = parseInt(res[0], 10);
 			mediaCanvas.height = parseInt(res[1], 10);
-			console.log("media resolution: " + event.target.options[this.mediaResolution].value);
+			console.log("Media resolution: " + event.target.options[this.mediaResolution].value);
 		}
 	};
 

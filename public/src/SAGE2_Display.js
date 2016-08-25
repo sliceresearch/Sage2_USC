@@ -246,7 +246,6 @@ function SAGE2_init() {
 			session: session
 		};
 		wsio.emit('addClient', clientDescription);
-		wsio.emit('requestStoredFiles');
 	});
 
 	// Socket close event (ie server crashed)
@@ -278,6 +277,9 @@ function setupListeners() {
 
 		// Global initialization
 		SAGE2_initialize(startTime);
+
+		// Request list of assets
+		wsio.emit('requestStoredFiles');
 	});
 
 	wsio.on('setAsMasterDisplay', function() {
@@ -307,6 +309,8 @@ function setupListeners() {
 		js.src = script_data.source;
 		document.head.appendChild(js);
 	});
+
+
 
 	wsio.on('setupDisplayConfiguration', function(json_cfg) {
 		var i;
@@ -383,6 +387,18 @@ function setupListeners() {
 				ui.connectedToRemoteSite(data);
 			}, 1000);
 		}
+	});
+
+	wsio.on('drawingInit', function(data) {
+		ui.drawingInit(data);
+	});
+
+	wsio.on('drawingUpdate', function(data) {
+		ui.updateObject(data);
+	});
+
+	wsio.on('drawingRemove', function(data) {
+		ui.removeObject(data);
 	});
 
 	wsio.on('createSagePointer', function(pointer_data) {
@@ -808,7 +824,9 @@ function setupListeners() {
 		dragCorner[0].style.left   = (Math.round(position_data.elemWidth) - cornerSize).toString()  + "px";
 
 		// if the element is a div or iframe, resize should use the style object
-		if (child[0].tagName.toLowerCase() === "div" || child[0].tagName.toLowerCase() === "iframe") {
+		if (child[0].tagName.toLowerCase() === "div" ||
+			child[0].tagName.toLowerCase() === "iframe" ||
+			child[0].tagName.toLowerCase() === "webview") {
 			child[0].style.width  = Math.round(position_data.elemWidth)  + "px";
 			child[0].style.height = Math.round(position_data.elemHeight) + "px";
 		} else {
@@ -916,15 +934,16 @@ function setupListeners() {
 	});
 
 	wsio.on('eventInItem', function(event_data) {
-		var date = new Date(event_data.date);
-		var app  = applications[event_data.id];
-
-		app.SAGE2Event(event_data.type, event_data.position, event_data.user, event_data.data, date);
-		//Send event data to every monitor app
-		for (var key in applicationMonitors){
-			if (applicationMonitors.hasOwnProperty(key)){
-				app = applicationMonitors[key];
-				app.SAGE2Event("monitor", {}, "", event_data, date);
+		var app = applications[event_data.id];
+		if (app) {
+			var date = new Date(event_data.date);
+			app.SAGE2Event(event_data.type, event_data.position, event_data.user, event_data.data, date);
+			//Send event data to every monitor app
+			for (var key in applicationMonitors) {
+				if (applicationMonitors.hasOwnProperty(key)) {
+					app = applicationMonitors[key];
+					app.SAGE2Event("monitor", {}, "", event_data, date);
+				}
 			}
 		}
 	});
@@ -1421,21 +1440,7 @@ function createAppWindow(data, parentId, titleBarHeight, titleTextSize, offsetX,
 
 				// Sending the context menu info to the server
 				if (isMaster) {
-					// If the application defines a menu function, use it
-					if (typeof newapp.getContextEntries === "function") {
-						wsio.emit('dtuRmbContextMenuContents', {
-							app: newapp.id,
-							entries: newapp.getContextEntries()
-						});
-					} else {
-						// Otherwise, send a default empty menu
-						wsio.emit('dtuRmbContextMenuContents', {
-							app: newapp.id,
-							entries: [{
-								description: "Not supported by this app"
-							}]
-						});
-					}
+					newapp.getFullContextMenuAndUpdate();
 				}
 
 				applications[data.id]   = newapp;
@@ -1458,21 +1463,7 @@ function createAppWindow(data, parentId, titleBarHeight, titleTextSize, offsetX,
 
 			// Sending the context menu info to the server
 			if (isMaster) {
-				// If the application defines a menu function, use it
-				if (typeof app.getContextEntries === "function") {
-					wsio.emit('dtuRmbContextMenuContents', {
-						app: app.id,
-						entries: app.getContextEntries()
-					});
-				} else {
-					// Otherwise, send a default empty menu
-					wsio.emit('dtuRmbContextMenuContents', {
-						app: app.id,
-						entries: [{
-							description: "Not supported by this app"
-						}]
-					});
-				}
+				app.getFullContextMenuAndUpdate();
 			}
 
 			applications[data.id] = app;

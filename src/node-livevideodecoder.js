@@ -108,7 +108,7 @@ LiveVideoDecoder.prototype.startLiveDecoding = function() {
 	var frameBuffer  = new Buffer(this.frameSize);
 
 	var command = ffmpeg(this.url).native().seekInput(this.frameIdx / this.framerate).size(this.width + 'x' + this.height)
-				.outputFormat('rawvideo').outputOptions('-pix_fmt yuv420p');
+		.outputFormat('rawvideo').outputOptions('-pix_fmt yuv420p');
 	if (this.options.ffmpegPath !== undefined) {
 		command.setFfmpegPath(this.options.ffmpegPath + "ffmpeg");
 	}
