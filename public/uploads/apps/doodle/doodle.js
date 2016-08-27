@@ -62,9 +62,48 @@ var doodle = SAGE2_App.extend({
 		if (initialImage === null || initialImage === undefined) {
 			return;
 		}
+		var _this = this;
+		this.imageToDraw.onload = function() {
+			_this.drawCanvas.width = _this.imageToDraw.width;
+			_this.drawCanvas.height = _this.imageToDraw.height;
+			_this.ctx.drawImage(_this.imageToDraw, 0, 0);
 
+			/*
+			Resize app based on image size.
+			NOTE: Known bug: if the canvas is set based upon an image, the localhost may error if the display client is on another computer.
+			To avoid, have all display clients on one computer or use the actual hostname rather than localhost.
+			*/
+			_this.sendResize(_this.imageToDraw.naturalWidth, _this.imageToDraw.naturalHeight);
+		};
 		this.imageToDraw.src = initialImage;
-		this.ctx.drawImage(this.imageToDraw, 0, 0);
+		// this.fitImageToAppSize();
+
+	},
+
+	/*
+	Since the app has a width and height, need to specify canvas stretch based upon change.
+	Ratio is width / height.
+	As width increases, the ratio increases.
+	As height increases, the ratio decreases.
+	If the app ratio is larger than the image ratio, the app has more width:height.
+	Therefore the image should be limited by height.
+	Else, the app ratio is smaller, meaning the app has less width:height.
+	Therefore the image should be limited by width.
+
+	Currently unused, and should be removed eventually after the autosizing based off of imagesize is implemented and checked.
+	*/
+	fitImageToAppSize: function() {
+		var divWidth      = parseInt(this.element.style.width);
+		var divHeight     = parseInt(this.element.style.height);
+		var appRatio = divWidth / divHeight;
+		var imageRatio      = this.drawCanvas.width / this.drawCanvas.height;
+		if (appRatio > imageRatio) {
+			this.drawCanvas.style.width  = "";
+			this.drawCanvas.style.height = "100%";
+		} else {
+			this.drawCanvas.style.width  = "100%";
+			this.drawCanvas.style.height = "";
+		}
 	},
 
 	/**
@@ -80,13 +119,13 @@ var doodle = SAGE2_App.extend({
 	Everyone in the array should be able to update this app correctly and receive each other's updates.
 	*/
 	addClientIdAsEditor: function(responseObject) {
-		// add the client who responded to the list of editors.
-		this.arrayOfEditors.push(responseObject.clientId);
-		// get canvas as image.
-		var imageString = this.getCanvasAsImage();
-
 		// prevent multiple sends if there are more than 1 display.
 		if (isMaster) {
+			// add the client who responded to the list of editors.
+			this.arrayOfEditors.push(responseObject.clientId);
+			// get canvas as image.
+			var imageString = this.getCanvasAsImage();
+
 			// send back to client the OK to start editing.
 			var dataForClient = {};
 			dataForClient.clientDest  = responseObject.clientId;
@@ -94,9 +133,10 @@ var doodle = SAGE2_App.extend({
 			dataForClient.func        = 'uiDrawSetCurrentStateAndShow';
 			dataForClient.appId       = this.id;
 			dataForClient.type        = 'sendDataToClient';
+			dataForClient.imageWidth  = this.drawCanvas.width;
+			dataForClient.imageHeight = this.drawCanvas.height;
 			wsio.emit('csdMessage', dataForClient);
 		}
-
 		this.changeTitleToOriginalCreatorAndTime(responseObject);
 	},
 
@@ -165,7 +205,7 @@ var doodle = SAGE2_App.extend({
 		this.SAGE2UpdateAppOptionsFromState();
 		this.SAGE2Sync(true);
 		// Tell server to save the file
-		if (this.state.creationTime !== null && this.state.creationTime !== undefined) {
+		if (isMaster && this.state.creationTime !== null && this.state.creationTime !== undefined) {
 			var fileData = {};
 			fileData.type = "saveDataOnServer";
 			fileData.fileType = "doodle"; // Extension
@@ -218,13 +258,37 @@ var doodle = SAGE2_App.extend({
 			titleString += this.state.creationTime.getMilliseconds();
 			// store it for later and update the tile.
 			this.state.creationTime = titleString;
-			this.updateTitle(this.state.creationTime);
 			this.state.originalCreator = responseObject.clientName;
+			this.formatAndSetTitle(this.state.creationTime);
 		}
 		// if loaded will include the creationTime
 		if (responseObject.creationTime !== undefined && responseObject.creationTime !== null) {
 			this.state.creationTime = responseObject.creationTime;
-			this.updateTitle(responseObject.creationTime);
+			this.formatAndSetTitle(this.state.creationTime);
+		}
+	},
+
+	formatAndSetTitle: function(wholeName) {
+		// Breaking apart whole name and using moment.js to make easier to read.
+		var parts  = wholeName.split("-"); // 0 name - 1 qn - 2 YYYYMMDD - 3 HHMMSSmmm
+		var author = parts[0];
+		var month  = parseInt(parts[2].substring(4, 6)); // YYYY[MM]
+		var day    = parseInt(parts[2].substring(6, 8)); // YYYYMM[DD]
+		var hour   = parseInt(parts[3].substring(0, 2)); // [HH]
+		var min    = parseInt(parts[3].substring(2, 4)); // HH[MM]
+		// Moment conversion
+		var momentTime = {
+			month: month,
+			day: day,
+			hour: hour,
+			minute: min
+		};
+		momentTime = moment(momentTime);
+		// If the author is supposed to be Anonymouse, then omit author inclusion and marker.
+		if (author === "Anonymous") {
+			this.updateTitle(momentTime.format("MMM Do, hh:mm A"));
+		} else { // Otherwise have the name followed by @
+			this.updateTitle(author + " @ " + momentTime.format("MMM Do, hh:mm A"));
 		}
 	},
 
@@ -238,6 +302,7 @@ var doodle = SAGE2_App.extend({
 	},
 
 	resize: function(date) {
+		// this.fitImageToAppSize();
 		// var workingDiv = document.getElementById(this.element.id);
 		// workingDiv.width = this.element.clientWidth + "px";
 		// workingDiv.height = this.element.clientHeight + "px";
@@ -255,6 +320,8 @@ var doodle = SAGE2_App.extend({
 			data.type    = "launchAppWithValues";
 			data.appName = "doodle";
 			data.func    = "initializationThroughDuplicate";
+			data.xLaunch = this.sage2_x + 100;
+			data.yLaunch = this.sage2_y;
 			data.params  =  {};
 			data.params.clientName    = responseObject.clientName;
 			data.params.imageSnapshot = this.getCanvasAsImage();
