@@ -4751,7 +4751,8 @@ function processInputCommand(line) {
 			console.log('load\t\tload a session and restore applications');
 			console.log('open\t\topen a file: open file_url [0.5, 0.5]');
 			console.log('play\t\tplay a media stream: appid');
-			console.log('play\t\tpause a media stream: appid');
+			console.log('pause\t\tpause a media stream: appid');
+			console.log('loop\t\tloop a media stream (yes/no): appid boolean');
 			console.log('resize\t\tresize a window: appid width height');
 			console.log('moveby\t\tshift a window: appid dx dy');
 			console.log('moveto\t\tmove a window: appid x y');
@@ -4897,6 +4898,12 @@ function processInputCommand(line) {
 			}
 			break;
 		}
+		case 'loop': {
+			if (command.length > 2 && typeof command[2] === "string") {
+				loopVideo(command[1],(command[2]==="true"));
+			}
+			break;
+		}
 		case 'fullscreen': {
 			if (command.length > 1 && typeof command[1] === "string") {
 				wsFullscreen(null, {id: command[1]});
@@ -4948,6 +4955,12 @@ function processInputCommand(line) {
 			break;
 		}
 	}
+}
+
+function loopVideo(appId, setLoop) {
+	var wsio = null; // ignored by wsPlayVideo
+	var data = {id: appId, loop: setLoop};
+	wsLoopVideo(wsio, data);
 }
 
 function playVideo(appId) {
