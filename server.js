@@ -4750,6 +4750,8 @@ function processInputCommand(line) {
 			console.log('save\t\tsave state of running applications into a session');
 			console.log('load\t\tload a session and restore applications');
 			console.log('open\t\topen a file: open file_url [0.5, 0.5]');
+			console.log('play\t\tplay a media stream: appid');
+			console.log('play\t\tpause a media stream: appid');
 			console.log('resize\t\tresize a window: appid width height');
 			console.log('moveby\t\tshift a window: appid dx dy');
 			console.log('moveto\t\tmove a window: appid x y');
@@ -4883,6 +4885,18 @@ function processInputCommand(line) {
 			}
 			break;
 		}
+		case 'play': {
+			if (command.length > 1 && typeof command[1] === "string") {
+				playVideo(command[1]);
+			}
+			break;
+		}
+		case 'pause': {
+			if (command.length > 1 && typeof command[1] === "string") {
+				pauseVideo(command[1]);
+			}
+			break;
+		}
 		case 'fullscreen': {
 			if (command.length > 1 && typeof command[1] === "string") {
 				wsFullscreen(null, {id: command[1]});
@@ -4934,6 +4948,16 @@ function processInputCommand(line) {
 			break;
 		}
 	}
+}
+
+function playVideo(appId) {
+	var wsio = null; // ignored by wsPlayVideo
+	wsPlayVideo(wsio, {id: appId});
+}
+
+function pauseVideo(appId) {
+	var wsio = null; // ignored by wsPauseVideo
+	wsPauseVideo(wsio, {id: appId});
 }
 
 // Command loop: reading input commands - SHOULD MOVE LATER: INSIDE CALLBACK AFTER SERVER IS LISTENING
