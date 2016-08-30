@@ -69,8 +69,18 @@ var SAGE2MEP = {
 		var pointerDiv = document.getElementById(user.id);
 
 		// Returns the value of x and y based on world space, not display space.
-		var xLocationOfPointerOnScreen = this.getXOfWebkitTranslate(pointerDiv.style.WebkitTransform);
-		var yLocationOfPointerOnScreen = this.getYOfWebkitTranslate(pointerDiv.style.WebkitTransform);
+		var tempTransform = pointerDiv.style.webkitTransform;
+		if (!tempTransform) {
+			tempTransform = pointerDiv.style.mozTransform;
+		}
+		if (!tempTransform) {
+			tempTransform = pointerDiv.style.transform;
+		}
+		if (!tempTransform) {
+			console.log("Error, no transform detected. Not possible to convert mouse events.");
+		}
+		var xLocationOfPointerOnScreen = this.getXOfWebkitTranslate(tempTransform);
+		var yLocationOfPointerOnScreen = this.getYOfWebkitTranslate(tempTransform);
 
 		// gets the element under the pointer coordinate. Some assumptions are made.
 		point.currentElement = this.getElementUnderPointer(xLocationOfPointerOnScreen, yLocationOfPointerOnScreen, appId);
@@ -286,10 +296,6 @@ var SAGE2MEP = {
 				break;
 		} // end switch of sage event type
 
-		// don't forget to put the app back where it came from
-		// this.moveAppWhereItWasIfNecessary(appId);
-		// maybe no longer needed with the new getElementUnderPointer
-
 	}, // end processAndPassEvents
 
 
@@ -385,9 +391,9 @@ var SAGE2MEP = {
 	getXOfWebkitTranslate: function(translateString) {
 		var retval;
 		retval = -1;
-		if (translateString.search("translate") > -1) {
-			translateString = translateString.substring(translateString.search("translate") + 10);
-			retval = Math.round(translateString.substring(0, translateString.search("px")).valueOf());
+		if (translateString.indexOf("translate") > -1) {
+			translateString = translateString.substring(translateString.indexOf("translate") + 10);
+			retval = Math.round(translateString.substring(0, translateString.indexOf("px")).valueOf());
 		}
 		return retval;
 	},
@@ -402,10 +408,10 @@ var SAGE2MEP = {
 	getYOfWebkitTranslate: function(translateString) {
 		var retval;
 		retval = -1;
-		if (translateString.search("translate") > -1) {
-			translateString = translateString.substring(translateString.search("translate") + 10);
-			translateString = translateString.substring(translateString.search("px") + 4);
-			translateString = translateString.substring(0, translateString.search("px"));
+		if (translateString.indexOf("translate") > -1) {
+			translateString = translateString.substring(translateString.indexOf("translate") + 10);
+			translateString = translateString.substring(translateString.indexOf(",") + 1);
+			translateString = translateString.substring(0, translateString.indexOf("px"));
 			retval = Math.round(translateString.valueOf());
 		}
 		return retval;
@@ -588,10 +594,20 @@ var SAGE2MEP = {
 		appTopOffset -= parseInt(titleBarDiv.style.height);
 
 		// world space of app x and y.
-		var appX = this.getXOfWebkitTranslate(appElem.style.WebkitTransform);
-		var appY = this.getYOfWebkitTranslate(appElem.style.WebkitTransform);
+		var tempTransform = appElem.style.webkitTransform;
+		if (!tempTransform) {
+			tempTransform = appElem.style.mozTransform;
+		}
+		if (!tempTransform) {
+			tempTransform = appElem.style.transform;
+		}
+		if (!tempTransform) {
+			console.log("Error, no transform detected. Not possible to convert mouse events.");
+		}
+		var appX = this.getXOfWebkitTranslate(tempTransform);
+		var appY = this.getYOfWebkitTranslate(tempTransform);
 		// Save original values.
-		var appOriginalWebkit =  appElem.style.WebkitTransform; // webkit of the application not the zone
+		var appOriginalWebkit =  tempTransform; // webkit of the application not the zone
 		var appOriginalZ = appElem.style.zIndex;
 		// detect display, which is actually server specified tile size.
 		var displayWidth = parseInt(ui.bg.style.width, 10);   // TODO get the width of the current display
@@ -651,35 +667,13 @@ var SAGE2MEP = {
 		// " pointer at:" + px + "," + py + " also look for the location of the appElem:" + translateString);
 
 		// put everything back
-		appElem.style.WebkitTransform =  appOriginalWebkit;
-		appElem.style.mozTransform =  appOriginalWebkit;
-		appElem.style.transform =  appOriginalWebkit;
-		appElem.style.zIndex = appOriginalZ; // does this alter the correct element's z index?
+		appElem.style.WebkitTransform = appOriginalWebkit;
+		appElem.style.mozTransform    = appOriginalWebkit;
+		appElem.style.transform       = appOriginalWebkit;
+		appElem.style.zIndex          = appOriginalZ; // does this alter the correct element's z index?
 
 		return theElementAtThePointer;
 	}, // end moveAppToViewIfNecessary
-
-
-	/*
-	If the app had to be moved, put it back.
-	*/
-	moveAppWhereItWasIfNecessary: function(appDivId) {
-
-		if (this.matvin) {
-			this.matvin = false; // dunno how necessary this is.
-			var appname = null;
-			var idx = appDivId.indexOf('app_');
-			if (idx >= 0) {
-				// extract the app_ part of the string
-				appname = appDivId.slice(idx);
-				var appElem = document.getElementById(appname);
-				appElem.style.WebkitTransform = this.matvinWebkit;
-				appElem.style.zIndex = this.matvinZ;
-			}
-		}
-
-
-	}, // end moveAppWhereItWasIfNecessary
 
 	getScrollContainerIfExists: function(appId, elementScrolledOn) {
 		var appContainter = document.getElementById(appId).parentNode;
