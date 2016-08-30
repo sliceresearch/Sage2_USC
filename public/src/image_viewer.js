@@ -41,6 +41,8 @@ var image_viewer = SAGE2_App.extend( {
 
 		this.updateAppFromState();
 		this.addWidgetControlsToImageViewer();
+
+		console.log(this.state);
 	},
 
 	/**
@@ -60,7 +62,7 @@ var image_viewer = SAGE2_App.extend( {
 	* @method updateAppFromState
 	*/
 	updateAppFromState: function() {
-		this.element.src  = this.state.src;
+		this.element.src  = cleanURL(this.state.src);
 
 		this.pre.innerHTML = this.syntaxHighlight(this.state.exif);
 		if (this.state.showExif === true) {
@@ -99,8 +101,9 @@ var image_viewer = SAGE2_App.extend( {
 	* @param visibility {bool} became visible or hidden
 	*/
 	onVisible: function(visibility) {
+		console.log(this.state);
 		if (visibility)
-			this.element.src = this.state.src;
+			this.element.src = cleanURL(this.state.src);
 		else
 			this.element.src = smallWhiteGIF();
 	},
