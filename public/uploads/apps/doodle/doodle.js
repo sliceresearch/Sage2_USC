@@ -64,6 +64,9 @@ var doodle = SAGE2_App.extend({
 		}
 		var _this = this;
 		this.imageToDraw.onload = function() {
+			_this.drawCanvas.width = _this.imageToDraw.width;
+			_this.drawCanvas.height = _this.imageToDraw.height;
+			_this.ctx.drawImage(_this.imageToDraw, 0, 0);
 
 			/*
 			Resize app based on image size.
@@ -73,9 +76,6 @@ var doodle = SAGE2_App.extend({
 			_this.sendResize(_this.imageToDraw.naturalWidth, _this.imageToDraw.naturalHeight);
 		};
 		this.imageToDraw.src = initialImage;
-		this.drawCanvas.width = this.imageToDraw.width;
-		this.drawCanvas.height = this.imageToDraw.height;
-		this.ctx.drawImage(this.imageToDraw, 0, 0);
 		// this.fitImageToAppSize();
 
 	},
@@ -121,7 +121,6 @@ var doodle = SAGE2_App.extend({
 	addClientIdAsEditor: function(responseObject) {
 		// prevent multiple sends if there are more than 1 display.
 		if (isMaster) {
-			console.log("erase me, addClientIdAsEditor start");
 			// add the client who responded to the list of editors.
 			this.arrayOfEditors.push(responseObject.clientId);
 			// get canvas as image.
@@ -137,7 +136,6 @@ var doodle = SAGE2_App.extend({
 			dataForClient.imageWidth  = this.drawCanvas.width;
 			dataForClient.imageHeight = this.drawCanvas.height;
 			wsio.emit('csdMessage', dataForClient);
-			console.log("erase me, addClientIdAsEditor after emit");
 		}
 		this.changeTitleToOriginalCreatorAndTime(responseObject);
 	},

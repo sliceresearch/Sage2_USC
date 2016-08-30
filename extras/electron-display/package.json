@@ -6,7 +6,8 @@
   "scripts": {
     "start": "electron electron.js",
     "d0": "electron electron.js -s http://localhost:9292 -d 0",
-    "d1": "electron electron.js -s http://localhost:9292 -d 1"
+    "d1": "electron electron.js -s http://localhost:9292 -d 1",
+    "audio": "electron electron.js -s http://localhost:9292 -a"
   },
   "keywords": [
     "Electron",
@@ -19,6 +20,10 @@
   "dependencies": {
 	"commander": "latest"
   },
+  "repository": {
+    "type": "git",
+    "url": "https://bitbucket.org/sage2/sage2/"
+  },
   "author": "Luc Renambot <renambot@uic.edu>",
-  "license": "SAGE2-Software-License"
+  "license": "SEE LICENSE IN LICENSE.txt"
 }

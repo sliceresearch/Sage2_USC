@@ -270,13 +270,11 @@ var Webview = SAGE2_App.extend({
 				button: "left",
 				clickCount: 1
 			});
-			// console.log('Sending mouseDown', x, y);
 		} else if (eventType === "pointerMove") {
 			// move
 			this.element.sendInputEvent({
 				type: "mouseMove", x: x, y: y
 			});
-			// console.log('Sending mouseMove', x, y);
 		} else if (eventType === "pointerRelease" && (data.button === "left")) {
 			// click release
 			this.element.sendInputEvent({
@@ -285,7 +283,6 @@ var Webview = SAGE2_App.extend({
 				button: "left",
 				clickCount: 1
 			});
-			// console.log('Sending mouseUp', x, y);
 		} else if (eventType === "pointerScroll") {
 			// Scroll events: reverse the amount to get correct direction
 			this.element.sendInputEvent({

@@ -197,7 +197,9 @@ module.exports = function(grunt) {
 		// use ir or get the name from command line
 		var newapp   = appname || grunt.option('name');
 		// calculate new paths
-		var appdir   = path.join(__dirname, "public", "uploads", "apps", newapp);
+		var homeDir  = process.env[(process.platform === 'win32') ? 'USERPROFILE' : 'HOME'];
+		var sageDir  = path.join(homeDir, "Documents", "SAGE2_Media", "/");
+		var appdir   = path.join(sageDir, "apps", newapp);
 		var templdir = path.join(__dirname, "doc", "templates");
 		// create the application folder
 		fs.mkdirSync(appdir);
@@ -211,19 +213,34 @@ module.exports = function(grunt) {
 			// write the resulting content
 			fs.writeFileSync(path.join(appdir, "instructions.json"), result, 'utf8');
 			// Read the template code
-			fs.readFile(path.join(templdir, "sage2.js"), 'utf8', function (err2,data2) {
+			fs.readFile(path.join(templdir, "sage2.js"), 'utf8', function (err2, data2) {
 				// substitute APPNAME for the new app name
 				var result2 = data2.replace(/APPNAME/g, newapp);
 				result2 = result2.replace(/FIRSTNAME/g, grunt.config("firstname"));
 				result2 = result2.replace(/LASTNAME/g,  grunt.config("lastname"));
 				result2 = result2.replace(/EMAIL/g,     grunt.config("email"));
 				// write the resulting content
-				fs.writeFileSync(path.join(appdir, newapp+".js"), result2, 'utf8');
+				fs.writeFileSync(path.join(appdir, newapp + ".js"), result2, 'utf8');
 				// Copy the icon
-				fs.writeFileSync(path.join(appdir, newapp+".png"), fs.readFileSync(path.join(templdir, "sage2.png")));
-				// We are done
-				grunt.log.write('New application done: ', newapp, 'in', appdir);
-				done();
+				fs.writeFileSync(path.join(appdir, newapp + ".png"), fs.readFileSync(path.join(templdir, "sage2.png")));
+				// Copy eslint definition
+				fs.writeFileSync(path.join(appdir, "eslintrc"), fs.readFileSync(path.join(templdir, "eslintrc")));
+
+				// geenrate a package.json file
+				fs.readFile(path.join(templdir, "package.json"), 'utf8', function (err3, data3) {
+					// substitute APPNAME for the new app name
+					var result3 = data3.replace(/APPNAME/g, newapp);
+					result3 = result3.replace(/FIRSTNAME/g, grunt.config("firstname"));
+					result3 = result3.replace(/LASTNAME/g,  grunt.config("lastname"));
+					result3 = result3.replace(/EMAIL/g,     grunt.config("email"));
+					// write the resulting content
+					fs.writeFileSync(path.join(appdir, "package.json"), result3, 'utf8');
+
+					// We are done
+					grunt.log.write('New application done: ', newapp, 'in', appdir);
+					done();
+				});
+
 			});
 		});
 	});
