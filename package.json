@@ -108,7 +108,8 @@
 		"test":    "grunt all",
 		"in":      "node ./install_dependencies.js",
 		"inprod":  "node ./install_dependencies.js --prod",
-		"indev":   "node ./install_dependencies.js --dev"
+		"indev":   "node ./install_dependencies.js --dev",
+		"electron":"electron electron.js -s http://localhost:9292 -d 0"
 	},
 	"license": "SEE LICENSE IN LICENSE.txt"
 }
