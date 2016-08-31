@@ -69,7 +69,8 @@
 		"normalizeurl": "latest",
 		"sw-precache": "latest",
 		"debug": "latest",
-		"ytdl-core": "latest"
+		"ytdl-core": "latest",
+		"electron-prebuilt": "latest"
 	},
 	"optionalDependencies": {
 		"websocketio": "latest",

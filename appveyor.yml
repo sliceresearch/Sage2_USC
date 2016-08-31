@@ -24,8 +24,8 @@ init:
   - dir C:\Dev\ffmpeg-win64-dev\lib
 
 install:
-  - ps: Get-NodeJsLatestBuild 6.2
-  - ps: Install-Product node 6.2.2 x64
+  - ps: Get-NodeJsLatestBuild 6.3
+  - ps: Install-Product node 6.3.1 x64
   - dir C:\avvm\node
   - node -v
   - cd %APPVEYOR_BUILD_FOLDER%
@@ -88,6 +88,7 @@ install:
   - move package.json SAGE2
   - move public SAGE2
   - move server.js SAGE2
+  - move electron.js SAGE2
   - move generate-service-worker.js SAGE2
   - move src SAGE2
   - ren SAGE2 SAGE2-%APPVEYOR_BUILD_VERSION%
