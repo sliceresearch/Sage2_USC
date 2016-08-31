@@ -1788,6 +1788,7 @@ function wsAppResize(wsio, data) {
 	if (SAGE2Items.applications.list.hasOwnProperty(data.id)) {
 		var app = SAGE2Items.applications.list[data.id];
 
+		console.log("new resizing "+data.width+" "+data.height);
 		// Values in percent if smaller than 1
 		if (data.width > 0 && data.width <= 1) {
 			data.width = Math.round(data.width * config.totalWidth);
@@ -1796,6 +1797,7 @@ function wsAppResize(wsio, data) {
 			data.height = Math.round(data.height * config.totalHeight);
 		}
 
+		console.log("new size "+data.width+" "+data.height);
 		// Update the width height and aspect ratio
 		if (sageutils.isTrue(data.keepRatio)) {
 			// we use the width as leading the calculation
@@ -2569,6 +2571,8 @@ function wsLoadApplication(wsio, data) {
 	var appData = {application: "custom_app", filename: data.application, data: data.data};
 	appLoader.loadFileFromLocalStorage(appData, function(appInstance) {
 		appInstance.id = getUniqueAppId();
+		appInstance.initialScaling = data.initialScaling;
+		console.log("wsLoadApplication appInstance "+JSON.stringify(appInstance));
 		if (appInstance.animation) {
 			var i;
 			SAGE2Items.renderSync[appInstance.id] = {clients: {}, date: Date.now()};
@@ -2608,6 +2612,7 @@ function wsLoadApplication(wsio, data) {
 			}
 		}
 
+		console.log("wsLoadApplication appInstance2 "+JSON.stringify(appInstance));
 		handleNewApplication(appInstance, null);
 
 		addEventToUserLog(data.user, {type: "openApplication", data:
@@ -2706,6 +2711,7 @@ function wsLoadFileFromServer(wsio, data) {
 				}
 			}
 
+			appInstance.initialScale = data.initialScale;
 			handleNewApplication(appInstance, videohandle);
 
 			addEventToUserLog(data.user, {type: "openFile", data:
@@ -4801,7 +4807,7 @@ function processInputCommand(line) {
 			if (command[1] !== undefined) {
 				var pos  = [0.0, 0.0];
 				var file = command[1];
-				if (command.length === 4) {
+				if (command.length >= 4) {
 					pos = [parseFloat(command[2]), parseFloat(command[3])];
 				}
 				var mt = assets.getMimeType(getSAGE2Path(file));
@@ -4809,13 +4815,17 @@ function processInputCommand(line) {
 					wsLoadApplication(null,
 						{application: file,
 						user: "127.0.0.1:42",
-						position: pos});
+						position: pos,
+						initialScale: 0.1});
 				} else {
 					wsLoadFileFromServer(null, {application: "something",
 						filename: file,
 						user: "127.0.0.1:42",
-						position: pos});
+						position: pos,
+						initialScale: 0.1});
 				}
+				//ww = parseFloat(command[4]);
+				//wsAppResize(null, {id: command[1], width: ww, height: hh, keepRatio: false});
 			} else {
 				console.log(sageutils.header("Command") + "should be: open /user/file.pdf [0.5 0.5]");
 			}
@@ -7495,6 +7505,7 @@ function pointerCloseGesture(uniqueID, pointerX, pointerY, time, gesture) {
 }
 
 function handleNewApplication(appInstance, videohandle) {
+	console.log("handleNewApplication "+JSON.stringify(appInstance));
 	broadcast('createAppWindow', appInstance);
 	broadcast('createAppWindowPositionSizeOnly', getAppPositionSize(appInstance));
 
@@ -7531,6 +7542,7 @@ function handleNewApplication(appInstance, videohandle) {
 	SAGE2Items.applications.editButtonVisibilityOnItem(appInstance.id, "syncButton", false);
 
 	initializeLoadedVideo(appInstance, videohandle);
+	wsAppResize(null, {id:appInstance.id, width:appInstance.initialScale, height:0, keepRatio: true});
 }
 
 function handleNewApplicationInDataSharingPortal(appInstance, videohandle, portalId) {
