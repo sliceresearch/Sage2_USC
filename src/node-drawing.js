@@ -86,26 +86,22 @@ DrawingManager.prototype.scalePoint = function(point, origin, scaleX, scaleY) {
 
 DrawingManager.prototype.calculateTileDimensions = function(config) {
 
-	// This method crashes if config.displays is less than product of rows and columns
-	// Check if the clientID corresponds to the actual clientID
-	var clients = config.layout.rows * config.layout.columns;
-	var width = config.resolution.width;
-	var height = config.resolution.height;
+	var clients = config.displays.length;
+	var width   = config.resolution.width;
+	var height  = config.resolution.height;
 
 	for (var i = 0; i < clients; i++) {
-
 		var display = config.displays[i];
 
 		var startX = width * display.column;
-		var endX = startX + width - 1;
+		var endX   = startX + (width * display.width) - 1;
 
 		var startY = height * display.row;
-		var endY = startY + height - 1;
+		var endY   = startY + (height * display.height) - 1;
 
 		var position = {startX: startX, endX: endX, startY: startY, endY: endY, clientID: i};
 
 		this.tilesPosition.push(position);
-
 	}
 
 };

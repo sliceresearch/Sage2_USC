@@ -1,6 +1,6 @@
 {
 	"main_script": "ParaSAGE.js",
-	"icon:": "pv.png",
+	"icon": "pv.png",
 	"width": 1000,
 	"height": 1000,
 	"animation": false,
