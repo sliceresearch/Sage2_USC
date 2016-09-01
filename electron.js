@@ -76,7 +76,7 @@ function createWindow() {
 		frame:  !commander.no_decoration,
 		webPreferences: {
 			nodeIntegration: true,
-			webSecurity: true,
+			webSecurity: true
 			// webaudio: commander.audio
 		}
 	};
