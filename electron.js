@@ -76,7 +76,7 @@ var mainWindow;
  * @method     openWindow
  */
 function openWindow() {
- 	if (!commander.fullscreen) {
+	if (!commander.fullscreen) {
 		mainWindow.show();
 	}
 
