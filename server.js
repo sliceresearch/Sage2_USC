@@ -912,8 +912,8 @@ function setupListeners(wsio) {
 	wsio.on('disableDrawingMode',					wsDisableDrawingMode);
 	wsio.on('enableEraserMode',						wsEnableEraserMode);
 	wsio.on('disableEraserMode',					wsDisableEraserMode);
-	wsio.on('enablePointerColorMode',						wsEnablePointerColorMode);
-	wsio.on('disablePointerColorMode',					wsDisablePointerColorMode);
+	wsio.on('enablePointerColorMode',				wsEnablePointerColorMode);
+	wsio.on('disablePointerColorMode',				wsDisablePointerColorMode);
 	wsio.on('clearDrawingCanvas',					wsClearDrawingCanvas);
 	wsio.on('changeStyle',							wsChangeStyle);
 	wsio.on('undoLastDrawing',						wsUndoLastDrawing);
@@ -982,6 +982,10 @@ function setupListeners(wsio) {
 	wsio.on('command',                              wsCommand);
 
 	wsio.on('createFolder',                         wsCreateFolder);
+
+	// Jupyper messages
+	wsio.on('startJupyterSharing',					wsStartJupyterSharing);
+	wsio.on('updateJupyterSharing',					wsUpdateJupyterSharing);
 
 	// message passing between ui to display (utd)
 	wsio.on('utdWhatAppIsAt',						wsUtdWhatAppIsAt);
@@ -8444,7 +8448,61 @@ function csdSaveDataOnServer(wsio, data) {
 	}
 }
 
+/**
+ * Start a jupyter connection
+ *
+ * @method     wsStartJupyterSharing
+ * @param      {Object}  wsio    The websocket
+ * @param      {Object}  data    The data
+ */
+function wsStartJupyterSharing(wsio, data) {
+	console.log(sageutils.header('Jupyter') + "received new stream: " + data.id);
+	console.log(sageutils.header('Jupyter') + data);
 
+	/*var i;
+	SAGE2Items.renderSync[data.id] = {clients: {}, chunks: []};
+	for (i = 0; i < clients.length; i++) {
+		if (clients[i].clientType === "display") {
+			SAGE2Items.renderSync[data.id].clients[clients[i].id] = {wsio: clients[i], readyForNextFrame: false, blocklist: []};
+		}
+	}
+	*/
+
+	// forcing 'int' type for width and height
+	data.width  = parseInt(data.width,  10);
+	data.height = parseInt(data.height, 10);
+
+	appLoader.createJupyterApp(data.src, data.type, data.encoding, data.title, data.color, 108, 600,
+		function(appInstance) {
+			appInstance.id = data.id;
+			handleNewApplication(appInstance, null);
+		}
+	);
+}
+
+function wsUpdateJupyterSharing(wsio, data) {
+	console.log(sageutils.header('Jupyter') + "received update from: " + data.id);
+	console.log(sageutils.header('Jupyter') + data);
+	sendJupyterUpdates(data);
+}
+
+function sendJupyterUpdates(data) {
+	// var ePosition = {x: 0, y: 0};
+	var eUser = {id: 1, label: "Touch", color: "none"};
+
+	var event = {
+		id: data.id,
+		type: "imageUpload",
+		position: 0,
+		user: eUser,
+		data: data,
+		date: Date.now()
+	};
+
+	console.log(sageutils.header('Jupyter'), event);
+
+	broadcast('eventInItem', event);
+}
 
 
 

@@ -781,6 +781,59 @@ AppLoader.prototype.loadFileFromWebURL = function(file, callback) {
 
 };
 
+AppLoader.prototype.createJupyterApp = function(source, type, encoding, name, color, width, height, callback) {
+	var aspectRatio = width / height;
+
+	console.log('createJupyterApp');
+
+	var metadata         = {};
+	metadata.title       = "Jupyter";
+	metadata.version     = "1.0.0";
+	metadata.description = "Jupyer for SAGE2";
+	metadata.author      = "SAGE2";
+	metadata.license     = "SAGE2-Software-License";
+	metadata.keywords    = ["jupyter"];
+
+	var appInstance = {
+		id: null,
+		title: name,
+		color: color,
+		application: "jupyter",
+		type: "mime_type",
+		url: "src",
+		data: {
+			src: source,
+			type: type,
+			encoding: encoding
+		},
+		load: {
+			imgDict: {},
+			mainImgs: {},
+			page: 1
+		},
+		resrc: null,
+		left: this.titleBarHeight,
+		top: 1.5 * this.titleBarHeight,
+		width: width,
+		height: height,
+		native_width: width,
+		native_height: height,
+		previous_left: null,
+		previous_top: null,
+		previous_width: null,
+		previous_height: null,
+		maximized: false,
+		aspect: aspectRatio,
+		animation: false,
+		sticky: false,
+		metadata: metadata,
+		date: new Date()
+	};
+	this.scaleAppToFitDisplay(appInstance);
+	callback(appInstance);
+};
+
+
 function getSAGE2Path(getName) {
 	// pathname: result of the search
 	var pathname = null;
