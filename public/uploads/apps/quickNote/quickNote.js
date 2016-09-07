@@ -258,6 +258,17 @@ var quickNote = SAGE2_App.extend({
 		var entries = [];
 		var entry;
 
+
+		entry = {};
+		entry.description = "Edit";
+		entry.callback    = "SAGE2_UI_Special_Case_Launch_App_Control";
+		entry.parameters  = {};
+		entries.push(entry);
+
+		entry = {};
+		entry.description = "separator";
+		entries.push(entry);
+
 		entry = {};
 		entry.description = "Duplicate";
 		entry.callback    = "duplicate";
@@ -315,6 +326,22 @@ var quickNote = SAGE2_App.extend({
 		entries.push(entry);
 
 		return entries;
+	},
+
+	requestControlPanelLayout: function(obj) {
+		// pointerName: pointerName,
+		// pointerColor: pointerColor,
+		// uniqueID: uniqueID
+
+
+		var dataForClient = {};
+		dataForClient.type   = 'sendDataToClient';
+		dataForClient.appId  = this.id;
+		dataForClient.func   = 'controlPanelLayout';
+		dataForClient.layout = "This is the placeholder layout from quickNote " + this.id;
+		wsio.emit('csdMessage', dataForClient);
+
+
 	},
 
 	quit: function() {

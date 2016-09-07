@@ -2055,6 +2055,9 @@ function setRmbContextMenuEntries(data) {
 							link.dispatchEvent(me);
 						}
 					}
+				} else if (this.callback === "SAGE2_UI_Special_Case_Launch_App_Control") {
+					var url = "appControl.html?appId=" + this.app;
+					open(url, "App Control Panel");
 				} else {
 					// if an input field, need to modify the params to pass back before sending.
 					if (this.inputField === true) {
