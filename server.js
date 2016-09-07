@@ -589,8 +589,6 @@ function movePaletteTo(paletteID, x, y, w, h) {
 	}
 }
 
->>>>>>> origin/master
-
 function setUpDialogsAsInteractableObjects() {
 	var dialogGeometry = {
 		x: config.totalWidth / 2 - 13 * config.ui.titleBarHeight,
@@ -840,7 +838,6 @@ function wsAddClient(wsio, data) {
 					manageRemoteConnection(wsio, element, index);
 				}
 			});
->>>>>>> origin/master
 		}
 	}
 
