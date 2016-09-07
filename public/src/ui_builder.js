@@ -259,6 +259,8 @@ function UIBuilder(json_cfg, clientID) {
 		if (this.clientID === -1) {
 			this.offsetX = 0;
 			this.offsetY = 0;
+			this.width   = this.json_cfg.totalWidth;
+			this.height  = this.json_cfg.totalHeight;
 			this.titleBarHeight = this.json_cfg.ui.titleBarHeight;
 			this.titleTextSize  = this.json_cfg.ui.titleTextSize;
 			this.pointerWidth   = this.json_cfg.ui.pointerSize * 3;
@@ -285,8 +287,10 @@ function UIBuilder(json_cfg, clientID) {
 			}
 
 			// Position offsets plus borders offsets
-			this.offsetX = x * this.json_cfg.resolution.width + borderx;
+			this.offsetX = x * this.json_cfg.resolution.width  + borderx;
 			this.offsetY = y * this.json_cfg.resolution.height + bordery;
+			this.width   = this.json_cfg.displays[this.clientID].width  * this.json_cfg.resolution.width;
+			this.height  = this.json_cfg.displays[this.clientID].height * this.json_cfg.resolution.height;
 			this.titleBarHeight = this.json_cfg.ui.titleBarHeight;
 			this.titleTextSize  = this.json_cfg.ui.titleTextSize;
 			this.pointerWidth   = this.json_cfg.ui.pointerSize;
@@ -357,7 +361,8 @@ function UIBuilder(json_cfg, clientID) {
 		machine.style.mozTransform  = "translateY(-50%)";
 		machine.style.transform  = "translateY(-50%)";
 
-		var rightOffset = this.offsetX - (this.json_cfg.resolution.width * (this.json_cfg.layout.columns - 1));
+		var rightOffset = this.offsetX - (this.json_cfg.totalWidth - this.width);
+
 		version.style.position   = "absolute";
 		version.style.whiteSpace = "nowrap";
 		version.style.fontSize   = Math.round(this.titleTextSize) + "px";
@@ -739,7 +744,7 @@ function UIBuilder(json_cfg, clientID) {
 		this.changeSVGColor(logo, "path", null, textColor);
 
 		// Update the size to fit in the titlebar
-		var rightOffset = this.offsetX - (this.json_cfg.resolution.width * (this.json_cfg.layout.columns - 1));
+		var rightOffset = this.offsetX - (this.json_cfg.totalWidth - this.width);
 
 		var bbox = logo.getBBox();
 		width = height * (bbox.width / bbox.height);
