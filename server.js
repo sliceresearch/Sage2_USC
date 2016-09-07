@@ -8457,7 +8457,6 @@ function csdSaveDataOnServer(wsio, data) {
  */
 function wsStartJupyterSharing(wsio, data) {
 	console.log(sageutils.header('Jupyter') + "received new stream: " + data.id);
-	console.log(sageutils.header('Jupyter') + data);
 
 	/*var i;
 	SAGE2Items.renderSync[data.id] = {clients: {}, chunks: []};
@@ -8472,7 +8471,7 @@ function wsStartJupyterSharing(wsio, data) {
 	data.width  = parseInt(data.width,  10);
 	data.height = parseInt(data.height, 10);
 
-	appLoader.createJupyterApp(data.src, data.type, data.encoding, data.title, data.color, 108, 600,
+	appLoader.createJupyterApp(data.src, data.type, data.encoding, data.title, data.color, 800, 1200,
 		function(appInstance) {
 			appInstance.id = data.id;
 			handleNewApplication(appInstance, null);
@@ -8482,7 +8481,6 @@ function wsStartJupyterSharing(wsio, data) {
 
 function wsUpdateJupyterSharing(wsio, data) {
 	console.log(sageutils.header('Jupyter') + "received update from: " + data.id);
-	console.log(sageutils.header('Jupyter') + data);
 	sendJupyterUpdates(data);
 }
 
@@ -8498,8 +8496,6 @@ function sendJupyterUpdates(data) {
 		data: data,
 		date: Date.now()
 	};
-
-	console.log(sageutils.header('Jupyter'), event);
 
 	broadcast('eventInItem', event);
 }

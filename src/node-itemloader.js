@@ -784,8 +784,6 @@ AppLoader.prototype.loadFileFromWebURL = function(file, callback) {
 AppLoader.prototype.createJupyterApp = function(source, type, encoding, name, color, width, height, callback) {
 	var aspectRatio = width / height;
 
-	console.log('createJupyterApp');
-
 	var metadata         = {};
 	metadata.title       = "Jupyter";
 	metadata.version     = "1.0.0";
@@ -799,6 +797,7 @@ AppLoader.prototype.createJupyterApp = function(source, type, encoding, name, co
 		title: name,
 		color: color,
 		application: "jupyter",
+		icon: "/images/jupyter.png",
 		type: "mime_type",
 		url: "src",
 		data: {
@@ -824,6 +823,7 @@ AppLoader.prototype.createJupyterApp = function(source, type, encoding, name, co
 		previous_height: null,
 		maximized: false,
 		aspect: aspectRatio,
+		resizeMode: "free",
 		animation: false,
 		sticky: false,
 		metadata: metadata,
