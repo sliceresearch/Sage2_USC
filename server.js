@@ -7952,9 +7952,11 @@ function wsUtdRequestRmbContextMenu(wsio, data) {
 		} else {
 			// Default response
 			wsio.emit('dtuRmbContextMenuContents', {
+				x: data.xClick,
+				y: data.yClick,
 				app: obj.data.id,
 				entries: [{
-					description: "Not supported by this app"
+					description: "App not yet loaded on display client yet."
 				}]
 			});
 		}
