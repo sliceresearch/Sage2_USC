@@ -385,20 +385,21 @@ function initializeSage2Server() {
 	wsioServerS = new WebsocketIO.Server({server: sage2ServerS});
 	wsioServer.onconnection(openWebSocketClient);
 	wsioServerS.onconnection(openWebSocketClient);
+
 	drawingManager = new Drawing(config);
 	drawingManager.setCallbacks(
-								drawingInit,
-								drawingUpdate,
-								drawingRemove,
-								sendTouchToPalette,
-								sendDragToPalette,
-								sendStyleToPalette,
-								sendChangeToPalette,
-								movePaletteTo,
-								saveDrawingSession,
-								loadDrawingSession,
-								sendSessionListToPalette
-								);
+		drawingInit,
+		drawingUpdate,
+		drawingRemove,
+		sendTouchToPalette,
+		sendDragToPalette,
+		sendStyleToPalette,
+		sendChangeToPalette,
+		movePaletteTo,
+		saveDrawingSession,
+		loadDrawingSession,
+		sendSessionListToPalette
+	);
 	// Link the interactable manager to the drawing manager
 	drawingManager.linkInteractableManager(interactMgr);
 }
