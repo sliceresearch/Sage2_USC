@@ -335,10 +335,11 @@ var quickNote = SAGE2_App.extend({
 
 
 		var dataForClient = {};
-		dataForClient.type   = 'sendDataToClient';
-		dataForClient.appId  = this.id;
-		dataForClient.func   = 'controlPanelLayout';
-		dataForClient.layout = "This is the placeholder layout from quickNote " + this.id;
+		dataForClient.type       = 'sendDataToClient';
+		dataForClient.appId      = this.id;
+		dataForClient.clientDest = obj.uniqueID;
+		dataForClient.func       = 'controlPanelLayout';
+		dataForClient.layout     = "This is the placeholder layout from quickNote " + this.id;
 		wsio.emit('csdMessage', dataForClient);
 
 
