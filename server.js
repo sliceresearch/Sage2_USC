@@ -1409,7 +1409,11 @@ function wsStartNewMediaStream(wsio, data) {
 	appLoader.createMediaStream(data.src, data.type, data.encoding, data.title, data.color, data.width, data.height,
 		function(appInstance) {
 			appInstance.id = data.id;
+                        var pos = data.pos || [1.0,0.0];
+                        var resize = data.resize || 1920;
+                        setAppPosition(appInstance, pos);
 			handleNewApplication(appInstance, null);
+                        wsAppResize(null, {id: data.id, width: resize, keepRatio: true});
 
 			var eLogData = {
 				application: {
@@ -1601,12 +1605,34 @@ function wsStartNewMediaBlockStream(wsio, data) {
 			SAGE2Items.renderSync[data.id].clients[clients[i].id] = {wsio: clients[i], readyForNextFrame: true, blocklist: []};
 		}
 	}
-
-	appLoader.createMediaBlockStream(data.title, data.color, data.colorspace, data.width, data.height, function(appInstance) {
-		appInstance.id = data.id;
-		handleNewApplication(appInstance, null);
-		calculateValidBlocks(appInstance, mediaBlockSize, SAGE2Items.renderSync[appInstance.id]);
-	});
+        appLoader.createMediaBlockStream(data.title, data.color, data.colorspace, data.width, data.height, function(appInstance) {
+                appInstance.id = data.id;
+                console.log("createMediaBlockStream "+JSON.stringify(data));
+                var pos = data.pos || [1.0,0.0];
+                var resize = false;
+                if (data.title==="laptop1") {
+                        console.log("laptop1");
+                        pos = [1970,0];
+                        resize = true;
+                }
+                if (data.title==="vc1") {
+                        console.log("vc1");
+                        pos = [5828,0];
+                        resize = true;
+                }
+                if (data.title==="laptop2") {
+                        console.log("laptop2");
+                        pos = [9686,0];
+                        resize = true;
+                }
+                console.log("pos "+pos);
+                setAppPosition(appInstance, pos);
+                handleNewApplication(appInstance, null);
+                if (resize) {
+                        wsAppResize(null, {id: data.id, width: 1.96/7, keepRatio: true});
+                }
+                calculateValidBlocks(appInstance, mediaBlockSize, SAGE2Items.renderSync[appInstance.id]);
+        });
 }
 
 function wsUpdateMediaBlockStreamFrame(wsio, buffer) {
@@ -2712,6 +2738,10 @@ function wsLoadFileFromServer(wsio, data) {
 			}
 
 			handleNewApplication(appInstance, videohandle);
+                        var resize = data.rwidth || undefined;
+                        if (resize !== undefined) {
+                          wsAppResize(null, {id: appInstance.id, width: resize, keepRatio: true});
+                        }
 
 			addEventToUserLog(data.user, {type: "openFile", data:
 				{name: data.filename, application: {id: appInstance.id, type: appInstance.application}}, time: Date.now()});
@@ -4805,30 +4835,37 @@ function processInputCommand(line) {
 			}
 			break;
 		}
-		case 'open': {
-			if (command[1] !== undefined) {
-				var pos  = [0.0, 0.0];
-				var file = command[1];
-				if (command.length === 4) {
-					pos = [parseFloat(command[2]), parseFloat(command[3])];
-				}
-				var mt = assets.getMimeType(getSAGE2Path(file));
-				if (mt === "application/custom") {
-					wsLoadApplication(null,
-						{application: file,
-						user: "127.0.0.1:42",
-						position: pos});
-				} else {
-					wsLoadFileFromServer(null, {application: "something",
-						filename: file,
-						user: "127.0.0.1:42",
-						position: pos});
-				}
-			} else {
-				console.log(sageutils.header("Command") + "should be: open /user/file.pdf [0.5 0.5]");
-			}
-			break;
-		}
+                case 'open': {
+                        if (command[1] !== undefined) {
+                                var pos  = [0.0, 0.0];
+                                var file = command[1];
+                                var res = undefined;
+                                if (command.length >= 4) {
+                                        pos = [parseFloat(command[2]), parseFloat(command[3])];
+                                }
+                                if (command.length >= 5) {
+                                        res = parseInt(command[4]);
+                                }
+                                console.log("cmd open resize "+res);
+                                var mt = assets.getMimeType(getSAGE2Path(file));
+                                if (mt === "application/custom") {
+                                        wsLoadApplication(null,
+                                                {application: file,
+                                                user: "127.0.0.1:42",
+                                                position: pos
+                                                });
+                                } else {
+                                        wsLoadFileFromServer(null, {application: "something",
+                                                filename: file,
+                                                user: "127.0.0.1:42",
+                                                position: pos,
+                                                rwidth: res});
+                                }
+                        } else {
+                                console.log(sageutils.header("Command") + "should be: open /user/file.pdf [0.5 0.5]");
+                        }
+                        break;
+                }
 		case 'sessions': {
 			printListSessions();
 			break;
