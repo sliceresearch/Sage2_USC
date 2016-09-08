@@ -56,7 +56,7 @@
 		"mime": "latest",
 		"node-json-db": "latest",
 		"qr-image": "latest",
-		"rbush": "latest",
+		"rbush": ">=2",
 		"request": "latest",
 		"sprint": "^0.3.1",
 		"twit": "latest",
@@ -68,7 +68,9 @@
 		"sanitize-filename": "latest",
 		"normalizeurl": "latest",
 		"sw-precache": "latest",
-		"ytdl-core": "latest"
+		"debug": "latest",
+		"ytdl-core": "latest",
+		"electron-prebuilt": "latest"
 	},
 	"optionalDependencies": {
 		"websocketio": "latest",
@@ -97,7 +99,7 @@
 	"scripts": {
 		"start":   "node server.js -l",
 		"sw":      "node generate-service-worker.js",
-		"monitor": "nodemon -e json,js,html -I -L -i public/uploads server.js -l",
+		"monitor": "nodemon -e json,js,html -I -L -i public/uploads -i public/service-worker.js server.js -l",
 		"lint":    "grunt eslint",
 		"style":   "grunt jscs",
 		"doc":     "grunt yuidoc",
@@ -106,7 +108,8 @@
 		"test":    "grunt all",
 		"in":      "node ./install_dependencies.js",
 		"inprod":  "node ./install_dependencies.js --prod",
-		"indev":   "node ./install_dependencies.js --dev"
+		"indev":   "node ./install_dependencies.js --dev",
+		"electron":"electron electron.js -s http://localhost:9292 -d 0"
 	},
-	"license": "SAGE2-Software-License"
+	"license": "SEE LICENSE IN LICENSE.txt"
 }

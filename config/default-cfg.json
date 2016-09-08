@@ -4,8 +4,8 @@
 {
 	name: "mysite",
 	host: "localhost",
-	port: 9292,
-	index_port: 9090,
+	port: 9090,
+	index_port: 9292,
 	background: {
 		color: "#333333",
 		watermark: {

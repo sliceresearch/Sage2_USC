@@ -31,7 +31,7 @@
 	},
 	resolution: {
 		width: 1366,
-		height:  1536
+		height:  3072
 	},
 	// for experimental features: true/false
 	experimental: {
@@ -50,7 +50,7 @@
 		}
 	},
 	layout: {
-		rows: 2,
+		rows: 1,
 		columns: 18
 	},
 	displays: [
@@ -59,15 +59,7 @@
 			column: 0
 		},
 		{
-			row: 1,
-			column: 0
-		},
-		{
 			row: 0,
-			column: 1
-		},
-		{
-			row: 1,
 			column: 1
 		},
 		{
@@ -75,15 +67,7 @@
 			column: 2
 		},
 		{
-			row: 1,
-			column: 2
-		},
-		{
 			row: 0,
-			column: 3
-		},
-		{
-			row: 1,
 			column: 3
 		},
 		{
@@ -91,15 +75,7 @@
 			column: 4
 		},
 		{
-			row: 1,
-			column: 4
-		},
-		{
 			row: 0,
-			column: 5
-		},
-		{
-			row: 1,
 			column: 5
 		},
 		{
@@ -107,15 +83,7 @@
 			column: 6
 		},
 		{
-			row: 1,
-			column: 6
-		},
-		{
 			row: 0,
-			column: 7
-		},
-		{
-			row: 1,
 			column: 7
 		},
 		{
@@ -123,15 +91,7 @@
 			column: 8
 		},
 		{
-			row: 1,
-			column: 8
-		},
-		{
 			row: 0,
-			column: 9
-		},
-		{
-			row: 1,
 			column: 9
 		},
 		{
@@ -139,15 +99,7 @@
 			column: 10
 		},
 		{
-			row: 1,
-			column: 10
-		},
-		{
 			row: 0,
-			column: 11
-		},
-		{
-			row: 1,
 			column: 11
 		},
 		{
@@ -155,15 +107,7 @@
 			column: 12
 		},
 		{
-			row: 1,
-			column: 12
-		},
-		{
 			row: 0,
-			column: 13
-		},
-		{
-			row: 1,
 			column: 13
 		},
 		{
@@ -171,15 +115,7 @@
 			column: 14
 		},
 		{
-			row: 1,
-			column: 14
-		},
-		{
 			row: 0,
-			column: 15
-		},
-		{
-			row: 1,
 			column: 15
 		},
 		{
@@ -187,15 +123,7 @@
 			column: 16
 		},
 		{
-			row: 1,
-			column: 16
-		},
-		{
 			row: 0,
-			column: 17
-		},
-		{
-			row: 1,
 			column: 17
 		}
 	],
@@ -210,9 +138,10 @@
 	remote_sites: [
 		{
 			name: "Cyber-Commons",
-			host: "iridium.evl.uic.edu",
+			host: "inferno.evl.uic.edu",
 			port: 443,
-			secure: true
+			secure: true,
+			password: "evl123"
 		},
 		{
 			name: "LAVA",
@@ -252,6 +181,6 @@
                         url: "/extras",
                         path: "/iridium_SSD/evldemo/extras/",
                         upload: false
-                },
+                }
 	]
 }

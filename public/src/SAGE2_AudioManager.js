@@ -33,7 +33,6 @@ var audioPannerNodes = {};
 
 
 
-
 // Explicitely close web socket when web browser is closed
 window.onbeforeunload = function() {
 	if (wsio !== undefined) {
@@ -70,8 +69,6 @@ function SAGE2_init() {
 	SAGE2_browser();
 
 	wsio = new WebsocketIO();
-
-	console.log("Connected to server: ", window.location.origin);
 
 	wsio.open(function() {
 		console.log("Websocket opened");
@@ -149,7 +146,6 @@ function SAGE2_init() {
 function setupListeners() {
 	// wall values
 	var totalWidth;
-	// var totalHeight;
 
 	wsio.on('initialize', function(data) {
 		// nothing
@@ -203,7 +199,7 @@ function setupListeners() {
 		// Array of assets to preload
 		var soundAssets = [
 			{id: "startup",   src: jingle,          defaultPlayProps: defaults},
-			{id: "newapp",    src: "newapp.mp3",    defaultPlayProps: defaults},
+			{id: "newapp",    src: "newapp2.mp3",   defaultPlayProps: defaults},
 			{id: "deleteapp", src: "deleteapp.mp3", defaultPlayProps: defaults},
 			{id: "remote",    src: "remote.mp3",    defaultPlayProps: lowdefaults},
 			{id: "send",      src: "send.mp3",      defaultPlayProps: defaults},
@@ -220,7 +216,6 @@ function setupListeners() {
 		audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 		audioCtx.listener.setPosition(0, 0, 0);
 		totalWidth  = json_cfg.totalWidth;
-		// totalHeight = json_cfg.totalHeight;
 	});
 
 	wsio.on('createAppWindow', function(data) {
@@ -351,8 +346,13 @@ function setupListeners() {
 			volumeSlider.min   = 0;
 			volumeSlider.max   = 1;
 			volumeSlider.step  = 0.05;
+			// Set the initial value
 			volumeSlider.value = initialVolume / 10;
+			// Setup a callback for slider
 			volumeSlider.addEventListener('input', changeVolume, false);
+			// set the initial volume
+			changeVolume({target: volumeSlider});
+			// Add slider to the DOM
 			volume.appendChild(volumeSlider);
 
 			videoRow2.appendChild(volume);
@@ -500,7 +500,6 @@ function setupListeners() {
 	});
 
 	wsio.on('connectedToRemoteSite', function(data) {
-		console.log('connectedToRemoteSite', data);
 		// Play an audio blop when a remote site comes up or down
 		if (data.connected === "on") {
 			createjs.Sound.play("remote");
@@ -546,7 +545,9 @@ function changeVolume(event) {
 	var volumeSlider = event.target;
 	var vol = volumeSlider.value;
 	wsio.emit("setVolume", {id: volumeSlider.appid, level: vol});
-	changeVideoVolume(volumeSlider.appid, vol);
+
+	// Dont need to change volume since the server will send message
+	// changeVideoVolume(volumeSlider.appid, vol);
 }
 
 /**
