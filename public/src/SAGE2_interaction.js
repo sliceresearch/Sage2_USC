@@ -568,18 +568,6 @@ function SAGE2_interaction(wsio) {
 		this.req = requestIdleCallback(this.step);
 	};
 
- function str2ab(str) {
-   var buf = new ArrayBuffer(str.length); // 2 bytes for each char
-   var buf = new ArrayBuffer(str.length);
-   var bufView = new Uint8Array(buf);
-   for (var i=0, strLen=str.length; i < strLen; i++) {
-     bufView[i] = str.charCodeAt(i);
-     //console.log("str2ab ",i, bufView[i]);
-     //console.log("str2ab ",i, bufView[i]);
-   }
-   return bufView;
- }
-
 
 	/**
 	* The screen sharing can start
@@ -722,7 +710,7 @@ function SAGE2_interaction(wsio) {
 			var frame = this.pix;
 			var raw   = atob(frame.split(",")[1]);  // base64 to string
 
-			if (false) // raw.length > this.chunk) {
+			if (false) { // raw.length > this.chunk) {
 				var _this   = this;
 				var nchunks = Math.ceil(raw.length / this.chunk);
 
