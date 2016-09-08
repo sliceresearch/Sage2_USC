@@ -5743,7 +5743,7 @@ function pointerPressOnApplication(uniqueID, pointerX, pointerY, data, obj, loca
 
 	// pointer press on app window
 	if (btn === null) {
-		if (data.button === "right") {
+		if (data.button === "right" && !vncApp(obj)) {
 			var elemCtrl = SAGE2Items.widgets.list[obj.id + uniqueID + "_controls"];
 			if (!elemCtrl) {
 				// if no UI element, send event to app if in interaction mode
@@ -7262,6 +7262,10 @@ function keyDownOnPortal(uniqueID, portalId, localPt, data) {
 	}
 }
 
+function vncApp(obj) {
+       return obj.data.title.startsWith("vnc") || obj.data.title.startsWith("VNC");
+}
+
 function keyUp(uniqueID, pointerX, pointerY, data) {
 	if (sagePointers[uniqueID] === undefined) {
 		return;
@@ -7307,8 +7311,10 @@ function keyUp(uniqueID, pointerX, pointerY, data) {
 			break;
 		}
 		case "applications": {
-			if (remoteInteraction[uniqueID].windowManagementMode() &&
-				(data.code === 8 || data.code === 46)) {
+			if (vncApp(obj) && remoteInteraction[uniqueID].appInteractionMode()) {
+                                sendKeyUpToApplication(uniqueID, obj.data, localPt, data);
+			} else if (remoteInteraction[uniqueID].windowManagementMode()) {
+			    if (data.code === 8 || data.code === 46) { // backspace or delete
 				// backspace or delete
 				deleteApplication(obj.data.id);
 
@@ -7319,8 +7325,9 @@ function keyUp(uniqueID, pointerX, pointerY, data) {
 					}
 				};
 				addEventToUserLog(uniqueID, {type: "delete", data: eLogData, time: Date.now()});
-			} else {
+			    } else {
 				sendKeyUpToApplication(uniqueID, obj.data, localPt, data);
+			    }
 			}
 			break;
 		}
