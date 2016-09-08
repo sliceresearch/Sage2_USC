@@ -1568,16 +1568,16 @@ function doOverlap(x_1, y_1, width_1, height_1, x_2, y_2, width_2, height_2) {
 	return !(x_1 > x_2 + width_2 || x_1 + width_1 < x_2 || y_1 > y_2 + height_2 || y_1 + height_1 < y_2);
 }
 
-function wsUpdateMediaStreamFrame(wsio, data) {
+function wsUpdateMediaStreamFrame(wsio, dataOrBuffer) {
 	var key;
 
         // NB: Cloned code
         var data;
         if (dataOrBuffer.id !== undefined) {
-          //console.log("UpdateMediaStreamFrame: parameter is record");
+          console.log("UpdateMediaStreamFrame: parameter is record");
           data = dataOrBuffer;
         } else {
-          //console.log("UpdateMediaStreamFrame: parameter is Buffer");
+          console.log("UpdateMediaStreamFrame: parameter is Buffer");
           data = {}
           // buffer: id, state-type, state-encoding, state-src
           data.id = byteBufferToString(dataOrBuffer);
@@ -1618,10 +1618,11 @@ function wsUpdateMediaStreamFrame(wsio, data) {
 	// Iterate over all the clients of this app
 	for (key in SAGE2Items.renderSync[data.id].clients) {
 		var did = SAGE2Items.renderSync[data.id].clients[key].wsio.clientID;
+		console.log("displayClient ", did);
 		// Overview display
 		if (did === -1) {
 			// send the full frame to be displayed
-			SAGE2Items.renderSync[data.id].clients[key].wsio.emit('updateMediaStreamFrame', data);
+			SAGE2Items.renderSync[data.id].clients[key].wsio.emit('updateMediaStreamFrame', dataOrBuffer);
 			continue;
 		}
 		var display = config.displays[did];
@@ -1642,7 +1643,7 @@ function wsUpdateMediaStreamFrame(wsio, data) {
 		if (doOverlap(left, top, stream.width, stream.height,
 			offsetX, offsetY, checkWidth, checkHeight)) {
 			// send the full frame to be displayed
-			SAGE2Items.renderSync[data.id].clients[key].wsio.emit('updateMediaStreamFrame', data);
+			SAGE2Items.renderSync[data.id].clients[key].wsio.emit('updateMediaStreamFrame', dataOrBuffer);
 		} else {
 			// otherwise send a dummy small image
 			SAGE2Items.renderSync[data.id].clients[key].wsio.emit('updateMediaStreamFrame', data_copy);

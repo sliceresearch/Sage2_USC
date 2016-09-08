@@ -728,9 +728,11 @@ function SAGE2_interaction(wsio) {
 				}
 				this.gotRequest = false;
 			} else {
-				//this.wsio.emit('updateMediaStreamFrame', {id: this.uniqueID + "|0", state:
-				//	{src: raw, type: "image/jpeg", encoding: "binary"}});
-                 		var buffer = _appendBuffers(str2ab(id), str2ab("image/jpeg"), str2ab("Buffer"), new Uint8Array(raw));
+				console.log("sendMediaStreamFrame ", this.uniqueID);
+				//mytrace(raw);
+				var id = this.uniqueID+"|0";
+				console.log("id ",id.byteLength);
+                		var buffer = _appendBuffers(str2ab(id), str2ab("image/jpeg"), str2ab("base64"), str2ab(raw));
 				this.wsio.emit('updateMediaStreamFrame', buffer);
 			}
 		}
