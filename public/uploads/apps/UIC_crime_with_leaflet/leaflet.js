@@ -277,14 +277,34 @@ var leaflet = SAGE2_App.extend({
 
 		/* eslint-disable brace-style */
 		var feature = this.g.selectAll("circle")
-		.data(collection)
-		.enter()
-		.append("svg:circle")
-		.style("stroke", function(d) { if (d.inLastMonth) { return "black"; } else { return "white"; } })
-		.style("stroke-width", function(d) { if (d.inLastMonth) { return 4; } else { return 2; } })
-		.style("opacity", function(d) { if (d.inLastMonth) { return 1.0; } else { return 0.4; } })
-		.style("fill", function(d) { return d.color; })
-		.attr("r", circleSize); // 15
+			.data(collection)
+			.enter()
+			.append("svg:circle")
+			.style("stroke", function(d) {
+				if (d.inLastMonth) {
+					return "black";
+				} else {
+					return "white";
+				}
+			})
+			.style("stroke-width", function(d) {
+				if (d.inLastMonth) {
+					return 4;
+				} else {
+					return 2;
+				}
+			})
+			.style("opacity", function(d) {
+				if (d.inLastMonth) {
+					return 1.0;
+				} else {
+					return 0.4;
+				}
+			})
+			.style("fill", function(d) {
+				return d.color;
+			})
+			.attr("r", circleSize);
 
 		/* eslint-enable brace-style */
 

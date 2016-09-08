@@ -461,8 +461,8 @@ function deregisterSAGE2(config, callback) {
  */
 function encodeReservedURL(aUrl) {
 	return encodeURI(aUrl).replace(/\$/g, "%24").replace(/\&/g, "%26").replace(/\+/g, "%2B")
-			.replace(/\,/g, "%2C").replace(/\:/g, "%3A").replace(/\;/g, "%3B").replace(/\=/g, "%3D")
-			.replace(/\?/g, "%3F").replace(/\@/g, "%40");
+		.replace(/\,/g, "%2C").replace(/\:/g, "%3A").replace(/\;/g, "%3B").replace(/\=/g, "%3D")
+		.replace(/\?/g, "%3F").replace(/\@/g, "%40");
 }
 
 /**
@@ -579,6 +579,38 @@ function monitorFolders(folders, excludes, callback) {
 // }
 //
 
+/**
+ * Merges object a and b into b
+ *
+ * @method     mergeObjects
+ * @param      {Object}            a       source object
+ * @param      {Object}            b       destination
+ * @param      {Array}            ignore  object fields to ignore during merge
+ * @return     {Boolean}  return true if b was modified
+ */
+function mergeObjects(a, b, ignore) {
+	var ig = ignore || [];
+	var modified = false;
+	// test in case of old sessions
+	if (a === undefined || b === undefined) {
+		return modified;
+	}
+	for (var key in b) {
+		if (a[key] !== undefined && ig.indexOf(key) < 0) {
+			var aRecurse = (a[key] === null || a[key] instanceof Array || typeof a[key] !== "object") ? false : true;
+			var bRecurse = (b[key] === null || b[key] instanceof Array || typeof b[key] !== "object") ? false : true;
+			if (aRecurse && bRecurse) {
+				modified = mergeObjects(a[key], b[key]) || modified;
+			} else if (!aRecurse && !bRecurse && a[key] !== b[key]) {
+				b[key] = a[key];
+				modified = true;
+			}
+		}
+	}
+	return modified;
+}
+
+
 
 module.exports.nodeVersion       = _NODE_VERSION;
 module.exports.getNodeVersion    = getNodeVersion;
@@ -601,6 +633,7 @@ module.exports.monitorFolders    = monitorFolders;
 module.exports.getHomeDirectory  = getHomeDirectory;
 module.exports.mkdirParent       = mkdirParent;
 module.exports.sanitizedURL      = sanitizedURL;
+module.exports.mergeObjects      = mergeObjects;
 
 module.exports.encodeReservedURL  = encodeReservedURL;
 module.exports.encodeReservedPath = encodeReservedPath;

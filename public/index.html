@@ -450,15 +450,15 @@
 					</tr>
 					<tr>
 						<td>&nbsp&nbsp</td>
-						<td> <div id="uinmColorPick1"></div> </td>
-						<td> <div id="uinmColorPick2"></div> </td>
-						<td> <div id="uinmColorPick3"></div> </td>
+						<td> <div id="uinmColorPick1" class="uinmColorPickBlock"></div> </td>
+						<td> <div id="uinmColorPick2" class="uinmColorPickBlock"></div> </td>
+						<td> <div id="uinmColorPick3" class="uinmColorPickBlock"></div> </td>
 					</tr>
 					<tr>
 						<td>&nbsp&nbsp</td>
-						<td> <div id="uinmColorPick4"></div> </td>
-						<td> <div id="uinmColorPick5"></div> </td>
-						<td> <div id="uinmColorPick6"></div> </td>
+						<td> <div id="uinmColorPick4" class="uinmColorPickBlock"></div> </td>
+						<td> <div id="uinmColorPick5" class="uinmColorPickBlock"></div> </td>
+						<td> <div id="uinmColorPick6" class="uinmColorPickBlock"></div> </td>
 					</tr>
 				</table>
 			</div>
@@ -468,6 +468,7 @@
 			&nbsp&nbsp&nbsp
 			<br>
 			<br>&nbsp
+			<span id="uiNoteMakerCloseButton" class="button">Close</span>&nbsp&nbsp&nbsp
 			<span id="uiNoteMakerSendButton" class="button">Make Note [Enter]</span>
 			<br>&nbsp
 	</div>
@@ -495,17 +496,18 @@
 		</table>
 		<br>
 		&nbsp&nbsp&nbsp
-		<canvas id="uiDrawZoneCanvas" width="500" height="500" style="border:1px solid black">
+		<canvas id="uiDrawZoneCanvas" width="500" height="500">
 		</canvas>
 		&nbsp&nbsp&nbsp
 		<br>
 		<br>
-		<div style="position:relative; text-align:right; right:5%">
-			<span id="uiDrawZoneCloseButton" class="button">Close</span>
+		<div>
+			<span id="uiDrawZoneCloseDoodleButton" class="button">Cancel / Close Doodle</span>
+			<span id="uiDrawZoneCloseEditorButton" class="button">Close Editor</span>
 		</div>
 		<br>
 	</div>
-	<div id="uiDrawZoneEraseReference" style="position:absolute;top:-100;left:-100;width:1;border:1px solid black;border-radius:50%;z-index:10003;pointer-events:none" >
+	<div id="uiDrawZoneEraseReference">
 	</div>
 	
 	

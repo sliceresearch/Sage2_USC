@@ -94,6 +94,7 @@ function FileManager(wsio, mydiv, uniqueID) {
 			{id: "display_menu",  value: "Display client 0"},
 			{id: "overview_menu", value: "Display overview client"},
 			{id: "audio_menu",    value: "Audio manager"},
+			{id: "web_menu",      value: "Create webview"},
 			// {id: "drawing_menu",  value: "Drawing application"},
 			{id: "console_menu",  value: "Server console"}
 		]},
@@ -361,8 +362,68 @@ function FileManager(wsio, mydiv, uniqueID) {
 			_this.main.adjust();
 		} else if (evt === "audio_menu") {
 			var audioUrl = "http://" + window.location.hostname + _this.http_port +  "/audioManager.html";
-			// var audioUrl = "audioManager.html";
 			window.open(audioUrl, '_blank');
+		} else if (evt === "web_menu") {
+
+			// Open a URL in a webview
+			webix.ui({
+				view: "window",
+				id: "web_form",
+				position: "center",
+				modal: true,
+				zIndex: 9999,
+				head: "Create a web view",
+				body: {
+					view: "form",
+					width: 400,
+					borderless: false,
+					elements: [
+						{
+							view: "text", id: "web_url", label: "Type a URL", name: "url"
+						},
+						{margin: 5, cols: [
+							{view: "button", value: "Cancel", click: function() {
+								this.getTopParentView().hide();
+							}},
+							{view: "button", value: "Create", type: "form", click: function() {
+								var data = this.getFormView().getValues();
+								wsio.emit('openNewWebpage', {
+									url: data.url,
+									user: this.uniqueID
+								});
+								this.getTopParentView().hide();
+							}}
+						]}
+					],
+					elementsConfig: {
+						labelPosition: "top"
+					}
+				}
+			}).show();
+			// Attach handlers for keyboard
+			$$("web_url").attachEvent("onKeyPress", function(code, e) {
+				// ESC closes
+				if (code === 27 && !e.ctrlKey && !e.shiftKey && !e.altKey) {
+					this.getTopParentView().hide();
+					return false;
+				}
+				// ENTER activates
+				if (code === 13 && !e.ctrlKey && !e.shiftKey && !e.altKey) {
+					var data = this.getFormView().getValues();
+					console.log('Webview', data.url);
+					window.open(data.url,
+						"SAGE2 browser",
+						"resizable,scrollbars,status");
+					wsio.emit('openNewWebpage', {
+						url: data.url,
+						user: this.uniqueID
+					});
+					this.getTopParentView().hide();
+					return false;
+				}
+			});
+			$$('web_url').focus();
+
 		} else if (evt === "drawing_menu") {
 			// window.open("drawing.html", '_blank');
 		} else if (evt === "console_menu") {

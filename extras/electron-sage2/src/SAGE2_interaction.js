@@ -435,18 +435,16 @@ function SAGE2_interaction(wsio) {
 				minFrameRate: 3
 			};
 			var desktopCapturer = require('electron').desktopCapturer;
-			console.log('Capturer', desktopCapturer);
 			var _this = this;
 			desktopCapturer.getSources({types: ['window', 'screen']}, function(error, sources) {
 				if (error) {
 					throw error;
 				}
-				for (var i = 0; i < sources.length; ++i) {
-					console.log('Win:', sources[i].name, sources[i].id, sources[i].thumbnail);
-				}
+				// for (var i = 0; i < sources.length; ++i) {
+				// 	console.log('Win:', sources[i].name, sources[i].id, sources[i].thumbnail);
+				// }
 				for (var i = 0; i < sources.length; ++i) {
 					if (target === "window" && sources[i].name == "SAGE2 - Electron") {
-					// if (sources[i].name == "Entire screen") {
 						navigator.getUserMedia({
 								audio: false,
 								video: {
@@ -464,7 +462,9 @@ function SAGE2_interaction(wsio) {
 						);
 						return;
 					}
-					if (target === "screen" && sources[i].name == "Entire screen") {
+					if (target === "screen" &&
+						(sources[i].name == "Entire screen" ||
+						sources[i].name == "Screen 1")) {
 						navigator.getUserMedia({
 								audio: false,
 								video: {

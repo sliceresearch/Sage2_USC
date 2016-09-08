@@ -21,10 +21,20 @@ var quickNote = SAGE2_App.extend({
 		this.element.style.fontSize   = ui.titleTextSize + "px";
 		// Using SAGE2 default font
 		this.element.style.fontFamily = "Arimo, Helvetica, sans-serif";
-
+		// Default starting attributes
 		this.backgroundChoice = "lightyellow";
 		this.startingFontSize = ui.titleTextSize;
-		this.startingWidth    = data.width; // to match instructions width
+		this.startingWidth    = 300; // Hardcode necessary to keep scale on resize/restart/reload
+		// textarea setup
+		this.txtArea = document.createElement("textarea");
+		this.txtArea.rows = 5;
+		this.txtArea.cols = 22;
+		this.txtArea.style.resize = 'none';
+		// this.txtArea.style.width = "100%";
+		// this.txtArea.style.height = "100%";
+		this.txtArea.style.fontFamily = "Arimo, Helvetica, sans-serif";
+		this.txtArea.style.fontSize = '30px';
+		this.element.appendChild(this.txtArea);
 
 		// If loaded from session, this.state will have meaningful values.
 		this.setMessage(this.state);
@@ -59,7 +69,7 @@ var quickNote = SAGE2_App.extend({
 	setMessage: function(msgParams) {
 		// First remove potential new lines from input
 		if (msgParams.clientInput) {
-			msgParams.clientInput = msgParams.clientInput.replace(/\n/g, "");
+			msgParams.clientInput = msgParams.clientInput.replace(/\n/g, "<br>");
 		}
 		// If defined by a file, use those values
 		if (msgParams.fileDefined === true) {
@@ -69,21 +79,17 @@ var quickNote = SAGE2_App.extend({
 			this.state.creationTime = msgParams.clientName;
 			this.element.style.background = msgParams.colorChoice;
 			this.element.innerHTML        = msgParams.clientInput;
-			this.updateTitle(this.state.creationTime);
+			this.formatAndSetTitle(this.state.creationTime);
 			this.saveNote(msgParams.creationTime);
 			return;
 		}
 
 		// Otherwise set the values using probably user input.
 		if (msgParams.clientName === undefined || msgParams.clientName === null || msgParams.clientName == "") {
-			msgParams.clientName = "Anonymous";
+			msgParams.clientName = "";
 		}
-		// If the color choice was not defined, default to lightyellow.
-		if (msgParams.colorChoice === undefined || msgParams.colorChoice === null || msgParams.colorChoice == "") {
-			this.backgroundChoice = "lightyellow";
-			this.element.style.background = "lightyellow";
-		} else {
-			// Else use the given color.
+		// If the color choice was defined, use the given color. RMB choices do not provide a color (currently)
+		if (msgParams.colorChoice !== undefined && msgParams.colorChoice !== null && msgParams.colorChoice !== "") {
 			this.backgroundChoice = msgParams.colorChoice;
 			this.element.style.background = msgParams.colorChoice;
 		}
@@ -130,13 +136,44 @@ var quickNote = SAGE2_App.extend({
 			titleString += this.state.creationTime.getMilliseconds();
 			// store it for later and update the tile.
 			this.state.creationTime = titleString;
-			this.updateTitle(this.state.creationTime);
+			this.formatAndSetTitle(this.state.creationTime);
 		}
 		// if loaded will include the creationTime
 		if (msgParams.creationTime !== undefined && msgParams.creationTime !== null) {
-			this.updateTitle(msgParams.creationTime);
+			this.formatAndSetTitle(msgParams.creationTime);
 		}
 		this.saveNote(msgParams.creationTime);
+	},
+
+	setColor: function(responseObject) {
+		this.backgroundChoice         = responseObject.color;
+		this.state.colorChoice        = this.backgroundChoice;
+		this.element.style.background = responseObject.color;
+		this.saveNote(responseObject.creationTime);
+	},
+
+	formatAndSetTitle: function(wholeName) {
+		// Breaking apart whole name and using moment.js to make easier to read.
+		var parts  = wholeName.split("-"); // 0 name - 1 qn - 2 YYYYMMDD - 3 HHMMSSmmm
+		var author = parts[0];
+		var month  = parseInt(parts[2].substring(4, 6)); // YYYY[MM]
+		var day    = parseInt(parts[2].substring(6, 8)); // YYYYMM[DD]
+		var hour   = parseInt(parts[3].substring(0, 2)); // [HH]
+		var min    = parseInt(parts[3].substring(2, 4)); // HH[MM]
+		// Moment conversion
+		var momentTime = {
+			month: month,
+			day: day,
+			hour: hour,
+			minute: min
+		};
+		momentTime = moment(momentTime);
+		// If the author is supposed to be Anonymouse, then omit author inclusion and marker.
+		if (author === "Anonymous") {
+			this.updateTitle(momentTime.format("MMM Do, hh:mm A"));
+		} else { // Otherwise have the name followed by @
+			this.updateTitle(author + " @ " + momentTime.format("MMM Do, hh:mm A"));
+		}
 	},
 
 	load: function(date) {
@@ -190,11 +227,13 @@ var quickNote = SAGE2_App.extend({
 	duplicate: function(responseObject) {
 		if (isMaster) {
 			var data = {};
-			data.type		= "launchAppWithValues";
-			data.appName	= "quickNote";
-			data.func		= "setMessage";
+			data.type       = "launchAppWithValues";
+			data.appName    = "quickNote";
+			data.func       = "setMessage";
+			data.xLaunch    = this.sage2_x + 100;
+			data.yLaunch    = this.sage2_y;
 			data.params		= {};
-			data.params.clientName = responseObject.clientName;
+			data.params.clientName  = responseObject.clientName;
 			data.params.clientInput = this.state.clientInput;
 			data.params.colorChoice = this.state.colorChoice;
 			wsio.emit("csdMessage", data);
@@ -223,6 +262,48 @@ var quickNote = SAGE2_App.extend({
 		entry.description = "Duplicate";
 		entry.callback    = "duplicate";
 		entry.parameters  = {};
+		entries.push(entry);
+
+		entry = {};
+		entry.description = "Blue";
+		entry.callback    = "setColor";
+		entry.parameters  = { color: "lightblue"};
+		entry.entryColor  = "lightblue";
+		entries.push(entry);
+
+		entry = {};
+		entry.description = "Yellow";
+		entry.callback    = "setColor";
+		entry.parameters  = { color: "lightyellow"};
+		entry.entryColor  = "lightyellow";
+		entries.push(entry);
+
+		entry = {};
+		entry.description = "Pink";
+		entry.callback    = "setColor";
+		entry.parameters  = { color: "lightpink"};
+		entry.entryColor  = "lightpink";
+		entries.push(entry);
+
+		entry = {};
+		entry.description = "Green";
+		entry.callback    = "setColor";
+		entry.parameters  = { color: "lightgreen"};
+		entry.entryColor  = "lightgreen";
+		entries.push(entry);
+
+		entry = {};
+		entry.description = "White";
+		entry.callback    = "setColor";
+		entry.parameters  = { color: "white"};
+		entry.entryColor  = "white";
+		entries.push(entry);
+
+		entry = {};
+		entry.description = "Orange";
+		entry.callback    = "setColor";
+		entry.parameters  = { color: "lightsalmon"};
+		entry.entryColor  = "lightsalmon";
 		entries.push(entry);
 
 		entry = {};

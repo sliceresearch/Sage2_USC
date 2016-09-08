@@ -10,11 +10,17 @@
 		"lib/ChemDoodleWeb.js"
 	],
 	"load": {
-		"rotation": 0,
+		"rotationx": 0,
+		"rotationy": 0,
+		"scale": 1,
 		"ismoving": true
 	},
 	"title": "ChemViewer",
 	"version": "1.0.0",
+	"fileTypes": [ "pdb" ],
+	"directory": "molecules",
+	"removeFromLauncher": false,
+	"plugin": "plugin.js",
 	"description": "SAGE2 application based on ChemDoodle Web Components",
 	"keywords": [ "sage2", "ChemViewer", "ChemDoodleWeb", "chemistry", "PDB" ],
 	"author": "Luc Renambot <renambot@gmail.com>",

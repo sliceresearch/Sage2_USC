@@ -22,7 +22,7 @@ var timezone = SAGE2_App.extend({
 
 	updateAllDivs: function() {
 		for (var i in this.state.clocks) {
-			var div = d3.select("#" + this.state.clocks[i].id);
+			var div = d3.select(this.element).select("#" + this.state.clocks[i].id);
 			div.style("width", 100 / this.state.clocks.length + "%");
 			div.style("height", 100 + "%");
 			div.style("position", "absolute");
@@ -41,8 +41,8 @@ var timezone = SAGE2_App.extend({
 
 	updateAllCaption: function() {
 		for (var i in this.state.clocks) {
-			var captionDiv = d3.select("#" + this.state.clocks[i].id + "textDiv");
-			var captionP = d3.select("#" + this.state.clocks[i].id + "Text");
+			var captionDiv = d3.select(this.element).select("#" + this.state.clocks[i].id + "textDiv");
+			var captionP = d3.select(this.element).select("#" + this.state.clocks[i].id + "Text");
 			if (!captionDiv.empty() && !captionP.empty()) {
 				captionP.style("font-size", this.minimumFontSize + "px");
 				var maxwidth = parseInt(captionDiv.style("width"));
@@ -54,8 +54,13 @@ var timezone = SAGE2_App.extend({
 	},
 
 	setCaptionSize: function(captionDiv, captionP, captionAMPM) {
-		var maxheight = parseInt(captionDiv.style("height"));
-		var maxwidth  = parseInt(captionDiv.style("width"));
+		// Get the DOM element out of the D3 selection
+		var cp = captionDiv[0][0];
+		if (cp === null) {
+			return;
+		}
+		var maxheight = cp.clientHeight; // parseInt(captionDiv.style("height"));
+		var maxwidth  = cp.clientWidth;  // parseInt(captionDiv.style("width"));
 
 		// Calculate city scaling
 		var fontsize  = maxheight;
@@ -94,27 +99,27 @@ var timezone = SAGE2_App.extend({
 
 	createCaption: function(clock) {
 		var top = "95%";
-		var textdiv = d3.select("#" + clock.id)
-						.append("div")
-						.attr("id", clock.id + "textDiv")
-						.style("height", "15%")
-						.style("top", top)
-						.style("position", "absolute")
-						.style("width", "100%");
+		var textdiv = d3.select(this.element).select("#" + clock.id)
+			.append("div")
+			.attr("id", clock.id + "textDiv")
+			.style("height", "15%")
+			.style("top", top)
+			.style("position", "absolute")
+			.style("width", "100%");
 		var textAMPM = textdiv.append("p")
-						.attr("id", clock.id + "TextAMPM")
-						.style("color", "#d3d3d3")
-						.style("top", "-1em")
-						.style("position", "absolute")
-						.style("white-space", "nowrap")
-						.text("00:00 PM");
+			.attr("id", clock.id + "TextAMPM")
+			.style("color", "#d3d3d3")
+			.style("top", "-1em")
+			.style("position", "absolute")
+			.style("white-space", "nowrap")
+			.text("00:00 PM");
 		var text = textdiv.append("p")
-						.attr("id", clock.id + "Text")
-						.style("color", "white")
-						.style("position", "absolute")
-						.style("top", "0.2em")
-						.style("white-space", "nowrap")
-						.text(clock.name.split(',')[0]);
+			.attr("id", clock.id + "Text")
+			.style("color", "white")
+			.style("position", "absolute")
+			.style("top", "0.2em")
+			.style("white-space", "nowrap")
+			.text(clock.name.split(',')[0]);
 		this.setCaptionSize(textdiv, text, textAMPM);
 		this.resizeCaption();
 		this.updateAllCaption();
@@ -124,7 +129,7 @@ var timezone = SAGE2_App.extend({
 
 	addClockToView: function(clock) {
 		this.ready = false;
-		d3.select("#clocks").append("div").attr("id", clock.id);
+		d3.select(this.element).select("#clocks").append("div").attr("id", clock.id);
 		var _this = this;
 		d3.xml(this.resrcPath + 'clock.svg', "image/svg+xml", function(error, xml) {
 			if (error) {
@@ -143,12 +148,12 @@ var timezone = SAGE2_App.extend({
 
 	createClockPage: function() {
 		this.clockDiv = d3.select(this.element)
-							.append("div")
-							.attr("id", "clocks")
-							.style("width", "100%")
-							.style("height", "85%")
-							.style("top", "2%")
-							.style("position", "absolute");
+			.append("div")
+			.attr("id", "clocks")
+			.style("width", "100%")
+			.style("height", "85%")
+			.style("top", "2%")
+			.style("position", "absolute");
 		this.addAllClocks();
 		this.createButtons();
 	},
@@ -163,7 +168,12 @@ var timezone = SAGE2_App.extend({
 		this.ready = false;
 		this.minimumFontSize = Number.MAX_VALUE;
 		if (this.state.clocks.length == 0) {
-			this.state.clocks.push({name: "Chicago, IL, United States", offset: 0, id: "chicagoDiv", nightMode: false});
+			this.state.clocks.push({
+				name: "Chicago, IL, United States",
+				offset: 0,
+				id: this.id + "chicagoDiv",
+				nightMode: false
+			});
 		} else {
 			for (var i in this.state.clocks) {
 				this.state.clocks[i].nightMode = false;
@@ -188,12 +198,12 @@ var timezone = SAGE2_App.extend({
 	},
 
 	rotateElement: function(clockId, id, angle) {
-		var svgDoc = d3.select("#" + clockId).select('svg');
+		var svgDoc = d3.select(this.element).select("#" + clockId).select('svg');
 		svgDoc.select("#" + id).attr('transform', 'rotate(' + angle + ', 100, 100)');
 	},
 
 	toggleNightMode: function(index, background, dial) {
-		var svgDoc = d3.select("#" + this.state.clocks[index].id).select('svg');
+		var svgDoc = d3.select(this.element).select("#" + this.state.clocks[index].id).select('svg');
 		if (!svgDoc.empty()) {
 			svgDoc.select("#" + "background").style("fill", background);
 			svgDoc.select("#" + "dial").style("fill", dial);
@@ -222,7 +232,7 @@ var timezone = SAGE2_App.extend({
 				var momentTime = moment({hour: hours, minute: minutes});
 				var momentStr  = momentTime.format("hh:mm A");
 				// update the text for this clock
-				d3.select("#" + this.state.clocks[i].id + "TextAMPM").text(momentStr);
+				d3.select(this.element).select("#" + this.state.clocks[i].id + "TextAMPM").text(momentStr);
 
 				// rotate hour hands
 				this.rotateElement(this.state.clocks[i].id, 'hourHand', 30 * hours + 0.5 * minutes);
@@ -261,7 +271,7 @@ var timezone = SAGE2_App.extend({
 	resizeCaption: function() {
 		this.minimumFontSize = Number.MAX_VALUE;
 		for (var i in this.state.clocks) {
-			var captionDiv  = d3.select("#" + this.state.clocks[i].id + "textDiv");
+			var captionDiv  = d3.select(this.element).select("#" + this.state.clocks[i].id + "textDiv");
 			var captionP    = captionDiv.select("#" + this.state.clocks[i].id + "Text");
 			var captionAMPM = captionDiv.select("#" + this.state.clocks[i].id + "TextAMPM");
 			this.setCaptionSize(captionDiv, captionP, captionAMPM);
@@ -283,6 +293,8 @@ var timezone = SAGE2_App.extend({
 		var id = data.cityName.toLowerCase() + data.lat + data.lon;
 		id = id.replace(/ /g, "");
 		id = id.replace(/\./g, '');
+		// make the id unique for this instance of the app
+		id = this.id + id;
 		var flag = false;
 		for (var i in this.state.clocks) {
 			if (id === this.state.clocks[i].id) {

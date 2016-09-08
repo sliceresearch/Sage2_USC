@@ -3,4 +3,5 @@
 #killall -HUP node
 kill `ps auxww | grep node | grep -v CAVE2.js|awk '{print $2}'`
 tentakel pkill -HUP chrome
+tentakel pkill -9 electron
 
