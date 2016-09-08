@@ -436,18 +436,18 @@ function initializeSage2Server() {
 
 	drawingManager = new Drawing(config);
 	drawingManager.setCallbacks(
-								drawingInit,
-								drawingUpdate,
-								drawingRemove,
-								sendTouchToPalette,
-								sendDragToPalette,
-								sendStyleToPalette,
-								sendChangeToPalette,
-								movePaletteTo,
-								saveDrawingSession,
-								loadDrawingSession,
-								sendSessionListToPalette
-								);
+		drawingInit,
+		drawingUpdate,
+		drawingRemove,
+		sendTouchToPalette,
+		sendDragToPalette,
+		sendStyleToPalette,
+		sendChangeToPalette,
+		movePaletteTo,
+		saveDrawingSession,
+		loadDrawingSession,
+		sendSessionListToPalette
+	);
 	// Link the interactable manager to the drawing manager
 	drawingManager.linkInteractableManager(interactMgr);
 }
@@ -8091,9 +8091,11 @@ function wsUtdRequestRmbContextMenu(wsio, data) {
 		} else {
 			// Default response
 			wsio.emit('dtuRmbContextMenuContents', {
+				x: data.xClick,
+				y: data.yClick,
 				app: obj.data.id,
 				entries: [{
-					description: "Not supported by this app"
+					description: "App not yet loaded on display client yet."
 				}]
 			});
 		}

@@ -819,7 +819,6 @@ function UIBuilder(json_cfg, clientID) {
 	};
 
 	this.drawingInit = function(data) {
-		console.log("toCreateSVG");
 		if (!this.drawingSvg) {
 			this.drawingSvg = d3.select("#main").append("svg").attr("id", "drawingSVG");
 			this.drawingSvg.attr("height", parseInt(this.main.style.height));
