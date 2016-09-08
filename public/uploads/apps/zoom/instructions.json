@@ -7,6 +7,8 @@
 	"dependencies": [
 		  "openseadragon.min.js"
 	],
+	"fileTypes": [ "dzi" ],
+	"directory": "dzi",
 	"title": "Multi-Res Image Viewer",
 	"version": "1.0.0",
 	"description": "High-resolution Image Viewer using the Openseadragon API",

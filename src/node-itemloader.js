@@ -603,8 +603,7 @@ AppLoader.prototype.loadAppFromFileFromRegistry = function(file, mime_type, aUrl
 	});
 };
 
-
-AppLoader.prototype.loadAppFromFile = function(file, mime_type, aUrl, external_url, name, callback) {
+AppLoader.prototype.loadAppFromFile = function(file, mime_type, aUrl, external_url, name, data, callback) {
 	var _this = this;
 	var zipFolder = file;
 
@@ -615,6 +614,8 @@ AppLoader.prototype.loadAppFromFile = function(file, mime_type, aUrl, external_u
 		}
 
 		var appInstance = _this.readInstructionsFile(json_str, zipFolder, mime_type, external_url);
+		sageutils.mergeObjects(data, appInstance.data);
+
 		_this.scaleAppToFitDisplay(appInstance);
 		appInstance.file = file;
 		callback(appInstance);
@@ -780,6 +781,59 @@ AppLoader.prototype.loadFileFromWebURL = function(file, callback) {
 
 };
 
+AppLoader.prototype.createJupyterApp = function(source, type, encoding, name, color, width, height, callback) {
+	var aspectRatio = width / height;
+
+	var metadata         = {};
+	metadata.title       = "Jupyter";
+	metadata.version     = "1.0.0";
+	metadata.description = "Jupyer for SAGE2";
+	metadata.author      = "SAGE2";
+	metadata.license     = "SAGE2-Software-License";
+	metadata.keywords    = ["jupyter"];
+
+	var appInstance = {
+		id: null,
+		title: name,
+		color: color,
+		application: "jupyter",
+		icon: "/images/jupyter.png",
+		type: "mime_type",
+		url: "src",
+		data: {
+			src: source,
+			type: type,
+			encoding: encoding
+		},
+		load: {
+			imgDict: {},
+			mainImgs: {},
+			page: 1
+		},
+		resrc: null,
+		left: this.titleBarHeight,
+		top: 1.5 * this.titleBarHeight,
+		width: width,
+		height: height,
+		native_width: width,
+		native_height: height,
+		previous_left: null,
+		previous_top: null,
+		previous_width: null,
+		previous_height: null,
+		maximized: false,
+		aspect: aspectRatio,
+		resizeMode: "free",
+		animation: false,
+		sticky: false,
+		metadata: metadata,
+		date: new Date()
+	};
+	this.scaleAppToFitDisplay(appInstance);
+	callback(appInstance);
+};
+
+
 function getSAGE2Path(getName) {
 	// pathname: result of the search
 	var pathname = null;
@@ -843,7 +897,7 @@ AppLoader.prototype.loadFileFromLocalStorage = function(file, callback) {
 	var external_url = url.resolve(this.hostOrigin, a_url);
 
 	this.loadApplication({location: "file", path: localPath, url: a_url, external_url: external_url,
-			type: mime_type, name: file.filename, compressed: false}, function(appInstance, handle) {
+			type: mime_type, name: file.filename, compressed: false, data: file.data}, function(appInstance, handle) {
 		callback(appInstance, handle);
 	});
 };
@@ -965,7 +1019,7 @@ AppLoader.prototype.loadApplication = function(appData, callback) {
 						}
 				);
 			} else {
-				this.loadAppFromFile(appData.path, appData.type, appData.url, appData.external_url, appData.name,
+				this.loadAppFromFile(appData.path, appData.type, appData.url, appData.external_url, appData.name, appData.data,
 						function(appInstance) {
 							callback(appInstance, null);
 						}

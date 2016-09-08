@@ -416,6 +416,7 @@ function SAGE2_init() {
 		}
 	});
 
+	// This will startup the uiNote and uiDraw sections of the UI.
 	setupRmbContextMenuDiv();
 	setupUiNoteMaker();
 	setupUiDrawCanvas();
@@ -624,7 +625,7 @@ function setupListeners() {
 	});
 
 	wsio.on('dtuRmbContextMenuContents', function(data) {
-		setRmbContextMenuEntries(data.entries, data.app);
+		setRmbContextMenuEntries(data);
 	});
 
 	wsio.on('csdSendDataToClient', function(data) {
@@ -1022,7 +1023,12 @@ function pointerPress(event) {
 			var btn = (event.button === 0) ? "left" : (event.button === 1) ? "middle" : "right";
 			displayUI.pointerPress(btn);
 		}
+		hideRmbContextMenuDiv();
+		clearContextMenu();
 		event.preventDefault();
+	} else if (event.target.id === "mainUI") {
+		hideRmbContextMenuDiv();
+		clearContextMenu();
 	}
 }
 
@@ -1360,12 +1366,60 @@ function handleClick(element) {
 		wsio.emit('tileApplications');
 		hideDialog('arrangementDialog');
 	} else if (element.id === "savesession") {
+		// generate a default name
 		var template = "session_" + dateToYYYYMMDDHHMMSS(new Date());
-		var filename = prompt("Please enter a session name\n(Leave blank for name based on server's time)", template);
-		if (filename !== null) {
-			wsio.emit('saveSesion', filename);
-			hideDialog('arrangementDialog');
-		}
+
+		// Hide the parent dialog
+		hideDialog('arrangementDialog');
+
+		// Build a webix dialog
+		webix.ui({
+			view: "window",
+			id: "session_form",
+			position: "center",
+			modal: true,
+			zIndex: 9999,
+			head: "Save session",
+			width: 400,
+			body: {
+				view: "form",
+				borderless: false,
+				elements: [
+					{view: "text", value: template, id: "session_name", label: "Please enter a session name:", name: "session"},
+					{margin: 5, cols: [
+						{view: "button", value: "Cancel", click: function() {
+							this.getTopParentView().hide();
+						}},
+						{view: "button", value: "Save", type: "form", click: function() {
+							var values = this.getFormView().getValues();
+							wsio.emit('saveSesion', values.session);
+							this.getTopParentView().hide();
+						}}
+					]}
+				],
+				elementsConfig: {
+					labelPosition: "top"
+				}
+			}
+		}).show();
+
+		// Attach handlers for keyboard
+		$$("session_name").attachEvent("onKeyPress", function(code, e) {
+			// ESC closes
+			if (code === 27 && !e.ctrlKey && !e.shiftKey && !e.altKey) {
+				this.getTopParentView().hide();
+				return false;
+			}
+			// ENTER activates
+			if (code === 13 && !e.ctrlKey && !e.shiftKey && !e.altKey) {
+				var values = this.getFormView().getValues();
+				wsio.emit('saveSesion', values.session);
+				this.getTopParentView().hide();
+				return false;
+			}
+		});
+		$$('session_name').focus();
+
 	} else if (element.id === "ffShareScreenBtn") {
 		// Firefox Share Screen Dialog
 		interactor.captureDesktop("screen");
@@ -1758,11 +1812,12 @@ function noBackspace(event) {
 		&& event.target.id.indexOf("Input") !== -1
 		) {
 		event.target.parentNode["buttonEffect" + event.target.id]();
+	} else if (event.ctrlKey && event.keyCode === 13 && event.target.id === "uiNoteMakerInputField") {
+		event.target.value += "\n";
 	} else if (event.keyCode === 13 && event.target.id === "uiNoteMakerInputField") {
 		sendCsdMakeNote();
-	} else {
-		return true;
 	}
+	return true;
 }
 
 /**
@@ -1953,30 +2008,26 @@ function reloadIfServerRunning(callback) {
  * Will set the values of the right mouse button(rmb) context menu div.
  */
 function setupRmbContextMenuDiv() {
-	var workingDiv = document.getElementById('rmbContextMenu');
-	workingDiv.style.position = "absolute";
-	workingDiv.style.visibility = "hidden";
-	workingDiv.style.border = "1px solid black";
-	workingDiv.style.background = "white";
-	workingDiv.style.zIndex = 9999; // location matters. This is 1 lay below dialog but above the UI canvas.
 	// override rmb contextmenu calls.
 	document.addEventListener('contextmenu', function(e) {
 		// if a right click is made on canvas
-		if (event.target.id === "sage2UICanvas") {
+		if (e.target.id === "sage2UICanvas") {
 			// get the location with respect to the display positioning.
-			var rect = event.target.getBoundingClientRect();
-			var pointerX = event.clientX - rect.left;
-			var pointerY = event.clientY - rect.top;
+			var rect = e.target.getBoundingClientRect();
+			var pointerX = e.clientX - rect.left;
+			var pointerY = e.clientY - rect.top;
 			pointerX = pointerX / displayUI.scale;
 			pointerY = pointerY / displayUI.scale;
 			var data = {};
 			data.x = pointerX;
 			data.y = pointerY;
+			data.xClick = e.clientX;
+			data.yClick = e.clientY;
 			// ask for the context menu for the topmost app at that spot.
 			wsio.emit('utdRequestRmbContextMenu', data);
-			showRmbContextMenuDiv(e.clientX, e.clientY);
-			// start with blank set of entries, it will be updated later
 			clearContextMenu();
+			hideRmbContextMenuDiv();
+			// The context menu will be filled and positioned after getting a response from server.
 		}
 		// prevent the standard context menu
 		e.preventDefault();
@@ -2019,7 +2070,11 @@ function clearContextMenu() {
  * 		obj.buttonEffect 	will be added if .func exists
  *
  */
-function setRmbContextMenuEntries(entriesToAdd, app) {
+function setRmbContextMenuEntries(data) {
+	//data.entries, data.app, data.x, data.y
+	var entriesToAdd = data.entries;
+	var app = data.app;
+	showRmbContextMenuDiv(data.x, data.y);
 	// full removal of current contents
 	removeAllChildren('rmbContextMenu');
 	// for each entry
@@ -2083,9 +2138,20 @@ function setRmbContextMenuEntries(entriesToAdd, app) {
 	var workingDiv;
 	for (i = 0; i < entriesToAdd.length; i++) {
 		workingDiv = document.createElement('div');
+		// unique entry id
 		workingDiv.id = 'rmbContextMenuEntry' + i; // unique entry id
-		workingDiv.style.background = "#FFF8E1"; // start as off-white color
-		workingDiv.innerHTML = "&nbsp&nbsp&nbsp" + entriesToAdd[i].description + "&nbsp&nbsp&nbsp";
+		if (typeof entriesToAdd[i].entryColor === "string") {
+			workingDiv.startingBgColor = entriesToAdd[i].entryColor; // use given color if specified
+		} else {
+			workingDiv.startingBgColor = "#FFF8E1"; // start as off-white color
+		}
+		workingDiv.style.background = workingDiv.startingBgColor;
+		// special case for a separator (line) entry
+		if (entriesToAdd[i].description === "separator") {
+			workingDiv.innerHTML = "<hr>";
+		} else {
+			workingDiv.innerHTML = "&nbsp&nbsp&nbsp" + entriesToAdd[i].description + "&nbsp&nbsp&nbsp";
+		}
 		// add input field if app says to.
 		workingDiv.inputField = false;
 		if (entriesToAdd[i].inputField === true) {
@@ -2119,7 +2185,7 @@ function setRmbContextMenuEntries(entriesToAdd, app) {
 				this.style.background = "lightgray";
 			});
 			rmbcmeIob.addEventListener('mouseout', function() {
-				this.style.background = "#FFF8E1";
+				this.style.background = this.startingBgColor;
 			});
 			workingDiv.appendChild(rmbcmeIob);
 			// workingDiv.innerHTML += "&nbsp&nbsp&nbsp";
@@ -2134,7 +2200,7 @@ function setRmbContextMenuEntries(entriesToAdd, app) {
 				this.style.background = "lightgray";
 			});
 			workingDiv.addEventListener('mouseout', function() {
-				this.style.background = "#FFF8E1";
+				this.style.background = this.startingBgColor;
 			});
 		}
 		// click effect
@@ -2156,46 +2222,36 @@ Fills out some of the field properties.
 */
 function setupUiNoteMaker() {
 	var workingDiv = document.getElementById('uiNoteMaker');
-	workingDiv.style.border = "1px solid black";
 	var inputField = document.getElementById('uiNoteMakerInputField');
 	inputField.id = "uiNoteMakerInputField";
 	inputField.rows = 5;
 	inputField.cols = 20;
-	inputField.style.resize = 'none';
-	inputField.style.fontSize = '20px';
 	var sendButton = document.getElementById('uiNoteMakerSendButton');
 	// click effect to make a note on the display (app launch)
 	sendButton.addEventListener('click', function() {
 		sendCsdMakeNote();
 	});
+	var closeButton = document.getElementById('uiNoteMakerCloseButton');
+	// click effect to cancel making a note
+	closeButton.addEventListener('click', function() {
+		hideDialog(openDialog);
+	});
 	// Add Color fields.
 	for (var i = 1; i <= 6; i++) {
 		workingDiv = document.getElementById("uinmColorPick" + i);
-		workingDiv.style.width = "65px";
-		workingDiv.style.height = "45px";
-		workingDiv.style.border = "1px solid black";
 		workingDiv.colorNumber = i;
 		workingDiv.colorWasPicked = false;
 		workingDiv.addEventListener("click", function () {
 			setUiNoteColorSelect(this.colorNumber);
 		});
-		if (i === 1) {
-			workingDiv.style.background = "lightyellow";
-		}
-		if (i === 2) {
-			workingDiv.style.background = "lightblue";
-		}
-		if (i === 3) {
-			workingDiv.style.background = "lightpink";
-		}
-		if (i === 4) {
-			workingDiv.style.background = "lightgreen";
-		}
-		if (i === 5) {
-			workingDiv.style.background = "lightsalmon";
-		}
-		if (i === 6) {
-			workingDiv.style.background = "white";
+		// This is necessary because for some strange reason, css values are not visible as properties.
+		switch (i) {
+			case 1: workingDiv.style.background = "lightyellow"; break;
+			case 2: workingDiv.style.background = "lightblue"; break;
+			case 3: workingDiv.style.background = "lightpink"; break;
+			case 4: workingDiv.style.background = "lightgreen"; break;
+			case 5: workingDiv.style.background = "lightsalmon"; break;
+			case 6: workingDiv.style.background = "white"; break;
 		}
 	}
 	setUiNoteColorSelect(1);
@@ -2290,10 +2346,25 @@ function setupUiDrawCanvas() {
 		}
 	);
 	// closes the draw area (but really hides it)
-	var closeButton = document.getElementById("uiDrawZoneCloseButton");
-	closeButton.addEventListener('click',
+	var closeEditorButton = document.getElementById("uiDrawZoneCloseEditorButton");
+	closeEditorButton.addEventListener('click',
 		function() {
 			hideDialog('uiDrawZone');
+		}
+	);
+	// closes the draw area (but really hides it)
+	var closeDoodleButton = document.getElementById("uiDrawZoneCloseDoodleButton");
+	closeDoodleButton.addEventListener('click',
+		function() {
+			hideDialog('uiDrawZone');
+			// Close the doodle on the wall.
+			var workingDiv	= document.getElementById('uiDrawZoneCanvas');
+			var data = {};
+			data.app = workingDiv.appId;
+			data.func = "SAGE2DeleteElement";
+			data.parameters = {};
+			data.parameters.clientName = document.getElementById('sage2PointerLabel').value;
+			wsio.emit('utdCallFunctionOnApp', data);
 		}
 	);
 	// initiate a launch app for quick additions of doodles.
@@ -2313,65 +2384,79 @@ function setupUiDrawCanvas() {
 		}
 	);
 	// get the line adjustment working for the thickness buttons.
-	var thicknessSelectBox = document.getElementById('uidztp1');
-	thicknessSelectBox.addEventListener('mousedown',
-		function() {
+	var thicknessSelectBox;
+	for (var i = 1; i <= 6; i++) {
+		thicknessSelectBox = document.getElementById("uidztp" + i);
+		thicknessSelectBox.lineWidth = (i - 1);
+		thicknessSelectBox.addEventListener("mousedown", function() {
 			var workingDiv = document.getElementById('uiDrawZoneCanvas');
-			workingDiv.lineWidth = 1;
-			uiDrawSelectThickness('uidztp1');
+			workingDiv.lineWidth = Math.pow(2, this.lineWidth);
+			uiDrawSelectThickness('uidztp' + (this.lineWidth + 1));
 		});
-	// start the with 1px selected
-	uidzCanvas.lineWidth = 1;
-	thicknessSelectBox.style.border = "3px solid red";
-	// have to hard code each selection due to linewidth adjustment
-	// 2
-	thicknessSelectBox = document.getElementById('uidztp2');
-	thicknessSelectBox.addEventListener('mousedown',
-		function() {
-			var workingDiv = document.getElementById('uiDrawZoneCanvas');
-			workingDiv.lineWidth = 2;
-			uiDrawSelectThickness('uidztp2');
-		});
-	// next
-	thicknessSelectBox = document.getElementById('uidztp3');
-	thicknessSelectBox.addEventListener('mousedown',
-		function() {
-			var workingDiv = document.getElementById('uiDrawZoneCanvas');
-			workingDiv.lineWidth = 4;
-			uiDrawSelectThickness('uidztp3');
-		});
-	// next
-	thicknessSelectBox = document.getElementById('uidztp4');
-	thicknessSelectBox.addEventListener('mousedown',
-		function() {
-			var workingDiv = document.getElementById('uiDrawZoneCanvas');
-			workingDiv.lineWidth = 8;
-			uiDrawSelectThickness('uidztp4');
-		});
-	// next
-	thicknessSelectBox = document.getElementById('uidztp5');
-	thicknessSelectBox.addEventListener('mousedown',
-		function() {
-			var workingDiv = document.getElementById('uiDrawZoneCanvas');
-			workingDiv.lineWidth = 16;
-			uiDrawSelectThickness('uidztp5');
-		});
-	// next
-	thicknessSelectBox = document.getElementById('uidztp6');
-	thicknessSelectBox.addEventListener('mousedown',
-		function() {
-			var workingDiv = document.getElementById('uiDrawZoneCanvas');
-			workingDiv.lineWidth = 32;
-			uiDrawSelectThickness('uidztp6');
-		});
-	// next
-	thicknessSelectBox = document.getElementById('uidztp7');
-	thicknessSelectBox.addEventListener('mousedown',
-		function() {
-			var workingDiv = document.getElementById('uiDrawZoneCanvas');
-			workingDiv.lineWidth = 64;
-			uiDrawSelectThickness('uidztp7');
-		});
+		// Start with thicknes 1
+		if (i === 1) {
+			thicknessSelectBox.style.border = "3px solid red";
+		}
+	}
+	// var thicknessSelectBox = document.getElementById('uidztp1');
+	// thicknessSelectBox.addEventListener('mousedown',
+	// 	function() {
+	// 		var workingDiv = document.getElementById('uiDrawZoneCanvas');
+	// 		workingDiv.lineWidth = 1;
+	// 		uiDrawSelectThickness('uidztp1');
+	// 	});
+	// // start the with 1px selected
+	// uidzCanvas.lineWidth = 1;
+	// thicknessSelectBox.style.border = "3px solid red";
+	// // have to hard code each selection due to linewidth adjustment
+	// // 2
+	// thicknessSelectBox = document.getElementById('uidztp2');
+	// thicknessSelectBox.addEventListener('mousedown',
+	// 	function() {
+	// 		var workingDiv = document.getElementById('uiDrawZoneCanvas');
+	// 		workingDiv.lineWidth = 2;
+	// 		uiDrawSelectThickness('uidztp2');
+	// 	});
+	// // next
+	// thicknessSelectBox = document.getElementById('uidztp3');
+	// thicknessSelectBox.addEventListener('mousedown',
+	// 	function() {
+	// 		var workingDiv = document.getElementById('uiDrawZoneCanvas');
+	// 		workingDiv.lineWidth = 4;
+	// 		uiDrawSelectThickness('uidztp3');
+	// 	});
+	// // next
+	// thicknessSelectBox = document.getElementById('uidztp4');
+	// thicknessSelectBox.addEventListener('mousedown',
+	// 	function() {
+	// 		var workingDiv = document.getElementById('uiDrawZoneCanvas');
+	// 		workingDiv.lineWidth = 8;
+	// 		uiDrawSelectThickness('uidztp4');
+	// 	});
+	// // next
+	// thicknessSelectBox = document.getElementById('uidztp5');
+	// thicknessSelectBox.addEventListener('mousedown',
+	// 	function() {
+	// 		var workingDiv = document.getElementById('uiDrawZoneCanvas');
+	// 		workingDiv.lineWidth = 16;
+	// 		uiDrawSelectThickness('uidztp5');
+	// 	});
+	// // next
+	// thicknessSelectBox = document.getElementById('uidztp6');
+	// thicknessSelectBox.addEventListener('mousedown',
+	// 	function() {
+	// 		var workingDiv = document.getElementById('uiDrawZoneCanvas');
+	// 		workingDiv.lineWidth = 32;
+	// 		uiDrawSelectThickness('uidztp6');
+	// 	});
+	// // next
+	// thicknessSelectBox = document.getElementById('uidztp7');
+	// thicknessSelectBox.addEventListener('mousedown',
+	// 	function() {
+	// 		var workingDiv = document.getElementById('uiDrawZoneCanvas');
+	// 		workingDiv.lineWidth = 64;
+	// 		uiDrawSelectThickness('uidztp7');
+	// 	});
 }
 
 /**
@@ -2509,11 +2594,13 @@ function uiDrawSendLineCommand(xDest, yDest, xPrev, yPrev) {
 	var lineWidth	= parseInt(workingDiv.lineWidth);
 	var fillStyle	= document.getElementById('uiDrawColorPicker').value;
 	var strokeStyle	= document.getElementById('uiDrawColorPicker').value;
+	// If resize is greater than 0, its a 2^resize value, otherwise 1.
+	var modifier = (workingDiv.resizeCount > 0) ? (Math.pow(2, workingDiv.resizeCount)) : 1;
 	var dataForApp = {};
 	dataForApp.app			= workingDiv.appId;
 	dataForApp.func			= "drawLine";
-	dataForApp.data			= [xDest, yDest,
-								xPrev, yPrev,
+	dataForApp.data			= [xDest * modifier, yDest * modifier,
+								xPrev * modifier, yPrev * modifier,
 								lineWidth,
 								fillStyle, strokeStyle,
 								workingDiv.clientDest];
@@ -2570,18 +2657,39 @@ Must clear out canvas, set state, show dialog.
 
 Generally this happens when a user chooses to edit an existing doodle. Their canvas needs to be set
 	to the current state of the doodle before edits should be made.
+
+But, doodles can be made from images which have varying sizes. They must also be contained within view correctly.
 */
 function uiDrawSetCurrentStateAndShow(data) {
 	// clear out canvas
 	uiDrawCanvasBackgroundFlush("white");
+	var imageResolutionToBe = { w: data.imageWidth, h: data.imageHeight };
+	var imageLimit = {w: (window.innerWidth * 0.8), h: (window.innerHeight - 200)};
+	var resizeCount = 0;
+	while (imageResolutionToBe.w > imageLimit.w) {
+		imageResolutionToBe.w /= 2;
+		imageResolutionToBe.h /= 2;
+		resizeCount++;
+	}
+	while (imageResolutionToBe.h > imageLimit.h) {
+		imageResolutionToBe.w /= 2;
+		imageResolutionToBe.h /= 2;
+		resizeCount++;
+	}
+
 	// set the state
-	var workingDiv	= document.getElementById('uiDrawZoneCanvas');
-	var ctx			= workingDiv.getContext('2d');
+	var workingDiv = document.getElementById('uiDrawZoneCanvas');
+	workingDiv.width           = data.imageWidth;
+	workingDiv.height          = data.imageHeight;
+	workingDiv.style.width     = imageResolutionToBe.w + "px";
+	workingDiv.style.height    = imageResolutionToBe.h + "px";
 	workingDiv.imageToDraw.src = data.canvasImage;
+	var ctx = workingDiv.getContext('2d');
 	ctx.drawImage(workingDiv.imageToDraw, 0, 0);
 	// set variables to correctly send updates and allow removal as editor.
-	workingDiv.clientDest = data.clientDest;
-	workingDiv.appId = data.appId;
+	workingDiv.clientDest  = data.clientDest;
+	workingDiv.appId       = data.appId;
+	workingDiv.resizeCount = resizeCount;
 	// show dialog
 	showDialog('uiDrawZone');
 }

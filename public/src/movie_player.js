@@ -205,6 +205,7 @@ var movie_player = SAGE2_BlockStreamingApp.extend({
 			this.state.looped = true;
 		}
 		this.loopBtn.state = 1 - this.loopBtn.state;
+		this.getFullContextMenuAndUpdate();
 	},
 
 	stopVideo: function() {
@@ -234,22 +235,61 @@ var movie_player = SAGE2_BlockStreamingApp.extend({
 		var entries = [];
 		var entry;
 
-		entry = {};
-		entry.description = "Play/Pause";
-		entry.callback = "contextTogglePlayPause";
-		entry.parameters = {};
-		entries.push(entry);
+		if (this.state.paused) {
+			entry = {};
+			entry.description = "Play";
+			entry.callback = "contextTogglePlayPause";
+			entry.parameters = {};
+			entries.push(entry);
+		} else {
+			entry = {};
+			entry.description = "Pause";
+			entry.callback = "contextTogglePlayPause";
+			entry.parameters = {};
+			entries.push(entry);
+		}
 
 		entry = {};
 		entry.description = "Stop";
 		entry.callback = "stopVideo";
 		entry.parameters = {};
 		entries.push(entry);
+		
+		entry = {};
+		entry.description = "separator";
+		entries.push(entry);
+
+		if (this.state.muted) {
+			entry = {};
+			entry.description = "unmute";
+			entry.callback = "contextToggleMute";
+			entry.parameters = {};
+			entries.push(entry);
+		} else {
+			entry = {};
+			entry.description = "mute";
+			entry.callback = "contextToggleMute";
+			entry.parameters = {};
+			entries.push(entry);
+		}
+
+
+		if (this.state.looped) {
+			entry = {};
+			entry.description = "stop looping";
+			entry.callback = "toggleLoop";
+			entry.parameters = {};
+			entries.push(entry);
+		} else {
+			entry = {};
+			entry.description = "loop video";
+			entry.callback = "toggleLoop";
+			entry.parameters = {};
+			entries.push(entry);
+		}
 
 		entry = {};
-		entry.description = "Mute";
-		entry.callback = "contextToggleMute";
-		entry.parameters = {};
+		entry.description = "separator";
 		entries.push(entry);
 
 		// Special callback: dowload the file
@@ -272,6 +312,7 @@ var movie_player = SAGE2_BlockStreamingApp.extend({
 	*/
 	contextTogglePlayPause: function(responseObject) {
 		this.togglePlayPause(new Date(responseObject.serverDate));
+		this.getFullContextMenuAndUpdate();
 	},
 
 	/**
@@ -282,6 +323,7 @@ var movie_player = SAGE2_BlockStreamingApp.extend({
 	*/
 	contextToggleMute: function(responseObject) {
 		this.toggleMute(new Date(responseObject.serverDate));
+		this.getFullContextMenuAndUpdate();
 	},
 
 	/**
