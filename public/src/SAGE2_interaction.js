@@ -568,6 +568,19 @@ function SAGE2_interaction(wsio) {
 		this.req = requestIdleCallback(this.step);
 	};
 
+ function str2ab(str) {
+   var buf = new ArrayBuffer(str.length); // 2 bytes for each char
+   var buf = new ArrayBuffer(str.length);
+   var bufView = new Uint8Array(buf);
+   for (var i=0, strLen=str.length; i < strLen; i++) {
+     bufView[i] = str.charCodeAt(i);
+     //console.log("str2ab ",i, bufView[i]);
+     //console.log("str2ab ",i, bufView[i]);
+   }
+   return bufView;
+ }
+
+
 	/**
 	* The screen sharing can start
 	*
@@ -655,6 +668,49 @@ function SAGE2_interaction(wsio) {
 		}
 	};
 
+	function str2ab(str) {
+	  var buf = new ArrayBuffer(str.length);
+	  var bufView = new Uint8Array(buf);
+	  for (var i=0, strLen=str.length; i < strLen; i++) {
+	    bufView[i] = str.charCodeAt(i);
+	    //console.log("str2ab ",i, bufView[i]);
+	  }
+	  return bufView;
+	}
+
+	/**
+	 * Creates a new Uint8Array based on two different ArrayBuffers
+	 *
+	 * @private
+	 * @param {ArrayBuffers} buffer1 The first buffer.
+	 * @param {ArrayBuffers} buffer2 The second buffer.
+	 * @return {ArrayBuffers} The new ArrayBuffer created out of the two.
+	 */
+	var _appendBuffers = function(buffer1, buffer2, buffer3, buffer4) {
+	  console.log("appendBuffers ",buffer1.byteLength, buffer2.byteLength, buffer3.byteLength, buffer4.byteLength);
+	  var nulB = new Uint8Array([0]);
+	  var tmp = new Uint8Array(buffer1.byteLength + buffer2.byteLength + buffer3.byteLength + buffer4.byteLength + 3);
+	  var pos = 0;
+	  tmp.set(buffer1, pos);
+	  var i = 0;
+	  pos = pos + buffer1.byteLength;
+	  tmp.set(nulB, pos);
+	  pos = pos + 1;
+	  tmp.set(buffer2, pos);
+	  pos = pos + buffer2.byteLength;
+	  tmp.set(nulB, pos);
+	  pos = pos + 1;
+	  tmp.set(buffer3, pos);
+	  pos = pos + buffer3.byteLength;
+	  tmp.set(nulB, pos);
+	  pos = pos + 1;
+	  tmp.set(buffer4, pos);
+	  //for (i = 0; i<buffer1.byteLength + 2; i++) {
+	  //  console.log("tmp ",i,tmp[i]);
+	  //}
+	  return tmp;
+	};
+
 	/**
 	* Send the captured frame to the server
 	*
@@ -666,7 +722,7 @@ function SAGE2_interaction(wsio) {
 			var frame = this.pix;
 			var raw   = atob(frame.split(",")[1]);  // base64 to string
 
-			if (raw.length > this.chunk) {
+			if (false) // raw.length > this.chunk) {
 				var _this   = this;
 				var nchunks = Math.ceil(raw.length / this.chunk);
 
@@ -684,8 +740,10 @@ function SAGE2_interaction(wsio) {
 				}
 				this.gotRequest = false;
 			} else {
-				this.wsio.emit('updateMediaStreamFrame', {id: this.uniqueID + "|0", state:
-					{src: raw, type: "image/jpeg", encoding: "binary"}});
+				//this.wsio.emit('updateMediaStreamFrame', {id: this.uniqueID + "|0", state:
+				//	{src: raw, type: "image/jpeg", encoding: "binary"}});
+                 		var buffer = _appendBuffers(str2ab(id), str2ab("image/jpeg"), str2ab("Buffer"), new Uint8Array(raw));
+				this.wsio.emit('updateMediaStreamFrame', buffer);
 			}
 		}
 	};
