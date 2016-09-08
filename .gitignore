@@ -42,6 +42,7 @@ sessions
 keys/*.crt
 keys/*.key
 public/images/background/*_[0-9]*.*
+public/images/background/tmp_*
 
 
 # Users Environment Variables

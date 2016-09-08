@@ -24,7 +24,12 @@ var Webview = SAGE2_App.extend({
 		// not sure
 		this.element.style.display = "inline-flex";
 
+		// Webview settings
 		this.element.autosize  = "on";
+		this.element.plugins   = "on";
+		this.element.allowpopups = false;
+		this.element.allowfullscreen = false;
+
 		this.element.minwidth  = data.width;
 		this.element.minheight = data.height;
 
@@ -61,6 +66,18 @@ var Webview = SAGE2_App.extend({
 		// When the page changes its title
 		this.element.addEventListener("page-title-updated", function(event) {
 			_this.updateTitle('Webview: ' + event.title);
+		});
+
+		// When the page request fullscreen
+		this.element.addEventListener("enter-html-full-screen", function(event) {
+			console.log('Webview>	Enter fullscreen');
+			// not sure if this works
+			event.preventDefault();
+		});
+		this.element.addEventListener("leave-html-full-screen", function(event) {
+			console.log('Webview>	Leave fullscreen');
+			// not sure if this works
+			event.preventDefault();
 		});
 
 		// When the webview tries to open a new window

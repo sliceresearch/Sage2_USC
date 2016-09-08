@@ -33,7 +33,6 @@ var audioPannerNodes = {};
 
 
 
-
 // Explicitely close web socket when web browser is closed
 window.onbeforeunload = function() {
 	if (wsio !== undefined) {
@@ -58,7 +57,6 @@ function SAGE2_init() {
 	// SoundJS library
 	//
 	// Load the SoundJS library and plugins
-	// createjs.Sound.registerPlugins([ createjs.WebAudioPlugin ]);
 	if (!createjs.Sound.initializeDefaultPlugins()) {
 		console.log('SoundJS> cannot load library');
 		return;
@@ -148,7 +146,6 @@ function SAGE2_init() {
 function setupListeners() {
 	// wall values
 	var totalWidth;
-	// var totalHeight;
 
 	wsio.on('initialize', function(data) {
 		// nothing
@@ -219,7 +216,6 @@ function setupListeners() {
 		audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 		audioCtx.listener.setPosition(0, 0, 0);
 		totalWidth  = json_cfg.totalWidth;
-		// totalHeight = json_cfg.totalHeight;
 	});
 
 	wsio.on('createAppWindow', function(data) {

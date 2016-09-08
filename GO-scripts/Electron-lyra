@@ -1,7 +1,8 @@
 #!/bin/bash
 
-tentakel pkill -9 electron
+cd ~/sage2
 
+tentakel pkill -9 electron
 
 server="lyra.evl.optiputer.net"
 
