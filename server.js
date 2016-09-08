@@ -1568,7 +1568,7 @@ function doOverlap(x_1, y_1, width_1, height_1, x_2, y_2, width_2, height_2) {
 	return !(x_1 > x_2 + width_2 || x_1 + width_1 < x_2 || y_1 > y_2 + height_2 || y_1 + height_1 < y_2);
 }
 
-function wsUpdateMediaStreamFrame(wsio, dataOrBuffer) {
+function wsUpdateMediaStreamFrame(wsio, data) {
 	var key;
 
         // NB: Cloned code
@@ -1642,7 +1642,7 @@ function wsUpdateMediaStreamFrame(wsio, dataOrBuffer) {
 		if (doOverlap(left, top, stream.width, stream.height,
 			offsetX, offsetY, checkWidth, checkHeight)) {
 			// send the full frame to be displayed
-			SAGE2Items.renderSync[data.id].clients[key].wsio.emit('updateMediaStreamFrame', dataOrBuffer);
+			SAGE2Items.renderSync[data.id].clients[key].wsio.emit('updateMediaStreamFrame', data);
 		} else {
 			// otherwise send a dummy small image
 			SAGE2Items.renderSync[data.id].clients[key].wsio.emit('updateMediaStreamFrame', data_copy);
