@@ -299,6 +299,100 @@ function broadcast(dataObject) {
 	wsio.emit('broadcast', dataObject);
 }
 
+//  PARENT CHILD LINKED APPS STUFF
+
+/**
+ * Ask the server to launch a specified child app 
+ * See 'exampleParent' for usage.
+ *
+ * @method launchLinkedChildApp
+ * @param dataObject {Object} data to be sent
+ */
+function launchLinkedChildApp(dataObject){
+	wsio.emit('launchLinkedChildApp', dataObject);
+}
+
+
+/**
+ * Ask the server to close a specified child app 
+ * See 'exampleParent' for usage.
+ *
+ * @method launchLinkedChildApp
+ * @param dataObject {Object} data to be sent
+ */
+function closeLinkedChildApp(dataObject){
+	wsio.emit('closeLinkedChildApp', dataObject);
+}
+
+/**
+ * Ask the server to move a specified child app 
+ * See 'exampleParent' for usage.
+ *
+ * @method launchLinkedChildApp
+ * @param dataObject {Object} data to be sent
+ */
+function moveLinkedChildApp(dataObject){
+	wsio.emit('moveLinkedChildApp', dataObject);
+}
+
+/**
+ * Ask the server to move a specified child app 
+ * See 'exampleParent' for usage.
+ *
+ * @method launchLinkedChildApp
+ * @param dataObject {Object} data to be sent
+ */
+function resizeLinkedChildApp(dataObject){
+	wsio.emit('resizeLinkedChildApp', dataObject);
+}
+
+
+/**
+ * Ask the server to send a message to a specified child app 
+ * See 'exampleParent' for usage.
+ *
+ * @method sendMessageToChild
+ * @param id of self
+ * @param childId to send message to
+ * @param params include any particulars of the message
+ */
+
+function sendMessageToChild(id, childId, params){
+	var dataObject = {
+		id: id,
+		childId: childId,
+		params: params
+	};
+	wsio.emit('messageToChild', dataObject);
+}
+
+/**
+ * Ask the server to send a message to a specified child app 
+ * See 'exampleParent' for usage.
+ *
+ * @method sendMessageToChild
+ * @param id of self
+ * @param childId to send message to
+ * @param params include any particulars of the message
+ */
+
+function sendMessageToParent(id, params){
+	var dataObject = {
+		id: id,
+		params: params
+	};
+	wsio.emit('messageToParent', dataObject);
+}
+
+
+// END PARENT CHILD LINKED APPS 
+
+//this isn't really working right now...
+function getDisplaySize() {
+	//don't know how to yet- so for now I am just returning cybercommons
+	return {width: 8160, height: 2210}; 
+}
+
 /**
  * Pretty print a date object into string
  *

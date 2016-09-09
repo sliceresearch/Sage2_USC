@@ -69,6 +69,16 @@ var SAGE2_App = Class.extend({
 		this.fileWrite = null;
 		this.fileReceived = null;
 
+		//------  Parent monitoring children:
+		// for now, app decides how to store and handle children
+		// if parent wanted to just launch apps and do nothing else, 
+		// all it needs is 'launchChild' (see below)
+		this.childList = [];
+
+		this.parentApp = null; //if you become parented, here is how you get the parent id
+								//only one parent per child app
+
+
 		// Track if in User Event loop
 		this.SAGE2UserModification = false;
 		// Modify state sync options
@@ -149,6 +159,11 @@ var SAGE2_App = Class.extend({
 
 		this.SAGE2CopyState(data.state);
 		this.SAGE2InitializeAppOptionsFromState();
+
+
+		this.parentApp = data.parentApp; 
+		this.childList = data.childList;
+
 	},
 
 	SAGE2Load: function(state, date) {
@@ -879,5 +894,188 @@ var SAGE2_App = Class.extend({
 			}
 			wsio.emit("dtuRmbContextMenuContents", rmbData);
 		}
-	}
+	},
+
+////////////////////// INTER APP COMMUNICATION
+	
+	/**
+	* launchNewChild method allows apps to launch and coordinate 'childApps'
+	* 
+	* @method launchNewChild
+	* @param childAppType is the type of app (custom, pdf, image, etc)
+	*/
+	launchNewChild: function( childAppType, childAppName, initState, message ){
+		data = {
+			applicationType: childAppType,
+			application: childAppName, 
+			user: "parentApp", //would be nice to have actual app name... or sth
+			id: this.id,
+			msg: message,
+			childId: null,
+			initState: initState, 
+		};
+		if( isMaster ){
+			launchLinkedChildApp(data); //defined in runtime
+		}
+
+		this.childList.push( data );
+	},
+
+	/**
+	* closeChild method allows parents to close child apps
+	* 
+	* @method launchNewChild
+	* @param childAppType is the type of app (custom, pdf, image, etc)
+	*/
+	closeChild: function( n ){
+		if( n >= this.childList.length )
+			return;
+		child = this.childList[n];
+		data = {
+			childId: child.childId,
+			id: this.id
+		};
+		if( isMaster ){
+			console.log("close child" + child.childId);
+			closeLinkedChildApp(data); //defined in runtime
+		}
+	},
+
+	moveChild: function( n, x, y ){
+		if( n >= this.childList.length )
+			return;
+
+		child = this.childList[n];
+		data = {
+			childId: child.childId,
+			id: this.id,
+			x: x,
+			y: y
+		};
+		if( isMaster ){
+			console.log("move child");
+			moveLinkedChildApp(data); //defined in runtime
+		}
+	},
+
+	resizeChild: function( n, w, h, aspectKeep ){
+		if( n >= this.childList.length )
+			return;
+
+		child = this.childList[n];
+		data = {
+			childId: child.childId,
+			id: this.id,
+			w: w,
+			h: h,
+			aspectKeep: aspectKeep
+		};
+		if( isMaster ){
+			console.log("resize child");
+			resizeLinkedChildApp(data); //defined in runtime
+		}
+	},
+
+	/**
+	* SAGE2SetParent method called to create parent app
+	* 
+	* @method SAGE2SetParent
+	* @param state {Object} contains state of app instance
+	* not using this yet, just initializing parent in init
+	*/
+	SAGE2SetParent: function(data){ //success, childId, msg){
+		if( data.success ){ 
+			console.log("child has parent " + data.parentId);
+			this.parentApp = data.parentId; //put the id into the obj
+		}
+		else{
+			console.log("set parent failure " + data.parentId + " msg: " + data.msg );
+		}
+
+		// if( typeof this.setParentResponseHandler != "undefined")
+		// 	this.setParentResponseHandler();
+	},
+
+	//convenience function: could also just look at list directly
+	getNumberOfChildren: function(){
+		return this.childList.length;
+	},
+
+	//convenience function: could also just look at list directly
+	getChildByIdx: function(idx){
+		console.log("" + this.getNumberOfChildren() + " " + idx);
+		if( idx >= this.getNumberOfChildren() )
+			return null; 
+		return this.childList[idx];
+	},
+
+	//convenience function: could also just look at list directly
+	getChildIdByIdx: function(idx){
+		console.log(idx);
+		if( idx >= this.getNumberOfChildren() )
+			return null; 
+		return this.childList[idx].childId;
+	},
+
+
+
+	/**
+	* SAGE2MessageEvent method called for communication between children or parents
+	* 
+	* @method SAGE2MessageEvent
+	* @param state {Object} contains state of app instance
+	*/
+	SAGE2MessageEvent: function(data){
+		if (typeof this.messageEvent != "undefined") { 
+    		this.messageEvent(data); 
+		}
+	},
+
+	/**
+	* SAGE2MonitoringEvent method called when child is reposition or resized or closed
+	* 
+	* @method SAGE2MonitoringEvent
+	* @param data {Object} contains data.childId, data.type, data.data, data.date
+	*/
+	SAGE2MonitoringEvent: function(data){
+		console.log("sage2 monitoring event");
+
+		if( data.whichType == "childMonitoring"){
+			console.log("child monitoring " + this.childMonitorEvent);
+
+			if( data.type == "childCloseEvent" ){//remove child
+				for(i = 0; i < this.childList.length; i++)
+					if( this.childList[i].childId == data.childId )
+						this.childList.splice(i, 1);
+			}
+			if (data.type == "childOpenEvent") {
+				console.log("child open event");
+				if( data.data.success ){ 
+					console.log("child app launch success " + data.childId);
+					this.childList[this.childList.length-1].childId = data.childId; //put the id into the obj
+				}
+				else{
+					console.log("child app launch failure " + data.childId + " success: " + data.data.success );
+
+					//remove the child
+					this.childList.splice(this.childList.length-1, 1);
+				}
+			}
+			if( typeof this.childMonitorEvent != "undefined") { 
+    			this.childMonitorEvent(data.childId, data.type, data.data, data.date); 
+    		}
+		} else if( data.whichType == "parentMonitoring"){
+			if( data.type == "parentClose" ){//remove child
+				this.parentApp = null;
+			}
+			if (typeof this.parentMonitorEvent != "undefined") {
+    			this.parentMonitorEvent(data.parentId, data.type, data.data, data.date); 
+    		}
+		}
+	},
+
+	SAGE2TextInputEvent: function(data){
+		console.log("text in!" + data);
+		this.textInputEvent(data.data, data.date);
+	},
 });

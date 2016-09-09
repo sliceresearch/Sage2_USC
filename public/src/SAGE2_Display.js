@@ -938,6 +938,54 @@ function setupListeners() {
 		}
 	});
 
+	// Parent child communication and linking functions 
+	wsio.on('messageEvent', function(event_data) {
+		var date = new Date(event_data.date);
+		var app  = applications[event_data.id];
+		event_data.date = date;
+		app.SAGE2MessageEvent(event_data); //event_data.type, event_data.position, event_data.user, event_data.data, date);
+	});
+
+	//this is how I send articulate text input events to sage2
+	wsio.on('textInputEvent', function(event_data) {
+		var date = new Date(event_data.date);
+		var app  = applications[event_data.id];
+		event_data.date = date;
+		app.SAGE2TextInputEvent(event_data); //event_data.type, event_data.position, event_data.user, event_data.data, date);
+	});
+
+
+	wsio.on('launchChildAppResponse',  function(data) {
+		// var date = new Date(event_data.date);
+		var app  = applications[data.id];
+		app.SAGE2ChildAppLaunchResponse(data); //event_data.type, event_data.position, event_data.user, event_data.data, date);
+	});
+
+	//not using right now... 
+	wsio.on('setParent',  function(data) {
+		// var date = new Date(event_data.date);
+		var app  = applications[data.id];
+		app.SAGE2SetParent(data); //event_data.type, event_data.position, event_data.user, event_data.data, date);
+	});
+
+	wsio.on('childMonitoringEvent', function(data) {
+		var app  = applications[data.id];
+		var date = new Date(data.date);
+		data.date = date;
+		data.whichType = "childMonitoring";
+		app.SAGE2MonitoringEvent(data);
+	});
+
+	wsio.on('parentMonitoringEvent', function(data) {
+		var app  = applications[data.id];
+		var date = new Date(data.date);
+		data.date = date;
+		data.whichType = "parentMonitoring";
+		app.SAGE2MonitoringEvent(data);
+	});
+
+
+
 	wsio.on('requestNewControl', function(data) {
 		var dt = new Date(data.date);
 		if (data.elemId !== undefined && data.elemId !== null) {
@@ -1405,7 +1453,9 @@ function createAppWindow(data, parentId, titleBarHeight, titleTextSize, offsetX,
 			resrc: url,
 			state: data.data,
 			date: date,
-			title: data.title
+			title: data.title,
+			parentApp: data.parentApp,
+			childList: data.childList
 		};
 
 		// load new app
