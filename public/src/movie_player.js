@@ -254,7 +254,7 @@ var movie_player = SAGE2_BlockStreamingApp.extend({
 		entry.callback = "stopVideo";
 		entry.parameters = {};
 		entries.push(entry);
-		
+
 		entry = {};
 		entry.description = "separator";
 		entries.push(entry);

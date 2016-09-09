@@ -55,6 +55,7 @@ var Webview = SAGE2_App.extend({
 			// save the url
 			_this.state.url = _this.element.src;
 			_this.SAGE2Sync(true);
+			_this.codeInject();
 		});
 
 		// done loading
@@ -126,26 +127,30 @@ var Webview = SAGE2_App.extend({
 		);
 	},
 
+	/**
+	Initial testing reveals:
+		the page is for most intents and purposes fully visible.
+			the exception is if there is a scroll bar.
+		javascript operates in the given browser.
+		different displays will still have the same coordinate system
+			exception: random content can alter coordinate locations
+
+		sendInputEvent
+			accelerator events have names http://electron.atom.io/docs/api/accelerator/
+			SAGE2 buttons can't pass symbols
+
+
+	Things to look out for:
+		Most errors are silent
+			might be possible to use console-message event: http://electron.atom.io/docs/api/web-view-tag/#event-console-message
+		alert effects still produce another window on display host
+			AND pause the page
+
+	*/
 	codeInject: function() {
 		this.element.executeJavaScript(
 			'\
-			var cSpot = document.createElement("div");\
-			cSpot.style.width = "20px";\
-			cSpot.style.height = "20px";\
-			cSpot.style.background = "black";\
-			cSpot.style.position = "absolute";\
-			document.body.appendChild(cSpot);\
-			\
-			document.addEventListener("click", function(e) {\
-				cSpot.style.left = e.clientX + "px";\
-				cSpot.style.top = e.clientY + "px";\
-			});\
 			var s2InjectForKeys = {};\
-			\
-			document.addEventListener("mousemove", function(e) {\
-				s2InjectForKeys.x = e.clientX;\
-				s2InjectForKeys.y = e.clientY;\
-			});\
 			\
 			document.addEventListener("click", function(e) {\
 				s2InjectForKeys.lastClickedElement = document.elementFromPoint(e.clientX, e.clientY);\
@@ -184,24 +189,6 @@ var Webview = SAGE2_App.extend({
 	getContextEntries: function() {
 		var entries = [];
 		var entry;
-
-		entry = {};
-		entry.description = "Alert";
-		entry.callback = "sendAlertCode";
-		entry.parameters = {};
-		entries.push(entry);
-
-		entry = {};
-		entry.description = "code inject";
-		entry.callback = "codeInject";
-		entry.parameters = {};
-		entries.push(entry);
-
-
-		entry = {};
-		entry.description = "separator";
-		entries.push(entry);
-
 
 		entry = {};
 		entry.description = "Back";
@@ -304,7 +291,7 @@ var Webview = SAGE2_App.extend({
 		} else if (action === "forward") {
 			this.element.goForward();
 		} else if (action === "address") {
-			if (responseObject.clientInput.indexOf("http://") != 0) {
+			if (responseObject.clientInput.indexOf("://") == -1) {
 				responseObject.clientInput = "http://" + responseObject.clientInput;
 			}
 			this.changeURL(responseObject.clientInput);
