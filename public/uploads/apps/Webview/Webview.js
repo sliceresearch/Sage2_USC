@@ -116,9 +116,92 @@ var Webview = SAGE2_App.extend({
 		// Make sure to delete stuff (timers, ...)
 	},
 
+	sendAlertCode: function() {
+		this.element.executeJavaScript(
+			"alert('where is this and or does it work?')",
+			false,
+			function() {
+				console.log("sendAlertCode callback initiated");
+			}
+		);
+	},
+
+	codeInject: function() {
+		this.element.executeJavaScript(
+			'\
+			var cSpot = document.createElement("div");\
+			cSpot.style.width = "20px";\
+			cSpot.style.height = "20px";\
+			cSpot.style.background = "black";\
+			cSpot.style.position = "absolute";\
+			document.body.appendChild(cSpot);\
+			\
+			document.addEventListener("click", function(e) {\
+				cSpot.style.left = e.clientX + "px";\
+				cSpot.style.top = e.clientY + "px";\
+			});\
+			var s2InjectForKeys = {};\
+			\
+			document.addEventListener("mousemove", function(e) {\
+				s2InjectForKeys.x = e.clientX;\
+				s2InjectForKeys.y = e.clientY;\
+			});\
+			\
+			document.addEventListener("click", function(e) {\
+				s2InjectForKeys.lastClickedElement = document.elementFromPoint(e.clientX, e.clientY);\
+			});\
+			\
+			document.addEventListener("keydown", function(e) {\
+				if (e.keyCode == 16) {\
+					s2InjectForKeys.shift = true;\
+					return;\
+				}\
+				if (e.keyCode == 8) {\
+					s2InjectForKeys.lastClickedElement.value = s2InjectForKeys.lastClickedElement.value.substring(0, s2InjectForKeys.lastClickedElement.value.length - 1);\
+					return;\
+				}\
+				if (s2InjectForKeys.lastClickedElement.value == undefined) {\
+					return; \
+				}\
+				var sendChar = String.fromCharCode(e.keyCode);\
+				if (!s2InjectForKeys.shift) {\
+					sendChar = sendChar.toLowerCase();\
+				}\
+				s2InjectForKeys.lastClickedElement.value += sendChar;\
+			});\
+			document.addEventListener("keyup", function(e) {\
+				if (e.keyCode == 0x10) {\
+					s2InjectForKeys.shift = false;\
+				}\
+				if (e.keyCode == 8) {\
+					s2InjectForKeys.lastClickedElement.value = s2InjectForKeys.lastClickedElement.value.substring(0, s2InjectForKeys.lastClickedElement.value.length - 1);\
+				}\
+			});\
+			'
+		);
+	},
+
 	getContextEntries: function() {
 		var entries = [];
 		var entry;
+
+		entry = {};
+		entry.description = "Alert";
+		entry.callback = "sendAlertCode";
+		entry.parameters = {};
+		entries.push(entry);
+
+		entry = {};
+		entry.description = "code inject";
+		entry.callback = "codeInject";
+		entry.parameters = {};
+		entries.push(entry);
+
+
+		entry = {};
+		entry.description = "separator";
+		entries.push(entry);
+
 
 		entry = {};
 		entry.description = "Back";
@@ -221,6 +304,9 @@ var Webview = SAGE2_App.extend({
 		} else if (action === "forward") {
 			this.element.goForward();
 		} else if (action === "address") {
+			if (responseObject.clientInput.indexOf("http://") != 0) {
+				responseObject.clientInput = "http://" + responseObject.clientInput;
+			}
 			this.changeURL(responseObject.clientInput);
 		} else if (action === "search") {
 			this.changeURL('https://www.google.com/#q=' + responseObject.clientInput);
@@ -324,7 +410,30 @@ var Webview = SAGE2_App.extend({
 		} else if (eventType === "specialKey") {
 			// SHIFT key
 			if (data.code === 16) {
+				if (data.state === "down") {
+					this.element.sendInputEvent({
+						type: "keyDown",
+						keyCode: "Shift"
+					});
+				} else {
+					this.element.sendInputEvent({
+						type: "keyUp",
+						keyCode: "Shift"
+					});
+				}
 				this.isShift = (data.state === "down");
+			}
+			// backspace key
+			if (data.code === 8 || data.code === 46) {
+				if (data.state === "down") {
+					// The delete is too quick potentially.
+					// Currently only allow on keyup have finer control
+				} else {
+					this.element.sendInputEvent({
+						type: "keyUp",
+						keyCode: "Backspace"
+					});
+				}
 			}
 			// ALT key
 			if (data.code === 18) {
