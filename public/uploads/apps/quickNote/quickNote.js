@@ -339,7 +339,42 @@ var quickNote = SAGE2_App.extend({
 		dataForClient.appId      = this.id;
 		dataForClient.clientDest = obj.uniqueID;
 		dataForClient.func       = 'controlPanelLayout';
-		dataForClient.layout     = "This is the placeholder layout from quickNote " + this.id;
+		// layout needs to be an array of objects that describe usage.
+		// array to ensure all elements are read. obj to follow a format.
+		dataForClient.layout     = [
+			{
+				type:  "button",
+				entryColor: "lightpink",
+				callback: "setColor",
+				parameters: { color:"lightpink" }
+			},
+			{
+				type:  "button",
+				entryColor: "white",
+				callback: "setColor",
+				parameters: { color:"white" }
+			},
+			{
+				type:  "button",
+				entryColor: "Blue",
+				callback: "setColor",
+				parameters: { color:"lightblue" }
+			},
+			{
+				type:  "button",
+				entryColor: "Green",
+				callback: "setColor",
+				parameters: { color:"lightgreen" }
+			},
+			{
+				type: "textarea",
+				rows: 5,
+				cols: 22,
+				callback: "setMessage",
+				parameters: {}
+
+			}
+		];
 		wsio.emit('csdMessage', dataForClient);
 
 

@@ -276,7 +276,63 @@ function requestControlDescriptionFromApp() {
 function setupControlPanel(data) {
 	console.log("erase me, data from app description");
 	console.dir(data);
-}
+
+	if (data.appId != appId) {
+		console.log("Error mismatch id expected " + appId + " but got " + data.appId);
+		return;
+	}
+
+	var layout  = data.layout;
+	var item, divToBe;
+
+	for (var i = 0; i < layout.length; i++) {
+		item = layout[i];
+		
+		divToBe            = document.createElement(item.type);
+		divToBe.callback   = item.callback;
+		divToBe.parameters = item.parameters
+
+		if (item.type == "button") {
+			divToBe.textContent = "button";
+			divToBe.style.background = item.entryColor;
+
+			divToBe.clickEffect = function() {
+				var dataForApp = {};
+				dataForApp.app = appId;
+				dataForApp.func = this.callback;
+				dataForApp.parameters = this.parameters;
+				dataForApp.parameters.clientName = pointerName;
+				wsio.emit('utdCallFunctionOnApp', dataForApp);
+
+				console.log("erase me, sending click effect for button");
+				console.dir(dataForApp);
+			}
+			divToBe.addEventListener("click", divToBe.clickEffect);
+		} else if (item.type == "textarea") {
+			divToBe.rows = item.rows;
+			divToBe.cols = item.cols;
+
+			divToBe.keyPressEffect = function() {
+				var dataForApp = {};
+				dataForApp.app = appId;
+				dataForApp.func = this.callback;
+				dataForApp.parameters = this.parameters;
+				dataForApp.parameters.clientName = pointerName;
+				dataForApp.parameters.clientInput = pointerName;
+				wsio.emit('utdCallFunctionOnApp', dataForApp);
+
+				console.log("erase me, sending keyDown effect for textarea");
+				console.dir(dataForApp);
+			}
+			divToBe.addEventListener("keydown", divToBe.keyPressEffect);
+		} else {
+			console.log("Unknown layout type:" + item.type);
+		}
+
+		appControlPanelDiv.appendChild(divToBe);
+		appControlPanelDiv.appendChild(document.createElement("br"));
+	}
+} // end setupControlPanel
 
 
 
