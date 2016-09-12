@@ -8,6 +8,12 @@
             "directory": "pdfs"
         },
         {
+            "name": "Webview",
+            "types": [
+                "application/url"
+            ]
+        },
+        {
             "name": "image_viewer",
             "types": [
                 "image/jpeg",

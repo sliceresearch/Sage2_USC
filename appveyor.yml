@@ -25,8 +25,8 @@ init:
   - dir C:\Dev\ffmpeg-win64-dev\lib
 
 install:
-  - ps: Get-NodeJsLatestBuild 6.2
-  - ps: Install-Product node 6.2.2 x64
+  - ps: Get-NodeJsLatestBuild 6.3
+  - ps: Install-Product node 6.3.1 x64
   - dir C:\avvm\node
   - node -v
   - cd %APPVEYOR_BUILD_FOLDER%
@@ -54,8 +54,8 @@ install:
   - copy bin\gswin64c.exe bin\gswin32c.exe
   - xcopy /S /I /Y /Q gs\lib lib
   - rmdir /Q /S gs
-  - curl -LsSO http://www.imagemagick.org/download/binaries/ImageMagick-6.9.5-7-portable-Q16-x64.zip
-  - 7z x -y ImageMagick-6.9.5-7-portable-Q16-x64.zip -oim > nul
+  - curl -LsSO http://www.imagemagick.org/download/binaries/ImageMagick-6.9.5-9-portable-Q16-x64.zip
+  - 7z x -y ImageMagick-6.9.5-9-portable-Q16-x64.zip -oim > nul
   - rmdir /Q /S im\www im\images
   - copy im\* bin
   - rmdir /Q /S im
@@ -89,6 +89,7 @@ install:
   - move package.json SAGE2
   - move public SAGE2
   - move server.js SAGE2
+  - move electron.js SAGE2
   - move generate-service-worker.js SAGE2
   - move src SAGE2
   #- Push to the binary repo

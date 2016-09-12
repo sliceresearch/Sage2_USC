@@ -1434,7 +1434,7 @@ function createAppWindow(data, parentId, titleBarHeight, titleTextSize, offsetX,
 			js.type  = "text/javascript";
 			js.async = false;
 			js.src = url + "/" + data.application + ".js";
-			console.log(data.id, url + "/" + data.application + ".js");
+			console.log("Loading>", data.id, url + "/" + data.application + ".js");
 			document.head.appendChild(js);
 		} else {
 			// load existing app

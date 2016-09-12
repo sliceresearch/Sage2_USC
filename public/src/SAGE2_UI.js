@@ -683,9 +683,12 @@ function resizeMenuUI(ratio) {
 
 	var menuScale = 1.0;
 	var freeWidth = window.innerWidth * ratio;
-	if (freeWidth < 1080) {
+	if (freeWidth < 1200) {
 		// 9 buttons, 120 pixels per button
-		menuScale = freeWidth / 1080;
+		// menuScale = freeWidth / 1080;
+
+		// 10 buttons, 120 pixels per button
+		menuScale = freeWidth / 1200;
 	}
 
 	menuUI.style.webkitTransform = "scale(" + menuScale + ")";
@@ -1366,12 +1369,60 @@ function handleClick(element) {
 		wsio.emit('tileApplications');
 		hideDialog('arrangementDialog');
 	} else if (element.id === "savesession") {
+		// generate a default name
 		var template = "session_" + dateToYYYYMMDDHHMMSS(new Date());
-		var filename = prompt("Please enter a session name\n(Leave blank for name based on server's time)", template);
-		if (filename !== null) {
-			wsio.emit('saveSesion', filename);
-			hideDialog('arrangementDialog');
-		}
+
+		// Hide the parent dialog
+		hideDialog('arrangementDialog');
+
+		// Build a webix dialog
+		webix.ui({
+			view: "window",
+			id: "session_form",
+			position: "center",
+			modal: true,
+			zIndex: 9999,
+			head: "Save session",
+			width: 400,
+			body: {
+				view: "form",
+				borderless: false,
+				elements: [
+					{view: "text", value: template, id: "session_name", label: "Please enter a session name:", name: "session"},
+					{margin: 5, cols: [
+						{view: "button", value: "Cancel", click: function() {
+							this.getTopParentView().hide();
+						}},
+						{view: "button", value: "Save", type: "form", click: function() {
+							var values = this.getFormView().getValues();
+							wsio.emit('saveSesion', values.session);
+							this.getTopParentView().hide();
+						}}
+					]}
+				],
+				elementsConfig: {
+					labelPosition: "top"
+				}
+			}
+		}).show();
+
+		// Attach handlers for keyboard
+		$$("session_name").attachEvent("onKeyPress", function(code, e) {
+			// ESC closes
+			if (code === 27 && !e.ctrlKey && !e.shiftKey && !e.altKey) {
+				this.getTopParentView().hide();
+				return false;
+			}
+			// ENTER activates
+			if (code === 13 && !e.ctrlKey && !e.shiftKey && !e.altKey) {
+				var values = this.getFormView().getValues();
+				wsio.emit('saveSesion', values.session);
+				this.getTopParentView().hide();
+				return false;
+			}
+		});
+		$$('session_name').focus();
+
 	} else if (element.id === "ffShareScreenBtn") {
 		// Firefox Share Screen Dialog
 		interactor.captureDesktop("screen");

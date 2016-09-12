@@ -24,7 +24,12 @@ var Webview = SAGE2_App.extend({
 		// not sure
 		this.element.style.display = "inline-flex";
 
+		// Webview settings
 		this.element.autosize  = "on";
+		this.element.plugins   = "on";
+		this.element.allowpopups = false;
+		this.element.allowfullscreen = false;
+
 		this.element.minwidth  = data.width;
 		this.element.minheight = data.height;
 
@@ -50,6 +55,7 @@ var Webview = SAGE2_App.extend({
 			// save the url
 			_this.state.url = _this.element.src;
 			_this.SAGE2Sync(true);
+			_this.codeInject();
 		});
 
 		// done loading
@@ -61,6 +67,18 @@ var Webview = SAGE2_App.extend({
 		// When the page changes its title
 		this.element.addEventListener("page-title-updated", function(event) {
 			_this.updateTitle('Webview: ' + event.title);
+		});
+
+		// When the page request fullscreen
+		this.element.addEventListener("enter-html-full-screen", function(event) {
+			console.log('Webview>	Enter fullscreen');
+			// not sure if this works
+			event.preventDefault();
+		});
+		this.element.addEventListener("leave-html-full-screen", function(event) {
+			console.log('Webview>	Leave fullscreen');
+			// not sure if this works
+			event.preventDefault();
 		});
 
 		// When the webview tries to open a new window
@@ -97,6 +115,75 @@ var Webview = SAGE2_App.extend({
 
 	quit: function() {
 		// Make sure to delete stuff (timers, ...)
+	},
+
+	sendAlertCode: function() {
+		this.element.executeJavaScript(
+			"alert('where is this and or does it work?')",
+			false,
+			function() {
+				console.log("sendAlertCode callback initiated");
+			}
+		);
+	},
+
+	/**
+	Initial testing reveals:
+		the page is for most intents and purposes fully visible.
+			the exception is if there is a scroll bar.
+		javascript operates in the given browser.
+		different displays will still have the same coordinate system
+			exception: random content can alter coordinate locations
+
+		sendInputEvent
+			accelerator events have names http://electron.atom.io/docs/api/accelerator/
+			SAGE2 buttons can't pass symbols
+
+
+	Things to look out for:
+		Most errors are silent
+			might be possible to use console-message event: http://electron.atom.io/docs/api/web-view-tag/#event-console-message
+		alert effects still produce another window on display host
+			AND pause the page
+
+	*/
+	codeInject: function() {
+		this.element.executeJavaScript(
+			'\
+			var s2InjectForKeys = {};\
+			\
+			document.addEventListener("click", function(e) {\
+				s2InjectForKeys.lastClickedElement = document.elementFromPoint(e.clientX, e.clientY);\
+			});\
+			\
+			document.addEventListener("keydown", function(e) {\
+				if (e.keyCode == 16) {\
+					s2InjectForKeys.shift = true;\
+					return;\
+				}\
+				if (e.keyCode == 8) {\
+					s2InjectForKeys.lastClickedElement.value = s2InjectForKeys.lastClickedElement.value.substring(0, s2InjectForKeys.lastClickedElement.value.length - 1);\
+					return;\
+				}\
+				if (s2InjectForKeys.lastClickedElement.value == undefined) {\
+					return; \
+				}\
+				var sendChar = String.fromCharCode(e.keyCode);\
+				if (!s2InjectForKeys.shift) {\
+					sendChar = sendChar.toLowerCase();\
+				}\
+				s2InjectForKeys.lastClickedElement.value += sendChar;\
+			});\
+			document.addEventListener("keyup", function(e) {\
+				if (e.keyCode == 0x10) {\
+					s2InjectForKeys.shift = false;\
+				}\
+				if (e.keyCode == 8) {\
+					s2InjectForKeys.lastClickedElement.value = s2InjectForKeys.lastClickedElement.value.substring(0, s2InjectForKeys.lastClickedElement.value.length - 1);\
+				}\
+			});\
+			'
+		);
 	},
 
 	getContextEntries: function() {
@@ -204,6 +291,9 @@ var Webview = SAGE2_App.extend({
 		} else if (action === "forward") {
 			this.element.goForward();
 		} else if (action === "address") {
+			if (responseObject.clientInput.indexOf("://") == -1) {
+				responseObject.clientInput = "http://" + responseObject.clientInput;
+			}
 			this.changeURL(responseObject.clientInput);
 		} else if (action === "search") {
 			this.changeURL('https://www.google.com/#q=' + responseObject.clientInput);
@@ -307,7 +397,30 @@ var Webview = SAGE2_App.extend({
 		} else if (eventType === "specialKey") {
 			// SHIFT key
 			if (data.code === 16) {
+				if (data.state === "down") {
+					this.element.sendInputEvent({
+						type: "keyDown",
+						keyCode: "Shift"
+					});
+				} else {
+					this.element.sendInputEvent({
+						type: "keyUp",
+						keyCode: "Shift"
+					});
+				}
 				this.isShift = (data.state === "down");
+			}
+			// backspace key
+			if (data.code === 8 || data.code === 46) {
+				if (data.state === "down") {
+					// The delete is too quick potentially.
+					// Currently only allow on keyup have finer control
+				} else {
+					this.element.sendInputEvent({
+						type: "keyUp",
+						keyCode: "Backspace"
+					});
+				}
 			}
 			// ALT key
 			if (data.code === 18) {
