@@ -2,7 +2,7 @@
 // SAGE2 application: Webview
 // by: Luc Renambot <renambot@gmail.com>
 //
-// Copyright (c) 2015
+// Copyright (c) 2015-16
 //
 
 "use strict";
@@ -291,7 +291,7 @@ var Webview = SAGE2_App.extend({
 		} else if (action === "forward") {
 			this.element.goForward();
 		} else if (action === "address") {
-			if (responseObject.clientInput.indexOf("://") == -1) {
+			if (responseObject.clientInput.indexOf("://") === -1) {
 				responseObject.clientInput = "http://" + responseObject.clientInput;
 			}
 			this.changeURL(responseObject.clientInput);
