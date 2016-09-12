@@ -730,6 +730,7 @@ function SAGE2_interaction(wsio) {
 			} else {
 				//this.wsio.emit('updateMediaStreamFrame', {id: this.uniqueID + "|0", state:
 				//	{src: raw, type: "image/jpeg", encoding: "binary"}});
+				var id = this.uniqueID+"|0";
                  		var buffer = _appendBuffers(str2ab(id), str2ab("image/jpeg"), str2ab("Buffer"), new Uint8Array(raw));
 				this.wsio.emit('updateMediaStreamFrame', buffer);
 			}
