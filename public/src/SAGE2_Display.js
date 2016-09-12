@@ -494,7 +494,6 @@ function setupListeners() {
 		}
 	});
 
-<<<<<<< HEAD
 	wsio.on('updateMediaStreamFrame', function(dataOrBuffer) {
                 // NB: Cloned code
                 var data;
