@@ -4216,9 +4216,15 @@ function loadConfiguration() {
 		tileHeight = tile_diagonal_meters * aspectRatio;
 	}
 
-	if (userConfig.dimensions.tileHeight) {
-		// tileWidth    = parseFloat(userConfig.dimensions.tile_width) || 0.0;
+	if (userConfig.dimensions.tile_height) {
 		tileHeight   = parseFloat(userConfig.dimensions.tile_height) || 0.0;
+	}
+
+	// calculate pixel density (ppm) based on width
+	var pixelsPerMeter = userConfig.resolution.height / tileHeight;
+	if (userDefinedAspectRatio == false) {
+		aspectRatio = userConfig.resolution.width / userConfig.resolution.height;
+		console.log(sageutils.header("UI") + "Resolution defined aspect ratio: " + aspectRatio);
 	}
 
 	// Check the display border settings
@@ -4229,7 +4235,7 @@ function loadConfiguration() {
 		// then for dimensions
 		userConfig.dimensions.tile_borders = { left: 0.0, right: 0.0, bottom: 0.0, top: 0.0};
 	} else {
-		var borderLeft, borderRight, borderBottom, borderTop; // tileWidth,
+		var borderLeft, borderRight, borderBottom, borderTop;
 		// make sure the values are valid floats
 		borderLeft   = parseFloat(userConfig.dimensions.tile_borders.left)   || 0.0;
 		borderRight  = parseFloat(userConfig.dimensions.tile_borders.right)  || 0.0;
@@ -4242,13 +4248,6 @@ function loadConfiguration() {
 		userConfig.resolution.borders.right  = Math.round(pixelsPerMeter * borderRight)  || 0;
 		userConfig.resolution.borders.bottom = Math.round(pixelsPerMeter * borderBottom) || 0;
 		userConfig.resolution.borders.top    = Math.round(pixelsPerMeter * borderTop)    || 0;
-	}
-
-	// calculate pixel density (ppm) based on width
-	var pixelsPerMeter = userConfig.resolution.height / tileHeight;
-	if (userDefinedAspectRatio == false) {
-		aspectRatio = userConfig.resolution.width / userConfig.resolution.height;
-		console.log(sageutils.header("UI") + "Resolution defined aspect ratio: " + aspectRatio);
 	}
 
 	// calculate the widget control size based on dimensions and user distance
