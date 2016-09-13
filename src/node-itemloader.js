@@ -332,8 +332,15 @@ AppLoader.prototype.loadImageFromFile = function(file, mime_type, aUrl, external
 		// SVG file
 
 		// Query the exif data
-		var box  = assets.getTag(file, "ViewBox").split(' ');
-		var svgDims = {width: parseInt(box[2]), height: parseInt(box[3])};
+		var vbox = assets.getTag(file, "ViewBox");
+		var svgDims;
+		if (vbox) {
+			var box  = vbox.split(' ');
+			svgDims = {width: parseInt(box[2]), height: parseInt(box[3])};
+		} else  {
+			// Assume square image
+			svgDims = {width: 600, height: 600};
+		}
 		var svgExif = assets.getExifData(file);
 
 		if (svgDims) {
