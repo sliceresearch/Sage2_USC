@@ -337,7 +337,7 @@ AppLoader.prototype.loadImageFromFile = function(file, mime_type, aUrl, external
 		if (vbox) {
 			var box  = vbox.split(' ');
 			svgDims = {width: parseInt(box[2]), height: parseInt(box[3])};
-		} else  {
+		} else {
 			// Assume square image
 			svgDims = {width: 600, height: 600};
 		}
