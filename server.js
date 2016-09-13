@@ -362,7 +362,10 @@ function initializeSage2Server() {
 	interactMgr.addLayer("portals",      0);
 
 	// Initialize the background for the display clients (image or color)
-	setupDisplayBackground();
+	// master server only
+        if (program.slaveports === undefined) {
+		setupDisplayBackground();
+	}
 
 	// initialize dialog boxes
 	setUpDialogsAsInteractableObjects();
@@ -1651,18 +1654,54 @@ function wsUpdateMediaStreamFrame(wsio, dataOrBuffer) {
 	}
 }
 
-function wsUpdateMediaStreamChunk(wsio, data) {
-	//console.log("wsUpdateMediaStreamChunk ",data.id);
-	if (SAGE2Items.renderSync[data.id].chunks.length === 0) {
-		SAGE2Items.renderSync[data.id].chunks = initializeArray(data.total, "");
-	}
-	SAGE2Items.renderSync[data.id].chunks[data.piece] = data.state.src;
-	if (allNonBlank(SAGE2Items.renderSync[data.id].chunks)) {
-		wsUpdateMediaStreamFrame(wsio, {id: data.id, state: {
-			src: SAGE2Items.renderSync[data.id].chunks.join(""),
-			type: data.state.type,
-			encoding: data.state.encoding}});
-		SAGE2Items.renderSync[data.id].chunks = [];
+function wsUpdateMediaStreamChunk(wsio, dataOrBuffer) {
+        var data;
+	if (dataOrBuffer.id !== undefined) {
+		data = dataOrBuffer;
+		console.log("wsUpdateMediaStreamChunk as JSON ",data.id);
+		if (SAGE2Items.renderSync[data.id].chunks.length === 0) {
+			SAGE2Items.renderSync[data.id].chunks = initializeArray(data.total, "");
+		}
+		SAGE2Items.renderSync[data.id].chunks[data.piece] = data.state.src;
+		if (allNonBlank(SAGE2Items.renderSync[data.id].chunks)) {
+			wsUpdateMediaStreamFrame(wsio, {id: data.id, state: {
+				src: SAGE2Items.renderSync[data.id].chunks.join(""),
+				type: data.state.type,
+				encoding: data.state.encoding}});
+			SAGE2Items.renderSync[data.id].chunks = [];
+		}
+	} else {
+		data = {}
+		console.log("wsUpdateMediaStreamChunk as buffer ",data.id);
+		// buffer: id, state-type, state-encoding, state-src
+		data.id = byteBufferToString(dataOrBuffer);
+		console.log("wsUpdateMediaStreamChunk as buffer ",data.id);
+		//
+		var buf2 = dataOrBuffer.slice(data.id.length + 1);
+		data.index = byteBufferToString(buf2);
+		//
+		var buf3 = buf2.slice(data.index.length + 1);
+		data.total = byteBufferToString(buf3);
+		//
+		var buf4 = buf2.slice(data.total.length + 1);
+		data.type = byteBufferToString(buf4);
+		//
+		var buf5 = buf2.slice(data.type.length + 1);
+		data.enc = byteBufferToString(buf5);
+		//
+		data.src = buf2.slice(data.enc.length + 1);
+		//
+		if (SAGE2Items.renderSync[data.id].chunks.length === 0) {
+			SAGE2Items.renderSync[data.id].chunks = initializeArray(data.total, "");
+		}
+		SAGE2Items.renderSync[data.id].chunks[data.piece] = data.state.src;
+		if (allNonBlank(SAGE2Items.renderSync[data.id].chunks)) {
+			wsUpdateMediaStreamFrame(wsio, {id: data.id, state: {
+				src: SAGE2Items.renderSync[data.id].chunks.join(""),
+				type: data.state.type,
+				encoding: data.state.encoding}});
+			SAGE2Items.renderSync[data.id].chunks = [];
+		}
 	}
 }
 
@@ -1756,12 +1795,12 @@ function wsStartNewMediaBlockStream(wsio, data) {
                 var resize = false;
                 if (data.title==="laptop1") {
                         console.log("laptop1");
-                        pos = [1970,0];
+                        pos = [5828,0];
                         resize = true;
                 }
                 if (data.title==="vc1") {
                         console.log("vc1");
-                        pos = [5828,0];
+                        pos = [1970,0];
                         resize = true;
                 }
                 if (data.title==="laptop2") {
@@ -1773,7 +1812,7 @@ function wsStartNewMediaBlockStream(wsio, data) {
                 setAppPosition(appInstance, pos);
                 handleNewApplication(appInstance, null);
                 if (resize) {
-                        wsAppResize(null, {id: data.id, width: 1.96/7, keepRatio: true});
+                        wsAppResize(null, {id: data.id, width: 1.94/7, keepRatio: true});
                 }
                 calculateValidBlocks(appInstance, mediaBlockSize, SAGE2Items.renderSync[appInstance.id]);
         });
@@ -1792,7 +1831,7 @@ function wsUpdateMediaBlockStreamFrame(wsio, buffer) {
 	var id = byteBufferToString(buffer);
 
 	if (!SAGE2Items.renderSync[id].sendNextFrame) {
-		//console.log("drop frame");
+		console.log("drop frame");
 		return; 
 	} else {
 		//console.log("relay frame");

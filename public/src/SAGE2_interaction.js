@@ -39,6 +39,7 @@ function SAGE2_interaction(wsio) {
 	this.mediaVideo  = null;
 	this.mediaResolution = 2;
 	this.mediaQuality    = 9;
+	//this.mediaQuality    = 6;
 	this.chromeDesktopCaptureEnabled = false;
 	this.broadcasting  = false;
 	this.gotRequest    = false;
@@ -556,10 +557,12 @@ function SAGE2_interaction(wsio) {
 	* @method stepMethod
 	* @param deadline {Object} object containing timing information
 	*/
+	this.deadlineLimit = 15;
 	this.stepMethod = function(deadline) {
 		// if more than 10ms of freetime, go for it
-		if (deadline.timeRemaining() > 10) {
-			if (this.gotRequest) {
+		//if (true) { // if (deadline.timeRemaining() > 10) {
+		if (deadline.timeRemaining() > this.deadlineLimit) {
+			if (true) { // if (this.gotRequest) {
 				this.pix = this.captureMediaFrame();
 				this.sendMediaStreamFrame();
 			}
@@ -600,6 +603,17 @@ function SAGE2_interaction(wsio) {
 			var res = screenShareResolution.options[this.mediaResolution].value.split("x");
 			mediaCanvas.width  = parseInt(res[0], 10);
 			mediaCanvas.height = parseInt(res[1], 10);
+                        console.log("IP1: "+mediaCanvas.width+" "+mediaCanvas.height);
+                        if (mediaCanvas.width > 800) {
+				  mediaCanvas.width = mediaCanvas.width / 2;
+				  mediaCanvas.height = mediaCanvas.height / 2;
+			} else if (mediaCanvas.width > 1024) {
+				  mediaCanvas.height = mediaCanvas.width / 3;
+				  mediaCanvas.height = mediaCanvas.height / 3;
+			}
+                        console.log("IP2: "+mediaCanvas.width+" "+mediaCanvas.height);
+			console.log("mediaQuality "+this.mediaQuality);
+			console.log("deadlineLimit "+this.deadlineLimit);
 
 			var frame = this.captureMediaFrame();
 			this.pix  = frame;
@@ -667,11 +681,7 @@ function SAGE2_interaction(wsio) {
 	}
 
 	/**
-	 * Creates a new Uint8Array based on two different ArrayBuffers
-	 *
-	 * @private
-	 * @param {ArrayBuffers} buffer1 The first buffer.
-	 * @param {ArrayBuffers} buffer2 The second buffer.
+	 * Creates a new Uint8Array based on multiple ArrayBuffers
 	 * @return {ArrayBuffers} The new ArrayBuffer created out of the two.
 	 */
 	var _appendBuffers = function(buffer1, buffer2, buffer3, buffer4) {
@@ -700,6 +710,53 @@ function SAGE2_interaction(wsio) {
 	};
 
 	/**
+	 * Creates a new Uint8Array based on multiple ArrayBuffers
+	 * @return {ArrayBuffers} The new ArrayBuffer created out of the two.
+	 */
+	var _appendBuffers6 = function(buffer1, buffer2, buffer3, buffer4, buffer5, buffer6) {
+	  console.log("appendBuffers ");
+	  var nulB = new Uint8Array([0]);
+	  var tmplen = buffer1.byteLength + buffer2.byteLength + buffer3.byteLength + buffer4.byteLength + buffer5.byteLength + buffer6.byteLength + 5;
+	  var tmp = new Uint8Array(tmplen);
+	  var pos = 0;
+	  // buffer1
+	  tmp.set(buffer1, pos);
+	  pos = pos + buffer1.byteLength;
+	  tmp.set(nulB, pos);
+	  pos = pos + 1;
+	  // buffer2
+	  tmp.set(buffer2, pos);
+	  pos = pos + buffer2.byteLength;
+	  tmp.set(nulB, pos);
+	  pos = pos + 1;
+	  // buffer3
+	  tmp.set(buffer3, pos);
+	  pos = pos + buffer3.byteLength;
+	  tmp.set(nulB, pos);
+	  pos = pos + 1;
+	  // buffer4
+	  tmp.set(buffer4, pos);
+	  pos = pos + buffer4.byteLength;
+	  tmp.set(nulB, pos);
+	  pos = pos + 1;
+	  // buffer5
+	  tmp.set(buffer5, pos);
+	  pos = pos + buffer5.byteLength;
+	  tmp.set(nulB, pos);
+	  pos = pos + 1;
+	  // buffer6
+	  tmp.set(buffer6, pos);
+	  pos = pos + buffer6.byteLength;
+	  tmp.set(nulB, pos);
+	  pos = pos + 1;
+
+	  if (pos !== tmplen) {
+		console.log("WARNING: length inconsistency in _appendBuffers6");
+	  }
+	  return tmp;
+	};
+
+	/**
 	* Send the captured frame to the server
 	*
 	* @method sendMediaStreamFrame
@@ -714,17 +771,20 @@ function SAGE2_interaction(wsio) {
 				var _this   = this;
 				var nchunks = Math.ceil(raw.length / this.chunk);
 
-				var updateMediaStreamChunk = function(index, msg_chunk) {
+				var updateMediaStreamChunk = function(index, start, end) {
 					setTimeout(function() {
-						_this.wsio.emit('updateMediaStreamChunk', {id: _this.uniqueID + "|0",
-							state: {src: msg_chunk, type: "image/jpeg", encoding: "binary"},
-							piece: index, total: nchunks});
+						//_this.wsio.emit('updateMediaStreamChunk', {id: _this.uniqueID + "|0",
+						//	state: {src: msg_chunk, type: "image/jpeg", encoding: "binary"},
+						//	piece: index, total: nchunks});
+						var id = this.uniqueID+"|0";
+						var buffer = _appendBuffers6(str2ab(id), str2ab(index), str2ab(total), str2ab("image/jpeg"), str2ab("base64"), DataView(raw,start,end - start));
+						_this.wsio.emit('updateMediaStreamChunk', buffer);
 					}, 4);
 				};
 				for (var i = 0; i < nchunks; i++) {
 					var start = i * this.chunk;
 					var end   = (i + 1) * this.chunk < raw.length ? (i + 1) * this.chunk : raw.length;
-					updateMediaStreamChunk(i, raw.substring(start, end));
+					updateMediaStreamChunk(i, start, end);
 				}
 				this.gotRequest = false;
 			} else {
