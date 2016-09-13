@@ -696,6 +696,12 @@ var SAGE2_App = Class.extend({
 	* @param date {Date} current time from the server
 	*/
 	refresh: function(date) {
+		if (date === undefined) {
+			// if argument not passed, use previous date
+			// it should be ok for not animation-based application
+			date = this.prevDate;
+		}
+
 		if (this.SAGE2UserModification === true) {
 			this.SAGE2Sync(true);
 		}
