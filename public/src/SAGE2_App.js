@@ -86,8 +86,10 @@ var SAGE2_App = Class.extend({
 	* @param data {Object} contains initialization values (id, width, height, state, ...)
 	*/
 	SAGE2Init: function(type, data) {
-		// Application ID
+		// Save the application ID
 		this.id = data.id;
+		// Save the type of the application
+		this.application = data.application;
 
 		this.div = document.getElementById(data.id);
 		this.element = document.createElement(type);

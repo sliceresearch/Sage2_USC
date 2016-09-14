@@ -1405,7 +1405,8 @@ function createAppWindow(data, parentId, titleBarHeight, titleTextSize, offsetX,
 			resrc: url,
 			state: data.data,
 			date: date,
-			title: data.title
+			title: data.title,
+			application: data.application
 		};
 
 		// load new app
