@@ -271,24 +271,30 @@ var doodle = SAGE2_App.extend({
 	formatAndSetTitle: function(wholeName) {
 		// Breaking apart whole name and using moment.js to make easier to read.
 		var parts  = wholeName.split("-"); // 0 name - 1 qn - 2 YYYYMMDD - 3 HHMMSSmmm
-		var author = parts[0];
-		var month  = parseInt(parts[2].substring(4, 6)); // YYYY[MM]
-		var day    = parseInt(parts[2].substring(6, 8)); // YYYYMM[DD]
-		var hour   = parseInt(parts[3].substring(0, 2)); // [HH]
-		var min    = parseInt(parts[3].substring(2, 4)); // HH[MM]
-		// Moment conversion
-		var momentTime = {
-			month: month,
-			day: day,
-			hour: hour,
-			minute: min
-		};
-		momentTime = moment(momentTime);
-		// If the author is supposed to be Anonymouse, then omit author inclusion and marker.
-		if (author === "Anonymous") {
-			this.updateTitle(momentTime.format("MMM Do, hh:mm A"));
-		} else { // Otherwise have the name followed by @
-			this.updateTitle(author + " @ " + momentTime.format("MMM Do, hh:mm A"));
+		if (parts.length === 1) {
+			// If loading lastDoodle, just use that name
+			this.updateTitle(wholeName);
+		} else {
+			// Otherwise, decode filename into author and date
+			var author = parts[0];
+			var month  = parseInt(parts[2].substring(4, 6)); // YYYY[MM]
+			var day    = parseInt(parts[2].substring(6, 8)); // YYYYMM[DD]
+			var hour   = parseInt(parts[3].substring(0, 2)); // [HH]
+			var min    = parseInt(parts[3].substring(2, 4)); // HH[MM]
+			// Moment conversion
+			var momentTime = {
+				month: month,
+				day: day,
+				hour: hour,
+				minute: min
+			};
+			momentTime = moment(momentTime);
+			// If the author is supposed to be Anonymouse, then omit author inclusion and marker.
+			if (author === "Anonymous") {
+				this.updateTitle(momentTime.format("MMM Do, hh:mm A"));
+			} else { // Otherwise have the name followed by @
+				this.updateTitle(author + " @ " + momentTime.format("MMM Do, hh:mm A"));
+			}
 		}
 	},
 
