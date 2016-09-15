@@ -289,6 +289,8 @@ var SAGE2_App = Class.extend({
 					break;
 				case "specialKey":
 					break;
+				case "kinectInput":
+					break;
 				default:
 					break;
 			}

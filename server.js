@@ -1373,6 +1373,10 @@ function wsKeyPress(wsio, data) {
 	keyPress(wsio.id, pointerX, pointerY, data);
 }
 
+function wsKinectInput(wsio, data) {
+
+}
+
 // **************  File Upload Functions *****************
 function wsUploadedFile(wsio, data) {
 	addEventToUserLog(wsio.id, {type: "fileUpload", data: data, time: Date.now()});
@@ -5368,6 +5372,26 @@ function pointerPressOnStaticUI(uniqueID, pointerX, pointerY, data, obj, localPt
 	*/
 }
 
+/// KINECT input
+
+//kinect
+function sendKinectInput(id, data) {	// From addClient type == sageUI
+
+	// for now send to the skeleton tracking app
+	var app = SAGE2Items.applications.getFirstItemWithTitle("skeleton");
+
+ 	var event = {
+		id: app.id,
+		type: "kinectInput",
+		position: {"x":data.x, "y":data.y},
+		user: "kinect",
+		data: {"type": "head", "position": {"x":data.x, "y":data.y}},
+		date: Date.now()
+	};
+
+	broadcast('eventInItem', event);
+};
+
 function createNewDataSharingSession(remoteName, remoteHost, remotePort, remoteWSIO, remoteTime,
 	sharingWidth, sharingHeight, sharingScale, sharingTitleBarHeight, caller) {
 	var zIndex = SAGE2Items.applications.numItems + SAGE2Items.portals.numItems;
@@ -7705,7 +7729,8 @@ if (config.experimental && config.experimental.omicron &&
 		keyDown,
 		keyUp,
 		keyPress,
-		createRadialMenu
+		createRadialMenu,
+		sendKinectInput
 	);
 	omicronManager.runTracker();
 	omicronRunning = true;
@@ -8501,6 +8526,3 @@ function sendJupyterUpdates(data) {
 
 	broadcast('eventInItem', event);
 }
-
-
-

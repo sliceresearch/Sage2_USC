@@ -284,7 +284,8 @@ OmicronManager.prototype.setCallbacks = function(
 	keyDownCB,
 	keyUpCB,
 	keyPressCB,
-	createRadialMenuCB) {
+	createRadialMenuCB,
+	kinectInputCB ) {
 	this.sagePointers        = sagePointerList;
 	this.createSagePointer   = createSagePointerCB;
 	this.showPointer         = showPointerCB;
@@ -302,6 +303,7 @@ OmicronManager.prototype.setCallbacks = function(
 	this.keyUp               = keyUpCB;
 	this.keyPress            = keyPressCB;
 	this.createRadialMenu    = createRadialMenuCB;
+	this.kinectInput 				 = kinectInputCB;
 
 	this.createSagePointer(this.config.inputServerIP);
 };
@@ -465,7 +467,12 @@ OmicronManager.prototype.processIncomingEvent = function(msg, rinfo) {
 
 	// ServiceTypePointer
 	//
-	if (serviceType === 0) {
+	// mocap
+	if (serviceType === 1) {
+		//
+		this.kinectInput(sourceID, {"x": e.posx, "y": e.posy});
+		//console.log("e.posx:" + e.posx + " posX:" + posX);
+	} else if (serviceType === 0) {
 		omicronManager.processPointerEvent(e, sourceID, posX, posY, msg, offset, address, emit, dstart);
 	} else if (serviceType === 7) {
 		// ServiceTypeWand
