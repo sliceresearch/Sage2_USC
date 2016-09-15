@@ -997,6 +997,9 @@ function setupListeners(wsio) {
 	// generic message passing for data requests or for specific communications.
 	// might eventually break this up into individual ws functions
 	wsio.on('csdMessage',							wsCsdMessage);
+
+  // app file saving message
+  wsio.on('appFileSaveRequest', 			appFileSaveRequest);
 }
 
 /**
@@ -8502,5 +8505,66 @@ function sendJupyterUpdates(data) {
 	broadcast('eventInItem', event);
 }
 
+/**
+ * Method handling a file save request from a SAGE2_App
+ *
+ * @method     appFileSaveRequest
+ * @param      {Object}  wsio    The websocket
+ * @param      {Object}  data    The data
+ */
+function appFileSaveRequest(wsio, data) {
+	/* data includes
+	data = {
+		app: Name of application,
+		id: id of application
+		filePath: {
+			subdir: subdirectory app wishes file to be saved in
+			name: name of the file
+			ext: file extension
+		},
+		saveData: file data
+	}
+	*/
+
+	var appFileSaveDirectory = path.join(mediaFolders.user.path, "appSavedFiles");
+
+	// console.log("Saving File at: " + data.filePath);
+	// console.log("From: " + data.id);
+
+	var filename;
+	var filedir;
+	var appdir;
+
+	if(data.filePath) {
+		filename = data.filePath.name;
+		if(filename.indexOf(data.filePath.ext) === -1) {
+			// add extension if it is not present in name
+			filename += data.filePath.ext;
+		}
+
+		appdir = path.join(appFileSaveDirectory, data.app);
+		if(data.filePath.subdir) {
+			filedir = path.join(appdir, data.filePath.subdir);
+		} else {
+			filedir = appdir;
+		}
+	} else {
+		filename = 'default.txt'; // defaults to text file
+	}
 
 
+	if (!sageutils.folderExists(filedir)) {
+		sageutils.mkdirParent(filedir);
+	}
+
+	var key;
+	var fullpath = path.join(filedir, filename);
+
+	try {
+		fs.writeFileSync(fullpath, data.saveData);
+		console.log("Saved file to " + fullpath);
+	} catch (err) {
+		console.log(err + "\n\n while saving to " + fullpath);
+	}
+
+}
