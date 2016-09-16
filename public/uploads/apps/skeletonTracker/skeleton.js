@@ -31,7 +31,8 @@ var skeleton = SAGE2_App.extend( {
 		this.textToDraw = "waiting for kinect input... ";
 
 	  this.headPosition = {"x": this.element.width/2.0, "y": this.element.height/2.0};
-
+		this.leftHandPosition = {"x": this.element.width/2.0 - 50, "y": this.element.height/2.0 + 50};
+		this.rightHandPosition = {"x": this.element.width/2.0 + 50, "y": this.element.height/2.0 + 50};
 	},
 
 	load: function(date) {
@@ -60,6 +61,23 @@ var skeleton = SAGE2_App.extend( {
 		this.ctx.fillText( "Input: " + this.textToDraw, this.element.width/2.0, 32);
 
 		this.ctx.fillText("head", this.headPosition.x, this.headPosition.y);
+		this.ctx.fillText("handLeft", this.leftHandPosition.x, this.leftHandPosition.y);
+		this.ctx.fillText("handRight", this.rightHandPosition.x, this.rightHandPosition.y);
+
+		this.ctx.beginPath();
+		this.ctx.arc(this.headPosition.x, this.headPosition.y, 15, 0, 2*Math.PI)
+		this.ctx.fill();
+		this.ctx.stroke();
+
+		this.ctx.beginPath();
+		this.ctx.arc(this.leftHandPosition.x, this.leftHandPosition.y, 10, 0, 2*Math.PI)
+		this.ctx.fill();
+		this.ctx.stroke();
+
+		this.ctx.beginPath();
+		this.ctx.arc(this.rightHandPosition.x, this.rightHandPosition.y, 10, 0, 2*Math.PI)
+		this.ctx.fill();
+		this.ctx.stroke();
 
 	},
 
@@ -85,9 +103,18 @@ var skeleton = SAGE2_App.extend( {
 	event: function(eventType, position, user_id, data, date) {
 
 		if( eventType == "kinectInput"){
-			this.headPosition.x = this.element.width/2.0+data.position.x*this.element.width;
+			const headPos = data["OMICRON_SKEL_HEAD"];
+			const leftHandPos = data["OMICRON_SKEL_LEFT_HAND"];
+			const rightHandPos = data["OMICRON_SKEL_RIGHT_HAND"];
+			this.headPosition.x = this.element.width/2.0+headPos.x*this.element.width;
+			// this.headPosition.y = this.element.height/2.0+headPos.y*this.element.height;
+			this.leftHandPosition.x = this.element.width/2.0+leftHandPos.x*this.element.width;
+			// this.leftHandPosition.y = this.element.height/2.0+leftHandPos.y*this.element.height;
+			this.rightHandPosition.x = this.element.width/2.0+rightHandPos.x*this.element.width;
+			// this.rightHandPosition.y = this.element.height/2.0+rightHandPos.y*this.element.height;
+
 			this.inputCount++;
-			this.textToDraw = "Kinect Input!   Count: " + this.inputCount + " Type: " + data.type + " Position: " + data.position.x + " , " + data.position.y;
+			this.textToDraw = "Kinect Input!   Count: " + this.inputCount + " Type: Head" + " Position: " + headPos.x + " , " + headPos.y;
 			this.refresh(date);
 		}
 		else if (eventType === "pointerPress" && (data.button === "left")) {

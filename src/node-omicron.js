@@ -358,7 +358,6 @@ OmicronManager.prototype.processIncomingEvent = function(msg, rinfo) {
 	// console.log("UDP> got: " + msg + " from " + rinfo.address + ":" + rinfo.port);
 	// var out = util.format("UDP> msg from [%s:%d] %d bytes", rinfo.address,rinfo.port,msg.length);
 	// console.log(out);
-
 	var offset = 0;
 	var e = {};
 	if (offset < msg.length) {
@@ -409,6 +408,7 @@ OmicronManager.prototype.processIncomingEvent = function(msg, rinfo) {
 	if (offset < msg.length) {
 		e.extraDataMask  = msg.readUInt32LE(offset); offset += 4;
 	}
+
 	// Extra data types:
 	//    0 ExtraDataNull,
 	//    1 ExtraDataFloatArray,
@@ -467,10 +467,59 @@ OmicronManager.prototype.processIncomingEvent = function(msg, rinfo) {
 
 	// ServiceTypePointer
 	//
-	// mocap
-	if (serviceType === 1) {
-		//
-		this.kinectInput(sourceID, {"x": e.posx, "y": e.posy});
+	if (serviceType === 1) { // mocap
+		var extraData = [];
+
+		while(offset < msg.length) {
+			extraData.push(msg.readFloatLE(offset));
+			offset += 4;
+		}
+
+		var bodyParts = [
+			"OMICRON_SKEL_HIP_CENTER",
+			"OMICRON_SKEL_HEAD",
+			"Junk",
+			"Junk",
+			"Junk",
+			"Junk",
+			"OMICRON_SKEL_LEFT_SHOULDER",
+			"OMICRON_SKEL_LEFT_ELBOW",
+			"OMICRON_SKEL_LEFT_WRIST",
+			"OMICRON_SKEL_LEFT_HAND",
+			"OMICRON_SKEL_LEFT_FINGERTIP",
+			"OMICRON_SKEL_LEFT_HIP",
+			"OMICRON_SKEL_LEFT_KNEE",
+			"OMICRON_SKEL_LEFT_ANKLE",
+			"OMICRON_SKEL_LEFT_FOOT",
+			"Junk",
+			"OMICRON_SKEL_RIGHT_SHOULDER",
+			"OMICRON_SKEL_RIGHT_ELBOW",
+			"OMICRON_SKEL_RIGHT_WRIST",
+			"OMICRON_SKEL_RIGHT_HAND",
+			"OMICRON_SKEL_RIGHT_FINGERTIP",
+			"OMICRON_SKEL_RIGHT_HIP",
+			"OMICRON_SKEL_RIGHT_KNEE",
+			"OMICRON_SKEL_RIGHT_ANKLE",
+			"OMICRON_SKEL_RIGHT_FOOT",
+			"OMICRON_SKEL_SPINE",
+			"OMICRON_SKEL_SHOULDER_CENTER",
+			"OMICRON_SKEL_LEFT_THUMB",
+			"OMICRON_SKEL_RIGHT_THUMB"
+		];
+
+		var bodyPartIndex = 0;
+		var posIndex = 0;
+		var skeletonPositions = {};
+		while(bodyPartIndex < bodyParts.length) {
+			const bodyPart = bodyParts[bodyPartIndex++];
+			skeletonPositions[bodyPart] = {
+				"x": extraData[posIndex++],
+				"y": extraData[posIndex++],
+				"z": extraData[posIndex++]
+			};
+		}
+
+		this.kinectInput(sourceID, skeletonPositions);
 		//console.log("e.posx:" + e.posx + " posX:" + posX);
 	} else if (serviceType === 0) {
 		omicronManager.processPointerEvent(e, sourceID, posX, posY, msg, offset, address, emit, dstart);

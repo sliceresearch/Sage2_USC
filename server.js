@@ -5379,13 +5379,12 @@ function sendKinectInput(id, data) {	// From addClient type == sageUI
 
 	// for now send to the skeleton tracking app
 	var app = SAGE2Items.applications.getFirstItemWithTitle("skeleton");
-
  	var event = {
 		id: app.id,
 		type: "kinectInput",
 		position: {"x":data.x, "y":data.y},
 		user: "kinect",
-		data: {"type": "head", "position": {"x":data.x, "y":data.y}},
+		data: data,
 		date: Date.now()
 	};
 
