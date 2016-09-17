@@ -20,5 +20,18 @@ do
 	./init_webserver.cmd $f
 done
 
-/usr/bin/security add-trusted-cert -d -r trustRoot localhost-server.crt
+macos=`uname -r | tr "." "\n" | head -1`
+echo "MacOS version" $macos
+
+if [ $macos = "16" ]
+then
+	echo ""
+	echo "============================"
+	echo "Enter your password if asked"
+	echo "============================"
+	echo ""
+	sudo /usr/bin/security add-trusted-cert -d -r trustRoot -k /Library/Keychains/System.keychain localhost-server.crt
+else
+	/usr/bin/security add-trusted-cert -d -r trustRoot localhost-server.crt
+fi
 
