@@ -96,6 +96,8 @@ var Webview = SAGE2_App.extend({
 			// only accept http protocols
 			if (event.url.startsWith('http:') || event.url.startsWith('https:')) {
 				_this.changeURL(event.url);
+			} else {
+				console.log('Webview>	Not http URL, not opening', event.url);
 			}
 		});
 
@@ -314,7 +316,8 @@ var Webview = SAGE2_App.extend({
 			} else if (action === "forward") {
 				this.element.goForward();
 			} else if (action === "address") {
-				if (responseObject.clientInput.indexOf("://") === -1) {
+				if ((responseObject.clientInput.indexOf("://") === -1) &&
+					!responseObject.clientInput.startsWith("/")) {
 					responseObject.clientInput = "http://" + responseObject.clientInput;
 				}
 				this.changeURL(responseObject.clientInput);
