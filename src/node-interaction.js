@@ -148,8 +148,20 @@ Interaction.prototype.moveSelectedItem = function(pointerX, pointerY) {
 	}
 
 	this.selectedMoveItem.left = pointerX + this.selectOffsetX;
-	this.selectedMoveItem.top  = pointerY + this.selectOffsetY;
-	this.selectedMoveItem.maximized = false;
+
+	// testing maximized item only slides horizontally
+	// this.selectedMoveItem.top  = pointerY + this.selectOffsetY;
+	// this.selectedMoveItem.maximized = false;
+
+	if (!this.selectedMoveItem.maximized) {
+		this.selectedMoveItem.top  = pointerY + this.selectOffsetY;
+	} else {
+		// if it maximized change the previous_left value to correspond to the new center
+		this.selectedMoveItem.previous_left =
+			this.selectedMoveItem.left + this.selectedMoveItem.width / 2 -
+			this.selectedMoveItem.previous_width / 2;
+	}
+
 	return {elemId: this.selectedMoveItem.id, elemLeft: this.selectedMoveItem.left,
 			elemTop: this.selectedMoveItem.top, elemWidth: this.selectedMoveItem.width,
 			elemHeight: this.selectedMoveItem.height, date: new Date()};
@@ -374,13 +386,13 @@ Interaction.prototype.resizeSelectedItem = function(pointerX, pointerY) {
  *@method maximizeSelectedItem
  */
 
-Interaction.prototype.maximizeSelectedItem = function(item) {
+Interaction.prototype.maximizeSelectedItem = function(item, centered) {
 	if (item === null) {
 		return null;
 	}
 
 	var wallRatio = this.configuration.totalWidth  / this.configuration.totalHeight;
-	var iCenterX  = this.configuration.totalWidth  / 2.0;
+	var iCenterX  = centered ? this.configuration.totalHeight / 2.0 : item.left + item.width / 2.0;
 	var iCenterY  = this.configuration.totalHeight / 2.0;
 	var iWidth    = 1;
 	var iHeight   = 1;
@@ -408,10 +420,18 @@ Interaction.prototype.maximizeSelectedItem = function(item) {
 	item.previous_height = item.width / item.aspect;
 
 	// calculate new values
-	item.left   = iCenterX - (iWidth / 2);
 	item.top    = iCenterY - (iHeight / 2);
 	item.width  = iWidth;
 	item.height = iHeight;
+
+	// keep window inside display
+	if (iCenterX - (iWidth / 2) < 0) {
+		item.left = 0;
+	} else if (iCenterX + (iWidth / 2) > this.configuration.totalWidth) {
+		item.left = this.configuration.totalWidth - iWidth;
+	} else {
+		item.left = iCenterX - (iWidth / 2);
+	}
 
 	// Shift by 'titleBarHeight' if no auto-hide
 	if (this.configuration.ui.auto_hide_ui === true) {
