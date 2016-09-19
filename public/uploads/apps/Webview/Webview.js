@@ -11,8 +11,14 @@
 
 var Webview = SAGE2_App.extend({
 	init: function(data) {
-		// Create div into the DOM
-		this.SAGE2Init("webview", data);
+		if (this.isElectron()) {
+			// Create div into the DOM
+			this.SAGE2Init("webview", data);			
+		} else {
+			// Create div into the DOM
+			this.SAGE2Init("div", data);
+			this.element.innerHTML = "<h1>Webview only supported using Electron as a display client</h1>";
+		}
 		// Set the DOM id
 		this.element.id = "div_" + data.id;
 		// Set the background to black
@@ -81,6 +87,10 @@ var Webview = SAGE2_App.extend({
 			event.preventDefault();
 		});
 
+		this.element.addEventListener('console-message', function(event) {
+			console.log('Webview>	console:', event.message);
+		});
+
 		// When the webview tries to open a new window
 		this.element.addEventListener("new-window", function(event) {
 			// only accept http protocols
@@ -89,6 +99,16 @@ var Webview = SAGE2_App.extend({
 			}
 		});
 
+	},
+
+	/**
+	 * Determines if electron is the renderer (instead of a browser)
+	 *
+	 * @method     isElectron
+	 * @return     {Boolean}  True if electron, False otherwise.
+	 */
+	isElectron: function() {
+		return (typeof window !== 'undefined' && window.process && window.process.type === "renderer");
 	},
 
 	load: function(date) {
@@ -280,195 +300,205 @@ var Webview = SAGE2_App.extend({
 	},
 
 	reloadPage: function(responseObject) {
-		this.element.reload();
-		this.element.setZoomFactor(this.zoomFactor);
+		if (this.isElectron()) {
+			this.element.reload();
+			this.element.setZoomFactor(this.zoomFactor);			
+		}
 	},
 
 	navigation: function(responseObject) {
-		var action = responseObject.action;
-		if (action === "back") {
-			this.element.goBack();
-		} else if (action === "forward") {
-			this.element.goForward();
-		} else if (action === "address") {
-			if (responseObject.clientInput.indexOf("://") === -1) {
-				responseObject.clientInput = "http://" + responseObject.clientInput;
+		if (this.isElectron) {
+			var action = responseObject.action;
+			if (action === "back") {
+				this.element.goBack();
+			} else if (action === "forward") {
+				this.element.goForward();
+			} else if (action === "address") {
+				if (responseObject.clientInput.indexOf("://") === -1) {
+					responseObject.clientInput = "http://" + responseObject.clientInput;
+				}
+				this.changeURL(responseObject.clientInput);
+			} else if (action === "search") {
+				this.changeURL('https://www.google.com/#q=' + responseObject.clientInput);
 			}
-			this.changeURL(responseObject.clientInput);
-		} else if (action === "search") {
-			this.changeURL('https://www.google.com/#q=' + responseObject.clientInput);
 		}
 	},
 
 	zoomPage: function(responseObject) {
-		var dir = responseObject.dir;
+		if (this.isElectron()) {
+			var dir = responseObject.dir;
 
-		// zoomin
-		if (dir === "zoomin") {
-			this.zoomFactor *= 1.25;
-			this.element.setZoomFactor(this.zoomFactor);
+			// zoomin
+			if (dir === "zoomin") {
+				this.zoomFactor *= 1.25;
+				this.element.setZoomFactor(this.zoomFactor);
+			}
+
+			// zoomout
+			if (dir === "zoomout") {
+				this.zoomFactor /= 1.25;
+				this.element.setZoomFactor(this.zoomFactor);
+			}
+
+			this.refresh(this.prevDate);
 		}
-
-		// zoomout
-		if (dir === "zoomout") {
-			this.zoomFactor /= 1.25;
-			this.element.setZoomFactor(this.zoomFactor);
-		}
-
-		this.refresh(this.prevDate);
 	},
 
 	changeMode: function(responseObject) {
-		var mode = responseObject.mode;
+		if (this.isElectron()) {
+			var mode = responseObject.mode;
 
-		if (mode === "mobile") {
-			this.zoomFactor = 1;
-			this.element.setZoomFactor(this.zoomFactor);
-			var content = this.element.getWebContents();
-			content.enableDeviceEmulation({
-				screenPosition: "mobile",
-				fitToView: true
-			});
+			if (mode === "mobile") {
+				this.zoomFactor = 1;
+				this.element.setZoomFactor(this.zoomFactor);
+				var content = this.element.getWebContents();
+				content.enableDeviceEmulation({
+					screenPosition: "mobile",
+					fitToView: true
+				});
+			}
+
+			// zoomout
+			if (mode === "desktop") {
+				this.zoomFactor = 1;
+				this.element.setZoomFactor(this.zoomFactor);
+				var content = this.element.getWebContents();
+				content.enableDeviceEmulation({
+					screenPosition: "desktop",
+					deviceScaleFactor: 0,
+					fitToView: false
+				});
+			}
+
+			this.refresh(this.prevDate);
 		}
-
-		// zoomout
-		if (mode === "desktop") {
-			this.zoomFactor = 1;
-			this.element.setZoomFactor(this.zoomFactor);
-			var content = this.element.getWebContents();
-			content.enableDeviceEmulation({
-				screenPosition: "desktop",
-				deviceScaleFactor: 0,
-				fitToView: false
-			});
-		}
-
-		this.refresh(this.prevDate);
 	},
 
 	event: function(eventType, position, user_id, data, date) {
-		// Making Integer values, seems to be required by sendInputEvent
-		var x = Math.round(position.x);
-		var y = Math.round(position.y);
-		var _this = this;
+		if (this.isElectron()) {
+			// Making Integer values, seems to be required by sendInputEvent
+			var x = Math.round(position.x);
+			var y = Math.round(position.y);
+			var _this = this;
 
-		if (eventType === "pointerPress" && (data.button === "left")) {
-			// click
-			this.element.sendInputEvent({
-				type: "mouseDown",
-				x: x, y: y,
-				button: "left",
-				clickCount: 1
-			});
-		} else if (eventType === "pointerMove") {
-			// move
-			this.element.sendInputEvent({
-				type: "mouseMove", x: x, y: y
-			});
-		} else if (eventType === "pointerRelease" && (data.button === "left")) {
-			// click release
-			this.element.sendInputEvent({
-				type: "mouseUp",
-				x: x, y: y,
-				button: "left",
-				clickCount: 1
-			});
-		} else if (eventType === "pointerScroll") {
-			// Scroll events: reverse the amount to get correct direction
-			this.element.sendInputEvent({
-				type: "mouseWheel",
-				deltaX: 0, deltaY: -1 * data.wheelDelta,
-				x: 0, y: 0,
-				canScroll: true
-			});
-		} else if (eventType === "widgetEvent") {
-			// widget events
-		} else if (eventType === "keyboard") {
-			this.element.sendInputEvent({
-				type: "keyDown",
-				keyCode: data.character
-			});
-			setTimeout(function() {
-				_this.element.sendInputEvent({
-					type: "keyUp",
+			if (eventType === "pointerPress" && (data.button === "left")) {
+				// click
+				this.element.sendInputEvent({
+					type: "mouseDown",
+					x: x, y: y,
+					button: "left",
+					clickCount: 1
+				});
+			} else if (eventType === "pointerMove") {
+				// move
+				this.element.sendInputEvent({
+					type: "mouseMove", x: x, y: y
+				});
+			} else if (eventType === "pointerRelease" && (data.button === "left")) {
+				// click release
+				this.element.sendInputEvent({
+					type: "mouseUp",
+					x: x, y: y,
+					button: "left",
+					clickCount: 1
+				});
+			} else if (eventType === "pointerScroll") {
+				// Scroll events: reverse the amount to get correct direction
+				this.element.sendInputEvent({
+					type: "mouseWheel",
+					deltaX: 0, deltaY: -1 * data.wheelDelta,
+					x: 0, y: 0,
+					canScroll: true
+				});
+			} else if (eventType === "widgetEvent") {
+				// widget events
+			} else if (eventType === "keyboard") {
+				this.element.sendInputEvent({
+					type: "keyDown",
 					keyCode: data.character
 				});
-			}, 0);
-		} else if (eventType === "specialKey") {
-			// SHIFT key
-			if (data.code === 16) {
-				if (data.state === "down") {
-					this.element.sendInputEvent({
-						type: "keyDown",
-						keyCode: "Shift"
-					});
-				} else {
-					this.element.sendInputEvent({
+				setTimeout(function() {
+					_this.element.sendInputEvent({
 						type: "keyUp",
-						keyCode: "Shift"
+						keyCode: data.character
 					});
+				}, 0);
+			} else if (eventType === "specialKey") {
+				// SHIFT key
+				if (data.code === 16) {
+					if (data.state === "down") {
+						this.element.sendInputEvent({
+							type: "keyDown",
+							keyCode: "Shift"
+						});
+					} else {
+						this.element.sendInputEvent({
+							type: "keyUp",
+							keyCode: "Shift"
+						});
+					}
+					this.isShift = (data.state === "down");
 				}
-				this.isShift = (data.state === "down");
-			}
-			// backspace key
-			if (data.code === 8 || data.code === 46) {
-				if (data.state === "down") {
-					// The delete is too quick potentially.
-					// Currently only allow on keyup have finer control
-				} else {
-					this.element.sendInputEvent({
-						type: "keyUp",
-						keyCode: "Backspace"
-					});
+				// backspace key
+				if (data.code === 8 || data.code === 46) {
+					if (data.state === "down") {
+						// The delete is too quick potentially.
+						// Currently only allow on keyup have finer control
+					} else {
+						this.element.sendInputEvent({
+							type: "keyUp",
+							keyCode: "Backspace"
+						});
+					}
 				}
-			}
-			// ALT key
-			if (data.code === 18) {
-				this.isAlt = (data.state === "down");
-			}
+				// ALT key
+				if (data.code === 18) {
+					this.isAlt = (data.state === "down");
+				}
 
-			if (data.code === 37 && data.state === "down") {
-				// arrow left
-				if (this.isAlt) {
-					// navigate back
-					this.element.goBack();
+				if (data.code === 37 && data.state === "down") {
+					// arrow left
+					if (this.isAlt) {
+						// navigate back
+						this.element.goBack();
+					}
+					this.refresh(date);
+				} else if (data.code === 38 && data.state === "down") {
+					// arrow up
+					if (this.isAlt) {
+						// ALT-up_arrow zooms in
+						this.zoomPage({dir: "zoomin"});
+					} else {
+						this.element.sendInputEvent({
+							type: "mouseWheel",
+							deltaX: 0, deltaY: 64,
+							x: 0, y: 0,
+							canScroll: true
+						});
+					}
+					this.refresh(date);
+				} else if (data.code === 39 && data.state === "down") {
+					// arrow right
+					if (this.isAlt) {
+						// navigate forward
+						this.element.goForward();
+					}
+					this.refresh(date);
+				} else if (data.code === 40 && data.state === "down") {
+					// arrow down
+					if (this.isAlt) {
+						// ALT-down_arrow zooms out
+						this.zoomPage({dir: "zoomout"});
+					} else {
+						this.element.sendInputEvent({
+							type: "mouseWheel",
+							deltaX: 0, deltaY: -64,
+							x: 0, y: 0,
+							canScroll: true
+						});
+					}
+					this.refresh(date);
 				}
-				this.refresh(date);
-			} else if (data.code === 38 && data.state === "down") {
-				// arrow up
-				if (this.isAlt) {
-					// ALT-up_arrow zooms in
-					this.zoomPage({dir: "zoomin"});
-				} else {
-					this.element.sendInputEvent({
-						type: "mouseWheel",
-						deltaX: 0, deltaY: 64,
-						x: 0, y: 0,
-						canScroll: true
-					});
-				}
-				this.refresh(date);
-			} else if (data.code === 39 && data.state === "down") {
-				// arrow right
-				if (this.isAlt) {
-					// navigate forward
-					this.element.goForward();
-				}
-				this.refresh(date);
-			} else if (data.code === 40 && data.state === "down") {
-				// arrow down
-				if (this.isAlt) {
-					// ALT-down_arrow zooms out
-					this.zoomPage({dir: "zoomout"});
-				} else {
-					this.element.sendInputEvent({
-						type: "mouseWheel",
-						deltaX: 0, deltaY: -64,
-						x: 0, y: 0,
-						canScroll: true
-					});
-				}
-				this.refresh(date);
 			}
 		}
 	}
