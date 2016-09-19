@@ -903,8 +903,12 @@ var SAGE2_App = Class.extend({
 	 * @param      {String}  data				The file's data
 	 */
 	saveFile: function(appname, subdir, filename, ext, data) {
-		if(isMaster) {
-			wsio.emit("appFileSaveRequest", {app: appname, id: this.id, filePath: {subdir: subdir, name: filename, ext: ext}, saveData: data});
+		if (isMaster) {
+			wsio.emit("appFileSaveRequest", {
+				app: appname, id: this.id,
+				filePath: {subdir: subdir, name: filename, ext: ext},
+				saveData: data
+			});
 		}
 	}
 });

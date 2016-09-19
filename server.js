@@ -998,8 +998,8 @@ function setupListeners(wsio) {
 	// might eventually break this up into individual ws functions
 	wsio.on('csdMessage',							wsCsdMessage);
 
-  // app file saving message
-  wsio.on('appFileSaveRequest', 			appFileSaveRequest);
+	// app file saving message
+	wsio.on('appFileSaveRequest',                   appFileSaveRequest);
 }
 
 /**
@@ -8513,6 +8513,7 @@ function sendJupyterUpdates(data) {
  * @param      {Object}  data    The data
  */
 function appFileSaveRequest(wsio, data) {
+
 	/* data includes
 	data = {
 		app: Name of application,
@@ -8535,15 +8536,15 @@ function appFileSaveRequest(wsio, data) {
 	var filedir;
 	var appdir;
 
-	if(data.filePath) {
+	if (data.filePath) {
 		filename = data.filePath.name;
-		if(filename.indexOf(data.filePath.ext) === -1) {
+		if (filename.indexOf(data.filePath.ext) === -1) {
 			// add extension if it is not present in name
 			filename += data.filePath.ext;
 		}
 
 		appdir = path.join(appFileSaveDirectory, data.app);
-		if(data.filePath.subdir) {
+		if (data.filePath.subdir) {
 			filedir = path.join(appdir, data.filePath.subdir);
 		} else {
 			filedir = appdir;
@@ -8552,12 +8553,10 @@ function appFileSaveRequest(wsio, data) {
 		filename = 'default.txt'; // defaults to text file
 	}
 
-
 	if (!sageutils.folderExists(filedir)) {
 		sageutils.mkdirParent(filedir);
 	}
 
-	var key;
 	var fullpath = path.join(filedir, filename);
 
 	try {
