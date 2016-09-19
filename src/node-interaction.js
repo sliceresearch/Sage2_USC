@@ -147,20 +147,42 @@ Interaction.prototype.moveSelectedItem = function(pointerX, pointerY) {
 		return null;
 	}
 
-	this.selectedMoveItem.left = pointerX + this.selectOffsetX;
-
-	// testing maximized item only slides horizontally
+	// testing maximized item slide constrained by edges of screen
+	// this.selectedMoveItem.left = pointerX + this.selectOffsetX;
 	// this.selectedMoveItem.top  = pointerY + this.selectOffsetY;
 	// this.selectedMoveItem.maximized = false;
 
 	if (!this.selectedMoveItem.maximized) {
+		// move window as normal
+		this.selectedMoveItem.left = pointerX + this.selectOffsetX;
 		this.selectedMoveItem.top  = pointerY + this.selectOffsetY;
 	} else {
-		// if it maximized change the previous_left value to correspond to the new center
-		this.selectedMoveItem.previous_left =
-			this.selectedMoveItem.left + this.selectedMoveItem.width / 2 -
-			this.selectedMoveItem.previous_width / 2;
-	}
+		// if it is maximized
+		if (this.selectedMoveItem.maximizeConstraint === "width") {
+			// if maximization is constrained by width
+			// only translate vertically
+			this.selectedMoveItem.top  = pointerY + this.selectOffsetY;
+
+			this.selectedMoveItem.previous_top =
+				this.selectedMoveItem.top + this.selectedMoveItem.height / 2 -
+				this.selectedMoveItem.previous_height / 2;
+
+		} else if (this.selectedMoveItem.maximizeConstraint === "height") {
+			// if maximization is constrained by height
+			// only translate horizontally
+			this.selectedMoveItem.left = pointerX + this.selectOffsetX;
+
+			this.selectedMoveItem.previous_left =
+				this.selectedMoveItem.left + this.selectedMoveItem.width / 2 -
+				this.selectedMoveItem.previous_width / 2;
+		} else if (this.selectedMoveItem.maximizeConstraint === "both") {
+			// move window as normal
+			// possible to change the way this works at later time
+			this.selectedMoveItem.left = pointerX + this.selectOffsetX;
+			this.selectedMoveItem.top  = pointerY + this.selectOffsetY;
+		} // end if maximizeConstraint === ...
+
+	} // end if maximized ...
 
 	return {elemId: this.selectedMoveItem.id, elemLeft: this.selectedMoveItem.left,
 			elemTop: this.selectedMoveItem.top, elemWidth: this.selectedMoveItem.width,
@@ -401,18 +423,28 @@ Interaction.prototype.maximizeSelectedItem = function(item, centered) {
 		titleBar = 0;
 	}
 
-	if (this.SHIFT === true) {
-		item.aspect = item.native_width / item.native_height;
-	}
-	if (item.aspect > wallRatio) {
-		// Image wider than wall
-		iWidth  = this.configuration.totalWidth;
-		iHeight = iWidth / item.aspect;
-	} else {
-		// Wall wider than image
+	if (this.SHIFT === true && item.resizeMode === "free") {
+		// previously would resize to native height/width
+		// item.aspect = item.native_width / item.native_height;
+
+		// Free Resize aspect ratio fills wall
+		iWidth = this.configuration.totalWidth;
 		iHeight = this.configuration.totalHeight - (2 * titleBar);
-		iWidth  = iHeight * item.aspect;
+		item.maximizeConstraint = "both";
+	} else {
+		if (item.aspect > wallRatio) {
+			// Image wider than wall
+			iWidth  = this.configuration.totalWidth;
+			iHeight = iWidth / item.aspect;
+			item.maximizeConstraint = "width";
+		} else {
+			// Wall wider than image
+			iHeight = this.configuration.totalHeight - (2 * titleBar);
+			iWidth  = iHeight * item.aspect;
+			item.maximizeConstraint = "height";
+		}
 	}
+
 	// back up values for restore
 	item.previous_left   = item.left;
 	item.previous_top    = item.top;
@@ -483,10 +515,21 @@ Interaction.prototype.restoreSelectedItem = function(item) {
 		return null;
 	}
 
-	item.left   = item.previous_left;
-	item.top    = item.previous_top;
-	item.width  = item.previous_width;
-	item.height = item.previous_height;
+	if (this.SHIFT === true) {
+		// resize to native width/height
+		item.aspect = item.native_width / item.native_height;
+		item.left = item.previous_left + item.previous_width / 2 - item.native_width / 2;
+		item.top = item.previous_top + item.previous_height / 2 - item.native_height / 2;
+		item.width = item.native_width;
+		item.height = item.native_height;
+	} else {
+		item.left   = item.previous_left;
+		item.top    = item.previous_top;
+		item.width  = item.previous_width;
+		item.height = item.previous_height;
+	}
+
+
 
 	item.maximized = false;
 
