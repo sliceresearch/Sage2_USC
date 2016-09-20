@@ -13,7 +13,18 @@ var Webview = SAGE2_App.extend({
 	init: function(data) {
 		if (this.isElectron()) {
 			// Create div into the DOM
-			this.SAGE2Init("webview", data);			
+			this.SAGE2Init("webview", data);
+			// Create a layer for the console
+			this.createLayer("rgba(0,0,0,0.85)");
+			// clip the overflow
+			this.layer.style.overflow = "hidden";
+			// create a text box
+			this.pre = document.createElement('pre');
+			// allow text to wrap inside the box
+			this.pre.style.whiteSpace = "pre-wrap";
+			// Add it to the layer
+			this.layer.appendChild(this.pre);
+			this.console = false;
 		} else {
 			// Create div into the DOM
 			this.SAGE2Init("div", data);
@@ -51,8 +62,10 @@ var Webview = SAGE2_App.extend({
 
 		var _this = this;
 
-		// reset the zoom at when it starts loading
 		this.element.addEventListener("did-start-loading", function() {
+			// Clear the console
+			_this.pre.innerHTML = "";
+			// reset the zoom at when it starts loading
 			_this.element.setZoomFactor(_this.zoomFactor);
 		});
 
@@ -89,6 +102,8 @@ var Webview = SAGE2_App.extend({
 
 		this.element.addEventListener('console-message', function(event) {
 			console.log('Webview>	console:', event.message);
+			// Add the message to the console layer
+			_this.pre.innerHTML += 'Webview> ' + event.message + '\n';
 		});
 
 		// When the webview tries to open a new window
@@ -132,6 +147,9 @@ var Webview = SAGE2_App.extend({
 		// Called when window is resized
 		this.element.style.width  = this.sage2_width  + "px";
 		this.element.style.height = this.sage2_height + "px";
+		// resize the console layer
+		this.layer.style.width  = this.element.style.width;
+		this.layer.style.height = this.element.style.height;
 		this.refresh(date);
 	},
 
@@ -232,9 +250,7 @@ var Webview = SAGE2_App.extend({
 		entry.parameters = {};
 		entries.push(entry);
 
-		entry = {};
-		entry.description = "separator";
-		entries.push(entry);
+		entries.push({description: "separator"});
 
 		entry = {};
 		entry.description = "Mobile emulation";
@@ -251,8 +267,12 @@ var Webview = SAGE2_App.extend({
 		entries.push(entry);
 
 		entry = {};
-		entry.description = "separator";
+		entry.description = "Show/Hide the console";
+		entry.callback = "showConsole";
+		entry.parameters = {};
 		entries.push(entry);
+
+		entries.push({description: "separator"});
 
 		entry = {};
 		entry.description = "Zoom in";
@@ -268,9 +288,7 @@ var Webview = SAGE2_App.extend({
 		entry.parameters.dir = "zoomout";
 		entries.push(entry);
 
-		entry = {};
-		entry.description = "separator";
-		entries.push(entry);
+		entries.push({description: "separator"});
 
 		entry   = {};
 		// label of them menu
@@ -298,6 +316,8 @@ var Webview = SAGE2_App.extend({
 		entry.parameters.action = "search";
 		entries.push(entry);
 
+		entries.push({description: "separator"});
+
 		return entries;
 	},
 
@@ -305,6 +325,18 @@ var Webview = SAGE2_App.extend({
 		if (this.isElectron()) {
 			this.element.reload();
 			this.element.setZoomFactor(this.zoomFactor);			
+		}
+	},
+
+	showConsole: function(responseObject) {
+		if (this.isElectron()) {
+			if (this.console) {
+				this.hideLayer();
+				this.console = false;
+			} else {
+				this.showLayer();
+				this.console = true;
+			}
 		}
 	},
 
