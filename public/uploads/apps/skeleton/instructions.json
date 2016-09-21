@@ -1,11 +1,10 @@
 {
 	"main_script": "skeleton.js",
 	"icon": "skeleton.png",
-	"width": 1200,
+	"width": 800,
 	"height": 600,
 	"resize": "free",
 	"dependencies": [
-		"scripts/lodash.min.js"
 	],
 	"load": {
 		"value": 4

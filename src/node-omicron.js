@@ -509,18 +509,19 @@ OmicronManager.prototype.processIncomingEvent = function(msg, rinfo) {
 
 		var bodyPartIndex = 0;
 		var posIndex = 0;
-		var skeletonPositions = {};
+		var skeletonData = {};
 		while(bodyPartIndex < bodyParts.length) {
 			const bodyPart = bodyParts[bodyPartIndex++];
-			skeletonPositions[bodyPart] = {
+			skeletonData[bodyPart] = {
 				"x": extraData[posIndex++],
 				"y": extraData[posIndex++],
 				"z": extraData[posIndex++]
 			};
 		}
 
-		this.kinectInput(sourceID, skeletonPositions);
-		//console.log("e.posx:" + e.posx + " posX:" + posX);
+		skeletonData["skeletonID"] = sourceID;
+
+		this.kinectInput(sourceID, skeletonData);
 	} else if (serviceType === 0) {
 		omicronManager.processPointerEvent(e, sourceID, posX, posY, msg, offset, address, emit, dstart);
 	} else if (serviceType === 7) {

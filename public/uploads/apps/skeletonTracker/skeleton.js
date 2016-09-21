@@ -30,9 +30,7 @@ var skeleton = SAGE2_App.extend( {
 		this.inputCount = 0;
 		this.textToDraw = "waiting for kinect input... ";
 
-	  this.headPosition = {"x": this.element.width/2.0, "y": this.element.height/2.0};
-		this.leftHandPosition = {"x": this.element.width/2.0 - 50, "y": this.element.height/2.0 + 50};
-		this.rightHandPosition = {"x": this.element.width/2.0 + 50, "y": this.element.height/2.0 + 50};
+		this.skeletons = {};
 	},
 
 	load: function(date) {
@@ -48,37 +46,47 @@ var skeleton = SAGE2_App.extend( {
 	//---------- DRAWING FUNCTIONS ----------//
 	//---------------------------------------//
 	draw: function(date) {
-		console.log('articulate_ui> Draw with state value', this.state.value);
-
 		this.ctx.clearRect(0, 0, this.element.width, this.element.height);
 
-		this.fontSize = 32;
-		this.ctx.font = "32px Helvetica";
-		this.ctx.textAlign="center";
+		// filter out skeletons that haven't been updated in over 2 seconds
+		this.skeletons = _.pickBy(this.skeletons, function (skeleton) {
+			return date.getTime() - skeleton.lastUpdate < 2000;
+		});
 
-		//status bar
-		this.ctx.fillStyle = "rgba(255, 255, 255, 1.0)";
-		this.ctx.fillText( "Input: " + this.textToDraw, this.element.width/2.0, 32);
+		for (const skeletonID in this.skeletons) {
+			const skeleton = this.skeletons[skeletonID];
 
-		this.ctx.fillText("head", this.headPosition.x, this.headPosition.y);
-		this.ctx.fillText("handLeft", this.leftHandPosition.x, this.leftHandPosition.y);
-		this.ctx.fillText("handRight", this.rightHandPosition.x, this.rightHandPosition.y);
+			console.log('articulate_ui> Draw with state value', this.state.value);
 
-		this.ctx.beginPath();
-		this.ctx.arc(this.headPosition.x, this.headPosition.y, 15, 0, 2*Math.PI)
-		this.ctx.fill();
-		this.ctx.stroke();
+			this.fontSize = 32;
+			this.ctx.font = "32px Helvetica";
+			this.ctx.textAlign="center";
 
-		this.ctx.beginPath();
-		this.ctx.arc(this.leftHandPosition.x, this.leftHandPosition.y, 10, 0, 2*Math.PI)
-		this.ctx.fill();
-		this.ctx.stroke();
+			//status bar
+			this.ctx.fillStyle = "rgba(255, 255, 255, 1.0)";
+			this.ctx.fillText( "Input: " + this.textToDraw, this.element.width/2.0, 32);
 
-		this.ctx.beginPath();
-		this.ctx.arc(this.rightHandPosition.x, this.rightHandPosition.y, 10, 0, 2*Math.PI)
-		this.ctx.fill();
-		this.ctx.stroke();
+			this.ctx.fillStyle = skeleton.color || this.ctx.fillStyle;
+			this.ctx.fillText("head", skeleton.headPosition.x, skeleton.headPosition.y);
+			this.ctx.fillText("leftHand", skeleton.leftHandPosition.x, skeleton.leftHandPosition.y);
+			this.ctx.fillText("rightHand", skeleton.rightHandPosition.x, skeleton.rightHandPosition.y);
+			this.ctx.fillText(skeletonID, skeleton.shoulderCenterPosition.x, skeleton.shoulderCenterPosition.y);
 
+			this.ctx.beginPath();
+			this.ctx.arc(skeleton.headPosition.x, skeleton.headPosition.y, 15, 0, 2*Math.PI)
+			this.ctx.fill();
+			this.ctx.stroke();
+
+			this.ctx.beginPath();
+			this.ctx.arc(skeleton.leftHandPosition.x, skeleton.leftHandPosition.y, 10, 0, 2*Math.PI)
+			this.ctx.fill();
+			this.ctx.stroke();
+
+			this.ctx.beginPath();
+			this.ctx.arc(skeleton.rightHandPosition.x, skeleton.rightHandPosition.y, 10, 0, 2*Math.PI)
+			this.ctx.fill();
+			this.ctx.stroke();
+		}
 	},
 
 
@@ -101,20 +109,58 @@ var skeleton = SAGE2_App.extend( {
 	//--------------EVENT FUNCTIONS-------------//
 	//------------------------------------------//
 	event: function(eventType, position, user_id, data, date) {
+		const skeletonColors = ["red", "blue", "green", "orange", "pink", "white"];
 
 		if( eventType == "kinectInput"){
+			const skeletonID = data["skeletonID"];
+
+			if (!this.skeletons[skeletonID]) {
+				var availableColors = [];
+
+				for (var i = 0; i < skeletonColors.length; i++) {
+					const skeletonColor = skeletonColors[i];
+					const skeletonsWithThisColor = _.pickBy(this.skeletons, function (skeleton) {
+						return skeleton.color == skeletonColor;
+					});
+
+					if (_.size(skeletonsWithThisColor) == 0) {
+						availableColors.push(skeletonColor);
+					}
+				};
+
+				this.skeletons[skeletonID] = {
+					headPosition: {},
+					leftHandPosition: {},
+					rightHandPosition: {},
+					shoulderCenterPosition: {},
+					color: availableColors.length > 0 ? _.shuffle(availableColors)[0] : undefined
+				};
+			}
+
 			const headPos = data["OMICRON_SKEL_HEAD"];
 			const leftHandPos = data["OMICRON_SKEL_LEFT_HAND"];
 			const rightHandPos = data["OMICRON_SKEL_RIGHT_HAND"];
-			this.headPosition.x = this.element.width/2.0+headPos.x*this.element.width;
-			// this.headPosition.y = this.element.height/2.0+headPos.y*this.element.height;
-			this.leftHandPosition.x = this.element.width/2.0+leftHandPos.x*this.element.width;
-			// this.leftHandPosition.y = this.element.height/2.0+leftHandPos.y*this.element.height;
-			this.rightHandPosition.x = this.element.width/2.0+rightHandPos.x*this.element.width;
-			// this.rightHandPosition.y = this.element.height/2.0+rightHandPos.y*this.element.height;
+			const shoulderCenterPos = data["OMICRON_SKEL_SHOULDER_CENTER"];
+
+			this.skeletons[skeletonID].headPosition.x = this.element.width/2.0+headPos.x*this.element.width;
+			this.skeletons[skeletonID].headPosition.y = this.element.height/2.0-headPos.y*this.element.height;
+			this.skeletons[skeletonID].leftHandPosition.x = this.element.width/2.0+leftHandPos.x*this.element.width;
+			this.skeletons[skeletonID].leftHandPosition.y = this.element.height/2.0-leftHandPos.y*this.element.height;
+			this.skeletons[skeletonID].rightHandPosition.x = this.element.width/2.0+rightHandPos.x*this.element.width;
+			this.skeletons[skeletonID].rightHandPosition.y = this.element.height/2.0-rightHandPos.y*this.element.height;
+			this.skeletons[skeletonID].shoulderCenterPosition.x = this.element.width/2.0+shoulderCenterPos.x*this.element.width;
+			this.skeletons[skeletonID].shoulderCenterPosition.y = this.element.height/2.0-shoulderCenterPos.y*this.element.height;
+
+			this.skeletons[skeletonID].lastUpdate = date.getTime();
 
 			this.inputCount++;
-			this.textToDraw = "Kinect Input!   Count: " + this.inputCount + " Type: Head" + " Position: " + headPos.x + " , " + headPos.y;
+
+			this.textToDraw = "skeletons: [ ";
+			for (const skeleton in this.skeletons) {
+				this.textToDraw += skeleton + " ";
+			}
+			this.textToDraw += "]";
+
 			this.refresh(date);
 		}
 		else if (eventType === "pointerPress" && (data.button === "left")) {
