@@ -79,6 +79,9 @@ function UIBuilder(json_cfg, clientID) {
 			this.bg.style.backgroundColor = "#000000";
 		}
 
+		// Set at the bottom of the stack
+		this.bg.style.zIndex = 0;
+
 		// Setup the clipping size
 		if (this.clientID === -1) {
 			// set the resolution to be the whole display wall
@@ -795,6 +798,7 @@ function UIBuilder(json_cfg, clientID) {
 		watermark.style.position = "absolute";
 		watermark.style.left     = ((this.json_cfg.totalWidth  / 2) - (width  / 2) - this.offsetX).toString() + "px";
 		watermark.style.top      = ((this.json_cfg.totalHeight / 2) - (height / 2) - this.offsetY).toString() + "px";
+		watermark.style.zIndex   = -1;
 	};
 
 	/**

@@ -44,8 +44,8 @@ var zoom = SAGE2_App.extend({
 			showNavigationControl: false,
 
 			// change tileSources for your dataset
-			// tileSources: this.resrcPath + "enceladus.dzi"
-			tileSources: this.resrcPath + "ratbrain.dzi"
+			tileSources: this.resrcPath + "enceladus.dzi"
+			// tileSources: this.resrcPath + "ratbrain.dzi"
 			// tileSources: "http://sage2rtt.evl.uic.edu:3000/ratbrain.dzi"
 		});
 

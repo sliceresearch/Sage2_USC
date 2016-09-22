@@ -1190,9 +1190,121 @@ function handleClick(element) {
 		showDialog('arrangementDialog');
 	} else if (element.id === "settings"    || element.id === "settingsContainer"    || element.id === "settingsLabel") {
 		showDialog('settingsDialog');
-	} else if (element.id === "browser"     || element.id === "browserContainer"     || element.id === "browserLabel") {
-		showDialog('browserDialog');
-	} else if (element.id === "info"        || element.id === "infoContainer"        || element.id === "infoLabel") {
+	} else if (element.id === "browser") {
+		// Build a webix dialog
+		webix.ui({
+			view: "window",
+			id: "browser_form",
+			position: "center",
+			modal: true,
+			zIndex: 9999,
+			head: "Open a browser window",
+			width: 400,
+			body: {
+				view: "form",
+				borderless: false,
+				elements: [
+					{view: "text", value: "", id: "browser_url", label: "Please enter a URL:", name: "browser_url"},
+					{view: "text", value: "", id: "browser_search", label: "or search terms:", name: "browser_search"},
+					{margin: 5, cols: [
+						{view: "button", value: "Cancel", click: function() {
+							this.getTopParentView().hide();
+						}},
+						{view: "button", value: "Open", type: "form", click: function() {
+							// get the values from the form
+							var values = this.getFormView().getValues();
+							var url = "";
+							// if it was a URL entry
+							if (values.browser_url) {
+								// check if it looks like a URL
+								if (values.browser_url.indexOf("://") === -1) {
+									url = 'http://' + values.browser_url;
+								} else {
+									url = values.browser_url;
+								}
+							} else {
+								// a search entry
+								url = 'https://www.google.com/#q=' + values.browser_search;
+							}
+							// if we have something valid, open a webview
+							if (url) {
+								wsio.emit('openNewWebpage', {
+									id: interactor.uniqueID,
+									url: url
+								});
+							}
+							// close the form
+							this.getTopParentView().hide();
+						}}
+					]}
+				],
+				elementsConfig: {
+					labelPosition: "top"
+				}
+			}
+		}).show();
+
+		// Attach handlers for keyboard
+		$$("browser_url").attachEvent("onKeyPress", function(code, e) {
+			// ESC closes
+			if (code === 27 && !e.ctrlKey && !e.shiftKey && !e.altKey) {
+				this.getTopParentView().hide();
+				return false;
+			}
+			// ENTER activates
+			if (code === 13 && !e.ctrlKey && !e.shiftKey && !e.altKey) {
+				var values = this.getFormView().getValues();
+				var url = "";
+				// if it was a URL entry
+				if (values.browser_url) {
+					// check if it looks like a URL
+					if (values.browser_url.indexOf("://") === -1) {
+						url = 'http://' + values.browser_url;
+					} else {
+						url = values.browser_url;
+					}
+				}
+				// if we have something valid, open a webview
+				if (url) {
+					wsio.emit('openNewWebpage', {
+						id: interactor.uniqueID,
+						url: url
+					});
+				}
+				// close the form
+				this.getTopParentView().hide();
+				return false;
+			}
+		});
+		// Attach handlers for keyboard
+		$$("browser_search").attachEvent("onKeyPress", function(code, e) {
+			// ESC closes
+			if (code === 27 && !e.ctrlKey && !e.shiftKey && !e.altKey) {
+				this.getTopParentView().hide();
+				return false;
+			}
+			// ENTER activates
+			if (code === 13 && !e.ctrlKey && !e.shiftKey && !e.altKey) {
+				var values = this.getFormView().getValues();
+				var url = "";
+				if (values.browser_search) {
+					// a search entry
+					url = 'https://www.google.com/#q=' + values.browser_search;
+					// if we have something valid, open a webview
+					wsio.emit('openNewWebpage', {
+						id: interactor.uniqueID,
+						url: url
+					});
+				}
+				// close the form
+				this.getTopParentView().hide();
+				return false;
+			}
+		});
+		// Focus the URL box
+		$$('browser_url').focus();
+
+	} else if (element.id === "info" || element.id === "infoContainer" || element.id === "infoLabel") {
 		// Fill up some information from the server
 		var infoData = document.getElementById('infoData');
 		// Clean up the existing values
@@ -1327,13 +1439,6 @@ function handleClick(element) {
 	} else if (element.id === "settingsCloseBtn2") {
 		// Init Settings Dialog
 		hideDialog('settingsDialog2');
-	} else if (element.id === "browserOpenBtn") {
-		// Browser Dialog
-		var url = document.getElementById("openWebpageUrl");
-		wsio.emit('openNewWebpage', {id: interactor.uniqueID, url: url.value});
-		hideDialog('browserDialog');
-	} else if (element.id === "browserCloseBtn") {
-		hideDialog('browserDialog');
 	} else if (element.id.length > 14 && element.id.substring(0, 14) === "available_app_") {
 		// Application Selected
 		var application_selected = element.getAttribute("application");
