@@ -59,6 +59,8 @@ var Webview = SAGE2_App.extend({
 		this.isAlt   = false;
 		// Store the zoom level, when in desktop emulation
 		this.zoomFactor = 1;
+		// Auto-refresh time
+		this.autoRefresh = null;
 
 		var _this = this;
 
@@ -154,7 +156,10 @@ var Webview = SAGE2_App.extend({
 	},
 
 	quit: function() {
-		// Make sure to delete stuff (timers, ...)
+		if (this.autoRefresh) {
+			// cancel the autoreload timer
+			clearInterval(this.autoRefresh);
+		}
 	},
 
 	sendAlertCode: function() {
@@ -250,6 +255,12 @@ var Webview = SAGE2_App.extend({
 		entry.parameters = {};
 		entries.push(entry);
 
+		entry = {};
+		entry.description = "Auto refresh (5min)";
+		entry.callback = "reloadPage";
+		entry.parameters = {time: 60};
+		entries.push(entry);
+
 		entries.push({description: "separator"});
 
 		entry = {};
@@ -321,10 +332,31 @@ var Webview = SAGE2_App.extend({
 		return entries;
 	},
 
+	/**
+	 * Reload the content of the webview
+	 *
+	 * @method     reloadPage
+	 * @param      {Object}  responseObject  if time parameter passed, used as a timer
+	 */
 	reloadPage: function(responseObject) {
 		if (this.isElectron()) {
-			this.element.reload();
-			this.element.setZoomFactor(this.zoomFactor);			
+			if (responseObject.time) {
+				// if an argument passed, use it for timer
+				if (isMaster) {
+					// Parse the value we got
+					var interval = parseInt(responseObject.time, 10);
+					var _this = this;
+					// build the timer
+					this.autoRefresh = setInterval(function() {
+						// send the message to the server to relay
+						_this.broadcast("reloadPage", {});
+					}, 5 * 60 * 1000);
+				}
+			} else {
+				// Just reload once
+				this.element.reload();
+				this.element.setZoomFactor(this.zoomFactor);
+			}
 		}
 	},
 
