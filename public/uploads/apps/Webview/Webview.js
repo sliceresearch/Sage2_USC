@@ -202,20 +202,44 @@ var Webview = SAGE2_App.extend({
 			});\
 			\
 			document.addEventListener("keydown", function(e) {\
+				/*Shift*/\
 				if (e.keyCode == 16) {\
 					s2InjectForKeys.shift = true;\
 					return;\
 				}\
+				/*Backspace*/\
 				if (e.keyCode == 8) {\
 					s2InjectForKeys.lastClickedElement.value = s2InjectForKeys.lastClickedElement.value.substring(0, s2InjectForKeys.lastClickedElement.value.length - 1);\
 					return;\
 				}\
+				/*Dont set keypress value if there was no clicked div*/\
 				if (s2InjectForKeys.lastClickedElement.value == undefined) {\
 					return; \
 				}\
+				/*By default, characters are capitalized, if shift is not down, lower case them.*/\
 				var sendChar = String.fromCharCode(e.keyCode);\
 				if (!s2InjectForKeys.shift) {\
 					sendChar = sendChar.toLowerCase();\
+				} else if(e.keyCode == 49) { /* 1 */\
+					sendChar =  "!";\
+				} else if(e.keyCode == 50) { /* 2 */\
+					sendChar =  "@";\
+				} else if(e.keyCode == 51) { /* 3 */\
+					sendChar =  "#";\
+				} else if(e.keyCode == 52) { /* 4 */\
+					sendChar =  "$";\
+				} else if(e.keyCode == 53) { /* 5 */\
+					sendChar =  "%";\
+				} else if(e.keyCode == 54) { /* 6 */\
+					sendChar =  "^";\
+				} else if(e.keyCode == 55) { /* 7 */\
+					sendChar =  "&";\
+				} else if(e.keyCode == 56) { /* 8 */\
+					sendChar =  "*";\
+				} else if(e.keyCode == 57) { /* 9 */\
+					sendChar =  "(";\
+				} else if(e.keyCode == 48) { /* 0 */\
+					sendChar =  ")";\
 				}\
 				s2InjectForKeys.lastClickedElement.value += sendChar;\
 			});\
