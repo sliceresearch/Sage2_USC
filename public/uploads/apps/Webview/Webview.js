@@ -13,7 +13,18 @@ var Webview = SAGE2_App.extend({
 	init: function(data) {
 		if (this.isElectron()) {
 			// Create div into the DOM
-			this.SAGE2Init("webview", data);			
+			this.SAGE2Init("webview", data);
+			// Create a layer for the console
+			this.createLayer("rgba(0,0,0,0.85)");
+			// clip the overflow
+			this.layer.style.overflow = "hidden";
+			// create a text box
+			this.pre = document.createElement('pre');
+			// allow text to wrap inside the box
+			this.pre.style.whiteSpace = "pre-wrap";
+			// Add it to the layer
+			this.layer.appendChild(this.pre);
+			this.console = false;
 		} else {
 			// Create div into the DOM
 			this.SAGE2Init("div", data);
@@ -48,11 +59,15 @@ var Webview = SAGE2_App.extend({
 		this.isAlt   = false;
 		// Store the zoom level, when in desktop emulation
 		this.zoomFactor = 1;
+		// Auto-refresh time
+		this.autoRefresh = null;
 
 		var _this = this;
 
-		// reset the zoom at when it starts loading
 		this.element.addEventListener("did-start-loading", function() {
+			// Clear the console
+			_this.pre.innerHTML = "";
+			// reset the zoom at when it starts loading
 			_this.element.setZoomFactor(_this.zoomFactor);
 		});
 
@@ -89,6 +104,8 @@ var Webview = SAGE2_App.extend({
 
 		this.element.addEventListener('console-message', function(event) {
 			console.log('Webview>	console:', event.message);
+			// Add the message to the console layer
+			_this.pre.innerHTML += 'Webview> ' + event.message + '\n';
 		});
 
 		// When the webview tries to open a new window
@@ -132,11 +149,17 @@ var Webview = SAGE2_App.extend({
 		// Called when window is resized
 		this.element.style.width  = this.sage2_width  + "px";
 		this.element.style.height = this.sage2_height + "px";
+		// resize the console layer
+		this.layer.style.width  = this.element.style.width;
+		this.layer.style.height = this.element.style.height;
 		this.refresh(date);
 	},
 
 	quit: function() {
-		// Make sure to delete stuff (timers, ...)
+		if (this.autoRefresh) {
+			// cancel the autoreload timer
+			clearInterval(this.autoRefresh);
+		}
 	},
 
 	sendAlertCode: function() {
@@ -179,20 +202,44 @@ var Webview = SAGE2_App.extend({
 			});\
 			\
 			document.addEventListener("keydown", function(e) {\
+				/*Shift*/\
 				if (e.keyCode == 16) {\
 					s2InjectForKeys.shift = true;\
 					return;\
 				}\
+				/*Backspace*/\
 				if (e.keyCode == 8) {\
 					s2InjectForKeys.lastClickedElement.value = s2InjectForKeys.lastClickedElement.value.substring(0, s2InjectForKeys.lastClickedElement.value.length - 1);\
 					return;\
 				}\
+				/*Dont set keypress value if there was no clicked div*/\
 				if (s2InjectForKeys.lastClickedElement.value == undefined) {\
 					return; \
 				}\
+				/*By default, characters are capitalized, if shift is not down, lower case them.*/\
 				var sendChar = String.fromCharCode(e.keyCode);\
 				if (!s2InjectForKeys.shift) {\
 					sendChar = sendChar.toLowerCase();\
+				} else if(e.keyCode == 49) { /* 1 */\
+					sendChar =  "!";\
+				} else if(e.keyCode == 50) { /* 2 */\
+					sendChar =  "@";\
+				} else if(e.keyCode == 51) { /* 3 */\
+					sendChar =  "#";\
+				} else if(e.keyCode == 52) { /* 4 */\
+					sendChar =  "$";\
+				} else if(e.keyCode == 53) { /* 5 */\
+					sendChar =  "%";\
+				} else if(e.keyCode == 54) { /* 6 */\
+					sendChar =  "^";\
+				} else if(e.keyCode == 55) { /* 7 */\
+					sendChar =  "&";\
+				} else if(e.keyCode == 56) { /* 8 */\
+					sendChar =  "*";\
+				} else if(e.keyCode == 57) { /* 9 */\
+					sendChar =  "(";\
+				} else if(e.keyCode == 48) { /* 0 */\
+					sendChar =  ")";\
 				}\
 				s2InjectForKeys.lastClickedElement.value += sendChar;\
 			});\
@@ -233,8 +280,12 @@ var Webview = SAGE2_App.extend({
 		entries.push(entry);
 
 		entry = {};
-		entry.description = "separator";
+		entry.description = "Auto refresh (5min)";
+		entry.callback = "reloadPage";
+		entry.parameters = {time: 60};
 		entries.push(entry);
+
+		entries.push({description: "separator"});
 
 		entry = {};
 		entry.description = "Mobile emulation";
@@ -251,8 +302,12 @@ var Webview = SAGE2_App.extend({
 		entries.push(entry);
 
 		entry = {};
-		entry.description = "separator";
+		entry.description = "Show/Hide the console";
+		entry.callback = "showConsole";
+		entry.parameters = {};
 		entries.push(entry);
+
+		entries.push({description: "separator"});
 
 		entry = {};
 		entry.description = "Zoom in";
@@ -268,9 +323,7 @@ var Webview = SAGE2_App.extend({
 		entry.parameters.dir = "zoomout";
 		entries.push(entry);
 
-		entry = {};
-		entry.description = "separator";
-		entries.push(entry);
+		entries.push({description: "separator"});
 
 		entry   = {};
 		// label of them menu
@@ -298,13 +351,48 @@ var Webview = SAGE2_App.extend({
 		entry.parameters.action = "search";
 		entries.push(entry);
 
+		entries.push({description: "separator"});
+
 		return entries;
 	},
 
+	/**
+	 * Reload the content of the webview
+	 *
+	 * @method     reloadPage
+	 * @param      {Object}  responseObject  if time parameter passed, used as a timer
+	 */
 	reloadPage: function(responseObject) {
 		if (this.isElectron()) {
-			this.element.reload();
-			this.element.setZoomFactor(this.zoomFactor);			
+			if (responseObject.time) {
+				// if an argument passed, use it for timer
+				if (isMaster) {
+					// Parse the value we got
+					var interval = parseInt(responseObject.time, 10);
+					var _this = this;
+					// build the timer
+					this.autoRefresh = setInterval(function() {
+						// send the message to the server to relay
+						_this.broadcast("reloadPage", {});
+					}, 5 * 60 * 1000);
+				}
+			} else {
+				// Just reload once
+				this.element.reload();
+				this.element.setZoomFactor(this.zoomFactor);
+			}
+		}
+	},
+
+	showConsole: function(responseObject) {
+		if (this.isElectron()) {
+			if (this.console) {
+				this.hideLayer();
+				this.console = false;
+			} else {
+				this.showLayer();
+				this.console = true;
+			}
 		}
 	},
 
