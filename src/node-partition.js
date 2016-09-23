@@ -23,19 +23,19 @@
   */
 
 function Partition(dims, id) {
-  this.children = {};
-  this.numChildren = 0;
+	this.children = {};
+	this.numChildren = 0;
 
-  this.width = dims.width;
-  this.height = dims.height;
-  this.left = dims.left;
-  this.top = dims.top;
+	this.width = dims.width;
+	this.height = dims.height;
+	this.left = dims.left;
+	this.top = dims.top;
 
-  this.bounding = true;
+	this.bounding = true;
 
-  this.innerTiling = false;
-  this.innerMaximization = false;
-  this.currentMaximizedChild = 0;
+	this.innerTiling = false;
+	this.innerMaximization = false;
+	this.currentMaximizedChild = 0;
 }
 
 /**
@@ -44,10 +44,10 @@ function Partition(dims, id) {
   * @method addChild
   * @param item     The item to be added
   */
-Partition.prototype.addChild(item) {
-  this.numChildren++;
-  this.children[item.id] = item;
-}
+Partition.prototype.addChild = function(item) {
+	this.numChildren++;
+	this.children[item.id] = item;
+};
 
 /**
   * Remove a Child application to the partition.
@@ -55,55 +55,55 @@ Partition.prototype.addChild(item) {
   * @method releaseChild
   * @param id     The id of child to remove
   */
-Partition.prototype.releaseChild(id) {
-  if (this.children.hasOwnProperty(id)) {
+Partition.prototype.releaseChild = function(id) {
+	if (this.children.hasOwnProperty(id)) {
 
-    this.children[id].partition = null;
+		this.children[id].partition = null;
 
-    this.numChildren--;
-    delete this.children[id];
-  }
-}
+		this.numChildren--;
+		delete this.children[id];
+	}
+};
 
 /**
   * Remove all Child applications from the partition
   *
   * @method releaseAllChildren
   */
-Partition.prototype.releaseAllChildren() {
-  var childIDs = Object.keys(children);
+Partition.prototype.releaseAllChildren = function() {
+	var childIDs = Object.keys(this.children);
 
-  childIDs.forEach((el) {
-    removeChild(el);
-  });
-}
+	childIDs.forEach((el) => {
+		this.children[el].removeChild(el);
+	});
+};
 
 /**
   * Toggle partition tiling mode
   *
   * @method toggleInnerTiling
   */
-Partition.prototype.toggleInnerTiling() {
-  this.innerTiling = !this.innerTiling;
-}
+Partition.prototype.toggleInnerTiling = function() {
+	this.innerTiling = !this.innerTiling;
+};
 
 /**
   * Re-tile the apps within a partition
   *
   * @method tilePartition
   */
-Partition.prototype.tilePartition() {
+Partition.prototype.tilePartition = function() {
   // TODO: run tiling algorithm on inner windows
-}
+};
 
 /**
   * Toggle partition maximization mode
   *
   * @method toggleInnerMaximization
   */
-Partition.prototype.toggleInnerMaximization() {
-  this.innerMaximization = !this.innerMaximization;
-}
+Partition.prototype.toggleInnerMaximization = function() {
+	this.innerMaximization = !this.innerMaximization;
+};
 
 /**
   * Increment the value of maximized child in the partition, and maximize that
@@ -111,11 +111,11 @@ Partition.prototype.toggleInnerMaximization() {
   *
   * @method maximizeNextChild
   */
-Partition.prototype.maximizeNextChild() {
-  this.currentMaximizedChild = (this.currentMaximizedChild + 1) % numChildren;
+Partition.prototype.maximizeNextChild = function() {
+	this.currentMaximizedChild = (this.currentMaximizedChild + 1) % this.numChildren;
 
-  maximizeChild(this.currentMaximizedChild);
-}
+	this.maximizeChild(this.currentMaximizedChild);
+};
 
 /**
   * Maximize a specific child in the partition
@@ -123,12 +123,12 @@ Partition.prototype.maximizeNextChild() {
   * @method maximizeChild
   * @param id     The id of child to maximize
   */
-Partition.prototype.maximizeChild(id) {
-  if (this.children.hasOwnProperty(id)) {
-    var child = this.children[id];
+Partition.prototype.maximizeChild = function(id) {
+	if (this.children.hasOwnProperty(id)) {
+		// var child = this.children[id];
 
     // TODO: Maximize this child
-  }
-}
+	}
+};
 
 module.exports = Partition;
