@@ -15,10 +15,10 @@
   * @requires node-partition
   */
 
- // require variables to be declared
- "use strict";
+// require variables to be declared
+"use strict";
 
- var Partition = require('./node-partition');
+var Partition = require('./node-partition');
 
 /**
   * @class PartitionList
@@ -126,7 +126,7 @@ PartitionList.prototype.removePartition = function(id) {
   * @param item     The item which was moved
   */
 PartitionList.prototype.updateOnItemRelease = function(item) {
-  // check partitions to find if item falls into one
+	// check partitions to find if item falls into one
 	var partitionIDs = Object.keys(this.list);
 
 	var closestID = null;
@@ -137,27 +137,40 @@ PartitionList.prototype.updateOnItemRelease = function(item) {
 		y: item.top + item.height / 2
 	};
 
-	partitionIDs.forEach((el) => {
-	// the centroid of the item must be within the bounds of the partition
-		if (itemCenter.x >= this.list[el].left &&
-			itemCenter.x <= this.list[el].left) {
-				//
+	// if item is within a partition already
+	if (item.partition !== null) {
+		if ((itemCenter.x >= item.partition.left) && (itemCenter.x <= item.partition.left + item.partition.width) &&
+			(itemCenter.y >= item.partition.top) && (itemCenter.y <= item.partition.top + item.partition.height)) {
+			// the item still falls within its current parent partition
 		}
+	}
 
-		// calculate center point of partition
-		var partitionCenter = {
-			x: this.list[el].left + this.list[el].width / 2,
-			y: this.list[el].top + this.list[el].height / 2
-		};
 
-		var distance = Math.sqrt(
-		Math.pow(itemCenter.x - partitionCenter.x, 2) +
-		Math.pow(itemCenter.y - partitionCenter.y, 2)
-		);
+	// check if item falls into any partition
+	partitionIDs.forEach((el) => {
+		var ptn = this.list[el];
 
-		if (distance < closestDistance) {
-			closestID = el;
-			closestDistance = distance;
+		// the centroid of the item must be within the bounds of the partition
+		if ((itemCenter.x >= ptn.left) && (itemCenter.x <= ptn.left + ptn.width) &&
+			(itemCenter.y >= ptn.top) && (itemCenter.y <= ptn.top + ptn.height)) {
+			// the centroid of the item is inside the partition
+
+			// calculate center point of partition
+			var partitionCenter = {
+				x: ptn.left + ptn.width / 2,
+				y: ptn.top + ptn.height / 2
+			};
+
+			// calculate distance between item centroid and partition centroid
+			var distance = Math.sqrt(
+				Math.pow(itemCenter.x - partitionCenter.x, 2) +
+				Math.pow(itemCenter.y - partitionCenter.y, 2)
+			);
+
+			if (distance < closestDistance) {
+				closestID = el;
+				closestDistance = distance;
+			}
 		}
 	}); // end partitionIDs.forEach(...)
 

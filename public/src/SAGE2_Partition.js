@@ -12,36 +12,36 @@
 /* global addStoredFileListEventHandler, removeStoredFileListEventHandler */
 
 /**
- * @module client
- * @submodule SAGE2_Partition
- */
+	* @module client
+	* @submodule SAGE2_Partition
+	*/
 
- /**
- * Base class for SAGE2 partitions
- *
- * @class SAGE2_Partition
- */
+/**
+	* Base class for SAGE2 partitions
+	*
+	* @class SAGE2_Partition
+	*/
 var SAGE2_Partition = Class.extend({
 
 	/**
-	* Constructor for SAGE2 partitions
-	*
-	* @class SAGE2_Partition
-	* @constructor
-	*/
+		* Constructor for SAGE2 partitions
+		*
+		* @class SAGE2_Partition
+		* @constructor
+		*/
 	construct: function() {
 		arguments.callee.superClass.construct.call(this);
 
 
 	},
 
-  /**
-	* SAGE2Init method called right after the constructor
-	*
-	* @method SAGE2Init
-	* @param type {String} type of DOM element to be created (div, canvas, ...)
-	* @param data {Object} contains initialization values (id, width, height, state, ...)
-	*/
+	/**
+		* SAGE2Init method called right after the constructor
+		*
+		* @method SAGE2Init
+		* @param type {String} type of DOM element to be created (div, canvas, ...)
+		* @param data {Object} contains initialization values (id, width, height, state, ...)
+		*/
 	SAGE2Init: function(type, data) {
 
 	}

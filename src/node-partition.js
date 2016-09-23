@@ -14,8 +14,8 @@
   * @submodule partition
   */
 
- // require variables to be declared
- "use strict";
+// require variables to be declared
+"use strict";
 
 /**
   * @class Partition
@@ -93,7 +93,7 @@ Partition.prototype.toggleInnerTiling = function() {
   * @method tilePartition
   */
 Partition.prototype.tilePartition = function() {
-  // TODO: run tiling algorithm on inner windows
+	// TODO: run tiling algorithm on inner windows
 };
 
 /**
@@ -127,7 +127,7 @@ Partition.prototype.maximizeChild = function(id) {
 	if (this.children.hasOwnProperty(id)) {
 		// var child = this.children[id];
 
-    // TODO: Maximize this child
+		// TODO: Maximize this child
 	}
 };
 
