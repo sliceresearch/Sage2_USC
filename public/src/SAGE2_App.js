@@ -160,7 +160,6 @@ var SAGE2_App = Class.extend({
 		this.SAGE2CopyState(data.state);
 		this.SAGE2InitializeAppOptionsFromState();
 
-
 		this.parentApp = data.parentApp; 
 		this.childList = data.childList;
 
@@ -1052,7 +1051,7 @@ var SAGE2_App = Class.extend({
 				console.log("child open event");
 				if( data.data.success ){ 
 					console.log("child app launch success " + data.childId);
-					this.childList[this.childList.length-1].childId = data.childId; //put the id into the obj
+					this.childList[this.childList.length-1].childId = data.childId; //put the id into the obj 
 				}
 				else{
 					console.log("child app launch failure " + data.childId + " success: " + data.data.success );
