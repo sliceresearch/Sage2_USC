@@ -8,7 +8,7 @@ pipelines:
     - step:
         script: # Modify the commands below to build your repository.
           - npm --version
-          - npm install
+          - npm install --only=dev
           - npm run lint
           - npm run style
           - npm run doc
