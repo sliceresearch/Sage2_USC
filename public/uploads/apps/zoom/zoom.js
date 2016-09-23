@@ -45,6 +45,8 @@ var zoom = SAGE2_App.extend({
 
 			// change tileSources for your dataset
 			tileSources: this.resrcPath + "enceladus.dzi"
+			// tileSources: this.resrcPath + "ratbrain.dzi"
+			// tileSources: "http://sage2rtt.evl.uic.edu:3000/ratbrain.dzi"
 		});
 
 		this.controls.addButton({type: "prev", position: 1, identifier: "Left"});

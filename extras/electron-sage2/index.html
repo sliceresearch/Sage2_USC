@@ -24,16 +24,37 @@
 const remote = require('electron').remote;
 const Menu = remote.Menu;
 const MenuItem = remote.MenuItem;
+const Tray = remote.Tray;
 
-var menu = new Menu();
-menu.append(new MenuItem({ label: 'MenuItem1', click: function() { console.log('item 1 clicked'); } }));
-menu.append(new MenuItem({ type: 'separator' }));
-menu.append(new MenuItem({ label: 'MenuItem2', type: 'checkbox', checked: true }));
+// Right-click menu
+// var menu = new Menu();
+// menu.append(new MenuItem({ label: 'MenuItem1', click: function() { console.log('item 1 clicked'); } }));
+// menu.append(new MenuItem({ type: 'separator' }));
+// menu.append(new MenuItem({ label: 'MenuItem2', type: 'checkbox', checked: true }));
+// window.addEventListener('contextmenu', function (e) {
+//   e.preventDefault();
+//   menu.popup(remote.getCurrentWindow());
+// }, false);
 
-window.addEventListener('contextmenu', function (e) {
-  e.preventDefault();
-  menu.popup(remote.getCurrentWindow());
-}, false);
+// Tray
+var appIcon = null;
+appIcon = new Tray(__dirname + '/images/S2.png');
+var trayMenu = Menu.buildFromTemplate([
+	{ label: 'Screen sharing', type: 'checkbox', checked: false, click: sharing_func },
+	{ label: 'Quit', type: 'normal', role: 'quit' }
+]);
+appIcon.setHighlightMode(false);
+appIcon.setToolTip('SAGE2');
+appIcon.setContextMenu(trayMenu);
+
+function sharing_func(menuitem, win, event) {
+	console.log('Event', menuitem.checked);
+	if (menuitem.checked) {
+		sharescreen_func();
+	} else {
+		stopsharing_func();
+	}
+}
 
 
 var template = [
@@ -60,7 +81,6 @@ var template = [
 
 if (process.platform == 'darwin') {
   var name = require('electron').remote.app.getName();
-  console.log('name', name)
   template.unshift({
     label: name,
     submenu: [
@@ -89,25 +109,13 @@ if (process.platform == 'darwin') {
         label: 'Quit',
         accelerator: 'Command+Q',
         click: function() {
+			stopsharing_func();
         	require('electron').remote.app.quit();
         }
       },
     ]
   });
-  // // Window menu.
-  // template[3].submenu.push(
-  //   {
-  //     type: 'separator'
-  //   },
-  //   {
-  //     label: 'Bring All to Front',
-  //     role: 'front'
-  //   }
-  // );
 }
-
-// var menu = Menu.buildFromTemplate(template);
-// Menu.setApplicationMenu(menu);
 
 // SAGE2 code
 var wsio;
@@ -122,6 +130,8 @@ var hasMouse = true;
 
 // Explicitely close web socket when web browser is closed
 window.onbeforeunload = function() {
+	// stop screen sharing
+	stopsharing_func();
 };
 
 /**
@@ -241,9 +251,9 @@ function SAGE2_init() {
 						click: startpointer_func,						
 					},
 					{
-						template: '<img width=200 src="' + 'images/S2-logo.png' + '"/>',
-						width:  200,
-						height: 200
+						template: '<img width=170 src="' + 'images/S2-logo.png' + '"/>',
+						width:  170,
+						height: 170
 					}
 				]},
 				{ view : "resizer", id: "resizer_id" },
@@ -375,7 +385,7 @@ function showMessage(msg) {
 	webix.alert({
 		type: "alert-warning",
 		title: "SAGE2 (tm)",
-		width: 500,
+		// width: 500,
 		ok: "OK",
 		text: msg
 	});
@@ -439,16 +449,21 @@ function share_func() {
 		if (!interactor.broadcasting) {
 			interactor.captureDesktop("window");
 			$$('share_id').$view.querySelector('button').style.backgroundColor = "#00b359";
+			// update tray item
+			trayMenu.items[0].checked = true;
 		}
 	} else {
 		showMessage("Connect to server first");
 	}
 }
+
 function sharescreen_func() {
 	if (interactor) {
 		if (!interactor.broadcasting) {
 			interactor.captureDesktop("screen");
 			$$('sharescreen_id').$view.querySelector('button').style.backgroundColor = "#00b359";
+			// update tray item
+			trayMenu.items[0].checked = true;
 		}
 	} else {
 		showMessage("Connect to server first");
@@ -459,6 +474,8 @@ function stopsharing_func() {
 	if (interactor && interactor.mediaStream !== null) {
 		var track = interactor.mediaStream.getTracks()[0];
 		track.stop();
+		// update tray item
+		trayMenu.items[0].checked = false;
 		$$('share_id').$view.querySelector('button').style.backgroundColor = "#3498db";
 		$$('sharescreen_id').$view.querySelector('button').style.backgroundColor = "#3498db";
 	}

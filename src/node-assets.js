@@ -551,11 +551,24 @@ var getDimensions = function(id) {
 
 // Returns a EXIF data element
 var getTag = function(id, tag) {
+	var result = null;
+	// convert the search tag to lowercase
+	var lowerTag = tag.toLowerCase();
+	// simplify the id
 	id = path.resolve(id);
+	// search for it
 	if (id in AllAssets.list) {
-		return AllAssets.list[id].exif[tag];
+		// Compare the keys in lowercase
+		Object.keys(AllAssets.list[id].exif).forEach(function(element, i) {
+			if (lowerTag === element.toLowerCase()) {
+				// copy the value
+				result = AllAssets.list[id].exif[element];
+				// send it back
+				return result;
+			}
+		});
 	}
-	return null;
+	return result;
 };
 
 // Add an EXIF data element

@@ -96,8 +96,10 @@ var SAGE2_App = Class.extend({
 	* @param data {Object} contains initialization values (id, width, height, state, ...)
 	*/
 	SAGE2Init: function(type, data) {
-		// Application ID
+		// Save the application ID
 		this.id = data.id;
+		// Save the type of the application
+		this.application = data.application;
 
 		this.div = document.getElementById(data.id);
 		this.element = document.createElement(type);
@@ -710,6 +712,12 @@ var SAGE2_App = Class.extend({
 	* @param date {Date} current time from the server
 	*/
 	refresh: function(date) {
+		if (date === undefined) {
+			// if argument not passed, use previous date
+			// it should be ok for not animation-based application
+			date = this.prevDate;
+		}
+
 		if (this.SAGE2UserModification === true) {
 			this.SAGE2Sync(true);
 		}

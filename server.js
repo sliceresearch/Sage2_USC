@@ -389,20 +389,21 @@ function initializeSage2Server() {
 	wsioServerS = new WebsocketIO.Server({server: sage2ServerS});
 	wsioServer.onconnection(openWebSocketClient);
 	wsioServerS.onconnection(openWebSocketClient);
+
 	drawingManager = new Drawing(config);
 	drawingManager.setCallbacks(
-								drawingInit,
-								drawingUpdate,
-								drawingRemove,
-								sendTouchToPalette,
-								sendDragToPalette,
-								sendStyleToPalette,
-								sendChangeToPalette,
-								movePaletteTo,
-								saveDrawingSession,
-								loadDrawingSession,
-								sendSessionListToPalette
-								);
+		drawingInit,
+		drawingUpdate,
+		drawingRemove,
+		sendTouchToPalette,
+		sendDragToPalette,
+		sendStyleToPalette,
+		sendChangeToPalette,
+		movePaletteTo,
+		saveDrawingSession,
+		loadDrawingSession,
+		sendSessionListToPalette
+	);
 	// Link the interactable manager to the drawing manager
 	drawingManager.linkInteractableManager(interactMgr);
 }
@@ -916,8 +917,8 @@ function setupListeners(wsio) {
 	wsio.on('disableDrawingMode',					wsDisableDrawingMode);
 	wsio.on('enableEraserMode',						wsEnableEraserMode);
 	wsio.on('disableEraserMode',					wsDisableEraserMode);
-	wsio.on('enablePointerColorMode',						wsEnablePointerColorMode);
-	wsio.on('disablePointerColorMode',					wsDisablePointerColorMode);
+	wsio.on('enablePointerColorMode',				wsEnablePointerColorMode);
+	wsio.on('disablePointerColorMode',				wsDisablePointerColorMode);
 	wsio.on('clearDrawingCanvas',					wsClearDrawingCanvas);
 	wsio.on('changeStyle',							wsChangeStyle);
 	wsio.on('undoLastDrawing',						wsUndoLastDrawing);
@@ -988,6 +989,10 @@ function setupListeners(wsio) {
 	wsio.on('command',                              wsCommand);
 
 	wsio.on('createFolder',                         wsCreateFolder);
+
+	// Jupyper messages
+	wsio.on('startJupyterSharing',					wsStartJupyterSharing);
+	wsio.on('updateJupyterSharing',					wsUpdateJupyterSharing);
 
 	// message passing between ui to display (utd)
 	wsio.on('utdWhatAppIsAt',						wsUtdWhatAppIsAt);
@@ -4320,9 +4325,15 @@ function loadConfiguration() {
 		tileHeight = tile_diagonal_meters * aspectRatio;
 	}
 
-	if (userConfig.dimensions.tileHeight) {
-		// tileWidth    = parseFloat(userConfig.dimensions.tile_width) || 0.0;
+	if (userConfig.dimensions.tile_height) {
 		tileHeight   = parseFloat(userConfig.dimensions.tile_height) || 0.0;
+	}
+
+	// calculate pixel density (ppm) based on width
+	var pixelsPerMeter = userConfig.resolution.height / tileHeight;
+	if (userDefinedAspectRatio == false) {
+		aspectRatio = userConfig.resolution.width / userConfig.resolution.height;
+		console.log(sageutils.header("UI") + "Resolution defined aspect ratio: " + aspectRatio);
 	}
 
 	// Check the display border settings
@@ -4333,7 +4344,7 @@ function loadConfiguration() {
 		// then for dimensions
 		userConfig.dimensions.tile_borders = { left: 0.0, right: 0.0, bottom: 0.0, top: 0.0};
 	} else {
-		var borderLeft, borderRight, borderBottom, borderTop; // tileWidth,
+		var borderLeft, borderRight, borderBottom, borderTop;
 		// make sure the values are valid floats
 		borderLeft   = parseFloat(userConfig.dimensions.tile_borders.left)   || 0.0;
 		borderRight  = parseFloat(userConfig.dimensions.tile_borders.right)  || 0.0;
@@ -4346,13 +4357,6 @@ function loadConfiguration() {
 		userConfig.resolution.borders.right  = Math.round(pixelsPerMeter * borderRight)  || 0;
 		userConfig.resolution.borders.bottom = Math.round(pixelsPerMeter * borderBottom) || 0;
 		userConfig.resolution.borders.top    = Math.round(pixelsPerMeter * borderTop)    || 0;
-	}
-
-	// calculate pixel density (ppm) based on width
-	var pixelsPerMeter = userConfig.resolution.height / tileHeight;
-	if (userDefinedAspectRatio == false) {
-		aspectRatio = userConfig.resolution.width / userConfig.resolution.height;
-		console.log(sageutils.header("UI") + "Resolution defined aspect ratio: " + aspectRatio);
 	}
 
 	// calculate the widget control size based on dimensions and user distance
@@ -8340,9 +8344,11 @@ function wsUtdRequestRmbContextMenu(wsio, data) {
 		} else {
 			// Default response
 			wsio.emit('dtuRmbContextMenuContents', {
+				x: data.xClick,
+				y: data.yClick,
 				app: obj.data.id,
 				entries: [{
-					description: "Not supported by this app"
+					description: "App not yet loaded on display client yet."
 				}]
 			});
 		}
@@ -8836,7 +8842,57 @@ function csdSaveDataOnServer(wsio, data) {
 	}
 }
 
+/**
+ * Start a jupyter connection
+ *
+ * @method     wsStartJupyterSharing
+ * @param      {Object}  wsio    The websocket
+ * @param      {Object}  data    The data
+ */
+function wsStartJupyterSharing(wsio, data) {
+	console.log(sageutils.header('Jupyter') + "received new stream: " + data.id);
 
+	/*var i;
+	SAGE2Items.renderSync[data.id] = {clients: {}, chunks: []};
+	for (i = 0; i < clients.length; i++) {
+		if (clients[i].clientType === "display") {
+			SAGE2Items.renderSync[data.id].clients[clients[i].id] = {wsio: clients[i], readyForNextFrame: false, blocklist: []};
+		}
+	}
+	*/
+
+	// forcing 'int' type for width and height
+	data.width  = parseInt(data.width,  10);
+	data.height = parseInt(data.height, 10);
+
+	appLoader.createJupyterApp(data.src, data.type, data.encoding, data.title, data.color, 800, 1200,
+		function(appInstance) {
+			appInstance.id = data.id;
+			handleNewApplication(appInstance, null);
+		}
+	);
+}
+
+function wsUpdateJupyterSharing(wsio, data) {
+	console.log(sageutils.header('Jupyter') + "received update from: " + data.id);
+	sendJupyterUpdates(data);
+}
+
+function sendJupyterUpdates(data) {
+	// var ePosition = {x: 0, y: 0};
+	var eUser = {id: 1, label: "Touch", color: "none"};
+
+	var event = {
+		id: data.id,
+		type: "imageUpload",
+		position: 0,
+		user: eUser,
+		data: data,
+		date: Date.now()
+	};
+
+	broadcast('eventInItem', event);
+}
 
 
 

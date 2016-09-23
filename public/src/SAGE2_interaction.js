@@ -293,6 +293,9 @@ function SAGE2_interaction(wsio) {
 			mimeType = "video/webm";
 		} else if (ext === "pdf") {
 			mimeType = "application/pdf";
+		} else {
+			// madeup mimetype for drag-drop URL
+			mimeType = "application/url";
 		}
 		console.log("URL: " + url + ", type: " + mimeType);
 

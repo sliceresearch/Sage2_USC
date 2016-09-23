@@ -332,12 +332,20 @@ AppLoader.prototype.loadImageFromFile = function(file, mime_type, aUrl, external
 		// SVG file
 
 		// Query the exif data
-		var box  = assets.getTag(file, "ViewBox").split(' ');
-		var svgDims = {width: parseInt(box[2]), height: parseInt(box[3])};
-		var svgExif = assets.getExifData(file);
-
-		if (svgDims) {
-			this.loadImageFromServer(svgDims.width, svgDims.height, mime_type, aUrl, external_url, name, svgExif,
+		// var vbox = assets.getTag(file, "ViewBox");
+		// var svgDims;
+		// if (vbox) {
+		// 	var box  = vbox.split(' ');
+		// 	svgDims = {width: parseInt(box[2]), height: parseInt(box[3])};
+		// } else {
+		// 	// Assume square image
+		// 	svgDims = {width: 600, height: 600};
+		// }
+		var svgExif   = assets.getExifData(file);
+		if (svgExif) {
+			var svgWidth  = svgExif.ImageWidth  || 600;
+			var svgHeight = svgExif.ImageHeight || 600;
+			this.loadImageFromServer(svgWidth, svgHeight, mime_type, aUrl, external_url, name, svgExif,
 				function(appInstance) {
 					appInstance.file = file;
 					callback(appInstance);
@@ -448,7 +456,6 @@ AppLoader.prototype.loadPdfFromFile = function(file, mime_type, aUrl, external_u
 
 	var metadata         = {};
 	metadata.title       = "PDF Viewer";
-	// metadata.version     = "1.0.0";
 	metadata.version     = "2.0.0";
 	metadata.description = "PDF viewer for SAGE2";
 	metadata.author      = "SAGE2";
@@ -464,14 +471,6 @@ AppLoader.prototype.loadPdfFromFile = function(file, mime_type, aUrl, external_u
 		icon: exif ? exif.SAGE2thumbnail : null,
 		type: mime_type,
 		url: external_url,
-
-		// V1 PDF viewer
-		// data: {
-		// 	doc_url: external_url,
-		// 	page: 1,
-		// 	numPagesShown: 1
-		// },
-
 		// V2 PDF viewer
 		data: {
 			doc_url: external_url,
@@ -508,7 +507,6 @@ AppLoader.prototype.loadPdfFromFile = function(file, mime_type, aUrl, external_u
 	this.scaleAppToFitDisplay(appInstance);
 	callback(appInstance);
 };
-
 
 AppLoader.prototype.loadNoteFromFile = function(file, mime_type, aUrl, external_url, name, callback) {
 	// Find the app. Look it the file name in the registry. Get path, navigate to the path's instruction.json file.
@@ -777,9 +775,62 @@ AppLoader.prototype.loadFileFromWebURL = function(file, callback) {
 	var mime_type = file.type;
 	var filename = decodeURI(file.url.substring(file.url.lastIndexOf("/") + 1));
 
-	this.loadApplication({location: "url", url: file.url, type: mime_type, name: filename, strictSSL: false}, callback);
-
+	this.loadApplication({location: "url", url: file.url, type: mime_type, name: filename, strictSSL: false},
+		callback);
 };
+
+AppLoader.prototype.createJupyterApp = function(source, type, encoding, name, color, width, height, callback) {
+	var aspectRatio = width / height;
+
+	var metadata         = {};
+	metadata.title       = "Jupyter";
+	metadata.version     = "1.0.0";
+	metadata.description = "Jupyer for SAGE2";
+	metadata.author      = "SAGE2";
+	metadata.license     = "SAGE2-Software-License";
+	metadata.keywords    = ["jupyter"];
+
+	var appInstance = {
+		id: null,
+		title: name,
+		color: color,
+		application: "jupyter",
+		icon: "/images/jupyter.png",
+		type: "mime_type",
+		url: "src",
+		data: {
+			src: source,
+			type: type,
+			encoding: encoding
+		},
+		load: {
+			imgDict: {},
+			mainImgs: {},
+			page: 1
+		},
+		resrc: null,
+		left: this.titleBarHeight,
+		top: 1.5 * this.titleBarHeight,
+		width: width,
+		height: height,
+		native_width: width,
+		native_height: height,
+		previous_left: null,
+		previous_top: null,
+		previous_width: null,
+		previous_height: null,
+		maximized: false,
+		aspect: aspectRatio,
+		resizeMode: "free",
+		animation: false,
+		sticky: false,
+		metadata: metadata,
+		date: new Date()
+	};
+	this.scaleAppToFitDisplay(appInstance);
+	callback(appInstance);
+};
+
 
 function getSAGE2Path(getName) {
 	// pathname: result of the search
@@ -1001,6 +1052,19 @@ AppLoader.prototype.loadApplication = function(appData, callback) {
 			this.loadPdfFromURL(appData.url, appData.type, appData.name, appData.strictSSL, function(appInstance) {
 				callback(appInstance, null);
 			});
+		} else if (app === "Webview") {
+			// Special case to load URLs in the webview app
+			var webpath = getSAGE2Path('/uploads/apps/Webview');
+			// Set the URL
+			appData.data = {url: appData.url};
+			// Set the path of the app
+			appData.url  = webpath;
+			// Load the webview
+			this.loadAppFromFile(webpath, appData.type, appData.url, appData.url, "", appData.data,
+					function(appInstance) {
+						callback(appInstance, null);
+					}
+			);
 		}
 	} else if (appData.location === "remote") {
 		if (appData.application.application === "movie_player") {
