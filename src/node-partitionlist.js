@@ -126,6 +126,14 @@ PartitionList.prototype.removePartition = function(id) {
   * @param item     The item which was moved
   */
 PartitionList.prototype.updateOnItemRelease = function(item) {
+	var newPartitionID = this.calculateNewPartition(item);
+
+	if (newPartitionID !== null) {
+		this.list[newPartitionID].addChild(item);
+	}
+};
+
+PartitionList.prototype.calculateNewPartition = function(item) {
 	// check partitions to find if item falls into one
 	var partitionIDs = Object.keys(this.list);
 
@@ -137,15 +145,6 @@ PartitionList.prototype.updateOnItemRelease = function(item) {
 		y: item.top + item.height / 2
 	};
 
-	// if item is within a partition already
-	if (item.partition !== null) {
-		if ((itemCenter.x >= item.partition.left) && (itemCenter.x <= item.partition.left + item.partition.width) &&
-			(itemCenter.y >= item.partition.top) && (itemCenter.y <= item.partition.top + item.partition.height)) {
-			// the item still falls within its current parent partition
-		}
-	}
-
-
 	// check if item falls into any partition
 	partitionIDs.forEach((el) => {
 		var ptn = this.list[el];
@@ -154,6 +153,11 @@ PartitionList.prototype.updateOnItemRelease = function(item) {
 		if ((itemCenter.x >= ptn.left) && (itemCenter.x <= ptn.left + ptn.width) &&
 			(itemCenter.y >= ptn.top) && (itemCenter.y <= ptn.top + ptn.height)) {
 			// the centroid of the item is inside the partition
+
+			// if the partition is the parent automatically remain inside
+			if (item.partition && item.partition === el) {
+				return el;
+			}
 
 			// calculate center point of partition
 			var partitionCenter = {
@@ -174,13 +178,7 @@ PartitionList.prototype.updateOnItemRelease = function(item) {
 		}
 	}); // end partitionIDs.forEach(...)
 
-	if (closestID !== null) {
-		this.list[closestID].addChild(item);
-	} else {
-		if (item.partition !== null) {
-			item.partition.removeChild(item.id);
-		}
-	}
+	return closestID;
 };
 
 module.exports = PartitionList;

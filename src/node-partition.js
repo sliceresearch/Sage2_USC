@@ -31,6 +31,8 @@ function Partition(dims, id) {
 	this.left = dims.left;
 	this.top = dims.top;
 
+	this.id = id;
+
 	this.bounding = true;
 
 	this.innerTiling = false;
@@ -45,6 +47,8 @@ function Partition(dims, id) {
   * @param item     The item to be added
   */
 Partition.prototype.addChild = function(item) {
+	item.partition = this.id;
+
 	this.numChildren++;
 	this.children[item.id] = item;
 };
