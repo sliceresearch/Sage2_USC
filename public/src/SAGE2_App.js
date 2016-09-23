@@ -1073,7 +1073,6 @@ var SAGE2_App = Class.extend({
 					initState: data.initState
 				};
 				this.childList.push(childData);
-				this.refersh();
 			}
 			if( typeof this.childMonitorEvent != "undefined") { 
     			this.childMonitorEvent(data.childId, data.type, data.data, data.date); 

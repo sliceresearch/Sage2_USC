@@ -982,6 +982,8 @@ function setupListeners(wsio) {
 
 	wsio.on('createAppClone',                       wsCreateAppClone);
 
+	wsio.on('appCreated', 							wsAppCreatedCallback);
+
 	wsio.on('sage2Log',                             wsPrintDebugInfo);
 	wsio.on('command',                              wsCommand);
 
@@ -1121,9 +1123,6 @@ function initializeExistingWallUI(wsio) {
 function initializeExistingApps(wsio) {
 	var key;
 
-	console.log("DEBUG");
-	console.log(SAGE2Items.applications.list);
-
 	for (key in SAGE2Items.applications.list) {
 		wsio.emit('createAppWindow', SAGE2Items.applications.list[key]);
 		if (SAGE2Items.renderSync.hasOwnProperty(key)) {
@@ -1143,33 +1142,36 @@ function initializeExistingApps(wsio) {
 
 	var newOrder = interactMgr.getObjectZIndexList("applications", ["portals"]);
 	wsio.emit('updateItemOrder', newOrder);
+}
+
+
+// This is called after an app has been created on the display 
+function wsAppCreatedCallback(wsio, data){
+	console.log("Created  " + data.id);
 
 	//HERE
-	for ( key in SAGE2Items.applications.list) {
-		//manage parent child connections
-		//first add children to parents 
-		if (SAGE2Items.applications.list[key].id in parentApps && parentApps[SAGE2Items.applications.list[key].id] != null) {
-			console.log("is a parent: ")
-			//console.log( parentApps[ SAGE2Items.applications.list[key].id ][0] );
-			var thisChildList = parentApps[ SAGE2Items.applications.list[key].id ];
-			for( var c = 0; c < thisChildList.length; c++){
-				var childId = thisChildList[c];
-				console.log(key)
-				console.log(parentApps[ SAGE2Items.applications.list[key].id ])
-				var childObj = SAGE2Items.applications.list[ parentApps[ SAGE2Items.applications.list[key].id ][c] ]
-				var childData = {
-					childAppType: childObj.type,
-					childAppName: childObj.application, 
-					user: "parentApp", //would be nice to have actual app name... or sth
-					id: SAGE2Items.applications.list[key].id,
-					msg: "none",
-					childId: childObj.id,
-					initState: childObj.data,
-					success: true
-				};
-				
-				sendChildMonitoringEvent(childData.id, childData.childId, "childReopenedEvent", childData);
-			}
+
+	if (data.id in parentApps && parentApps[data.id] != null) {
+		console.log("is a parent: ")
+
+		var thisChildList = parentApps[ data.id ];
+		for( var c = 0; c < thisChildList.length; c++){
+			var childId = thisChildList[c];
+			console.log(data.id)
+			console.log(parentApps[ data.id])
+			var childObj = SAGE2Items.applications.list[ parentApps[data.id][c] ]
+			var childData = {
+				childAppType: childObj.type,
+				childAppName: childObj.application, 
+				user: "parentApp", //would be nice to have actual app name... or sth
+				id: data.id,
+				msg: "none",
+				childId: childObj.id,
+				initState: childObj.data,
+				success: true
+			};
+			
+			sendChildMonitoringEvent(childData.id, childData.childId, "childReopenedEvent", childData);
 		}
 	}
 

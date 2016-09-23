@@ -955,6 +955,7 @@ function setupListeners() {
 	});
 
 
+	//not sure if I am using this... 
 	wsio.on('launchChildAppResponse',  function(data) {
 		// var date = new Date(event_data.date);
 		var app  = applications[data.id];
@@ -979,7 +980,7 @@ function setupListeners() {
 			app.SAGE2MonitoringEvent(data);
 		}
 		else {
-			console.log("error");
+			console.log("error unable to send child monitoring event for " + data.id);
 		}
 	});
 
@@ -1476,6 +1477,9 @@ function createAppWindow(data, parentId, titleBarHeight, titleTextSize, offsetX,
 				newapp.init(init);
 				newapp.refresh(date);
 
+				wsio.emit('appCreated', {id: data.id});	
+
+
 				// Sending the context menu info to the server
 				if (isMaster) {
 					newapp.getFullContextMenuAndUpdate();
@@ -1498,6 +1502,8 @@ function createAppWindow(data, parentId, titleBarHeight, titleTextSize, offsetX,
 			var app = new window[data.application]();
 			app.init(init);
 			app.refresh(date);
+
+			wsio.emit('appCreated', {id: data.id});	
 
 			// Sending the context menu info to the server
 			if (isMaster) {
@@ -1603,6 +1609,7 @@ function createAppWindow(data, parentId, titleBarHeight, titleTextSize, offsetX,
 	}
 
 	itemCount += 2;
+
 
 	console.log("done")
 }
