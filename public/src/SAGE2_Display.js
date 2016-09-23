@@ -969,11 +969,18 @@ function setupListeners() {
 	});
 
 	wsio.on('childMonitoringEvent', function(data) {
+		// console.log("child monitoring on ")
+		// console.log(applications)
 		var app  = applications[data.id];
-		var date = new Date(data.date);
-		data.date = date;
-		data.whichType = "childMonitoring";
-		app.SAGE2MonitoringEvent(data);
+		if (app !== undefined && app !== null) {
+			var date = new Date(data.date);
+			data.date = date;
+			data.whichType = "childMonitoring";
+			app.SAGE2MonitoringEvent(data);
+		}
+		else {
+			console.log("error");
+		}
 	});
 
 	wsio.on('parentMonitoringEvent', function(data) {
@@ -1596,4 +1603,6 @@ function createAppWindow(data, parentId, titleBarHeight, titleTextSize, offsetX,
 	}
 
 	itemCount += 2;
+
+	console.log("done")
 }

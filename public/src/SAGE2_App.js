@@ -912,7 +912,7 @@ var SAGE2_App = Class.extend({
 			id: this.id,
 			msg: message,
 			childId: null,
-			initState: initState, 
+			initState: initState,  //note: doesn't get updated as child's state changes... 
 		};
 		if( isMaster ){
 			launchLinkedChildApp(data); //defined in runtime
@@ -1041,7 +1041,7 @@ var SAGE2_App = Class.extend({
 		console.log("sage2 monitoring event");
 
 		if( data.whichType == "childMonitoring"){
-			console.log("child monitoring " + this.childMonitorEvent);
+			console.log("child monitoring " + data);
 
 			if( data.type == "childCloseEvent" ){//remove child
 				for(i = 0; i < this.childList.length; i++)
@@ -1060,6 +1060,21 @@ var SAGE2_App = Class.extend({
 					//remove the child
 					this.childList.splice(this.childList.length-1, 1);
 				}
+			}
+			if( data.type == "childReopenedEvent"){
+				console.log("reopened children ");
+				console.log(data);
+				childData = {
+					applicationType: data.childAppType,
+					application: data.childAppName, 
+					user: "parentApp", //would be nice to have actual app name... or sth
+					id: this.id,
+					msg: data.msg,
+					childId: data.childId,
+					initState: data.initState
+				};
+				this.childList.push(childData);
+				this.refersh();
 			}
 			if( typeof this.childMonitorEvent != "undefined") { 
     			this.childMonitorEvent(data.childId, data.type, data.data, data.date); 

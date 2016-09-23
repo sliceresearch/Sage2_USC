@@ -1121,6 +1121,9 @@ function initializeExistingWallUI(wsio) {
 function initializeExistingApps(wsio) {
 	var key;
 
+	console.log("DEBUG");
+	console.log(SAGE2Items.applications.list);
+
 	for (key in SAGE2Items.applications.list) {
 		wsio.emit('createAppWindow', SAGE2Items.applications.list[key]);
 		if (SAGE2Items.renderSync.hasOwnProperty(key)) {
@@ -1132,6 +1135,7 @@ function initializeExistingApps(wsio) {
 			//   (especially true for slow update apps, like the clock)
 			broadcast('animateCanvas', {id: SAGE2Items.applications.list[key].id, date: Date.now()});
 		}
+
 	}
 	for (key in SAGE2Items.portals.list) {
 		broadcast('initializeDataSharingSession', SAGE2Items.portals.list[key]);
@@ -1139,6 +1143,36 @@ function initializeExistingApps(wsio) {
 
 	var newOrder = interactMgr.getObjectZIndexList("applications", ["portals"]);
 	wsio.emit('updateItemOrder', newOrder);
+
+	//HERE
+	for ( key in SAGE2Items.applications.list) {
+		//manage parent child connections
+		//first add children to parents 
+		if (SAGE2Items.applications.list[key].id in parentApps && parentApps[SAGE2Items.applications.list[key].id] != null) {
+			console.log("is a parent: ")
+			//console.log( parentApps[ SAGE2Items.applications.list[key].id ][0] );
+			var thisChildList = parentApps[ SAGE2Items.applications.list[key].id ];
+			for( var c = 0; c < thisChildList.length; c++){
+				var childId = thisChildList[c];
+				console.log(key)
+				console.log(parentApps[ SAGE2Items.applications.list[key].id ])
+				var childObj = SAGE2Items.applications.list[ parentApps[ SAGE2Items.applications.list[key].id ][c] ]
+				var childData = {
+					childAppType: childObj.type,
+					childAppName: childObj.application, 
+					user: "parentApp", //would be nice to have actual app name... or sth
+					id: SAGE2Items.applications.list[key].id,
+					msg: "none",
+					childId: childObj.id,
+					initState: childObj.data,
+					success: true
+				};
+				
+				sendChildMonitoringEvent(childData.id, childData.childId, "childReopenedEvent", childData);
+			}
+		}
+	}
+
 }
 
 function initializeExistingAppsPositionSizeTypeOnly(wsio) {
