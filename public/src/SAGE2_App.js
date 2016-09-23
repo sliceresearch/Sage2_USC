@@ -1062,7 +1062,6 @@ var SAGE2_App = Class.extend({
 			}
 			if( data.type == "childReopenedEvent"){
 				console.log("reopened children ");
-				console.log(data);
 				childData = {
 					applicationType: data.childAppType,
 					application: data.childAppName, 

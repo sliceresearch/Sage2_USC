@@ -1146,19 +1146,12 @@ function initializeExistingApps(wsio) {
 
 
 // This is called after an app has been created on the display 
-function wsAppCreatedCallback(wsio, data){
-	console.log("Created  " + data.id);
-
-	//HERE
+function wsAppCreatedCallback(wsio, data){x
 
 	if (data.id in parentApps && parentApps[data.id] != null) {
-		console.log("is a parent: ")
-
 		var thisChildList = parentApps[ data.id ];
 		for( var c = 0; c < thisChildList.length; c++){
 			var childId = thisChildList[c];
-			console.log(data.id)
-			console.log(parentApps[ data.id])
 			var childObj = SAGE2Items.applications.list[ parentApps[data.id][c] ]
 			var childData = {
 				childAppType: childObj.type,
