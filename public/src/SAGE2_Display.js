@@ -522,15 +522,6 @@ function setupListeners() {
                   data.state.src = btoa(strings.join(''));
                 }
 
-	wsio.on('storedFileList', function(data) {
-		// Save the cached stored file list and update all the listeners
-		storedFileList = data;
-		for (var i = 0; i < storedFileListEventHandlers.length; i++) {
-			storedFileListEventHandlers[i](storedFileList);
-		}
-	});
-
-	wsio.on('updateMediaStreamFrame', function(data) {
 		wsio.emit('receivedMediaStreamFrame', {id: data.id});
 
 		var app = applications[data.id];
@@ -545,6 +536,14 @@ function setupListeners() {
 			if (app !== undefined && app !== null) {
 				app.SAGE2Load(data.state, new Date(data.date));
 			}
+		}
+	});
+
+	wsio.on('storedFileList', function(data) {
+		// Save the cached stored file list and update all the listeners
+		storedFileList = data;
+		for (var i = 0; i < storedFileListEventHandlers.length; i++) {
+			storedFileListEventHandlers[i](storedFileList);
 		}
 	});
 
