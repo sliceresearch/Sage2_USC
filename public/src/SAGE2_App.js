@@ -921,9 +921,9 @@ var SAGE2_App = Class.extend({
 			childId: null,
 			initState: initState,  //note: doesn't get updated as child's state changes... 
 		};
-		if( isMaster ){
+		//if( isMaster ){
 			launchLinkedChildApp(data); //defined in runtime
-		}
+		//}
 
 		this.childList.push( data );
 	},

@@ -309,6 +309,7 @@ function broadcast(dataObject) {
  * @param dataObject {Object} data to be sent
  */
 function launchLinkedChildApp(dataObject){
+	console.log("launching");
 	wsio.emit('launchLinkedChildApp', dataObject);
 }
 
