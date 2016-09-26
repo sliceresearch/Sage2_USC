@@ -71,6 +71,7 @@ var Sagepointer         = require('./src/node-sagepointer');      // handles sag
 var StickyItems         = require('./src/node-stickyitems');
 var registry            = require('./src/node-registry');        // Registry Manager
 
+var PartitionList				= require('./src/node-partitionlist');		// list of SAGE2 Partitions
 //
 // Globals
 //
@@ -117,6 +118,8 @@ var mediaBlockSize     = 512;
 var startTime          = Date.now();
 var drawingManager;
 var pressingAlt        = true;
+
+var partitions				 = new PartitionList();
 
 // Add extra folders defined in the configuration file
 if (config.folders) {

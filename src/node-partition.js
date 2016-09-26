@@ -11,7 +11,7 @@
 /**
   * Partitioning of SAGE2 Apps into groups
   * @module server
-  * @submodule partition
+  * @submodule Partition
   */
 
 // require variables to be declared
@@ -22,7 +22,10 @@
   * @constructor
   */
 
-function Partition(dims, id) {
+function Partition(dims, id, partitionList) {
+	// the list which this partition is a part of
+	this.partitionList = partitionList;
+
 	this.children = {};
 	this.numChildren = 0;
 
@@ -43,10 +46,14 @@ function Partition(dims, id) {
 /**
   * Add a Child application to the partition.
   *
-  * @method addChild
-  * @param item     The item to be added
+  * @param {object} item - The item to be added
   */
 Partition.prototype.addChild = function(item) {
+	if (item.partition) {
+		// if the item was already in another partition, remove and add to this partition
+		this.partitionList.removeChildFromPartition(item.id, item.partition);
+	}
+
 	item.partition = this.id;
 
 	this.numChildren++;
@@ -56,8 +63,7 @@ Partition.prototype.addChild = function(item) {
 /**
   * Remove a Child application to the partition.
   *
-  * @method releaseChild
-  * @param id     The id of child to remove
+  * @param {string} id - The id of child to remove
   */
 Partition.prototype.releaseChild = function(id) {
 	if (this.children.hasOwnProperty(id)) {
@@ -71,8 +77,6 @@ Partition.prototype.releaseChild = function(id) {
 
 /**
   * Remove all Child applications from the partition
-  *
-  * @method releaseAllChildren
   */
 Partition.prototype.releaseAllChildren = function() {
 	var childIDs = Object.keys(this.children);
@@ -85,7 +89,6 @@ Partition.prototype.releaseAllChildren = function() {
 /**
   * Toggle partition tiling mode
   *
-  * @method toggleInnerTiling
   */
 Partition.prototype.toggleInnerTiling = function() {
 	this.innerTiling = !this.innerTiling;
@@ -93,8 +96,6 @@ Partition.prototype.toggleInnerTiling = function() {
 
 /**
   * Re-tile the apps within a partition
-  *
-  * @method tilePartition
   */
 Partition.prototype.tilePartition = function() {
 	// TODO: run tiling algorithm on inner windows
@@ -102,8 +103,6 @@ Partition.prototype.tilePartition = function() {
 
 /**
   * Toggle partition maximization mode
-  *
-  * @method toggleInnerMaximization
   */
 Partition.prototype.toggleInnerMaximization = function() {
 	this.innerMaximization = !this.innerMaximization;
@@ -112,8 +111,6 @@ Partition.prototype.toggleInnerMaximization = function() {
 /**
   * Increment the value of maximized child in the partition, and maximize that
   * child
-  *
-  * @method maximizeNextChild
   */
 Partition.prototype.maximizeNextChild = function() {
 	this.currentMaximizedChild = (this.currentMaximizedChild + 1) % this.numChildren;
@@ -124,8 +121,7 @@ Partition.prototype.maximizeNextChild = function() {
 /**
   * Maximize a specific child in the partition
   *
-  * @method maximizeChild
-  * @param id     The id of child to maximize
+  * @param {string} id - The id of child to maximize
   */
 Partition.prototype.maximizeChild = function(id) {
 	if (this.children.hasOwnProperty(id)) {

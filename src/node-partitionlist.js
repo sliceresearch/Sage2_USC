@@ -9,9 +9,9 @@
 // Copyright (c) 2015
 
 /**
-  * Partitioning of SAGE2 Apps into groups
+  * List structure containing Partitions (groups) of Apps
   * @module server
-  * @submodule partitionlist
+  * @submodule PartitionList
   * @requires node-partition
   */
 
@@ -32,10 +32,13 @@ function PartitionList() {
 }
 
 /**
-  * Create a new partition by dimensions
+  * Create a new partition from a set of dimensions
   *
-  * @method newPartition
-  * @param dims       Dimensions of the Partition
+  * @param {object} dims - Dimensions of the Partition
+	* @param {number} dims.left - Coordinate of left side of Partition
+	* @param {number} dims.top - Coordinate of Top side of Partition
+	* @param {number} dims.width - Width of the Partition
+	* @param {number} dims.height - Height of the partition
   */
 PartitionList.prototype.newPartition = function(dims) {
 	this.count++;
@@ -44,7 +47,7 @@ PartitionList.prototype.newPartition = function(dims) {
 	var newID = "ptn" + ('00' + this.totalCreated).substring(-2);
 
 	// add new partition to list
-	this.list[newID] = new Partition(dims, newID);
+	this.list[newID] = new Partition(dims, newID, this);
 
 	// return new partition for use by other methods
 	return this.list[newID];
@@ -53,8 +56,7 @@ PartitionList.prototype.newPartition = function(dims) {
 /**
   * Create a new partition from a list of apps
   *
-  * @method newBoundingPartition
-  * @param items      A list of items to create the Partition from
+  * @param {array} items - A list of items from which to create the Partition
   */
 PartitionList.prototype.newBoundingPartition = function(items) {
 	var bounds = {
@@ -105,8 +107,7 @@ PartitionList.prototype.newBoundingPartition = function(items) {
 /**
   * Create a new partition by dimensions
   *
-  * @method removePartition
-  * @param id       id of the Partition to remove
+  * @param {string} id - id of the Partition to remove
   */
 PartitionList.prototype.removePartition = function(id) {
 	if (this.list.hasOwnProperty(id)) {
@@ -120,10 +121,19 @@ PartitionList.prototype.removePartition = function(id) {
 };
 
 /**
-  * Calculate if an item falls within a partition
+  * Create a new partition by dimensions
   *
-  * @method updateOnItemRelease
-  * @param item     The item which was moved
+  * @param {string} childID - id of the Child to remove
+  * @param {string} partitionID - id of the Partition from which to remove the Child
+  */
+PartitionList.prototype.removeChildFromPartition = function(childID, partitionID) {
+	this.list[partitionID].releaseChild(childID);
+};
+
+/**
+  * Update partitions based on item which was moved
+  *
+  * @param {object} item - The item which was moved
   */
 PartitionList.prototype.updateOnItemRelease = function(item) {
 	var newPartitionID = this.calculateNewPartition(item);
@@ -133,6 +143,11 @@ PartitionList.prototype.updateOnItemRelease = function(item) {
 	}
 };
 
+/**
+  * Calculate which partition an item falls into
+  *
+  * @param {object} item - The item which was moved
+  */
 PartitionList.prototype.calculateNewPartition = function(item) {
 	// check partitions to find if item falls into one
 	var partitionIDs = Object.keys(this.list);
@@ -156,7 +171,9 @@ PartitionList.prototype.calculateNewPartition = function(item) {
 
 			// if the partition is the parent automatically remain inside
 			if (item.partition && item.partition === el) {
-				return el;
+				// negative distance will always be the minimum number
+				closestID = el;
+				closestDistance = -1;
 			}
 
 			// calculate center point of partition

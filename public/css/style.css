@@ -168,6 +168,40 @@ body {
 	transform-origin: 0 0 0;
 }
 
+.partitionArea {
+	position: absolute;
+	left: 0;
+	top: 0;
+	overflow: hidden;
+	border: 4px solid #14B4C8;
+	-webkit-box-sizing: border-box;
+	-moz-box-sizing: border-box;
+	box-sizing: border-box;
+	-webkit-transform-origin: 0 0 0;
+	-moz-transform-origin: 0 0 0;
+	-o-transform-origin: 0 0 0;
+	-ms-transform-origin: 0 0 0;
+	transform-origin: 0 0 0;
+}
+
+.partitionTitle {
+	position: absolute;
+	left: 0;
+	top: 0;
+	overflow: hidden;
+	border: 4px solid #14B4C8;
+	background-color: #1195A6;
+	border-bottom: none;
+	-webkit-box-sizing: border-box;
+	-moz-box-sizing: border-box;
+	box-sizing: border-box;
+	-webkit-transform-origin: 0 0 0;
+	-moz-transform-origin: 0 0 0;
+	-o-transform-origin: 0 0 0;
+	-ms-transform-origin: 0 0 0;
+	transform-origin: 0 0 0;
+}
+
 .stateObject {
 	color: #FFFFFF;
 }

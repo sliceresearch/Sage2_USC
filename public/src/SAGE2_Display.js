@@ -49,6 +49,7 @@ var lockedControlElements = {};
 var widgetConnectorRequestList = {};
 
 var applications = {};
+var partitions = {};
 var dependencies = {};
 var dataSharingPortals = {};
 
@@ -582,6 +583,12 @@ function setupListeners() {
 
 	wsio.on('createAppWindow', function(data) {
 		createAppWindow(data, ui.main.id, ui.titleBarHeight, ui.titleTextSize, ui.offsetX, ui.offsetY);
+	});
+
+	wsio.on('createPartitionWindow', function(data) {
+		console.log("Creating Partition Window");
+
+		partitions[data.id] = new SAGE2_Partition(data);
 	});
 
 	wsio.on('createAppWindowInDataSharingPortal', function(data) {
