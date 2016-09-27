@@ -314,7 +314,7 @@ function initializeSage2Server() {
 	}
 	// try to exclude some folders from the monitoring
 	var excludes = ['.DS_Store', 'Thumbs.db', 'passwd.json',
-		'assets', 'apps', 'tmp', 'config', 'web'];
+		'assets', 'apps', 'tmp', 'config', 'web', 'savedFiles'];
 	sageutils.monitorFolders(listOfFolders, excludes,
 		function(change) {
 			// console.log(sageutils.header("Monitor") + "Changes detected in", this.root);
@@ -998,8 +998,8 @@ function setupListeners(wsio) {
 	// might eventually break this up into individual ws functions
 	wsio.on('csdMessage',							wsCsdMessage);
 
-  // app file saving message
-  wsio.on('appFileSaveRequest', 			appFileSaveRequest);
+	// application file saving message
+	wsio.on('appFileSaveRequest',                   appFileSaveRequest);
 }
 
 /**
@@ -8513,10 +8513,12 @@ function sendJupyterUpdates(data) {
  * @param      {Object}  data    The data
  */
 function appFileSaveRequest(wsio, data) {
+
 	/* data includes
 	data = {
 		app: Name of application,
-		id: id of application
+		id: id of application,
+		asset: true,
 		filePath: {
 			subdir: subdirectory app wishes file to be saved in
 			name: name of the file
@@ -8526,45 +8528,60 @@ function appFileSaveRequest(wsio, data) {
 	}
 	*/
 
-	var appFileSaveDirectory = path.join(mediaFolders.user.path, "appSavedFiles");
+	if (data.filePath) {
+		var appFileSaveDirectory, appdir;
 
-	// console.log("Saving File at: " + data.filePath);
-	// console.log("From: " + data.id);
-
-	var filename;
-	var filedir;
-	var appdir;
-
-	if(data.filePath) {
-		filename = data.filePath.name;
-		if(filename.indexOf(data.filePath.ext) === -1) {
-			// add extension if it is not present in name
-			filename += data.filePath.ext;
-		}
-
-		appdir = path.join(appFileSaveDirectory, data.app);
-		if(data.filePath.subdir) {
-			filedir = path.join(appdir, data.filePath.subdir);
+		// is it an asset or an application file
+		if (data.asset) {
+			// save in the user's folder (~/Documents/SAGE2_Media)
+			appFileSaveDirectory = path.join(mediaFolders.user.path, "tmp");
+			appdir = appFileSaveDirectory;
 		} else {
-			filedir = appdir;
+			// save in protecteed application folder
+			appFileSaveDirectory = path.join(mediaFolders.user.path, "savedFiles");
+			appdir = path.join(appFileSaveDirectory, data.app);
 		}
+
+		// Take the filename
+		var filename = data.filePath.name;
+		if (filename.indexOf("." + data.filePath.ext) === -1) {
+			// add extension if it is not present in name
+			filename += "." + data.filePath.ext;
+		}
+
+		// save the file in the specific application folder
+		var filedir = appdir;
+		if (data.filePath.subdir) {
+			// add a sub-directory if asked
+			filedir = path.join(appdir, data.filePath.subdir);
+		}
+
+		// check and create the folder if needed
+		if (!sageutils.folderExists(filedir)) {
+			sageutils.mkdirParent(filedir);
+		}
+
+		// finally, build the full path
+		var fullpath = path.join(filedir, filename);
+
+		// and write the file
+		try {
+			fs.writeFileSync(fullpath, data.saveData);
+			console.log(sageutils.header('File') + "saved file to " + fullpath);
+			if (data.asset) {
+				var fileObject = {};
+				fileObject[0] = {
+					name: filename,
+					type: data.filePath.ext,
+					path: fullpath};
+				// Add the file to the asset library and open it
+				manageUploadedFiles(fileObject, [0, 0], data.app, "#B4B4B4", true);
+			}
+		} catch (err) {
+			console.log(sageutils.header('File') + "error while saving to " + fullpath + ":" + err);
+		}
+
 	} else {
-		filename = 'default.txt'; // defaults to text file
+		console.log(sageutils.header('File') + "file directory not specified. File not saved.");
 	}
-
-
-	if (!sageutils.folderExists(filedir)) {
-		sageutils.mkdirParent(filedir);
-	}
-
-	var key;
-	var fullpath = path.join(filedir, filename);
-
-	try {
-		fs.writeFileSync(fullpath, data.saveData);
-		console.log("Saved file to " + fullpath);
-	} catch (err) {
-		console.log(err + "\n\n while saving to " + fullpath);
-	}
-
 }
