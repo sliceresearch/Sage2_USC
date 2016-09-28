@@ -44,7 +44,6 @@ module.exports = function(grunt) {
 						"public/uploads/apps/flow/shared.js",
 						"public/uploads/apps/googlemaps/googlemaps.js",
 						"public/uploads/apps/notepad/notepad.js",
-						"public/uploads/apps/ParaSAGE/ParaSAGE.js",
 						"public/uploads/apps/photos/photos.js",
 						"public/uploads/apps/photos/photo_scrapbooks.js",
 						"public/uploads/apps/quickNote/quickNote.js",
@@ -54,6 +53,8 @@ module.exports = function(grunt) {
 						"public/uploads/apps/sticky_note/sticky_note.js",
 						"public/uploads/apps/web_earth/web_earth.js",
 						"public/uploads/apps/welcome/welcome.js",
+						"public/uploads/apps/Webview/Webview.js",
+						"public/uploads/apps/WhiteboardPalette/WhiteboardPalette.js",
 						"public/uploads/apps/zoom/zoom.js"
 					]
 				},
@@ -101,6 +102,8 @@ module.exports = function(grunt) {
 					"public/uploads/apps/sticky_note/sticky_note.js",
 					"public/uploads/apps/web_earth/web_earth.js",
 					"public/uploads/apps/welcome/welcome.js",
+					"public/uploads/apps/Webview/Webview.js",
+					"public/uploads/apps/WhiteboardPalette/WhiteboardPalette.js",
 					"public/uploads/apps/zoom/zoom.js"
 				],
 				options: { config: "build/jscs_sage2.json" }
