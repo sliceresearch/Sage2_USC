@@ -918,6 +918,19 @@ var SAGE2_App = Class.extend({
 	},
 
 	/**
+	 * Loads a saved data file (from the saveFile function)
+	 *
+	 * @method     loadSavedData
+	 * @param      {String}  filename  The filename to load
+	 * @param      {Function} callback function to call when loading is done
+	 */
+	loadSavedData: function(filename, callback) {
+		readFile("/user/savedFiles/" + this.application + "/" + filename, function(error, data) {
+			callback(error, data);
+		}, "JSON");
+	},
+
+	/**
 	 * Uses WebSocket to send a request to the server to save a file from the app
 	 * into the media folders as an asset (image, pdf, ...)
 	 *
