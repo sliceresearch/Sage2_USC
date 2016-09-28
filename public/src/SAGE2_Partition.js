@@ -30,7 +30,7 @@ var SAGE2_Partition = function(data) {
 	this.width = data.width;
 	this.height = data.height;
 
-	console.log(this.left, this.top, this.width, this.height);
+	console.log("SAGE2_Partition: Creating new Partition");
 
 	var title = document.createElement('div');
 	title.id = this.id + "_title";
@@ -102,7 +102,7 @@ var SAGE2_Partition = function(data) {
 
 	ui.main.appendChild(this.title);
 	ui.main.appendChild(this.partitionArea);
-}
+};
 
 
 /**

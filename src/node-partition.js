@@ -23,6 +23,8 @@
   */
 
 function Partition(dims, id, partitionList) {
+	console.log("Partition: Creating new Partition");
+
 	// the list which this partition is a part of
 	this.partitionList = partitionList;
 
@@ -51,10 +53,10 @@ function Partition(dims, id, partitionList) {
 Partition.prototype.addChild = function(item) {
 	if (item.partition) {
 		// if the item was already in another partition, remove and add to this partition
-		this.partitionList.removeChildFromPartition(item.id, item.partition);
+		this.partitionList.removeChildFromPartition(item.id, item.partition.id);
 	}
 
-	item.partition = this.id;
+	item.partition = this;
 
 	this.numChildren++;
 	this.children[item.id] = item;
@@ -129,6 +131,17 @@ Partition.prototype.maximizeChild = function(id) {
 
 		// TODO: Maximize this child
 	}
+};
+
+Partition.prototype.getDisplayString = function() {
+	return {
+		id: this.id,
+
+		left: this.left,
+		top: this.top,
+		width: this.width,
+		height: this.height
+	};
 };
 
 module.exports = Partition;

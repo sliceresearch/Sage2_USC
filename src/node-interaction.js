@@ -413,33 +413,57 @@ Interaction.prototype.maximizeSelectedItem = function(item, centered) {
 		return null;
 	}
 
-	var wallRatio = this.configuration.totalWidth  / this.configuration.totalHeight;
-	var iCenterX  = centered ? this.configuration.totalHeight / 2.0 : item.left + item.width / 2.0;
-	var iCenterY  = this.configuration.totalHeight / 2.0;
-	var iWidth    = 1;
-	var iHeight   = 1;
+	// normally is just the screen size, but if in partition it is the partition boundaries
+	var maxBound = {
+		left: 0,
+		top: 0,
+		width: 0,
+		height: 0
+	};
+
 	var titleBar = this.configuration.ui.titleBarHeight;
 	if (this.configuration.ui.auto_hide_ui === true) {
 		titleBar = 0;
 	}
+
+	if (item.partition) {
+		maxBound.left = item.partition.left;
+		maxBound.top = item.partition.top;
+		maxBound.width = item.partition.width;
+		maxBound.height = item.partition.height + titleBar;
+	} else {
+		// normal wall maximization parameters
+		maxBound.left = 0;
+		maxBound.top = 0;
+		maxBound.width = this.configuration.totalWidth;
+		maxBound.height = this.configuration.totalHeight;
+
+	}
+
+	var outerRatio = maxBound.width  / maxBound.height;
+	var iCenterX  = centered ? maxBound.left + maxBound.width / 2.0 : item.left + item.width / 2.0;
+	var iCenterY  = maxBound.top + maxBound.height / 2.0;
+	var iWidth    = 1;
+	var iHeight   = 1;
+
 
 	if (this.SHIFT === true && item.resizeMode === "free") {
 		// previously would resize to native height/width
 		// item.aspect = item.native_width / item.native_height;
 
 		// Free Resize aspect ratio fills wall
-		iWidth = this.configuration.totalWidth;
-		iHeight = this.configuration.totalHeight - (2 * titleBar);
+		iWidth = maxBound.width;
+		iHeight = maxBound.height - (2 * titleBar);
 		item.maximizeConstraint = "both";
 	} else {
-		if (item.aspect > wallRatio) {
+		if (item.aspect > outerRatio) {
 			// Image wider than wall
-			iWidth  = this.configuration.totalWidth;
+			iWidth  = maxBound.width;
 			iHeight = iWidth / item.aspect;
 			item.maximizeConstraint = "width";
 		} else {
 			// Wall wider than image
-			iHeight = this.configuration.totalHeight - (2 * titleBar);
+			iHeight = maxBound.height - (2 * titleBar);
 			iWidth  = iHeight * item.aspect;
 			item.maximizeConstraint = "height";
 		}
@@ -458,9 +482,9 @@ Interaction.prototype.maximizeSelectedItem = function(item, centered) {
 
 	// keep window inside display
 	if (iCenterX - (iWidth / 2) < 0) {
-		item.left = 0;
-	} else if (iCenterX + (iWidth / 2) > this.configuration.totalWidth) {
-		item.left = this.configuration.totalWidth - iWidth;
+		item.left = maxBound.left;
+	} else if (iCenterX + (iWidth / 2) > maxBound.width) {
+		item.left = maxBound.width + maxBound.left - iWidth;
 	} else {
 		item.left = iCenterX - (iWidth / 2);
 	}

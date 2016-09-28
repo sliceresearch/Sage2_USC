@@ -1001,11 +1001,7 @@ function setupListeners(wsio) {
 	// might eventually break this up into individual ws functions
 	wsio.on('csdMessage',							wsCsdMessage);
 
-<<<<<<< HEAD
-	// app file saving message
-=======
 	// application file saving message
->>>>>>> master
 	wsio.on('appFileSaveRequest',                   appFileSaveRequest);
 }
 
@@ -6668,10 +6664,14 @@ function dropMoveItem(uniqueID, app, valid, portalId) {
 	if (valid !== false) {
 		valid = true;
 	}
+
 	var updatedItem = remoteInteraction[uniqueID].releaseItem(valid);
 	if (updatedItem !== null) {
 		moveApplicationWindow(uniqueID, updatedItem, portalId);
 	}
+
+	// update parent partition of item when the app is released
+	partitions.updateOnItemRelease(app);
 
 	broadcast('finishedMove', {id: app.id, date: Date.now()});
 
@@ -8534,6 +8534,17 @@ function appFileSaveRequest(wsio, data) {
 		saveData: file data
 	}
 	*/
+
+	// Create Test partition
+	/***** --- MOVE CODE TO CORRECT LOCATION LATER --- *****/
+	console.log("Server: Creating new Partition");
+	var myPtn = partitions.newPartition({
+		left: 100,
+		top: 100,
+		width: 2000,
+		height: 2000
+	});
+	broadcast('createPartitionWindow', myPtn.getDisplayString());
 
 	if (data.filePath) {
 		var appFileSaveDirectory, appdir;

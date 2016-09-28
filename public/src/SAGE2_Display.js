@@ -24,6 +24,8 @@
 /* global createWidgetToAppConnector */
 /* global getTextFromTextInputWidget */
 
+/* global SAGE2_Partition */
+
 "use strict";
 
 /**
@@ -586,8 +588,6 @@ function setupListeners() {
 	});
 
 	wsio.on('createPartitionWindow', function(data) {
-		console.log("Creating Partition Window");
-
 		partitions[data.id] = new SAGE2_Partition(data);
 	});
 

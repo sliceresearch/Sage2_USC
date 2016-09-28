@@ -41,10 +41,12 @@ function PartitionList() {
 	* @param {number} dims.height - Height of the partition
   */
 PartitionList.prototype.newPartition = function(dims) {
+	console.log("PartitionList: Creating new Partition");
+
 	this.count++;
 	this.totalCreated++;
-	// give the partition a unique ID (up to 99)
-	var newID = "ptn" + ('00' + this.totalCreated).substring(-2);
+	// give the partition a unique ID
+	var newID = "ptn_" + this.totalCreated;
 
 	// add new partition to list
 	this.list[newID] = new Partition(dims, newID, this);
@@ -96,7 +98,12 @@ PartitionList.prototype.newBoundingPartition = function(items) {
 	bounds.yMax += 10;
 
 	// create new partition of dimensions of bounding box
-	var partition = new Partition(bounds);
+	var partition = new Partition({
+		left: bounds.xMin,
+		top: bounds.yMin,
+		width: bounds.xMax - bounds.xMin,
+		height: bounds.yMax - bounds.yMin
+	});
 
 	// add children to new partition automatically
 	items.forEach((el) => {
@@ -127,6 +134,7 @@ PartitionList.prototype.removePartition = function(id) {
   * @param {string} partitionID - id of the Partition from which to remove the Child
   */
 PartitionList.prototype.removeChildFromPartition = function(childID, partitionID) {
+	console.log("Removing", childID, "from", partitionID);
 	this.list[partitionID].releaseChild(childID);
 };
 
@@ -137,9 +145,19 @@ PartitionList.prototype.removeChildFromPartition = function(childID, partitionID
   */
 PartitionList.prototype.updateOnItemRelease = function(item) {
 	var newPartitionID = this.calculateNewPartition(item);
+	// console.log(item);
 
 	if (newPartitionID !== null) {
-		this.list[newPartitionID].addChild(item);
+		if (item.partition === newPartitionID) {
+			// stay in same partition, do nothing
+		} else {
+			console.log(item.id, "added to", newPartitionID);
+			this.list[newPartitionID].addChild(item);
+		}
+	} else {
+		if (item.partition) {
+			this.removeChildFromPartition(item.id, item.partition.id);
+		}
 	}
 };
 
