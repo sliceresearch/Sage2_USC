@@ -20,6 +20,7 @@
 	* Base class for SAGE2 partitions
 	*
 	* @class SAGE2_Partition
+	* @param {object} data - The object in the server corresponding to the partition
 	*/
 var SAGE2_Partition = function(data) {
 	this.id = data.id;
@@ -103,9 +104,15 @@ var SAGE2_Partition = function(data) {
 	ui.main.appendChild(this.partitionArea);
 }
 
-SAGE2_Partition.prototype.updatePositionAndSize = function(left, top, width, height) {
-	this.left = left;
-	this.top = top;
+
+/**
+	* Update position and size of the partition based on the partition within the server
+	*
+	* @param {object} data - The object in the server corresponding to the partition
+	*/
+SAGE2_Partition.prototype.updatePositionAndSize = function(data) {
+	this.left = data.left;
+	this.top = data.top;
 
 	this.title.style.webkitTransform = "translate(" + this.left + "px," + this.top + "px)";
 	this.title.style.mozTransform    = "translate(" + this.left + "px," + this.top + "px)";
@@ -118,19 +125,19 @@ SAGE2_Partition.prototype.updatePositionAndSize = function(left, top, width, hei
 	this.partitionArea.style.transform       = "translate(" + this.left + "px," +
 			(this.top + ui.titleBarHeight) + "px)";
 
-	if (this.width !== width) {
-		this.width = width;
+	if (this.width !== data.width) {
+		this.width = data.width;
 
 		this.title.style.width = this.width + "px";
 		this.partitionArea.style.width = this.width + "px";
-		this.dragCorner.style.left     = (this.width - cornerSize).toString() + "px";
+		this.dragCorner.style.left     = (this.width - this.cornerSize).toString() + "px";
 	}
 
-	if (this.height != height) {
-		this.height = height;
+	if (this.height != data.height) {
+		this.height = data.height;
 
-		partitionArea.style.height = this.height + "px";
-		this.dragCorner.style.top = (this.height - cornerSize).toString() + "px";
+		this.partitionArea.style.height = this.height + "px";
+		this.dragCorner.style.top = (this.height - this.cornerSize).toString() + "px";
 	}
 
 };
