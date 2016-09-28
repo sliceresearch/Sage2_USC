@@ -822,7 +822,7 @@ var recursiveReaddirSync = function(aPath) {
 	var list     = [];
 	var excludes = ['.DS_Store', 'Thumbs.db', 'tmp',
 		'passwd.json', 'assets', 'sessions', 'config', 'sabiConfig',
-		'web'];
+		'web', 'savedFiles'];
 	var files, stats;
 
 	files = fs.readdirSync(aPath);

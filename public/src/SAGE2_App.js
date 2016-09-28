@@ -892,21 +892,64 @@ var SAGE2_App = Class.extend({
 	/**
 	 * Uses WebSocket to send a request to the server to save a file from the app
 	 * into the media folders. The file will be placed in a subdirectory of the media
-	 * folders called appSavedFiles/appname/(subdir)?/ . The file name must not contains
+	 * folders called savedFiles/appname/(subdir)?/ . The file name must not contains
 	 * any directory characters ('/', '\', etc.).
 	 *
 	 * @method     saveFile
-	 * @param      {String}  appname		The name of the app
 	 * @param      {String}  subdir			Subdirectory within the app's folder to save file
 	 * @param      {String}  filename		The name for the file being saved
-	 * @param      {String}  ext				The file's extension
-	 * @param      {String}  data				The file's data
+	 * @param      {String}  ext			The file's extension
+	 * @param      {String}  data			The file's data
 	 */
-	saveFile: function(appname, subdir, filename, ext, data) {
+	saveFile: function(subdir, filename, ext, data) {
 		if (isMaster) {
 			wsio.emit("appFileSaveRequest", {
-				app: appname, id: this.id,
-				filePath: {subdir: subdir, name: filename, ext: ext},
+				app: this.application,
+				id:  this.id,
+				asset: false,
+				filePath: {
+					subdir: subdir,
+					name:   filename,
+					ext:    ext
+				},
+				saveData: data
+			});
+		}
+	},
+
+	/**
+	 * Loads a saved data file (from the saveFile function)
+	 *
+	 * @method     loadSavedData
+	 * @param      {String}  filename  The filename to load
+	 * @param      {Function} callback function to call when loading is done
+	 */
+	loadSavedData: function(filename, callback) {
+		readFile("/user/savedFiles/" + this.application + "/" + filename, function(error, data) {
+			callback(error, data);
+		}, "JSON");
+	},
+
+	/**
+	 * Uses WebSocket to send a request to the server to save a file from the app
+	 * into the media folders as an asset (image, pdf, ...)
+	 *
+	 * @method     saveFile
+	 * @param      {String}  filename		The name for the file being saved
+	 * @param      {String}  ext			The file's extension
+	 * @param      {String}  data			The file's data
+	 */
+	saveAsset: function(filename, ext, data) {
+		if (isMaster) {
+			wsio.emit("appFileSaveRequest", {
+				app: this.application,
+				id:  this.id,
+				asset: true,
+				filePath: {
+					subdir: "",
+					name:   filename,
+					ext:    ext
+				},
 				saveData: data
 			});
 		}
