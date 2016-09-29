@@ -1328,6 +1328,11 @@ function handleClick(element) {
 				+ sage2Version.commit + " - " + sage2Version.date;
 			infoData.appendChild(info5);
 		}
+		// Show the type of web browser
+		var info4 = document.createElement('p');
+		info4.innerHTML = "<span style='font-weight:bold;'>Browser (current)</span>: " + __SAGE2__.browser.browserType +
+			" " + __SAGE2__.browser.version;
+		infoData.appendChild(info4);
 		// Finally show the dialog
 		showDialog('infoDialog');
 	} else if (element.id === "ezNote" || element.id === "ezNoteContainer" || element.id === "ezNoteLabel") {

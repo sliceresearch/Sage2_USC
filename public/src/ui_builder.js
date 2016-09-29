@@ -375,10 +375,10 @@ function UIBuilder(json_cfg, clientID) {
 		} else {
 			version.style.right  = ((6 * this.titleBarHeight) + rightOffset).toString() + "px";
 		}
-		version.style.top        = "50%";
-		version.style.webkitTransform  = "translateY(-50%)";
-		version.style.mozTransform  = "translateY(-50%)";
-		version.style.transform  = "translateY(-50%)";
+		version.style.top = "50%";
+		version.style.webkitTransform = "translateY(-50%)";
+		version.style.mozTransform = "translateY(-50%)";
+		version.style.transform = "translateY(-50%)";
 
 		// Load the logo (shown top left corner)
 		var _this = this;
@@ -720,7 +720,9 @@ function UIBuilder(json_cfg, clientID) {
 		if (this.json_cfg.ui.show_version) {
 			var version = document.getElementById('version');
 			if (data.branch && data.commit && data.date) {
-				version.innerHTML = "<b>v" + data.base + "-" + data.branch + "-" + data.commit + "</b> " + data.date;
+				version.innerHTML = "<b>v" + data.base + "-" + data.branch + "-" + data.commit + "</b> ";
+				version.innerHTML += data.date;
+				version.innerHTML += " [" + __SAGE2__.browser.browserType + "]";
 			} else {
 				version.innerHTML = "<b>v" + data.base + "</b>";
 			}
