@@ -1330,7 +1330,7 @@ function handleClick(element) {
 		}
 		// Show the type of web browser
 		var info4 = document.createElement('p');
-		info4.innerHTML = "<span style='font-weight:bold;'>Browser (current)</span>: " + __SAGE2__.browser.browserType +
+		info4.innerHTML = "<span style='font-weight:bold;'>Browser</span>: " + __SAGE2__.browser.browserType +
 			" " + __SAGE2__.browser.version;
 		infoData.appendChild(info4);
 		// Finally show the dialog
