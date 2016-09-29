@@ -427,10 +427,11 @@ Interaction.prototype.maximizeSelectedItem = function(item, centered) {
 	}
 
 	if (item.partition) {
-		maxBound.left = item.partition.left;
-		maxBound.top = item.partition.top;
-		maxBound.width = item.partition.width;
-		maxBound.height = item.partition.height + titleBar;
+		// margin of 4 within partition
+		maxBound.left = item.partition.left + 4;
+		maxBound.top = item.partition.top + 4;
+		maxBound.width = item.partition.width - 8;
+		maxBound.height = item.partition.height + titleBar - 8;
 	} else {
 		// normal wall maximization parameters
 		maxBound.left = 0;

@@ -104,6 +104,16 @@ var SAGE2_Partition = function(data) {
 	ui.main.appendChild(this.partitionArea);
 };
 
+/**
+	* Delete all of the partition elements created
+	*
+	*/
+SAGE2_Partition.prototype.deletePartition = function() {
+	console.log("SAGE2_Partition: Deleting Partition", this.id);
+
+	ui.main.removeChild(this.title);
+	ui.main.removeChild(this.partitionArea);
+};
 
 /**
 	* Update position and size of the partition based on the partition within the server

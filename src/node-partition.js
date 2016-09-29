@@ -35,6 +35,14 @@ function Partition(dims, id, partitionList) {
 	this.height = dims.height;
 	this.left = dims.left;
 	this.top = dims.top;
+	this.aspect = dims.width / dims.height;
+
+	this.previous_left = null;
+	this.previous_top = null;
+	this.previous_width = null;
+	this.previous_height = null;
+
+	this.maximized = false;
 
 	this.id = id;
 
@@ -51,7 +59,7 @@ function Partition(dims, id, partitionList) {
   * @param {object} item - The item to be added
   */
 Partition.prototype.addChild = function(item) {
-	if (item.partition) {
+	if (item.partition /*&& item.partition !== this*/) {
 		// if the item was already in another partition, remove and add to this partition
 		this.partitionList.removeChildFromPartition(item.id, item.partition.id);
 	}
@@ -70,6 +78,7 @@ Partition.prototype.addChild = function(item) {
 Partition.prototype.releaseChild = function(id) {
 	if (this.children.hasOwnProperty(id)) {
 
+		this.children[id].maximized = false;
 		this.children[id].partition = null;
 
 		this.numChildren--;
@@ -84,7 +93,19 @@ Partition.prototype.releaseAllChildren = function() {
 	var childIDs = Object.keys(this.children);
 
 	childIDs.forEach((el) => {
-		this.children[el].removeChild(el);
+		this.releaseChild(el);
+	});
+};
+
+/**
+  * Delete all children within the partition
+  */
+Partition.prototype.clearPartition = function(deleteFnc) {
+	var childIDs = Object.keys(this.children);
+
+	childIDs.forEach((el) => {
+		this.releaseChild(el);
+		deleteFnc(el);
 	});
 };
 

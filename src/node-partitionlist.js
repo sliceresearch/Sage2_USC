@@ -8,27 +8,35 @@
 //
 // Copyright (c) 2015
 
+/* global interactMgr */
+
 /**
   * List structure containing Partitions (groups) of Apps
   * @module server
   * @submodule PartitionList
   * @requires node-partition
+	* @requires node-interactable
   */
 
 // require variables to be declared
 "use strict";
 
 var Partition = require('./node-partition');
+var InteractableManager = require('./node-interactable');
 
 /**
   * @class PartitionList
   * @constructor
   */
 
-function PartitionList() {
+function PartitionList(config) {
 	this.list = {};
 	this.count = 0;
 	this.totalCreated = 0;
+
+	this.configuration = config;
+
+	this.interactable = new InteractableManager();
 }
 
 /**
@@ -40,19 +48,25 @@ function PartitionList() {
 	* @param {number} dims.width - Width of the Partition
 	* @param {number} dims.height - Height of the partition
   */
-PartitionList.prototype.newPartition = function(dims) {
-	console.log("PartitionList: Creating new Partition");
+PartitionList.prototype.newPartition = function(dims, iMgr) {
+	if (this.count <= 20) {
+		console.log("PartitionList: Creating new Partition");
 
-	this.count++;
-	this.totalCreated++;
-	// give the partition a unique ID
-	var newID = "ptn_" + this.totalCreated;
+		this.count++;
+		this.totalCreated++;
+		// give the partition a unique ID
+		var newID = "ptn_" + this.totalCreated;
 
-	// add new partition to list
-	this.list[newID] = new Partition(dims, newID, this);
+		// add new partition to list
+		this.list[newID] = new Partition(dims, newID, this);
 
-	// return new partition for use by other methods
-	return this.list[newID];
+		this.createPartitionGeometries(newID, iMgr);
+
+		// return new partition for use by other methods
+		return this.list[newID];
+	} else {
+		return null;
+	}
 };
 
 /**
@@ -121,6 +135,8 @@ PartitionList.prototype.removePartition = function(id) {
 		// remove all children from the partition
 		this.list[id].releaseAllChildren();
 
+		this.interactable.removeLayer(id);
+
 		// delete reference of partition
 		this.count--;
 		delete this.list[id];
@@ -148,7 +164,7 @@ PartitionList.prototype.updateOnItemRelease = function(item) {
 	// console.log(item);
 
 	if (newPartitionID !== null) {
-		if (item.partition === newPartitionID) {
+		if (item.partition && item.partition.id === newPartitionID) {
 			// stay in same partition, do nothing
 		} else {
 			console.log(item.id, "added to", newPartitionID);
@@ -214,6 +230,130 @@ PartitionList.prototype.calculateNewPartition = function(item) {
 	}); // end partitionIDs.forEach(...)
 
 	return closestID;
+};
+
+/* Methods using node-interactable for user interaction */
+
+/**
+	* Update the geometries of an item on resize
+	*
+	* @param {string} ptnID - the ID of the partiton whos geometries will be updated
+	*/
+PartitionList.prototype.createPartitionGeometries = function(newID, iMgr) {
+	// Add new partition to global interactMgr
+	var newPtn = this.list[newID];
+
+	var titleBarHeight = this.configuration.ui.titleBarHeight;
+
+	// TODO: change ui title bar height
+	var zIndex = this.count;
+	iMgr.addGeometry(newID, "partitions", "rectangle", {
+		x: newPtn.left, y: newPtn.top,
+		w: newPtn.width, h: newPtn.height + titleBarHeight},
+		true, zIndex, newPtn);
+
+	// Add geometries to this interactable
+	this.interactable.addLayer(newID, 0);
+
+	var cornerSize   = 0.2 * Math.min(newPtn.width, newPtn.height);
+	var oneButton    = Math.round(titleBarHeight) * (300 / 235);
+	var buttonsPad   = 0.1 * oneButton;
+	var startButtons = newPtn.width - Math.round(3 * oneButton + 2 * buttonsPad);
+
+	// add controls for partition
+	this.addButtonToItem(newID, "titleBar", "rectangle",
+		{x: 0, y: 0, w: newPtn.width, h: titleBarHeight}, 0);
+	this.addButtonToItem(newID, "clearButton", "rectangle",
+		{x: startButtons, y: 0, w: oneButton, h: titleBarHeight}, 1);
+	this.addButtonToItem(newID, "fullscreenButton", "rectangle",
+		{x: startButtons + (1 * (buttonsPad + oneButton)), y: 0, w: oneButton, h: titleBarHeight}, 1);
+	this.addButtonToItem(newID, "closeButton", "rectangle",
+		{x: startButtons + (2 * (buttonsPad + oneButton)), y: 0, w: oneButton, h: titleBarHeight}, 1);
+	this.addButtonToItem(newID, "dragCorner", "rectangle",
+		{x: newPtn.width - cornerSize,
+		y: newPtn.height + titleBarHeight - cornerSize, w: cornerSize, h: cornerSize}, 2);
+};
+
+/**
+	* Update the geometries of an item on resize
+	*
+	* @param {string} ptnID - the ID of the partiton whos geometries will be updated
+	*/
+PartitionList.prototype.updatePartitionGeometries = function(ptnID, iMgr) {
+	// edit geometries of moved/resized partition
+	var thisPtn = this.list[ptnID];
+	var titleBarHeight = this.configuration.ui.titleBarHeight;
+
+	var cornerSize   = 0.2 * Math.min(thisPtn.width, thisPtn.height);
+	var oneButton    = Math.round(titleBarHeight) * (300 / 235);
+	var buttonsPad   = 0.1 * oneButton;
+	var startButtons = thisPtn.width - Math.round(3 * oneButton + 2 * buttonsPad);
+
+	iMgr.editGeometry(ptnID, "partitions", "rectangle", {
+		x: thisPtn.left, y: thisPtn.top,
+		w: thisPtn.width, h: thisPtn.height + titleBarHeight});
+
+	this.editButtonOnItem(ptnID, "titleBar", "rectangle",
+		{x: 0, y: 0, w: thisPtn.width, h: titleBarHeight}, 0);
+	this.editButtonOnItem(ptnID, "clearButton", "rectangle",
+		{x: startButtons, y: 0, w: oneButton, h: titleBarHeight}, 1);
+	this.editButtonOnItem(ptnID, "fullscreenButton", "rectangle",
+		{x: startButtons + (1 * (buttonsPad + oneButton)), y: 0, w: oneButton, h: titleBarHeight}, 1);
+	this.editButtonOnItem(ptnID, "closeButton", "rectangle",
+		{x: startButtons + (2 * (buttonsPad + oneButton)), y: 0, w: oneButton, h: titleBarHeight}, 1);
+	this.editButtonOnItem(ptnID, "dragCorner", "rectangle",
+		{x: thisPtn.width - cornerSize,
+		y: thisPtn.height + titleBarHeight - cornerSize, w: cornerSize, h: cornerSize}, 2);
+};
+
+/**
+* Add an interactable button to a partition in the list
+*
+* @method addButtonToItem
+* @param id {String} id of partition
+* @param buttonId {String} id of button
+* @param type {String} "rectangle" or "circle"
+* @param geometry {Object} defines button (rectangle = {x: , y: , w: , h: }, circle = {x: , y: , r: })
+*/
+PartitionList.prototype.addButtonToItem = function(id, buttonId, type, geometry, zIndex) {
+	this.interactable.addGeometry(buttonId, id, type, geometry, true, zIndex, null);
+};
+
+/**
+* Edit an interactable button for an item in the list
+*
+* @method editButtonOnItem
+* @param id {String} id of item
+* @param buttonId {String} id of button
+* @param type {String} "rectangle" or "circle"
+* @param geometry {Object} defines button (rectangle = {x: , y: , w: , h: }, circle = {x: , y: , r: })
+*/
+PartitionList.prototype.editButtonOnItem = function(id, buttonId, type, geometry) {
+	this.interactable.editGeometry(buttonId, id, type, geometry);
+};
+
+/**
+* Edit visibility for an interactable button for an item in the list
+*
+* @method editButtonVisibilityOnItem
+* @param id {String} id of item
+* @param buttonId {String} id of button
+* @param visible {Boolean} whether or not the button is visible
+*/
+PartitionList.prototype.editButtonVisibilityOnItem = function(id, buttonId, visible) {
+	this.interactable.editVisibility(buttonId, id, visible);
+};
+
+/**
+* Test to see which button is under a given point
+*
+* @method findButtonByPoint
+* @param id {String} id of item
+* @param point {Object} {x: , y: }
+* @return button {Object} button under the point
+*/
+PartitionList.prototype.findButtonByPoint = function(id, point) {
+	return this.interactable.searchGeometry(point, id);
 };
 
 module.exports = PartitionList;

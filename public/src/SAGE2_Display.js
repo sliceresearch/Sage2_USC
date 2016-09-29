@@ -587,8 +587,17 @@ function setupListeners() {
 		createAppWindow(data, ui.main.id, ui.titleBarHeight, ui.titleTextSize, ui.offsetX, ui.offsetY);
 	});
 
+
+	/* Partition wsio calls */
 	wsio.on('createPartitionWindow', function(data) {
 		partitions[data.id] = new SAGE2_Partition(data);
+	});
+	wsio.on('deletePartitionWindow', function(data) {
+		partitions[data.id].deletePartition();
+		delete partitions[data.id];
+	});
+	wsio.on('partitionMoveAndResizeFinished', function(data) {
+		partitions[data.id].updatePositionAndSize(data);
 	});
 
 	wsio.on('createAppWindowInDataSharingPortal', function(data) {

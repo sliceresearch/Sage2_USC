@@ -95,6 +95,7 @@ function FileManager(wsio, mydiv, uniqueID) {
 			{id: "overview_menu", value: "Display overview client"},
 			{id: "audio_menu",    value: "Audio manager"},
 			// {id: "drawing_menu",  value: "Drawing application"},
+			{id: "partition_menu",  value: "Create Partition"},
 			{id: "console_menu",  value: "Server console"}
 		]},
 		{id: "mainhelp_menu",  value: "Help", submenu: [
@@ -366,6 +367,10 @@ function FileManager(wsio, mydiv, uniqueID) {
 			// window.open("drawing.html", '_blank');
 		} else if (evt === "console_menu") {
 			window.open("admin/console.html", '_blank');
+		} else if (evt === "partition_menu") {
+			// create partition
+			var ptnDims = {left: 500, top: 200, width: 1500, height: 1000};
+			wsio.emit('createPartition', ptnDims);
 		} else {
 			// dunno
 		}

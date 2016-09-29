@@ -119,7 +119,7 @@ var startTime          = Date.now();
 var drawingManager;
 var pressingAlt        = true;
 
-var partitions				 = new PartitionList();
+var partitions				 = new PartitionList(config);
 
 // Add extra folders defined in the configuration file
 if (config.folders) {
@@ -358,6 +358,7 @@ function initializeSage2Server() {
 	interactMgr.addLayer("widgets",      1);
 	interactMgr.addLayer("applications", 0);
 	interactMgr.addLayer("portals",      0);
+	interactMgr.addLayer("partitions",   -1);
 
 	// Initialize the background for the display clients (image or color)
 	setupDisplayBackground();
@@ -1003,6 +1004,9 @@ function setupListeners(wsio) {
 
 	// application file saving message
 	wsio.on('appFileSaveRequest',                   appFileSaveRequest);
+
+	// create partition
+	wsio.on('createPartition', 						wsCreatePartition);
 }
 
 /**
@@ -5306,6 +5310,10 @@ function pointerPress(uniqueID, pointerX, pointerY, data) {
 			pointerPressOnApplication(uniqueID, pointerX, pointerY, data, obj, localPt, null);
 			break;
 		}
+		case "partitions": {
+			pointerPressOnPartition(uniqueID, pointerX, pointerY, data, obj, localPt, null);
+			break;
+		}
 		case "portals": {
 			pointerPressOnDataSharingPortal(uniqueID, pointerX, pointerY, data, obj, localPt);
 			break;
@@ -5653,6 +5661,96 @@ function pointerPressOnApplication(uniqueID, pointerX, pointerY, data, obj, loca
 			if (sagePointers[uniqueID].visible) {
 				// only if pointer on the wall, not the web UI
 				deleteApplication(obj.data.id, portalId);
+			}
+			break;
+	}
+}
+
+function pointerPressOnPartition(uniqueID, pointerX, pointerY, data, obj, localPt, portalId) {
+
+	var btn = partitions.findButtonByPoint(obj.id, localPt);
+
+	// // pointer press on app window
+	if (btn === null) {
+		// if (data.button === "right") {
+		// 	var elemCtrl = SAGE2Items.widgets.list[obj.id + uniqueID + "_controls"];
+		// 	if (!elemCtrl) {
+		// 		// if no UI element, send event to app if in interaction mode
+		// 		if (remoteInteraction[uniqueID].appInteractionMode()) {
+		// 			sendPointerPressToApplication(uniqueID, obj.data, pointerX, pointerY, data);
+		// 		}
+		// 		// Request a control (do not know in advance)
+		// 		broadcast('requestNewControl', {elemId: obj.id, user_id: uniqueID,
+		// 			user_label: sagePointers[uniqueID] ? sagePointers[uniqueID].label : "",
+		// 			x: pointerX, y: pointerY, date: Date.now() });
+		// 	} else if (elemCtrl.show === false) {
+		// 		showControl(elemCtrl, uniqueID, pointerX, pointerY);
+		// 		addEventToUserLog(uniqueID, {type: "widgetMenu", data: {action: "open", application:
+		// 			{id: obj.id, type: obj.data.application}}, time: Date.now()});
+		// 	} else {
+		// 		moveControlToPointer(elemCtrl, uniqueID, pointerX, pointerY);
+		// 	}
+		// } else {
+		// 	if (remoteInteraction[uniqueID].appInteractionMode()) {
+		// 		sendPointerPressToApplication(uniqueID, obj.data, pointerX, pointerY, data);
+		// 	} else {
+		// 		selectApplicationForMove(uniqueID, obj.data, pointerX, pointerY, portalId);
+		// 	}
+		// }
+		return;
+	}
+
+	switch (btn.id) {
+		case "titleBar":
+			console.log("Click on Title Bar:", obj.id);
+			if (drawingManager.paletteID !== uniqueID) {
+				// selectApplicationForMove(uniqueID, obj.data, pointerX, pointerY, portalId);
+			}
+			break;
+		case "dragCorner":
+			console.log("Click on Drag Corner:", obj.id);
+			// selectApplicationForResize(uniqueID, obj.data, pointerX, pointerY, portalId);
+			break;
+		case "clearButton":
+			console.log("Click on Clear Partition:", obj.id);
+			if (sagePointers[uniqueID].visible) {
+				// only if pointer on the wall, not the web UI
+
+				// clear partition (close all windows inside)
+				if (partitions.list.hasOwnProperty(obj.id)) {
+					partitions.list[obj.id].clearPartition(deleteApplication);
+				}
+			}
+			break;
+		case "fullscreenButton":
+			console.log("Click on Fullscreen:", obj.id);
+			if (sagePointers[uniqueID].visible) {
+				// only if pointer on the wall, not the web UI
+
+				if (!obj.data.maximized) {
+					remoteInteraction[uniqueID].maximizeSelectedItem(obj.data);
+				} else {
+					remoteInteraction[uniqueID].restoreSelectedItem(obj.data);
+				}
+
+				partitions.updatePartitionGeometries(obj.id, interactMgr);
+
+				broadcast('partitionMoveAndResizeFinished', obj.data.getDisplayString());
+			}
+			break;
+		case "closeButton":
+			console.log("Click on Close Button:", obj.id);
+			if (sagePointers[uniqueID].visible) {
+				// only if pointer on the wall, not the web UI
+
+				// close partition (drop all windows inside)
+
+				console.log(partitions);
+
+				broadcast('deletePartitionWindow', obj.data.getDisplayString());
+				partitions.removePartition(obj.id);
+
+				console.log(partitions);
 			}
 			break;
 	}
@@ -7512,7 +7610,8 @@ function handleNewApplication(appInstance, videohandle) {
 	broadcast('createAppWindow', appInstance);
 	broadcast('createAppWindowPositionSizeOnly', getAppPositionSize(appInstance));
 
-	var zIndex = SAGE2Items.applications.numItems + SAGE2Items.portals.numItems;
+	// reserve 20 backmost layers for partitions
+	var zIndex = SAGE2Items.applications.numItems + SAGE2Items.portals.numItems + 20;
 	interactMgr.addGeometry(appInstance.id, "applications", "rectangle", {
 		x: appInstance.left, y: appInstance.top,
 		w: appInstance.width, h: appInstance.height + config.ui.titleBarHeight},
@@ -8535,17 +8634,6 @@ function appFileSaveRequest(wsio, data) {
 	}
 	*/
 
-	// Create Test partition
-	/***** --- MOVE CODE TO CORRECT LOCATION LATER --- *****/
-	console.log("Server: Creating new Partition");
-	var myPtn = partitions.newPartition({
-		left: 100,
-		top: 100,
-		width: 2000,
-		height: 2000
-	});
-	broadcast('createPartitionWindow', myPtn.getDisplayString());
-
 	if (data.filePath) {
 		var appFileSaveDirectory, appdir;
 
@@ -8602,4 +8690,17 @@ function appFileSaveRequest(wsio, data) {
 	} else {
 		console.log(sageutils.header('File') + "file directory not specified. File not saved.");
 	}
+}
+
+/**
+	* Create a new screen partition with dimensions specified in data
+	*
+	* @method wsCreatePartition
+	* @param {object} data - The dimensions of the partition to be created
+	*/
+function wsCreatePartition(wsio, data) {
+	// Create Test partition
+	console.log("Server: Creating new Partition");
+	var myPtn = partitions.newPartition(data, interactMgr);
+	broadcast('createPartitionWindow', myPtn.getDisplayString());
 }
