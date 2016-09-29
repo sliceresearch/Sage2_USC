@@ -331,7 +331,6 @@ AppLoader.prototype.loadImageFromFile = function(file, mime_type, aUrl, external
 	} else if (mime_type === "image/svg+xml") {
 		// SVG file
 		var svgExif = assets.getExifData(file);
-		console.log('SVG', svgExif)
 		if (svgExif) {
 			var svgWidth  = parseInt(svgExif.ImageWidth,  10) || 600;
 			var svgHeight = parseInt(svgExif.ImageHeight, 10) || 600;
