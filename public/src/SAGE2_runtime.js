@@ -62,7 +62,7 @@ function SAGE2_browser() {
 	browser.isIE       = /*@cc_on!@*/false || !!document.documentMode;
     // Edge 20+
 	browser.isEdge     = !browser.isIE && !!window.StyleMedia;
-	browser.isOpera    = userAgent.indexOf("opera") >= 0;
+	browser.isOpera    = userAgent.indexOf("opr") >= 0;
 	browser.isChrome   = !browser.isIE && userAgent.indexOf("chrome") >= 0;
 	browser.isWebKit   = userAgent.indexOf("webkit") >= 0;
 	browser.isSafari   = !browser.isChrome && !browser.isIE && userAgent.indexOf("safari") >= 0;
@@ -88,6 +88,7 @@ function SAGE2_browser() {
 		browser.isEdge ? "Edge" :
 		browser.isFirefox ? "Firefox" :
 		browser.isSafari ? "Safari" :
+		browser.isOpera ? "Opera" :
 		browser.isChrome ? "Chrome" : "---";
 	browser.browserType  = browserType;
 
@@ -95,13 +96,13 @@ function SAGE2_browser() {
 	var _browser = {};
 	var match    = '';
 	var ua       = userAgent;
-	_browser.electron  = /electron/.test(ua);
-	_browser.chrome  = /webkit/.test(ua) && /chrome/.test(ua) && !/edge/.test(ua);
-	_browser.firefox = /mozilla/.test(ua) && /firefox/.test(ua);
-	_browser.msie    = /msie/.test(ua) || /trident/.test(ua) || /edge/.test(ua);
-	_browser.safari  = /safari/.test(ua)  && /applewebkit/.test(ua) && !/chrome/.test(ua);
-	_browser.opr     = /mozilla/.test(ua) && /applewebkit/.test(ua) && /chrome/.test(ua) && /safari/.test(ua) && /opr/.test(ua);
-	_browser.version = '';
+	_browser.electron = /electron/.test(ua);
+	_browser.opr      = /mozilla/.test(ua) && /applewebkit/.test(ua) && /chrome/.test(ua) && /safari/.test(ua) && /opr/.test(ua);
+	_browser.firefox  = /mozilla/.test(ua) && /firefox/.test(ua);
+	_browser.msie     = /msie/.test(ua) || /trident/.test(ua) || /edge/.test(ua);
+	_browser.safari   = /safari/.test(ua)  && /applewebkit/.test(ua) && !/chrome/.test(ua);
+	_browser.chrome   = /webkit/.test(ua) && /chrome/.test(ua) && !/edge/.test(ua);
+	_browser.version  = '';
 	for (var x in _browser) {
 		if (_browser[x]) {
 			match = ua.match(
