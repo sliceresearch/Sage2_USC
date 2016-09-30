@@ -120,6 +120,8 @@ var drawingManager;
 var pressingAlt        = true;
 
 var partitions				 = new PartitionList(config);
+var partitionStart		 = null;
+var draggingPartition	 = null;
 
 // Add extra folders defined in the configuration file
 if (config.folders) {
@@ -358,7 +360,7 @@ function initializeSage2Server() {
 	interactMgr.addLayer("widgets",      1);
 	interactMgr.addLayer("applications", 0);
 	interactMgr.addLayer("portals",      0);
-	interactMgr.addLayer("partitions",   -1);
+	interactMgr.addLayer("partitions",   0);
 
 	// Initialize the background for the display clients (image or color)
 	setupDisplayBackground();
@@ -5311,6 +5313,7 @@ function pointerPress(uniqueID, pointerX, pointerY, data) {
 			break;
 		}
 		case "partitions": {
+			console.log("Pointer Press on Partition", obj.id);
 			pointerPressOnPartition(uniqueID, pointerX, pointerY, data, obj, localPt, null);
 			break;
 		}
@@ -5325,6 +5328,11 @@ function pointerPressOnOpenSpace(uniqueID, pointerX, pointerY, data) {
 	if (data.button === "right") {
 		// Right click opens the radial menu
 		createRadialMenu(uniqueID, pointerX, pointerY);
+	} else if (data.button === "left" && remoteInteraction[uniqueID].CTRL) {
+		// start tracking size to create new partition
+		partitionStart = {x: pointerX, y: pointerY};
+
+		draggingPartition = createPartition({left: pointerX, top: pointerY, width: 0, height: 0});
 	}
 }
 
@@ -5703,9 +5711,7 @@ function pointerPressOnPartition(uniqueID, pointerX, pointerY, data, obj, localP
 	switch (btn.id) {
 		case "titleBar":
 			console.log("Click on Title Bar:", obj.id);
-			if (drawingManager.paletteID !== uniqueID) {
-				// selectApplicationForMove(uniqueID, obj.data, pointerX, pointerY, portalId);
-			}
+			// remoteInteraction[uniqueID].selectMoveItem(obj.data, pointerX, pointerY);
 			break;
 		case "dragCorner":
 			console.log("Click on Drag Corner:", obj.id);
@@ -5718,6 +5724,7 @@ function pointerPressOnPartition(uniqueID, pointerX, pointerY, data, obj, localP
 
 				// clear partition (close all windows inside)
 				if (partitions.list.hasOwnProperty(obj.id)) {
+					// passing method to delete applications for use within clearPartition method
 					partitions.list[obj.id].clearPartition(deleteApplication);
 				}
 			}
@@ -5736,6 +5743,13 @@ function pointerPressOnPartition(uniqueID, pointerX, pointerY, data, obj, localP
 				partitions.updatePartitionGeometries(obj.id, interactMgr);
 
 				broadcast('partitionMoveAndResizeFinished', obj.data.getDisplayString());
+
+				// update child positions within partiton
+				var updatedChildren = partitions.list[obj.id].updateChildrenPositions();
+
+				for (let child of updatedChildren) {
+					moveAndResizeApplicationWindow(child);
+				}
 			}
 			break;
 		case "closeButton":
@@ -5744,13 +5758,9 @@ function pointerPressOnPartition(uniqueID, pointerX, pointerY, data, obj, localP
 				// only if pointer on the wall, not the web UI
 
 				// close partition (drop all windows inside)
-
-				console.log(partitions);
-
 				broadcast('deletePartitionWindow', obj.data.getDisplayString());
 				partitions.removePartition(obj.id);
-
-				console.log(partitions);
+				interactMgr.removeGeometry(obj.id, "partitions")
 			}
 			break;
 	}
@@ -6024,6 +6034,16 @@ function updatePointerPosition(uniqueID, pointerX, pointerY, data) {
 	var updatedResizeItem;
 	var updatedControl;
 
+	if (draggingPartition) {
+		draggingPartition.left = pointerX < partitionStart.x ? pointerX : partitionStart.x;
+		draggingPartition.top = pointerY < partitionStart.y ? pointerY : partitionStart.y;
+		draggingPartition.width = +(pointerX - partitionStart.x);
+		draggingPartition.height = +(pointerY - partitionStart.y);
+
+		partitions.updatePartitionGeometries(draggingPartition.id, interactMgr);
+		broadcast('partitionMoveAndResizeFinished', draggingPartition.getDisplayString());
+	}
+
 	if (moveAppPortal !== null) {
 		localPt = globalToLocal(pointerX, pointerY, moveAppPortal.type, moveAppPortal.geometry);
 		scaledPt = {x: localPt.x / moveAppPortal.data.scale,
@@ -6052,9 +6072,12 @@ function updatePointerPosition(uniqueID, pointerX, pointerY, data) {
 	updatedMoveItem = remoteInteraction[uniqueID].moveSelectedItem(pointerX, pointerY);
 	updatedResizeItem = remoteInteraction[uniqueID].resizeSelectedItem(pointerX, pointerY);
 	updatedControl = remoteInteraction[uniqueID].moveSelectedControl(pointerX, pointerY);
+
 	if (updatedMoveItem !== null) {
 		if (SAGE2Items.portals.list.hasOwnProperty(updatedMoveItem.elemId)) {
 			moveDataSharingPortalWindow(updatedMoveItem);
+		} else if(partitions.list.hasOwnProperty(updatedMoveItem.elemId)) {
+			movePartitionWindow(uniqueID, updatedMoveItem, null);
 		} else {
 			moveApplicationWindow(uniqueID, updatedMoveItem, null);
 		}
@@ -6140,6 +6163,10 @@ function updatePointerPosition(uniqueID, pointerX, pointerY, data) {
 						'stopRemoteSagePointer', {id: uniqueID});
 					remoteInteraction[uniqueID].portal = null;
 				}
+				break;
+			}
+			case "partitions": {
+				pointerMoveOnPartition(uniqueID, pointerX, pointerY, data, obj, localPt, null);
 				break;
 			}
 			case "portals": {
@@ -6251,6 +6278,10 @@ function pointerMoveOnApplication(uniqueID, pointerX, pointerY, data, obj, local
 			break;
 		}
 	}
+}
+
+function pointerMoveOnPartition(uniqueID, pointerX, pointerY, data, obj, localPt, portalId) {
+	console.log("Pointer Move on Partition:", obj.data.id);
 }
 
 function pointerMoveOnDataSharingPortal(uniqueID, pointerX, pointerY, data, obj, localPt) {
@@ -6385,6 +6416,11 @@ function moveApplicationWindow(uniqueID, moveApp, portalId) {
 				w: stickyItem.elemWidth, h: stickyItem.elemHeight + config.ui.titleBarHeight});
 			broadcast('setItemPosition', updatedStickyItems[idx]);
 		}
+
+		// update parent partition of item when the app is released
+		if(SAGE2Items.applications.list.hasOwnProperty(app.id)) {
+			partitions.updateOnItemRelease(app);
+		}
 	}
 }
 
@@ -6415,12 +6451,31 @@ function moveAndResizeApplicationWindow(resizeApp, portalId) {
 		}
 	}
 
+	// update parent partition of item when the app is released
+	if(SAGE2Items.applications.list.hasOwnProperty(app.id)) {
+		partitions.updateOnItemRelease(app);
+	}
+
 	if (portalId !== undefined && portalId !== null) {
 		var ts = Date.now() + remoteSharingSessions[portalId].timeOffset;
 		remoteSharingSessions[portalId].wsio.emit('updateApplicationPositionAndSize',
 			{appPositionAndSize: resizeApp, portalId: portalId, date: ts});
 	}
 }
+
+function movePartitionWindow(uniqueID, movePartition) {
+	if(partitions.list.hasOwnProperty(movePartition.elemId)) {
+		console.log("Partition being moved");
+		partitions.updatePartitionGeometries(movePartition.elemId, interactMgr);
+		broadcast('partitionMoveAndResizeFinished', partitions.list[movePartition.elemId].getDisplayString());
+
+		var updatedChildren = partitions.list[movePartition.elemId].updateChildrenPositions();
+		for (let child of updatedChildren) {
+			moveAndResizeApplicationWindow(child);
+		}
+	}
+}
+
 
 function moveDataSharingPortalWindow(movePortal) {
 	interactMgr.editGeometry(movePortal.elemId, "portals", "rectangle",
@@ -6528,7 +6583,23 @@ function pointerRelease(uniqueID, pointerX, pointerY, data) {
 	}	else {
 		obj = interactMgr.searchGeometry({x: pointerX, y: pointerY});
 	}
+
+	if (draggingPartition && data.button === "left") {
+		draggingPartition.left = pointerX < partitionStart.x ? pointerX : partitionStart.x;
+		draggingPartition.top = pointerY < partitionStart.y ? pointerY : partitionStart.y;
+		draggingPartition.width = +(pointerX - partitionStart.x);
+		draggingPartition.height = +(pointerY - partitionStart.y);
+
+		partitions.updatePartitionGeometries(draggingPartition.id, interactMgr);
+		broadcast('partitionMoveAndResizeFinished', draggingPartition.getDisplayString());
+
+		// stop creation of partition
+		partitionStart = null;
+		draggingPartition = null;
+	}
+
 	if (obj === null) {
+
 		dropSelectedItem(uniqueID, true, portal.id);
 		return;
 	}
@@ -6553,6 +6624,11 @@ function pointerRelease(uniqueID, pointerX, pointerY, data) {
 					sendPointerReleaseToApplication(uniqueID, obj.data, pointerX, pointerY, data);
 				}
 			}
+			break;
+		}
+		case "partitions": {
+			console.log("Pointer Release on Partition");
+			dropSelectedItem(uniqueID, true, portal.id);
 			break;
 		}
 		case "portals": {
@@ -6767,9 +6843,6 @@ function dropMoveItem(uniqueID, app, valid, portalId) {
 	if (updatedItem !== null) {
 		moveApplicationWindow(uniqueID, updatedItem, portalId);
 	}
-
-	// update parent partition of item when the app is released
-	partitions.updateOnItemRelease(app);
 
 	broadcast('finishedMove', {id: app.id, date: Date.now()});
 
@@ -8701,6 +8774,12 @@ function appFileSaveRequest(wsio, data) {
 function wsCreatePartition(wsio, data) {
 	// Create Test partition
 	console.log("Server: Creating new Partition");
-	var myPtn = partitions.newPartition(data, interactMgr);
+	createPartition(data);
+}
+
+function createPartition(dims) {
+	var myPtn = partitions.newPartition(dims, interactMgr);
 	broadcast('createPartitionWindow', myPtn.getDisplayString());
+
+	return myPtn;
 }

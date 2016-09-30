@@ -66,9 +66,30 @@ Partition.prototype.addChild = function(item) {
 
 	item.partition = this;
 
+	var titleBarHeight = this.partitionList.configuration.ui.titleBarHeight;
+	// save positions within partition as percentages of partition
+	item.relative_left = (item.left - this.left) / this.width;
+	item.relative_top = (item.top - this.top - titleBarHeight) / this.height;
+	item.relative_width = item.width / this.width;
+	item.relative_height = item.height / this.height;
+
 	this.numChildren++;
 	this.children[item.id] = item;
 };
+
+Partition.prototype.updateChild = function(id) {
+	if (this.children.hasOwnProperty(id)) {
+		// when a child is moved, update the relative positions within the parent
+		var item = this.children[id];
+		var titleBarHeight = this.partitionList.configuration.ui.titleBarHeight;
+
+		item.relative_left = (item.left - this.left) / this.width;
+		item.relative_top = (item.top - this.top - titleBarHeight) / this.height;
+		item.relative_width = item.width / this.width;
+		item.relative_height = item.height / this.height;
+
+	}
+}
 
 /**
   * Remove a Child application to the partition.
@@ -78,8 +99,15 @@ Partition.prototype.addChild = function(item) {
 Partition.prototype.releaseChild = function(id) {
 	if (this.children.hasOwnProperty(id)) {
 
-		this.children[id].maximized = false;
-		this.children[id].partition = null;
+		var item = this.children[id];
+
+		item.relative_left = null;
+		item.relative_top = null;
+		item.relative_width = null;
+		item.relative_height = null;
+
+		item.maximized = false;
+		item.partition = null;
 
 		this.numChildren--;
 		delete this.children[id];
@@ -154,6 +182,32 @@ Partition.prototype.maximizeChild = function(id) {
 	}
 };
 
+Partition.prototype.updateChildrenPositions = function() {
+	var updatedChildren = [];
+
+	var childIDs = Object.keys(this.children);
+	var titleBarHeight = this.partitionList.configuration.ui.titleBarHeight;
+
+	childIDs.forEach((el) => {
+		var item = this.children[el];
+
+		item.left = item.relative_left * this.width + this.left;
+		item.top = item.relative_top * this.height + this.top + titleBarHeight;
+		item.width = item.relative_width * this.width;
+		item.height = item.relative_height * this.height;
+
+		updatedChildren.push({elemId: item.id, elemLeft: item.left, elemTop: item.top,
+				elemWidth: item.width, elemHeight: item.height, date: new Date()});
+	});
+
+	return updatedChildren;
+};
+
+/**
+  * Get a string corresponding to the information needed to update the display
+  *
+  * @param {string} id - The id of child to maximize
+  */
 Partition.prototype.getDisplayString = function() {
 	return {
 		id: this.id,
