@@ -30,6 +30,11 @@ var SAGE2_Partition = function(data) {
 	this.width = data.width;
 	this.height = data.height;
 
+	this.cornerSize   = 0.2 * Math.min(this.width, this.height);
+	var oneButton    = Math.round(ui.titleBarHeight) * (300 / 235);
+	var buttonsPad   = 0.1 * oneButton;
+	var startButtons = this.width - Math.round(3 * oneButton + 2 * buttonsPad);
+
 	console.log("SAGE2_Partition: Creating new Partition");
 
 	var title = document.createElement('div');
@@ -72,6 +77,24 @@ var SAGE2_Partition = function(data) {
 
 	this.titleIcons = titleIcons;
 
+	var clearcontentIcon = document.createElement("img");
+	clearcontentIcon.src = "images/ui/clearcontent.svg";
+	clearcontentIcon.height = Math.round(ui.titleBarHeight + 20);
+	clearcontentIcon.style.position = "absolute";
+	clearcontentIcon.style.right    = "190px";
+	clearcontentIcon.style.top			 = "-12px";
+
+	this.clearcontentIcon = clearcontentIcon;
+
+	var tilecontentIcon = document.createElement("img");
+	tilecontentIcon.src = "images/ui/tilecontent.svg";
+	tilecontentIcon.height = Math.round(ui.titleBarHeight + 20);
+	tilecontentIcon.style.position = "absolute";
+	tilecontentIcon.style.right    = "265px";
+	tilecontentIcon.style.top			 = "-12px";
+
+	this.tilecontentIcon = tilecontentIcon;
+
 	var titleText = document.createElement('p');
 	titleText.id = this.id + "_titleText";
 	titleText.style.color = "#FFFFFF";
@@ -80,8 +103,6 @@ var SAGE2_Partition = function(data) {
 	titleText.textContent = "Partition: " + this.id;
 
 	this.titleText = titleText;
-
-	this.cornerSize = 0.2 * Math.min(this.width, this.height);
 
 	var dragCorner = document.createElement('div');
 	dragCorner.className      = "dragCorner";
@@ -97,6 +118,8 @@ var SAGE2_Partition = function(data) {
 	this.dragCorner = dragCorner;
 
 	this.title.appendChild(this.titleIcons);
+	this.title.appendChild(this.clearcontentIcon);
+	this.title.appendChild(this.tilecontentIcon);
 	this.title.appendChild(this.titleText);
 	this.partitionArea.appendChild(this.dragCorner);
 

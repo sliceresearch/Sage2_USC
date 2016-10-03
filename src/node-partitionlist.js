@@ -234,6 +234,8 @@ PartitionList.prototype.calculateNewPartition = function(item) {
 	return closestID;
 };
 
+
+/* **************************************************** */
 /* Methods using node-interactable for user interaction */
 
 /**
@@ -260,17 +262,20 @@ PartitionList.prototype.createPartitionGeometries = function(newID, iMgr) {
 	var cornerSize   = 0.2 * Math.min(newPtn.width, newPtn.height);
 	var oneButton    = Math.round(titleBarHeight) * (300 / 235);
 	var buttonsPad   = 0.1 * oneButton;
-	var startButtons = newPtn.width - Math.round(3 * oneButton + 2 * buttonsPad);
+	var startButtons = newPtn.width - Math.round(2 * oneButton + 2 * buttonsPad);
+	var startPartitionControls = startButtons - 30 - Math.round(2 * oneButton + 2 * buttonsPad);
 
 	// add controls for partition
 	this.addButtonToItem(newID, "titleBar", "rectangle",
 		{x: 0, y: 0, w: newPtn.width, h: titleBarHeight}, 0);
+	this.addButtonToItem(newID, "tileButton", "rectangle",
+		{x: startPartitionControls, y: 0, w: oneButton, h: titleBarHeight}, 1);
 	this.addButtonToItem(newID, "clearButton", "rectangle",
-		{x: startButtons, y: 0, w: oneButton, h: titleBarHeight}, 1);
+		{x: startPartitionControls + (1 * (buttonsPad + oneButton)), y: 0, w: oneButton, h: titleBarHeight}, 1);
 	this.addButtonToItem(newID, "fullscreenButton", "rectangle",
-		{x: startButtons + (1 * (buttonsPad + oneButton)), y: 0, w: oneButton, h: titleBarHeight}, 1);
+		{x: startButtons, y: 0, w: oneButton, h: titleBarHeight}, 1);
 	this.addButtonToItem(newID, "closeButton", "rectangle",
-		{x: startButtons + (2 * (buttonsPad + oneButton)), y: 0, w: oneButton, h: titleBarHeight}, 1);
+		{x: startButtons + (1 * (buttonsPad + oneButton)), y: 0, w: oneButton, h: titleBarHeight}, 1);
 	this.addButtonToItem(newID, "dragCorner", "rectangle",
 		{x: newPtn.width - cornerSize,
 		y: newPtn.height + titleBarHeight - cornerSize, w: cornerSize, h: cornerSize}, 2);
@@ -289,7 +294,8 @@ PartitionList.prototype.updatePartitionGeometries = function(ptnID, iMgr) {
 	var cornerSize   = 0.2 * Math.min(thisPtn.width, thisPtn.height);
 	var oneButton    = Math.round(titleBarHeight) * (300 / 235);
 	var buttonsPad   = 0.1 * oneButton;
-	var startButtons = thisPtn.width - Math.round(3 * oneButton + 2 * buttonsPad);
+	var startButtons = thisPtn.width - Math.round(2 * oneButton + 2 * buttonsPad);
+	var startPartitionControls = startButtons - 30 - Math.round(2 * oneButton + 2 * buttonsPad);
 
 	iMgr.editGeometry(ptnID, "partitions", "rectangle", {
 		x: thisPtn.left, y: thisPtn.top,
@@ -297,12 +303,14 @@ PartitionList.prototype.updatePartitionGeometries = function(ptnID, iMgr) {
 
 	this.editButtonOnItem(ptnID, "titleBar", "rectangle",
 		{x: 0, y: 0, w: thisPtn.width, h: titleBarHeight}, 0);
+	this.editButtonOnItem(ptnID, "tileButton", "rectangle",
+		{x: startPartitionControls, y: 0, w: oneButton, h: titleBarHeight}, 1);
 	this.editButtonOnItem(ptnID, "clearButton", "rectangle",
-		{x: startButtons, y: 0, w: oneButton, h: titleBarHeight}, 1);
+		{x: startPartitionControls + (1 * (buttonsPad + oneButton)), y: 0, w: oneButton, h: titleBarHeight}, 1);
 	this.editButtonOnItem(ptnID, "fullscreenButton", "rectangle",
-		{x: startButtons + (1 * (buttonsPad + oneButton)), y: 0, w: oneButton, h: titleBarHeight}, 1);
+		{x: startButtons, y: 0, w: oneButton, h: titleBarHeight}, 1);
 	this.editButtonOnItem(ptnID, "closeButton", "rectangle",
-		{x: startButtons + (2 * (buttonsPad + oneButton)), y: 0, w: oneButton, h: titleBarHeight}, 1);
+		{x: startButtons + (1 * (buttonsPad + oneButton)), y: 0, w: oneButton, h: titleBarHeight}, 1);
 	this.editButtonOnItem(ptnID, "dragCorner", "rectangle",
 		{x: thisPtn.width - cornerSize,
 		y: thisPtn.height + titleBarHeight - cornerSize, w: cornerSize, h: cornerSize}, 2);

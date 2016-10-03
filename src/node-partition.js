@@ -143,6 +143,11 @@ Partition.prototype.clearPartition = function(deleteFnc) {
   */
 Partition.prototype.toggleInnerTiling = function() {
 	this.innerTiling = !this.innerTiling;
+	console.log("Tiling:", this.innerTiling);
+	
+	if(this.innerTiling) {
+		this.tilePartition();
+	}
 };
 
 /**
@@ -150,6 +155,7 @@ Partition.prototype.toggleInnerTiling = function() {
   */
 Partition.prototype.tilePartition = function() {
 	// TODO: run tiling algorithm on inner windows
+	console.log("Performing tiling on", this.id);
 };
 
 /**

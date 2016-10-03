@@ -5313,7 +5313,6 @@ function pointerPress(uniqueID, pointerX, pointerY, data) {
 			break;
 		}
 		case "partitions": {
-			console.log("Pointer Press on Partition", obj.id);
 			pointerPressOnPartition(uniqueID, pointerX, pointerY, data, obj, localPt, null);
 			break;
 		}
@@ -5711,11 +5710,15 @@ function pointerPressOnPartition(uniqueID, pointerX, pointerY, data, obj, localP
 	switch (btn.id) {
 		case "titleBar":
 			console.log("Click on Title Bar:", obj.id);
-			// remoteInteraction[uniqueID].selectMoveItem(obj.data, pointerX, pointerY);
+			selectApplicationForMove(uniqueID, obj.data, pointerX, pointerY);
 			break;
 		case "dragCorner":
 			console.log("Click on Drag Corner:", obj.id);
 			// selectApplicationForResize(uniqueID, obj.data, pointerX, pointerY, portalId);
+			break;
+		case "tileButton":
+			console.log("Click on Tile Partition:", obj.id);
+			partitions.list[obj.id].toggleInnerTiling();
 			break;
 		case "clearButton":
 			console.log("Click on Clear Partition:", obj.id);
@@ -5741,7 +5744,6 @@ function pointerPressOnPartition(uniqueID, pointerX, pointerY, data, obj, localP
 				}
 
 				partitions.updatePartitionGeometries(obj.id, interactMgr);
-
 				broadcast('partitionMoveAndResizeFinished', obj.data.getDisplayString());
 
 				// update child positions within partiton
@@ -6281,7 +6283,7 @@ function pointerMoveOnApplication(uniqueID, pointerX, pointerY, data, obj, local
 }
 
 function pointerMoveOnPartition(uniqueID, pointerX, pointerY, data, obj, localPt, portalId) {
-	console.log("Pointer Move on Partition:", obj.data.id);
+	// console.log("Pointer Move on Partition:", obj.data.id);
 }
 
 function pointerMoveOnDataSharingPortal(uniqueID, pointerX, pointerY, data, obj, localPt) {
@@ -6465,10 +6467,11 @@ function moveAndResizeApplicationWindow(resizeApp, portalId) {
 
 function movePartitionWindow(uniqueID, movePartition) {
 	if(partitions.list.hasOwnProperty(movePartition.elemId)) {
-		console.log("Partition being moved");
+
 		partitions.updatePartitionGeometries(movePartition.elemId, interactMgr);
 		broadcast('partitionMoveAndResizeFinished', partitions.list[movePartition.elemId].getDisplayString());
 
+		// update children of partition
 		var updatedChildren = partitions.list[movePartition.elemId].updateChildrenPositions();
 		for (let child of updatedChildren) {
 			moveAndResizeApplicationWindow(child);
@@ -6589,6 +6592,7 @@ function pointerRelease(uniqueID, pointerX, pointerY, data) {
 		draggingPartition.top = pointerY < partitionStart.y ? pointerY : partitionStart.y;
 		draggingPartition.width = +(pointerX - partitionStart.x);
 		draggingPartition.height = +(pointerY - partitionStart.y);
+		draggingPartition.aspect = draggingPartition.width / draggingPartition.height; // set aspect ratio when resize finished
 
 		partitions.updatePartitionGeometries(draggingPartition.id, interactMgr);
 		broadcast('partitionMoveAndResizeFinished', draggingPartition.getDisplayString());
@@ -6596,10 +6600,10 @@ function pointerRelease(uniqueID, pointerX, pointerY, data) {
 		// stop creation of partition
 		partitionStart = null;
 		draggingPartition = null;
+		return;
 	}
 
 	if (obj === null) {
-
 		dropSelectedItem(uniqueID, true, portal.id);
 		return;
 	}
@@ -6627,8 +6631,7 @@ function pointerRelease(uniqueID, pointerX, pointerY, data) {
 			break;
 		}
 		case "partitions": {
-			console.log("Pointer Release on Partition");
-			dropSelectedItem(uniqueID, true, portal.id);
+			// pointer release on partition (no functionality yet)
 			break;
 		}
 		case "portals": {
@@ -6810,21 +6813,36 @@ function pointerReleaseOnRadialMenu(uniqueID, pointerX, pointerY, data, obj) {
 
 function dropSelectedItem(uniqueID, valid, portalId) {
 	var item;
-	var list;
 	var position;
 	if (remoteInteraction[uniqueID].selectedMoveItem !== null) {
-		list = (SAGE2Items.portals.list.hasOwnProperty(remoteInteraction[uniqueID].selectedMoveItem.id)) ?
-			"portals" : "applications";
-		item = SAGE2Items[list].list[remoteInteraction[uniqueID].selectedMoveItem.id];
+		// check which list contains the move item selected
+		if(SAGE2Items.portals.list.hasOwnProperty(remoteInteraction[uniqueID].selectedMoveItem.id)) {
+			// if the item is a portal
+			item = SAGE2Items["portals"].list[remoteInteraction[uniqueID].selectedMoveItem.id];
+		} else if (partitions.list.hasOwnProperty(remoteInteraction[uniqueID].selectedMoveItem.id)) {
+			// if the item is a partition
+			item = partitions.list[remoteInteraction[uniqueID].selectedMoveItem.id]
+		} else {
+			item = SAGE2Items["applications"].list[remoteInteraction[uniqueID].selectedMoveItem.id];
+		}
+
 		if (item) {
 			position = {left: item.left, top: item.top, width: item.width, height: item.height};
 			dropMoveItem(uniqueID, item, valid, portalId);
 			return {application: item, previousPosition: position};
 		}
 	} else if (remoteInteraction[uniqueID].selectedResizeItem !== null) {
-		list = (SAGE2Items.portals.list.hasOwnProperty(remoteInteraction[uniqueID].selectedResizeItem.id)) ?
-			"portals" : "applications";
-		item = SAGE2Items[list].list[remoteInteraction[uniqueID].selectedResizeItem.id];
+		// check which list contains the item selected
+		if(SAGE2Items.portals.list.hasOwnProperty(remoteInteraction[uniqueID].selectedResizeItem.id)) {
+			// if the item is a portal
+			item = SAGE2Items["portals"].list[remoteInteraction[uniqueID].selectedResizeItem.id];
+		} else if (partitions.list.hasOwnProperty(remoteInteraction[uniqueID].selectedResizeItem.id)) {
+			// if the item is a partition
+			item = partitions.list[remoteInteraction[uniqueID].selectedResizeItem.id]
+		} else {
+			item = SAGE2Items["applications"].list[remoteInteraction[uniqueID].selectedResizeItem.id];
+		}
+
 		if (item) {
 			position = {left: item.left, top: item.top, width: item.width, height: item.height};
 			dropResizeItem(uniqueID, item, portalId);

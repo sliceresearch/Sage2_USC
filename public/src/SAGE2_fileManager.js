@@ -369,7 +369,7 @@ function FileManager(wsio, mydiv, uniqueID) {
 			window.open("admin/console.html", '_blank');
 		} else if (evt === "partition_menu") {
 			// create partition
-			var ptnDims = {left: 500, top: 200, width: 1500, height: 1000};
+			var ptnDims = {left: 200, top: 200, width: 1000, height: 700};
 			wsio.emit('createPartition', ptnDims);
 		} else {
 			// dunno
