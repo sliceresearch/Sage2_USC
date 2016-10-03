@@ -443,7 +443,7 @@ Interaction.prototype.maximizeSelectedItem = function(item, centered) {
 
 	var outerRatio = maxBound.width  / maxBound.height;
 	var iCenterX  = centered ? maxBound.left + maxBound.width / 2.0 : item.left + item.width / 2.0;
-	var iCenterY  = maxBound.top + maxBound.height / 2.0;
+	var iCenterY  = centered ? maxBound.top + maxBound.height / 2.0 : item.top + item.height / 2.0;
 	var iWidth    = 1;
 	var iHeight   = 1;
 
@@ -481,13 +481,22 @@ Interaction.prototype.maximizeSelectedItem = function(item, centered) {
 	item.width  = iWidth;
 	item.height = iHeight;
 
-	// keep window inside display
+	// keep window inside display horizontally
 	if (iCenterX - (iWidth / 2) < 0) {
 		item.left = maxBound.left;
 	} else if (iCenterX + (iWidth / 2) > maxBound.width) {
 		item.left = maxBound.width + maxBound.left - iWidth;
 	} else {
 		item.left = iCenterX - (iWidth / 2);
+	}
+
+	// keep window inside display vertically
+	if (iCenterY - (iHeight / 2) < 0) {
+		item.top = 0;
+	} else if (iCenterY + (iHeight / 2) > this.configuration.totalHeight) {
+		item.top = this.configuration.totalHeight - iHeight;
+	} else {
+		item.top = iCenterY - (iHeight / 2);
 	}
 
 	// Shift by 'titleBarHeight' if no auto-hide
