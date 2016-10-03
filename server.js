@@ -6632,6 +6632,7 @@ function pointerRelease(uniqueID, pointerX, pointerY, data) {
 		}
 		case "partitions": {
 			// pointer release on partition (no functionality yet)
+			dropSelectedItem(uniqueID, true, portal.id);
 			break;
 		}
 		case "portals": {

@@ -429,7 +429,7 @@ Interaction.prototype.maximizeSelectedItem = function(item, centered) {
 	if (item.partition) {
 		// margin of 4 within partition
 		maxBound.left = item.partition.left + 4;
-		maxBound.top = item.partition.top + 4;
+		maxBound.top = item.partition.top + titleBar + 4;
 		maxBound.width = item.partition.width - 8;
 		maxBound.height = item.partition.height + titleBar - 8;
 	} else {
@@ -492,9 +492,9 @@ Interaction.prototype.maximizeSelectedItem = function(item, centered) {
 
 	// keep window inside display vertically
 	if (iCenterY - (iHeight / 2) < 0) {
-		item.top = 0;
-	} else if (iCenterY + (iHeight / 2) > this.configuration.totalHeight) {
-		item.top = this.configuration.totalHeight - iHeight;
+		item.top = maxBound.top + titleBar;
+	} else if (iCenterY + (iHeight / 2) > maxBound.height) {
+		item.top = maxBound.height - iHeight - titleBar;
 	} else {
 		item.top = iCenterY - (iHeight / 2);
 	}
