@@ -5762,7 +5762,7 @@ function pointerPressOnPartition(uniqueID, pointerX, pointerY, data, obj, localP
 				// close partition (drop all windows inside)
 				broadcast('deletePartitionWindow', obj.data.getDisplayString());
 				partitions.removePartition(obj.id);
-				interactMgr.removeGeometry(obj.id, "partitions")
+				interactMgr.removeGeometry(obj.id, "partitions");
 			}
 			break;
 	}
@@ -6078,7 +6078,7 @@ function updatePointerPosition(uniqueID, pointerX, pointerY, data) {
 	if (updatedMoveItem !== null) {
 		if (SAGE2Items.portals.list.hasOwnProperty(updatedMoveItem.elemId)) {
 			moveDataSharingPortalWindow(updatedMoveItem);
-		} else if(partitions.list.hasOwnProperty(updatedMoveItem.elemId)) {
+		} else if (partitions.list.hasOwnProperty(updatedMoveItem.elemId)) {
 			movePartitionWindow(uniqueID, updatedMoveItem, null);
 		} else {
 			moveApplicationWindow(uniqueID, updatedMoveItem, null);
@@ -6420,7 +6420,7 @@ function moveApplicationWindow(uniqueID, moveApp, portalId) {
 		}
 
 		// update parent partition of item when the app is released
-		if(SAGE2Items.applications.list.hasOwnProperty(app.id)) {
+		if (SAGE2Items.applications.list.hasOwnProperty(app.id)) {
 			partitions.updateOnItemRelease(app);
 		}
 	}
@@ -6454,7 +6454,7 @@ function moveAndResizeApplicationWindow(resizeApp, portalId) {
 	}
 
 	// update parent partition of item when the app is released
-	if(SAGE2Items.applications.list.hasOwnProperty(app.id)) {
+	if (SAGE2Items.applications.list.hasOwnProperty(app.id)) {
 		partitions.updateOnItemRelease(app);
 	}
 
@@ -6466,7 +6466,7 @@ function moveAndResizeApplicationWindow(resizeApp, portalId) {
 }
 
 function movePartitionWindow(uniqueID, movePartition) {
-	if(partitions.list.hasOwnProperty(movePartition.elemId)) {
+	if (partitions.list.hasOwnProperty(movePartition.elemId)) {
 
 		partitions.updatePartitionGeometries(movePartition.elemId, interactMgr);
 		broadcast('partitionMoveAndResizeFinished', partitions.list[movePartition.elemId].getDisplayString());
@@ -6816,14 +6816,14 @@ function dropSelectedItem(uniqueID, valid, portalId) {
 	var position;
 	if (remoteInteraction[uniqueID].selectedMoveItem !== null) {
 		// check which list contains the move item selected
-		if(SAGE2Items.portals.list.hasOwnProperty(remoteInteraction[uniqueID].selectedMoveItem.id)) {
+		if (SAGE2Items.portals.list.hasOwnProperty(remoteInteraction[uniqueID].selectedMoveItem.id)) {
 			// if the item is a portal
-			item = SAGE2Items["portals"].list[remoteInteraction[uniqueID].selectedMoveItem.id];
+			item = SAGE2Items.portals.list[remoteInteraction[uniqueID].selectedMoveItem.id];
 		} else if (partitions.list.hasOwnProperty(remoteInteraction[uniqueID].selectedMoveItem.id)) {
 			// if the item is a partition
-			item = partitions.list[remoteInteraction[uniqueID].selectedMoveItem.id]
+			item = partitions.list[remoteInteraction[uniqueID].selectedMoveItem.id];
 		} else {
-			item = SAGE2Items["applications"].list[remoteInteraction[uniqueID].selectedMoveItem.id];
+			item = SAGE2Items.applications.list[remoteInteraction[uniqueID].selectedMoveItem.id];
 		}
 
 		if (item) {
@@ -6833,14 +6833,14 @@ function dropSelectedItem(uniqueID, valid, portalId) {
 		}
 	} else if (remoteInteraction[uniqueID].selectedResizeItem !== null) {
 		// check which list contains the item selected
-		if(SAGE2Items.portals.list.hasOwnProperty(remoteInteraction[uniqueID].selectedResizeItem.id)) {
+		if (SAGE2Items.portals.list.hasOwnProperty(remoteInteraction[uniqueID].selectedResizeItem.id)) {
 			// if the item is a portal
-			item = SAGE2Items["portals"].list[remoteInteraction[uniqueID].selectedResizeItem.id];
+			item = SAGE2Items.portals.list[remoteInteraction[uniqueID].selectedResizeItem.id];
 		} else if (partitions.list.hasOwnProperty(remoteInteraction[uniqueID].selectedResizeItem.id)) {
 			// if the item is a partition
-			item = partitions.list[remoteInteraction[uniqueID].selectedResizeItem.id]
+			item = partitions.list[remoteInteraction[uniqueID].selectedResizeItem.id];
 		} else {
-			item = SAGE2Items["applications"].list[remoteInteraction[uniqueID].selectedResizeItem.id];
+			item = SAGE2Items.applications.list[remoteInteraction[uniqueID].selectedResizeItem.id];
 		}
 
 		if (item) {

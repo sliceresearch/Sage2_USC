@@ -31,9 +31,6 @@ var SAGE2_Partition = function(data) {
 	this.height = data.height;
 
 	this.cornerSize   = 0.2 * Math.min(this.width, this.height);
-	var oneButton    = Math.round(ui.titleBarHeight) * (300 / 235);
-	var buttonsPad   = 0.1 * oneButton;
-	var startButtons = this.width - Math.round(3 * oneButton + 2 * buttonsPad);
 
 	console.log("SAGE2_Partition: Creating new Partition");
 

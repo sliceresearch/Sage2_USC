@@ -89,7 +89,7 @@ Partition.prototype.updateChild = function(id) {
 		item.relative_height = item.height / this.height;
 
 	}
-}
+};
 
 /**
   * Remove a Child application to the partition.
@@ -144,8 +144,8 @@ Partition.prototype.clearPartition = function(deleteFnc) {
 Partition.prototype.toggleInnerTiling = function() {
 	this.innerTiling = !this.innerTiling;
 	console.log("Tiling:", this.innerTiling);
-	
-	if(this.innerTiling) {
+
+	if (this.innerTiling) {
 		this.tilePartition();
 	}
 };
