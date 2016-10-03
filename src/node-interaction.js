@@ -467,9 +467,9 @@ Interaction.prototype.maximizeSelectedItem = function(item, centered) {
 
 	// keep window inside display vertically
 	if (iCenterY - (iHeight / 2) < 0) {
-		item.top = 0;
+		item.top = titleBar;
 	} else if (iCenterY + (iHeight / 2) > this.configuration.totalHeight) {
-		item.top = this.configuration.totalHeight - iHeight;
+		item.top = this.configuration.totalHeight - iHeight - titleBar;
 	} else {
 		item.top = iCenterY - (iHeight / 2);
 	}
