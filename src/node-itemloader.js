@@ -330,22 +330,11 @@ AppLoader.prototype.loadImageFromFile = function(file, mime_type, aUrl, external
 
 	} else if (mime_type === "image/svg+xml") {
 		// SVG file
-
-		// Query the exif data
-		// var vbox = assets.getTag(file, "ViewBox");
-		// var svgDims;
-		// if (vbox) {
-		// 	var box  = vbox.split(' ');
-		// 	svgDims = {width: parseInt(box[2]), height: parseInt(box[3])};
-		// } else {
-		// 	// Assume square image
-		// 	svgDims = {width: 600, height: 600};
-		// }
-		var svgExif   = assets.getExifData(file);
+		var svgExif = assets.getExifData(file);
 		if (svgExif) {
-			var svgWidth  = svgExif.ImageWidth  || 600;
-			var svgHeight = svgExif.ImageHeight || 600;
-			this.loadImageFromServer(svgWidth, svgHeight, mime_type, aUrl, external_url, name, svgExif,
+			var svgWidth  = parseInt(svgExif.ImageWidth,  10) || 600;
+			var svgHeight = parseInt(svgExif.ImageHeight, 10) || 600;
+			this.loadImageFromServer(svgWidth, svgHeight, mime_type, aUrl, external_url, svgExif.FileName, svgExif,
 				function(appInstance) {
 					appInstance.file = file;
 					callback(appInstance);
