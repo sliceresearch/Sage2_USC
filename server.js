@@ -344,7 +344,10 @@ function initializeSage2Server() {
 	);
 
 	// Initialize assets folders
-	assets.initialize(mainFolder, mediaFolders);
+	assets.initialize(mainFolder, mediaFolders, function() {
+		// when processing assets done, send the file list
+		broadcast('storedFileList', getSavedFilesList());
+	});
 
 	// Initialize app loader
 	appLoader = new Loader(mainFolder.path, hostOrigin, config, imageMagickOptions, ffmpegOptions);
@@ -3985,7 +3988,7 @@ function loadConfiguration() {
 	var pixelsPerMeter = userConfig.resolution.height / tileHeight;
 	if (userDefinedAspectRatio == false) {
 		aspectRatio = userConfig.resolution.width / userConfig.resolution.height;
-		console.log(sageutils.header("UI") + "Resolution defined aspect ratio: " + aspectRatio);
+		console.log(sageutils.header("UI") + "Resolution defined aspect ratio: " + aspectRatio.toFixed(2));
 	}
 
 	// Check the display border settings
