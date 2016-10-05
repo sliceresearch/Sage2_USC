@@ -517,16 +517,22 @@ var addFile = function(filename, exif, callback) {
 };
 
 
-var deleteAsset = function(filename) {
+var deleteAsset = function(filename, cb) {
 	var filepath = path.resolve(filename);
 	fs.unlink(filepath, function(err) {
 		if (err) {
 			console.log(sageutils.header("Assets") + "error removing file: " + filename + err);
+			if (cb) {
+				cb(err);
+			}
 		} else {
 			console.log(sageutils.header("Assets") + "successfully deleted file: " + filename);
 			// Delete the metadata
 			delete AllAssets.list[filepath];
 			saveAssets();
+			if (cb) {
+				cb(null);
+			}
 		}
 	});
 };

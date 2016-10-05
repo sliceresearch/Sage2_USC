@@ -2905,15 +2905,17 @@ function calculateValidBlocks(app, blockSize, renderhandle) {
 }
 
 function wsDeleteElementFromStoredFiles(wsio, data) {
-	assets.deleteAsset(data.filename);
-
 	if (data.application === "load_session") {
 		// if it's a session
 		deleteSession(data.filename);
+	} else {
+		assets.deleteAsset(data.filename, function(err) {
+			if (!err) {
+				// send the update file list
+				broadcast('storedFileList', getSavedFilesList());
+			}
+		});
 	}
-
-	// send the update file list
-	broadcast('storedFileList', getSavedFilesList());
 }
 
 function wsMoveElementFromStoredFiles(wsio, data) {
