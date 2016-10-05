@@ -414,8 +414,8 @@ Interaction.prototype.maximizeSelectedItem = function(item, centered) {
 	}
 
 	var wallRatio = this.configuration.totalWidth  / this.configuration.totalHeight;
-	var iCenterX  = centered ? this.configuration.totalHeight / 2.0 : item.left + item.width / 2.0;
-	var iCenterY  = this.configuration.totalHeight / 2.0;
+	var iCenterX  = centered ? this.configuration.totalWidth / 2.0 : item.left + item.width / 2.0;
+	var iCenterY  = centered ? this.configuration.totalHeight / 2.0 : item.top + item.height / 2.0;
 	var iWidth    = 1;
 	var iHeight   = 1;
 	var titleBar = this.configuration.ui.titleBarHeight;
@@ -456,13 +456,22 @@ Interaction.prototype.maximizeSelectedItem = function(item, centered) {
 	item.width  = iWidth;
 	item.height = iHeight;
 
-	// keep window inside display
+	// keep window inside display horizontally
 	if (iCenterX - (iWidth / 2) < 0) {
 		item.left = 0;
 	} else if (iCenterX + (iWidth / 2) > this.configuration.totalWidth) {
 		item.left = this.configuration.totalWidth - iWidth;
 	} else {
 		item.left = iCenterX - (iWidth / 2);
+	}
+
+	// keep window inside display vertically
+	if (iCenterY - (iHeight / 2) < 0) {
+		item.top = titleBar;
+	} else if (iCenterY + (iHeight / 2) > this.configuration.totalHeight) {
+		item.top = this.configuration.totalHeight - iHeight - titleBar;
+	} else {
+		item.top = iCenterY - (iHeight / 2);
 	}
 
 	// Shift by 'titleBarHeight' if no auto-hide
