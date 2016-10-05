@@ -344,7 +344,10 @@ function initializeSage2Server() {
 	);
 
 	// Initialize assets folders
-	assets.initialize(mainFolder, mediaFolders);
+	assets.initialize(mainFolder, mediaFolders, function() {
+		// when processing assets done, send the file list
+		broadcast('storedFileList', getSavedFilesList());
+	});
 
 	// Initialize app loader
 	appLoader = new Loader(mainFolder.path, hostOrigin, config, imageMagickOptions, ffmpegOptions);
@@ -2902,15 +2905,17 @@ function calculateValidBlocks(app, blockSize, renderhandle) {
 }
 
 function wsDeleteElementFromStoredFiles(wsio, data) {
-	assets.deleteAsset(data.filename);
-
 	if (data.application === "load_session") {
 		// if it's a session
 		deleteSession(data.filename);
+	} else {
+		assets.deleteAsset(data.filename, function(err) {
+			if (!err) {
+				// send the update file list
+				broadcast('storedFileList', getSavedFilesList());
+			}
+		});
 	}
-
-	// send the update file list
-	broadcast('storedFileList', getSavedFilesList());
 }
 
 function wsMoveElementFromStoredFiles(wsio, data) {
@@ -3985,7 +3990,7 @@ function loadConfiguration() {
 	var pixelsPerMeter = userConfig.resolution.height / tileHeight;
 	if (userDefinedAspectRatio == false) {
 		aspectRatio = userConfig.resolution.width / userConfig.resolution.height;
-		console.log(sageutils.header("UI") + "Resolution defined aspect ratio: " + aspectRatio);
+		console.log(sageutils.header("UI") + "Resolution defined aspect ratio: " + aspectRatio.toFixed(2));
 	}
 
 	// Check the display border settings
