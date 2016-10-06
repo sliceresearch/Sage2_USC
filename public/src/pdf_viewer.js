@@ -668,7 +668,7 @@ var pdf_viewer = SAGE2_App.extend({
 
 		// Special callback: dowload the file
 		entries.push({
-			description: "Download",
+			description: "Download PDF",
 			callback: "SAGE2_download",
 			parameters: {
 				url: this.state.doc_url
