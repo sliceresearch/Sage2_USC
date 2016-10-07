@@ -429,7 +429,7 @@ Interaction.prototype.maximizeSelectedItem = function(item, centered) {
 	if (item.partition) {
 		// margin of 4 within partition
 		maxBound.left = item.partition.left + 4;
-		maxBound.top = item.partition.top + titleBar + 4;
+		maxBound.top = item.partition.top + 4;
 		maxBound.width = item.partition.width - 8;
 		maxBound.height = item.partition.height + titleBar - 8;
 	} else {
@@ -458,12 +458,12 @@ Interaction.prototype.maximizeSelectedItem = function(item, centered) {
 		item.maximizeConstraint = "both";
 	} else {
 		if (item.aspect > outerRatio) {
-			// Image wider than wall
+			// Image wider than wall area
 			iWidth  = maxBound.width;
 			iHeight = iWidth / item.aspect;
 			item.maximizeConstraint = "width";
 		} else {
-			// Wall wider than image
+			// Wall area than image
 			iHeight = maxBound.height - (2 * titleBar);
 			iWidth  = iHeight * item.aspect;
 			item.maximizeConstraint = "height";
@@ -482,19 +482,19 @@ Interaction.prototype.maximizeSelectedItem = function(item, centered) {
 	item.height = iHeight;
 
 	// keep window inside display horizontally
-	if (iCenterX - (iWidth / 2) < 0) {
+	if (iCenterX - (iWidth / 2) < maxBound.left) {
 		item.left = maxBound.left;
-	} else if (iCenterX + (iWidth / 2) > maxBound.width) {
+	} else if (iCenterX + (iWidth / 2) > maxBound.left + maxBound.width) {
 		item.left = maxBound.width + maxBound.left - iWidth;
 	} else {
 		item.left = iCenterX - (iWidth / 2);
 	}
 
 	// keep window inside display vertically
-	if (iCenterY - (iHeight / 2) < 0) {
+	if (iCenterY - (iHeight / 2) < maxBound.top + titleBar) {
 		item.top = maxBound.top + titleBar;
-	} else if (iCenterY + (iHeight / 2) > maxBound.height) {
-		item.top = maxBound.height - iHeight - titleBar;
+	} else if (iCenterY + (iHeight / 2) > maxBound.top + maxBound.height) {
+		item.top = maxBound.top + maxBound.height - iHeight - titleBar;
 	} else {
 		item.top = iCenterY - (iHeight / 2);
 	}
