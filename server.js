@@ -6766,7 +6766,7 @@ function pointerDblClickOnApplication(uniqueID, pointerX, pointerY, obj, localPt
 	// pointer press on app window
 	if (btn === null) {
 		if (remoteInteraction[uniqueID].windowManagementMode()) {
-			toggleApplicationFullscreen(uniqueID, obj.data);
+			toggleApplicationFullscreen(uniqueID, obj.data, true);
 		} else {
 			sendPointerDblClickToApplication(uniqueID, obj.data, pointerX, pointerY);
 		}
@@ -6775,7 +6775,7 @@ function pointerDblClickOnApplication(uniqueID, pointerX, pointerY, obj, localPt
 
 	switch (btn.id) {
 		case "titleBar": {
-			toggleApplicationFullscreen(uniqueID, obj.data);
+			toggleApplicationFullscreen(uniqueID, obj.data, true);
 			break;
 		}
 		case "dragCorner": {
@@ -7389,12 +7389,12 @@ function keyPressOnPortal(uniqueID, portalId, localPt, data) {
 }
 
 
-function toggleApplicationFullscreen(uniqueID, app) {
+function toggleApplicationFullscreen(uniqueID, app, dblClick) {
 	var resizeApp;
 	if (app.maximized !== true) { // maximize
-		resizeApp = remoteInteraction[uniqueID].maximizeSelectedItem(app);
+		resizeApp = remoteInteraction[uniqueID].maximizeSelectedItem(app, dblClick);
 	} else { // restore to previous
-		resizeApp = remoteInteraction[uniqueID].restoreSelectedItem(app);
+		resizeApp = remoteInteraction[uniqueID].restoreSelectedItem(app, dblClick);
 	}
 	if (resizeApp !== null) {
 		broadcast('startMove', {id: resizeApp.elemId, date: Date.now()});
