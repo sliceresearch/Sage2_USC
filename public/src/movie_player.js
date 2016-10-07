@@ -261,13 +261,13 @@ var movie_player = SAGE2_BlockStreamingApp.extend({
 
 		if (this.state.muted) {
 			entry = {};
-			entry.description = "unmute";
+			entry.description = "Unmute";
 			entry.callback = "contextToggleMute";
 			entry.parameters = {};
 			entries.push(entry);
 		} else {
 			entry = {};
-			entry.description = "mute";
+			entry.description = "Mute";
 			entry.callback = "contextToggleMute";
 			entry.parameters = {};
 			entries.push(entry);
@@ -276,13 +276,13 @@ var movie_player = SAGE2_BlockStreamingApp.extend({
 
 		if (this.state.looped) {
 			entry = {};
-			entry.description = "stop looping";
+			entry.description = "Stop looping";
 			entry.callback = "toggleLoop";
 			entry.parameters = {};
 			entries.push(entry);
 		} else {
 			entry = {};
-			entry.description = "loop video";
+			entry.description = "Loop video";
 			entry.callback = "toggleLoop";
 			entry.parameters = {};
 			entries.push(entry);
@@ -294,7 +294,7 @@ var movie_player = SAGE2_BlockStreamingApp.extend({
 
 		// Special callback: dowload the file
 		entries.push({
-			description: "Download",
+			description: "Download video",
 			callback: "SAGE2_download",
 			parameters: {
 				url: this.state.video_url

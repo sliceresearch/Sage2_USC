@@ -239,18 +239,6 @@ function initializeSage2Server() {
 		}
 	}
 
-	// Get full version of SAGE2 - git branch, commit, date
-	sageutils.getFullVersion(function(version) {
-		// fields: base commit branch date
-		SAGE2_version = version;
-		console.log(sageutils.header("SAGE2") + "Full Version:" + json5.stringify(SAGE2_version));
-		broadcast('setupSAGE2Version', SAGE2_version);
-
-		if (users !== null) {
-			users.session.version = SAGE2_version;
-		}
-	});
-
 	// Generate a qr image that points to sage2 server
 	var qr_png = qrimage.image(hostOrigin, { ec_level: 'M', size: 15, margin: 3, type: 'png' });
 	var qr_out = path.join(uploadsDirectory, "images", "QR.png");
@@ -343,12 +331,6 @@ function initializeSage2Server() {
 		}
 	);
 
-	// Initialize assets folders
-	assets.initialize(mainFolder, mediaFolders, function() {
-		// when processing assets done, send the file list
-		broadcast('storedFileList', getSavedFilesList());
-	});
-
 	// Initialize app loader
 	appLoader = new Loader(mainFolder.path, hostOrigin, config, imageMagickOptions, ffmpegOptions);
 
@@ -388,6 +370,24 @@ function initializeSage2Server() {
 	wsioServerS = new WebsocketIO.Server({server: sage2ServerS});
 	wsioServer.onconnection(openWebSocketClient);
 	wsioServerS.onconnection(openWebSocketClient);
+
+	// Get full version of SAGE2 - git branch, commit, date
+	sageutils.getFullVersion(function(version) {
+		// fields: base commit branch date
+		SAGE2_version = version;
+		console.log(sageutils.header("SAGE2") + "Full Version:" + json5.stringify(SAGE2_version));
+		broadcast('setupSAGE2Version', SAGE2_version);
+
+		if (users !== null) {
+			users.session.version = SAGE2_version;
+		}
+	});
+
+	// Initialize assets folders
+	assets.initialize(mainFolder, mediaFolders, function() {
+		// when processing assets done, send the file list
+		broadcast('storedFileList', getSavedFilesList());
+	});
 
 	drawingManager = new Drawing(config);
 	drawingManager.setCallbacks(
