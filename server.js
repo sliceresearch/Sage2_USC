@@ -5740,7 +5740,7 @@ function pointerPressOnPartition(uniqueID, pointerX, pointerY, data, obj, localP
 				// clear partition (close all windows inside)
 				if (partitions.list.hasOwnProperty(obj.id)) {
 					// passing method to delete applications for use within clearPartition method
-					var changedPartitions = partitions.list[obj.id].clearPartition(deleteApplication);
+					changedPartitions = partitions.list[obj.id].clearPartition(deleteApplication);
 					changedPartitions.forEach(el => {
 						broadcast('partitionWindowTitleUpdate', partitions.list[el].getTitle());
 					});

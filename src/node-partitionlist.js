@@ -267,7 +267,6 @@ PartitionList.prototype.createPartitionGeometries = function(newID, iMgr) {
 	var oneButton    = Math.round(titleBarHeight) * (300 / 235);
 	var buttonsPad   = 0.1 * oneButton;
 	var startButtons = newPtn.width - Math.round(2 * oneButton + 2 * buttonsPad);
-	var startPartitionControls = startButtons - 30 - Math.round(2 * oneButton + 2 * buttonsPad);
 
 	// add controls for partition
 	this.addButtonToItem(newID, "titleBar", "rectangle",
@@ -299,7 +298,6 @@ PartitionList.prototype.updatePartitionGeometries = function(ptnID, iMgr) {
 	var oneButton    = Math.round(titleBarHeight) * (300 / 235);
 	var buttonsPad   = 0.1 * oneButton;
 	var startButtons = thisPtn.width - Math.round(2 * oneButton + 2 * buttonsPad);
-	var startPartitionControls = startButtons - 30 - Math.round(2 * oneButton + 2 * buttonsPad);
 
 	iMgr.editGeometry(ptnID, "partitions", "rectangle", {
 		x: thisPtn.left, y: thisPtn.top,
