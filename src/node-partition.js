@@ -22,7 +22,7 @@
   * @constructor
   */
 
-function Partition(dims, id, partitionList) {
+function Partition(dims, id, color, partitionList) {
 	console.log("Partition: Creating new Partition");
 
 	// the list which this partition is a part of
@@ -45,6 +45,7 @@ function Partition(dims, id, partitionList) {
 	this.maximized = false;
 
 	this.id = id;
+	this.color = color;
 
 	this.bounding = true;
 
@@ -59,11 +60,15 @@ function Partition(dims, id, partitionList) {
   * @param {object} item - The item to be added
   */
 Partition.prototype.addChild = function(item) {
+	var changedPartitions = [];
+
 	if (item.partition /*&& item.partition !== this*/) {
 		// if the item was already in another partition, remove and add to this partition
+		changedPartitions.push(item.partition.id);
 		this.partitionList.removeChildFromPartition(item.id, item.partition.id);
 	}
 
+	changedPartitions.push(this.id);
 	item.partition = this;
 
 	var titleBarHeight = this.partitionList.configuration.ui.titleBarHeight;
@@ -75,6 +80,8 @@ Partition.prototype.addChild = function(item) {
 
 	this.numChildren++;
 	this.children[item.id] = item;
+
+	return changedPartitions;
 };
 
 Partition.prototype.updateChild = function(id) {
@@ -112,6 +119,8 @@ Partition.prototype.releaseChild = function(id) {
 		this.numChildren--;
 		delete this.children[id];
 	}
+
+	return [this.id];
 };
 
 /**
@@ -123,6 +132,8 @@ Partition.prototype.releaseAllChildren = function() {
 	childIDs.forEach((el) => {
 		this.releaseChild(el);
 	});
+
+	return [this.id];
 };
 
 /**
@@ -135,6 +146,8 @@ Partition.prototype.clearPartition = function(deleteFnc) {
 		this.releaseChild(el);
 		deleteFnc(el);
 	});
+
+	return [this.id];
 };
 
 /**
@@ -143,11 +156,13 @@ Partition.prototype.clearPartition = function(deleteFnc) {
   */
 Partition.prototype.toggleInnerTiling = function() {
 	this.innerTiling = !this.innerTiling;
-	console.log("Tiling:", this.innerTiling);
+	console.log("Tiling:", this.innerTiling, this.id);
 
 	if (this.innerTiling) {
 		this.tilePartition();
 	}
+
+	return [this.id];
 };
 
 /**
@@ -163,6 +178,8 @@ Partition.prototype.tilePartition = function() {
   */
 Partition.prototype.toggleInnerMaximization = function() {
 	this.innerMaximization = !this.innerMaximization;
+
+	return [this.id];
 };
 
 /**
@@ -211,12 +228,11 @@ Partition.prototype.updateChildrenPositions = function() {
 
 /**
   * Get a string corresponding to the information needed to update the display
-  *
-  * @param {string} id - The id of child to maximize
   */
-Partition.prototype.getDisplayString = function() {
+Partition.prototype.getDisplayInfo = function() {
 	return {
 		id: this.id,
+		color: this.color,
 
 		left: this.left,
 		top: this.top,
@@ -224,5 +240,23 @@ Partition.prototype.getDisplayString = function() {
 		height: this.height
 	};
 };
+
+/**
+  * Get a string corresponding to the information needed to update the display
+  */
+Partition.prototype.getTitle = function() {
+	var partitionString = "# Items: " + this.numChildren;
+
+	if (this.innerMaximization && this.innerTiling) {
+		partitionString += " | Maximized & Tiled";
+	} else if (this.innerMaximization) {
+		partitionString += " | Maximized";
+	} else if (this.innerTiling) {
+		partitionString += " | Tiled";
+	}
+
+	return {id: this.id, title: partitionString};
+};
+
 
 module.exports = Partition;

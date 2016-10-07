@@ -173,8 +173,8 @@ body {
 	left: 0;
 	top: 0;
 	overflow: hidden;
-	border: 4px solid #14B4C8;
-	background-color: rgba(40, 200, 220, 0.25);
+	border: 4px solid #a5a5a5;
+	/*background-color: rgba(40, 200, 220, 0.25);*/
 	-webkit-box-sizing: border-box;
 	-moz-box-sizing: border-box;
 	box-sizing: border-box;
@@ -190,8 +190,9 @@ body {
 	left: 0;
 	top: 0;
 	overflow: hidden;
-	border: 4px solid #14B4C8;
-	background-color: #1195A6;
+	text-align: center;
+	border: 4px solid #a5a5a5;
+	background-color: #6b6b6b;
 	border-bottom: none;
 	-webkit-box-sizing: border-box;
 	-moz-box-sizing: border-box;

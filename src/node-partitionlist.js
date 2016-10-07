@@ -48,7 +48,7 @@ function PartitionList(config) {
 	* @param {number} dims.width - Width of the Partition
 	* @param {number} dims.height - Height of the partition
   */
-PartitionList.prototype.newPartition = function(dims, iMgr) {
+PartitionList.prototype.newPartition = function(dims, iMgr, color) {
 	if (this.count <= 20) {
 		console.log("PartitionList: Creating new Partition");
 
@@ -56,9 +56,10 @@ PartitionList.prototype.newPartition = function(dims, iMgr) {
 		this.totalCreated++;
 		// give the partition a unique ID
 		var newID = "ptn_" + this.totalCreated;
+		var newColor = color || [40, 200, 220]; // default color
 
 		// add new partition to list
-		this.list[newID] = new Partition(dims, newID, this);
+		this.list[newID] = new Partition(dims, newID, newColor, this);
 
 		this.createPartitionGeometries(newID, iMgr);
 
@@ -123,6 +124,7 @@ PartitionList.prototype.newBoundingPartition = function(items) {
 	items.forEach((el) => {
 		partition.addChild(el);
 	});
+
 };
 
 /**
@@ -151,7 +153,8 @@ PartitionList.prototype.removePartition = function(id) {
   */
 PartitionList.prototype.removeChildFromPartition = function(childID, partitionID) {
 	console.log("Removing", childID, "from", partitionID);
-	this.list[partitionID].releaseChild(childID);
+
+	return this.list[partitionID].releaseChild(childID);
 };
 
 /**
@@ -169,13 +172,15 @@ PartitionList.prototype.updateOnItemRelease = function(item) {
 			this.list[newPartitionID].updateChild(item.id);
 		} else {
 			console.log(item.id, "added to", newPartitionID);
-			this.list[newPartitionID].addChild(item);
+			return this.list[newPartitionID].addChild(item);
 		}
 	} else {
 		if (item.partition) {
-			this.removeChildFromPartition(item.id, item.partition.id);
+			return this.removeChildFromPartition(item.id, item.partition.id);
 		}
 	}
+
+	return [];
 };
 
 /**
@@ -268,9 +273,9 @@ PartitionList.prototype.createPartitionGeometries = function(newID, iMgr) {
 	this.addButtonToItem(newID, "titleBar", "rectangle",
 		{x: 0, y: 0, w: newPtn.width, h: titleBarHeight}, 0);
 	this.addButtonToItem(newID, "tileButton", "rectangle",
-		{x: startPartitionControls, y: 0, w: oneButton, h: titleBarHeight}, 1);
+		{x: 0 + (1 * (buttonsPad + oneButton)), y: 0, w: oneButton, h: titleBarHeight}, 1);
 	this.addButtonToItem(newID, "clearButton", "rectangle",
-		{x: startPartitionControls + (1 * (buttonsPad + oneButton)), y: 0, w: oneButton, h: titleBarHeight}, 1);
+		{x: 0, y: 0, w: oneButton, h: titleBarHeight}, 1);
 	this.addButtonToItem(newID, "fullscreenButton", "rectangle",
 		{x: startButtons, y: 0, w: oneButton, h: titleBarHeight}, 1);
 	this.addButtonToItem(newID, "closeButton", "rectangle",
@@ -303,9 +308,9 @@ PartitionList.prototype.updatePartitionGeometries = function(ptnID, iMgr) {
 	this.editButtonOnItem(ptnID, "titleBar", "rectangle",
 		{x: 0, y: 0, w: thisPtn.width, h: titleBarHeight}, 0);
 	this.editButtonOnItem(ptnID, "tileButton", "rectangle",
-		{x: startPartitionControls, y: 0, w: oneButton, h: titleBarHeight}, 1);
+		{x: 0 + (1 * (buttonsPad + oneButton)), y: 0, w: oneButton, h: titleBarHeight}, 1);
 	this.editButtonOnItem(ptnID, "clearButton", "rectangle",
-		{x: startPartitionControls + (1 * (buttonsPad + oneButton)), y: 0, w: oneButton, h: titleBarHeight}, 1);
+		{x: 0, y: 0, w: oneButton, h: titleBarHeight}, 1);
 	this.editButtonOnItem(ptnID, "fullscreenButton", "rectangle",
 		{x: startButtons, y: 0, w: oneButton, h: titleBarHeight}, 1);
 	this.editButtonOnItem(ptnID, "closeButton", "rectangle",

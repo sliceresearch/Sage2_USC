@@ -24,13 +24,14 @@
 	*/
 var SAGE2_Partition = function(data) {
 	this.id = data.id;
+	this.color = hexToRgb(data.color);
 
 	this.left = data.left;
 	this.top = data.top;
 	this.width = data.width;
 	this.height = data.height;
 
-	this.cornerSize   = 0.2 * Math.min(this.width, this.height);
+	this.cornerSize = 0.2 * Math.min(this.width, this.height);
 
 	console.log("SAGE2_Partition: Creating new Partition");
 
@@ -44,6 +45,9 @@ var SAGE2_Partition = function(data) {
 	title.style.webkitTransform = "translate(" + this.left + "px," + this.top + "px)";
 	title.style.mozTransform    = "translate(" + this.left + "px," + this.top + "px)";
 	title.style.transform       = "translate(" + this.left + "px," + this.top + "px)";
+	// title.style.backgroundColor = "rgba(" + this.color.r + "," + this.color.g + "," + this.color.b + ", 1)";
+	// title.style.border = "rgba(" + (this.color.r * 0.6) + "," + (this.color.g * 0.6) + "," + (this.color.b * 0.6) + ", 1)";
+	title.style.borderWidth = 4;
 	title.style.zIndex = 0;
 
 	this.title = title;
@@ -62,6 +66,8 @@ var SAGE2_Partition = function(data) {
 			(data.top + ui.titleBarHeight) + "px)";
 	partitionArea.style.transform       = "translate(" + data.left + "px," +
 			(data.top + ui.titleBarHeight) + "px)";
+	partitionArea.style.backgroundColor = "rgba(" + this.color.r + "," + this.color.g + "," + this.color.b + ", 0.25)";
+	// partitionArea.style.border = "4px solid " + data.color;
 	partitionArea.style.zIndex = 0;
 
 	this.partitionArea = partitionArea;
@@ -78,8 +84,8 @@ var SAGE2_Partition = function(data) {
 	clearcontentIcon.src = "images/ui/clearcontent.svg";
 	clearcontentIcon.height = Math.round(ui.titleBarHeight + 20);
 	clearcontentIcon.style.position = "absolute";
-	clearcontentIcon.style.right    = "190px";
-	clearcontentIcon.style.top			 = "-12px";
+	clearcontentIcon.style.left    	 = "0px";
+	clearcontentIcon.style.top			 = "-10px";
 
 	this.clearcontentIcon = clearcontentIcon;
 
@@ -87,16 +93,18 @@ var SAGE2_Partition = function(data) {
 	tilecontentIcon.src = "images/ui/tilecontent.svg";
 	tilecontentIcon.height = Math.round(ui.titleBarHeight + 20);
 	tilecontentIcon.style.position = "absolute";
-	tilecontentIcon.style.right    = "265px";
-	tilecontentIcon.style.top			 = "-12px";
+	tilecontentIcon.style.left     = "75px";
+	tilecontentIcon.style.top			 = "-10px";
 
 	this.tilecontentIcon = tilecontentIcon;
 
 	var titleText = document.createElement('p');
 	titleText.id = this.id + "_titleText";
+	tilecontentIcon.style.position = "absolute";
+	titleText.style.top = "50%";
 	titleText.style.color = "#FFFFFF";
 	titleText.style.fontSize = Math.round(ui.titleTextSize) + "px";
-	titleText.style.marginLeft = Math.round(0.5 * ui.titleTextSize) + "px";
+	// titleText.style.marginLeft = Math.round(0.5 * ui.titleTextSize) + "px";
 	titleText.textContent = "Partition: " + this.id;
 
 	this.titleText = titleText;
@@ -122,6 +130,15 @@ var SAGE2_Partition = function(data) {
 
 	ui.main.appendChild(this.title);
 	ui.main.appendChild(this.partitionArea);
+
+	function hexToRgb(hex) {
+    var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+    return result ? {
+        r: parseInt(result[1], 16),
+        g: parseInt(result[2], 16),
+        b: parseInt(result[3], 16)
+    } : null;
+	}
 };
 
 /**
@@ -170,4 +187,13 @@ SAGE2_Partition.prototype.updatePositionAndSize = function(data) {
 		this.dragCorner.style.top = (this.height - this.cornerSize).toString() + "px";
 	}
 
+};
+
+/**
+	* Update position and size of the partition based on the partition within the server
+	*
+	* @param {string} title - The title of the partition
+	*/
+SAGE2_Partition.prototype.updateTitle = function(title) {
+	this.titleText.textContent = title;
 };
