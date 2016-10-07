@@ -244,18 +244,6 @@ function initializeSage2Server() {
 		}
 	}
 
-	// Get full version of SAGE2 - git branch, commit, date
-	sageutils.getFullVersion(function(version) {
-		// fields: base commit branch date
-		SAGE2_version = version;
-		console.log(sageutils.header("SAGE2") + "Full Version:" + json5.stringify(SAGE2_version));
-		broadcast('setupSAGE2Version', SAGE2_version);
-
-		if (users !== null) {
-			users.session.version = SAGE2_version;
-		}
-	});
-
 	// Generate a qr image that points to sage2 server
 	var qr_png = qrimage.image(hostOrigin, { ec_level: 'M', size: 15, margin: 3, type: 'png' });
 	var qr_out = path.join(uploadsDirectory, "images", "QR.png");
@@ -348,9 +336,6 @@ function initializeSage2Server() {
 		}
 	);
 
-	// Initialize assets folders
-	assets.initialize(mainFolder, mediaFolders);
-
 	// Initialize app loader
 	appLoader = new Loader(mainFolder.path, hostOrigin, config, imageMagickOptions, ffmpegOptions);
 
@@ -391,6 +376,24 @@ function initializeSage2Server() {
 	wsioServerS = new WebsocketIO.Server({server: sage2ServerS});
 	wsioServer.onconnection(openWebSocketClient);
 	wsioServerS.onconnection(openWebSocketClient);
+
+	// Get full version of SAGE2 - git branch, commit, date
+	sageutils.getFullVersion(function(version) {
+		// fields: base commit branch date
+		SAGE2_version = version;
+		console.log(sageutils.header("SAGE2") + "Full Version:" + json5.stringify(SAGE2_version));
+		broadcast('setupSAGE2Version', SAGE2_version);
+
+		if (users !== null) {
+			users.session.version = SAGE2_version;
+		}
+	});
+
+	// Initialize assets folders
+	assets.initialize(mainFolder, mediaFolders, function() {
+		// when processing assets done, send the file list
+		broadcast('storedFileList', getSavedFilesList());
+	});
 
 	drawingManager = new Drawing(config);
 	drawingManager.setCallbacks(
@@ -2911,15 +2914,17 @@ function calculateValidBlocks(app, blockSize, renderhandle) {
 }
 
 function wsDeleteElementFromStoredFiles(wsio, data) {
-	assets.deleteAsset(data.filename);
-
 	if (data.application === "load_session") {
 		// if it's a session
 		deleteSession(data.filename);
+	} else {
+		assets.deleteAsset(data.filename, function(err) {
+			if (!err) {
+				// send the update file list
+				broadcast('storedFileList', getSavedFilesList());
+			}
+		});
 	}
-
-	// send the update file list
-	broadcast('storedFileList', getSavedFilesList());
 }
 
 function wsMoveElementFromStoredFiles(wsio, data) {
@@ -3994,7 +3999,7 @@ function loadConfiguration() {
 	var pixelsPerMeter = userConfig.resolution.height / tileHeight;
 	if (userDefinedAspectRatio == false) {
 		aspectRatio = userConfig.resolution.width / userConfig.resolution.height;
-		console.log(sageutils.header("UI") + "Resolution defined aspect ratio: " + aspectRatio);
+		console.log(sageutils.header("UI") + "Resolution defined aspect ratio: " + aspectRatio.toFixed(2));
 	}
 
 	// Check the display border settings
@@ -6958,7 +6963,7 @@ function pointerDblClickOnApplication(uniqueID, pointerX, pointerY, obj, localPt
 	// pointer press on app window
 	if (btn === null) {
 		if (remoteInteraction[uniqueID].windowManagementMode()) {
-			toggleApplicationFullscreen(uniqueID, obj.data);
+			toggleApplicationFullscreen(uniqueID, obj.data, true);
 		} else {
 			sendPointerDblClickToApplication(uniqueID, obj.data, pointerX, pointerY);
 		}
@@ -6967,7 +6972,7 @@ function pointerDblClickOnApplication(uniqueID, pointerX, pointerY, obj, localPt
 
 	switch (btn.id) {
 		case "titleBar": {
-			toggleApplicationFullscreen(uniqueID, obj.data);
+			toggleApplicationFullscreen(uniqueID, obj.data, true);
 			break;
 		}
 		case "dragCorner": {
@@ -7581,12 +7586,12 @@ function keyPressOnPortal(uniqueID, portalId, localPt, data) {
 }
 
 
-function toggleApplicationFullscreen(uniqueID, app) {
+function toggleApplicationFullscreen(uniqueID, app, dblClick) {
 	var resizeApp;
 	if (app.maximized !== true) { // maximize
-		resizeApp = remoteInteraction[uniqueID].maximizeSelectedItem(app);
+		resizeApp = remoteInteraction[uniqueID].maximizeSelectedItem(app, dblClick);
 	} else { // restore to previous
-		resizeApp = remoteInteraction[uniqueID].restoreSelectedItem(app);
+		resizeApp = remoteInteraction[uniqueID].restoreSelectedItem(app, dblClick);
 	}
 	if (resizeApp !== null) {
 		broadcast('startMove', {id: resizeApp.elemId, date: Date.now()});

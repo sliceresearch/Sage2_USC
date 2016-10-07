@@ -2199,7 +2199,7 @@ function setRmbContextMenuEntries(data) {
 				if (this.callback === "SAGE2_download") {
 					// special case: want to download the file
 					var url = this.parameters.url;
-					console.log('trying to download', url);
+					console.log('Download>	content', url);
 					if (url) {
 						// Download the file
 						var link = document.createElement('a');

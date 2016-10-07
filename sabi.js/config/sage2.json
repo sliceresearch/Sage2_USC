@@ -13,6 +13,7 @@
 	},
 	"actions": {
 		"sage2-on":          { "script":  "scripts\\sage2_on.bat" },
+		"s2-on-electron": { "script":  "scripts\\s2_on_electron.bat" },
 		"sage2-off":         { "script":  "scripts\\sage2_off.bat" },
 		"edit-config":       { "editor":  "~/Documents/SAGE2_Media/config/defaultWin-cfg.json" },
 		"edit-form":         { "openurl": "form.html?action=edit-config" },
@@ -41,7 +42,7 @@
 			"description": "Start and stop SAGE2. You can also set a meeting access code to protect access to your meeting.",
 			"image": "images/display.png",
 			"actions": [
-				{"title": "Start", "action": "sage2-on" },
+				{"title": "Start", "action": "s2-on-electron" },
 				{"title": "Stop",  "action": "sage2-off"}
 			]
 		},
