@@ -29,6 +29,14 @@ var zoom = SAGE2_App.extend({
 
 		this.scrollAmount = 0;
 
+		var dataset;
+		// Is it loaded from an asset or as an application
+		if (data.state.file && data.state.file.length > 0) {
+			dataset = data.state.file;
+		} else {
+			dataset = this.resrcPath + "enceladus.dzi";
+		}
+
 		// create the image viewer with the right data and path
 		this.viewer = OpenSeadragon({
 			// suppporting div
@@ -41,7 +49,8 @@ var zoom = SAGE2_App.extend({
 			showNavigationControl: false,
 
 			// change tileSources for your dataset
-			tileSources: this.resrcPath + "enceladus.dzi"
+			tileSources: dataset
+			// tileSources: this.resrcPath + "enceladus.dzi"
 			// tileSources: this.resrcPath + "ratbrain.dzi"
 			// tileSources: "http://sage2rtt.evl.uic.edu:3000/ratbrain.dzi"
 		});
