@@ -7068,7 +7068,18 @@ function sendKeyDownToApplication(uniqueID, app, localPt, data) {
 
 	var ePosition = {x: localPt.x, y: localPt.y - titleBarHeight};
 	var eUser = {id: sagePointers[uniqueID].id, label: sagePointers[uniqueID].label, color: sagePointers[uniqueID].color};
-	var eData =  {code: data.code, state: "down"};
+	var eData =  {
+		code: data.code,
+		state: "down",
+		// add also the state of the special keys
+		status: {
+			SHIFT: remoteInteraction[uniqueID].SHIFT,
+			CTRL:  remoteInteraction[uniqueID].CTRL,
+			ALT:   remoteInteraction[uniqueID].ALT,
+			CAPS:  remoteInteraction[uniqueID].CAPS,
+			CMD:   remoteInteraction[uniqueID].CMD
+		}
+	};
 
 	var event = {id: app.id, type: "specialKey", position: ePosition, user: eUser, data: eData, date: Date.now()};
 	broadcast('eventInItem', event);
@@ -7272,8 +7283,8 @@ function keyPress(uniqueID, pointerX, pointerY, data) {
 
 		modeSwitch = true;
 	}
-	var lockedControl = remoteInteraction[uniqueID].lockedControl();
 
+	var lockedControl = remoteInteraction[uniqueID].lockedControl();
 	if (lockedControl !== null) {
 		var eUser = {id: sagePointers[uniqueID].id, label: sagePointers[uniqueID].label,
 					color: sagePointers[uniqueID].color};
@@ -7289,7 +7300,6 @@ function keyPress(uniqueID, pointerX, pointerY, data) {
 	}
 
 	var obj = interactMgr.searchGeometry({x: pointerX, y: pointerY});
-
 	if (obj === null) {
 		// if in empty space:
 		// Pressing ? for help (with shift)
@@ -7337,7 +7347,6 @@ function sendKeyPressToApplication(uniqueID, app, localPt, data) {
 
 	var ePosition = {x: localPt.x, y: localPt.y - titleBarHeight};
 	var eUser = {id: sagePointers[uniqueID].id, label: sagePointers[uniqueID].label, color: sagePointers[uniqueID].color};
-
 	var event = {id: app.id, type: "keyboard", position: ePosition, user: eUser, data: data, date: Date.now()};
 	broadcast('eventInItem', event);
 
