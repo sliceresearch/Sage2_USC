@@ -175,7 +175,7 @@ Interaction.prototype.moveSelectedItem = function(pointerX, pointerY) {
 			this.selectedMoveItem.previous_left =
 				this.selectedMoveItem.left + this.selectedMoveItem.width / 2 -
 				this.selectedMoveItem.previous_width / 2;
-		} else if (this.selectedMoveItem.maximizeConstraint === "both") {
+		} else if (this.selectedMoveItem.maximizeConstraint === "none") {
 			// move window as normal
 			// possible to change the way this works at later time
 			this.selectedMoveItem.left = pointerX + this.selectOffsetX;
@@ -455,7 +455,7 @@ Interaction.prototype.maximizeSelectedItem = function(item, centered) {
 		// Free Resize aspect ratio fills wall
 		iWidth = maxBound.width;
 		iHeight = maxBound.height - (2 * titleBar);
-		item.maximizeConstraint = "both";
+		item.maximizeConstraint = "none";
 	} else {
 		if (item.aspect > outerRatio) {
 			// Image wider than wall area
@@ -502,6 +502,11 @@ Interaction.prototype.maximizeSelectedItem = function(item, centered) {
 	// Shift by 'titleBarHeight' if no auto-hide
 	if (this.configuration.ui.auto_hide_ui === true) {
 		item.top = item.top - this.configuration.ui.titleBarHeight;
+	}
+
+	if (item.partition) {
+		item.partition.updateChild(item.id);
+		item.maximizeConstraint = "none";
 	}
 
 	item.maximized = true;

@@ -71,7 +71,31 @@ Partition.prototype.addChild = function(item) {
 	changedPartitions.push(this.id);
 	item.partition = this;
 
+	// if item is bigger than or slightly outside of partition, resize and put inside
+	// to show that the item is now in the partiton
 	var titleBarHeight = this.partitionList.configuration.ui.titleBarHeight;
+
+	if (item.width > this.width - 8) {
+		item.width = this.width - 8;
+		item.height = item.width / item.aspect;
+	}
+	if (item.height > this.height - titleBarHeight - 8) {
+		item.height = this.height - titleBarHeight - 8;
+		item.width = item.height * item.aspect;
+	}
+
+	if (item.left < this.left + 4) {
+		item.left = this.left + 4;
+	} else if (item.left + item.width > this.left + this.width - 4) {
+		item.left = this.left + this.width - 4 - item.width;
+	}
+
+	if (item.top < this.top + titleBarHeight + 4) {
+		item.top = this.top + titleBarHeight + 4;
+	} else if (item.top + item.height > this.top + this.height - 4) {
+		item.top = this.top + this.height - 4 - item.height;
+	}
+
 	// save positions within partition as percentages of partition
 	item.relative_left = (item.left - this.left) / this.width;
 	item.relative_top = (item.top - this.top - titleBarHeight) / this.height;

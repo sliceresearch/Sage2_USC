@@ -6100,7 +6100,6 @@ function updatePointerPosition(uniqueID, pointerX, pointerY, data) {
 
 			// Calculate partition which item is over
 			var ptnHovered = partitions.calculateNewPartition(SAGE2Items.applications.list[updatedMoveItem.elemId]);
-			
 			broadcast('updatePartitionBorders', ptnHovered);
 		}
 		return;
@@ -6438,15 +6437,6 @@ function moveApplicationWindow(uniqueID, moveApp, portalId) {
 				w: stickyItem.elemWidth, h: stickyItem.elemHeight + config.ui.titleBarHeight});
 			broadcast('setItemPosition', updatedStickyItems[idx]);
 		}
-
-		// update parent partition of item when the app is released
-		if (SAGE2Items.applications.list.hasOwnProperty(app.id)) {
-			var changedPartitions = partitions.updateOnItemRelease(app);
-
-			changedPartitions.forEach(el => {
-				broadcast('partitionWindowTitleUpdate', partitions.list[el].getTitle());
-			});
-		}
 	}
 }
 
@@ -6475,14 +6465,6 @@ function moveAndResizeApplicationWindow(resizeApp, portalId) {
 		if (app.id in SAGE2Items.renderSync && SAGE2Items.renderSync[app.id].newFrameGenerated === false) {
 			handleNewVideoFrame(app.id);
 		}
-	}
-
-	// update parent partition of item when the app is released
-	if (SAGE2Items.applications.list.hasOwnProperty(app.id)) {
-		var changedPartitions = partitions.updateOnItemRelease(app);
-		changedPartitions.forEach(el => {
-			broadcast('partitionWindowTitleUpdate', partitions.list[el].getTitle());
-		});
 	}
 
 	if (portalId !== undefined && portalId !== null) {
@@ -6630,6 +6612,20 @@ function pointerRelease(uniqueID, pointerX, pointerY, data) {
 		partitionStart = null;
 		draggingPartition = null;
 		return;
+	}
+
+	// update parent partition of item when the app is released
+	if (selectedApp && selectedApp.id && SAGE2Items.applications.list.hasOwnProperty(selectedApp.id)) {
+		var changedPartitions = partitions.updateOnItemRelease(selectedApp);
+
+		moveAndResizeApplicationWindow({elemId: selectedApp.id, elemLeft: selectedApp.left,
+				elemTop: selectedApp.top, elemWidth: selectedApp.width,
+				elemHeight: selectedApp.height, date: new Date()});
+
+		changedPartitions.forEach(el => {
+			broadcast('partitionWindowTitleUpdate', partitions.list[el].getTitle());
+		});
+		broadcast('updatePartitionBorders', null);
 	}
 
 	if (obj === null) {

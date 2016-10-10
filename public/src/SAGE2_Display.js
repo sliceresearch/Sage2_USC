@@ -608,8 +608,8 @@ function setupListeners() {
 			partitions[p].updateSelected(false);
 		}
 
+		// if a value was passed, highlight this value
 		if (data) {
-			console.log("Highlighting", data);
 			partitions[data].updateSelected(true);
 		}
 	});
