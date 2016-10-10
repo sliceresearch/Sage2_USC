@@ -5,8 +5,10 @@
 	"height": 506,
 	"resize": "free",
 	"dependencies": [
-		  "openseadragon.min.js"
+		"openseadragon.min.js"
 	],
+        "load": {
+        },
 	"removeFromLauncher": false,
 	"fileTypes": [ "dzi" ],
 	"directory": "dzi",

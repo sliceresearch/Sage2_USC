@@ -437,7 +437,8 @@ var addFile = function(filename, exif, callback) {
 			callback();
 		});
 		anAsset.exif.SAGE2thumbnail = rthumb;
-	} else if (exif.MIMEType === 'application/custom') {
+	} else if (exif.MIMEType === 'application/custom' ||
+		exif.MIMEType === 'application/xml') {
 		if (exif.icon === null || !sageutils.fileExists(exif.icon)) {
 			anAsset.exif.SAGE2thumbnail = path.join(AllAssets.rel, 'assets', 'apps', 'unknownapp');
 			callback();

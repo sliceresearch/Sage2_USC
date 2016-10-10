@@ -55,10 +55,6 @@ var Webview = SAGE2_App.extend({
 		// Get the URL from parameter or session
 		this.element.src = data.params || this.state.url;
 
-		// State of Shift key
-		this.isShift = false;
-		// State of Alt key
-		this.isAlt   = false;
 		// Store the zoom level, when in desktop emulation
 		this.zoomFactor = 1;
 		// Auto-refresh time
@@ -547,7 +543,6 @@ var Webview = SAGE2_App.extend({
 							keyCode: "Shift"
 						});
 					}
-					this.isShift = (data.state === "down");
 				}
 				// backspace key
 				if (data.code === 8 || data.code === 46) {
@@ -561,21 +556,17 @@ var Webview = SAGE2_App.extend({
 						});
 					}
 				}
-				// ALT key
-				if (data.code === 18) {
-					this.isAlt = (data.state === "down");
-				}
 
 				if (data.code === 37 && data.state === "down") {
 					// arrow left
-					if (this.isAlt) {
+					if (data.status.ALT) {
 						// navigate back
 						this.element.goBack();
 					}
 					this.refresh(date);
 				} else if (data.code === 38 && data.state === "down") {
 					// arrow up
-					if (this.isAlt) {
+					if (data.status.ALT) {
 						// ALT-up_arrow zooms in
 						this.zoomPage({dir: "zoomin"});
 					} else {
@@ -589,14 +580,14 @@ var Webview = SAGE2_App.extend({
 					this.refresh(date);
 				} else if (data.code === 39 && data.state === "down") {
 					// arrow right
-					if (this.isAlt) {
+					if (data.status.ALT) {
 						// navigate forward
 						this.element.goForward();
 					}
 					this.refresh(date);
 				} else if (data.code === 40 && data.state === "down") {
 					// arrow down
-					if (this.isAlt) {
+					if (data.status.ALT) {
 						// ALT-down_arrow zooms out
 						this.zoomPage({dir: "zoomout"});
 					} else {
