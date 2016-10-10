@@ -6054,8 +6054,8 @@ function updatePointerPosition(uniqueID, pointerX, pointerY, data) {
 	if (draggingPartition) {
 		draggingPartition.left = pointerX < partitionStart.x ? pointerX : partitionStart.x;
 		draggingPartition.top = pointerY < partitionStart.y ? pointerY : partitionStart.y;
-		draggingPartition.width = +(pointerX - partitionStart.x);
-		draggingPartition.height = +(pointerY - partitionStart.y);
+		draggingPartition.width = pointerX < partitionStart.x ? partitionStart.x - pointerX : pointerX - partitionStart.x;
+		draggingPartition.height = pointerY < partitionStart.y ? partitionStart.y - pointerY : pointerY - partitionStart.y;
 
 		partitions.updatePartitionGeometries(draggingPartition.id, interactMgr);
 		broadcast('partitionMoveAndResizeFinished', draggingPartition.getDisplayInfo());
@@ -6097,6 +6097,11 @@ function updatePointerPosition(uniqueID, pointerX, pointerY, data) {
 			movePartitionWindow(uniqueID, updatedMoveItem, null);
 		} else {
 			moveApplicationWindow(uniqueID, updatedMoveItem, null);
+
+			// Calculate partition which item is over
+			var ptnHovered = partitions.calculateNewPartition(SAGE2Items.applications.list[updatedMoveItem.elemId]);
+			
+			broadcast('updatePartitionBorders', ptnHovered);
 		}
 		return;
 	}
@@ -6612,8 +6617,8 @@ function pointerRelease(uniqueID, pointerX, pointerY, data) {
 	if (draggingPartition && data.button === "left") {
 		draggingPartition.left = pointerX < partitionStart.x ? pointerX : partitionStart.x;
 		draggingPartition.top = pointerY < partitionStart.y ? pointerY : partitionStart.y;
-		draggingPartition.width = +(pointerX - partitionStart.x);
-		draggingPartition.height = +(pointerY - partitionStart.y);
+		draggingPartition.width = pointerX < partitionStart.x ? partitionStart.x - pointerX : pointerX - partitionStart.x;
+		draggingPartition.height = pointerY < partitionStart.y ? partitionStart.y - pointerY : pointerY - partitionStart.y;
 		draggingPartition.aspect = draggingPartition.width / draggingPartition.height; // set aspect ratio when resize finished
 
 		partitions.updatePartitionGeometries(draggingPartition.id, interactMgr);

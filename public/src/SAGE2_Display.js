@@ -602,6 +602,17 @@ function setupListeners() {
 	wsio.on('partitionWindowTitleUpdate', function(data) {
 		partitions[data.id].updateTitle(data.title);
 	});
+	wsio.on('updatePartitionBorders', function(data) {
+		for (var p in partitions) {
+			// console.log(p);
+			partitions[p].updateSelected(false);
+		}
+
+		if (data) {
+			console.log("Highlighting", data);
+			partitions[data].updateSelected(true);
+		}
+	});
 
 	wsio.on('createAppWindowInDataSharingPortal', function(data) {
 		var portal = dataSharingPortals[data.portal];

@@ -68,6 +68,7 @@ var SAGE2_Partition = function(data) {
 			(data.top + ui.titleBarHeight) + "px)";
 	partitionArea.style.backgroundColor = "rgba(" + this.color.r + "," + this.color.g + "," + this.color.b + ", 0.25)";
 	// partitionArea.style.border = "4px solid " + data.color;
+	partitionArea.style.border = "4px solid #a5a5a5";
 	partitionArea.style.zIndex = 0;
 
 	this.partitionArea = partitionArea;
@@ -85,7 +86,7 @@ var SAGE2_Partition = function(data) {
 	clearcontentIcon.height = Math.round(ui.titleBarHeight + 20);
 	clearcontentIcon.style.position = "absolute";
 	clearcontentIcon.style.left    	 = "0px";
-	clearcontentIcon.style.top			 = "-10px";
+	clearcontentIcon.style.top			 = "-12px";
 
 	this.clearcontentIcon = clearcontentIcon;
 
@@ -94,7 +95,7 @@ var SAGE2_Partition = function(data) {
 	tilecontentIcon.height = Math.round(ui.titleBarHeight + 20);
 	tilecontentIcon.style.position = "absolute";
 	tilecontentIcon.style.left     = "75px";
-	tilecontentIcon.style.top			 = "-10px";
+	tilecontentIcon.style.top			 = "-12px";
 
 	this.tilecontentIcon = tilecontentIcon;
 
@@ -104,6 +105,7 @@ var SAGE2_Partition = function(data) {
 	titleText.style.top = "50%";
 	titleText.style.color = "#FFFFFF";
 	titleText.style.fontSize = Math.round(ui.titleTextSize) + "px";
+	titleText.style.transform = "translateY(20%)";
 	// titleText.style.marginLeft = Math.round(0.5 * ui.titleTextSize) + "px";
 	titleText.textContent = "Partition: " + this.id;
 
@@ -196,4 +198,17 @@ SAGE2_Partition.prototype.updatePositionAndSize = function(data) {
 	*/
 SAGE2_Partition.prototype.updateTitle = function(title) {
 	this.titleText.textContent = title;
+};
+
+/**
+	* Update partition borders (highlighted if app will be dropped in)
+	*
+	* @param {bool} selected - Whether or not this partition is selected
+	*/
+SAGE2_Partition.prototype.updateSelected = function(selected) {
+	if (selected) {
+		this.partitionArea.style.border = "6px solid #fff723";
+	} else {
+		this.partitionArea.style.border = "4px solid #a5a5a5";
+	}
 };
