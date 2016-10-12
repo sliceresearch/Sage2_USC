@@ -5728,6 +5728,12 @@ function pointerPressOnPartition(uniqueID, pointerX, pointerY, data, obj, localP
 			console.log("Click on Tile Partition:", obj.id);
 			var changedPartitions = partitions.list[obj.id].toggleInnerTiling();
 
+			var updatedChildren = partitions.list[obj.id].updateChildrenPositions();
+
+			for (let child of updatedChildren) {
+				moveAndResizeApplicationWindow(child);
+			}
+
 			changedPartitions.forEach(el => {
 				broadcast('partitionWindowTitleUpdate', partitions.list[el].getTitle());
 			});
