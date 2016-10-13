@@ -51,7 +51,7 @@ function Partition(dims, id, color, partitionList) {
 
 	this.innerTiling = false;
 	this.innerMaximization = false;
-	this.currentMaximizedChild = 0;
+	this.currentMaximizedChild = null;
 }
 
 /**
@@ -118,8 +118,9 @@ Partition.prototype.updateChild = function(id) {
 		item.relative_top = (item.top - this.top - titleBarHeight) / this.height;
 		item.relative_width = item.width / this.width;
 		item.relative_height = item.height / this.height;
-
 	}
+
+	return [this.id];
 };
 
 /**
@@ -194,7 +195,6 @@ Partition.prototype.toggleInnerTiling = function() {
 	* Tiling Algorithm taken from server.js
   */
 Partition.prototype.tilePartition = function() {
-	// TODO: run tiling algorithm on inner windows
 	console.log("Performing tiling on", this.id);
 
 	// alias for this
@@ -404,25 +404,102 @@ Partition.prototype.toggleInnerMaximization = function() {
 };
 
 /**
-  * Increment the value of maximized child in the partition, and maximize that
-  * child
-  */
-Partition.prototype.maximizeNextChild = function() {
-	this.currentMaximizedChild = (this.currentMaximizedChild + 1) % this.numChildren;
-
-	this.maximizeChild(this.currentMaximizedChild);
-};
-
-/**
   * Maximize a specific child in the partition
   *
   * @param {string} id - The id of child to maximize
   */
 Partition.prototype.maximizeChild = function(id) {
 	if (this.children.hasOwnProperty(id)) {
-		// var child = this.children[id];
+		var item = this.children[id];
+		var config = this.partitionList.configuration;
 
-		// TODO: Maximize this child
+		// normally is just the screen size, but if in partition it is the partition boundaries
+		var titleBar = config.ui.titleBarHeight;
+		if (config.ui.auto_hide_ui === true) {
+			titleBar = 0;
+		}
+
+		this.currentMaximizedChild = id;
+
+		var maxBound = {
+			left: this.left + 4,
+			top: this.top + 4,
+			width: this.width - 8,
+			height: this.height + titleBar - 8
+		};
+
+		var outerRatio = maxBound.width  / maxBound.height;
+		var iCenterX  = centered ? maxBound.left + maxBound.width / 2.0 : item.left + item.width / 2.0;
+		var iCenterY  = centered ? maxBound.top + maxBound.height / 2.0 : item.top + item.height / 2.0;
+		var iWidth    = 1;
+		var iHeight   = 1;
+
+
+		if (this.SHIFT === true && item.resizeMode === "free") {
+			// previously would resize to native height/width
+			// item.aspect = item.native_width / item.native_height;
+
+			// Free Resize aspect ratio fills wall
+			iWidth = maxBound.width;
+			iHeight = maxBound.height - (2 * titleBar);
+			item.maximizeConstraint = "none";
+		} else {
+			if (item.aspect > outerRatio) {
+				// Image wider than wall area
+				iWidth  = maxBound.width;
+				iHeight = iWidth / item.aspect;
+				item.maximizeConstraint = "width";
+			} else {
+				// Wall area than image
+				iHeight = maxBound.height - (2 * titleBar);
+				iWidth  = iHeight * item.aspect;
+				item.maximizeConstraint = "height";
+			}
+		}
+
+		// back up values for restore
+		item.previous_left   = item.left;
+		item.previous_top    = item.top;
+		item.previous_width  = item.width;
+		item.previous_height = item.width / item.aspect;
+
+		// calculate new values
+		item.top    = iCenterY - (iHeight / 2);
+		item.width  = iWidth;
+		item.height = iHeight;
+
+		// keep window inside display horizontally
+		if (iCenterX - (iWidth / 2) < maxBound.left) {
+			item.left = maxBound.left;
+		} else if (iCenterX + (iWidth / 2) > maxBound.left + maxBound.width) {
+			item.left = maxBound.width + maxBound.left - iWidth;
+		} else {
+			item.left = iCenterX - (iWidth / 2);
+		}
+
+		// keep window inside display vertically
+		if (iCenterY - (iHeight / 2) < maxBound.top + titleBar) {
+			item.top = maxBound.top + titleBar;
+		} else if (iCenterY + (iHeight / 2) > maxBound.top + maxBound.height) {
+			item.top = maxBound.top + maxBound.height - iHeight - titleBar;
+		} else {
+			item.top = iCenterY - (iHeight / 2);
+		}
+
+		// Shift by 'titleBarHeight' if no auto-hide
+		if (this.configuration.ui.auto_hide_ui === true) {
+			item.top = item.top - this.configuration.ui.titleBarHeight;
+		}
+
+		if (item.partition) {
+			item.partition.updateChild(item.id);
+			item.maximizeConstraint = "none";
+		}
+
+		item.maximized = true;
+
+		return {elemId: item.id, elemLeft: item.left, elemTop: item.top,
+				elemWidth: item.width, elemHeight: item.height, date: new Date()};
 	}
 };
 

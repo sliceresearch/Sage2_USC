@@ -820,6 +820,7 @@ function initializeWSClient(wsio, reqConfig, reqVersion, reqTime, reqConsole) {
 
 	if (wsio.clientType === "display") {
 		initializeExistingSagePointers(wsio);
+		initializeExistingPartitions(wsio);
 		initializeExistingApps(wsio);
 		initializeRemoteServerInfo(wsio);
 		initializeExistingWallUI(wsio);
@@ -1126,7 +1127,12 @@ function initializeExistingApps(wsio) {
 	var key;
 
 	for (key in SAGE2Items.applications.list) {
-		wsio.emit('createAppWindow', SAGE2Items.applications.list[key]);
+		// remove partition value from application while sending wsio message (circular structure)
+		// does this cause issues?
+		var appCopy = Object.assign({}, SAGE2Items.applications.list[key]);
+		delete appCopy.partition;
+
+		wsio.emit('createAppWindow', appCopy);
 		if (SAGE2Items.renderSync.hasOwnProperty(key)) {
 			SAGE2Items.renderSync[key].clients[wsio.id] = {wsio: wsio, readyForNextFrame: false, blocklist: []};
 			calculateValidBlocks(SAGE2Items.applications.list[key], mediaBlockSize, SAGE2Items.renderSync[key]);
@@ -1143,6 +1149,15 @@ function initializeExistingApps(wsio) {
 
 	var newOrder = interactMgr.getObjectZIndexList("applications", ["portals"]);
 	wsio.emit('updateItemOrder', newOrder);
+}
+
+function initializeExistingPartitions(wsio) {
+	var key;
+
+	for (key in partitions.list) {
+		wsio.emit('createPartitionWindow', partitions.list[key].getDisplayInfo());
+		wsio.emit('partitionWindowTitleUpdate', partitions.list[key].getTitle());
+	}
 }
 
 function initializeExistingAppsPositionSizeTypeOnly(wsio) {
@@ -5728,7 +5743,7 @@ function pointerPressOnPartition(uniqueID, pointerX, pointerY, data, obj, localP
 			console.log("Click on Tile Partition:", obj.id);
 			var changedPartitions = partitions.list[obj.id].toggleInnerTiling();
 
-			var updatedChildren = partitions.list[obj.id].updateChildrenPositions();
+			let updatedChildren = partitions.list[obj.id].updateChildrenPositions();
 
 			for (let child of updatedChildren) {
 				moveAndResizeApplicationWindow(child);
@@ -5768,7 +5783,7 @@ function pointerPressOnPartition(uniqueID, pointerX, pointerY, data, obj, localP
 				broadcast('partitionMoveAndResizeFinished', obj.data.getDisplayInfo());
 
 				// update child positions within partiton
-				var updatedChildren = partitions.list[obj.id].updateChildrenPositions();
+				let updatedChildren = partitions.list[obj.id].updateChildrenPositions();
 
 				for (let child of updatedChildren) {
 					moveAndResizeApplicationWindow(child);
@@ -6487,7 +6502,8 @@ function movePartitionWindow(uniqueID, movePartition) {
 		broadcast('partitionMoveAndResizeFinished', partitions.list[movePartition.elemId].getDisplayInfo());
 
 		// update children of partition
-		var updatedChildren = partitions.list[movePartition.elemId].updateChildrenPositions();
+		let updatedChildren = partitions.list[movePartition.elemId].updateChildrenPositions();
+
 		for (let child of updatedChildren) {
 			moveAndResizeApplicationWindow(child);
 		}
@@ -6630,7 +6646,20 @@ function pointerRelease(uniqueID, pointerX, pointerY, data) {
 
 		changedPartitions.forEach(el => {
 			broadcast('partitionWindowTitleUpdate', partitions.list[el].getTitle());
+
+			// re-tile partitions if they are in tiled mode
+			if (partitions.list[el].innerTiling) {
+				partitions.list[el].tilePartition();
+
+				let updatedChildren = partitions.list[el].updateChildrenPositions();
+
+				for(let child of updatedChildren) {
+					moveAndResizeApplicationWindow(child);
+				}
+			}
 		});
+
+		// remove partition edge highlight
 		broadcast('updatePartitionBorders', null);
 	}
 

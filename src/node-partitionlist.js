@@ -169,7 +169,7 @@ PartitionList.prototype.updateOnItemRelease = function(item) {
 	if (newPartitionID !== null) {
 		if (item.partition && item.partition.id === newPartitionID) {
 			// stay in same partition, update relative position
-			this.list[newPartitionID].updateChild(item.id);
+			return this.list[newPartitionID].updateChild(item.id);
 		} else {
 			console.log(item.id, "added to", newPartitionID);
 			return this.list[newPartitionID].addChild(item);
