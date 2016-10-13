@@ -303,15 +303,16 @@ Partition.prototype.tilePartition = function() {
 		app.top = newdims[1] - titleBar + this.top;
 		app.width = newdims[2];
 		app.height = newdims[3];
-		var updateItem = {
-			elemId: app.id,
-			elemLeft: app.left,
-			elemTop: app.top,
-			elemWidth: app.width,
-			elemHeight: app.height,
-			force: true,
-			date: Date.now()
-		};
+
+		// var updateItem = {
+		// 	elemId: app.id,
+		// 	elemLeft: app.left,
+		// 	elemTop: app.top,
+		// 	elemWidth: app.width,
+		// 	elemHeight: app.height,
+		// 	force: true,
+		// 	date: Date.now()
+		// };
 
 		// broadcast('startMove', {id: updateItem.elemId, date: updateItem.date});
 		// broadcast('startResize', {id: updateItem.elemId, date: updateItem.date});
@@ -429,8 +430,8 @@ Partition.prototype.maximizeChild = function(id) {
 		};
 
 		var outerRatio = maxBound.width  / maxBound.height;
-		var iCenterX  = centered ? maxBound.left + maxBound.width / 2.0 : item.left + item.width / 2.0;
-		var iCenterY  = centered ? maxBound.top + maxBound.height / 2.0 : item.top + item.height / 2.0;
+		var iCenterX  = item.left + item.width / 2.0;
+		var iCenterY  = item.top + item.height / 2.0;
 		var iWidth    = 1;
 		var iHeight   = 1;
 
