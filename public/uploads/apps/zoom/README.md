@@ -32,5 +32,9 @@ We use VIPS to process the input images:
 * Edit the init function to point to that dzi file:
     * `this.viewer = OpenSeadragon({ id: this.element.id, prefixUrl: this.resrcPath + "/images/", tileSources: this.resrcPath + "large.dzi" });`
 
+### Icon
 
-Luc Renambot - July 2014
+Icon made by by Freepik (in kid and baby Pack: Kids Elements) from www.flaticon.com 
+
+
+Luc Renambot - July 2014-2016
