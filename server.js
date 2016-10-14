@@ -1013,6 +1013,7 @@ function setupListeners(wsio) {
 
 	// create partition
 	wsio.on('createPartition', 						wsCreatePartition);
+	wsio.on('partitionScreen', 						wsPartitionScreen);
 }
 
 /**
@@ -5743,11 +5744,7 @@ function pointerPressOnPartition(uniqueID, pointerX, pointerY, data, obj, localP
 			console.log("Click on Tile Partition:", obj.id);
 			var changedPartitions = partitions.list[obj.id].toggleInnerTiling();
 
-			var updatedChildren = partitions.list[obj.id].updateChildrenPositions();
-
-			for (let child of updatedChildren) {
-				moveAndResizeApplicationWindow(child);
-			}
+			updatePartitionInnerLayout(partitions.list[obj.id]);
 
 			changedPartitions.forEach(el => {
 				broadcast('partitionWindowTitleUpdate', partitions.list[el].getTitle());
@@ -5783,11 +5780,7 @@ function pointerPressOnPartition(uniqueID, pointerX, pointerY, data, obj, localP
 				broadcast('partitionMoveAndResizeFinished', obj.data.getDisplayInfo());
 
 				// update child positions within partiton
-				let updatedChildren = partitions.list[obj.id].updateChildrenPositions();
-
-				for (let child of updatedChildren) {
-					moveAndResizeApplicationWindow(child);
-				}
+				updatePartitionInnerLayout(partitions.list[obj.id]);
 			}
 			break;
 		case "closeButton":
@@ -6501,15 +6494,20 @@ function movePartitionWindow(uniqueID, movePartition) {
 		partitions.updatePartitionGeometries(movePartition.elemId, interactMgr);
 		broadcast('partitionMoveAndResizeFinished', partitions.list[movePartition.elemId].getDisplayInfo());
 
-		// update children of partition
-		let updatedChildren = partitions.list[movePartition.elemId].updateChildrenPositions();
-
-		for (let child of updatedChildren) {
-			moveAndResizeApplicationWindow(child);
-		}
+		updatePartitionInnerLayout(partitions.list[movePartition.elemId]);
 	}
 }
 
+function updatePartitionInnerLayout(partition) {
+	partition.updateInnerLayout();
+
+	// update children of partition
+	let updatedChildren = partition.updateChildrenPositions();
+
+	for (let child of updatedChildren) {
+		moveAndResizeApplicationWindow(child);
+	}
+}
 
 function moveDataSharingPortalWindow(movePortal) {
 	interactMgr.editGeometry(movePortal.elemId, "portals", "rectangle",
@@ -6647,16 +6645,7 @@ function pointerRelease(uniqueID, pointerX, pointerY, data) {
 		changedPartitions.forEach(el => {
 			broadcast('partitionWindowTitleUpdate', partitions.list[el].getTitle());
 
-			// re-tile partitions if they are in tiled mode
-			if (partitions.list[el].innerTiling) {
-				partitions.list[el].tilePartition();
-
-				let updatedChildren = partitions.list[el].updateChildrenPositions();
-
-				for (let child of updatedChildren) {
-					moveAndResizeApplicationWindow(child);
-				}
-			}
+			updatePartitionInnerLayout(partitions.list[el]);
 		});
 
 		// remove partition edge highlight
@@ -7657,6 +7646,13 @@ function toggleApplicationFullscreen(uniqueID, app, dblClick) {
 	} else { // restore to previous
 		resizeApp = remoteInteraction[uniqueID].restoreSelectedItem(app, dblClick);
 	}
+
+	if (app.partition) {
+		console.log("toggleApplicationFullscreen: Updating Partition Layout", app.partition.id);
+		updatePartitionInnerLayout(app.partition);
+		broadcast('partitionWindowTitleUpdate', app.partition.getTitle());
+	}
+
 	if (resizeApp !== null) {
 		broadcast('startMove', {id: resizeApp.elemId, date: Date.now()});
 		broadcast('startResize', {id: resizeApp.elemId, date: Date.now()});
@@ -7693,7 +7689,17 @@ function deleteApplication(appId, portalId) {
 	if (!SAGE2Items.applications.list.hasOwnProperty(appId)) {
 		return;
 	}
+
 	var app = SAGE2Items.applications.list[appId];
+
+	// if the app being deleted was in a partition, update partition
+	if (app.partition) {
+		let ptn = app.partition.releaseChild(app.id);
+
+		updatePartitionInnerLayout(partitions.list[ptn]);
+		broadcast('partitionWindowTitleUpdate', partitions.list[ptn].getTitle());
+	}
+
 	var application = app.application;
 	if (application === "media_stream" || application === "media_block_stream") {
 		var i;
@@ -8862,9 +8868,46 @@ function appFileSaveRequest(wsio, data) {
 function wsCreatePartition(wsio, data) {
 	// Create Test partition
 	console.log("Server: Creating new Partition");
-	createPartition(data);
+	var newPtn = createPartition(data, "#ffffff");
+
+	// update the title of the new partition
+	broadcast('partitionWindowTitleUpdate', newPtn.getTitle());
 }
 
+/**
+	* Create a new screen partition with dimensions specified in data
+	*
+	* @method wsPartitionScreen
+	* @param {object} data - Contains the numRows and numCols that the screen will be divided into
+	*/
+function wsPartitionScreen(wsio, data) {
+	console.log("Server: Dividing SAGE2 into Partitions");
+
+	var ptnWidth = config.totalWidth / data.numCols;
+	var ptnHeight = (config.totalHeight - ((data.numRows + 1) * config.ui.titleBarHeight)) / data.numRows;
+
+	let row, col;
+
+	for (row = 0; row < data.numRows; row++) {
+		for (col = 0; col < data.numCols; col++) {
+			let newPtn = createPartition({
+				left: (col * ptnWidth),
+				top: (config.ui.titleBarHeight + (row * (ptnHeight + config.ui.titleBarHeight))),
+				width: ptnWidth,
+				height: ptnHeight
+			}, "#307fff");
+
+			broadcast('partitionWindowTitleUpdate', newPtn.getTitle());
+		}
+	}
+}
+
+/**
+	* Create a new partition with a given set of dimensions and a color
+	*
+	* @method createPartition
+	* @param {object} data - Contains the numRows and numCols that the screen will be divided into
+	*/
 function createPartition(dims, color) {
 	var myPtn = partitions.newPartition(dims, interactMgr, color);
 	broadcast('createPartitionWindow', myPtn.getDisplayInfo());

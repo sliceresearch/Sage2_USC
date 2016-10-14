@@ -73,13 +73,21 @@ var SAGE2_Partition = function(data) {
 
 	this.partitionArea = partitionArea;
 
-	var titleIcons = document.createElement("img");
-	titleIcons.src = "images/layout3.svg";
-	titleIcons.height = Math.round(ui.titleBarHeight - 4);
-	titleIcons.style.position = "absolute";
-	titleIcons.style.right    = "0px";
+	var closeIcon = document.createElement("img");
+	closeIcon.src = "images/window-close.svg";
+	closeIcon.height = Math.round(ui.titleBarHeight - 4);
+	closeIcon.style.position = "absolute";
+	closeIcon.style.right    = "0px";
 
-	this.titleIcons = titleIcons;
+	this.closeIcon = closeIcon;
+
+	var maxIcon = document.createElement("img");
+	maxIcon.src = "images/window-fullscreen.svg";
+	maxIcon.height = Math.round(ui.titleBarHeight - 4);
+	maxIcon.style.position = "absolute";
+	maxIcon.style.right    = "70px";
+
+	this.maxIcon = maxIcon;
 
 	var clearcontentIcon = document.createElement("img");
 	clearcontentIcon.src = "images/ui/clearcontent.svg";
@@ -124,7 +132,8 @@ var SAGE2_Partition = function(data) {
 
 	this.dragCorner = dragCorner;
 
-	this.title.appendChild(this.titleIcons);
+	this.title.appendChild(this.maxIcon);
+	this.title.appendChild(this.closeIcon);
 	this.title.appendChild(this.clearcontentIcon);
 	this.title.appendChild(this.tilecontentIcon);
 	this.title.appendChild(this.titleText);

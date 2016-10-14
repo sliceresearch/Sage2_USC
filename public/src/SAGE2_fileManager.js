@@ -95,14 +95,19 @@ function FileManager(wsio, mydiv, uniqueID) {
 			{id: "overview_menu", value: "Display overview client"},
 			{id: "audio_menu",    value: "Audio manager"},
 			// {id: "drawing_menu",  value: "Drawing application"},
-			{id: "partition_menu",  value: "Create Partition"},
+			// {id: "partition_menu",  value: "Create Partition"},
 			{id: "console_menu",  value: "Server console"}
 		]},
 		{id: "mainhelp_menu",  value: "Help", submenu: [
 			{id: "help_menu",  value: "Help"},
 			{id: "info_menu",  value: "Information"},
 			{id: "about_menu", value: "About"}
-		]}
+		]},
+		{id: "mainpartition_menu",    value: "Partition Screen", config: {width: 250}, submenu: [
+			{id: "2x1_menu",  value: "2 Columns"},
+			{id: "3x1_menu", value: "3 Columns"},
+			{id: "2x2_menu",    value: "2 Columns, 2 Rows"}
+		]},
 	];
 	var mymenu = {
 		id: "mymenu",
@@ -371,6 +376,15 @@ function FileManager(wsio, mydiv, uniqueID) {
 			// create partition
 			var ptnDims = {left: 200, top: 200, width: 1000, height: 700};
 			wsio.emit('createPartition', ptnDims);
+		} else if (evt === "2x1_menu") {
+			// create partition division of screen
+			wsio.emit('partitionScreen', {numRows: 1, numCols: 2});
+		} else if (evt === "3x1_menu") {
+			// create partition division of screen
+			wsio.emit('partitionScreen', {numRows: 1, numCols: 3});
+		} else if (evt === "2x2_menu") {
+			// create partition division of screen
+			wsio.emit('partitionScreen', {numRows: 2, numCols: 2});
 		} else {
 			// dunno
 		}

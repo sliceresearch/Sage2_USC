@@ -152,7 +152,6 @@ PartitionList.prototype.removePartition = function(id) {
   * @param {string} partitionID - id of the Partition from which to remove the Child
   */
 PartitionList.prototype.removeChildFromPartition = function(childID, partitionID) {
-	console.log("Removing", childID, "from", partitionID);
 
 	return this.list[partitionID].releaseChild(childID);
 };
@@ -171,7 +170,6 @@ PartitionList.prototype.updateOnItemRelease = function(item) {
 			// stay in same partition, update relative position
 			return this.list[newPartitionID].updateChild(item.id);
 		} else {
-			console.log(item.id, "added to", newPartitionID);
 			return this.list[newPartitionID].addChild(item);
 		}
 	} else {

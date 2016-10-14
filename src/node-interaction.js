@@ -175,7 +175,7 @@ Interaction.prototype.moveSelectedItem = function(pointerX, pointerY) {
 			this.selectedMoveItem.previous_left =
 				this.selectedMoveItem.left + this.selectedMoveItem.width / 2 -
 				this.selectedMoveItem.previous_width / 2;
-		} else if (this.selectedMoveItem.maximizeConstraint === "none") {
+		} else {
 			// move window as normal
 			// possible to change the way this works at later time
 			this.selectedMoveItem.left = pointerX + this.selectOffsetX;
@@ -427,11 +427,7 @@ Interaction.prototype.maximizeSelectedItem = function(item, centered) {
 	}
 
 	if (item.partition) {
-		// margin of 4 within partition
-		maxBound.left = item.partition.left + 4;
-		maxBound.top = item.partition.top + 4;
-		maxBound.width = item.partition.width - 8;
-		maxBound.height = item.partition.height + titleBar - 8;
+		return item.partition.maximizeChild(item.id, this.SHIFT);
 	} else {
 		// normal wall maximization parameters
 		maxBound.left = 0;
@@ -439,80 +435,74 @@ Interaction.prototype.maximizeSelectedItem = function(item, centered) {
 		maxBound.width = this.configuration.totalWidth;
 		maxBound.height = this.configuration.totalHeight;
 
-	}
-
-	var outerRatio = maxBound.width  / maxBound.height;
-	var iCenterX  = centered ? maxBound.left + maxBound.width / 2.0 : item.left + item.width / 2.0;
-	var iCenterY  = centered ? maxBound.top + maxBound.height / 2.0 : item.top + item.height / 2.0;
-	var iWidth    = 1;
-	var iHeight   = 1;
+		var outerRatio = maxBound.width  / maxBound.height;
+		var iCenterX  = centered ? maxBound.left + maxBound.width / 2.0 : item.left + item.width / 2.0;
+		var iCenterY  = centered ? maxBound.top + maxBound.height / 2.0 : item.top + item.height / 2.0;
+		var iWidth    = 1;
+		var iHeight   = 1;
 
 
-	if (this.SHIFT === true && item.resizeMode === "free") {
-		// previously would resize to native height/width
-		// item.aspect = item.native_width / item.native_height;
+		if (this.SHIFT === true && item.resizeMode === "free") {
+			// previously would resize to native height/width
+			// item.aspect = item.native_width / item.native_height;
 
-		// Free Resize aspect ratio fills wall
-		iWidth = maxBound.width;
-		iHeight = maxBound.height - (2 * titleBar);
-		item.maximizeConstraint = "none";
-	} else {
-		if (item.aspect > outerRatio) {
-			// Image wider than wall area
-			iWidth  = maxBound.width;
-			iHeight = iWidth / item.aspect;
-			item.maximizeConstraint = "width";
-		} else {
-			// Wall area than image
+			// Free Resize aspect ratio fills wall
+			iWidth = maxBound.width;
 			iHeight = maxBound.height - (2 * titleBar);
-			iWidth  = iHeight * item.aspect;
-			item.maximizeConstraint = "height";
+			item.maximizeConstraint = "none";
+		} else {
+			if (item.aspect > outerRatio) {
+				// Image wider than wall area
+				iWidth  = maxBound.width;
+				iHeight = iWidth / item.aspect;
+				item.maximizeConstraint = "width";
+			} else {
+				// Wall area than image
+				iHeight = maxBound.height - (2 * titleBar);
+				iWidth  = iHeight * item.aspect;
+				item.maximizeConstraint = "height";
+			}
 		}
+
+		// back up values for restore
+		item.previous_left   = item.left;
+		item.previous_top    = item.top;
+		item.previous_width  = item.width;
+		item.previous_height = item.width / item.aspect;
+
+		// calculate new values
+		item.top    = iCenterY - (iHeight / 2);
+		item.width  = iWidth;
+		item.height = iHeight;
+
+		// keep window inside display horizontally
+		if (iCenterX - (iWidth / 2) < maxBound.left) {
+			item.left = maxBound.left;
+		} else if (iCenterX + (iWidth / 2) > maxBound.left + maxBound.width) {
+			item.left = maxBound.width + maxBound.left - iWidth;
+		} else {
+			item.left = iCenterX - (iWidth / 2);
+		}
+
+		// keep window inside display vertically
+		if (iCenterY - (iHeight / 2) < maxBound.top + titleBar) {
+			item.top = maxBound.top + titleBar;
+		} else if (iCenterY + (iHeight / 2) > maxBound.top + maxBound.height) {
+			item.top = maxBound.top + maxBound.height - iHeight - titleBar;
+		} else {
+			item.top = iCenterY - (iHeight / 2);
+		}
+
+		// Shift by 'titleBarHeight' if no auto-hide
+		if (this.configuration.ui.auto_hide_ui === true) {
+			item.top = item.top - this.configuration.ui.titleBarHeight;
+		}
+
+		item.maximized = true;
+
+		return {elemId: item.id, elemLeft: item.left, elemTop: item.top,
+				elemWidth: item.width, elemHeight: item.height, date: new Date()};
 	}
-
-	// back up values for restore
-	item.previous_left   = item.left;
-	item.previous_top    = item.top;
-	item.previous_width  = item.width;
-	item.previous_height = item.width / item.aspect;
-
-	// calculate new values
-	item.top    = iCenterY - (iHeight / 2);
-	item.width  = iWidth;
-	item.height = iHeight;
-
-	// keep window inside display horizontally
-	if (iCenterX - (iWidth / 2) < maxBound.left) {
-		item.left = maxBound.left;
-	} else if (iCenterX + (iWidth / 2) > maxBound.left + maxBound.width) {
-		item.left = maxBound.width + maxBound.left - iWidth;
-	} else {
-		item.left = iCenterX - (iWidth / 2);
-	}
-
-	// keep window inside display vertically
-	if (iCenterY - (iHeight / 2) < maxBound.top + titleBar) {
-		item.top = maxBound.top + titleBar;
-	} else if (iCenterY + (iHeight / 2) > maxBound.top + maxBound.height) {
-		item.top = maxBound.top + maxBound.height - iHeight - titleBar;
-	} else {
-		item.top = iCenterY - (iHeight / 2);
-	}
-
-	// Shift by 'titleBarHeight' if no auto-hide
-	if (this.configuration.ui.auto_hide_ui === true) {
-		item.top = item.top - this.configuration.ui.titleBarHeight;
-	}
-
-	if (item.partition) {
-		item.partition.updateChild(item.id);
-		item.maximizeConstraint = "none";
-	}
-
-	item.maximized = true;
-
-	return {elemId: item.id, elemLeft: item.left, elemTop: item.top,
-			elemWidth: item.width, elemHeight: item.height, date: new Date()};
 };
 
 Interaction.prototype.maximizeFullSelectedItem = function(item) {
@@ -552,6 +542,10 @@ Interaction.prototype.maximizeFullSelectedItem = function(item) {
 Interaction.prototype.restoreSelectedItem = function(item) {
 	if (item === null) {
 		return null;
+	}
+
+	if (item.partition) {
+		return item.partition.restoreChild(item.id, this.SHIFT);
 	}
 
 	if (this.SHIFT === true) {

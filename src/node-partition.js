@@ -105,6 +105,10 @@ Partition.prototype.addChild = function(item) {
 	this.numChildren++;
 	this.children[item.id] = item;
 
+	if (this.innerMaximization) {
+		this.maximizeChild(item.id);
+	}
+
 	return changedPartitions;
 };
 
@@ -143,6 +147,15 @@ Partition.prototype.releaseChild = function(id) {
 
 		this.numChildren--;
 		delete this.children[id];
+
+		if (this.innerMaximization && this.currentMaximizedChild === id) {
+
+			if (Object.keys(this.children).length > 0) {
+				this.maximizeChild(Object.keys(this.children)[0]);
+			} else {
+				this.currentMaximizedChild = null;
+			}
+		}
 	}
 
 	return [this.id];
@@ -181,7 +194,6 @@ Partition.prototype.clearPartition = function(deleteFnc) {
   */
 Partition.prototype.toggleInnerTiling = function() {
 	this.innerTiling = !this.innerTiling;
-	console.log("Tiling:", this.innerTiling, this.id);
 
 	if (this.innerTiling) {
 		this.tilePartition();
@@ -195,7 +207,6 @@ Partition.prototype.toggleInnerTiling = function() {
 	* Tiling Algorithm taken from server.js
   */
 Partition.prototype.tilePartition = function() {
-	console.log("Performing tiling on", this.id);
 
 	// alias for this
 	var _this = this;
@@ -204,9 +215,78 @@ Partition.prototype.tilePartition = function() {
 	var i, c, r, key;
 	var numCols, numRows, numCells;
 
-	var displayAr  = this.width / this.height;
+	var numWindows = this.numChildren - ((this.innerMaximization && this.currentMaximizedChild) ? 1 : 0);
+
+
+	// determine the bounds of the tiling area
+	var titleBar = this.partitionList.configuration.ui.titleBarHeight;
+	if (this.partitionList.configuration.ui.auto_hide_ui === true) {
+		titleBar = 0;
+	}
+
+	var tilingArea = {
+		left: this.left,
+		top: this.top + titleBar,
+		width: this.width,
+		height: this.height
+	};
+
+	// get set of children to run tiling on
+	var children = Object.assign({}, this.children);
+
+	if (this.innerMaximization) {
+		if (this.currentMaximizedChild) {
+
+			// if a child is maximized, remove from set to tile
+			delete children[this.currentMaximizedChild];
+
+			let maxChild = this.children[this.currentMaximizedChild];
+
+			if (numWindows === 0) {
+				// if the maximized window is the only window
+				// place in center
+				maxChild.left = this.left + this.width / 2 - maxChild.width / 2;
+				maxChild.top = this.top + titleBar + this.height / 2 - maxChild.height / 2;
+
+				this.updateChild(this.currentMaximizedChild);
+				return;
+			}
+
+			if (maxChild.maximizeConstraint === "width_ptn") {
+				// aspect ratio is wider than partition
+
+				// shift maximized child to top
+				maxChild.top = this.top + 2 * titleBar;
+
+				// adjust tiling area to be rest of space
+				tilingArea.top = maxChild.top + maxChild.height;
+				tilingArea.height = this.height - maxChild.height - titleBar;
+			} else if (maxChild.maximizeConstraint === "height_ptn") {
+				// aspect ratio is taller than partition
+
+				// shift maximized child to left
+				maxChild.left = this.left + 4;
+
+				// adjust tiling area to be rest of space
+				tilingArea.left = maxChild.left + maxChild.width;
+				tilingArea.width = this.width - maxChild.width;
+			}
+
+			// shift maximized child to top-left
+			maxChild.top = this.top + titleBar + 4;
+			maxChild.left = this.left + 4;
+
+			this.updateChild(this.currentMaximizedChild);
+		}
+	}
+
+	if (numWindows === 0) {
+		// return if no windows
+		return;
+	}
+
+	var displayAr  = tilingArea.width / tilingArea.height;
 	var arDiff     = displayAr / averageWindowAspectRatio();
-	var numWindows = this.numChildren;
 
 	// 3 scenarios... windows are on average the same aspect ratio as the display
 	if (arDiff >= 0.7 && arDiff <= 1.3) {
@@ -235,19 +315,14 @@ Partition.prototype.tilePartition = function() {
 	}
 	numCells = numRows * numCols;
 
-	// determine the bounds of the tiling area
-	var titleBar = this.partitionList.configuration.ui.titleBarHeight;
-	if (this.partitionList.configuration.ui.auto_hide_ui === true) {
-		titleBar = 0;
-	}
 	var areaX = 0;
 	var areaY = Math.round(1.5 * titleBar); // keep 0.5 height as margin
 	if (this.partitionList.configuration.ui.auto_hide_ui === true) {
 		areaY = -this.partitionList.configuration.ui.titleBarHeight;
 	}
 
-	var areaW = this.width;
-	var areaH = this.height - (1.0 * titleBar);
+	var areaW = tilingArea.width;
+	var areaH = tilingArea.height - (1.0 * titleBar);
 
 	var tileW = Math.floor(areaW / numCols);
 	var tileH = Math.floor(areaH / numRows);
@@ -262,8 +337,10 @@ Partition.prototype.tilePartition = function() {
 	var centroidsTiles = [];
 
 	// Caculate apps centers
-	for (key in this.children) {
-		app = this.children[key];
+	// use a subset of children excluding maximizedChild
+
+	for (key in children) {
+		app = children[key];
 		centroidsApps[key] = {x: app.left + app.width / 2.0, y: app.top + app.height / 2.0};
 	}
 	// Caculate tiles centers
@@ -283,13 +360,13 @@ Partition.prototype.tilePartition = function() {
 		}
 	}
 
-	for (key in this.children) {
+	for (key in children) {
 		// get the application
-		app = this.children[key];
+		app = children[key];
 		// pick a cell
 		var cellid = findMinimum(distances[key]);
 		// put infinite value to disable the chosen cell
-		for (i in this.children) {
+		for (i in children) {
 			distances[i][cellid] = Number.MAX_VALUE;
 		}
 
@@ -299,8 +376,8 @@ Partition.prototype.tilePartition = function() {
 		var newdims = fitWithin(app, c * tileW + areaX, r * tileH + areaY, tileW, tileH, padding);
 
 		// update the data structure
-		app.left = newdims[0] + this.left;
-		app.top = newdims[1] - titleBar + this.top;
+		app.left = newdims[0] + tilingArea.left;
+		app.top = newdims[1] - titleBar + tilingArea.top - titleBar / 2;
 		app.width = newdims[2];
 		app.height = newdims[3];
 
@@ -332,8 +409,8 @@ Partition.prototype.tilePartition = function() {
 
 		var totAr = 0.0;
 		var key;
-		for (key in _this.children) {
-			totAr += (_this.children[key].width / _this.children[key].height);
+		for (key in children) {
+			totAr += (children[key].width / children[key].height);
 		}
 		return (totAr / num);
 	}
@@ -409,7 +486,7 @@ Partition.prototype.toggleInnerMaximization = function() {
   *
   * @param {string} id - The id of child to maximize
   */
-Partition.prototype.maximizeChild = function(id) {
+Partition.prototype.maximizeChild = function(id, shift) {
 	if (this.children.hasOwnProperty(id)) {
 		var item = this.children[id];
 		var config = this.partitionList.configuration;
@@ -420,7 +497,12 @@ Partition.prototype.maximizeChild = function(id) {
 			titleBar = 0;
 		}
 
+		if (this.innerMaximization && this.currentMaximizedChild) {
+			this.restoreChild(this.currentMaximizedChild);
+		}
+
 		this.currentMaximizedChild = id;
+		this.innerMaximization = true;
 
 		var maxBound = {
 			left: this.left + 4,
@@ -436,25 +518,25 @@ Partition.prototype.maximizeChild = function(id) {
 		var iHeight   = 1;
 
 
-		if (this.SHIFT === true && item.resizeMode === "free") {
+		if (shift === true && item.resizeMode === "free") {
 			// previously would resize to native height/width
 			// item.aspect = item.native_width / item.native_height;
 
 			// Free Resize aspect ratio fills wall
 			iWidth = maxBound.width;
 			iHeight = maxBound.height - (2 * titleBar);
-			item.maximizeConstraint = "none";
+			item.maximizeConstraint = "none_ptn";
 		} else {
 			if (item.aspect > outerRatio) {
 				// Image wider than wall area
 				iWidth  = maxBound.width;
 				iHeight = iWidth / item.aspect;
-				item.maximizeConstraint = "width";
+				item.maximizeConstraint = "width_ptn";
 			} else {
 				// Wall area than image
 				iHeight = maxBound.height - (2 * titleBar);
 				iWidth  = iHeight * item.aspect;
-				item.maximizeConstraint = "height";
+				item.maximizeConstraint = "height_ptn";
 			}
 		}
 
@@ -463,6 +545,11 @@ Partition.prototype.maximizeChild = function(id) {
 		item.previous_top    = item.top;
 		item.previous_width  = item.width;
 		item.previous_height = item.width / item.aspect;
+
+		item.previous_relative_left = item.relative_left;
+		item.previous_relative_top = item.relative_top;
+		item.previous_relative_width = item.relative_width;
+		item.previous_relative_height = item.relative_height;
 
 		// calculate new values
 		item.top    = iCenterY - (iHeight / 2);
@@ -488,19 +575,75 @@ Partition.prototype.maximizeChild = function(id) {
 		}
 
 		// Shift by 'titleBarHeight' if no auto-hide
-		if (this.configuration.ui.auto_hide_ui === true) {
-			item.top = item.top - this.configuration.ui.titleBarHeight;
+		if (this.partitionList.configuration.ui.auto_hide_ui === true) {
+			item.top = item.top - this.partitionList.configuration.ui.titleBarHeight;
 		}
 
-		if (item.partition) {
-			item.partition.updateChild(item.id);
-			item.maximizeConstraint = "none";
-		}
+		this.updateChild(item.id);
 
 		item.maximized = true;
 
 		return {elemId: item.id, elemLeft: item.left, elemTop: item.top,
 				elemWidth: item.width, elemHeight: item.height, date: new Date()};
+	}
+
+	return null;
+};
+
+/**
+  * Restore a specific child in the partition
+  *
+  * @param {string} id - The id of child to restore
+  */
+Partition.prototype.restoreChild = function(id, shift) {
+	if (this.children.hasOwnProperty(id)) {
+		var item = this.children[id];
+
+		this.innerMaximization = false;
+		this.currentMaximizedChild = null;
+
+		if (shift === true) {
+			// resize to native width/height
+			item.aspect = item.native_width / item.native_height;
+			item.left = item.previous_left + item.previous_width / 2 - item.native_width / 2;
+			item.top = item.previous_top + item.previous_height / 2 - item.native_height / 2;
+			item.width = item.native_width;
+			item.height = item.native_height;
+		} else {
+			item.left   = item.previous_relative_left * this.width + this.left;
+			item.top    = item.previous_relative_top * this.height +
+				this.top + this.partitionList.configuration.ui.titleBarHeight;
+			item.width  = item.previous_relative_width * this.width;
+			item.height = item.previous_relative_height * this.height;
+		}
+
+		this.updateChild(item.id);
+
+		item.maximized = false;
+
+		return {elemId: item.id, elemLeft: item.left, elemTop: item.top,
+				elemWidth: item.width, elemHeight: item.height, date: new Date()};
+	}
+
+	return null;
+};
+
+/**
+  * Updates the inner layout of the partition according to whether or not
+	* the partition is in innerTiling mode or innerMaximization mode or both
+  *
+  * @param {string} id - The id of child to restore
+  */
+Partition.prototype.updateInnerLayout = function() {
+	if (this.innerMaximization && this.currentMaximizedChild) {
+		if (this.children[this.currentMaximizedChild].maximized === false) {
+			// this should never really happen
+			this.maximizeChild(this.currentMaximizedChild);
+		}
+	}
+
+	if (this.innerTiling) {
+		this.tilePartition();
 	}
 };
 
