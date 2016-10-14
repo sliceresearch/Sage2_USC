@@ -26,6 +26,7 @@ var zoom = SAGE2_App.extend({
 		this.dragging  = false;
 		this.isShift   = false;
 		this.position  = {x: 0, y: 0};
+		this.title     = data.title;
 
 		this.scrollAmount = 0;
 
@@ -53,6 +54,16 @@ var zoom = SAGE2_App.extend({
 			// tileSources: this.resrcPath + "enceladus.dzi"
 			// tileSources: this.resrcPath + "ratbrain.dzi"
 			// tileSources: "http://sage2rtt.evl.uic.edu:3000/ratbrain.dzi"
+		});
+
+		// Handler when dataset is loaded
+		var _this = this;
+		this.viewer.addHandler('open', function(event) {
+			var info = _this.viewer.source.width.toLocaleString() + " x "
+				+ _this.viewer.source.width.toLocaleString() + " pixels";
+			var parts = dataset.split('/');
+			var newTitle  = _this.title + ": " + parts[parts.length - 1] + " " + info;
+			_this.updateTitle(newTitle);
 		});
 
 		this.controls.addButton({type: "prev", position: 1, identifier: "Left"});
