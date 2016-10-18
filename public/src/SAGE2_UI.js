@@ -2823,3 +2823,130 @@ function uiDrawZoneRemoveSelfAsClient() {
 	dataForApp.clientDest	= "allDisplays";
 	wsio.emit("csdMessage", dataForApp);
 }
+
+
+
+
+// ----------------------------------------------------------------------------------
+// ----------------------------------------------------------------------------------
+// ----------------------------------------------------------------------------------
+
+var s2SpeechRecognition = {};
+s2SpeechRecognition.hasInit            = false;
+s2SpeechRecognition.webkitSR           = null;
+s2SpeechRecognition.recognizing        = false;
+s2SpeechRecognition.final_transcript   = false;
+s2SpeechRecognition.interim_transcript = false;
+
+s2SpeechRecognition.init = function() {
+	if (!("webkitSpeechRecognition" in window)) {
+		alert("Sorry your browser doesn't support webkitSpeechRecognition. You will need an updated chrome");
+	}
+	else {
+		console.log("webkitSpeechRecognition exists beginning setup");
+		this.webkitSR = new webkitSpeechRecognition();
+		this.webkitSR.continuous = true;
+		this.webkitSR.interimResults = true;
+
+		this.webkitSR.onstart = function() {
+			console.log("s2SpeechRecognition started");
+			this.recognizing = true;
+		}
+
+		this.webkitSR.onresult = function(event) {
+			this.interim_transcript = " ";
+			for (var i = event.resultIndex; i < event.results.length; ++i) {
+				if (event.results[i].isFinal) {
+					this.final_transcript = event.results[i][0].transcript;
+					console.log("final_transcript:" + this.final_transcript);
+
+					/*
+					if the voice command contains:
+						launch {appname}
+					where app name can be
+						google maps
+						car
+						timer
+						weather
+						browser
+						doodle
+					*/
+					var appToLaunch = null;
+					this.final_transcript = this.final_transcript.toLowerCase();
+					if (this.final_transcript.indexOf("launch") != -1) {
+						if (this.final_transcript.indexOf("maps") != -1) {
+							appToLaunch = "googlemaps";
+						} else if (this.final_transcript.indexOf("car") != -1) {
+							appToLaunch = "car_threejs";
+						} else if (this.final_transcript.indexOf("timer") != -1) {
+							appToLaunch = "countdown";
+						} else if (this.final_transcript.indexOf("weather") != -1) {
+							appToLaunch = "US_weather";
+						} else if (this.final_transcript.indexOf("browser") != -1) {
+							appToLaunch = "Webview";
+						}  else if (this.final_transcript.indexOf("browser") != -1) {
+							appToLaunch = "Webview";
+						} 
+					}
+					
+					if (appToLaunch != null) {
+						console.log("App to launch:" + appToLaunch);
+						var data = {};
+						data.type = "launchAppWithValues";
+						data.appName = appToLaunch;
+						data.func = "getFullContextMenuAndUpdate";
+						data.params = {};
+						wsio.emit("csdMessage", data);
+						console.log("Launch packet sent");
+					}
+					
+					
+					/*
+					wsio.emit("csdMessage", {
+						type:        "setValue",
+						nameOfValue: "s2SpeechFinal",
+						value:       this.final_transcript,
+						description: "Set by UI running Chrome webkitSpeechRecognition"
+					});
+					//*/
+
+
+					setTimeout(function(){
+						console.log("restarting");
+						s2SpeechRecognition.webkitSR.stop();
+					}, 10);
+				} else {
+					this.interim_transcript += event.results[i][0].transcript;
+					console.log("interim_transcript:" + this.interim_transcript);
+				}
+			}
+		} //end onresult
+
+		this.webkitSR.onerror = function(e) {
+			console.log("webkitSpeechRecognition error:" + e);
+			console.dir(e);
+		}
+
+		this.webkitSR.onend = function() {
+			this.recognizing = false;
+			console.log("voice ended");
+			s2SpeechRecognition.webkitSR.start();
+		}
+		this.toggleS2SpeechRecognition();
+	} //end else there is webkit
+}
+
+s2SpeechRecognition.toggleS2SpeechRecognition = function() {
+	if (this.recognizing) {
+		this.webkitSR.stop();
+		return;
+	}
+	this.final_transcript = " ";
+	this.webkitSR.lang = "en-US";
+	this.webkitSR.start();
+}
+
+console.log("s2SpeechRecognition init()");
+s2SpeechRecognition.init();
+
+// ----------------------------------------------------------------------------------
