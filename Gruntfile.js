@@ -79,7 +79,7 @@ module.exports = function(grunt) {
 				options: { config: "build/jscs_sage2.json" }
 			},
 			appsFiles: {
-				src: [ 
+				src: [
 					"public/uploads/apps/UIC_crime_with_leaflet/leaflet.js",
 					"public/uploads/apps/US_weather/USweather.js",
 					"public/uploads/apps/car_threejs/car_threejs.js",
@@ -249,4 +249,3 @@ module.exports = function(grunt) {
 	// build a new app with questions
 	grunt.registerTask('newapp', ['prompt:genapp', 'genapp']);
 };
-

@@ -520,8 +520,21 @@ OmicronManager.prototype.processIncomingEvent = function(msg, rinfo) {
 		}
 
 		skeletonData["skeletonID"] = sourceID;
+		skeletonData["type"] = "kinectInput";
 
 		this.kinectInput(sourceID, skeletonData);
+	} else if (serviceType === 8 ) { // speech input
+		var spokenStringBuffer = msg.slice(offset, offset + e.extraDataSize);
+		const confidence = e.posx;
+
+		var speechData = {
+			"phrase": spokenStringBuffer.toString('utf8'),
+			"confidence": confidence,
+			"speechID": sourceID,
+			"type": confidence === 1.0 ? "dictationInput" : "grammarInput"
+		};
+
+		this.kinectInput(sourceID, speechData);
 	} else if (serviceType === 0) {
 		omicronManager.processPointerEvent(e, sourceID, posX, posY, msg, offset, address, emit, dstart);
 	} else if (serviceType === 7) {

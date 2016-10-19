@@ -5381,8 +5381,7 @@ function sendKinectInput(id, data) {	// From addClient type == sageUI
 	var app = SAGE2Items.applications.getFirstItemWithTitle("skeleton");
  	var event = {
 		id: app.id,
-		type: "kinectInput",
-		position: {"x":data.x, "y":data.y},
+		type: data.type,
 		user: "kinect",
 		data: data,
 		date: Date.now()
@@ -5390,6 +5389,7 @@ function sendKinectInput(id, data) {	// From addClient type == sageUI
 
 	broadcast('eventInItem', event);
 };
+
 
 function createNewDataSharingSession(remoteName, remoteHost, remotePort, remoteWSIO, remoteTime,
 	sharingWidth, sharingHeight, sharingScale, sharingTitleBarHeight, caller) {
