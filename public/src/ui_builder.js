@@ -79,6 +79,9 @@ function UIBuilder(json_cfg, clientID) {
 			this.bg.style.backgroundColor = "#000000";
 		}
 
+		// Set at the bottom of the stack
+		this.bg.style.zIndex = 0;
+
 		// Setup the clipping size
 		if (this.clientID === -1) {
 			// set the resolution to be the whole display wall
@@ -372,10 +375,10 @@ function UIBuilder(json_cfg, clientID) {
 		} else {
 			version.style.right  = ((6 * this.titleBarHeight) + rightOffset).toString() + "px";
 		}
-		version.style.top        = "50%";
-		version.style.webkitTransform  = "translateY(-50%)";
-		version.style.mozTransform  = "translateY(-50%)";
-		version.style.transform  = "translateY(-50%)";
+		version.style.top = "50%";
+		version.style.webkitTransform = "translateY(-50%)";
+		version.style.mozTransform = "translateY(-50%)";
+		version.style.transform = "translateY(-50%)";
 
 		// Load the logo (shown top left corner)
 		var _this = this;
@@ -717,7 +720,9 @@ function UIBuilder(json_cfg, clientID) {
 		if (this.json_cfg.ui.show_version) {
 			var version = document.getElementById('version');
 			if (data.branch && data.commit && data.date) {
-				version.innerHTML = "<b>v" + data.base + "-" + data.branch + "-" + data.commit + "</b> " + data.date;
+				version.innerHTML = "<b>v" + data.base + "-" + data.branch + "-" + data.commit + "</b> ";
+				version.innerHTML += data.date;
+				version.innerHTML += " [" + __SAGE2__.browser.browserType + "]";
 			} else {
 				version.innerHTML = "<b>v" + data.base + "</b>";
 			}
@@ -795,6 +800,7 @@ function UIBuilder(json_cfg, clientID) {
 		watermark.style.position = "absolute";
 		watermark.style.left     = ((this.json_cfg.totalWidth  / 2) - (width  / 2) - this.offsetX).toString() + "px";
 		watermark.style.top      = ((this.json_cfg.totalHeight / 2) - (height / 2) - this.offsetY).toString() + "px";
+		watermark.style.zIndex   = -1;
 	};
 
 	/**
