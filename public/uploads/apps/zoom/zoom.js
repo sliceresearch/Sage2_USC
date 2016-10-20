@@ -85,6 +85,37 @@ var zoom = SAGE2_App.extend({
 		this.refresh(date);
 	},
 
+	resetView: function(obj) {
+		// reset the view to origin viewport
+		this.viewer.viewport.fitBounds(this.viewer.viewport.getHomeBounds());
+	},
+
+	zoomAllIn: function(obj) {
+		// Maximum zoom
+		this.viewer.viewport.zoomTo(this.viewer.viewport.getMaxZoom());
+	},
+
+	getContextEntries: function() {
+		var entries = [];
+		var entry   = {};
+
+		entry = {};
+		entry.description = "Reset view";
+		entry.callback = "resetView";
+		entry.parameters = {};
+		entries.push(entry);
+
+		entry = {};
+		entry.description = "Maximum zoom";
+		entry.callback = "zoomAllIn";
+		entry.parameters = {};
+		entries.push(entry);
+
+		entries.push({description: "separator"});
+
+		return entries;
+	},
+
 	event: function(eventType, position, user_id, data, date) {
 		if (eventType === "pointerPress" && (data.button === "left")) {
 			if ((date - this.lastClick) < 350) {
@@ -119,12 +150,12 @@ var zoom = SAGE2_App.extend({
 
 			if (this.scrollAmount >= 24) {
 				// zoom out
-				this.viewer.viewport.zoomBy(0.8);
+				this.viewer.viewport.zoomBy(0.9);
 				this.viewer.viewport.applyConstraints();
 				this.scrollAmount = 0;
 			} else if (this.scrollAmount <= -24) {
 				// zoom in
-				this.viewer.viewport.zoomBy(1.2);
+				this.viewer.viewport.zoomBy(1.1);
 				this.viewer.viewport.applyConstraints();
 				this.scrollAmount = 0;
 			}
@@ -151,6 +182,14 @@ var zoom = SAGE2_App.extend({
 				// down
 				this.viewer.viewport.panBy(new OpenSeadragon.Point(0, 0.01));
 				this.viewer.viewport.applyConstraints();
+			} else if (data.code === 189 && !this.isShift && data.state === "down") {
+				// - minus
+				this.viewer.viewport.zoomBy(0.9);
+				this.lastZoom = date;
+			} else if (data.code === 187 && this.isShift && data.state === "down") {
+				// + plus
+				this.viewer.viewport.zoomBy(1.1);
+				this.lastZoom = date;
 			}
 		} else if (eventType === "widgetEvent") {
 			switch (data.identifier) {
@@ -172,12 +211,12 @@ var zoom = SAGE2_App.extend({
 					break;
 				case "ZoomIn":
 					// zoom in
-					this.viewer.viewport.zoomBy(1.2);
+					this.viewer.viewport.zoomBy(1.1);
 					this.lastZoom = date;
 					break;
 				case "ZoomOut":
 					// zoom out
-					this.viewer.viewport.zoomBy(0.8);
+					this.viewer.viewport.zoomBy(0.9);
 					this.lastZoom = date;
 					break;
 				default:
