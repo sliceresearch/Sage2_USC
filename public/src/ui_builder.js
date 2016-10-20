@@ -722,10 +722,10 @@ function UIBuilder(json_cfg, clientID) {
 			if (data.branch && data.commit && data.date) {
 				version.innerHTML = "<b>v" + data.base + "-" + data.branch + "-" + data.commit + "</b> ";
 				version.innerHTML += data.date;
-				version.innerHTML += " [" + __SAGE2__.browser.browserType + "]";
 			} else {
 				version.innerHTML = "<b>v" + data.base + "</b>";
 			}
+			version.innerHTML += " [" + __SAGE2__.browser.browserType + "]";
 		}
 	};
 
