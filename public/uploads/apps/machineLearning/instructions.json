@@ -1,0 +1,19 @@
+{
+	"main_script": "machineLearning.js",
+	"icon": "machineLearning.png",
+	"width": 1200,
+	"height": 600,
+	"resize": "free",
+	"dependencies": [
+		"scripts/lodash.min.js"
+	],
+	"load": {
+		"value": 4
+	},
+	"title": "machineLearning",
+	"version": "1.0.0",
+	"description": "simple machine learning application to recognize human gestures",
+	"keywords": [ "sage2", "kinect", "motion capture", "machine learning" ],
+	"author": "Jillian Aurisano <jillian.aurisano@gmail.com>",
+	"license": "SAGE2-Software-License"
+}

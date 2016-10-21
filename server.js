@@ -5386,7 +5386,7 @@ function pointerPressOnStaticUI(uniqueID, pointerX, pointerY, data, obj, localPt
 function sendKinectInput(id, data) {	// From addClient type == sageUI
 
 	// for now send to the skeleton tracking app
-	var app = SAGE2Items.applications.getFirstItemWithTitle("skeleton");
+	var app = SAGE2Items.applications.getFirstItemWithTitle("machineLearning");
  	var event = {
 		id: app.id,
 		type: data.type,

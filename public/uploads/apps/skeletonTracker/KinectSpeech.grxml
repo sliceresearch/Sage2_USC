@@ -1,0 +1,60 @@
+﻿<grammar version="1.0" xml:lang="en-US" root="rootRule" tag-format="semantics/1.0-literals" xmlns="http://www.w3.org/2001/06/grammar">
+  <rule id="rootRule">
+    <one-of>
+      <item>
+        <tag>Articulate</tag>
+        <one-of>
+          <item>articulat</item>
+          <item>hello</item>
+        </one-of>
+      </item>
+
+      <item>
+        <tag>That</tag>
+        <one-of>
+          <item>this</item>
+        </one-of>
+      </item>
+
+      <item>
+        <tag>Top Left</tag>
+        <one-of>
+          <item>upper left</item>
+          <item>left top</item>
+          <item>top left corner</item>
+          <item>upper left corner</item>
+        </one-of>
+      </item>
+
+      <item>
+        <tag>Top Right</tag>
+        <one-of>
+          <item>upper right</item>
+          <item>right top</item>
+          <item>top right corner</item>
+          <item>upper right corner</item>
+        </one-of>
+      </item>
+
+      <item>
+        <tag>Bottom Left</tag>
+        <one-of>
+          <item>lower left</item>
+          <item>left bottom</item>
+          <item>bottom left corner</item>
+          <item>lower left corner</item>
+        </one-of>
+      </item>
+
+      <item>
+        <tag>Bottom Right</tag>
+        <one-of>
+          <item>lower right</item>
+          <item>right bottom</item>
+          <item>bottom right corner</item>
+          <item>lower right corner</item>
+        </one-of>
+      </item>
+    </one-of>
+  </rule>
+</grammar>

@@ -110,7 +110,7 @@ function endOfPeriod (timePeriod) {
 	}
 }
 
-var skeleton = SAGE2_App.extend( {
+var machineLearning = SAGE2_App.extend( {
 	init: function(data) {
 		// Create div into the DOM
 		this.SAGE2Init("canvas", data);
@@ -139,12 +139,10 @@ var skeleton = SAGE2_App.extend( {
 
 		var date = new Date();
 		this.startTime = date.getTime();
-		this.beginningOfCurrentTimePeriod = this.startTime;
-		this.timePeriods = [{}];
-		this.currentTimePeriod = 0;
-
+		this.currentTrialStartTime = this.startTime;
 		this.buffer = ""; // buffer for printing data to a file
-		this.loggingData = false;
+		this.trialRunning = false;
+		this.trialNumber = 0;
 	},
 
 	load: function(date) {
@@ -161,12 +159,15 @@ var skeleton = SAGE2_App.extend( {
 	draw: function(date) {
 		this.ctx.clearRect(0, 0, this.element.width, this.element.height);
 
-		// draw data logging button
-		const logText = this.loggingData ? "Turn off logging" : "Turn on logging";
-		this.ctx.fillStyle = this.loggingData ? "red" : "green";
+		// draw data logging "button"
+		const logText = this.trialRunning ? "End Trial" : "Begin Trial";
+		this.ctx.fillStyle = this.trialRunning ? "red" : "green";
 		this.ctx.rect(0, this.element.height - 50, 100, this.element.height);
 		this.ctx.fill();
 		this.ctx.stroke();
+		this.ctx.fillStyle = "black";
+		this.ctx.font = "16px Helvetica";
+		this.ctx.fillText(logText, 50, this.element.height - 20);
 
 		// filter out skeletons that haven't been updated in over 1 second
 		this.skeletons = _.pickBy(this.skeletons, function (skeleton) {
@@ -238,27 +239,48 @@ var skeleton = SAGE2_App.extend( {
 		// Make sure to delete stuff (timers, ...)
 	},
 
+	endTrial: function () {
+		this.logData("subject0_trial" + this.trialNumber);
+		this.trialRunning = false;
+		this.trialNumber++;
+	},
+
+	beginTrial: function () {
+		this.currentTrialStartTime = Date.now();
+		this.trialRunning = true;
+		this.buffer = "";
+	},
+
+	handlePointerPress: function (position) {
+		if (position.x < 100 && position.y > this.element.height - 50) {
+			if (this.trialRunning) { // end trial manually
+				this.endTrial();
+			} else { // start trial
+				this.beginTrial();
+			}
+		}
+	},
+
 	//------------------------------------------//
 	//--------------EVENT FUNCTIONS-------------//
 	//------------------------------------------//
 	event: function(eventType, position, user_id, data, date) {
 		const skeletonColors = ["red", "blue", "green", "orange", "pink"];
 
-		if( eventType == "pointerPress"){
-			this.loggingData = !this.loggingData;
+		if (eventType == "pointerPress"){
+			this.handlePointerPress(position);
 		}
-		if( eventType === "kinectInput"){
-			// determine which time period this event belongs to
-			if (date.getTime() - 10000 > this.beginningOfCurrentTimePeriod) {
-				this.logData("subject0_trial" + this.currentTimePeriod);
-
-				this.beginningOfCurrentTimePeriod = date.getTime();
-				this.timePeriods.push({});
-				this.currentTimePeriod += 1;
+		else if ( eventType === "kinectInput"){
+			if (this.trialRunning && Date.now() - 10000 > this.currentTrialStartTime) {
+				this.endTrial();
 			}
 
 			const skeletonID = data["skeletonID"];
 
+			// ignore "phantom" skeletons (fixes BUG)
+			if (skeletonID === 0 || skeletonID === 1) return;
+
+			// add a new skeleton and give it a color
 			if (!this.skeletons[skeletonID]) {
 				var availableColors = [];
 
@@ -278,11 +300,6 @@ var skeleton = SAGE2_App.extend( {
 				};
 			}
 
-			// if this skeleton isn't present in the current time period, add it
-			if (!this.timePeriods[this.currentTimePeriod][skeletonID]) {
-				this.timePeriods[this.currentTimePeriod][skeletonID] = [];
-			}
-
 			for (const bodyPartID in data) {
 				const bodyPart = data[bodyPartID];
 
@@ -296,23 +313,24 @@ var skeleton = SAGE2_App.extend( {
 					this.skeletons[skeletonID][bodyPartName].baseSize = bodyParts[bodyPartID].baseSize;
 				}
 			}
-			this.mostRecentSkeleton = this.skeletons[skeletonID];
+
 			this.skeletons[skeletonID].lastUpdate = date.getTime();
-			const skel = {
-				"leftHandY" : this.skeletons[skeletonID].leftHand.y,
-				"rightHandY" : this.skeletons[skeletonID].rightHand.y,
-				"leftHandX": this.skeletons[skeletonID].leftHand.x,
-				"rightHandX" : this.skeletons[skeletonID].rightHand.x,
-			};
 
-			this.addToBuffer(skeletonID, "leftHand");
-
-			this.timePeriods[this.currentTimePeriod][skeletonID].push(skel);
+			if (this.trialRunning) {
+				this.addToBuffer(skeletonID, "leftHand");
+			}
 
 			this.refresh(date);
 		}
 		else if (eventType === "grammarInput") {
 			// what to do if grammar recognized
+			const phrase = data.phrase;
+
+			if (!this.trialRunning && phrase === "start" && data.confidence > 0.5) {
+				this.beginTrial();
+			} else if (this.trialRunning && phrase === "stop" && data.confidence > 0.5) {
+				this.endTrial();
+			}
 		}
 		else if (eventType === "dictationInput") {
 			const phrase = data.phrase;
@@ -366,18 +384,14 @@ var skeleton = SAGE2_App.extend( {
 
 	addToBuffer: function (skeletonID, bodyPartName) {
 		const bodyPart = this.skeletons[skeletonID][bodyPartName];
-		this.buffer += bodyPartName + "," + bodyPart.x + "," + bodyPart.y + "\n";
+		this.buffer += skeletonID + "," + bodyPartName + "," + bodyPart.x + "," + bodyPart.y + "," + bodyPart.z + "\n";
 	},
 
 	//this is how we can print data to a file
 	logData: function(filename){
-		if (this.loggingData) {
-			console.log("logging data to file: " + filename);
-			this.buffer = "Body Part,X coord,Y coord\n" + this.buffer;
-			dataToSave = this.buffer;
-			this.saveFile("", filename, "csv", dataToSave); //JSON.stringify(this.state, null, "\t"));
-		}
-		this.buffer = "";
+		console.log("logging data to file: " + filename);
+		this.buffer = "ID,Body Part,X coord,Y coord,Z coord\n" + this.buffer;
+		dataToSave = this.buffer;
+		this.saveFile("", filename, "csv", dataToSave); //JSON.stringify(this.state, null, "\t"));
 	}
-
 });
