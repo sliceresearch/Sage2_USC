@@ -70,7 +70,7 @@
 		"sw-precache": "latest",
 		"debug": "latest",
 		"ytdl-core": "latest",
-		"electron-prebuilt": "latest"
+		"electron": "latest"
 	},
 	"optionalDependencies": {
 		"websocketio": "latest",
