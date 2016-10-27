@@ -21,6 +21,11 @@
 "use strict";
 
 var SAGE2_version = require('../package.json');
+try {
+	var SAGE2_buildVersion = require('../VERSION.json');
+} catch (e) {
+	// nothing yet
+}
 
 var crypto  = require('crypto');              // https encryption
 var exec    = require('child_process').exec;  // execute external application
@@ -158,6 +163,10 @@ function loadCABundle(filename) {
  * @return {String} version number as x.x.x
  */
 function getShortVersion() {
+	// try to get the version from the VERSION.json file
+	if (SAGE2_buildVersion && SAGE2_buildVersion.version) {
+		SAGE2_version.version = SAGE2_buildVersion.version;
+	}
 	return SAGE2_version.version;
 }
 

@@ -1,6 +1,6 @@
 .PHONY: package
 
-VERSION=0.4.1
+VERSION=1.5.0
 
 default: all
 
@@ -15,7 +15,7 @@ package:
 
 download:
 	curl -LsSO https://bitbucket.org/sage2/sage2/get/master.zip
-	curl -LsSO https://nodejs.org/dist/v0.12.7/node-v0.12.7-darwin-x64.tar.gz
+	curl -LsSO https://nodejs.org/dist/latest/node-v6.7.0-darwin-x64.tar.gz
 	curl -LsSO https://bitbucket.org/sage2/sage2/downloads/mac-bin.zip
 
 stage:
@@ -24,7 +24,7 @@ stage:
 	rm -fr master
 
 install:
-	cd sage2 && node install_dependencies.js --prod --mac --target=0.12.0
+	cd sage2 && node install_dependencies.js --prod --mac --target=6.0.0
 	cd sage2 && install_name_tool -change /usr/local/lib/libavcodec.56.dylib local/lib/libavcodec.56.dylib node_modules/node-demux/build/Release/node_demux.node
 	cd sage2 && install_name_tool -change /usr/local/lib/libavutil.54.dylib local/lib/libavutil.54.dylib node_modules/node-demux/build/Release/node_demux.node
 	cd sage2 && install_name_tool -change /usr/local/lib/libavformat.56.dylib local/lib/libavformat.56.dylib  node_modules/node-demux/build/Release/node_demux.node
@@ -40,11 +40,11 @@ binary:
 	cp scripts/osx64/GO* sage2/
 	cp scripts/osx64/VERSION.json sage2/
 	unzip -q -u -d sage2 mac-bin.zip 
-	tar xf node-v0.12.7-darwin-x64.tar.gz
-	mv node-v0.12.7-darwin-x64/bin/node sage2/local/bin
-	mv node-v0.12.7-darwin-x64/lib/node_modules sage2/local/lib
+	tar xf node-v6.7.0-darwin-x64.tar.gz
+	mv node-v6.7.0-darwin-x64/bin/node sage2/local/bin
+	mv node-v6.7.0-darwin-x64/lib/node_modules sage2/local/lib
 	cd sage2/local/bin && ln -s ../lib/node_modules/npm/bin/npm-cli.js npm
-	rm -fr node-v0.12.7-darwin-x64
+	rm -fr node-v6.7.0-darwin-x64
 	cd sage2 && mv doc/api public
 	cd sage2 && rm -fr appveyor* *.log Dockerfile doc test extras GO-scripts build .eslintrc .jshintignore .kthxbai .eslint_client_rc .jshintrc
 	mv sage2 SAGE2
@@ -56,6 +56,6 @@ clean:
 	/bin/rm -fr SAGE2 dmg/*.dmg
 veryclean:
 	/bin/rm -fr SAGE2 sage2.zip dmg/*.dmg
-	/bin/rm -fr master.zip node-v0.12.7-darwin-x64.tar.gz mac-bin.zip
+	/bin/rm -fr master.zip node-v6.7.0-darwin-x64.tar.gz mac-bin.zip
 
 

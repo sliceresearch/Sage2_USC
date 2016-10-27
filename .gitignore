@@ -44,10 +44,12 @@ keys/*.key
 public/images/background/*_[0-9]*.*
 public/images/background/tmp_*
 
+yarn.lock
 
 # Users Environment Variables
 .lock-wscript
 
 .stylelintrc
+
 
 

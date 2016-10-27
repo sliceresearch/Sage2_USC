@@ -239,18 +239,6 @@ function initializeSage2Server() {
 		}
 	}
 
-	// Get full version of SAGE2 - git branch, commit, date
-	sageutils.getFullVersion(function(version) {
-		// fields: base commit branch date
-		SAGE2_version = version;
-		console.log(sageutils.header("SAGE2") + "Full Version:" + json5.stringify(SAGE2_version));
-		broadcast('setupSAGE2Version', SAGE2_version);
-
-		if (users !== null) {
-			users.session.version = SAGE2_version;
-		}
-	});
-
 	// Generate a qr image that points to sage2 server
 	var qr_png = qrimage.image(hostOrigin, { ec_level: 'M', size: 15, margin: 3, type: 'png' });
 	var qr_out = path.join(uploadsDirectory, "images", "QR.png");
@@ -314,7 +302,7 @@ function initializeSage2Server() {
 	}
 	// try to exclude some folders from the monitoring
 	var excludes = ['.DS_Store', 'Thumbs.db', 'passwd.json',
-		'assets', 'apps', 'tmp', 'config', 'web'];
+		'assets', 'apps', 'tmp', 'config', 'web', 'savedFiles'];
 	sageutils.monitorFolders(listOfFolders, excludes,
 		function(change) {
 			// console.log(sageutils.header("Monitor") + "Changes detected in", this.root);
@@ -342,9 +330,6 @@ function initializeSage2Server() {
 			}
 		}
 	);
-
-	// Initialize assets folders
-	assets.initialize(mainFolder, mediaFolders);
 
 	// Initialize app loader
 	appLoader = new Loader(mainFolder.path, hostOrigin, config, imageMagickOptions, ffmpegOptions);
@@ -385,6 +370,24 @@ function initializeSage2Server() {
 	wsioServerS = new WebsocketIO.Server({server: sage2ServerS});
 	wsioServer.onconnection(openWebSocketClient);
 	wsioServerS.onconnection(openWebSocketClient);
+
+	// Get full version of SAGE2 - git branch, commit, date
+	sageutils.getFullVersion(function(version) {
+		// fields: base commit branch date
+		SAGE2_version = version;
+		console.log(sageutils.header("SAGE2") + "Full Version:" + json5.stringify(SAGE2_version));
+		broadcast('setupSAGE2Version', SAGE2_version);
+
+		if (users !== null) {
+			users.session.version = SAGE2_version;
+		}
+	});
+
+	// Initialize assets folders
+	assets.initialize(mainFolder, mediaFolders, function() {
+		// when processing assets done, send the file list
+		broadcast('storedFileList', getSavedFilesList());
+	});
 
 	drawingManager = new Drawing(config);
 	drawingManager.setCallbacks(
@@ -997,6 +1000,9 @@ function setupListeners(wsio) {
 	// generic message passing for data requests or for specific communications.
 	// might eventually break this up into individual ws functions
 	wsio.on('csdMessage',							wsCsdMessage);
+
+	// application file saving message
+	wsio.on('appFileSaveRequest',                   appFileSaveRequest);
 }
 
 /**
@@ -2899,15 +2905,17 @@ function calculateValidBlocks(app, blockSize, renderhandle) {
 }
 
 function wsDeleteElementFromStoredFiles(wsio, data) {
-	assets.deleteAsset(data.filename);
-
 	if (data.application === "load_session") {
 		// if it's a session
 		deleteSession(data.filename);
+	} else {
+		assets.deleteAsset(data.filename, function(err) {
+			if (!err) {
+				// send the update file list
+				broadcast('storedFileList', getSavedFilesList());
+			}
+		});
 	}
-
-	// send the update file list
-	broadcast('storedFileList', getSavedFilesList());
 }
 
 function wsMoveElementFromStoredFiles(wsio, data) {
@@ -3982,7 +3990,7 @@ function loadConfiguration() {
 	var pixelsPerMeter = userConfig.resolution.height / tileHeight;
 	if (userDefinedAspectRatio == false) {
 		aspectRatio = userConfig.resolution.width / userConfig.resolution.height;
-		console.log(sageutils.header("UI") + "Resolution defined aspect ratio: " + aspectRatio);
+		console.log(sageutils.header("UI") + "Resolution defined aspect ratio: " + aspectRatio.toFixed(2));
 	}
 
 	// Check the display border settings
@@ -6758,7 +6766,7 @@ function pointerDblClickOnApplication(uniqueID, pointerX, pointerY, obj, localPt
 	// pointer press on app window
 	if (btn === null) {
 		if (remoteInteraction[uniqueID].windowManagementMode()) {
-			toggleApplicationFullscreen(uniqueID, obj.data);
+			toggleApplicationFullscreen(uniqueID, obj.data, true);
 		} else {
 			sendPointerDblClickToApplication(uniqueID, obj.data, pointerX, pointerY);
 		}
@@ -6767,7 +6775,7 @@ function pointerDblClickOnApplication(uniqueID, pointerX, pointerY, obj, localPt
 
 	switch (btn.id) {
 		case "titleBar": {
-			toggleApplicationFullscreen(uniqueID, obj.data);
+			toggleApplicationFullscreen(uniqueID, obj.data, true);
 			break;
 		}
 		case "dragCorner": {
@@ -7060,7 +7068,18 @@ function sendKeyDownToApplication(uniqueID, app, localPt, data) {
 
 	var ePosition = {x: localPt.x, y: localPt.y - titleBarHeight};
 	var eUser = {id: sagePointers[uniqueID].id, label: sagePointers[uniqueID].label, color: sagePointers[uniqueID].color};
-	var eData =  {code: data.code, state: "down"};
+	var eData =  {
+		code: data.code,
+		state: "down",
+		// add also the state of the special keys
+		status: {
+			SHIFT: remoteInteraction[uniqueID].SHIFT,
+			CTRL:  remoteInteraction[uniqueID].CTRL,
+			ALT:   remoteInteraction[uniqueID].ALT,
+			CAPS:  remoteInteraction[uniqueID].CAPS,
+			CMD:   remoteInteraction[uniqueID].CMD
+		}
+	};
 
 	var event = {id: app.id, type: "specialKey", position: ePosition, user: eUser, data: eData, date: Date.now()};
 	broadcast('eventInItem', event);
@@ -7264,8 +7283,8 @@ function keyPress(uniqueID, pointerX, pointerY, data) {
 
 		modeSwitch = true;
 	}
-	var lockedControl = remoteInteraction[uniqueID].lockedControl();
 
+	var lockedControl = remoteInteraction[uniqueID].lockedControl();
 	if (lockedControl !== null) {
 		var eUser = {id: sagePointers[uniqueID].id, label: sagePointers[uniqueID].label,
 					color: sagePointers[uniqueID].color};
@@ -7281,7 +7300,6 @@ function keyPress(uniqueID, pointerX, pointerY, data) {
 	}
 
 	var obj = interactMgr.searchGeometry({x: pointerX, y: pointerY});
-
 	if (obj === null) {
 		// if in empty space:
 		// Pressing ? for help (with shift)
@@ -7329,7 +7347,6 @@ function sendKeyPressToApplication(uniqueID, app, localPt, data) {
 
 	var ePosition = {x: localPt.x, y: localPt.y - titleBarHeight};
 	var eUser = {id: sagePointers[uniqueID].id, label: sagePointers[uniqueID].label, color: sagePointers[uniqueID].color};
-
 	var event = {id: app.id, type: "keyboard", position: ePosition, user: eUser, data: data, date: Date.now()};
 	broadcast('eventInItem', event);
 
@@ -7381,12 +7398,12 @@ function keyPressOnPortal(uniqueID, portalId, localPt, data) {
 }
 
 
-function toggleApplicationFullscreen(uniqueID, app) {
+function toggleApplicationFullscreen(uniqueID, app, dblClick) {
 	var resizeApp;
 	if (app.maximized !== true) { // maximize
-		resizeApp = remoteInteraction[uniqueID].maximizeSelectedItem(app);
+		resizeApp = remoteInteraction[uniqueID].maximizeSelectedItem(app, dblClick);
 	} else { // restore to previous
-		resizeApp = remoteInteraction[uniqueID].restoreSelectedItem(app);
+		resizeApp = remoteInteraction[uniqueID].restoreSelectedItem(app, dblClick);
 	}
 	if (resizeApp !== null) {
 		broadcast('startMove', {id: resizeApp.elemId, date: Date.now()});
@@ -8502,5 +8519,83 @@ function sendJupyterUpdates(data) {
 	broadcast('eventInItem', event);
 }
 
+/**
+ * Method handling a file save request from a SAGE2_App
+ *
+ * @method     appFileSaveRequest
+ * @param      {Object}  wsio    The websocket
+ * @param      {Object}  data    The data
+ */
+function appFileSaveRequest(wsio, data) {
 
+	/* data includes
+	data = {
+		app: Name of application,
+		id: id of application,
+		asset: true,
+		filePath: {
+			subdir: subdirectory app wishes file to be saved in
+			name: name of the file
+			ext: file extension
+		},
+		saveData: file data
+	}
+	*/
 
+	if (data.filePath) {
+		var appFileSaveDirectory, appdir;
+
+		// is it an asset or an application file
+		if (data.asset) {
+			// save in the user's folder (~/Documents/SAGE2_Media)
+			appFileSaveDirectory = path.join(mediaFolders.user.path, "tmp");
+			appdir = appFileSaveDirectory;
+		} else {
+			// save in protecteed application folder
+			appFileSaveDirectory = path.join(mediaFolders.user.path, "savedFiles");
+			appdir = path.join(appFileSaveDirectory, data.app);
+		}
+
+		// Take the filename
+		var filename = data.filePath.name;
+		if (filename.indexOf("." + data.filePath.ext) === -1) {
+			// add extension if it is not present in name
+			filename += "." + data.filePath.ext;
+		}
+
+		// save the file in the specific application folder
+		var filedir = appdir;
+		if (data.filePath.subdir) {
+			// add a sub-directory if asked
+			filedir = path.join(appdir, data.filePath.subdir);
+		}
+
+		// check and create the folder if needed
+		if (!sageutils.folderExists(filedir)) {
+			sageutils.mkdirParent(filedir);
+		}
+
+		// finally, build the full path
+		var fullpath = path.join(filedir, filename);
+
+		// and write the file
+		try {
+			fs.writeFileSync(fullpath, data.saveData);
+			console.log(sageutils.header('File') + "saved file to " + fullpath);
+			if (data.asset) {
+				var fileObject = {};
+				fileObject[0] = {
+					name: filename,
+					type: data.filePath.ext,
+					path: fullpath};
+				// Add the file to the asset library and open it
+				manageUploadedFiles(fileObject, [0, 0], data.app, "#B4B4B4", true);
+			}
+		} catch (err) {
+			console.log(sageutils.header('File') + "error while saving to " + fullpath + ":" + err);
+		}
+
+	} else {
+		console.log(sageutils.header('File') + "file directory not specified. File not saved.");
+	}
+}

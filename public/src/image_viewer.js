@@ -45,6 +45,8 @@ var image_viewer = SAGE2_App.extend({
 		// old image url
 		this.old_img_url = "";
 
+		this.title  = data.title;
+
 		this.updateAppFromState();
 		this.addWidgetControlsToImageViewer();
 	},
@@ -126,7 +128,7 @@ var image_viewer = SAGE2_App.extend({
 
 		// Special callback: dowload the file
 		entries.push({
-			description: "Download",
+			description: "Download image",
 			callback: "SAGE2_download",
 			parameters: {
 				url: cleanURL(this.state.src || this.state.img_url)

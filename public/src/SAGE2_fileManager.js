@@ -90,12 +90,16 @@ function FileManager(wsio, mydiv, uniqueID) {
 			{id: "tile_menu",   value: "Tile content"},
 			{id: "clear_menu",  value: "Clear display"}
 		]},
-		{id: "mainadmin_menu",    value: "Admin", config: {width: 170}, submenu: [
+		{id: "mainadmin_menu", value: "Admin", config: {width: 170}, submenu: [
 			{id: "display_menu",  value: "Display client 0"},
 			{id: "overview_menu", value: "Display overview client"},
 			{id: "audio_menu",    value: "Audio manager"},
 			// {id: "drawing_menu",  value: "Drawing application"},
 			{id: "console_menu",  value: "Server console"}
+		]},
+		{id: "services_menu", value: "Services", config: {width: 170}, submenu: [
+			{id: "imageservice_menu",  value: "Large image processing"},
+			{id: "videoservice_menu",  value: "Video processing"}
 		]},
 		{id: "mainhelp_menu",  value: "Help", submenu: [
 			{id: "help_menu",  value: "Help"},
@@ -339,6 +343,12 @@ function FileManager(wsio, mydiv, uniqueID) {
 		} else if (evt === "overview_menu") {
 			var overviewUrl = "http://" + window.location.hostname + _this.http_port +  "/display.html?clientID=-1";
 			window.open(overviewUrl, '_blank');
+		} else if (evt === "imageservice_menu") {
+			var imageUrl = "https://sage2rtt.evl.uic.edu:3043/upload";
+			window.open(imageUrl, '_blank');
+		} else if (evt === "videoservice_menu") {
+			var videoUrl = "https://sage2rtt.evl.uic.edu:3043/video";
+			window.open(videoUrl, '_blank');
 		} else if (evt === "clear_menu") {
 			wsio.emit('clearDisplay');
 		} else if (evt === "tile_menu") {
@@ -934,7 +944,8 @@ function FileManager(wsio, mydiv, uniqueID) {
 				// Create a subfolder if needed
 
 				// var filepath = myFile.sage2URL.split('/');
-				var filepath = decodeURIComponent(myFile.sage2URL).split('/');
+				// var filepath = decodeURIComponent(myFile.sage2URL).split('/');
+				var filepath = myFile.sage2URL.split('/');
 
 				// Remove the fist two elements (root) and the last (filename)
 				var subdirArray = filepath.slice(2, -1);
@@ -945,7 +956,8 @@ function FileManager(wsio, mydiv, uniqueID) {
 					// if it doesnt already exist
 					if (!_this.tree.getItem(newid)) {
 						var newElement = {
-							id: newid, value: sub,
+							// id: newid, value: sub,
+							id: newid, value: decodeURIComponent(sub),
 							icon: "folder", open: true, sage2URL: newid,
 							data: [], onContext: {}
 						};
