@@ -258,21 +258,24 @@ SAGE2WidgetControlInstance.prototype.createSlider = function(x, y, outline) {
 		sliderKnobLabel.attr({x: position});
 	}
 
-	Object.observe(app.handle, function(changes) {
-		for (var i = 0; i < changes.length; i++) {
-			if (changes[i].name === app.property) {
-				moveSlider(app.handle[app.property]);
-			}
-		}
+	var safeValue = app.handle[app.property];
+	var internalSliderValue = "_" + this.controlSpec.slider.id + "BoundValue";
+	Object.defineProperty(app.handle, app.property, {
+		get: function () {
+			return this[internalSliderValue];
+		},
+		set: function (x) {
+			this[internalSliderValue] = x;
+			moveSlider(x);
+		} 
 	});
-	if (app.handle[app.property] === null || app.handle[app.property] === begin) {
-		app.handle[app.property] = begin + 1;
-		app.handle[app.property] = begin;
-	} else if (app.handle[app.property] !== begin) {
-		var temp = app.handle[app.property];
-		app.handle[app.property] = begin;
-		app.handle[app.property] = temp;
+	
+	if (safeValue === null || safeValue === undefined) {
+		safeValue = begin;
+	} else if (safeValue < begin || safeValue > end) {
+		safeValue = (begin + end) / 2;
 	}
+	app.handle[app.property] = safeValue;
 	return {id: this.controlSpec.slider.id, x: bound.x, y: bound.y - knobHeight / 2, w: bound.x2 - bound.x, h: knobHeight};
 };
 
@@ -378,26 +381,34 @@ SAGE2WidgetControlInstance.prototype.createButton = function(buttonSpec, cx, cy,
 		});
 		buttonCoverReady(buttonCover);
 	}
+	function buttonCoverAnimate(value) {
+		if (type.img2 === null || type.img2 === undefined) {
+			var path = (value === 0) ? type.from : type.to;
+			var fill = (value === 0) ? type.fill : type.toFill;
+			buttonCover.animate({path: path, fill: fill}, type.delay, mina.bounce);
+		} else if (value === 1) {
+			button.select("#cover2").attr("visibility", "visible");
+			button.select("#cover").attr("visibility", "hidden");
+		} else {
+			button.select("#cover").attr("visibility", "visible");
+			button.select("#cover2").attr("visibility", "hidden");
+		}
+	}
 
 	if (type.state !== null && type.state !== undefined) {
-		Object.observe(type, function(changes) {
-			for (var i = 0; i < changes.length; i++) {
-				if (changes[i].name === "state") {
-					if (type.img2 === null || type.img2 === undefined) {
-						var path = (type.state === 0) ? type.from : type.to;
-						var fill = (type.state === 0) ? type.fill : type.toFill;
-						buttonCover.animate({path: path, fill: fill}, type.delay, mina.bounce);
-					} else if (type.state === 1) {
-						button.select("#cover2").attr("visibility", "visible");
-						button.select("#cover").attr("visibility", "hidden");
-					} else {
-						button.select("#cover").attr("visibility", "visible");
-						button.select("#cover2").attr("visibility", "hidden");
-					}
-				}
-			}
+		var internalStateValue = "_" + buttonSpec.id + "BoundValue";
+		type[internalStateValue] = type.state;
+		Object.defineProperty(type, "state", {
+			get: function () {
+				return this[internalStateValue];
+			},
+			set: function (x) {
+				this[internalStateValue] = x;
+				buttonCoverAnimate(x);
+			} 
 		});
 	}
+
 	return button;
 };
 
