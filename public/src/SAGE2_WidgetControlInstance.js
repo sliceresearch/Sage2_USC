@@ -267,9 +267,9 @@ SAGE2WidgetControlInstance.prototype.createSlider = function(x, y, outline) {
 		set: function (x) {
 			this[internalSliderValue] = x;
 			moveSlider(x);
-		} 
+		}
 	});
-	
+
 	if (safeValue === null || safeValue === undefined) {
 		safeValue = begin;
 	} else if (safeValue < begin || safeValue > end) {
@@ -405,7 +405,7 @@ SAGE2WidgetControlInstance.prototype.createButton = function(buttonSpec, cx, cy,
 			set: function (x) {
 				this[internalStateValue] = x;
 				buttonCoverAnimate(x);
-			} 
+			}
 		});
 	}
 
