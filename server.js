@@ -301,20 +301,21 @@ function initializeSage2Server() {
 		listOfFolders.push(mediaFolders[lf].path);
 	}
 	// try to exclude some folders from the monitoring
-	var excludes = ['.DS_Store', 'Thumbs.db', 'passwd.json',
-		'assets', 'apps', 'tmp', 'config', 'web', 'savedFiles'];
-	sageutils.monitorFolders(listOfFolders, excludes,
+	var excludesFiles   = ['.DS_Store', 'Thumbs.db', 'passwd.json'];
+	var excludesFolders = ['assets', 'apps', 'tmp', 'config', 'web', 'savedFiles'];
+	console.log('Asking monitoring for', listOfFolders);
+	sageutils.monitorFolders(listOfFolders, excludesFiles, excludesFolders,
 		function(change) {
-			// console.log(sageutils.header("Monitor") + "Changes detected in", this.root);
+			console.log(sageutils.header("Monitor") + "Changes detected in", this.root);
+			if (change.modifiedFiles.length > 0) {
+				console.log(sageutils.header("Monitor") + "	Modified files: %j",   change.modifiedFiles);
+				// broadcast the new file list
+				assets.refresh(this.root, function(count) {
+					broadcast('storedFileList', getSavedFilesList());
+				});
+			}
 			if (change.addedFiles.length > 0) {
 				// console.log(sageutils.header("Monitor") + "	Added files:    %j",   change.addedFiles);
-				// broadcast the new file list
-				// assets.refresh(this.root, function(count) {
-				// 	broadcast('storedFileList', getSavedFilesList());
-				// });
-			}
-			if (change.modifiedFiles.length > 0) {
-				// console.log(sageutils.header("Monitor") + "	Modified files: %j",   change.modifiedFiles);
 			}
 			if (change.removedFiles.length > 0) {
 				// console.log(sageutils.header("Monitor") + "	Removed files:  %j",   change.removedFiles);
