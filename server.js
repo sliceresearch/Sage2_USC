@@ -7030,34 +7030,35 @@ function keyDown(uniqueID, pointerX, pointerY, data) {
 
 	checkForSpecialKeys(uniqueID, data.code, true);
 
-	if (remoteInteraction[uniqueID].appInteractionMode()) {
-		var obj = interactMgr.searchGeometry({x: pointerX, y: pointerY});
+	// if (remoteInteraction[uniqueID].appInteractionMode()) {
+	// luc: send keys to app anyway
+	var obj = interactMgr.searchGeometry({x: pointerX, y: pointerY});
 
-		if (obj === null) {
-			return;
+	if (obj === null) {
+		return;
+	}
+
+	var localPt = globalToLocal(pointerX, pointerY, obj.type, obj.geometry);
+	switch (obj.layerId) {
+		case "staticUI": {
+			break;
 		}
-
-		var localPt = globalToLocal(pointerX, pointerY, obj.type, obj.geometry);
-		switch (obj.layerId) {
-			case "staticUI": {
-				break;
-			}
-			case "radialMenus": {
-				break;
-			}
-			case "widgets": {
-				break;
-			}
-			case "applications": {
-				sendKeyDownToApplication(uniqueID, obj.data, localPt, data);
-				break;
-			}
-			case "portals": {
-				keyDownOnPortal(uniqueID, obj.data.id, localPt, data);
-				break;
-			}
+		case "radialMenus": {
+			break;
+		}
+		case "widgets": {
+			break;
+		}
+		case "applications": {
+			sendKeyDownToApplication(uniqueID, obj.data, localPt, data);
+			break;
+		}
+		case "portals": {
+			keyDownOnPortal(uniqueID, obj.data.id, localPt, data);
+			break;
 		}
 	}
+	// }
 }
 
 function sendKeyDownToApplication(uniqueID, app, localPt, data) {
@@ -7190,9 +7191,12 @@ function keyUp(uniqueID, pointerX, pointerY, data) {
 					}
 				};
 				addEventToUserLog(uniqueID, {type: "delete", data: eLogData, time: Date.now()});
-			} else {
-				sendKeyUpToApplication(uniqueID, obj.data, localPt, data);
+			// } else {
+			// 	sendKeyUpToApplication(uniqueID, obj.data, localPt, data);
+			// }
 			}
+			// luc: send keys to app anyway
+			sendKeyUpToApplication(uniqueID, obj.data, localPt, data);
 			break;
 		}
 		case "portals": {
@@ -7322,7 +7326,9 @@ function keyPress(uniqueID, pointerX, pointerY, data) {
 			break;
 		}
 		case "applications": {
-			if (modeSwitch === false && remoteInteraction[uniqueID].appInteractionMode()) {
+			// if (modeSwitch === false && remoteInteraction[uniqueID].appInteractionMode()) {
+			// luc: send keys to app anyway
+			if (modeSwitch === false) {
 				sendKeyPressToApplication(uniqueID, obj.data, localPt, data);
 			}
 			break;
