@@ -378,8 +378,10 @@ AppLoader.prototype.loadVideoFromFile = function(file, mime_type, aUrl, external
 		var _this = this;
 		var video = new Videodemuxer();
 		video.on('metadata', function(data) {
-			var metadata = {title: "Video Player", version: "2.0.0", description: "Video player for SAGE2",
-							author: "SAGE2", license: "SAGE2-Software-License", keywords: ["video", "movie", "player"]};
+			var metadata = {
+				title: "Video Player", version: "2.0.0", description: "Video player for SAGE2",
+				author: "SAGE2", license: "SAGE2-Software-License", keywords: ["video", "movie", "player"]
+			};
 			var exif = assets.getExifData(file);
 
 			var stretch = data.display_aspect_ratio / (data.width / data.height);
@@ -883,8 +885,9 @@ AppLoader.prototype.loadFileFromLocalStorage = function(file, callback) {
 	}
 	var external_url = url.resolve(this.hostOrigin, a_url);
 
-	this.loadApplication({location: "file", path: localPath, url: a_url, external_url: external_url,
-			type: mime_type, name: file.filename, compressed: false, data: file.data}, function(appInstance, handle) {
+	this.loadApplication({
+		location: "file", path: localPath, url: a_url, external_url: external_url,
+		type: mime_type, name: file.filename, compressed: false, data: file.data}, function(appInstance, handle) {
 		callback(appInstance, handle);
 	});
 };
@@ -930,8 +933,9 @@ AppLoader.prototype.manageAndLoadUploadedFile = function(file, callback) {
 		}
 		if (app === "custom_app" && mime_type === "application/zip") {
 			// Compressed ZIP file, load directly
-			_this.loadApplication({location: "file", path: localPath, url: "", external_url: "",
-					type: mime_type, name: cleanFilename, compressed: true}, function(appInstance, handle) {
+			_this.loadApplication({
+				location: "file", path: localPath, url: "", external_url: "",
+				type: mime_type, name: cleanFilename, compressed: true}, function(appInstance, handle) {
 				callback(appInstance, handle);
 			});
 		} else {
@@ -946,8 +950,9 @@ AppLoader.prototype.manageAndLoadUploadedFile = function(file, callback) {
 						// calculate a complete URL with hostname
 						var external_url = url.resolve(_this.hostOrigin, aUrl);
 
-						_this.loadApplication({location: "file", path: localPath, url: aUrl, external_url: external_url,
-								type: mime_type, name: cleanFilename, compressed: false}, function(appInstance, handle) {
+						_this.loadApplication({
+							location: "file", path: localPath, url: aUrl, external_url: external_url,
+							type: mime_type, name: cleanFilename, compressed: false}, function(appInstance, handle) {
 							callback(appInstance, handle);
 						});
 					});

@@ -1067,8 +1067,8 @@ function initializeExistingControls(wsio) {
 			uniqueID = data.id.substring(data.appId.length, data.id.lastIndexOf("_"));
 			app = SAGE2Items.applications.list[data.appId];
 			addEventToUserLog(uniqueID, {type: "widgetMenu",
-					data: {action: "open", application: {id: app.id, type: app.application}},
-					time: Date.now()});
+				data: {action: "open", application: {id: app.id, type: app.application}},
+				time: Date.now()});
 		}
 	}
 }
@@ -1940,8 +1940,8 @@ function wsFullscreen(wsio, data) {
 
 		// build the object to be sent
 		var updateItem = {elemId: item.id, elemLeft: item.left, elemTop: item.top,
-				elemWidth: item.width, elemHeight: item.height, force: true,
-				date: new Date()};
+			elemWidth: item.width, elemHeight: item.height, force: true,
+			date: new Date()};
 
 		moveAndResizeApplicationWindow(updateItem);
 	}
@@ -2031,10 +2031,10 @@ function listSessions() {
 				thelist.push({id: filename,
 					sage2URL: '/uploads/' + file,
 					exif: { FileName: file.slice(0, -5),
-							FileSize: stat.size,
-							FileDate: strdate,
-							MIMEType: 'sage2/session'
-						}
+						FileSize: stat.size,
+						FileDate: strdate,
+						MIMEType: 'sage2/session'
+					}
 				});
 			}
 		}
@@ -3019,12 +3019,13 @@ function wsCommand(wsio, data) {
 function wsOpenNewWebpage(wsio, data) {
 	console.log(sageutils.header('Webview') + "opening " + data.url);
 
-	wsLoadApplication(null,
-		{application: "/uploads/apps/Webview",
+	wsLoadApplication(null, {
+		application: "/uploads/apps/Webview",
 		user: wsio.id,
 		// pass the url in the data object
 		data: data,
-		position: [0, 0]});
+		position: [0, 0]
+	});
 
 	// Check if the web-browser is connected
 	if (webBrowserClient !== null) {
@@ -4819,15 +4820,18 @@ function processInputCommand(line) {
 				}
 				var mt = assets.getMimeType(getSAGE2Path(file));
 				if (mt === "application/custom") {
-					wsLoadApplication(null,
-						{application: file,
+					wsLoadApplication(null, {
+						application: file,
 						user: "127.0.0.1:42",
-						position: pos});
+						position: pos
+					});
 				} else {
-					wsLoadFileFromServer(null, {application: "something",
+					wsLoadFileFromServer(null, {
+						application: "something",
 						filename: file,
 						user: "127.0.0.1:42",
-						position: pos});
+						position: pos
+					});
 				}
 			} else {
 				console.log(sageutils.header("Command") + "should be: open /user/file.pdf [0.5 0.5]");
@@ -6285,9 +6289,10 @@ function moveApplicationWindow(uniqueID, moveApp, portalId) {
 
 		for (var idx = 0; idx < updatedStickyItems.length; idx++) {
 			var stickyItem = updatedStickyItems[idx];
-			im.editGeometry(stickyItem.elemId, "applications", "rectangle",
-				{x: stickyItem.elemLeft, y: stickyItem.elemTop,
-				w: stickyItem.elemWidth, h: stickyItem.elemHeight + config.ui.titleBarHeight});
+			im.editGeometry(stickyItem.elemId, "applications", "rectangle", {
+				x: stickyItem.elemLeft, y: stickyItem.elemTop,
+				w: stickyItem.elemWidth, h: stickyItem.elemHeight + config.ui.titleBarHeight
+			});
 			broadcast('setItemPosition', updatedStickyItems[idx]);
 		}
 	}
@@ -7291,11 +7296,15 @@ function keyPress(uniqueID, pointerX, pointerY, data) {
 
 	var lockedControl = remoteInteraction[uniqueID].lockedControl();
 	if (lockedControl !== null) {
-		var eUser = {id: sagePointers[uniqueID].id, label: sagePointers[uniqueID].label,
-					color: sagePointers[uniqueID].color};
-		var event = {code: data.code, printable: true, state: "press", ctrlId: lockedControl.ctrlId,
-					appId: lockedControl.appId, instanceID: lockedControl.instanceID, user: eUser,
-					date: Date.now()};
+		var eUser = {
+			id: sagePointers[uniqueID].id, label: sagePointers[uniqueID].label,
+			color: sagePointers[uniqueID].color
+		};
+		var event = {
+			code: data.code, printable: true, state: "press", ctrlId: lockedControl.ctrlId,
+			appId: lockedControl.appId, instanceID: lockedControl.instanceID, user: eUser,
+			date: Date.now()
+		};
 		broadcast('keyInTextInputWidget', event);
 		if (data.code === 13) {
 			// Enter key
@@ -7894,10 +7903,12 @@ function wsRadialMenuThumbnailWindow(wsio, data) {
 		radialMenu.openThumbnailWindow(data);
 
 		var thumbnailWindowPos = radialMenu.getThumbnailWindowPosition();
-		interactMgr.editGeometry(data.id + "_menu_thumbnail", "radialMenus", "rectangle",
-				{x: thumbnailWindowPos.x, y: thumbnailWindowPos.y,
-				w: radialMenu.thumbnailWindowSize.x,
-				h: radialMenu.thumbnailWindowSize.y});
+		interactMgr.editGeometry(data.id + "_menu_thumbnail", "radialMenus", "rectangle", {
+			x: thumbnailWindowPos.x,
+			y: thumbnailWindowPos.y,
+			w: radialMenu.thumbnailWindowSize.x,
+			h: radialMenu.thumbnailWindowSize.y
+		});
 		interactMgr.editVisibility(data.id + "_menu_thumbnail", "radialMenus", data.thumbnailWindowOpen);
 	}
 }

@@ -119,9 +119,11 @@ Interaction.prototype.releaseItem = function(valid) {
 		this.selectedMoveItem.width  = this.selectedMoveItem.previous_width;
 		this.selectedMoveItem.height = this.selectedMoveItem.previous_height;
 
-		updatedItem = {elemId: this.selectedMoveItem.id, elemLeft: this.selectedMoveItem.left,
-					elemTop: this.selectedMoveItem.top, elemWidth: this.selectedMoveItem.width,
-					elemHeight: this.selectedMoveItem.height, date: new Date()};
+		updatedItem = {
+			elemId: this.selectedMoveItem.id, elemLeft: this.selectedMoveItem.left,
+			elemTop: this.selectedMoveItem.top, elemWidth: this.selectedMoveItem.width,
+			elemHeight: this.selectedMoveItem.height, date: new Date()
+		};
 	}
 
 	if (valid && this.selectedMoveItem !== null && this.selectedMoveItem.maximized === false) {
@@ -184,9 +186,11 @@ Interaction.prototype.moveSelectedItem = function(pointerX, pointerY) {
 
 	} // end if maximized ...
 
-	return {elemId: this.selectedMoveItem.id, elemLeft: this.selectedMoveItem.left,
-			elemTop: this.selectedMoveItem.top, elemWidth: this.selectedMoveItem.width,
-			elemHeight: this.selectedMoveItem.height, date: new Date()};
+	return {
+		elemId: this.selectedMoveItem.id, elemLeft: this.selectedMoveItem.left,
+		elemTop: this.selectedMoveItem.top, elemWidth: this.selectedMoveItem.width,
+		elemHeight: this.selectedMoveItem.height, date: new Date()
+	};
 };
 
 /**
@@ -201,11 +205,13 @@ Interaction.prototype.moveSelectedControl = function(pointerX, pointerY) {
 	this.selectedMoveControl.left = pointerX + this.selectOffsetX;
 	this.selectedMoveControl.top  = pointerY + this.selectOffsetY;
 
-	return {elemId: this.selectedMoveControl.id, appId: this.selectedMoveControl.appId,
-			elemLeft: this.selectedMoveControl.left, elemTop: this.selectedMoveControl.top,
-			elemWidth: this.selectedMoveControl.width, elemHeight: this.selectedMoveControl.height,
-			elemBarHeight: this.selectedMoveControl.barHeight, hasSideBar: this.selectedMoveControl.hasSideBar,
-			date: Date.now()};
+	return {
+		elemId: this.selectedMoveControl.id, appId: this.selectedMoveControl.appId,
+		elemLeft: this.selectedMoveControl.left, elemTop: this.selectedMoveControl.top,
+		elemWidth: this.selectedMoveControl.width, elemHeight: this.selectedMoveControl.height,
+		elemBarHeight: this.selectedMoveControl.barHeight, hasSideBar: this.selectedMoveControl.hasSideBar,
+		date: Date.now()
+	};
 };
 
 
@@ -313,9 +319,11 @@ Interaction.prototype.scrollSelectedItem = function(scale) {
 
 	this.selectedScrollItem.maximized = false;
 
-	return {elemId: this.selectedScrollItem.id, elemLeft: this.selectedScrollItem.left,
-			elemTop: this.selectedScrollItem.top, elemWidth: this.selectedScrollItem.width,
-			elemHeight: this.selectedScrollItem.height, date: new Date()};
+	return {
+		elemId: this.selectedScrollItem.id, elemLeft: this.selectedScrollItem.left,
+		elemTop: this.selectedScrollItem.top, elemWidth: this.selectedScrollItem.width,
+		elemHeight: this.selectedScrollItem.height, date: new Date()
+	};
 };
 
 /**
@@ -399,9 +407,11 @@ Interaction.prototype.resizeSelectedItem = function(pointerX, pointerY) {
 	this.selectedResizeItem.height = iHeight;
 	this.selectedResizeItem.maximized = false;
 
-	return {elemId: this.selectedResizeItem.id, elemLeft: this.selectedResizeItem.left,
-			elemTop: this.selectedResizeItem.top, elemWidth: this.selectedResizeItem.width,
-			elemHeight: this.selectedResizeItem.height, date: new Date()};
+	return {
+		elemId: this.selectedResizeItem.id, elemLeft: this.selectedResizeItem.left,
+		elemTop: this.selectedResizeItem.top, elemWidth: this.selectedResizeItem.width,
+		elemHeight: this.selectedResizeItem.height, date: new Date()
+	};
 };
 
 /**
@@ -481,8 +491,10 @@ Interaction.prototype.maximizeSelectedItem = function(item, centered) {
 
 	item.maximized = true;
 
-	return {elemId: item.id, elemLeft: item.left, elemTop: item.top,
-			elemWidth: item.width, elemHeight: item.height, date: new Date()};
+	return {
+		elemId: item.id, elemLeft: item.left, elemTop: item.top,
+		elemWidth: item.width, elemHeight: item.height, date: new Date()
+	};
 };
 
 Interaction.prototype.maximizeFullSelectedItem = function(item) {
@@ -511,8 +523,10 @@ Interaction.prototype.maximizeFullSelectedItem = function(item) {
 
 	item.maximized = true;
 
-	return {elemId: item.id, elemLeft: item.left, elemTop: item.top,
-			elemWidth: item.width, elemHeight: item.height, date: new Date()};
+	return {
+		elemId: item.id, elemLeft: item.left, elemTop: item.top,
+		elemWidth: item.width, elemHeight: item.height, date: new Date()
+	};
 };
 
 
@@ -538,12 +552,12 @@ Interaction.prototype.restoreSelectedItem = function(item) {
 		item.height = item.previous_height;
 	}
 
-
-
 	item.maximized = false;
 
-	return {elemId: item.id, elemLeft: item.left, elemTop: item.top,
-			elemWidth: item.width, elemHeight: item.height, date: new Date()};
+	return {
+		elemId: item.id, elemLeft: item.left, elemTop: item.top,
+		elemWidth: item.width, elemHeight: item.height, date: new Date()
+	};
 };
 
 /**
