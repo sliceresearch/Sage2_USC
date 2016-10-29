@@ -6333,9 +6333,10 @@ function moveAndResizeApplicationWindow(resizeApp, portalId) {
 }
 
 function moveDataSharingPortalWindow(movePortal) {
-	interactMgr.editGeometry(movePortal.elemId, "portals", "rectangle",
-		{x: movePortal.elemLeft, y: movePortal.elemTop,
-		w: movePortal.elemWidth, h: movePortal.elemHeight + config.ui.titleBarHeight});
+	interactMgr.editGeometry(movePortal.elemId, "portals", "rectangle", {
+		x: movePortal.elemLeft, y: movePortal.elemTop,
+		w: movePortal.elemWidth, h: movePortal.elemHeight + config.ui.titleBarHeight
+	});
 	broadcast('setItemPosition', movePortal);
 }
 
@@ -7562,9 +7563,10 @@ function handleNewApplication(appInstance, videohandle) {
 		{x: startButtons + (1 * (buttonsPad + oneButton)), y: 0, w: oneButton, h: config.ui.titleBarHeight}, 1);
 	SAGE2Items.applications.addButtonToItem(appInstance.id, "closeButton", "rectangle",
 		{x: startButtons + (2 * (buttonsPad + oneButton)), y: 0, w: oneButton, h: config.ui.titleBarHeight}, 1);
-	SAGE2Items.applications.addButtonToItem(appInstance.id, "dragCorner", "rectangle",
-		{x: appInstance.width - cornerSize,
-		y: appInstance.height + config.ui.titleBarHeight - cornerSize, w: cornerSize, h: cornerSize}, 2);
+	SAGE2Items.applications.addButtonToItem(appInstance.id, "dragCorner", "rectangle", {
+		x: appInstance.width - cornerSize,
+		y: appInstance.height + config.ui.titleBarHeight - cornerSize, w: cornerSize, h: cornerSize
+	}, 2);
 	SAGE2Items.applications.editButtonVisibilityOnItem(appInstance.id, "syncButton", false);
 
 	initializeLoadedVideo(appInstance, videohandle);
@@ -7575,10 +7577,10 @@ function handleNewApplicationInDataSharingPortal(appInstance, videohandle, porta
 
 	var zIndex = remoteSharingSessions[portalId].appCount;
 	var titleBarHeight = SAGE2Items.portals.list[portalId].titleBarHeight;
-	SAGE2Items.portals.interactMgr[portalId].addGeometry(appInstance.id, "applications", "rectangle",
-		{x: appInstance.left, y: appInstance.top,
-		w: appInstance.width, h: appInstance.height + titleBarHeight},
-		true, zIndex, appInstance);
+	SAGE2Items.portals.interactMgr[portalId].addGeometry(appInstance.id, "applications", "rectangle", {
+		x: appInstance.left, y: appInstance.top,
+		w: appInstance.width, h: appInstance.height + titleBarHeight
+	}, true, zIndex, appInstance);
 
 	var cornerSize = 0.2 * Math.min(appInstance.width, appInstance.height);
 	var oneButton    = Math.round(titleBarHeight) * (300 / 235);
@@ -7601,9 +7603,10 @@ function handleNewApplicationInDataSharingPortal(appInstance, videohandle, porta
 		{x: startButtons + (1 * (buttonsPad + oneButton)), y: 0, w: oneButton, h: titleBarHeight}, 1);
 	SAGE2Items.applications.addButtonToItem(appInstance.id, "closeButton", "rectangle",
 		{x: startButtons + (2 * (buttonsPad + oneButton)), y: 0, w: oneButton, h: titleBarHeight}, 1);
-	SAGE2Items.applications.addButtonToItem(appInstance.id, "dragCorner", "rectangle",
-		{x: appInstance.width - cornerSize, y: appInstance.height + titleBarHeight - cornerSize,
-		w: cornerSize, h: cornerSize}, 2);
+	SAGE2Items.applications.addButtonToItem(appInstance.id, "dragCorner", "rectangle", {
+		x: appInstance.width - cornerSize, y: appInstance.height + titleBarHeight - cornerSize,
+		w: cornerSize, h: cornerSize
+	}, 2);
 	SAGE2Items.applications.editButtonVisibilityOnItem(appInstance.id, "syncButton", false);
 
 	initializeLoadedVideo(appInstance, videohandle);
