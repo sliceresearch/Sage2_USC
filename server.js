@@ -302,7 +302,7 @@ function initializeSage2Server() {
 	}
 	// try to exclude some folders from the monitoring
 	var excludesFiles   = ['.DS_Store', 'Thumbs.db', 'passwd.json'];
-	var excludesFolders = ['assets', 'apps', 'tmp', 'config', 'web', 'savedFiles'];
+	var excludesFolders = ['assets', 'apps', 'config', 'savedFiles', 'sessions', 'tmp', 'web'];
 	console.log('Asking monitoring for', listOfFolders);
 	sageutils.monitorFolders(listOfFolders, excludesFiles, excludesFolders,
 		function(change) {
