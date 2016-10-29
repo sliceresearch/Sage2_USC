@@ -139,13 +139,13 @@ var WhiteboardPalette = SAGE2_App.extend({
 				{name: "selectionModeButton", action: this.selectionModeOnOff, parent: this, icon: path + "/selection.png",
 					r: 24, c: 0, cSpan: 2, rSpan: 10},
 				{name: "enablePaint",
-						action: this.paintingMode ? this.disablePaintingMode : this.enablePaintingMode,
-						parent: this, icon: this.paintingMode ? path + "/paintActive.png" : path + "/paintNonActive.png",
-						r: 24, c: 2, cSpan: 2, rSpan: 10},
+					action: this.paintingMode ? this.disablePaintingMode : this.enablePaintingMode,
+					parent: this, icon: this.paintingMode ? path + "/paintActive.png" : path + "/paintNonActive.png",
+					r: 24, c: 2, cSpan: 2, rSpan: 10},
 				{name: "enableDrawing",
-						action: this.drawingMode ? this.disableDrawingMode : this.enableDrawingMode,
-						parent: this, icon: this.drawingMode ? path + "/enabled.png" : path + "/disabled.png",
-						r: 24, c: 4, cSpan: 2, rSpan: 10},
+					action: this.drawingMode ? this.disableDrawingMode : this.enableDrawingMode,
+					parent: this, icon: this.drawingMode ? path + "/enabled.png" : path + "/disabled.png",
+					r: 24, c: 4, cSpan: 2, rSpan: 10},
 
 				{name: "SaveButton", action: this.saveDrawings, parent: this, icon: path + "/save.png", r: 36, c: 0,
 					cSpan: 2, rSpan: 10},
@@ -181,25 +181,37 @@ var WhiteboardPalette = SAGE2_App.extend({
 				var hue = 360 / (nCols - 4) * (i - 2);
 				var s = 100 / (nCols - 4) * (i - 2);
 				var v = 100 / (nCols - 4) * (i - 2);
-				this.paletteButtons.push({parent: this, action: this.changeHue, r: 1, c: i, rSpan: 2, hue: hue,
-											backgroundColor: hsvFromValues(hue, this.s, this.v), stroke: "transparent",
-											selected: hue == this.hue ? true : false, dragResponsive: true});
-				this.paletteButtons.push({parent: this, action: this.changeSaturation, r: 4, c: i, rSpan: 2, s: s,
-											backgroundColor: hsvFromValues(this.hue, s, this.v), stroke: "transparent",
-											selected: s == this.s ? true : false, dragResponsive: true});
-				this.paletteButtons.push({parent: this, action: this.changeLuminance, r: 7, c: i, rSpan: 2, v: v,
-											backgroundColor: hsvFromValues(this.hue, this.s, v), stroke: "transparent",
-											selected: v == this.v ? true : false, dragResponsive: true});
+				this.paletteButtons.push({
+					parent: this, action: this.changeHue, r: 1, c: i, rSpan: 2, hue: hue,
+					backgroundColor: hsvFromValues(hue, this.s, this.v), stroke: "transparent",
+					selected: hue == this.hue ? true : false, dragResponsive: true
+				});
+				this.paletteButtons.push({
+					parent: this, action: this.changeSaturation, r: 4, c: i, rSpan: 2, s: s,
+					backgroundColor: hsvFromValues(this.hue, s, this.v), stroke: "transparent",
+					selected: s == this.s ? true : false, dragResponsive: true
+				});
+				this.paletteButtons.push({
+					parent: this, action: this.changeLuminance, r: 7, c: i, rSpan: 2, v: v,
+					backgroundColor: hsvFromValues(this.hue, this.s, v), stroke: "transparent",
+					selected: v == this.v ? true : false, dragResponsive: true
+				});
 			}
 
-			this.paletteButtons.push({parent: this, action: this.cancelPicker, r: 13, c: 10, cSpan: 35, rSpan: 2, v: v,
-											icon: path + "cancel.png", backgroundColor: cancelColor});
-			this.paletteButtons.push({parent: this, action: this.changeColor, r: 10, c: 35, cSpan: 30, rSpan: 2, v: v,
-											backgroundColor: hsvFromValues(this.hue, this.s, this.v),
-											selectedColor: hsvFromValues(this.hue, this.s, this.v)});
-			this.paletteButtons.push({parent: this, action: this.changeColor, r: 13, c: 55, cSpan: 35, rSpan: 2, v: v,
-											icon: path + "select.png", selectedColor: hsvFromValues(this.hue, this.s, this.v),
-											backgroundColor: acceptColor});
+			this.paletteButtons.push({
+				parent: this, action: this.cancelPicker, r: 13, c: 10, cSpan: 35, rSpan: 2, v: v,
+				icon: path + "cancel.png", backgroundColor: cancelColor
+			});
+			this.paletteButtons.push({
+				parent: this, action: this.changeColor, r: 10, c: 35, cSpan: 30, rSpan: 2, v: v,
+				backgroundColor: hsvFromValues(this.hue, this.s, this.v),
+				selectedColor: hsvFromValues(this.hue, this.s, this.v)
+			});
+			this.paletteButtons.push({
+				parent: this, action: this.changeColor, r: 13, c: 55, cSpan: 35, rSpan: 2, v: v,
+				icon: path + "select.png", selectedColor: hsvFromValues(this.hue, this.s, this.v),
+				backgroundColor: acceptColor
+			});
 
 		} else if (this.paletteMode == "sure") {
 			nRows = 100;

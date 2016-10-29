@@ -389,9 +389,13 @@ var pdf_viewer = SAGE2_App.extend({
 		// iterating over the model trying to understand if a button was pressed
 		for (var i in this.interactable) {
 			var item = this.interactable[i];
-			var position = {x: parseInt(item.attr("x")), y: parseInt(item.attr("y")),
-							w: parseInt(item.attr("width")), h: parseInt(item.attr("height")),
-							container: item.container};
+			var position = {
+				x: parseInt(item.attr("x")),
+				y: parseInt(item.attr("y")),
+				w: parseInt(item.attr("width")),
+				h: parseInt(item.attr("height")),
+				container: item.container
+			};
 			// check if the click is within the current button
 			if (item.command && within(position, x, y)) {
 				// if the button is clickable, generates a color transition feedback
@@ -427,9 +431,11 @@ var pdf_viewer = SAGE2_App.extend({
 
 	leftClickMove: function(x, y, id) {
 
-		var position = {x: parseInt(this.commandBarBG.attr("x")), y: parseInt(this.commandBarBG.attr("y")),
-						w: parseInt(this.commandBarBG.attr("width")), h: parseInt(this.commandBarBG.attr("height")),
-						container: this.commandBarBG.container};
+		var position = {
+			x: parseInt(this.commandBarBG.attr("x")), y: parseInt(this.commandBarBG.attr("y")),
+			w: parseInt(this.commandBarBG.attr("width")), h: parseInt(this.commandBarBG.attr("height")),
+			container: this.commandBarBG.container
+		};
 		// check if the click is within the current button
 		if (this.inBarCommand == null && within(position, x, y)) {
 			var center = ((this.widthCommandButton + this.state.marginButton) *

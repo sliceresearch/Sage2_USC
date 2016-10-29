@@ -492,11 +492,13 @@ SAGE2WidgetControlInstance.prototype.createTextInput = function(x, y, outline) {
 			insertTextIntoTextInputWidget(textInput, this.controlSpec.textInput.value.charCodeAt(i), true);
 		}
 	}
-	var rectangle = {id: this.controlSpec.textInput.id,
-			x: parseInt(textArea.attr("x")),
-			y: parseInt(textArea.attr("y")),
-			h: parseInt(textArea.attr("height")),
-			w: parseInt(textArea.attr("width"))};
+	var rectangle = {
+		id: this.controlSpec.textInput.id,
+		x: parseInt(textArea.attr("x")),
+		y: parseInt(textArea.attr("y")),
+		h: parseInt(textArea.attr("height")),
+		w: parseInt(textArea.attr("width"))
+	};
 	return rectangle;
 };
 

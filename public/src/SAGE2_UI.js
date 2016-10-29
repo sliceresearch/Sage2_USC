@@ -2709,16 +2709,18 @@ function uiDrawSendLineCommand(xDest, yDest, xPrev, yPrev) {
 	var strokeStyle	= document.getElementById('uiDrawColorPicker').value;
 	// If resize is greater than 0, its a 2^resize value, otherwise 1.
 	var modifier = (workingDiv.resizeCount > 0) ? (Math.pow(2, workingDiv.resizeCount)) : 1;
-	var dataForApp = {};
-	dataForApp.app			= workingDiv.appId;
-	dataForApp.func			= "drawLine";
-	dataForApp.data			= [xDest * modifier, yDest * modifier,
-								xPrev * modifier, yPrev * modifier,
-								lineWidth,
-								fillStyle, strokeStyle,
-								workingDiv.clientDest];
-	dataForApp.type			= "sendDataToClient";
-	dataForApp.clientDest	= "allDisplays";
+	var dataForApp  = {};
+	dataForApp.app  = workingDiv.appId;
+	dataForApp.func = "drawLine";
+	dataForApp.data = [
+		xDest * modifier, yDest * modifier,
+		xPrev * modifier, yPrev * modifier,
+		lineWidth,
+		fillStyle, strokeStyle,
+		workingDiv.clientDest
+	];
+	dataForApp.type       = "sendDataToClient";
+	dataForApp.clientDest = "allDisplays";
 	wsio.emit("csdMessage", dataForApp);
 }
 
