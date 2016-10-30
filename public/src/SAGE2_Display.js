@@ -1057,7 +1057,7 @@ function setupListeners() {
 				ctrlParent.data("value", radioButtonSelected);
 				action = "radioButtonPress";
 				ctrlId = radioButtonId.replace("button_radio", "");
-			}else {
+			} else {
 				ctrlId = ctrlParent.attr("id").replace("slider", "");
 				action = "sliderRelease";
 			}

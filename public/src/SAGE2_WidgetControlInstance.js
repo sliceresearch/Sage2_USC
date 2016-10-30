@@ -16,6 +16,7 @@
 /* global createButtonShape */
 /* global drawWidgetControlCenter */
 /* global insertTextIntoTextInputWidget */
+/* global thetaFromY */
 
 "use strict";
 
@@ -106,23 +107,22 @@ function SAGE2WidgetControlInstance(instanceID, controlSpec) {
 	var p1 = polarToCartesian(dimensions.outerR, 352, center);
 	var p2 = polarToCartesian(dimensions.outerR, 368, center);
 	var heightOfBar = Math.abs(p1.y - p2.y);
-	var d, leftMidOfBar, rightEndOfCircle;
-	var leftTopOfBar, leftBottomOfBar;
-	var sideBarHeightInAngles = 16;
+	var leftMidOfBar, rightEndOfCircle;
 	var sideBarCount = this.controlSpec.sideBarElements.length;
-	var yFrom = center.y + heightOfBar * sideBarCount / 2 ;
+	var yFrom = center.y + heightOfBar * sideBarCount / 2;
 	var thetaFrom = thetaFromY(yFrom, dimensions.outerR, center);
-	for (var i = 0; i < sideBarCount; i ++) {
+	for (var i = 0; i < sideBarCount; i++) {
 		var thetaTo = thetaFromY(yFrom - heightOfBar, dimensions.outerR, center);
 		var sideBarElement = this.controlSpec.sideBarElements[i];
 		var midAngle = (thetaFrom + thetaTo) / 2.0;
-		var outline = makeWidgetBarOutlinePath(thetaFrom, thetaTo, dimensions.outerR, center, sideBarElement.width, dimensions.buttonRadius);
+		var outline = makeWidgetBarOutlinePath(thetaFrom, thetaTo, dimensions.outerR,
+			center, sideBarElement.width, dimensions.buttonRadius);
 		leftMidOfBar = polarToCartesian(dimensions.outerR, midAngle, center);
 		leftMidOfBar.x +=  dimensions.buttonRadius;
 		rightEndOfCircle = polarToCartesian(dimensions.outerR, midAngle, center);
 		var left = (outline.leftTop.x + outline.leftBottom.x) / 2.0;
 		var right = Math.min(outline.rightTop.x, outline.rightBottom.x);
-		var midOfBarY = yFrom - heightOfBar/2.0;
+		var midOfBarY = yFrom - heightOfBar / 2.0;
 		if (this.controlSpec.layoutOptions.drawSpokes === true) {
 			drawSpokeForRadialLayout(instanceID, this.controlSVG, rightEndOfCircle, leftMidOfBar);
 		}
@@ -131,12 +131,13 @@ function SAGE2WidgetControlInstance(instanceID, controlSpec) {
 		} else if (sideBarElement.id.indexOf('textInput') > -1) {
 			innerGeometry.textInputs.push(this.createTextInput(sideBarElement, left, right, midOfBarY, outline.d));
 		} else if (sideBarElement.id.indexOf('radio') > -1) {
-			innerGeometry.radioButtons.push(this.createRadioButton(sideBarElement, left, right, midOfBarY, outline.d, dimensions.buttonRadius - 2));
+			innerGeometry.radioButtons.push(this.createRadioButton(sideBarElement, left, right,
+				midOfBarY, outline.d, dimensions.buttonRadius - 2));
 		}
 		thetaFrom = thetaTo;
 		yFrom = yFrom - heightOfBar;
 	}
-	
+
 	var centerButton = this.controlSpec.buttonSequence["0"];
 	if (centerButton !== undefined && centerButton !== null) {
 		this.createButton(centerButton, center.x, center.y, dimensions.buttonRadius - 2);
@@ -176,7 +177,7 @@ SAGE2WidgetControlInstance.prototype.createSlider = function(sliderSpec, x1, x2,
 		});
 	}
 	x1 = x1 + sliderAreaWidth * 0.15;
-	var sliderLine = this.controlSVG.line(x1, y, x2 - ui.widgetControlSize/2.0, y);
+	var sliderLine = this.controlSVG.line(x1, y, x2 - ui.widgetControlSize / 2.0, y);
 	sliderLine.attr({
 		strokeWidth: 1,
 		id: sliderSpec.id + 'line',
@@ -263,9 +264,9 @@ SAGE2WidgetControlInstance.prototype.createSlider = function(sliderSpec, x1, x2,
 		set: function (x) {
 			this[internalSliderValue] = x;
 			moveSlider(x);
-		} 
+		}
 	});
-	
+
 	if (safeValue === null || safeValue === undefined) {
 		safeValue = begin;
 	} else if (safeValue < begin || safeValue > end) {
@@ -401,7 +402,7 @@ SAGE2WidgetControlInstance.prototype.createButton = function(buttonSpec, cx, cy,
 			set: function (x) {
 				this[internalStateValue] = x;
 				buttonCoverAnimate(x);
-			} 
+			}
 		});
 	}
 
@@ -431,7 +432,8 @@ SAGE2WidgetControlInstance.prototype.createTextInput = function(textInputSpec, x
 		});
 	}
 	x1 = x1 + textInputBarWidth * 0.15;
-	var textArea = this.controlSVG.rect(x1, y - textInputAreaHeight / 2.0, x2 - ui.widgetControlSize/2.0 - x1, textInputAreaHeight);
+	var textArea = this.controlSVG.rect(x1, y - textInputAreaHeight / 2.0,
+		x2 - ui.widgetControlSize / 2.0 - x1, textInputAreaHeight);
 	textArea.attr({
 		id: textInputSpec.id + "Area",
 		fill: "rgba(185,206,235,1.0)",
@@ -528,7 +530,7 @@ SAGE2WidgetControlInstance.prototype.createRadioButton = function(radioButtonSpe
 			fill: "rgba(42, 86, 140, 1.0)",
 			strokeWidth: 1,
 			stroke: "rgba(42, 86, 140, 1.0)",
-			visibility: (radioButtonSpec.default === options[i])? "visible" : "hidden"
+			visibility: (radioButtonSpec.default === options[i]) ? "visible" : "hidden"
 		});
 
 		var buttonCenter = createButtonShape(this.controlSVG, x, y, buttonRad * 0.9, "circle");

@@ -9,7 +9,7 @@
 // Copyright (c) 2014
 
 /* global SAGE2WidgetButtonTypes */
-
+/* global polarToCartesian */
 "use strict";
 
 /**
@@ -351,10 +351,11 @@ SAGE2WidgetControl.prototype.computeSize = function() {
 	size.height = dimensions.outerR * 2.4; // 10% extra on all sides
 	size.width = size.height;
 	size.hasSideBar = false;
-	console.log("In compute size:");
 	if (this.sideBarElements.length > 0) {
 		size.hasSideBar = true;
-		var elementWidth = Math.max.apply(null, this.sideBarElements.map(function(d) { return d.width; }));
+		var elementWidth = Math.max.apply(null, this.sideBarElements.map(function(d) {
+			return d.width;
+		}));
 		size.width = size.width  + elementWidth + dimensions.buttonRadius;
 		var center = {x: size.height / 2.0, y: size.height / 2.0};
 		var sideBarHeightInAngles = 16;
@@ -363,7 +364,6 @@ SAGE2WidgetControl.prototype.computeSize = function() {
 		var point1 = polarToCartesian(dimensions.outerR, start, center);
 		var point2 = polarToCartesian(dimensions.outerR, start + theta, center);
 		size.barHeight = Math.abs(point2.y - point1.y);
-		console.log(elementWidth, size.barHeight);
 	}
 	this.controlDimensions = dimensions;
 	return size;
