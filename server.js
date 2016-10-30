@@ -3362,20 +3362,30 @@ function wsStopRemoteSagePointer(wsio, data) {
 function wsRecordInnerGeometryForWidget(wsio, data) {
 	// var center = data.innerGeometry.center;
 	var buttons = data.innerGeometry.buttons;
-	var textInput = data.innerGeometry.textInput;
-	var slider = data.innerGeometry.slider;
+	var textInputs = data.innerGeometry.textInputs;
+	var sliders = data.innerGeometry.sliders;
+	var radioButtons = data.innerGeometry.radioButtons;
+
 	// SAGE2Items.widgets.addButtonToItem(data.instanceID, "center", "circle", {x:center.x, y: center.y, r:center.r}, 0);
-	for (var i = 0; i < buttons.length; i++) {
+	var i;
+	for (i = 0; i < buttons.length; i++) {
 		SAGE2Items.widgets.addButtonToItem(data.instanceID, buttons[i].id, "circle",
 			{x: buttons[i].x, y: buttons[i].y, r: buttons[i].r}, 0);
 	}
-	if (textInput !== null) {
-		SAGE2Items.widgets.addButtonToItem(data.instanceID, textInput.id, "rectangle",
-			{x: textInput.x, y: textInput.y, w: textInput.w, h: textInput.h}, 0);
+	for (i = 0; i < textInputs.length; i++) {
+		SAGE2Items.widgets.addButtonToItem(data.instanceID, textInputs[i].id, "rectangle",
+			{x: textInputs[i].x, y: textInputs[i].y, w: textInputs[i].w, h: textInputs[i].h}, 0);
 	}
-	if (slider !== null) {
-		SAGE2Items.widgets.addButtonToItem(data.instanceID, slider.id, "rectangle",
-			{x: slider.x, y: slider.y, w: slider.w, h: slider.h}, 0);
+	for (i = 0; i < sliders.length; i++) {
+		SAGE2Items.widgets.addButtonToItem(data.instanceID, sliders[i].id, "rectangle",
+			{x: sliders[i].x, y: sliders[i].y, w: sliders[i].w, h: sliders[i].h}, 0);
+	}
+	for (i = 0; i < radioButtons.length; i++) {
+		var radioOptions = radioButtons[i];
+		for (var j = 0; j < radioOptions.length; j++) {
+			SAGE2Items.widgets.addButtonToItem(data.instanceID, radioOptions[j].id, "circle",
+			{x: radioOptions[j].x, y: radioOptions[j].y, r: radioOptions[j].r}, 0);
+		}
 	}
 }
 
