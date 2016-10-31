@@ -1047,7 +1047,6 @@ function setupListeners() {
 				}
 				ctrlId = ctrlParent.attr("id").replace("button", "");
 			} else if (/radio/.test(ctrlId) === true) {
-				console.log("Radio:", ctrlId);
 				var radioButtonId =  ctrlParent.attr("id");
 				var oldValue = ctrlParent.data("value");
 				var oldSelection = ctrlParent.select("#" + radioButtonId + oldValue);
@@ -1099,7 +1098,6 @@ function setupListeners() {
 	});
 
 	wsio.on('sliderKnobLockAction', function(data) {
-		console.log(data.ctrl);
 		var ctrl   = getWidgetControlInstanceById(data.ctrl);
 		var slider = ctrl.parent();
 		var appId = data.ctrl.appId;
@@ -1123,7 +1121,6 @@ function setupListeners() {
 	wsio.on('moveSliderKnob', function(data) {
 		// TODO: add `date` to `data` object
 		//       DON'T USE `new Date()` CLIENT SIDE (apps will get out of sync)
-		console.log(data.ctrl);
 		var ctrl = getWidgetControlInstanceById(data.ctrl);
 		var slider = ctrl.parent();
 		var ctrHandle = document.getElementById(slider.data("instanceID"));
