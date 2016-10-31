@@ -148,10 +148,11 @@ var movie_player = SAGE2_BlockStreamingApp.extend({
 		if (this.state.paused === true) {
 			if (isMaster) {
 				// Trying to sync
-				wsio.emit('updateVideoTime',
-					{id: this.div.id,
+				wsio.emit('updateVideoTime', {
+					id: this.div.id,
 					timestamp: (this.state.frame / this.state.framerate),
-					play: true});
+					play: true
+				});
 				// wsio.emit('playVideo', {id: this.div.id});
 			}
 			this.state.paused = false;
@@ -392,10 +393,11 @@ var movie_player = SAGE2_BlockStreamingApp.extend({
 							break;
 						case "sliderRelease":
 							if (isMaster) {
-								wsio.emit('updateVideoTime',
-									{id: this.div.id,
+								wsio.emit('updateVideoTime', {
+									id: this.div.id,
 									timestamp: (this.state.frame / this.state.framerate),
-									play: !this.state.paused});
+									play: !this.state.paused
+								});
 							}
 							break;
 					}

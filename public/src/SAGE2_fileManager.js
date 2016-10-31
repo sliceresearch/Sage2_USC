@@ -241,7 +241,7 @@ function FileManager(wsio, mydiv, uniqueID) {
 					]
 				}
 			]
-		}
+			}
 		]
 	});
 	this.tree = $$("tree1");
@@ -410,13 +410,13 @@ function FileManager(wsio, mydiv, uniqueID) {
 		metadata.config.elements = [];
 		metadata.config.elements.push({label: "Metadata", type: "label"});
 		metadata.config.elements.push({label: "Width",
-				value: _this.allFiles[elt.id].exif.ImageWidth || '-'});
+			value: _this.allFiles[elt.id].exif.ImageWidth || '-'});
 		metadata.config.elements.push({label: "Height",
-				value: _this.allFiles[elt.id].exif.ImageHeight || '-'});
+			value: _this.allFiles[elt.id].exif.ImageHeight || '-'});
 		metadata.config.elements.push({label: "Author",
-				value: _this.allFiles[elt.id].exif.Creator || '-'});
+			value: _this.allFiles[elt.id].exif.Creator || '-'});
 		metadata.config.elements.push({label: "File",
-				value: _this.allFiles[elt.id].exif.MIMEType || '-'});
+			value: _this.allFiles[elt.id].exif.MIMEType || '-'});
 
 		// Add an EXIF panel for pictures
 		var info;
@@ -545,8 +545,10 @@ function FileManager(wsio, mydiv, uniqueID) {
 
 			// Parse description
 			info = _this.allFiles[elt.id].exif.metadata.description || '';
-			metadata.config.elements.push({label: info, type: "label",
-					css: {height: "100px"}});
+			metadata.config.elements.push({
+				label: info, type: "label",
+				css: {height: "100px"}
+			});
 		} else if (_this.allFiles[elt.id].exif.MIMEType.indexOf('sage2/session') >= 0) {
 			// Noting yet
 		}
@@ -564,23 +566,26 @@ function FileManager(wsio, mydiv, uniqueID) {
 		var appType = this.getApplicationFromId(tid);
 		// Opening an app
 		if (appType === "application/custom") {
-			wsio.emit('loadApplication',
-					{application: tid,
-					user: _this.uniqueID,
-					position: position});
+			wsio.emit('loadApplication', {
+				application: tid,
+				user: _this.uniqueID,
+				position: position
+			});
 		} else if (appType === "sage2/session") {
-			wsio.emit('loadFileFromServer',
-					{application: 'load_session',
-					filename: tid,
-					user: _this.uniqueID,
-					position: position});
+			wsio.emit('loadFileFromServer',	{
+				application: 'load_session',
+				filename: tid,
+				user: _this.uniqueID,
+				position: position
+			});
 		} else {
 			// Opening a file
-			wsio.emit('loadFileFromServer',
-					{application: appType,
-					filename: tid,
-					user: _this.uniqueID,
-					position: position});
+			wsio.emit('loadFileFromServer', {
+				application: appType,
+				filename: tid,
+				user: _this.uniqueID,
+				position: position
+			});
 		}
 	};
 

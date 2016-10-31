@@ -537,18 +537,20 @@ function mkdirParent(dirPath) {
 
 
 /**
- * Place a callback on a list of folders to monitor.
+ * Place a callback on a list of folders to monitor
  *  callback triggered when a change is detected:
  *    this.root contains the monitored folder
  *  parameter contains the following list:
  *    addedFiles, modifiedFiles, removedFiles,
  *    addedFolders, modifiedFolders, removedFolders
  *
- * @method deregisterSAGE2
- * @param folders {Array} list of folders
- * @param callback {Function} to be called when a change is detected
+ * @method     monitorFolders
+ * @param      {Array}    folders          list of folders to monitor
+ * @param      {Array}    excludesFiles    The excludes files
+ * @param      {Array}    excludesFolders  The excludes folders
+ * @param      {Function}  callback         to be called when a change is detected
  */
-function monitorFolders(folders, excludes, callback) {
+function monitorFolders(folders, excludesFiles, excludesFolders, callback) {
 	// for each folder
 	for (var folder in folders) {
 		// get a full path
@@ -559,14 +561,19 @@ function monitorFolders(folders, excludes, callback) {
 		if (stat.isDirectory()) {
 			console.log(header("Monitor") + "watching folder " + folderpath);
 			var monitor = fsmonitor.watch(folderpath, {
-				// only matching: all true for now
+				// excludes non-valid filenames
 				matches:  function(relpath) {
-					return true;
+					var condition = excludesFiles.every(function(e, i, a) {
+						return !relpath.endsWith(e);
+					});
+					return condition;
 				},
-				// and excluding: nothing for now
+				// and ignores folders
 				excludes: function(relpath) {
-					return (excludes.indexOf(relpath) !== -1);
-					// return false;
+					var condition = excludesFolders.every(function(e, i, a) {
+						return !relpath.startsWith(e);
+					});
+					return !condition;
 				}
 			});
 			// place the callback the change event
