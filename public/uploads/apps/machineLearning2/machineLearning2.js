@@ -159,7 +159,7 @@ const bodyParts = {
 // 	}
 // }
 
-var machineLearning = SAGE2_App.extend( {
+var machineLearning2 = SAGE2_App.extend( {
 	init: function(data) {
 		// Create div into the DOM
 		this.SAGE2Init("canvas", data);
@@ -195,6 +195,12 @@ var machineLearning = SAGE2_App.extend( {
 		this.trialNumber = 0;
 
 		this.regularTrialMode = true;
+		this.drawSkeletonMode = true;
+
+		this.trialStates = ["pause","free_gestures", "init_gesture", "gesture", "stop_gesture", "free_gestures", "saveornot"];
+		this.trialTimes = [10000000, 10, 2, 10, 2, 3]; //how many seconds for each state
+		this.currentState = 0;
+		this.saveOrNotStatus = "";
 
 		Math.seed(Date.now());
 
@@ -230,6 +236,7 @@ var machineLearning = SAGE2_App.extend( {
 		this.ctx.arc(x, y, diameter, 0, 2*Math.PI);
 		this.ctx.fill();
 		this.ctx.stroke();
+		this.ctx.closePath();
 	},
 
 	// -------------- CALIBRATED TRIAL FUNCTIONS
@@ -300,7 +307,7 @@ var machineLearning = SAGE2_App.extend( {
 			count = 0;
 			this.rawSkeletonBuffer += Date.now() +"," + "green:";
 			for (const bodyPartName in this.mostRecentSkeleton) {
-				const bodyPart = skeleton[bodyPartName];
+				const bodyPart = this.mostRecentSkeleton[bodyPartName];
 				if( count == 0 ){ // first line body part
 					this.rawSkeletonBuffer += bodyPart.kinectX + "," + bodyPart.kinectY + "," + bodyPart.z;
 				}
@@ -420,28 +427,169 @@ var machineLearning = SAGE2_App.extend( {
 		else {
 			this.calibratedTrialModeDraw(date);
 		}
+		// this.refresh(date);
 	},
 
 
 ////  REGULAR (non-calibrated) TRIAL FUNCTIONS
 	regularTrialModeDraw: function(date){
-		this.ctx.clearRect(0, 0, this.element.width, this.element.height);
 
-		// draw data logging "button"
-		const logText = this.trialRunning ? "End Trial" : "Begin Trial";
-		this.ctx.fillStyle = this.trialRunning ? "red" : "green";
-		this.ctx.rect(0, this.element.height - 50, 200, this.element.height);
-		this.ctx.fill();
-		this.ctx.stroke();
+		this.ctx.clearRect(0, 0, this.element.width, this.element.height);
+		// filter out skeletons that haven't been updated in over 1 second
+		this.skeletons = _.pickBy(this.skeletons, function (skeleton) {
+			return date.getTime() - skeleton.lastUpdate < 1000;
+		});
+
+		if( this.drawSkeletonMode ){
+			this.drawSkeleton();
+		}
+
+		// // draw data logging "button"
+		// const logText = this.trialRunning ? "End Trial" : "Begin Trial";
+		// this.ctx.fillStyle = this.trialRunning ? "red" : "green";
+		// this.ctx.rect(0, this.element.height - 50, 200, this.element.height);
+		// this.ctx.fill();
+		// this.ctx.stroke();
 		this.ctx.fillStyle = "black";
-		this.ctx.font = "18px Helvetica";
-		this.ctx.fillText(logText, 50, this.element.height - 20);
+		this.ctx.font = "24px Helvetica";
+		// this.ctx.fillText(logText, 50, this.element.height - 20);
 
 		// draw trial number
 		this.ctx.fillStyle = "white";
 		this.ctx.fillText("Trial: " + this.trialNumber, 30, 20);
+
+		if( this.trialStates[this.currentState] == "pause" ){
+			// this.ctx.fillStyle = "steelblue";
+			// this.ctx.rect(this.element.width/2-200, this.element.height/2-20, 400, 40 );
+			// this.ctx.fill();
+			// this.ctx.stroke();
+			this.ctx.fillStyle = "white";
+			this.ctx.fillText(this.saveOrNotStatus + "  click anywhere to begin", this.element.width/2-100, this.element.height/2);
+		}
+		if( this.trialStates[this.currentState] == "free_gestures"){
+
+			this.ctx.fillStyle = "tomato"
+			this.fillCircle(this.ball.x, this.ball.y, 100);
+			this.ctx.fillStyle = "black";
+			this.ctx.textAlign ="center"
+			this.ctx.fillText("Gesture freely",this.ball.x, this.ball.y);
+
+			this.fillSkeletonBuffer();
+		}
+		if( this.trialStates[this.currentState] == "init_gesture"){
+
+			this.ctx.fillStyle = "gold"
+			this.fillCircle(this.ball.x, this.ball.y, 100);
+			this.ctx.fillStyle = "black";
+			this.ctx.textAlign ="center"
+			this.ctx.fillText("Select ball",this.ball.x, this.ball.y);
+
+			this.fillSkeletonBuffer();
+
+		}
+		if( this.trialStates[this.currentState] == "gesture"){
+
+			this.ctx.fillStyle = "mediumseagreen"
+			this.fillCircle(this.ball.x, this.ball.y, 100);
+			this.ctx.fillStyle = "black";
+			this.ctx.textAlign ="center"
+			this.ctx.fillText("Follow ball",this.ball.x, this.ball.y);
+
+			this.fillSkeletonBuffer();
+
+		}
+		if( this.trialStates[this.currentState] == "stop_gesture"){
+
+			this.ctx.fillStyle = "gold"
+			this.fillCircle(this.ball.x, this.ball.y, 100);
+			this.ctx.fillStyle = "black";
+			this.ctx.textAlign ="center"
+			this.ctx.fillText("Stop selecting",this.ball.x, this.ball.y);
+
+			this.fillSkeletonBuffer();
+
+		}
+		if( this.trialStates[this.currentState] == "saveornot"){
+			this.ctx.fillStyle = "mediumseagreen";
+		  this.ctx.fillRect(this.element.width/4-100, this.element.height/2-40, 200, 80);
+
+			// this.ctx.stroke();
+			//
+			this.ctx.fillStyle = "crimson";
+			this.ctx.fillRect(3*this.element.width/4-100, this.element.height/2-40, 200, 80);
+
+			this.ctx.fillStyle = "black";
+			this.ctx.fillText("Click here to save",this.element.width/4, this.element.height/2);
+			this.ctx.fillText("Click here to skip",3*this.element.width/4, this.element.height/2);
+
+			// this.logSkeletonData("skeleton_subject0_trial" + this.trialNumber);
+			// this.trialNumber++;
+		}
 	},
 
+	drawSkeleton: function(date){
+		for (const skeletonID in this.skeletons) {
+			const skeleton = this.skeletons[skeletonID];
+
+			// console.log('articulate_ui> Draw with state value', this.state.value);
+
+			this.fontSize = 32;
+			this.ctx.font = "32px Helvetica";
+			this.ctx.textAlign="center";
+
+			//status bar
+			this.ctx.fillStyle = "white";
+			this.ctx.fillText( "Speech Input: " + this.textToDraw, this.element.width/2.0, 32);
+
+			this.ctx.fillStyle = skeleton.color;
+			this.ctx.fillText("leftHand", skeleton.leftHand.x, skeleton.leftHand.y);
+
+			for (const bodyPartName in skeleton) {
+				const bodyPart = skeleton[bodyPartName];
+
+				const shape = bodyPart.shape;
+				const x = bodyPart.x;
+				const y = bodyPart.y;
+				const z = bodyPart.z;
+				const size = bodyPart.baseSize / z;
+
+				if (bodyPart.colorOverride) {
+					this.ctx.fillStyle = bodyPart.colorOverride;
+				} else {
+					this.ctx.fillStyle = skeleton.color;
+				}
+
+				if (shape === "circle") {
+					this.fillCircle(x, y, size);
+				} else if (shape === "square") {
+					this.ctx.rect(x, y, size, size);
+					this.ctx.fill();
+					this.ctx.stroke();
+				}
+			}
+		}
+	},
+
+
+	fillSkeletonBuffer: function(){
+		// fill the skeleton buffer
+		count = 0;
+		this.rawSkeletonBuffer += Date.now() +"," + this.trialStates[this.currentState]+",";
+		for (const bodyPartName in this.mostRecentSkeleton) {
+			if(bodyPartName != "color" && bodyPartName != "lastUpdate"){
+				const bodyPart = this.mostRecentSkeleton[bodyPartName];
+				if( count == 0 ){ // first line body part
+					this.rawSkeletonBuffer += bodyPart.kinectX + "," + bodyPart.kinectY + "," + bodyPart.z;
+				}
+				else { // remaining body parts, start with a comma - fencepost
+					this.rawSkeletonBuffer += "," + bodyPart.kinectX + "," + bodyPart.kinectY + "," + bodyPart.z;
+				}
+				count++;
+			}
+		}
+		this.rawSkeletonBuffer += "\n"; //end with a new line
+
+	},
 
 
 
@@ -468,6 +616,28 @@ var machineLearning = SAGE2_App.extend( {
 		// 		this.beginTrial();
 		// 	}
 		// }
+
+		// if( this.trialStates[this.currentState] == "pause" ){
+		// 	this.currentState = this.currentState +1;
+		// }
+		// if( this.tr)
+
+		if( this.trialStates[this.currentState] == "saveornot"){
+
+			if(position.x < this.element.width/2){
+				this.logSkeletonData("skeleton_subject0_trial" + this.trialNumber);
+				this.trialNumber++;
+				this.saveOrNotStatus = "saved! "
+			}
+			else {
+				this.saveOrNotStatus = "not saved. "
+			}
+			this.rawSkeletonBuffer = ""; //clear it
+		}
+
+		this.currentState++;
+		if(this.currentState == this.trialStates.length)
+			this.currentState = 0;
 	},
 
 	//------------------------------------------//
@@ -478,6 +648,7 @@ var machineLearning = SAGE2_App.extend( {
 
 		if (eventType == "pointerPress"){
 			this.handlePointerPress(position);
+			this.refresh(date);
 		}
 		else if ( eventType === "kinectInput"){
 			// if (this.trialRunning && Date.now() - 10000 > this.currentTrialStartTime) {
@@ -531,40 +702,40 @@ var machineLearning = SAGE2_App.extend( {
 			this.refresh(date);
 		}
 		else if (eventType === "grammarInput") {
-			// what to do if grammar recognized
-			const phrase = data.phrase;
-			if (data.confidence < 0.5) return;
-
-			const {x, y} = this.mostRecentSkeleton.leftFingerTip;
-			const {upperLeft, lowerLeft, upperRight, lowerRight} = this.calibrations;
-
-			if (!this.trialRunning && phrase === "start") {
-				// this.beginTrial();
-			} else if (this.trialRunning && phrase === "stop") {
-				// this.endTrial();
-			} else if (phrase === "calibrate" && upperLeft && lowerLeft && upperRight && lowerRight) {
-				this.calibrations.calibrated = true;
-				this.calibrations.xMin = (upperLeft.x + lowerLeft.x) / 2;
-				this.calibrations.xMax = (upperRight.x + lowerRight.x) / 2;
-				this.calibrations.yMin = (upperLeft.y + upperRight.y) / 2;
-				this.calibrations.yMax = (lowerLeft.y + lowerRight.y) / 2;
-			} else if (phrase === "upper left") {
-				this.calibrations.upperLeft = {};
-				this.calibrations.upperLeft.x = x;
-				this.calibrations.upperLeft.y = y;
-			} else if (phrase === "lower left") {
-				this.calibrations.lowerLeft = {};
-				this.calibrations.lowerLeft.x = x;
-				this.calibrations.lowerLeft.y = y;
-			} else if (phrase === "upper right") {
-				this.calibrations.upperRight = {};
-				this.calibrations.upperRight.x = x;
-				this.calibrations.upperRight.y = y;
-			} else if (phrase === "lower right") {
-				this.calibrations.lowerRight = {};
-				this.calibrations.lowerRight.x = x;
-				this.calibrations.lowerRight.y = y;
-			}
+			// // what to do if grammar recognized
+			// const phrase = data.phrase;
+			// if (data.confidence < 0.5) return;
+			//
+			// const {x, y} = this.mostRecentSkeleton.leftFingerTip;
+			// const {upperLeft, lowerLeft, upperRight, lowerRight} = this.calibrations;
+			//
+			// if (!this.trialRunning && phrase === "start") {
+			// 	// this.beginTrial();
+			// } else if (this.trialRunning && phrase === "stop") {
+			// 	// this.endTrial();
+			// } else if (phrase === "calibrate" && upperLeft && lowerLeft && upperRight && lowerRight) {
+			// 	this.calibrations.calibrated = true;
+			// 	this.calibrations.xMin = (upperLeft.x + lowerLeft.x) / 2;
+			// 	this.calibrations.xMax = (upperRight.x + lowerRight.x) / 2;
+			// 	this.calibrations.yMin = (upperLeft.y + upperRight.y) / 2;
+			// 	this.calibrations.yMax = (lowerLeft.y + lowerRight.y) / 2;
+			// } else if (phrase === "upper left") {
+			// 	this.calibrations.upperLeft = {};
+			// 	this.calibrations.upperLeft.x = x;
+			// 	this.calibrations.upperLeft.y = y;
+			// } else if (phrase === "lower left") {
+			// 	this.calibrations.lowerLeft = {};
+			// 	this.calibrations.lowerLeft.x = x;
+			// 	this.calibrations.lowerLeft.y = y;
+			// } else if (phrase === "upper right") {
+			// 	this.calibrations.upperRight = {};
+			// 	this.calibrations.upperRight.x = x;
+			// 	this.calibrations.upperRight.y = y;
+			// } else if (phrase === "lower right") {
+			// 	this.calibrations.lowerRight = {};
+			// 	this.calibrations.lowerRight.x = x;
+			// 	this.calibrations.lowerRight.y = y;
+			// }
 		}
 		else if (eventType === "dictationInput") {
 			// const phrase = data.phrase;
@@ -629,9 +800,10 @@ var machineLearning = SAGE2_App.extend( {
 	logSkeletonData: function(filename){
 		console.log("logging data to file: " + filename);
 
-		header = "";
-		for (const bodyPartName in skeleton) {
-			header += bodyPartName +".x," + bodyPartName+".y,"+bodyPartName+".z,";
+		header = "timestamp,classification,";
+		for (const bodyPartName in this.mostRecentSkeleton) {
+			if( bodyPartName != "color" && bodyPartName!= "lastUpdate")
+				header += bodyPartName +".x," + bodyPartName+".y,"+bodyPartName+".z,";
 		}
 		header+= "\n";
 
