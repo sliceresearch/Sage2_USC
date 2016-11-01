@@ -61,8 +61,10 @@ function SAGE2WidgetControl(id) {
 	this.RadioButton = function() {
 		this.id 	= null;
 		this.appId	= null;
-		this.options = [];
-		this.default = null;
+		this.data = {
+			options: [],
+			value: null
+		};
 	};
 	this.ColorPaletteClass = function() {
 		this.id = null;
@@ -392,12 +394,11 @@ SAGE2WidgetControl.prototype.addRadioButton = function(data) {
 		}
 		radioButton.appId = this.id;
 		radioButton.label = data.label || null;
-		radioButton.options = [];
-		radioButton.default = data.options[0];
+		radioButton.data.value = data.options[0];
 		for (var i = 0; i < data.options.length; i++) {
-			radioButton.options[i] = data.options[i];
+			radioButton.data.options[i] = data.options[i];
 			if (data.default === data.options[i]) {
-				radioButton.default = data.default;
+				radioButton.data.value = data.default;
 			}
 		}
 		radioButton.width = 13.0 * ui.widgetControlSize;
@@ -406,5 +407,6 @@ SAGE2WidgetControl.prototype.addRadioButton = function(data) {
 	} else {
 		console.log("Can't create widget " + data.identifier + ", no space on widget bar!");
 	}
+	return radioButton.data;
 };
 
