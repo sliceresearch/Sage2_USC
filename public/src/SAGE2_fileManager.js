@@ -90,12 +90,16 @@ function FileManager(wsio, mydiv, uniqueID) {
 			{id: "tile_menu",   value: "Tile content"},
 			{id: "clear_menu",  value: "Clear display"}
 		]},
-		{id: "mainadmin_menu",    value: "Admin", config: {width: 170}, submenu: [
+		{id: "mainadmin_menu", value: "Admin", config: {width: 170}, submenu: [
 			{id: "display_menu",  value: "Display client 0"},
 			{id: "overview_menu", value: "Display overview client"},
 			{id: "audio_menu",    value: "Audio manager"},
 			// {id: "drawing_menu",  value: "Drawing application"},
 			{id: "console_menu",  value: "Server console"}
+		]},
+		{id: "services_menu", value: "Services", config: {width: 170}, submenu: [
+			{id: "imageservice_menu",  value: "Large image processing"},
+			{id: "videoservice_menu",  value: "Video processing"}
 		]},
 		{id: "mainhelp_menu",  value: "Help", submenu: [
 			{id: "help_menu",  value: "Help"},
@@ -237,7 +241,7 @@ function FileManager(wsio, mydiv, uniqueID) {
 					]
 				}
 			]
-		}
+			}
 		]
 	});
 	this.tree = $$("tree1");
@@ -339,6 +343,12 @@ function FileManager(wsio, mydiv, uniqueID) {
 		} else if (evt === "overview_menu") {
 			var overviewUrl = "http://" + window.location.hostname + _this.http_port +  "/display.html?clientID=-1";
 			window.open(overviewUrl, '_blank');
+		} else if (evt === "imageservice_menu") {
+			var imageUrl = "https://sage2rtt.evl.uic.edu:3043/upload";
+			window.open(imageUrl, '_blank');
+		} else if (evt === "videoservice_menu") {
+			var videoUrl = "https://sage2rtt.evl.uic.edu:3043/video";
+			window.open(videoUrl, '_blank');
 		} else if (evt === "clear_menu") {
 			wsio.emit('clearDisplay');
 		} else if (evt === "tile_menu") {
@@ -400,13 +410,13 @@ function FileManager(wsio, mydiv, uniqueID) {
 		metadata.config.elements = [];
 		metadata.config.elements.push({label: "Metadata", type: "label"});
 		metadata.config.elements.push({label: "Width",
-				value: _this.allFiles[elt.id].exif.ImageWidth || '-'});
+			value: _this.allFiles[elt.id].exif.ImageWidth || '-'});
 		metadata.config.elements.push({label: "Height",
-				value: _this.allFiles[elt.id].exif.ImageHeight || '-'});
+			value: _this.allFiles[elt.id].exif.ImageHeight || '-'});
 		metadata.config.elements.push({label: "Author",
-				value: _this.allFiles[elt.id].exif.Creator || '-'});
+			value: _this.allFiles[elt.id].exif.Creator || '-'});
 		metadata.config.elements.push({label: "File",
-				value: _this.allFiles[elt.id].exif.MIMEType || '-'});
+			value: _this.allFiles[elt.id].exif.MIMEType || '-'});
 
 		// Add an EXIF panel for pictures
 		var info;
@@ -535,8 +545,10 @@ function FileManager(wsio, mydiv, uniqueID) {
 
 			// Parse description
 			info = _this.allFiles[elt.id].exif.metadata.description || '';
-			metadata.config.elements.push({label: info, type: "label",
-					css: {height: "100px"}});
+			metadata.config.elements.push({
+				label: info, type: "label",
+				css: {height: "100px"}
+			});
 		} else if (_this.allFiles[elt.id].exif.MIMEType.indexOf('sage2/session') >= 0) {
 			// Noting yet
 		}
@@ -554,23 +566,26 @@ function FileManager(wsio, mydiv, uniqueID) {
 		var appType = this.getApplicationFromId(tid);
 		// Opening an app
 		if (appType === "application/custom") {
-			wsio.emit('loadApplication',
-					{application: tid,
-					user: _this.uniqueID,
-					position: position});
+			wsio.emit('loadApplication', {
+				application: tid,
+				user: _this.uniqueID,
+				position: position
+			});
 		} else if (appType === "sage2/session") {
-			wsio.emit('loadFileFromServer',
-					{application: 'load_session',
-					filename: tid,
-					user: _this.uniqueID,
-					position: position});
+			wsio.emit('loadFileFromServer',	{
+				application: 'load_session',
+				filename: tid,
+				user: _this.uniqueID,
+				position: position
+			});
 		} else {
 			// Opening a file
-			wsio.emit('loadFileFromServer',
-					{application: appType,
-					filename: tid,
-					user: _this.uniqueID,
-					position: position});
+			wsio.emit('loadFileFromServer', {
+				application: appType,
+				filename: tid,
+				user: _this.uniqueID,
+				position: position
+			});
 		}
 	};
 

@@ -290,15 +290,13 @@ var googlemaps = SAGE2_App.extend({
 			} else if (data.character === "t") {
 				this.toggleTraffic();
 			}
-			// else if (data.character === 'x') {
-			// 	// Press 'x' to close itself
-			// 	this.close();
-			// }
 			this.refresh(date);
 		} else if (eventType === "specialKey") {
-			if (data.code === 16) {
+			if (data.status && data.status.SHIFT) {
 				// Shift key
-				this.isShift = (data.state === "down");
+				this.isShift = true;
+			} else {
+				this.isShift = false;
 			}
 			if (data.code === 18 && data.state === "down") {      // alt
 				// zoom in

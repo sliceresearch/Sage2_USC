@@ -1007,7 +1007,8 @@ function setupListeners() {
 			var ctrlId = ctrl.attr('id');
 			var action = "buttonPress";
 			var ctrlParent = ctrl.parent();
-			if (/button/.test(ctrlId)) {
+			var radioButtonSelected = null;
+			if (/button/.test(ctrlId) === true && /radio/.test(ctrlId) === false) {
 				ctrl = ctrlParent.select("svg");
 				var animationInfo = ctrlParent.data("animationInfo");
 				var state = animationInfo.state;
@@ -1020,18 +1021,9 @@ function setupListeners() {
 								ctrl.animate({fill: fillVal}, 400, mina.bounce);
 							});
 						}
-					}/* else if (state === 1) {
-						ctrlParent.select("#cover2").attr("visibility", "visible");
-						ctrlParent.select("#cover").attr("visibility", "hidden");
-						animationInfo.state = 0;
-					} else {
-						ctrlParent.select("#cover").attr("visibility", "visible");
-						ctrlParent.select("#cover2").attr("visibility", "hidden");
-						animationInfo.state = 1;
-					}*/
+					}
 				} else {
 					ctrl = ctrlParent.select("path") || ctrlParent.select("text");
-
 					if (animationInfo.textual === false && animationInfo.animation === true) {
 						var delay = animationInfo.delay;
 						var fromPath = animationInfo.from;
@@ -1054,6 +1046,16 @@ function setupListeners() {
 					}
 				}
 				ctrlId = ctrlParent.attr("id").replace("button", "");
+			} else if (/radio/.test(ctrlId) === true) {
+				var radioButtonId =  ctrlParent.attr("id");
+				var oldValue = ctrlParent.data("value");
+				var oldSelection = ctrlParent.select("#" + radioButtonId + oldValue);
+				oldSelection.select("#" + radioButtonId + oldValue + "ring").attr("visibility", "hidden");
+				ctrl.select("#" + ctrlId + "ring").attr("visibility", "visible");
+				radioButtonSelected = ctrlId.replace(radioButtonId, "");
+				ctrlParent.data("value", radioButtonSelected);
+				action = "radioButtonPress";
+				ctrlId = radioButtonId.replace("button_radio", "");
 			} else {
 				ctrlId = ctrlParent.attr("id").replace("slider", "");
 				action = "sliderRelease";
@@ -1075,7 +1077,11 @@ function setupListeners() {
 				case "ShareApp":
 					break;
 				default:
-					app.SAGE2Event("widgetEvent", null, data.user, {identifier: ctrlId, action: action}, new Date(data.date));
+					var widgetEventData = {identifier: ctrlId, action: action};
+					if (radioButtonSelected !== null) {
+						widgetEventData.value = radioButtonSelected;
+					}
+					app.SAGE2Event("widgetEvent", null, data.user, widgetEventData, new Date(data.date));
 					break;
 			}
 
@@ -1115,7 +1121,6 @@ function setupListeners() {
 	wsio.on('moveSliderKnob', function(data) {
 		// TODO: add `date` to `data` object
 		//       DON'T USE `new Date()` CLIENT SIDE (apps will get out of sync)
-
 		var ctrl = getWidgetControlInstanceById(data.ctrl);
 		var slider = ctrl.parent();
 		var ctrHandle = document.getElementById(slider.data("instanceID"));

@@ -437,7 +437,8 @@ var addFile = function(filename, exif, callback) {
 			callback();
 		});
 		anAsset.exif.SAGE2thumbnail = rthumb;
-	} else if (exif.MIMEType === 'application/custom') {
+	} else if (exif.MIMEType === 'application/custom' ||
+		exif.MIMEType === 'application/xml') {
 		if (exif.icon === null || !sageutils.fileExists(exif.icon)) {
 			anAsset.exif.SAGE2thumbnail = path.join(AllAssets.rel, 'assets', 'apps', 'unknownapp');
 			callback();
@@ -549,8 +550,10 @@ var addURL = function(aUrl, exif) {
 var getDimensions = function(id) {
 	id = path.resolve(id);
 	if (id in AllAssets.list) {
-		return {width:  AllAssets.list[id].exif.ImageWidth,
-				height: AllAssets.list[id].exif.ImageHeight };
+		return {
+			width:  AllAssets.list[id].exif.ImageWidth,
+			height: AllAssets.list[id].exif.ImageHeight
+		};
 	}
 	return null;
 };
@@ -742,8 +745,10 @@ var listAssets = function() {
 	videos.sort(sageutils.compareFilename);
 	pdfs.sort(sageutils.compareFilename);
 	apps.sort(sageutils.compareFilename);
-	return {images: images, videos: videos, pdfs: pdfs,
-			applications: apps, others: others};
+	return {
+		images: images, videos: videos, pdfs: pdfs,
+		applications: apps, others: others
+	};
 };
 
 var listPDFs = function() {
