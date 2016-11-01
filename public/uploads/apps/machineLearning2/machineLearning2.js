@@ -201,11 +201,14 @@ var machineLearning2 = SAGE2_App.extend( {
 
 		this.trialStates = ["pause","free_gestures", "init_gesture", "gesture", "stop_gesture", "free_gestures", "saveornot"];
 		this.trialTimes = [10000000, 10, 2, 10, 2, 3, 1000000]; //how many seconds for each state
+		this.generateRandomTimings();
 		this.currentState = 0;
 		this.saveOrNotStatus = "";
 		this.timeSinceLastState = Date.now();
-		this.ballStartPosition = {"x": this.element.width/2, "y": this.element.height/2};
-		this.ballEndPosition = { "x": Math.random()*this.element.width, "y": Math.random()*this.element.height}
+		// this.ballStartPosition = {"x": this.element.width/2, "y": this.element.height/2};
+		// this.ballEndPosition = { "x": Math.random()*this.element.width, "y": Math.random()*this.element.height}
+		this.generateRandomPosition();
+
 		this.timeSinceLastDraw = Date.now();
 
 		// randomly calculate direction and speed of ball
@@ -483,8 +486,8 @@ var machineLearning2 = SAGE2_App.extend( {
 			this.ball.x = this.ballStartPosition.x;
 			this.ball.y = this.ballEndPosition.y;
 			this.incrementPerMS = {
-				"x": (this.ballStartPosition.x-this.ballEndPosition.x)/(this.trialTimes[3]*1000),
-				"y": (this.ballStartPosition.y-this.ballEndPosition.y)/(this.trialTimes[3]*1000)
+				"x": (this.ballEndPosition.x-this.ballStartPosition.x)/(this.trialTimes[3]*1000),
+				"y": (this.ballStartPosition.y- this.ballEndPosition.y)/(this.trialTimes[3]*1000)
 			};
 		}
 		if( this.trialStates[this.currentState] == "free_gestures"){
@@ -663,13 +666,39 @@ var machineLearning2 = SAGE2_App.extend( {
 			}
 			this.rawSkeletonBuffer = ""; //clear it
 
-			this.ballStartPosition = {"x": Math.random()*this.element.width, "y": Math.random()*this.element.height};
-			this.ballEndPosition = { "x": Math.random()*this.element.width, "y": Math.random()*this.element.height}
+			this.generateRandomPosition();
+			// this.ballStartPosition = {"x": Math.random()*this.element.width, "y": Math.random()*this.element.height};
+			// this.ballEndPosition = { "x": Math.random()*this.element.width, "y": Math.random()*this.element.height}
+			this.currentState++;
+			if(this.currentState == this.trialStates.length)
+				this.currentState = 0;
 		}
 
 		// this.currentState++;
 		// if(this.currentState == this.trialStates.length)
 		// 	this.currentState = 0;
+	},
+
+	generateRandomPosition(){
+		this.ballStartPosition = {"x": Math.random()*this.element.width*.95+this.element.width*.05, "y": Math.random()*this.element.height*.95+this.element.height*.05};
+		// randomly calculate direction and speed of ball
+		// const xSign = ((Math.floor(Math.random() * 2)) - 1) === -1 ? -1 : 1;
+		// const ySign = ((Math.floor(Math.random() * 2)) - 1) === -1 ? -1 : 1;
+		// // const xDir = (Math.random() * 2 + 2) * xSign;
+		// // const yDir = (Math.random() * 2 + 2) * ySign;
+
+		this.ballEndPosition = { "x": Math.random()*this.element.width*.95+this.element.width*.05, "y": Math.random()*this.element.height*.95+this.element.height*.05}
+
+		console.log(this.ballStartPosition);
+		console.log(this.ballEndPosition);
+	},
+
+	generateRandomTimings(){
+		this.trialTimes[1] = 5 + Math.random()*10;
+		this.trialTimes[2] = 2 + Math.random()*2;
+		this.trialTimes[3] = 5 + Math.random()*5;
+		this.trialTimes[4] = 2 + Math.random()*2;
+
 	},
 
 	//------------------------------------------//
