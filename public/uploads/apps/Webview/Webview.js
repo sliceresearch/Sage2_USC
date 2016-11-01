@@ -520,7 +520,9 @@ var Webview = SAGE2_App.extend({
 				// widget events
 			} else if (eventType === "keyboard") {
 				this.element.sendInputEvent({
-					type: "keyDown",
+					// type: "keyDown",
+					// Not sure why we need 'char' but it works ! -- Luc
+					type: "char",
 					keyCode: data.character
 				});
 				setTimeout(function() {
