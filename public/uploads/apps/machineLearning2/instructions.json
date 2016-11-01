@@ -4,6 +4,7 @@
 	"width": 2400,
 	"height": 1200,
 	"resize": "free",
+	"animation": true,
 	"dependencies": [
 		"scripts/lodash.min.js"
 	],

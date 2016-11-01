@@ -174,7 +174,7 @@ var machineLearning2 = SAGE2_App.extend( {
 		// SAGE2 Application Settings
 		//
 		// Control the frame rate for an animation application
-		this.maxFPS = 2.0;
+		this.maxFPS = 20.0;
 		// Not adding controls but making the default buttons available
 		this.controls.finishedAddingControls();
 		this.enableControls = true;
@@ -197,12 +197,16 @@ var machineLearning2 = SAGE2_App.extend( {
 		this.regularTrialMode = true;
 		this.drawSkeletonMode = true;
 
+		Math.seed(Date.now());
+
 		this.trialStates = ["pause","free_gestures", "init_gesture", "gesture", "stop_gesture", "free_gestures", "saveornot"];
-		this.trialTimes = [10000000, 10, 2, 10, 2, 3]; //how many seconds for each state
+		this.trialTimes = [10000000, 10, 2, 10, 2, 3, 1000000]; //how many seconds for each state
 		this.currentState = 0;
 		this.saveOrNotStatus = "";
-
-		Math.seed(Date.now());
+		this.timeSinceLastState = Date.now();
+		this.ballStartPosition = {"x": this.element.width/2, "y": this.element.height/2};
+		this.ballEndPosition = { "x": Math.random()*this.element.width, "y": Math.random()*this.element.height}
+		this.timeSinceLastDraw = Date.now();
 
 		// randomly calculate direction and speed of ball
 		const xSign = ((Math.floor(Math.random() * 2)) - 1) === -1 ? -1 : 1;
@@ -421,6 +425,14 @@ var machineLearning2 = SAGE2_App.extend( {
 	//---------- DRAWING FUNCTIONS ----------//
 	//---------------------------------------//
 	draw: function(date) {
+		// console.log( "time elapsed: " + (Date.now() - this.timeSinceLastState));
+		// console.log( "time in state " + (this.trialTimes[this.currentState]*1000) );
+		if( this.trialTimes[this.currentState]*1000 < date - this.timeSinceLastState ){
+			this.currentState++;
+			this.timeSinceLastState = date; //Date.now();
+			if( this.currentState>this.trialTimes.length)
+				this.currentState = 0;
+		}
 		if( this.regularTrialMode ){
 			this.regularTrialModeDraw(date);
 		}
@@ -428,6 +440,8 @@ var machineLearning2 = SAGE2_App.extend( {
 			this.calibratedTrialModeDraw(date);
 		}
 		// this.refresh(date);
+		this.timeSinceLastDraw = date;
+
 	},
 
 
@@ -465,6 +479,13 @@ var machineLearning2 = SAGE2_App.extend( {
 			// this.ctx.stroke();
 			this.ctx.fillStyle = "white";
 			this.ctx.fillText(this.saveOrNotStatus + "  click anywhere to begin", this.element.width/2-100, this.element.height/2);
+
+			this.ball.x = this.ballStartPosition.x;
+			this.ball.y = this.ballEndPosition.y;
+			this.incrementPerMS = {
+				"x": (this.ballStartPosition.x-this.ballEndPosition.x)/(this.trialTimes[3]*1000),
+				"y": (this.ballStartPosition.y-this.ballEndPosition.y)/(this.trialTimes[3]*1000)
+			};
 		}
 		if( this.trialStates[this.currentState] == "free_gestures"){
 
@@ -488,6 +509,10 @@ var machineLearning2 = SAGE2_App.extend( {
 
 		}
 		if( this.trialStates[this.currentState] == "gesture"){
+
+			//pixelsPerMS * MS elapsed
+			this.ball.x +=  this.incrementPerMS.x * (date-this.timeSinceLastDraw);
+			this.ball.y += this.incrementPerMS.y * (date-this.timeSinceLastDraw);
 
 			this.ctx.fillStyle = "mediumseagreen"
 			this.fillCircle(this.ball.x, this.ball.y, 100);
@@ -608,7 +633,7 @@ var machineLearning2 = SAGE2_App.extend( {
 		// Make sure to delete stuff (timers, ...)
 	},
 
-	handlePointerPress: function (position) {
+	handlePointerPress: function (position, date) {
 		// if (position.x < 100 && position.y > this.element.height - 50) {
 		// 	if (this.trialRunning) { // end trial manually
 		// 		this.endTrial();
@@ -621,7 +646,11 @@ var machineLearning2 = SAGE2_App.extend( {
 		// 	this.currentState = this.currentState +1;
 		// }
 		// if( this.tr)
-
+		if( this.trialStates[this.currentState] == "pause"){
+			//start
+			this.currentState++;
+			this.timeSinceLastState = Date.now(); //start series
+		}
 		if( this.trialStates[this.currentState] == "saveornot"){
 
 			if(position.x < this.element.width/2){
@@ -633,11 +662,14 @@ var machineLearning2 = SAGE2_App.extend( {
 				this.saveOrNotStatus = "not saved. "
 			}
 			this.rawSkeletonBuffer = ""; //clear it
+
+			this.ballStartPosition = {"x": Math.random()*this.element.width, "y": Math.random()*this.element.height};
+			this.ballEndPosition = { "x": Math.random()*this.element.width, "y": Math.random()*this.element.height}
 		}
 
-		this.currentState++;
-		if(this.currentState == this.trialStates.length)
-			this.currentState = 0;
+		// this.currentState++;
+		// if(this.currentState == this.trialStates.length)
+		// 	this.currentState = 0;
 	},
 
 	//------------------------------------------//
@@ -647,7 +679,7 @@ var machineLearning2 = SAGE2_App.extend( {
 		const skeletonColors = ["red", "blue", "green", "orange", "pink"];
 
 		if (eventType == "pointerPress"){
-			this.handlePointerPress(position);
+			this.handlePointerPress(position, date);
 			this.refresh(date);
 		}
 		else if ( eventType === "kinectInput"){
