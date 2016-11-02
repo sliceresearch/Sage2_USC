@@ -205,12 +205,9 @@ CustomBuffer.prototype.updateCursorPosition = function(data) {
 
 FileBuffer.prototype.requestBuffer = function(data) {
 	if ((data.appId.toString() in this.buffers) === false) {
-		console.log(sageutils.header("SAGE2") + "Creating buffer for:" + data.appId);
 		var buf = new CustomBuffer(data);
 		if (data.content !== undefined && data.content !== null) {
-			console.log("Content length: ", data.content.length);
 			var text = data.content.split('\r\n').join('\n');
-
 			text = this.parse(text).text;
 			buf.insertStr(text);
 		}

@@ -78,8 +78,8 @@ var notepad = SAGE2_App.extend({
 		this.controls.addButton({type: "zoom-out", position: 9, identifier: "decreaseFont"});
 		//this.controls.addButton({type: "new", position: 5, identifier: "NewNote"});
 		this.controls.addRadioButton({identifier: "colorScheme",
-			label: "Scheme",
-			options: ["Dark", "Lite", "Dusk", "Candy"],
+			label: "Theme",
+			options: ["Dark", "Lite", "Cofi", "Blue"],
 			default: "Dark"
 		});
 		//TODO: Need to fetch user id and feed it as Owner
@@ -100,7 +100,7 @@ var notepad = SAGE2_App.extend({
 						content: fileContent
 					});
 					this.requestNewTitle(fileName + ' - notepad');
-					this.controls.addTextInput({value: this.state.fileName, identifier: "TextInput", label: "file"});
+					this.controls.addTextInput({value: this.state.fileName, identifier: "TextInput", label: "File"});
 					this.controls.finishedAddingControls();
 					this.state.buffer = fileContent;
 					this.refresh(data.date);
@@ -114,7 +114,7 @@ var notepad = SAGE2_App.extend({
 				content: this.state.buffer
 			});
 			this.requestNewTitle(this.state.fileName + ' - notepad');
-			this.controls.addTextInput({value: this.state.fileName, identifier: "TextInput", label: "file"});
+			this.controls.addTextInput({value: this.state.fileName, identifier: "TextInput", label: "File"});
 			this.controls.finishedAddingControls();
 		}
 
@@ -370,11 +370,13 @@ var notepad = SAGE2_App.extend({
 
 	changeColorScheme: function(name) {
 		var colorScheme = this.colorSchemeTable[name];
-		for (var c in colorScheme) {
-			this.makeDivElement({id: c,
-				style: {backgroundColor: colorScheme[c].backgroundColor, color: colorScheme[c].color}}, false);
+		if (colorScheme !== null && colorScheme !== undefined) {
+			for (var c in colorScheme) {
+				this.makeDivElement({id: c,
+					style: {backgroundColor: colorScheme[c].backgroundColor, color: colorScheme[c].color}}, false);
+			}
+			this.caretHandle.style.color = colorScheme[this.writeArea.id].color;
 		}
-		this.caretHandle.style.color = colorScheme[this.writeArea.id].color;
 	},
 
 	addColorScheme: function(name, data) {
@@ -396,16 +398,16 @@ var notepad = SAGE2_App.extend({
 			{id: this.element.id + "leftMargin", backgroundColor: "#F0F0F0", color: "#787878"},
 			{id: this.element.id + "scrollBar", backgroundColor: "#F0F0F0", color: "#000000"},
 			{id: this.element.id + "scrollKnob", backgroundColor: "#969696", color: "#000000"}]);
-		this.addColorScheme("Dusk", [{id: this.element.id, backgroundColor: "#FFD66E", color: "#000000"},
-			{id: this.writeArea.id, backgroundColor: "#FFD66E", color: "#532E15"},
-			{id: this.element.id + "leftMargin", backgroundColor: "#FFD66E", color: "#CD6D09"},
-			{id: this.element.id + "scrollBar", backgroundColor: "#FFD66E", color: "#000000"},
-			{id: this.element.id + "scrollKnob", backgroundColor: "#FFAD26", color: "#000000"}]);
-		this.addColorScheme("Candy", [{id: this.element.id, backgroundColor: "#7554BC", color: "#000000"},
-			{id: this.writeArea.id, backgroundColor: "#7554BC", color: "#FBAA0C"},
-			{id: this.element.id + "leftMargin", backgroundColor: "#7554BC", color: "#CBB7B9"},
-			{id: this.element.id + "scrollBar", backgroundColor: "#7554BC", color: "#000000"},
-			{id: this.element.id + "scrollKnob", backgroundColor: "#EC1300", color: "#000000"}]);
+		this.addColorScheme("Cofi", [{id: this.element.id, backgroundColor: "#4D351D", color: "#000000"},
+			{id: this.writeArea.id, backgroundColor: "#4D351D", color: "#CCB697"},
+			{id: this.element.id + "leftMargin", backgroundColor: "#4D351D", color: "#8B6E46"},
+			{id: this.element.id + "scrollBar", backgroundColor: "#4D351D", color: "#000000"},
+			{id: this.element.id + "scrollKnob", backgroundColor: "#B99768", color: "#000000"}]);
+		this.addColorScheme("Blue", [{id: this.element.id, backgroundColor: "#003399", color: "#000000"},
+			{id: this.writeArea.id, backgroundColor: "#003399", color: "#CCFFCC"},
+			{id: this.element.id + "leftMargin", backgroundColor: "#003399", color: "#0099CC"},
+			{id: this.element.id + "scrollBar", backgroundColor: "#003399", color: "#000000"},
+			{id: this.element.id + "scrollKnob", backgroundColor: "#66CCFF", color: "#000000"}]);
 	},
 
 	event: function(eventType, position, user_id, data, date) {
