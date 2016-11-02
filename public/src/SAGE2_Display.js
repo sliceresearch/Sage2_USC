@@ -1048,12 +1048,10 @@ function setupListeners() {
 				ctrlId = ctrlParent.attr("id").replace("button", "");
 			} else if (/radio/.test(ctrlId) === true) {
 				var radioButtonId =  ctrlParent.attr("id");
-				var oldValue = ctrlParent.data("value");
-				var oldSelection = ctrlParent.select("#" + radioButtonId + oldValue);
-				oldSelection.select("#" + radioButtonId + oldValue + "ring").attr("visibility", "hidden");
-				ctrl.select("#" + ctrlId + "ring").attr("visibility", "visible");
+				var radioState = ctrlParent.data("radioState");
 				radioButtonSelected = ctrlId.replace(radioButtonId, "");
-				ctrlParent.data("value", radioButtonSelected);
+				radioState.value = radioButtonSelected;
+				ctrlParent.data("radioState", radioState);
 				action = "radioButtonPress";
 				ctrlId = radioButtonId.replace("button_radio", "");
 			} else {

@@ -86,7 +86,8 @@ var Webview = SAGE2_App.extend({
 				event.errorCode === -501 ||
 				event.errorDescription === "OK") {
 				// it's a redirect
-				_this.changeURL(event.validatedURL, false);
+				// _this.changeURL(event.validatedURL, false);
+				// nope
 			} else {
 				// real error
 				_this.element.src = 'data:text/html;charset=utf-8,<h1>Invalid URL</h1>';
@@ -520,7 +521,9 @@ var Webview = SAGE2_App.extend({
 				// widget events
 			} else if (eventType === "keyboard") {
 				this.element.sendInputEvent({
-					type: "keyDown",
+					// type: "keyDown",
+					// Not sure why we need 'char' but it works ! -- Luc
+					type: "char",
 					keyCode: data.character
 				});
 				setTimeout(function() {

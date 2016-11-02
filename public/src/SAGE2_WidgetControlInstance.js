@@ -168,12 +168,12 @@ SAGE2WidgetControlInstance.prototype.createSlider = function(sliderSpec, x1, x2,
 	var fontSize = 0.045 * ui.widgetControlSize;
 	var sliderLabel = null;
 	if (sliderSpec.label) {
-		sliderLabel = this.controlSVG.text(x1 + ui.widgetControlSize, y, sliderSpec.label.slice(0, 6));
+		sliderLabel = this.controlSVG.text(x1 + ui.widgetControlSize, y, sliderSpec.label.slice(0, 5));
 		sliderLabel.attr({
 			id: sliderSpec.id + "label",
 			dy: (0.26 * ui.widgetControlSize) + "px",
 			class: "widgetLabel",
-			fontSize: (fontSize * 0.8) + "em"
+			fontSize: (fontSize * 0.7) + "em"
 		});
 	}
 	x1 = x1 + sliderAreaWidth * 0.15;
@@ -423,12 +423,12 @@ SAGE2WidgetControlInstance.prototype.createTextInput = function(textInputSpec, x
 	var textInputBarWidth = textInputOutline.getBBox().w;
 	var textInputLabel = null;
 	if (textInputSpec.label !== null) {
-		textInputLabel = this.controlSVG.text(x1 + ui.widgetControlSize, y, textInputSpec.label.slice(0, 6));
+		textInputLabel = this.controlSVG.text(x1 + ui.widgetControlSize, y, textInputSpec.label.slice(0, 5));
 		textInputLabel.attr({
 			id: textInputSpec.id + "label",
 			dy: (0.26 * ui.widgetControlSize) + "px",
 			class: "widgetLabel",
-			fontSize: (fontSize * 0.8) + "em"
+			fontSize: (fontSize * 0.7) + "em"
 		});
 	}
 	x1 = x1 + textInputBarWidth * 0.15;
@@ -512,19 +512,19 @@ SAGE2WidgetControlInstance.prototype.createRadioButton = function(radioButtonSpe
 	var fontSize = 0.045 * ui.widgetControlSize;
 	var radioButtonLabel = null;
 	if (radioButtonSpec.label) {
-		radioButtonLabel = this.controlSVG.text(x1 + ui.widgetControlSize, y, radioButtonSpec.label.slice(0, 6));
+		radioButtonLabel = this.controlSVG.text(x1 + ui.widgetControlSize, y, radioButtonSpec.label.slice(0, 5));
 		radioButtonLabel.attr({
 			id: radioButtonSpec.id + "label",
 			dy: (0.26 * ui.widgetControlSize) + "px",
 			class: "widgetLabel",
-			fontSize: (fontSize * 0.8) + "em"
+			fontSize: (fontSize * 0.7) + "em"
 		});
 	}
 	var geometry = [];
 	var radioButton = this.controlSVG.group();
 	x1 = x1 + radioButtonAreaWidth * 0.15;
 	var buttonSpace = (x2 - x1) / 6.0;
-	var options = radioButtonSpec.options;
+	var options = radioButtonSpec.data.options;
 	var xMid = (x1 + x2) / 2.0;
 	var x = xMid - (options.length - 1) * buttonSpace / 2.0;
 	for (var i = 0; i < options.length; i++) {
@@ -534,7 +534,7 @@ SAGE2WidgetControlInstance.prototype.createRadioButton = function(radioButtonSpe
 			fill: "rgba(42, 86, 140, 1.0)",
 			strokeWidth: 1,
 			stroke: "rgba(42, 86, 140, 1.0)",
-			visibility: (radioButtonSpec.default === options[i]) ? "visible" : "hidden"
+			visibility: (radioButtonSpec.data.value === options[i]) ? "visible" : "hidden"
 		});
 
 		var buttonCenter = createButtonShape(this.controlSVG, x, y, buttonRad * 0.9, "circle");
@@ -563,10 +563,36 @@ SAGE2WidgetControlInstance.prototype.createRadioButton = function(radioButtonSpe
 
 	radioButtonArea.data("appId", radioButtonSpec.appId);
 	radioButton.attr("id", radioButtonSpec.id);
-	radioButton.data("value", radioButtonSpec.default);
+	radioButton.data("radioState", radioButtonSpec.data);
 	radioButton.data("instanceID", this.instanceID);
 
 	radioButton.data("appId", radioButtonSpec.appId);
 
+	function radioStateAnimate(oldValue, newValue) {
+		var oldSelection = radioButton.select("#" + radioButtonSpec.id + oldValue);
+		var newSelection = radioButton.select("#" + radioButtonSpec.id + newValue);
+		if (newSelection !== null && newSelection !== undefined) {
+			oldSelection.select("#" + radioButtonSpec.id + oldValue + "ring").attr("visibility", "hidden");
+			newSelection.select("#" + radioButtonSpec.id + newValue + "ring").attr("visibility", "visible");
+			return true;
+		} else {
+			return false;
+		}
+	}
+	var radioState = radioButtonSpec.data;
+	if (radioState.value !== null && radioState.value !== undefined) {
+		var internalStateValue = "_" + radioButtonSpec.id + "BoundValue";
+		radioState[internalStateValue] = radioState.value;
+		Object.defineProperty(radioState, "value", {
+			get: function () {
+				return this[internalStateValue];
+			},
+			set: function (x) {
+				if (radioStateAnimate(this[internalStateValue], x) === true) {
+					this[internalStateValue] = x;
+				}
+			}
+		});
+	}
 	return geometry;
 };
