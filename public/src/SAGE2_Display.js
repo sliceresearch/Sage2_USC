@@ -1478,12 +1478,13 @@ function createAppWindow(data, parentId, titleBarHeight, titleTextSize, offsetX,
 				newapp.init(init);
 				newapp.refresh(date);
 
-				wsio.emit('appCreated', {id: data.id});	
+				
 
 
 				// Sending the context menu info to the server
 				if (isMaster) {
 					newapp.getFullContextMenuAndUpdate();
+					wsio.emit('appCreated', {id: data.id});	
 				}
 
 				applications[data.id]   = newapp;
@@ -1504,11 +1505,12 @@ function createAppWindow(data, parentId, titleBarHeight, titleTextSize, offsetX,
 			app.init(init);
 			app.refresh(date);
 
-			wsio.emit('appCreated', {id: data.id});	
+			
 
 			// Sending the context menu info to the server
 			if (isMaster) {
 				app.getFullContextMenuAndUpdate();
+				wsio.emit('appCreated', {id: data.id});	
 			}
 
 			applications[data.id] = app;

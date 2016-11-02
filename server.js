@@ -1151,8 +1151,8 @@ function initializeExistingApps(wsio) {
 
 
 // This is called after an app has been created on the display 
-function wsAppCreatedCallback(wsio, data){x
-
+function wsAppCreatedCallback(wsio, data){
+	console.log("app created callback");
 	if (data.id in parentApps && parentApps[data.id] != null) {
 		var thisChildList = parentApps[ data.id ];
 		for( var c = 0; c < thisChildList.length; c++){

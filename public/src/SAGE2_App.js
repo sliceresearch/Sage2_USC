@@ -71,7 +71,7 @@ var SAGE2_App = Class.extend({
 
 		//------  Parent monitoring children:
 		// for now, app decides how to store and handle children
-		// if parent wanted to just launch apps and do nothing else, 
+		// if parent wanted to just launch apps and do nothing else,
 		// all it needs is 'launchChild' (see below)
 		this.childList = [];
 
@@ -162,7 +162,7 @@ var SAGE2_App = Class.extend({
 		this.SAGE2CopyState(data.state);
 		this.SAGE2InitializeAppOptionsFromState();
 
-		this.parentApp = data.parentApp; 
+		this.parentApp = data.parentApp;
 		this.childList = data.childList;
 
 	},
@@ -904,33 +904,33 @@ var SAGE2_App = Class.extend({
 	},
 
 ////////////////////// INTER APP COMMUNICATION
-	
+
 	/**
 	* launchNewChild method allows apps to launch and coordinate 'childApps'
-	* 
+	*
 	* @method launchNewChild
 	* @param childAppType is the type of app (custom, pdf, image, etc)
 	*/
 	launchNewChild: function( childAppType, childAppName, initState, message ){
 		data = {
 			applicationType: childAppType,
-			application: childAppName, 
+			application: childAppName,
 			user: "parentApp", //would be nice to have actual app name... or sth
 			id: this.id,
 			msg: message,
 			childId: null,
-			initState: initState,  //note: doesn't get updated as child's state changes... 
+			initState: initState,  //note: doesn't get updated as child's state changes...
 		};
-		//if( isMaster ){
+		if( isMaster ){
 			launchLinkedChildApp(data); //defined in runtime
-		//}
-
+		}
 		this.childList.push( data );
+
 	},
 
 	/**
 	* closeChild method allows parents to close child apps
-	* 
+	*
 	* @method launchNewChild
 	* @param childAppType is the type of app (custom, pdf, image, etc)
 	*/
@@ -985,13 +985,13 @@ var SAGE2_App = Class.extend({
 
 	/**
 	* SAGE2SetParent method called to create parent app
-	* 
+	*
 	* @method SAGE2SetParent
 	* @param state {Object} contains state of app instance
 	* not using this yet, just initializing parent in init
 	*/
 	SAGE2SetParent: function(data){ //success, childId, msg){
-		if( data.success ){ 
+		if( data.success ){
 			console.log("child has parent " + data.parentId);
 			this.parentApp = data.parentId; //put the id into the obj
 		}
@@ -1012,7 +1012,7 @@ var SAGE2_App = Class.extend({
 	getChildByIdx: function(idx){
 		console.log("" + this.getNumberOfChildren() + " " + idx);
 		if( idx >= this.getNumberOfChildren() )
-			return null; 
+			return null;
 		return this.childList[idx];
 	},
 
@@ -1020,7 +1020,7 @@ var SAGE2_App = Class.extend({
 	getChildIdByIdx: function(idx){
 		console.log(idx);
 		if( idx >= this.getNumberOfChildren() )
-			return null; 
+			return null;
 		return this.childList[idx].childId;
 	},
 
@@ -1028,19 +1028,19 @@ var SAGE2_App = Class.extend({
 
 	/**
 	* SAGE2MessageEvent method called for communication between children or parents
-	* 
+	*
 	* @method SAGE2MessageEvent
 	* @param state {Object} contains state of app instance
 	*/
 	SAGE2MessageEvent: function(data){
-		if (typeof this.messageEvent != "undefined") { 
-    		this.messageEvent(data); 
+		if (typeof this.messageEvent != "undefined") {
+    		this.messageEvent(data);
 		}
 	},
 
 	/**
 	* SAGE2MonitoringEvent method called when child is reposition or resized or closed
-	* 
+	*
 	* @method SAGE2MonitoringEvent
 	* @param data {Object} contains data.childId, data.type, data.data, data.date
 	*/
@@ -1057,9 +1057,9 @@ var SAGE2_App = Class.extend({
 			}
 			if (data.type == "childOpenEvent") {
 				console.log("child open event");
-				if( data.data.success ){ 
+				if( data.data.success ){
 					console.log("child app launch success " + data.childId);
-					this.childList[this.childList.length-1].childId = data.childId; //put the id into the obj 
+					this.childList[this.childList.length-1].childId = data.childId; //put the id into the obj
 				}
 				else{
 					console.log("child app launch failure " + data.childId + " success: " + data.data.success );
@@ -1072,7 +1072,7 @@ var SAGE2_App = Class.extend({
 				console.log("reopened children ");
 				childData = {
 					applicationType: data.childAppType,
-					application: data.childAppName, 
+					application: data.childAppName,
 					user: "parentApp", //would be nice to have actual app name... or sth
 					id: this.id,
 					msg: data.msg,
@@ -1081,15 +1081,15 @@ var SAGE2_App = Class.extend({
 				};
 				this.childList.push(childData);
 			}
-			if( typeof this.childMonitorEvent != "undefined") { 
-    			this.childMonitorEvent(data.childId, data.type, data.data, data.date); 
+			if( typeof this.childMonitorEvent != "undefined") {
+    			this.childMonitorEvent(data.childId, data.type, data.data, data.date);
     		}
 		} else if( data.whichType == "parentMonitoring"){
 			if( data.type == "parentClose" ){//remove child
 				this.parentApp = null;
 			}
 			if (typeof this.parentMonitorEvent != "undefined") {
-    			this.parentMonitorEvent(data.parentId, data.type, data.data, data.date); 
+    			this.parentMonitorEvent(data.parentId, data.type, data.data, data.date);
     		}
 		}
 	},

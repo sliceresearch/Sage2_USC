@@ -310,7 +310,8 @@ function broadcast(dataObject) {
  */
 function launchLinkedChildApp(dataObject){
 	console.log("launching");
-	wsio.emit('launchLinkedChildApp', dataObject);
+	if( isMaster )
+		wsio.emit('launchLinkedChildApp', dataObject);
 }
 
 
