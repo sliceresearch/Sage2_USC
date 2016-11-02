@@ -149,36 +149,33 @@ var photos = SAGE2_App.extend({
 
 				newOpacity = 1.0;
 				if (this.bigList != null) {
-				    if (this.bigList.length > 1) {
-					newOpacity = 0.0;
+					if (this.bigList.length > 1) {
+						newOpacity = 0.0;
 
-					// quick hack to stop the flickering on multi image ones
-					this.svg.select("#image2")
-					    .attr("xlink:href", this.image2.src)
-					    .attr("opacity", 0)
-					    .attr("width",  image2DrawWidth)
-					    .attr("height", image2DrawHeight);
-				    }
-				    else{ // this part is ok for a fading webcam
-					if (this.okToDraw > 1) {
-					    this.svg.select("#image2")
-						.attr("xlink:href", this.image2.src)
-						.attr("opacity", newOpacity)
-						.attr("width",  image2DrawWidth)
-						.attr("height", image2DrawHeight);
-					} else {
-					    this.svg.select("#image2")
-						.attr("xlink:href", this.image2.src)
-						.attr("opacity", Math.max(0.0, Math.min(1.0, (this.okToDraw + 9) / this.fadeCount)))
-						.attr("width",  image2DrawWidth)
-						.attr("height", image2DrawHeight);
+						// quick hack to stop the flickering on multi image ones
+						this.svg.select("#image2")
+							.attr("xlink:href", this.image2.src)
+							.attr("opacity", 0)
+							.attr("width",  image2DrawWidth)
+							.attr("height", image2DrawHeight);
+					} else { // this part is ok for a fading webcam
+						if (this.okToDraw > 1) {
+							this.svg.select("#image2")
+								.attr("xlink:href", this.image2.src)
+								.attr("opacity", newOpacity)
+								.attr("width",  image2DrawWidth)
+								.attr("height", image2DrawHeight);
+						} else {
+							this.svg.select("#image2")
+								.attr("xlink:href", this.image2.src)
+								.attr("opacity", Math.max(0.0, Math.min(1.0, (this.okToDraw + 9) / this.fadeCount)))
+								.attr("width",  image2DrawWidth)
+								.attr("height", image2DrawHeight);
+						}
 					}
-				    }
-				    
-						
+				}
+				///////
 			}
-			///////
-		}
 
 			// current image
 			if (this.image1 !== "NULL") {
@@ -194,7 +191,7 @@ var photos = SAGE2_App.extend({
 
 				this.svg.select("#image1")
 					.attr("xlink:href", this.image1.src)
-				        .attr("opacity", Math.max(0.0, Math.min(1.0, 1.0 - (this.okToDraw / this.fadeCount))))
+					.attr("opacity", Math.max(0.0, Math.min(1.0, 1.0 - (this.okToDraw / this.fadeCount))))
 					.attr("width",  image1DrawWidth)
 					.attr("height", image1DrawHeight);
 			}
