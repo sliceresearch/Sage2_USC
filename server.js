@@ -70,7 +70,7 @@ var Sage2ItemList       = require('./src/node-sage2itemlist');    // list of SAG
 var Sagepointer         = require('./src/node-sagepointer');      // handles sage pointers (creation, location, etc.)
 var StickyItems         = require('./src/node-stickyitems');
 var registry            = require('./src/node-registry');        // Registry Manager
-
+var FileBufferManager	= require('./src/node-filebuffer');
 //
 // Globals
 //
@@ -117,6 +117,7 @@ var mediaBlockSize     = 512;
 var startTime          = Date.now();
 var drawingManager;
 var pressingAlt        = true;
+var fileBufferManager  = new FileBufferManager();
 
 // Add extra folders defined in the configuration file
 if (config.folders) {
@@ -980,6 +981,11 @@ function setupListeners(wsio) {
 	wsio.on('hideWidgetFromControl',                wsHideWidgetFromControl);
 	wsio.on('openRadialMenuFromControl',            wsOpenRadialMenuFromControl);
 	wsio.on('recordInnerGeometryForWidget',			wsRecordInnerGeometryForWidget);
+
+	wsio.on('requestNewTitle',						wsRequestNewTitle);
+	wsio.on('requestFileBuffer',					wsRequestFileBuffer);
+	wsio.on('closeFileBuffer',						wsCloseFileBuffer);
+	wsio.on('updateFileBufferCursorPosition', 		wsUpdateFileBufferCursorPosition);
 
 	wsio.on('createAppClone',                       wsCreateAppClone);
 
@@ -7099,6 +7105,11 @@ function sendKeyDownToApplication(uniqueID, app, localPt, data) {
 		}
 	};
 
+	if (fileBufferManager.hasFileBufferForApp(app.id)) {
+		eData.bufferUpdate = fileBufferManager.insertChar({appId: app.id, code: data.code,
+			printable: false, user_id: sagePointers[uniqueID].id});
+	}
+
 	var event = {id: app.id, type: "specialKey", position: ePosition, user: eUser, data: eData, date: Date.now()};
 	broadcast('eventInItem', event);
 
@@ -7374,6 +7385,10 @@ function sendKeyPressToApplication(uniqueID, app, localPt, data) {
 
 	var ePosition = {x: localPt.x, y: localPt.y - titleBarHeight};
 	var eUser = {id: sagePointers[uniqueID].id, label: sagePointers[uniqueID].label, color: sagePointers[uniqueID].color};
+	if (fileBufferManager.hasFileBufferForApp(app.id)) {
+		data.bufferUpdate = fileBufferManager.insertChar({appId: app.id, code: data.code,
+			printable: true, user_id: sagePointers[uniqueID].id});
+	}
 	var event = {id: app.id, type: "keyboard", position: ePosition, user: eUser, data: data, date: Date.now()};
 	broadcast('eventInItem', event);
 
@@ -8628,5 +8643,58 @@ function appFileSaveRequest(wsio, data) {
 
 	} else {
 		console.log(sageutils.header('File') + "file directory not specified. File not saved.");
+	}
+}
+
+
+function wsRequestFileBuffer(wsio, data) {
+	if (data.createdOn === null || data.createdOn === undefined) {
+		data.createdOn = Date.now();
+	}
+	var app = SAGE2Items.applications.list[data.id];
+	if (fileBufferManager.hasFileBufferForApp(data.id) === true) {
+		fileBufferManager.editCredentialsForBuffer({appId: data.id, owner: data.owner, createdOn: data.createdOn});
+	} else {
+		console.log("Creating file buffer for:", app.application);
+		fileBufferManager.requestBuffer({appId: data.id, owner: data.owner, createdOn: data.createdOn,
+			color: data.color, content: data.content});
+	}
+
+	if (data.fileName !== null && data.fileName !== undefined) {
+		// Create the folder as needed
+		var fileSaveDir = path.join(mainFolder.path, "notes");
+		fileSaveDir = path.join(fileSaveDir, app.application);
+
+		// Take the filename
+		var filename = data.fileName;
+		var ext = data.extension || "txt";
+		if (filename.indexOf("." + ext) === -1) {
+			// add extension if it is not present in name
+			filename += "." + ext;
+		}
+
+		// save the file in the specific application folder
+		if (data.subdir) {
+			// add a sub-directory if asked
+			fileSaveDir = path.join(fileSaveDir, data.subdir);
+		}
+		fileBufferManager.associateFile({appId: data.id, appName: app.application, fileDir: fileSaveDir, fileName: filename});
+	}
+}
+
+function wsCloseFileBuffer(wsio, data) {
+	console.log("Closing buffer for:", data.id);
+	fileBufferManager.closeFileBuffer(data.id);
+}
+
+function wsUpdateFileBufferCursorPosition(wsio, data) {
+	fileBufferManager.updateFileBufferCursorPosition(data);
+}
+
+function wsRequestNewTitle(wsio, data) {
+	var app = SAGE2Items.applications.list[data.id];
+	if (app !== null && app !== undefined) {
+		app.title = data.title;
+		broadcast('setTitle', data);
 	}
 }

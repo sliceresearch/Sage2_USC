@@ -1,16 +1,18 @@
 {
 	"main_script": "notepad.js",
 	"icon": "notepad.png",
-	"type": "canvas",
-	"width": 600,
-	"height": 720,
-	"animation": true,
+	"width": 800,
+	"height": 600,
+	"animation": false,
+	"hasFileBuffer": true,
+	"resize": "free",
 	"dependencies": [
 	],
 	"load": {
-		"content": []
+		"buffer": "",
+		"bufferEmpty": true
 	},
-	"fileTypes": [ "txt" ],
+	"fileTypes": [ "md", "txt" ],
 	"directory": "text",
 	"title": "Notepad",
 	"version": "1.2.3",

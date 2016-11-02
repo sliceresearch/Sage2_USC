@@ -1089,7 +1089,7 @@ function setupListeners() {
 			if (app.cloneable === true && app.requestForClone === true) {
 				app.requestForClone = false;
 				if (isMaster) {
-					wsio.emit('createAppClone', {id: appId, cloneData: app.cloneData});
+					wsio.emit('createAppClone', {id: appId, cloneData: app.state});
 				}
 			}
 
@@ -1203,6 +1203,14 @@ function setupListeners() {
 
 	wsio.on('initializeDataSharingSession', function(data) {
 		dataSharingPortals[data.id] = new DataSharing(data);
+	});
+
+	wsio.on('setTitle', function(data) {
+		if (data.id !== null && data.id !== undefined) {
+			var titleDiv = document.getElementById(data.id + "_title");
+			var pElement = titleDiv.getElementsByTagName("p");
+			pElement[0].textContent = data.title;
+		}
 	});
 
 	wsio.on('setAppSharingFlag', function(data) {
