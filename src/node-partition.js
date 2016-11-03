@@ -619,8 +619,10 @@ Partition.prototype.restoreChild = function(id, shift) {
 
 		item.maximized = false;
 
-		return {elemId: item.id, elemLeft: item.left, elemTop: item.top,
-				elemWidth: item.width, elemHeight: item.height, date: new Date()};
+		return {
+			elemId: item.id, elemLeft: item.left, elemTop: item.top,
+			elemWidth: item.width, elemHeight: item.height, date: new Date()
+		};
 	}
 
 	return null;
@@ -636,6 +638,7 @@ Partition.prototype.updateInnerLayout = function() {
 	if (this.innerMaximization && this.currentMaximizedChild) {
 		if (this.children[this.currentMaximizedChild].maximized === false) {
 			// this should never really happen
+			console.log("Partition: Maximizing child in updateInnerLayout()");
 			this.maximizeChild(this.currentMaximizedChild);
 		}
 	}
@@ -659,8 +662,10 @@ Partition.prototype.updateChildrenPositions = function() {
 		item.width = item.relative_width * this.width;
 		item.height = item.relative_height * this.height;
 
-		updatedChildren.push({elemId: item.id, elemLeft: item.left, elemTop: item.top,
-				elemWidth: item.width, elemHeight: item.height, date: new Date()});
+		updatedChildren.push({
+			elemId: item.id, elemLeft: item.left, elemTop: item.top,
+			elemWidth: item.width, elemHeight: item.height, date: new Date()
+		});
 	});
 
 	return updatedChildren;
@@ -695,7 +700,10 @@ Partition.prototype.getTitle = function() {
 		partitionString += " | Tiled";
 	}
 
-	return {id: this.id, title: partitionString};
+	return {
+		id: this.id,
+		title: partitionString
+	};
 };
 
 
