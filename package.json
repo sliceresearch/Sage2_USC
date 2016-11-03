@@ -70,7 +70,7 @@
 		"sw-precache": "latest",
 		"debug": "latest",
 		"ytdl-core": "latest",
-		"electron-prebuilt": "latest"
+		"electron": "latest"
 	},
 	"optionalDependencies": {
 		"websocketio": "latest",
@@ -86,10 +86,10 @@
 		"grunt-mocha-cli": "latest",
 		"nodemon": "latest",
 		"kthxbai": "latest",
-		"mocha": "^2.0.1",
-		"mocha-jshint": "^0.0.9",
-		"istanbul": "^0.3.5",
-		"coveralls": "^2.11.2"
+		"mocha": "latest",
+		"mocha-jshint": "latest",
+		"istanbul": "latest",
+		"coveralls": "latest"
 	},
 	"engines": {
 		"node": ">=0.10.x"

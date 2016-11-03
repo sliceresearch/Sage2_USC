@@ -24,8 +24,8 @@ init:
   - dir C:\Dev\ffmpeg-win64-dev\lib
 
 install:
-  - ps: Get-NodeJsLatestBuild 6.6
-  - ps: Install-Product node 6.6.0 x64
+  - ps: Get-NodeJsLatestBuild 6.7
+  - ps: Install-Product node 6.7.0 x64
   - dir C:\avvm\node
   - node -v
   - cd %APPVEYOR_BUILD_FOLDER%
@@ -53,16 +53,16 @@ install:
   - copy bin\gswin64c.exe bin\gswin32c.exe
   - xcopy /S /I /Y /Q gs\lib lib
   - rmdir /Q /S gs
-  - curl -LsSO http://www.imagemagick.org/download/binaries/ImageMagick-6.9.6-2-portable-Q16-x64.zip
-  - 7z x -y ImageMagick-6.9.6-2-portable-Q16-x64.zip -oim > nul
+  - curl -LsSO http://www.imagemagick.org/download/binaries/ImageMagick-6.9.6-3-portable-Q16-x64.zip
+  - 7z x -y ImageMagick-6.9.6-3-portable-Q16-x64.zip -oim > nul
   - rmdir /Q /S im\www im\images
   - copy im\* bin
   - rmdir /Q /S im
   - del /Q *.7z
   - del /Q *.zip
   - cd bin
-  - curl -LsSO https://nodejs.org/dist/latest/win-x64/node.exe
-  - curl -LsSO https://nodejs.org/dist/latest/win-x64/node.lib
+  - curl -LsSO https://nodejs.org/dist/v6.7.0/win-x64/node.exe
+  - curl -LsSO https://nodejs.org/dist/v6.7.0/win-x64/node.lib
   - cd ..
   - cd sabi.js
   - npm install --production --msvs_version=2013
