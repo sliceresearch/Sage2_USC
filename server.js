@@ -7734,12 +7734,6 @@ function toggleApplicationFullscreen(uniqueID, app, dblClick) {
 		resizeApp = remoteInteraction[uniqueID].restoreSelectedItem(app, dblClick);
 	}
 
-	if (app.partition) {
-		console.log("toggleApplicationFullscreen: Updating Partition Layout", app.partition.id);
-		updatePartitionInnerLayout(app.partition);
-		broadcast('partitionWindowTitleUpdate', app.partition.getTitle());
-	}
-
 	if (resizeApp !== null) {
 		broadcast('startMove', {id: resizeApp.elemId, date: Date.now()});
 		broadcast('startResize', {id: resizeApp.elemId, date: Date.now()});
@@ -7761,6 +7755,12 @@ function toggleApplicationFullscreen(uniqueID, app, dblClick) {
 			data: {type: "resize", action: "start", application: a, location: l}, time: Date.now()});
 
 		moveAndResizeApplicationWindow(resizeApp);
+
+		if (app.partition) {
+			console.log("toggleApplicationFullscreen: Updating Partition Layout", app.partition.id);
+			updatePartitionInnerLayout(app.partition);
+			broadcast('partitionWindowTitleUpdate', app.partition.getTitle());
+		}
 
 		broadcast('finishedMove', {id: resizeApp.elemId, date: Date.now()});
 		broadcast('finishedResize', {id: resizeApp.elemId, date: Date.now()});
