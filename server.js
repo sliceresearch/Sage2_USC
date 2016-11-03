@@ -3401,6 +3401,7 @@ function wsRecordInnerGeometryForWidget(wsio, data) {
 	for (i = 0; i < textInputs.length; i++) {
 		SAGE2Items.widgets.addButtonToItem(data.instanceID, textInputs[i].id, "rectangle",
 			{x: textInputs[i].x, y: textInputs[i].y, w: textInputs[i].w, h: textInputs[i].h}, 0);
+
 	}
 	for (i = 0; i < sliders.length; i++) {
 		SAGE2Items.widgets.addButtonToItem(data.instanceID, sliders[i].id, "rectangle",
