@@ -2315,19 +2315,19 @@ function loadSession(filename) {
 			});
 
 			// associate any existing apps with partitions
-			for(var key in SAGE2Items.applications.list) {
+			for (var key in SAGE2Items.applications.list) {
 				var changedPartitions = partitions.updateOnItemRelease(SAGE2Items.applications.list[key]);
 
 				changedPartitions.forEach((id => {
 					updatePartitionInnerLayout(partitions.list[id]);
 
-					broadcast('partitionWindowTitleUpdate', partitions.list[id].getTitle())
+					broadcast('partitionWindowTitleUpdate', partitions.list[id].getTitle());
 				}));
 			}
 
 			// recreate apps
 			session.apps.forEach(function(element, index, array) {
-				var id = createAppFromDescription(element, function(appInstance, videohandle) {
+				createAppFromDescription(element, function(appInstance, videohandle) {
 					appInstance.id = getUniqueAppId();
 
 					if (appInstance.animation) {
@@ -2347,7 +2347,7 @@ function loadSession(filename) {
 					changedPartitions.forEach((id => {
 						updatePartitionInnerLayout(partitions.list[id]);
 
-						broadcast('partitionWindowTitleUpdate', partitions.list[id].getTitle())
+						broadcast('partitionWindowTitleUpdate', partitions.list[id].getTitle());
 					}));
 				});
 			});
@@ -6754,9 +6754,11 @@ function pointerRelease(uniqueID, pointerX, pointerY, data) {
 	if (selectedApp && selectedApp.id && SAGE2Items.applications.list.hasOwnProperty(selectedApp.id)) {
 		var changedPartitions = partitions.updateOnItemRelease(selectedApp);
 
-		moveAndResizeApplicationWindow({elemId: selectedApp.id, elemLeft: selectedApp.left,
-				elemTop: selectedApp.top, elemWidth: selectedApp.width,
-				elemHeight: selectedApp.height, date: new Date()});
+		moveAndResizeApplicationWindow({
+			elemId: selectedApp.id, elemLeft: selectedApp.left,
+			elemTop: selectedApp.top, elemWidth: selectedApp.width,
+			elemHeight: selectedApp.height, date: new Date()
+		});
 
 		changedPartitions.forEach(el => {
 			broadcast('partitionWindowTitleUpdate', partitions.list[el].getTitle());

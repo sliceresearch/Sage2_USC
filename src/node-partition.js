@@ -582,8 +582,10 @@ Partition.prototype.maximizeChild = function(id, shift) {
 
 		item.maximized = true;
 
-		return {elemId: item.id, elemLeft: item.left, elemTop: item.top,
-				elemWidth: item.width, elemHeight: item.height, date: new Date()};
+		return {
+			elemId: item.id, elemLeft: item.left, elemTop: item.top,
+			elemWidth: item.width, elemHeight: item.height, date: new Date()
+		};
 	}
 
 	return null;

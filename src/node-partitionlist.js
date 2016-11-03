@@ -277,7 +277,7 @@ PartitionList.prototype.createPartitionGeometries = function(newID, iMgr) {
 		{x: startButtons + (1 * (buttonsPad + oneButton)), y: 0, w: oneButton, h: titleBarHeight}, 1);
 	this.addButtonToItem(newID, "dragCorner", "rectangle",
 		{x: newPtn.width - cornerSize,
-		y: newPtn.height + titleBarHeight - cornerSize, w: cornerSize, h: cornerSize}, 2);
+			y: newPtn.height + titleBarHeight - cornerSize, w: cornerSize, h: cornerSize}, 2);
 };
 
 /**
@@ -311,7 +311,7 @@ PartitionList.prototype.updatePartitionGeometries = function(ptnID, iMgr) {
 		{x: startButtons + (1 * (buttonsPad + oneButton)), y: 0, w: oneButton, h: titleBarHeight}, 1);
 	this.editButtonOnItem(ptnID, "dragCorner", "rectangle",
 		{x: thisPtn.width - cornerSize,
-		y: thisPtn.height + titleBarHeight - cornerSize, w: cornerSize, h: cornerSize}, 2);
+			y: thisPtn.height + titleBarHeight - cornerSize, w: cornerSize, h: cornerSize}, 2);
 };
 
 /**
