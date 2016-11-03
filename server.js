@@ -2171,14 +2171,32 @@ function saveSession(filename) {
 	var states     = {};
 	states.apps    = [];
 	states.numapps = 0;
+	states.partitions = [];
+	states.numpartitions = 0;
 	states.date    = Date.now();
 	for (key in SAGE2Items.applications.list) {
 		var a = SAGE2Items.applications.list[key];
+
+		if (a.hasOwnProperty(partition)) {
+			// remove reference to parent partition if it exists
+			delete a.partition;
+		}
 		// Ignore media streaming applications for now (desktop sharing)
 		if (a.application !== 'media_stream' && a.application !== 'media_block_stream') {
 			states.apps.push(a);
 			states.numapps++;
 		}
+	}
+
+	for (key in partitions.list) {
+		var p = partitions.list[key];
+
+		if (p.hasOwnProperty(partitionList)) {
+			delete p.partitionList;
+		}
+
+		states.apps.push(p);
+		states.numpartitions++;
 	}
 
 	try {
