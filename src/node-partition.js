@@ -40,6 +40,7 @@ function Partition(dims, id, color, partitionList) {
 	this.previous_width = null;
 	this.previous_height = null;
 
+	this.resizeMode = "free";
 	this.maximized = false;
 
 	this.id = id;

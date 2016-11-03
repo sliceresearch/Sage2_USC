@@ -5813,7 +5813,7 @@ function pointerPressOnPartition(uniqueID, pointerX, pointerY, data, obj, localP
 			break;
 		case "dragCorner":
 			console.log("Click on Drag Corner:", obj.id);
-			// selectApplicationForResize(uniqueID, obj.data, pointerX, pointerY, portalId);
+			selectApplicationForResize(uniqueID, obj.data, pointerX, pointerY, portalId);
 			break;
 		case "tileButton":
 			console.log("Click on Tile Partition:", obj.id);
@@ -6183,7 +6183,7 @@ function updatePointerPosition(uniqueID, pointerX, pointerY, data) {
 		if (SAGE2Items.portals.list.hasOwnProperty(updatedMoveItem.elemId)) {
 			moveDataSharingPortalWindow(updatedMoveItem);
 		} else if (partitions.list.hasOwnProperty(updatedMoveItem.elemId)) {
-			movePartitionWindow(uniqueID, updatedMoveItem, null);
+			moveAndResizePartitionWindow(uniqueID, updatedMoveItem, null);
 		} else {
 			moveApplicationWindow(uniqueID, updatedMoveItem, null);
 
@@ -6196,6 +6196,8 @@ function updatePointerPosition(uniqueID, pointerX, pointerY, data) {
 	if (updatedResizeItem !== null) {
 		if (SAGE2Items.portals.list.hasOwnProperty(updatedResizeItem.elemId)) {
 			moveAndResizeDataSharingPortalWindow(updatedResizeItem);
+		} else if (partitions.list.hasOwnProperty(updatedResizeItem.elemId)) {
+			moveAndResizePartitionWindow(uniqueID, updatedResizeItem, null);
 		} else {
 			moveAndResizeApplicationWindow(updatedResizeItem, null);
 		}
@@ -6391,7 +6393,44 @@ function pointerMoveOnApplication(uniqueID, pointerX, pointerY, data, obj, local
 }
 
 function pointerMoveOnPartition(uniqueID, pointerX, pointerY, data, obj, localPt, portalId) {
-	// console.log("Pointer Move on Partition:", obj.data.id);
+	var btn = partitions.findButtonByPoint(obj.id, localPt);
+
+	// pointer press on app window
+	if (btn === null || draggingPartition) {
+		return;
+	}
+
+	switch (btn.id) {
+		case "titleBar":
+
+			break;
+		case "dragCorner":
+			if (remoteInteraction[uniqueID].hoverCornerItem === null) {
+				console.log("Setting partition drag corner visible");
+
+				remoteInteraction[uniqueID].setHoverCornerItem(obj.data);
+				broadcast('hoverOverItemCorner', {elemId: obj.data.id, flag: true});
+
+			} else if (remoteInteraction[uniqueID].hoverCornerItem.id !== obj.data.id) {
+				broadcast('hoverOverItemCorner', {elemId: remoteInteraction[uniqueID].hoverCornerItem.id, flag: false});
+
+				remoteInteraction[uniqueID].setHoverCornerItem(obj.data);
+				broadcast('hoverOverItemCorner', {elemId: obj.data.id, flag: true});
+			}
+			break;
+		case "tileButton":
+
+			break;
+		case "clearButton":
+
+			break;
+		case "fullscreenButton":
+
+			break;
+		case "closeButton":
+
+			break;
+	}
 }
 
 function pointerMoveOnDataSharingPortal(uniqueID, pointerX, pointerY, data, obj, localPt) {
@@ -6564,7 +6603,7 @@ function moveAndResizeApplicationWindow(resizeApp, portalId) {
 	}
 }
 
-function movePartitionWindow(uniqueID, movePartition) {
+function moveAndResizePartitionWindow(uniqueID, movePartition) {
 	if (partitions.list.hasOwnProperty(movePartition.elemId)) {
 
 		partitions.updatePartitionGeometries(movePartition.elemId, interactMgr);

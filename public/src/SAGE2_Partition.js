@@ -122,8 +122,8 @@ var SAGE2_Partition = function(data) {
 	dragCorner.style.position = "absolute";
 	dragCorner.style.width    = this.cornerSize.toString() + "px";
 	dragCorner.style.height   = this.cornerSize.toString() + "px";
-	dragCorner.style.top      = (this.height - this.cornerSize).toString() + "px";
-	dragCorner.style.left     = (this.width - this.cornerSize).toString() + "px";
+	dragCorner.style.bottom   = "0px";
+	dragCorner.style.right    = "0px";
 	dragCorner.style.backgroundColor = "rgba(255,255,255,0.0)";
 	dragCorner.style.border   = "none";
 	dragCorner.style.zIndex   = "1000";
@@ -181,19 +181,23 @@ SAGE2_Partition.prototype.updatePositionAndSize = function(data) {
 	this.partitionArea.style.transform       = "translate(" + this.left + "px," +
 			(this.top + ui.titleBarHeight) + "px)";
 
+	this.cornerSize = Math.min(data.width, data.height) / 5;
+	console.log(this.cornerSize);
+
+	this.dragCorner.style.width = this.cornerSize + "px";
+	this.dragCorner.style.height = this.cornerSize + "px";
+
 	if (this.width !== data.width) {
 		this.width = data.width;
 
 		this.title.style.width = this.width + "px";
 		this.partitionArea.style.width = this.width + "px";
-		this.dragCorner.style.left     = (this.width - this.cornerSize).toString() + "px";
 	}
 
 	if (this.height != data.height) {
 		this.height = data.height;
 
 		this.partitionArea.style.height = this.height + "px";
-		this.dragCorner.style.top = (this.height - this.cornerSize).toString() + "px";
 	}
 
 };
