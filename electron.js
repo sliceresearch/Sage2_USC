@@ -80,6 +80,16 @@ function openWindow() {
 		mainWindow.show();
 	}
 
+	if (commander.audio) {
+		if (commander.width === 1280 && (commander.height === 720)) {
+			// if default values specified, tweak them for the audio manager
+			commander.width  = 800;
+			commander.height = 400;
+		}
+	}
+
+
+
 	// Setup initial position and size
 	mainWindow.setBounds({
 		x:      commander.xorigin,
