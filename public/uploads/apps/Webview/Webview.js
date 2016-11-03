@@ -86,7 +86,8 @@ var Webview = SAGE2_App.extend({
 				event.errorCode === -501 ||
 				event.errorDescription === "OK") {
 				// it's a redirect
-				_this.changeURL(event.validatedURL, false);
+				// _this.changeURL(event.validatedURL, false);
+				// nope
 			} else {
 				// real error
 				_this.element.src = 'data:text/html;charset=utf-8,<h1>Invalid URL</h1>';

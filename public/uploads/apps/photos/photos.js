@@ -30,6 +30,7 @@ var photos = SAGE2_App.extend({
 	initApp: function() {
 		this.listFileCallbackFunc        = this.listFileCallback.bind(this);
 		this.imageLoadCallbackFunc       = this.imageLoadCallback.bind(this);
+
 		this.imageLoadFailedCallbackFunc = this.imageLoadFailedCallback.bind(this);
 
 		this.image1.onload  = this.imageLoadCallbackFunc;
@@ -67,12 +68,11 @@ var photos = SAGE2_App.extend({
 	},
 
 	imageLoadCallback: function() {
-		this.imageTemp = this.image2; // hold onto 2
-		this.image2    = this.image1; // image2 is the previous image (needed for fading)
-
-		this.okToDraw = this.fadeCount;
-		this.image1   = this.image3;    // image1 is now the new image
+		this.imageTemp = this.image2; // hold onto the previous image (image2)
+		this.image2    = this.image1; // current image becomes the previous image (needed for fading)
+		this.image1   = this.image3;  // image1 is now the new image (image3)
 		this.image3   = this.imageTemp;
+		this.okToDraw = this.fadeCount;
 	},
 
 	imageLoadFailedCallback: function() {
@@ -117,6 +117,7 @@ var photos = SAGE2_App.extend({
 
 			var newWidth  = this.canvasWidth;
 			var newHeight = this.canvasHeight;
+			var newOpacity = 1;
 
 			this.svg.select("#baserect")
 				.attr("height", newHeight)
@@ -140,19 +141,40 @@ var photos = SAGE2_App.extend({
 					image2DrawHeight = this.canvasWidth / image2ratio;
 				}
 
-				if (this.okToDraw > 1) {
-					this.svg.select("#image2")
-						.attr("xlink:href", this.image2.src)
-						.attr("opacity", 1)
-						.attr("width",  image2DrawWidth)
-						.attr("height", image2DrawHeight);
-				} else {
-					this.svg.select("#image2")
-						.attr("xlink:href", this.image2.src)
-						.attr("opacity", Math.max(0.0, Math.min(1.0, (this.okToDraw + 9) / this.fadeCount)))
-						.attr("width",  image2DrawWidth)
-						.attr("height", image2DrawHeight);
+				// okToDraw starts at this.fadeCount and decreases by one each frame
+				// mid 2016 something changed and I'm not getting the current image2 right away
+				// different images look ok with a fade to black in between
+				// webcams look better without the fade to black
+				///////
+
+				newOpacity = 1.0;
+				if (this.bigList != null) {
+					if (this.bigList.length > 1) {
+						newOpacity = 0.0;
+
+						// quick hack to stop the flickering on multi image ones
+						this.svg.select("#image2")
+							.attr("xlink:href", this.image2.src)
+							.attr("opacity", 0)
+							.attr("width",  image2DrawWidth)
+							.attr("height", image2DrawHeight);
+					} else { // this part is ok for a fading webcam
+						if (this.okToDraw > 1) {
+							this.svg.select("#image2")
+								.attr("xlink:href", this.image2.src)
+								.attr("opacity", newOpacity)
+								.attr("width",  image2DrawWidth)
+								.attr("height", image2DrawHeight);
+						} else {
+							this.svg.select("#image2")
+								.attr("xlink:href", this.image2.src)
+								.attr("opacity", Math.max(0.0, Math.min(1.0, (this.okToDraw + 9) / this.fadeCount)))
+								.attr("width",  image2DrawWidth)
+								.attr("height", image2DrawHeight);
+						}
+					}
 				}
+				///////
 			}
 
 			// current image
@@ -174,7 +196,7 @@ var photos = SAGE2_App.extend({
 					.attr("height", image1DrawHeight);
 			}
 
-			this.okToDraw -= 1.0;
+			this.okToDraw = this.okToDraw - 1;
 		}
 
 
