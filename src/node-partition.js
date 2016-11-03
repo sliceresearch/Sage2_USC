@@ -23,8 +23,6 @@
   */
 
 function Partition(dims, id, color, partitionList) {
-	console.log("Partition: Creating new Partition");
-
 	// the list which this partition is a part of
 	this.partitionList = partitionList;
 

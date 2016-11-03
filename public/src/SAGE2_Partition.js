@@ -33,8 +33,6 @@ var SAGE2_Partition = function(data) {
 
 	this.cornerSize = 0.2 * Math.min(this.width, this.height);
 
-	console.log("SAGE2_Partition: Creating new Partition");
-
 	var title = document.createElement('div');
 	title.id = this.id + "_title";
 	title.className = "partitionTitle";

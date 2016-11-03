@@ -50,8 +50,6 @@ function PartitionList(config) {
   */
 PartitionList.prototype.newPartition = function(dims, iMgr, color) {
 	if (this.count <= 20) {
-		console.log("PartitionList: Creating new Partition");
-
 		this.count++;
 		this.totalCreated++;
 		// give the partition a unique ID

@@ -2177,7 +2177,7 @@ function saveSession(filename) {
 	for (key in SAGE2Items.applications.list) {
 		var a = SAGE2Items.applications.list[key];
 
-		if (a.hasOwnProperty(partition)) {
+		if (a.partition) {
 			// remove reference to parent partition if it exists
 			delete a.partition;
 		}
@@ -2191,11 +2191,11 @@ function saveSession(filename) {
 	for (key in partitions.list) {
 		var p = partitions.list[key];
 
-		if (p.hasOwnProperty(partitionList)) {
+		if (p.partitionList) {
 			delete p.partitionList;
 		}
 
-		states.apps.push(p);
+		states.partitions.push(p);
 		states.numpartitions++;
 	}
 
@@ -2292,9 +2292,12 @@ function loadSession(filename) {
 			var session = JSON.parse(data);
 			console.log(sageutils.header("Session") + "number of applications", session.numapps);
 
+			var newApps = {};
+
 			session.apps.forEach(function(element, index, array) {
 				createAppFromDescription(element, function(appInstance, videohandle) {
 					appInstance.id = getUniqueAppId();
+
 					if (appInstance.animation) {
 						var i;
 						SAGE2Items.renderSync[appInstance.id] = {clients: {}, date: Date.now()};
@@ -2307,7 +2310,47 @@ function loadSession(filename) {
 					}
 
 					handleNewApplication(appInstance, videohandle);
+
+					// console.log(appInstance);
+
+					// save mapping from old appID to new app (NOT WORKING CORRECTLY)
+					newApps[element.id] = SAGE2Items.applications.list[appInstance.id];
+
 				});
+			});
+
+			// recreate partitions
+			session.partitions.forEach(function(element, index, array) {
+				// remake partition
+
+				var ptn = createPartition(
+					{
+						width: element.width,
+						height: element.height,
+						left: element.left,
+						top: element.top
+					},
+					element.color
+				);
+
+				ptn.innerMaximization = element.innerMaximization;
+				ptn.innerTiling = element.innerTiling;
+
+				// if (ptn.innerMaximization) {
+				// 	// set maximized child
+				// 	// ptn.maximizeChild(...)
+				// }
+				//
+				// ptn.updateInnerLayout();
+				//
+				//
+				// // reassociate apps (NOT WORKING CORRECTLY)
+				// for(var key in element.children) {
+				// 	ptn.addChild(newApps[element.children[key].id]);
+				// }
+
+				// update partition title after it is restored
+				broadcast('partitionWindowTitleUpdate', ptn.getTitle());
 			});
 		}
 	});
