@@ -9028,6 +9028,11 @@ function divideAreaPartitions(data, x, y, width, height) {
 	let currX = x,
 		currY = y;
 
+	let randColor = "#" +
+		("00" + Math.floor(Math.random() * 256).toString(16)).substr(-2) +
+		("00" + Math.floor(Math.random() * 256).toString(16)).substr(-2) +
+		("00" + Math.floor(Math.random() * 256).toString(16)).substr(-2);
+
 	if (data.ptn) {
 		let newPtn = createPartition(
 			{
@@ -9036,7 +9041,7 @@ function divideAreaPartitions(data, x, y, width, height) {
 				width: width,
 				height: height - config.ui.titleBarHeight
 			},
-			"#307fff"
+			randColor
 		);
 
 		broadcast('partitionWindowTitleUpdate', newPtn.getTitle());
