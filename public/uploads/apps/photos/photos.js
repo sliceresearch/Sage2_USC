@@ -126,8 +126,8 @@ var photos = SAGE2_App.extend({
 			var windowRatio = this.canvasWidth / this.canvasHeight;
 			var image1DrawWidth = this.canvasWidth;
 			var image1DrawHeight = this.canvasHeight;
-			var image2DrawWidth = this.canvasWidth;
-			var image2DrawHeight = this.canvasHeight;
+			// var image2DrawWidth = this.canvasWidth;
+			// var image2DrawHeight = this.canvasHeight;
 
 			// previous image
 			if (this.image2 !== "NULL") {
@@ -137,8 +137,8 @@ var photos = SAGE2_App.extend({
 
 				// want wide images to be aligned to top not center
 				if (image2ratio > windowRatio) {
-					image2DrawWidth  =  this.canvasWidth;
-					image2DrawHeight = this.canvasWidth / image2ratio;
+					// image2DrawWidth  =  this.canvasWidth;
+					// image2DrawHeight = this.canvasWidth / image2ratio;
 				}
 
 				// okToDraw starts at this.fadeCount and decreases by one each frame
@@ -153,24 +153,13 @@ var photos = SAGE2_App.extend({
 						newOpacity = 0.0;
 
 						// quick hack to stop the flickering on multi image ones
-						this.svg.select("#image2")
-							.attr("xlink:href", this.image2.src)
-							.attr("opacity", 0)
-							.attr("width",  image2DrawWidth)
-							.attr("height", image2DrawHeight);
+						this.svg.select("#image2").attr("opacity", 0);
 					} else { // this part is ok for a fading webcam
 						if (this.okToDraw > 1) {
-							this.svg.select("#image2")
-								.attr("xlink:href", this.image2.src)
-								.attr("opacity", newOpacity)
-								.attr("width",  image2DrawWidth)
-								.attr("height", image2DrawHeight);
+							this.svg.select("#image2").attr("opacity", newOpacity);
 						} else {
 							this.svg.select("#image2")
-								.attr("xlink:href", this.image2.src)
-								.attr("opacity", Math.max(0.0, Math.min(1.0, (this.okToDraw + 9) / this.fadeCount)))
-								.attr("width",  image2DrawWidth)
-								.attr("height", image2DrawHeight);
+								.attr("opacity", Math.max(0.0, Math.min(1.0, (this.okToDraw + 9) / this.fadeCount)));
 						}
 					}
 				}
@@ -189,11 +178,16 @@ var photos = SAGE2_App.extend({
 					image1DrawHeight = this.canvasWidth / image1ratio;
 				}
 
-				this.svg.select("#image1")
-					.attr("xlink:href", this.image1.src)
-					.attr("opacity", Math.max(0.0, Math.min(1.0, 1.0 - (this.okToDraw / this.fadeCount))))
-					.attr("width",  image1DrawWidth)
-					.attr("height", image1DrawHeight);
+				if (this.okToDraw === this.fadeCount) {
+					this.svg.select("#image1")
+						.attr("xlink:href", this.image1.src)
+						.attr("opacity", 0)
+						.attr("width",  image1DrawWidth)
+						.attr("height", image1DrawHeight);
+				} else {
+					this.svg.select("#image1")
+						.attr("opacity", Math.max(0.0, Math.min(1.0, 1.0 - (this.okToDraw / this.fadeCount))));
+				}
 			}
 
 			this.okToDraw = this.okToDraw - 1;
