@@ -9025,13 +9025,11 @@ function wsPartitionScreen(wsio, data) {
 }
 
 function divideAreaPartitions(data, x, y, width, height) {
+
 	let currX = x,
 		currY = y;
 
-	let randColor = "#" +
-		("00" + Math.floor(Math.random() * 256).toString(16)).substr(-2) +
-		("00" + Math.floor(Math.random() * 256).toString(16)).substr(-2) +
-		("00" + Math.floor(Math.random() * 256).toString(16)).substr(-2);
+	let randColor = partitions.defaultColors[Math.floor(Math.random() * 12)];
 
 	if (data.ptn) {
 		let newPtn = createPartition(

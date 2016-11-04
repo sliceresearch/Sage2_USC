@@ -39,7 +39,7 @@ var SAGE2_Partition = function(data) {
 	title.style.left = (-ui.offsetX).toString() + "px";
 	title.style.top = (-ui.offsetY).toString() + "px";
 	title.style.width = this.width + "px";
-	title.style.height = 55 + "px";
+	title.style.height = ui.titleBarHeight + "px";
 	title.style.webkitTransform = "translate(" + this.left + "px," + this.top + "px)";
 	title.style.mozTransform    = "translate(" + this.left + "px," + this.top + "px)";
 	title.style.transform       = "translate(" + this.left + "px," + this.top + "px)";
@@ -83,7 +83,7 @@ var SAGE2_Partition = function(data) {
 	maxIcon.src = "images/window-fullscreen.svg";
 	maxIcon.height = Math.round(ui.titleBarHeight - 4);
 	maxIcon.style.position = "absolute";
-	maxIcon.style.right    = "70px";
+	maxIcon.style.right    = (ui.titleBarHeight * 1.25) + "px";
 
 	this.maxIcon = maxIcon;
 
@@ -100,7 +100,7 @@ var SAGE2_Partition = function(data) {
 	tilecontentIcon.src = "images/ui/tilecontent.svg";
 	tilecontentIcon.height = Math.round(ui.titleBarHeight + 20);
 	tilecontentIcon.style.position = "absolute";
-	tilecontentIcon.style.left     = "75px";
+	tilecontentIcon.style.left     = (ui.titleBarHeight * 1.25) + "px";
 	tilecontentIcon.style.top			 = "-12px";
 
 	this.tilecontentIcon = tilecontentIcon;
