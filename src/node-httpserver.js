@@ -424,7 +424,7 @@ HttpServer.prototype.onreq = function(req, res) {
 
 				// Read part of the file
 				// This line opens the file as a readable stream
-				var readStream = fs.createReadStream(pathname, {start: start, end: end});
+				let readStream = fs.createReadStream(pathname, {start: start, end: end});
 				// This will wait until we know the readable stream is actually valid before piping
 				readStream.on('open', function () {
 					// This just pipes the read stream to the response object
@@ -438,7 +438,7 @@ HttpServer.prototype.onreq = function(req, res) {
 
 			} else {
 				// Open the file as a stream
-				var readStream = fs.createReadStream(pathname);
+				let readStream = fs.createReadStream(pathname);
 				// array of allowed compression file types
 				var compressExtensions = ['.html', '.json', '.js', '.css', '.txt', '.svg', '.xml', '.md'];
 				if (compressExtensions.indexOf(path.extname(pathname)) === -1) {
