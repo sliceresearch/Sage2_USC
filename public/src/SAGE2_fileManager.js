@@ -108,10 +108,12 @@ function FileManager(wsio, mydiv, uniqueID) {
 			{id: "about_menu", value: "About"}
 		]},
 		{id: "mainpartition_menu",    value: "Partition Screen", config: {width: 250}, submenu: [
-			{id: "2x1_menu",  value: "2 Columns"},
+			{id: "2x1_menu", value: "2 Columns"},
 			{id: "3x1_menu", value: "3 Columns"},
-			{id: "2x2_menu",    value: "2 Columns, 2 Rows"}
-		]},
+			{id: "2x2_menu", value: "2 Columns, 2 Rows"},
+			{id: "2s-1b-2s_menu", value: "Center Pane, 4 Mini"},
+			{id: "2b-1w_menu", value: "2 Pane, Taskbar"},
+		]}
 	];
 	var mymenu = {
 		id: "mymenu",
@@ -388,13 +390,170 @@ function FileManager(wsio, mydiv, uniqueID) {
 			wsio.emit('createPartition', ptnDims);
 		} else if (evt === "2x1_menu") {
 			// create partition division of screen
-			wsio.emit('partitionScreen', {numRows: 1, numCols: 2});
+			wsio.emit('partitionScreen',
+				{
+					type: "row",
+					size: 12,
+					children: [
+						{
+							type: "col",
+							ptn: true,
+							size: 6
+						},
+						{
+							type: "col",
+							ptn: true,
+							size: 6
+						}
+					]
+				});
 		} else if (evt === "3x1_menu") {
 			// create partition division of screen
-			wsio.emit('partitionScreen', {numRows: 1, numCols: 3});
+			wsio.emit('partitionScreen',
+				{
+					type: "row",
+					size: 12,
+					children: [
+						{
+							type: "col",
+							ptn: true,
+							size: 4
+						},
+						{
+							type: "col",
+							ptn: true,
+							size: 4
+						},
+						{
+							type: "col",
+							ptn: true,
+							size: 4
+						}
+					]
+				});
 		} else if (evt === "2x2_menu") {
 			// create partition division of screen
-			wsio.emit('partitionScreen', {numRows: 2, numCols: 2});
+			wsio.emit('partitionScreen',
+				{
+					type: "col",
+					size: 12,
+					children: [
+						{
+							type: "row",
+							size: 6,
+							children: [
+								{
+									type: "col",
+									ptn: true,
+									size: 6
+								},
+								{
+									type: "col",
+									ptn: true,
+									size: 6
+								}
+							]
+						},
+						{
+							type: "row",
+							size: 6,
+							children: [
+								{
+									type: "col",
+									ptn: true,
+									size: 6
+								},
+								{
+									type: "col",
+									ptn: true,
+									size: 6
+								}
+							]
+						}
+					]
+				});
+		} else if (evt === "2s-1b-2s_menu") {
+			// create partition division of screen
+			wsio.emit('partitionScreen',
+				{
+					type: "row",
+					size: 12,
+					children: [
+						{
+							type: "col",
+							size: 3,
+							children: [
+								{
+									type: "row",
+									ptn: true,
+									size: 8
+								},
+								{
+									type: "row",
+									ptn: true,
+									size: 4
+								}
+							]
+						},
+						{
+							type: "col",
+							ptn: true,
+							size: 6
+						},
+						{
+							type: "col",
+							size: 3,
+							children: [
+								{
+									type: "row",
+									ptn: true,
+									size: 4
+								},
+								{
+									type: "row",
+									ptn: true,
+									size: 8
+								}
+							]
+						}
+					]
+				});
+		} else if (evt === "2b-1w_menu") {
+			// create partition division of screen
+			wsio.emit('partitionScreen',
+				{
+					type: "col",
+					size: 12,
+					children: [
+						{
+							type: "row",
+							size: 8,
+							children: [
+								{
+									type: "col",
+									ptn: true,
+									size: 8
+								},
+								{
+									type: "col",
+									ptn: true,
+									size: 4
+								}
+							]
+						},
+						{
+							type: "row",
+							size: 4,
+							children: [
+								{
+									type: "col",
+									ptn: true,
+									size: 12
+								}
+							]
+						}
+					]
+				});
 		} else {
 			// dunno
 		}

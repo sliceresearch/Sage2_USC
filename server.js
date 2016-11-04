@@ -9010,28 +9010,65 @@ function wsCreatePartition(wsio, data) {
 	* Create a new screen partition with dimensions specified in data
 	*
 	* @method wsPartitionScreen
-	* @param {object} data - Contains the numRows and numCols that the screen will be divided into
+	* @param {object} data - Contains the layout specificiation with which partitions will be created
 	*/
 function wsPartitionScreen(wsio, data) {
 	console.log("Server: Dividing SAGE2 into Partitions");
 
-	var ptnWidth = config.totalWidth / data.numCols;
-	var ptnHeight = (config.totalHeight - ((data.numRows + 1) * config.ui.titleBarHeight)) / data.numRows;
+	divideAreaPartitions(
+		data,
+		0,
+		config.ui.titleBarHeight,
+		config.totalWidth,
+		config.totalHeight - config.ui.titleBarHeight
+	);
+}
 
-	let row, col;
+function divideAreaPartitions(data, x, y, width, height) {
+	let currX = x,
+		currY = y;
 
-	for (row = 0; row < data.numRows; row++) {
-		for (col = 0; col < data.numCols; col++) {
-			let newPtn = createPartition({
-				left: (col * ptnWidth),
-				top: (config.ui.titleBarHeight + (row * (ptnHeight + config.ui.titleBarHeight))),
-				width: ptnWidth,
-				height: ptnHeight
-			}, "#307fff");
+	if (data.ptn) {
+		let newPtn = createPartition(
+			{
+				left: x,
+				top: y,
+				width: width,
+				height: height - config.ui.titleBarHeight
+			},
+			"#307fff"
+		);
 
-			broadcast('partitionWindowTitleUpdate', newPtn.getTitle());
+		broadcast('partitionWindowTitleUpdate', newPtn.getTitle());
+
+	} else {
+		if (data.type === "col") {
+			for (let i = 0; i < data.children.length; i++) {
+				divideAreaPartitions(
+					data.children[i],
+					currX,
+					currY,
+					width,
+					height * data.children[i].size / 12
+				);
+
+				currY += height * data.children[i].size / 12;
+			}
+		} else if (data.type === "row") {
+			for (let i = 0; i < data.children.length; i++) {
+				divideAreaPartitions(
+					data.children[i],
+					currX,
+					currY,
+					width * data.children[i].size / 12,
+					height
+				);
+
+				currX += width * data.children[i].size / 12;
+			}
 		}
 	}
+
 }
 
 /**
