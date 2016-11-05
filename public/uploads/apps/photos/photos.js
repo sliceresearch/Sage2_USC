@@ -113,11 +113,15 @@ var photos = SAGE2_App.extend({
 
 	drawEverything: function() {
 		if ((this.okToDraw >= -this.fadeCount) || (this.forceRedraw > 0)) {
-			this.forceRedraw = 0;
+
+			if 	(this.forceRedraw > 0) {
+				this.okToDraw = this.fadeCount;
+			}
 
 			var newWidth  = this.canvasWidth;
 			var newHeight = this.canvasHeight;
-			var newOpacity = 1;
+			var newOpacityOld = 1;
+			var newOpacityNew = 1;
 
 			this.svg.select("#baserect")
 				.attr("height", newHeight)
@@ -126,8 +130,8 @@ var photos = SAGE2_App.extend({
 			var windowRatio = this.canvasWidth / this.canvasHeight;
 			var image1DrawWidth = this.canvasWidth;
 			var image1DrawHeight = this.canvasHeight;
-			// var image2DrawWidth = this.canvasWidth;
-			// var image2DrawHeight = this.canvasHeight;
+			var image2DrawWidth = this.canvasWidth;
+			var image2DrawHeight = this.canvasHeight;
 
 			// previous image
 			if (this.image2 !== "NULL") {
@@ -137,33 +141,28 @@ var photos = SAGE2_App.extend({
 
 				// want wide images to be aligned to top not center
 				if (image2ratio > windowRatio) {
-					// image2DrawWidth  =  this.canvasWidth;
-					// image2DrawHeight = this.canvasWidth / image2ratio;
+					image2DrawWidth  = this.canvasWidth;
+					image2DrawHeight = this.canvasWidth / image2ratio;
 				}
 
 				// okToDraw starts at this.fadeCount and decreases by one each frame
-				// mid 2016 something changed and I'm not getting the current image2 right away
+				//
+				// mid 2016 something changed and I'm not getting the nice blend from before
+				// so diabling the blending for multiple image scrapbooks for now
+				//
 				// different images look ok with a fade to black in between
-				// webcams look better without the fade to black
+				// webcams look better without the fade to black in between
 				///////
 
-				newOpacity = 1.0;
+				newOpacityOld = Math.max(0.0, Math.min(1.0, (this.okToDraw + 9) / this.fadeCount));
+				newOpacityNew = Math.max(0.0, Math.min(1.0, 1.0 - (this.okToDraw / this.fadeCount)));
+
 				if (this.bigList != null) {
 					if (this.bigList.length > 1) {
-						newOpacity = 0.0;
-
-						// quick hack to stop the flickering on multi image ones
-						this.svg.select("#image2").attr("opacity", 0);
-					} else { // this part is ok for a fading webcam
-						if (this.okToDraw > 1) {
-							this.svg.select("#image2").attr("opacity", newOpacity);
-						} else {
-							this.svg.select("#image2")
-								.attr("opacity", Math.max(0.0, Math.min(1.0, (this.okToDraw + 9) / this.fadeCount)));
-						}
+						newOpacityOld = 0.0;
 					}
+					this.svg.select("#image2").attr("opacity", newOpacityOld);
 				}
-				///////
 			}
 
 			// current image
@@ -184,12 +183,20 @@ var photos = SAGE2_App.extend({
 						.attr("opacity", 0)
 						.attr("width",  image1DrawWidth)
 						.attr("height", image1DrawHeight);
+
+					this.svg.select("#image2")
+						.attr("xlink:href", this.image2.src)
+						//.attr("opacity", newOpacity)
+						.attr("width",  image2DrawWidth)
+						.attr("height", image2DrawHeight);
+
 				} else {
 					this.svg.select("#image1")
-						.attr("opacity", Math.max(0.0, Math.min(1.0, 1.0 - (this.okToDraw / this.fadeCount))));
+						.attr("opacity", newOpacityNew);
 				}
 			}
 
+			this.forceRedraw = 0;
 			this.okToDraw = this.okToDraw - 1;
 		}
 
