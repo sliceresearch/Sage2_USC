@@ -1454,12 +1454,12 @@ function UIBuilder(json_cfg, clientID) {
 			for (i = 0; i < itemlist.length; i++) {
 				itemlist[i].classList.toggle("windowItemNoBorder");
 			}
-			// Hide the apps top bar
+			// Hide the partitions top bar
 			var ptnlist = document.getElementsByClassName("partitionTitle");
 			for (i = 0; i < ptnlist.length; i++) {
 				ptnlist[i].style.display = 'none';
 			}
-			// Hide the apps border
+			// Hide the partitions background area
 			var ptntitlelist = document.getElementsByClassName("partitionArea");
 			for (i = 0; i < ptntitlelist.length; i++) {
 				ptntitlelist[i].style.display = 'none';
@@ -1496,12 +1496,12 @@ function UIBuilder(json_cfg, clientID) {
 			for (i = 0; i < itemlist.length; i++) {
 				itemlist[i].classList.toggle("windowItemNoBorder");
 			}
-			// Hide the apps top bar
+			// Show the partitions top bar
 			var ptnlist = document.getElementsByClassName("partitionTitle");
 			for (i = 0; i < ptnlist.length; i++) {
 				ptnlist[i].style.display = 'block';
 			}
-			// Hide the apps border
+			// Show the partitions background area
 			var ptntitlelist = document.getElementsByClassName("partitionArea");
 			for (i = 0; i < ptntitlelist.length; i++) {
 				ptntitlelist[i].style.display = 'block';
