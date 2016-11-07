@@ -12,14 +12,15 @@ configuration: Release
 platform: x64
 
 init:
-  - curl -LsSO http://ffmpeg.zeranoe.com/builds/win64/dev/ffmpeg-3.0.1-win64-dev.7z
-  - 7z x ffmpeg-3.0.1-win64-dev.7z -o. > nul
+#  - curl -LsSO http://ffmpeg.zeranoe.com/builds/win64/dev/ffmpeg-3.0.1-win64-dev.7z
+  - curl -LsSO https://bitbucket.org/sage2/binaries/downloads/ffmpeg-3.0-win64-dev.7z
+  - 7z x ffmpeg-3.0-win64-dev.7z -o. > nul
   - mkdir C:\Dev\
   - mkdir C:\Dev\ffmpeg-win64-dev
-  - move ffmpeg-3.0.1-win64-dev\lib C:\Dev\ffmpeg-win64-dev
-  - move ffmpeg-3.0.1-win64-dev\include C:\Dev\ffmpeg-win64-dev
+  - move ffmpeg-3.0-win64-dev\lib C:\Dev\ffmpeg-win64-dev
+  - move ffmpeg-3.0-win64-dev\include C:\Dev\ffmpeg-win64-dev
   - del /Q *.7z
-  - rmdir /Q /S ffmpeg-3.0.1-win64-dev
+  - rmdir /Q /S ffmpeg-3.0-win64-dev
   - dir C:\Dev
   - dir C:\Dev\ffmpeg-win64-dev\include
   - dir C:\Dev\ffmpeg-win64-dev\lib
@@ -36,12 +37,13 @@ install:
   - npm install npm
   - npm install -g kthxbai
   - kthxbai
-  - curl -LsSO http://ffmpeg.zeranoe.com/builds/win64/shared/ffmpeg-3.0.1-win64-shared.7z
-  - 7z x ffmpeg-3.0.1-win64-shared.7z -o.  > nul
-  - copy ffmpeg-3.0.1-win64-shared\bin\*.dll node_modules\node-demux\build\Release\
-  - copy ffmpeg-3.0.1-win64-shared\bin\*.dll bin\
-  - copy ffmpeg-3.0.1-win64-shared\bin\*.exe bin\
-  - rmdir /Q /S ffmpeg-3.0.1-win64-shared
+#  - curl -LsSO http://ffmpeg.zeranoe.com/builds/win64/shared/ffmpeg-3.0.1-win64-shared.7z
+  - curl -LsSO https://bitbucket.org/sage2/binaries/downloads/ffmpeg-3.0-win64-shared.7z
+  - 7z x ffmpeg-3.0-win64-shared.7z -o.  > nul
+  - copy ffmpeg-3.0-win64-shared\bin\*.dll node_modules\node-demux\build\Release\
+  - copy ffmpeg-3.0-win64-shared\bin\*.dll bin\
+  - copy ffmpeg-3.0-win64-shared\bin\*.exe bin\
+  - rmdir /Q /S ffmpeg-3.0-win64-shared
   - curl -LsSO http://www.sno.phy.queensu.ca/~phil/exiftool/exiftool-10.25.zip
   - 7z x exiftool-10.25.zip > nul
   - move exiftool(-k).exe bin\exiftool.exe
