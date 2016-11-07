@@ -219,9 +219,9 @@ Partition.prototype.tilePartition = function() {
 
 	// determine the bounds of the tiling area
 	var titleBar = this.partitionList.configuration.ui.titleBarHeight;
-	if (this.partitionList.configuration.ui.auto_hide_ui === true) {
-		titleBar = 0;
-	}
+	// if (this.partitionList.configuration.ui.auto_hide_ui === true) {
+	// 	titleBar = 0;
+	// }
 
 	var tilingArea = {
 		left: this.left,
@@ -316,9 +316,9 @@ Partition.prototype.tilePartition = function() {
 
 	var areaX = 0;
 	var areaY = Math.round(1.5 * titleBar); // keep 0.5 height as margin
-	if (this.partitionList.configuration.ui.auto_hide_ui === true) {
-		areaY = -this.partitionList.configuration.ui.titleBarHeight;
-	}
+	// if (this.partitionList.configuration.ui.auto_hide_ui === true) {
+	// 	areaY = -this.partitionList.configuration.ui.titleBarHeight;
+	// }
 
 	var areaW = tilingArea.width;
 	var areaH = tilingArea.height - (1.0 * titleBar);
@@ -416,9 +416,9 @@ Partition.prototype.tilePartition = function() {
 
 	function fitWithin(app, x, y, width, height, margin) {
 		var titleBar = _this.partitionList.configuration.ui.titleBarHeight;
-		if (_this.partitionList.configuration.ui.auto_hide_ui === true) {
-			titleBar = 0;
-		}
+		// if (_this.partitionList.configuration.ui.auto_hide_ui === true) {
+		// 	titleBar = 0;
+		// }
 
 		// take buffer into account
 		x += margin;
@@ -492,9 +492,9 @@ Partition.prototype.maximizeChild = function(id, shift) {
 
 		// normally is just the screen size, but if in partition it is the partition boundaries
 		var titleBar = config.ui.titleBarHeight;
-		if (config.ui.auto_hide_ui === true) {
-			titleBar = 0;
-		}
+		// if (config.ui.auto_hide_ui === true) {
+		// 	titleBar = 0;
+		// }
 
 		if (this.innerMaximization && this.currentMaximizedChild) {
 			this.restoreChild(this.currentMaximizedChild);
@@ -574,9 +574,9 @@ Partition.prototype.maximizeChild = function(id, shift) {
 		}
 
 		// Shift by 'titleBarHeight' if no auto-hide
-		if (this.partitionList.configuration.ui.auto_hide_ui === true) {
-			item.top = item.top - this.partitionList.configuration.ui.titleBarHeight;
-		}
+		// if (this.partitionList.configuration.ui.auto_hide_ui === true) {
+		// 	item.top = item.top - this.partitionList.configuration.ui.titleBarHeight;
+		// }
 
 		this.updateChild(item.id);
 
