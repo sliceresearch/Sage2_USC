@@ -133,6 +133,15 @@
 		<span>Save</span>
 	</div>
 </div>
+<div class="entryDescription" style="text-align: center">
+	Certificates will be made for host and each alternate host specified. Overwriting may occur.<br>
+	If you bought from a CA take caution when using this.
+</div>
+<div id="saveAndMakeCertificatesButtonContainer">
+	<div id="saveAndMakeCertificatesButton" class="centerContent buttonFull cgBlue">
+		<span>Save And Make Certificates</span>
+	</div>
+</div>
 
 <div id="cancelButtonContainer" class="centerContent buttonFull cgDark">
 	<div id="cancelButton">
@@ -166,6 +175,7 @@
 
 	socket.on("requestConfigAndTipsResponse", function(msg) {
 		fillFieldsWithConfigAndTips(msg);
+		waitMessage.style.display = "none";
 	});
 
 
@@ -197,6 +207,9 @@
 
 	// add event listeners to Save and Cancel buttons
 	saveButtonContainer.addEventListener("click", sendCfgEditsAndRedirect);
+	saveAndMakeCertificatesButtonContainer.addEventListener("click", function() {
+		sendCfgEditsAndRedirect("makeCerts");
+	});
 	cancelButtonContainer.addEventListener("click", redirectToAdminPanel);
 
 
@@ -549,7 +562,7 @@
 			inputForRsHost1
 			inputForRsPort1
 	*/
-	function sendCfgEditsAndRedirect() {
+	function sendCfgEditsAndRedirect(makeCerts) {
 		console.log("Retrieving values");
 
 		// performValueCheckAndMoveToCfg(checkvalue, condition, serverProperty, subProperty) {
@@ -643,6 +656,13 @@
 
 		// print
 		console.dir(serverGivenCfgCopy);
+
+		// set property to make certs
+		if (makeCerts == "makeCerts") {
+			serverGivenCfgCopy.makeCerts = true;
+		} else {
+			serverGivenCfgCopy.makeCerts = false;
+		}
 
 		// send to server
 		socket.emit("assistedConfigSend", serverGivenCfgCopy);
