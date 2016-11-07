@@ -3,6 +3,7 @@ version: 1.5.{build}
 branches:
   only:
   - master
+  - Andrew-Branch
 
 shallow_clone: true
 
