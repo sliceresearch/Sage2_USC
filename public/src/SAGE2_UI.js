@@ -520,6 +520,25 @@ function setupListeners() {
 		displayUI.setItemPositionAndSize(data);
 	});
 
+	// webUI partition wsio messages
+	wsio.on('createPartitionBorder', function(data) {
+		displayUI.addPartitionBorder(data);
+	});
+
+	wsio.on('deletePartitionWindow', function(data) {
+		displayUI.deletePartition(data.id);
+	});
+
+	wsio.on('partitionMoveAndResizeFinished', function(data) {
+		displayUI.setPartitionPositionAndSize(data);
+	});
+
+	wsio.on('updatePartitionBorders', function(data) {
+		displayUI.updateHighlightedPartition(data);
+	});
+
+
+
 	// Server sends the SAGE2 version
 	wsio.on('setupSAGE2Version', function(data) {
 		sage2Version = data;

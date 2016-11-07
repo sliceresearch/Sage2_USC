@@ -836,6 +836,7 @@ function initializeWSClient(wsio, reqConfig, reqVersion, reqTime, reqConsole) {
 			});
 		}
 		initializeExistingAppsPositionSizeTypeOnly(wsio);
+		initializeExistingPartitionsUI(wsio);
 	}
 
 	var remote = findRemoteSiteByConnection(wsio);
@@ -1169,6 +1170,14 @@ function initializeExistingAppsPositionSizeTypeOnly(wsio) {
 
 	var newOrder = interactMgr.getObjectZIndexList("applications", ["portals"]);
 	wsio.emit('updateItemOrder', newOrder);
+}
+
+function initializeExistingPartitionsUI(wsio) {
+	var key;
+
+	for (key in partitions.list) {
+		wsio.emit('createPartitionBorder', partitions.list[key].getDisplayInfo());
+	}
 }
 
 function initializeRemoteServerInfo(wsio) {
@@ -9083,6 +9092,7 @@ function divideAreaPartitions(data, x, y, width, height) {
 function createPartition(dims, color) {
 	var myPtn = partitions.newPartition(dims, interactMgr, color);
 	broadcast('createPartitionWindow', myPtn.getDisplayInfo());
+	broadcast('createPartitionBorder', myPtn.getDisplayInfo());
 
 	return myPtn;
 }
