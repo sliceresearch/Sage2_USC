@@ -102,7 +102,7 @@ var SAGE2MEP = {
 		var mouseEventToPass;
 		var buttonValue;
 		var offsetValues = {}; // NOTE: according to MDN, this is experiemental and shouldn't be used in production.
-		if (type == "pointerMove" || type == "pointerRelease" || type == "pointerPress" ) {
+		if (type == "pointerMove" || type == "pointerRelease" || type == "pointerPress") {
 			var parent = point.currentElement;
 			var boundsOfParent;
 			// get the app bounding box, while the id doesn't contain app_
