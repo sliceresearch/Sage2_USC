@@ -594,7 +594,7 @@ SAGE2DisplayUI.prototype.updateHighlightedPartition = function(id) {
 		highlighted.style.backgroundColor = "rgba(1, 1, 1, 0.5)";
 		highlighted.style.border = "6px solid #fff723";
 	}
-}
+};
 
 /**
  * Draw a rounded rectangle
