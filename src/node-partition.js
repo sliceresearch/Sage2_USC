@@ -245,7 +245,7 @@ Partition.prototype.tilePartition = function() {
 				// if the maximized window is the only window
 				// place in center
 				maxChild.left = this.left + this.width / 2 - maxChild.width / 2;
-				maxChild.top = this.top + titleBar + this.height / 2 - maxChild.height / 2;
+				maxChild.top = this.top + (this.height - maxChild.height + titleBar) / 2;
 
 				this.updateChild(this.currentMaximizedChild);
 				return;
@@ -507,7 +507,7 @@ Partition.prototype.maximizeChild = function(id, shift) {
 			left: this.left + 4,
 			top: this.top + 4,
 			width: this.width - 8,
-			height: this.height + titleBar - 8
+			height: this.height - 8
 		};
 
 		var outerRatio = maxBound.width  / maxBound.height;
@@ -523,7 +523,7 @@ Partition.prototype.maximizeChild = function(id, shift) {
 
 			// Free Resize aspect ratio fills wall
 			iWidth = maxBound.width;
-			iHeight = maxBound.height - (2 * titleBar);
+			iHeight = maxBound.height - titleBar;
 			item.maximizeConstraint = "none_ptn";
 		} else {
 			if (item.aspect > outerRatio) {
@@ -533,7 +533,7 @@ Partition.prototype.maximizeChild = function(id, shift) {
 				item.maximizeConstraint = "width_ptn";
 			} else {
 				// Wall area than image
-				iHeight = maxBound.height - (2 * titleBar);
+				iHeight = maxBound.height - titleBar;
 				iWidth  = iHeight * item.aspect;
 				item.maximizeConstraint = "height_ptn";
 			}
@@ -567,8 +567,8 @@ Partition.prototype.maximizeChild = function(id, shift) {
 		// keep window inside display vertically
 		if (iCenterY - (iHeight / 2) < maxBound.top + titleBar) {
 			item.top = maxBound.top + titleBar;
-		} else if (iCenterY + (iHeight / 2) > maxBound.top + maxBound.height) {
-			item.top = maxBound.top + maxBound.height - iHeight - titleBar;
+		} else if (iCenterY + (iHeight / 2) > maxBound.top + (maxBound.height + titleBar)) {
+			item.top = maxBound.top + maxBound.height - iHeight;
 		} else {
 			item.top = iCenterY - (iHeight / 2);
 		}

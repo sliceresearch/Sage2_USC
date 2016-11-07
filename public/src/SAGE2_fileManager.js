@@ -107,12 +107,15 @@ function FileManager(wsio, mydiv, uniqueID) {
 			{id: "info_menu",  value: "Information"},
 			{id: "about_menu", value: "About"}
 		]},
-		{id: "mainpartition_menu",    value: "Partition Screen", config: {width: 250}, submenu: [
+		{id: "mainpartition_menu",    value: "Partitions", config: {width: 250}, submenu: [
 			{id: "2x1_menu", value: "2 Columns"},
 			{id: "3x1_menu", value: "3 Columns"},
 			{id: "2x2_menu", value: "2 Columns, 2 Rows"},
 			{id: "2s-1b-2s_menu", value: "Center Pane, 4 Mini"},
 			{id: "2b-1w_menu", value: "2 Pane, Taskbar"},
+			{$template: "Separator"},
+			{id: "partitiongrab_menu", value: "Assign Content to Partitions"},
+			{id: "deletepartition_menu", value: "Delete All Partitions"}
 		]}
 	];
 	var mymenu = {
@@ -532,12 +535,12 @@ function FileManager(wsio, mydiv, uniqueID) {
 								{
 									type: "col",
 									ptn: true,
-									size: 8
+									size: 6
 								},
 								{
 									type: "col",
 									ptn: true,
-									size: 4
+									size: 6
 								}
 							]
 						},
@@ -554,6 +557,10 @@ function FileManager(wsio, mydiv, uniqueID) {
 						}
 					]
 				});
+		} else if (evt === "deletepartition_menu") {
+			wsio.emit('deleteAllPartitions');
+		} else if (evt === "partitiongrab_menu") {
+			wsio.emit('partitionsGrabAllContent');
 		} else {
 			// dunno
 		}

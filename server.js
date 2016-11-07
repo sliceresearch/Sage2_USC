@@ -1015,6 +1015,8 @@ function setupListeners(wsio) {
 	// create partition
 	wsio.on('createPartition', 						wsCreatePartition);
 	wsio.on('partitionScreen', 						wsPartitionScreen);
+	wsio.on('deleteAllPartitions',				wsDeleteAllPartitions);
+	wsio.on('partitionsGrabAllContent',		wsPartitionsGrabAllContent);
 }
 
 /**
@@ -2323,16 +2325,7 @@ function loadSession(filename) {
 				broadcast('partitionWindowTitleUpdate', ptn.getTitle());
 			});
 
-			// associate any existing apps with partitions
-			for (var key in SAGE2Items.applications.list) {
-				var changedPartitions = partitions.updateOnItemRelease(SAGE2Items.applications.list[key]);
-
-				changedPartitions.forEach((id => {
-					updatePartitionInnerLayout(partitions.list[id]);
-
-					broadcast('partitionWindowTitleUpdate', partitions.list[id].getTitle());
-				}));
-			}
+			partitionsGrabAllContent();
 
 			// recreate apps
 			session.apps.forEach(function(element, index, array) {
@@ -5817,25 +5810,27 @@ function pointerPressOnPartition(uniqueID, pointerX, pointerY, data, obj, localP
 
 	switch (btn.id) {
 		case "titleBar":
-			console.log("Click on Title Bar:", obj.id);
 			selectApplicationForMove(uniqueID, obj.data, pointerX, pointerY);
 			break;
 		case "dragCorner":
-			console.log("Click on Drag Corner:", obj.id);
-			selectApplicationForResize(uniqueID, obj.data, pointerX, pointerY, portalId);
+			if (sagePointers[uniqueID].visible) {
+				// only if pointer on the wall, not the web UI
+
+				selectApplicationForResize(uniqueID, obj.data, pointerX, pointerY, portalId);
+			}
 			break;
 		case "tileButton":
-			console.log("Click on Tile Partition:", obj.id);
-			var changedPartitions = partitions.list[obj.id].toggleInnerTiling();
+			if (sagePointers[uniqueID].visible) {
+				var changedPartitions = partitions.list[obj.id].toggleInnerTiling();
 
-			updatePartitionInnerLayout(partitions.list[obj.id]);
+				updatePartitionInnerLayout(partitions.list[obj.id]);
 
-			changedPartitions.forEach(el => {
-				broadcast('partitionWindowTitleUpdate', partitions.list[el].getTitle());
-			});
+				changedPartitions.forEach(el => {
+					broadcast('partitionWindowTitleUpdate', partitions.list[el].getTitle());
+				});
+			}
 			break;
 		case "clearButton":
-			console.log("Click on Clear Partition:", obj.id);
 			if (sagePointers[uniqueID].visible) {
 				// only if pointer on the wall, not the web UI
 
@@ -5850,7 +5845,6 @@ function pointerPressOnPartition(uniqueID, pointerX, pointerY, data, obj, localP
 			}
 			break;
 		case "fullscreenButton":
-			console.log("Click on Fullscreen:", obj.id);
 			if (sagePointers[uniqueID].visible) {
 				// only if pointer on the wall, not the web UI
 
@@ -5868,7 +5862,6 @@ function pointerPressOnPartition(uniqueID, pointerX, pointerY, data, obj, localP
 			}
 			break;
 		case "closeButton":
-			console.log("Click on Close Button:", obj.id);
 			if (sagePointers[uniqueID].visible) {
 				// only if pointer on the wall, not the web UI
 
@@ -6415,8 +6408,6 @@ function pointerMoveOnPartition(uniqueID, pointerX, pointerY, data, obj, localPt
 			break;
 		case "dragCorner":
 			if (remoteInteraction[uniqueID].hoverCornerItem === null) {
-				console.log("Setting partition drag corner visible");
-
 				remoteInteraction[uniqueID].setHoverCornerItem(obj.data);
 				broadcast('hoverOverItemCorner', {elemId: obj.data.id, flag: true});
 
@@ -7807,7 +7798,6 @@ function toggleApplicationFullscreen(uniqueID, app, dblClick) {
 		moveAndResizeApplicationWindow(resizeApp);
 
 		if (app.partition) {
-			console.log("toggleApplicationFullscreen: Updating Partition Layout", app.partition.id);
 			updatePartitionInnerLayout(app.partition);
 			broadcast('partitionWindowTitleUpdate', app.partition.getTitle());
 		}
@@ -9081,6 +9071,48 @@ function divideAreaPartitions(data, x, y, width, height) {
 		}
 	}
 
+}
+
+/**
+	* Remove all partitions
+	*
+	* @method wsDeleteAllPartitions
+	*/
+function wsDeleteAllPartitions(wsio) {
+	for (var key in partitions.list) {
+		broadcast('deletePartitionWindow', partitions.list[key].getDisplayInfo());
+		partitions.removePartition(key);
+		interactMgr.removeGeometry(key, "partitions");
+	}
+}
+
+/**
+	* Cause all apps to be associated with a partition if it is above one
+	* (WebSocket method)
+	*
+	* @method wsPartitionsGrabAllContent
+	*/
+function wsPartitionsGrabAllContent(wsio) {
+	// associate any existing apps with partitions
+	partitionsGrabAllContent();
+}
+
+/**
+	* Cause all apps to be associated with a partition if it is above one
+	*
+	* @method partitionsGrabAllContent
+	*/
+function partitionsGrabAllContent() {
+	// associate any existing apps with partitions
+	for (var key in SAGE2Items.applications.list) {
+		var changedPartitions = partitions.updateOnItemRelease(SAGE2Items.applications.list[key]);
+
+		changedPartitions.forEach((id => {
+			updatePartitionInnerLayout(partitions.list[id]);
+
+			broadcast('partitionWindowTitleUpdate', partitions.list[id].getTitle());
+		}));
+	}
 }
 
 /**
