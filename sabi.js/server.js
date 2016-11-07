@@ -1590,7 +1590,9 @@ function socketOnAssistedConfigSend(socket, sentCfg) {
 	console.log("Updating electron cfg");
 	fs.writeFileSync(pathToElectronConfig, JSON5.stringify(electronCfg, null, 4));
 
-	updateCertificates();
+	if (sentCfg.makeCerts) {
+		updateCertificates();
+	}
 }
 
 
