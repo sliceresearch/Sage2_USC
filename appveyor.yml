@@ -3,7 +3,6 @@ version: 1.5.{build}
 branches:
   only:
   - master
-  - Andrew-Branch
 
 shallow_clone: true
 
@@ -26,8 +25,8 @@ init:
   - dir C:\Dev\ffmpeg-win64-dev\lib
 
 install:
-  - ps: Get-NodeJsLatestBuild 6.7
-  - ps: Install-Product node 6.7.0 x64
+  - ps: Get-NodeJsLatestBuild 6.9
+  - ps: Install-Product node 6.9.1 x64
   - dir C:\avvm\node
   - node -v
   - cd %APPVEYOR_BUILD_FOLDER%
