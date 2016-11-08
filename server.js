@@ -2306,25 +2306,27 @@ function loadSession(filename) {
 			console.log(sageutils.header("Session") + "number of applications", session.numapps);
 
 			// recreate partitions
-			session.partitions.forEach(function(element, index, array) {
-				// remake partition
+			if (session.partitions) {
+				session.partitions.forEach(function(element, index, array) {
+					// remake partition
+					var ptn = createPartition(
+						{
+							width: element.width,
+							height: element.height,
+							left: element.left,
+							top: element.top
+						},
+						element.color
+					);
 
-				var ptn = createPartition(
-					{
-						width: element.width,
-						height: element.height,
-						left: element.left,
-						top: element.top
-					},
-					element.color
-				);
+					ptn.innerMaximization = element.innerMaximization;
+					ptn.innerTiling = element.innerTiling;
 
-				ptn.innerMaximization = element.innerMaximization;
-				ptn.innerTiling = element.innerTiling;
+					broadcast('partitionWindowTitleUpdate', ptn.getTitle());
+				});
+			}
 
-				broadcast('partitionWindowTitleUpdate', ptn.getTitle());
-			});
-
+			// Assign the windows to partitions
 			partitionsGrabAllContent();
 
 			// recreate apps
