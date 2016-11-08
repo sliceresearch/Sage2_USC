@@ -98,16 +98,7 @@ function FileManager(wsio, mydiv, uniqueID) {
 			// {id: "partition_menu",  value: "Create Partition"},
 			{id: "console_menu",  value: "Server console"}
 		]},
-		{id: "services_menu", value: "Services", config: {width: 170}, submenu: [
-			{id: "imageservice_menu",  value: "Large image processing"},
-			{id: "videoservice_menu",  value: "Video processing"}
-		]},
-		{id: "mainhelp_menu",  value: "Help", submenu: [
-			{id: "help_menu",  value: "Help"},
-			{id: "info_menu",  value: "Information"},
-			{id: "about_menu", value: "About"}
-		]},
-		{id: "mainpartition_menu",    value: "Partitions", config: {width: 250}, submenu: [
+		{id: "mainpartition_menu", value: "Partitions", config: {width: 250}, submenu: [
 			{id: "2x1_menu", value: "2 Columns"},
 			{id: "3x1_menu", value: "3 Columns"},
 			{id: "2x2_menu", value: "2 Columns, 2 Rows"},
@@ -116,6 +107,15 @@ function FileManager(wsio, mydiv, uniqueID) {
 			{$template: "Separator"},
 			{id: "partitiongrab_menu", value: "Assign Content to Partitions"},
 			{id: "deletepartition_menu", value: "Delete All Partitions"}
+		]},
+		{id: "services_menu", value: "Services", config: {width: 170}, submenu: [
+			{id: "imageservice_menu",  value: "Large image processing"},
+			{id: "videoservice_menu",  value: "Video processing"}
+		]},
+		{id: "mainhelp_menu",  value: "Help", submenu: [
+			{id: "help_menu",  value: "Help"},
+			{id: "info_menu",  value: "Information"},
+			{id: "about_menu", value: "About"}
 		]}
 	];
 	var mymenu = {
