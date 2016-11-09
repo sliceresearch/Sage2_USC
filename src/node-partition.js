@@ -665,6 +665,14 @@ Partition.prototype.updateChildrenPositions = function() {
 		item.width = item.relative_width * this.width;
 		item.height = item.relative_height * this.height;
 
+		if (item.resizeMode !== "free") {
+			if (item.aspect < item.width / item.height) {
+				item.width = item.height * item.aspect;
+			} else {
+				item.height = item.width / item.aspect;
+			}
+		}
+
 		updatedChildren.push({
 			elemId: item.id, elemLeft: item.left, elemTop: item.top,
 			elemWidth: item.width, elemHeight: item.height, date: new Date()
