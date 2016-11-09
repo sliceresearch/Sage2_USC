@@ -165,7 +165,7 @@ var movie_player = SAGE2_BlockStreamingApp.extend({
 					play: true
 				});
 				// wsio.emit('playVideo', {id: this.div.id});
-				
+
 				// if this is a sender, also send the command to the server holding variable
 				if (this.shouldSendCommands) {
 					wsio.emit("csdMessage", {
@@ -534,7 +534,7 @@ var movie_player = SAGE2_BlockStreamingApp.extend({
 				}
 			}
 		}
-		
+
 		// steps must be forward or back.
 		if (shouldSendTimeUpdate) {
 			wsio.emit('updateVideoTime', {
