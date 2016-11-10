@@ -146,7 +146,12 @@ var SAGE2_Partition = function(data) {
 			r: parseInt(result[1], 16),
 			g: parseInt(result[2], 16),
 			b: parseInt(result[3], 16)
-		} : null;
+		} :
+		{
+			r: 200,
+			g: 200,
+			b: 200
+		};
 	}
 };
 
@@ -155,7 +160,6 @@ var SAGE2_Partition = function(data) {
 	*
 	*/
 SAGE2_Partition.prototype.deletePartition = function() {
-	console.log("SAGE2_Partition: Deleting Partition", this.id);
 
 	ui.main.removeChild(this.title);
 	ui.main.removeChild(this.partitionArea);
@@ -182,7 +186,6 @@ SAGE2_Partition.prototype.updatePositionAndSize = function(data) {
 			(this.top + ui.titleBarHeight) + "px)";
 
 	this.cornerSize = Math.min(data.width, data.height) / 5;
-	console.log(this.cornerSize);
 
 	this.dragCorner.style.width = this.cornerSize + "px";
 	this.dragCorner.style.height = this.cornerSize + "px";

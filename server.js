@@ -120,8 +120,7 @@ var drawingManager;
 var pressingAlt        = true;
 
 var partitions				 = new PartitionList(config);
-var partitionStart		 = null;
-var draggingPartition	 = null;
+var draggingPartition	 = {};
 
 // Add extra folders defined in the configuration file
 if (config.folders) {
@@ -5429,12 +5428,13 @@ function pointerPressOnOpenSpace(uniqueID, pointerX, pointerY, data) {
 		createRadialMenu(uniqueID, pointerX, pointerY);
 	} else if (data.button === "left" && remoteInteraction[uniqueID].CTRL) {
 		// start tracking size to create new partition
-		partitionStart = {x: pointerX, y: pointerY};
+		draggingPartition[uniqueID] = {};
+		draggingPartition[uniqueID].ptn = createPartition({left: pointerX, top: pointerY, width: 0, height: 0},
+			sagePointers[uniqueID].color);
+
+		draggingPartition[uniqueID].start = {x: pointerX, y: pointerY};
 
 		console.log(sagePointers[uniqueID].color);
-
-		draggingPartition = createPartition({left: pointerX, top: pointerY, width: 0, height: 0},
-			sagePointers[uniqueID].color);
 	}
 }
 
@@ -6144,14 +6144,25 @@ function updatePointerPosition(uniqueID, pointerX, pointerY, data) {
 	var updatedResizeItem;
 	var updatedControl;
 
-	if (draggingPartition) {
-		draggingPartition.left = pointerX < partitionStart.x ? pointerX : partitionStart.x;
-		draggingPartition.top = pointerY < partitionStart.y ? pointerY : partitionStart.y;
-		draggingPartition.width = pointerX < partitionStart.x ? partitionStart.x - pointerX : pointerX - partitionStart.x;
-		draggingPartition.height = pointerY < partitionStart.y ? partitionStart.y - pointerY : pointerY - partitionStart.y;
+	if (draggingPartition[uniqueID]) {
+		draggingPartition[uniqueID].ptn.left =
+			pointerX < draggingPartition[uniqueID].start.x ?
+			pointerX : draggingPartition[uniqueID].start.x;
 
-		partitions.updatePartitionGeometries(draggingPartition.id, interactMgr);
-		broadcast('partitionMoveAndResizeFinished', draggingPartition.getDisplayInfo());
+		draggingPartition[uniqueID].ptn.top =
+			pointerY < draggingPartition[uniqueID].start.y ?
+			pointerY : draggingPartition[uniqueID].start.y;
+
+		draggingPartition[uniqueID].ptn.width =
+			pointerX < draggingPartition[uniqueID].start.x ?
+			draggingPartition[uniqueID].start.x - pointerX : pointerX - draggingPartition[uniqueID].start.x;
+
+		draggingPartition[uniqueID].ptn.height =
+			pointerY < draggingPartition[uniqueID].start.y ?
+			draggingPartition[uniqueID].start.y - pointerY : pointerY - draggingPartition[uniqueID].start.y;
+
+		partitions.updatePartitionGeometries(draggingPartition[uniqueID].ptn.id, interactMgr);
+		broadcast('partitionMoveAndResizeFinished', draggingPartition[uniqueID].ptn.getDisplayInfo());
 	}
 
 	if (moveAppPortal !== null) {
@@ -6400,7 +6411,7 @@ function pointerMoveOnPartition(uniqueID, pointerX, pointerY, data, obj, localPt
 	var btn = partitions.findButtonByPoint(obj.id, localPt);
 
 	// pointer press on app window
-	if (btn === null || draggingPartition) {
+	if (btn === null || draggingPartition[uniqueID]) {
 		return;
 	}
 
@@ -6734,21 +6745,31 @@ function pointerRelease(uniqueID, pointerX, pointerY, data) {
 		obj = interactMgr.searchGeometry({x: pointerX, y: pointerY});
 	}
 
-	if (draggingPartition && data.button === "left") {
-		draggingPartition.left = pointerX < partitionStart.x ? pointerX : partitionStart.x;
-		draggingPartition.top = pointerY < partitionStart.y ? pointerY : partitionStart.y;
-		draggingPartition.width = pointerX < partitionStart.x ? partitionStart.x - pointerX : pointerX - partitionStart.x;
-		draggingPartition.height = pointerY < partitionStart.y ? partitionStart.y - pointerY : pointerY - partitionStart.y;
-		draggingPartition.aspect = draggingPartition.width / draggingPartition.height; // set aspect ratio when resize finished
+	if (draggingPartition[uniqueID] && data.button === "left") {
+		draggingPartition[uniqueID].ptn.left =
+			pointerX < draggingPartition[uniqueID].start.x ?
+			pointerX : draggingPartition[uniqueID].start.x;
 
-		partitions.updatePartitionGeometries(draggingPartition.id, interactMgr);
-		broadcast('partitionMoveAndResizeFinished', draggingPartition.getDisplayInfo());
+		draggingPartition[uniqueID].ptn.top =
+			pointerY < draggingPartition[uniqueID].start.y ?
+			pointerY : draggingPartition[uniqueID].start.y;
 
-		broadcast('partitionWindowTitleUpdate', draggingPartition.getTitle());
+		draggingPartition[uniqueID].ptn.width =
+			pointerX < draggingPartition[uniqueID].start.x ?
+			draggingPartition[uniqueID].start.x - pointerX : pointerX - draggingPartition[uniqueID].start.x;
+
+		draggingPartition[uniqueID].ptn.height =
+			pointerY < draggingPartition[uniqueID].start.y ?
+			draggingPartition[uniqueID].start.y - pointerY : pointerY - draggingPartition[uniqueID].start.y;
+
+		partitions.updatePartitionGeometries(draggingPartition[uniqueID].ptn.id, interactMgr);
+		broadcast('partitionMoveAndResizeFinished', draggingPartition[uniqueID].ptn.getDisplayInfo());
+
+		broadcast('partitionWindowTitleUpdate', draggingPartition[uniqueID].ptn.getTitle());
 
 		// stop creation of partition
-		partitionStart = null;
-		draggingPartition = null;
+		delete draggingPartition[uniqueID];
+
 		return;
 	}
 
