@@ -8349,7 +8349,7 @@ function wsUtdWhatAppIsAt(wsio, data) {
  */
 function wsUtdRequestRmbContextMenu(wsio, data) {
 	var obj = interactMgr.searchGeometry({x: data.x, y: data.y});
-	if (obj !== null) {
+	if (obj !== null && SAGE2Items.applications.list[obj.data.id]) {
 		if (SAGE2Items.applications.list[obj.data.id].contextMenu) {
 			// If we already have the menu info, send it
 			wsio.emit('dtuRmbContextMenuContents', {
