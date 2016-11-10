@@ -1270,6 +1270,11 @@ function wsSelectionModeOnOff(wsio, data) {
 
 function wsRegisterInteractionClient(wsio, data) {
 	var key;
+
+	// Update color and name of pointer when UI connects
+	sagePointers[wsio.id].color = data.color;
+	sagePointers[wsio.id].name  = data.name;
+
 	if (program.trackUsers === true) {
 		var newUser = true;
 		for (key in users) {
