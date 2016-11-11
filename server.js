@@ -4132,7 +4132,7 @@ function loadConfiguration() {
 		var targetVisualAcuity = 0.5; // degrees of arc
 
 		calcuatedWidgetControlSize = Math.tan((targetVisualAcuity * Math.PI / 180.0) / 2) * 2 * userDist * pixelsPerMeter;
-		
+
 		if (calcuatedWidgetControlSize < minimumWidgetControlSize) {
 			calcuatedWidgetControlSize = minimumWidgetControlSize;
 			console.log(sageutils.header("UI") + "widgetControlSize (min): " + calcuatedWidgetControlSize);
