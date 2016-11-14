@@ -244,6 +244,10 @@ function FileManager(wsio, mydiv, uniqueID) {
 							id: "thumb",
 							template: function(obj) {
 								if (obj.image) {
+									if (obj.image.indexOf(".svg") >= 0) {
+										// if it is an svg don't append _256.jpg
+										return "<img src='" + obj.image + "'></img>";
+									}
 									return "<img src='" + obj.image + "_256.jpg'></img>";
 								}
 								return "";
@@ -735,15 +739,19 @@ function FileManager(wsio, mydiv, uniqueID) {
 				css: {height: "100px"}
 			});
 		} else if (_this.allFiles[elt.id].exif.MIMEType.indexOf('sage2/session') >= 0) {
-			// Noting yet
+			// Nothing yet
 		}
 
 		// Done updating metadata
 		metadata.refresh();
 
+		console.log(_this.allFiles[elt.id]);
+
 		// Update the thumbnail
 		var thumb = $$("thumb");
 		thumb.data = {image: _this.allFiles[elt.id].exif.SAGE2thumbnail};
+		console.log(thumb);
+
 		thumb.refresh();
 	});
 

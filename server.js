@@ -2066,13 +2066,18 @@ function listSessions() {
 				var strdate = sprint("%4d/%02d/%02d %02d:%02d:%02s",
 										ad.getFullYear(), ad.getMonth() + 1, ad.getDate(),
 										ad.getHours(), ad.getMinutes(), ad.getSeconds());
+				var thumbPath = path.join(path.join(path.join("", "user"), "sessions"), ".previews");
+				// replace .json with .svg in filename
+				var thumbPathFull = "\\" + path.join(thumbPath, file.substring(".json", file.length - 5) + ".svg");
 				// Make it look like an exif data structure
+				console.log(filename, thumbPathFull);
 				thelist.push({id: filename,
 					sage2URL: '/uploads/' + file,
 					exif: { FileName: file.slice(0, -5),
 						FileSize: stat.size,
 						FileDate: strdate,
-						MIMEType: 'sage2/session'
+						MIMEType: 'sage2/session',
+						SAGE2thumbnail: thumbPathFull
 					}
 				});
 			}
@@ -2185,7 +2190,7 @@ function saveSession(filename) {
 	states.numpartitions = 0;
 	states.date    = Date.now();
 	for (key in SAGE2Items.applications.list) {
-		var a = SAGE2Items.applications.list[key];
+		var a = Object.assign({}, SAGE2Items.applications.list[key]);
 
 		if (a.partition) {
 			// remove reference to parent partition if it exists
@@ -2199,10 +2204,18 @@ function saveSession(filename) {
 	}
 
 	for (key in partitions.list) {
-		var p = partitions.list[key];
+		var p = Object.assign({}, partitions.list[key]);
 
 		if (p.partitionList) {
 			delete p.partitionList;
+		}
+
+		for (var app in p.children) {
+			p.children[app] = Object.assign({}, p.children[app]);
+
+			if (p.children[app].partition) {
+				delete p.children[app].partition;
+			}
 		}
 
 		states.partitions.push(p);
@@ -2220,10 +2233,85 @@ function saveSession(filename) {
 		fullpath += '.json';
 	}
 
+	// save session preview image to sessions/.previews/
+
+	var previewPath = path.join(sessionDirectory, ".previews");
+
+	if (!sageutils.folderExists(previewPath)) {
+		sageutils.mkdirParent(previewPath);
+	}
+
+	var previewFname;
+
+	if (filename.indexOf(".json", filename.length - 5) === -1) {
+		previewFname = filename + ".svg";
+	} else {
+		previewFname = filename.substr(0, filename.length - 5) + ".svg";
+	}
+
+	var fullPreviewPath = path.join(previewPath, previewFname);
+
+	// create svg string as thumbnail for session preview
+
+	var width = config.totalWidth,
+		height = config.totalHeight,
+		box = "0,0," + width + "," + height;
+
+	var svg = "<svg width=\"" + 256 +
+		"\" height=\"" + 256 +
+		"\" viewBox=\"" + box +
+		"\" version=\"1.1\" xmlns=\"http://www.w3.org/2000/svg\">";
+
+	// add gray background
+	svg += "<rect width=\"" + width +
+		"\" height=\"" + height +
+		"\" style=\"fill: #666666;\"" + "></rect>";
+
+	for(var p of states.partitions) {
+		// partition areas
+		svg += "<rect width=\"" + (p.width - 8) +
+			"\" height=\"" + (p.height - 8) +
+			"\" x=\"" + (p.left + 4) +
+			"\" y=\"" + (p.top + 4) +
+			"\" style=\"fill: " + p.color +
+			"; stroke: " + p.color +
+			"; stroke-width: 8; fill-opacity: 0.3;\"" + "></rect>";
+
+		// partition title bars
+		svg += "<rect width=\"" + p.width +
+			"\" height=\"" + config.ui.titleBarHeight +
+			"\" x=\"" + p.left +
+			"\" y=\"" + (p.top - config.ui.titleBarHeight) +
+			"\" style=\"fill: " + p.color +
+			"\"" + "></rect>";
+	}
+
+	for(var a of states.apps) {
+		// draw app rectangles
+		svg += "<rect width=\"" + a.width +
+			"\" height=\"" + a.height +
+			"\" x=\"" + a.left +
+			"\" y=\"" + a.top +
+			"\" style=\"fill: " + "#222222; fill-opacity: 0.5; stroke: black; stroke-width: 5;\">" + "</rect>";
+	}
+
+	svg += "</svg>";
+
+	// svg file header
+	var header = "<?xml version=\"1.0\" encoding=\"utf-8\"?>";
+		header += "<!DOCTYPE svg PUBLIC \"-//W3C//DTD SVG 1.1//EN\" \"http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd\">";
 
 	try {
 		fs.writeFileSync(fullpath, JSON.stringify(states, null, 4));
 		console.log(sageutils.header("Session") + "saved session file to " + fullpath);
+	} catch (err) {
+		console.log(sageutils.header("Session") + "error saving " + err);
+	}
+
+	// write preview image
+	try {
+		fs.writeFileSync(fullPreviewPath, header + svg);
+		console.log(sageutils.header("Session") + "saved session preview image to " + fullPreviewPath);
 	} catch (err) {
 		console.log(sageutils.header("Session") + "error saving " + err);
 	}
