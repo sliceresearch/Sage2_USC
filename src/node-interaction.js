@@ -163,6 +163,7 @@ Interaction.prototype.moveSelectedItem = function(pointerX, pointerY) {
 		if (this.selectedMoveItem.maximizeConstraint === "width") {
 			// if maximization is constrained by width
 			// only translate vertically
+			this.selectedMoveItem.left = 0;
 			this.selectedMoveItem.top  = pointerY + this.selectOffsetY;
 
 			this.selectedMoveItem.previous_top =
@@ -173,6 +174,7 @@ Interaction.prototype.moveSelectedItem = function(pointerX, pointerY) {
 			// if maximization is constrained by height
 			// only translate horizontally
 			this.selectedMoveItem.left = pointerX + this.selectOffsetX;
+			this.selectedMoveItem.top  = this.configuration.ui.titleBarHeight;
 
 			this.selectedMoveItem.previous_left =
 				this.selectedMoveItem.left + this.selectedMoveItem.width / 2 -

@@ -2177,11 +2177,6 @@ function saveSession(filename) {
 	filename = filename || 'default.json';
 
 	var key;
-	var fullpath = path.join(sessionDirectory, filename);
-	// if it doesn't end in .json, add it
-	if (fullpath.indexOf(".json", fullpath.length - 5) === -1) {
-		fullpath += '.json';
-	}
 
 	var states     = {};
 	states.apps    = [];
@@ -2213,6 +2208,18 @@ function saveSession(filename) {
 		states.partitions.push(p);
 		states.numpartitions++;
 	}
+
+	// session with only partitions considered a "LAYOUT"
+	if (states.numapps === 0 && states.numpartitions > 0 && filename !== "default.json") {
+		filename = "LAYOUT - " + filename;
+	}
+
+	var fullpath = path.join(sessionDirectory, filename);
+	// if it doesn't end in .json, add it
+	if (fullpath.indexOf(".json", fullpath.length - 5) === -1) {
+		fullpath += '.json';
+	}
+
 
 	try {
 		fs.writeFileSync(fullpath, JSON.stringify(states, null, 4));
