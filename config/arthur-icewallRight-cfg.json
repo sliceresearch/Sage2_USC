@@ -5,10 +5,10 @@
 	secure_port: 9090,
 	background: {
 		color: "#333333",
-		image: {
-			url: "images/background/kamping_icewall_half_fullColor.jpg",
-			style: "fit"
-		},
+		//image: {
+		//	url: "images/background/kamping_icewall_half_fullColor.jpg",
+		//	style: "fit"
+		//},
 	},
     audio: {
 		initialVolume: 8,

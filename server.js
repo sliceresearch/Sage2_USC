@@ -4219,16 +4219,26 @@ function loadConfiguration() {
 	// calculate the widget control size based on dimensions and user distance
 	if (userConfig.ui.auto_scale_ui && tileHeight !== undefined) {
 		var objectHeightMeters = 27 / pixelsPerMeter;
-		// var minimumWidgetControlSize = 20; // Min button size for text readability (also for touch wall)
+		var minimumWidgetControlSize = 20; // Min button size for text readability (also for touch wall)
 		var perceptualScalingFactor = 0.0213;
+		var oldDefaultWidgetScale = Math.round(0.020 * minDim);
 		var userDist = userConfig.dimensions.viewing_distance;
 		var calcuatedWidgetControlSize = userDist * (perceptualScalingFactor * (userDist / objectHeightMeters));
-		var targetVisualAcuity = 1; // degrees of arc
+		var targetVisualAcuity = 0.5; // degrees of arc
 
 		calcuatedWidgetControlSize = Math.tan((targetVisualAcuity * Math.PI / 180.0) / 2) * 2 * userDist * pixelsPerMeter;
 
-		console.log(sageutils.header("UI") + "widgetControlSize: " + calcuatedWidgetControlSize);
-		console.log(sageutils.header("UI") + "pixelsPerMeter: " + pixelsPerMeter);
+		if (calcuatedWidgetControlSize < minimumWidgetControlSize) {
+			calcuatedWidgetControlSize = minimumWidgetControlSize;
+			console.log(sageutils.header("UI") + "widgetControlSize (min): " + calcuatedWidgetControlSize);
+		} else if (calcuatedWidgetControlSize > oldDefaultWidgetScale) {
+			calcuatedWidgetControlSize = oldDefaultWidgetScale * 2;
+			console.log(sageutils.header("UI") + "widgetControlSize (max): " + calcuatedWidgetControlSize);
+		} else {
+			console.log(sageutils.header("UI") + "widgetControlSize: " + calcuatedWidgetControlSize);
+		}
+		// console.log(sageutils.header("UI") + "pixelsPerMeter: " + pixelsPerMeter);
+		userConfig.ui.widgetControlSize = calcuatedWidgetControlSize;
 	}
 
 	// Check the width and height of each display (in tile count)
