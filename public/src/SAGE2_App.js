@@ -874,6 +874,14 @@ var SAGE2_App = Class.extend({
 			if (typeof this.getContextEntries === "function") {
 				rmbData.entries = this.getContextEntries();
 				rmbData.entries.push({
+					description: "Send to back",
+					callback: "SAGE2SendToBack",
+					parameters: {}
+				});
+				rmbData.entries.push({
+					description: "separator"
+				});
+				rmbData.entries.push({
 					description: "Close " + (this.title || "application"),
 					callback: "SAGE2DeleteElement",
 					parameters: {}

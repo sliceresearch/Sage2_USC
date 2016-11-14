@@ -4132,6 +4132,16 @@ function loadConfiguration() {
 		console.log(sageutils.header("UI") + "pixelsPerMeter: " + pixelsPerMeter);
 	}
 
+	// // Automatically populate the displays entry if undefined. Adds left to right, starting from the top.
+	// if (userConfig.displays === undefined) {
+	// 	userConfig.displays = [];
+	// 	for (var r = 0; r < userConfig.layout.rows; r++) {
+	// 		for (var c = 0; c < userConfig.layout.columns; c++) {
+	// 			userConfig.displays.push({row: r, column:c});
+	// 		}
+	// 	}
+	// }
+
 	// Check the width and height of each display (in tile count)
 	// by default, a display covers one tile
 	for (var d = 0; d < userConfig.displays.length; d++) {
@@ -8379,6 +8389,17 @@ function wsUtdCallFunctionOnApp(wsio, data) {
 	if (data.func === "SAGE2DeleteElement") {
 		deleteApplication(data.app);
 		return; // closing of applications are handled by the called function.
+	}
+	if (data.func === "SAGE2SendToBack") {
+		console.log("erase me, start wsUtdCallFunctionOnApp");
+		// data.app should contain the id.
+		var im = findInteractableManager(data.app);
+		im.moveObjectToBack(data.app, "applications");
+		var newOrder = im.getObjectZIndexList("applications");
+		broadcast('updateItemOrder', newOrder);
+
+		console.log("erase me, end");
+		return;
 	}
 	// Using broadcast means the parameter must be in data.data
 	data.data = data.parameters;

@@ -332,6 +332,45 @@ InteractableManager.prototype.moveObjectToFront = function(id, layerId, otherLay
 };
 
 /**
+* Move geometric object to back (edit zIndex)
+*
+* @method moveObjectToBack
+* @param id {String} unique identifier for the geometric object
+* @param layerId {String} unique identifier for the layer
+* @param otherLayerIds {Array} unique identifiers for other layers to include in sort
+*/
+InteractableManager.prototype.moveObjectToBack = function(id, layerId, otherLayerIds) {
+	var i;
+	var key;
+	var currZIndex = getZIndexOfObj(this.interactableObjects[layerId][id]);
+	var minZIndex = currZIndex;
+	var allLayerIds = [layerId].concat(otherLayerIds || []);
+
+		console.log("erase me, start moveObjectToBack, currZIndex " + currZIndex);
+
+	for (i = 0; i < allLayerIds.length; i++) {
+		if (this.interactableObjects.hasOwnProperty(allLayerIds[i])) {
+			for (key in this.interactableObjects[allLayerIds[i]]) {
+				var itemZIndex = getZIndexOfObj(this.interactableObjects[allLayerIds[i]][key]);
+				if (itemZIndex < currZIndex) {
+					if (itemZIndex < minZIndex) {
+						minZIndex = itemZIndex;
+					}
+
+					console.log("erase me, changing other app zIndex from " + itemZIndex);
+
+					var increasedIndex = itemZIndex + 1;
+					setZIndexOfObj(this.interactableObjects[allLayerIds[i]][key], increasedIndex);
+				}
+			}
+		}
+	}
+
+					console.log("erase me, changing app zIndex to minZIndex " + minZIndex);
+	setZIndexOfObj(this.interactableObjects[layerId][id], minZIndex);
+};
+
+/**
 * Move geometric object to front (edit zIndex)
 *
 * @method getObjectZIndexList
