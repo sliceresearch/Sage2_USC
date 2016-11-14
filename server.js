@@ -2066,11 +2066,11 @@ function listSessions() {
 				var strdate = sprint("%4d/%02d/%02d %02d:%02d:%02s",
 										ad.getFullYear(), ad.getMonth() + 1, ad.getDate(),
 										ad.getHours(), ad.getMinutes(), ad.getSeconds());
+				// create path to thumbnail
 				var thumbPath = path.join(path.join(path.join("", "user"), "sessions"), ".previews");
 				// replace .json with .svg in filename
 				var thumbPathFull = "\\" + path.join(thumbPath, file.substring(".json", file.length - 5) + ".svg");
 				// Make it look like an exif data structure
-				console.log(filename, thumbPathFull);
 				thelist.push({id: filename,
 					sage2URL: '/uploads/' + file,
 					exif: { FileName: file.slice(0, -5),
@@ -2292,7 +2292,7 @@ function saveSession(filename) {
 			"\" height=\"" + ap.height +
 			"\" x=\"" + ap.left +
 			"\" y=\"" + ap.top +
-			"\" style=\"fill: " + "#666666; fill-opacity: 0.5; stroke: black; stroke-width: 5;\">" + "</rect>";
+			"\" style=\"fill: " + "#AAAAAA; fill-opacity: 0.5; stroke: black; stroke-width: 5;\">" + "</rect>";
 	}
 
 	svg += "</svg>";
