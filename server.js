@@ -2267,39 +2267,39 @@ function saveSession(filename) {
 		"\" height=\"" + height +
 		"\" style=\"fill: #666666;\"" + "></rect>";
 
-	for(var p of states.partitions) {
+	for (var ptn of states.partitions) {
 		// partition areas
-		svg += "<rect width=\"" + (p.width - 8) +
-			"\" height=\"" + (p.height - 8) +
-			"\" x=\"" + (p.left + 4) +
-			"\" y=\"" + (p.top + 4) +
-			"\" style=\"fill: " + p.color +
-			"; stroke: " + p.color +
+		svg += "<rect width=\"" + (ptn.width - 8) +
+			"\" height=\"" + (ptn.height - 8) +
+			"\" x=\"" + (ptn.left + 4) +
+			"\" y=\"" + (ptn.top + 4) +
+			"\" style=\"fill: " + ptn.color +
+			"; stroke: " + ptn.color +
 			"; stroke-width: 8; fill-opacity: 0.3;\"" + "></rect>";
 
 		// partition title bars
-		svg += "<rect width=\"" + p.width +
+		svg += "<rect width=\"" + ptn.width +
 			"\" height=\"" + config.ui.titleBarHeight +
-			"\" x=\"" + p.left +
-			"\" y=\"" + (p.top - config.ui.titleBarHeight) +
-			"\" style=\"fill: " + p.color +
+			"\" x=\"" + ptn.left +
+			"\" y=\"" + (ptn.top - config.ui.titleBarHeight) +
+			"\" style=\"fill: " + ptn.color +
 			"\"" + "></rect>";
 	}
 
-	for(var a of states.apps) {
+	for (var ap of states.apps) {
 		// draw app rectangles
-		svg += "<rect width=\"" + a.width +
-			"\" height=\"" + a.height +
-			"\" x=\"" + a.left +
-			"\" y=\"" + a.top +
-			"\" style=\"fill: " + "#222222; fill-opacity: 0.5; stroke: black; stroke-width: 5;\">" + "</rect>";
+		svg += "<rect width=\"" + ap.width +
+			"\" height=\"" + ap.height +
+			"\" x=\"" + ap.left +
+			"\" y=\"" + ap.top +
+			"\" style=\"fill: " + "#666666; fill-opacity: 0.5; stroke: black; stroke-width: 5;\">" + "</rect>";
 	}
 
 	svg += "</svg>";
 
 	// svg file header
 	var header = "<?xml version=\"1.0\" encoding=\"utf-8\"?>";
-		header += "<!DOCTYPE svg PUBLIC \"-//W3C//DTD SVG 1.1//EN\" \"http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd\">";
+	header += "<!DOCTYPE svg PUBLIC \"-//W3C//DTD SVG 1.1//EN\" \"http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd\">";
 
 	try {
 		fs.writeFileSync(fullpath, JSON.stringify(states, null, 4));

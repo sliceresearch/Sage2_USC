@@ -745,13 +745,9 @@ function FileManager(wsio, mydiv, uniqueID) {
 		// Done updating metadata
 		metadata.refresh();
 
-		console.log(_this.allFiles[elt.id]);
-
 		// Update the thumbnail
 		var thumb = $$("thumb");
 		thumb.data = {image: _this.allFiles[elt.id].exif.SAGE2thumbnail};
-		console.log(thumb);
-
 		thumb.refresh();
 	});
 
