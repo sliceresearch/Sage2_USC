@@ -696,7 +696,6 @@ function setupListeners() {
 	});
 
 	wsio.on('hoverOverItemCorner', function(elem_data) {
-		console.log(elem_data);
 		var selectedElem = document.getElementById(elem_data.elemId);
 		if (selectedElem) {
 			var dragCorner   = selectedElem.getElementsByClassName("dragCorner");

@@ -6862,6 +6862,8 @@ function pointerRelease(uniqueID, pointerX, pointerY, data) {
 			pointerY < draggingPartition[uniqueID].start.y ?
 			draggingPartition[uniqueID].start.y - pointerY : pointerY - draggingPartition[uniqueID].start.y;
 
+		draggingPartition[uniqueID].ptn.aspect = draggingPartition[uniqueID].ptn.width / draggingPartition[uniqueID].ptn.height;
+
 		partitions.updatePartitionGeometries(draggingPartition[uniqueID].ptn.id, interactMgr);
 		broadcast('partitionMoveAndResizeFinished', draggingPartition[uniqueID].ptn.getDisplayInfo());
 
