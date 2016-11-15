@@ -2260,7 +2260,8 @@ function saveSession(filename) {
 	var svg = "<svg width=\"" + 256 +
 		"\" height=\"" + 256 +
 		"\" viewBox=\"" + box +
-		"\" version=\"1.1\" xmlns=\"http://www.w3.org/2000/svg\">";
+		"\" version=\"1.1\" xmlns=\"http://www.w3.org/2000/svg\" " +
+		"xmlns:xlink=\"http://www.w3.org/1999/xlink\">";
 
 	// add gray background
 	svg += "<rect width=\"" + width +
@@ -2293,6 +2294,23 @@ function saveSession(filename) {
 			"\" x=\"" + ap.left +
 			"\" y=\"" + ap.top +
 			"\" style=\"fill: " + "#AAAAAA; fill-opacity: 0.5; stroke: black; stroke-width: 5;\">" + "</rect>";
+
+
+		var iconPath = path.join(mainFolder.path, path.relative("/user", ap.icon)) + "_256.jpg";
+
+		var iconImageData = "";
+
+		try {
+			iconImageData = new Buffer(fs.readFileSync(iconPath)).toString('base64');
+		} catch (error) {
+			// error reading/converting icon image
+		}
+
+		svg += "<image width=\"" + ap.width +
+			"\" height=\"" + ap.height +
+			"\" x=\"" + ap.left +
+			"\" y=\"" + ap.top +
+			"\" xlink:href=\"data:image/jpg;base64," + iconImageData + "\">" + "</image>";
 	}
 
 	svg += "</svg>";
