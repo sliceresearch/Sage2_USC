@@ -15,7 +15,7 @@
   * @module server
   * @submodule PartitionList
   * @requires node-partition
-	* @requires node-interactable
+  * @requires node-interactable
   */
 
 // require variables to be declared
