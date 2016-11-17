@@ -11,12 +11,12 @@
 /* global interactMgr */
 
 /**
-  * List structure containing Partitions (groups) of Apps
-  * @module server
-  * @submodule PartitionList
-  * @requires node-partition
-  * @requires node-interactable
-  */
+	* List structure containing Partitions (groups) of Apps
+	* @module server
+	* @submodule PartitionList
+	* @requires node-partition
+	* @requires node-interactable
+	*/
 
 // require variables to be declared
 "use strict";
@@ -25,9 +25,9 @@ var Partition = require('./node-partition');
 var InteractableManager = require('./node-interactable');
 
 /**
-  * @class PartitionList
-  * @constructor
-  */
+	* @class PartitionList
+	* @constructor
+	*/
 
 function PartitionList(config) {
 	this.list = {};
@@ -55,14 +55,14 @@ function PartitionList(config) {
 }
 
 /**
-  * Create a new partition from a set of dimensions
-  *
-  * @param {object} dims - Dimensions of the Partition
+	* Create a new partition from a set of dimensions
+	*
+	* @param {object} dims - Dimensions of the Partition
 	* @param {number} dims.left - Coordinate of left side of Partition
 	* @param {number} dims.top - Coordinate of Top side of Partition
 	* @param {number} dims.width - Width of the Partition
 	* @param {number} dims.height - Height of the partition
-  */
+	*/
 PartitionList.prototype.newPartition = function(dims, iMgr, color) {
 	if (this.count <= 20) {
 		this.count++;
@@ -84,10 +84,10 @@ PartitionList.prototype.newPartition = function(dims, iMgr, color) {
 };
 
 /**
-  * Create a new partition from a list of apps
-  *
-  * @param {array} items - A list of items from which to create the Partition
-  */
+	* Create a new partition from a list of apps
+	*
+	* @param {array} items - A list of items from which to create the Partition
+	*/
 PartitionList.prototype.newBoundingPartition = function(items) {
 	var bounds = {
 		xMin: Infinity,
@@ -141,10 +141,10 @@ PartitionList.prototype.newBoundingPartition = function(items) {
 };
 
 /**
-  * Create a new partition by dimensions
-  *
-  * @param {string} id - id of the Partition to remove
-  */
+	* Create a new partition by dimensions
+	*
+	* @param {string} id - id of the Partition to remove
+	*/
 PartitionList.prototype.removePartition = function(id) {
 	if (this.list.hasOwnProperty(id)) {
 		// remove all children from the partition
@@ -159,21 +159,21 @@ PartitionList.prototype.removePartition = function(id) {
 };
 
 /**
-  * Create a new partition by dimensions
-  *
-  * @param {string} childID - id of the Child to remove
-  * @param {string} partitionID - id of the Partition from which to remove the Child
-  */
+	* Create a new partition by dimensions
+	*
+	* @param {string} childID - id of the Child to remove
+	* @param {string} partitionID - id of the Partition from which to remove the Child
+	*/
 PartitionList.prototype.removeChildFromPartition = function(childID, partitionID) {
 
 	return this.list[partitionID].releaseChild(childID);
 };
 
 /**
-  * Update partitions based on item which was moved
-  *
-  * @param {object} item - The item which was moved
-  */
+	* Update partitions based on item which was moved
+	*
+	* @param {object} item - The item which was moved
+	*/
 PartitionList.prototype.updateOnItemRelease = function(item) {
 	var newPartitionID = this.calculateNewPartition(item);
 	// console.log(item);
@@ -195,10 +195,10 @@ PartitionList.prototype.updateOnItemRelease = function(item) {
 };
 
 /**
-  * Calculate which partition an item falls into
-  *
-  * @param {object} item - The item which was moved
-  */
+	* Calculate which partition an item falls into
+	*
+	* @param {object} item - The item which was moved
+	*/
 PartitionList.prototype.calculateNewPartition = function(item) {
 	// check partitions to find if item falls into one
 	var partitionIDs = Object.keys(this.list);

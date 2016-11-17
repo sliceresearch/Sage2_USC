@@ -9,160 +9,158 @@
 // Copyright (c) 2015
 
 /**
-  * Partitioning of SAGE2 Apps into groups
-  * @module server
-  * @submodule Visualization
-  * @requires fs
-  * @requires path
-  */
+	* Partitioning of SAGE2 Apps into groups
+	* @module server
+	* @submodule Visualization
+	* @requires fs
+	* @requires path
+	*/
 
 // require variables to be declared
 "use strict";
 
 var fs = require('fs');
-var path = require('path');
+// var path = require('path');
 
 /**
-  * @class Visualization
-  * @constructor
-  */
+	* @class Visualization
+	* @constructor
+	*/
 
 function Visualization(wsio, name) {
-  this.wsio = wsio;
-  this.name = name;
+	this.wsio = wsio;
+	this.name = name;
 
-  // the data for the visualization
-  this.data = {};
-  // after data is loaded and formatted, it is ready
-  this.dataReady = false;
+	// the data for the visualization
+	this.data = {};
+	// after data is loaded and formatted, it is ready
+	this.dataReady = false;
 
-  this.views = {};
-  this.numViews = 0;
+	this.views = {};
+	this.numViews = 0;
 }
 
 /**
-  * Set the data object of this Visualization
-  *
-  * @param {object} data - Data to be visualized
-  */
+	* Set the data object of this Visualization
+	*
+	* @param {object} data - Data to be visualized
+	*/
 Visualization.prototype.setDataSource = function(data) {
-  this.data = data || {};
-}
+	this.data = data || {};
+};
 
 /**
-  * Load data into the visualization, json, csv, or tsv (csv & tsv with headers)
-  *
-  * @param {string} dataPath - Path to the remote source of data to be loaded using fs (json format data)
-  * @param {string} format - format of data to be loaded ["json", "csv", "tsv"]
-  */
+	* Load data into the visualization, json, csv, or tsv (csv & tsv with headers)
+	*
+	* @param {string} dataPath - Path to the remote source of data to be loaded using fs (json format data)
+	* @param {string} format - format of data to be loaded ["json", "csv", "tsv"]
+	*/
 Visualization.prototype.loadDataSource = function(dataPath, format) {
-  if(dataPath) {
-    fs.readFile(dataPath, (err, data) => {
-      if (err) {
-        throw err;
-      }
+	if (dataPath) {
+		fs.readFile(dataPath, (err, data) => {
+			if (err) {
+				throw err;
+			}
 
-      // convert file read to string 
-      data = data.toString();
+			// convert file read to string
+			data = data.toString();
 
-      // parse data
-      var parsedData = {};
+			// parse data
+			var parsedData = {};
 
-      // read csv/tsv format files
-      if (format === "csv" || format === "tsv") {
-        var delim;
+			// read csv/tsv format files
+			if (format === "csv" || format === "tsv") {
+				var delim;
 
-        if (format === "csv") {
-          delim = ",";
-        } else if (format === "tsv") {
-          delim = "\t";
-        }
+				if (format === "csv") {
+					delim = ",";
+				} else if (format === "tsv") {
+					delim = "\t";
+				}
 
-        var lines = data.split("\n");
+				var lines = data.split("\n");
 
-        var header = lines[0];
+				var header = lines[0];
 
-        var dataLines = lines.slice(1);
+				var dataLines = lines.slice(1);
 
-        parsedData = dataLines.map((el) => {
+				parsedData = dataLines.map((el) => {
 
-          var dataPt = {};
-          var thisLine = el.split(delim);
+					var dataPoint = {};
+					var thisLine = el.split(delim);
 
-          for (var i = 0; i < header.length; i++) {
-            dataPoint[header[i]] = thisLine[i];
-          }
+					for (var i = 0; i < header.length; i++) {
+						dataPoint[header[i]] = thisLine[i];
+					}
 
-          return dataPoint;
-        });
-      } else if (format === "json") {
-        parsedData = JSON.parse(data);
-      }
-      
+					return dataPoint;
+				});
+			} else if (format === "json") {
+				parsedData = JSON.parse(data);
+			}
 
-      this.setDataSource(parsedData);
-    });
-  }
-  
-}
+			this.setDataSource(parsedData);
+		});
+	}
+};
 
 /**
-  * Format data using provided map from values used in data to 
-  *
-  * @param {object} map - Mapping from data terms to recognized terms
-  */
+	* Format data using provided map from values used in data to
+	*
+	* @param {object} map - Mapping from data terms to recognized terms
+	*/
 Visualization.prototype.formatData = function(map) {
-  let formattedData = {};
+	let formattedData = {};
 
-  // perform data regularization operations
-  for (var key in this.data) {
-    formattedData[map[key]] = formatElement(this.data[key], map);
-  }
+	// perform data regularization operations
+	for (var key in this.data) {
+		formattedData[map[key]] = formatElement(this.data[key], map);
+	}
 
-  this.data = formattedData;
+	this.data = formattedData;
 
 
-  // used to recursively format substructure of data using same mapping
-  function formatElement(el, map) {
-    var elCopy = {};
+	// used to recursively format substructure of data using same mapping
+	function formatElement(el, map) {
+		var elCopy = {};
 
-    for (var key in el) {
-      elCopy[map[key]] = formatElement(el[key], map);
-    }
-  } // end formatElement(...
+		for (var key in el) {
+			elCopy[map[key]] = formatElement(el[key], map);
+		}
+	} // end formatElement(...
 
-}
+};
 
 Visualization.prototype.addView = function(view) {
-  this.views[view.id] = {
-    type: view.type
-  };
+	this.views[view.id] = {
+		type: view.type
+	};
 
-  this.numViews++;
-}
+	this.numViews++;
+};
 
 Visualization.prototype.removeView = function(viewID) {
-  if (this.views.hasOwnProperty(viewID)) {
-    // if the object exists within the viewController
-    delete this.views[viewID];
+	if (this.views.hasOwnProperty(viewID)) {
+		// if the object exists within the viewController
+		delete this.views[viewID];
 
-    this.numViews--;
-  }
-}
+		this.numViews--;
+	}
+};
 
 Visualization.prototype.updateView = function(viewID) {
-  if (this.views.hasOwnProperty(viewID)) {
-    // if the object exists within the viewController
+	if (this.views.hasOwnProperty(viewID)) {
+		// if the object exists within the viewController
 
-    // calculate data subset which the view will be sent (depends on view type)
-    var dataToSend = this.data;
+		// calculate data subset which the view will be sent (depends on view type)
+		var dataToSend = this.data;
 
-    // update the data which this view holds
-    wsio.emit("visualizationUpdateView", {
-      id: viewID,
-      data: dataToSend
-    });
+		// update the data which this view holds
+		this.wsio.emit("visualizationUpdateView", {
+			id: viewID,
+			data: dataToSend
+		});
 
 
-  }
-}
+	}
+};
