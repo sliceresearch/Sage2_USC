@@ -9298,7 +9298,7 @@ function wsVisTestButton(data) {
 	} else if (visTest.data) {
 		console.log("Format Data");
 		visTest.formatData({
-			"hits": {
+			hits: {
 				type: "attr",
 				use: "size",
 				domain: "quantitative"

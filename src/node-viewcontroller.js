@@ -103,11 +103,11 @@ Visualization.prototype.loadDataSource = function(dataPath) {
 			} else if (format === "json") {
 				parsedData = JSON.parse(data);
 			} else {
-				var err = new Error();
-				err.message = "Incompatible data format: " + dataPath;
-				err.name = "VisControllerDataError";
+				var e = new Error();
+				e.message = "Incompatible data format: " + dataPath;
+				e.name = "VisControllerDataError";
 
-				throw err;
+				throw e;
 			}
 
 			this.setDataSource(parsedData);
@@ -117,7 +117,7 @@ Visualization.prototype.loadDataSource = function(dataPath) {
 
 /**
 	* Format first level of data using provided map from values used in data to recognized terms,
-	* with a 
+	*
 	*
 	* @param {object} map - Mapping from data terms to recognized terms
 	*/
@@ -134,14 +134,14 @@ Visualization.prototype.formatData = function(map) {
 				use: map[key].use,
 				domain: map[key].domain,
 				data: this.data[key]
-			}
+			};
 		} else {
 			formattedData[newKey] = {
 				label: key,
 				use: null,
 				domain: null,
 				data: this.data[key]
-			}
+			};
 		}
 	}
 
