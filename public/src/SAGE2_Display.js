@@ -1290,6 +1290,13 @@ function setupListeners() {
 			}
 		}
 	});
+
+	// Visualization View update listener
+	wsio.on("visualizationUpdateView", function(data) {
+		if (data.id) {
+			console.log("SAGE2_Display: Update Vis View:", data.id, data.data);
+		}
+	});
 }
 
 function createAppWindow(data, parentId, titleBarHeight, titleTextSize, offsetX, offsetY) {

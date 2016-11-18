@@ -72,6 +72,8 @@ var StickyItems         = require('./src/node-stickyitems');
 var registry            = require('./src/node-registry');        // Registry Manager
 
 var PartitionList				= require('./src/node-partitionlist');		// list of SAGE2 Partitions
+var Visualization				= require('./src/node-viewcontroller');		// Visualization view controller
+
 //
 // Globals
 //
@@ -121,6 +123,10 @@ var pressingAlt        = true;
 
 var partitions				 = new PartitionList(config);
 var draggingPartition	 = {};
+
+var visTest 					 = new Visualization(broadcast, "TestVis");
+
+visTest.addView({id: "view01", type: "default"});
 
 // Add extra folders defined in the configuration file
 if (config.folders) {
@@ -1016,6 +1022,9 @@ function setupListeners(wsio) {
 	wsio.on('partitionScreen', 						wsPartitionScreen);
 	wsio.on('deleteAllPartitions',				wsDeleteAllPartitions);
 	wsio.on('partitionsGrabAllContent',		wsPartitionsGrabAllContent);
+
+	// vis controller methods
+	wsio.on('visTestFuncCall', 						wsVisTestButton);
 }
 
 /**
@@ -9280,4 +9289,31 @@ function createPartition(dims, color) {
 	broadcast('createPartitionBorder', myPtn.getDisplayInfo());
 
 	return myPtn;
+}
+
+function wsVisTestButton(data) {
+	if (visTest.dataReady) {
+		console.log("Update View");
+		visTest.updateView("view01");
+	} else if (visTest.data) {
+		console.log("Format Data");
+		visTest.formatData({
+			"hits": {
+				type: "attr",
+				use: "size",
+				domain: "quantitative"
+			}
+		}
+		);
+	}	else {
+		// load data (try-catch data errors)
+		try {
+			console.log("Load Data");
+			visTest.loadDataSource("./Minimal.json");
+			// visTest.loadDataSource("LICENSE.txt");
+		} catch (err) {
+			console.log("Caught", err.name);
+		}
+	}
+
 }

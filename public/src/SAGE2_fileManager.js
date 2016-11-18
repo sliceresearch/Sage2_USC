@@ -95,8 +95,8 @@ function FileManager(wsio, mydiv, uniqueID) {
 			{id: "overview_menu", value: "Display overview client"},
 			{id: "audio_menu",    value: "Audio manager"},
 			// {id: "drawing_menu",  value: "Drawing application"},
-			// {id: "partition_menu",  value: "Create Partition"},
-			{id: "console_menu",  value: "Server console"}
+			{id: "console_menu",  value: "Server console"},
+			{id: "vis_menu",  value: "Vis Controller Method Call"}
 		]},
 		{id: "mainpartition_menu", value: "Partitions", config: {width: 250}, submenu: [
 			{id: "2x1_menu", value: "2 Columns"},
@@ -565,6 +565,8 @@ function FileManager(wsio, mydiv, uniqueID) {
 			wsio.emit('deleteAllPartitions');
 		} else if (evt === "partitiongrab_menu") {
 			wsio.emit('partitionsGrabAllContent');
+		} else if (evt === "vis_menu") {
+			wsio.emit('visTestFuncCall');
 		} else {
 			// dunno
 		}

@@ -22,17 +22,20 @@
 var fs = require('fs');
 // var path = require('path');
 
+// global view types enumerated
+
+
 /**
 	* @class Visualization
 	* @constructor
 	*/
 
-function Visualization(wsio, name) {
-	this.wsio = wsio;
+function Visualization(broadcastFunc, name) {
+	this.send = broadcastFunc;
 	this.name = name;
 
 	// the data for the visualization
-	this.data = {};
+	this.data = null;
 	// after data is loaded and formatted, it is ready
 	this.dataReady = false;
 
@@ -53,10 +56,12 @@ Visualization.prototype.setDataSource = function(data) {
 	* Load data into the visualization, json, csv, or tsv (csv & tsv with headers)
 	*
 	* @param {string} dataPath - Path to the remote source of data to be loaded using fs (json format data)
-	* @param {string} format - format of data to be loaded ["json", "csv", "tsv"]
 	*/
-Visualization.prototype.loadDataSource = function(dataPath, format) {
+Visualization.prototype.loadDataSource = function(dataPath) {
 	if (dataPath) {
+		// format inferred from filename
+		var format = dataPath.substring(dataPath.lastIndexOf(".") + 1);
+
 		fs.readFile(dataPath, (err, data) => {
 			if (err) {
 				throw err;
@@ -97,6 +102,12 @@ Visualization.prototype.loadDataSource = function(dataPath, format) {
 				});
 			} else if (format === "json") {
 				parsedData = JSON.parse(data);
+			} else {
+				var err = new Error();
+				err.message = "Incompatible data format: " + dataPath;
+				err.name = "VisControllerDataError";
+
+				throw err;
 			}
 
 			this.setDataSource(parsedData);
@@ -105,30 +116,37 @@ Visualization.prototype.loadDataSource = function(dataPath, format) {
 };
 
 /**
-	* Format data using provided map from values used in data to
+	* Format first level of data using provided map from values used in data to recognized terms,
+	* with a 
 	*
 	* @param {object} map - Mapping from data terms to recognized terms
 	*/
 Visualization.prototype.formatData = function(map) {
-	let formattedData = {};
+	let formattedData = Array.isArray(this.data) ? new Array(this.data.length) : {};
 
 	// perform data regularization operations
-	for (var key in this.data) {
-		formattedData[map[key]] = formatElement(this.data[key], map);
+	for (let key in this.data) {
+		let newKey = map[key] && map[key].type || key;
+
+		if (map[key]) {
+			formattedData[newKey] = {
+				label: key,
+				use: map[key].use,
+				domain: map[key].domain,
+				data: this.data[key]
+			}
+		} else {
+			formattedData[newKey] = {
+				label: key,
+				use: null,
+				domain: null,
+				data: this.data[key]
+			}
+		}
 	}
 
 	this.data = formattedData;
-
-
-	// used to recursively format substructure of data using same mapping
-	function formatElement(el, map) {
-		var elCopy = {};
-
-		for (var key in el) {
-			elCopy[map[key]] = formatElement(el[key], map);
-		}
-	} // end formatElement(...
-
+	this.dataReady = true;
 };
 
 Visualization.prototype.addView = function(view) {
@@ -155,8 +173,13 @@ Visualization.prototype.updateView = function(viewID) {
 		// calculate data subset which the view will be sent (depends on view type)
 		var dataToSend = this.data;
 
+		console.log("Visualization: Update Vis View:", {
+			id: viewID,
+			data: dataToSend
+		});
+
 		// update the data which this view holds
-		this.wsio.emit("visualizationUpdateView", {
+		this.send("visualizationUpdateView", {
 			id: viewID,
 			data: dataToSend
 		});
@@ -164,3 +187,5 @@ Visualization.prototype.updateView = function(viewID) {
 
 	}
 };
+
+module.exports = Visualization;
