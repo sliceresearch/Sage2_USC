@@ -4132,15 +4132,15 @@ function loadConfiguration() {
 		console.log(sageutils.header("UI") + "pixelsPerMeter: " + pixelsPerMeter);
 	}
 
-	// // Automatically populate the displays entry if undefined. Adds left to right, starting from the top.
-	// if (userConfig.displays === undefined) {
-	// 	userConfig.displays = [];
-	// 	for (var r = 0; r < userConfig.layout.rows; r++) {
-	// 		for (var c = 0; c < userConfig.layout.columns; c++) {
-	// 			userConfig.displays.push({row: r, column:c});
-	// 		}
-	// 	}
-	// }
+	// Automatically populate the displays entry if undefined. Adds left to right, starting from the top.
+	if (userConfig.displays === undefined || userConfig.displays.length == 0) {
+		userConfig.displays = [];
+		for (var r = 0; r < userConfig.layout.rows; r++) {
+			for (var c = 0; c < userConfig.layout.columns; c++) {
+				userConfig.displays.push({row: r, column:c});
+			}
+		}
+	}
 
 	// Check the width and height of each display (in tile count)
 	// by default, a display covers one tile
