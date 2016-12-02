@@ -4264,7 +4264,7 @@ function loadConfiguration() {
 		userConfig.displays = [];
 		for (var r = 0; r < userConfig.layout.rows; r++) {
 			for (var c = 0; c < userConfig.layout.columns; c++) {
-				userConfig.displays.push({row: r, column:c});
+				userConfig.displays.push({row: r, column: c});
 			}
 		}
 	}
@@ -8542,14 +8542,12 @@ function wsUtdCallFunctionOnApp(wsio, data) {
 		return; // closing of applications are handled by the called function.
 	}
 	if (data.func === "SAGE2SendToBack") {
-		console.log("erase me, start wsUtdCallFunctionOnApp");
 		// data.app should contain the id.
 		var im = findInteractableManager(data.app);
 		im.moveObjectToBack(data.app, "applications");
 		var newOrder = im.getObjectZIndexList("applications");
 		broadcast('updateItemOrder', newOrder);
 
-		console.log("erase me, end");
 		return;
 	}
 	// Using broadcast means the parameter must be in data.data

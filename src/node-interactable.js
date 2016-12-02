@@ -346,8 +346,6 @@ InteractableManager.prototype.moveObjectToBack = function(id, layerId, otherLaye
 	var minZIndex = currZIndex;
 	var allLayerIds = [layerId].concat(otherLayerIds || []);
 
-		console.log("erase me, start moveObjectToBack, currZIndex " + currZIndex);
-
 	for (i = 0; i < allLayerIds.length; i++) {
 		if (this.interactableObjects.hasOwnProperty(allLayerIds[i])) {
 			for (key in this.interactableObjects[allLayerIds[i]]) {
@@ -356,17 +354,12 @@ InteractableManager.prototype.moveObjectToBack = function(id, layerId, otherLaye
 					if (itemZIndex < minZIndex) {
 						minZIndex = itemZIndex;
 					}
-
-					console.log("erase me, changing other app zIndex from " + itemZIndex);
-
 					var increasedIndex = itemZIndex + 1;
 					setZIndexOfObj(this.interactableObjects[allLayerIds[i]][key], increasedIndex);
 				}
 			}
 		}
 	}
-
-					console.log("erase me, changing app zIndex to minZIndex " + minZIndex);
 	setZIndexOfObj(this.interactableObjects[layerId][id], minZIndex);
 };
 
