@@ -1454,6 +1454,16 @@ function UIBuilder(json_cfg, clientID) {
 			for (i = 0; i < itemlist.length; i++) {
 				itemlist[i].classList.toggle("windowItemNoBorder");
 			}
+			// Hide the partitions top bar
+			var ptnlist = document.getElementsByClassName("partitionTitle");
+			for (i = 0; i < ptnlist.length; i++) {
+				ptnlist[i].style.display = 'none';
+			}
+			// Hide the partitions background area
+			var ptntitlelist = document.getElementsByClassName("partitionArea");
+			for (i = 0; i < ptntitlelist.length; i++) {
+				ptntitlelist[i].style.display = 'none';
+			}
 			this.uiHidden = true;
 		}
 	};
@@ -1485,6 +1495,16 @@ function UIBuilder(json_cfg, clientID) {
 			var itemlist = document.getElementsByClassName("windowItem");
 			for (i = 0; i < itemlist.length; i++) {
 				itemlist[i].classList.toggle("windowItemNoBorder");
+			}
+			// Show the partitions top bar
+			var ptnlist = document.getElementsByClassName("partitionTitle");
+			for (i = 0; i < ptnlist.length; i++) {
+				ptnlist[i].style.display = 'block';
+			}
+			// Show the partitions background area
+			var ptntitlelist = document.getElementsByClassName("partitionArea");
+			for (i = 0; i < ptntitlelist.length; i++) {
+				ptntitlelist[i].style.display = 'block';
 			}
 			this.uiHidden = false;
 		}

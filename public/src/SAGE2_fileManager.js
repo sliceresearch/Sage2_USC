@@ -95,7 +95,18 @@ function FileManager(wsio, mydiv, uniqueID) {
 			{id: "overview_menu", value: "Display overview client"},
 			{id: "audio_menu",    value: "Audio manager"},
 			// {id: "drawing_menu",  value: "Drawing application"},
+			// {id: "partition_menu",  value: "Create Partition"},
 			{id: "console_menu",  value: "Server console"}
+		]},
+		{id: "mainpartition_menu", value: "Partitions", config: {width: 250}, submenu: [
+			{id: "2x1_menu", value: "2 Columns"},
+			{id: "3x1_menu", value: "3 Columns"},
+			{id: "2x2_menu", value: "2 Columns, 2 Rows"},
+			{id: "2s-1b-2s_menu", value: "Center Pane, 4 Mini"},
+			{id: "2b-1w_menu", value: "2 Pane, Taskbar"},
+			{$template: "Separator"},
+			{id: "partitiongrab_menu", value: "Assign Content to Partitions"},
+			{id: "deletepartition_menu", value: "Delete All Partitions"}
 		]},
 		{id: "services_menu", value: "Services", config: {width: 170}, submenu: [
 			{id: "imageservice_menu",  value: "Large image processing"},
@@ -233,6 +244,10 @@ function FileManager(wsio, mydiv, uniqueID) {
 							id: "thumb",
 							template: function(obj) {
 								if (obj.image) {
+									if (obj.session) {
+										// if it is from a session
+										return "<img src='" + obj.image + "'></img>";
+									}
 									return "<img src='" + obj.image + "_256.jpg'></img>";
 								}
 								return "";
@@ -376,6 +391,180 @@ function FileManager(wsio, mydiv, uniqueID) {
 			// window.open("drawing.html", '_blank');
 		} else if (evt === "console_menu") {
 			window.open("admin/console.html", '_blank');
+		} else if (evt === "partition_menu") {
+			// create partition
+			var ptnDims = {left: 200, top: 200, width: 1000, height: 700};
+			wsio.emit('createPartition', ptnDims);
+		} else if (evt === "2x1_menu") {
+			// create partition division of screen
+			wsio.emit('partitionScreen',
+				{
+					type: "row",
+					size: 12,
+					children: [
+						{
+							type: "col",
+							ptn: true,
+							size: 6
+						},
+						{
+							type: "col",
+							ptn: true,
+							size: 6
+						}
+					]
+				});
+		} else if (evt === "3x1_menu") {
+			// create partition division of screen
+			wsio.emit('partitionScreen',
+				{
+					type: "row",
+					size: 12,
+					children: [
+						{
+							type: "col",
+							ptn: true,
+							size: 4
+						},
+						{
+							type: "col",
+							ptn: true,
+							size: 4
+						},
+						{
+							type: "col",
+							ptn: true,
+							size: 4
+						}
+					]
+				});
+		} else if (evt === "2x2_menu") {
+			// create partition division of screen
+			wsio.emit('partitionScreen',
+				{
+					type: "col",
+					size: 12,
+					children: [
+						{
+							type: "row",
+							size: 6,
+							children: [
+								{
+									type: "col",
+									ptn: true,
+									size: 6
+								},
+								{
+									type: "col",
+									ptn: true,
+									size: 6
+								}
+							]
+						},
+						{
+							type: "row",
+							size: 6,
+							children: [
+								{
+									type: "col",
+									ptn: true,
+									size: 6
+								},
+								{
+									type: "col",
+									ptn: true,
+									size: 6
+								}
+							]
+						}
+					]
+				});
+		} else if (evt === "2s-1b-2s_menu") {
+			// create partition division of screen
+			wsio.emit('partitionScreen',
+				{
+					type: "row",
+					size: 12,
+					children: [
+						{
+							type: "col",
+							size: 3,
+							children: [
+								{
+									type: "row",
+									ptn: true,
+									size: 8
+								},
+								{
+									type: "row",
+									ptn: true,
+									size: 4
+								}
+							]
+						},
+						{
+							type: "col",
+							ptn: true,
+							size: 6
+						},
+						{
+							type: "col",
+							size: 3,
+							children: [
+								{
+									type: "row",
+									ptn: true,
+									size: 4
+								},
+								{
+									type: "row",
+									ptn: true,
+									size: 8
+								}
+							]
+						}
+					]
+				});
+		} else if (evt === "2b-1w_menu") {
+			// create partition division of screen
+			wsio.emit('partitionScreen',
+				{
+					type: "col",
+					size: 12,
+					children: [
+						{
+							type: "row",
+							size: 8,
+							children: [
+								{
+									type: "col",
+									ptn: true,
+									size: 6
+								},
+								{
+									type: "col",
+									ptn: true,
+									size: 6
+								}
+							]
+						},
+						{
+							type: "row",
+							size: 4,
+							children: [
+								{
+									type: "col",
+									ptn: true,
+									size: 12
+								}
+							]
+						}
+					]
+				});
+		} else if (evt === "deletepartition_menu") {
+			wsio.emit('deleteAllPartitions');
+		} else if (evt === "partitiongrab_menu") {
+			wsio.emit('partitionsGrabAllContent');
 		} else {
 			// dunno
 		}
@@ -550,7 +739,7 @@ function FileManager(wsio, mydiv, uniqueID) {
 				css: {height: "100px"}
 			});
 		} else if (_this.allFiles[elt.id].exif.MIMEType.indexOf('sage2/session') >= 0) {
-			// Noting yet
+			// Nothing yet
 		}
 
 		// Done updating metadata
@@ -558,7 +747,10 @@ function FileManager(wsio, mydiv, uniqueID) {
 
 		// Update the thumbnail
 		var thumb = $$("thumb");
-		thumb.data = {image: _this.allFiles[elt.id].exif.SAGE2thumbnail};
+		thumb.data = {
+			image: _this.allFiles[elt.id].exif.SAGE2thumbnail,
+			session: (_this.allFiles[elt.id].exif.MIMEType.indexOf('sage2/session') >= 0)
+		};
 		thumb.refresh();
 	});
 

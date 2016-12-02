@@ -7,14 +7,14 @@
 <title>SAGE2 UI - Mobile</title>
 
 <script type="text/license">
-	// SAGE2 is available for use under the SAGE2 Software License 
-	//      
+	// SAGE2 is available for use under the SAGE2 Software License
+	//
 	// University of Illinois at Chicago's Electronic Visualization Laboratory (EVL)
 	// and University of Hawai'i at Manoa's Laboratory for Advanced Visualization and
 	// Applications (LAVA)
-	//      
+	//
 	// See full text, terms and conditions in the LICENSE.txt included file
-	//      
+	//
 	// Copyright (c) 2014
 </script>
 
@@ -100,6 +100,7 @@
 		</div>
 
 		<div id="displayUIDiv" style="display:none;">
+			<div id="partitionsDiv"></div>
 			<div id="applicationsDiv"></div>
 			<canvas id="sage2UICanvas"></canvas>
 		</div>
@@ -161,15 +162,15 @@
 	</section>
 
 	<div class="clear"></div>
-	
+
 	<!-- transparent black overlay for all dialogs -->
 	<div id="blackoverlay"></div>
-	
+
 	<!-- dialog for the SAGE2 Pointer Help -->
 	<div id="sage2pointerDialog" class="dialog">
 		<img alt="sage2pointerHelp" id="sage2pointerHelp" src="images/SAGE2Pointer-help.svg"/>
 	</div>
-	
+
 	<!-- dialog for the App Launcher-->
 	<div id="appLauncherDialog" class="dialog">
 		<div id="appListContainer">
@@ -181,7 +182,7 @@
 			<span id="appCloseBtn" class="button">Close</span>
 		</div>
 	</div>
-	
+
 	<!-- dialog for the Media Browser -->
 	<div id="mediaBrowserDialog" class="dialog">
 		<div id="fileTreeList" class="css-treeview">
@@ -221,7 +222,7 @@
 			<span id="fileUploadBtn" class="button">Upload</span>
 		</div>
 	</div>
-	
+
 	<!-- dialog for the Arrangement-->
 	<div id="arrangementDialog" class="dialog">
 		<div id="arrangementItems">
@@ -404,7 +405,7 @@
 		<span id="ffShareScreenBtn" class="button">Share Screen</span>
 		<span id="ffShareWindowBtn" class="button">Share Window</span>
 	</div>
-	
+
 	<div id="sage2MobileContainer">
 		<div id="sage2MobileTrackpad">
 			<div style="font-size:xx-large;text-align:center;">Trackpad</div>
@@ -490,12 +491,11 @@
 	</div>
 	<div id="uiDrawZoneEraseReference">
 	</div>
-	
-	
+
+
 	<!-- invisible text to test rendered width -->
 	<div id="textWidthTest"></div>
 	<canvas id="mediaCanvas" style="display: none;"></canvas>
 	<video id="mediaVideo" style="display: none;"></video>
 </body>
 </html>
-

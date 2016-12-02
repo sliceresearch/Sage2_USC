@@ -24,6 +24,8 @@
 /* global createWidgetToAppConnector */
 /* global getTextFromTextInputWidget */
 
+/* global SAGE2_Partition */
+
 "use strict";
 
 /**
@@ -49,6 +51,7 @@ var lockedControlElements = {};
 var widgetConnectorRequestList = {};
 
 var applications = {};
+var partitions = {};
 var dependencies = {};
 var dataSharingPortals = {};
 
@@ -582,6 +585,33 @@ function setupListeners() {
 
 	wsio.on('createAppWindow', function(data) {
 		createAppWindow(data, ui.main.id, ui.titleBarHeight, ui.titleTextSize, ui.offsetX, ui.offsetY);
+	});
+
+
+	/* Partition wsio calls */
+	wsio.on('createPartitionWindow', function(data) {
+		partitions[data.id] = new SAGE2_Partition(data);
+	});
+	wsio.on('deletePartitionWindow', function(data) {
+		partitions[data.id].deletePartition();
+		delete partitions[data.id];
+	});
+	wsio.on('partitionMoveAndResizeFinished', function(data) {
+		partitions[data.id].updatePositionAndSize(data);
+	});
+	wsio.on('partitionWindowTitleUpdate', function(data) {
+		partitions[data.id].updateTitle(data.title);
+	});
+	wsio.on('updatePartitionBorders', function(data) {
+		for (var p in partitions) {
+			// console.log(p);
+			partitions[p].updateSelected(false);
+		}
+
+		// if a value was passed, highlight this value
+		if (data) {
+			partitions[data].updateSelected(true);
+		}
 	});
 
 	wsio.on('createAppWindowInDataSharingPortal', function(data) {

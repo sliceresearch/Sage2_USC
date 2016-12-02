@@ -135,11 +135,11 @@ var image_viewer = SAGE2_App.extend({
 			}
 		});
 		// Special callback: convert to a doodle.
-		entries.push({
-			description: "Make Doodle",
-			callback: "makeDoodle",
-			parameters: {}
-		});
+		// entries.push({
+		// 	description: "Make Doodle",
+		// 	callback: "makeDoodle",
+		// 	parameters: {}
+		// });
 
 		return entries;
 	},

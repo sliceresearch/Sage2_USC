@@ -67,6 +67,14 @@ h2 {
 	margin: 2px 0 0 2px;
 }
 
+#partitionsDiv {
+	position: absolute;
+	overflow: hidden;
+	background-color: #B4B4B4;
+	margin: 2px 0 0 2px;
+}
+
+
 #sage2UICanvas {
 	position: absolute;
 	border: solid 2px #565656;
@@ -197,6 +205,37 @@ h2 {
 
 .clear {
 	clear: both;
+}
+
+.ptnWindow {
+	display: block;
+	position: absolute;
+	border: solid 1px #6C6C6C;
+}
+
+.ptnWindowTitle {
+	position: absolute;
+	border: solid 1px #6C6C6C;
+	-webkit-box-sizing: border-box;
+	-moz-box-sizing: border-box;
+	box-sizing: border-box;
+}
+
+.ptnWindowTitleHover {
+	position: absolute;
+	border: solid 1px #6C6C6C;
+	background-color: #3694B7;
+	-webkit-box-sizing: border-box;
+	-moz-box-sizing: border-box;
+	box-sizing: border-box;
+}
+
+.ptnWindowArea {
+	position: absolute;
+	border: solid 1px #6C6C6C;
+	-webkit-box-sizing: border-box;
+	-moz-box-sizing: border-box;
+	box-sizing: border-box;
 }
 
 /***** Light Box    *****/
