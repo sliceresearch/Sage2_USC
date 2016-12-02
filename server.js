@@ -120,8 +120,7 @@ var drawingManager;
 var pressingAlt        = true;
 
 var partitions				 = new PartitionList(config);
-var partitionStart		 = null;
-var draggingPartition	 = null;
+var draggingPartition	 = {};
 
 // Add extra folders defined in the configuration file
 if (config.folders) {
@@ -1270,6 +1269,11 @@ function wsSelectionModeOnOff(wsio, data) {
 
 function wsRegisterInteractionClient(wsio, data) {
 	var key;
+
+	// Update color and name of pointer when UI connects
+	sagePointers[wsio.id].color = data.color;
+	sagePointers[wsio.id].name  = data.name;
+
 	if (program.trackUsers === true) {
 		var newUser = true;
 		for (key in users) {
@@ -2062,13 +2066,18 @@ function listSessions() {
 				var strdate = sprint("%4d/%02d/%02d %02d:%02d:%02s",
 										ad.getFullYear(), ad.getMonth() + 1, ad.getDate(),
 										ad.getHours(), ad.getMinutes(), ad.getSeconds());
+				// create path to thumbnail
+				var thumbPath = path.join(path.join(path.join("", "user"), "sessions"), ".previews");
+				// replace .json with .svg in filename
+				var thumbPathFull = "\\" + path.join(thumbPath, file.substring(".json", file.length - 5) + ".svg");
 				// Make it look like an exif data structure
 				thelist.push({id: filename,
 					sage2URL: '/uploads/' + file,
 					exif: { FileName: file.slice(0, -5),
 						FileSize: stat.size,
 						FileDate: strdate,
-						MIMEType: 'sage2/session'
+						MIMEType: 'sage2/session',
+						SAGE2thumbnail: thumbPathFull
 					}
 				});
 			}
@@ -2173,11 +2182,6 @@ function saveSession(filename) {
 	filename = filename || 'default.json';
 
 	var key;
-	var fullpath = path.join(sessionDirectory, filename);
-	// if it doesn't end in .json, add it
-	if (fullpath.indexOf(".json", fullpath.length - 5) === -1) {
-		fullpath += '.json';
-	}
 
 	var states     = {};
 	states.apps    = [];
@@ -2186,7 +2190,7 @@ function saveSession(filename) {
 	states.numpartitions = 0;
 	states.date    = Date.now();
 	for (key in SAGE2Items.applications.list) {
-		var a = SAGE2Items.applications.list[key];
+		var a = Object.assign({}, SAGE2Items.applications.list[key]);
 
 		if (a.partition) {
 			// remove reference to parent partition if it exists
@@ -2200,19 +2204,132 @@ function saveSession(filename) {
 	}
 
 	for (key in partitions.list) {
-		var p = partitions.list[key];
+		var p = Object.assign({}, partitions.list[key]);
 
 		if (p.partitionList) {
 			delete p.partitionList;
+		}
+
+		for (var app in p.children) {
+			p.children[app] = Object.assign({}, p.children[app]);
+
+			if (p.children[app].partition) {
+				delete p.children[app].partition;
+			}
 		}
 
 		states.partitions.push(p);
 		states.numpartitions++;
 	}
 
+	// session with only partitions considered a "LAYOUT"
+	if (states.numapps === 0 && states.numpartitions > 0 && filename !== "default.json") {
+		filename = "LAYOUT - " + filename;
+	}
+
+	var fullpath = path.join(sessionDirectory, filename);
+	// if it doesn't end in .json, add it
+	if (fullpath.indexOf(".json", fullpath.length - 5) === -1) {
+		fullpath += '.json';
+	}
+
+	// save session preview image to sessions/.previews/
+
+	var previewPath = path.join(sessionDirectory, ".previews");
+
+	if (!sageutils.folderExists(previewPath)) {
+		sageutils.mkdirParent(previewPath);
+	}
+
+	var previewFname;
+
+	if (filename.indexOf(".json", filename.length - 5) === -1) {
+		previewFname = filename + ".svg";
+	} else {
+		previewFname = filename.substr(0, filename.length - 5) + ".svg";
+	}
+
+	var fullPreviewPath = path.join(previewPath, previewFname);
+
+	// create svg string as thumbnail for session preview
+
+	var width = config.totalWidth,
+		height = config.totalHeight,
+		box = "0,0," + width + "," + height;
+
+	var svg = "<svg width=\"" + 256 +
+		"\" height=\"" + 256 +
+		"\" viewBox=\"" + box +
+		"\" version=\"1.1\" xmlns=\"http://www.w3.org/2000/svg\" " +
+		"xmlns:xlink=\"http://www.w3.org/1999/xlink\">";
+
+	// add gray background
+	svg += "<rect width=\"" + width +
+		"\" height=\"" + height +
+		"\" style=\"fill: #666666;\"" + "></rect>";
+
+	for (var ptn of states.partitions) {
+		// partition areas
+		svg += "<rect width=\"" + (ptn.width - 8) +
+			"\" height=\"" + (ptn.height - 8) +
+			"\" x=\"" + (ptn.left + 4) +
+			"\" y=\"" + (ptn.top + 4) +
+			"\" style=\"fill: " + ptn.color +
+			"; stroke: " + ptn.color +
+			"; stroke-width: 8; fill-opacity: 0.3;\"" + "></rect>";
+
+		// partition title bars
+		svg += "<rect width=\"" + ptn.width +
+			"\" height=\"" + config.ui.titleBarHeight +
+			"\" x=\"" + ptn.left +
+			"\" y=\"" + (ptn.top - config.ui.titleBarHeight) +
+			"\" style=\"fill: " + ptn.color +
+			"\"" + "></rect>";
+	}
+
+	for (var ap of states.apps) {
+		// draw app rectangles
+		svg += "<rect width=\"" + ap.width +
+			"\" height=\"" + ap.height +
+			"\" x=\"" + ap.left +
+			"\" y=\"" + ap.top +
+			"\" style=\"fill: " + "#AAAAAA; fill-opacity: 0.5; stroke: black; stroke-width: 5;\">" + "</rect>";
+
+
+		var iconPath = path.join(mainFolder.path, path.relative("/user", ap.icon)) + "_256.jpg";
+
+		var iconImageData = "";
+
+		try {
+			iconImageData = new Buffer(fs.readFileSync(iconPath)).toString('base64');
+		} catch (error) {
+			// error reading/converting icon image
+		}
+
+		svg += "<image width=\"" + ap.width +
+			"\" height=\"" + ap.height +
+			"\" x=\"" + ap.left +
+			"\" y=\"" + ap.top +
+			"\" xlink:href=\"data:image/jpg;base64," + iconImageData + "\">" + "</image>";
+	}
+
+	svg += "</svg>";
+
+	// svg file header
+	var header = "<?xml version=\"1.0\" encoding=\"utf-8\"?>";
+	header += "<!DOCTYPE svg PUBLIC \"-//W3C//DTD SVG 1.1//EN\" \"http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd\">";
+
 	try {
 		fs.writeFileSync(fullpath, JSON.stringify(states, null, 4));
 		console.log(sageutils.header("Session") + "saved session file to " + fullpath);
+	} catch (err) {
+		console.log(sageutils.header("Session") + "error saving " + err);
+	}
+
+	// write preview image
+	try {
+		fs.writeFileSync(fullPreviewPath, header + svg);
+		console.log(sageutils.header("Session") + "saved session preview image to " + fullPreviewPath);
 	} catch (err) {
 		console.log(sageutils.header("Session") + "error saving " + err);
 	}
@@ -4120,16 +4237,26 @@ function loadConfiguration() {
 	// calculate the widget control size based on dimensions and user distance
 	if (userConfig.ui.auto_scale_ui && tileHeight !== undefined) {
 		var objectHeightMeters = 27 / pixelsPerMeter;
-		// var minimumWidgetControlSize = 20; // Min button size for text readability (also for touch wall)
+		var minimumWidgetControlSize = 20; // Min button size for text readability (also for touch wall)
 		var perceptualScalingFactor = 0.0213;
+		var oldDefaultWidgetScale = Math.round(0.020 * minDim);
 		var userDist = userConfig.dimensions.viewing_distance;
 		var calcuatedWidgetControlSize = userDist * (perceptualScalingFactor * (userDist / objectHeightMeters));
-		var targetVisualAcuity = 1; // degrees of arc
+		var targetVisualAcuity = 0.5; // degrees of arc
 
 		calcuatedWidgetControlSize = Math.tan((targetVisualAcuity * Math.PI / 180.0) / 2) * 2 * userDist * pixelsPerMeter;
 
-		console.log(sageutils.header("UI") + "widgetControlSize: " + calcuatedWidgetControlSize);
-		console.log(sageutils.header("UI") + "pixelsPerMeter: " + pixelsPerMeter);
+		if (calcuatedWidgetControlSize < minimumWidgetControlSize) {
+			calcuatedWidgetControlSize = minimumWidgetControlSize;
+			console.log(sageutils.header("UI") + "widgetControlSize (min): " + calcuatedWidgetControlSize);
+		} else if (calcuatedWidgetControlSize > oldDefaultWidgetScale) {
+			calcuatedWidgetControlSize = oldDefaultWidgetScale * 2;
+			console.log(sageutils.header("UI") + "widgetControlSize (max): " + calcuatedWidgetControlSize);
+		} else {
+			console.log(sageutils.header("UI") + "widgetControlSize: " + calcuatedWidgetControlSize);
+		}
+		// console.log(sageutils.header("UI") + "pixelsPerMeter: " + pixelsPerMeter);
+		userConfig.ui.widgetControlSize = calcuatedWidgetControlSize;
 	}
 
 	// Automatically populate the displays entry if undefined. Adds left to right, starting from the top.
@@ -5439,12 +5566,13 @@ function pointerPressOnOpenSpace(uniqueID, pointerX, pointerY, data) {
 		createRadialMenu(uniqueID, pointerX, pointerY);
 	} else if (data.button === "left" && remoteInteraction[uniqueID].CTRL) {
 		// start tracking size to create new partition
-		partitionStart = {x: pointerX, y: pointerY};
+		draggingPartition[uniqueID] = {};
+		draggingPartition[uniqueID].ptn = createPartition({left: pointerX, top: pointerY, width: 0, height: 0},
+			sagePointers[uniqueID].color);
+
+		draggingPartition[uniqueID].start = {x: pointerX, y: pointerY};
 
 		console.log(sagePointers[uniqueID].color);
-
-		draggingPartition = createPartition({left: pointerX, top: pointerY, width: 0, height: 0},
-			sagePointers[uniqueID].color);
 	}
 }
 
@@ -6154,14 +6282,25 @@ function updatePointerPosition(uniqueID, pointerX, pointerY, data) {
 	var updatedResizeItem;
 	var updatedControl;
 
-	if (draggingPartition) {
-		draggingPartition.left = pointerX < partitionStart.x ? pointerX : partitionStart.x;
-		draggingPartition.top = pointerY < partitionStart.y ? pointerY : partitionStart.y;
-		draggingPartition.width = pointerX < partitionStart.x ? partitionStart.x - pointerX : pointerX - partitionStart.x;
-		draggingPartition.height = pointerY < partitionStart.y ? partitionStart.y - pointerY : pointerY - partitionStart.y;
+	if (draggingPartition[uniqueID]) {
+		draggingPartition[uniqueID].ptn.left =
+			pointerX < draggingPartition[uniqueID].start.x ?
+			pointerX : draggingPartition[uniqueID].start.x;
 
-		partitions.updatePartitionGeometries(draggingPartition.id, interactMgr);
-		broadcast('partitionMoveAndResizeFinished', draggingPartition.getDisplayInfo());
+		draggingPartition[uniqueID].ptn.top =
+			pointerY < draggingPartition[uniqueID].start.y ?
+			pointerY : draggingPartition[uniqueID].start.y;
+
+		draggingPartition[uniqueID].ptn.width =
+			pointerX < draggingPartition[uniqueID].start.x ?
+			draggingPartition[uniqueID].start.x - pointerX : pointerX - draggingPartition[uniqueID].start.x;
+
+		draggingPartition[uniqueID].ptn.height =
+			pointerY < draggingPartition[uniqueID].start.y ?
+			draggingPartition[uniqueID].start.y - pointerY : pointerY - draggingPartition[uniqueID].start.y;
+
+		partitions.updatePartitionGeometries(draggingPartition[uniqueID].ptn.id, interactMgr);
+		broadcast('partitionMoveAndResizeFinished', draggingPartition[uniqueID].ptn.getDisplayInfo());
 	}
 
 	if (moveAppPortal !== null) {
@@ -6410,7 +6549,7 @@ function pointerMoveOnPartition(uniqueID, pointerX, pointerY, data, obj, localPt
 	var btn = partitions.findButtonByPoint(obj.id, localPt);
 
 	// pointer press on app window
-	if (btn === null || draggingPartition) {
+	if (btn === null || draggingPartition[uniqueID]) {
 		return;
 	}
 
@@ -6744,21 +6883,33 @@ function pointerRelease(uniqueID, pointerX, pointerY, data) {
 		obj = interactMgr.searchGeometry({x: pointerX, y: pointerY});
 	}
 
-	if (draggingPartition && data.button === "left") {
-		draggingPartition.left = pointerX < partitionStart.x ? pointerX : partitionStart.x;
-		draggingPartition.top = pointerY < partitionStart.y ? pointerY : partitionStart.y;
-		draggingPartition.width = pointerX < partitionStart.x ? partitionStart.x - pointerX : pointerX - partitionStart.x;
-		draggingPartition.height = pointerY < partitionStart.y ? partitionStart.y - pointerY : pointerY - partitionStart.y;
-		draggingPartition.aspect = draggingPartition.width / draggingPartition.height; // set aspect ratio when resize finished
+	if (draggingPartition[uniqueID] && data.button === "left") {
+		draggingPartition[uniqueID].ptn.left =
+			pointerX < draggingPartition[uniqueID].start.x ?
+			pointerX : draggingPartition[uniqueID].start.x;
 
-		partitions.updatePartitionGeometries(draggingPartition.id, interactMgr);
-		broadcast('partitionMoveAndResizeFinished', draggingPartition.getDisplayInfo());
+		draggingPartition[uniqueID].ptn.top =
+			pointerY < draggingPartition[uniqueID].start.y ?
+			pointerY : draggingPartition[uniqueID].start.y;
 
-		broadcast('partitionWindowTitleUpdate', draggingPartition.getTitle());
+		draggingPartition[uniqueID].ptn.width =
+			pointerX < draggingPartition[uniqueID].start.x ?
+			draggingPartition[uniqueID].start.x - pointerX : pointerX - draggingPartition[uniqueID].start.x;
+
+		draggingPartition[uniqueID].ptn.height =
+			pointerY < draggingPartition[uniqueID].start.y ?
+			draggingPartition[uniqueID].start.y - pointerY : pointerY - draggingPartition[uniqueID].start.y;
+
+		draggingPartition[uniqueID].ptn.aspect = draggingPartition[uniqueID].ptn.width / draggingPartition[uniqueID].ptn.height;
+
+		partitions.updatePartitionGeometries(draggingPartition[uniqueID].ptn.id, interactMgr);
+		broadcast('partitionMoveAndResizeFinished', draggingPartition[uniqueID].ptn.getDisplayInfo());
+
+		broadcast('partitionWindowTitleUpdate', draggingPartition[uniqueID].ptn.getTitle());
 
 		// stop creation of partition
-		partitionStart = null;
-		draggingPartition = null;
+		delete draggingPartition[uniqueID];
+
 		return;
 	}
 
@@ -8359,7 +8510,7 @@ function wsUtdWhatAppIsAt(wsio, data) {
  */
 function wsUtdRequestRmbContextMenu(wsio, data) {
 	var obj = interactMgr.searchGeometry({x: data.x, y: data.y});
-	if (obj !== null) {
+	if (obj !== null && SAGE2Items.applications.list[obj.data.id]) {
 		if (SAGE2Items.applications.list[obj.data.id].contextMenu) {
 			// If we already have the menu info, send it
 			wsio.emit('dtuRmbContextMenuContents', {
