@@ -5891,7 +5891,16 @@ function pointerPressOnApplication(uniqueID, pointerX, pointerY, data, obj, loca
 			}
 			break;
 		case "dragCorner":
-			selectApplicationForResize(uniqueID, obj.data, pointerX, pointerY, portalId);
+			if (obj.data.application === "Webview") {
+				if (!sagePointers[uniqueID].visible) {
+					selectApplicationForResize(uniqueID, obj.data, pointerX, pointerY, portalId);
+				} else {
+					// if corner click and webview, then send the click to app
+					sendPointerPressToApplication(uniqueID, obj.data, pointerX, pointerY, data);
+				}
+			} else {
+				selectApplicationForResize(uniqueID, obj.data, pointerX, pointerY, portalId);
+			}
 			break;
 		case "syncButton":
 			if (sagePointers[uniqueID].visible) {
@@ -5955,7 +5964,6 @@ function pointerPressOnPartition(uniqueID, pointerX, pointerY, data, obj, localP
 		case "dragCorner":
 			if (sagePointers[uniqueID].visible) {
 				// only if pointer on the wall, not the web UI
-
 				selectApplicationForResize(uniqueID, obj.data, pointerX, pointerY, portalId);
 			}
 			break;
@@ -6509,27 +6517,56 @@ function pointerMoveOnApplication(uniqueID, pointerX, pointerY, data, obj, local
 			break;
 		}
 		case "dragCorner": {
-			if (remoteInteraction[uniqueID].hoverCornerItem === null) {
-				remoteInteraction[uniqueID].setHoverCornerItem(obj.data);
-				broadcast('hoverOverItemCorner', {elemId: obj.data.id, flag: true});
-				if (portalId !== undefined && portalId !== null) {
-					ts = Date.now() + remoteSharingSessions[portalId].timeOffset;
-					remoteSharingSessions[portalId].wsio.emit('remoteSagePointerHoverCorner',
-						{appHoverCorner: {elemId: obj.data.id, flag: true}, date: ts});
+			if (obj.data.application === "Webview") {
+				if (!sagePointers[uniqueID].visible) {
+					if (remoteInteraction[uniqueID].hoverCornerItem === null) {
+						remoteInteraction[uniqueID].setHoverCornerItem(obj.data);
+						broadcast('hoverOverItemCorner', {elemId: obj.data.id, flag: true});
+						if (portalId !== undefined && portalId !== null) {
+							ts = Date.now() + remoteSharingSessions[portalId].timeOffset;
+							remoteSharingSessions[portalId].wsio.emit('remoteSagePointerHoverCorner',
+								{appHoverCorner: {elemId: obj.data.id, flag: true}, date: ts});
+						}
+					} else if (remoteInteraction[uniqueID].hoverCornerItem.id !== obj.data.id) {
+						broadcast('hoverOverItemCorner', {elemId: remoteInteraction[uniqueID].hoverCornerItem.id, flag: false});
+						if (portalId !== undefined && portalId !== null) {
+							ts = Date.now() + remoteSharingSessions[portalId].timeOffset;
+							remoteSharingSessions[portalId].wsio.emit('remoteSagePointerHoverCorner',
+								{appHoverCorner: {elemId: remoteInteraction[uniqueID].hoverCornerItem.id,
+									flag: false}, date: ts});
+						}
+						remoteInteraction[uniqueID].setHoverCornerItem(obj.data);
+						broadcast('hoverOverItemCorner', {elemId: obj.data.id, flag: true});
+						if (portalId !== undefined && portalId !== null) {
+							ts = Date.now() + remoteSharingSessions[portalId].timeOffset;
+							remoteSharingSessions[portalId].wsio.emit('remoteSagePointerHoverCorner',
+								{appHoverCorner: {elemId: obj.data.id, flag: true}, date: ts});
+						}
+					}
 				}
-			} else if (remoteInteraction[uniqueID].hoverCornerItem.id !== obj.data.id) {
-				broadcast('hoverOverItemCorner', {elemId: remoteInteraction[uniqueID].hoverCornerItem.id, flag: false});
-				if (portalId !== undefined && portalId !== null) {
-					ts = Date.now() + remoteSharingSessions[portalId].timeOffset;
-					remoteSharingSessions[portalId].wsio.emit('remoteSagePointerHoverCorner',
-						{appHoverCorner: {elemId: remoteInteraction[uniqueID].hoverCornerItem.id, flag: false}, date: ts});
-				}
-				remoteInteraction[uniqueID].setHoverCornerItem(obj.data);
-				broadcast('hoverOverItemCorner', {elemId: obj.data.id, flag: true});
-				if (portalId !== undefined && portalId !== null) {
-					ts = Date.now() + remoteSharingSessions[portalId].timeOffset;
-					remoteSharingSessions[portalId].wsio.emit('remoteSagePointerHoverCorner',
-						{appHoverCorner: {elemId: obj.data.id, flag: true}, date: ts});
+			} else {
+				if (remoteInteraction[uniqueID].hoverCornerItem === null) {
+					remoteInteraction[uniqueID].setHoverCornerItem(obj.data);
+					broadcast('hoverOverItemCorner', {elemId: obj.data.id, flag: true});
+					if (portalId !== undefined && portalId !== null) {
+						ts = Date.now() + remoteSharingSessions[portalId].timeOffset;
+						remoteSharingSessions[portalId].wsio.emit('remoteSagePointerHoverCorner',
+							{appHoverCorner: {elemId: obj.data.id, flag: true}, date: ts});
+					}
+				} else if (remoteInteraction[uniqueID].hoverCornerItem.id !== obj.data.id) {
+					broadcast('hoverOverItemCorner', {elemId: remoteInteraction[uniqueID].hoverCornerItem.id, flag: false});
+					if (portalId !== undefined && portalId !== null) {
+						ts = Date.now() + remoteSharingSessions[portalId].timeOffset;
+						remoteSharingSessions[portalId].wsio.emit('remoteSagePointerHoverCorner',
+							{appHoverCorner: {elemId: remoteInteraction[uniqueID].hoverCornerItem.id, flag: false}, date: ts});
+					}
+					remoteInteraction[uniqueID].setHoverCornerItem(obj.data);
+					broadcast('hoverOverItemCorner', {elemId: obj.data.id, flag: true});
+					if (portalId !== undefined && portalId !== null) {
+						ts = Date.now() + remoteSharingSessions[portalId].timeOffset;
+						remoteSharingSessions[portalId].wsio.emit('remoteSagePointerHoverCorner',
+							{appHoverCorner: {elemId: obj.data.id, flag: true}, date: ts});
+					}
 				}
 			}
 			break;
@@ -6852,6 +6889,8 @@ function pointerRelease(uniqueID, pointerX, pointerY, data) {
 	if (sagePointers[uniqueID] === undefined) {
 		return;
 	}
+
+	removeExistingHoverCorner(uniqueID);
 
 	// Whiteboard app
 	if (drawingManager.drawingMode) {
@@ -8097,7 +8136,8 @@ function handleNewApplication(appInstance, videohandle) {
 		{x: startButtons + (2 * (buttonsPad + oneButton)), y: 0, w: oneButton, h: config.ui.titleBarHeight}, 1);
 	SAGE2Items.applications.addButtonToItem(appInstance.id, "dragCorner", "rectangle", {
 		x: appInstance.width - cornerSize,
-		y: appInstance.height + config.ui.titleBarHeight - cornerSize, w: cornerSize, h: cornerSize
+		y: appInstance.height + config.ui.titleBarHeight - cornerSize,
+		w: cornerSize, h: cornerSize
 	}, 2);
 	SAGE2Items.applications.editButtonVisibilityOnItem(appInstance.id, "syncButton", false);
 
