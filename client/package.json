@@ -13,7 +13,8 @@
   "scripts": {
      "electron": "electron electron.js -s https://localhost:9090 -d -1",
      "update": "cp ../electron.js electron.js",
-     "build_mac": "build_mac"
+     "build_mac": "build_mac",
+     "build_lnx": "build_lnx"
   },
   "author": "Luc Renambot <renambot@gmail.com>",
   "license": "SEE LICENSE IN LICENSE.txt"
