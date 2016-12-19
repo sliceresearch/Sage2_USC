@@ -186,8 +186,11 @@ var Webview = SAGE2_App.extend({
 		this.element.style.width  = this.sage2_width  + "px";
 		this.element.style.height = this.sage2_height + "px";
 		// resize the console layer
-		this.layer.style.width  = this.element.style.width;
-		this.layer.style.height = this.element.style.height;
+		if (this.layer) {
+			// make sure the layer exist first
+			this.layer.style.width  = this.element.style.width;
+			this.layer.style.height = this.element.style.height;
+		}
 		this.refresh(date);
 	},
 

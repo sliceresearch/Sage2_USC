@@ -430,27 +430,30 @@ var pdf_viewer = SAGE2_App.extend({
 	},
 
 	leftClickMove: function(x, y, id) {
-
 		var position = {
-			x: parseInt(this.commandBarBG.attr("x")), y: parseInt(this.commandBarBG.attr("y")),
-			w: parseInt(this.commandBarBG.attr("width")), h: parseInt(this.commandBarBG.attr("height")),
+			x: parseInt(this.commandBarBG.attr("x")),
+			y: parseInt(this.commandBarBG.attr("y")),
+			w: parseInt(this.commandBarBG.attr("width")),
+			h: parseInt(this.commandBarBG.attr("height")),
 			container: this.commandBarBG.container
 		};
+
 		// check if the click is within the current button
 		if (this.inBarCommand == null && within(position, x, y)) {
-			var center = ((this.widthCommandButton + this.state.marginButton) *
-				(this.commandBarG.node().childNodes.length - 1) / 2) / 2;
-			var iFound = 0;
-			for (var i in this.interactable) {
-				var item = this.interactable[i];
-				if (item.ico) {
-					item.transition().attr("x", x / this.state.resizeValue +
-						(this.widthCommandButton + this.state.marginButton) * iFound - center).duration(200);
-					item.ico.transition().attr("x", x / this.state.resizeValue +
-						(this.widthCommandButton + this.state.marginButton) * iFound - center).duration(200);
-					iFound += 1;
-				}
-			}
+			// Do not move the widget bar at the bottom anymore
+			// var center = ((this.widthCommandButton + this.state.marginButton) *
+			// 	(this.commandBarG.node().childNodes.length - 1) / 2) / 2;
+			// var iFound = 0;
+			// for (var i in this.interactable) {
+			// 	var item = this.interactable[i];
+			// 	if (item.ico) {
+			// 		item.transition().attr("x", x / this.state.resizeValue +
+			// 			(this.widthCommandButton + this.state.marginButton) * iFound - center).duration(200);
+			// 		item.ico.transition().attr("x", x / this.state.resizeValue +
+			// 			(this.widthCommandButton + this.state.marginButton) * iFound - center).duration(200);
+			// 		iFound += 1;
+			// 	}
+			// }
 			this.inBarCommand = true;
 		} else if (!within(position, x, y)) {
 			this.inBarCommand = null;

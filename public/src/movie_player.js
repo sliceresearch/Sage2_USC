@@ -113,6 +113,19 @@ var movie_player = SAGE2_BlockStreamingApp.extend({
 	videoEnded: function() {
 		if (this.state.looped === false) {
 			this.stopVideo();
+		} else if (this.shouldSendCommands) {
+			wsio.emit("csdMessage", {
+				type: "setValue",
+				nameOfValue: "videoSyncCommandVariable",
+				value: {
+					command: "seek",
+					timestamp: 0,
+					frame: 0,
+					framerate: this.state.framerate,
+					play: false
+				},
+				description: "This variable contains the last send command"
+			});
 		}
 	},
 
@@ -674,19 +687,20 @@ var movie_player = SAGE2_BlockStreamingApp.extend({
 									timestamp: (this.state.frame / this.state.framerate),
 									play: !this.state.paused
 								});
-
-								wsio.emit("csdMessage", {
-									type: "setValue",
-									nameOfValue: "videoSyncCommandVariable",
-									value: {
-										command: "seek",
-										timestamp: (this.state.frame / this.state.framerate),
-										frame: this.state.frame,
-										framerate: this.state.framerate,
-										play: !this.state.paused
-									},
-									description: "This variable contains the last send command"
-								});
+								if (this.shouldSendCommands) {
+									wsio.emit("csdMessage", {
+										type: "setValue",
+										nameOfValue: "videoSyncCommandVariable",
+										value: {
+											command: "seek",
+											timestamp: (this.state.frame / this.state.framerate),
+											frame: this.state.frame,
+											framerate: this.state.framerate,
+											play: !this.state.paused
+										},
+										description: "This variable contains the last send command"
+									});
+								}
 							}
 							break;
 					}

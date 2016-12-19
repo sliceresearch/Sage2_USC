@@ -2066,13 +2066,18 @@ function listSessions() {
 				var strdate = sprint("%4d/%02d/%02d %02d:%02d:%02s",
 										ad.getFullYear(), ad.getMonth() + 1, ad.getDate(),
 										ad.getHours(), ad.getMinutes(), ad.getSeconds());
+				// create path to thumbnail
+				var thumbPath = path.join(path.join(path.join("", "user"), "sessions"), ".previews");
+				// replace .json with .svg in filename
+				var thumbPathFull = "\\" + path.join(thumbPath, file.substring(".json", file.length - 5) + ".svg");
 				// Make it look like an exif data structure
 				thelist.push({id: filename,
 					sage2URL: '/uploads/' + file,
 					exif: { FileName: file.slice(0, -5),
 						FileSize: stat.size,
 						FileDate: strdate,
-						MIMEType: 'sage2/session'
+						MIMEType: 'sage2/session',
+						SAGE2thumbnail: thumbPathFull
 					}
 				});
 			}
@@ -2177,11 +2182,6 @@ function saveSession(filename) {
 	filename = filename || 'default.json';
 
 	var key;
-	var fullpath = path.join(sessionDirectory, filename);
-	// if it doesn't end in .json, add it
-	if (fullpath.indexOf(".json", fullpath.length - 5) === -1) {
-		fullpath += '.json';
-	}
 
 	var states     = {};
 	states.apps    = [];
@@ -2190,7 +2190,7 @@ function saveSession(filename) {
 	states.numpartitions = 0;
 	states.date    = Date.now();
 	for (key in SAGE2Items.applications.list) {
-		var a = SAGE2Items.applications.list[key];
+		var a = Object.assign({}, SAGE2Items.applications.list[key]);
 
 		if (a.partition) {
 			// remove reference to parent partition if it exists
@@ -2204,19 +2204,132 @@ function saveSession(filename) {
 	}
 
 	for (key in partitions.list) {
-		var p = partitions.list[key];
+		var p = Object.assign({}, partitions.list[key]);
 
 		if (p.partitionList) {
 			delete p.partitionList;
+		}
+
+		for (var app in p.children) {
+			p.children[app] = Object.assign({}, p.children[app]);
+
+			if (p.children[app].partition) {
+				delete p.children[app].partition;
+			}
 		}
 
 		states.partitions.push(p);
 		states.numpartitions++;
 	}
 
+	// session with only partitions considered a "LAYOUT"
+	if (states.numapps === 0 && states.numpartitions > 0 && filename !== "default.json") {
+		filename = "LAYOUT - " + filename;
+	}
+
+	var fullpath = path.join(sessionDirectory, filename);
+	// if it doesn't end in .json, add it
+	if (fullpath.indexOf(".json", fullpath.length - 5) === -1) {
+		fullpath += '.json';
+	}
+
+	// save session preview image to sessions/.previews/
+
+	var previewPath = path.join(sessionDirectory, ".previews");
+
+	if (!sageutils.folderExists(previewPath)) {
+		sageutils.mkdirParent(previewPath);
+	}
+
+	var previewFname;
+
+	if (filename.indexOf(".json", filename.length - 5) === -1) {
+		previewFname = filename + ".svg";
+	} else {
+		previewFname = filename.substr(0, filename.length - 5) + ".svg";
+	}
+
+	var fullPreviewPath = path.join(previewPath, previewFname);
+
+	// create svg string as thumbnail for session preview
+
+	var width = config.totalWidth,
+		height = config.totalHeight,
+		box = "0,0," + width + "," + height;
+
+	var svg = "<svg width=\"" + 256 +
+		"\" height=\"" + 256 +
+		"\" viewBox=\"" + box +
+		"\" version=\"1.1\" xmlns=\"http://www.w3.org/2000/svg\" " +
+		"xmlns:xlink=\"http://www.w3.org/1999/xlink\">";
+
+	// add gray background
+	svg += "<rect width=\"" + width +
+		"\" height=\"" + height +
+		"\" style=\"fill: #666666;\"" + "></rect>";
+
+	for (var ptn of states.partitions) {
+		// partition areas
+		svg += "<rect width=\"" + (ptn.width - 8) +
+			"\" height=\"" + (ptn.height - 8) +
+			"\" x=\"" + (ptn.left + 4) +
+			"\" y=\"" + (ptn.top + 4) +
+			"\" style=\"fill: " + ptn.color +
+			"; stroke: " + ptn.color +
+			"; stroke-width: 8; fill-opacity: 0.3;\"" + "></rect>";
+
+		// partition title bars
+		svg += "<rect width=\"" + ptn.width +
+			"\" height=\"" + config.ui.titleBarHeight +
+			"\" x=\"" + ptn.left +
+			"\" y=\"" + (ptn.top - config.ui.titleBarHeight) +
+			"\" style=\"fill: " + ptn.color +
+			"\"" + "></rect>";
+	}
+
+	for (var ap of states.apps) {
+		// draw app rectangles
+		svg += "<rect width=\"" + ap.width +
+			"\" height=\"" + ap.height +
+			"\" x=\"" + ap.left +
+			"\" y=\"" + ap.top +
+			"\" style=\"fill: " + "#AAAAAA; fill-opacity: 0.5; stroke: black; stroke-width: 5;\">" + "</rect>";
+
+
+		var iconPath = path.join(mainFolder.path, path.relative("/user", ap.icon)) + "_256.jpg";
+
+		var iconImageData = "";
+
+		try {
+			iconImageData = new Buffer(fs.readFileSync(iconPath)).toString('base64');
+		} catch (error) {
+			// error reading/converting icon image
+		}
+
+		svg += "<image width=\"" + ap.width +
+			"\" height=\"" + ap.height +
+			"\" x=\"" + ap.left +
+			"\" y=\"" + ap.top +
+			"\" xlink:href=\"data:image/jpg;base64," + iconImageData + "\">" + "</image>";
+	}
+
+	svg += "</svg>";
+
+	// svg file header
+	var header = "<?xml version=\"1.0\" encoding=\"utf-8\"?>";
+	header += "<!DOCTYPE svg PUBLIC \"-//W3C//DTD SVG 1.1//EN\" \"http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd\">";
+
 	try {
 		fs.writeFileSync(fullpath, JSON.stringify(states, null, 4));
 		console.log(sageutils.header("Session") + "saved session file to " + fullpath);
+	} catch (err) {
+		console.log(sageutils.header("Session") + "error saving " + err);
+	}
+
+	// write preview image
+	try {
+		fs.writeFileSync(fullPreviewPath, header + svg);
+		console.log(sageutils.header("Session") + "saved session preview image to " + fullPreviewPath);
 	} catch (err) {
 		console.log(sageutils.header("Session") + "error saving " + err);
 	}
@@ -4146,6 +4259,16 @@ function loadConfiguration() {
 		userConfig.ui.widgetControlSize = calcuatedWidgetControlSize;
 	}
 
+	// Automatically populate the displays entry if undefined. Adds left to right, starting from the top.
+	if (userConfig.displays === undefined || userConfig.displays.length == 0) {
+		userConfig.displays = [];
+		for (var r = 0; r < userConfig.layout.rows; r++) {
+			for (var c = 0; c < userConfig.layout.columns; c++) {
+				userConfig.displays.push({row: r, column: c});
+			}
+		}
+	}
+
 	// Check the width and height of each display (in tile count)
 	// by default, a display covers one tile
 	for (var d = 0; d < userConfig.displays.length; d++) {
@@ -5768,7 +5891,16 @@ function pointerPressOnApplication(uniqueID, pointerX, pointerY, data, obj, loca
 			}
 			break;
 		case "dragCorner":
-			selectApplicationForResize(uniqueID, obj.data, pointerX, pointerY, portalId);
+			if (obj.data.application === "Webview") {
+				if (!sagePointers[uniqueID].visible) {
+					selectApplicationForResize(uniqueID, obj.data, pointerX, pointerY, portalId);
+				} else {
+					// if corner click and webview, then send the click to app
+					sendPointerPressToApplication(uniqueID, obj.data, pointerX, pointerY, data);
+				}
+			} else {
+				selectApplicationForResize(uniqueID, obj.data, pointerX, pointerY, portalId);
+			}
 			break;
 		case "syncButton":
 			if (sagePointers[uniqueID].visible) {
@@ -5832,7 +5964,6 @@ function pointerPressOnPartition(uniqueID, pointerX, pointerY, data, obj, localP
 		case "dragCorner":
 			if (sagePointers[uniqueID].visible) {
 				// only if pointer on the wall, not the web UI
-
 				selectApplicationForResize(uniqueID, obj.data, pointerX, pointerY, portalId);
 			}
 			break;
@@ -6386,27 +6517,56 @@ function pointerMoveOnApplication(uniqueID, pointerX, pointerY, data, obj, local
 			break;
 		}
 		case "dragCorner": {
-			if (remoteInteraction[uniqueID].hoverCornerItem === null) {
-				remoteInteraction[uniqueID].setHoverCornerItem(obj.data);
-				broadcast('hoverOverItemCorner', {elemId: obj.data.id, flag: true});
-				if (portalId !== undefined && portalId !== null) {
-					ts = Date.now() + remoteSharingSessions[portalId].timeOffset;
-					remoteSharingSessions[portalId].wsio.emit('remoteSagePointerHoverCorner',
-						{appHoverCorner: {elemId: obj.data.id, flag: true}, date: ts});
+			if (obj.data.application === "Webview") {
+				if (!sagePointers[uniqueID].visible) {
+					if (remoteInteraction[uniqueID].hoverCornerItem === null) {
+						remoteInteraction[uniqueID].setHoverCornerItem(obj.data);
+						broadcast('hoverOverItemCorner', {elemId: obj.data.id, flag: true});
+						if (portalId !== undefined && portalId !== null) {
+							ts = Date.now() + remoteSharingSessions[portalId].timeOffset;
+							remoteSharingSessions[portalId].wsio.emit('remoteSagePointerHoverCorner',
+								{appHoverCorner: {elemId: obj.data.id, flag: true}, date: ts});
+						}
+					} else if (remoteInteraction[uniqueID].hoverCornerItem.id !== obj.data.id) {
+						broadcast('hoverOverItemCorner', {elemId: remoteInteraction[uniqueID].hoverCornerItem.id, flag: false});
+						if (portalId !== undefined && portalId !== null) {
+							ts = Date.now() + remoteSharingSessions[portalId].timeOffset;
+							remoteSharingSessions[portalId].wsio.emit('remoteSagePointerHoverCorner',
+								{appHoverCorner: {elemId: remoteInteraction[uniqueID].hoverCornerItem.id,
+									flag: false}, date: ts});
+						}
+						remoteInteraction[uniqueID].setHoverCornerItem(obj.data);
+						broadcast('hoverOverItemCorner', {elemId: obj.data.id, flag: true});
+						if (portalId !== undefined && portalId !== null) {
+							ts = Date.now() + remoteSharingSessions[portalId].timeOffset;
+							remoteSharingSessions[portalId].wsio.emit('remoteSagePointerHoverCorner',
+								{appHoverCorner: {elemId: obj.data.id, flag: true}, date: ts});
+						}
+					}
 				}
-			} else if (remoteInteraction[uniqueID].hoverCornerItem.id !== obj.data.id) {
-				broadcast('hoverOverItemCorner', {elemId: remoteInteraction[uniqueID].hoverCornerItem.id, flag: false});
-				if (portalId !== undefined && portalId !== null) {
-					ts = Date.now() + remoteSharingSessions[portalId].timeOffset;
-					remoteSharingSessions[portalId].wsio.emit('remoteSagePointerHoverCorner',
-						{appHoverCorner: {elemId: remoteInteraction[uniqueID].hoverCornerItem.id, flag: false}, date: ts});
-				}
-				remoteInteraction[uniqueID].setHoverCornerItem(obj.data);
-				broadcast('hoverOverItemCorner', {elemId: obj.data.id, flag: true});
-				if (portalId !== undefined && portalId !== null) {
-					ts = Date.now() + remoteSharingSessions[portalId].timeOffset;
-					remoteSharingSessions[portalId].wsio.emit('remoteSagePointerHoverCorner',
-						{appHoverCorner: {elemId: obj.data.id, flag: true}, date: ts});
+			} else {
+				if (remoteInteraction[uniqueID].hoverCornerItem === null) {
+					remoteInteraction[uniqueID].setHoverCornerItem(obj.data);
+					broadcast('hoverOverItemCorner', {elemId: obj.data.id, flag: true});
+					if (portalId !== undefined && portalId !== null) {
+						ts = Date.now() + remoteSharingSessions[portalId].timeOffset;
+						remoteSharingSessions[portalId].wsio.emit('remoteSagePointerHoverCorner',
+							{appHoverCorner: {elemId: obj.data.id, flag: true}, date: ts});
+					}
+				} else if (remoteInteraction[uniqueID].hoverCornerItem.id !== obj.data.id) {
+					broadcast('hoverOverItemCorner', {elemId: remoteInteraction[uniqueID].hoverCornerItem.id, flag: false});
+					if (portalId !== undefined && portalId !== null) {
+						ts = Date.now() + remoteSharingSessions[portalId].timeOffset;
+						remoteSharingSessions[portalId].wsio.emit('remoteSagePointerHoverCorner',
+							{appHoverCorner: {elemId: remoteInteraction[uniqueID].hoverCornerItem.id, flag: false}, date: ts});
+					}
+					remoteInteraction[uniqueID].setHoverCornerItem(obj.data);
+					broadcast('hoverOverItemCorner', {elemId: obj.data.id, flag: true});
+					if (portalId !== undefined && portalId !== null) {
+						ts = Date.now() + remoteSharingSessions[portalId].timeOffset;
+						remoteSharingSessions[portalId].wsio.emit('remoteSagePointerHoverCorner',
+							{appHoverCorner: {elemId: obj.data.id, flag: true}, date: ts});
+					}
 				}
 			}
 			break;
@@ -6730,6 +6890,8 @@ function pointerRelease(uniqueID, pointerX, pointerY, data) {
 		return;
 	}
 
+	removeExistingHoverCorner(uniqueID);
+
 	// Whiteboard app
 	if (drawingManager.drawingMode) {
 		var color = sagePointers[uniqueID] ? sagePointers[uniqueID].color : null;
@@ -6776,6 +6938,8 @@ function pointerRelease(uniqueID, pointerX, pointerY, data) {
 		draggingPartition[uniqueID].ptn.height =
 			pointerY < draggingPartition[uniqueID].start.y ?
 			draggingPartition[uniqueID].start.y - pointerY : pointerY - draggingPartition[uniqueID].start.y;
+
+		draggingPartition[uniqueID].ptn.aspect = draggingPartition[uniqueID].ptn.width / draggingPartition[uniqueID].ptn.height;
 
 		partitions.updatePartitionGeometries(draggingPartition[uniqueID].ptn.id, interactMgr);
 		broadcast('partitionMoveAndResizeFinished', draggingPartition[uniqueID].ptn.getDisplayInfo());
@@ -7972,7 +8136,8 @@ function handleNewApplication(appInstance, videohandle) {
 		{x: startButtons + (2 * (buttonsPad + oneButton)), y: 0, w: oneButton, h: config.ui.titleBarHeight}, 1);
 	SAGE2Items.applications.addButtonToItem(appInstance.id, "dragCorner", "rectangle", {
 		x: appInstance.width - cornerSize,
-		y: appInstance.height + config.ui.titleBarHeight - cornerSize, w: cornerSize, h: cornerSize
+		y: appInstance.height + config.ui.titleBarHeight - cornerSize,
+		w: cornerSize, h: cornerSize
 	}, 2);
 	SAGE2Items.applications.editButtonVisibilityOnItem(appInstance.id, "syncButton", false);
 
@@ -8415,6 +8580,15 @@ function wsUtdCallFunctionOnApp(wsio, data) {
 	if (data.func === "SAGE2DeleteElement") {
 		deleteApplication(data.app);
 		return; // closing of applications are handled by the called function.
+	}
+	if (data.func === "SAGE2SendToBack") {
+		// data.app should contain the id.
+		var im = findInteractableManager(data.app);
+		im.moveObjectToBack(data.app, "applications");
+		var newOrder = im.getObjectZIndexList("applications");
+		broadcast('updateItemOrder', newOrder);
+
+		return;
 	}
 	// Using broadcast means the parameter must be in data.data
 	data.data = data.parameters;
