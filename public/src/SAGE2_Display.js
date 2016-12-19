@@ -263,7 +263,15 @@ function updateMediaStreamFrame(anWsio,dataOrBuffer) {
 		  var given_encoding = byteBufferToString(buf3);
                   var buf4 = buf3.subarray(given_encoding.length + 1, buf3.length);
                   data.state.encoding = "base64";
-                  data.state.src = btoa(String.fromCharCode.apply(null, buf4));
+		  // There is a maximum stack size. We cannot call String.fromCharCode with as many arguments as we want
+                  //data.state.src = btoa(String.fromCharCode.apply(null, buf4));
+		  var uarr = buf4;
+		  var strings = [], chunksize = 0xffff;
+		  var len = uarr.length;
+		  for (var i = 0; i * chunksize < len; i++){
+		    strings.push(String.fromCharCode.apply(null, uarr.subarray(i * chunksize, (i + 1) * chunksize)));
+		  }
+		  data.state.src = btoa(strings.join(''));
 		  //if (buf3 === "plain") {
 		  //  console.log("non-base64");
                   //  data.state.encoding = "string";

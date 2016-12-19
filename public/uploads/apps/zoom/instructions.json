@@ -7,7 +7,7 @@
 	"dependencies": [
 		  "openseadragon.min.js"
 	],
-	"title": "Multi-Res Image Viewer",
+	"title": "Multi-Res Image Viewer (hacked)",
 	"version": "1.0.0",
 	"description": "High-resolution Image Viewer using the Openseadragon API",
 	"keywords": [ "openseadragon", "image", "viewer" ],

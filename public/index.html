@@ -16,6 +16,23 @@
 	// See full text, terms and conditions in the LICENSE.txt included file
 	//      
 	// Copyright (c) 2014
+
+    function loadWebURL(){
+    var reqUrl = document.getElementById("req_url").value;
+     var sjdurl =  "http://10.234.2.30:8085/sage-browser-url?"+reqUrl;
+         window.location=sjdurl;
+    }
+
+    function vncURL(){
+    var display_value = document.getElementById("req_url").value;
+    //var port_value = document.getElementById("port_id").value;
+    //if ((display_value != "") && (port_value != ""))
+    //if (display_value != "")
+     var sjdurl =  "http://10.234.2.30:8085/sage-vnc-ipaddr?"+display_value+ "?0"; // + port_value;
+     //popup = window.open(sjdurl,"popup"," menubar =0,toolbar =0,location=0, height=900, width=1000");
+     //popup.window.moveTo(950,150);
+         window.location=sjdurl;
+    }
 </script>
 
 <!-- Style sheets -->
@@ -97,6 +114,13 @@
                                                 <a target="_vxlab_cmd" href="http://10.234.2.30:8085/capture-laptop1-stop">PC1 off</a>
                                                 <a target="_vxlab_cmd" href="http://10.234.2.30:8085/capture-laptop2-stop">PC2 off</a>
                                                 <a target="_vxlab_cmd" href="http://10.234.2.30:8085/capture-vc1-stop">VC off</a>
+                                                <div style="text-align:left; margin:0px 0px auto;">
+                                                <label for="req_url"></label>
+                                                <input type="Text" id="req_url" maxlength="35" size="12"/>
+                                                <input type='button' onclick='loadWebURL()' value='Browser'>
+                                                <input type='button' onclick='vncURL()' value='VNC'>
+						</div>
+
                                         </td>
 				</tr>
 			</table>

@@ -654,6 +654,8 @@ function initializeWSClient(wsio, reqConfig, reqVersion, reqTime, reqConsole) {
 			console.log("- send slave server details: ", slaveServers[ss]);
 			wsio.emit('displayAddSlaveServer', slaveServers[ss]);
 		}
+	} else if (wsio.clientType === "audioManager") {
+		initializeExistingAppsAudio(wsio);
 	} else if (wsio.clientType === "sageUI") {
 		createSagePointer(wsio.id);
 		var key;
@@ -873,6 +875,15 @@ function initializeExistingWallUI(wsio) {
 		updateWallUIMediaBrowser(menuInfo.id);
 	}
 }
+
+function initializeExistingAppsAudio(wsio) {
+	var key;
+
+	for (key in SAGE2Items.applications.list) {
+		wsio.emit('createAppWindow', SAGE2Items.applications.list[key]);
+	}
+}
+
 
 function initializeExistingApps(wsio) {
 	var key;
@@ -1135,6 +1146,7 @@ function doOverlap(x_1, y_1, width_1, height_1, x_2, y_2, width_2, height_2) {
 }
 
 function wsUpdateMediaStreamFrame(wsio, dataOrBuffer) {
+        console.log("wsUpdateMediaStreamFrame");
 	var key;
 
         // NB: Cloned code
@@ -5857,6 +5869,7 @@ function sendPointerMoveToApplication(uniqueID, app, pointerX, pointerY, data) {
 		date: Date.now()
 	};
 
+	//console.log('sendPointerMoveToApplication eventInItem ',event);
 	broadcast('eventInItem', event);
 }
 

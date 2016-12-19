@@ -1674,6 +1674,7 @@ function hideSAGE2PointerOverlayNoMouse() {
  * @method sagePointerEnabled
  */
 function sagePointerEnabled() {
+	console.log("sage2 pointer enabled");
 	// show SAGE2 Pointer dialog
 	showDialog('sage2pointerDialog');
 }
@@ -1684,6 +1685,7 @@ function sagePointerEnabled() {
  * @method sagePointerDisabled
  */
 function sagePointerDisabled() {
+	console.log("sage2 pointer disabled");
 	// hide SAGE2 Pointer dialog
 	hideDialog('sage2pointerDialog');
 }
