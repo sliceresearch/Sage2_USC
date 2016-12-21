@@ -1582,8 +1582,9 @@ function doOverlap(x_1, y_1, width_1, height_1, x_2, y_2, width_2, height_2) {
 	return !(x_1 > x_2 + width_2 || x_1 + width_1 < x_2 || y_1 > y_2 + height_2 || y_1 + height_1 < y_2);
 }
 
-function wsUpdateMediaStreamFrame(wsio, dataOrBuffer) {
+function wsUpdateMediaStreamFrame(wsio, data) {
 	var key;
+<<<<<<< HEAD
 
         // NB: Cloned code
         var data;
@@ -1596,6 +1597,8 @@ function wsUpdateMediaStreamFrame(wsio, dataOrBuffer) {
           // buffer: id, state-type, state-encoding, state-src
           data.id = byteBufferToString(dataOrBuffer);
         }
+=======
+>>>>>>> origin/vnc
 	// Remote sites have a pass back issue that needs to be caught
 	if (SAGE2Items.renderSync[data.id] === undefined || SAGE2Items.renderSync[data.id] === null) {
 		return;
@@ -1656,7 +1659,7 @@ function wsUpdateMediaStreamFrame(wsio, dataOrBuffer) {
 		if (doOverlap(left, top, stream.width, stream.height,
 			offsetX, offsetY, checkWidth, checkHeight)) {
 			// send the full frame to be displayed
-			SAGE2Items.renderSync[data.id].clients[key].wsio.emit('updateMediaStreamFrame', dataOrBuffer);
+			SAGE2Items.renderSync[data.id].clients[key].wsio.emit('updateMediaStreamFrame', data);
 		} else {
 			// otherwise send a dummy small image
 			SAGE2Items.renderSync[data.id].clients[key].wsio.emit('updateMediaStreamFrame', data_copy);
@@ -6006,7 +6009,7 @@ function pointerPressOnApplication(uniqueID, pointerX, pointerY, data, obj, loca
 
 	// pointer press on app window
 	if (btn === null) {
-		if (data.button === "right") {
+		if (data.button === "right" && !vncApp(obj)) {
 			var elemCtrl = SAGE2Items.widgets.list[obj.id + uniqueID + "_controls"];
 			if (!elemCtrl) {
 				// if no UI element, send event to app if in interaction mode
@@ -7844,6 +7847,10 @@ function keyDownOnPortal(uniqueID, portalId, localPt, data) {
 	}
 }
 
+function vncApp(obj) {
+       return obj.data.title.startsWith("vnc") || obj.data.title.startsWith("VNC");
+}
+
 function keyUp(uniqueID, pointerX, pointerY, data) {
 	if (sagePointers[uniqueID] === undefined) {
 		return;
@@ -7889,8 +7896,15 @@ function keyUp(uniqueID, pointerX, pointerY, data) {
 			break;
 		}
 		case "applications": {
+<<<<<<< HEAD
 			if (remoteInteraction[uniqueID].windowManagementMode() &&
 				(data.code === 8 || data.code === 46)) {
+=======
+			if (vncApp(obj) && remoteInteraction[uniqueID].appInteractionMode()) {
+                                sendKeyUpToApplication(uniqueID, obj.data, localPt, data);
+			} else if (remoteInteraction[uniqueID].windowManagementMode()) {
+			    if (data.code === 8 || data.code === 46) { // backspace or delete
+>>>>>>> origin/vnc
 				// backspace or delete
 				deleteApplication(obj.data.id);
 
@@ -7901,9 +7915,9 @@ function keyUp(uniqueID, pointerX, pointerY, data) {
 					}
 				};
 				addEventToUserLog(uniqueID, {type: "delete", data: eLogData, time: Date.now()});
-			// } else {
-			// 	sendKeyUpToApplication(uniqueID, obj.data, localPt, data);
-			// }
+			    } else {
+				sendKeyUpToApplication(uniqueID, obj.data, localPt, data);
+			    }
 			}
 			// luc: send keys to app anyway
 			sendKeyUpToApplication(uniqueID, obj.data, localPt, data);
