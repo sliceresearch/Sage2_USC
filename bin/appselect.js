@@ -61,6 +61,10 @@ function thumbnail(remote,appnr){
 	console.log("...thumbnail "+appnr);
 	var app = apps[appnr];
 	console.log("...app "+JSON.stringify(app));
+	if (app.data.indexOf("201612-VxLab.pdf")!==-1) {
+           console.log("skip pdf");
+	   return;
+	}
 	var thumbx = regionOffset;
 	var thumby = regionOffset;
 	if (appnr<2) {
@@ -81,21 +85,22 @@ function selectApp(remote) {
 				
 
 				// find slot 1 if any and move to slot 2
-			        var searchgeom = "["+xw+"x"+yw+" +"+slots[1].x+"+"+slots[1].y+"]";
-			        console.log("search for "+searchgeom);
-				Object.keys(apps).forEach(function(key, index) {
-				  var app = this[key];
-				  console.log("nr: "+key+" "+JSON.stringify(app));
-				  if (app.geometry===searchgeom) {
-					console.log("...slot 1 to 2"+app.appid);
-					var movecmd = "moveto "+app.appid+" "+slots[2].x+" "+slots[2].y;
-					var resizecmd = "resize "+app.appid+" "+xw+" "+yw;
-					console.log(movecmd);
-					console.log(resizecmd);
-					remote.emit('command', movecmd);
-					remote.emit('command', resizecmd);
-				  }
-				}, apps);
+			        //var searchgeom = "["+xw+"x"+yw+" +"+slots[1].x+"+"+slots[1].y+"]";
+			        //console.log("search for "+searchgeom);
+				//Object.keys(apps).forEach(function(key, index) {
+				//  var app = this[key];
+				//  console.log("nr: "+key+" "+JSON.stringify(app));
+				//  if (app.geometry===searchgeom) {
+				//	console.log("...slot 1 to 2"+app.appid);
+				//	var movecmd = "moveto "+app.appid+" "+slots[2].x+" "+slots[2].y;
+				//	var resizecmd = "resize "+app.appid+" "+xw+" "+yw;
+				//	console.log(movecmd);
+				//	console.log(resizecmd);
+				//	remote.emit('command', movecmd);
+				//	remote.emit('command', resizecmd);
+				//  }
+				//}, apps);
+
 				// find slot 2 if any and move to slot 3
 			        var searchgeom = "["+xw+"x"+yw+" +"+slots[2].x+"+"+slots[2].y+"]";
 				Object.keys(apps).forEach(function(key, index) {
@@ -120,8 +125,9 @@ function selectApp(remote) {
 					thumbnail(remote,key);
 				  }
 				}, apps);
+				// hack: map into slot 2 (NOT slot 1)
 				var selected = apps[command].appid;
-				var movecmd = "moveto "+selected+" "+slots[1].x+" "+slots[1].y;
+				var movecmd = "moveto "+selected+" "+slots[2].x+" "+slots[2].y;
 				var resizecmd = "resize "+selected+" "+xw+" "+yw;
 				console.log(movecmd);
 				console.log(resizecmd);
