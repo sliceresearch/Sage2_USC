@@ -1544,7 +1544,11 @@ function wsStartNewMediaStream(wsio, data) {
 	appLoader.createMediaStream(data.src, data.type, data.encoding, data.title, data.color, data.width, data.height,
 		function(appInstance) {
 			appInstance.id = data.id;
+                        var pos = data.pos || [1.0,0.0];
+                        var resize = data.resize || 1920;
+                        setAppPosition(appInstance, pos);
 			handleNewApplication(appInstance, null);
+                        wsAppResize(null, {id: data.id, width: resize, keepRatio: true});
 
 			var eLogData = {
 				application: {
@@ -1564,6 +1568,36 @@ function wsStartNewMediaStream(wsio, data) {
 	
 }
 
+function setAppPosition(appInstance, pos) {
+                // Get the drop position and convert it to wall coordinates
+                var position = pos || [0, 0];
+                if (position[0] > 1) {
+                        // value in pixels, used as origin
+                        appInstance.left = position[0];
+                } else {
+                        // value in percent
+                        position[0] = Math.round(position[0] * config.totalWidth);
+                        // Use the position as center of drop location
+                        appInstance.left = position[0] - appInstance.width / 2;
+                        if (appInstance.left < 0) {
+                                appInstance.left = 0;
+                        }
+                }
+                if (position[1] > 1) {
+                        // value in pixels, used as origin
+                        appInstance.top = position[1];
+                } else {
+                        // value in percent
+                        position[1] = Math.round(position[1] * config.totalHeight);
+                        // Use the position as center of drop location
+                        appInstance.top  = position[1] - appInstance.height / 2;
+                        if (appInstance.top < 0) {
+                                appInstance.top = 0;
+                        }
+                }
+}
+
+
 /**
  * Test if two rectangles overlap (axis-aligned)
  *
@@ -1582,9 +1616,8 @@ function doOverlap(x_1, y_1, width_1, height_1, x_2, y_2, width_2, height_2) {
 	return !(x_1 > x_2 + width_2 || x_1 + width_1 < x_2 || y_1 > y_2 + height_2 || y_1 + height_1 < y_2);
 }
 
-function wsUpdateMediaStreamFrame(wsio, data) {
+function wsUpdateMediaStreamFrame(wsio, dataOrBuffer) {
 	var key;
-<<<<<<< HEAD
 
         // NB: Cloned code
         var data;
@@ -1597,8 +1630,7 @@ function wsUpdateMediaStreamFrame(wsio, data) {
           // buffer: id, state-type, state-encoding, state-src
           data.id = byteBufferToString(dataOrBuffer);
         }
-=======
->>>>>>> origin/vnc
+
 	// Remote sites have a pass back issue that needs to be caught
 	if (SAGE2Items.renderSync[data.id] === undefined || SAGE2Items.renderSync[data.id] === null) {
 		return;
@@ -1763,12 +1795,34 @@ function wsStartNewMediaBlockStream(wsio, data) {
 		}
 	}
 	SAGE2Items.renderSync[data.id].sendNextFrame = true;
-
-	appLoader.createMediaBlockStream(data.title, data.color, data.colorspace, data.width, data.height, function(appInstance) {
-		appInstance.id = data.id;
-		handleNewApplication(appInstance, null);
-		calculateValidBlocks(appInstance, mediaBlockSize, SAGE2Items.renderSync[appInstance.id]);
-	});
+        appLoader.createMediaBlockStream(data.title, data.color, data.colorspace, data.width, data.height, function(appInstance) {
+                appInstance.id = data.id;
+                console.log("createMediaBlockStream "+JSON.stringify(data));
+                var pos = data.pos || [1.0,0.0];
+                var resize = false;
+                if (data.title==="laptop1") {
+                        console.log("laptop1");
+                        pos = [1970,0];
+                        resize = true;
+                }
+                if (data.title==="vc1") {
+                        console.log("vc1");
+                        pos = [5828,0];
+                        resize = true;
+                }
+                if (data.title==="laptop2") {
+                        console.log("laptop2");
+                        pos = [9686,0];
+                        resize = true;
+                }
+                console.log("pos "+pos);
+                setAppPosition(appInstance, pos);
+                handleNewApplication(appInstance, null);
+                if (resize) {
+                        wsAppResize(null, {id: data.id, width: 1.96/7, keepRatio: true});
+                }
+                calculateValidBlocks(appInstance, mediaBlockSize, SAGE2Items.renderSync[appInstance.id]);
+        });
 
 	if (masterServer!==undefined && masterServer!=null) {
 		console.log("master - start new media block stream");
@@ -3067,6 +3121,10 @@ function wsLoadFileFromServer(wsio, data) {
 			}
 
 			handleNewApplication(appInstance, videohandle);
+                        var resize = data.rwidth || undefined;
+                        if (resize !== undefined) {
+                          wsAppResize(null, {id: appInstance.id, width: resize, keepRatio: true});
+                        }
 
 			addEventToUserLog(data.user, {type: "openFile", data:
 				{name: data.filename, application: {id: appInstance.id, type: appInstance.application}}, time: Date.now()});
@@ -5153,6 +5211,9 @@ function processInputCommand(line) {
 			console.log('save\t\tsave state of running applications into a session');
 			console.log('load\t\tload a session and restore applications');
 			console.log('open\t\topen a file: open file_url [0.5, 0.5]');
+			console.log('play\t\tplay a media stream: appid');
+			console.log('pause\t\tpause a media stream: appid');
+			console.log('loop\t\tloop a media stream (yes/no): appid boolean');
 			console.log('resize\t\tresize a window: appid width height');
 			console.log('moveby\t\tshift a window: appid dx dy');
 			console.log('moveto\t\tmove a window: appid x y');
@@ -5200,33 +5261,37 @@ function processInputCommand(line) {
 			}
 			break;
 		}
-		case 'open': {
-			if (command[1] !== undefined) {
-				var pos  = [0.0, 0.0];
-				var file = command[1];
-				if (command.length === 4) {
-					pos = [parseFloat(command[2]), parseFloat(command[3])];
-				}
-				var mt = assets.getMimeType(getSAGE2Path(file));
-				if (mt === "application/custom") {
-					wsLoadApplication(null, {
-						application: file,
-						user: "127.0.0.1:42",
-						position: pos
-					});
-				} else {
-					wsLoadFileFromServer(null, {
-						application: "something",
-						filename: file,
-						user: "127.0.0.1:42",
-						position: pos
-					});
-				}
-			} else {
-				console.log(sageutils.header("Command") + "should be: open /user/file.pdf [0.5 0.5]");
-			}
-			break;
-		}
+                case 'open': {
+                        if (command[1] !== undefined) {
+                                var pos  = [0.0, 0.0];
+                                var file = command[1];
+                                var res = undefined;
+                                if (command.length >= 4) {
+                                        pos = [parseFloat(command[2]), parseFloat(command[3])];
+                                }
+                                if (command.length >= 5) {
+                                        res = parseInt(command[4]);
+                                }
+                                console.log("cmd open resize "+res);
+                                var mt = assets.getMimeType(getSAGE2Path(file));
+                                if (mt === "application/custom") {
+                                        wsLoadApplication(null,
+                                                {application: file,
+                                                user: "127.0.0.1:42",
+                                                position: pos
+                                                });
+                                } else {
+                                        wsLoadFileFromServer(null, {application: "something",
+                                                filename: file,
+                                                user: "127.0.0.1:42",
+                                                position: pos,
+                                                rwidth: res});
+                                }
+                        } else {
+                                console.log(sageutils.header("Command") + "should be: open /user/file.pdf [0.5 0.5]");
+                        }
+                        break;
+                }
 		case 'sessions': {
 			printListSessions();
 			break;
@@ -5289,6 +5354,24 @@ function processInputCommand(line) {
 			}
 			break;
 		}
+		case 'play': {
+			if (command.length > 1 && typeof command[1] === "string") {
+				playVideo(command[1]);
+			}
+			break;
+		}
+		case 'pause': {
+			if (command.length > 1 && typeof command[1] === "string") {
+				pauseVideo(command[1]);
+			}
+			break;
+		}
+		case 'loop': {
+			if (command.length > 2 && typeof command[2] === "string") {
+				loopVideo(command[1],(command[2]==="true"));
+			}
+			break;
+		}
 		case 'fullscreen': {
 			if (command.length > 1 && typeof command[1] === "string") {
 				wsFullscreen(null, {id: command[1]});
@@ -5340,6 +5423,22 @@ function processInputCommand(line) {
 			break;
 		}
 	}
+}
+
+function loopVideo(appId, setLoop) {
+	var wsio = null; // ignored by wsPlayVideo
+	var data = {id: appId, loop: setLoop};
+	wsLoopVideo(wsio, data);
+}
+
+function playVideo(appId) {
+	var wsio = null; // ignored by wsPlayVideo
+	wsPlayVideo(wsio, {id: appId});
+}
+
+function pauseVideo(appId) {
+	var wsio = null; // ignored by wsPauseVideo
+	wsPauseVideo(wsio, {id: appId});
 }
 
 // Command loop: reading input commands - SHOULD MOVE LATER: INSIDE CALLBACK AFTER SERVER IS LISTENING
@@ -7896,15 +7995,10 @@ function keyUp(uniqueID, pointerX, pointerY, data) {
 			break;
 		}
 		case "applications": {
-<<<<<<< HEAD
-			if (remoteInteraction[uniqueID].windowManagementMode() &&
-				(data.code === 8 || data.code === 46)) {
-=======
 			if (vncApp(obj) && remoteInteraction[uniqueID].appInteractionMode()) {
                                 sendKeyUpToApplication(uniqueID, obj.data, localPt, data);
 			} else if (remoteInteraction[uniqueID].windowManagementMode()) {
 			    if (data.code === 8 || data.code === 46) { // backspace or delete
->>>>>>> origin/vnc
 				// backspace or delete
 				deleteApplication(obj.data.id);
 
