@@ -131,6 +131,7 @@ window.addEventListener('unload', function(event) {
  * @method SAGE2_init
  */
 function SAGE2_init() {
+	console.log("screenshare init");
 	// Redirection to HTTPS
 	if (window.location.protocol === "http:") {
 		var xhr = new XMLHttpRequest();
@@ -958,7 +959,7 @@ function mouseCheck(event) {
 		return;
 	}
 	hasMouse = true;
-	document.title = "SAGE2 UI - Desktop";
+	document.title = "SAGE2 Screen Sharing";
 	console.log("Detected as desktop device");
 
 	document.addEventListener('mousedown',  pointerPress,    false);
