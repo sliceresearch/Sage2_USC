@@ -81,10 +81,11 @@ var SAGE2_WebGLApp = SAGE2_App.extend({
 	*/
 	resizeCanvas: function(date) {
 		// Applications will require different parameters to do their frustum setting.
-		var resizeData = {left: 0, right: 0, bottom: 0, top: 0,
-							leftViewOffset: 0, topViewOffset: 0,
-							localWidth: 0, localHeight: 0};
-
+		var resizeData = {
+			left: 0, right: 0, bottom: 0, top: 0,
+			leftViewOffset: 0, topViewOffset: 0,
+			localWidth: 0, localHeight: 0
+		};
 
 		var checkWidth  = this.config.resolution.width;
 		var checkHeight = this.config.resolution.height;

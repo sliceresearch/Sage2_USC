@@ -169,8 +169,10 @@ function RadialMenu() {
 		this.id = data.id;
 		this.radialMenuScale = data.radialMenuScale;
 		// overwritten in init - based on window size
-		this.radialMenuCenter = { x: radialMenuCenter.x * this.radialMenuScale,
-								y: radialMenuCenter.y * this.radialMenuScale};
+		this.radialMenuCenter = {
+			x: radialMenuCenter.x * this.radialMenuScale,
+			y: radialMenuCenter.y * this.radialMenuScale
+		};
 		this.radialMenuSize = data.radialMenuSize;
 
 		this.thumbnailWindowSize.x = data.thumbnailWindowSize.x;
@@ -848,8 +850,10 @@ function RadialMenu() {
 				var thumbButton = currentThumbnailButtons[i];
 
 
-				var thumbEventPos = {x: position.x - this.thumbnailWindowPosition.x + 18 * this.radialMenuScale,
-						y: position.y - this.thumbnailWindowPosition.y - this.textHeaderHeight};
+				var thumbEventPos = {
+					x: position.x - this.thumbnailWindowPosition.x + 18 * this.radialMenuScale,
+					y: position.y - this.thumbnailWindowPosition.y - this.textHeaderHeight
+				};
 
 				// Prevent clicking on hidden thumbnails under preview window
 				//    should match where "this.thumbnailWindowDiv.style.width" is assigned
