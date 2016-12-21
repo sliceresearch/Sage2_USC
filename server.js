@@ -362,7 +362,9 @@ function initializeSage2Server() {
 	interactMgr.addLayer("portals",      0);
 
 	// Initialize the background for the display clients (image or color)
-	setupDisplayBackground();
+	if (program.slaveports === undefined) {
+	  setupDisplayBackground();
+	}
 
 	// initialize dialog boxes
 	setUpDialogsAsInteractableObjects();
