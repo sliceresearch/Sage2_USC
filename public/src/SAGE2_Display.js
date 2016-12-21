@@ -617,7 +617,15 @@ function setupListeners(anWsio) {
                   var buf3 = buf2.subarray(data.state.type.length + 1);
                   data.state.encoding = "base64";
                   var buf4 = buf3.subarray(data.state.encoding.length + 1, buf3.length);
-                  data.state.src = btoa(String.fromCharCode.apply(null, buf4));
+                  // There is a maximum stack size. We cannot call String.fromCharCode with as many arguments as we want
+                  //data.state.src = btoa(String.fromCharCode.apply(null, buf4));
+                  var uarr = buf4;
+                  var strings = [], chunksize = 0xffff;
+                  var len = uarr.length;
+                  for (var i = 0; i * chunksize < len; i++){
+                    strings.push(String.fromCharCode.apply(null, uarr.subarray(i * chunksize, (i + 1) * chunksize)));
+                  }
+                  data.state.src = btoa(strings.join(''));
                 }
 		anWsio.emit('receivedMediaStreamFrame', {id: data.id});
 		var app = applications[data.id];
@@ -633,7 +641,6 @@ function setupListeners(anWsio) {
 			}
 		}
 	});
-
 
 	anWsio.on('updateMediaBlockStreamFrame', function(data) {
 		var appId     = byteBufferToString(data);
