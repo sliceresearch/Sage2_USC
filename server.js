@@ -1072,6 +1072,8 @@ function setupListeners(wsio) {
 	wsio.on('sage2Log',                             wsPrintDebugInfo);
 	wsio.on('command',                              wsCommand);
 
+	wsio.on('goToPage',                         	wsGoToPage);
+
 	wsio.on('createFolder',                         wsCreateFolder);
 
 	// Jupyper messages
@@ -1499,7 +1501,7 @@ function wsStartNewMediaStream(wsio, data) {
 	appLoader.createMediaStream(data.src, data.type, data.encoding, data.title, data.color, data.width, data.height,
 		function(appInstance) {
 			appInstance.id = data.id;
-                        var pos = data.pos || [1.0,0.0];
+                        var pos = data.pos || [0.0,0.0];
                         var resize = data.resize || 1920;
                         setAppPosition(appInstance, pos);
 			handleNewApplication(appInstance, null);
@@ -2022,6 +2024,7 @@ function wsUpdateStateOptions(wsio, data) {
 //
 function wsAppResize(wsio, data) {
 	if (SAGE2Items.applications.list.hasOwnProperty(data.id)) {
+		console.log("wsAppResize "+JSON.stringify(data));
 		var app = SAGE2Items.applications.list[data.id];
 
 		// Values in percent if smaller than 1
@@ -2807,6 +2810,7 @@ function wsRequestStoredFiles(wsio, data) {
 }
 
 function wsLoadApplication(wsio, data) {
+	console.log("wsLoadApp");
 	var appData = {application: "custom_app", filename: data.application, data: data.data};
 	appLoader.loadFileFromLocalStorage(appData, function(appInstance) {
 		appInstance.id = getUniqueAppId();
@@ -2824,9 +2828,11 @@ function wsLoadApplication(wsio, data) {
 
 		// Get the drop position and convert it to wall coordinates
 		var position = data.position || [0, 0];
-		if (position[0] > 1) {
+		console.log("wsLoadApplication position "+JSON.stringify(position));
+		if (position[0] > 1 || position[0] < 0) {
 			// value in pixels, used as origin
 			appInstance.left = position[0];
+			console.log("X pos in pixels");
 		} else {
 			// value in percent
 			position[0] = Math.round(position[0] * config.totalWidth);
@@ -2836,9 +2842,10 @@ function wsLoadApplication(wsio, data) {
 				appInstance.left = 0;
 			}
 		}
-		if (position[1] > 1) {
+		if (position[1] > 1 || position[1] < 0) {
 			// value in pixels, used as origin
 			appInstance.top = position[1];
+			console.log("Y pos in pixels");
 		} else {
 			// value in percent
 			position[1] = Math.round(position[1] * config.totalHeight);
@@ -2897,6 +2904,7 @@ function wsLoadImageFromBuffer(wsio, data) {
 }
 
 function wsLoadFileFromServer(wsio, data) {
+	console.log("wsLoadFileFromServer "+JSON.stringify(data));
 	if (data.application === "load_session") {
 		// if it's a session, then load it
 		loadSession(data.filename);
@@ -2907,7 +2915,8 @@ function wsLoadFileFromServer(wsio, data) {
 		appLoader.loadFileFromLocalStorage(data, function(appInstance, videohandle) {
 			// Get the drop position and convert it to wall coordinates
 			var position = data.position || [0, 0];
-			if (position[0] > 1) {
+			console.log("position "+JSON.stringify(position));
+			if (position[0] > 1 || position[0] < -1) {
 				// value in pixels, used as origin
 				appInstance.left = position[0];
 			} else {
@@ -2919,7 +2928,7 @@ function wsLoadFileFromServer(wsio, data) {
 					appInstance.left = 0;
 				}
 			}
-			if (position[1] > 1) {
+			if (position[1] > 1 || position[1] < -1) {
 				// value in pixels, used as origin
 				appInstance.top = position[1];
 			} else {
@@ -3220,6 +3229,10 @@ function wsAddNewWebElement(wsio, data) {
 }
 
 // **************  Folder management     *****************
+
+function wsGoToPage(wsio, data) {
+       broadcast('goToPage', data);
+}
 
 function wsCreateFolder(wsio, data) {
 	// Create a folder as needed
