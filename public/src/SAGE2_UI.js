@@ -520,6 +520,25 @@ function setupListeners() {
 		displayUI.setItemPositionAndSize(data);
 	});
 
+	// webUI partition wsio messages
+	wsio.on('createPartitionBorder', function(data) {
+		displayUI.addPartitionBorder(data);
+	});
+
+	wsio.on('deletePartitionWindow', function(data) {
+		displayUI.deletePartition(data.id);
+	});
+
+	wsio.on('partitionMoveAndResizeFinished', function(data) {
+		displayUI.setPartitionPositionAndSize(data);
+	});
+
+	wsio.on('updatePartitionBorders', function(data) {
+		displayUI.updateHighlightedPartition(data);
+	});
+
+
+
 	// Server sends the SAGE2 version
 	wsio.on('setupSAGE2Version', function(data) {
 		sage2Version = data;
@@ -683,9 +702,12 @@ function resizeMenuUI(ratio) {
 
 	var menuScale = 1.0;
 	var freeWidth = window.innerWidth * ratio;
-	if (freeWidth < 1080) {
+	if (freeWidth < 1200) {
 		// 9 buttons, 120 pixels per button
-		menuScale = freeWidth / 1080;
+		// menuScale = freeWidth / 1080;
+
+		// 10 buttons, 120 pixels per button
+		menuScale = freeWidth / 1200;
 	}
 
 	menuUI.style.webkitTransform = "scale(" + menuScale + ")";
@@ -1187,9 +1209,121 @@ function handleClick(element) {
 		showDialog('arrangementDialog');
 	} else if (element.id === "settings"    || element.id === "settingsContainer"    || element.id === "settingsLabel") {
 		showDialog('settingsDialog');
-	} else if (element.id === "browser"     || element.id === "browserContainer"     || element.id === "browserLabel") {
-		showDialog('browserDialog');
-	} else if (element.id === "info"        || element.id === "infoContainer"        || element.id === "infoLabel") {
+	} else if (element.id === "browser") {
+		// Build a webix dialog
+		webix.ui({
+			view: "window",
+			id: "browser_form",
+			position: "center",
+			modal: true,
+			zIndex: 9999,
+			head: "Open a browser window",
+			width: 400,
+			body: {
+				view: "form",
+				borderless: false,
+				elements: [
+					{view: "text", value: "", id: "browser_url", label: "Please enter a URL:", name: "browser_url"},
+					{view: "text", value: "", id: "browser_search", label: "or search terms:", name: "browser_search"},
+					{margin: 5, cols: [
+						{view: "button", value: "Cancel", click: function() {
+							this.getTopParentView().hide();
+						}},
+						{view: "button", value: "Open", type: "form", click: function() {
+							// get the values from the form
+							var values = this.getFormView().getValues();
+							var url = "";
+							// if it was a URL entry
+							if (values.browser_url) {
+								// check if it looks like a URL
+								if (values.browser_url.indexOf("://") === -1) {
+									url = 'http://' + values.browser_url;
+								} else {
+									url = values.browser_url;
+								}
+							} else {
+								// a search entry
+								url = 'https://www.google.com/#q=' + values.browser_search;
+							}
+							// if we have something valid, open a webview
+							if (url) {
+								wsio.emit('openNewWebpage', {
+									id: interactor.uniqueID,
+									url: url
+								});
+							}
+							// close the form
+							this.getTopParentView().hide();
+						}}
+					]}
+				],
+				elementsConfig: {
+					labelPosition: "top"
+				}
+			}
+		}).show();
+
+		// Attach handlers for keyboard
+		$$("browser_url").attachEvent("onKeyPress", function(code, e) {
+			// ESC closes
+			if (code === 27 && !e.ctrlKey && !e.shiftKey && !e.altKey) {
+				this.getTopParentView().hide();
+				return false;
+			}
+			// ENTER activates
+			if (code === 13 && !e.ctrlKey && !e.shiftKey && !e.altKey) {
+				var values = this.getFormView().getValues();
+				var url = "";
+				// if it was a URL entry
+				if (values.browser_url) {
+					// check if it looks like a URL
+					if (values.browser_url.indexOf("://") === -1) {
+						url = 'http://' + values.browser_url;
+					} else {
+						url = values.browser_url;
+					}
+				}
+				// if we have something valid, open a webview
+				if (url) {
+					wsio.emit('openNewWebpage', {
+						id: interactor.uniqueID,
+						url: url
+					});
+				}
+				// close the form
+				this.getTopParentView().hide();
+				return false;
+			}
+		});
+		// Attach handlers for keyboard
+		$$("browser_search").attachEvent("onKeyPress", function(code, e) {
+			// ESC closes
+			if (code === 27 && !e.ctrlKey && !e.shiftKey && !e.altKey) {
+				this.getTopParentView().hide();
+				return false;
+			}
+			// ENTER activates
+			if (code === 13 && !e.ctrlKey && !e.shiftKey && !e.altKey) {
+				var values = this.getFormView().getValues();
+				var url = "";
+				if (values.browser_search) {
+					// a search entry
+					url = 'https://www.google.com/#q=' + values.browser_search;
+					// if we have something valid, open a webview
+					wsio.emit('openNewWebpage', {
+						id: interactor.uniqueID,
+						url: url
+					});
+				}
+				// close the form
+				this.getTopParentView().hide();
+				return false;
+			}
+		});
+		// Focus the URL box
+		$$('browser_url').focus();
+
+	} else if (element.id === "info" || element.id === "infoContainer" || element.id === "infoLabel") {
 		// Fill up some information from the server
 		var infoData = document.getElementById('infoData');
 		// Clean up the existing values
@@ -1213,6 +1347,11 @@ function handleClick(element) {
 				+ sage2Version.commit + " - " + sage2Version.date;
 			infoData.appendChild(info5);
 		}
+		// Show the type of web browser
+		var info4 = document.createElement('p');
+		info4.innerHTML = "<span style='font-weight:bold;'>Browser</span>: " + __SAGE2__.browser.browserType +
+			" " + __SAGE2__.browser.version;
+		infoData.appendChild(info4);
 		// Finally show the dialog
 		showDialog('infoDialog');
 	} else if (element.id === "ezNote" || element.id === "ezNoteContainer" || element.id === "ezNoteLabel") {
@@ -1324,13 +1463,6 @@ function handleClick(element) {
 	} else if (element.id === "settingsCloseBtn2") {
 		// Init Settings Dialog
 		hideDialog('settingsDialog2');
-	} else if (element.id === "browserOpenBtn") {
-		// Browser Dialog
-		var url = document.getElementById("openWebpageUrl");
-		wsio.emit('openNewWebpage', {id: interactor.uniqueID, url: url.value});
-		hideDialog('browserDialog');
-	} else if (element.id === "browserCloseBtn") {
-		hideDialog('browserDialog');
 	} else if (element.id.length > 14 && element.id.substring(0, 14) === "available_app_") {
 		// Application Selected
 		var application_selected = element.getAttribute("application");
@@ -2086,7 +2218,7 @@ function setRmbContextMenuEntries(data) {
 				if (this.callback === "SAGE2_download") {
 					// special case: want to download the file
 					var url = this.parameters.url;
-					console.log('trying to download', url);
+					console.log('Download>	content', url);
 					if (url) {
 						// Download the file
 						var link = document.createElement('a');
@@ -2596,16 +2728,18 @@ function uiDrawSendLineCommand(xDest, yDest, xPrev, yPrev) {
 	var strokeStyle	= document.getElementById('uiDrawColorPicker').value;
 	// If resize is greater than 0, its a 2^resize value, otherwise 1.
 	var modifier = (workingDiv.resizeCount > 0) ? (Math.pow(2, workingDiv.resizeCount)) : 1;
-	var dataForApp = {};
-	dataForApp.app			= workingDiv.appId;
-	dataForApp.func			= "drawLine";
-	dataForApp.data			= [xDest * modifier, yDest * modifier,
-								xPrev * modifier, yPrev * modifier,
-								lineWidth,
-								fillStyle, strokeStyle,
-								workingDiv.clientDest];
-	dataForApp.type			= "sendDataToClient";
-	dataForApp.clientDest	= "allDisplays";
+	var dataForApp  = {};
+	dataForApp.app  = workingDiv.appId;
+	dataForApp.func = "drawLine";
+	dataForApp.data = [
+		xDest * modifier, yDest * modifier,
+		xPrev * modifier, yPrev * modifier,
+		lineWidth,
+		fillStyle, strokeStyle,
+		workingDiv.clientDest
+	];
+	dataForApp.type       = "sendDataToClient";
+	dataForApp.clientDest = "allDisplays";
 	wsio.emit("csdMessage", dataForApp);
 }
 

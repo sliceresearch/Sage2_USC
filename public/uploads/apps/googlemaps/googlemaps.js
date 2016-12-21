@@ -42,8 +42,7 @@ var googlemaps = SAGE2_App.extend({
 	},
 
 	initializeWidgets: function() {
-		this.controls.addButton({label: "Map", position: 4, identifier: "Map"});
-		this.controls.addButton({type: "traffic", position: 3, identifier: "Traffic"});
+		this.controls.addButton({type: "traffic", position: 4, identifier: "Traffic"});
 		this.controls.addButton({type: "zoom-in", position: 12, identifier: "ZoomIn"});
 		this.controls.addButton({type: "zoom-out", position: 11, identifier: "ZoomOut"});
 		this.controls.addTextInput({value: "", label: "Addr", identifier: "Address"});
@@ -59,7 +58,11 @@ var googlemaps = SAGE2_App.extend({
 				return ((value < 10) ? "0" : "") + value + "/" + end;
 			}
 		});
-
+		this.mapTypeRadioButton = this.controls.addRadioButton({identifier: "MapType",
+			label: "Map",
+			options: ["Turf", "Roads", "Arial", "Mix"],
+			default: "Mix"
+		});
 		this.controls.finishedAddingControls();
 	},
 
@@ -246,9 +249,6 @@ var googlemaps = SAGE2_App.extend({
 			this.refresh(date);
 		} else if (eventType === "widgetEvent") {
 			switch (data.identifier) {
-				case "Map":
-					this.changeMapType();
-					break;
 				case "Traffic":
 					this.toggleTraffic();
 					break;
@@ -279,6 +279,9 @@ var googlemaps = SAGE2_App.extend({
 					this.map.setZoom(15);
 					this.state.zoomLevel = 15;
 					break;
+				case "MapType":
+					this.changeMapType(data.value);
+					break;
 				default:
 					console.log("No handler for:", data.identifier);
 			}
@@ -290,15 +293,13 @@ var googlemaps = SAGE2_App.extend({
 			} else if (data.character === "t") {
 				this.toggleTraffic();
 			}
-			// else if (data.character === 'x') {
-			// 	// Press 'x' to close itself
-			// 	this.close();
-			// }
 			this.refresh(date);
 		} else if (eventType === "specialKey") {
-			if (data.code === 16) {
+			if (data.status && data.status.SHIFT) {
 				// Shift key
-				this.isShift = (data.state === "down");
+				this.isShift = true;
+			} else {
+				this.isShift = false;
 			}
 			if (data.code === 18 && data.state === "down") {      // alt
 				// zoom in
@@ -324,17 +325,27 @@ var googlemaps = SAGE2_App.extend({
 		}
 	},
 
-	changeMapType: function() {
-		if (this.state.mapType === google.maps.MapTypeId.TERRAIN) {
-			this.state.mapType = google.maps.MapTypeId.ROADMAP;
-		} else if (this.state.mapType === google.maps.MapTypeId.ROADMAP) {
-			this.state.mapType = google.maps.MapTypeId.SATELLITE;
-		} else if (this.state.mapType === google.maps.MapTypeId.SATELLITE) {
-			this.state.mapType = google.maps.MapTypeId.HYBRID;
-		} else if (this.state.mapType === google.maps.MapTypeId.HYBRID) {
-			this.state.mapType = google.maps.MapTypeId.TERRAIN;
+	changeMapType: function(value) {
+		var options = [google.maps.MapTypeId.TERRAIN, google.maps.MapTypeId.ROADMAP,
+			google.maps.MapTypeId.SATELLITE, google.maps.MapTypeId.HYBRID];
+		var i;
+		if (value !== null && value !== undefined) {
+			// Change due to radio button
+			for (i = 0; i < options.length; i++) {
+				if (this.mapTypeRadioButton.options[i] === value) {
+					this.state.mapType = options[i];
+					break;
+				}
+			}
 		} else {
-			this.state.mapType = google.maps.MapTypeId.HYBRID;
+			// Change due to key board
+			for (i = 0; i < options.length; i++) {
+				if (this.mapTypeRadioButton.options[i] === this.mapTypeRadioButton.value) {
+					this.mapTypeRadioButton.value = this.mapTypeRadioButton.options[(i + 1) % options.length];
+					this.state.mapType = options[(i + 1) % options.length];
+					break;
+				}
+			}
 		}
 		this.map.setMapTypeId(this.state.mapType);
 	},
@@ -393,6 +404,7 @@ var googlemaps = SAGE2_App.extend({
 	*/
 	getContextEntries: function() {
 		var entries = [];
+
 		var entry   = {};
 		// label of them menu
 		entry.description = "Type a location:";
@@ -404,6 +416,20 @@ var googlemaps = SAGE2_App.extend({
 		entry.inputFieldSize = 20;
 		entries.push(entry);
 
+		entry = {};
+		entry.description = "Save current location";
+		entry.callback = "setDefault";
+		entry.parameters = {};
+		entries.push(entry);
+
+		entry = {};
+		entry.description = "Load saved location";
+		entry.callback = "loadDefault";
+		entry.parameters = {};
+		entries.push(entry);
+
+		entries.push({description: "separator"});
+
 		return entries;
 	},
 
@@ -411,9 +437,48 @@ var googlemaps = SAGE2_App.extend({
 	 * Callback from th web ui menu (right click)
 	*/
 	setLocation: function(msgParams) {
-		// receive an from the web ui
+		// receive an object from the web ui
 		// .clientInput for what they typed
 		this.codeAddress(msgParams.clientInput);
+	},
+
+	/**
+	 * Set default location from app menu
+	*/
+	setDefault: function(msgParams) {
+		// Select current position as default location for the application
+		this.saveFile("", "default", "json", JSON.stringify(this.state, null, "\t"));
+	},
+
+	/**
+	 * Reload the default location
+	*/
+	loadDefault: function(msgParams) {
+		var _this = this;
+		// Request the file already saved in the app private folder
+		this.loadSavedData("default.json", function(error, data) {
+			// Update the map with the result
+			_this.map.setCenter(data.center);
+			// Update the state variable
+			_this.state.center = {lat: data.center.lat, lng: data.center.lng};
+			// Setting the zoom
+			_this.map.setZoom(data.zoomLevel);
+			_this.state.zoomLevel = data.zoomLevel;
+			// Set map type
+			_this.map.setMapTypeId(data.mapType);
+			_this.state.mapType = data.mapType;
+			// Set traffic
+			if (data.layer.t) {
+				_this.trafficLayer.setMap(_this.map);
+				clearInterval(_this.trafficTimer);
+				_this.trafficTimer = setInterval(_this.trafficCB, 60 * 1000);
+			} else {
+				_this.trafficLayer.setMap(null);
+				clearInterval(_this.trafficTimer);
+			}
+			// Need to sync since it's an async function
+			_this.SAGE2Sync(true);
+		});
 	}
 
 });

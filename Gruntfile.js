@@ -44,7 +44,6 @@ module.exports = function(grunt) {
 						"public/uploads/apps/flow/shared.js",
 						"public/uploads/apps/googlemaps/googlemaps.js",
 						"public/uploads/apps/notepad/notepad.js",
-						"public/uploads/apps/ParaSAGE/ParaSAGE.js",
 						"public/uploads/apps/photos/photos.js",
 						"public/uploads/apps/photos/photo_scrapbooks.js",
 						"public/uploads/apps/quickNote/quickNote.js",
@@ -54,56 +53,12 @@ module.exports = function(grunt) {
 						"public/uploads/apps/sticky_note/sticky_note.js",
 						"public/uploads/apps/web_earth/web_earth.js",
 						"public/uploads/apps/welcome/welcome.js",
+						"public/uploads/apps/Webview/Webview.js",
+						"public/uploads/apps/WhiteboardPalette/WhiteboardPalette.js",
 						"public/uploads/apps/zoom/zoom.js"
 					]
 				},
 				options: { configFile: "build/.eslint_client_rc" }
-			}
-		},
-		jscs: {
-			serverFiles: {
-				src: [
-					"server.js",
-					"electron.js",
-					"install_dependencies.js",
-					"src/*.js",
-					"bin/*.js",
-					"public/uploads/apps/welcome/plugin.js",
-					"public/uploads/apps/chronicles_of_spaceman_spiff/plugin.js",
-					"public/uploads/apps/chemViewer/plugin.js"
-					],
-				options: { config: "build/jscs_server.json" }
-			},
-			browserFiles: {
-				src: ['public/src/*.js', 'public/admin/*.js'],
-				options: { config: "build/jscs_sage2.json" }
-			},
-			appsFiles: {
-				src: [ 
-					"public/uploads/apps/UIC_crime_with_leaflet/leaflet.js",
-					"public/uploads/apps/US_weather/USweather.js",
-					"public/uploads/apps/car_threejs/car_threejs.js",
-					"public/uploads/apps/chemViewer/chemViewer.js",
-					"public/uploads/apps/chronicles_of_spaceman_spiff/chronicles_of_spaceman_spiff.js",
-					"public/uploads/apps/clock_svg/clock_svg.js",
-					"public/uploads/apps/countdown/countdown.js",
-					"public/uploads/apps/doodle/doodle.js",
-					"public/uploads/apps/flow/flow.js",
-					"public/uploads/apps/flow/shared.js",
-					"public/uploads/apps/googlemaps/googlemaps.js",
-					"public/uploads/apps/notepad/notepad.js",
-					"public/uploads/apps/photos/photos.js",
-					"public/uploads/apps/photos/photo_scrapbooks.js",
-					"public/uploads/apps/quickNote/quickNote.js",
-					"public/uploads/apps/radar/radar.js",
-					"public/uploads/apps/stereo_image/stereo_image.js",
-					"public/uploads/apps/timezone/timezone.js",
-					"public/uploads/apps/sticky_note/sticky_note.js",
-					"public/uploads/apps/web_earth/web_earth.js",
-					"public/uploads/apps/welcome/welcome.js",
-					"public/uploads/apps/zoom/zoom.js"
-				],
-				options: { config: "build/jscs_sage2.json" }
 			}
 		},
 		yuidoc: {
@@ -113,7 +68,7 @@ module.exports = function(grunt) {
 			compile: {
 				name: 'SAGE2',
 				description: 'A New Approach for Data Intensive Collaboration Using Scalable Resolution Shared Displays',
-				version: '1.0.0',
+				version: '2.0.0',
 				url: 'http://sage2.sagecommons.org',
 				options: {
 					linkNatives: "true",
@@ -182,10 +137,9 @@ module.exports = function(grunt) {
 	grunt.loadNpmTasks('grunt-contrib-uglify');
 	grunt.loadNpmTasks('grunt-mocha-cli');
 	grunt.loadNpmTasks('grunt-prompt');
-	grunt.loadNpmTasks('grunt-jscs');
 
 	// this would be run by typing "grunt test" on the command line
-	grunt.registerTask('all', ['eslint', 'jscs', 'yuidoc', 'uglify', 'mochacli']);
+	grunt.registerTask('all', ['eslint', 'yuidoc', 'uglify', 'mochacli']);
 
 	// the default task can be run just by typing "grunt" on the command line
 	grunt.registerTask('default', ['eslint']);

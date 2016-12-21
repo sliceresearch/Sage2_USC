@@ -28,7 +28,7 @@
 function SagePointer(id) {
 	this.id          = id;
 	this.label       = "";
-	this.color       = [255, 255, 255];
+	this.color       = "#FFFFFF";
 	this.left        = 0;
 	this.top         = 0;
 	this.visibleLeft = 0;

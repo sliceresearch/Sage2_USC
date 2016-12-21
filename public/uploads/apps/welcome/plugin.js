@@ -32,8 +32,10 @@ function processRequest(wsio, data, config) {
 				if (data.broadcast === true) {
 					// get the broadcast function from main module
 					// send the data to all display nodes
-					module.parent.exports.broadcast('broadcast', {app: data.app, func: data.func,
-							data: {picture: json, quote: quote, err: null}});
+					module.parent.exports.broadcast('broadcast', {
+						app: data.app, func: data.func,
+						data: {picture: json, quote: quote, err: null}
+					});
 				} else {
 					// send data to the master display node
 					wsio.emit('broadcast', {app: data.app, func: data.func, data: {picture: json, quote: quote, err: null}});
