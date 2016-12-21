@@ -48,6 +48,15 @@ function SAGE2_interaction(wsio) {
 	this.maxUploadSize = 20 * (1024 * 1024 * 1024); // 20GB just as a precaution
 	this.array_xhr     = [];
 
+	this.origWidth = 0;
+	this.origHeight = 0;
+	this.lastChecksum = 0; // image checksum
+	this.dropTot = 0;
+	this.sentTot = 0;
+	this.dropTot2 = 0;
+	this.sentTot2 = 0;
+	this.frameCount = 0;
+
 	// Event filtering for mouseMove
 	this.now = Date.now();
 	this.cnt = 0;
@@ -558,11 +567,13 @@ function SAGE2_interaction(wsio) {
 	* @param deadline {Object} object containing timing information
 	*/
 	this.deadlineLimit = 15;
+	this.timeForThisFrame;
 	this.stepMethod = function(deadline) {
 		// if more than 10ms of freetime, go for it
 		//if (true) { // if (deadline.timeRemaining() > 10) {
 		if (deadline.timeRemaining() > this.deadlineLimit) {
 			if (true) { // if (this.gotRequest) {
+				this.timeForThisFrame = deadline.timeRemaining();
 				this.pix = this.captureMediaFrame();
 				this.sendMediaStreamFrame();
 			}
@@ -571,6 +582,69 @@ function SAGE2_interaction(wsio) {
 		this.req = requestIdleCallback(this.step);
 	};
 
+	this.qosUpdate = function(match) {
+		// ratio of dropped frames to total frames gathered
+		var ratio1 = this.resolutionCheck1(match);
+		var ratio2 = this.resolutionCheck2(match);
+		this.frameCount = this.frameCount + 1;
+		if (this.frameCount === 19) {
+			console.log("shape use ratio1 "+ratio1);
+                        var mediaCanvas = document.getElementById('mediaCanvas');
+			if (ratio1 > 0.8 || (this.origWidth<600) || (this.timeForThisFrame>50)) {
+			  console.log("full scale");
+			  mediaCanvas.width = this.origWidth;
+			  mediaCanvas.height = this.origHeight;
+			  this.mediaQuality    = 9;
+			} else {
+			  console.log("half scale");
+			  mediaCanvas.width = this.origWidth * 0.7;
+			  mediaCanvas.height = this.origHeight * 0.7;
+			  this.mediaQuality    = 7;
+			}
+		}
+		if (this.frameCount === 39) {
+			console.log("shape use ratio2 "+ratio2);
+                        var mediaCanvas = document.getElementById('mediaCanvas');
+			if (ratio2 > 0.8 || (this.origWidth<600) || (this.timeForThisFrame>50)) {
+			  console.log("full scale");
+			  mediaCanvas.width = this.origWidth;
+			  mediaCanvas.height = this.origHeight;
+			  this.mediaQuality    = 9;
+			} else {
+			  console.log("half scale");
+			  mediaCanvas.width = this.origWidth * 0.7;
+			  mediaCanvas.height = this.origHeight * 0.7;
+			  this.mediaQuality    = 7;
+			}
+		}
+	}
+
+	this.resolutionCheck1 = function(match) {
+	 	if (match) {
+			this.dropTot = this.dropTot + 1;
+		} else {
+			this.sentTot = this.sentTot + 1;
+		}	
+		if (this.frameCount === 20) {
+			this.dropTot = 1;
+			this.sentTot = 1;
+		}
+		return this.dropTot / (this.dropTot + this.sentTot);
+	}
+
+	this.resolutionCheck2 = function(match) {
+	 	if (match) {
+			this.dropTot2 = this.dropTot2 + 1;
+		} else {
+			this.sentTot2 = this.sentTot2 + 1;
+		}	
+		if (this.frameCount === 40) {
+			this.dropTot2 = 1;
+			this.sentTot2 = 1;
+			this.frameCount = 0;
+		}
+		return this.dropTot2 / (this.dropTot2 + this.sentTot2);
+	}
 
 	/**
 	* The screen sharing can start
@@ -604,13 +678,16 @@ function SAGE2_interaction(wsio) {
 			mediaCanvas.width  = parseInt(res[0], 10);
 			mediaCanvas.height = parseInt(res[1], 10);
                         console.log("IP1: "+mediaCanvas.width+" "+mediaCanvas.height);
-                        if (mediaCanvas.width > 800) {
-				  mediaCanvas.width = mediaCanvas.width / 2;
-				  mediaCanvas.height = mediaCanvas.height / 2;
-			} else if (mediaCanvas.width > 1024) {
-				  mediaCanvas.height = mediaCanvas.width / 3;
-				  mediaCanvas.height = mediaCanvas.height / 3;
-			}
+			this.origWidth = mediaCanvas.width;
+			this.origHeight = mediaCanvas.height;
+                        //if (mediaCanvas.width > 800) {
+			//	  mediaCanvas.width = mediaCanvas.width * 0.9;
+			//	  mediaCanvas.height = mediaCanvas.height * 0.9;
+			//}
+			//if (this.origWidth > 1024) {
+			//		  mediaCanvas.width = this.origWidth * 0.8;
+			//	  mediaCanvas.height = this.origHeight * 0.8;
+			//}
                         console.log("IP2: "+mediaCanvas.width+" "+mediaCanvas.height);
 			console.log("mediaQuality "+this.mediaQuality);
 			console.log("deadlineLimit "+this.deadlineLimit);
@@ -670,12 +747,16 @@ function SAGE2_interaction(wsio) {
 		}
 	};
 
-	function str2ab(str) {
+	function str2ab(str, refChecksum) {
 	  var buf = new ArrayBuffer(str.length);
 	  var bufView = new Uint8Array(buf);
+	  var checkSum = 0;
 	  for (var i=0, strLen=str.length; i < strLen; i++) {
 	    bufView[i] = str.charCodeAt(i);
-	    //console.log("str2ab ",i, bufView[i]);
+	    checkSum = (checkSum + bufView[i]) % 256;
+	  }
+	  if (refChecksum !== null && refChecksum !== undefined) {
+	    refChecksum.val = checkSum;
 	  }
 	  return bufView;
 	}
@@ -685,7 +766,7 @@ function SAGE2_interaction(wsio) {
 	 * @return {ArrayBuffers} The new ArrayBuffer created out of the two.
 	 */
 	var _appendBuffers = function(buffer1, buffer2, buffer3, buffer4) {
-	  console.log("appendBuffers ",buffer1.byteLength, buffer2.byteLength, buffer3.byteLength, buffer4.byteLength);
+	  //console.log("appendBuffers ",buffer1.byteLength, buffer2.byteLength, buffer3.byteLength, buffer4.byteLength);
 	  var nulB = new Uint8Array([0]);
 	  var tmp = new Uint8Array(buffer1.byteLength + buffer2.byteLength + buffer3.byteLength + buffer4.byteLength + 3);
 	  var pos = 0;
@@ -788,12 +869,21 @@ function SAGE2_interaction(wsio) {
 				}
 				this.gotRequest = false;
 			} else {
-				console.log("sendMediaStreamFrame ", this.uniqueID);
+				//console.log("sendMediaStreamFrame ", this.uniqueID);
 				//mytrace(raw);
 				var id = this.uniqueID+"|0";
-				console.log("id ",id.byteLength);
-                		var buffer = _appendBuffers(str2ab(id), str2ab("image/jpeg"), str2ab("base64"), str2ab(raw));
-				this.wsio.emit('updateMediaStreamFrame', buffer);
+				//console.log("id ",id.byteLength);
+				var refChecksum = {};
+                		var buffer = _appendBuffers(str2ab(id), str2ab("image/jpeg"), str2ab("base64"), str2ab(raw, refChecksum));
+				var lastChecksum = refChecksum.val;
+				var match = (lastChecksum === this.lastChecksum);
+				if (match) {
+				    console.log("checksum match - drop frame");
+				} else {
+				    this.wsio.emit('updateMediaStreamFrame', buffer);
+				}
+				this.qosUpdate(match);
+				this.lastChecksum = lastChecksum;
 			}
 		}
 	};
