@@ -101,22 +101,42 @@ var SAGE2MEP = {
 
 		var mouseEventToPass;
 		var buttonValue;
+		var offsetValues = {}; // NOTE: according to MDN, this is experiemental and shouldn't be used in production.
+		if (type == "pointerMove" || type == "pointerRelease" || type == "pointerPress") {
+			var parent = point.currentElement;
+			var boundsOfParent;
+			// get the app bounding box, while the id doesn't contain app_
+			while (parent.id.indexOf("app_") < 0) {
+				parent = parent.parentNode;
+			}
+			boundsOfParent = parent.getBoundingClientRect();
+			var boundsOfCurrent = point.currentElement.getBoundingClientRect();
+			// difference because the app could be anywhere on SAGE2
+			console.log("parent " + parent.id + " " + boundsOfParent.left + "," + boundsOfParent.top);
+			console.log("child " + point.currentElement.id + " " + boundsOfCurrent.left + "," + boundsOfCurrent.top);
+			offsetValues.x = point.xCurrent - (boundsOfCurrent.left - boundsOfParent.left);
+			offsetValues.y = point.yCurrent - (boundsOfCurrent.top - boundsOfParent.top);
+			console.log("offset " + offsetValues.x + "," + offsetValues.y);
+		}
+
+		// Mouse events need to be made within their cases because the creation does extra stuff that doesn't allow easily modified return objects.
 
 		switch (type) {
 
 			case "pointerMove":
 				// if the current and previous element match, then only need to worry about sending mouse move event
 				if (point.currentElement == point.previousElement) {
-					mouseEventToPass = new MouseEvent("mousemove", {
-						bubbles: true,
-						clientX: point.xCurrent,
-						clientY: point.yCurrent,
-						screenX: point.xCurrent,
-						screenY: point.yCurrent,
-						movementX: (point.xCurrent - point.xPrevious),
-						movementY: (point.yCurrent - point.yPrevious),
-						target: point.currentElement
-					});
+					mouseEventToPass = new CustomEvent("mousemove", {bubbles: true});
+					mouseEventToPass.clientX = point.xCurrent;
+					mouseEventToPass.clientY = point.yCurrent;
+					mouseEventToPass.screenX = point.xCurrent;
+					mouseEventToPass.screenY = point.yCurrent;
+					mouseEventToPass.offsetX = offsetValues.x;
+					mouseEventToPass.offsetY = offsetValues.y;
+					mouseEventToPass.movementX = (point.xCurrent - point.xPrevious);
+					mouseEventToPass.movementY = (point.yCurrent - point.yPrevious);
+					mouseEventToPass.target = point.currentElement;
+
 					if (point && point.currentElement) {
 						point.currentElement.dispatchEvent(mouseEventToPass);
 					}
@@ -125,36 +145,37 @@ var SAGE2MEP = {
 					// since the current is different from previous, need to create and dispatch mouse over, enter, out, leave
 
 					// event order is : (first) over, enter, out, leave (last)
-					mouseEventToPass = new MouseEvent("mouseover", {
-						bubbles: true,
-						clientX: point.xCurrent,
-						clientY: point.yCurrent,
-						screenX: point.xCurrent,
-						screenY: point.yCurrent,
-						target: point.currentElement,
-						relatedTarget: point.previousElement // for: focus, mouse enter leave out over, drag
-					});
+					mouseEventToPass = new CustomEvent("mouseover", {bubbles: true});
+					mouseEventToPass.clientX = point.xCurrent;
+					mouseEventToPass.clientY = point.yCurrent;
+					mouseEventToPass.screenX = point.xCurrent;
+					mouseEventToPass.screenY = point.yCurrent;
+					mouseEventToPass.offsetX = offsetValues.x;
+					mouseEventToPass.offsetY = offsetValues.y;
+					mouseEventToPass.target = point.currentElement;
+					mouseEventToPass.relatedTarget = point.previousElement;
+
 					point.currentElement.dispatchEvent(mouseEventToPass);
 
-
-					this.determineAndSendEnterEvents(point);
+					this.determineAndSendEnterEvents(point, offsetValues);
 
 					// depending on timing, previous element may be null.
 					if (point.previousElement != null) {
-						mouseEventToPass = new MouseEvent("mouseout", {
-							bubbles: true,
-							clientX: point.xCurrent,
-							clientY: point.yCurrent,
-							screenX: point.xCurrent,
-							screenY: point.yCurrent,
-							target: point.previousElement,
-							relatedTarget: point.currentElement  // for: focus, mouse enter leave out over, drag
-						});
+						mouseEventToPass = new CustomEvent("mouseout", {bubbles: true});
+						mouseEventToPass.clientX = point.xCurrent;
+						mouseEventToPass.clientY = point.yCurrent;
+						mouseEventToPass.screenX = point.xCurrent;
+						mouseEventToPass.screenY = point.yCurrent;
+						mouseEventToPass.offsetX = offsetValues.x;
+						mouseEventToPass.offsetY = offsetValues.y;
+						mouseEventToPass.target = point.previousElement;
+						mouseEventToPass.relatedTarget = point.currentElement;
+
 						point.previousElement.dispatchEvent(mouseEventToPass);
 					} // end passing mouse out if there was a previous element.
 
 
-					this.determineAndSendLeaveEvents(point);
+					this.determineAndSendLeaveEvents(point, offsetValues);
 
 				} // end else the current element is different from the previous
 
@@ -175,17 +196,16 @@ var SAGE2MEP = {
 					buttonValue = 2;
 				}
 
-				mouseEventToPass = new MouseEvent("mousedown", {
-					bubbles: true,
-					clientX: point.xCurrent,
-					clientY: point.yCurrent,
-					screenX: point.xCurrent,
-					screenY: point.yCurrent,
-					button: buttonValue,
-					// relatedTarget: point.previousElement,
-					// for: focus, mouse enter leave out over, drag
-					target: point.currentElement
-				});
+				mouseEventToPass = new CustomEvent("mousedown", {bubbles: true});
+				mouseEventToPass.clientX = point.xCurrent;
+				mouseEventToPass.clientY = point.yCurrent;
+				mouseEventToPass.screenX = point.xCurrent;
+				mouseEventToPass.screenY = point.yCurrent;
+				mouseEventToPass.offsetX = offsetValues.x;
+				mouseEventToPass.offsetY = offsetValues.y;
+				mouseEventToPass.button = buttonValue;
+				mouseEventToPass.target = point.currentElement;
+
 				point.currentElement.dispatchEvent(mouseEventToPass);
 
 				// There are some fringe cases where this can cause improper click events.
@@ -203,32 +223,73 @@ var SAGE2MEP = {
 				} else if (data.button == "right") {
 					buttonValue = 2;
 				}
-				mouseEventToPass = new MouseEvent("mouseup", {
-					bubbles: true,
-					clientX: point.xCurrent,
-					clientY: point.yCurrent,
-					screenX: point.xCurrent,
-					screenY: point.yCurrent,
-					button: buttonValue,
-					// relatedTarget: point.previousElement
-					//for: focus, mouse enter leave out over, drag
-					target: point.currentElement
-				});
+
+				mouseEventToPass = new CustomEvent("mouseup", {bubbles: true});
+				mouseEventToPass.clientX = point.xCurrent;
+				mouseEventToPass.clientY = point.yCurrent;
+				mouseEventToPass.screenX = point.xCurrent;
+				mouseEventToPass.screenY = point.yCurrent;
+				mouseEventToPass.offsetX = offsetValues.x;
+				mouseEventToPass.offsetY = offsetValues.y;
+				mouseEventToPass.button = buttonValue;
+				mouseEventToPass.target = point.currentElement;
+
 				point.currentElement.dispatchEvent(mouseEventToPass);
 
 				// if there was a press and release, then fire a click event
 				if (point.elementPressed == point.currentElement) {
+					mouseEventToPass = new CustomEvent("click", {bubbles: true});
+					// mouseEventToPass.bubbles = true,
+					mouseEventToPass.clientX = point.xCurrent;
+					mouseEventToPass.clientY = point.yCurrent;
+					mouseEventToPass.screenX = point.xCurrent;
+					mouseEventToPass.screenY = point.yCurrent;
+					mouseEventToPass.offsetX = offsetValues.x;
+					mouseEventToPass.offsetY = offsetValues.y;
+					mouseEventToPass.button = buttonValue;
+					mouseEventToPass.target = point.currentElement;
+					console.log("custom mouseEventToPass");
+					console.dir(mouseEventToPass);
+
+					/*
+					 saving my tests for now as a comment block
+
 					mouseEventToPass = new MouseEvent("click", {
 						bubbles: true,
 						clientX: point.xCurrent,
 						clientY: point.yCurrent,
 						screenX: point.xCurrent,
 						screenY: point.yCurrent,
+						offsetX: offsetValues.x,
+						offsetY: offsetValues.y,
 						button: buttonValue,
 						// relatedTarget: point.previousElement
 						//for: focus, mouse enter leave out over, drag
 						target: point.currentElement
 					});
+					var tempEvent = mouseEventToPass;
+					mouseEventToPass = {};
+					for (attribute in tempEvent) {
+						mouseEventToPass[attribute] = tempEvent[attribute];
+					}
+					mouseEventToPass.offsetX = offsetValues.x;
+					mouseEventToPass.offsetY = offsetValues.y;
+					console.dir(mouseEventToPass);
+					mouseEventToPass = new CustomEvent("click", {"offsetX": offsetValues.x, "offsetY": offsetValues.y});
+
+					mouseEventToPass.offsetX = offsetValues.x;
+					mouseEventToPass.offsetY = offsetValues.y;
+					console.log("type of mouseEventToPass: " + typeof mouseEventToPass);
+					console.dir(mouseEventToPass);
+
+					mouseEventToPass.__proto__ = tempEvent.__proto__;
+					console.log("does object have: " + offsetValues.x + "," + offsetValues.y);
+					console.log("          object: " + mouseEventToPass.offsetX + "," + mouseEventToPass.offsetY);
+					console.log("type of mouseEventToPass: " + typeof mouseEventToPass);
+					console.dir(mouseEventToPass);
+					console.log("type of tempEvent: " + typeof tempEvent);
+					console.dir(tempEvent);
+					*/
 					point.currentElement.dispatchEvent(mouseEventToPass);
 					point.elementPressed = null; // finally cancell out the pressed value.
 					point.lastClickedElement = point.currentElement;
@@ -297,7 +358,6 @@ var SAGE2MEP = {
 		} // end switch of sage event type
 
 	}, // end processAndPassEvents
-
 
 	/*
 	This will return the index the app is being tracked at.
@@ -426,7 +486,7 @@ var SAGE2MEP = {
 		3. If NOT, first find the common ancestor.
 		4. Once the common ancestor has been found, send enter events from the top until it reaches the common ancestor.
 	*/
-	determineAndSendEnterEvents: function(point) {
+	determineAndSendEnterEvents: function(point, offsetValues) {
 		if (point.previousElement == point.currentElement) {
 			// just in case
 			return;
@@ -451,15 +511,16 @@ var SAGE2MEP = {
 			cElem = point.currentElement;
 
 			while (cElem != pElem) {
-				mouseEventToPass = new MouseEvent("mouseenter", {
-					bubbles: false,
-					clientX: point.xCurrent,
-					clientY: point.yCurrent,
-					screenX: point.xCurrent,
-					screenY: point.yCurrent,
-					target: cElem,
-					relatedTarget: point.previousElement // for: focus, mouse enter leave out over, drag
-				});
+				mouseEventToPass = new CustomEvent("mouseenter", {bubbles: true});
+				mouseEventToPass.clientX = point.xCurrent;
+				mouseEventToPass.clientY = point.yCurrent;
+				mouseEventToPass.screenX = point.xCurrent;
+				mouseEventToPass.screenY = point.yCurrent;
+				mouseEventToPass.offsetX = offsetValues.x;
+				mouseEventToPass.offsetY = offsetValues.y;
+				mouseEventToPass.target = cElem;
+				mouseEventToPass.relatedTarget = point.previousElement;
+
 				cElem.dispatchEvent(mouseEventToPass);
 				cElem = cElem.parentNode;
 			}
@@ -502,15 +563,16 @@ var SAGE2MEP = {
 			// Common ancestor should be in pElem.
 			cElem = point.currentElement;
 			while (cElem != pElem) {
-				mouseEventToPass = new MouseEvent("mouseenter", {
-					bubbles: false,
-					clientX: point.xCurrent,
-					clientY: point.yCurrent,
-					screenX: point.xCurrent,
-					screenY: point.yCurrent,
-					target: cElem,
-					relatedTarget: point.previousElement // for: focus, mouse enter leave out over, drag
-				});
+				mouseEventToPass = new CustomEvent("mouseenter", {bubbles: true});
+				mouseEventToPass.clientX = point.xCurrent;
+				mouseEventToPass.clientY = point.yCurrent;
+				mouseEventToPass.screenX = point.xCurrent;
+				mouseEventToPass.screenY = point.yCurrent;
+				mouseEventToPass.offsetX = offsetValues.x;
+				mouseEventToPass.offsetY = offsetValues.y;
+				mouseEventToPass.target = cElem;
+				mouseEventToPass.relatedTarget = point.previousElement;
+
 				cElem.dispatchEvent(mouseEventToPass);
 				cElem = cElem.parentNode;
 			}
@@ -526,18 +588,19 @@ var SAGE2MEP = {
 		Events generated will be based off of the stored values from the checks in determineAndSendEnterEvents.
 		Note, this doesn't care if a common ancestor was found, only if there are elements in the mouseLeaveEventsToSend property.
 	*/
-	determineAndSendLeaveEvents: function(point) {
+	determineAndSendLeaveEvents: function(point, offsetValues) {
 		var mouseEventToPass;
 		for (var i = 0; i < point.mouseLeaveEventsToSend.length; i++) {
-			mouseEventToPass = new MouseEvent("mouseleave", {
-				bubbles: false,
-				clientX: point.xCurrent,
-				clientY: point.yCurrent,
-				screenX: point.xCurrent,
-				screenY: point.yCurrent,
-				target: point.mouseLeaveEventsToSend[i],
-				relatedTarget: point.previousElement // for: focus, mouse enter leave out over, drag
-			});
+			mouseEventToPass = new CustomEvent("mouseleave", {bubbles: true});
+			mouseEventToPass.clientX = point.xCurrent;
+			mouseEventToPass.clientY = point.yCurrent;
+			mouseEventToPass.screenX = point.xCurrent;
+			mouseEventToPass.screenY = point.yCurrent;
+			mouseEventToPass.offsetX = offsetValues.x;
+			mouseEventToPass.offsetY = offsetValues.y;
+			mouseEventToPass.target = point.mouseLeaveEventsToSend[i];
+			mouseEventToPass.relatedTarget = point.previousElement;
+
 			point.mouseLeaveEventsToSend[i].dispatchEvent(mouseEventToPass);
 		}
 
@@ -733,4 +796,3 @@ var SAGE2MEP = {
 	}, //end initialize
 
 */
-

@@ -278,11 +278,10 @@ function sagePointer(wsio) {
 	*/
 	this.captureDesktop = function(mediaSourceId) {
 		var constraints = {chromeMediaSource: 'desktop', chromeMediaSourceId: mediaSourceId, maxWidth: 3840, maxHeight: 2160};
-		navigator.getUserMedia(
-			{video: {mandatory: constraints, optional: []},
-			audio: false},
-			this.streamSuccess, this.streamFail
-		);
+		navigator.getUserMedia({
+			video: {mandatory: constraints, optional: []},
+			audio: false
+		}, this.streamSuccess, this.streamFail);
 	};
 
 	/**
@@ -323,10 +322,12 @@ function sagePointer(wsio) {
 	* @method streamMetaDataMethod
 	*/
 	this.streamMetaDataMethod = function() {
-		var widths = [Math.min(852, this.mediaVideo.videoWidth),
-					Math.min(1280, this.mediaVideo.videoWidth),
-					Math.min(1920, this.mediaVideo.videoWidth),
-					this.mediaVideo.videoWidth];
+		var widths = [
+			Math.min(852, this.mediaVideo.videoWidth),
+			Math.min(1280, this.mediaVideo.videoWidth),
+			Math.min(1920, this.mediaVideo.videoWidth),
+			this.mediaVideo.videoWidth
+		];
 
 		for (var i = 0; i < 4; i++) {
 			var height = parseInt(widths[i] * this.mediaVideo.videoHeight / this.mediaVideo.videoWidth, 10);
@@ -341,11 +342,13 @@ function sagePointer(wsio) {
 
 		var frame = this.captureMediaFrame();
 		var raw = this.base64ToString(frame.split(",")[1]);
-		this.wsio.emit('startNewMediaStream', {id: this.uniqueID + "|0",
-				title: localStorage.SAGE2_ptrName + ": Shared Screen",
-				src: raw, type: "image/jpeg", encoding: "binary",
-				width: this.mediaVideo.videoWidth,
-				height: this.mediaVideo.videoHeight});
+		this.wsio.emit('startNewMediaStream', {
+			id: this.uniqueID + "|0",
+			title: localStorage.SAGE2_ptrName + ": Shared Screen",
+			src: raw, type: "image/jpeg", encoding: "binary",
+			width: this.mediaVideo.videoWidth,
+			height: this.mediaVideo.videoHeight
+		});
 
 		this.broadcasting = true;
 	};

@@ -5,11 +5,15 @@
 	"height": 506,
 	"resize": "free",
 	"dependencies": [
-		  "openseadragon.min.js"
+		"openseadragon.min.js"
 	],
+        "load": {
+		"file": ""
+        },
+	"removeFromLauncher": false,
 	"fileTypes": [ "dzi" ],
 	"directory": "dzi",
-	"title": "Multi-Res Image Viewer",
+	"title": "Deep Zoom Image",
 	"version": "1.0.0",
 	"description": "High-resolution Image Viewer using the Openseadragon API",
 	"keywords": [ "openseadragon", "image", "viewer" ],

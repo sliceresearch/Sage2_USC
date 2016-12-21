@@ -13,12 +13,25 @@
 #      _.evl.uic.edu.key
 
 
-servers="$HOSTNAME localhost 127.0.0.1 whiteboard.evl.uic.edu"
+servers="$HOSTNAME localhost 127.0.0.1"
 
 for f in `echo $servers`
 do
 	./init_webserver.cmd $f
 done
 
-/usr/bin/security add-trusted-cert -d -r trustRoot localhost-server.crt
+macos=`uname -r | tr "." "\n" | head -1`
+echo "MacOS version" $macos
+
+if [ $macos = "16" ]
+then
+	echo ""
+	echo "============================"
+	echo "Enter your password if asked"
+	echo "============================"
+	echo ""
+	sudo /usr/bin/security add-trusted-cert -d -r trustRoot -k /Library/Keychains/System.keychain localhost-server.crt
+else
+	/usr/bin/security add-trusted-cert -d -r trustRoot localhost-server.crt
+fi
 
