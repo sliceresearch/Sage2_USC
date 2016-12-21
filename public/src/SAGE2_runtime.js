@@ -845,7 +845,9 @@ function addCookie(sKey, sValue) {
 		// NaN triggers false on if check.
 		if (maybeInt) { // this is a number, so must be last part of an ip address, need 4 parts
 			numberOfPiecesFromEndTokeep = 4;
-		} else { // was a hostname extension
+		} else if (domainPieces[domainPieces.length - 1] == "tw") {
+			numberOfPiecesFromEndTokeep = 3;
+		}else { // was a hostname extension
 			numberOfPiecesFromEndTokeep = 2;
 		}
 
