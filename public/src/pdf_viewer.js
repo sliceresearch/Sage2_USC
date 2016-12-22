@@ -186,9 +186,15 @@ var pdf_viewer = SAGE2_App.extend({
 
 	obtainPageFromPDF: function(pdfFile, pageNumber, that, quality) {
 
+                var _this = this;
+
 		var thumbnail = (quality === that.TVALUE) ? true : false;
 
 		pdfFile.getPage(pageNumber).then(function(page) {
+
+                        page.getTextContent().then(function(content){
+                                _this.scanPage(page,content);
+                        });
 
 			var canvas = document.createElement("canvas");
 			var ctx = canvas.getContext("2d");
@@ -343,6 +349,34 @@ var pdf_viewer = SAGE2_App.extend({
 			"translate(" + dx * this.state.resizeValue + ", " + dy +
 			"), scale(" + s + ")").duration(tDuration);
 	},
+
+        scanPage: function(page,textContent) {
+          if( null != textContent.items){
+            var page_text = "";
+            var last_block = null;
+            for( var k = 0; k < textContent.items.length; k++ ){
+                var block = textContent.items[k];
+                if( last_block != null && last_block.str[last_block.str.length-1] != ' '){
+                    if( block.x < last_block.x ) {
+                        page_text += "\r\n";
+                    }
+                    else if ( last_block.y != block.y && ( last_block.str.match(/^(\s?[a-zA-Z])$|^(.+\s[a-zA-Z])$/) == null ))
+                        page_text += ' ';
+                }
+                var simple = block.str.replace(/[^\x00-\x7F]/g, "");
+                page_text += simple;
+                if (page_text.length > 100) {
+                        break;
+                }
+                last_block = block;
+            }
+          }
+          if (this.startText === null || this.startText === undefined) {
+            this.startText = {};
+          }
+          this.startText[page.pageNumber] = page_text;
+        },
+
 
 	generateMissingPages: function() {
 
@@ -537,6 +571,14 @@ var pdf_viewer = SAGE2_App.extend({
 		this.generateMissingPages();
 		this.modifyState("currentPage", page);
 		this.translateGroup(this.imageVisualizer, this.state.horizontalOffset, 0);
+
+                var msg = {pageNr:page, url:this.state.doc_url, startText:this.startText[page]};
+                console.log('emit goToPage '+JSON.stringify(msg));
+                //this.modifyState("pageText",this.startText[page]);
+                if (isMaster) {
+                  wsio.emit('goToPage',msg);
+                }
+
 		return dx;
 	},
 
