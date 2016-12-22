@@ -80,6 +80,7 @@
 <script async src="src/SAGE2_interaction.js"></script>
 <script async src="src/SAGE2_DisplayUI.js"></script>
 <script async src="src/SAGE2_UI.js"></script>
+<script async src="vxlab.js"></script>
 
 <!-- Style sheets -->
 <link rel="stylesheet" type="text/css" href="css/fonts.css"/>
@@ -96,7 +97,7 @@
 
 		<!-- Loading panel -->
 		<div id="loadingUI" style="display:block;">
-			<h1 style="margin-top:40px;font-size:32px;text-align:center;text-valign:center;">Loading SAGE2 Interface...</h1>
+			<h1 style="margin-top:20px;font-size:32px;text-align:center;text-valign:center;">Loading SAGE2 Interface...</h1>
 		</div>
 
 		<div id="displayUIDiv" style="display:none;">
@@ -110,45 +111,74 @@
 			<table id="menuUI">
 				<tr>
 					<td id="sage2pointerContainer">
-						<img id="sage2pointer" alt="pointer" src="images/ui/graycircle-sage2pointer.svg" width="48" height="48"/>
+						<img id="sage2pointer" alt="pointer" src="images/ui/graycircle-sage2pointer.svg" width="40" height="40"/>
 						<p id="sage2pointerLabel">SAGE2 Pointer</p>
 					</td>
 					<td id="sharescreenContainer">
-						<img id="sharescreen"  alt="sharescreen"  src="images/ui/graycircle-sharescreen.svg"  width="48" height="48"/>
+						<img id="sharescreen"  alt="sharescreen"  src="images/ui/graycircle-sharescreen.svg"  width="40" height="40"/>
 						<p id="sharescreenLabel">Screen Sharing</p>
 					</td>
 					<td id="applauncherContainer">
-						<img id="applauncher"  alt="applauncher"  src="images/ui/graycircle-applauncher.svg"  width="48" height="48"/>
+						<img id="applauncher"  alt="applauncher"  src="images/ui/graycircle-applauncher.svg"  width="40" height="40"/>
 						<p id="applauncherLabel">App Launcher</p>
 					</td>
 					<td id="mediabrowserContainer">
-						<img id="mediabrowser" alt="mediabrowser" src="images/ui/graycircle-mediabrowser.svg" width="48" height="48"/>
+						<img id="mediabrowser" alt="mediabrowser" src="images/ui/graycircle-mediabrowser.svg" width="40" height="40"/>
 						<p id="mediabrowserLabel">Media Browser</p>
 					</td>
 					<td id="arrangementContainer">
-						<img id="arrangement"  alt="arrangement"  src="images/ui/graycircle-arrangement.svg"  width="48" height="48"/>
+						<img id="arrangement"  alt="arrangement"  src="images/ui/graycircle-arrangement.svg"  width="40" height="40"/>
 						<p id="arrangementLabel">Arrangement</p>
 					</td>
 					<td id="settingsContainer">
-						<img id="settings"     alt="settings"     src="images/ui/graycircle-settings.svg"     width="48" height="48"/>
+						<img id="settings"     alt="settings"     src="images/ui/graycircle-settings.svg"     width="40" height="40"/>
 						<p id="settingsLabel">Settings</p>
 					</td>
 					<td id="infoContainer">
-						<img id="info"         alt="info"         src="images/ui/graycircle-info.svg"         width="48" height="48"/>
+						<img id="info"         alt="info"         src="images/ui/graycircle-info.svg"         width="40" height="40"/>
 						<p id="infoLabel">Information</p>
 					</td>
 					<td id="ezNoteContainer">
-						<img id="ezNote"       alt="ezNote"     src="images/ui/graycircle-ezNote.svg"       width="48" height="48"/>
+						<img id="ezNote"       alt="ezNote"     src="images/ui/graycircle-ezNote.svg"       width="40" height="40"/>
 						<p id="ezNote">Quick Note</p>
 					</td>
 					<td id="ezDrawContainer">
-						<img id="ezDraw"       alt="ezDraw"     src="images/ui/graycircle-ezDraw.svg"       width="48" height="48"/>
+						<img id="ezDraw"       alt="ezDraw"     src="images/ui/graycircle-ezDraw.svg"       width="40" height="40"/>
 						<p id="ezDrawLabel">Doodle</p>
 					</td>
 					<td id="browserContainer">
-						<img id="browser" alt="browser" src="images/ui/graycircle-webview.svg" width="48" height="48"/>
+						<img id="browser" alt="browser" src="images/ui/graycircle-webview.svg" width="40" height="40"/>
 						<p id="browserLabel">Browser</p>
 					</td>
+                                        <td>
+                                                <input id="clickMe" type="button" value="Input1 on" onclick="httpGetAsync('https://10.234.2.30:8086/capture-laptop1-start');"/>
+                                                <input id="clickMe" type="button" value="Input2 on" onclick="httpGetAsync('https://10.234.2.30:8086/capture-laptop2-start');"/>
+                                                <input id="clickMe" type="button" value="VC on" onclick="httpGetAsync('https://10.234.2.30:8086/capture-vc1-start');"/>
+                                                <br>
+                                                <input id="clickMe" type="button" value="Input1 off" onclick="httpGetAsync('https://10.234.2.30:8086/capture-laptop1-stop');"/>
+                                                <input id="clickMe" type="button" value="Input2 off" onclick="httpGetAsync('https://10.234.2.30:8086/capture-laptop2-stop');"/>
+                                                <input id="clickMe" type="button" value="VC off" onclick="httpGetAsync('https://10.234.2.30:8086/capture-vc1-stop');"/>
+                                                <div style="text-align:left; margin:0px 0px auto;">
+                                                <label for="req_url"></label>
+                                                <input type="Text" id="req_url" maxlength="35" size="12"/>
+                                                <input type='button' onclick='loadWebURL()' value='Web'>
+                                                <input type='button' onclick='vncURL()' value='VNC'>
+                                                </div>
+                                                <input id="clickMe" type="button" value="Arrange" onclick="httpGetAsync('https://10.234.2.30:8086/arrange-apps');"/>
+                                                <input id="clickMe" type="button" value="0" onclick="httpGetAsync('https://10.234.2.30:8086/appselect?0');"/>
+                                                <input id="clickMe" type="button" value="1" onclick="httpGetAsync('https://10.234.2.30:8086/appselect?1');"/>
+                                                <input id="clickMe" type="button" value="2" onclick="httpGetAsync('https://10.234.2.30:8086/appselect?2');"/>
+                                                <input id="clickMe" type="button" value="3" onclick="httpGetAsync('https://10.234.2.30:8086/appselect?3');"/>
+                                                <input id="clickMe" type="button" value="4" onclick="httpGetAsync('https://10.234.2.30:8086/appselect?4');"/>
+                                                <input id="clickMe" type="button" value="5" onclick="httpGetAsync('https://10.234.2.30:8086/appselect?5');"/>
+                                                <input id="clickMe" type="button" value="6" onclick="httpGetAsync('https://10.234.2.30:8086/appselect?6');"/>
+                                                <input id="clickMe" type="button" value="7" onclick="httpGetAsync('https://10.234.2.30:8086/appselect?7');"/>
+                                                <input id="clickMe" type="button" value="8" onclick="httpGetAsync('https://10.234.2.30:8086/appselect?8');"/>
+                                                <input id="clickMe" type="button" value="9" onclick="httpGetAsync('https://10.234.2.30:8086/appselect?9');"/>
+                                                <br>
+                                                <input id="clickMe" type="button" value="MyDesktop" onclick="httpGetAsync('http://10.234.2.30:8085/mydesktop');"/>
+                                                <a target="_vxlab_panel" href="http://10.234.2.30/~sage/">More...</a>
+                                        </td>
 				</tr>
 			</table>
 		</div>
