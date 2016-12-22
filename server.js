@@ -1083,6 +1083,8 @@ function setupListeners(wsio) {
 
 	wsio.on('createFolder',                         wsCreateFolder);
 
+        wsio.on('goToPage',                             wsGoToPage);
+
 	// Jupyper messages
 	wsio.on('startJupyterSharing',					wsStartJupyterSharing);
 	wsio.on('updateJupyterSharing',					wsUpdateJupyterSharing);
@@ -1670,7 +1672,7 @@ function wsUpdateMediaStreamFrame(wsio, dataOrBuffer) {
 		// Overview display
 		if (did === -1) {
 			// send the full frame to be displayed
-			SAGE2Items.renderSync[data.id].clients[key].wsio.emit('updateMediaStreamFrame', data);
+			SAGE2Items.renderSync[data.id].clients[key].wsio.emit('updateMediaStreamFrame', dataOrBuffer);
 			continue;
 		}
 		var display = config.displays[did];
@@ -1691,7 +1693,7 @@ function wsUpdateMediaStreamFrame(wsio, dataOrBuffer) {
 		if (doOverlap(left, top, stream.width, stream.height,
 			offsetX, offsetY, checkWidth, checkHeight)) {
 			// send the full frame to be displayed
-			SAGE2Items.renderSync[data.id].clients[key].wsio.emit('updateMediaStreamFrame', data);
+			SAGE2Items.renderSync[data.id].clients[key].wsio.emit('updateMediaStreamFrame', dataOrBuffer);
 		} else {
 			// otherwise send a dummy small image
 			SAGE2Items.renderSync[data.id].clients[key].wsio.emit('updateMediaStreamFrame', data_copy);
@@ -3395,6 +3397,10 @@ function wsAddNewWebElement(wsio, data) {
 }
 
 // **************  Folder management     *****************
+
+function wsGoToPage(wsio, data) {
+       broadcast('goToPage', data);
+}
 
 function wsCreateFolder(wsio, data) {
 	// Create a folder as needed
