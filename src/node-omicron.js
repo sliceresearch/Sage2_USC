@@ -207,34 +207,42 @@ function OmicronManager(sysConfig) {
 	server.listen(this.omicronDataPort, serverHost);
 
 	if (this.config.useOinputserver === true) {
-
+		
+		omicronManager.oinputserverConnected = false;
 		var msgPort = 28000;
 		if (this.config.msgPort) {
 			msgPort = this.config.msgPort;
 		}
 
-		console.log(sageutils.header('Omicron') + 'Connecting to Omicron oinputserver at "' +
-			omicronManager.config.inputServerIP + '" on msgPort: ' + msgPort + '.');
+		// attempt to connect every 15 seconds, if connection failed
+		setInterval(function() {
+			if (omicronManager.oinputserverConnected === false) {
+				console.log(sageutils.header('Omicron') + 'Connecting to Omicron oinputserver at "' +
+					omicronManager.config.inputServerIP + '" on msgPort: ' + msgPort + '.');
 
-		this.oinputserverSocket = net.connect(msgPort, this.config.inputServerIP,  function() {
-			// 'connect' listener
-			console.log(sageutils.header('Omicron') +
-				'Connection Successful. Requesting data on port ', omicronManager.omicronDataPort);
+				omicronManager.oinputserverSocket = net.connect(msgPort, omicronManager.config.inputServerIP,  function() {
+					// 'connect' listener
+					console.log(sageutils.header('Omicron') +
+						'Connection Successful. Requesting data on port ', omicronManager.omicronDataPort);
+					omicronManager.oinputserverConnected = true;
+					
+					var sendbuf = util.format("omicron_data_on,%d\n", omicronManager.omicronDataPort);
+					omicronManager.oinputserverSocket.write(sendbuf);			
+				});
+				omicronManager.oinputserverSocket.on('error', function(e) {
+					console.log(sageutils.header('Omicron') + 'oinputserver connection error - code:', e.code);
+				});
+				omicronManager.oinputserverSocket.on('end', function(e) {
+					console.log(sageutils.header('Omicron') + 'oinputserver disconnected');
+					omicronManager.oinputserverConnected = false;
+				});
+				omicronManager.oinputserverSocket.on('data', function(e) {
+					// console.log(sageutils.header('Omicron') + 'oinputserver receiving data:', e);
+					omicronManager.processIncomingEvent(e);
+				});
+			}
+		}, 15000);
 
-			var sendbuf = util.format("omicron_data_on,%d\n", omicronManager.omicronDataPort);
-			omicronManager.oinputserverSocket.write(sendbuf);
-		});
-
-		this.oinputserverSocket.on('end', function(e) {
-			console.log(sageutils.header('Omicron') + 'oinputserver disconnected');
-		});
-		this.oinputserverSocket.on('error', function(e) {
-			console.log(sageutils.header('Omicron') + 'oinputserver connection error - code:', e.code);
-		});
-		this.oinputserverSocket.on('data', function(e) {
-			// console.log(sageutils.header('Omicron') + 'oinputserver receiving data:', e);
-			omicronManager.processIncomingEvent(e);
-		});
 	}
 }
 
@@ -461,6 +469,8 @@ OmicronManager.prototype.processIncomingEvent = function(msg, rinfo) {
 	var address = sourceID;
 	if (rinfo !== undefined) {
 		address = rinfo.address + ":" + sourceID;
+	} else {
+		address = omicronManager.config.inputServerIP + ":" + sourceID;
 	}
 
 	// ServiceTypePointer
@@ -664,11 +674,20 @@ OmicronManager.prototype.processPointerEvent = function(e, sourceID, posX, posY,
 	touchHeight *= omicronManager.totalHeight;
 
 	if (omicronManager.eventDebug) {
-		console.log(sageutils.header('Omicron') + "pointer ID " + sourceID + " event! type: " + e.type);
-		console.log(sageutils.header('Omicron') + "pointer event! type: " + e.type);
-		console.log(sageutils.header('Omicron') + "ServiceTypePointer> source ", e.sourceId);
-		console.log(sageutils.header('Omicron') + "ServiceTypePointer> serviceID ", e.serviceId);
-		console.log(sageutils.header('Omicron') + "pointer width/height ", touchWidth, touchHeight);
+		var eventTypeSrt = "";
+		if (e.type == 4) {
+			eventTypeSrt = "Move";
+		} else if (e.type == 5) {
+			eventTypeSrt = "Down";
+		} else if (e.type == 6) {
+			eventTypeSrt = "Up";
+		}
+		console.log(sageutils.header('Omicron') + "pointer ID " + sourceID + " event! type: " + eventTypeSrt);
+		// console.log(sageutils.header('Omicron') + "pointer event! type: " + e.type);
+		// console.log(sageutils.header('Omicron') + "ServiceTypePointer> source ", e.sourceId);
+		// console.log(sageutils.header('Omicron') + "ServiceTypePointer> serviceID ", e.serviceId);
+		// console.log(sageutils.header('Omicron') + "pointer width/height ", touchWidth, touchHeight);
+		// console.log(sageutils.header('Omicron') + "pointer address ", address);
 	}
 
 	// Basic way to check if the input is coming from oinput, should be changed to an extra field
@@ -755,6 +774,7 @@ OmicronManager.prototype.processPointerEvent = function(e, sourceID, posX, posY,
 	typeStrings[18] = "Split";
 	typeStrings[21] = "Rotate";
 
+	/*
 	if (e.type === 4) { // EventType: MOVE
 		if (timeSinceLastNonCritEvent > omicronManager.nonCriticalEventDelay) {
 			if (e.flags == 0 || e.flags == FLAG_SINGLE_TOUCH) { // Basic touch event, non-gesture
@@ -819,15 +839,14 @@ OmicronManager.prototype.processPointerEvent = function(e, sourceID, posX, posY,
 	} else if (e.type === 15 && omicronManager.enableTwoFingerZoom) {
 		// zoom
 
-		/*
-		Omicron zoom event extra data:
-		0 = touchWidth (parsed above)
-		1 = touchHeight (parsed above)
-		2 = initX (parsed above)
-		3 = initY (parsed above)
-		4 = zoom delta
-		5 = event second type ( 1 = Down, 2 = Move, 3 = Up )
-		*/
+		// Omicron zoom event extra data:
+		// 0 = touchWidth (parsed above)
+		// 1 = touchHeight (parsed above)
+		// 2 = initX (parsed above)
+		// 3 = initY (parsed above)
+		// 4 = zoom delta
+		// 5 = event second type ( 1 = Down, 2 = Move, 3 = Up )
+		
 		// extraDataType 1 = float
 		// console.log("Touch zoom " + e.extraDataType  + " " + e.extraDataItems );
 		if (e.extraDataType === 1 && e.extraDataItems >= 4) {
@@ -885,7 +904,7 @@ OmicronManager.prototype.processPointerEvent = function(e, sourceID, posX, posY,
 	} else {
 		console.log("\t UNKNOWN event type ", e.type, typeStrings[e.type]);
 	}
-
+	*/
 	if (emit > 2) {
 		dstart = Date.now();
 		emit = 0;

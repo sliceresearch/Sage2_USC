@@ -43,8 +43,10 @@
 		viewing_distance: 0.71	// in meters
 	},
 	resolution: {
-		width: 2560,
-		height: 1600
+		//width: 2560,
+		//height: 1600
+		width: 1366,
+		height: 768
 	},
 	layout: {
 		rows: 1,
@@ -86,7 +88,7 @@
 		}
 	],
 	// for experimental features: true/false
-	/*
+	
 	experimental: {
 		webbrowser: false,  // enable the awesomium module
 		
@@ -94,9 +96,9 @@
 		{
 			// Standard 'SAGE' connection
 			// SAGE listens for a sageinputserver to stream events
-			enable: true,
+			enable: false,
 			dataPort: 30005,
-			eventDebug: false,
+			eventDebug: true,
 
 			// Touch gestures
 			zoomGestureScale: 2000,
@@ -111,7 +113,7 @@
 		}
 		
 	},
-	*/
+	
 	dependencies: {
 		ImageMagick: "",
 		FFMpeg: "C:/Dev/ffmpeg-win64-shared/bin/"
