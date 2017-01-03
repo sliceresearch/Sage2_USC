@@ -847,7 +847,7 @@ function addCookie(sKey, sValue) {
 			numberOfPiecesFromEndTokeep = 4;
 		} else if (domainPieces[domainPieces.length - 1] == "tw") {
 			numberOfPiecesFromEndTokeep = 3;
-		}else { // was a hostname extension
+		} else { // was a hostname extension
 			numberOfPiecesFromEndTokeep = 2;
 		}
 
