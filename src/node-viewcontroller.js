@@ -9,11 +9,12 @@
 // Copyright (c) 2015
 
 /**
-	* Partitioning of SAGE2 Apps into groups
+	* SAGE2 Vizualization Class
 	* @module server
 	* @submodule Visualization
 	* @requires fs
 	* @requires path
+	* @requires node-visdatafactory
 	*/
 
 // require variables to be declared
