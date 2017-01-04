@@ -9236,7 +9236,7 @@ function appFileSaveRequest(wsio, data) {
 	*/
 function wsCreatePartition(wsio, data) {
 	// Create Test partition
-	console.log("Server: Creating new Partition");
+	console.log(sageutils.header('Partition') + "Creating a new partition");
 	var newPtn = createPartition(data, "#ffffff");
 
 	// update the title of the new partition
@@ -9250,7 +9250,7 @@ function wsCreatePartition(wsio, data) {
 	* @param {object} data - Contains the layout specificiation with which partitions will be created
 	*/
 function wsPartitionScreen(wsio, data) {
-	console.log("Server: Dividing SAGE2 into Partitions");
+	console.log(sageutils.header('Partition') + "Dividing SAGE2 into partitions");
 
 	divideAreaPartitions(
 		data,
