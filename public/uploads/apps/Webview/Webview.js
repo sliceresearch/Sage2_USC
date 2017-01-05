@@ -462,13 +462,13 @@ var Webview = SAGE2_App.extend({
 
 			// zoomin
 			if (dir === "zoomin") {
-				this.state.zoom *= 1.25;
+				this.state.zoom *= 1.50;
 				this.element.setZoomFactor(this.state.zoom);
 			}
 
 			// zoomout
 			if (dir === "zoomout") {
-				this.state.zoom /= 1.25;
+				this.state.zoom /= 1.50;
 				this.element.setZoomFactor(this.state.zoom);
 			}
 
