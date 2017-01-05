@@ -7989,9 +7989,9 @@ function keyPressOnPortal(uniqueID, portalId, localPt, data) {
 function toggleApplicationFullscreen(uniqueID, app, dblClick) {
 	var resizeApp;
 	if (app.maximized !== true) { // maximize
-		resizeApp = remoteInteraction[uniqueID].maximizeSelectedItem(app, dblClick);
+		resizeApp = remoteInteraction[uniqueID].maximizeSelectedItem(app);
 	} else { // restore to previous
-		resizeApp = remoteInteraction[uniqueID].restoreSelectedItem(app, dblClick);
+		resizeApp = remoteInteraction[uniqueID].restoreSelectedItem(app);
 	}
 
 	if (resizeApp !== null) {
