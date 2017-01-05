@@ -8285,18 +8285,9 @@ function findApplicationPortal(app) {
 // **************  Omicron section *****************
 var omicronRunning = false;
 var omicronManager = new Omicron(config);
-omicronManager.linkDrawingManager(drawingManager);
 
-if (config.experimental && config.experimental.omicron &&
-	(config.experimental.omicron.enable === true || config.experimental.omicron.useSageInputServer === true)) {
-
-	var closeGestureDelay = 1500;
-
-	if (config.experimental.omicron.closeGestureDelay !== undefined) {
-		closeGestureDelay = config.experimental.omicron.closeGestureDelay;
-	}
-
-	omicronManager.setCallbacks(
+// Set callback functions so Omicron can generate SAGEPointer events
+omicronManager.setCallbacks(
 		sagePointers,
 		createSagePointer,
 		showPointer,
@@ -8315,6 +8306,18 @@ if (config.experimental && config.experimental.omicron &&
 		keyPress,
 		createRadialMenu
 	);
+omicronManager.linkDrawingManager(drawingManager);
+
+if (config.experimental && config.experimental.omicron &&
+	(config.experimental.omicron.enable === true || config.experimental.omicron.useSageInputServer === true)) {
+
+	var closeGestureDelay = 1500;
+
+	if (config.experimental.omicron.closeGestureDelay !== undefined) {
+		closeGestureDelay = config.experimental.omicron.closeGestureDelay;
+	}
+
+	
 	omicronManager.runTracker();
 	omicronRunning = true;
 }

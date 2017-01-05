@@ -213,38 +213,50 @@ function OmicronManager(sysConfig) {
 		if (this.config.msgPort) {
 			msgPort = this.config.msgPort;
 		}
-
+		
+		omicronManager.connect(msgPort);
+		
 		// attempt to connect every 15 seconds, if connection failed
 		setInterval(function() {
 			if (omicronManager.oinputserverConnected === false) {
-				console.log(sageutils.header('Omicron') + 'Connecting to Omicron oinputserver at "' +
-					omicronManager.config.inputServerIP + '" on msgPort: ' + msgPort + '.');
-
-				omicronManager.oinputserverSocket = net.connect(msgPort, omicronManager.config.inputServerIP,  function() {
-					// 'connect' listener
-					console.log(sageutils.header('Omicron') +
-						'Connection Successful. Requesting data on port ', omicronManager.omicronDataPort);
-					omicronManager.oinputserverConnected = true;
-					
-					var sendbuf = util.format("omicron_data_on,%d\n", omicronManager.omicronDataPort);
-					omicronManager.oinputserverSocket.write(sendbuf);			
-				});
-				omicronManager.oinputserverSocket.on('error', function(e) {
-					console.log(sageutils.header('Omicron') + 'oinputserver connection error - code:', e.code);
-				});
-				omicronManager.oinputserverSocket.on('end', function(e) {
-					console.log(sageutils.header('Omicron') + 'oinputserver disconnected');
-					omicronManager.oinputserverConnected = false;
-				});
-				omicronManager.oinputserverSocket.on('data', function(e) {
-					// console.log(sageutils.header('Omicron') + 'oinputserver receiving data:', e);
-					omicronManager.processIncomingEvent(e);
-				});
+				omicronManager.connect(msgPort);
 			}
 		}, 15000);
 
 	}
 }
+
+/**
+ * Initalizes connection with Omicron input servr
+ *
+ * @method connect
+ */
+OmicronManager.prototype.connect = function(msgPort) {
+	console.log(sageutils.header('Omicron') + 'Connecting to Omicron oinputserver at "' +
+		omicronManager.config.inputServerIP + '" on msgPort: ' + msgPort + '.');
+
+		omicronManager.oinputserverSocket = net.connect(msgPort, omicronManager.config.inputServerIP,  function() {
+			// 'connect' listener
+			console.log(sageutils.header('Omicron') +
+				'Connection Successful. Requesting data on port ', omicronManager.omicronDataPort);
+			omicronManager.oinputserverConnected = true;
+
+			var sendbuf = util.format("omicron_data_on,%d\n", omicronManager.omicronDataPort);
+				omicronManager.oinputserverSocket.write(sendbuf);			
+		});
+		omicronManager.oinputserverSocket.on('error', function(e) {
+			console.log(sageutils.header('Omicron') + 'oinputserver connection error - code:', e.code);
+		});
+		omicronManager.oinputserverSocket.on('end', function(e) {
+			console.log(sageutils.header('Omicron') + 'oinputserver disconnected');
+			omicronManager.oinputserverConnected = false;
+		});
+		omicronManager.oinputserverSocket.on('data', function(e) {
+			// console.log(sageutils.header('Omicron') + 'oinputserver receiving data:', e);
+			omicronManager.processIncomingEvent(e);
+		});
+};
+
 
 /**
  * Sends disconnect signal to input server
@@ -312,6 +324,8 @@ OmicronManager.prototype.setCallbacks = function(
 	this.createRadialMenu    = createRadialMenuCB;
 
 	this.createSagePointer(this.config.inputServerIP);
+
+	console.log(sageutils.header('Omicron') + "server callbacks set");
 };
 
 /**
@@ -686,7 +700,7 @@ OmicronManager.prototype.processPointerEvent = function(e, sourceID, posX, posY,
 		// console.log(sageutils.header('Omicron') + "pointer event! type: " + e.type);
 		// console.log(sageutils.header('Omicron') + "ServiceTypePointer> source ", e.sourceId);
 		// console.log(sageutils.header('Omicron') + "ServiceTypePointer> serviceID ", e.serviceId);
-		// console.log(sageutils.header('Omicron') + "pointer width/height ", touchWidth, touchHeight);
+		// console.log(sageutils.header('Omicron') + "   pos: " + posX.toFixed(2) + ", " + posY.toFixed(2) + " size: " + touchWidth.toFixed(2) + ", " + touchHeight.toFixed(2));
 		// console.log(sageutils.header('Omicron') + "pointer address ", address);
 	}
 
@@ -774,8 +788,14 @@ OmicronManager.prototype.processPointerEvent = function(e, sourceID, posX, posY,
 	typeStrings[18] = "Split";
 	typeStrings[21] = "Rotate";
 
-	/*
 	if (e.type === 4) { // EventType: MOVE
+		if (omicronManager.gestureDebug) {
+			console.log(sageutils.header('Omicron') + "Touch move at - (" + posX.toFixed(2) + "," + posY.toFixed(2) + ") initPos: ("
+			+ initX.toFixed(2) + "," + initY.toFixed(2) + ")");
+		}
+		
+		
+		/*
 		if (timeSinceLastNonCritEvent > omicronManager.nonCriticalEventDelay) {
 			if (e.flags == 0 || e.flags == FLAG_SINGLE_TOUCH) { // Basic touch event, non-gesture
 				if (omicronManager.gestureDebug) {
@@ -795,21 +815,24 @@ OmicronManager.prototype.processPointerEvent = function(e, sourceID, posX, posY,
 				omicronManager.lastNonCritEventTime = Date.now();
 			}
 		}
+		*/
 	} else if (e.type === 5) { // EventType: DOWN
 		if (omicronManager.gestureDebug) {
-			console.log("Touch down at - (" + posX.toFixed(2) + "," + posY.toFixed(2) + ") initPos: ("
+			console.log(sageutils.header('Omicron') + "Touch down at - (" + posX.toFixed(2) + "," + posY.toFixed(2) + ") initPos: ("
 			+ initX.toFixed(2) + "," + initY.toFixed(2) + ") flags:" + e.flags);
 		}
 
+		omicronManager.createSagePointer(address);
+		/*
 		if (e.flags == 0 || e.flags == FLAG_SINGLE_TOUCH) { // Basic touch event, non-gesture
 			// Create pointer
-			if (address in omicronManager.sagePointers) {
-				omicronManager.showPointer(address, {
-					label:  "Touch: " + sourceID,
-					color: "rgba(242, 182, 15, 1.0)",
-					sourceType: "Touch"
-				});
-			} else {
+			// if (address in omicronManager.sagePointers) {
+			// 	omicronManager.showPointer(address, {
+			// 		label:  "Touch: " + sourceID,
+			// 		color: "rgba(242, 182, 15, 1.0)",
+			// 		sourceType: "Touch"
+			// 	});
+			// } else {
 				omicronManager.createSagePointer(address);
 				omicronManager.showPointer(address, {
 					label:  "Touch: " + sourceID,
@@ -817,9 +840,16 @@ OmicronManager.prototype.processPointerEvent = function(e, sourceID, posX, posY,
 					sourceType: "Touch"
 				});
 				omicronManager.pointerPress(address, posX, posY, { button: "left" });
-			}
+			// }
 		}
+		*/
 	} else if (e.type === 6) { // EventType: UP
+		if (omicronManager.gestureDebug) {
+			// console.log("Touch release");
+			console.log(sageutils.header('Omicron') + "Touch up at - (" + posX.toFixed(2) + "," + posY.toFixed(2) + ") initPos: ("
+			+ initX.toFixed(2) + "," + initY.toFixed(2) + ") flags:" + e.flags);
+		}
+		/*
 		// if(e.flags == 0) { // Basic touch event, non-gesture
 		// Hide pointer
 		omicronManager.hidePointer(address);
@@ -836,7 +866,8 @@ OmicronManager.prototype.processPointerEvent = function(e, sourceID, posX, posY,
 			+ initX.toFixed(2) + "," + initY.toFixed(2) + ") flags:" + e.flags);
 		}
 		// }
-	} else if (e.type === 15 && omicronManager.enableTwoFingerZoom) {
+		*/
+	}/* else if (e.type === 15 && omicronManager.enableTwoFingerZoom) {
 		// zoom
 
 		// Omicron zoom event extra data:
