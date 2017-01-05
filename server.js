@@ -8093,7 +8093,7 @@ function pointerCloseGesture(uniqueID, pointerX, pointerY, time, gesture) {
 	if (elem !== null) {
 		if (elem.closeGestureID === undefined && gesture === 0) { // gesture: 0 = down, 1 = hold/move, 2 = up
 			elem.closeGestureID = uniqueID;
-			elem.closeGestureTime = time + closeGestureDelay; // Delay in ms
+			// elem.closeGestureTime = time + closeGestureDelay; // Delay in ms
 		} else if (elem.closeGestureTime <= time && gesture === 1) { // Held long enough, remove
 			deleteApplication(elem);
 		} else if (gesture === 2) { // Released, reset timer
@@ -8286,6 +8286,12 @@ function findApplicationPortal(app) {
 var omicronRunning = false;
 var omicronManager = new Omicron(config);
 
+// Helper function for omicron to switch pointer mode
+function omi_pointerChangeMode(uniqueID) {
+	remoteInteraction[uniqueID].toggleModes();
+	broadcast('changeSagePointerMode', {id: sagePointers[uniqueID].id, mode: remoteInteraction[uniqueID].interactionMode});
+}
+
 // Set callback functions so Omicron can generate SAGEPointer events
 omicronManager.setCallbacks(
 		sagePointers,
@@ -8304,20 +8310,15 @@ omicronManager.setCallbacks(
 		keyDown,
 		keyUp,
 		keyPress,
-		createRadialMenu
+		createRadialMenu,
+		omi_pointerChangeMode,
+		remoteInteraction
 	);
 omicronManager.linkDrawingManager(drawingManager);
 
 if (config.experimental && config.experimental.omicron &&
 	(config.experimental.omicron.enable === true || config.experimental.omicron.useSageInputServer === true)) {
 
-	var closeGestureDelay = 1500;
-
-	if (config.experimental.omicron.closeGestureDelay !== undefined) {
-		closeGestureDelay = config.experimental.omicron.closeGestureDelay;
-	}
-
-	
 	omicronManager.runTracker();
 	omicronRunning = true;
 }

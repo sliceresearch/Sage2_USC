@@ -98,12 +98,12 @@
 			// SAGE listens for a sageinputserver to stream events
 			enable: false,
 			dataPort: 30005,
-			eventDebug: true,
+			eventDebug: false,
 
 			// Touch gestures
 			zoomGestureScale: 2000,
 			acceleratedDragScale: 3,
-			gestureDebug: true,
+			gestureDebug: false,
 
 			// Additional 'CAVE2' type connection
 			// SAGE connects to an oinputserver to get events
