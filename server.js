@@ -5571,8 +5571,6 @@ function pointerPressOnOpenSpace(uniqueID, pointerX, pointerY, data) {
 			sagePointers[uniqueID].color);
 
 		draggingPartition[uniqueID].start = {x: pointerX, y: pointerY};
-
-		console.log(sagePointers[uniqueID].color);
 	}
 }
 
@@ -6923,6 +6921,7 @@ function pointerRelease(uniqueID, pointerX, pointerY, data) {
 	}
 
 	if (draggingPartition[uniqueID] && data.button === "left") {
+
 		draggingPartition[uniqueID].ptn.left =
 			pointerX < draggingPartition[uniqueID].start.x ?
 			pointerX : draggingPartition[uniqueID].start.x;
@@ -6939,13 +6938,31 @@ function pointerRelease(uniqueID, pointerX, pointerY, data) {
 			pointerY < draggingPartition[uniqueID].start.y ?
 			draggingPartition[uniqueID].start.y - pointerY : pointerY - draggingPartition[uniqueID].start.y;
 
-		draggingPartition[uniqueID].ptn.aspect = draggingPartition[uniqueID].ptn.width / draggingPartition[uniqueID].ptn.height;
+		// if the partition is much too small (most likely created by mistake)
+		if (draggingPartition[uniqueID].ptn.width < 25 || draggingPartition[uniqueID].ptn.height < 25) {
+			// delete the partition
+			broadcast('deletePartitionWindow', partitions.list[draggingPartition[uniqueID].ptn.id].getDisplayInfo());
+			partitions.removePartition(draggingPartition[uniqueID].ptn.id);
+			interactMgr.removeGeometry(draggingPartition[uniqueID].ptn.id, "partitions");
+		} else {
+			// increase partition width to minimum width if too thin
+			if (draggingPartition[uniqueID].ptn.width < partitions.minSize.width) {
+				draggingPartition[uniqueID].ptn.width = partitions.minSize.width;
+			}
 
-		partitions.updatePartitionGeometries(draggingPartition[uniqueID].ptn.id, interactMgr);
-		broadcast('partitionMoveAndResizeFinished', draggingPartition[uniqueID].ptn.getDisplayInfo());
+			// increase partition height to minimum height if too short
+			if (draggingPartition[uniqueID].ptn.height < partitions.minSize.height) {
+				draggingPartition[uniqueID].ptn.height = partitions.minSize.height;
+			}
 
-		broadcast('partitionWindowTitleUpdate', draggingPartition[uniqueID].ptn.getTitle());
+			draggingPartition[uniqueID].ptn.aspect =
+				draggingPartition[uniqueID].ptn.width / draggingPartition[uniqueID].ptn.height;
 
+			partitions.updatePartitionGeometries(draggingPartition[uniqueID].ptn.id, interactMgr);
+			broadcast('partitionMoveAndResizeFinished', draggingPartition[uniqueID].ptn.getDisplayInfo());
+
+			broadcast('partitionWindowTitleUpdate', draggingPartition[uniqueID].ptn.getTitle());
+		}
 		// stop creation of partition
 		delete draggingPartition[uniqueID];
 
@@ -7972,9 +7989,9 @@ function keyPressOnPortal(uniqueID, portalId, localPt, data) {
 function toggleApplicationFullscreen(uniqueID, app, dblClick) {
 	var resizeApp;
 	if (app.maximized !== true) { // maximize
-		resizeApp = remoteInteraction[uniqueID].maximizeSelectedItem(app, dblClick);
+		resizeApp = remoteInteraction[uniqueID].maximizeSelectedItem(app);
 	} else { // restore to previous
-		resizeApp = remoteInteraction[uniqueID].restoreSelectedItem(app, dblClick);
+		resizeApp = remoteInteraction[uniqueID].restoreSelectedItem(app);
 	}
 
 	if (resizeApp !== null) {
@@ -9214,7 +9231,7 @@ function appFileSaveRequest(wsio, data) {
 	*/
 function wsCreatePartition(wsio, data) {
 	// Create Test partition
-	console.log("Server: Creating new Partition");
+	console.log(sageutils.header('Partition') + "Creating a new partition");
 	var newPtn = createPartition(data, "#ffffff");
 
 	// update the title of the new partition
@@ -9228,7 +9245,7 @@ function wsCreatePartition(wsio, data) {
 	* @param {object} data - Contains the layout specificiation with which partitions will be created
 	*/
 function wsPartitionScreen(wsio, data) {
-	console.log("Server: Dividing SAGE2 into Partitions");
+	console.log(sageutils.header('Partition') + "Dividing SAGE2 into partitions");
 
 	divideAreaPartitions(
 		data,

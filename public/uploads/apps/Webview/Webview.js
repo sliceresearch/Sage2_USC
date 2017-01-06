@@ -47,6 +47,10 @@ var Webview = SAGE2_App.extend({
 		this.element.allowpopups = false;
 		this.element.allowfullscreen = false;
 		this.element.nodeintegration = 0;
+		// disable fullscreen
+		this.element.fullscreenable = false;
+		this.element.fullscreen = false;
+
 		// this.element.disablewebsecurity = true;
 
 		this.element.minwidth  = data.width;
@@ -185,6 +189,7 @@ var Webview = SAGE2_App.extend({
 		// Called when window is resized
 		this.element.style.width  = this.sage2_width  + "px";
 		this.element.style.height = this.sage2_height + "px";
+
 		// resize the console layer
 		if (this.layer) {
 			// make sure the layer exist first
@@ -462,13 +467,13 @@ var Webview = SAGE2_App.extend({
 
 			// zoomin
 			if (dir === "zoomin") {
-				this.state.zoom *= 1.25;
+				this.state.zoom *= 1.50;
 				this.element.setZoomFactor(this.state.zoom);
 			}
 
 			// zoomout
 			if (dir === "zoomout") {
-				this.state.zoom /= 1.25;
+				this.state.zoom /= 1.50;
 				this.element.setZoomFactor(this.state.zoom);
 			}
 

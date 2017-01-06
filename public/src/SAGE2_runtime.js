@@ -838,8 +838,33 @@ function addCookie(sKey, sValue) {
 	if (window.location.hostname === "127.0.0.1") {
 		domain = "127.0.0.1";
 	} else {
-		domain = window.location.hostname.split('.').slice(-2).join(".");
+		var domainPieces = window.location.hostname.split('.');
+		var maybeInt = parseInt(domainPieces[domainPieces.length - 1]);
+		var numberOfPiecesFromEndTokeep;
+
+		// if (maybeInt) { // this is a number, so must be last part of an ip address, need 4 parts
+		// 	numberOfPiecesFromEndTokeep = 4;
+		// } else if (domainPieces[domainPieces.length - 1] == "tw") {
+		// 	numberOfPiecesFromEndTokeep = 3;
+		// } else { // was a hostname extension
+		// 	numberOfPiecesFromEndTokeep = 2;
+		// }
+
+		// NaN triggers false on a test
+		if (maybeInt) {
+			// this is a number, so must be last part of an ip address
+			// use the whole hostname
+			numberOfPiecesFromEndTokeep = domainPieces.length;
+		} else {
+			// was a hostname extension
+			// to get domain, remove hostname
+			numberOfPiecesFromEndTokeep = domainPieces.length - 1;
+		}
+
+		// calculate the domain from the spliced hostname
+		domain = domainPieces.slice(-1 * numberOfPiecesFromEndTokeep).join(".");
 	}
+
 	document.cookie = encodeURIComponent(sKey) + "=" + encodeURIComponent(sValue) +
 		"; expires=Fri, 31 Dec 9999 23:59:59 GMT" +
 		"; domain=" + domain +
