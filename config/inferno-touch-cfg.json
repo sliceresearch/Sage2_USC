@@ -1,8 +1,8 @@
 {
 	name: "Inferno",
 	host: "inferno.evl.uic.edu",
-	port: 9090,
-	index_port: 9292,
+	port: 443,
+	index_port: 80,
 	background: {
 		color: "#333333",
 		watermark: {
@@ -30,8 +30,8 @@
 		tile_borders: { left: 0.004, right: 0.002, bottom: 0.002, top: 0.004 }, // mullions in meter
 		// prefered or common viewing distance to calculate UI sizes
 		//viewing_distance: 0.5  // in meter (touchscreen user)
-		//viewing_distance: 1.8  // in meter (presenter user)
-		viewing_distance: 4.8  // in meter (door row user)
+		viewing_distance: 2.8  // in meter (presenter user)
+		//viewing_distance: 3.8  // in meter (door row user)
 	},
 	layout: {
 		rows: 1,
@@ -50,28 +50,26 @@
 	],
 	experimental: {
 		omicron: {
-			// Default SAGE2 input connection
-			// SAGE listens for a sageinputserver to stream events
 			enable: true,
-			//host: "131.193.76.121",
+			
+			// Port SAGE will listen for a oinputserver connection
+			msgPort: 28000,
+			
+			// If specified, SAGE will actively attempt to connect to
+			// an oinputserver on the specified IP and data port
+			inputServerIP: "131.193.183.207",
 			dataPort: 30005,
 			
-			debug: false,
+			eventDebug: false,
 			
+			style: "Touch", // Display as "Touch" or "Pointer"
+			interactionMode: "App", // "Window" or "App"
+
 			// Touch gestures
-			gestureDebug: true,
-			touchOffset: [ 0, -20 ], // in pixels
-			zoomGestureScale: 5,
-			acceleratedDragScale: 2,
-			
-			// Alternate input connection
-			// Note if the following is enabled the server will attempt
-			// to connect to the specified Omicron oinputserver
-			// (By default the server listens for an Omicron sageinputserver to connect to it)
-			useOinputserver: false,
-			inputServerIP: "131.193.76.94",
-			//inputServerIP: "131.193.183.207",
-			msgPort: 28000
+			touchOffset: [ 12, 5 ], // in pixels
+			zoomGestureScale: 2000,
+			acceleratedDragScale: 3,
+			gestureDebug: false,
 		}
 	},
 	dependencies: {
