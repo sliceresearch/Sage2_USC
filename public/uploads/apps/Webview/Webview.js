@@ -42,11 +42,19 @@ var Webview = SAGE2_App.extend({
 		this.element.style.display = "inline-flex";
 
 		// Webview settings
-		this.element.autosize  = "on";
+		// this.element.autosize  = "on";
+		this.element.autosize  = "off";
 		this.element.plugins   = "on";
 		this.element.allowpopups = false;
 		this.element.allowfullscreen = false;
 		this.element.nodeintegration = 0;
+
+		// disable auto resize (handled in SAGE2 resize event)
+		this.element.disableguestresize = "on";
+		// disable fullscreen
+		this.element.fullscreenable = false;
+		this.element.fullscreen = false;
+
 		// this.element.disablewebsecurity = true;
 
 		this.element.minwidth  = data.width;
@@ -67,6 +75,14 @@ var Webview = SAGE2_App.extend({
 			_this.pre.innerHTML = "";
 			// update the emulation
 			_this.updateMode();
+
+			var wc = _this.element.getWebContents();
+			wc.setSize({
+				normal: {
+					width:  data.width,
+					height: data.height
+				}
+			});
 		});
 
 		// done loading
@@ -185,6 +201,17 @@ var Webview = SAGE2_App.extend({
 		// Called when window is resized
 		this.element.style.width  = this.sage2_width  + "px";
 		this.element.style.height = this.sage2_height + "px";
+
+		// Set size by hand since we disabled auto-resize
+		// maybe better performance
+		var wc = this.element.getWebContents();
+		wc.setSize({
+			normal: {
+				width:  this.sage2_width,
+				height: this.sage2_height
+			}
+		});
+
 		// resize the console layer
 		if (this.layer) {
 			// make sure the layer exist first
