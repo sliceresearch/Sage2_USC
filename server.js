@@ -5507,7 +5507,7 @@ function pointerPress(uniqueID, pointerX, pointerY, data) {
 	// Whiteboard app
 	// If the user touches on the palette with drawing disabled, enable it
 	if ((!drawingManager.drawingMode) && drawingManager.touchInsidePalette(pointerX, pointerY)) {
-		drawingManager.reEnableDrawingMode();
+		// drawingManager.reEnableDrawingMode();
 	}
 	if (drawingManager.drawingMode) {
 		drawingManager.pointerEvent(

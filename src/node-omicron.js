@@ -116,9 +116,11 @@ function OmicronManager(sysConfig) {
 		this.config.acceleratedDragScale = 3;
 		this.config.gestureDebug = false;
 
-		this.config.useOinputserver = false;
-		this.config.inputServerIP = "127.0.0.1";
 		this.config.msgPort = 28000;
+	}
+
+	if (this.config.enable === false) {
+		return;
 	}
 
 	if (this.config.enableDoubleClickMaximize !== undefined) {
@@ -206,8 +208,7 @@ function OmicronManager(sysConfig) {
 
 	server.listen(this.omicronDataPort, serverHost);
 
-	if (this.config.useOinputserver === true) {
-
+	if (this.config.inputServerIP !== undefined) {
 		omicronManager.oinputserverConnected = false;
 		var msgPort = 28000;
 		if (this.config.msgPort) {
@@ -330,7 +331,7 @@ OmicronManager.prototype.setCallbacks = function(
 
 	this.createSagePointer(this.config.inputServerIP);
 
-	console.log(sageutils.header('Omicron') + "server callbacks set");
+	// console.log(sageutils.header('Omicron') + "Server callbacks set");
 };
 
 /**
@@ -339,6 +340,10 @@ OmicronManager.prototype.setCallbacks = function(
  * @method runTracker
  */
 OmicronManager.prototype.runTracker = function() {
+	if (this.config.enable === false) {
+		return;
+	}
+
 	var udp = dgram.createSocket("udp4");
 
 	udp.on("message", function(msg, rinfo) {
@@ -713,11 +718,7 @@ OmicronManager.prototype.processPointerEvent = function(e, sourceID, posX, posY,
 		// console.log(sageutils.header('Omicron') + "pointer address ", address);
 	}
 
-	// Basic way to check if the input is coming from oinput, should be changed to an extra field
-	// but that would mean change the C++ code for the oinput server
-	var isOInput = e.flags == 0;
-
-	if (isOInput && drawingManager.drawingMode) {
+	if (drawingManager.drawingMode) {
 		// If the touch is coming from oinput send it to node-drawing and stop after that
 		drawingManager.pointerEvent(e, sourceID, posX, posY, touchWidth, touchHeight);
 		return;
@@ -725,8 +726,8 @@ OmicronManager.prototype.processPointerEvent = function(e, sourceID, posX, posY,
 
 	// If the user touches on the palette with drawing disabled, enable it
 	if ((!drawingManager.drawingMode) && drawingManager.touchInsidePalette(posX, posY)
-		&& e.type === 5 && isOInput) {
-		drawingManager.reEnableDrawingMode();
+		&& e.type === 5) {
+		// drawingManager.reEnableDrawingMode();
 	}
 
 	// TouchGestureManager Flags:
