@@ -43,10 +43,10 @@
 		viewing_distance: 0.71	// in meters
 	},
 	resolution: {
-		//width: 2560,
-		//height: 1600
-		width: 1366,
-		height: 768
+		width: 2560,
+		height: 1600
+		//width: 1366,
+		//height: 768
 	},
 	layout: {
 		rows: 1,
@@ -105,6 +105,9 @@
 			dataPort: 30005,
 			
 			eventDebug: false,
+			
+			style: "Touch", // Display as "Touch" or "Pointer"
+			interactionMode: "App", // "Window" or "App"
 
 			// Touch gestures
 			zoomGestureScale: 2000,

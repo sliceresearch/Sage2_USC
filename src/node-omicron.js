@@ -848,14 +848,25 @@ OmicronManager.prototype.processPointerEvent = function(e, sourceID, posX, posY,
 		omicronManager.createSagePointer(address);
 
 		// Set the pointer style
+		var pointerStyle = "Touch";
+		if (omicronManager.config.style !== undefined) {
+			pointerStyle = omicronManager.config.style;
+		}
 		omicronManager.showPointer(address, {
 			label:  "Touch: " + sourceID,
 			color: "rgba(242, 182, 15, 1.0)",
-			sourceType: "Pointer"
+			sourceType: pointerStyle
 		});
 
 		// Set pointer mode
-		omicronManager.pointerChangeMode(address);
+		var mode = "Window";
+		if (omicronManager.config.interactionMode !== undefined) {
+			mode = omicronManager.config.interactionMode;
+		}
+
+		if (mode === "App") {
+			omicronManager.pointerChangeMode(address);
+		}
 
 		// Set the initial pointer position
 		omicronManager.pointerPosition(address, { pointerX: posX, pointerY: posY });
