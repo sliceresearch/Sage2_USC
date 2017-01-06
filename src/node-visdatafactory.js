@@ -12,9 +12,9 @@
 	* SAGE2 Data Factory Class
 	* @module server
 	* @submodule DataFactory
-	* @requires fs
-	* @requires path
 	*/
+
+"use strict";
 
 function DataFactory() {
 	this.dataType = "Obj";
@@ -22,6 +22,7 @@ function DataFactory() {
 
 // basic visualization data types
 DataFactory.prototype.dataTypes = {
+	ID: ID,
 	Num: Num,
 	Text: Text,
 	Point: Point,
@@ -38,6 +39,11 @@ DataFactory.prototype.transform = function(options) {
 };
 
 // ====== Data Type Class Declarations ======
+
+// ID Class - (For key of an item for later reference)
+function ID(options) {
+	this.data = options.data || null;
+}
 
 // Num Class
 function Num(options) {

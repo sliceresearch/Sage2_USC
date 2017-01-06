@@ -36,9 +36,10 @@ function Visualization(broadcastFunc, name) {
 	this.name = name;
 
 	// the data for the visualization
-	this.data = null;
-	// after data is loaded and formatted, it is ready
-	this.dataReady = false;
+	this.data = null; // data
+	this.header = null; // data attributes
+
+	this.parser = new DataFactory();
 
 	this.views = {};
 	this.numViews = 0;
@@ -86,7 +87,7 @@ Visualization.prototype.loadDataSource = function(dataPath) {
 
 				var lines = data.split("\n");
 
-				var header = lines[0];
+				this.header = lines[0];
 
 				var dataLines = lines.slice(1);
 
@@ -103,6 +104,7 @@ Visualization.prototype.loadDataSource = function(dataPath) {
 				});
 			} else if (format === "json") {
 				parsedData = JSON.parse(data);
+				this.header = Object.keys(parsedData[0]);
 			} else {
 				var e = new Error();
 				e.message = "Incompatible data format: " + dataPath;
@@ -120,33 +122,25 @@ Visualization.prototype.loadDataSource = function(dataPath) {
 	* Format first level of data using provided map from values used in data to recognized terms,
 	*
 	*
-	* @param {object} map - Mapping from data terms to recognized terms
+	* @param {object} map - Mapping from data terms to recognized data types
 	*/
 Visualization.prototype.formatData = function(map) {
-	let formattedData = Array.isArray(this.data) ? new Array(this.data.length) : {};
+	let array = Array.isArray(this.data);
 
 	// perform data regularization operations
-	for (let key in this.data) {
-		let newKey = map[key] && map[key].type || key;
+	for (let obj of this.data) {
+		var keys = Object.keys(obj);
 
-		if (map[key]) {
-			formattedData[newKey] = {
-				label: key,
-				use: map[key].use,
-				domain: map[key].domain,
-				data: this.data[key]
-			};
-		} else {
-			formattedData[newKey] = {
-				label: key,
-				use: null,
-				domain: null,
-				data: this.data[key]
-			};
+		for (let key of keys) {
+			// transform the key of the data into the correct data class, store in same object
+			obj[key] = this.factory.transform(
+				{
+					data: obj[key],
+					dataType: map[key]
+				});
 		}
 	}
 
-	this.data = formattedData;
 	this.dataReady = true;
 };
 
