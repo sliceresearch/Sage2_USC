@@ -155,9 +155,10 @@ function createWindow() {
 			nodeIntegration: true,
 			webSecurity: true,
 			backgroundThrottling: false,
-			plugins: commander.plugins
-			// allowDisplayingInsecureContent: true
-			// allowRunningInsecureContent: true
+			plugins: commander.plugins,
+			// allow this for now, problem loading webview recently
+			allowDisplayingInsecureContent: true,
+			allowRunningInsecureContent: true
 		}
 	};
 
