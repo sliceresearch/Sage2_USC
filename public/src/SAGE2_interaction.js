@@ -278,7 +278,8 @@ function SAGE2_interaction(wsio) {
 		}
 		ext = ext.toLowerCase();
 		if (youtube >= 0) {
-			mimeType = "video/youtube";
+			// mimeType = "video/youtube";
+			mimeType = "application/url";
 		} else if (ext === "jpg") {
 			mimeType = "image/jpeg";
 		} else if (ext === "jpeg") {
