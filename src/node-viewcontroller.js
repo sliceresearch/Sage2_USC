@@ -23,6 +23,8 @@
 var fs = require('fs');
 // var path = require('path');
 
+var DataFactory = require('node-visdatafactory');
+
 // global view types enumerated
 
 
@@ -96,8 +98,8 @@ Visualization.prototype.loadDataSource = function(dataPath) {
 					var dataPoint = {};
 					var thisLine = el.split(delim);
 
-					for (var i = 0; i < header.length; i++) {
-						dataPoint[header[i]] = thisLine[i];
+					for (var i = 0; i < this.header.length; i++) {
+						dataPoint[this.header[i]] = thisLine[i];
 					}
 
 					return dataPoint;
@@ -125,7 +127,7 @@ Visualization.prototype.loadDataSource = function(dataPath) {
 	* @param {object} map - Mapping from data terms to recognized data types
 	*/
 Visualization.prototype.formatData = function(map) {
-	let array = Array.isArray(this.data);
+	// let array = Array.isArray(this.data);
 
 	// perform data regularization operations
 	for (let obj of this.data) {
