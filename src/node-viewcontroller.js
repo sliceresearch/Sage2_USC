@@ -20,13 +20,16 @@
 // require variables to be declared
 "use strict";
 
+// UNCOMMENT IN NODE MODULE
+
 var fs = require('fs');
 // var path = require('path');
 
 var DataFactory = require('node-visdatafactory');
 
-// global view types enumerated
+// UNCOMMENT IN NODE MODULE */
 
+// global view types enumerated
 
 /**
 	* @class Visualization
@@ -40,8 +43,6 @@ function Visualization(broadcastFunc, name) {
 	// the data for the visualization
 	this.data = null; // data
 	this.header = null; // data attributes
-
-	this.parser = new DataFactory();
 
 	this.views = {};
 	this.numViews = 0;
@@ -125,22 +126,39 @@ Visualization.prototype.loadDataSource = function(dataPath) {
 	*
 	*
 	* @param {object} map - Mapping from data terms to recognized data types
+	* @param {boolean} eachrow - If eachrow is to be treated as a single object
+	*		as opposed to each row having multiple objects within it
+	* @param {string} rowType - Using eachrow, this is the specification of the rowType
+	*		object type
 	*/
-Visualization.prototype.formatData = function(map) {
+Visualization.prototype.formatData = function(map, eachrow = false, rowType) {
 	// let array = Array.isArray(this.data);
 
-	// perform data regularization operations
-	for (let obj of this.data) {
-		var keys = Object.keys(obj);
+	let parser = new DataFactory(map);
 
-		for (let key of keys) {
-			// transform the key of the data into the correct data class, store in same object
-			obj[key] = this.factory.transform(
+	// perform data regularization operations
+	for (let objKey in this.data) {
+		if (eachrow) {
+
+			this.data[objKey] = parser.transform(
 				{
-					data: obj[key],
-					dataType: map[key]
+					data: this.data[objKey],
+					dataType: rowType
 				});
+
+		} else {
+			var keys = Object.keys(this.data[objKey]);
+
+			for (let dataKey of keys) {
+				// transform the key of the data into the correct data class, store in same object
+				this.data[objKey][dataKey] = parser.transform(
+					{
+						data: this.data[objKey][dataKey],
+						dataType: map[dataKey]
+					});
+			}
 		}
+
 	}
 
 	this.dataReady = true;
@@ -185,4 +203,4 @@ Visualization.prototype.updateView = function(viewID) {
 	}
 };
 
-module.exports = Visualization;
+// module.exports = Visualization;
