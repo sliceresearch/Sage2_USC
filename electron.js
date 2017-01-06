@@ -203,6 +203,9 @@ function createWindow() {
 	mainWindow.webContents.on('will-navigate', function(ev) {
 		// ev.preventDefault();
 	});
+
+	// Once all done, prevent changing the fullscreen state
+	mainWindow.setFullScreenable(false);
 }
 
 /**
