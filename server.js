@@ -6325,11 +6325,11 @@ function updatePointerPosition(uniqueID, pointerX, pointerY, data) {
 			+(pointerY - cuttingPartition[uniqueID].start.y) ?
 			"horizontal" : "vertical";
 
-		var cutPosition = cutDirection === "horizontal" ? 
-			(cuttingPartition[uniqueID].start.y + pointerY) / 2 : 
+		var cutPosition = cutDirection === "horizontal" ?
+			(cuttingPartition[uniqueID].start.y + pointerY) / 2 :
 			(cuttingPartition[uniqueID].start.x + pointerX) / 2;
 
-		var cutDist = Math.sqrt(Math.pow(pointerY - cuttingPartition[uniqueID].start.y, 2) + 
+		var cutDist = Math.sqrt(Math.pow(pointerY - cuttingPartition[uniqueID].start.y, 2) +
 			Math.pow(pointerX - cuttingPartition[uniqueID].start.x, 2));
 
 		var oldPtn = cuttingPartition[uniqueID].ptn;
@@ -6424,8 +6424,8 @@ function updatePointerPosition(uniqueID, pointerX, pointerY, data) {
 				cuttingPartition[uniqueID].newPtn2.height = newDims2.height;
 
 
-				moveAndResizePartitionWindow(uniqueID, {elemId: cuttingPartition[uniqueID].newPtn1.id})
-				moveAndResizePartitionWindow(uniqueID, {elemId: cuttingPartition[uniqueID].newPtn2.id})
+				moveAndResizePartitionWindow(uniqueID, {elemId: cuttingPartition[uniqueID].newPtn1.id});
+				moveAndResizePartitionWindow(uniqueID, {elemId: cuttingPartition[uniqueID].newPtn2.id});
 
 			}
 		}
@@ -7129,10 +7129,10 @@ function pointerRelease(uniqueID, pointerX, pointerY, data) {
 			// if the old partition was tiled, set the new displays to be tiled
 			if (ptnTiled) {
 				newPtn1.toggleInnerTiling();
-				updateInnerLayout(newPtn1);
+				newPtn1.updateInnerLayout();
 
 				newPtn2.toggleInnerTiling();
-				updateInnerLayout(newPtn2);
+				newPtn2.updateInnerLayout();
 			}
 
 			// update parititon titles
