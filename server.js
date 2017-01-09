@@ -5507,7 +5507,7 @@ function pointerPress(uniqueID, pointerX, pointerY, data) {
 	// Whiteboard app
 	// If the user touches on the palette with drawing disabled, enable it
 	if ((!drawingManager.drawingMode) && drawingManager.touchInsidePalette(pointerX, pointerY)) {
-		drawingManager.reEnableDrawingMode();
+		// drawingManager.reEnableDrawingMode();
 	}
 	if (drawingManager.drawingMode) {
 		drawingManager.pointerEvent(
@@ -8110,7 +8110,7 @@ function pointerCloseGesture(uniqueID, pointerX, pointerY, time, gesture) {
 	if (elem !== null) {
 		if (elem.closeGestureID === undefined && gesture === 0) { // gesture: 0 = down, 1 = hold/move, 2 = up
 			elem.closeGestureID = uniqueID;
-			elem.closeGestureTime = time + closeGestureDelay; // Delay in ms
+			// elem.closeGestureTime = time + closeGestureDelay; // Delay in ms
 		} else if (elem.closeGestureTime <= time && gesture === 1) { // Held long enough, remove
 			deleteApplication(elem);
 		} else if (gesture === 2) { // Released, reset timer
@@ -8302,18 +8302,15 @@ function findApplicationPortal(app) {
 // **************  Omicron section *****************
 var omicronRunning = false;
 var omicronManager = new Omicron(config);
-omicronManager.linkDrawingManager(drawingManager);
 
-if (config.experimental && config.experimental.omicron &&
-	(config.experimental.omicron.enable === true || config.experimental.omicron.useSageInputServer === true)) {
+// Helper function for omicron to switch pointer mode
+function omi_pointerChangeMode(uniqueID) {
+	remoteInteraction[uniqueID].toggleModes();
+	broadcast('changeSagePointerMode', {id: sagePointers[uniqueID].id, mode: remoteInteraction[uniqueID].interactionMode});
+}
 
-	var closeGestureDelay = 1500;
-
-	if (config.experimental.omicron.closeGestureDelay !== undefined) {
-		closeGestureDelay = config.experimental.omicron.closeGestureDelay;
-	}
-
-	omicronManager.setCallbacks(
+// Set callback functions so Omicron can generate SAGEPointer events
+omicronManager.setCallbacks(
 		sagePointers,
 		createSagePointer,
 		showPointer,
@@ -8330,11 +8327,11 @@ if (config.experimental && config.experimental.omicron &&
 		keyDown,
 		keyUp,
 		keyPress,
-		createRadialMenu
+		createRadialMenu,
+		omi_pointerChangeMode,
+		remoteInteraction
 	);
-	omicronManager.runTracker();
-	omicronRunning = true;
-}
+omicronManager.linkDrawingManager(drawingManager);
 
 /* ****** Radial Menu section ************************************************************** */
 // createMediabrowser();
