@@ -752,14 +752,23 @@ OmicronManager.prototype.processPointerEvent = function(e, sourceID, posX, posY,
 	var initX = 0;
 	var initY = 0;
 
-	// var distance = 0;
-	// var angle = 0;
-	// var accelDistance = 0;
-	// var accelX = 0;
-	// var accelY = 0;
+	var distance = 0;
+	var angle = 0;
+	var accelDistance = 0;
+	var accelX = 0;
+	var accelY = 0;
 
 	// As of 2015/11/13 all touch gesture events touch have an init value
 	// (zoomDelta moved to extraData index 4 instead of 2)
+	// ExtraDataFloats
+	// [0] width
+	// [1] height
+	// [2] initX
+	// [3] initY
+	// [4] touch count in group
+	// [c] id of touch n
+	// [c+1] xPos of touch n
+	// [c+2] yPos of touch n
 	if (e.extraDataItems > 2) {
 		initX = msg.readFloatLE(offset); offset += 4;
 		initY = msg.readFloatLE(offset); offset += 4;
@@ -891,7 +900,7 @@ OmicronManager.prototype.processPointerEvent = function(e, sourceID, posX, posY,
 		// Release event
 		omicronManager.pointerRelease(address, posX, posY, { button: "left" });
 
-	}/* else if (e.type === 15 && omicronManager.enableTwoFingerZoom) {
+	} else if (e.type === 15 && omicronManager.enableTwoFingerZoom) {
 		// zoom
 
 		// Omicron zoom event extra data:
@@ -959,7 +968,7 @@ OmicronManager.prototype.processPointerEvent = function(e, sourceID, posX, posY,
 	} else {
 		console.log("\t UNKNOWN event type ", e.type, typeStrings[e.type]);
 	}
-	*/
+
 	if (emit > 2) {
 		dstart = Date.now();
 		emit = 0;

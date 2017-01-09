@@ -110,7 +110,9 @@
 			interactionMode: "App", // "Window" or "App"
 
 			// Touch gestures
+			enableTwoFingerZoom: true,
 			zoomGestureScale: 2000,
+			enableTwoFingerWindowDrag: false,
 			acceleratedDragScale: 3,
 			gestureDebug: false,			
 		}

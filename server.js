@@ -8333,13 +8333,6 @@ omicronManager.setCallbacks(
 	);
 omicronManager.linkDrawingManager(drawingManager);
 
-if (config.experimental && config.experimental.omicron &&
-	(config.experimental.omicron.enable === true || config.experimental.omicron.useSageInputServer === true)) {
-
-	omicronManager.runTracker();
-	omicronRunning = true;
-}
-
 /* ****** Radial Menu section ************************************************************** */
 // createMediabrowser();
 
