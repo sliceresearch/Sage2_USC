@@ -6321,8 +6321,8 @@ function updatePointerPosition(uniqueID, pointerX, pointerY, data) {
 
 	// if the user is cutting a partition
 	if (cuttingPartition[uniqueID]) {
-		var cutDirection = +(pointerX - cuttingPartition[uniqueID].start.x) >
-			+(pointerY - cuttingPartition[uniqueID].start.y) ?
+		var cutDirection = Math.abs(pointerX - cuttingPartition[uniqueID].start.x) >
+			Math.abs(pointerY - cuttingPartition[uniqueID].start.y) ?
 			"horizontal" : "vertical";
 
 		var cutPosition = cutDirection === "horizontal" ?
@@ -6356,7 +6356,7 @@ function updatePointerPosition(uniqueID, pointerX, pointerY, data) {
 				top: oldPtn.top,
 				left: oldPtn.left,
 				width: oldPtn.width,
-				height: cutPosition - oldPtn.top
+				height: cutPosition - oldPtn.top  - config.ui.titleBarHeight
 			};
 
 			newDims2 = {
@@ -6395,7 +6395,7 @@ function updatePointerPosition(uniqueID, pointerX, pointerY, data) {
 			};
 		}
 
-		if (cutDist > 50) {
+		if (cutDist > Math.min(oldPtn.width, oldPtn.height) / 3) {
 			// if partitions are not created
 			if (!cuttingPartition[uniqueID].newPtn1 && !cuttingPartition[uniqueID].newPtn2) {
 				// if the gesture is long enough and the new partitions haven't been made, create them
@@ -7098,18 +7098,29 @@ function pointerRelease(uniqueID, pointerX, pointerY, data) {
 	if (cuttingPartition[uniqueID] && data.button === "left") {
 		cuttingPartition[uniqueID].end = {x: pointerX, y: pointerY};
 
+		var cutDirection = +(pointerX - cuttingPartition[uniqueID].start.x) >
+			+(pointerY - cuttingPartition[uniqueID].start.y) ?
+			"horizontal" : "vertical";
+
 		var oldPtn = cuttingPartition[uniqueID].ptn;
 
 		var newPtn1 = cuttingPartition[uniqueID].newPtn1;
 		var newPtn2 = cuttingPartition[uniqueID].newPtn2;
 
 		// if mouse is dragged outside of old partition, consider that to be a cancelled split, delete the new partitions
+		// also do nothing if partition is not large enough to be split
 		if (pointerX < oldPtn.left || pointerX > oldPtn.left + oldPtn.width ||
-			pointerY < oldPtn.top || pointerY > oldPtn.top + oldPtn.height) {
+			pointerY < oldPtn.top || pointerY > oldPtn.top + oldPtn.height ||
+			(cutDirection === "horizontal" && oldPtn.height < partitions.minSize.height * 2) ||
+			(cutDirection === "vertical" && oldPtn.width < partitions.minSize.width * 2)) {
 
 			// cancel operation, delete new partitions
-			deletePartition(newPtn1.id);
-			deletePartition(newPtn2.id);
+			if (newPtn1) {
+				deletePartition(newPtn1.id);
+			}
+			if (newPtn2) {
+				deletePartition(newPtn2.id);
+			}
 
 		} else {
 			// otherwise, delete old partition, assign items to new partitions
