@@ -1568,6 +1568,14 @@ function handleClick(element) {
 			wsio.emit('partitionScreen',
 				{
 					type: "row",
+					ptn: true,
+					size: 12
+				});
+		} else if (value === "1") {
+			// create partition division of screen
+			wsio.emit('partitionScreen',
+				{
+					type: "row",
 					size: 12,
 					children: [
 						{
@@ -1582,7 +1590,7 @@ function handleClick(element) {
 						}
 					]
 				});
-		} else if (value === "1") {
+		} else if (value === "2") {
 			// create partition division of screen
 			wsio.emit('partitionScreen',
 				{
@@ -1606,7 +1614,7 @@ function handleClick(element) {
 						}
 					]
 				});
-		} else if (value === "2") {
+		} else if (value === "3") {
 			// create partition division of screen
 			wsio.emit('partitionScreen',
 				{
@@ -1647,7 +1655,7 @@ function handleClick(element) {
 						}
 					]
 				});
-		} else if (value === "3") {
+		} else if (value === "4") {
 			// create partition division of screen
 			wsio.emit('partitionScreen',
 				{
@@ -1693,7 +1701,7 @@ function handleClick(element) {
 						}
 					]
 				});
-		} else if (value === "4") {
+		} else if (value === "5") {
 			// create partition division of screen
 			wsio.emit('partitionScreen',
 				{
