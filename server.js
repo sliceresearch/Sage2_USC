@@ -7125,33 +7125,39 @@ function pointerRelease(uniqueID, pointerX, pointerY, data) {
 		} else {
 			// otherwise, delete old partition, assign items to new partitions
 
-			var cutPtnItems = Object.assign({}, oldPtn.children);
-			// var ptnColor = oldPtn.color;
-			var ptnTiled = oldPtn.innerTiling; // to preserve tiling of new partitions
+			// make sure that the new partitions exist
+			// it is possible that they wouldn't if the drag gesture was too small
+			// if they don't exist, do nothing
+			if (newPtn1 && newPtn2) {
+				var cutPtnItems = Object.assign({}, oldPtn.children);
+				// var ptnColor = oldPtn.color;
+				var ptnTiled = oldPtn.innerTiling; // to preserve tiling of new partitions
 
-			// delete the old partition
-			deletePartition(oldPtn.id);
+				// delete the old partition
+				deletePartition(oldPtn.id);
 
-			// reassign content from oldPtn to the 2 new partitions
-			for (var key in cutPtnItems) {
-				partitions.updateOnItemRelease(cutPtnItems[key]);
+				// reassign content from oldPtn to the 2 new partitions
+				for (var key in cutPtnItems) {
+					partitions.updateOnItemRelease(cutPtnItems[key]);
+				}
+
+				// if the old partition was tiled, set the new displays to be tiled
+				if (ptnTiled) {
+					newPtn1.toggleInnerTiling();
+					newPtn1.updateInnerLayout();
+
+					newPtn2.toggleInnerTiling();
+					newPtn2.updateInnerLayout();
+				}
+
+				// update parititon titles
+				broadcast('partitionWindowTitleUpdate', newPtn1.getTitle());
+				broadcast('partitionWindowTitleUpdate', newPtn2.getTitle());
+
+				// return borders to normal
+				broadcast('updatePartitionBorders', {id: newPtn1.id, highlight: false});
+				broadcast('updatePartitionBorders', {id: newPtn2.id, highlight: false});
 			}
-
-			// if the old partition was tiled, set the new displays to be tiled
-			if (ptnTiled) {
-				newPtn1.toggleInnerTiling();
-				newPtn1.updateInnerLayout();
-
-				newPtn2.toggleInnerTiling();
-				newPtn2.updateInnerLayout();
-			}
-
-			// update parititon titles
-			broadcast('partitionWindowTitleUpdate', newPtn1.getTitle());
-			broadcast('partitionWindowTitleUpdate', newPtn2.getTitle());
-
-			broadcast('updatePartitionBorders', {id: newPtn1.id, highlight: false});
-			broadcast('updatePartitionBorders', {id: newPtn2.id, highlight: false});
 		}
 
 		// stop division of partition
