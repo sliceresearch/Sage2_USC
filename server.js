@@ -5525,7 +5525,7 @@ function pointerPress(uniqueID, pointerX, pointerY, data) {
 
 	// while cutting partition, can right click to cancel action
 	if (cuttingPartition[uniqueID] && data.button === "right") {
-		
+
 		if (cuttingPartition[uniqueID].newPtn1) {
 			deletePartition(cuttingPartition[uniqueID].newPtn1.id);
 		}
