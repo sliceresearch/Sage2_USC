@@ -5522,6 +5522,29 @@ function pointerPress(uniqueID, pointerX, pointerY, data) {
 		pointerPressOnOpenSpace(uniqueID, pointerX, pointerY, data);
 		return;
 	}
+
+	// while cutting partition, can right click to cancel action
+	if (cuttingPartition[uniqueID] && data.button === "right") {
+		
+		if (cuttingPartition[uniqueID].newPtn1) {
+			deletePartition(cuttingPartition[uniqueID].newPtn1.id);
+		}
+
+		if (cuttingPartition[uniqueID].newPtn2) {
+			deletePartition(cuttingPartition[uniqueID].newPtn2.id);
+		}
+
+		delete cuttingPartition[uniqueID];
+	}
+
+	// while dragging to create partition, can right click to cancel action
+	if (draggingPartition[uniqueID] && data.button === "right") {
+
+		deletePartition(draggingPartition[uniqueID].ptn.id);
+
+		delete draggingPartition[uniqueID];
+	}
+
 	var prevInteractionItem = remoteInteraction[uniqueID].getPreviousInteractionItem();
 	var localPt = globalToLocal(pointerX, pointerY, obj.type, obj.geometry);
 
