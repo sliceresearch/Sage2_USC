@@ -1,8 +1,8 @@
 {
 	"main_script": "Webview.js",
 	"icon": "Webview.png",
-	"width": 720,
-	"height": 900,
+	"width": 1280,
+	"height": 720,
 	"resize": "free",
 	"animation": false,
 	"dependencies": [

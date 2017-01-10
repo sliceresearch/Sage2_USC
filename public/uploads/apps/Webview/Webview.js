@@ -57,7 +57,24 @@ var Webview = SAGE2_App.extend({
 		this.element.minheight = data.height;
 
 		// Get the URL from parameter or session
-		this.element.src = data.params || this.state.url;
+		var view_url = data.params || this.state.url;
+		if (view_url.indexOf('youtu') >= 0) {
+			// Search for the Youtubeq ID
+			var video_id = view_url.split('v=')[1];
+			var ampersandPosition = video_id.indexOf('&');
+			if (ampersandPosition != -1) {
+				video_id = video_id.substring(0, ampersandPosition);
+			}
+			view_url = 'https://www.youtube.com/embed/' + video_id + '?autoplay=0';
+		} else if (view_url.indexOf('vimeo') >= 0) {
+			// Search for the Vimeo ID
+			var m = view_url.match(/^.+vimeo.com\/(.*\/)?([^#\?]*)/);
+			var vimeo_id =  m ? m[2] || m[1] : null;
+			if (vimeo_id) {
+				view_url = 'https://player.vimeo.com/video/' + vimeo_id;
+			}
+		}
+		this.element.src = view_url;
 
 		// Store the zoom level, when in desktop emulation
 		this.zoomFactor = 1;
