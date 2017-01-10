@@ -1627,7 +1627,7 @@ function wsUpdateMediaStreamFrame(wsio, dataOrBuffer) {
           //console.log("UpdateMediaStreamFrame: parameter is record");
           data = dataOrBuffer;
         } else {
-          //console.log("UpdateMediaStreamFrame: parameter is Buffer");
+          console.log("UpdateMediaStreamFrame: parameter is Buffer "+dataOrBuffer.length);
           data = {}
           // buffer: id, state-type, state-encoding, state-src
           data.id = byteBufferToString(dataOrBuffer);
@@ -1701,20 +1701,68 @@ function wsUpdateMediaStreamFrame(wsio, dataOrBuffer) {
 	}
 }
 
-function wsUpdateMediaStreamChunk(wsio, data) {
-	//console.log("wsUpdateMediaStreamChunk ",data.id);
-	if (SAGE2Items.renderSync[data.id].chunks.length === 0) {
-		SAGE2Items.renderSync[data.id].chunks = initializeArray(data.total, "");
-	}
-	SAGE2Items.renderSync[data.id].chunks[data.piece] = data.state.src;
-	if (allNonBlank(SAGE2Items.renderSync[data.id].chunks)) {
-		wsUpdateMediaStreamFrame(wsio, {id: data.id, state: {
-			src: SAGE2Items.renderSync[data.id].chunks.join(""),
-			type: data.state.type,
-			encoding: data.state.encoding}});
-		SAGE2Items.renderSync[data.id].chunks = [];
-	}
+function wsUpdateMediaStreamChunk(wsio, dataOrBuffer) {
+        var data;
+        if (dataOrBuffer.id !== undefined) {
+                data = dataOrBuffer;
+                if (SAGE2Items.renderSync[data.id].chunks.length === 0) {
+                        SAGE2Items.renderSync[data.id].chunks = initializeArray(data.total, "");
+                }
+                SAGE2Items.renderSync[data.id].chunks[data.piece] = data.state.src;
+                if (allNonBlank(SAGE2Items.renderSync[data.id].chunks)) {
+                        wsUpdateMediaStreamFrame(wsio, {id: data.id, state: {
+                                src: SAGE2Items.renderSync[data.id].chunks.join(""),
+                                type: data.state.type,
+                                encoding: data.state.encoding}});
+                        SAGE2Items.renderSync[data.id].chunks = [];
+                }
+        } else {
+                data = {}
+                // buffer: id, state-type, state-encoding, state-src
+                data.id = byteBufferToString(dataOrBuffer);
+                //
+                var buf2 = dataOrBuffer.slice(data.id.length + 1);
+                data.piece = byteBufferToString(buf2);
+                //
+                var buf3 = buf2.slice(data.piece.length + 1);
+                data.total = byteBufferToString(buf3);
+                //
+                var buf4 = buf3.slice(data.total.length + 1);
+                data.state = {};
+                data.state.type = byteBufferToString(buf4);
+                //
+                var buf5 = buf4.slice(data.state.type.length + 1);
+                data.state.encoding = byteBufferToString(buf5);
+                //
+                data.state.src = buf5.slice(data.state.encoding.length + 1);
+                //
+                var chunks = SAGE2Items.renderSync[data.id].chunks;
+                if (chunks.length === 0 || chunks === null || chunks === undefined) {
+                        SAGE2Items.renderSync[data.id].chunks = initializeArray(data.total, "");
+                }
+                chunks[data.piece] = data.state.src;
+                if (allNonBlank(SAGE2Items.renderSync[data.id].chunks)) {
+                        // construct normal frame message buffer: id, type, encoding, src
+                        var newAr = chunks.slice(0);
+                        // prepend in reverse order: encoding, type, id...
+                        newAr.unshift(new Buffer([0]));
+                        newAr.unshift(new Buffer(data.state.encoding));
+                        newAr.unshift(new Buffer([0]));
+                        newAr.unshift(new Buffer(data.state.type));
+                        newAr.unshift(new Buffer([0]));
+                        newAr.unshift(new Buffer(data.id));
+                        var newBuffer = Buffer.concat(newAr);
+                        //wsUpdateMediaStreamFrame(wsio, {id: data.id, state: {
+                        //      src: concatSrc,
+                        //      type: data.state.type,
+                        //      encoding: data.state.encoding}});
+                        ////debugArrayBuffer(newBuffer);
+                        wsUpdateMediaStreamFrame(wsio,newBuffer);
+                        SAGE2Items.renderSync[data.id].chunks = [];
+                }
+        }
 }
+
 
 function wsStopMediaStream(wsio, data) {
 	var stream = SAGE2Items.applications.list[data.id];
@@ -1840,10 +1888,10 @@ function wsUpdateMediaBlockStreamFrame(wsio, buffer) {
 	var id = byteBufferToString(buffer);
 
 	if (!SAGE2Items.renderSync[id].sendNextFrame) {
-		//console.log("drop frame");
+		console.log("UpdateMediaBlockStreamFrame: drop frame");
 		return; 
 	} else {
-		//console.log("relay frame");
+		console.log("UpdateMediaBlockStreamFrame: relay frame");
 	}
 	SAGE2Items.renderSync[id].sendNextFrame = false;
 
@@ -2026,10 +2074,16 @@ function wsUpdateStateOptions(wsio, data) {
 	}
 }
 
+function stackTrace() {
+    var err = new Error();
+    return err.stack;
+}
+
 //
 // Got a resize call for an application itself
 //
 function wsAppResize(wsio, data) {
+	console.log("wsAppResize "+JSON.stringify(data)+" "+JSON.stringify(stackTrace()));
 	if (SAGE2Items.applications.list.hasOwnProperty(data.id)) {
 		var app = SAGE2Items.applications.list[data.id];
 
@@ -3082,7 +3136,7 @@ function wsLoadFileFromServer(wsio, data) {
 		appLoader.loadFileFromLocalStorage(data, function(appInstance, videohandle) {
 			// Get the drop position and convert it to wall coordinates
 			var position = data.position || [0, 0];
-			if (position[0] > 1) {
+			if (position[0] > 1 || position[0] < -1) {
 				// value in pixels, used as origin
 				appInstance.left = position[0];
 			} else {
@@ -3094,7 +3148,7 @@ function wsLoadFileFromServer(wsio, data) {
 					appInstance.left = 0;
 				}
 			}
-			if (position[1] > 1) {
+			if (position[1] > 1 || position[1] < -1) {
 				// value in pixels, used as origin
 				appInstance.top = position[1];
 			} else {
@@ -3123,9 +3177,17 @@ function wsLoadFileFromServer(wsio, data) {
 			}
 
 			handleNewApplication(appInstance, videohandle);
-                        var resize = data.rwidth || undefined;
-                        if (resize !== undefined) {
-                          wsAppResize(null, {id: appInstance.id, width: resize, keepRatio: true});
+			var resizeCmd = {id: appInstance.id, keepRatio: true};
+                        if (data.rwidth !== undefined) {
+                          resizeCmd.width = data.rwidth; 
+			  if (data.rheight !== undefined) {
+                            resizeCmd.height = data.rheight;
+                            resizeCmd.keepRatio = false;
+			  }
+			  console.log("call wsAppResize "+JSON.stringify(resizeCmd));
+			  setTimeout(function() {
+                            wsAppResize(null, resizeCmd);
+			  },2000);
                         }
 
 			addEventToUserLog(data.user, {type: "openFile", data:
@@ -5271,14 +5333,18 @@ function processInputCommand(line) {
                         if (command[1] !== undefined) {
                                 var pos  = [0.0, 0.0];
                                 var file = command[1];
-                                var res = undefined;
+                                var resx = undefined;
+                                var resy = undefined;
                                 if (command.length >= 4) {
                                         pos = [parseFloat(command[2]), parseFloat(command[3])];
                                 }
                                 if (command.length >= 5) {
-                                        res = parseInt(command[4]);
+                                        resx = parseInt(command[4]);
                                 }
-                                console.log("cmd open resize "+res);
+                                if (command.length >= 6) {
+                                        resy = parseInt(command[5]);
+                                }
+                                console.log("cmd open resize "+resx+" "+resy);
                                 var mt = assets.getMimeType(getSAGE2Path(file));
                                 if (mt === "application/custom") {
                                         wsLoadApplication(null,
@@ -5291,7 +5357,8 @@ function processInputCommand(line) {
                                                 filename: file,
                                                 user: "127.0.0.1:42",
                                                 position: pos,
-                                                rwidth: res});
+                                                rwidth: resx,
+						rheight: resy});
                                 }
                         } else {
                                 console.log(sageutils.header("Command") + "should be: open /user/file.pdf [0.5 0.5]");
