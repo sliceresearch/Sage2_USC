@@ -303,8 +303,8 @@ function slaveInit(id) {
 }
 
 function setupSlaveListeners(anWsio) {
-	anWsio.on('updateMediaStreamFrame', function(dataOrBuffer) {
-		console.log("SCALE2: updateMediaStreamFrame");
+
+        anWsio.on('updateMediaStreamFrame', function(dataOrBuffer) {
                 // NB: Cloned code
                 var data;
                 if (dataOrBuffer.id !== undefined) {
@@ -321,22 +321,30 @@ function setupSlaveListeners(anWsio) {
                   var buf3 = buf2.subarray(data.state.type.length + 1);
                   data.state.encoding = "base64";
                   var buf4 = buf3.subarray(data.state.encoding.length + 1, buf3.length);
-                  data.state.src = btoa(String.fromCharCode.apply(null, buf4));
+                  // There is a maximum stack size. We cannot call String.fromCharCode with as many arguments as we want
+                  //data.state.src = btoa(String.fromCharCode.apply(null, buf4));
+                  var uarr = buf4;
+                  var strings = [], chunksize = 0xffff;
+                  var len = uarr.length;
+                  for (var i = 0; i * chunksize < len; i++){
+                    strings.push(String.fromCharCode.apply(null, uarr.subarray(i * chunksize, (i + 1) * chunksize)));
+                  }
+                  data.state.src = btoa(strings.join(''));
                 }
-		anWsio.emit('receivedMediaStreamFrame', {id: data.id});
-		var app = applications[data.id];
-		if (app !== undefined && app !== null) {
-			app.SAGE2Load(data.state, new Date(data.date));
-		}
-		// update clones in data-sharing portals
-		var key;
-		for (key in dataSharingPortals) {
-			app = applications[data.id + "_" + key];
-			if (app !== undefined && app !== null) {
-				app.SAGE2Load(data.state, new Date(data.date));
-			}
-		}
-	});
+                anWsio.emit('receivedMediaStreamFrame', {id: data.id});
+                var app = applications[data.id];
+                if (app !== undefined && app !== null) {
+                        app.SAGE2Load(data.state, new Date(data.date));
+                }
+                // update clones in data-sharing portals
+                var key;
+                for (key in dataSharingPortals) {
+                        app = applications[data.id + "_" + key];
+                        if (app !== undefined && app !== null) {
+                                app.SAGE2Load(data.state, new Date(data.date));
+                        }
+                }
+        });
 
 	anWsio.on('updateMediaBlockStreamFrame', function(data) {
 		var appId     = byteBufferToString(data);
