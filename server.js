@@ -7167,10 +7167,10 @@ function pointerRelease(uniqueID, pointerX, pointerY, data) {
 				// if the old partition was tiled, set the new displays to be tiled
 				if (ptnTiled) {
 					newPtn1.toggleInnerTiling();
-					newPtn1.updateInnerLayout();
+					updatePartitionInnerLayout(newPtn1);
 
 					newPtn2.toggleInnerTiling();
-					newPtn2.updateInnerLayout();
+					updatePartitionInnerLayout(newPtn2);
 				}
 
 				// update parititon titles
