@@ -20,14 +20,12 @@
 // require variables to be declared
 "use strict";
 
-// UNCOMMENT IN NODE MODULE
 
 var fs = require('fs');
 // var path = require('path');
 
-var DataFactory = require('node-visdatafactory');
+var DataFactory = require('./node-visdatafactory');
 
-// UNCOMMENT IN NODE MODULE */
 
 // global view types enumerated
 
@@ -139,23 +137,27 @@ Visualization.prototype.formatData = function(map, eachrow = false, rowType) {
 	// perform data regularization operations
 	for (let objKey in this.data) {
 		if (eachrow) {
-
-			this.data[objKey] = parser.transform(
-				{
+			this.data[objKey] = {
 					data: this.data[objKey],
 					dataType: rowType
-				});
+				};
+
+			// this.data[objKey] = parser.transform(
+			parser.transform(this.data[objKey]);
 
 		} else {
 			var keys = Object.keys(this.data[objKey]);
 
 			for (let dataKey of keys) {
 				// transform the key of the data into the correct data class, store in same object
-				this.data[objKey][dataKey] = parser.transform(
-					{
+
+				this.data[objKey][dataKey] = {
 						data: this.data[objKey][dataKey],
 						dataType: map[dataKey]
-					});
+					};
+
+				// this.data[objKey][dataKey] = parser.transform(
+				parser.transform(this.data[objKey][dataKey]);
 			}
 		}
 
@@ -181,6 +183,24 @@ Visualization.prototype.removeView = function(viewID) {
 	}
 };
 
+Visualization.prototype.createView = function(viewID) {
+	if (this.views.hasOwnProperty(viewID)) {
+		// if the object exists within the viewController
+
+		// calculate data subset which the view will be sent (depends on view type)
+		var dataToSend = this.data;
+
+		console.log("Visualization: Update Vis View:", viewID);
+
+		// update the data which this view holds
+		this.send("visualizationCreateView", {
+			id: viewID,
+			data: dataToSend
+		});
+
+	}
+};
+
 Visualization.prototype.updateView = function(viewID) {
 	if (this.views.hasOwnProperty(viewID)) {
 		// if the object exists within the viewController
@@ -188,10 +208,7 @@ Visualization.prototype.updateView = function(viewID) {
 		// calculate data subset which the view will be sent (depends on view type)
 		var dataToSend = this.data;
 
-		console.log("Visualization: Update Vis View:", {
-			id: viewID,
-			data: dataToSend
-		});
+		console.log("Visualization: Update Vis View:", viewID);
 
 		// update the data which this view holds
 		this.send("visualizationUpdateView", {
@@ -199,8 +216,7 @@ Visualization.prototype.updateView = function(viewID) {
 			data: dataToSend
 		});
 
-
 	}
 };
 
-// module.exports = Visualization;
+module.exports = Visualization;

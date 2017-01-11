@@ -58,7 +58,7 @@ DataFactory.prototype.transform = function(options) {
 		}
 	}
 
-	return new DataFactory.dataTypes[this.dataType](options);
+	// return new DataFactory.dataTypes[this.dataType](options);
 };
 
 // ====== Data Type Class Declarations ======
@@ -252,4 +252,6 @@ function Obj(options) {
 	this.data = options.data || null;
 }
 
-// module.exports = DataFactory;
+Obj.params = [];
+
+module.exports = DataFactory;

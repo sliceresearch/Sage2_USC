@@ -9367,25 +9367,21 @@ function createPartition(dims, color) {
 	return myPtn;
 }
 
+
 function wsVisTestButton(data) {
-	if (visTest.dataReady) {
+	if (visTest.numViews === 0) {
+			
+	} else if (visTest.dataReady) {
 		console.log("Update View");
 		visTest.updateView("view01");
 	} else if (visTest.data) {
 		console.log("Format Data");
-		visTest.formatData({
-			hits: {
-				type: "attr",
-				use: "size",
-				domain: "quantitative"
-			}
-		}
-		);
+		visTest.formatData({}, true, "Node");
 	}	else {
 		// load data (try-catch data errors)
 		try {
 			console.log("Load Data");
-			visTest.loadDataSource("./Minimal.json");
+			visTest.loadDataSource("./mis-nodes.json");
 			// visTest.loadDataSource("LICENSE.txt");
 		} catch (err) {
 			console.log("Caught", err.name);

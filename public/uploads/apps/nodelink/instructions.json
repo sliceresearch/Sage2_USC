@@ -1,0 +1,23 @@
+{
+	"main_script": "nodelink.js",
+	"icon": "BasicNetwork.png",
+	"width": 800,
+	"height": 600,
+	"resize": "free",
+	"dependencies": [
+	],
+	"load": {
+		"file": "",
+		"drawMode": 0,
+		"primaryColumn": 0,
+		"secondaryColumn" : 0,
+		"sorted": 0,
+		"useFirstColumn": true
+	},
+	"title": "Node Link Diagram",
+	"version": "1.0.0",
+	"fileTypes": [],
+	"keywords": [ "d3", "visualization" ],
+	"author": "Andrew Burks <andrewtburks@gmail.com>",
+	"license": "SAGE2-Software-License"
+}

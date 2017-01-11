@@ -26,6 +26,8 @@
 
 /* global SAGE2_Partition */
 
+/* global SAGE2_VisDataTypes */
+
 "use strict";
 
 /**
@@ -1294,6 +1296,10 @@ function setupListeners() {
 	// Visualization View update listener
 	wsio.on("visualizationUpdateView", function(data) {
 		if (data.id) {
+			console.log(data.data[0]);
+			for (var ind in data.data) {
+				data.data[ind] = VisDataTypes.parse(data.data[ind]);
+			}
 			console.log("SAGE2_Display: Update Vis View:", data.id, data.data);
 		}
 	});
