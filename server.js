@@ -121,6 +121,7 @@ var pressingAlt        = true;
 
 var partitions				 = new PartitionList(config);
 var draggingPartition	 = {};
+var cuttingPartition 	 = {};
 
 // Add extra folders defined in the configuration file
 if (config.folders) {
@@ -5507,7 +5508,7 @@ function pointerPress(uniqueID, pointerX, pointerY, data) {
 	// Whiteboard app
 	// If the user touches on the palette with drawing disabled, enable it
 	if ((!drawingManager.drawingMode) && drawingManager.touchInsidePalette(pointerX, pointerY)) {
-		drawingManager.reEnableDrawingMode();
+		// drawingManager.reEnableDrawingMode();
 	}
 	if (drawingManager.drawingMode) {
 		drawingManager.pointerEvent(
@@ -5521,6 +5522,29 @@ function pointerPress(uniqueID, pointerX, pointerY, data) {
 		pointerPressOnOpenSpace(uniqueID, pointerX, pointerY, data);
 		return;
 	}
+
+	// while cutting partition, can right click to cancel action
+	if (cuttingPartition[uniqueID] && data.button === "right") {
+
+		if (cuttingPartition[uniqueID].newPtn1) {
+			deletePartition(cuttingPartition[uniqueID].newPtn1.id);
+		}
+
+		if (cuttingPartition[uniqueID].newPtn2) {
+			deletePartition(cuttingPartition[uniqueID].newPtn2.id);
+		}
+
+		delete cuttingPartition[uniqueID];
+	}
+
+	// while dragging to create partition, can right click to cancel action
+	if (draggingPartition[uniqueID] && data.button === "right") {
+
+		deletePartition(draggingPartition[uniqueID].ptn.id);
+
+		delete draggingPartition[uniqueID];
+	}
+
 	var prevInteractionItem = remoteInteraction[uniqueID].getPreviousInteractionItem();
 	var localPt = globalToLocal(pointerX, pointerY, obj.type, obj.geometry);
 
@@ -5571,8 +5595,6 @@ function pointerPressOnOpenSpace(uniqueID, pointerX, pointerY, data) {
 			sagePointers[uniqueID].color);
 
 		draggingPartition[uniqueID].start = {x: pointerX, y: pointerY};
-
-		console.log(sagePointers[uniqueID].color);
 	}
 }
 
@@ -5927,8 +5949,15 @@ function pointerPressOnPartition(uniqueID, pointerX, pointerY, data, obj, localP
 
 	var btn = partitions.findButtonByPoint(obj.id, localPt);
 
-	// // pointer press on app window
+	// pointer press on ptn window
 	if (btn === null) {
+		if (data.button === "left" && remoteInteraction[uniqueID].CTRL) {
+			// start tracking size to create new partition
+			cuttingPartition[uniqueID] = {};
+			cuttingPartition[uniqueID].start = {x: pointerX, y: pointerY};
+			cuttingPartition[uniqueID].ptn = obj.data;
+		}
+
 		// if (data.button === "right") {
 		// 	var elemCtrl = SAGE2Items.widgets.list[obj.id + uniqueID + "_controls"];
 		// 	if (!elemCtrl) {
@@ -6014,9 +6043,11 @@ function pointerPressOnPartition(uniqueID, pointerX, pointerY, data, obj, localP
 				// only if pointer on the wall, not the web UI
 
 				// close partition (drop all windows inside)
-				broadcast('deletePartitionWindow', obj.data.getDisplayInfo());
-				partitions.removePartition(obj.id);
-				interactMgr.removeGeometry(obj.id, "partitions");
+				// broadcast('deletePartitionWindow', obj.data.getDisplayInfo());
+				// partitions.removePartition(obj.id);
+				// interactMgr.removeGeometry(obj.id, "partitions");
+
+				deletePartition(obj.id);
 			}
 			break;
 	}
@@ -6311,6 +6342,119 @@ function updatePointerPosition(uniqueID, pointerX, pointerY, data) {
 		broadcast('partitionMoveAndResizeFinished', draggingPartition[uniqueID].ptn.getDisplayInfo());
 	}
 
+	// if the user is cutting a partition
+	if (cuttingPartition[uniqueID]) {
+		var cutDirection = Math.abs(pointerX - cuttingPartition[uniqueID].start.x) >
+			Math.abs(pointerY - cuttingPartition[uniqueID].start.y) ?
+			"horizontal" : "vertical";
+
+		var cutPosition = cutDirection === "horizontal" ?
+			(cuttingPartition[uniqueID].start.y + pointerY) / 2 :
+			(cuttingPartition[uniqueID].start.x + pointerX) / 2;
+
+		var cutDist = Math.sqrt(Math.pow(pointerY - cuttingPartition[uniqueID].start.y, 2) +
+			Math.pow(pointerX - cuttingPartition[uniqueID].start.x, 2));
+
+		var oldPtn = cuttingPartition[uniqueID].ptn;
+
+		// calculate dimensions of new partitions
+		var newDims1, newDims2 = null;
+
+		if (cutDirection === "horizontal") {
+			// make sure partition is tall enough to split
+			if (oldPtn.height < 2 * partitions.minSize.height) {
+				return;
+			}
+
+			// clamp cut position inside partition so it doesn't break
+			if (cutPosition > (oldPtn.top + oldPtn.height - partitions.minSize.height)) {
+				cutPosition = oldPtn.top + oldPtn.height - partitions.minSize.height;
+			}
+
+			if (cutPosition < (oldPtn.top + partitions.minSize.height)) {
+				cutPosition = oldPtn.top + partitions.minSize.height;
+			}
+
+			newDims1 = {
+				top: oldPtn.top,
+				left: oldPtn.left,
+				width: oldPtn.width,
+				height: cutPosition - oldPtn.top  - config.ui.titleBarHeight
+			};
+
+			newDims2 = {
+				top: cutPosition,
+				left: oldPtn.left,
+				width: oldPtn.width,
+				height: (oldPtn.top + oldPtn.height) - cutPosition
+			};
+
+		} else if (cutDirection === "vertical") {
+			// make sure partition is wide enough to split
+			if (oldPtn.width < 2 * partitions.minSize.width) {
+				return;
+			}
+			// clamp cut position inside partition so it doesn't break
+			if (cutPosition > (oldPtn.left + oldPtn.width - partitions.minSize.width)) {
+				cutPosition = oldPtn.left + oldPtn.width - partitions.minSize.width;
+			}
+
+			if (cutPosition < (oldPtn.left + partitions.minSize.width)) {
+				cutPosition = oldPtn.left + partitions.minSize.width;
+			}
+
+			newDims1 = {
+				top: oldPtn.top,
+				left: oldPtn.left,
+				width: cutPosition - oldPtn.left,
+				height: oldPtn.height
+			};
+
+			newDims2 = {
+				top: oldPtn.top,
+				left: cutPosition,
+				width: (oldPtn.left + oldPtn.width) - cutPosition,
+				height: oldPtn.height
+			};
+		}
+
+		if (cutDist > Math.min(oldPtn.width, oldPtn.height) / 3) {
+			// if partitions are not created
+			if (!cuttingPartition[uniqueID].newPtn1 && !cuttingPartition[uniqueID].newPtn2) {
+				// if the gesture is long enough and the new partitions haven't been made, create them
+				var ptnColor = oldPtn.color;
+
+				// create the 2 new partitions
+				cuttingPartition[uniqueID].newPtn1 = createPartition(newDims1, ptnColor);
+				cuttingPartition[uniqueID].newPtn2 = createPartition(newDims2, ptnColor);
+
+
+				broadcast('updatePartitionBorders', {id: cuttingPartition[uniqueID].newPtn1.id, highlight: true});
+				broadcast('updatePartitionBorders', {id: cuttingPartition[uniqueID].newPtn2.id, highlight: true});
+			} else {
+				// if they are already created just update their size and position
+
+				// resize partition 1
+				cuttingPartition[uniqueID].newPtn1.left = newDims1.left;
+				cuttingPartition[uniqueID].newPtn1.top = newDims1.top;
+				cuttingPartition[uniqueID].newPtn1.width = newDims1.width;
+				cuttingPartition[uniqueID].newPtn1.height = newDims1.height;
+
+				// resize partition 2
+				cuttingPartition[uniqueID].newPtn2.left = newDims2.left;
+				cuttingPartition[uniqueID].newPtn2.top = newDims2.top;
+				cuttingPartition[uniqueID].newPtn2.width = newDims2.width;
+				cuttingPartition[uniqueID].newPtn2.height = newDims2.height;
+
+
+				moveAndResizePartitionWindow(uniqueID, {elemId: cuttingPartition[uniqueID].newPtn1.id});
+				moveAndResizePartitionWindow(uniqueID, {elemId: cuttingPartition[uniqueID].newPtn2.id});
+
+			}
+		}
+
+	}
+
 	if (moveAppPortal !== null) {
 		localPt = globalToLocal(pointerX, pointerY, moveAppPortal.type, moveAppPortal.geometry);
 		scaledPt = {x: localPt.x / moveAppPortal.data.scale,
@@ -6350,7 +6494,7 @@ function updatePointerPosition(uniqueID, pointerX, pointerY, data) {
 
 			// Calculate partition which item is over
 			var ptnHovered = partitions.calculateNewPartition(SAGE2Items.applications.list[updatedMoveItem.elemId]);
-			broadcast('updatePartitionBorders', ptnHovered);
+			broadcast('updatePartitionBorders', {id: ptnHovered, highlight: true});
 		}
 		return;
 	}
@@ -6923,6 +7067,7 @@ function pointerRelease(uniqueID, pointerX, pointerY, data) {
 	}
 
 	if (draggingPartition[uniqueID] && data.button === "left") {
+
 		draggingPartition[uniqueID].ptn.left =
 			pointerX < draggingPartition[uniqueID].start.x ?
 			pointerX : draggingPartition[uniqueID].start.x;
@@ -6939,15 +7084,107 @@ function pointerRelease(uniqueID, pointerX, pointerY, data) {
 			pointerY < draggingPartition[uniqueID].start.y ?
 			draggingPartition[uniqueID].start.y - pointerY : pointerY - draggingPartition[uniqueID].start.y;
 
-		draggingPartition[uniqueID].ptn.aspect = draggingPartition[uniqueID].ptn.width / draggingPartition[uniqueID].ptn.height;
+		// if the partition is much too small (most likely created by mistake)
+		if (draggingPartition[uniqueID].ptn.width < 25 || draggingPartition[uniqueID].ptn.height < 25) {
 
-		partitions.updatePartitionGeometries(draggingPartition[uniqueID].ptn.id, interactMgr);
-		broadcast('partitionMoveAndResizeFinished', draggingPartition[uniqueID].ptn.getDisplayInfo());
+			// delete the partition
+			// broadcast('deletePartitionWindow', partitions.list[draggingPartition[uniqueID].ptn.id].getDisplayInfo());
+			// partitions.removePartition(draggingPartition[uniqueID].ptn.id);
+			// interactMgr.removeGeometry(draggingPartition[uniqueID].ptn.id, "partitions");
 
-		broadcast('partitionWindowTitleUpdate', draggingPartition[uniqueID].ptn.getTitle());
+			deletePartition(draggingPartition[uniqueID].ptn.id);
+		} else {
+			// increase partition width to minimum width if too thin
+			if (draggingPartition[uniqueID].ptn.width < partitions.minSize.width) {
+				draggingPartition[uniqueID].ptn.width = partitions.minSize.width;
+			}
 
+			// increase partition height to minimum height if too short
+			if (draggingPartition[uniqueID].ptn.height < partitions.minSize.height) {
+				draggingPartition[uniqueID].ptn.height = partitions.minSize.height;
+			}
+
+			draggingPartition[uniqueID].ptn.aspect =
+				draggingPartition[uniqueID].ptn.width / draggingPartition[uniqueID].ptn.height;
+
+			partitions.updatePartitionGeometries(draggingPartition[uniqueID].ptn.id, interactMgr);
+			broadcast('partitionMoveAndResizeFinished', draggingPartition[uniqueID].ptn.getDisplayInfo());
+
+			broadcast('partitionWindowTitleUpdate', draggingPartition[uniqueID].ptn.getTitle());
+		}
 		// stop creation of partition
 		delete draggingPartition[uniqueID];
+
+		return;
+	}
+
+	if (cuttingPartition[uniqueID] && data.button === "left") {
+		cuttingPartition[uniqueID].end = {x: pointerX, y: pointerY};
+
+		var cutDirection = +(pointerX - cuttingPartition[uniqueID].start.x) >
+			+(pointerY - cuttingPartition[uniqueID].start.y) ?
+			"horizontal" : "vertical";
+
+		var oldPtn = cuttingPartition[uniqueID].ptn;
+
+		var newPtn1 = cuttingPartition[uniqueID].newPtn1;
+		var newPtn2 = cuttingPartition[uniqueID].newPtn2;
+
+		// if mouse is dragged outside of old partition, consider that to be a cancelled split, delete the new partitions
+		// also do nothing if partition is not large enough to be split
+		if (pointerX < oldPtn.left || pointerX > oldPtn.left + oldPtn.width ||
+			pointerY < oldPtn.top || pointerY > oldPtn.top + oldPtn.height ||
+			(cutDirection === "horizontal" && oldPtn.height < partitions.minSize.height * 2) ||
+			(cutDirection === "vertical" && oldPtn.width < partitions.minSize.width * 2)) {
+
+			// cancel operation, delete new partitions
+			if (newPtn1) {
+				deletePartition(newPtn1.id);
+			}
+			if (newPtn2) {
+				deletePartition(newPtn2.id);
+			}
+
+		} else {
+			// otherwise, delete old partition, assign items to new partitions
+
+			// make sure that the new partitions exist
+			// it is possible that they wouldn't if the drag gesture was too small
+			// if they don't exist, do nothing
+			if (newPtn1 && newPtn2) {
+				var cutPtnItems = Object.assign({}, oldPtn.children);
+				// var ptnColor = oldPtn.color;
+				var ptnTiled = oldPtn.innerTiling; // to preserve tiling of new partitions
+
+				// delete the old partition
+				deletePartition(oldPtn.id);
+
+				// reassign content from oldPtn to the 2 new partitions
+				for (var key in cutPtnItems) {
+					partitions.updateOnItemRelease(cutPtnItems[key]);
+				}
+
+				// if the old partition was tiled, set the new displays to be tiled
+				if (ptnTiled) {
+					newPtn1.toggleInnerTiling();
+					updatePartitionInnerLayout(newPtn1);
+
+					newPtn2.toggleInnerTiling();
+					updatePartitionInnerLayout(newPtn2);
+				}
+
+				// update parititon titles
+				broadcast('partitionWindowTitleUpdate', newPtn1.getTitle());
+				broadcast('partitionWindowTitleUpdate', newPtn2.getTitle());
+
+				// return borders to normal
+				broadcast('updatePartitionBorders', {id: newPtn1.id, highlight: false});
+				broadcast('updatePartitionBorders', {id: newPtn2.id, highlight: false});
+			}
+		}
+
+		// stop division of partition
+		delete cuttingPartition[uniqueID];
 
 		return;
 	}
@@ -7972,9 +8209,9 @@ function keyPressOnPortal(uniqueID, portalId, localPt, data) {
 function toggleApplicationFullscreen(uniqueID, app, dblClick) {
 	var resizeApp;
 	if (app.maximized !== true) { // maximize
-		resizeApp = remoteInteraction[uniqueID].maximizeSelectedItem(app, dblClick);
+		resizeApp = remoteInteraction[uniqueID].maximizeSelectedItem(app);
 	} else { // restore to previous
-		resizeApp = remoteInteraction[uniqueID].restoreSelectedItem(app, dblClick);
+		resizeApp = remoteInteraction[uniqueID].restoreSelectedItem(app);
 	}
 
 	if (resizeApp !== null) {
@@ -8093,7 +8330,7 @@ function pointerCloseGesture(uniqueID, pointerX, pointerY, time, gesture) {
 	if (elem !== null) {
 		if (elem.closeGestureID === undefined && gesture === 0) { // gesture: 0 = down, 1 = hold/move, 2 = up
 			elem.closeGestureID = uniqueID;
-			elem.closeGestureTime = time + closeGestureDelay; // Delay in ms
+			// elem.closeGestureTime = time + closeGestureDelay; // Delay in ms
 		} else if (elem.closeGestureTime <= time && gesture === 1) { // Held long enough, remove
 			deleteApplication(elem);
 		} else if (gesture === 2) { // Released, reset timer
@@ -8285,18 +8522,15 @@ function findApplicationPortal(app) {
 // **************  Omicron section *****************
 var omicronRunning = false;
 var omicronManager = new Omicron(config);
-omicronManager.linkDrawingManager(drawingManager);
 
-if (config.experimental && config.experimental.omicron &&
-	(config.experimental.omicron.enable === true || config.experimental.omicron.useSageInputServer === true)) {
+// Helper function for omicron to switch pointer mode
+function omi_pointerChangeMode(uniqueID) {
+	remoteInteraction[uniqueID].toggleModes();
+	broadcast('changeSagePointerMode', {id: sagePointers[uniqueID].id, mode: remoteInteraction[uniqueID].interactionMode});
+}
 
-	var closeGestureDelay = 1500;
-
-	if (config.experimental.omicron.closeGestureDelay !== undefined) {
-		closeGestureDelay = config.experimental.omicron.closeGestureDelay;
-	}
-
-	omicronManager.setCallbacks(
+// Set callback functions so Omicron can generate SAGEPointer events
+omicronManager.setCallbacks(
 		sagePointers,
 		createSagePointer,
 		showPointer,
@@ -8313,11 +8547,11 @@ if (config.experimental && config.experimental.omicron &&
 		keyDown,
 		keyUp,
 		keyPress,
-		createRadialMenu
+		createRadialMenu,
+		omi_pointerChangeMode,
+		remoteInteraction
 	);
-	omicronManager.runTracker();
-	omicronRunning = true;
-}
+omicronManager.linkDrawingManager(drawingManager);
 
 /* ****** Radial Menu section ************************************************************** */
 // createMediabrowser();
@@ -9210,7 +9444,7 @@ function appFileSaveRequest(wsio, data) {
 	*/
 function wsCreatePartition(wsio, data) {
 	// Create Test partition
-	console.log("Server: Creating new Partition");
+	console.log(sageutils.header('Partition') + "Creating a new partition");
 	var newPtn = createPartition(data, "#ffffff");
 
 	// update the title of the new partition
@@ -9224,7 +9458,7 @@ function wsCreatePartition(wsio, data) {
 	* @param {object} data - Contains the layout specificiation with which partitions will be created
 	*/
 function wsPartitionScreen(wsio, data) {
-	console.log("Server: Dividing SAGE2 into Partitions");
+	console.log(sageutils.header('Partition') + "Dividing SAGE2 into partitions");
 
 	divideAreaPartitions(
 		data,
@@ -9292,9 +9526,11 @@ function divideAreaPartitions(data, x, y, width, height) {
 	*/
 function wsDeleteAllPartitions(wsio) {
 	for (var key in partitions.list) {
-		broadcast('deletePartitionWindow', partitions.list[key].getDisplayInfo());
-		partitions.removePartition(key);
-		interactMgr.removeGeometry(key, "partitions");
+		// broadcast('deletePartitionWindow', partitions.list[key].getDisplayInfo());
+		// partitions.removePartition(key);
+		// interactMgr.removeGeometry(key, "partitions");
+
+		deletePartition(key);
 	}
 }
 
@@ -9331,7 +9567,8 @@ function partitionsGrabAllContent() {
 	* Create a new partition with a given set of dimensions and a color
 	*
 	* @method createPartition
-	* @param {object} data - Contains the numRows and numCols that the screen will be divided into
+	* @param {object} dims - The dimensions of a partition in top, left, width, height
+	* @param {string} color - The color of the partition
 	*/
 function createPartition(dims, color) {
 	var myPtn = partitions.newPartition(dims, interactMgr, color);
@@ -9339,4 +9576,18 @@ function createPartition(dims, color) {
 	broadcast('createPartitionBorder', myPtn.getDisplayInfo());
 
 	return myPtn;
+}
+
+/**
+	* Create a new partition with a given set of dimensions and a color
+	*
+	* @method createPartition
+	* @param {string} id - The id of the partition to be deleted
+	*/
+function deletePartition(id) {
+	var ptn = partitions.list[id];
+
+	broadcast('deletePartitionWindow', ptn.getDisplayInfo());
+	partitions.removePartition(ptn.id);
+	interactMgr.removeGeometry(ptn.id, "partitions");
 }

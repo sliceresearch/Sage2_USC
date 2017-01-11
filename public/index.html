@@ -239,8 +239,59 @@
 				<p>Save Session</p>
 			</div>
 		</div>
+
+		<div id="arrangementItems2">
+			<div id="createpartitionsContainer">
+				<img alt="createpartitions" id="createpartitions" src="images/ui/graycircle-createpartitions.svg" width="64" height="64"/>
+				<p>Create Partitions</p>
+			</div>
+			<div id="deletepartitionsContainer">
+				<img alt="deletepartitions" id="deletepartitions" src="images/ui/graycircle-deletepartitions.svg" width="64" height="64"/>
+				<p>Delete Partitions</p>
+			</div>
+			<div id="assigntopartitionsContainer">
+				<img alt="assigntopartitions" id="assigntopartitions" src="images/ui/graycircle-assigntopartitions.svg" width="64" height="64"/>
+				<p>Assign to Partitions</p>
+			</div>
+		</div>
+			
 		<div id="arrangementButtons">
 			<span id="arrangementCloseBtn" class="button">Close</span>
+		</div>
+	</div>
+
+	<!-- dialog for partition creation -->
+	<div id="createpartitionsDialog" class="dialog" style="width:40%;min-width:280px;">
+
+		<div id="createpartitionsItems">
+
+			<div id="createpartitionsContainer" style="width:100%">
+				<table style="width:100%;border-spacing:0;">
+					<tr>
+						<th colspan="3" style="padding-bottom:5px;font-weight:bold;font-size:1.5em;align:left;">Create Partitions</th>
+					</tr>
+					<tr>
+						<td style="align:left;">
+							<label class="sageLabel">Layout</label>
+						</td>
+						<td style="align:left;">
+							<select id="partitionLayout">
+								<option value="0">Full Screen</option>
+								<option value="1">2 Columns</option>
+								<option value="2">3 Columns</option>
+								<option value="3" selected="selected">2 Columns, 2 Rows</option>
+								<option value="4">Center Pane, 4 Mini</option>
+								<option value="5">2 Pane, Taskbar</option>
+							</select>
+						</td>
+					</tr>
+				</table>
+			</div>
+		</div>
+
+		<div id="createpartitionsButtons">
+			<span id="createpartitionsCreateBtn" class="button">Create</span>
+			<span id="createpartitionsCloseBtn" class="button">Close</span>
 		</div>
 	</div>
 

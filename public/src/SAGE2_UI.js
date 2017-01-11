@@ -1552,6 +1552,201 @@ function handleClick(element) {
 		});
 		$$('session_name').focus();
 
+	} else if (element.id === "createpartitions") {
+		// Create a partition layout
+		hideDialog('arrangementDialog');
+		showDialog('createpartitionsDialog');
+	} else if (element.id === "createpartitionsCloseBtn") {
+		hideDialog('createpartitionsDialog');
+	} else if (element.id === "createpartitionsCreateBtn") {
+		var dropdown = document.getElementById('partitionLayout');
+		var value = dropdown.options[dropdown.selectedIndex].value;
+
+		// check selected value
+		if (value === "0") {
+			// create partition division of screen
+			wsio.emit('partitionScreen',
+				{
+					type: "row",
+					ptn: true,
+					size: 12
+				});
+		} else if (value === "1") {
+			// create partition division of screen
+			wsio.emit('partitionScreen',
+				{
+					type: "row",
+					size: 12,
+					children: [
+						{
+							type: "col",
+							ptn: true,
+							size: 6
+						},
+						{
+							type: "col",
+							ptn: true,
+							size: 6
+						}
+					]
+				});
+		} else if (value === "2") {
+			// create partition division of screen
+			wsio.emit('partitionScreen',
+				{
+					type: "row",
+					size: 12,
+					children: [
+						{
+							type: "col",
+							ptn: true,
+							size: 4
+						},
+						{
+							type: "col",
+							ptn: true,
+							size: 4
+						},
+						{
+							type: "col",
+							ptn: true,
+							size: 4
+						}
+					]
+				});
+		} else if (value === "3") {
+			// create partition division of screen
+			wsio.emit('partitionScreen',
+				{
+					type: "col",
+					size: 12,
+					children: [
+						{
+							type: "row",
+							size: 6,
+							children: [
+								{
+									type: "col",
+									ptn: true,
+									size: 6
+								},
+								{
+									type: "col",
+									ptn: true,
+									size: 6
+								}
+							]
+						},
+						{
+							type: "row",
+							size: 6,
+							children: [
+								{
+									type: "col",
+									ptn: true,
+									size: 6
+								},
+								{
+									type: "col",
+									ptn: true,
+									size: 6
+								}
+							]
+						}
+					]
+				});
+		} else if (value === "4") {
+			// create partition division of screen
+			wsio.emit('partitionScreen',
+				{
+					type: "row",
+					size: 12,
+					children: [
+						{
+							type: "col",
+							size: 3,
+							children: [
+								{
+									type: "row",
+									ptn: true,
+									size: 8
+								},
+								{
+									type: "row",
+									ptn: true,
+									size: 4
+								}
+							]
+						},
+						{
+							type: "col",
+							ptn: true,
+							size: 6
+						},
+						{
+							type: "col",
+							size: 3,
+							children: [
+								{
+									type: "row",
+									ptn: true,
+									size: 4
+								},
+								{
+									type: "row",
+									ptn: true,
+									size: 8
+								}
+							]
+						}
+					]
+				});
+		} else if (value === "5") {
+			// create partition division of screen
+			wsio.emit('partitionScreen',
+				{
+					type: "col",
+					size: 12,
+					children: [
+						{
+							type: "row",
+							size: 8,
+							children: [
+								{
+									type: "col",
+									ptn: true,
+									size: 6
+								},
+								{
+									type: "col",
+									ptn: true,
+									size: 6
+								}
+							]
+						},
+						{
+							type: "row",
+							size: 4,
+							children: [
+								{
+									type: "col",
+									ptn: true,
+									size: 12
+								}
+							]
+						}
+					]
+				});
+		}
+		hideDialog('createpartitionsDialog');
+	} else if (element.id === "deletepartitions") {
+		// Delete all partitions
+		wsio.emit('deleteAllPartitions');
+		hideDialog('arrangementDialog');
+	} else if (element.id === "assigntopartitions") {
+		// Assign content to partitions (partitions grab items which are above them)
+		wsio.emit('partitionsGrabAllContent');
+		hideDialog('arrangementDialog');
 	} else if (element.id === "ffShareScreenBtn") {
 		// Firefox Share Screen Dialog
 		interactor.captureDesktop("screen");

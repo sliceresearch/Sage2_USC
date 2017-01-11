@@ -603,14 +603,13 @@ function setupListeners() {
 		partitions[data.id].updateTitle(data.title);
 	});
 	wsio.on('updatePartitionBorders', function(data) {
-		for (var p in partitions) {
-			// console.log(p);
-			partitions[p].updateSelected(false);
-		}
-
-		// if a value was passed, highlight this value
-		if (data) {
-			partitions[data].updateSelected(true);
+		if (!data) {
+			for (var p in partitions) {
+				// console.log(p);
+				partitions[p].updateSelected(false);
+			}
+		} else {
+			partitions[data.id].updateSelected(data.highlight);
 		}
 	});
 

@@ -36,6 +36,11 @@ function PartitionList(config) {
 
 	this.configuration = config;
 
+	this.minSize = {
+		width: Math.round(config.ui.titleBarHeight) * (300 / 235) * 6, // 4 buttons + some padding in between
+		height: config.ui.titleBarHeight * 4 // titlebar + some height for inside of partition
+	};
+
 	this.defaultColors = [
 		'#a6cee3',
 		'#1f78b4',

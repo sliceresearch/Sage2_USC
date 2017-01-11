@@ -199,7 +199,7 @@ if (ConfigFile.indexOf("sage2") >= 0) {
 
 	//always ov
 	if (platform === "Windows") {
-		var sfpContents = 'cd "' + __dirname + '\\..' + '"\n';
+		var sfpContents = 'cd /d "' + __dirname + '\\..' + '"\n';
 		sfpContents += 'set PATH=%CD%\\bin;%PATH%;\n';
 		sfpContents += 'cd sabi.js\n';
 		sfpContents += 'start /MIN ..\\bin\\node server.js -f '+ pathToSabiConfigFolder +'\\config\\sage2.json %*';

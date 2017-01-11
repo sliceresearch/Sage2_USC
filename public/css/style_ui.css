@@ -369,6 +369,11 @@ h2 {
 }
 
 #arrangementItems {
+	margin: 10px 10px 20px;
+	overflow: auto;
+}
+
+#arrangementItems2 {
 	margin: 10px 10px 66px;
 	overflow: auto;
 }
@@ -391,9 +396,53 @@ h2 {
 	text-align: center;
 }
 
+#createpartitionsContainer {
+	width: 100px;
+	float: left;
+	text-align: center;
+}
+
+#deletepartitionsContainer {
+	width: 100px;
+	float: left;
+	text-align: center;
+}
+
+#assigntopartitionsContainer {
+	width: 100px;
+	float: left;
+	text-align: center;
+}
+
 #arrangementCloseBtn {
 	position: absolute;
 	right: 10px;
+	bottom: 10px;
+}
+
+#createpartitionsDialog {
+	top: 50%;
+	left: 50%;
+	-webkit-transform: translate(-50%, -50%);
+	-moz-transform: translate(-50%, -50%);
+	-ms-transform: translate(-50%, -50%);
+	transform: translate(-50%, -50%);
+}
+
+#createpartitionsItems {
+	margin: 10px 10px 66px;
+	overflow: auto;
+}
+
+#createpartitionsCreateBtn {
+	position: absolute;
+	right: 10px;
+	bottom: 10px;
+}
+
+#createpartitionsCloseBtn {
+	position: absolute;
+	right: 75px;
 	bottom: 10px;
 }
 

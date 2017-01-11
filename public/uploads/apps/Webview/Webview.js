@@ -47,13 +47,34 @@ var Webview = SAGE2_App.extend({
 		this.element.allowpopups = false;
 		this.element.allowfullscreen = false;
 		this.element.nodeintegration = 0;
+		// disable fullscreen
+		this.element.fullscreenable = false;
+		this.element.fullscreen = false;
+
 		// this.element.disablewebsecurity = true;
 
 		this.element.minwidth  = data.width;
 		this.element.minheight = data.height;
 
 		// Get the URL from parameter or session
-		this.element.src = data.params || this.state.url;
+		var view_url = data.params || this.state.url;
+		if (view_url.indexOf('youtu') >= 0 && view_url.indexOf('embed') === -1) {
+			// Search for the Youtubeq ID
+			var video_id = view_url.split('v=')[1];
+			var ampersandPosition = video_id.indexOf('&');
+			if (ampersandPosition != -1) {
+				video_id = video_id.substring(0, ampersandPosition);
+			}
+			view_url = 'https://www.youtube.com/embed/' + video_id + '?autoplay=0';
+		} else if (view_url.indexOf('vimeo') >= 0 && view_url.indexOf('player') === -1) {
+			// Search for the Vimeo ID
+			var m = view_url.match(/^.+vimeo.com\/(.*\/)?([^#\?]*)/);
+			var vimeo_id =  m ? m[2] || m[1] : null;
+			if (vimeo_id) {
+				view_url = 'https://player.vimeo.com/video/' + vimeo_id;
+			}
+		}
+		this.element.src = view_url;
 
 		// Store the zoom level, when in desktop emulation
 		this.zoomFactor = 1;
@@ -185,6 +206,7 @@ var Webview = SAGE2_App.extend({
 		// Called when window is resized
 		this.element.style.width  = this.sage2_width  + "px";
 		this.element.style.height = this.sage2_height + "px";
+
 		// resize the console layer
 		if (this.layer) {
 			// make sure the layer exist first
@@ -462,13 +484,13 @@ var Webview = SAGE2_App.extend({
 
 			// zoomin
 			if (dir === "zoomin") {
-				this.state.zoom *= 1.25;
+				this.state.zoom *= 1.50;
 				this.element.setZoomFactor(this.state.zoom);
 			}
 
 			// zoomout
 			if (dir === "zoomout") {
-				this.state.zoom /= 1.25;
+				this.state.zoom /= 1.50;
 				this.element.setZoomFactor(this.state.zoom);
 			}
 
