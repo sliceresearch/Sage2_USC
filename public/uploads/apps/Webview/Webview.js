@@ -58,7 +58,7 @@ var Webview = SAGE2_App.extend({
 
 		// Get the URL from parameter or session
 		var view_url = data.params || this.state.url;
-		if (view_url.indexOf('youtu') >= 0) {
+		if (view_url.indexOf('youtu') >= 0 && view_url.indexOf('embed') === -1) {
 			// Search for the Youtubeq ID
 			var video_id = view_url.split('v=')[1];
 			var ampersandPosition = video_id.indexOf('&');
@@ -66,7 +66,7 @@ var Webview = SAGE2_App.extend({
 				video_id = video_id.substring(0, ampersandPosition);
 			}
 			view_url = 'https://www.youtube.com/embed/' + video_id + '?autoplay=0';
-		} else if (view_url.indexOf('vimeo') >= 0) {
+		} else if (view_url.indexOf('vimeo') >= 0 && view_url.indexOf('player') === -1) {
 			// Search for the Vimeo ID
 			var m = view_url.match(/^.+vimeo.com\/(.*\/)?([^#\?]*)/);
 			var vimeo_id =  m ? m[2] || m[1] : null;
