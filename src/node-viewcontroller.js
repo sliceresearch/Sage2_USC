@@ -138,9 +138,9 @@ Visualization.prototype.formatData = function(map, eachrow = false, rowType) {
 	for (let objKey in this.data) {
 		if (eachrow) {
 			this.data[objKey] = {
-					data: this.data[objKey],
-					dataType: rowType
-				};
+				data: this.data[objKey],
+				dataType: rowType
+			};
 
 			// this.data[objKey] = parser.transform(
 			parser.transform(this.data[objKey]);
@@ -152,9 +152,9 @@ Visualization.prototype.formatData = function(map, eachrow = false, rowType) {
 				// transform the key of the data into the correct data class, store in same object
 
 				this.data[objKey][dataKey] = {
-						data: this.data[objKey][dataKey],
-						dataType: map[dataKey]
-					};
+					data: this.data[objKey][dataKey],
+					dataType: map[dataKey]
+				};
 
 				// this.data[objKey][dataKey] = parser.transform(
 				parser.transform(this.data[objKey][dataKey]);
@@ -168,7 +168,7 @@ Visualization.prototype.formatData = function(map, eachrow = false, rowType) {
 
 Visualization.prototype.addView = function(view) {
 	this.views[view.id] = {
-		type: view.type
+		types: view.types
 	};
 
 	this.numViews++;

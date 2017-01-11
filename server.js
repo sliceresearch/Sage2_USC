@@ -9370,7 +9370,7 @@ function createPartition(dims, color) {
 
 function wsVisTestButton(data) {
 	if (visTest.numViews === 0) {
-			
+		visTest.addView({id: "view01", types: ["node", "link"]});
 	} else if (visTest.dataReady) {
 		console.log("Update View");
 		visTest.updateView("view01");

@@ -26,7 +26,7 @@
 
 /* global SAGE2_Partition */
 
-/* global SAGE2_VisDataTypes */
+/* global VisDataTypes */
 
 "use strict";
 

@@ -23,16 +23,15 @@
  */
 var SAGE2_DataView = SAGE2_App.extend({
 
-  /**
-  * Constructor for SAGE2 data views for visualization
-  *
-  * @class SAGE2_DataView
-  * @constructor
-  */
-  construct: function() {
-    arguments.callee.superClass.construct.call(this);
+	/**
+	* Constructor for SAGE2 data views for visualization
+	*
+	* @class SAGE2_DataView
+	* @constructor
+	*/
+	construct: function() {
+		arguments.callee.superClass.construct.call(this);
 
-    
-  }
+	}
 });
 
