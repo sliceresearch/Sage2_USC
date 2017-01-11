@@ -9599,6 +9599,7 @@ function deletePartition(id) {
 	broadcast('deletePartitionWindow', ptn.getDisplayInfo());
 	partitions.removePartition(ptn.id);
 	interactMgr.removeGeometry(ptn.id, "partitions");
+}
 
 
 function wsVisTestButton(data) {
