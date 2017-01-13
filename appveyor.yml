@@ -3,6 +3,7 @@ version: 2.0.{build}
 branches:
   only:
   - master
+  - sabiUpdater
 
 shallow_clone: true
 
@@ -96,6 +97,24 @@ install:
   - move electron.js SAGE2
   - move generate-service-worker.js SAGE2
   - move src SAGE2
+  #- Push to the binary repo
+  - cd SAGE2
+  - git init
+  - git add .
+  - git config --global credential.helper store
+  - ps: Add-Content "$env:USERPROFILE\.git-credentials" "https://uhlavalab%40gmail.com:1%5ev%5ebitb@bitbucket.org`n"
+  - git config user.email "uhlavalab@gmail.com"
+  - git config user.name "Lava Lab"
+  - git commit -m "Forced overwrite from appveyor"
+  - git remote add origin "https://bitbucket.org/dkobayashi/sage2binaryupdate.git"
+  #- git remote add origin "https://Lava%20Lab:1%5ev%5ebitb@bitbucket.org/dkobayashi/sage2binaryupdate.git"
+  - git push -f origin master
+  #- Using git tools within the folder being updated doesn't seem to work.
+  #- curl -LsSOk https://bitbucket.org/sage2/sage2/downloads/git-win64-bin.zip
+  #- 7z x -y git-win64-bin.zip > nul
+  #- del /Q *.zip
+  - cd ..
+  #-After git push to different repo.
   - ren SAGE2 SAGE2-%APPVEYOR_BUILD_VERSION%
   - 7z a -sfx7z.sfx SAGE2-win64-%APPVEYOR_BUILD_VERSION%-%APPVEYOR_REPO_BRANCH%.exe SAGE2-%APPVEYOR_BUILD_VERSION% > nul
 
