@@ -1129,7 +1129,7 @@ function writeSageOnFileWithCorrectPortAndMeetingID( data ) {
 		console.log( "Going to overwrite it.");
 		var rewriteContents;
 			rewriteContents = "@rem off\n\n";
-			rewriteContents += "This fill will be automatically regenerated through sabi usage.\n\n";
+			rewriteContents += "rem This file will be automatically regenerated through sabi usage.\n\n";
 			rewriteContents += "start /MIN /D .. sage2.bat\n\n";
 			rewriteContents += "timeout 2\n\n";
 			rewriteContents += "rem clear the chrome folders\n";
