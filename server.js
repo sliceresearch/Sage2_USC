@@ -125,9 +125,8 @@ var partitions				 = new PartitionList(config);
 var draggingPartition	 = {};
 var cuttingPartition 	 = {};
 
-var visTest 					 = new Visualization(broadcast, "TestVis");
+var SAGE2_Vizs 				 = {};
 
-visTest.addView({id: "view01", type: "default"});
 
 // Add extra folders defined in the configuration file
 if (config.folders) {
@@ -1025,7 +1024,7 @@ function setupListeners(wsio) {
 	wsio.on('partitionsGrabAllContent',		wsPartitionsGrabAllContent);
 
 	// vis controller methods
-	wsio.on('visTestFuncCall', 						wsVisTestButton);
+	wsio.on('createVisualization', 				wsCreateSAGEVis);
 }
 
 /**
@@ -2835,7 +2834,13 @@ function wsLoadApplication(wsio, data) {
 			}
 		}
 
-		handleNewApplication(appInstance, null);
+		console.log(appInstance);
+
+		if (appInstance.data.dataView) {
+			handleNewVisualization(appInstance, data.parent, null);
+		} else {
+			handleNewApplication(appInstance, null);
+		}
 
 		addEventToUserLog(data.user, {type: "openApplication", data:
 			{application: {id: appInstance.id, type: appInstance.application}}, time: Date.now()});
@@ -8390,6 +8395,15 @@ function handleNewApplication(appInstance, videohandle) {
 	initializeLoadedVideo(appInstance, videohandle);
 }
 
+function handleNewVisualization(appInstance, parent, videohandle) {
+	SAGE2_Vizs[parent].addView({id: appInstance.id, types: appInstance.data.handlesData});
+	console.log("Adding new visualization", appInstance.id, "to", parent);
+
+	// SAGE2_Vizs[parent].views[]
+
+	handleNewApplication(appInstance, videohandle);
+}
+
 function handleNewApplicationInDataSharingPortal(appInstance, videohandle, portalId) {
 	broadcast('createAppWindowInDataSharingPortal', {portal: portalId, application: appInstance});
 
@@ -9601,24 +9615,16 @@ function deletePartition(id) {
 	interactMgr.removeGeometry(ptn.id, "partitions");
 }
 
+function wsCreateSAGEVis(wsio, data) {
 
-function wsVisTestButton(data) {
-	if (visTest.numViews === 0) {
-		visTest.addView({id: "view01", types: ["node", "link"]});
-	} else if (visTest.dataReady) {
-		console.log("Update View");
-		visTest.updateView("view01");
-	} else if (visTest.data) {
-		console.log("Format Data");
-		visTest.formatData({}, true, "Node");
-	}	else {
-		// load data (try-catch data errors)
-		try {
-			console.log("Load Data");
-			visTest.loadDataSource("./mis-nodes.json");
-			// visTest.loadDataSource("LICENSE.txt");
-		} catch (err) {
-			console.log("Caught", err.name);
-		}
+	var pathFromUser = path.relative("C:\\user", data.filePath);
+	var fullPath = path.join(mediaFolders.user.path, pathFromUser);
+	console.log(fullPath);
+
+	if (data && data.id) {
+		SAGE2_Vizs[data.id] = new Visualization(broadcast, data.filePath);
+
+		SAGE2_Vizs[data.id].loadDataSource(fullPath);
+		SAGE2_Vizs[data.id].formatData({}, true, "Node");
 	}
 }

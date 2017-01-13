@@ -13,7 +13,7 @@
 /* global d3 */
 "use strict";
 
-var nodelink = SAGE2_App.extend({
+var nodelink = SAGE2_DataView.extend({
   init: function(data) {
     this.SAGE2Init("div", data);
 
@@ -52,13 +52,6 @@ var nodelink = SAGE2_App.extend({
     this.controls.addButton({label: "Col 1", position: 12, identifier: "FirstColToggle"});
 
     this.controls.finishedAddingControls();
-
-    // load csv after controls are finished
-
-    this.csvSrc = this.state.file;
-    this.csvData = [];
-    this.headers = [];
-    this.state.useFirstColumn = this.state.useFirstColumn || false; // only usable with line and scatter
 
     this.state.sorted = this.state.sorted || false;
     this.needsResort = true;
@@ -142,7 +135,7 @@ var nodelink = SAGE2_App.extend({
     var firstColOptionName = this.state.useFirstColumn ?
       "Don't Use First Column" : "Use First Column";
 
-    var defaultEntries = [
+    var contextMenuEntries = [
       {
         description: "Change Mode",
         callback: "modeToggle",
@@ -187,128 +180,6 @@ var nodelink = SAGE2_App.extend({
         parameters: {}
       }
     ];
-
-    var modeOptions = new Array(this.drawModeNames.length);
-
-    modeOptions[0] = [
-      {
-        description: "Change Mode",
-        callback: "modeToggle",
-        parameters: {}
-      },
-      {
-        description: sortUnsortOptionName,
-        callback: "toggleSort",
-        parameters: {}
-      },
-      separator,
-      {
-        description: "Next Bar Category",
-        callback: "incrementPrimary",
-        parameters: {val: 1}
-      },
-      {
-        description: "Previous Bar Category",
-        callback: "incrementPrimary",
-        parameters: {val: -1}
-      },
-      separator,
-      {
-        description: "Next Bar Value",
-        callback: "incrementSecondary",
-        parameters: {val: 1}
-      },
-      {
-        description: "Previous Bar Value",
-        callback: "incrementSecondary",
-        parameters: {val: -1}
-      },
-      separator,
-      {
-        description: "Save SVG result",
-        callback: "downloadSVG",
-        parameters: {}
-      }
-    ];
-
-    modeOptions[1] = [
-      {
-        description: "Change Mode",
-        callback: "modeToggle",
-        parameters: {}
-      },
-      {
-        description: firstColOptionName,
-        callback: "toggleUseFirstColumn",
-        parameters: {}
-      },
-      {
-        description: sortUnsortOptionName,
-        callback: "toggleSort",
-        parameters: {}
-      },
-      separator,
-      {
-        description: "Next Sort Value",
-        callback: "incrementPrimary",
-        parameters: {val: 1}
-      },
-      {
-        description: "Previous Sort Value",
-        callback: "incrementPrimary",
-        parameters: {val: -1}
-      },
-      separator,
-      {
-        description: "Save SVG result",
-        callback: "downloadSVG",
-        parameters: {}
-      }
-    ];
-
-    modeOptions[2] = [
-      {
-        description: "Change Mode",
-        callback: "modeToggle",
-        parameters: {}
-      },
-      {
-        description: firstColOptionName,
-        callback: "toggleUseFirstColumn",
-        parameters: {}
-      },
-      separator,
-      {
-        description: "Next X Variable",
-        callback: "incrementPrimary",
-        parameters: {val: 1}
-      },
-      {
-        description: "Previous X Variable",
-        callback: "incrementPrimary",
-        parameters: {val: -1}
-      },
-      separator,
-      {
-        description: "Next Y Variable",
-        callback: "incrementSecondary",
-        parameters: {val: 1}
-      },
-      {
-        description: "Previous Y Variable",
-        callback: "incrementSecondary",
-        parameters: {val: -1}
-      },
-      separator,
-      {
-        description: "Save SVG result",
-        callback: "downloadSVG",
-        parameters: {}
-      }
-    ];
-
-    var contextMenuEntries = isNaN(this.state.drawMode) ? defaultEntries :
-      modeOptions[this.state.drawMode];
 
     return contextMenuEntries;
   },

@@ -1,20 +1,22 @@
 var VisDataTypes = {};
 
 (function() {
+	// transfer object into the correct form with attributes property
 	VisDataTypes.parse = function(object) {
-		// return new VisDataTypes.types[object.dataType]({data: object});
 
-		var xobj = {attr: {}};
+		var xobj = {attr: {}, dataType: object.dataType};
 		var attributes = Object.assign({}, object.data);
 
-		for (var prop of VisDataTypes.types[object.dataType]) {
-			xobj[prop] = object.data[prop];
+		for (var prop of VisDataTypes.types[object.dataType].params) {
+			xobj[prop] = attributes[prop];
 			delete attributes[prop];
 		}
 
 		for (var key of Object.keys(attributes)) {
 			xobj.attr[key] = attributes[key];
 		}
+
+		return xobj;
 	};
 
 	// VisDataTypes.types = {

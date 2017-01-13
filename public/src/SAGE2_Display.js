@@ -605,12 +605,13 @@ function setupListeners() {
 		partitions[data.id].updateTitle(data.title);
 	});
 	wsio.on('updatePartitionBorders', function(data) {
-		if (!data) {
+		if (!data || !data.id) {
 			for (var p in partitions) {
 				// console.log(p);
 				partitions[p].updateSelected(false);
 			}
 		} else {
+			console.log(data);
 			partitions[data.id].updateSelected(data.highlight);
 		}
 	});

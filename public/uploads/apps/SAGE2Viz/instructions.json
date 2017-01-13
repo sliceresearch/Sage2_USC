@@ -1,0 +1,19 @@
+{
+	"main_script": "SAGE2Viz.js",
+	"icon": "BasicNetwork.PNG",
+	"width": 800,
+	"height": 600,
+	"resize": "free",
+	"dependencies": [
+	],
+	"load": {
+		"file": ""
+	},
+	"title": "SAGE2 Visualizaion",
+	"version": "1.0.0",
+	"fileTypes": [ "json", "csv", "tsv" ],
+	"directory": "visData",
+	"keywords": [ "visualization" ],
+	"author": "Andrew Burks <andrewtburks@gmail.com>",
+	"license": "SAGE2-Software-License"
+}

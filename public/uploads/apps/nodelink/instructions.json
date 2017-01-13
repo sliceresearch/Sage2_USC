@@ -8,11 +8,8 @@
 	],
 	"load": {
 		"file": "",
-		"drawMode": 0,
-		"primaryColumn": 0,
-		"secondaryColumn" : 0,
-		"sorted": 0,
-		"useFirstColumn": true
+		"dataView": true,
+		"handlesData": ["Node", "Link"]
 	},
 	"title": "Node Link Diagram",
 	"version": "1.0.0",
