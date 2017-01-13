@@ -1377,6 +1377,11 @@ function handleClick(element) {
 		// App Launcher Dialog
 		loadSelectedApplication();
 		hideDialog('appLauncherDialog');
+	} else if (element.id === "appStoreBtn") {
+		hideDialog('appLauncherDialog');
+		// Open the appstore page
+		var awin4 = window.open("http://apps.sagecommons.org/", '_blank');
+		awin4.focus();
 	} else if (element.id === "appCloseBtn") {
 		selectedAppEntry = null;
 		hideDialog('appLauncherDialog');
