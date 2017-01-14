@@ -6041,12 +6041,6 @@ function pointerPressOnPartition(uniqueID, pointerX, pointerY, data, obj, localP
 		case "closeButton":
 			if (sagePointers[uniqueID].visible) {
 				// only if pointer on the wall, not the web UI
-
-				// close partition (drop all windows inside)
-				// broadcast('deletePartitionWindow', obj.data.getDisplayInfo());
-				// partitions.removePartition(obj.id);
-				// interactMgr.removeGeometry(obj.id, "partitions");
-
 				deletePartition(obj.id);
 			}
 			break;
@@ -7086,12 +7080,7 @@ function pointerRelease(uniqueID, pointerX, pointerY, data) {
 
 		// if the partition is much too small (most likely created by mistake)
 		if (draggingPartition[uniqueID].ptn.width < 25 || draggingPartition[uniqueID].ptn.height < 25) {
-
 			// delete the partition
-			// broadcast('deletePartitionWindow', partitions.list[draggingPartition[uniqueID].ptn.id].getDisplayInfo());
-			// partitions.removePartition(draggingPartition[uniqueID].ptn.id);
-			// interactMgr.removeGeometry(draggingPartition[uniqueID].ptn.id, "partitions");
-
 			deletePartition(draggingPartition[uniqueID].ptn.id);
 		} else {
 			// increase partition width to minimum width if too thin
@@ -9526,10 +9515,6 @@ function divideAreaPartitions(data, x, y, width, height) {
 	*/
 function wsDeleteAllPartitions(wsio) {
 	for (var key in partitions.list) {
-		// broadcast('deletePartitionWindow', partitions.list[key].getDisplayInfo());
-		// partitions.removePartition(key);
-		// interactMgr.removeGeometry(key, "partitions");
-
 		deletePartition(key);
 	}
 }
