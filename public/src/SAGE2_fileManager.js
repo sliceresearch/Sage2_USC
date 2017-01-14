@@ -929,7 +929,6 @@ function FileManager(wsio, mydiv, uniqueID) {
 
 				if (id === "Download") {
 					downloadItem(list.getItem(listId).id);
-
 				} else if (id === "Open") {
 					var tbo = [];
 					if (dItems.length === 0) {
@@ -1035,23 +1034,28 @@ function FileManager(wsio, mydiv, uniqueID) {
 	function downloadItem(elt) {
 		var url = _this.allFiles[elt].sage2URL;
 		if (url) {
-			// Open the file
-			// window.open(url, '_blank');
-
-			// Download the file
-			var link = document.createElement('a');
-			link.href = url;
-			if (link.download !== undefined) {
-				// Set HTML5 download attribute. This will prevent file from opening if supported.
-				var fileName = url.substring(url.lastIndexOf('/') + 1, url.length);
-				link.download = fileName;
-			}
-			// Dispatching click event
-			if (document.createEvent) {
-				var me = document.createEvent('MouseEvents');
-				me.initEvent('click', true, true);
-				link.dispatchEvent(me);
-				return true;
+			// If a session file, package the session
+			if (_this.allFiles[elt].exif && _this.allFiles[elt].exif.MIMEType === "sage2/session") {
+				wsio.emit('packageSession', {
+					id:  _this.allFiles[elt].id,
+					url: _this.allFiles[elt].sage2URL
+				});
+			} else {
+				// Download the file
+				var link = document.createElement('a');
+				link.href = url;
+				if (link.download !== undefined) {
+					// Set HTML5 download attribute. This will prevent file from opening if supported.
+					var fileName = url.substring(url.lastIndexOf('/') + 1, url.length);
+					link.download = fileName;
+				}
+				// Dispatching click event
+				if (document.createEvent) {
+					var me = document.createEvent('MouseEvents');
+					me.initEvent('click', true, true);
+					link.dispatchEvent(me);
+					return true;
+				}
 			}
 		}
 	}

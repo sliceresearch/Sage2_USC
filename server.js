@@ -909,6 +909,7 @@ function setupListeners(wsio) {
 	wsio.on('deleteElementFromStoredFiles',         wsDeleteElementFromStoredFiles);
 	wsio.on('moveElementFromStoredFiles',           wsMoveElementFromStoredFiles);
 	wsio.on('saveSession',                          wsSaveSession);
+	wsio.on('packageSession',                       wsPackageSession);
 	wsio.on('clearDisplay',                         wsClearDisplay);
 	wsio.on('tileApplications',                     wsTileApplications);
 
@@ -2038,6 +2039,147 @@ function wsSaveSession(wsio, data) {
 							ad.getHours(), ad.getMinutes(), ad.getSeconds());
 	}
 	saveSession(sname);
+}
+
+/**
+ * Bundles all the assets of a session into one zip file
+ *
+ * @method     wsPackageSession
+ * @param      {Object}  wsio    websocket
+ * @param      {Object}  data    message payload
+ */
+function wsPackageSession(wsio, data) {
+	var fse = require('fs-extra');
+	var archiver = require('archiver');
+	// data
+	// id: filename
+	// url: sage2URL
+	console.log('-----------------------');
+	console.log(sageutils.header('Session') + 'got to package ' + data.url);
+	var tempDir = path.join(os.tmpdir(), 'sage2-');
+	fs.mkdtemp(tempDir, (err, folder) => {
+		if (err) {
+			throw err;
+		}
+		console.log('Building session in', folder);
+
+		var fullpath;
+		if (sageutils.fileExists(path.resolve(data.id))) {
+			fullpath = data.id;
+		} else {
+			fullpath = path.join(sessionDirectory, data.id);
+		}
+
+		// Get the short name
+		var sessionName = path.basename(fullpath, ".json");
+
+		// Copy the session file into the new folder
+		// fse.copySync(
+		// 	fullpath,
+		// 	path.join(folder, path.basename(fullpath)),
+		// 	{preserveTimestamps: true}
+		// );
+
+		fs.readFile(fullpath, function(err, data) {
+			if (err) {
+				console.log(sageutils.header("Session") + "error reading session", err);
+			} else {
+				console.log(sageutils.header("Session") + "reading session from " + fullpath);
+
+				var session = JSON.parse(data);
+				console.log(sageutils.header("Session") + "number of applications", session.numapps);
+
+				// Build a new session file
+				var states     = {};
+				states.apps    = [];
+				states.numapps = 0;
+				states.date    = Date.now();
+
+				states.partitions    = [];
+				states.numpartitions = 1;
+
+				var wallRatio  = config.totalWidth / config.totalHeight;
+				var partWidth  = 1920;
+				var partHeight = partWidth / wallRatio;
+				states.partitions[0] = {
+					children: {},
+					numChildren: 0,
+					width: partWidth,
+					height: partHeight,
+					left: 0,
+					top: 0,
+					aspect: wallRatio,
+					previous_left: null,
+					previous_top: null,
+					previous_width: null,
+					previous_height: null,
+					resizeMode: "free",
+					maximized: false,
+					id: "ptn_1",
+					color: "#18a521",
+					bounding: true,
+					innerTiling: false,
+					innerMaximization: false,
+					currentMaximizedChild: null,
+					maximizeConstraint: "width"
+				};
+
+				// list apps
+				session.apps.forEach(function(element, index, array) {
+					states.apps.push(element);
+					states.numapps++;
+					console.log('App', index, element.file);
+					if (element.file) {
+						// copy into folder
+						fse.copySync(
+							element.file,
+							path.join(folder, path.basename(element.file)),
+							{preserveTimestamps: true}
+						);
+					}
+					// Add the app into the partition
+					states.partitions[0].children[element.id] = element;
+					states.partitions[0].numChildren = states.numapps;
+				});
+
+				try {
+					fs.writeFileSync(
+						path.join(folder, path.basename(fullpath)),
+						JSON.stringify(states, null, 4)
+					);
+					console.log(sageutils.header("Session") + "saved session file to " + fullpath);
+				} catch (err) {
+					console.log(sageutils.header("Session") + "error saving " + err);
+				}
+
+				var output = fs.createWriteStream(path.join(os.tmpdir(), sessionName + '.zip'));
+				var archive = archiver('zip', {
+					store: true // Sets the compression method to STORE.
+				});
+
+				// Listen for all archive data to be written
+				output.on('close', function() {
+					// Deleting temp folder
+					fse.removeSync(folder);
+				});
+
+				// Catch this error explicitly
+				archive.on('error', function(err) {
+					throw err;
+				});
+
+				// pipe archive data to the file
+				archive.pipe(output);
+
+				// append files from a directory
+				archive.directory(folder, false);
+
+				// finalize the archive
+				archive.finalize();
+			}
+		});
+
+	});
 }
 
 function printListSessions() {
