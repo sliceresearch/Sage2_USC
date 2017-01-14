@@ -70,6 +70,8 @@
 		"sw-precache": "latest",
 		"debug": "latest",
 		"ytdl-core": "latest",
+		"fs-extra": "latest",
+		"archiver": "latest",
 		"electron": "latest"
 	},
 	"optionalDependencies": {
