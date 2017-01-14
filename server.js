@@ -2061,7 +2061,7 @@ function wsPackageSession(wsio, data) {
 		if (err) {
 			throw err;
 		}
-		console.log('Building session in', folder);
+		console.log(sageutils.header('Session') + 'Building session in ' + folder);
 
 		var fullpath;
 		if (sageutils.fileExists(path.resolve(data.id))) {
@@ -2128,7 +2128,7 @@ function wsPackageSession(wsio, data) {
 				session.apps.forEach(function(element, index, array) {
 					states.apps.push(element);
 					states.numapps++;
-					console.log('App', index, element.file);
+					console.log(sageutils.header("Session") + 'App ' +  index + ' : ' + element.file);
 					if (element.file) {
 						// copy into folder
 						fse.copySync(
@@ -2143,28 +2143,34 @@ function wsPackageSession(wsio, data) {
 				});
 
 				try {
+					var session_fullpath = path.join(folder, path.basename(fullpath));
 					fs.writeFileSync(
-						path.join(folder, path.basename(fullpath)),
+						session_fullpath,
 						JSON.stringify(states, null, 4)
 					);
-					console.log(sageutils.header("Session") + "saved session file to " + fullpath);
+					console.log(sageutils.header("Session") + "saved new session file to " + session_fullpath);
 				} catch (err) {
 					console.log(sageutils.header("Session") + "error saving " + err);
 				}
 
-				var output = fs.createWriteStream(path.join(os.tmpdir(), sessionName + '.zip'));
+				var output_zip = path.join(os.tmpdir(), sessionName + '.zip');
+				var output = fs.createWriteStream(output_zip);
 				var archive = archiver('zip', {
 					store: true // Sets the compression method to STORE.
 				});
 
 				// Listen for all archive data to be written
 				output.on('close', function() {
+					console.log(sageutils.header("Session") + "portable session created " + output_zip);
+					console.log('-----------------------');
 					// Deleting temp folder
 					fse.removeSync(folder);
 				});
 
 				// Catch this error explicitly
 				archive.on('error', function(err) {
+					console.log(sageutils.header("Session") + "error creating zip file " + err);
+					console.log('-----------------------');
 					throw err;
 				});
 
