@@ -2838,6 +2838,10 @@ function wsLoadApplication(wsio, data) {
 
 		if (appInstance.data.dataView) {
 			handleNewVisualization(appInstance, data.parent, null);
+
+			// sends data too fast, before app is created
+			// SAGE2_Vizs[data.parent].updateAllViews();
+
 		} else {
 			handleNewApplication(appInstance, null);
 		}

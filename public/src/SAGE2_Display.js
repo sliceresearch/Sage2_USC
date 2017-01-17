@@ -1297,9 +1297,13 @@ function setupListeners() {
 	wsio.on("visualizationUpdateView", function(data) {
 		if (data.id) {
 			console.log(data.data[0]);
-			for (var ind in data.data) {
-				data.data[ind] = VisDataTypes.parse(data.data[ind]);
-			}
+			// for (var ind in data.data) {
+			// 	data.data[ind] = VisDataTypes.parse(data.data[ind]);
+			// }
+
+			applications[data.id].updateData(data.data);
+
+
 			console.log("SAGE2_Display: Update Vis View:", data.id, data.data);
 		}
 	});

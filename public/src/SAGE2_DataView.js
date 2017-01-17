@@ -32,6 +32,14 @@ var SAGE2_DataView = SAGE2_App.extend({
 	construct: function() {
 		arguments.callee.superClass.construct.call(this);
 
+		this.visData = null;
+
+	},
+
+	updateData: function(data) {
+		this.visData = data;
+
+		console.log("SAGE2_DataView: updateData()" + this.visData);
 	}
 });
 

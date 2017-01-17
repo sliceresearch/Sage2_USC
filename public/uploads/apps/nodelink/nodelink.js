@@ -15,6 +15,7 @@
 
 var nodelink = SAGE2_DataView.extend({
   init: function(data) {
+    
     this.SAGE2Init("div", data);
 
     this.element.id = "div" + data.id;

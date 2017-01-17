@@ -219,4 +219,13 @@ Visualization.prototype.updateView = function(viewID) {
 	}
 };
 
+Visualization.prototype.updateAllViews = function() {
+	console.log("Update All Views");
+
+	for (var key in this.views) {
+		this.updateView(key);
+		console.log("Update All: Key " + key);
+	}
+};
+
 module.exports = Visualization;
