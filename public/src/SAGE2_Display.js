@@ -609,7 +609,9 @@ function setupListeners() {
 				partitions[p].updateSelected(false);
 			}
 		} else {
-			partitions[data.id].updateSelected(data.highlight);
+			if (partitions.hasOwnProperty(data.id)) {
+				partitions[data.id].updateSelected(data.highlight);
+			}
 		}
 	});
 
