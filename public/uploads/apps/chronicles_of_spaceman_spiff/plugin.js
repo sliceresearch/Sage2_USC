@@ -25,8 +25,17 @@ function processRequest(wsio, data, config) {
 			var parsedHTML = $.load(body);
 			// query for all elements with class 'strip' and loop over them
 			var results = [];
-			parsedHTML('.strip').map(function(i, foo) {
-				var elt = $(foo);
+
+			// 2016 method
+			// parsedHTML('.strip').map(function(i, foo) {
+			// 	var elt = $(foo);
+			// 	results.push(elt.attr('src'));
+			// });
+			// var bigImage = results.splice(-1)[0];
+
+			// 2017 method
+			parsedHTML('.item-comic-image').map(function(i, foo) {
+				var elt = $(foo).find('img');
 				results.push(elt.attr('src'));
 			});
 			var bigImage = results.splice(-1)[0];
