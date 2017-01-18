@@ -34,7 +34,7 @@ function SAGE2DisplayUI() {
 	this.uploadPercent = 0;
 	this.fileDropFontSize = 12;
 	this.applications = {};
-	this.appCount = 0;
+	this.appCount = 20;
 	this.partitions = {};
 	this.ptnCount = 0;
 	this.mediaStreamIcon = null;

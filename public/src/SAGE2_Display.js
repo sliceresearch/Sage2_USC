@@ -44,7 +44,7 @@ var wsio;
 var isMaster;
 var hostAlias = {};
 
-var itemCount = 0;
+var itemCount = 20;
 var controlItems   = {};
 var controlObjects = {};
 var lockedControlElements = {};
