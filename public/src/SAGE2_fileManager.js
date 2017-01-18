@@ -109,6 +109,7 @@ function FileManager(wsio, mydiv, uniqueID) {
 			{id: "deletepartition_menu", value: "Delete All Partitions"}
 		]},
 		{id: "services_menu", value: "Services", config: {width: 170}, submenu: [
+			{id: "appstore_menu",  value: "SAGE2 appstore"},
 			{id: "imageservice_menu",  value: "Large image processing"},
 			{id: "videoservice_menu",  value: "Video processing"}
 		]},
@@ -361,6 +362,9 @@ function FileManager(wsio, mydiv, uniqueID) {
 		} else if (evt === "imageservice_menu") {
 			var imageUrl = "https://sage2rtt.evl.uic.edu:3043/upload";
 			window.open(imageUrl, '_blank');
+		} else if (evt === "appstore_menu") {
+			var storeUrl = "http://apps.sagecommons.org/";
+			window.open(storeUrl, '_blank');
 		} else if (evt === "videoservice_menu") {
 			var videoUrl = "https://sage2rtt.evl.uic.edu:3043/video";
 			window.open(videoUrl, '_blank');

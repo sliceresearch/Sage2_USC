@@ -34,7 +34,7 @@ function SAGE2DisplayUI() {
 	this.uploadPercent = 0;
 	this.fileDropFontSize = 12;
 	this.applications = {};
-	this.appCount = 0;
+	this.appCount = 20;
 	this.partitions = {};
 	this.ptnCount = 0;
 	this.mediaStreamIcon = null;
@@ -578,21 +578,37 @@ SAGE2DisplayUI.prototype.deletePartition = function(id) {
 	delete this.partitions[id];
 };
 
-SAGE2DisplayUI.prototype.updateHighlightedPartition = function(id) {
-	for (var p in this.partitions) {
-		var ptnElem = document.getElementById(p + "_area");
+SAGE2DisplayUI.prototype.updateHighlightedPartition = function(data) {
+	// for (var p in this.partitions) {
+	// 	var ptnElem = document.getElementById(p + "_area");
 
 
-		ptnElem.style.backgroundColor = "rgba(1, 1, 1, 0.25)";
-		ptnElem.style.border = "1px solid #a5a5a5";
-	}
+	// 	ptnElem.style.backgroundColor = "rgba(1, 1, 1, 0.25)";
+	// 	ptnElem.style.border = "1px solid #a5a5a5";
+	// }
 
-	// if a value was passed, highlight this value
-	if (id) {
-		let highlighted = document.getElementById(id + "_area");
+	// // if a value was passed, highlight this value
+	// if (id) {
+	// 	let highlighted = document.getElementById(id + "_area");
 
-		highlighted.style.backgroundColor = "rgba(1, 1, 1, 0.5)";
-		highlighted.style.border = "6px solid #fff723";
+	// 	highlighted.style.backgroundColor = "rgba(1, 1, 1, 0.5)";
+	// 	highlighted.style.border = "6px solid #fff723";
+	// }
+
+	if (!data) {
+		for (var p in this.partitions) {
+			var ptnElem = document.getElementById(p + "_area");
+
+			ptnElem.style.backgroundColor = "rgba(1, 1, 1, 0.25)";
+			ptnElem.style.border = "1px solid #a5a5a5";
+		}
+	} else {
+		if (this.partitions.hasOwnProperty(data.id)) {
+			let highlighted = document.getElementById(data.id + "_area");
+
+			highlighted.style.backgroundColor = "rgba(1, 1, 1, 0.5)";
+			highlighted.style.border = "6px solid #fff723";
+		}
 	}
 };
 
