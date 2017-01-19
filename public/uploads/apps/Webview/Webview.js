@@ -259,6 +259,33 @@ var Webview = SAGE2_App.extend({
 			'\
 			var s2InjectForKeys = {};\
 			\
+			document.addEventListener("keypress", function(e) {\
+				var kue = new CustomEvent("keydown", {bubbles:true});\
+				kue.target = e.target;\
+				kue.view = e.view;\
+				kue.detail = e.detail;\
+				kue.char = e.char;\
+				kue.key = e.key;\
+				kue.charCode = e.charCode;\
+				kue.keyCode = e.keyCode;\
+				kue.which = e.which;\
+				kue.location = e.location;\
+				kue.repeat = e.repeat;\
+				kue.locale = e.locale;\
+				kue.ctrlKey = e.ctrlKey;\
+				kue.shiftKey = e.shiftKey;\
+				kue.altKey = e.altKey;\
+				kue.metaKey = e.metaKey;\
+				if (e.target.value == undefined) {\
+						s2InjectForKeys.lastClickedElement = e.target;\
+						s2InjectForKeys.lastClickedElement.dispatchEvent(kue);\
+						e.preventDefault();\
+					/*if (s2InjectForKeys.lastClickedElement != null) {\
+						s2InjectForKeys.lastClickedElement.dispatchEvent(kue);\
+						e.preventDefault();\
+					}*/\
+				}\
+			});\
 			document.addEventListener("click", function(e) {\
 				s2InjectForKeys.lastClickedElement = document.elementFromPoint(e.clientX, e.clientY);\
 			});\
@@ -303,7 +330,9 @@ var Webview = SAGE2_App.extend({
 				} else if(e.keyCode == 48) { /* 0 */\
 					sendChar =  ")";\
 				}\
-				s2InjectForKeys.lastClickedElement.value += sendChar;\
+				if (s2InjectForKeys.lastClickedElement.value != undefined) {\
+				} else {\
+				}\
 			});\
 			document.addEventListener("keyup", function(e) {\
 				if (e.keyCode == 0x10) {\
