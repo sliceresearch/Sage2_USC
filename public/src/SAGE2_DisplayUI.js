@@ -603,11 +603,17 @@ SAGE2DisplayUI.prototype.updateHighlightedPartition = function(data) {
 			ptnElem.style.border = "1px solid #a5a5a5";
 		}
 	} else {
-		if (this.partitions.hasOwnProperty(data.id)) {
-			let highlighted = document.getElementById(data.id + "_area");
+		var highlighted = document.getElementById(data.id + "_area");
 
-			highlighted.style.backgroundColor = "rgba(1, 1, 1, 0.5)";
-			highlighted.style.border = "6px solid #fff723";
+		if (this.partitions.hasOwnProperty(data.id) && highlighted) {
+
+			if (data.highlight) {
+				highlighted.style.backgroundColor = "rgba(1, 1, 1, 0.5)";
+				highlighted.style.border = "6px solid #fff723";
+			} else {
+				highlighted.style.backgroundColor = "rgba(1, 1, 1, 0.25)";
+				highlighted.style.border = "1px solid #a5a5a5";
+			}
 		}
 	}
 };
