@@ -58,7 +58,7 @@ var Webview = SAGE2_App.extend({
 
 		// Get the URL from parameter or session
 		var view_url = data.params || this.state.url;
-		if (view_url.indexOf('youtube') >= 0 && view_url.indexOf('embed') === -1 && view_url.indexOf("watch?v=") >= 0) {
+		if (view_url.indexOf('youtu') >= 0 && view_url.indexOf('embed') === -1 && view_url.indexOf("watch?v=") >= 0) {
 			// Search for the Youtubeq ID
 			var video_id = view_url.split('v=')[1];
 			var ampersandPosition = video_id.indexOf('&');
