@@ -58,13 +58,22 @@ var Webview = SAGE2_App.extend({
 
 		// Get the URL from parameter or session
 		var view_url = data.params || this.state.url;
-		if (view_url.indexOf('youtu') >= 0 && view_url.indexOf('embed') === -1 && view_url.indexOf("watch?v=") >= 0) {
-			// Search for the Youtubeq ID
-			var video_id = view_url.split('v=')[1];
-			var ampersandPosition = video_id.indexOf('&');
+		var video_id, ampersandPosition;
+
+		// A youtube URL with a 'watch' video
+		if (view_url.startsWith('https://www.youtube.com') &&
+				view_url.indexOf('embed') === -1 &&
+				view_url.indexOf("watch?v=") >= 0) {
+			// Search for the Youtube ID
+			video_id = view_url.split('v=')[1];
+			ampersandPosition = video_id.indexOf('&');
 			if (ampersandPosition != -1) {
 				video_id = video_id.substring(0, ampersandPosition);
 			}
+			view_url = 'https://www.youtube.com/embed/' + video_id + '?autoplay=0';
+		} else if (view_url.startsWith('https://youtu.be')) {
+			// youtube short URL (used in sharing)
+			video_id = view_url.split('/').pop();
 			view_url = 'https://www.youtube.com/embed/' + video_id + '?autoplay=0';
 		} else if (view_url.indexOf('vimeo') >= 0 && view_url.indexOf('player') === -1) {
 			// Search for the Vimeo ID
