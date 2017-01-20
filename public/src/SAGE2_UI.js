@@ -2491,6 +2491,13 @@ function setRmbContextMenuEntries(data) {
 			var inputField = document.createElement('input');
 			inputField.id = workingDiv.id + "Input"; // unique input field
 			inputField.value = "";
+			if (entriesToAdd[i].inputDefault != undefined && entriesToAdd[i].inputDefault != null) {
+				var tempIfid = inputField.id;
+				var tempIfval = entriesToAdd[i].inputDefault;
+				setTimeout(function(){
+					document.getElementById(tempIfid).value = tempIfval;
+				}, 100);
+			}
 			if (entriesToAdd[i].inputFieldSize) { // if specified state input field size
 				inputField.size = entriesToAdd[i].inputFieldSize;
 			} else {

@@ -108,6 +108,7 @@ var Webview = SAGE2_App.extend({
 			// sync the state object
 			_this.SAGE2Sync(false);
 			_this.codeInject();
+			_this.getFullContextMenuAndUpdate();
 		});
 
 		// done loading
@@ -434,6 +435,7 @@ var Webview = SAGE2_App.extend({
 		// input setting
 		entry.inputField     = true;
 		entry.inputFieldSize = 20;
+		entry.inputDefault   = this.state.url;
 		// parameters of the callback function
 		entry.parameters = {};
 		entry.parameters.action = "address";
