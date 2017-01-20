@@ -254,14 +254,122 @@ PartitionList.prototype.calculateNewPartition = function(item) {
 	return closestID;
 };
 
+/**
+  * Retrieve a list of partitions which are neighbors to a partition,
+  * along with the information of the side
+  *
+  * @param {string} ptnID - The Partition for which we are finding neighbors
+  */
+PartitionList.prototype.findNeighbors = function(ptnID) {
+	if (this.list.hasOwnProperty(ptnID)) {
+		let neighbors = {};
+		let thisPtn = this.list[ptnID];
+
+		let titleBar = this.configuration.ui.titleBarHeight;
+
+		for (let id of Object.keys(this.list)) {
+			var ptn = this.list[id];
+
+			// only if the other partition is snapping as well
+			if (ptn.isSnapping) {
+				let anyAdjacent = false;
+
+				let adjacentSides = {
+					left: null,
+					right: null,
+					top: null,
+					bottom: null
+				};
+
+				// check top against top and bottom of other (can't be both, only one or the other)
+				if (Math.abs(thisPtn.top - (ptn.top + ptn.height + titleBar)) < 10) {
+					adjacentSides.top = "bottom";
+					anyAdjacent = true;
+				} else if (Math.abs(thisPtn.top - ptn.top) < 10) {
+					adjacentSides.top = "top";
+					anyAdjacent = true;
+				}
+
+				// check bottom against top and bottom of other
+				if (Math.abs((thisPtn.top + thisPtn.height + titleBar) - ptn.top) < 10) {
+					adjacentSides.bottom = "top";
+					anyAdjacent = true;
+				} else if (Math.abs((thisPtn.top + thisPtn.height) - (ptn.top + ptn.height)) < 10) {
+					adjacentSides.bottom = "bottom";
+					anyAdjacent = true;
+				}
+
+				// check left against left and right of other
+				if (Math.abs(thisPtn.left - (ptn.left + ptn.width)) < 10) {
+					adjacentSides.left = "right";
+					anyAdjacent = true;
+				} else if (Math.abs(thisPtn.left - ptn.left) < 10) {
+					adjacentSides.left = "left";
+					anyAdjacent = true;
+				}
+
+				// check right against left and right of other
+				if (Math.abs((thisPtn.left + thisPtn.width) - ptn.left) < 10) {
+					adjacentSides.right = "left";
+					anyAdjacent = true;
+				} else if (Math.abs((thisPtn.left + thisPtn.width) - (ptn.left + ptn.width)) < 10) {
+					adjacentSides.right = "right";
+					anyAdjacent = true;
+				}
+
+				// if any of the sides of the other partition are adjacent to this partition, 
+				// add to list of neighbors
+				if (anyAdjacent) {
+					neighbors[ptn.id] = adjacentSides;
+				}	
+
+			} // end if (ptn.isSnapping ...
+		} // end for (let ptn of ...
+		return neighbors;
+	}
+
+	return [];	
+};
+
+
+PartitionList.prototype.updateNeighbors = function(ptnID) {
+	if (this.list.hasOwnProperty(ptnID)) {
+		// update neighbors of selected partition
+		this.list[ptnID].neighbors = this.findNeighbors(ptnID);
+
+		// update its neighbors to correctly include the new partition
+		for (var nID of Object.keys(this.list[ptnID].neighbors)) {
+			var neighbor = this.list[nID];
+			// inefficient but a partition may have been deleted, so recalculate from remaining group
+			neighbor.neighbors = this.findNeighbors(nID);
+		}
+
+		if (Math.abs(this.list[ptnID].top - (this.configuration.ui.titleBarHeight)) < 25) {
+			this.list[ptnID].snapTop = true;
+		}
+
+		if (Math.abs(this.list[ptnID].left + this.list[ptnID].width - this.configuration.totalWidth) < 25) {
+			this.list[ptnID].snapRight = true;
+		}
+
+		if (Math.abs(this.list[ptnID].top + this.list[ptnID].height + this.configuration.ui.titleBarHeight - this.configuration.totalHeight) < 25) {
+			this.list[ptnID].snapBottom = true;
+		}
+
+		if (Math.abs(this.list[ptnID].left) < 25) {
+			this.list[ptnID].snapLeft = true;
+		}
+	}
+};
+
 
 /* **************************************************** */
 /* Methods using node-interactable for user interaction */
 
 /**
-	* Update the geometries of an item on resize
+	* Create the geometries for a new partition when it is created
 	*
-	* @param {string} ptnID - the ID of the partiton whos geometries will be updated
+	* @param {string} newID - the ID of the partiton whos geometries will be updated
 	*/
 PartitionList.prototype.createPartitionGeometries = function(newID, iMgr) {
 	// Add new partition to global interactMgr

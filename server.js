@@ -6943,11 +6943,52 @@ function moveAndResizeApplicationWindow(resizeApp, portalId) {
 
 function moveAndResizePartitionWindow(uniqueID, movePartition) {
 	if (partitions.list.hasOwnProperty(movePartition.elemId)) {
+		var movedPtn = partitions.list[movePartition.elemId];
+		var titleBar = config.ui.titleBarHeight;
+		
+
+		// if it is a snapping partition, update all of the neighbors as well
+		if (movedPtn.isSnapping) {
+			// first check its borders against borders of wall
+
+			if (movedPtn.snapTop) {
+				// increase height when trying to drag down when snapped at top?
+				var tempBottom = movedPtn.top + movedPtn.height;
+
+				movedPtn.top = (config.ui.titleBarHeight);
+				// movedPtn.height = tempBottom - movedPtn.top;
+			}
+			if (movedPtn.snapBottom) {
+				movedPtn.height = config.totalHeight - movedPtn.top - config.ui.titleBarHeight;
+			}
+
+			if (movedPtn.snapLeft) {
+				var tempRight = movedPtn.left + movedPtn.width;
+
+				movedPtn.left = 0;
+				// movedPtn.width = tempRight;
+			}
+			if (movedPtn.snapRight) {
+				movedPtn.width = config.totalWidth - movedPtn.left;
+			}
+
+			// then update the neighboring partition positions
+			var updatedNeighbors = movedPtn.updateNeighborPtnPositions();
+
+			// update geometries/display/layout of any updated neighbors
+			for (var neigh of updatedNeighbors) {
+				partitions.updatePartitionGeometries(neigh, interactMgr);
+				broadcast('partitionMoveAndResizeFinished', partitions.list[neigh].getDisplayInfo());
+
+				updatePartitionInnerLayout(partitions.list[neigh]);
+			}
+
+		}
 
 		partitions.updatePartitionGeometries(movePartition.elemId, interactMgr);
-		broadcast('partitionMoveAndResizeFinished', partitions.list[movePartition.elemId].getDisplayInfo());
+		broadcast('partitionMoveAndResizeFinished', movedPtn.getDisplayInfo());
 
-		updatePartitionInnerLayout(partitions.list[movePartition.elemId]);
+		updatePartitionInnerLayout(movedPtn);
 	}
 }
 
@@ -7161,6 +7202,7 @@ function pointerRelease(uniqueID, pointerX, pointerY, data) {
 				var cutPtnItems = Object.assign({}, oldPtn.children);
 				// var ptnColor = oldPtn.color;
 				var ptnTiled = oldPtn.innerTiling; // to preserve tiling of new partitions
+				var ptnSnapping = oldPtn.isSnapping;
 
 				// delete the old partition
 				deletePartition(oldPtn.id);
@@ -7168,6 +7210,14 @@ function pointerRelease(uniqueID, pointerX, pointerY, data) {
 				// reassign content from oldPtn to the 2 new partitions
 				for (var key in cutPtnItems) {
 					partitions.updateOnItemRelease(cutPtnItems[key]);
+				}
+
+				newPtn1.isSnapping = ptnSnapping;
+				newPtn2.isSnapping = ptnSnapping;
+
+				if (ptnSnapping) {
+					partitions.updateNeighbors(newPtn1.id);
+					partitions.updateNeighbors(newPtn2.id);
 				}
 
 				// if the old partition was tiled, set the new displays to be tiled
@@ -9488,7 +9538,8 @@ function divideAreaPartitions(data, x, y, width, height) {
 				left: x,
 				top: y,
 				width: width,
-				height: height - config.ui.titleBarHeight
+				height: height - config.ui.titleBarHeight,
+				isSnapping: true
 			},
 			randColor
 		);
@@ -9580,6 +9631,11 @@ function createPartition(dims, color) {
 	var myPtn = partitions.newPartition(dims, interactMgr, color);
 	broadcast('createPartitionWindow', myPtn.getDisplayInfo());
 	broadcast('createPartitionBorder', myPtn.getDisplayInfo());
+
+	// on creation, if it is snapping, update the neighbors
+	if (myPtn.isSnapping) {
+		partitions.updateNeighbors(myPtn.id);
+	}
 
 	return myPtn;
 }
