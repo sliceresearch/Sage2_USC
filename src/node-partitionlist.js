@@ -317,18 +317,18 @@ PartitionList.prototype.findNeighbors = function(ptnID) {
 					anyAdjacent = true;
 				}
 
-				// if any of the sides of the other partition are adjacent to this partition, 
+				// if any of the sides of the other partition are adjacent to this partition,
 				// add to list of neighbors
 				if (anyAdjacent) {
 					neighbors[ptn.id] = adjacentSides;
-				}	
+				}
 
 			} // end if (ptn.isSnapping ...
 		} // end for (let ptn of ...
 		return neighbors;
 	}
 
-	return [];	
+	return [];
 };
 
 
@@ -352,7 +352,9 @@ PartitionList.prototype.updateNeighbors = function(ptnID) {
 			this.list[ptnID].snapRight = true;
 		}
 
-		if (Math.abs(this.list[ptnID].top + this.list[ptnID].height + this.configuration.ui.titleBarHeight - this.configuration.totalHeight) < 25) {
+		if (Math.abs(this.list[ptnID].top + this.list[ptnID].height +
+			this.configuration.ui.titleBarHeight - this.configuration.totalHeight) < 25) {
+
 			this.list[ptnID].snapBottom = true;
 		}
 

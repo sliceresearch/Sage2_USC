@@ -718,7 +718,7 @@ Partition.prototype.updateNeighborPtnPositions = function() {
 				} else { // "top"
 
 					// save bottom coordinate
-					var botCoord = partitions.list[neigh].top + partitions.list[neigh].height;
+					let botCoord = partitions.list[neigh].top + partitions.list[neigh].height;
 
 					// adjust the top and height of neighbor
 					partitions.list[neigh].top = this.top;
@@ -732,7 +732,7 @@ Partition.prototype.updateNeighborPtnPositions = function() {
 				if (this.neighbors[neigh].bottom === "top") {
 
 					// save bottom coordinate
-					var botCoord = partitions.list[neigh].top + partitions.list[neigh].height;
+					let botCoord = partitions.list[neigh].top + partitions.list[neigh].height;
 
 					// adjust the top and height of neighbor
 					partitions.list[neigh].top = this.top + this.height + titleBar;
@@ -755,7 +755,7 @@ Partition.prototype.updateNeighborPtnPositions = function() {
 					isUpdated = true;
 				} else { // "left"
 					// save right coordinate
-					var rightCoord = partitions.list[neigh].left + partitions.list[neigh].width;
+					let rightCoord = partitions.list[neigh].left + partitions.list[neigh].width;
 
 					// adjust the left and width of neighbor
 					partitions.list[neigh].left = this.left;
@@ -768,7 +768,7 @@ Partition.prototype.updateNeighborPtnPositions = function() {
 			if (this.neighbors[neigh].right) {
 				if (this.neighbors[neigh].right === "left") {
 					// save right coordinate
-					var rightCoord = partitions.list[neigh].left + partitions.list[neigh].width;
+					let rightCoord = partitions.list[neigh].left + partitions.list[neigh].width;
 
 					// adjust the left and width of neighbor
 					partitions.list[neigh].left = this.left + this.width;

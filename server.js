@@ -6945,28 +6945,21 @@ function moveAndResizePartitionWindow(uniqueID, movePartition) {
 	if (partitions.list.hasOwnProperty(movePartition.elemId)) {
 		var movedPtn = partitions.list[movePartition.elemId];
 		var titleBar = config.ui.titleBarHeight;
-		
+
 
 		// if it is a snapping partition, update all of the neighbors as well
 		if (movedPtn.isSnapping) {
 			// first check its borders against borders of wall
 
 			if (movedPtn.snapTop) {
-				// increase height when trying to drag down when snapped at top?
-				var tempBottom = movedPtn.top + movedPtn.height;
-
-				movedPtn.top = (config.ui.titleBarHeight);
-				// movedPtn.height = tempBottom - movedPtn.top;
+				movedPtn.top = (titleBar);
 			}
 			if (movedPtn.snapBottom) {
-				movedPtn.height = config.totalHeight - movedPtn.top - config.ui.titleBarHeight;
+				movedPtn.height = config.totalHeight - movedPtn.top - titleBar;
 			}
 
 			if (movedPtn.snapLeft) {
-				var tempRight = movedPtn.left + movedPtn.width;
-
 				movedPtn.left = 0;
-				// movedPtn.width = tempRight;
 			}
 			if (movedPtn.snapRight) {
 				movedPtn.width = config.totalWidth - movedPtn.left;
