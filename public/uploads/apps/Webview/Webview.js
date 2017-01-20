@@ -108,6 +108,7 @@ var Webview = SAGE2_App.extend({
 			// sync the state object
 			_this.SAGE2Sync(false);
 			_this.codeInject();
+			// update the context menu with the current URL
 			_this.getFullContextMenuAndUpdate();
 		});
 
@@ -433,7 +434,9 @@ var Webview = SAGE2_App.extend({
 		// callback
 		entry.callback = "navigation";
 		// input setting
-		entry.inputField     = true;
+		entry.inputField = true;
+		// set the value to the current URL
+		entry.value = this.element.src;
 		entry.inputFieldSize = 20;
 		entry.inputDefault   = this.state.url;
 		// parameters of the callback function
