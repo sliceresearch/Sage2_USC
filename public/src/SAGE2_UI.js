@@ -2439,11 +2439,11 @@ function setRmbContextMenuEntries(data) {
 					// if an input field, need to modify the params to pass back before sending.
 					if (this.inputField === true) {
 						var inputField = document.getElementById(this.inputFieldId);
-						//dont do anything if there is nothing in the inputfield
+						// dont do anything if there is nothing in the inputfield
 						if (inputField.value.length <= 0) {
 							return;
 						}
-						//add the field clientInput to the parameters
+						// add the field clientInput to the parameters
 						this.parameters.clientInput = inputField.value;
 					}
 					// create data to send, then emit
@@ -2489,8 +2489,10 @@ function setRmbContextMenuEntries(data) {
 		if (entriesToAdd[i].inputField === true) {
 			workingDiv.inputField = true;
 			var inputField = document.createElement('input');
-			inputField.id = workingDiv.id + "Input"; // unique input field
-			inputField.value = "";
+			// unique input field
+			inputField.id = workingDiv.id + "Input";
+			// check if the data has a value field
+			inputField.defaultValue = entriesToAdd[i].value || "";
 			if (entriesToAdd[i].inputFieldSize) { // if specified state input field size
 				inputField.size = entriesToAdd[i].inputFieldSize;
 			} else {
