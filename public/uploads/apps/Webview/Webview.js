@@ -457,6 +457,14 @@ var Webview = SAGE2_App.extend({
 		entry.parameters.action = "search";
 		entries.push(entry);
 
+		entries.push({
+			description: "Copy URL to clipboard",
+			callback: "SAGE2_copyURL",
+			parameters: {
+				url: this.state.url
+			}
+		});
+
 		entries.push({description: "separator"});
 
 		return entries;

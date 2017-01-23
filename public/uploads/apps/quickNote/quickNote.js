@@ -36,6 +36,9 @@ var quickNote = SAGE2_App.extend({
 		this.txtArea.style.fontSize = '30px';
 		this.element.appendChild(this.txtArea);
 
+		// Keep a copy of the title
+		this.noteTitle = "";
+
 		// If loaded from session, this.state will have meaningful values.
 		this.setMessage(this.state);
 
@@ -170,10 +173,11 @@ var quickNote = SAGE2_App.extend({
 		momentTime = moment(momentTime);
 		// If the author is supposed to be Anonymouse, then omit author inclusion and marker.
 		if (author === "Anonymous") {
-			this.updateTitle(momentTime.format("MMM Do, hh:mm A"));
+			this.noteTitle = momentTime.format("MMM Do, hh:mm A");
 		} else { // Otherwise have the name followed by @
-			this.updateTitle(author + " @ " + momentTime.format("MMM Do, hh:mm A"));
+			this.noteTitle = author + " @ " + momentTime.format("MMM Do, hh:mm A");
 		}
+		this.updateTitle(this.noteTitle);
 	},
 
 	load: function(date) {
@@ -208,6 +212,9 @@ var quickNote = SAGE2_App.extend({
 			+ "\n"
 			+ this.state.clientInput;
 		wsio.emit("csdMessage", fileData);
+
+		// update the context menu with the current content
+		this.getFullContextMenuAndUpdate();
 	},
 
 	draw: function(date) {
@@ -313,6 +320,16 @@ var quickNote = SAGE2_App.extend({
 		entry.inputField  = true;
 		entry.inputFieldSize = 20;
 		entries.push(entry);
+
+		entries.push({description: "separator"});
+
+		entries.push({
+			description: "Copy content to clipboard",
+			callback: "SAGE2_copyURL",
+			parameters: {
+				url: this.noteTitle + "\n" + this.state.clientInput + "\n"
+			}
+		});
 
 		return entries;
 	},
