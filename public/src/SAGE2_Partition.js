@@ -72,7 +72,7 @@ var SAGE2_Partition = function(data) {
 	this.partitionArea = partitionArea;
 
 	var closeIcon = document.createElement("img");
-	closeIcon.src = "images/window-close.svg";
+	closeIcon.src = "images/window-close3.svg";
 	closeIcon.height = Math.round(ui.titleBarHeight - 4);
 	closeIcon.style.position = "absolute";
 	closeIcon.style.right    = "0px";

@@ -44,7 +44,7 @@ var wsio;
 var isMaster;
 var hostAlias = {};
 
-var itemCount = 0;
+var itemCount = 20;
 var controlItems   = {};
 var controlObjects = {};
 var lockedControlElements = {};
@@ -609,7 +609,9 @@ function setupListeners() {
 				partitions[p].updateSelected(false);
 			}
 		} else {
-			partitions[data.id].updateSelected(data.highlight);
+			if (partitions.hasOwnProperty(data.id)) {
+				partitions[data.id].updateSelected(data.highlight);
+			}
 		}
 	});
 

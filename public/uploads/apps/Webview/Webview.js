@@ -58,13 +58,22 @@ var Webview = SAGE2_App.extend({
 
 		// Get the URL from parameter or session
 		var view_url = data.params || this.state.url;
-		if (view_url.indexOf('youtu') >= 0 && view_url.indexOf('embed') === -1) {
-			// Search for the Youtubeq ID
-			var video_id = view_url.split('v=')[1];
-			var ampersandPosition = video_id.indexOf('&');
+		var video_id, ampersandPosition;
+
+		// A youtube URL with a 'watch' video
+		if (view_url.startsWith('https://www.youtube.com') &&
+				view_url.indexOf('embed') === -1 &&
+				view_url.indexOf("watch?v=") >= 0) {
+			// Search for the Youtube ID
+			video_id = view_url.split('v=')[1];
+			ampersandPosition = video_id.indexOf('&');
 			if (ampersandPosition != -1) {
 				video_id = video_id.substring(0, ampersandPosition);
 			}
+			view_url = 'https://www.youtube.com/embed/' + video_id + '?autoplay=0';
+		} else if (view_url.startsWith('https://youtu.be')) {
+			// youtube short URL (used in sharing)
+			video_id = view_url.split('/').pop();
 			view_url = 'https://www.youtube.com/embed/' + video_id + '?autoplay=0';
 		} else if (view_url.indexOf('vimeo') >= 0 && view_url.indexOf('player') === -1) {
 			// Search for the Vimeo ID
@@ -99,6 +108,8 @@ var Webview = SAGE2_App.extend({
 			// sync the state object
 			_this.SAGE2Sync(false);
 			_this.codeInject();
+			// update the context menu with the current URL
+			_this.getFullContextMenuAndUpdate();
 		});
 
 		// done loading
@@ -259,6 +270,33 @@ var Webview = SAGE2_App.extend({
 			'\
 			var s2InjectForKeys = {};\
 			\
+			document.addEventListener("keypress", function(e) {\
+				var kue = new CustomEvent("keydown", {bubbles:true});\
+				kue.target = e.target;\
+				kue.view = e.view;\
+				kue.detail = e.detail;\
+				kue.char = e.char;\
+				kue.key = e.key;\
+				kue.charCode = e.charCode;\
+				kue.keyCode = e.keyCode;\
+				kue.which = e.which;\
+				kue.location = e.location;\
+				kue.repeat = e.repeat;\
+				kue.locale = e.locale;\
+				kue.ctrlKey = e.ctrlKey;\
+				kue.shiftKey = e.shiftKey;\
+				kue.altKey = e.altKey;\
+				kue.metaKey = e.metaKey;\
+				if (e.target.value == undefined) {\
+						s2InjectForKeys.lastClickedElement = e.target;\
+						s2InjectForKeys.lastClickedElement.dispatchEvent(kue);\
+						e.preventDefault();\
+					/*if (s2InjectForKeys.lastClickedElement != null) {\
+						s2InjectForKeys.lastClickedElement.dispatchEvent(kue);\
+						e.preventDefault();\
+					}*/\
+				}\
+			});\
 			document.addEventListener("click", function(e) {\
 				s2InjectForKeys.lastClickedElement = document.elementFromPoint(e.clientX, e.clientY);\
 			});\
@@ -303,7 +341,9 @@ var Webview = SAGE2_App.extend({
 				} else if(e.keyCode == 48) { /* 0 */\
 					sendChar =  ")";\
 				}\
-				s2InjectForKeys.lastClickedElement.value += sendChar;\
+				if (s2InjectForKeys.lastClickedElement.value != undefined) {\
+				} else {\
+				}\
 			});\
 			document.addEventListener("keyup", function(e) {\
 				if (e.keyCode == 0x10) {\
@@ -394,8 +434,11 @@ var Webview = SAGE2_App.extend({
 		// callback
 		entry.callback = "navigation";
 		// input setting
-		entry.inputField     = true;
+		entry.inputField = true;
+		// set the value to the current URL
+		entry.value = this.element.src;
 		entry.inputFieldSize = 20;
+		entry.inputDefault   = this.state.url;
 		// parameters of the callback function
 		entry.parameters = {};
 		entry.parameters.action = "address";

@@ -6634,9 +6634,15 @@ function updatePointerPosition(uniqueID, pointerX, pointerY, data) {
 		} else {
 			moveApplicationWindow(uniqueID, updatedMoveItem, null);
 
+
+			let currentMoveItem = SAGE2Items.applications.list[updatedMoveItem.elemId];
+
+			broadcast('updatePartitionBorders', {id: currentMoveItem.ptnHovered, highlight: false});
+
 			// Calculate partition which item is over
-			var ptnHovered = partitions.calculateNewPartition(SAGE2Items.applications.list[updatedMoveItem.elemId]);
-			broadcast('updatePartitionBorders', {id: ptnHovered, highlight: true});
+			currentMoveItem.ptnHovered = partitions.calculateNewPartition(currentMoveItem);
+
+			broadcast('updatePartitionBorders', {id: currentMoveItem.ptnHovered, highlight: true});
 		}
 		return;
 	}
