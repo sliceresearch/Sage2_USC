@@ -2436,6 +2436,13 @@ function setRmbContextMenuEntries(data) {
 							link.dispatchEvent(me);
 						}
 					}
+				} else if (this.callback === "SAGE2_copyURL") {
+					// special case: want to copy the URL of the file to clipboard
+					var url = this.parameters.url;
+					if (url) {
+						// defined in SAGE2_runtime
+						SAGE2_copyToClipboard(url);
+					}
 				} else {
 					// if an input field, need to modify the params to pass back before sending.
 					if (this.inputField === true) {
