@@ -56,6 +56,8 @@ function SAGE2_interaction(wsio) {
         this.dropTot2 = 0;
         this.sentTot2 = 0;
         this.frameCount = 0;
+	this.nchunks = 0;
+	this.sentChunks = 0;
 
 	// Event filtering for mouseMove
 	this.now = Date.now();
@@ -559,10 +561,12 @@ function SAGE2_interaction(wsio) {
 	* @param event {Object} event
 	*/
 	this.streamEndedMethod = function(event) {
+		console.log("stream ended");
 		this.broadcasting = false;
 		// cancelAnimationFrame(this.req);
 		cancelIdleCallback(this.req);
 		this.wsio.emit('stopMediaStream', {id: this.uniqueID + "|0"});
+		//window.self.close();
 	};
 
 	/**
@@ -587,6 +591,7 @@ function SAGE2_interaction(wsio) {
 	};
 
         this.qosUpdate = function(match) {
+		console.log("qosUpdate");
                 // ratio of dropped frames to total frames gathered
                 var ratio1 = this.resolutionCheck1(match);
                 var ratio2 = this.resolutionCheck2(match);
@@ -808,8 +813,28 @@ function SAGE2_interaction(wsio) {
          * Creates a new Uint8Array based on multiple ArrayBuffers
          * @return {ArrayBuffers} The new ArrayBuffer created out of the two.
          */
+        var _appendBuffers2 = function(buffer1, buffer2) {
+          var nulB = new Uint8Array([0]);
+          var tmp = new Uint8Array(buffer1.byteLength + buffer2.byteLength + 1);
+          var pos = 0;
+          tmp.set(buffer1, pos);
+          var i = 0;
+          pos = pos + buffer1.byteLength;
+          tmp.set(nulB, pos);
+          pos = pos + 1;
+          tmp.set(buffer2, pos);
+          //for (i = 0; i<buffer1.byteLength + 2; i++) {
+          //  console.log("tmp ",i,tmp[i]);
+          //}
+          return tmp;
+        };
+
+        /**
+         * Creates a new Uint8Array based on multiple ArrayBuffers
+         * @return {ArrayBuffers} The new ArrayBuffer created out of the two.
+         */
         var _appendBuffers6 = function(buffer1, buffer2, buffer3, buffer4, buffer5, buffer6) {
-          console.log("appendBuffers ");
+          //console.log("appendBuffers ");
           var nulB = new Uint8Array([0]);
           var tmplen = buffer1.byteLength + buffer2.byteLength + buffer3.byteLength + buffer4.byteLength + buffer5.byteLength + buffer6.byteLength + 5;
           var tmp = new Uint8Array(tmplen);
@@ -857,12 +882,13 @@ function SAGE2_interaction(wsio) {
 	* @method sendMediaStreamFrame
 	*/
 	this.sendMediaStreamFrame = function() {
-		if (this.broadcasting) {
+		if (this.broadcasting && this.sentChunks === this.nchunks) {
 			// var frame = this.captureMediaFrame();
 			var frame = this.pix;
 			var raw   = atob(frame.split(",")[1]);  // base64 to string
 
-			if (true) { // raw.length > this.chunk) {
+		        if (true) { // raw.length > this.chunk) {
+				//console.log("send frame as chunks");
                                 var _this   = this;
                                 var nchunks = Math.ceil(raw.length / this.chunk);
 
@@ -871,22 +897,37 @@ function SAGE2_interaction(wsio) {
                                 var lastChecksum = refChecksum.val;
                                 var match = (lastChecksum === this.lastChecksum);
                                 if (match) {
-                                    console.log("checksum match - drop frame");
+                                    //console.log("checksum match - drop frame");
                                 } else {
+				    this.nchunks = nchunks;
+				    this.sentChunks = 0;
 				    var updateMediaStreamChunk = function(index, start, end) {
 					    setTimeout(function() {
-						    //_this.wsio.emit('updateMediaStreamChunk', {id: _this.uniqueID + "|0",
-						    //      state: {src: msg_chunk, type: "image/jpeg", encoding: "binary"},
-						    //      piece: index, total: nchunks});
-						    var id = _this.uniqueID+"|0";
-						    var clen = end - start;
-						    //console.log("updateMediaStreamChunk ", index, id, intAr.length, start, end, clen);
-						    //var subAr = intAr.subarray(start, clen);
-						    var subAr = new Uint8Array(intAr,start,clen);
-						    //console.log("extracted chunk "+subAr.length);
-						    var buffer = _appendBuffers6(str2ab(id), str2ab(index.toString()), str2ab(nchunks.toString()), str2ab("image/jpeg"), str2ab("base64"), subAr);
-						    _this.wsio.emit('updateMediaStreamChunk', buffer);
-					    }, 4);
+                                                var data = {id: _this.uniqueID + "|0",
+                                                        state: {src: null, type: "image/jpeg", encoding: "binary"},
+                                                        piece: index,
+                                                        frameNr: _this.sentFrameCount,
+                                                        total: nchunks
+                                                };
+                                                var t1 = Date.now();
+                                                var id = _this.uniqueID+"|0";
+                                                var clen = end - start;
+                                                //console.log("updateMediaStreamChunk ", index, id, start, end, clen);
+                                                //var subAr = intAr.subarray(start, clen);
+                                                //console.log("new Uint8Array start length "+start+" "+clen);
+                                                var subAr = new Uint8Array(intAr.buffer,start,clen);
+                                                //console.log("subAr length byteLength "+subAr.length+" "+subAr.byteLength);
+                                                var t2 = Date.now();
+                                                var buffer = _appendBuffers2(str2ab(JSON.stringify(data)), subAr);
+                                                var t3 = Date.now();
+                                                _this.wsio.emit('updateMediaStreamChunk', buffer);
+                                                var t4 = Date.now();
+                                                //console.log("updateChunk "+(t2 - t1));
+                                                //console.log("updateChunk "+(t3 - t2));
+                                                //console.log("updateChunk "+(t4 - t3));
+                                                _this.sentChunks = _this.sentChunks + 1;
+                                                //console.log("sent chunk "+_this.sentChunks+" of "+_this.nchunks);
+					    }, 0);
 				    };
 				    for (var i = 0; i < nchunks; i++) {
 					    var start = i * this.chunk;
@@ -898,7 +939,7 @@ function SAGE2_interaction(wsio) {
                                 this.qosUpdate(match);
                                 this.lastChecksum = lastChecksum;
 
-			} else {
+			    } else {
                                 //console.log("sendMediaStreamFrame ", this.uniqueID);
                                 //mytrace(raw);
                                 var id = this.uniqueID+"|0";
@@ -914,7 +955,7 @@ function SAGE2_interaction(wsio) {
                                 }
                                 this.qosUpdate(match);
                                 this.lastChecksum = lastChecksum;
-			}
+			    }
 		}
 	};
 

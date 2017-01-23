@@ -1717,28 +1717,25 @@ function wsUpdateMediaStreamChunk(wsio, dataOrBuffer) {
                         SAGE2Items.renderSync[data.id].chunks = [];
                 }
         } else {
-                data = {}
+                // FIXME: removing the requirement for next-frame signalling creates a race between chunks of different frames
                 // buffer: id, state-type, state-encoding, state-src
-                data.id = byteBufferToString(dataOrBuffer);
-                //
-                var buf2 = dataOrBuffer.slice(data.id.length + 1);
-                data.piece = byteBufferToString(buf2);
-                //
-                var buf3 = buf2.slice(data.piece.length + 1);
-                data.total = byteBufferToString(buf3);
-                //
-                var buf4 = buf3.slice(data.total.length + 1);
-                data.state = {};
-                data.state.type = byteBufferToString(buf4);
-                //
-                var buf5 = buf4.slice(data.state.type.length + 1);
-                data.state.encoding = byteBufferToString(buf5);
-                //
-                data.state.src = buf5.slice(data.state.encoding.length + 1);
-                //
+                var dataStr = byteBufferToString(dataOrBuffer);
+                console.log("chunk data "+dataStr);
+                data = JSON.parse(dataStr);
+                var curState = SAGE2Items.renderSync[data.id];
+                data.state.src = dataOrBuffer.slice(dataStr.length + 1);
+                console.log("chunk size "+data.state.src.length);
                 var chunks = SAGE2Items.renderSync[data.id].chunks;
-                if (chunks.length === 0 || chunks === null || chunks === undefined) {
+                if (chunks === null || chunks === undefined || chunks.length === 0) {
+                        console.log("new frame: awaiting "+data.total+" chunks ");
                         SAGE2Items.renderSync[data.id].chunks = initializeArray(data.total, "");
+                        chunks = SAGE2Items.renderSync[data.id].chunks;
+                }
+                if (curState.frameCount === null || curState.frameCount === undefined) {
+                        curState.frameCount = 0;
+                }
+                if (curState.frameCount+1 !== data.frameNr) {
+                        console.log("CHUNK FROM OTHER FRAME "+data.frameNr);
                 }
                 chunks[data.piece] = data.state.src;
                 if (allNonBlank(SAGE2Items.renderSync[data.id].chunks)) {
