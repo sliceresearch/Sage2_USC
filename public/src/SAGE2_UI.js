@@ -2340,7 +2340,7 @@ function reloadIfServerRunning(callback) {
  * Will set the values of the right mouse button(rmb) context menu div.
  */
 function setupRmbContextMenuDiv() {
-	// override rmb contextmenu calls.
+	// override rmb contextmenu calls
 	document.addEventListener('contextmenu', function(e) {
 		// if a right click is made on canvas
 		if (e.target.id === "sage2UICanvas") {
@@ -2360,9 +2360,10 @@ function setupRmbContextMenuDiv() {
 			clearContextMenu();
 			hideRmbContextMenuDiv();
 			// The context menu will be filled and positioned after getting a response from server.
+
+			// prevent the standard context menu, only for the canvas
+			e.preventDefault();
 		}
-		// prevent the standard context menu
-		e.preventDefault();
 	}, false);
 }
 
