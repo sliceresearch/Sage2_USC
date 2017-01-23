@@ -8385,7 +8385,7 @@ function handleNewApplication(appInstance, videohandle) {
 		updatePartitionInnerLayout(partitions.list[id]);
 
 		broadcast('partitionWindowTitleUpdate', partitions.list[id].getTitle());
-	}));			
+	}));
 }
 
 function handleNewApplicationInDataSharingPortal(appInstance, videohandle, portalId) {
