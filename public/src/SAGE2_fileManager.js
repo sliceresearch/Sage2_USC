@@ -18,7 +18,7 @@
  */
 
 /* global SAGE2_init, SAGE2_resize, escape, unescape, sage2Version, showDialog */
-/* global removeAllChildren */
+/* global removeAllChildren, SAGE2_copyToClipboard */
 
 "use strict";
 
