@@ -1013,10 +1013,10 @@ function setupListeners(wsio) {
 	wsio.on('appFileSaveRequest',                   appFileSaveRequest);
 
 	// create partition
-	wsio.on('createPartition', 						wsCreatePartition);
-	wsio.on('partitionScreen', 						wsPartitionScreen);
-	wsio.on('deleteAllPartitions',				wsDeleteAllPartitions);
-	wsio.on('partitionsGrabAllContent',		wsPartitionsGrabAllContent);
+	wsio.on('createPartition',                      wsCreatePartition);
+	wsio.on('partitionScreen',                      wsPartitionScreen);
+	wsio.on('deleteAllPartitions',                  wsDeleteAllPartitions);
+	wsio.on('partitionsGrabAllContent',             wsPartitionsGrabAllContent);
 }
 
 /**
@@ -1168,6 +1168,13 @@ function initializeExistingAppsPositionSizeTypeOnly(wsio) {
 	var key;
 	for (key in SAGE2Items.applications.list) {
 		wsio.emit('createAppWindowPositionSizeOnly', getAppPositionSize(SAGE2Items.applications.list[key]));
+
+		// Send the appliation state to the UI
+		broadcast('applicationState', {
+			id: SAGE2Items.applications.list[key].id,
+			state: SAGE2Items.applications.list[key].data,
+			application: SAGE2Items.applications.list[key].application
+		});
 	}
 
 	var newOrder = interactMgr.getObjectZIndexList("applications", ["portals"]);
@@ -1816,6 +1823,13 @@ function wsUpdateAppState(wsio, data) {
 				}
 			}
 		}
+
+		// Send the appliation state to the UI
+		broadcast('applicationState', {
+			id: data.id,
+			state: app.data,
+			application: app.application
+		});
 	}
 }
 
@@ -6491,7 +6505,6 @@ function updatePointerPosition(uniqueID, pointerX, pointerY, data) {
 			moveAndResizePartitionWindow(uniqueID, updatedMoveItem, null);
 		} else {
 			moveApplicationWindow(uniqueID, updatedMoveItem, null);
-
 
 			let currentMoveItem = SAGE2Items.applications.list[updatedMoveItem.elemId];
 
