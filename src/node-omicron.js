@@ -248,6 +248,7 @@ OmicronManager.prototype.connect = function(msgPort) {
 	});
 	omicronManager.oinputserverSocket.on('error', function(e) {
 		console.log(sageutils.header('Omicron') + 'oinputserver connection error - code:', e.code);
+		omicronManager.oinputserverConnected = false;
 	});
 	omicronManager.oinputserverSocket.on('end', function(e) {
 		console.log(sageutils.header('Omicron') + 'oinputserver disconnected');

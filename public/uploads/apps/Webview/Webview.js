@@ -144,6 +144,17 @@ var Webview = SAGE2_App.extend({
 			event.preventDefault();
 		});
 
+		// Emitted when page receives favicon urls
+		this.element.addEventListener("page-favicon-updated", function(event) {
+			console.log('Webview>	page-favicon-updated', event.favicons, event.favicons[0]);
+			if (event.favicons && event.favicons[0]) {
+				_this.state.favicon = event.favicons[0];
+				// sync the state object
+				_this.SAGE2Sync(false);
+			}
+		});
+
+		// Console message from the embedded page
 		this.element.addEventListener('console-message', function(event) {
 			console.log('Webview>	console:', event.message);
 			// Add the message to the console layer
@@ -456,6 +467,14 @@ var Webview = SAGE2_App.extend({
 		entry.parameters = {};
 		entry.parameters.action = "search";
 		entries.push(entry);
+
+		entries.push({
+			description: "Copy URL to clipboard",
+			callback: "SAGE2_copyURL",
+			parameters: {
+				url: this.state.url
+			}
+		});
 
 		entries.push({description: "separator"});
 
