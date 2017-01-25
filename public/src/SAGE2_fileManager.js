@@ -18,7 +18,7 @@
  */
 
 /* global SAGE2_init, SAGE2_resize, escape, unescape, sage2Version, showDialog */
-/* global removeAllChildren */
+/* global removeAllChildren, SAGE2_copyToClipboard */
 
 "use strict";
 
@@ -918,7 +918,7 @@ function FileManager(wsio, mydiv, uniqueID) {
 	webix.ui({
 		view: "contextmenu",
 		id: "cmenu",
-		data: ["Open", "Download", { $template: "Separator" }, "Delete"],
+		data: ["Open", "Copy URL", "Download", { $template: "Separator" }, "Delete"],
 		on: {
 			onItemClick: function(id) {
 				var i;
@@ -929,7 +929,8 @@ function FileManager(wsio, mydiv, uniqueID) {
 
 				if (id === "Download") {
 					downloadItem(list.getItem(listId).id);
-
+				} else if (id === "Copy URL") {
+					copyURLItem(list.getItem(listId).id);
 				} else if (id === "Open") {
 					var tbo = [];
 					if (dItems.length === 0) {
@@ -1053,6 +1054,14 @@ function FileManager(wsio, mydiv, uniqueID) {
 				link.dispatchEvent(me);
 				return true;
 			}
+		}
+	}
+
+	function copyURLItem(elt) {
+		var url = _this.allFiles[elt].sage2URL;
+		if (url) {
+			// Copy to clipboard (defined in SAGE2_runtime)
+			SAGE2_copyToClipboard(window.location.origin + url);
 		}
 	}
 

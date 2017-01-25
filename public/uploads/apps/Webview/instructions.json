@@ -9,6 +9,7 @@
 	],
 	"load": {
 		"url": "/uploads/web/index.html",
+		"favicon": "",
 		"zoom": 1,
 		"mode": "desktop"
 	},

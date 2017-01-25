@@ -444,6 +444,13 @@ var movie_player = SAGE2_BlockStreamingApp.extend({
 				url: this.state.video_url
 			}
 		});
+		entries.push({
+			description: "Copy URL",
+			callback: "SAGE2_copyURL",
+			parameters: {
+				url: this.state.video_url
+			}
+		});
 
 		return entries;
 	},
