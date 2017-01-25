@@ -2478,13 +2478,6 @@ function loadSession(filename) {
 					}
 
 					handleNewApplication(appInstance, videohandle);
-
-					var changedPartitions = partitions.updateOnItemRelease(appInstance);
-					changedPartitions.forEach((id => {
-						updatePartitionInnerLayout(partitions.list[id]);
-
-						broadcast('partitionWindowTitleUpdate', partitions.list[id].getTitle());
-					}));
 				});
 			});
 		}
@@ -8398,6 +8391,14 @@ function handleNewApplication(appInstance, videohandle) {
 	SAGE2Items.applications.editButtonVisibilityOnItem(appInstance.id, "syncButton", false);
 
 	initializeLoadedVideo(appInstance, videohandle);
+
+	// assign content to a partition immediately when it is created
+	var changedPartitions = partitions.updateOnItemRelease(appInstance);
+	changedPartitions.forEach((id => {
+		updatePartitionInnerLayout(partitions.list[id]);
+
+		broadcast('partitionWindowTitleUpdate', partitions.list[id].getTitle());
+	}));
 }
 
 function handleNewApplicationInDataSharingPortal(appInstance, videohandle, portalId) {
