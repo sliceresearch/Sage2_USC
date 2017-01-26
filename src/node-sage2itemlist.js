@@ -151,6 +151,17 @@ SAGE2ItemList.prototype.getItemById = function(id) {
 	return this.list[id];
 };
 
+//pass a title of the app, get this item
+SAGE2ItemList.prototype.getFirstItemWithTitle = function(title) {
+	for (var key in this.list) {
+	  if (this.list[key].title == title) {
+	    return this.list[key];
+	  }
+	}
+	return null;
+};
+
+
 // TODO: Given local coordinate inside the item bounding box, determine if inside an interactable area
 
 module.exports = SAGE2ItemList;

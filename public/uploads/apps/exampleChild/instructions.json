@@ -1,0 +1,22 @@
+{
+	"main_script": "exampleChild.js",
+	"icon": "exampleChild.png",
+	"width": 400,
+	"height": 200,
+	"resize": "free",
+	"animation": true,			
+	"dependencies": [
+	],
+	"load": {
+		"value": 4,
+		"red": 255,
+		"green": 0,
+		"blue": 0
+	},
+	"title": "exampleChild",
+	"version": "1.0.0",
+	"description": "SAGE2 application exampleChild",
+	"keywords": [ "sage2", "exampleChild" ],
+	"author": "Jillian Aurisano <jillian.aurisano@gmail.com>",
+	"license": "SAGE2-Software-License"
+}

@@ -1,0 +1,19 @@
+{
+	"main_script": "exampleParent.js",
+	"icon": "exampleParent.png",
+	"width": 1000,
+	"height": 800,
+	"resize": "free",
+	"animation": true,	
+	"dependencies": [
+	],
+	"load": {
+		"value": 4
+	},
+	"title": "exampleParent",
+	"version": "1.0.0",
+	"description": "SAGE2 application exampleParent",
+	"keywords": [ "sage2", "exampleParent" ],
+	"author": "Jillian Aurisano <jillian.aurisano@gmail.com>",
+	"license": "SAGE2-Software-License"
+}

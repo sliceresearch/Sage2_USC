@@ -1,0 +1,26 @@
+{
+	"main_script": "heat_map.js",
+	"icon": "heat_map.png",
+	"width": 800,
+	"height": 600,
+	"resize": "free",
+	"animation": true,
+	"dependencies": [
+		"scripts/modestMaps.js"
+	],
+	"load": {
+		"value": 4,
+		"data": [
+		    {"latitude": 41.872, "longitude": -87.624, "value": 82},
+		    {"latitude": 41.873, "longitude": -87.625, "value": 82}
+		  ],
+		"maxValue": 100,
+		"title": "visualization response"
+	},
+	"title": "heat_map",
+	"version": "1.0.0",
+	"description": "SAGE2 application articulate_console",
+	"keywords": [ "sage2", "heat_map" ],
+	"author": "Jillian Aurisano <jillian.aurisano@gmail.com>",
+	"license": "SAGE2-Software-License"
+}
