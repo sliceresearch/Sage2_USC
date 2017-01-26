@@ -537,7 +537,16 @@ function setupListeners() {
 		displayUI.updateHighlightedPartition(data);
 	});
 
-
+	// Receive a message when an application state is upated
+	wsio.on('applicationState', function(data) {
+		if (data.application === "Webview") {
+			var icon = document.getElementById(data.id + "_icon");
+			if (icon && data.state.favicon) {
+				// Update the icon of the app window with the favicon of the site
+				icon.src = data.state.favicon;
+			}
+		}
+	});
 
 	// Server sends the SAGE2 version
 	wsio.on('setupSAGE2Version', function(data) {
@@ -2404,7 +2413,7 @@ function clearContextMenu() {
  *
  */
 function setRmbContextMenuEntries(data) {
-	//data.entries, data.app, data.x, data.y
+	// data.entries, data.app, data.x, data.y
 	var entriesToAdd = data.entries;
 	var app = data.app;
 	showRmbContextMenuDiv(data.x, data.y);
