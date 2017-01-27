@@ -320,7 +320,7 @@ var SAGE2Viz = SAGE2_App.extend({
   },
 
   loadNodeLinkApp: function() {
-    if (this.isMaster) {
+    if (isMaster) {
       wsio.emit('loadApplication', {application: "C:\\Users\\andre\\Documents\\sage2\\public\\uploads\\apps\\nodelink", user: "SAGE2", parent: this.id});
     }
   }

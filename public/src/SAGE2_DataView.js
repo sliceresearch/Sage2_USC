@@ -40,7 +40,7 @@ var SAGE2_DataView = SAGE2_App.extend({
 		this.visData = data;
 
 		console.log("SAGE2_DataView: updateData()" + this.id);
-		this.draw();
+		this.drawvis();
 	},
 
 	draw: function() {

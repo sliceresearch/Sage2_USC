@@ -30,7 +30,7 @@ var nodelink = SAGE2_DataView.extend({
     this.svg = d3.select(this.element).append("svg")
       .attr("width",   data.width)
       .attr("height",  data.height)
-      // .attr("viewBox", box);
+      .attr("viewBox", box);
 
     // in case we want to allow for more interactive d3
     // this.passSAGE2PointerAsMouseEvents = true;
@@ -39,7 +39,7 @@ var nodelink = SAGE2_DataView.extend({
       .attr("class", "bg")
       .attr("width", "100%")
       .attr("height", "100%")
-      .style("fill", "#DDDDDD");
+      .style("fill", "#000000");
 
     // console.log("creating controls");
     // this.controls.addButton({label: "Mode",  position: 1,  identifier: "ModeToggle"});
@@ -59,85 +59,98 @@ var nodelink = SAGE2_DataView.extend({
     // empty
   },
 
-  draw_d3: function(date) {
+  drawvis: function(date) {
     var width = this.element.clientWidth,
     height = this.element.clientHeight;
 
     var svg = this.svg;
     var graph = this.visData;
 
-    // svg.attr("width", width)
-    //   .attr("height", height)
+    var color = d3.scaleOrdinal(d3.schemeCategory20);
 
-    var idmap = {};
+    var simulation = d3.forceSimulation()
+        .force("link", d3.forceLink().id(function(d) { return d.id; }))
+        .force("charge", d3.forceManyBody())
+        .force("center", d3.forceCenter(width / 2, height / 2));
 
-    for (let ind in graph.nodes) {
-      idmap[graph.nodes[ind].id] = Number(ind);
-    }
+    var link = svg.append("g")
+        .attr("class", "links")
+      .selectAll("line")
+      .data(function() {console.log(graph.links); return graph.links})
+      .enter().append("line")
+        .attr("stroke-width", function(d) { return Math.sqrt(d.value); })
+        .style("stroke", "#aaa");
 
-    // console.log(idmap);
-    if (!graph.mapped) {
-      graph.links = graph.links.map(link => {
-        if (!idmap[link.source]) console.log(link.source);
-        if (!idmap[link.target]) console.log(link.target);
+    var node = svg.append("g")
+        .attr("class", "nodes")
+      .selectAll("circle")
+      .data(graph.nodes)
+      .enter().append("circle")
+        .attr("r", 5)
+        .attr("fill", function(d) { return color(d.group); })
+        .style("stroke", "#FFF")
+        .call(d3.drag()
+            .on("start", dragstarted)
+            .on("drag", dragged)
+            .on("end", dragended));
 
-        return {
-          "source": idmap[link.source],
-          "target": idmap[link.target],
-          "weight": 1
-        };
-      });
+    node.append("title")
+        .text(function(d) { return d.id; });
 
-      graph.mapped = true;
-    }
-
-    var force = d3.layout.force()
+    simulation
         .nodes(graph.nodes)
-        .links(graph.links)
-        .size([width, height])
-        .charge(-200)
-        .on("tick", tick)
-        .start();
+        .on("tick", ticked);
 
-    var link = svg.selectAll(".link")
-       .data(graph.links)
-     .enter().append("line")
-       .attr("class", "link")
-       // .attr("stroke-width", 10);
+    simulation.force("link")
+        .links(graph.links);
 
-    var node = svg.selectAll(".node")
-       .data(graph.nodes)
-     .enter().append("circle")
-       .attr("class", "node")
-       .attr("r", 5);
-
-    function tick() {
-      link.attr("x1", function(d) { return d.source.x; })
+    function ticked() {
+      link
+          .attr("x1", function(d) { return d.source.x; })
           .attr("y1", function(d) { return d.source.y; })
           .attr("x2", function(d) { return d.target.x; })
           .attr("y2", function(d) { return d.target.y; });
 
-      node.attr("cx", function(d) { return d.x; })
+      node
+          .attr("cx", function(d) { return d.x; })
           .attr("cy", function(d) { return d.y; });
+    }
+
+
+    function dragstarted(d) {
+      if (!d3.event.active) simulation.alphaTarget(0.3).restart();
+      d.fx = d.x;
+      d.fy = d.y;
+    }
+
+    function dragged(d) {
+      d.fx = d3.event.x;
+      d.fy = d3.event.y;
+    }
+
+    function dragended(d) {
+      if (!d3.event.active) simulation.alphaTarget(0);
+      d.fx = null;
+      d.fy = null;
     }
   },
 
   draw: function(date) {
-    this.draw_d3(date);
+    // this.draw_d3(date);
   },
 
   resize: function(date) {
     var box = "0,0," + this.element.clientWidth + "," + this.element.clientHeight;
     this.svg.attr('width',  this.element.clientWidth)
       .attr('height', this.element.clientHeight)
-      .attr("viewBox", box);
+      // .attr("viewBox", box);
 
     // this.svg.select(".bg")
     //   .attr("width", +this.svg.attr("width"))
     //   .attr("height", +this.svg.attr("height"));
 
     this.refresh(date);
-    this.draw_d3(date);
+    // this.drawvis(date);
   },
 
   getContextEntries: function() {
