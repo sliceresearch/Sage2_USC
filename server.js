@@ -905,6 +905,7 @@ function setupListeners(wsio) {
 	wsio.on('appFullscreen',                        wsFullscreen);
 	wsio.on('broadcast',                            wsBroadcast);
 	wsio.on('applicationRPC',                       wsApplicationRPC);
+	wsio.on('applicationReady'											wsApplicationReady);
 
 	wsio.on('requestAvailableApplications',         wsRequestAvailableApplications);
 	wsio.on('requestStoredFiles',                   wsRequestStoredFiles);
@@ -9652,4 +9653,8 @@ function wsCreateSAGEVis(wsio, data) {
 		SAGE2_Vizs[data.id].loadDataSource(fullPath);
 		SAGE2_Vizs[data.id].formatData({}, true, "Node");
 	}
+}
+
+function wsApplicationReady(wsio, data) {
+	
 }
