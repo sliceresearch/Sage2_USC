@@ -11,7 +11,7 @@
 "use strict";
 
 /* global FileManager, SAGE2_interaction, SAGE2DisplayUI */
-/* global removeAllChildren */
+/* global removeAllChildren, SAGE2_copyToClipboard */
 
 /**
  * Web user interface
@@ -537,7 +537,16 @@ function setupListeners() {
 		displayUI.updateHighlightedPartition(data);
 	});
 
-
+	// Receive a message when an application state is upated
+	wsio.on('applicationState', function(data) {
+		if (data.application === "Webview") {
+			var icon = document.getElementById(data.id + "_icon");
+			if (icon && data.state.favicon) {
+				// Update the icon of the app window with the favicon of the site
+				icon.src = data.state.favicon;
+			}
+		}
+	});
 
 	// Server sends the SAGE2 version
 	wsio.on('setupSAGE2Version', function(data) {
@@ -2340,7 +2349,7 @@ function reloadIfServerRunning(callback) {
  * Will set the values of the right mouse button(rmb) context menu div.
  */
 function setupRmbContextMenuDiv() {
-	// override rmb contextmenu calls.
+	// override rmb contextmenu calls
 	document.addEventListener('contextmenu', function(e) {
 		// if a right click is made on canvas
 		if (e.target.id === "sage2UICanvas") {
@@ -2360,9 +2369,10 @@ function setupRmbContextMenuDiv() {
 			clearContextMenu();
 			hideRmbContextMenuDiv();
 			// The context menu will be filled and positioned after getting a response from server.
+
+			// prevent the standard context menu, only for the canvas
+			e.preventDefault();
 		}
-		// prevent the standard context menu
-		e.preventDefault();
 	}, false);
 }
 
@@ -2403,7 +2413,7 @@ function clearContextMenu() {
  *
  */
 function setRmbContextMenuEntries(data) {
-	//data.entries, data.app, data.x, data.y
+	// data.entries, data.app, data.x, data.y
 	var entriesToAdd = data.entries;
 	var app = data.app;
 	showRmbContextMenuDiv(data.x, data.y);
@@ -2435,15 +2445,22 @@ function setRmbContextMenuEntries(data) {
 							link.dispatchEvent(me);
 						}
 					}
+				} else if (this.callback === "SAGE2_copyURL") {
+					// special case: want to copy the URL of the file to clipboard
+					var dlurl = this.parameters.url;
+					if (dlurl) {
+						// defined in SAGE2_runtime
+						SAGE2_copyToClipboard(dlurl);
+					}
 				} else {
 					// if an input field, need to modify the params to pass back before sending.
 					if (this.inputField === true) {
 						var inputField = document.getElementById(this.inputFieldId);
-						//dont do anything if there is nothing in the inputfield
+						// dont do anything if there is nothing in the inputfield
 						if (inputField.value.length <= 0) {
 							return;
 						}
-						//add the field clientInput to the parameters
+						// add the field clientInput to the parameters
 						this.parameters.clientInput = inputField.value;
 					}
 					// create data to send, then emit
@@ -2489,8 +2506,10 @@ function setRmbContextMenuEntries(data) {
 		if (entriesToAdd[i].inputField === true) {
 			workingDiv.inputField = true;
 			var inputField = document.createElement('input');
-			inputField.id = workingDiv.id + "Input"; // unique input field
-			inputField.value = "";
+			// unique input field
+			inputField.id = workingDiv.id + "Input";
+			// check if the data has a value field
+			inputField.defaultValue = entriesToAdd[i].value || "";
 			if (entriesToAdd[i].inputFieldSize) { // if specified state input field size
 				inputField.size = entriesToAdd[i].inputFieldSize;
 			} else {

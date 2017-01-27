@@ -1018,13 +1018,14 @@ function setupListeners(wsio) {
 	wsio.on('appFileSaveRequest',                   appFileSaveRequest);
 
 	// create partition
-	wsio.on('createPartition', 						wsCreatePartition);
-	wsio.on('partitionScreen', 						wsPartitionScreen);
-	wsio.on('deleteAllPartitions',				wsDeleteAllPartitions);
-	wsio.on('partitionsGrabAllContent',		wsPartitionsGrabAllContent);
+	wsio.on('createPartition',                      wsCreatePartition);
+	wsio.on('partitionScreen',                      wsPartitionScreen);
+	wsio.on('deleteAllPartitions',                  wsDeleteAllPartitions);
+	wsio.on('partitionsGrabAllContent',             wsPartitionsGrabAllContent);
 
 	// vis controller methods
 	wsio.on('createVisualization', 				wsCreateSAGEVis);
+
 }
 
 /**
@@ -1176,6 +1177,13 @@ function initializeExistingAppsPositionSizeTypeOnly(wsio) {
 	var key;
 	for (key in SAGE2Items.applications.list) {
 		wsio.emit('createAppWindowPositionSizeOnly', getAppPositionSize(SAGE2Items.applications.list[key]));
+
+		// Send the appliation state to the UI
+		broadcast('applicationState', {
+			id: SAGE2Items.applications.list[key].id,
+			state: SAGE2Items.applications.list[key].data,
+			application: SAGE2Items.applications.list[key].application
+		});
 	}
 
 	var newOrder = interactMgr.getObjectZIndexList("applications", ["portals"]);
@@ -1824,6 +1832,13 @@ function wsUpdateAppState(wsio, data) {
 				}
 			}
 		}
+
+		// Send the appliation state to the UI
+		broadcast('applicationState', {
+			id: data.id,
+			state: app.data,
+			application: app.application
+		});
 	}
 }
 
@@ -2472,13 +2487,6 @@ function loadSession(filename) {
 					}
 
 					handleNewApplication(appInstance, videohandle);
-
-					var changedPartitions = partitions.updateOnItemRelease(appInstance);
-					changedPartitions.forEach((id => {
-						updatePartitionInnerLayout(partitions.list[id]);
-
-						broadcast('partitionWindowTitleUpdate', partitions.list[id].getTitle());
-					}));
 				});
 			});
 		}
@@ -6510,9 +6518,14 @@ function updatePointerPosition(uniqueID, pointerX, pointerY, data) {
 		} else {
 			moveApplicationWindow(uniqueID, updatedMoveItem, null);
 
+			let currentMoveItem = SAGE2Items.applications.list[updatedMoveItem.elemId];
+
+			broadcast('updatePartitionBorders', {id: currentMoveItem.ptnHovered, highlight: false});
+
 			// Calculate partition which item is over
-			var ptnHovered = partitions.calculateNewPartition(SAGE2Items.applications.list[updatedMoveItem.elemId]);
-			broadcast('updatePartitionBorders', {id: ptnHovered, highlight: true});
+			currentMoveItem.ptnHovered = partitions.calculateNewPartition(currentMoveItem);
+
+			broadcast('updatePartitionBorders', {id: currentMoveItem.ptnHovered, highlight: true});
 		}
 		return;
 	}
@@ -8397,6 +8410,14 @@ function handleNewApplication(appInstance, videohandle) {
 	SAGE2Items.applications.editButtonVisibilityOnItem(appInstance.id, "syncButton", false);
 
 	initializeLoadedVideo(appInstance, videohandle);
+
+	// assign content to a partition immediately when it is created
+	var changedPartitions = partitions.updateOnItemRelease(appInstance);
+	changedPartitions.forEach((id => {
+		updatePartitionInnerLayout(partitions.list[id]);
+
+		broadcast('partitionWindowTitleUpdate', partitions.list[id].getTitle());
+	}));
 }
 
 function handleNewVisualization(appInstance, parent, videohandle) {
