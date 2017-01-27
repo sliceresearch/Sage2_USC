@@ -15,12 +15,13 @@
 	background: {
 		color: "#585757",
 		image: {
-			url: "images/background/dbgrid.png",
+			url: "images/background/evl1.jpg",
+			// url: "images/background/dbgrid.png",
 			style: "tile"
 		},
 		watermark: {
-			svg: "images/EVL-LAVA.svg",
-			color: "rgba(255, 255, 255, 0.25)"
+			// svg: "images/EVL-LAVA.svg",
+			// color: "rgba(255, 255, 255, 0.25)"
 		}
 	},
 	security: {
@@ -45,6 +46,10 @@
 		width: 1920,
 		height: 1080
 	},
+	layout: {
+		rows: 1,
+		columns: 2
+	},
 	dimensions: {
 		// dimensions of one tile (can be overriden in displays section)
 		tile_width:  1.205,  // in meter, pixel area
@@ -53,18 +58,12 @@
 		// prefered or common viewing distance to calculate UI sizes
 		viewing_distance: 1.0	// in meter
 	},
-	layout: {
-		rows: 1,
-		columns: 2
-	},
 	displays: [
 		{
 			row: 0,
-			column: 0
-		},
-		{
-			row: 0,
-			column: 1
+			column: 0,
+			width: 2,
+			height: 1
 		}
 	],
 	alternate_hosts: [

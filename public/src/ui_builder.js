@@ -195,8 +195,14 @@ function UIBuilder(json_cfg, clientID) {
 
 						_this.bg.style.top    = top.toString() + "px";
 						_this.bg.style.left   = left.toString() + "px";
-						_this.bg.style.width  = (_this.json_cfg.resolution.width - left).toString() + "px";
-						_this.bg.style.height = (_this.json_cfg.resolution.height - top).toString() + "px";
+						var tileW = _this.json_cfg.resolution.width *
+							(_this.json_cfg.displays[_this.clientID].width || 1);
+						var tileH = _this.json_cfg.resolution.height *
+							(_this.json_cfg.displays[_this.clientID].height || 1);
+						tileW -= left;
+						tileH -= top;
+						_this.bg.style.width  = tileW + "px";
+						_this.bg.style.height = tileH + "px";
 
 						_this.bg.style.backgroundImage    = "url(" + _this.json_cfg.background.image.url + ")";
 						_this.bg.style.backgroundPosition = "top left";
@@ -205,8 +211,10 @@ function UIBuilder(json_cfg, clientID) {
 
 						_this.main.style.top    = (-1 * top).toString()  + "px";
 						_this.main.style.left   = (-1 * left).toString() + "px";
-						_this.main.style.width  = _this.json_cfg.resolution.width  + "px";
-						_this.main.style.height = _this.json_cfg.resolution.height + "px";
+						_this.main.style.width  = _this.json_cfg.resolution.width *
+							(_this.json_cfg.displays[_this.clientID].width || 1)  + "px";
+						_this.main.style.height = _this.json_cfg.resolution.height *
+							(_this.json_cfg.displays[_this.clientID].height || 1) + "px";
 					} else {
 						var bgImgFinal;
 						var ext = _this.json_cfg.background.image.url.lastIndexOf(".");
