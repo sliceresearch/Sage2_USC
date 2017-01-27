@@ -1296,16 +1296,16 @@ function setupListeners() {
 
 	// Visualization View update listener
 	wsio.on("visualizationUpdateView", function(data) {
+		console.log("SAGE2_Display: Update Vis View:", data.id);
+
 		if (data.id) {
-			console.log(data.data[0]);
+			console.log("Example:", data.data[0]);
 			// for (var ind in data.data) {
 			// 	data.data[ind] = VisDataTypes.parse(data.data[ind]);
 			// }
 
 			applications[data.id].updateData(data.data);
 
-
-			console.log("SAGE2_Display: Update Vis View:", data.id, data.data);
 		}
 	});
 }
@@ -1479,6 +1479,9 @@ function createAppWindow(data, parentId, titleBarHeight, titleTextSize, offsetX,
 				applications[data.id]   = newapp;
 				controlObjects[data.id] = newapp;
 
+				// application creation is finished
+				wsio.emit("applicationReady", data);
+
 				if (data.animation === true) {
 					wsio.emit('finishedRenderingAppFrame', {id: data.id});
 				}
@@ -1501,6 +1504,9 @@ function createAppWindow(data, parentId, titleBarHeight, titleTextSize, offsetX,
 
 			applications[data.id] = app;
 			controlObjects[data.id] = app;
+
+			// application creation is finished
+			wsio.emit("applicationReady", data);
 
 			if (data.animation === true) {
 				wsio.emit('finishedRenderingAppFrame', {id: data.id});

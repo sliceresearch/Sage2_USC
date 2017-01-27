@@ -105,7 +105,9 @@ Visualization.prototype.loadDataSource = function(dataPath) {
 				});
 			} else if (format === "json") {
 				parsedData = JSON.parse(data);
-				this.header = Object.keys(parsedData[0]);
+
+				// need to change structure of this
+				// this.header = Object.keys(parsedData[0]);
 			} else {
 				var e = new Error();
 				e.message = "Incompatible data format: " + dataPath;

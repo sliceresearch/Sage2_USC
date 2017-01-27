@@ -905,7 +905,7 @@ function setupListeners(wsio) {
 	wsio.on('appFullscreen',                        wsFullscreen);
 	wsio.on('broadcast',                            wsBroadcast);
 	wsio.on('applicationRPC',                       wsApplicationRPC);
-	wsio.on('applicationReady'											wsApplicationReady);
+	wsio.on('applicationReady',											wsApplicationReady);
 
 	wsio.on('requestAvailableApplications',         wsRequestAvailableApplications);
 	wsio.on('requestStoredFiles',                   wsRequestStoredFiles);
@@ -2842,8 +2842,6 @@ function wsLoadApplication(wsio, data) {
 				appInstance.top = 0;
 			}
 		}
-
-		console.log(appInstance);
 
 		if (appInstance.data.dataView) {
 			handleNewVisualization(appInstance, data.parent, null);
@@ -8422,10 +8420,10 @@ function handleNewApplication(appInstance, videohandle) {
 }
 
 function handleNewVisualization(appInstance, parent, videohandle) {
+	appInstance.data.viewControllerParent = parent;
+
 	SAGE2_Vizs[parent].addView({id: appInstance.id, types: appInstance.data.handlesData});
 	console.log("Adding new visualization", appInstance.id, "to", parent);
-
-	// SAGE2_Vizs[parent].views[]
 
 	handleNewApplication(appInstance, videohandle);
 }
@@ -9651,10 +9649,15 @@ function wsCreateSAGEVis(wsio, data) {
 		SAGE2_Vizs[data.id] = new Visualization(broadcast, data.filePath);
 
 		SAGE2_Vizs[data.id].loadDataSource(fullPath);
-		SAGE2_Vizs[data.id].formatData({}, true, "Node");
+		// SAGE2_Vizs[data.id].formatData({}, true, "Node");
 	}
 }
 
 function wsApplicationReady(wsio, data) {
-	
+	console.log(data.id, "is ready");
+
+	// if it is a data view, the parent needs to update the view with the data on load
+	if (data.data.dataView && data.data.viewControllerParent) {
+		SAGE2_Vizs[data.data.viewControllerParent].updateView(data.id);
+	}
 }
