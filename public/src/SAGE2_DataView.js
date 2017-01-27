@@ -44,7 +44,7 @@ var SAGE2_DataView = SAGE2_App.extend({
 	},
 
 	draw: function() {
-		
+		// will be overwritten by the view
 	}
 });
 
