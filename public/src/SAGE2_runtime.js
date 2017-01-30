@@ -27,7 +27,7 @@
  * @property __SAGE2__
  * @type {Object}
  */
-var __SAGE2__ = {};
+var __SAGE2__ = __SAGE2__ || {};
 __SAGE2__.version = "2.0.0";
 
 
@@ -957,3 +957,4 @@ function SAGE2_copyToClipboard(text) {
 		}
 	}
 }
+
