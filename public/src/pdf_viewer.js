@@ -682,6 +682,13 @@ var pdf_viewer = SAGE2_App.extend({
 				url: this.state.doc_url
 			}
 		});
+		entries.push({
+			description: "Copy URL",
+			callback: "SAGE2_copyURL",
+			parameters: {
+				url: this.state.doc_url
+			}
+		});
 
 		return entries;
 	},

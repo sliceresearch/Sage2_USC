@@ -134,6 +134,13 @@ var image_viewer = SAGE2_App.extend({
 				url: cleanURL(this.state.src || this.state.img_url)
 			}
 		});
+		entries.push({
+			description: "Copy URL",
+			callback: "SAGE2_copyURL",
+			parameters: {
+				url: cleanURL(this.state.src || this.state.img_url)
+			}
+		});
 		// Special callback: convert to a doodle.
 		// entries.push({
 		// 	description: "Make Doodle",

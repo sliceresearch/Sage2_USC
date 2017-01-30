@@ -11,7 +11,7 @@
 "use strict";
 
 /* global FileManager, SAGE2_interaction, SAGE2DisplayUI */
-/* global removeAllChildren */
+/* global removeAllChildren, SAGE2_copyToClipboard */
 
 /**
  * Web user interface
@@ -537,7 +537,16 @@ function setupListeners() {
 		displayUI.updateHighlightedPartition(data);
 	});
 
-
+	// Receive a message when an application state is upated
+	wsio.on('applicationState', function(data) {
+		if (data.application === "Webview") {
+			var icon = document.getElementById(data.id + "_icon");
+			if (icon && data.state.favicon) {
+				// Update the icon of the app window with the favicon of the site
+				icon.src = data.state.favicon;
+			}
+		}
+	});
 
 	// Server sends the SAGE2 version
 	wsio.on('setupSAGE2Version', function(data) {
@@ -2404,7 +2413,7 @@ function clearContextMenu() {
  *
  */
 function setRmbContextMenuEntries(data) {
-	//data.entries, data.app, data.x, data.y
+	// data.entries, data.app, data.x, data.y
 	var entriesToAdd = data.entries;
 	var app = data.app;
 	showRmbContextMenuDiv(data.x, data.y);
@@ -2435,6 +2444,13 @@ function setRmbContextMenuEntries(data) {
 							me.initEvent('click', true, true);
 							link.dispatchEvent(me);
 						}
+					}
+				} else if (this.callback === "SAGE2_copyURL") {
+					// special case: want to copy the URL of the file to clipboard
+					var dlurl = this.parameters.url;
+					if (dlurl) {
+						// defined in SAGE2_runtime
+						SAGE2_copyToClipboard(dlurl);
 					}
 				} else {
 					// if an input field, need to modify the params to pass back before sending.
