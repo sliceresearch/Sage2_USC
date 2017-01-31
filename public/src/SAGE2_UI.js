@@ -396,7 +396,7 @@ function SAGE2_init() {
 	hasMouse = false;
 	console.log("Assuming mobile device");
 
-	// Event listener to the Chrome extension for desktop capture
+	// Event listener to the Chrome EXTENSION for desktop capture
 	window.addEventListener('message', function(event) {
 		if (event.origin !== window.location.origin) {
 			return;
@@ -413,6 +413,12 @@ function SAGE2_init() {
 		}
 		if (event.data.cmd === "screenshot") {
 			wsio.emit('loadImageFromBuffer', event.data);
+		}
+		if (event.data.cmd === "openlink") {
+			wsio.emit('openNewWebpage', {
+				id: interactor.uniqueID,
+				url: event.data.url
+			});
 		}
 	});
 
