@@ -51,6 +51,17 @@ function Partition(dims, id, color, partitionList) {
 	this.innerTiling = false;
 	this.innerMaximization = false;
 	this.currentMaximizedChild = null;
+
+	// for the more geometric idea of partitions
+	this.isSnapping = dims.isSnapping || false;
+
+	// possibly maintaining list of neighbors?
+	// this.neighbors = {
+	// 	top: {},
+	// 	left: {},
+	// 	right: {},
+	// 	bottom: {}
+	// };
 }
 
 /**
@@ -680,6 +691,105 @@ Partition.prototype.updateChildrenPositions = function() {
 	});
 
 	return updatedChildren;
+};
+
+Partition.prototype.updateNeighborPtnPositions = function() {
+	var partitions = this.partitionList;
+	var updatedPtnIDs = [];
+
+	var titleBar = this.partitionList.configuration.ui.titleBarHeight;
+
+	// then update neighbors dimensions
+	for (var neigh of Object.keys(this.neighbors)) {
+
+		// make sure this partition is in partitions (list)
+		if (partitions.list.hasOwnProperty(neigh)) {
+			var isUpdated = false;
+
+			// if the top of this partition is shared with the bottom of another
+			if (this.neighbors[neigh].top) {
+
+				// check which of the 2 sides is the same
+				if (this.neighbors[neigh].top === "bottom") {
+					// adjust height of neighbor
+					partitions.list[neigh].height = this.top - partitions.list[neigh].top - titleBar;
+
+					isUpdated = true;
+				} else { // "top"
+
+					// save bottom coordinate
+					let botCoord = partitions.list[neigh].top + partitions.list[neigh].height;
+
+					// adjust the top and height of neighbor
+					partitions.list[neigh].top = this.top;
+					partitions.list[neigh].height = botCoord - partitions.list[neigh].top;
+
+					isUpdated = true;
+				}
+			}
+			// if the bottom of this partition is shared with the top of another
+			if (this.neighbors[neigh].bottom) {
+				if (this.neighbors[neigh].bottom === "top") {
+
+					// save bottom coordinate
+					let botCoord = partitions.list[neigh].top + partitions.list[neigh].height;
+
+					// adjust the top and height of neighbor
+					partitions.list[neigh].top = this.top + this.height + titleBar;
+					partitions.list[neigh].height = botCoord - partitions.list[neigh].top;
+
+					isUpdated = true;
+				} else { // "bottom"
+					// adjust height of neighbor
+					partitions.list[neigh].height = this.top + this.height - partitions.list[neigh].top;
+
+					isUpdated = true;
+				}
+			}
+			// if the left of this partition is shared with the right of another
+			if (this.neighbors[neigh].left) {
+				if (this.neighbors[neigh].left === "right") {
+					// adjust width of neighbor
+					partitions.list[neigh].width = this.left - partitions.list[neigh].left;
+
+					isUpdated = true;
+				} else { // "left"
+					// save right coordinate
+					let rightCoord = partitions.list[neigh].left + partitions.list[neigh].width;
+
+					// adjust the left and width of neighbor
+					partitions.list[neigh].left = this.left;
+					partitions.list[neigh].width = rightCoord - partitions.list[neigh].left;
+
+					isUpdated = true;
+				}
+			}
+			// if the right of this partition is shared with the left of another
+			if (this.neighbors[neigh].right) {
+				if (this.neighbors[neigh].right === "left") {
+					// save right coordinate
+					let rightCoord = partitions.list[neigh].left + partitions.list[neigh].width;
+
+					// adjust the left and width of neighbor
+					partitions.list[neigh].left = this.left + this.width;
+					partitions.list[neigh].width = rightCoord - partitions.list[neigh].left;
+
+					isUpdated = true;
+				} else { // "right"
+					// adjust width of neighbor
+					partitions.list[neigh].width = this.left + this.width - partitions.list[neigh].left;
+
+					isUpdated = true;
+				}
+			}
+
+			if (isUpdated) {
+				updatedPtnIDs.push(neigh);
+			}
+		}
+	}
+
+	return updatedPtnIDs;
 };
 
 /**
