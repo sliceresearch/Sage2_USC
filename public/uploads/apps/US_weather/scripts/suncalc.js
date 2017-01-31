@@ -6,6 +6,8 @@
 
 (function () { 'use strict';
 
+console.log("In SunCalc");
+
 // shortcuts for easier to read formulas
 
 var PI   = Math.PI,

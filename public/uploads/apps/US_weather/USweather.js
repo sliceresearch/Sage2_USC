@@ -16,7 +16,11 @@
 
 "use strict";
 
-/* global d3 SunCalc */
+/* global d3 SunCalc SAGE2_LibLoader */
+
+let d3 = SAGE2_LibLoader.import("d3", "v3");
+
+console.log("USweather d3 version", d3.version);
 
 // could allow clicking on individual elements to change its state
 // might also allow people to focus on smaller state level
