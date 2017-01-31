@@ -719,8 +719,9 @@ OmicronManager.prototype.processPointerEvent = function(e, sourceID, posX, posY,
 		// console.log(sageutils.header('Omicron') + "pointer address ", address);
 	}
 
-	if (drawingManager.drawingMode) {
+	if (drawingManager.drawingMode && e.type !== 6) {
 		// If the touch is coming from oinput send it to node-drawing and stop after that
+		// If touch up, still send to SAGE to clear touch
 		drawingManager.pointerEvent(e, sourceID, posX, posY, touchWidth, touchHeight);
 		return;
 	}
