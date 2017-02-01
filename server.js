@@ -8860,17 +8860,24 @@ function wsUtdRequestRmbContextMenu(wsio, data) {
 function wsUtdCallFunctionOnApp(wsio, data) {
 	if (data.func === "SAGE2DeleteElement") {
 		deleteApplication(data.app);
-		return; // closing of applications are handled by the called function.
-	}
-	if (data.func === "SAGE2SendToBack") {
+		// closing of applications are handled by the called function.
+		return;
+	} else if (data.func === "SAGE2SendToBack") {
 		// data.app should contain the id.
 		var im = findInteractableManager(data.app);
 		im.moveObjectToBack(data.app, "applications");
 		var newOrder = im.getObjectZIndexList("applications");
 		broadcast('updateItemOrder', newOrder);
-
+		return;
+	} else if (data.func === "SAGE2Maximize") {
+		if (data.parameters.clientId && SAGE2Items.applications.list[data.app]) {
+			toggleApplicationFullscreen(data.parameters.clientId,
+				SAGE2Items.applications.list[data.app],
+				true);
+		}
 		return;
 	}
+
 	// Using broadcast means the parameter must be in data.data
 	data.data = data.parameters;
 	// add the serverDate property
