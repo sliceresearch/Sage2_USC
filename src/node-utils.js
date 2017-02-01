@@ -381,10 +381,12 @@ function checkPackages(inDevelopement) {
 	if (indevel) {
 		command = "npm outdated --depth 0 --json";
 	}
-	exec(command, {cwd: path.normalize(path.join(__dirname, ".."))},
+	exec(command, {cwd: path.normalize(path.join(__dirname, "..")), timeout: 30000},
 		function(error, stdout, stderr) {
-			if (error) {
-				console.log("NPM>	Error running update");
+			// returns error code 1 if found outdated packages
+			if (error && error.code !== 1) {
+				console.log(header("Packages") + "Warning, error running update [ " + error.cmd + '] ',
+					'code: ' + error.code + ' signal: ' + error.signal);
 				return;
 			}
 
