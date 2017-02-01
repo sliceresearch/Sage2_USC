@@ -87,6 +87,10 @@ var movie_player = SAGE2_BlockStreamingApp.extend({
 
 		this.controls.finishedAddingControls();
 
+		// Calculate human readable string for the length of the video
+		var clipLength = this.state.numframes / this.state.framerate;
+		this.lengthString = formatHHMMSS(1000 * clipLength);
+
 		setTimeout(function() {
 			_this.muteBtn.state      = _this.state.muted  ? 0 : 1;
 			_this.loopBtn.state      = _this.state.looped ? 0 : 1;
@@ -151,13 +155,16 @@ var movie_player = SAGE2_BlockStreamingApp.extend({
 		// new code: put current time in title bar
 		var duration = parseInt(1000 * (this.state.frame / this.state.framerate), 10);
 		var current  = formatHHMMSS(duration);
+
 		// modified to have (frame) [(Sending / Receiving Commands)]
 		if (this.shouldSendCommands) {
 			this.updateTitle(this.title + " - " + current + "(f:" + this.state.frame + ")(Sending Commands)");
 		} else if (this.shouldReceiveCommands) {
 			this.updateTitle(this.title + " - " + current + "(f:" + this.state.frame + ")(Receiving Commands)");
 		} else {
-			this.updateTitle(this.title + " - " + current + "(f:" + this.state.frame + ")");
+			// Default mode: show current time and duration
+			this.updateTitle(this.title + " - " + current + " / " + this.lengthString);
+			// var currentFrame = Math.floor(this.state.frame % this.state.framerate) + 1;
 		}
 	},
 
@@ -218,6 +225,7 @@ var movie_player = SAGE2_BlockStreamingApp.extend({
 		}
 		this.refresh(date);
 		this.playPauseBtn.state = 1 - this.playPauseBtn.state;
+		this.getFullContextMenuAndUpdate();
 	},
 
 	/**
@@ -285,6 +293,7 @@ var movie_player = SAGE2_BlockStreamingApp.extend({
 		this.state.paused = true;
 		// must change play-pause button (should show 'play' icon)
 		this.playPauseBtn.state = 0;
+		this.getFullContextMenuAndUpdate();
 	},
 
 	/**
