@@ -566,7 +566,7 @@ function SAGE2_interaction(wsio) {
 		// cancelAnimationFrame(this.req);
 		cancelIdleCallback(this.req);
 		this.wsio.emit('stopMediaStream', {id: this.uniqueID + "|0"});
-		//window.self.close();
+		window.self.close();
 	};
 
 	/**
@@ -655,6 +655,14 @@ function SAGE2_interaction(wsio) {
                 return this.dropTot2 / (this.dropTot2 + this.sentTot2);
         }
 
+        function drawDataURIOnCanvas(strDataURI, canvas) {
+            "use strict";
+            var img = new window.Image();
+            img.addEventListener("load", function () {
+                canvas.getContext("2d").drawImage(img, 0, 0);
+            });
+            img.setAttribute("src", strDataURI);
+        }
 
 	/**
 	* The screen sharing can start
@@ -710,6 +718,10 @@ function SAGE2_interaction(wsio) {
 
 			var frame = this.captureMediaFrame();
 			this.pix  = frame;
+
+                        var canvas=document.getElementById("sage2UICanvas");
+                        drawDataURIOnCanvas(frame,canvas);
+
 			var raw   = atob(frame.split(",")[1]); // base64 to string
 			this.wsio.emit('startNewMediaStream', {
 				id: this.uniqueID + "|0",

@@ -1762,6 +1762,7 @@ function wsUpdateMediaStreamChunk(wsio, dataOrBuffer) {
 
 
 function wsStopMediaStream(wsio, data) {
+	console.log("wsStopMediaStream");
 	var stream = SAGE2Items.applications.list[data.id];
 	if (stream !== undefined && stream !== null) {
 		deleteApplication(stream.id);
@@ -1773,6 +1774,11 @@ function wsStopMediaStream(wsio, data) {
 			}
 		};
 		addEventToUserLog(wsio.id, {type: "delete", data: eLogData, time: Date.now()});
+	}
+
+	if (masterServer!==undefined && masterServer!=null) {
+		console.log("master - stop media stream");
+		masterServer.emit('stopMediaStream', data);
 	}
 
 	// stop all clones in shared portals
