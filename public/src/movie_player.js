@@ -36,6 +36,10 @@ var movie_player = SAGE2_BlockStreamingApp.extend({
 
 		// Keep a copy of the title string
 		this.title = data.title;
+
+		// command variables
+		this.shouldSendCommands = false;
+		this.shouldReceiveCommands = false;
 	},
 
 	/**
@@ -83,6 +87,10 @@ var movie_player = SAGE2_BlockStreamingApp.extend({
 
 		this.controls.finishedAddingControls();
 
+		// Calculate human readable string for the length of the video
+		var clipLength = this.state.numframes / this.state.framerate;
+		this.lengthString = formatHHMMSS(1000 * clipLength);
+
 		setTimeout(function() {
 			_this.muteBtn.state      = _this.state.muted  ? 0 : 1;
 			_this.loopBtn.state      = _this.state.looped ? 0 : 1;
@@ -109,6 +117,19 @@ var movie_player = SAGE2_BlockStreamingApp.extend({
 	videoEnded: function() {
 		if (this.state.looped === false) {
 			this.stopVideo();
+		} else if (this.shouldSendCommands) {
+			wsio.emit("csdMessage", {
+				type: "setValue",
+				nameOfValue: "videoSyncCommandVariable",
+				value: {
+					command: "seek",
+					timestamp: 0,
+					frame: 0,
+					framerate: this.state.framerate,
+					play: false
+				},
+				description: "This variable contains the last send command"
+			});
 		}
 	},
 
@@ -134,7 +155,17 @@ var movie_player = SAGE2_BlockStreamingApp.extend({
 		// new code: put current time in title bar
 		var duration = parseInt(1000 * (this.state.frame / this.state.framerate), 10);
 		var current  = formatHHMMSS(duration);
-		this.updateTitle(this.title + " - " + current);
+
+		// modified to have (frame) [(Sending / Receiving Commands)]
+		if (this.shouldSendCommands) {
+			this.updateTitle(this.title + " - " + current + "(f:" + this.state.frame + ")(Sending Commands)");
+		} else if (this.shouldReceiveCommands) {
+			this.updateTitle(this.title + " - " + current + "(f:" + this.state.frame + ")(Receiving Commands)");
+		} else {
+			// Default mode: show current time and duration
+			this.updateTitle(this.title + " - " + current + " / " + this.lengthString);
+			// var currentFrame = Math.floor(this.state.frame % this.state.framerate) + 1;
+		}
 	},
 
 
@@ -148,16 +179,47 @@ var movie_player = SAGE2_BlockStreamingApp.extend({
 		if (this.state.paused === true) {
 			if (isMaster) {
 				// Trying to sync
-				wsio.emit('updateVideoTime',
-					{id: this.div.id,
+				wsio.emit('updateVideoTime', {
+					id: this.div.id,
 					timestamp: (this.state.frame / this.state.framerate),
-					play: true});
+					play: true
+				});
 				// wsio.emit('playVideo', {id: this.div.id});
+
+				// if this is a sender, also send the command to the server holding variable
+				if (this.shouldSendCommands) {
+					wsio.emit("csdMessage", {
+						type: "setValue",
+						nameOfValue: "videoSyncCommandVariable",
+						value: {
+							command: "play",
+							timestamp: (this.state.frame / this.state.framerate),
+							frame: this.state.frame,
+							framerate: this.state.framerate
+						},
+						description: "This variable contains the last send command"
+					});
+				}
 			}
 			this.state.paused = false;
 		} else {
 			if (isMaster) {
 				wsio.emit('pauseVideo', {id: this.div.id});
+
+				// if this is a sender, also send the command to the server holding variable
+				if (this.shouldSendCommands) {
+					wsio.emit("csdMessage", {
+						type: "setValue",
+						nameOfValue: "videoSyncCommandVariable",
+						value: {
+							command: "pause",
+							timestamp: (this.state.frame / this.state.framerate),
+							frame: this.state.frame,
+							framerate: this.state.framerate
+						},
+						description: "This variable contains the last send command"
+					});
+				}
 			}
 			this.state.paused = true;
 		}
@@ -211,10 +273,26 @@ var movie_player = SAGE2_BlockStreamingApp.extend({
 	stopVideo: function() {
 		if (isMaster) {
 			wsio.emit('stopVideo', {id: this.div.id});
+
+			// if this is a sender, also send the command to the server holding variable
+			if (this.shouldSendCommands) {
+				wsio.emit("csdMessage", {
+					type: "setValue",
+					nameOfValue: "videoSyncCommandVariable",
+					value: {
+						command: "stop",
+						timestamp: (this.state.frame / this.state.framerate),
+						frame: this.state.frame,
+						framerate: this.state.framerate
+					},
+					description: "This variable contains the last send command"
+				});
+			}
 		}
 		this.state.paused = true;
 		// must change play-pause button (should show 'play' icon)
 		this.playPauseBtn.state = 0;
+		this.getFullContextMenuAndUpdate();
 	},
 
 	/**
@@ -254,20 +332,20 @@ var movie_player = SAGE2_BlockStreamingApp.extend({
 		entry.callback = "stopVideo";
 		entry.parameters = {};
 		entries.push(entry);
-		
+
 		entry = {};
 		entry.description = "separator";
 		entries.push(entry);
 
 		if (this.state.muted) {
 			entry = {};
-			entry.description = "unmute";
+			entry.description = "Unmute";
 			entry.callback = "contextToggleMute";
 			entry.parameters = {};
 			entries.push(entry);
 		} else {
 			entry = {};
-			entry.description = "mute";
+			entry.description = "Mute";
 			entry.callback = "contextToggleMute";
 			entry.parameters = {};
 			entries.push(entry);
@@ -276,17 +354,91 @@ var movie_player = SAGE2_BlockStreamingApp.extend({
 
 		if (this.state.looped) {
 			entry = {};
-			entry.description = "stop looping";
+			entry.description = "Stop looping";
 			entry.callback = "toggleLoop";
 			entry.parameters = {};
 			entries.push(entry);
 		} else {
 			entry = {};
-			entry.description = "loop video";
+			entry.description = "Loop video";
 			entry.callback = "toggleLoop";
 			entry.parameters = {};
 			entries.push(entry);
 		}
+
+		/*
+			This next section is synchronized controls for video player.
+			One cannot send and receive.
+		*/
+
+		entry = {};
+		entry.description = "separator";
+		entries.push(entry);
+
+		if (this.shouldSendCommands) {
+			entry = {};
+			entry.description = "Stop sending commands";
+			entry.callback = "contextVideoSyncHandler";
+			entry.parameters = {
+				send: false,
+				receive: false
+			};
+			entries.push(entry);
+		} else {
+			entry = {};
+			entry.description = "Send commands";
+			entry.callback = "contextVideoSyncHandler";
+			entry.parameters = {
+				send: true,
+				receive: false
+			};
+			entries.push(entry);
+		}
+
+		if (this.shouldReceiveCommands) {
+			entry = {};
+			entry.description = "Stop receiving commands";
+			entry.callback = "contextVideoSyncHandler";
+			entry.parameters = {
+				send: false,
+				receive: false
+			};
+			entries.push(entry);
+		} else {
+			entry = {};
+			entry.description = "Receive commands";
+			entry.callback = "contextVideoSyncHandler";
+			entry.parameters = {
+				send: false,
+				receive: true
+			};
+			entries.push(entry);
+		}
+
+		// If a sender, then have access to additional command, step forward and step back.
+		if (this.shouldSendCommands) {
+			entry = {};
+			entry.description = "separator";
+			entries.push(entry);
+
+			entry = {};
+			entry.description = "< Step back";
+			entry.callback = "contextVideoSyncStep";
+			entry.parameters = {
+				step: "back"
+			};
+			entries.push(entry);
+
+			entry = {};
+			entry.description = "> Step forward";
+			entry.callback = "contextVideoSyncStep";
+			entry.parameters = {
+				step: "forward"
+			};
+			entries.push(entry);
+		}
+
+
 
 		entry = {};
 		entry.description = "separator";
@@ -294,8 +446,15 @@ var movie_player = SAGE2_BlockStreamingApp.extend({
 
 		// Special callback: dowload the file
 		entries.push({
-			description: "Download",
+			description: "Download video",
 			callback: "SAGE2_download",
+			parameters: {
+				url: this.state.video_url
+			}
+		});
+		entries.push({
+			description: "Copy URL",
+			callback: "SAGE2_copyURL",
 			parameters: {
 				url: this.state.video_url
 			}
@@ -324,6 +483,152 @@ var movie_player = SAGE2_BlockStreamingApp.extend({
 	contextToggleMute: function(responseObject) {
 		this.toggleMute(new Date(responseObject.serverDate));
 		this.getFullContextMenuAndUpdate();
+	},
+
+	/**
+	* Sets variables necessary sending or receiving of commands.
+	* A player can send or receive, but not both.
+	*
+	* @method contextVideoSyncHandler
+	* @param responseObject {Object} contains response from entry selection
+	*/
+	contextVideoSyncHandler: function(responseObject) {
+		if (responseObject.send) {
+			this.shouldSendCommands = true;
+			this.shouldReceiveCommands = false;
+			// no purpose behind this other than to ensure variable exists after a sender is specified.
+			wsio.emit("csdMessage", {
+				type: "setValue",
+				nameOfValue: "videoSyncCommandVariable",
+				value: {
+					command: "newSender",
+					timestamp: (this.state.frame / this.state.framerate),
+					frame: this.state.frame,
+					framerate: this.state.framerate
+				},
+				description: "This variable contains the last send command"
+			});
+		} else if (responseObject.receive) {
+			this.shouldSendCommands = false;
+			this.shouldReceiveCommands = true;
+
+			wsio.emit("csdMessage", {
+				type: "subscribeToValue",
+				nameOfValue: "videoSyncCommandVariable",
+				app: this.id,
+				func: "videoSyncCommandHandler",
+				description: "This variable contains the last send command"
+			});
+
+		} else {
+			this.shouldSendCommands = false;
+			this.shouldReceiveCommands = false;
+		}
+		this.getFullContextMenuAndUpdate();
+	},
+
+	/**
+	* Initiates a step and pauses.
+	*
+	* @method contextVideoSyncStep
+	* @param responseObject {Object} contains response from entry selection
+	*/
+	contextVideoSyncStep: function(responseObject) {
+		var timestampToSend;
+		var shouldSendTimeUpdate = false;
+
+		if (responseObject.step == "back") {
+			shouldSendTimeUpdate = true;
+			if (this.state.frame == 0) { // if at 0, they go to last frame.
+				timestampToSend = this.state.numframes / this.state.framerate;
+			} else { // else frame is > 0
+				timestampToSend = this.state.frame - this.state.framerate;
+				if (timestampToSend < 0) { // stepping always stops at 0 before wrap around.
+					timestampToSend = 0;
+				} else { // non zero means calc its time.
+					timestampToSend = timestampToSend / this.state.framerate;
+				}
+			}
+		} else if (responseObject.step == "forward") {
+			shouldSendTimeUpdate = true;
+			if (this.state.frame == this.state.numframes) { // if at last frame, wrap around
+				timestampToSend = 0;
+			} else { // else frame is < max
+				timestampToSend = this.state.frame + this.state.framerate;
+				if (timestampToSend > this.state.numframes) { // stepping always stops at max before wrap
+					timestampToSend = this.state.numframes / this.state.framerate;
+				} else { // if not max, then calc
+					timestampToSend = timestampToSend / this.state.framerate;
+				}
+			}
+		}
+
+		// steps must be forward or back.
+		if (shouldSendTimeUpdate) {
+			wsio.emit('updateVideoTime', {
+				id: this.div.id,
+				timestamp: timestampToSend,
+				play: false
+			});
+
+			wsio.emit("csdMessage", {
+				type: "setValue",
+				nameOfValue: "videoSyncCommandVariable",
+				value: {
+					command: "seek",
+					timestamp: timestampToSend,
+					frame: this.state.frame,
+					framerate: this.state.framerate,
+					play: false
+				},
+				description: "This variable contains the last send command"
+			});
+		}
+	},
+
+	/**
+	* Assumes that the update value is an object with properties:
+	*		command
+	*		timestamp
+	*		frame
+	*		framerate
+	* @method videoSyncCommandHandler
+	* @param valueUpdate {Object} contains last sent command
+	*/
+	videoSyncCommandHandler: function(valueUpdate) {
+		if (!this.shouldReceiveCommands) {
+			return;
+		}
+		var playStatusToSend = false;
+		var timestampToSend = valueUpdate.timestamp;
+		var shouldSendTimeUpdate = false;
+
+		if (valueUpdate.command == "play") {
+			playStatusToSend = true;
+			this.playPauseBtn.state = 1; // show stop
+			shouldSendTimeUpdate = true;
+		} else if (valueUpdate.command == "pause") {
+			playStatusToSend = false;
+			this.playPauseBtn.state = 0; // show play
+			shouldSendTimeUpdate = true;
+		} else if (valueUpdate.command == "stop") {
+			playStatusToSend = false;
+			timestampToSend = 0;
+			this.playPauseBtn.state = 0; // show play
+			shouldSendTimeUpdate = true;
+		} else if (valueUpdate.command == "seek") {
+			playStatusToSend = valueUpdate.play;
+			this.playPauseBtn.state = playStatusToSend ? 1 : 0;
+			shouldSendTimeUpdate = true;
+		}
+
+		if (shouldSendTimeUpdate) {
+			wsio.emit('updateVideoTime', {
+				id: this.div.id,
+				timestamp: timestampToSend,
+				play: playStatusToSend
+			});
+		}
 	},
 
 	/**
@@ -392,10 +697,25 @@ var movie_player = SAGE2_BlockStreamingApp.extend({
 							break;
 						case "sliderRelease":
 							if (isMaster) {
-								wsio.emit('updateVideoTime',
-									{id: this.div.id,
+								wsio.emit('updateVideoTime', {
+									id: this.div.id,
 									timestamp: (this.state.frame / this.state.framerate),
-									play: !this.state.paused});
+									play: !this.state.paused
+								});
+								if (this.shouldSendCommands) {
+									wsio.emit("csdMessage", {
+										type: "setValue",
+										nameOfValue: "videoSyncCommandVariable",
+										value: {
+											command: "seek",
+											timestamp: (this.state.frame / this.state.framerate),
+											frame: this.state.frame,
+											framerate: this.state.framerate,
+											play: !this.state.paused
+										},
+										description: "This variable contains the last send command"
+									});
+								}
 							}
 							break;
 					}

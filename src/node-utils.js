@@ -21,6 +21,11 @@
 "use strict";
 
 var SAGE2_version = require('../package.json');
+try {
+	var SAGE2_buildVersion = require('../VERSION.json');
+} catch (e) {
+	// nothing yet
+}
 
 var crypto  = require('crypto');              // https encryption
 var exec    = require('child_process').exec;  // execute external application
@@ -158,6 +163,10 @@ function loadCABundle(filename) {
  * @return {String} version number as x.x.x
  */
 function getShortVersion() {
+	// try to get the version from the VERSION.json file
+	if (SAGE2_buildVersion && SAGE2_buildVersion.version) {
+		SAGE2_version.version = SAGE2_buildVersion.version;
+	}
 	return SAGE2_version.version;
 }
 
@@ -372,10 +381,12 @@ function checkPackages(inDevelopement) {
 	if (indevel) {
 		command = "npm outdated --depth 0 --json";
 	}
-	exec(command, {cwd: path.normalize(path.join(__dirname, ".."))},
+	exec(command, {cwd: path.normalize(path.join(__dirname, "..")), timeout: 30000},
 		function(error, stdout, stderr) {
-			if (error) {
-				console.log("NPM>	Error running update");
+			// returns error code 1 if found outdated packages
+			if (error && error.code !== 1) {
+				console.log(header("Packages") + "Warning, error running update [ " + error.cmd + '] ',
+					'code: ' + error.code + ' signal: ' + error.signal);
 				return;
 			}
 
@@ -528,18 +539,20 @@ function mkdirParent(dirPath) {
 
 
 /**
- * Place a callback on a list of folders to monitor.
+ * Place a callback on a list of folders to monitor
  *  callback triggered when a change is detected:
  *    this.root contains the monitored folder
  *  parameter contains the following list:
  *    addedFiles, modifiedFiles, removedFiles,
  *    addedFolders, modifiedFolders, removedFolders
  *
- * @method deregisterSAGE2
- * @param folders {Array} list of folders
- * @param callback {Function} to be called when a change is detected
+ * @method     monitorFolders
+ * @param      {Array}    folders          list of folders to monitor
+ * @param      {Array}    excludesFiles    The excludes files
+ * @param      {Array}    excludesFolders  The excludes folders
+ * @param      {Function}  callback         to be called when a change is detected
  */
-function monitorFolders(folders, excludes, callback) {
+function monitorFolders(folders, excludesFiles, excludesFolders, callback) {
 	// for each folder
 	for (var folder in folders) {
 		// get a full path
@@ -550,14 +563,19 @@ function monitorFolders(folders, excludes, callback) {
 		if (stat.isDirectory()) {
 			console.log(header("Monitor") + "watching folder " + folderpath);
 			var monitor = fsmonitor.watch(folderpath, {
-				// only matching: all true for now
+				// excludes non-valid filenames
 				matches:  function(relpath) {
-					return true;
+					var condition = excludesFiles.every(function(e, i, a) {
+						return !relpath.endsWith(e);
+					});
+					return condition;
 				},
-				// and excluding: nothing for now
+				// and ignores folders
 				excludes: function(relpath) {
-					return (excludes.indexOf(relpath) !== -1);
-					// return false;
+					var condition = excludesFolders.every(function(e, i, a) {
+						return !relpath.startsWith(e);
+					});
+					return !condition;
 				}
 			});
 			// place the callback the change event

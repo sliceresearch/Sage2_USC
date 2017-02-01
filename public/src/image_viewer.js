@@ -45,6 +45,8 @@ var image_viewer = SAGE2_App.extend({
 		// old image url
 		this.old_img_url = "";
 
+		this.title  = data.title;
+
 		this.updateAppFromState();
 		this.addWidgetControlsToImageViewer();
 	},
@@ -126,18 +128,25 @@ var image_viewer = SAGE2_App.extend({
 
 		// Special callback: dowload the file
 		entries.push({
-			description: "Download",
+			description: "Download image",
 			callback: "SAGE2_download",
 			parameters: {
 				url: cleanURL(this.state.src || this.state.img_url)
 			}
 		});
-		// Special callback: convert to a doodle.
 		entries.push({
-			description: "Make Doodle",
-			callback: "makeDoodle",
-			parameters: {}
+			description: "Copy URL",
+			callback: "SAGE2_copyURL",
+			parameters: {
+				url: cleanURL(this.state.src || this.state.img_url)
+			}
 		});
+		// Special callback: convert to a doodle.
+		// entries.push({
+		// 	description: "Make Doodle",
+		// 	callback: "makeDoodle",
+		// 	parameters: {}
+		// });
 
 		return entries;
 	},

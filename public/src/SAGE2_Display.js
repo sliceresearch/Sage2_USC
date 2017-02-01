@@ -24,6 +24,8 @@
 /* global createWidgetToAppConnector */
 /* global getTextFromTextInputWidget */
 
+/* global SAGE2_Partition */
+
 "use strict";
 
 /**
@@ -42,13 +44,14 @@ var wsio;
 var isMaster;
 var hostAlias = {};
 
-var itemCount = 0;
+var itemCount = 20;
 var controlItems   = {};
 var controlObjects = {};
 var lockedControlElements = {};
 var widgetConnectorRequestList = {};
 
 var applications = {};
+var partitions = {};
 var dependencies = {};
 var dataSharingPortals = {};
 
@@ -584,6 +587,34 @@ function setupListeners() {
 		createAppWindow(data, ui.main.id, ui.titleBarHeight, ui.titleTextSize, ui.offsetX, ui.offsetY);
 	});
 
+
+	/* Partition wsio calls */
+	wsio.on('createPartitionWindow', function(data) {
+		partitions[data.id] = new SAGE2_Partition(data);
+	});
+	wsio.on('deletePartitionWindow', function(data) {
+		partitions[data.id].deletePartition();
+		delete partitions[data.id];
+	});
+	wsio.on('partitionMoveAndResizeFinished', function(data) {
+		partitions[data.id].updatePositionAndSize(data);
+	});
+	wsio.on('partitionWindowTitleUpdate', function(data) {
+		partitions[data.id].updateTitle(data.title);
+	});
+	wsio.on('updatePartitionBorders', function(data) {
+		if (!data) {
+			for (var p in partitions) {
+				// console.log(p);
+				partitions[p].updateSelected(false);
+			}
+		} else {
+			if (partitions.hasOwnProperty(data.id)) {
+				partitions[data.id].updateSelected(data.highlight);
+			}
+		}
+	});
+
 	wsio.on('createAppWindowInDataSharingPortal', function(data) {
 		var portal = dataSharingPortals[data.portal];
 
@@ -1007,7 +1038,8 @@ function setupListeners() {
 			var ctrlId = ctrl.attr('id');
 			var action = "buttonPress";
 			var ctrlParent = ctrl.parent();
-			if (/button/.test(ctrlId)) {
+			var radioButtonSelected = null;
+			if (/button/.test(ctrlId) === true && /radio/.test(ctrlId) === false) {
 				ctrl = ctrlParent.select("svg");
 				var animationInfo = ctrlParent.data("animationInfo");
 				var state = animationInfo.state;
@@ -1020,18 +1052,9 @@ function setupListeners() {
 								ctrl.animate({fill: fillVal}, 400, mina.bounce);
 							});
 						}
-					}/* else if (state === 1) {
-						ctrlParent.select("#cover2").attr("visibility", "visible");
-						ctrlParent.select("#cover").attr("visibility", "hidden");
-						animationInfo.state = 0;
-					} else {
-						ctrlParent.select("#cover").attr("visibility", "visible");
-						ctrlParent.select("#cover2").attr("visibility", "hidden");
-						animationInfo.state = 1;
-					}*/
+					}
 				} else {
 					ctrl = ctrlParent.select("path") || ctrlParent.select("text");
-
 					if (animationInfo.textual === false && animationInfo.animation === true) {
 						var delay = animationInfo.delay;
 						var fromPath = animationInfo.from;
@@ -1054,6 +1077,14 @@ function setupListeners() {
 					}
 				}
 				ctrlId = ctrlParent.attr("id").replace("button", "");
+			} else if (/radio/.test(ctrlId) === true) {
+				var radioButtonId =  ctrlParent.attr("id");
+				var radioState = ctrlParent.data("radioState");
+				radioButtonSelected = ctrlId.replace(radioButtonId, "");
+				radioState.value = radioButtonSelected;
+				ctrlParent.data("radioState", radioState);
+				action = "radioButtonPress";
+				ctrlId = radioButtonId.replace("button_radio", "");
 			} else {
 				ctrlId = ctrlParent.attr("id").replace("slider", "");
 				action = "sliderRelease";
@@ -1075,7 +1106,11 @@ function setupListeners() {
 				case "ShareApp":
 					break;
 				default:
-					app.SAGE2Event("widgetEvent", null, data.user, {identifier: ctrlId, action: action}, new Date(data.date));
+					var widgetEventData = {identifier: ctrlId, action: action};
+					if (radioButtonSelected !== null) {
+						widgetEventData.value = radioButtonSelected;
+					}
+					app.SAGE2Event("widgetEvent", null, data.user, widgetEventData, new Date(data.date));
 					break;
 			}
 
@@ -1115,7 +1150,6 @@ function setupListeners() {
 	wsio.on('moveSliderKnob', function(data) {
 		// TODO: add `date` to `data` object
 		//       DON'T USE `new Date()` CLIENT SIDE (apps will get out of sync)
-
 		var ctrl = getWidgetControlInstanceById(data.ctrl);
 		var slider = ctrl.parent();
 		var ctrHandle = document.getElementById(slider.data("instanceID"));
@@ -1405,7 +1439,8 @@ function createAppWindow(data, parentId, titleBarHeight, titleTextSize, offsetX,
 			resrc: url,
 			state: data.data,
 			date: date,
-			title: data.title
+			title: data.title,
+			application: data.application
 		};
 
 		// load new app
@@ -1434,7 +1469,7 @@ function createAppWindow(data, parentId, titleBarHeight, titleTextSize, offsetX,
 			js.type  = "text/javascript";
 			js.async = false;
 			js.src = url + "/" + data.application + ".js";
-			console.log(data.id, url + "/" + data.application + ".js");
+			console.log("Loading>", data.id, url + "/" + data.application + ".js");
 			document.head.appendChild(js);
 		} else {
 			// load existing app

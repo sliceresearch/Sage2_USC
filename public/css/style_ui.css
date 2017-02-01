@@ -67,6 +67,14 @@ h2 {
 	margin: 2px 0 0 2px;
 }
 
+#partitionsDiv {
+	position: absolute;
+	overflow: hidden;
+	background-color: #B4B4B4;
+	margin: 2px 0 0 2px;
+}
+
+
 #sage2UICanvas {
 	position: absolute;
 	border: solid 2px #565656;
@@ -199,6 +207,37 @@ h2 {
 	clear: both;
 }
 
+.ptnWindow {
+	display: block;
+	position: absolute;
+	border: solid 1px #6C6C6C;
+}
+
+.ptnWindowTitle {
+	position: absolute;
+	border: solid 1px #6C6C6C;
+	-webkit-box-sizing: border-box;
+	-moz-box-sizing: border-box;
+	box-sizing: border-box;
+}
+
+.ptnWindowTitleHover {
+	position: absolute;
+	border: solid 1px #6C6C6C;
+	background-color: #3694B7;
+	-webkit-box-sizing: border-box;
+	-moz-box-sizing: border-box;
+	box-sizing: border-box;
+}
+
+.ptnWindowArea {
+	position: absolute;
+	border: solid 1px #6C6C6C;
+	-webkit-box-sizing: border-box;
+	-moz-box-sizing: border-box;
+	box-sizing: border-box;
+}
+
 /***** Light Box    *****/
 #sage2pointerDialog {
 	top: 50%;
@@ -231,6 +270,12 @@ h2 {
 
 #appList p {
 	color: #FFFFFF;
+}
+
+#appStoreBtn {
+	position: absolute;
+	left: 10px;
+	bottom: 10px;
 }
 
 #appOpenBtn {
@@ -330,6 +375,11 @@ h2 {
 }
 
 #arrangementItems {
+	margin: 10px 10px 20px;
+	overflow: auto;
+}
+
+#arrangementItems2 {
 	margin: 10px 10px 66px;
 	overflow: auto;
 }
@@ -352,9 +402,53 @@ h2 {
 	text-align: center;
 }
 
+#createpartitionsContainer {
+	width: 100px;
+	float: left;
+	text-align: center;
+}
+
+#deletepartitionsContainer {
+	width: 100px;
+	float: left;
+	text-align: center;
+}
+
+#assigntopartitionsContainer {
+	width: 100px;
+	float: left;
+	text-align: center;
+}
+
 #arrangementCloseBtn {
 	position: absolute;
 	right: 10px;
+	bottom: 10px;
+}
+
+#createpartitionsDialog {
+	top: 50%;
+	left: 50%;
+	-webkit-transform: translate(-50%, -50%);
+	-moz-transform: translate(-50%, -50%);
+	-ms-transform: translate(-50%, -50%);
+	transform: translate(-50%, -50%);
+}
+
+#createpartitionsItems {
+	margin: 10px 10px 66px;
+	overflow: auto;
+}
+
+#createpartitionsCreateBtn {
+	position: absolute;
+	right: 10px;
+	bottom: 10px;
+}
+
+#createpartitionsCloseBtn {
+	position: absolute;
+	right: 75px;
 	bottom: 10px;
 }
 
@@ -445,38 +539,6 @@ h2 {
 	-moz-transform: translate(-50%, -50%);
 	-ms-transform: translate(-50%, -50%);
 	transform: translate(-50%, -50%);
-}
-
-#browserItems {
-	margin: 10px 10px 66px;
-	overflow: auto;
-}
-
-#browserItemsContainer {
-	width: 400px;
-	float: left;
-	margin-right: 10px;
-}
-
-#browserItemsContainer td {
-	padding-bottom: 4px;
-}
-
-#openWebpageUrl {
-	width: 330px;
-	height: 16px;
-}
-
-#browserOpenBtn {
-	position: absolute;
-	right: 10px;
-	bottom: 10px;
-}
-
-#browserCloseBtn {
-	position: absolute;
-	right: 90px;
-	bottom: 10px;
 }
 
 #sage2PointerSettingsContainer {

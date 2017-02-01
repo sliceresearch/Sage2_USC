@@ -58,7 +58,6 @@ var pdf_viewer = SAGE2_App.extend({
 		// Control the frame rate for an animation application
 		this.maxFPS = 2.0;
 
-		this.isShift        = false;
 		this.activeTouch    = [];
 		this.interactable   = [];
 		this.gotInformation = false;
@@ -390,9 +389,13 @@ var pdf_viewer = SAGE2_App.extend({
 		// iterating over the model trying to understand if a button was pressed
 		for (var i in this.interactable) {
 			var item = this.interactable[i];
-			var position = {x: parseInt(item.attr("x")), y: parseInt(item.attr("y")),
-							w: parseInt(item.attr("width")), h: parseInt(item.attr("height")),
-							container: item.container};
+			var position = {
+				x: parseInt(item.attr("x")),
+				y: parseInt(item.attr("y")),
+				w: parseInt(item.attr("width")),
+				h: parseInt(item.attr("height")),
+				container: item.container
+			};
 			// check if the click is within the current button
 			if (item.command && within(position, x, y)) {
 				// if the button is clickable, generates a color transition feedback
@@ -427,25 +430,30 @@ var pdf_viewer = SAGE2_App.extend({
 	},
 
 	leftClickMove: function(x, y, id) {
+		var position = {
+			x: parseInt(this.commandBarBG.attr("x")),
+			y: parseInt(this.commandBarBG.attr("y")),
+			w: parseInt(this.commandBarBG.attr("width")),
+			h: parseInt(this.commandBarBG.attr("height")),
+			container: this.commandBarBG.container
+		};
 
-		var position = {x: parseInt(this.commandBarBG.attr("x")), y: parseInt(this.commandBarBG.attr("y")),
-						w: parseInt(this.commandBarBG.attr("width")), h: parseInt(this.commandBarBG.attr("height")),
-						container: this.commandBarBG.container};
 		// check if the click is within the current button
 		if (this.inBarCommand == null && within(position, x, y)) {
-			var center = ((this.widthCommandButton + this.state.marginButton) *
-				(this.commandBarG.node().childNodes.length - 1) / 2) / 2;
-			var iFound = 0;
-			for (var i in this.interactable) {
-				var item = this.interactable[i];
-				if (item.ico) {
-					item.transition().attr("x", x / this.state.resizeValue +
-						(this.widthCommandButton + this.state.marginButton) * iFound - center).duration(200);
-					item.ico.transition().attr("x", x / this.state.resizeValue +
-						(this.widthCommandButton + this.state.marginButton) * iFound - center).duration(200);
-					iFound += 1;
-				}
-			}
+			// Do not move the widget bar at the bottom anymore
+			// var center = ((this.widthCommandButton + this.state.marginButton) *
+			// 	(this.commandBarG.node().childNodes.length - 1) / 2) / 2;
+			// var iFound = 0;
+			// for (var i in this.interactable) {
+			// 	var item = this.interactable[i];
+			// 	if (item.ico) {
+			// 		item.transition().attr("x", x / this.state.resizeValue +
+			// 			(this.widthCommandButton + this.state.marginButton) * iFound - center).duration(200);
+			// 		item.ico.transition().attr("x", x / this.state.resizeValue +
+			// 			(this.widthCommandButton + this.state.marginButton) * iFound - center).duration(200);
+			// 		iFound += 1;
+			// 	}
+			// }
 			this.inBarCommand = true;
 		} else if (!within(position, x, y)) {
 			this.inBarCommand = null;
@@ -668,8 +676,15 @@ var pdf_viewer = SAGE2_App.extend({
 
 		// Special callback: dowload the file
 		entries.push({
-			description: "Download",
+			description: "Download PDF",
 			callback: "SAGE2_download",
+			parameters: {
+				url: this.state.doc_url
+			}
+		});
+		entries.push({
+			description: "Copy URL",
+			callback: "SAGE2_copyURL",
 			parameters: {
 				url: this.state.doc_url
 			}
@@ -745,15 +760,10 @@ var pdf_viewer = SAGE2_App.extend({
 		if (eventType === "specialKey") {
 			var newOffset, center, minOffset, step;
 
-			// Shift key
-			if (data.code === 16) {
-				this.isShift = (data.state === "down");
-			}
-
 			if (data.code === 39 && data.state === "down") {
 				// Right Arrow
 
-				if (this.isShift) {
+				if (data.status.SHIFT) {
 					// calculate a offset amount
 					step = (this.baseWidthPage + this.displacement) / 10;
 					// apply offset
@@ -776,7 +786,7 @@ var pdf_viewer = SAGE2_App.extend({
 			} else if (data.code === 37 && data.state === "down") {
 				// Left Arrow
 
-				if (this.isShift) {
+				if (data.status.SHIFT) {
 					// calculate a offset amount
 					step = (this.baseWidthPage + this.displacement) / 10;
 					// apply offset

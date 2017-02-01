@@ -100,8 +100,10 @@ function SAGE2_interaction(wsio) {
 	document.getElementById('sage2PointerLabel').value = localStorage.SAGE2_ptrName;
 	document.getElementById('sage2PointerColor').value = localStorage.SAGE2_ptrColor;
 
-	this.wsio.emit('registerInteractionClient', {name: document.getElementById('sage2PointerLabel').value,
-			color: document.getElementById('sage2PointerColor').value});
+	this.wsio.emit('registerInteractionClient', {
+		name: document.getElementById('sage2PointerLabel').value,
+		color: document.getElementById('sage2PointerColor').value
+	});
 
 	/**
 	* Set a unique ID
@@ -276,7 +278,8 @@ function SAGE2_interaction(wsio) {
 		}
 		ext = ext.toLowerCase();
 		if (youtube >= 0) {
-			mimeType = "video/youtube";
+			// mimeType = "video/youtube";
+			mimeType = "application/url";
 		} else if (ext === "jpg") {
 			mimeType = "image/jpeg";
 		} else if (ext === "jpeg") {
@@ -293,6 +296,9 @@ function SAGE2_interaction(wsio) {
 			mimeType = "video/webm";
 		} else if (ext === "pdf") {
 			mimeType = "application/pdf";
+		} else {
+			// madeup mimetype for drag-drop URL
+			mimeType = "application/url";
 		}
 		console.log("URL: " + url + ", type: " + mimeType);
 
@@ -586,10 +592,12 @@ function SAGE2_interaction(wsio) {
 				return;
 			}
 
-			var widths = [Math.min(852,  mediaVideo.videoWidth),
-						Math.min(1280, mediaVideo.videoWidth),
-						Math.min(1920, mediaVideo.videoWidth),
-						mediaVideo.videoWidth];
+			var widths = [
+				Math.min(852,  mediaVideo.videoWidth),
+				Math.min(1280, mediaVideo.videoWidth),
+				Math.min(1920, mediaVideo.videoWidth),
+				mediaVideo.videoWidth
+			];
 
 			for (var i = 0; i < 4; i++) {
 				var height = parseInt(widths[i] * mediaVideo.videoHeight / mediaVideo.videoWidth, 10);
@@ -603,11 +611,13 @@ function SAGE2_interaction(wsio) {
 			var frame = this.captureMediaFrame();
 			this.pix  = frame;
 			var raw   = atob(frame.split(",")[1]); // base64 to string
-			this.wsio.emit('startNewMediaStream', {id: this.uniqueID + "|0",
+			this.wsio.emit('startNewMediaStream', {
+				id: this.uniqueID + "|0",
 				title: localStorage.SAGE2_ptrName + ": Shared Screen",
 				color: localStorage.SAGE2_ptrColor,
 				src: raw, type: "image/jpeg", encoding: "binary",
-				width: mediaVideo.videoWidth, height: mediaVideo.videoHeight});
+				width: mediaVideo.videoWidth, height: mediaVideo.videoHeight
+			});
 
 			this.broadcasting = true;
 

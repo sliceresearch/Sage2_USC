@@ -795,8 +795,9 @@ DrawingManager.prototype.touchDown = function(e, sourceId, posX, posY, w, h) {
 
 	if (action == "movingPalette") {
 		// Just save the offset
-		this.offsetFromPaletteXTouch[e.sourceId] = {x: posX - this.palettePosition.startX,
-													y: posY - this.palettePosition.startY + this.TITLE_BAR_HEIGHT};
+		this.offsetFromPaletteXTouch[e.sourceId] = {
+			x: posX - this.palettePosition.startX,
+			y: posY - this.palettePosition.startY + this.TITLE_BAR_HEIGHT};
 		return;
 	}
 
@@ -807,11 +808,12 @@ DrawingManager.prototype.touchDown = function(e, sourceId, posX, posY, w, h) {
 	}
 	// Action Performed at touch down: recall Palette
 	if (action == "recallingPalette") {
-		this.movePaletteTo(this.paletteID
-								, posX
-								, this.palettePosition.startY - this.TITLE_BAR_HEIGHT
-								, this.palettePosition.endX - this.palettePosition.startX
-								, this.palettePosition.endY - this.palettePosition.startY);
+		this.movePaletteTo(
+			this.paletteID, posX,
+			this.palettePosition.startY - this.TITLE_BAR_HEIGHT,
+			this.palettePosition.endX - this.palettePosition.startX,
+			this.palettePosition.endY - this.palettePosition.startY
+		);
 		return;
 	}
 

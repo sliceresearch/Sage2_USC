@@ -86,8 +86,10 @@ var SAGE2_App = Class.extend({
 	* @param data {Object} contains initialization values (id, width, height, state, ...)
 	*/
 	SAGE2Init: function(type, data) {
-		// Application ID
+		// Save the application ID
 		this.id = data.id;
+		// Save the type of the application
+		this.application = data.application;
 
 		this.div = document.getElementById(data.id);
 		this.element = document.createElement(type);
@@ -696,6 +698,12 @@ var SAGE2_App = Class.extend({
 	* @param date {Date} current time from the server
 	*/
 	refresh: function(date) {
+		if (date === undefined) {
+			// if argument not passed, use previous date
+			// it should be ok for not animation-based application
+			date = this.prevDate;
+		}
+
 		if (this.SAGE2UserModification === true) {
 			this.SAGE2Sync(true);
 		}
@@ -764,12 +772,14 @@ var SAGE2_App = Class.extend({
 	* @method sendFullscreen
 	*/
 	sendFullscreen: function() {
-		var msgObject = {};
-		// Add the display node ID to the message
-		msgObject.node = clientID;
-		msgObject.id   = this.id;
-		// send the message to server
-		wsio.emit('appFullscreen', msgObject);
+		if (isMaster) {
+			var msgObject = {};
+			// Add the display node ID to the message
+			msgObject.node = clientID;
+			msgObject.id   = this.id;
+			// send the message to server
+			wsio.emit('appFullscreen', msgObject);
+		}
 	},
 
 	/**
@@ -866,18 +876,100 @@ var SAGE2_App = Class.extend({
 			if (typeof this.getContextEntries === "function") {
 				rmbData.entries = this.getContextEntries();
 				rmbData.entries.push({
-					description: "Close " + (document.getElementById(this.id + "_text").textContent),
-					callback: "SAGE2DeleteElement", // better function name?
+					description: "separator"
+				});
+				rmbData.entries.push({
+					description: "Send to back",
+					callback: "SAGE2SendToBack",
+					parameters: {}
+				});
+				rmbData.entries.push({
+					description: "Maximize",
+					callback: "SAGE2Maximize",
+					parameters: {}
+				});
+				rmbData.entries.push({
+					description: "separator"
+				});
+				rmbData.entries.push({
+					description: "Close " + (this.title || "application"),
+					callback: "SAGE2DeleteElement",
 					parameters: {}
 				});
 			} else {
 				rmbData.entries = [{
-					description: "Close App",
-					callback: "SAGE2DeleteElement", // better function name?
+					description: "Close application",
+					callback: "SAGE2DeleteElement",
 					parameters: {}
 				}];
 			}
 			wsio.emit("dtuRmbContextMenuContents", rmbData);
+		}
+	},
+
+	/**
+	 * Uses WebSocket to send a request to the server to save a file from the app
+	 * into the media folders. The file will be placed in a subdirectory of the media
+	 * folders called savedFiles/appname/(subdir)?/ . The file name must not contains
+	 * any directory characters ('/', '\', etc.).
+	 *
+	 * @method     saveFile
+	 * @param      {String}  subdir			Subdirectory within the app's folder to save file
+	 * @param      {String}  filename		The name for the file being saved
+	 * @param      {String}  ext			The file's extension
+	 * @param      {String}  data			The file's data
+	 */
+	saveFile: function(subdir, filename, ext, data) {
+		if (isMaster) {
+			wsio.emit("appFileSaveRequest", {
+				app: this.application,
+				id:  this.id,
+				asset: false,
+				filePath: {
+					subdir: subdir,
+					name:   filename,
+					ext:    ext
+				},
+				saveData: data
+			});
+		}
+	},
+
+	/**
+	 * Loads a saved data file (from the saveFile function)
+	 *
+	 * @method     loadSavedData
+	 * @param      {String}  filename  The filename to load
+	 * @param      {Function} callback function to call when loading is done
+	 */
+	loadSavedData: function(filename, callback) {
+		readFile("/user/savedFiles/" + this.application + "/" + filename, function(error, data) {
+			callback(error, data);
+		}, "JSON");
+	},
+
+	/**
+	 * Uses WebSocket to send a request to the server to save a file from the app
+	 * into the media folders as an asset (image, pdf, ...)
+	 *
+	 * @method     saveFile
+	 * @param      {String}  filename		The name for the file being saved
+	 * @param      {String}  ext			The file's extension
+	 * @param      {String}  data			The file's data
+	 */
+	saveAsset: function(filename, ext, data) {
+		if (isMaster) {
+			wsio.emit("appFileSaveRequest", {
+				app: this.application,
+				id:  this.id,
+				asset: true,
+				filePath: {
+					subdir: "",
+					name:   filename,
+					ext:    ext
+				},
+				saveData: data
+			});
 		}
 	}
 });

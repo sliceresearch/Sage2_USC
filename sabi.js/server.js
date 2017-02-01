@@ -101,6 +101,7 @@ var platform = os.platform() === "win32" ? "Windows" : os.platform() === "darwin
 var pathToSageUiPwdFile			= path.join(homedir(), "Documents", "SAGE2_Media", "passwd.json");
 var pathToWinDefaultConfig		= path.join(homedir(), "Documents", "SAGE2_Media", "config", "defaultWin-cfg.json");
 var pathToMacDefaultConfig		= path.join(homedir(), "Documents", "SAGE2_Media", "config", "default-cfg.json");
+var pathToElectronConfig		= path.join(homedir(), "Documents", "SAGE2_Media", "config", "electron-cfg.json");
 var pathToWinStartupFolder		= path.join(homedir(), "AppData", "Roaming", "Microsoft", "Windows", "Start Menu", "Programs", "Startup", "startWebCon.bat" );
 var pathToMonitorDataFile		= path.join("scripts", "MonitorInfo.json"); //gets written here due to nature of the winScriptHelperWriteMonitorRes.exe file.
 var pathToSabiConfigFolder		= path.join(homedir(), "Documents", "SAGE2_Media", "sabiConfig");
@@ -109,9 +110,9 @@ var pathToSage2onbatScript		= path.join(pathToSabiConfigFolder, "scripts", "sage
 var pathToGoWindowsCertGenFile	= path.join(pathToSabiConfigFolder, "scripts", "GO-windows.bat"); // "../keys/GO-windows.bat";
 var pathToActivateGoWindowsCert = path.join(pathToSabiConfigFolder, "scripts", "activateWindowsCertGenerator.bat" );
 var pathToGitCredentials 		= path.join(homedir(), ".git-credentials");
-var needToRegenerateSageOnFile	= true; //always check at least once
 var scriptExecutionFunction		= require('./src/script').Script;
 var commandExecutionFunction	= require('./src/script').Command;
+var spawn = require('child_process').spawn;
 
 // ---------------------------------------------
 //  Parse command line arguments
@@ -184,10 +185,21 @@ if (ConfigFile.indexOf("sage2") >= 0) {
 		// do the actual copy
 		fs.createReadStream(configInput).pipe(fs.createWriteStream(configOuput));
 	}
+	// always move electron regardless of OS
+	if (!fileExists(pathToElectronConfig)) {
+		configInput = path.join("scripts", "defaultWin-cfg.json");
+		configOuput = pathToElectronConfig;//path.join(media, "config", "defaultWin-cfg.json");
+		
+		console.log('Delete this comment later: config file does not exist tried to write to:' + configOuput);
+		console.log('    from file:' + configInput);
+
+		// do the actual copy
+		fs.createReadStream(configInput).pipe(fs.createWriteStream(configOuput));
+	}
 
 	//always ov
 	if (platform === "Windows") {
-		var sfpContents = 'cd "' + __dirname + '\\..' + '"\n';
+		var sfpContents = 'cd /d "' + __dirname + '\\..' + '"\n';
 		sfpContents += 'set PATH=%CD%\\bin;%PATH%;\n';
 		sfpContents += 'cd sabi.js\n';
 		sfpContents += 'start /MIN ..\\bin\\node server.js -f '+ pathToSabiConfigFolder +'\\config\\sage2.json %*';
@@ -214,6 +226,11 @@ if (ConfigFile.indexOf("sage2") >= 0) {
 	sabiMediaCheck = path.join(pathToSabiConfigFolder, "scripts", "sage2_on.bat");
 		if (!fileExists(sabiMediaCheck)) {
 			sabiMediaCopy = path.join("scripts", "sage2_on.bat");
+			fs.createReadStream(sabiMediaCopy).pipe(fs.createWriteStream(sabiMediaCheck));
+		}
+	sabiMediaCheck = path.join(pathToSabiConfigFolder, "scripts", "s2_on_electron.bat");
+		if (!fileExists(sabiMediaCheck)) {
+			sabiMediaCopy = path.join("scripts", "s2_on_electron.bat");
 			fs.createReadStream(sabiMediaCopy).pipe(fs.createWriteStream(sabiMediaCheck));
 		}
 	sabiMediaCheck = path.join(pathToSabiConfigFolder, "scripts", "sage2_off.bat");
@@ -773,9 +790,7 @@ function process_request(cfg, req, res) {
 			wstream.on('finish', function() {
 				// stream closed
 				console.log('HTTP>		PUT file has been written', filename, fileLength, 'bytes');
-				needToRegenerateSageOnFile = true;
-				updateCertificates();
-				makeMonitorInfoFile();
+				updateCertificates(); // keeping this if someone edits with basic / advanced
 			});
 			// Getting data
 			req.on('data', function(chunk) {
@@ -1022,19 +1037,33 @@ function processEditor(data, socket) {
 	}
 }
 
-function processRPC(data, socket) { // dkedits made to account for makeNewMeetingID
+/*
+	data is an object TODO double check this
+		data.value	an array
+			0		action defined in sage2.json (sabi config file)
+			1		path of file to activate
+		data.method	sendPurpose
+
+*/
+function processRPC(data, socket) {
 	console.log("RPC for:", data);
-	var found = false; 
-	if (data.value[0].indexOf("sage2-on") !== -1) {
-		console.log('Delete this comment later: Intercepting sage2-on action.');
-		updateConfigFileToAccountForMonitorsAndResolution();
-		console.log("After update config file before write sage on file");
-		writeSageOnFileWithCorrectPortAndMeetingID(data);
-		needToRegenerateSageOnFile = false;
-	}
-	//interception to activate data.method actions script from SAGE2_Media\sabiConfig folder
-	if(data.value[1] && data.value[1].indexOf("scripts\\") === 0) {
+	/*
+		Path fix to use SAGE2_Media only if the path STARTS with scripts\
+
+		interception to activate data.method actions script from SAGE2_Media\sabiConfig folder
+		data.value[1] now contains full path to specified script. Probably: C:\users\userName\Documents\.....bat
+	*/
+	if (data.value[1] && data.value[1].indexOf("scripts\\") === 0) {
 		data.value[1] = pathToSabiConfigFolder + "\\" + data.value[1];
+	}
+	var found = false; 
+	if (data.value[0].indexOf("sage2-on") !== -1 && data.value[1] != undefined) {
+		if (data.value[1].indexOf("electron") > -1) {
+			spawn(data.value[1], getLaunchParameters("electron"));
+		} else {
+			spawn(data.value[1], getLaunchParameters());
+		}
+		return;
 	}
 	for (var f in AppRPC) {
 		var func = AppRPC[f];
@@ -1049,7 +1078,6 @@ function processRPC(data, socket) { // dkedits made to account for makeNewMeetin
 		var jsonString = '{ "pwd" : "' + data.value[0] + '" }';
 		console.log('meetingID save double checking:' + jsonString);
 		fs.writeFileSync(pathToSageUiPwdFile, jsonString);
-		needToRegenerateSageOnFile = true;
 	}
 	if (!found && data.method === "makeNewLauncherPassword") {
 		console.log('Setting new launcher password', data.value[0]);
@@ -1225,6 +1253,43 @@ function updateConfigFileToAccountForMonitorsAndResolution() {
 	fs.writeFileSync(pathToWinDefaultConfig, JSON5.stringify(cfg, null, 4));
 }
 
+function updateElectronConfig() {
+	if(!fileExists(pathToWinDefaultConfig)) {
+		console.log("Error, asynchronous file writer through script function");
+		process.exit();
+	}
+
+	var defaultWinCfg = JSON5.parse(fs.readFileSync(pathToWinDefaultConfig));
+	var electronCfg   = JSON5.parse(fs.readFileSync(pathToElectronConfig));
+	var dataReturn = {};
+
+	electronCfg.host = defaultWinCfg.host;
+	electronCfg.port = defaultWinCfg.port;
+	electronCfg.index_port = defaultWinCfg.index_port;
+	electronCfg.layout = {
+		rows: 1,
+		columns: 1
+	};
+	electronCfg.resolution = {
+		width: (defaultWinCfg.resolution.width * defaultWinCfg.layout.columns),
+		height: (defaultWinCfg.resolution.height * defaultWinCfg.layout.rows)
+	};
+	electronCfg.displays = [{
+		row: 0,
+		column: 0
+	}];
+	electronCfg.alternate_hosts = defaultWinCfg.alternate_hosts;
+	electronCfg.remote_sites = defaultWinCfg.remote_sites;
+
+	fs.writeFileSync(pathToElectronConfig, JSON5.stringify(electronCfg, null, 4));
+
+	dataReturn.width = electronCfg.resolution.width;
+	dataReturn.height = electronCfg.resolution.height;
+	dataReturn.port = electronCfg.index_port;
+	dataReturn.hash = getMeetingIDFromPasswd();
+
+	return dataReturn;
+}
 
 function getPortUsedInConfig() {
 	var pathToConfig; //config name differs depending on OS.
@@ -1374,9 +1439,26 @@ sio.on('connection', function (socket) {
 		processOSC(data);
 	});
 
-	socket.on('disconnect', function (socket) {
+	socket.on("disconnect", function (socket) {
 		console.log("Connection closed");
 	});
+
+	// additional support for assisted config
+
+	/*
+		This needs to send necessary config components for the assisted config autofill and suggest values.
+	*/
+	socket.on("requestConfigAndTips", function(data) {
+		socketOnRequestConfigAndTips(socket);
+	})
+
+	/*
+		This will be sent after user hits the save button.
+		Hopefully this triggers correctly before redirecting the page. Double check.
+	*/
+	socket.on("assistedConfigSend", function(data) {
+		socketOnAssistedConfigSend(socket, data);
+	})
 
 });
 
@@ -1389,4 +1471,167 @@ sio.on('connection', function (socket) {
 hserver.listen(hport, "0.0.0.0");
 console.log("\nHTTP server running at http://localhost:" + hport );
 console.log("\n");
+
+
+
+
+
+
+// ------------------------------------------------------------------------------------------------------------
+// Additional functions to support assisted config
+
+
+
+/*
+	Main confusion is monitorData
+		tileWidth	actually how many detected monitors there are in the tiled display width
+		tileHeight	detected number of monitors in height
+		tileCoordinates
+		[
+			{
+			col 	x coordinate of top left corner of this particular monitor
+			row 	y coordinate of top left corner of this particular monitor
+			}
+		]
+
+*/
+function socketOnRequestConfigAndTips(socket) {
+	// read default
+	var cfg 		= fs.readFileSync(pathToWinDefaultConfig, "utf8");
+	cfg 		    = JSON5.parse(cfg);
+	var monitorData = fs.readFileSync(pathToMonitorDataFile);
+	monitorData     = JSON5.parse(monitorData);
+
+	// as mentioned earlier the tilewidth/height is how many detected monitors in the tile display layout
+	var tips = {};
+	tips.layoutWidth  = monitorData.tileWidth;
+	tips.layoutHeight = monitorData.tileHeight;
+	tips.resolutionWidth  = "unknown";
+	tips.resolutionHeight = "unknown";
+	var tw, th;
+
+	// if there are more than one detected, find where there is a difference in coordinates and set tips
+	for (var i = 1; i < monitorData.tileCoordinates.length; i++) {
+		tw = tips.resolutionWidth = Math.abs(monitorData.tileCoordinates[i - 1].col - monitorData.tileCoordinates[i].col);
+		th = tips.resolutionHeight = Math.abs(monitorData.tileCoordinates[i - 1].row - monitorData.tileCoordinates[i].row);
+		if (tw > 10) {
+			tips.resolutionWidth = tw;
+		}
+		if (th > 10) {
+			tips.resolutionHeight = th;
+		}
+	}
+
+	cfg.tips = tips;
+
+	socket.emit("requestConfigAndTipsResponse", cfg);
+}
+
+
+/*
+	The given config should be correct as it had to be checked in assistedConfig.html for Send button to work.
+	Still, have a couple safety checks.
+	Needs to copy over
+		host
+		port
+		index_port
+		resolution
+		layout
+		alternate_hosts
+		remote_sites
+
+*/
+function socketOnAssistedConfigSend(socket, sentCfg) {
+	var cfg           = JSON5.parse(fs.readFileSync(pathToWinDefaultConfig));
+	var electronCfg   = JSON5.parse(fs.readFileSync(pathToElectronConfig));
+	var totalMonitors = sentCfg.layout.columns * sentCfg.layout.rows;
+
+	// copy over layout
+	cfg.layout = sentCfg.layout;
+	// double check the displays
+	if (sentCfg.displays.length != totalMonitors) { // if display values don't match, make them
+		var tdisp;
+		cfg.displays = [];
+
+		for(var height = 0; height < cfg.layout.rows; height++){
+			for(var width = 0; width < cfg.layout.columns; width++){
+				tdisp = {};
+				tdisp.row = height;
+				tdisp.column = width;
+				cfg.displays.push(tdisp);
+			}
+		}
+	} else { // else it should be correct from UI
+		cfg.displays = sentCfg.displays;
+	}
+	// copy over all other relevent data.
+	cfg.host = sentCfg.host;
+	cfg.port = sentCfg.port;
+	cfg.index_port = sentCfg.index_port;
+	cfg.resolution = sentCfg.resolution;
+	cfg.alternate_hosts = sentCfg.alternate_hosts;
+	cfg.remote_sites = sentCfg.remote_sites;
+	// write
+	console.log("Updating default cfg");
+	fs.writeFileSync(pathToWinDefaultConfig, JSON5.stringify(cfg, null, 4));
+
+
+	// electron copy over
+	electronCfg.host = cfg.host;
+	electronCfg.port = cfg.port;
+	electronCfg.index_port      = cfg.index_port;
+	electronCfg.resolution      = {width: (cfg.resolution.width * cfg.layout.columns), height:(cfg.resolution.height * cfg.layout.rows)};//cfg.resolution;
+	electronCfg.layout          = {rows: 1, columns: 1};
+	electronCfg.displays        = [{row:0, column:0}];
+	electronCfg.alternate_hosts = cfg.alternate_hosts;
+	electronCfg.remote_sites    = cfg.remote_sites;
+
+	// write
+	console.log("Updating electron cfg");
+	fs.writeFileSync(pathToElectronConfig, JSON5.stringify(electronCfg, null, 4));
+
+	if (sentCfg.makeCerts) {
+		updateCertificates();
+	}
+}
+
+
+/*
+	Get relevent electron data for launch.
+	Electron launcher is a bat that needs to be passed width, height, port, hash(if available)
+
+	rem %1 path electron config
+	rem %2 index_port, NOT https
+	rem %3 width
+	rem %4 height
+	rem %5 hash
+	rem %6 row count
+	rem %7 col count
+
+	this only works with windows, actually probably everything only works with windows.
+*/
+
+function getLaunchParameters(isElectron) {
+	var cfg;
+	var dataReturn = [];
+	if (isElectron != undefined && isElectron == "electron"){
+		cfg = JSON5.parse(fs.readFileSync(pathToElectronConfig));
+	} else {
+		cfg = JSON5.parse(fs.readFileSync(pathToWinDefaultConfig));
+	}
+
+	dataReturn.push(pathToElectronConfig);
+	dataReturn.push(cfg.index_port);
+	dataReturn.push(cfg.resolution.width);
+	dataReturn.push(cfg.resolution.height);
+	dataReturn.push(getMeetingIDFromPasswd());
+	dataReturn.push(cfg.layout.rows);
+	dataReturn.push(cfg.layout.columns);
+
+	return dataReturn;
+}
+
+
+
+
 

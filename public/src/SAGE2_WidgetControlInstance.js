@@ -16,6 +16,7 @@
 /* global createButtonShape */
 /* global drawWidgetControlCenter */
 /* global insertTextIntoTextInputWidget */
+/* global thetaFromY */
 
 "use strict";
 
@@ -42,8 +43,9 @@ function SAGE2WidgetControlInstance(instanceID, controlSpec) {
 	var innerGeometry = {
 		center: {x: 0, y: 0, r: 0},
 		buttons: [],
-		textInput: null,
-		slider: null
+		textInputs: [],
+		sliders: [],
+		radioButtons: []
 	};
 
 	// change to reflect controlSVG center
@@ -102,45 +104,40 @@ function SAGE2WidgetControlInstance(instanceID, controlSpec) {
 		theta = theta + outerThetaIncrement;
 	}
 
-
-	var d, leftMidOfBar, rightEndOfCircle;
-	if (this.controlSpec.hasSlider === true && this.controlSpec.hasTextInput === true) {
-		d = makeWidgetBarOutlinePath(344, 360, dimensions.outerR, center, this.controlSpec.slider.width, dimensions.buttonRadius);
-		leftMidOfBar = polarToCartesian(dimensions.outerR, 352, center);
+	var p1 = polarToCartesian(dimensions.outerR, 352, center);
+	var p2 = polarToCartesian(dimensions.outerR, 368, center);
+	var heightOfBar = Math.abs(p1.y - p2.y);
+	var leftMidOfBar, rightEndOfCircle;
+	var sideBarCount = this.controlSpec.sideBarElements.length;
+	var yFrom = center.y + heightOfBar * sideBarCount / 2;
+	var thetaFrom = thetaFromY(yFrom, dimensions.outerR, center);
+	for (var i = 0; i < sideBarCount; i++) {
+		var thetaTo = thetaFromY(yFrom - heightOfBar, dimensions.outerR, center);
+		var sideBarElement = this.controlSpec.sideBarElements[i];
+		var midAngle = (thetaFrom + thetaTo) / 2.0;
+		var outline = makeWidgetBarOutlinePath(thetaFrom, thetaTo, dimensions.outerR,
+			center, sideBarElement.width, dimensions.buttonRadius);
+		leftMidOfBar = polarToCartesian(dimensions.outerR, midAngle, center);
 		leftMidOfBar.x +=  dimensions.buttonRadius;
-		rightEndOfCircle = polarToCartesian(dimensions.outerR, 352, center);
+		rightEndOfCircle = polarToCartesian(dimensions.outerR, midAngle, center);
+		var left = (outline.leftTop.x + outline.leftBottom.x) / 2.0;
+		var right = Math.min(outline.rightTop.x, outline.rightBottom.x);
+		var midOfBarY = yFrom - heightOfBar / 2.0;
 		if (this.controlSpec.layoutOptions.drawSpokes === true) {
 			drawSpokeForRadialLayout(instanceID, this.controlSVG, rightEndOfCircle, leftMidOfBar);
 		}
-		innerGeometry.slider = this.createSlider(leftMidOfBar.x, leftMidOfBar.y, d);
-		d = makeWidgetBarOutlinePath(0, 16, dimensions.outerR, center, this.controlSpec.textInput.width, dimensions.buttonRadius);
-		leftMidOfBar = polarToCartesian(dimensions.outerR, 8, center);
-		leftMidOfBar.x +=  dimensions.buttonRadius;
-		rightEndOfCircle = polarToCartesian(dimensions.outerR, 8, center);
-		if (this.controlSpec.layoutOptions.drawSpokes === true) {
-			drawSpokeForRadialLayout(instanceID, this.controlSVG, rightEndOfCircle, leftMidOfBar);
+		if (sideBarElement.id.indexOf('slider') > -1) {
+			innerGeometry.sliders.push(this.createSlider(sideBarElement, left, right, midOfBarY, outline.d));
+		} else if (sideBarElement.id.indexOf('textInput') > -1) {
+			innerGeometry.textInputs.push(this.createTextInput(sideBarElement, left, right, midOfBarY, outline.d));
+		} else if (sideBarElement.id.indexOf('radio') > -1) {
+			innerGeometry.radioButtons.push(this.createRadioButton(sideBarElement, left, right,
+				midOfBarY, outline.d, dimensions.buttonRadius - 2));
 		}
-		innerGeometry.textInput = this.createTextInput(leftMidOfBar.x, leftMidOfBar.y, d);
-	} else if (this.controlSpec.hasSlider === true) {
-		d = makeWidgetBarOutlinePath(352, 368, dimensions.outerR, center, this.controlSpec.slider.width, dimensions.buttonRadius);
-		leftMidOfBar = polarToCartesian(dimensions.outerR, 0, center);
-		leftMidOfBar.x +=  dimensions.buttonRadius;
-		rightEndOfCircle = polarToCartesian(dimensions.outerR, 0, center);
-		if (this.controlSpec.layoutOptions.drawSpokes === true) {
-			drawSpokeForRadialLayout(instanceID, this.controlSVG, rightEndOfCircle, leftMidOfBar);
-		}
-		innerGeometry.slider = this.createSlider(leftMidOfBar.x, leftMidOfBar.y, d);
-	} else if (this.controlSpec.hasTextInput === true) {
-		d = makeWidgetBarOutlinePath(352, 368, dimensions.outerR,
-			center, this.controlSpec.textInput.width, dimensions.buttonRadius);
-		leftMidOfBar = polarToCartesian(dimensions.outerR, 0, center);
-		leftMidOfBar.x +=  dimensions.buttonRadius;
-		rightEndOfCircle = polarToCartesian(dimensions.outerR, 0, center);
-		if (this.controlSpec.layoutOptions.drawSpokes === true) {
-			drawSpokeForRadialLayout(instanceID, this.controlSVG, rightEndOfCircle, leftMidOfBar);
-		}
-		innerGeometry.textInput = this.createTextInput(leftMidOfBar.x, leftMidOfBar.y, d);
+		thetaFrom = thetaTo;
+		yFrom = yFrom - heightOfBar;
 	}
+
 	var centerButton = this.controlSpec.buttonSequence["0"];
 	if (centerButton !== undefined && centerButton !== null) {
 		this.createButton(centerButton, center.x, center.y, dimensions.buttonRadius - 2);
@@ -163,36 +160,36 @@ function SAGE2WidgetControlInstance(instanceID, controlSpec) {
 /*
 *	Creates a slider from the slider specification
 */
-SAGE2WidgetControlInstance.prototype.createSlider = function(x, y, outline) {
+SAGE2WidgetControlInstance.prototype.createSlider = function(sliderSpec, x1, x2, y, outline) {
 	// var sliderHeight = 1.5 * ui.widgetControlSize;
 	var sliderArea = this.controlSVG.path(outline);
 	var sliderAreaWidth = sliderArea.getBBox().w;
 	sliderArea.attr("class", "widgetBackground");
 	var fontSize = 0.045 * ui.widgetControlSize;
 	var sliderLabel = null;
-	if (this.controlSpec.slider.label) {
-		sliderLabel = this.controlSVG.text(x + ui.widgetControlSize, y, this.controlSpec.slider.label);
+	if (sliderSpec.label) {
+		sliderLabel = this.controlSVG.text(x1 + ui.widgetControlSize, y, sliderSpec.label.slice(0, 5));
 		sliderLabel.attr({
-			id: this.controlSpec.slider.id + "label",
+			id: sliderSpec.id + "label",
 			dy: (0.26 * ui.widgetControlSize) + "px",
 			class: "widgetLabel",
-			fontSize: (fontSize * 0.8) + "em"
+			fontSize: (fontSize * 0.7) + "em"
 		});
 	}
-	x = x + sliderAreaWidth * 0.15;
-	var sliderLine = this.controlSVG.line(x, y, x + sliderAreaWidth * 0.80, y);
+	x1 = x1 + sliderAreaWidth * 0.15;
+	var sliderLine = this.controlSVG.line(x1, y, x2 - ui.widgetControlSize / 2.0, y);
 	sliderLine.attr({
 		strokeWidth: 1,
-		id: this.controlSpec.slider.id + 'line',
+		id: sliderSpec.id + 'line',
 		style: "shape-rendering:crispEdges;",
 		stroke: "rgba(230,230,230,1.0)"
 	});
 	var knobWidth = 3.6 * ui.widgetControlSize;
 
 	var knobHeight = 1.3 * ui.widgetControlSize;
-	var sliderKnob = this.controlSVG.rect(x + 0.5 * ui.widgetControlSize, y - knobHeight / 2, knobWidth, knobHeight);
+	var sliderKnob = this.controlSVG.rect(x1 + 0.5 * ui.widgetControlSize, y - knobHeight / 2, knobWidth, knobHeight);
 	sliderKnob.attr({
-		id: this.controlSpec.slider.id + 'knob',
+		id: sliderSpec.id + 'knob',
 		rx: (knobWidth / 16) + "px",
 		ry: (knobHeight / 8) + "px",
 		// style:"shape-rendering:crispEdges;",
@@ -200,10 +197,10 @@ SAGE2WidgetControlInstance.prototype.createSlider = function(x, y, outline) {
 		strokeWidth: 1,
 		stroke: "rgba(230,230,230,1.0)"
 	});
-	var sliderKnobLabel = this.controlSVG.text(x + 0.5 * ui.widgetControlSize + knobWidth / 2.0, y, "-");
+	var sliderKnobLabel = this.controlSVG.text(x1 + 0.5 * ui.widgetControlSize + knobWidth / 2.0, y, "-");
 
 	sliderKnobLabel.attr({
-		id: this.controlSpec.slider.id + "knobLabel",
+		id: sliderSpec.id + "knobLabel",
 		dy: (knobHeight * 0.22) + "px",
 		class: "widgetText",
 		fontSize: fontSize + "em"
@@ -213,23 +210,23 @@ SAGE2WidgetControlInstance.prototype.createSlider = function(x, y, outline) {
 	if (sliderLabel !== null) {
 		slider.add(sliderLabel);
 	}
-	sliderKnob.data("appId", this.controlSpec.slider.appId);
-	sliderKnobLabel.data("appId", this.controlSpec.slider.appId);
-	slider.attr("id", this.controlSpec.slider.id);
-	slider.data("appId", this.controlSpec.slider.appId);
+	sliderKnob.data("appId", sliderSpec.appId);
+	sliderKnobLabel.data("appId", sliderSpec.appId);
+	slider.attr("id", sliderSpec.id);
+	slider.data("appId", sliderSpec.appId);
 	slider.data("instanceID", this.instanceID);
-	slider.data("label", this.controlSpec.slider.label);
-	slider.data('appProperty', this.controlSpec.slider.appProperty);
-	var app = getPropertyHandle(applications[this.controlSpec.slider.appId], this.controlSpec.slider.appProperty);
-	var begin = this.controlSpec.slider.begin;
-	var end = this.controlSpec.slider.end;
-	var steps = this.controlSpec.slider.steps;
-	var increments = this.controlSpec.slider.increments;
+	slider.data("label", sliderSpec.label);
+	slider.data('appProperty', sliderSpec.appProperty);
+	var app = getPropertyHandle(applications[sliderSpec.appId], sliderSpec.appProperty);
+	var begin = sliderSpec.begin;
+	var end = sliderSpec.end;
+	var steps = sliderSpec.steps;
+	var increments = sliderSpec.increments;
 	slider.data('begin', begin);
 	slider.data('end', end);
 	slider.data('steps', steps);
 	slider.data('increments', increments);
-	var formatFunction = this.controlSpec.slider.knobLabelFormatFunction;
+	var formatFunction = sliderSpec.knobLabelFormatFunction;
 	if (!formatFunction) {
 		formatFunction = function(curVal, endVal) {
 			return curVal + " / " + endVal;
@@ -258,22 +255,25 @@ SAGE2WidgetControlInstance.prototype.createSlider = function(x, y, outline) {
 		sliderKnobLabel.attr({x: position});
 	}
 
-	Object.observe(app.handle, function(changes) {
-		for (var i = 0; i < changes.length; i++) {
-			if (changes[i].name === app.property) {
-				moveSlider(app.handle[app.property]);
-			}
+	var safeValue = app.handle[app.property];
+	var internalSliderValue = "_" + sliderSpec.id + "BoundValue";
+	Object.defineProperty(app.handle, app.property, {
+		get: function () {
+			return this[internalSliderValue];
+		},
+		set: function (x) {
+			this[internalSliderValue] = x;
+			moveSlider(x);
 		}
 	});
-	if (app.handle[app.property] === null || app.handle[app.property] === begin) {
-		app.handle[app.property] = begin + 1;
-		app.handle[app.property] = begin;
-	} else if (app.handle[app.property] !== begin) {
-		var temp = app.handle[app.property];
-		app.handle[app.property] = begin;
-		app.handle[app.property] = temp;
+
+	if (safeValue === null || safeValue === undefined) {
+		safeValue = begin;
+	} else if (safeValue < begin || safeValue > end) {
+		safeValue = (begin + end) / 2;
 	}
-	return {id: this.controlSpec.slider.id, x: bound.x, y: bound.y - knobHeight / 2, w: bound.x2 - bound.x, h: knobHeight};
+	app.handle[app.property] = safeValue;
+	return {id: sliderSpec.id, x: bound.x, y: bound.y - knobHeight / 2, w: bound.x2 - bound.x, h: knobHeight};
 };
 
 
@@ -378,26 +378,34 @@ SAGE2WidgetControlInstance.prototype.createButton = function(buttonSpec, cx, cy,
 		});
 		buttonCoverReady(buttonCover);
 	}
+	function buttonCoverAnimate(value) {
+		if (type.img2 === null || type.img2 === undefined) {
+			var path = (value === 0) ? type.from : type.to;
+			var fill = (value === 0) ? type.fill : type.toFill;
+			buttonCover.animate({path: path, fill: fill}, type.delay, mina.bounce);
+		} else if (value === 1) {
+			button.select("#cover2").attr("visibility", "visible");
+			button.select("#cover").attr("visibility", "hidden");
+		} else {
+			button.select("#cover").attr("visibility", "visible");
+			button.select("#cover2").attr("visibility", "hidden");
+		}
+	}
 
 	if (type.state !== null && type.state !== undefined) {
-		Object.observe(type, function(changes) {
-			for (var i = 0; i < changes.length; i++) {
-				if (changes[i].name === "state") {
-					if (type.img2 === null || type.img2 === undefined) {
-						var path = (type.state === 0) ? type.from : type.to;
-						var fill = (type.state === 0) ? type.fill : type.toFill;
-						buttonCover.animate({path: path, fill: fill}, type.delay, mina.bounce);
-					} else if (type.state === 1) {
-						button.select("#cover2").attr("visibility", "visible");
-						button.select("#cover").attr("visibility", "hidden");
-					} else {
-						button.select("#cover").attr("visibility", "visible");
-						button.select("#cover2").attr("visibility", "hidden");
-					}
-				}
+		var internalStateValue = "_" + buttonSpec.id + "BoundValue";
+		type[internalStateValue] = type.state;
+		Object.defineProperty(type, "state", {
+			get: function () {
+				return this[internalStateValue];
+			},
+			set: function (x) {
+				this[internalStateValue] = x;
+				buttonCoverAnimate(x);
 			}
 		});
 	}
+
 	return button;
 };
 
@@ -405,7 +413,7 @@ SAGE2WidgetControlInstance.prototype.createButton = function(buttonSpec, cx, cy,
 /*
 *	Creates a text-input from the text-input specification
 */
-SAGE2WidgetControlInstance.prototype.createTextInput = function(x, y, outline) {
+SAGE2WidgetControlInstance.prototype.createTextInput = function(textInputSpec, x1, x2, y, outline) {
 	var uiElementSize = ui.widgetControlSize;
 	var textInputAreaHeight = 1.3 * uiElementSize;
 	var fontSize = 0.045 * ui.widgetControlSize;
@@ -414,28 +422,29 @@ SAGE2WidgetControlInstance.prototype.createTextInput = function(x, y, outline) {
 	textInputOutline.attr("class", "widgetBackground");
 	var textInputBarWidth = textInputOutline.getBBox().w;
 	var textInputLabel = null;
-	if (this.controlSpec.textInput.label !== null) {
-		textInputLabel = this.controlSVG.text(x + ui.widgetControlSize, y, this.controlSpec.textInput.label);
+	if (textInputSpec.label !== null) {
+		textInputLabel = this.controlSVG.text(x1 + ui.widgetControlSize, y, textInputSpec.label.slice(0, 5));
 		textInputLabel.attr({
-			id: this.controlSpec.textInput.id + "label",
+			id: textInputSpec.id + "label",
 			dy: (0.26 * ui.widgetControlSize) + "px",
 			class: "widgetLabel",
-			fontSize: (fontSize * 0.8) + "em"
+			fontSize: (fontSize * 0.7) + "em"
 		});
 	}
-	x = x + textInputBarWidth * 0.15;
-	var textArea = this.controlSVG.rect(x, y - textInputAreaHeight / 2.0, textInputBarWidth * 0.80, textInputAreaHeight);
+	x1 = x1 + textInputBarWidth * 0.15;
+	var textArea = this.controlSVG.rect(x1, y - textInputAreaHeight / 2.0,
+		x2 - ui.widgetControlSize / 2.0 - x1, textInputAreaHeight);
 	textArea.attr({
-		id: this.controlSpec.textInput.id + "Area",
+		id: textInputSpec.id + "Area",
 		fill: "rgba(185,206,235,1.0)",
 		strokeWidth: 1,
 		stroke: "rgba(230,230,230,1.0)"
 	});
 
-	var pth = "M " + (x + 2) + " " + (y - textInputAreaHeight / 2.0 + 2) + " l 0 " + (textInputAreaHeight - 4);
+	var pth = "M " + (x1 + 2) + " " + (y - textInputAreaHeight / 2.0 + 2) + " l 0 " + (textInputAreaHeight - 4);
 	var blinker = this.controlSVG.path(pth);
 	blinker.attr({
-		id: this.controlSpec.textInput.id + "Blinker",
+		id: textInputSpec.id + "Blinker",
 		stroke: "#ffffff",
 		fill: "#ffffff",
 		style: "shape-rendering:crispEdges;",
@@ -450,42 +459,140 @@ SAGE2WidgetControlInstance.prototype.createTextInput = function(x, y, outline) {
 
 
 
-	var textData = this.controlSVG.text(x + 2, y, "");
+	var textData = this.controlSVG.text(x1 + 2, y, "");
 	textData.attr({
-		id: this.controlSpec.textInput.id + "TextData",
+		id: textInputSpec.id + "TextData",
 		class: "textInput",
 		fontSize: fontSize + "em",
 		dy: (textArea.attr("height") * 0.25) + "px"
 	});
 	var textInput = this.controlSVG.group(textArea, blinker);
 	textInput.add(textData);
-	textArea.data("appId", this.controlSpec.textInput.appId);
-	textData.data("appId", this.controlSpec.textInput.appId);
-	blinker.data("appId", this.controlSpec.textInput.appId);
-	textInput.attr("id", this.controlSpec.textInput.id);
+	textArea.data("appId", textInputSpec.appId);
+	textData.data("appId", textInputSpec.appId);
+	blinker.data("appId", textInputSpec.appId);
+	textInput.attr("id", textInputSpec.id);
 	textInput.data("instanceID", this.instanceID);
-	textInput.data("appId", this.controlSpec.textInput.appId);
+	textInput.data("appId", textInputSpec.appId);
 	textInput.data("buffer", "");
 	textInput.data("blinkerPosition", 0);
 	textInput.data("blinkerSuf", " " + (y - textInputAreaHeight / 2.0 + 2) + " l 0 " + (textInputAreaHeight - 4));
-	textInput.data("left", x + 2);
-	textInput.data("call", this.controlSpec.textInput.call);
+	textInput.data("left", x1 + 2);
+	textInput.data("call", textInputSpec.call);
 	textInput.data("head", "");
 	textInput.data("prefix", "");
 	textInput.data("suffix", "");
 	textInput.data("tail", "");
 	textInput.data("blinkCallback", blink);
 
-	if (this.controlSpec.textInput.value) {
-		for (var i = 0; i < this.controlSpec.textInput.value.length; i++) {
-			insertTextIntoTextInputWidget(textInput, this.controlSpec.textInput.value.charCodeAt(i), true);
+	if (textInputSpec.value) {
+		for (var i = 0; i < textInputSpec.value.length; i++) {
+			insertTextIntoTextInputWidget(textInput, textInputSpec.value.charCodeAt(i), true);
 		}
 	}
-	var rectangle = {id: this.controlSpec.textInput.id,
-			x: parseInt(textArea.attr("x")),
-			y: parseInt(textArea.attr("y")),
-			h: parseInt(textArea.attr("height")),
-			w: parseInt(textArea.attr("width"))};
+
+	var rectangle = {
+		id: textInputSpec.id,
+		x: parseInt(textArea.attr("x")),
+		y: parseInt(textArea.attr("y")),
+		h: parseInt(textArea.attr("height")),
+		w: parseInt(textArea.attr("width"))
+	};
+
 	return rectangle;
 };
 
+/*
+*	Creates a radio button input from the radio button specification
+*/
+SAGE2WidgetControlInstance.prototype.createRadioButton = function(radioButtonSpec, x1, x2, y, outline, buttonRad) {
+	var radioButtonArea = this.controlSVG.path(outline);
+	var radioButtonAreaWidth = radioButtonArea.getBBox().w;
+	radioButtonArea.attr("class", "widgetBackground");
+	var fontSize = 0.045 * ui.widgetControlSize;
+	var radioButtonLabel = null;
+	if (radioButtonSpec.label) {
+		radioButtonLabel = this.controlSVG.text(x1 + ui.widgetControlSize, y, radioButtonSpec.label.slice(0, 5));
+		radioButtonLabel.attr({
+			id: radioButtonSpec.id + "label",
+			dy: (0.26 * ui.widgetControlSize) + "px",
+			class: "widgetLabel",
+			fontSize: (fontSize * 0.7) + "em"
+		});
+	}
+	var geometry = [];
+	var radioButton = this.controlSVG.group();
+	x1 = x1 + radioButtonAreaWidth * 0.15;
+	var buttonSpace = (x2 - x1) / 6.0;
+	var options = radioButtonSpec.data.options;
+	var xMid = (x1 + x2) / 2.0;
+	var x = xMid - (options.length - 1) * buttonSpace / 2.0;
+	for (var i = 0; i < options.length; i++) {
+		var buttonRing = createButtonShape(this.controlSVG, x, y, buttonRad, "circle");
+		buttonRing.attr({
+			id: radioButtonSpec.id + options[i] + "ring",
+			fill: "rgba(42, 86, 140, 1.0)",
+			strokeWidth: 1,
+			stroke: "rgba(42, 86, 140, 1.0)",
+			visibility: (radioButtonSpec.data.value === options[i]) ? "visible" : "hidden"
+		});
+
+		var buttonCenter = createButtonShape(this.controlSVG, x, y, buttonRad * 0.9, "circle");
+		buttonCenter.attr({
+			id: radioButtonSpec.id + options[i] + "center",
+			fill: "rgba(185,206,235,1.0)",
+			strokeWidth: 1,
+			stroke: "rgba(230,230,230,1.0)"
+		});
+
+		var buttonText = this.controlSVG.text(x, y, options[i].slice(0, 5));
+		buttonText.attr({
+			id: radioButtonSpec.id + options[i] + "label",
+			class: "widgetText",
+			fontSize: (0.040 * buttonRad) + "em",
+			dy: (0.16 * ui.widgetControlSize) + "px"
+		});
+		var button = this.controlSVG.group(buttonRing, buttonCenter, buttonText);
+		button.attr("id", radioButtonSpec.id + options[i]);
+		button.data("appId", radioButtonSpec.appId);
+		button.data("instanceID", this.instanceID);
+		radioButton.add(button);
+		geometry.push({id: radioButtonSpec.id + options[i], x: x, y: y, r: buttonRad});
+		x += buttonSpace;
+	}
+
+	radioButtonArea.data("appId", radioButtonSpec.appId);
+	radioButton.attr("id", radioButtonSpec.id);
+	radioButton.data("radioState", radioButtonSpec.data);
+	radioButton.data("instanceID", this.instanceID);
+
+	radioButton.data("appId", radioButtonSpec.appId);
+
+	function radioStateAnimate(oldValue, newValue) {
+		var oldSelection = radioButton.select("#" + radioButtonSpec.id + oldValue);
+		var newSelection = radioButton.select("#" + radioButtonSpec.id + newValue);
+		if (newSelection !== null && newSelection !== undefined) {
+			oldSelection.select("#" + radioButtonSpec.id + oldValue + "ring").attr("visibility", "hidden");
+			newSelection.select("#" + radioButtonSpec.id + newValue + "ring").attr("visibility", "visible");
+			return true;
+		} else {
+			return false;
+		}
+	}
+	var radioState = radioButtonSpec.data;
+	if (radioState.value !== null && radioState.value !== undefined) {
+		var internalStateValue = "_" + radioButtonSpec.id + "BoundValue";
+		radioState[internalStateValue] = radioState.value;
+		Object.defineProperty(radioState, "value", {
+			get: function () {
+				return this[internalStateValue];
+			},
+			set: function (x) {
+				if (radioStateAnimate(this[internalStateValue], x) === true) {
+					this[internalStateValue] = x;
+				}
+			}
+		});
+	}
+	return geometry;
+};

@@ -175,7 +175,8 @@ function setupListeners() {
 
 		// Select the jinggle sound (default or configuration file)
 		// var jingle = "sage2_jinggle.mp3";
-		var jingle = "kola-startup.mp3";
+		// var jingle = "kola-startup.mp3";
+		var jingle = "blues_lick_in_a.mp3";
 		if (json_cfg.ui.startup_sound) {
 			// use the jingle file if specificied in configuration file
 			jingle = json_cfg.ui.startup_sound;

@@ -44,8 +44,10 @@ StickyItems.prototype.attachStickyItem = function(backgroundItem, stickyItem) {
 		this.stickyItemParent[backgroundItem.id] = [];
 		this.stickyItemParent[backgroundItem.id].push(stickyItem);
 	}
-	this.stickyItemOffsetInfo[stickyItem.id] = {offsetX: stickyItem.left - backgroundItem.left,
-			offsetY: stickyItem.top - backgroundItem.top };
+	this.stickyItemOffsetInfo[stickyItem.id] = {
+		offsetX: stickyItem.left - backgroundItem.left,
+		offsetY: stickyItem.top - backgroundItem.top
+	};
 };
 
 /**
@@ -93,8 +95,10 @@ StickyItems.prototype.moveItemsStickingToUpdatedItem = function(updatedItem) {
 		for (var l in list) {
 			list[l].left = updatedItem.elemLeft + this.stickyItemOffsetInfo[list[l].id].offsetX;
 			list[l].top  = updatedItem.elemTop + this.stickyItemOffsetInfo[list[l].id].offsetY;
-			var item     = {elemId: list[l].id, elemLeft: list[l].left, elemTop: list[l].top,
-							elemWidth: list[l].width, elemHeight: list[l].height, date: new Date()};
+			var item     = {
+				elemId: list[l].id, elemLeft: list[l].left, elemTop: list[l].top,
+				elemWidth: list[l].width, elemHeight: list[l].height, date: new Date()
+			};
 			moveItems.push(item);
 		}
 	}
