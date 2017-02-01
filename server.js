@@ -9530,6 +9530,8 @@ function wsCreatePartition(wsio, data) {
 function wsPartitionScreen(wsio, data) {
 	console.log(sageutils.header('Partition') + "Dividing SAGE2 into partitions");
 
+	partitions.unusedColors = partitions.defaultColors.slice(0, partitions.defaultColors.length);
+
 	divideAreaPartitions(
 		data,
 		0,
@@ -9537,6 +9539,8 @@ function wsPartitionScreen(wsio, data) {
 		config.totalWidth,
 		config.totalHeight - config.ui.titleBarHeight
 	);
+
+	delete partitions.unusedColors;
 }
 
 function divideAreaPartitions(data, x, y, width, height) {
@@ -9544,7 +9548,17 @@ function divideAreaPartitions(data, x, y, width, height) {
 	let currX = x,
 		currY = y;
 
-	let randColor = partitions.defaultColors[Math.floor(Math.random() * 12)];
+	// if we are out of unused colors, reset the list
+	if (partitions.unusedColors.length === 0) {
+		partitions.unusedColors = partitions.defaultColors.slice(0, partitions.defaultColors.length);
+	}
+
+	let randIndex = Math.floor(Math.random() * partitions.unusedColors.length);
+
+	let randColor = partitions.unusedColors[randIndex];
+
+	// delete the random color from the unused colors
+	partitions.unusedColors.splice(randIndex, 1);
 
 	if (data.ptn) {
 		let newPtn = createPartition(
