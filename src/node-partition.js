@@ -147,6 +147,7 @@ Partition.prototype.releaseChild = function(id) {
 
 		var item = this.children[id];
 
+
 		item.relative_left = null;
 		item.relative_top = null;
 		item.relative_width = null;
@@ -177,8 +178,9 @@ Partition.prototype.releaseChild = function(id) {
 Partition.prototype.releaseAllChildren = function() {
 	var childIDs = Object.keys(this.children);
 
-	childIDs.forEach((el) => {
-		this.releaseChild(el);
+
+	childIDs.forEach((cID) => {
+		this.releaseChild(cID);
 	});
 
 	return [this.id];

@@ -2439,6 +2439,15 @@ function loadSession(filename) {
 
 			// recreate partitions
 			if (session.partitions) {
+
+				// if there are any existing partitions
+				if (partitions.count > 0) {
+					// remove them and replace with partitions from sessions
+					for (var id of Object.keys(partitions.list)) {
+						deletePartition(id);
+					}
+				}
+
 				session.partitions.forEach(function(element, index, array) {
 					// remake partition
 					var ptn = createPartition(
@@ -2446,7 +2455,8 @@ function loadSession(filename) {
 							width: element.width,
 							height: element.height,
 							left: element.left,
-							top: element.top
+							top: element.top,
+							isSnapping: element.isSnapping
 						},
 						element.color
 					);
@@ -2459,7 +2469,9 @@ function loadSession(filename) {
 			}
 
 			// Assign the windows to partitions
-			partitionsGrabAllContent();
+			// don't assign existing content to partitions from session
+
+			// partitionsGrabAllContent();
 
 			// recreate apps
 			session.apps.forEach(function(element, index, array) {
@@ -8315,10 +8327,14 @@ function deleteApplication(appId, portalId) {
 
 	// if the app being deleted was in a partition, update partition
 	if (app.partition) {
-		let ptn = app.partition.releaseChild(app.id);
 
-		updatePartitionInnerLayout(partitions.list[ptn]);
-		broadcast('partitionWindowTitleUpdate', partitions.list[ptn].getTitle());
+		let ptnId = app.partition.releaseChild(app.id)[0]; // only 1 partition effected
+
+		if (partitions.list.hasOwnProperty(ptnId)) {
+			// make sure this id is a partition
+			updatePartitionInnerLayout(partitions.list[ptnId]);
+			broadcast('partitionWindowTitleUpdate', partitions.list[ptnId].getTitle());
+		}
 	}
 
 	var application = app.application;
@@ -9617,6 +9633,7 @@ function wsDeleteAllPartitions(wsio) {
 
 		deletePartition(key);
 	}
+
 }
 
 /**
