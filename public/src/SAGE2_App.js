@@ -772,12 +772,14 @@ var SAGE2_App = Class.extend({
 	* @method sendFullscreen
 	*/
 	sendFullscreen: function() {
-		var msgObject = {};
-		// Add the display node ID to the message
-		msgObject.node = clientID;
-		msgObject.id   = this.id;
-		// send the message to server
-		wsio.emit('appFullscreen', msgObject);
+		if (isMaster) {
+			var msgObject = {};
+			// Add the display node ID to the message
+			msgObject.node = clientID;
+			msgObject.id   = this.id;
+			// send the message to server
+			wsio.emit('appFullscreen', msgObject);
+		}
 	},
 
 	/**
@@ -874,8 +876,16 @@ var SAGE2_App = Class.extend({
 			if (typeof this.getContextEntries === "function") {
 				rmbData.entries = this.getContextEntries();
 				rmbData.entries.push({
+					description: "separator"
+				});
+				rmbData.entries.push({
 					description: "Send to back",
 					callback: "SAGE2SendToBack",
+					parameters: {}
+				});
+				rmbData.entries.push({
+					description: "Maximize",
+					callback: "SAGE2Maximize",
 					parameters: {}
 				});
 				rmbData.entries.push({

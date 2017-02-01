@@ -28,9 +28,8 @@ chrome.runtime.onMessage.addListener(function(message, sender) {
 	// getList message from popup
 	if (message.cmd && message.cmd === 'getList') {
 		var urls = uniqueArray(allURL(ports));
-		chrome.runtime.sendMessage(sender.id, urls);
+		chrome.runtime.sendMessage(sender.id, {cmd: 'list', urls: urls});
 	} else {
-		console.log('onMessage', message.sender);
 		if (message.sender) {
 			// Find a port with a matching URL
 			for (var p in ports) {
@@ -40,6 +39,8 @@ chrome.runtime.onMessage.addListener(function(message, sender) {
 					return;
 				}
 			}
+		} else {
+			// Nothing yet
 		}
 	}
 });
@@ -74,8 +75,6 @@ function uniqueArray(arr) {
 }
 
 chrome.runtime.onConnect.addListener(function(port) {
-	console.log('onConnect', port.sender.tab.id);
-
 	port.onMessage.addListener(portOnMessageHanlder);
 
 	port.onDisconnect.addListener(function() {
@@ -102,7 +101,7 @@ chrome.runtime.onConnect.addListener(function(port) {
 				// Save the port in the list, indexed by URL
 				ports[port.sender.tab.id] = port;
 				var numberOfConnection = Object.keys(ports).length;
-				chrome.browserAction.setBadgeText({text:numberOfConnection.toString()});
+				chrome.browserAction.setBadgeText({text: numberOfConnection.toString()});
 			} else {
 				ports[port.sender.tab.id] = port;
 			}
