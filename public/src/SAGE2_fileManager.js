@@ -63,11 +63,11 @@ function FileManager(wsio, mydiv, uniqueID) {
 			data: [
 				{id: "Image:/", value: "Image", icon: "search", data: [], tooltip: "Show all the images"},
 				{id: "Video:/", value: "Video", icon: "search", data: [], tooltip: "Show all the videos"},
-				{id: "PDF:/", value: "PDF", icon: "search", data: [], tooltip: "Show all the PDFs"},
-				{id: "Note:/", value: "Note", icon: "search", data: [], tooltip: "Show all the Notes"},
+				{id: "PDF:/", value: "PDF", icon: "search", data: [], tooltip: "Show all the PDF files"},
+				{id: "Note:/", value: "Note", icon: "search", data: [], tooltip: "Show all the notes"},
 				{id: "App:/", value: "Application", icon: "search", data: [], tooltip: "Show all the applications"},
 				{id: "Session:/", value: "Session", icon: "search", data: [], tooltip: "Show all the sessions"},
-				{id: "Mine:/", value: "Uploaded", icon: "search", data: [], tooltip: "Show all my uploaded files"}
+				{id: "Mine:/", value: "My files", icon: "search", data: [], tooltip: "Show all my uploaded files"}
 			]
 		}
 	];
@@ -1102,7 +1102,13 @@ function FileManager(wsio, mydiv, uniqueID) {
 				return val;
 			});
 		} else if (searchParam === "treeroot") {
-			_this.allTable.filter();
+			// List everything
+			// _this.allTable.filter();
+
+			// List all but the applications
+			_this.allTable.filter(function(obj) {
+				return _this.allFiles[obj.id].exif.MIMEType.indexOf('application/custom') < 0;
+			});
 		} else {
 			// var query = searchParam.split(':');
 			// if (query[0] === "Image") {
