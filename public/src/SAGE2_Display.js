@@ -63,6 +63,7 @@ var storedFileListEventHandlers = [];
 var ui;
 var uiTimer = null;
 var uiTimerDelay;
+var electronRequireObject = null;
 
 // Explicitely close web socket when web browser is closed
 window.onbeforeunload = function() {
@@ -1290,6 +1291,19 @@ function setupListeners() {
 				windowState.style.display = "none";
 			}
 		}
+	});
+
+	wsio.on('sendServerWallScreenShot', function(data) {
+		if (browser.isElectron) {
+			return; // don't do anything if it isn't electron. may need to turn into response to server as "unavailable"
+		} else if (electronRequireObject == null) {
+			electronRequireObject = require('electron');
+		}
+
+		electron.remote.getCurrentWindow().capturePage(function(img) {
+			wsio.emit("wallScreenShotFromDisplay", {imageAsPngData: img.toPng()});
+		});
+
 	});
 }
 

@@ -1009,6 +1009,10 @@ function setupListeners(wsio) {
 	// might eventually break this up into individual ws functions
 	wsio.on('csdMessage',							wsCsdMessage);
 
+	wsio.on('startWallScreenShot',                  wsStartWallScreenShot);
+	wsio.on('wallScreenShotFromDisplay',            wsWallScreenShotFromDisplay);
+
+
 	// application file saving message
 	wsio.on('appFileSaveRequest',                   appFileSaveRequest);
 
@@ -9327,6 +9331,130 @@ function csdSaveDataOnServer(wsio, data) {
 		fs.writeFileSync(fullpath, buffer);
 	} else {
 		console.log("ERROR:csdSaveDataOnServer: unable to save data on server for fileType " + data.fileType);
+	}
+}
+
+/**
+ * Sent from UI, server gets it and tells displays to send back screenshots.
+ *
+ * @method     wsStartJupyterSharing
+ * @param      {Object}  wsio    The websocket
+ * @param      {Object}  data    The data
+ */
+function wsStartWallScreenShot(wsio, data) {
+	for (var i = 0; i < clients.length; i++) {
+		if (clients[i].clientType === "display") {
+			clients[i].emit("sendServerWallScreenShot");
+		}
+	}
+}
+
+/**
+ * Called when displays are sending screenshots.
+ *
+ * @method     wsWallScreenShotFromDisplay
+ * @param      {Object}  wsio    The websocket
+ * @param      {Object}  data    The data
+ */
+function wsWallScreenShotFromDisplay(wsio, data) {
+	if (wsio.clientType != "display") {
+		return; // something incorrect happened for a non-display to submit a screenshot.
+	}
+	// first get displays object
+	var allDisplaysFromClients = [];
+	for (var i = 0; i < clients.length; i++) {
+		if (clients[i].clientType === "display") {
+			allDisplaysFromClients.push(clients[i]);
+		}
+	}
+
+	// save the file
+	var fileSaveObject = {};
+	fileSaveObject.app = "image_viewer";
+	fileSaveObject.id = null; // possible?
+	fileSaveObject.asset = true;
+	fileSaveObject.filePath = {
+		subdir: false,
+		name: "wallScreenShot" + wsio.clientID + ".png",
+		ext: "png"
+	};
+	fileSaveObject.saveData = data.imageAsPngData;
+	
+	// create the current tile piece.
+	appFileSaveRequest(wsio, fileSaveObject);
+
+	wsio.submittedScreenShot = true; // mark itself as having submitted a screenshot.
+
+	// now check if everyone submitted
+	var allDisplaysSubmittedScreenShots = true;
+	for (var i = 0; i < allDisplaysFromClients.length; i++) {
+		if (!allDisplaysFromClients[i].submittedScreenShot) {
+			allDisplaysSubmittedScreenShots = false;
+			break;
+		}
+		// // this should put them in order using insertion.
+		// for (var d = 0; d < displayOrder.length; d++) {
+		// 	if (allDisplaysFromClients[i].clientID < displayOrder[d].clientID) {
+		// 		displayOrder.splice(d, 0, allDisplaysFromClients[i]);
+		// 		break;
+		// 	} else if (allDisplaysFromClients[i].clientID > displayOrder[d].clientID && d == displayOrder.length - 1) {
+		// 		displayOrder.push(allDisplaysFromClients[i]);
+		// 	}
+		// }
+	}
+	
+	// stop if not all displays submitted. doing this to prevent too many nested blocks
+	if (!allDisplaysSubmittedScreenShots) { return; }
+	
+	var dateSuffix = formatDateToYYYYMMDD_HHMMSS(new Date());
+
+	if (allDisplaysFromClients.length > 1) {
+		// rebuild the wall in tile format.
+		var displayCount = 0;
+		var displayOrder = []; // display[x][y]
+		for (var c = 0; c < config.layout.columns; c++) {
+			displayOrder.push([]);
+			for (var r = 0; r < config.layout.rows; r++) {
+				displayOrder[i].push("blank"); // starts off filled with strings of "blank"
+			}
+		}
+		// put displays in their matrix order. NOTE 0,0 is top left.
+		for (var i = 0; i < allDisplaysFromClients.length; i++) {
+			try {
+				displayOrder[config.displays[allDisplaysFromClients[i].clientID].column][config.displays[allDisplaysFromClients[i].clientID].row] = allDisplaysFromClients[i];
+			} catch(e) { console.log("Error with wall stitch: " + e); } // should only error if config is wrong
+		}
+		// stitching needs to be done by rows.
+		var basePath = path.join(mediaFolders.user.path, "tmp");
+		var currentPath;
+		var rowPieces = [];
+		// first make each of the rows
+		for (var i = 0; i < displayOrder[0].length; i++) { // loop equal to rows (height)
+			currentPath = path.join(basePath, ("wallScreenShot" + displayOrder[0][i].clientID + ".png"));
+			rowPieces.push(imageMagick(currentPath));
+			for (var column = 1; column < displayOrder.length; column++) { // already got 0, so start at 1.
+				currentPath = path.join(basePath, ("wallScreenShot" + displayOrder[column][i].clientID + ".png"));
+				rowPieces[i] = rowPieces[i].append(currentPath, true); // attach the next piece in the row to the left
+			}
+		}
+		// then append the rows below each other
+		for (var i = 1; i < rowPieces.length; i++) {
+			rowPieces[0] = rowPieces[0].append(rowPieces[i]);
+		}
+		// finally write
+		currentPath = path.join(basePath, ("wallScreenShot" + dateSuffix + ".png"));
+		rowPieces[0].write(currentPath, function(error) {
+			if (error) {
+				throw error;
+			}
+			// Add the file to the asset library and open it
+			manageUploadedFiles(currentPath, [0, 0], "image_viewer", "#B4B4B4", true);
+		});
+
+	} else {
+		// just change the name
+		fileSaveObject.name = "wallScreenShot" + dateSuffix + ".png";
+		appFileSaveRequest(wsio, fileSaveObject);
 	}
 }
 
