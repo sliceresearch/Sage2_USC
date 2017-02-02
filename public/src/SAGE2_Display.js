@@ -1294,13 +1294,13 @@ function setupListeners() {
 	});
 
 	wsio.on('sendServerWallScreenShot', function(data) {
-		if (browser.isElectron) {
+		if (!__SAGE2__.browser.isElectron) {
 			return; // don't do anything if it isn't electron. may need to turn into response to server as "unavailable"
 		} else if (electronRequireObject == null) {
 			electronRequireObject = require('electron');
 		}
 
-		electron.remote.getCurrentWindow().capturePage(function(img) {
+		electronRequireObject.remote.getCurrentWindow().capturePage(function(img) {
 			wsio.emit("wallScreenShotFromDisplay", {imageAsPngData: img.toPng()});
 		});
 

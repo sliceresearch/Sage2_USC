@@ -9329,6 +9329,9 @@ function csdSaveDataOnServer(wsio, data) {
 		fs.writeFileSync(fullpath, buffer);
 		fullpath = path.join(notesFolder, data.fileName);
 		fs.writeFileSync(fullpath, buffer);
+	}  else if (data.fileType === "png") {
+		fullpath = path.join(mainFolder.path, "images", data.fileName);
+		fs.writeFileSync(fullpath, data.fileContent);
 	} else {
 		console.log("ERROR:csdSaveDataOnServer: unable to save data on server for fileType " + data.fileType);
 	}
@@ -9344,6 +9347,7 @@ function csdSaveDataOnServer(wsio, data) {
 function wsStartWallScreenShot(wsio, data) {
 	for (var i = 0; i < clients.length; i++) {
 		if (clients[i].clientType === "display") {
+			clients[i].submittedScreenShot = false;
 			clients[i].emit("sendServerWallScreenShot");
 		}
 	}
@@ -9370,18 +9374,13 @@ function wsWallScreenShotFromDisplay(wsio, data) {
 
 	// save the file
 	var fileSaveObject = {};
-	fileSaveObject.app = "image_viewer";
-	fileSaveObject.id = null; // possible?
-	fileSaveObject.asset = true;
-	fileSaveObject.filePath = {
-		subdir: false,
-		name: "wallScreenShot" + wsio.clientID + ".png",
-		ext: "png"
-	};
+	fileSaveObject.fileName = "wallScreenShot" + wsio.clientID + ".png";
+	fileSaveObject.fileType = "png";
+	fileSaveObject.fileContent = data.imageAsPngData;
 	fileSaveObject.saveData = data.imageAsPngData;
-	
+
 	// create the current tile piece.
-	appFileSaveRequest(wsio, fileSaveObject);
+	csdSaveDataOnServer(wsio, fileSaveObject);
 
 	wsio.submittedScreenShot = true; // mark itself as having submitted a screenshot.
 
@@ -9420,6 +9419,7 @@ function wsWallScreenShotFromDisplay(wsio, data) {
 		}
 		// put displays in their matrix order. NOTE 0,0 is top left.
 		for (var i = 0; i < allDisplaysFromClients.length; i++) {
+			allDisplaysFromClients.submittedScreenShot = false;
 			try {
 				displayOrder[config.displays[allDisplaysFromClients[i].clientID].column][config.displays[allDisplaysFromClients[i].clientID].row] = allDisplaysFromClients[i];
 			} catch(e) { console.log("Error with wall stitch: " + e); } // should only error if config is wrong
@@ -9453,8 +9453,9 @@ function wsWallScreenShotFromDisplay(wsio, data) {
 
 	} else {
 		// just change the name
-		fileSaveObject.name = "wallScreenShot" + dateSuffix + ".png";
-		appFileSaveRequest(wsio, fileSaveObject);
+		fileSaveObject.fileName = "wallScreenShot" + dateSuffix + ".png";
+		csdSaveDataOnServer(wsio, fileSaveObject);
+		manageUploadedFiles( path.join(mainFolder.path, "images", fileSaveObject.fileName);, [0, 0], "image_viewer", "#B4B4B4", false);
 	}
 }
 
