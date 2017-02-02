@@ -9331,7 +9331,8 @@ function csdSaveDataOnServer(wsio, data) {
 		fs.writeFileSync(fullpath, buffer);
 	}  else if (data.fileType === "png") {
 		fullpath = path.join(mainFolder.path, "images", data.fileName);
-		fs.writeFileSync(fullpath, data.fileContent);
+		var buffer = new Buffer(data.fileContent, "base64");
+		fs.writeFileSync(fullpath, buffer);
 	} else {
 		console.log("ERROR:csdSaveDataOnServer: unable to save data on server for fileType " + data.fileType);
 	}
@@ -9377,7 +9378,6 @@ function wsWallScreenShotFromDisplay(wsio, data) {
 	fileSaveObject.fileName = "wallScreenShot" + wsio.clientID + ".png";
 	fileSaveObject.fileType = "png";
 	fileSaveObject.fileContent = data.imageAsPngData;
-	fileSaveObject.saveData = data.imageAsPngData;
 
 	// create the current tile piece.
 	csdSaveDataOnServer(wsio, fileSaveObject);
@@ -9405,7 +9405,7 @@ function wsWallScreenShotFromDisplay(wsio, data) {
 	// stop if not all displays submitted. doing this to prevent too many nested blocks
 	if (!allDisplaysSubmittedScreenShots) { return; }
 	
-	var dateSuffix = formatDateToYYYYMMDD_HHMMSS(new Date());
+	var dateSuffix = formatDateToYYYYMMDD_HHMMSS(Date.now());
 
 	if (allDisplaysFromClients.length > 1) {
 		// rebuild the wall in tile format.
@@ -9455,7 +9455,7 @@ function wsWallScreenShotFromDisplay(wsio, data) {
 		// just change the name
 		fileSaveObject.fileName = "wallScreenShot" + dateSuffix + ".png";
 		csdSaveDataOnServer(wsio, fileSaveObject);
-		manageUploadedFiles( path.join(mainFolder.path, "images", fileSaveObject.fileName);, [0, 0], "image_viewer", "#B4B4B4", false);
+		// manageUploadedFiles( path.join(mainFolder.path, "images", fileSaveObject.fileName), [0, 0], "image_viewer", "#B4B4B4", false);
 	}
 }
 
