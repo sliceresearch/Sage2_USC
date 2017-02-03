@@ -101,7 +101,8 @@ var platform = os.platform() === "win32" ? "Windows" : os.platform() === "darwin
 var pathToSageUiPwdFile			= path.join(homedir(), "Documents", "SAGE2_Media", "passwd.json");
 var pathToWinDefaultConfig		= path.join(homedir(), "Documents", "SAGE2_Media", "config", "defaultWin-cfg.json");
 var pathToMacDefaultConfig		= path.join(homedir(), "Documents", "SAGE2_Media", "config", "default-cfg.json");
-var pathToElectronConfig		= path.join(homedir(), "Documents", "SAGE2_Media", "config", "electron-cfg.json");
+// var pathToElectronConfig		= path.join(homedir(), "Documents", "SAGE2_Media", "config", "electron-cfg.json");
+var pathToElectronConfig		= path.join(homedir(), "Documents", "SAGE2_Media", "config", "defaultWin-cfg.json");
 var pathToWinStartupFolder		= path.join(homedir(), "AppData", "Roaming", "Microsoft", "Windows", "Start Menu", "Programs", "Startup", "startWebCon.bat" );
 var pathToMonitorDataFile		= path.join("scripts", "MonitorInfo.json"); //gets written here due to nature of the winScriptHelperWriteMonitorRes.exe file.
 var pathToSabiConfigFolder		= path.join(homedir(), "Documents", "SAGE2_Media", "sabiConfig");
@@ -1587,8 +1588,8 @@ function socketOnAssistedConfigSend(socket, sentCfg) {
 	electronCfg.remote_sites    = cfg.remote_sites;
 
 	// write
-	console.log("Updating electron cfg");
-	fs.writeFileSync(pathToElectronConfig, JSON5.stringify(electronCfg, null, 4));
+	// console.log("Updating electron cfg");
+	// fs.writeFileSync(pathToElectronConfig, JSON5.stringify(electronCfg, null, 4));
 
 	if (sentCfg.makeCerts) {
 		updateCertificates();
@@ -1614,19 +1615,45 @@ function socketOnAssistedConfigSend(socket, sentCfg) {
 function getLaunchParameters(isElectron) {
 	var cfg;
 	var dataReturn = [];
+
+	// if launching electron, need to ensure that the defaultWin-cfg.json file has the correct width, height on display 0
 	if (isElectron != undefined && isElectron == "electron"){
 		cfg = JSON5.parse(fs.readFileSync(pathToElectronConfig));
+		cfg.displays[0].width = cfg.layout.columns;
+		cfg.displays[0].height = cfg.layout.rows;
 	} else {
 		cfg = JSON5.parse(fs.readFileSync(pathToWinDefaultConfig));
+		cfg.displays[0].width = 1;
+		cfg.displays[0].height = 1;
 	}
+
+
 
 	dataReturn.push(pathToElectronConfig);
 	dataReturn.push(cfg.index_port);
-	dataReturn.push(cfg.resolution.width);
-	dataReturn.push(cfg.resolution.height);
+
+	// electron bat is designed to get full resolution since it assumes only 1 electorn window.
+	if (isElectron != undefined && isElectron == "electron"){
+		dataReturn.push(cfg.resolution.width * cfg.layout.columns);
+		dataReturn.push(cfg.resolution.height * cfg.layout.rows);
+	} else {
+		dataReturn.push(cfg.resolution.width);
+		dataReturn.push(cfg.resolution.height);
+	}
+
 	dataReturn.push(getMeetingIDFromPasswd());
 	dataReturn.push(cfg.layout.rows);
 	dataReturn.push(cfg.layout.columns);
+
+
+	// now write the file with its adjustments
+	if (isElectron != undefined && isElectron == "electron"){
+		fs.writeFileSync(pathToElectronConfig, JSON5.stringify(cfg, null, 4));
+	} else {
+		fs.writeFileSync(pathToWinDefaultConfig, JSON5.stringify(cfg, null, 4));
+	}
+
+
 
 	return dataReturn;
 }
