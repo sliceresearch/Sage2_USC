@@ -1583,6 +1583,8 @@ function createAppWindow(data, parentId, titleBarHeight, titleTextSize, offsetX,
 	itemCount += 2;
 }
 
+/* global d3 */
+
 function moveItemWithAnimation(updatedApp) {
 	var elemTitle = d3.select("#" + updatedApp.elemId + "_title");
 	var elem = d3.select("#" + updatedApp.elemId);
