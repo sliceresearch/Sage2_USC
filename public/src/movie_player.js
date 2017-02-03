@@ -225,6 +225,7 @@ var movie_player = SAGE2_BlockStreamingApp.extend({
 		}
 		this.refresh(date);
 		this.playPauseBtn.state = 1 - this.playPauseBtn.state;
+		this.getFullContextMenuAndUpdate();
 	},
 
 	/**
