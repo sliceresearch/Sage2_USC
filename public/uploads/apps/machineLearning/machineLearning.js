@@ -124,41 +124,6 @@ const bodyParts = {
 
 };
 
-// function endOfPeriod (timePeriod) {
-// 	for (const skeletonID in timePeriod) {
-// 		const skeletonPeriod = timePeriod[skeletonID];
-//
-// 		var leftHandStartAvgY = 0;
-// 		var leftHandEndAvgY = 0;
-// 		var leftHandStartAvgX = 0;
-// 		var leftHandEndAvgX = 0;
-//
-// 		var i = 0;
-// 		for (; i < skeletonPeriod.length && i < 5; i++) {
-// 			leftHandStartAvgY += skeletonPeriod[i].leftHandY;
-// 			leftHandEndAvgY += skeletonPeriod[skeletonPeriod.length - (i + 1)].leftHandY;
-// 			leftHandStartAvgX += skeletonPeriod[i].leftHandX;
-// 			leftHandEndAvgX += skeletonPeriod[skeletonPeriod.length - (i + 1)].leftHandX;
-// 		}
-// 		leftHandStartAvgY /= i;
-// 		leftHandEndAvgY /= i;
-// 		leftHandStartAvgX /= i;
-// 		leftHandEndAvgX /= i;
-//
-// 		if (leftHandEndAvgY + 200 < leftHandStartAvgY) {
-// 			console.log("Hand was raised");
-// 		} else if (leftHandStartAvgY + 200 < leftHandEndAvgY) {
-// 			console.log("Hand was lowered");
-// 		}
-//
-// 		if (leftHandEndAvgX - 200 > leftHandStartAvgX) {
-// 			console.log("Hand was swept right");
-// 		} else if (leftHandStartAvgX - 200 > leftHandEndAvgX) {
-// 			console.log("Hand was swept left");
-// 		}
-// 	}
-// }
-
 var machineLearning = SAGE2_App.extend( {
 	init: function(data) {
 		// Create div into the DOM
@@ -187,8 +152,6 @@ var machineLearning = SAGE2_App.extend( {
 		this.speechEvents = [];
 
 		var date = new Date();
-		this.startTime = date.getTime();
-		this.currentTrialStartTime = this.startTime;
 		this.calibratedBuffer = ""; // buffer for printing data to a file
 		this.rawSkeletonBuffer = "";
 		this.trialRunning = false;
@@ -196,7 +159,32 @@ var machineLearning = SAGE2_App.extend( {
 
 		this.regularTrialMode = true;
 
-		Math.seed(Date.now());
+		// rotation matrix math:
+		// measured angle between kinect and screen = 63 degrees
+		// rotated -27 degrees so kinect is perpendicular to screen on x-axis
+		// [1.0 0 0 0
+		//	0 cos-27 -sin-27 0
+		//	0 sin-27 cos-27 0
+		//	0 0 0 1.0]
+		this.physicalSpace = {
+			"minX": -2.0, // meters
+			"maxX": 2.0, // meters
+			"minY": -0.92, // meters
+			"maxY": 0.92, // meters
+			"heightOfKinect": 2.04, // meters
+			"kinectToCenterOfScreenVertical": 0.92, // meters
+			"kinectToCenterOfScreenHorizontal": 0.06, // meters
+			"lengthFromDisplayToKinectGroundIntersect": 4.00, // meters
+			"angleFromKinectToDisplay": 63, // degrees
+			"rotationMatrix": [
+				1.0, 0.0, 0.0, 0.0,
+				0.0, 0.891, 0.454, 0.0,
+				0.0, -0.454, 0.891, 0.0,
+				0.0, 0.0, 0.0, 1.0
+			]
+		};
+
+		// Math.seed(date);
 
 		// randomly calculate direction and speed of ball
 		const xSign = ((Math.floor(Math.random() * 2)) - 1) === -1 ? -1 : 1;
@@ -226,10 +214,12 @@ var machineLearning = SAGE2_App.extend( {
 	},
 
 	fillCircle: function(x, y, diameter) {
-		this.ctx.beginPath();
-		this.ctx.arc(x, y, diameter, 0, 2*Math.PI);
-		this.ctx.fill();
-		this.ctx.stroke();
+		if (diameter >= 0.0) {
+			this.ctx.beginPath();
+			this.ctx.arc(x, y, diameter, 0, 2*Math.PI);
+			this.ctx.fill();
+			this.ctx.stroke();
+		}
 	},
 
 	// -------------- CALIBRATED TRIAL FUNCTIONS
@@ -272,15 +262,17 @@ var machineLearning = SAGE2_App.extend( {
 		const radius = this.ball.radius;
 		const fingerIsPointingAtBall = this.fingerPointingAtBall(adjustedX, adjustedY, ballX, ballY, radius);
 
+		this.drawStatusBar();
+
 		// if ball is not moving, finger is pointing at ball, and it has been 5 seconds since last "trial"
 		// begin new trial
 		if (this.ball.color != "green" && fingerIsPointingAtBall && Date.now() - 5000 > this.ball.stopMoveTime) {
-			this.ball.color = "green";
-			// this.ball.color = "yellow";
-			// setTimeout(function() {
-			// 	this.ball.color = "green";
-			// 	this.ball.startMoveTime = Date.now();
-			// }, 2000);
+			this.ball.color = "yellow";
+			var timeoutFunc = function() {
+				this.ball.color = "green";
+				this.ball.startMoveTime = Date.now();
+			};
+			setTimeout(timeoutFunc.bind(this), 2000);
 		}
 
 		// if ball has been moving for 10 seconds, stop it
@@ -299,6 +291,7 @@ var machineLearning = SAGE2_App.extend( {
 			// fill the skeleton buffer
 			count = 0;
 			this.rawSkeletonBuffer += Date.now() +"," + "green:";
+			const skeleton = this.mostRecentSkeleton;
 			for (const bodyPartName in this.mostRecentSkeleton) {
 				const bodyPart = skeleton[bodyPartName];
 				if( count == 0 ){ // first line body part
@@ -319,43 +312,85 @@ var machineLearning = SAGE2_App.extend( {
 		this.fillCircle(adjustedX, adjustedY, 10); // left finger tip
 	},
 
+	drawStatusBar: function () {
+		this.ctx.fillStyle = "white";
+		this.ctx.fillText( "Skeletons tracked: " + _.size(this.skeletons), this.element.width/2.0, 32);
+	},
+
+	// checkValidArmLength: function () {
+	// 	const leftShoulder = this.mostRecentSkeleton.leftShoulder;
+	// 	const leftHand = this.mostRecentSkeleton.leftHand;
+	//
+	// 	if (leftHand.z + 0.15 < leftShoulder.z) {
+	// 		return true;
+	// 	}
+	// 	else {
+	// 		return false;
+	// 	}
+	// },
+	//
+	// drawBoundingBox: function () {
+	// 	return;
+	// 	if (!this.mostRecentSkeleton) return;
+	// 	const leftShoulder = this.mostRecentSkeleton.leftShoulder;
+	// 	const leftHand = this.mostRecentSkeleton.leftHand;
+	//
+	// 	// if arm is not pointing toward screen, do not update arm length
+	// 	if (this.checkValidArmLength()) {
+	// 		const newArmLength = Math.sqrt(
+	// 			Math.pow((leftHand.x - leftShoulder.x), 2) + Math.pow((leftHand.y - leftShoulder.y), 2)
+	// 		);
+	//
+	// 		if (!this.boundingBox.armLength || newArmLength > this.boundingBox.armLength) {
+	// 			this.boundingBox.armLength = newArmLength;
+	// 		}
+	// 	}
+	//
+	// 	const armLength = this.boundingBox.armLength;
+	//
+	// 	// left shoulder is center of bounding box with "radius" of arm length
+	// 	this.boundingBox.centerX = leftShoulder.x
+	// 	this.boundingBox.centerY = leftShoulder.y
+	//
+	// 	this.ctx.fillStyle = "white";
+	// 	this.fillCircle(leftShoulder.x, leftShoulder.y, 10);
+	//
+	// 	const {centerX, centerY} = this.boundingBox;
+	// 	this.ctx.fillStyle = "white";
+	// 	this.ctx.rect(centerX - armLength, centerY - armLength, armLength * 2, armLength * 2);
+	// 	this.ctx.fill();
+	// 	this.ctx.stroke();
+	// },
+
 	drawRawBodyParts: function () {
 		// drawing the ball
 		this.ctx.fillStyle = this.ball.color;
 		this.fillCircle(this.ball.x, this.ball.y, this.ball.radius * 2);
 
 		this.drawCalibrationGuides();
+		// this.drawBoundingBox();
 
 		for (const skeletonID in this.skeletons) {
 			const skeleton = this.skeletons[skeletonID];
-
-			// console.log('articulate_ui> Draw with state value', this.state.value);
 
 			this.fontSize = 32;
 			this.ctx.font = "32px Helvetica";
 			this.ctx.textAlign="center";
 
 			//status bar
-			this.ctx.fillStyle = "white";
-			this.ctx.fillText( "Speech Input: " + this.textToDraw, this.element.width/2.0, 32);
+			this.drawStatusBar();
 
 			this.ctx.fillStyle = skeleton.color;
 			this.ctx.fillText("leftHand", skeleton.leftHand.x, skeleton.leftHand.y);
 
 			for (const bodyPartName in skeleton) {
 				const bodyPart = skeleton[bodyPartName];
-
 				const shape = bodyPart.shape;
-				const x = bodyPart.x;
-				const y = bodyPart.y;
+				const x = bodyPart.kinectX;
+				const y = bodyPart.kinectY;
 				const z = bodyPart.z;
 				const size = bodyPart.baseSize / z;
-
-				if (bodyPart.colorOverride) {
-					this.ctx.fillStyle = bodyPart.colorOverride;
-				} else {
-					this.ctx.fillStyle = skeleton.color;
-				}
+				this.ctx.fillStyle = bodyPart.colorOverride ? bodyPart.colorOverride : skeleton.color;
 
 				if (shape === "circle") {
 					this.fillCircle(x, y, size);
@@ -402,49 +437,20 @@ var machineLearning = SAGE2_App.extend( {
 				}
 			}
 
-			if (this.calibrations.calibrated) {
-				this.drawWithCalibrations();
-			}
-			else {
-				this.drawRawBodyParts();
-			}
+			// if (this.calibrations.calibrated) {
+			// 	this.drawWithCalibrations();
+			// }
+			// else {
+			this.drawRawBodyParts();
+			// }
 		},
 
 	//----------------------------------------//
 	//---------- DRAWING FUNCTIONS ----------//
 	//---------------------------------------//
 	draw: function(date) {
-		if( this.regularTrialMode ){
-			this.regularTrialModeDraw(date);
-		}
-		else {
-			this.calibratedTrialModeDraw(date);
-		}
+		this.calibratedTrialModeDraw(date);
 	},
-
-
-////  REGULAR (non-calibrated) TRIAL FUNCTIONS
-	regularTrialModeDraw: function(date){
-		this.ctx.clearRect(0, 0, this.element.width, this.element.height);
-
-		// draw data logging "button"
-		const logText = this.trialRunning ? "End Trial" : "Begin Trial";
-		this.ctx.fillStyle = this.trialRunning ? "red" : "green";
-		this.ctx.rect(0, this.element.height - 50, 200, this.element.height);
-		this.ctx.fill();
-		this.ctx.stroke();
-		this.ctx.fillStyle = "black";
-		this.ctx.font = "18px Helvetica";
-		this.ctx.fillText(logText, 50, this.element.height - 20);
-
-		// draw trial number
-		this.ctx.fillStyle = "white";
-		this.ctx.fillText("Trial: " + this.trialNumber, 30, 20);
-	},
-
-
-
-
 
 	//--------------------------------------------//
 	//--------- WINDOW CHANGE FUNCTIONS ----------//
@@ -470,9 +476,172 @@ var machineLearning = SAGE2_App.extend( {
 		// }
 	},
 
+	multiplyMatrixAndPoint: function (matrix, point) {
+	  //Give a simple variable name to each part of the matrix, a column and row number
+	  var c0r0 = matrix[ 0], c1r0 = matrix[ 1], c2r0 = matrix[ 2], c3r0 = matrix[ 3];
+	  var c0r1 = matrix[ 4], c1r1 = matrix[ 5], c2r1 = matrix[ 6], c3r1 = matrix[ 7];
+	  var c0r2 = matrix[ 8], c1r2 = matrix[ 9], c2r2 = matrix[10], c3r2 = matrix[11];
+	  var c0r3 = matrix[12], c1r3 = matrix[13], c2r3 = matrix[14], c3r3 = matrix[15];
+
+	  //Now set some simple names for the point
+	  var x = point[0];
+	  var y = point[1];
+	  var z = point[2];
+	  var w = point[3];
+
+	  //Multiply the point against each part of the 1st column, then add together
+	  var resultX = (x * c0r0) + (y * c0r1) + (z * c0r2) + (w * c0r3);
+
+	  //Multiply the point against each part of the 2nd column, then add together
+	  var resultY = (x * c1r0) + (y * c1r1) + (z * c1r2) + (w * c1r3);
+
+	  //Multiply the point against each part of the 3rd column, then add together
+	  var resultZ = (x * c2r0) + (y * c2r1) + (z * c2r2) + (w * c2r3);
+
+	  return [resultX, resultY, resultZ];
+	},
+
+	rotateJoint: function (joint) {
+		const x = joint.kinectX;
+		const y = joint.kinectY;
+		const z = joint.z;
+
+		const point = [x, y, z, 1.0];
+
+		return this.multiplyMatrixAndPoint(this.physicalSpace.rotationMatrix, point);
+	},
+
+	// returns true if user is within 2 meter distance from kinect, false otherwise
+	inProximity: function () {
+		return this.mostRecentSkeleton.shoulderCenter.z <= 2.0;
+	},
+
+	inRange: function (x, y, minX, maxX, minY, maxY) {
+		if (x >= minX && x <= maxX && y >= minY && y <= maxY) {
+			return true;
+		}
+		return false;
+	},
+
+	euclideanDistance: function (x1, y1, x2, y2) {
+		return Math.sqrt(Math.pow(x1-x2, 2) + Math.pow(y1-y2, 2));
+	},
+
+	vectorSubtraction: function (a, b) {
+		return [a[0] - b[0], a[1] - b[1], a[2] - b[2]];
+	},
+
+	dotProduct:  function (a, b) {
+		var n = 0, lim = Math.min(a.length,b.length);
+		for (var i = 0; i < lim; i++) n += a[i] * b[i];
+		return n;
+	},
+
+	angleOfArm: function () {
+		const {rightShoulder, rightFingerTip, shoulderCenter} = this.mostRecentSkeleton;
+
+		const rS = [rightShoulder.kinectX, rightShoulder.kinectY, rightShoulder.z];
+		const rF = [rightFingerTip.kinectX, rightFingerTip.kinectY, rightFingerTip.z];
+		const sC = [shoulderCenter.kinectX, shoulderCenter.kinectY, shoulderCenter.z];
+
+		const v1 = this.vectorSubtraction(rS, rF);
+		const v2 = this.vectorSubtraction(rS, sC);
+
+		const dotProduct = this.dotProduct(v1, v2);
+		return Math.acos(dotProduct);
+	},
+
+	// TODO:
+	// only update arm length if the angle between shoulder and finger
+	// is <60 degrees from origin point
+	armLength: function (shoulder, fingerTip) {
+		const currArmLength = this.euclideanDistance(shoulder.kinectX, shoulder.kinectY, fingerTip.kinectX, fingerTip.kinectY);
+
+		const angleInRadians = this.angleOfArm();
+		if (!this.maxArmLength || currArmLength > this.maxArmLength) {
+			this.maxArmLength = currArmLength;
+		}
+
+		return this.maxArmLength;
+	},
+
+	recognizePoint: function () {
+		const {rightShoulder, rightFingerTip} = this.mostRecentSkeleton;
+
+		const rightArmLength = this.armLength(rightShoulder, rightFingerTip);
+
+		const minX = rightShoulder.kinectX - rightArmLength;
+		const maxX = rightShoulder.kinectX + rightArmLength;
+		const minY = rightShoulder.kinectY - rightArmLength;
+		const maxY = rightShoulder.kinectY + rightArmLength;
+
+		if (this.inRange(rightFingerTip.kinectX, rightFingerTip.kinectY, minX, maxX, minY, maxY)) {
+			const mappedX = this.map(rightFingerTip.kinectX, minX, maxX, 0, this.element.width);
+			const mappedY = this.map(-rightFingerTip.kinectY, minY, maxY, 0, this.element.height);
+
+			this.fillCircle(mappedX, mappedY, 20);
+		}
+	},
+
 	//------------------------------------------//
 	//--------------EVENT FUNCTIONS-------------//
 	//------------------------------------------//
+
+	// rotate all joints for a skeleton and save rotated joints positions to state (this.skeletons)
+	rotateAboutXAxis: function (skeletonID) {
+		const skeleton = this.skeletons[skeletonID];
+
+		for (const bodyPartID in skeleton) {
+			const bodyPart = skeleton[bodyPartID];
+			if (bodyPart.kinectX) { // check that this is in fact a body part
+				const rotatedPoints = this.rotateJoint(bodyPart);
+				if (this.skeletons[skeletonID][bodyPartID]) {
+					this.skeletons[skeletonID][bodyPartID].kinectX = rotatedPoints[0];
+					this.skeletons[skeletonID][bodyPartID].kinectY = rotatedPoints[1];
+					this.skeletons[skeletonID][bodyPartID].z = rotatedPoints[2];
+				}
+			}
+		}
+	},
+
+	translateJoints: function (skeletonID) {
+		const skeleton = this.skeletons[skeletonID];
+
+		for (const bodyPartID in skeleton) {
+			const bodyPart = skeleton[bodyPartID];
+			if (bodyPart.kinectX) { // check that this is in fact a body part
+				if (this.skeletons[skeletonID][bodyPartID]) {
+					this.skeletons[skeletonID][bodyPartID].kinectY = bodyPart.kinectY + this.physicalSpace.kinectToCenterOfScreenVertical;
+					this.skeletons[skeletonID][bodyPartID].kinectX = bodyPart.kinectX - this.physicalSpace.kinectToCenterOfScreenHorizontal;
+				}
+			}
+		}
+	},
+
+	physicalToScreen: function (x, y) {
+		var xy_arr = [];
+
+		xy_arr.push(this.map(x, this.physicalSpace.minX, this.physicalSpace.maxX, 0, this.element.width));
+		xy_arr.push(this.map(y, this.physicalSpace.minY, this.physicalSpace.maxY, 0, this.element.height));
+
+		return xy_arr;
+	},
+
+	mapPhysicalSpaceToScreenSpace: function (skeletonID) {
+		const skeleton = this.skeletons[skeletonID];
+
+		for (const bodyPartID in skeleton) {
+			const bodyPart = skeleton[bodyPartID];
+			if (bodyPart.kinectX) {
+				if (this.skeletons[skeletonID][bodyPartID]) {
+					const xy_screen_arr = this.physicalToScreen(bodyPart.kinectX, bodyPart.kinectY);
+					this.skeletons[skeletonID][bodyPartID].x = xy_screen_arr[0];
+					this.skeletons[skeletonID][bodyPartID].y = xy_screen_arr[1];
+				}
+			}
+		}
+	}
+
 	event: function(eventType, position, user_id, data, date) {
 		const skeletonColors = ["red", "blue", "green", "orange", "pink"];
 
@@ -480,10 +649,6 @@ var machineLearning = SAGE2_App.extend( {
 			this.handlePointerPress(position);
 		}
 		else if ( eventType === "kinectInput"){
-			// if (this.trialRunning && Date.now() - 10000 > this.currentTrialStartTime) {
-			// 	// this.endTrial();
-			// }
-
 			const skeletonID = data["skeletonID"];
 
 			// ignore "phantom" skeletons (fixes BUG)
@@ -517,16 +682,30 @@ var machineLearning = SAGE2_App.extend( {
 					this.skeletons[skeletonID][bodyPartName] = {};
 					this.skeletons[skeletonID][bodyPartName].x = this.element.width/2.0+bodyPart.x*this.element.width;
 					this.skeletons[skeletonID][bodyPartName].y = this.element.height/2.0-bodyPart.y*this.element.height;
-					this.skeletons[skeletonID][bodyPartName].kinectX = bodyPart.x;
-					this.skeletons[skeletonID][bodyPartName].kinectY = bodyPart.y;
-					this.skeletons[skeletonID][bodyPartName].z = bodyPart.z;
+					this.skeletons[skeletonID][bodyPartName].kinectX = bodyPart.x;//**
+					this.skeletons[skeletonID][bodyPartName].kinectY = bodyPart.y;//**
+					this.skeletons[skeletonID][bodyPartName].z = bodyPart.z;//**
 					this.skeletons[skeletonID][bodyPartName].shape = bodyParts[bodyPartID].shape;
 					this.skeletons[skeletonID][bodyPartName].baseSize = bodyParts[bodyPartID].baseSize;
 				}
 			}
 
+			// need to make (x,y)-origin the center of screen for all joints
+			// rotate, then translate
+			this.rotateAboutXAxis(skeletonID);
+			this.translateJoints(skeletonID);
+
+			// physical coords -> screen coords
+			this.mapPhysicalSpaceToScreenSpace(skeletonID);
+			console.log(this.skeletons[skeletonID].head);
+
 			this.skeletons[skeletonID].lastUpdate = date.getTime();
 			this.mostRecentSkeleton = this.skeletons[skeletonID];
+			console.log(this.mostRecentSkeleton.head);
+
+			if (this.inProximity()) {
+				this.recognizePoint();
+			}
 
 			this.refresh(date);
 		}
@@ -630,7 +809,7 @@ var machineLearning = SAGE2_App.extend( {
 		console.log("logging data to file: " + filename);
 
 		header = "";
-		for (const bodyPartName in skeleton) {
+		for (const bodyPartName in this.mostRecentSkeleton) {
 			header += bodyPartName +".x," + bodyPartName+".y,"+bodyPartName+".z,";
 		}
 		header+= "\n";

@@ -1,9 +1,10 @@
 {
 	"main_script": "machineLearning.js",
 	"icon": "machineLearning.png",
-	"width": 2400,
-	"height": 1200,
+	"width": 5000,
+	"height": 2400,
 	"resize": "free",
+	"animation": true,
 	"dependencies": [
 		"scripts/lodash.min.js"
 	],

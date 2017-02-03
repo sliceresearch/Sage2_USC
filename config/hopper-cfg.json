@@ -26,18 +26,36 @@
         auto_hide_ui: true,
         auto_hide_delay: 5
 	},
+	dimensions:{
+		tile_width: 1.093,
+		tile_height: 1.292,
+		tile_borders: {left: 0, right:0, bottom: 0, top: 0},
+		viewing_distance: 4
+	},
 	resolution: {
-		width: 7680,
-		height: 2100
+		width: 1366,//7680,
+		height: 2304//2100
 	},
 	layout: {
 		rows: 1,
-		columns: 1
+		columns: 4
 	},
 	displays: [
 		{
 			row: 0,
 			column: 0
+		},
+		{
+			row: 0,
+			column: 1
+		},
+		{
+			row: 0,
+			column: 2
+		},
+		{
+			row: 0,
+			column: 3
 		}
 	],
 	alternate_hosts: [
