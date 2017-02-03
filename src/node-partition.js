@@ -813,7 +813,14 @@ Partition.prototype.getDisplayInfo = function() {
   * Get a string corresponding to the information needed to update the display
   */
 Partition.prototype.getTitle = function() {
-	var partitionString = "# Items: " + this.numChildren;
+	var partitionString = "";
+	if (this.numChildren === 0) {
+		partitionString = "Empty";
+	} else if (this.numChildren === 1) {
+		partitionString = "1 Item";
+	} else {
+		partitionString = this.numChildren + " Items";
+	}
 
 	if (this.innerMaximization && this.innerTiling) {
 		partitionString += " | Maximized & Tiled";
