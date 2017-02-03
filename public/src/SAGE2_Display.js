@@ -838,8 +838,6 @@ function setupListeners() {
 		var selectedElemTitle = document.getElementById(position_data.elemId + "_title");
 		selectedElemTitle.style.width = Math.round(position_data.elemWidth).toString() + "px";
 
-		var selectedElemState = document.getElementById(position_data.elemId + "_state");
-
 		if (position_data.elemId.split("_")[0] === "portal") {
 			dataSharingPortals[position_data.elemId].setPosition(position_data.elemLeft, position_data.elemTop);
 			return;
