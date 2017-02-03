@@ -718,16 +718,21 @@ function setupListeners() {
 			return;
 		}
 
-		var translate = "translate(" + position_data.elemLeft + "px," + position_data.elemTop + "px)";
-		var selectedElemTitle = document.getElementById(position_data.elemId + "_title");
-		selectedElemTitle.style.webkitTransform = translate;
-		selectedElemTitle.style.mozTransform    = translate;
-		selectedElemTitle.style.transform       = translate;
+		if (position_data.elemAnimate) {
+			moveItemWithAnimation(position_data);
+		} else {
+			var translate = "translate(" + position_data.elemLeft + "px," + position_data.elemTop + "px)";
+			var selectedElemTitle = document.getElementById(position_data.elemId + "_title");
+			selectedElemTitle.style.webkitTransform = translate;
+			selectedElemTitle.style.mozTransform    = translate;
+			selectedElemTitle.style.transform       = translate;
 
-		var selectedElem = document.getElementById(position_data.elemId);
-		selectedElem.style.webkitTransform = translate;
-		selectedElem.style.mozTransform    = translate;
-		selectedElem.style.transform       = translate;
+			var selectedElem = document.getElementById(position_data.elemId);
+			selectedElem.style.webkitTransform = translate;
+			selectedElem.style.mozTransform    = translate;
+			selectedElem.style.transform       = translate;
+		}
+
 
 		var app = applications[position_data.elemId];
 		if (app !== undefined) {
@@ -1591,22 +1596,27 @@ function moveItemWithAnimation(updatedApp) {
 
 	var translate = "translate(" + updatedApp.elemLeft + "px," + updatedApp.elemTop + "px)";
 
-	elemTitle.transition()
-		.duration(1000)
-		.styleTween("transform", function () {
-			return d3.interpolateString(
-				getComputedStyle(this).getPropertyValue("transform"),
-				translate);
-		});
+	// allow for transform transitions
+	elemTitle
+		.style("transition", " opacity 0.2s ease-in, transform 0.2s linear");
 
 	elem
-		.style("transform", function() {
-			return d3.select(this).style("transform");
-		})
-		.transition()
-		.duration(1000)
+		.style("transition", " opacity 0.2s ease-in, transform 0.2s linear");
+
+	// update transforms
+
+	elemTitle
 		.style("transform", translate);
 
+	elem
+		.style("transform", translate);
+
+	// reset transition after transition time
+	elemTitle.transition().delay(200)
+		.style("transition", " opacity 0.2s ease-in");
+
+	elem.transition().delay(200)
+		.style("transition", " opacity 0.2s ease-in");
 }
 
 // just doing move first
