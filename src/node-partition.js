@@ -656,11 +656,13 @@ Partition.prototype.updateInnerLayout = function() {
 			// this should never really happen
 			console.log("Partition: Maximizing child in updateInnerLayout()");
 			this.maximizeChild(this.currentMaximizedChild);
+			this.needsChildAnimate = true;
 		}
 	}
 
 	if (this.innerTiling) {
 		this.tilePartition();
+		this.needsChildAnimate = true;
 	}
 };
 

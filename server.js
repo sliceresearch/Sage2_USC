@@ -7010,6 +7010,7 @@ function updatePartitionInnerLayout(partition) {
 	let updatedChildren = partition.updateChildrenPositions();
 
 	for (let child of updatedChildren) {
+		child.elemAnimate = partition.needsChildAnimate;
 		moveAndResizeApplicationWindow(child);
 	}
 }

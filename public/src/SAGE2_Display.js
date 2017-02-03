@@ -836,18 +836,33 @@ function setupListeners() {
 
 		var translate = "translate(" + position_data.elemLeft + "px," + position_data.elemTop + "px)";
 		var selectedElemTitle = document.getElementById(position_data.elemId + "_title");
-		selectedElemTitle.style.webkitTransform = translate;
-		selectedElemTitle.style.mozTransform    = translate;
-		selectedElemTitle.style.transform       = translate;
+		selectedElemTitle.style.width = Math.round(position_data.elemWidth).toString() + "px";
+
+		var selectedElemState = document.getElementById(position_data.elemId + "_state");
+
+		if (position_data.elemId.split("_")[0] === "portal") {
+			dataSharingPortals[position_data.elemId].setPosition(position_data.elemLeft, position_data.elemTop);
+			return;
+		}
+
+		if (position_data.elemAnimate) {
+			moveItemWithAnimation(position_data);
+		} else {
+			selectedElemTitle.style.webkitTransform = translate;
+			selectedElemTitle.style.mozTransform    = translate;
+			selectedElemTitle.style.transform       = translate;
+
+			selectedElem.style.webkitTransform = translate;
+			selectedElem.style.mozTransform    = translate;
+			selectedElem.style.transform       = translate;
+
+		}
+
 		selectedElemTitle.style.width = Math.round(position_data.elemWidth).toString() + "px";
 
 		var selectedElemState = document.getElementById(position_data.elemId + "_state");
 		selectedElemState.style.width = Math.round(position_data.elemWidth).toString() + "px";
 		selectedElemState.style.height = Math.round(position_data.elemHeight).toString() + "px";
-
-		selectedElem.style.webkitTransform = translate;
-		selectedElem.style.mozTransform    = translate;
-		selectedElem.style.transform       = translate;
 
 		var dragCorner = selectedElem.getElementsByClassName("dragCorner");
 		var cornerSize = Math.min(position_data.elemWidth, position_data.elemHeight) / 5;
