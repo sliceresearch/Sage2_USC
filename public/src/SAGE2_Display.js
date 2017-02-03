@@ -1582,3 +1582,49 @@ function createAppWindow(data, parentId, titleBarHeight, titleTextSize, offsetX,
 
 	itemCount += 2;
 }
+
+function moveItemWithAnimation(updatedApp) {
+	var elemTitle = d3.select("#" + updatedApp.elemId + "_title");
+	var elem = d3.select("#" + updatedApp.elemId);
+
+	var translate = "translate(" + updatedApp.elemLeft + "px," + updatedApp.elemTop + "px)";
+
+	elemTitle.transition()
+		.duration(1000)
+		.styleTween("transform", function () {
+			return d3.interpolateString(
+				getComputedStyle(this).getPropertyValue("transform"),
+				translate);
+		});
+
+	elem
+		.style("transform", function() {
+			return d3.select(this).style("transform");
+		})
+		.transition()
+		.duration(1000)
+		.style("transform", translate);
+
+}
+
+// just doing move first
+// function resizeItemWithAnimation(updatedApp) {
+// 		var titleBar = d3.select("#" + itemID + "_title");
+// 		var item = d3.select("#" + itemID);
+//
+// 		var translate = "translate(" + updatedApp.elemLeft + "px," + updatedApp.elemTop + "px)";
+// 		var selectedElemTitle = document.getElementById(updatedApp.elemId + "_title");
+// 		selectedElemTitle.style.webkitTransform = translate;
+// 		selectedElemTitle.style.mozTransform    = translate;
+// 		selectedElemTitle.style.transform       = translate;
+// 		selectedElemTitle.style.width = Math.round(updatedApp.elemWidth).toString() + "px";
+//
+// 		var selectedElemState = document.getElementById(updatedApp.elemId + "_state");
+// 		selectedElemState.style.width = Math.round(updatedApp.elemWidth).toString() + "px";
+// 		selectedElemState.style.height = Math.round(updatedApp.elemHeight).toString() + "px";
+//
+// 		selectedElem.style.webkitTransform = translate;
+// 		selectedElem.style.mozTransform    = translate;
+// 		selectedElem.style.transform       = translate;
+//
+// }
