@@ -72,6 +72,7 @@ function FileManager(wsio, mydiv, uniqueID) {
 		}
 	];
 
+	// File manager menu bar
 	var menu_data = [
 		{id: "file_menu", value: "File", submenu: [
 			{id: "folder_menu",  value: "New folder"},
@@ -89,34 +90,6 @@ function FileManager(wsio, mydiv, uniqueID) {
 			{$template: "Separator"},
 			{id: "tile_menu",   value: "Tile content"},
 			{id: "clear_menu",  value: "Clear display"}
-		]},
-		{id: "mainadmin_menu", value: "Admin", config: {width: 170}, submenu: [
-			{id: "display_menu",  value: "Display client 0"},
-			{id: "overview_menu", value: "Display overview client"},
-			{id: "audio_menu",    value: "Audio manager"},
-			// {id: "drawing_menu",  value: "Drawing application"},
-			// {id: "partition_menu",  value: "Create Partition"},
-			{id: "console_menu",  value: "Server console"}
-		]},
-		{id: "mainpartition_menu", value: "Partitions", config: {width: 250}, submenu: [
-			{id: "2x1_menu", value: "2 Columns"},
-			{id: "3x1_menu", value: "3 Columns"},
-			{id: "2x2_menu", value: "2 Columns, 2 Rows"},
-			{id: "2s-1b-2s_menu", value: "Center Pane, 4 Mini"},
-			{id: "2b-1w_menu", value: "2 Pane, Taskbar"},
-			{$template: "Separator"},
-			{id: "partitiongrab_menu", value: "Assign Content to Partitions"},
-			{id: "deletepartition_menu", value: "Delete All Partitions"}
-		]},
-		{id: "services_menu", value: "Services", config: {width: 170}, submenu: [
-			{id: "appstore_menu",  value: "SAGE2 appstore"},
-			{id: "imageservice_menu",  value: "Large image processing"},
-			{id: "videoservice_menu",  value: "Video processing"}
-		]},
-		{id: "mainhelp_menu",  value: "Help", submenu: [
-			{id: "help_menu",  value: "Help"},
-			{id: "info_menu",  value: "Information"},
-			{id: "about_menu", value: "About"}
 		]}
 	];
 	var mymenu = {
@@ -132,151 +105,55 @@ function FileManager(wsio, mydiv, uniqueID) {
 		]
 	};
 
-	// Custom tooltip function
-	function mytip(obj) {
-		return obj.tooltip ? obj.tooltip : "";
-	}
+	/////////////////////////////////////////////////////////////////////////////
 
-	this.main = webix.ui({
-		container: mydiv,
-		id: "layout",
+	// Top UI menu bar
+	var topmenu_data = [
+		{id: "mainpartition_menu", value: "Partitions", config: {width: 250, zIndex: 10000}, submenu: [
+			{id: "2x1_menu", value: "2 Columns"},
+			{id: "3x1_menu", value: "3 Columns"},
+			{id: "2x2_menu", value: "2 Columns, 2 Rows"},
+			{id: "2s-1b-2s_menu", value: "Center Pane, 4 Mini"},
+			{id: "2b-1w_menu", value: "2 Pane, Taskbar"},
+			{$template: "Separator"},
+			{id: "partitiongrab_menu", value: "Assign Content to Partitions"},
+			{id: "deletepartition_menu", value: "Delete All Partitions"}
+		]},
+		{id: "services_menu", value: "Services", config: {width: 170, zIndex: 10000}, submenu: [
+			{id: "appstore_menu",  value: "SAGE2 appstore"},
+			{id: "imageservice_menu",  value: "Large image processing"},
+			{id: "videoservice_menu",  value: "Video processing"}
+		]},
+		{id: "mainadmin_menu",  value: "Admin", config: {width: 170, zIndex: 10000}, submenu: [
+			{id: "display_menu",  value: "Display client 0"},
+			{id: "overview_menu", value: "Display overview client"},
+			{id: "audio_menu",    value: "Audio manager"},
+			{id: "console_menu",  value: "Server console"}
+		]},
+		{id: "mainhelp_menu",  value: "Help", config: {zIndex: 10000}, submenu: [
+			{id: "help_menu",  value: "Help"},
+			{id: "info_menu",  value: "Information"},
+			{id: "about_menu", value: "About"}
+		]}
+	];
+	var topmenu = {
+		id: "topmenu",
+		view: "menu",
+		openAction: "click",
+		data: topmenu_data
+	};
+	webix.ui({
+		container: document.getElementById('mainMenuBar'),
+		id: "toplayout",
 		css: { border: "solid 1px #565656;"},
 		rows: [
 			{
-				view: "toolbar", cols: [mymenu, mytoolbar]
-			},
-			{ cols: [
-				{
-					rows: [
-						{
-							id: "tree1",
-							view: "tree",
-							select: "select",
-							navigation: true,
-							drag: true,
-							minWidth: 120,
-							width: 180,
-							activeTitle: true, // close/open when selected
-							tooltip: mytip,
-							data: data_with_icon,
-							onContext: {} // required for context menu
-						},
-						{
-							view: "resizer"},
-						{
-							height: 160, rows: [
-								{type: "header", id: "drop_header", template: "Drop files below"},
-								{view: "list", id: "uploadlist", type: "uploader", scroll: 'y'}
-							]
-						}
-					]
-				},
-				{
-					view: "resizer"
-				},
-				{
-					id: "all_table",
-					view: "datatable",
-					// editable: true,
-					gravity: 2, // two times bigger
-					columnWidth: 200,
-					resizeColumn: true,
-					// animate: false,
-					scroll: 'y',
-					drag: true,
-					select: "multiselect",
-					navigation: true,
-					scheme: {
-						// Generate an automatic index
-						$init: function(obj) {
-							obj.index = this.count() + 1;
-						}
-					},
-					on: {
-						// update index after sort or update
-						"data->onStoreUpdated": function() {
-							this.data.each(function(obj, i) {
-								obj.index = i + 1;
-							});
-							return true;
-						}
-					},
-					columns: [
-						{id: "index", header: "",     width: 40, minWidth: 25, sort: "int"},
-						{id: "name",  header: "Name", minWidth: 180,
-							sort: "text", fillspace: true},
-						{id: "user",  header: "User", width: 80, minWidth: 50,
-							sort: "text", css: {'text-align': 'right'}},
-						{id: "size",  header: "Size", width: 80, minWidth: 50,
-							sort: sortBySize, css: {'text-align': 'right'}},
-						{id: "date",  header: "Date", width: 150, minWidth: 80,
-							sort: sortByDate, css: {'text-align': 'center'}},
-						{id: "ago",   header: "Modified", width: 100, minWidth: 80,
-							sort: sortByDate, css: {'text-align': 'right'}},
-						{id: "type",  header: "Type", width: 80, minWidth: 50,
-							sort: "text", css: {'text-align': 'center'}}
-					],
-					data: [
-					]
-
-				},
-				{
-					view: "resizer"
-				},
-				{
-					minWidth: 100,
-					rows: [
-						{
-							view: "property",
-							id: "metadata",
-							editable: false,
-							scroll: true,
-							width: 260,
-							elements: [
-							]
-						},
-						{
-							view: "resizer"
-						},
-						{
-							width: 260,
-							height: 260,
-							minHeight: 100,
-							id: "thumb",
-							template: function(obj) {
-								if (obj.image) {
-									if (obj.session) {
-										// if it is from a session
-										return "<img src='" + obj.image + "'></img>";
-									}
-									return "<img src='" + obj.image + "_256.jpg'></img>";
-								}
-								return "";
-							}
-						}
-					]
-				}
-			]
+				view: "toolbar", cols: [topmenu]
 			}
 		]
 	});
-	this.tree = $$("tree1");
 
-	// Prevent HTML drop on rest of the page
-	webix.event(window, 'dragover', function(evt) {
-		evt.preventDefault();
-	});
-	webix.event(window, 'drop', function(evt) {
-		evt.preventDefault();
-	});
-
-	// Clear the upload list when clicking the header
-	webix.event($$("drop_header").$view, "click", function(e) {
-		$$("uploadlist").clearAll();
-	});
-
-	$$("mymenu").attachEvent("onMenuItemClick", function(evt) {
-		var mainUI = document.getElementById('mainUI');
+	$$("topmenu").attachEvent("onMenuItemClick", function(evt) {
 		if (evt === "about_menu") {
 			var versionText = "SAGE2 Version:<br>";
 			if (sage2Version.branch && sage2Version.commit && sage2Version.date) {
@@ -295,64 +172,6 @@ function FileManager(wsio, mydiv, uniqueID) {
 			window.open("help/info.html", '_blank');
 		} else if (evt === "help_menu") {
 			window.open("help/index.html", '_blank');
-		} else if (evt === "refresh_menu") {
-			wsio.emit('requestStoredFiles');
-		} else if (evt === "upload_menu") {
-			// open the file uploader panel
-			showDialog('uploadDialog');
-		} else if (evt === "folder_menu") {
-			var item = _this.tree.getSelectedItem();
-			if (item && item.sage2URL) {
-				webix.ui({
-					view: "window",
-					id: "folder_form",
-					position: "center",
-					modal: true,
-					head: "New folder in " + item.sage2URL,
-					body: {
-						view: "form",
-						width: 400,
-						borderless: false,
-						elements: [
-							{view: "text", id: "folder_name", label: "Folder name", name: "folder"},
-							{margin: 5, cols: [
-								{view: "button", value: "Cancel", click: function() {
-									this.getTopParentView().hide();
-								}},
-								{view: "button", value: "Create", type: "form", click: function() {
-									createFolder(item, this.getFormView().getValues());
-									this.getTopParentView().hide();
-								}}
-							]}
-						],
-						elementsConfig: {
-							labelPosition: "top"
-						}
-					}
-				}).show();
-				// Attach handlers for keyboard
-				$$("folder_name").attachEvent("onKeyPress", function(code, e) {
-					// ESC closes
-					if (code === 27 && !e.ctrlKey && !e.shiftKey && !e.altKey) {
-						this.getTopParentView().hide();
-						return false;
-					}
-					// ENTER activates
-					if (code === 13 && !e.ctrlKey && !e.shiftKey && !e.altKey) {
-						createFolder(item, this.getFormView().getValues());
-						this.getTopParentView().hide();
-						return false;
-					}
-				});
-				$$('folder_name').focus();
-			} else {
-				webix.alert({
-					type: "alert-warning",
-					title: "SAGE2",
-					ok: "OK",
-					text: "Select a parent folder first"
-				});
-			}
 		} else if (evt === "display_menu") {
 			var displayUrl = "http://" + window.location.hostname + _this.http_port +  "/display.html?clientID=0";
 			window.open(displayUrl, '_blank');
@@ -368,26 +187,6 @@ function FileManager(wsio, mydiv, uniqueID) {
 		} else if (evt === "videoservice_menu") {
 			var videoUrl = "https://sage2rtt.evl.uic.edu:3043/video";
 			window.open(videoUrl, '_blank');
-		} else if (evt === "clear_menu") {
-			wsio.emit('clearDisplay');
-		} else if (evt === "tile_menu") {
-			wsio.emit('tileApplications');
-		} else if (evt === "hidefm_menu") {
-			document.getElementById('fileManager').style.display = "none";
-			if (mainUI.style.display === "none") {
-				mainUI.style.display = "block";
-			}
-			SAGE2_resize();
-		} else if (evt === "hideui_menu") {
-			// Show and hide the main ui
-			if (mainUI.style.display === "none") {
-				mainUI.style.display = "block";
-				SAGE2_resize();
-			} else {
-				mainUI.style.display = "none";
-				_this.main.config.height = window.innerHeight;
-			}
-			_this.main.adjust();
 		} else if (evt === "audio_menu") {
 			var audioUrl = "http://" + window.location.hostname + _this.http_port +  "/audioManager.html";
 			window.open(audioUrl, '_blank');
@@ -395,10 +194,6 @@ function FileManager(wsio, mydiv, uniqueID) {
 			// window.open("drawing.html", '_blank');
 		} else if (evt === "console_menu") {
 			window.open("admin/console.html", '_blank');
-		} else if (evt === "partition_menu") {
-			// create partition
-			var ptnDims = {left: 200, top: 200, width: 1000, height: 700};
-			wsio.emit('createPartition', ptnDims);
 		} else if (evt === "2x1_menu") {
 			// create partition division of screen
 			wsio.emit('partitionScreen',
@@ -569,6 +364,236 @@ function FileManager(wsio, mydiv, uniqueID) {
 			wsio.emit('deleteAllPartitions');
 		} else if (evt === "partitiongrab_menu") {
 			wsio.emit('partitionsGrabAllContent');
+		} else {
+			// dunno
+		}
+	});
+
+	/////////////////////////////////////////////////////////////////////////////
+
+	// Custom tooltip function
+	function mytip(obj) {
+		return obj.tooltip ? obj.tooltip : "";
+	}
+
+	this.main = webix.ui({
+		container: mydiv,
+		id: "layout",
+		css: { border: "solid 1px #565656;"},
+		rows: [
+			{
+				view: "toolbar", cols: [mymenu, mytoolbar]
+			},
+			{ cols: [
+				{
+					rows: [
+						{
+							id: "tree1",
+							view: "tree",
+							select: "select",
+							navigation: true,
+							drag: true,
+							minWidth: 120,
+							width: 180,
+							activeTitle: true, // close/open when selected
+							tooltip: mytip,
+							data: data_with_icon,
+							onContext: {} // required for context menu
+						},
+						{
+							view: "resizer"},
+						{
+							height: 160, rows: [
+								{type: "header", id: "drop_header", template: "Drop files below"},
+								{view: "list", id: "uploadlist", type: "uploader", scroll: 'y'}
+							]
+						}
+					]
+				},
+				{
+					view: "resizer"
+				},
+				{
+					id: "all_table",
+					view: "datatable",
+					// editable: true,
+					gravity: 2, // two times bigger
+					columnWidth: 200,
+					resizeColumn: true,
+					// animate: false,
+					scroll: 'y',
+					drag: true,
+					select: "multiselect",
+					navigation: true,
+					scheme: {
+						// Generate an automatic index
+						$init: function(obj) {
+							obj.index = this.count() + 1;
+						}
+					},
+					on: {
+						// update index after sort or update
+						"data->onStoreUpdated": function() {
+							this.data.each(function(obj, i) {
+								obj.index = i + 1;
+							});
+							return true;
+						}
+					},
+					columns: [
+						{id: "index", header: "",     width: 40, minWidth: 25, sort: "int"},
+						{id: "name",  header: "Name", minWidth: 180,
+							sort: "text", fillspace: true},
+						{id: "user",  header: "User", width: 80, minWidth: 50,
+							sort: "text", css: {'text-align': 'right'}},
+						{id: "size",  header: "Size", width: 80, minWidth: 50,
+							sort: sortBySize, css: {'text-align': 'right'}},
+						{id: "date",  header: "Date", width: 150, minWidth: 80,
+							sort: sortByDate, css: {'text-align': 'center'}},
+						{id: "ago",   header: "Modified", width: 100, minWidth: 80,
+							sort: sortByDate, css: {'text-align': 'right'}},
+						{id: "type",  header: "Type", width: 80, minWidth: 50,
+							sort: "text", css: {'text-align': 'center'}}
+					],
+					data: [
+					]
+
+				},
+				{
+					view: "resizer"
+				},
+				{
+					minWidth: 100,
+					rows: [
+						{
+							view: "property",
+							id: "metadata",
+							editable: false,
+							scroll: true,
+							width: 260,
+							elements: [
+							]
+						},
+						{
+							view: "resizer"
+						},
+						{
+							width: 260,
+							height: 260,
+							minHeight: 100,
+							id: "thumb",
+							template: function(obj) {
+								if (obj.image) {
+									if (obj.session) {
+										// if it is from a session
+										return "<img src='" + obj.image + "'></img>";
+									}
+									return "<img src='" + obj.image + "_256.jpg'></img>";
+								}
+								return "";
+							}
+						}
+					]
+				}
+			]
+			}
+		]
+	});
+	this.tree = $$("tree1");
+
+	// Prevent HTML drop on rest of the page
+	webix.event(window, 'dragover', function(evt) {
+		evt.preventDefault();
+	});
+	webix.event(window, 'drop', function(evt) {
+		evt.preventDefault();
+	});
+
+	// Clear the upload list when clicking the header
+	webix.event($$("drop_header").$view, "click", function(e) {
+		$$("uploadlist").clearAll();
+	});
+
+	$$("mymenu").attachEvent("onMenuItemClick", function(evt) {
+		var mainUI = document.getElementById('mainUI');
+		if (evt === "refresh_menu") {
+			wsio.emit('requestStoredFiles');
+		} else if (evt === "upload_menu") {
+			// open the file uploader panel
+			showDialog('uploadDialog');
+		} else if (evt === "folder_menu") {
+			var item = _this.tree.getSelectedItem();
+			if (item && item.sage2URL) {
+				webix.ui({
+					view: "window",
+					id: "folder_form",
+					position: "center",
+					modal: true,
+					head: "New folder in " + item.sage2URL,
+					body: {
+						view: "form",
+						width: 400,
+						borderless: false,
+						elements: [
+							{view: "text", id: "folder_name", label: "Folder name", name: "folder"},
+							{margin: 5, cols: [
+								{view: "button", value: "Cancel", click: function() {
+									this.getTopParentView().hide();
+								}},
+								{view: "button", value: "Create", type: "form", click: function() {
+									createFolder(item, this.getFormView().getValues());
+									this.getTopParentView().hide();
+								}}
+							]}
+						],
+						elementsConfig: {
+							labelPosition: "top"
+						}
+					}
+				}).show();
+				// Attach handlers for keyboard
+				$$("folder_name").attachEvent("onKeyPress", function(code, e) {
+					// ESC closes
+					if (code === 27 && !e.ctrlKey && !e.shiftKey && !e.altKey) {
+						this.getTopParentView().hide();
+						return false;
+					}
+					// ENTER activates
+					if (code === 13 && !e.ctrlKey && !e.shiftKey && !e.altKey) {
+						createFolder(item, this.getFormView().getValues());
+						this.getTopParentView().hide();
+						return false;
+					}
+				});
+				$$('folder_name').focus();
+			} else {
+				webix.alert({
+					type: "alert-warning",
+					title: "SAGE2",
+					ok: "OK",
+					text: "Select a parent folder first"
+				});
+			}
+		} else if (evt === "clear_menu") {
+			wsio.emit('clearDisplay');
+		} else if (evt === "tile_menu") {
+			wsio.emit('tileApplications');
+		} else if (evt === "hidefm_menu") {
+			document.getElementById('fileManager').style.display = "none";
+			if (mainUI.style.display === "none") {
+				mainUI.style.display = "block";
+			}
+			SAGE2_resize();
+		} else if (evt === "hideui_menu") {
+			// Show and hide the main ui
+			if (mainUI.style.display === "none") {
+				mainUI.style.display = "block";
+				SAGE2_resize();
+			} else {
+				mainUI.style.display = "none";
+				_this.main.config.height = window.innerHeight;
+			}
+			_this.main.adjust();
 		} else {
 			// dunno
 		}
