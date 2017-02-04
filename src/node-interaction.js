@@ -405,9 +405,16 @@ Interaction.prototype.resizeSelectedItem = function(pointerX, pointerY) {
 		}
 	}
 
+	if (this.selectedResizeItem.partition && this.selectedResizeItem.maximized) {
+		// if the item is in a partition and it is maximized
+		// cancel maximized state of partition
+		this.selectedResizeItem.partition.innerMaximization = false;
+	}
+
 	this.selectedResizeItem.width  = iWidth;
 	this.selectedResizeItem.height = iHeight;
 	this.selectedResizeItem.maximized = false;
+
 
 	return {
 		elemId: this.selectedResizeItem.id, elemLeft: this.selectedResizeItem.left,

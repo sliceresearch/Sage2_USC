@@ -655,9 +655,9 @@ Partition.prototype.updateInnerLayout = function() {
 		if (this.children[this.currentMaximizedChild].maximized === false) {
 			// this should never really happen
 			console.log("Partition: Maximizing child in updateInnerLayout()");
-			this.maximizeChild(this.currentMaximizedChild);
-			this.needsChildAnimate = true;
 		}
+		this.maximizeChild(this.currentMaximizedChild);
+		this.needsChildAnimate = true;
 	}
 
 	if (this.innerTiling) {
