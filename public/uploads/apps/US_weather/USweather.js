@@ -397,7 +397,13 @@ var USweather = (function() {
 				iconVisibility = "hidden";
 			}
 
-			this.drawText(textVisibility, oneLocation, xLoc + this.gwin.boxSize * 0.5, yLoc + this.gwin.boxSize * 0.75, weather, 20);
+			this.drawText(
+				textVisibility,
+				oneLocation,
+				xLoc + this.gwin.boxSize * 0.5,
+				yLoc + this.gwin.boxSize * 0.75,
+				weather,
+				20);
 
 			oneLocation.append("svg:image")
 				.attr("visibility", iconVisibility)
