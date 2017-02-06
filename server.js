@@ -6010,10 +6010,7 @@ function pointerPressOnPartition(uniqueID, pointerX, pointerY, data, obj, localP
 			selectApplicationForMove(uniqueID, obj.data, pointerX, pointerY);
 			break;
 		case "dragCorner":
-			// if (sagePointers[uniqueID].visible) {
-				// only if pointer on the wall, not the web UI
-				selectApplicationForResize(uniqueID, obj.data, pointerX, pointerY, portalId);
-			// }
+			selectApplicationForResize(uniqueID, obj.data, pointerX, pointerY, portalId);
 			break;
 		case "tileButton":
 			if (sagePointers[uniqueID].visible) {
