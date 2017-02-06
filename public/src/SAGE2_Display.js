@@ -390,7 +390,7 @@ function setupListeners() {
 	});
 
 	wsio.on('drawingInit', function(data) {
-		// ui.drawingInit(data);
+		ui.drawingInit(data);
 	});
 
 	wsio.on('drawingUpdate', function(data) {

@@ -12,8 +12,8 @@
  * Library loader allowing for versioning of libraries used by applications
  *
  * @module client
- * @submodule SAGE2_runtime
- * @class SAGE2_runtime
+ * @submodule SAGE2_LibLoader
+ * @class SAGE2_LibLoader
  */
 
 /* global require */
@@ -69,7 +69,7 @@ var SAGE2_LibLoader = {};
 		lib.d3.v4 = d3v4;
 		lib.d3.latest = d3v4;
 
-		d3 = lib.	d3.v4;
+		d3 = lib.d3.v3;
 
 		console.log("d3.v3 & d3.v4 loaded");
 
