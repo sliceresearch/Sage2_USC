@@ -657,12 +657,10 @@ Partition.prototype.updateInnerLayout = function() {
 			console.log("Partition: Maximizing child in updateInnerLayout()");
 		}
 		this.maximizeChild(this.currentMaximizedChild);
-		this.needsChildAnimate = true;
 	}
 
 	if (this.innerTiling) {
 		this.tilePartition();
-		this.needsChildAnimate = true;
 	}
 };
 

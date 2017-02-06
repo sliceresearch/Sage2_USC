@@ -6010,16 +6010,16 @@ function pointerPressOnPartition(uniqueID, pointerX, pointerY, data, obj, localP
 			selectApplicationForMove(uniqueID, obj.data, pointerX, pointerY);
 			break;
 		case "dragCorner":
-			if (sagePointers[uniqueID].visible) {
+			// if (sagePointers[uniqueID].visible) {
 				// only if pointer on the wall, not the web UI
 				selectApplicationForResize(uniqueID, obj.data, pointerX, pointerY, portalId);
-			}
+			// }
 			break;
 		case "tileButton":
 			if (sagePointers[uniqueID].visible) {
 				var changedPartitions = partitions.list[obj.id].toggleInnerTiling();
 
-				updatePartitionInnerLayout(partitions.list[obj.id]);
+				updatePartitionInnerLayout(partitions.list[obj.id], true);
 
 				changedPartitions.forEach(el => {
 					broadcast('partitionWindowTitleUpdate', partitions.list[el].getTitle());
@@ -6054,17 +6054,12 @@ function pointerPressOnPartition(uniqueID, pointerX, pointerY, data, obj, localP
 				broadcast('partitionMoveAndResizeFinished', obj.data.getDisplayInfo());
 
 				// update child positions within partiton
-				updatePartitionInnerLayout(partitions.list[obj.id]);
+				updatePartitionInnerLayout(partitions.list[obj.id], false);
 			}
 			break;
 		case "closeButton":
 			if (sagePointers[uniqueID].visible) {
 				// only if pointer on the wall, not the web UI
-
-				// close partition (drop all windows inside)
-				// broadcast('deletePartitionWindow', obj.data.getDisplayInfo());
-				// partitions.removePartition(obj.id);
-				// interactMgr.removeGeometry(obj.id, "partitions");
 
 				deletePartition(obj.id);
 			}
@@ -6991,7 +6986,7 @@ function moveAndResizePartitionWindow(uniqueID, movePartition) {
 				partitions.updatePartitionGeometries(neigh, interactMgr);
 				broadcast('partitionMoveAndResizeFinished', partitions.list[neigh].getDisplayInfo());
 
-				updatePartitionInnerLayout(partitions.list[neigh]);
+				updatePartitionInnerLayout(partitions.list[neigh], true);
 			}
 
 		}
@@ -6999,18 +6994,18 @@ function moveAndResizePartitionWindow(uniqueID, movePartition) {
 		partitions.updatePartitionGeometries(movePartition.elemId, interactMgr);
 		broadcast('partitionMoveAndResizeFinished', movedPtn.getDisplayInfo());
 
-		updatePartitionInnerLayout(movedPtn);
+		updatePartitionInnerLayout(movedPtn, true);
 	}
 }
 
-function updatePartitionInnerLayout(partition) {
+function updatePartitionInnerLayout(partition, animateAppMovement) {
 	partition.updateInnerLayout();
 
 	// update children of partition
 	let updatedChildren = partition.updateChildrenPositions();
 
 	for (let child of updatedChildren) {
-		child.elemAnimate = partition.needsChildAnimate;
+		child.elemAnimate = animateAppMovement;
 		moveAndResizeApplicationWindow(child);
 	}
 }
@@ -7235,10 +7230,10 @@ function pointerRelease(uniqueID, pointerX, pointerY, data) {
 				// if the old partition was tiled, set the new displays to be tiled
 				if (ptnTiled) {
 					newPtn1.toggleInnerTiling();
-					updatePartitionInnerLayout(newPtn1);
+					updatePartitionInnerLayout(newPtn1, true);
 
 					newPtn2.toggleInnerTiling();
-					updatePartitionInnerLayout(newPtn2);
+					updatePartitionInnerLayout(newPtn2, true);
 				}
 
 				// update parititon titles
@@ -7270,7 +7265,7 @@ function pointerRelease(uniqueID, pointerX, pointerY, data) {
 		changedPartitions.forEach(el => {
 			broadcast('partitionWindowTitleUpdate', partitions.list[el].getTitle());
 
-			updatePartitionInnerLayout(partitions.list[el]);
+			updatePartitionInnerLayout(partitions.list[el], true);
 		});
 
 		// remove partition edge highlight
@@ -8305,7 +8300,7 @@ function toggleApplicationFullscreen(uniqueID, app, dblClick) {
 		moveAndResizeApplicationWindow(resizeApp);
 
 		if (app.partition) {
-			updatePartitionInnerLayout(app.partition);
+			updatePartitionInnerLayout(app.partition, true);
 			broadcast('partitionWindowTitleUpdate', app.partition.getTitle());
 		}
 
@@ -8333,7 +8328,7 @@ function deleteApplication(appId, portalId) {
 
 		if (partitions.list.hasOwnProperty(ptnId)) {
 			// make sure this id is a partition
-			updatePartitionInnerLayout(partitions.list[ptnId]);
+			updatePartitionInnerLayout(partitions.list[ptnId], true);
 			broadcast('partitionWindowTitleUpdate', partitions.list[ptnId].getTitle());
 		}
 	}
@@ -8455,7 +8450,7 @@ function handleNewApplication(appInstance, videohandle) {
 	// assign content to a partition immediately when it is created
 	var changedPartitions = partitions.updateOnItemRelease(appInstance);
 	changedPartitions.forEach((id => {
-		updatePartitionInnerLayout(partitions.list[id]);
+		updatePartitionInnerLayout(partitions.list[id], true);
 
 		broadcast('partitionWindowTitleUpdate', partitions.list[id].getTitle());
 	}));
@@ -9659,7 +9654,7 @@ function partitionsGrabAllContent() {
 		var changedPartitions = partitions.updateOnItemRelease(SAGE2Items.applications.list[key]);
 
 		changedPartitions.forEach((id => {
-			updatePartitionInnerLayout(partitions.list[id]);
+			updatePartitionInnerLayout(partitions.list[id], true);
 
 			broadcast('partitionWindowTitleUpdate', partitions.list[id].getTitle());
 		}));
