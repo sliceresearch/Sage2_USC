@@ -836,5 +836,40 @@ Partition.prototype.getTitle = function() {
 	};
 };
 
+/**
+  * Create the context menu based on the current state of the partition
+  */
+Partition.prototype.getContextMenu = function() {
+	var contextMenu = [];
+
+	contextMenu.push({
+		description: this.innerTiling ? "Stop Tiling" : "Tile Content",
+		callback: "toggleInnerTiling",
+		parameters: {}
+	});
+	contextMenu.push({
+		description: "Clear Content",
+		callback: "clearPartition",
+		parameters: {}
+	});
+
+	contextMenu.push({
+		description: "separator"
+	});
+	// broken because of node-drawing... aggravating
+	// contextMenu.push({
+	// 	description: "Maximize Partition",
+	// 	callback: "SAGE2Maximize",
+	// 	parameters: {}
+	// });
+	contextMenu.push({
+		description: "Close Partition",
+		callback: "SAGE2DeleteElement",
+		parameters: {}
+	});
+
+	return contextMenu;
+};
+
 
 module.exports = Partition;

@@ -8856,26 +8856,43 @@ function wsUtdWhatAppIsAt(wsio, data) {
  */
 function wsUtdRequestRmbContextMenu(wsio, data) {
 	var obj = interactMgr.searchGeometry({x: data.x, y: data.y});
-	if (obj !== null && SAGE2Items.applications.list[obj.data.id]) {
-		if (SAGE2Items.applications.list[obj.data.id].contextMenu) {
-			// If we already have the menu info, send it
+
+	if (obj !== null) {
+		// check type of item under click
+		if (SAGE2Items.applications.list.hasOwnProperty(obj.data.id)) {
+			// if an app was under the rmb click
+			if (SAGE2Items.applications.list[obj.data.id].contextMenu) {
+
+				// If we already have the menu info, send it
+				wsio.emit('dtuRmbContextMenuContents', {
+					x: data.xClick,
+					y: data.yClick,
+					app: obj.data.id,
+					entries: SAGE2Items.applications.list[obj.data.id].contextMenu
+				});
+
+			} else {
+				// Default response
+				wsio.emit('dtuRmbContextMenuContents', {
+					x: data.xClick,
+					y: data.yClick,
+					app: obj.data.id,
+					entries: [{
+						description: "App not yet loaded on display client yet."
+					}]
+				});
+
+			}
+		} else if (partitions.list.hasOwnProperty(obj.data.id)) {
+			// if a partition was under the rmb click
 			wsio.emit('dtuRmbContextMenuContents', {
 				x: data.xClick,
 				y: data.yClick,
 				app: obj.data.id,
-				entries: SAGE2Items.applications.list[obj.data.id].contextMenu
-			});
-		} else {
-			// Default response
-			wsio.emit('dtuRmbContextMenuContents', {
-				x: data.xClick,
-				y: data.yClick,
-				app: obj.data.id,
-				entries: [{
-					description: "App not yet loaded on display client yet."
-				}]
+				entries: partitions.list[obj.data.id].getContextMenu()
 			});
 		}
+
 	}
 }
 
@@ -8883,38 +8900,67 @@ function wsUtdRequestRmbContextMenu(wsio, data) {
  * Asks for rmb context menu from app under x,y coordinate.
  */
 function wsUtdCallFunctionOnApp(wsio, data) {
-	if (data.func === "SAGE2DeleteElement") {
-		deleteApplication(data.app);
-		// closing of applications are handled by the called function.
-		return;
-	} else if (data.func === "SAGE2SendToBack") {
-		// data.app should contain the id.
-		var im = findInteractableManager(data.app);
-		im.moveObjectToBack(data.app, "applications");
-		var newOrder = im.getObjectZIndexList("applications");
-		broadcast('updateItemOrder', newOrder);
-		return;
-	} else if (data.func === "SAGE2Maximize") {
-		if (data.parameters.clientId && SAGE2Items.applications.list[data.app]) {
-			toggleApplicationFullscreen(data.parameters.clientId,
-				SAGE2Items.applications.list[data.app],
-				true);
+	// check if the id is an applications or partition
+	if (SAGE2Items.applications.list.hasOwnProperty(data.app)) {
+		if (data.func === "SAGE2DeleteElement") {
+			deleteApplication(data.app);
+			// closing of applications are handled by the called function.
+			return;
+		} else if (data.func === "SAGE2SendToBack") {
+			// data.app should contain the id.
+			var im = findInteractableManager(data.app);
+			im.moveObjectToBack(data.app, "applications");
+			var newOrder = im.getObjectZIndexList("applications");
+			broadcast('updateItemOrder', newOrder);
+			return;
+		} else if (data.func === "SAGE2Maximize") {
+			if (data.parameters.clientId && SAGE2Items.applications.list[data.app]) {
+				toggleApplicationFullscreen(data.parameters.clientId,
+					SAGE2Items.applications.list[data.app],
+					true);
+			}
+			return;
 		}
-		return;
+
+		// Using broadcast means the parameter must be in data.data
+		data.data = data.parameters;
+		// add the serverDate property
+		data.data.serverDate = Date.now();
+		// add the clientId property
+		data.data.clientId = wsio.id;
+		// send to all display clients(since they all need to update)
+		for (var i = 0; i < clients.length; i++) {
+			if (clients[i].clientType === "display") {
+				clients[i].emit('broadcast', data);
+			}
+		}
+	}  else if (partitions.list.hasOwnProperty(data.app)) {
+		// the context menu is on a partition
+
+		if (data.func === "SAGE2DeleteElement") {
+			deletePartition(data.app);
+			// closing of applications are handled by the called function.
+			return;
+		} else if (data.func === "SAGE2Maximize") {
+			if (data.parameters.clientId && partitions.list[data.app]) {
+				toggleApplicationFullscreen(data.parameters.clientId,
+					partitions.list[data.app],
+					true);
+			}
+		} else if (data.func === "clearPartition") {
+			// invoke clear with delete application method -- messy, should refactor
+			partitions.list[data.app][data.func](deleteApplication);
+		} else {
+			// invoke the other callback
+			partitions.list[data.app][data.func]();
+		}
+
+		updatePartitionInnerLayout(partitions.list[data.app], true);
+
+		broadcast('partitionWindowTitleUpdate', partitions.list[data.app].getTitle());
+
 	}
 
-	// Using broadcast means the parameter must be in data.data
-	data.data = data.parameters;
-	// add the serverDate property
-	data.data.serverDate = Date.now();
-	// add the clientId property
-	data.data.clientId = wsio.id;
-	// send to all display clients(since they all need to update)
-	for (var i = 0; i < clients.length; i++) {
-		if (clients[i].clientType === "display") {
-			clients[i].emit('broadcast', data);
-		}
-	}
 }
 
 /**
