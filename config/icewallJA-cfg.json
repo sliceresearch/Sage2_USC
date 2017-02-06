@@ -3,7 +3,10 @@
 	"port": 6060,
 	"index_port": 6262,
 	"background": {
-		"color": "#333333"
+		image: {
+			url: "images/background/chicago_skyline_thor.jpg",
+			style: "fit"
+		},
 	},
 	"ui": {
 		"clock": 12,
@@ -36,10 +39,22 @@
 			"secure": true
 		},
 		{
-			"name": "CAVE2",
-			"host": "lyra.evl.uic.edu",
-			"port": 443,
-			"secure": true
+			name: "Krishna",
+			host: "thor.evl.uic.edu",
+			port: 5050,
+			secure: true
+		},
+		{
+			name: "Kristine",
+			host: "thor.evl.uic.edu",
+			port: 7070,
+			secure: true
+		},
+		{
+			name: "Arthur",
+			host: "thor.evl.uic.edu",
+			port: 8080,
+			secure: true
 		}
 	]
 }
