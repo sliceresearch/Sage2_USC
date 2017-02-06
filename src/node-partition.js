@@ -856,12 +856,12 @@ Partition.prototype.getContextMenu = function() {
 	contextMenu.push({
 		description: "separator"
 	});
-	// broken because of node-drawing... aggravating
-	// contextMenu.push({
-	// 	description: "Maximize Partition",
-	// 	callback: "SAGE2Maximize",
-	// 	parameters: {}
-	// });
+
+	contextMenu.push({
+		description: this.maximized ? "Restore Partition" : "Maximize Partition",
+		callback: "SAGE2Maximize",
+		parameters: {}
+	});
 	contextMenu.push({
 		description: "Close Partition",
 		callback: "SAGE2DeleteElement",

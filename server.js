@@ -8942,10 +8942,18 @@ function wsUtdCallFunctionOnApp(wsio, data) {
 			// closing of applications are handled by the called function.
 			return;
 		} else if (data.func === "SAGE2Maximize") {
-			if (data.parameters.clientId && partitions.list[data.app]) {
-				toggleApplicationFullscreen(data.parameters.clientId,
-					partitions.list[data.app],
-					true);
+			if (data.parameters.clientId) {
+				if (!partitions.list[data.app].maximized) {
+					remoteInteraction[data.parameters.clientId].maximizeSelectedItem(partitions.list[data.app]);
+				} else {
+					remoteInteraction[data.parameters.clientId].restoreSelectedItem(partitions.list[data.app]);
+				}
+
+				partitions.updatePartitionGeometries(data.app, interactMgr);
+				broadcast('partitionMoveAndResizeFinished', partitions.list[data.app].getDisplayInfo());
+
+				// update child positions within partiton
+				updatePartitionInnerLayout(partitions.list[data.app], false);
 			}
 		} else if (data.func === "clearPartition") {
 			// invoke clear with delete application method -- messy, should refactor
