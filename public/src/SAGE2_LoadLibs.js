@@ -69,7 +69,7 @@ var SAGE2_LibLoader = {};
 		lib.d3.v4 = d3v4;
 		lib.d3.latest = d3v4;
 
-		d3 = lib.d3.v4;
+		d3 = lib.	d3.v4;
 
 		console.log("d3.v3 & d3.v4 loaded");
 
@@ -77,5 +77,3 @@ var SAGE2_LibLoader = {};
 	});
 
 }());
-
-
