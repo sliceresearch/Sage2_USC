@@ -407,7 +407,7 @@ Interaction.prototype.resizeSelectedItem = function(pointerX, pointerY) {
 
 	if (this.selectedResizeItem.partition) {
 		// if the item is in a partition
-	 	if (this.selectedResizeItem.maximized) {
+		if (this.selectedResizeItem.maximized) {
 			// and it is maximized
 			// cancel maximized state of partition
 			this.selectedResizeItem.partition.innerMaximization = false;
