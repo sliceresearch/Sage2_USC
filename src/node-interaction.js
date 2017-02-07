@@ -405,10 +405,18 @@ Interaction.prototype.resizeSelectedItem = function(pointerX, pointerY) {
 		}
 	}
 
-	if (this.selectedResizeItem.partition && this.selectedResizeItem.maximized) {
-		// if the item is in a partition and it is maximized
-		// cancel maximized state of partition
-		this.selectedResizeItem.partition.innerMaximization = false;
+	if (this.selectedResizeItem.partition) {
+		// if the item is in a partition
+	 	if (this.selectedResizeItem.maximized) {
+			// and it is maximized
+			// cancel maximized state of partition
+			this.selectedResizeItem.partition.innerMaximization = false;
+		}
+		if (this.selectedResizeItem.partition.innerTiling) {
+			// if the partition is tiled
+			// cancel the tiled state of the partition
+			this.selectedResizeItem.partition.toggleInnerTiling();
+		}
 	}
 
 	this.selectedResizeItem.width  = iWidth;
