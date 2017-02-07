@@ -193,6 +193,7 @@ function SAGE2_init() {
 			},
 			browser: __SAGE2__.browser
 		};
+		console.log("addClient "+JSON.stringify(clientDescription));
 		wsio.emit('addClient', clientDescription);
 
 		// Interaction object: file upload, desktop sharing, ...
@@ -282,9 +283,6 @@ function SAGE2_init() {
 		if (event.data.cmd === "window_selected") {
 			interactor.captureDesktop(event.data.mediaSourceId);
 		}
-		if (event.data.cmd === "screenshot") {
-			wsio.emit('loadImageFromBuffer', event.data);
-		}
 	});
 }
 
@@ -312,33 +310,6 @@ function setupListeners() {
 		pointerY    = 0;
 
 		var sage2UI = document.getElementById('sage2UICanvas');
-
-		// Build the file manager
-		fileManager = new FileManager(wsio, "fileManager", interactor.uniqueID);
-		webix.DragControl.addDrop("displayUIDiv", {
-			$drop: function(source, target, event) {
-				var dnd = webix.DragControl.getContext();
-				// Calculate the position of the drop
-				var x, y;
-				if (hasMouse) {
-					// Desktop
-					x = event.layerX / event.target.clientWidth;
-					y = event.layerY / event.target.clientHeight;
-				} else {
-					// Mobile: convert from touch screen coordinate to element
-					var bbox = sage2UI.getBoundingClientRect();
-					x = (fileManager.dragPosition.x - bbox.left) / sage2UI.clientWidth;
-					y = (fileManager.dragPosition.y - bbox.top)  / sage2UI.clientHeight;
-				}
-				// Open the files
-				for (var i = 0; i < dnd.source.length; i++) {
-					fileManager.openItem(dnd.source[i], [x, y]);
-				}
-			}
-		});
-
-		// First request the files
-		wsio.emit('requestStoredFiles');
 	});
 
 	// Open a popup on message sent from server
@@ -961,14 +932,14 @@ function mouseCheck(event) {
 	document.title = "SAGE2 UI - Desktop";
 	console.log("Detected as desktop device");
 
-	document.addEventListener('mousedown',  pointerPress,    false);
-	document.addEventListener('mouseup',    pointerRelease,  false);
-	document.addEventListener('mousemove',  pointerMove,     false);
-	document.addEventListener('wheel',      pointerScroll,   false);
-	document.addEventListener('click',      pointerClick,    false);
-	document.addEventListener('dblclick',   pointerDblClick, false);
+	//document.addEventListener('mousedown',  pointerPress,    false);
+	//document.addEventListener('mouseup',    pointerRelease,  false);
+	//document.addEventListener('mousemove',  pointerMove,     false);
+	//document.addEventListener('wheel',      pointerScroll,   false);
+	//document.addEventListener('click',      pointerClick,    false);
+	//document.addEventListener('dblclick',   pointerDblClick, false);
 
-	document.removeEventListener('mousemove', mouseCheck, false);
+	//document.removeEventListener('mousemove', mouseCheck, false);
 
 	var uiButtonImg = getCSSProperty("style_ui.css", "#menuUI tr td:hover img");
 	if (uiButtonImg !== null) {
@@ -981,204 +952,6 @@ function mouseCheck(event) {
 	// if (uiButtonP !== null) {
 	// 	uiButtonP.style.opacity = "0.0";
 	// }
-}
-
-/**
- * Handler for click event
- *
- * @method pointerClick
- * @param event {Event} event data
- */
-function pointerClick(event) {
-	handleClick(event.target);
-}
-
-/**
- * Processing click
- *
- * @method handleClick
- * @param element {Element} DOM element triggering the click
- */
-function handleClick(element) {
-	console.log("handleClick", element);
-	// Menu Buttons
-	if (element.id === "sage2pointer"      || element.id === "sage2pointerContainer" || element.id === "sage2pointerLabel") {
-		interactor.startSAGE2Pointer(element.id);
-	} else if (element.id === "sharescreen"  || element.id === "sharescreenContainer"  || element.id === "sharescreenLabel") {
-		interactor.startScreenShare();
-	} else if (element.id === "applauncher"  || element.id === "applauncherContainer"  || element.id === "applauncherLabel") {
-		wsio.emit('requestAvailableApplications');
-	} else if (element.id === "mediabrowser" || element.id === "mediabrowserContainer" || element.id === "mediabrowserLabel") {
-		if (!hasMouse && !__SAGE2__.browser.isIPad &&
-			!__SAGE2__.browser.isAndroidTablet) {
-			// wsio.emit('requestStoredFiles');
-			showDialog('mediaBrowserDialog');
-		} else {
-			// Open the new file manager
-			var fm = document.getElementById('fileManager');
-			if (fm.style.display === "none") {
-				fm.style.display = "block";
-				SAGE2_resize(0.6);
-				fileManager.refresh();
-			} else {
-				fm.style.display = "none";
-				SAGE2_resize(1.0);
-			}
-		}
-	} else if (element.id === "arrangement"  || element.id === "arrangementContainer"  || element.id === "arrangementLabel") {
-		showDialog('arrangementDialog');
-	} else if (element.id === "settings"     || element.id === "settingsContainer"     || element.id === "settingsLabel") {
-		showDialog('settingsDialog');
-	} else if (element.id === "browser"      || element.id === "browserContainer"      || element.id === "browserLabel") {
-		showDialog('browserDialog');
-	} else if (element.id === "info"         || element.id === "infoContainer"         || element.id === "infoLabel") {
-		showDialog('infoDialog');
-	} else if (element.id === "appOpenBtn") {
-		// App Launcher Dialog
-		loadSelectedApplication();
-		hideDialog('appLauncherDialog');
-	} else if (element.id === "appCloseBtn") {
-		selectedAppEntry = null;
-		hideDialog('appLauncherDialog');
-	} else if (element.id === "closeMobileSAGE2Pointer") {
-		// Mobile SAGE2 Pointer
-		interactor.stopSAGE2Pointer();
-	} else if (element.id === "fileOpenBtn") {
-		// Media Browser Dialog
-		loadSelectedFile();
-		document.getElementById('thumbnail').src = "images/blank.jpg";
-		document.getElementById('metadata_text').textContent = "";
-		hideDialog('mediaBrowserDialog');
-	} else if (element.id === "fileCloseBtn") {
-		selectedFileEntry = null;
-		document.getElementById('thumbnail').src = "images/blank.jpg";
-		document.getElementById('metadata_text').textContent = "";
-		hideDialog('mediaBrowserDialog');
-	} else if (element.id === "fileUploadBtn") {
-		// Upload files to SAGE2
-		// clear the preview panel
-		selectedFileEntry = null;
-		document.getElementById('thumbnail').src = "images/blank.jpg";
-		document.getElementById('metadata_text').textContent = "";
-		// close the media browswer
-		hideDialog('mediaBrowserDialog');
-		// open the file uploader panel
-		showDialog('uploadDialog');
-	} else if (element.id === "localFilesBtn") {
-		// upload files local to the user's device
-		// close the file uploader panel
-		hideDialog('uploadDialog');
-		// open the file library
-		//    delay to remove bounce evennt on Chrome/iOS
-		setTimeout(function() {
-			showDialog('localfileDialog');
-		}, 200);
-	} else if (element.id === "dropboxFilesBtn") {
-		// upload from Dropbox
-		// Not Yet Implemented
-		//   ...
-		// close the file uploader panel
-		hideDialog('uploadDialog');
-	} else if (element.id === "cancelFilesBtn") {
-		// close the file uploader panel
-		hideDialog('uploadDialog');
-	} else if (element.id === "cancelFilesBtn2") {
-		// close the pic uploader panel
-		hideDialog('localfileDialog');
-	} else if (element.id === "localfileUploadBtn") {
-		// trigger the upload function
-		fileUploadFromUI();
-	} else if (element.id === "fileDeleteBtn") {
-		if (selectedFileEntry !== null && confirm("Are you sure you want to delete this file?")) {
-			var application = selectedFileEntry.getAttribute("application");
-			var file = selectedFileEntry.getAttribute("file");
-			wsio.emit('deleteElementFromStoredFiles', {application: application, filename: file});
-
-			document.getElementById('thumbnail').src = "images/blank.jpg";
-			document.getElementById('metadata_text').textContent = "";
-			selectedFileEntry = null;
-			hideDialog('mediaBrowserDialog');
-		}
-	} else if (element.id === "arrangementCloseBtn") {
-		// Arrangement Dialog
-		hideDialog('arrangementDialog');
-	} else if (element.id === "infoCloseBtn") {
-		// Info Dialog
-		hideDialog('infoDialog');
-	} else if (element.id === "helpcontent") {
-		hideDialog('infoDialog');
-		var awin1 = window.open("help/index.html", '_blank');
-		awin1.focus();
-	} else if (element.id === "admincontent") {
-		hideDialog('infoDialog');
-		var awin2 = window.open("admin/index.html", '_blank');
-		awin2.focus();
-	} else if (element.id === "infocontent") {
-		hideDialog('infoDialog');
-		var awin3 = window.open("help/info.html", '_blank');
-		awin3.focus();
-	} else if (element.id === "settingsCloseBtn") {
-		// Settings Dialog
-		hideDialog('settingsDialog');
-	} else if (element.id === "settingsCloseBtn2") {
-		// Init Settings Dialog
-		hideDialog('settingsDialog2');
-	} else if (element.id === "browserOpenBtn") {
-		// Browser Dialog
-		var url = document.getElementById("openWebpageUrl");
-		wsio.emit('openNewWebpage', {id: interactor.uniqueID, url: url.value});
-		hideDialog('browserDialog');
-	} else if (element.id === "browserCloseBtn") {
-		hideDialog('browserDialog');
-	} else if (element.id.length > 14 && element.id.substring(0, 14) === "available_app_") {
-		// Application Selected
-		var application_selected = element.getAttribute("application");
-		if (selectedAppEntry !== null) {
-			selectedAppEntry.style.backgroundColor = "transparent";
-		}
-		selectedAppEntry = document.getElementById('available_app_row_' + application_selected);
-		selectedAppEntry.style.backgroundColor = "#6C6C6C";
-	} else if (element.id.length > 5 && element.id.substring(0, 5) === "file_") {
-		// File Selected
-		// highlight selection
-		if (selectedFileEntry !== null) {
-			selectedFileEntry.style.backgroundColor = "transparent";
-		}
-		selectedFileEntry = element;
-		selectedFileEntry.style.backgroundColor = "#6C6C6C";
-
-		// show metadata
-		var metadata = document.getElementById('metadata');
-		var size = Math.min(parseInt(metadata.style.width, 10), parseInt(metadata.style.height, 10)) * 0.9 - 32;
-		var thumbnail = document.getElementById('thumbnail');
-		thumbnail.src = selectedFileEntry.getAttribute("thumbnail") + "_256.jpg";
-		thumbnail.width = size;
-		thumbnail.height = size;
-		var metadata_text = document.getElementById('metadata_text');
-		metadata_text.textContent = selectedFileEntry.textContent;
-	} else if (element.id === "clearcontent") {
-		// Remove all the running applications
-		wsio.emit('clearDisplay');
-		hideDialog('arrangementDialog');
-	} else if (element.id === "tilecontent") {
-		// Layout the applications
-		wsio.emit('tileApplications');
-		hideDialog('arrangementDialog');
-	} else if (element.id === "savesession") {
-		var template = "session_" + dateToYYYYMMDDHHMMSS(new Date());
-		var filename = prompt("Please enter a session name\n(Leave blank for name based on server's time)", template);
-		if (filename !== null) {
-			wsio.emit('saveSesion', filename);
-			hideDialog('arrangementDialog');
-		}
-	} else if (element.id === "ffShareScreenBtn") {
-		// Firefox Share Screen Dialog
-		interactor.captureDesktop("screen");
-		hideDialog('ffShareScreenDialog');
-	} else if (element.id === "ffShareWindowBtn") {
-		interactor.captureDesktop("window");
-		hideDialog('ffShareScreenDialog');
-	}
 }
 
 /**
