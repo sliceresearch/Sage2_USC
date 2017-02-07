@@ -9405,7 +9405,7 @@ function wsWallScreenShotFromDisplay(wsio, data) {
 	// stop if not all displays submitted. doing this to prevent too many nested blocks
 	if (!allDisplaysSubmittedScreenShots) { return; }
 	
-	var dateSuffix = formatDateToYYYYMMDD_HHMMSS(Date.now());
+	var dateSuffix = formatDateToYYYYMMDD_HHMMSS(new Date());
 
 	if (allDisplaysFromClients.length > 1) {
 		// rebuild the wall in tile format.
