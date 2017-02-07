@@ -335,32 +335,47 @@ PartitionList.prototype.findNeighbors = function(ptnID) {
 PartitionList.prototype.updateNeighbors = function(ptnID) {
 	if (this.list.hasOwnProperty(ptnID)) {
 		// update neighbors of selected partition
-		this.list[ptnID].neighbors = this.findNeighbors(ptnID);
+		if (this.list[ptnID].isSnapping) {
+			// find all neighbors
+			this.list[ptnID].neighbors = this.findNeighbors(ptnID);
 
-		// update its neighbors to correctly include the new partition
-		for (var nID of Object.keys(this.list[ptnID].neighbors)) {
-			var neighbor = this.list[nID];
-			// inefficient but a partition may have been deleted, so recalculate from remaining group
-			neighbor.neighbors = this.findNeighbors(nID);
+			// update its neighbors to correctly include the new partition
+			for (let nID of Object.keys(this.list[ptnID].neighbors)) {
+				let neighbor = this.list[nID];
+				// inefficient but a partition may have been deleted, so recalculate from remaining group
+				neighbor.neighbors = this.findNeighbors(nID);
+			}
+
+			if (Math.abs(this.list[ptnID].top - (this.configuration.ui.titleBarHeight)) < 25) {
+				this.list[ptnID].snapTop = true;
+			}
+
+			if (Math.abs(this.list[ptnID].left + this.list[ptnID].width - this.configuration.totalWidth) < 25) {
+				this.list[ptnID].snapRight = true;
+			}
+
+			if (Math.abs(this.list[ptnID].top + this.list[ptnID].height +
+				this.configuration.ui.titleBarHeight - this.configuration.totalHeight) < 25) {
+
+				this.list[ptnID].snapBottom = true;
+			}
+
+			if (Math.abs(this.list[ptnID].left) < 25) {
+				this.list[ptnID].snapLeft = true;
+			}
+		} else {
+			// if it is no longer a snapping partition, remove itself from neighbors' lists
+			for (let nID of Object.keys(this.list[ptnID].neighbors)) {
+				let neighbor = this.list[nID];
+
+				if (neighbor.neighbors[ptnID]) {
+					delete neighbor.neighbors[ptnID];
+				}
+			}
+
+			this.list[ptnID].neighbors = null;
 		}
 
-		if (Math.abs(this.list[ptnID].top - (this.configuration.ui.titleBarHeight)) < 25) {
-			this.list[ptnID].snapTop = true;
-		}
-
-		if (Math.abs(this.list[ptnID].left + this.list[ptnID].width - this.configuration.totalWidth) < 25) {
-			this.list[ptnID].snapRight = true;
-		}
-
-		if (Math.abs(this.list[ptnID].top + this.list[ptnID].height +
-			this.configuration.ui.titleBarHeight - this.configuration.totalHeight) < 25) {
-
-			this.list[ptnID].snapBottom = true;
-		}
-
-		if (Math.abs(this.list[ptnID].left) < 25) {
-			this.list[ptnID].snapLeft = true;
-		}
 	}
 };
 

@@ -774,6 +774,7 @@ Partition.prototype.updateNeighborPtnPositions = function() {
 
 					// adjust the left and width of neighbor
 					partitions.list[neigh].left = this.left + this.width;
+
 					partitions.list[neigh].width = rightCoord - partitions.list[neigh].left;
 
 					isUpdated = true;
@@ -792,6 +793,18 @@ Partition.prototype.updateNeighborPtnPositions = function() {
 	}
 
 	return updatedPtnIDs;
+};
+
+// toggle snapped mode and update neighbors
+Partition.prototype.toggleSnapping = function() {
+	this.isSnapping = !this.isSnapping;
+
+	this.updateNeighborPartitionList();
+};
+
+// update neighbors
+Partition.prototype.updateNeighborPartitionList = function() {
+	this.partitionList.updateNeighbors(this.id);
 };
 
 /**
@@ -821,7 +834,6 @@ Partition.prototype.getTitle = function() {
 	} else {
 		partitionString = this.numChildren + " Items";
 	}
-
 	if (this.innerMaximization && this.innerTiling) {
 		partitionString += " | Maximized & Tiled";
 	} else if (this.innerMaximization) {
@@ -852,6 +864,25 @@ Partition.prototype.getContextMenu = function() {
 		callback: "clearPartition",
 		parameters: {}
 	});
+
+	contextMenu.push({
+		description: "separator"
+	});
+
+
+	contextMenu.push({
+		description: this.isSnapping ? "Un-Snap Partition" : "Snap Partition",
+		callback: "toggleSnapping",
+		parameters: {}
+	});
+
+	if (this.isSnapping) {
+		contextMenu.push({
+			description: "Update Snapped Neighbors",
+			callback: "updateNeighborPartitionList",
+			parameters: {}
+		});
+	}
 
 	contextMenu.push({
 		description: "separator"
