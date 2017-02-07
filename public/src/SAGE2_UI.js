@@ -1184,6 +1184,10 @@ function handleClick(element) {
 	// Menu Buttons
 	if (element.id === "sage2pointer"        || element.id === "sage2pointerContainer" || element.id === "sage2pointerLabel") {
 		interactor.startSAGE2Pointer(element.id);
+	} else if (element.id === "sage2clipboardCopy") {
+		var text = document.getElementById('req_url').value;
+		console.log("clipboard copy: "+text);
+		wsio.emit('clipboard', {clipboard:text});
 	} else if (element.id === "sharescreen"  || element.id === "sharescreenContainer"  || element.id === "sharescreenLabel") {
 		console.log("try to open new window for screen sharing...");
 		// HACK to guess port!!!
