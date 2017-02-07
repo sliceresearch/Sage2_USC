@@ -1763,9 +1763,9 @@ function handleClick(element) {
 		// Delete all partitions
 		wsio.emit('deleteAllPartitions');
 		hideDialog('arrangementDialog');
-	} else if (element.id === "assigntopartitions") {
+	} else if (element.id === "deleteapplications") {
 		// Assign content to partitions (partitions grab items which are above them)
-		wsio.emit('partitionsGrabAllContent');
+		wsio.emit('deleteAllApplications');
 		hideDialog('arrangementDialog');
 	} else if (element.id === "ffShareScreenBtn") {
 		// Firefox Share Screen Dialog

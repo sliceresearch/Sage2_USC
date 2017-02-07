@@ -910,6 +910,7 @@ function setupListeners(wsio) {
 	wsio.on('moveElementFromStoredFiles',           wsMoveElementFromStoredFiles);
 	wsio.on('saveSesion',                           wsSaveSesion);
 	wsio.on('clearDisplay',                         wsClearDisplay);
+	wsio.on('deleteAllApplications',								wsDeleteAllApplications);
 	wsio.on('tileApplications',                     wsTileApplications);
 
 	// Radial menu should have its own message section? Just appended here for now.
@@ -2793,6 +2794,14 @@ function deleteAllPartitions() {
 	partitions.totalCreated = 0;
 }
 
+/**
+	* Remove all applications
+	*
+	* @method wsDeleteAllApplications
+	*/
+function wsDeleteAllApplications(wsio) {
+	deleteAllApplications();
+}
 
 // handlers for messages from UI
 function wsClearDisplay(wsio, data) {
@@ -7180,6 +7189,9 @@ function pointerRelease(uniqueID, pointerX, pointerY, data) {
 			broadcast('partitionMoveAndResizeFinished', draggingPartition[uniqueID].ptn.getDisplayInfo());
 
 			broadcast('partitionWindowTitleUpdate', draggingPartition[uniqueID].ptn.getTitle());
+
+			// make dragged partition grab content which it is under
+			partitionsGrabAllContent();
 		}
 		// stop creation of partition
 		delete draggingPartition[uniqueID];
