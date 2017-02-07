@@ -2766,6 +2766,11 @@ function tileApplications() {
 
 // Remove all applications
 function clearDisplay() {
+	// delete all partitions
+	for (var key of Object.keys(partitions.list)) {
+		deletePartition(key);
+	}
+
 	var i;
 	var all = Object.keys(SAGE2Items.applications.list);
 	for (i = 0; i < all.length; i++) {
@@ -2773,6 +2778,7 @@ function clearDisplay() {
 	}
 	// Reset the app_id counter to 0
 	getUniqueAppId(-1);
+
 }
 
 
@@ -9674,10 +9680,6 @@ function divideAreaPartitions(data, x, y, width, height) {
 	*/
 function wsDeleteAllPartitions(wsio) {
 	for (var key in partitions.list) {
-		// broadcast('deletePartitionWindow', partitions.list[key].getDisplayInfo());
-		// partitions.removePartition(key);
-		// interactMgr.removeGeometry(key, "partitions");
-
 		deletePartition(key);
 	}
 
