@@ -2764,21 +2764,33 @@ function tileApplications() {
 	}
 }
 
-// Remove all applications
+// Remove all apps and partitions
 function clearDisplay() {
-	// delete all partitions
-	for (var key of Object.keys(partitions.list)) {
-		deletePartition(key);
-	}
+	deleteAllPartitions();
+	deleteAllApplications();
+}
 
+// Remove all applications
+function deleteAllApplications() {
 	var i;
 	var all = Object.keys(SAGE2Items.applications.list);
 	for (i = 0; i < all.length; i++) {
 		deleteApplication(all[i]);
 	}
+
 	// Reset the app_id counter to 0
 	getUniqueAppId(-1);
+}
 
+// Remove all Partitions
+function deleteAllPartitions() {
+	// delete all partitions
+	for (var key of Object.keys(partitions.list)) {
+		deletePartition(key);
+	}
+
+	// reset partition counter to 0
+	partitions.totalCreated = 0;
 }
 
 
@@ -9679,10 +9691,7 @@ function divideAreaPartitions(data, x, y, width, height) {
 	* @method wsDeleteAllPartitions
 	*/
 function wsDeleteAllPartitions(wsio) {
-	for (var key in partitions.list) {
-		deletePartition(key);
-	}
-
+	deleteAllPartitions();
 }
 
 /**
