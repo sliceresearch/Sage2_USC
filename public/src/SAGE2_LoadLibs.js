@@ -43,7 +43,12 @@ var SAGE2_LibLoader = {};
 		return null;
 	};
 
-	// get all versions of a specified libraru
+	// get all libraries
+	SAGE2_LibLoader.libraries = function() {
+		return Object.keys(lib);
+	};
+
+	// get all versions of a specified library
 	SAGE2_LibLoader.versions = function(library) {
 		if (library && lib[library]) {
 			// check for version param and that library contains this version
