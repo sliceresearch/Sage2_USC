@@ -1,0 +1,17 @@
+{
+	"main_script": "polarclock_svg.js",
+	"icon": "polarclock_svg.png",
+	"width": 960,
+	"height": 960,
+	"animation": false,
+	"dependencies": [
+	],
+	"load": {
+	},
+	"title": "Polar Clock",
+	"version": "1.0.0",
+	"description": "A polar clock for SAGE2 adapted from Mike Bostock (https://bl.ocks.org/mbostock/b89c89ec6b58435956a1)",
+	"keywords": [ "clock", "2d", "svg", "polar" ],
+	"author": "Andrew Burks <aburks3@uic.edu>",
+	"license": "SAGE2-Software-License"
+}
