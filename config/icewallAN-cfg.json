@@ -1,17 +1,17 @@
 {
-	"name": "Endeavour",
-	"host": "nishimoto.evl.uic.edu",
-	"port": 9090,
-	"index_port": 9292,
+	"name": "Arthur",
+	"host": "thor.evl.uic.edu",
+	"port": 8080,
+	"index_port": 8282,
 	background: { 
 		image: {
-			url: "images/background/chicago_skyline_thor.jpg",
-			style: "fit"
+			url: "user/images/background/kamping_icewall_quarter_fullColor.jpg",
+			style: "tile"
 		},
-		watermark: {
-			svg: "images/EVL-logo.svg",
-			color: "rgba(255, 255, 255, 0.2)"
-		},
+		//watermark: {
+		//	svg: "images/EVL-logo.svg",
+		//	color: "rgba(255, 255, 255, 0.2)"
+		//},
 		clip: true
 	},
 	ui: {
@@ -20,21 +20,17 @@
 		show_version: true
 	},
 	resolution: {
-		width: 3072,
+		width: 1536,
 		height: 1360
 	},
 	layout: {
 		rows: 1,
-		columns: 2
+		columns: 1
 	},
 	displays: [
 		{
 			row: 0,
 			column: 0
-		},
-		{
-			row: 0,
-			column: 1
 		}
 	],
 	alternate_hosts: [
@@ -44,26 +40,26 @@
 	remote_sites: [
 		{
 			name: "Cyber-Commons",
-			host: "iridium.evl.uic.edu",
+			host: "inferno.evl.uic.edu",
 			port: 443,
 			secure: true
 		},
 		{
-			name: "CAVE2",
-			host: "lyra.evl.uic.edu",
-			port: 443,
+			name: "Krishna",
+			host: "thor.evl.uic.edu",
+			port: 5050,
 			secure: true
 		},
 		{
-			name: "PhD Room",
-			host: "dante.evl.uic.edu",
-			port: 443,
+			name: "Jillian",
+			host: "thor.evl.uic.edu",
+			port: 6060,
 			secure: true
 		},
 		{
-			name: "Green Room",
-			host: "mesaverde.evl.uic.edu",
-			port: 443,
+			name: "Kristine",
+			host: "thor.evl.uic.edu",
+			port: 7070,
 			secure: true
 		}
 	]
