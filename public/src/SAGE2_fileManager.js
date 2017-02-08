@@ -79,7 +79,7 @@ function FileManager(wsio, mydiv, uniqueID) {
 			{id: "upload_menu",  value: "Upload file"},
 			{id: "refresh_menu", value: "Refresh"},
 			{$template: "Separator"},
-			{id: "hidefm_menu", value: "Quit"}
+			{id: "hidefm_menu", value: "Quit Media Browser"}
 		]},
 		{id: "edit_menu", value: "Edit", submenu: [
 			{id: "delete_menu",   value: "Delete"},
@@ -185,7 +185,7 @@ function FileManager(wsio, mydiv, uniqueID) {
 			var storeUrl = "http://apps.sagecommons.org/";
 			window.open(storeUrl, '_blank');
 		} else if (evt === "videoservice_menu") {
-			var videoUrl = "https://sage2rtt.evl.uic.edu:3043/video";
+			var videoUrl = "https://sage2rtt.evl.uic.edu:3043/video/";
 			window.open(videoUrl, '_blank');
 		} else if (evt === "audio_menu") {
 			var audioUrl = "http://" + window.location.hostname + _this.http_port +  "/audioManager.html";

@@ -238,7 +238,7 @@ function setupFocusHandlers() {
 	document.addEventListener(visEvent, function(event) {
 		if (document[hidden]) {
 			if (interactor && interactor.broadcasting) {
-				note = notifyMe("Keep SAGE2 UI visible during screen sharing");
+				note = notifyMe("Keep browser tab with SAGE2 UI visible during screen sharing");
 			}
 		} else {
 			if (note) {
