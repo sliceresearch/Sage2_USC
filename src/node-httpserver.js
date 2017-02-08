@@ -355,8 +355,13 @@ HttpServer.prototype.onreq = function(req, res) {
 			var header = this.buildHeader();
 
 			if (path.extname(pathname) === ".html") {
-				// Do not allow iframe
-				header['X-Frame-Options'] = 'DENY';
+				if (pathname.endsWith("public/index.html")) {
+					// Allow embedding the UI page
+					delete header['X-Frame-Options'];
+				} else {
+					// Do not allow iframe
+					header['X-Frame-Options'] = 'DENY';
+				}
 			}
 
 			header['Access-Control-Allow-Headers']  = 'Range';
