@@ -720,6 +720,7 @@ Partition.prototype.updateNeighborPtnPositions = function() {
 							// adjust this partitions size to match with it
 							this.top = neighPtn.top + neighPtn.height;
 							ptnSizeChanged = true;
+
 						}
 
 						isUpdated = true;
@@ -735,10 +736,11 @@ Partition.prototype.updateNeighborPtnPositions = function() {
 						// prevent the height from being below the minimum
 						if (neighPtn.height < partitions.minSize.height) {
 							neighPtn.height = partitions.minSize.height;
-							neighPtn.top = botCoord - neighPtn.height;
+							// neighPtn.top = botCoord - neighPtn.height;
 
-							this.top = neighPtn.top;
+							// this.top = neighPtn.top;
 							ptnSizeChanged = true;
+
 						}
 
 						isUpdated = true;
@@ -757,10 +759,10 @@ Partition.prototype.updateNeighborPtnPositions = function() {
 
 						if (neighPtn.height < partitions.minSize.height) {
 							neighPtn.height = partitions.minSize.height;
-							neighPtn.top = botCoord - neighPtn.height;
+							neighPtn.top = this.top + this.height;
 
-							this.top = neighPtn.top - this.height;
 							ptnSizeChanged = true;
+
 						}
 
 						isUpdated = true;
@@ -773,6 +775,7 @@ Partition.prototype.updateNeighborPtnPositions = function() {
 
 							this.height = neighPtn.top + neighPtn.height;
 							ptnSizeChanged = true;
+
 						}
 
 						isUpdated = true;
@@ -810,6 +813,7 @@ Partition.prototype.updateNeighborPtnPositions = function() {
 
 							this.left = neighPtn.left;
 							ptnSizeChanged = true;
+
 						}
 
 						isUpdated = true;
@@ -830,8 +834,9 @@ Partition.prototype.updateNeighborPtnPositions = function() {
 							neighPtn.width = partitions.minSize.width;
 							neighPtn.left = rightCoord - neighPtn.width;
 
-							this.left = neighPtn.left - this.width;
+							this.width = neighPtn.left - this.left;
 							ptnSizeChanged = true;
+
 						}
 
 						isUpdated = true;
@@ -844,6 +849,7 @@ Partition.prototype.updateNeighborPtnPositions = function() {
 
 							this.width = neighPtn.left + neighPtn.width;
 							ptnSizeChanged = true;
+
 						}
 
 						isUpdated = true;
