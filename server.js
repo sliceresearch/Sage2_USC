@@ -5997,38 +5997,16 @@ function pointerPressOnPartition(uniqueID, pointerX, pointerY, data, obj, localP
 
 	// pointer press on ptn window
 	if (btn === null) {
-		if (data.button === "left" && remoteInteraction[uniqueID].CTRL) {
-			// start tracking size to create new partition
-			cuttingPartition[uniqueID] = {};
-			cuttingPartition[uniqueID].start = {x: pointerX, y: pointerY};
-			cuttingPartition[uniqueID].ptn = obj.data;
+		if (data.button === "left") {
+			if (remoteInteraction[uniqueID].CTRL) {
+				// start tracking size to create new partition
+				cuttingPartition[uniqueID] = {};
+				cuttingPartition[uniqueID].start = {x: pointerX, y: pointerY};
+				cuttingPartition[uniqueID].ptn = obj.data;
+			} else {
+				selectApplicationForMove(uniqueID, obj.data, pointerX, pointerY);
+			}
 		}
-
-		// if (data.button === "right") {
-		// 	var elemCtrl = SAGE2Items.widgets.list[obj.id + uniqueID + "_controls"];
-		// 	if (!elemCtrl) {
-		// 		// if no UI element, send event to app if in interaction mode
-		// 		if (remoteInteraction[uniqueID].appInteractionMode()) {
-		// 			sendPointerPressToApplication(uniqueID, obj.data, pointerX, pointerY, data);
-		// 		}
-		// 		// Request a control (do not know in advance)
-		// 		broadcast('requestNewControl', {elemId: obj.id, user_id: uniqueID,
-		// 			user_label: sagePointers[uniqueID] ? sagePointers[uniqueID].label : "",
-		// 			x: pointerX, y: pointerY, date: Date.now() });
-		// 	} else if (elemCtrl.show === false) {
-		// 		showControl(elemCtrl, uniqueID, pointerX, pointerY);
-		// 		addEventToUserLog(uniqueID, {type: "widgetMenu", data: {action: "open", application:
-		// 			{id: obj.id, type: obj.data.application}}, time: Date.now()});
-		// 	} else {
-		// 		moveControlToPointer(elemCtrl, uniqueID, pointerX, pointerY);
-		// 	}
-		// } else {
-		// 	if (remoteInteraction[uniqueID].appInteractionMode()) {
-		// 		sendPointerPressToApplication(uniqueID, obj.data, pointerX, pointerY, data);
-		// 	} else {
-		// 		selectApplicationForMove(uniqueID, obj.data, pointerX, pointerY, portalId);
-		// 	}
-		// }
 		return;
 	}
 

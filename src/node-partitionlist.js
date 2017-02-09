@@ -265,6 +265,8 @@ PartitionList.prototype.findNeighbors = function(ptnID) {
 		let neighbors = {};
 		let thisPtn = this.list[ptnID];
 
+		let distanceTolerance = 25;
+
 		let titleBar = this.configuration.ui.titleBarHeight;
 
 		for (let id of Object.keys(this.list)) {
@@ -282,37 +284,37 @@ PartitionList.prototype.findNeighbors = function(ptnID) {
 				};
 
 				// check top against top and bottom of other (can't be both, only one or the other)
-				if (Math.abs(thisPtn.top - (ptn.top + ptn.height + titleBar)) < 10) {
+				if (Math.abs(thisPtn.top - (ptn.top + ptn.height + titleBar)) < distanceTolerance) {
 					adjacentSides.top = "bottom";
 					anyAdjacent = true;
-				} else if (Math.abs(thisPtn.top - ptn.top) < 10) {
+				} else if (Math.abs(thisPtn.top - ptn.top) < distanceTolerance) {
 					adjacentSides.top = "top";
 					anyAdjacent = true;
 				}
 
 				// check bottom against top and bottom of other
-				if (Math.abs((thisPtn.top + thisPtn.height + titleBar) - ptn.top) < 10) {
+				if (Math.abs((thisPtn.top + thisPtn.height + titleBar) - ptn.top) < distanceTolerance) {
 					adjacentSides.bottom = "top";
 					anyAdjacent = true;
-				} else if (Math.abs((thisPtn.top + thisPtn.height) - (ptn.top + ptn.height)) < 10) {
+				} else if (Math.abs((thisPtn.top + thisPtn.height) - (ptn.top + ptn.height)) < distanceTolerance) {
 					adjacentSides.bottom = "bottom";
 					anyAdjacent = true;
 				}
 
 				// check left against left and right of other
-				if (Math.abs(thisPtn.left - (ptn.left + ptn.width)) < 10) {
+				if (Math.abs(thisPtn.left - (ptn.left + ptn.width)) < distanceTolerance) {
 					adjacentSides.left = "right";
 					anyAdjacent = true;
-				} else if (Math.abs(thisPtn.left - ptn.left) < 10) {
+				} else if (Math.abs(thisPtn.left - ptn.left) < distanceTolerance) {
 					adjacentSides.left = "left";
 					anyAdjacent = true;
 				}
 
 				// check right against left and right of other
-				if (Math.abs((thisPtn.left + thisPtn.width) - ptn.left) < 10) {
+				if (Math.abs((thisPtn.left + thisPtn.width) - ptn.left) < distanceTolerance) {
 					adjacentSides.right = "left";
 					anyAdjacent = true;
-				} else if (Math.abs((thisPtn.left + thisPtn.width) - (ptn.left + ptn.width)) < 10) {
+				} else if (Math.abs((thisPtn.left + thisPtn.width) - (ptn.left + ptn.width)) < distanceTolerance) {
 					adjacentSides.right = "right";
 					anyAdjacent = true;
 				}

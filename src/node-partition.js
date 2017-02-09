@@ -509,7 +509,8 @@ Partition.prototype.maximizeChild = function(id, shift) {
 		// 	titleBar = 0;
 		// }
 
-		if (this.innerMaximization && this.currentMaximizedChild) {
+		// only 1 child maximized in tiled mode
+		if (this.innerMaximization && this.currentMaximizedChild && this.innerTiling) {
 			this.restoreChild(this.currentMaximizedChild);
 		}
 
