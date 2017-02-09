@@ -49,7 +49,6 @@ function Partition(dims, id, color, partitionList) {
 	this.bounding = true;
 
 	this.innerTiling = false;
-	this.innerMaximization = false;
 	this.currentMaximizedChild = null;
 
 	// for the more geometric idea of partitions
@@ -115,7 +114,7 @@ Partition.prototype.addChild = function(item) {
 	this.numChildren++;
 	this.children[item.id] = item;
 
-	if (this.innerMaximization) {
+	if (this.innerTiling && this.currentMaximizedChild) {
 		this.maximizeChild(item.id);
 	}
 
@@ -159,7 +158,8 @@ Partition.prototype.releaseChild = function(id) {
 		this.numChildren--;
 		delete this.children[id];
 
-		if (this.innerMaximization && this.currentMaximizedChild === id) {
+		// if it is tiling and maximized, maximize another child
+		if (this.innerTiling && this.currentMaximizedChild === id) {
 
 			if (Object.keys(this.children).length > 0) {
 				this.maximizeChild(Object.keys(this.children)[0]);
@@ -227,7 +227,7 @@ Partition.prototype.tilePartition = function() {
 	var i, c, r, key;
 	var numCols, numRows, numCells;
 
-	var numWindows = this.numChildren - ((this.innerMaximization && this.currentMaximizedChild) ? 1 : 0);
+	var numWindows = this.numChildren - (this.currentMaximizedChild ? 1 : 0);
 
 
 	// determine the bounds of the tiling area
@@ -246,50 +246,48 @@ Partition.prototype.tilePartition = function() {
 	// get set of children to run tiling on
 	var children = Object.assign({}, this.children);
 
-	if (this.innerMaximization) {
-		if (this.currentMaximizedChild) {
+	if (this.currentMaximizedChild) {
 
-			// if a child is maximized, remove from set to tile
-			delete children[this.currentMaximizedChild];
+		// if a child is maximized, remove from set to tile
+		delete children[this.currentMaximizedChild];
 
-			let maxChild = this.children[this.currentMaximizedChild];
+		let maxChild = this.children[this.currentMaximizedChild];
 
-			if (numWindows === 0) {
-				// if the maximized window is the only window
-				// place in center
-				maxChild.left = this.left + this.width / 2 - maxChild.width / 2;
-				maxChild.top = this.top + (this.height - maxChild.height + titleBar) / 2;
-
-				this.updateChild(this.currentMaximizedChild);
-				return;
-			}
-
-			if (maxChild.maximizeConstraint === "width_ptn") {
-				// aspect ratio is wider than partition
-
-				// shift maximized child to top
-				maxChild.top = this.top + 2 * titleBar;
-
-				// adjust tiling area to be rest of space
-				tilingArea.top = maxChild.top + maxChild.height;
-				tilingArea.height = this.height - maxChild.height - titleBar;
-			} else if (maxChild.maximizeConstraint === "height_ptn") {
-				// aspect ratio is taller than partition
-
-				// shift maximized child to left
-				maxChild.left = this.left + 4;
-
-				// adjust tiling area to be rest of space
-				tilingArea.left = maxChild.left + maxChild.width;
-				tilingArea.width = this.width - maxChild.width;
-			}
-
-			// shift maximized child to top-left
-			maxChild.top = this.top + titleBar + 4;
-			maxChild.left = this.left + 4;
+		if (numWindows === 0) {
+			// if the maximized window is the only window
+			// place in center
+			maxChild.left = this.left + this.width / 2 - maxChild.width / 2;
+			maxChild.top = this.top + (this.height - maxChild.height + titleBar) / 2;
 
 			this.updateChild(this.currentMaximizedChild);
+			return;
 		}
+
+		if (maxChild.maximizeConstraint === "width_ptn") {
+			// aspect ratio is wider than partition
+
+			// shift maximized child to top
+			maxChild.top = this.top + 2 * titleBar;
+
+			// adjust tiling area to be rest of space
+			tilingArea.top = maxChild.top + maxChild.height;
+			tilingArea.height = this.height - maxChild.height - titleBar;
+		} else if (maxChild.maximizeConstraint === "height_ptn") {
+			// aspect ratio is taller than partition
+
+			// shift maximized child to left
+			maxChild.left = this.left + 4;
+
+			// adjust tiling area to be rest of space
+			tilingArea.left = maxChild.left + maxChild.width;
+			tilingArea.width = this.width - maxChild.width;
+		}
+
+		// shift maximized child to top-left
+		maxChild.top = this.top + titleBar + 4;
+		maxChild.left = this.left + 4;
+
+		this.updateChild(this.currentMaximizedChild);
 	}
 
 	if (numWindows === 0) {
@@ -485,15 +483,6 @@ Partition.prototype.tilePartition = function() {
 };
 
 /**
-  * Toggle partition maximization mode
-  */
-Partition.prototype.toggleInnerMaximization = function() {
-	this.innerMaximization = !this.innerMaximization;
-
-	return [this.id];
-};
-
-/**
   * Maximize a specific child in the partition
   *
   * @param {string} id - The id of child to maximize
@@ -510,12 +499,12 @@ Partition.prototype.maximizeChild = function(id, shift) {
 		// }
 
 		// only 1 child maximized in tiled mode
-		if (this.innerMaximization && this.currentMaximizedChild && this.innerTiling) {
-			this.restoreChild(this.currentMaximizedChild);
+		if (this.innerTiling) {
+			if (this.currentMaximizedChild) {
+				this.restoreChild(this.currentMaximizedChild);
+			}
+			this.currentMaximizedChild = id;
 		}
-
-		this.currentMaximizedChild = id;
-		this.innerMaximization = true;
 
 		var maxBound = {
 			left: this.left + 4,
@@ -614,7 +603,6 @@ Partition.prototype.restoreChild = function(id, shift) {
 	if (this.children.hasOwnProperty(id)) {
 		var item = this.children[id];
 
-		this.innerMaximization = false;
 		this.currentMaximizedChild = null;
 
 		if (shift === true) {
@@ -647,16 +635,12 @@ Partition.prototype.restoreChild = function(id, shift) {
 
 /**
   * Updates the inner layout of the partition according to whether or not
-	* the partition is in innerTiling mode or innerMaximization mode or both
+	* the partition is in innerTiling mode or has a maximized child mode or both
   *
   * @param {string} id - The id of child to restore
   */
 Partition.prototype.updateInnerLayout = function() {
-	if (this.innerMaximization && this.currentMaximizedChild) {
-		if (this.children[this.currentMaximizedChild].maximized === false) {
-			// this should never really happen
-			console.log("Partition: Maximizing child in updateInnerLayout()");
-		}
+	if (this.currentMaximizedChild) {
 		this.maximizeChild(this.currentMaximizedChild);
 	}
 
@@ -835,10 +819,8 @@ Partition.prototype.getTitle = function() {
 	} else {
 		partitionString = this.numChildren + " Items";
 	}
-	if (this.innerMaximization && this.innerTiling) {
+	if (this.currentMaximizedChild && this.innerTiling) {
 		partitionString += " | Maximized & Tiled";
-	} else if (this.innerMaximization) {
-		partitionString += " | Maximized";
 	} else if (this.innerTiling) {
 		partitionString += " | Tiled";
 	}

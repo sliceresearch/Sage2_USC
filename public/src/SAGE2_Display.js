@@ -1631,25 +1631,3 @@ function moveItemWithAnimation(updatedApp) {
 	elem.transition().delay(200)
 		.style("transition", " opacity 0.2s ease-in");
 }
-
-// just doing move first
-// function resizeItemWithAnimation(updatedApp) {
-// 		var titleBar = d3.select("#" + itemID + "_title");
-// 		var item = d3.select("#" + itemID);
-//
-// 		var translate = "translate(" + updatedApp.elemLeft + "px," + updatedApp.elemTop + "px)";
-// 		var selectedElemTitle = document.getElementById(updatedApp.elemId + "_title");
-// 		selectedElemTitle.style.webkitTransform = translate;
-// 		selectedElemTitle.style.mozTransform    = translate;
-// 		selectedElemTitle.style.transform       = translate;
-// 		selectedElemTitle.style.width = Math.round(updatedApp.elemWidth).toString() + "px";
-//
-// 		var selectedElemState = document.getElementById(updatedApp.elemId + "_state");
-// 		selectedElemState.style.width = Math.round(updatedApp.elemWidth).toString() + "px";
-// 		selectedElemState.style.height = Math.round(updatedApp.elemHeight).toString() + "px";
-//
-// 		selectedElem.style.webkitTransform = translate;
-// 		selectedElem.style.mozTransform    = translate;
-// 		selectedElem.style.transform       = translate;
-//
-// }
