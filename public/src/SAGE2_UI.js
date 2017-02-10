@@ -11,7 +11,7 @@
 "use strict";
 
 /* global FileManager, SAGE2_interaction, SAGE2DisplayUI */
-/* global removeAllChildren, SAGE2_copyToClipboard */
+/* global removeAllChildren, SAGE2_copyToClipboard, parseBool */
 
 /**
  * Web user interface
@@ -92,6 +92,8 @@ var pointerX, pointerY;
 var sage2Version;
 
 var note;
+
+var viewOnlyMode;
 
 /**
  * Reload the page if a application cache update is available
@@ -280,6 +282,9 @@ function SAGE2_init() {
 		return;
 	}
 
+	// Check if the viewonly flag is passed in the URL
+	viewOnlyMode = parseBool(getParameterByName("viewonly"));
+
 	// Detect which browser is being used
 	SAGE2_browser();
 
@@ -308,7 +313,11 @@ function SAGE2_init() {
 		// Show and hide elements once connect to server
 		document.getElementById('loadingUI').style.display     = "none";
 		document.getElementById('displayUIDiv').style.display  = "block";
-		document.getElementById('menuContainer').style.display = "block";
+		if (viewOnlyMode) {
+			document.getElementById('menuContainer').style.display = "none";
+		} else {
+			document.getElementById('menuContainer').style.display = "block";
+		}
 
 		// Start an initial resize of the UI once we get a connection
 		SAGE2_resize();
@@ -709,30 +718,32 @@ function SAGE2_resize(ratio) {
  * @param ratio {Number} scale factor
  */
 function resizeMenuUI(ratio) {
-	var menuContainer = document.getElementById('menuContainer');
-	var menuUI        = document.getElementById('menuUI');
+	if (!viewOnlyMode) {
+		var menuContainer = document.getElementById('menuContainer');
+		var menuUI        = document.getElementById('menuUI');
 
-	// Extra scaling factor
-	ratio = ratio || 1.0;
+		// Extra scaling factor
+		ratio = ratio || 1.0;
 
-	var menuScale = 1.0;
-	var freeWidth = window.innerWidth * ratio;
-	if (freeWidth < 1200) {
-		// 9 buttons, 120 pixels per button
-		// menuScale = freeWidth / 1080;
+		var menuScale = 1.0;
+		var freeWidth = window.innerWidth * ratio;
+		if (freeWidth < 1200) {
+			// 9 buttons, 120 pixels per button
+			// menuScale = freeWidth / 1080;
 
-		// 10 buttons, 120 pixels per button
-		menuScale = freeWidth / 1200;
+			// 10 buttons, 120 pixels per button
+			menuScale = freeWidth / 1200;
+		}
+
+		menuUI.style.webkitTransform = "scale(" + menuScale + ")";
+		menuUI.style.mozTransform = "scale(" + menuScale + ")";
+		menuUI.style.transform = "scale(" + menuScale + ")";
+		menuContainer.style.height = parseInt(86 * menuScale, 10) + "px";
+
+		// Center the menu bar
+		var mw = menuUI.getBoundingClientRect().width;
+		menuContainer.style.marginLeft = Math.round((window.innerWidth - mw) / 2) + "px";
 	}
-
-	menuUI.style.webkitTransform = "scale(" + menuScale + ")";
-	menuUI.style.mozTransform = "scale(" + menuScale + ")";
-	menuUI.style.transform = "scale(" + menuScale + ")";
-	menuContainer.style.height = parseInt(86 * menuScale, 10) + "px";
-
-	// Center the menu bar
-	var mw = menuUI.getBoundingClientRect().width;
-	menuContainer.style.marginLeft = Math.round((window.innerWidth - mw) / 2) + "px";
 }
 
 /**

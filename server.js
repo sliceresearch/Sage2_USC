@@ -5624,8 +5624,29 @@ function pointerPressOnOpenSpace(uniqueID, pointerX, pointerY, data) {
 }
 
 function pointerPressOnStaticUI(uniqueID, pointerX, pointerY, data, obj, localPt) {
-	// don't allow data-pushing
+	// If the remote site is active (green button)
+	if (obj.data.connected === "on") {
+		// Validate the remote address
+		var remoteSite = findRemoteSiteByConnection(obj.data.wsio);
 
+		// Build the UI URL
+		var viewURL = 'https://' + remoteSite.wsio.remoteAddress.address + ':'
+			+ remoteSite.wsio.remoteAddress.port + '/index.html?viewonly=true';
+
+		// Create the webview to the remote UI
+		wsLoadApplication(obj.data.wsio, {
+			application: "/uploads/apps/Webview",
+			user: obj.data.wsio.id,
+			// pass the url in the data object
+			data: {
+				id: uniqueID,
+				url: viewURL
+			},
+			position: [pointerX, pointerY]
+		});
+	}
+
+	// don't allow data-pushing
 	/*
 	switch (obj.id) {
 		case "dataSharingRequestDialog": {
