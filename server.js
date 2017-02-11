@@ -5942,7 +5942,8 @@ function pointerPressOnApplication(uniqueID, pointerX, pointerY, data, obj, loca
 			break;
 		case "dragCorner":
 			if (obj.data.application === "Webview") {
-				if (!sagePointers[uniqueID].visible) {
+				// resize with corner only in window mode
+				if (!sagePointers[uniqueID].visible || remoteInteraction[uniqueID].windowManagementMode()) {
 					selectApplicationForResize(uniqueID, obj.data, pointerX, pointerY, portalId);
 				} else {
 					// if corner click and webview, then send the click to app
@@ -6695,7 +6696,8 @@ function pointerMoveOnApplication(uniqueID, pointerX, pointerY, data, obj, local
 		}
 		case "dragCorner": {
 			if (obj.data.application === "Webview") {
-				if (!sagePointers[uniqueID].visible) {
+				// resize corner only in window mode
+				if (!sagePointers[uniqueID].visible || remoteInteraction[uniqueID].windowManagementMode()) {
 					if (remoteInteraction[uniqueID].hoverCornerItem === null) {
 						remoteInteraction[uniqueID].setHoverCornerItem(obj.data);
 						broadcast('hoverOverItemCorner', {elemId: obj.data.id, flag: true});
