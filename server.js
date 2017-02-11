@@ -2833,6 +2833,14 @@ function wsLoadApplication(wsio, data) {
 			}
 		}
 
+		// Get the size if any specificed
+		var initialSize = data.dimensions;
+		if (initialSize) {
+			appInstance.width  = initialSize[0];
+			appInstance.height = initialSize[1];
+			appInstance.aspect = initialSize[0] / initialSize[1];
+		}
+
 		handleNewApplication(appInstance, null);
 
 		addEventToUserLog(data.user, {type: "openApplication", data:
@@ -5621,10 +5629,11 @@ function pointerPressOnStaticUI(uniqueID, pointerX, pointerY, data, obj, localPt
 			user: obj.data.wsio.id,
 			// pass the url in the data object
 			data: {
-				id: uniqueID,
+				id:  uniqueID,
 				url: viewURL
 			},
-			position: [pointerX, pointerY]
+			position: [pointerX, config.ui.titleBarHeight + 10],
+			dimensions: [400, 120]
 		});
 	}
 
