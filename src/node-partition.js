@@ -738,6 +738,10 @@ Partition.prototype.updateNeighborPtnPositions = function() {
 							neighPtn.height = partitions.minSize.height;
 							// neighPtn.top = botCoord - neighPtn.height;
 
+							var thisBotCoord = this.top + this.height;
+							this.top = neighPtn.top;
+							this.height = thisBotCoord - this.top;
+
 							// this.top = neighPtn.top;
 							ptnSizeChanged = true;
 
