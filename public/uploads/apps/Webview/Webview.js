@@ -170,7 +170,6 @@ var Webview = SAGE2_App.extend({
 				console.log('Webview>	Not http URL, not opening', event.url);
 			}
 		});
-
 	},
 
 	/**

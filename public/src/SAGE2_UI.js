@@ -513,6 +513,12 @@ function setupListeners() {
 		if (fileManager) {
 			fileManager.serverConfiguration(config);
 		}
+
+		if (config.name && config.name !== "Windows" && config.name !== "localhost") {
+			document.title = "SAGE2 - " + config.name;
+		} else {
+			document.title = "SAGE2 - " + config.host;
+		}
 	});
 
 	wsio.on('createAppWindowPositionSizeOnly', function(data) {
@@ -1165,7 +1171,6 @@ function mouseCheck(event) {
 		return;
 	}
 	hasMouse = true;
-	document.title = "SAGE2 UI - Desktop";
 	console.log("Detected as desktop device");
 
 	document.addEventListener('mousedown',  pointerPress,    false);

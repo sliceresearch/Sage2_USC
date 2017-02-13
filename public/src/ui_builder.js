@@ -594,9 +594,9 @@ function UIBuilder(json_cfg, clientID) {
 		var newDialogCancel = document.createElement("div");
 		newDialogCancel.id  = id + "_cancel";
 		newDialogCancel.style.position = "absolute";
-		newDialogCancel.style.left   = (6.5 * this.titleBarHeight).toString() + "px";
+		newDialogCancel.style.left   = (1.5 * this.titleBarHeight).toString() + "px";
 		newDialogCancel.style.bottom = (this.titleBarHeight).toString() + "px";
-		newDialogCancel.style.width  = (13 * this.titleBarHeight).toString() + "px";
+		newDialogCancel.style.width  = (23 * this.titleBarHeight).toString() + "px";
 		newDialogCancel.style.height = (3 * this.titleBarHeight).toString() + "px";
 		newDialogCancel.style.webkitBoxSizing = "border-box";
 		newDialogCancel.style.mozBoxSizing    = "border-box";
