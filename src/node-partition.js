@@ -800,7 +800,10 @@ Partition.prototype.updateNeighborPtnPositions = function() {
 							neighPtn.width = partitions.minSize.width;
 
 							// adjust this partitions size to match with it
+							var thisRightCoord = this.left + this.width;
 							this.left = neighPtn.left + neighPtn.width;
+							this.width = thisRightCoord - this.left;
+
 							ptnSizeChanged = true;
 						}
 
