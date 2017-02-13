@@ -717,8 +717,11 @@ Partition.prototype.updateNeighborPtnPositions = function() {
 							// set the nieghbors height to be a minimum value
 							neighPtn.height = partitions.minSize.height;
 
-							// adjust this partitions size to match with it
+							var thisBotCoord = this.top + this.height;
 							this.top = neighPtn.top + neighPtn.height + titleBar;
+							this.height = thisBotCoord - this.top;
+
+							// adjust this partitions size to match with it
 							ptnSizeChanged = true;
 
 						}
