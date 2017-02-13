@@ -1308,7 +1308,7 @@ function setupListeners() {
 			applications[data.id].updateData(data.data);
 
 		}
-	})
+	});
 
 	// Visualization View update listener
 	wsio.on("visualizationUpdateView", function(data) {
