@@ -717,7 +717,7 @@ Partition.prototype.updateNeighborPtnPositions = function() {
 							// set the nieghbors height to be a minimum value
 							neighPtn.height = partitions.minSize.height;
 
-							var thisBotCoord = this.top + this.height;
+							let thisBotCoord = this.top + this.height;
 							this.top = neighPtn.top + neighPtn.height + titleBar;
 							this.height = thisBotCoord - this.top;
 
@@ -741,7 +741,7 @@ Partition.prototype.updateNeighborPtnPositions = function() {
 							neighPtn.height = partitions.minSize.height;
 							// neighPtn.top = botCoord - neighPtn.height;
 
-							var thisBotCoord = this.top + this.height;
+							let thisBotCoord = this.top + this.height;
 							this.top = neighPtn.top;
 							this.height = thisBotCoord - this.top;
 
@@ -800,7 +800,7 @@ Partition.prototype.updateNeighborPtnPositions = function() {
 							neighPtn.width = partitions.minSize.width;
 
 							// adjust this partitions size to match with it
-							var thisRightCoord = this.left + this.width;
+							let thisRightCoord = this.left + this.width;
 							this.left = neighPtn.left + neighPtn.width;
 							this.width = thisRightCoord - this.left;
 
@@ -822,7 +822,7 @@ Partition.prototype.updateNeighborPtnPositions = function() {
 							neighPtn.left = rightCoord - neighPtn.width;
 
 
-							var thisRightCoord = this.left + this.width;
+							let thisRightCoord = this.left + this.width;
 							this.left = neighPtn.left;
 							this.width = thisRightCoord - this.left;
 							ptnSizeChanged = true;
