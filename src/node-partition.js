@@ -718,7 +718,7 @@ Partition.prototype.updateNeighborPtnPositions = function() {
 							neighPtn.height = partitions.minSize.height;
 
 							// adjust this partitions size to match with it
-							this.top = neighPtn.top + neighPtn.height;
+							this.top = neighPtn.top + neighPtn.height + titleBar;
 							ptnSizeChanged = true;
 
 						}
@@ -759,7 +759,7 @@ Partition.prototype.updateNeighborPtnPositions = function() {
 
 						if (neighPtn.height < partitions.minSize.height) {
 							neighPtn.height = partitions.minSize.height;
-							neighPtn.top = this.top + this.height;
+							neighPtn.top = this.top + this.height + titleBar;
 
 							ptnSizeChanged = true;
 
@@ -773,7 +773,7 @@ Partition.prototype.updateNeighborPtnPositions = function() {
 						if (neighPtn.height < partitions.minSize.height) {
 							neighPtn.height = partitions.minSize.height;
 
-							this.height = neighPtn.top + neighPtn.height;
+							this.height = neighPtn.top + neighPtn.height - this.top;
 							ptnSizeChanged = true;
 
 						}
@@ -811,7 +811,10 @@ Partition.prototype.updateNeighborPtnPositions = function() {
 							neighPtn.width = partitions.minSize.width;
 							neighPtn.left = rightCoord - neighPtn.width;
 
+
+							var thisRightCoord = this.left + this.width;
 							this.left = neighPtn.left;
+							this.width = thisRightCoord - this.left;
 							ptnSizeChanged = true;
 
 						}
@@ -847,7 +850,7 @@ Partition.prototype.updateNeighborPtnPositions = function() {
 						if (neighPtn.width < partitions.minSize.width) {
 							neighPtn.width = partitions.minSize.width;
 
-							this.width = neighPtn.left + neighPtn.width;
+							this.width = neighPtn.left + neighPtn.width - this.left;
 							ptnSizeChanged = true;
 
 						}
