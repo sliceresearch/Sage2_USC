@@ -43,8 +43,13 @@ var SAGE2_DataView = SAGE2_App.extend({
 		this.drawvis();
 	},
 
+	updateViewChoices: function(data) {
+		this.visViewChoices = data;
+
+		console.log("SAGE2_DataView: updateViewChoices()" + this.id);
+	},
+
 	draw: function() {
 		// will be overwritten by the view
 	}
 });
-

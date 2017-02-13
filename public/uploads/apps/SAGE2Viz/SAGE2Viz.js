@@ -19,39 +19,56 @@ var SAGE2Viz = SAGE2_App.extend({
 
     this.SAGE2Init("div", data);
 
+
+    // get file name and type
+    var re = /.*\/(.+)\.(\w*)/;
+    var arr = re.exec(this.state.file);
+
     this.element.id = "div" + data.id;
 
     this.resizeEvents = /* "onfinish"; */ "continuous";
 
-    // save the view box (coordinate system)
-    this.box = [data.width, data.height];
+    this.div = d3.select("#" + this.element.id)
+      .style("font-family", "Helvetica sansserif")
+      .style("box-sizing", "border-box")
+      .style("padding", "10px");
 
-    // attach the SVG into the this.element node provided to us
-    var box = "0,0," + this.box[0] + "," + this.box[1];
-    this.svg = d3.select(this.element).append("svg")
-      .attr("width",   data.width)
-      .attr("height",  data.height)
-      .attr("viewBox", box);
+    this.components = {};
 
-    // in case we want to allow for more interactive d3
-    // this.passSAGE2PointerAsMouseEvents = true;
-
-    this.svg.append("rect")
-      .attr("class", "bg")
+    // show the title of the file
+    this.components.fileTitle = this.div.append("div")
+      .attr("class", "fileTitleDiv")
       .attr("width", "100%")
-      .attr("height", "100%")
-      .style("fill", "#D1E2E8");
+      .style("overflow", "hidden")
+      .style("font-size", "65px")
+      .style("font-weight", "bold")
+      .style("background", "#444")
+      .style("border", "3px solid #666")
+      .style("border-radius", "10px")
+      .style("padding", "8px")
+      .style("margin", "5px")
+    .append("p")
+      .style("color", "#AAA")
+      .text(arr[1]);
+
+    // show the type of the file
+    this.components.fileType = this.div.append("div")
+      .attr("class", "fileTitleDiv")
+      .attr("width", "100%")
+      .style("overflow", "hidden")
+      .style("font-size", "50px")
+      // .style("font-weight", "bold")
+      .style("background", "#444")
+      .style("border", "3px solid #666")
+      .style("border-radius", "10px")
+      .style("padding", "8px")
+      .style("margin", "5px")
+    .append("p")
+      .style("color", "#AAA")
+      .text(arr[2].toUpperCase());
 
     console.log("creating controls");
     this.controls.addButton({label: "Mode",  position: 1,  identifier: "ModeToggle"});
-    this.controls.addButton({type: "next",   position: 5,  identifier: "NextValPrim"});
-    this.controls.addButton({label: "Prim.", position: 4,  identifier: "PrimVal"});
-    this.controls.addButton({type: "prev",   position: 3,  identifier: "PrevValPrim"});
-    this.controls.addButton({label: "Sort",  position: 7,  identifier: "SortToggle"});
-    this.controls.addButton({type: "next",   position: 9,  identifier: "NextValSec"});
-    this.controls.addButton({label: "Sec.",  position: 10, identifier: "SecVal"});
-    this.controls.addButton({type: "prev",   position: 11, identifier: "PrevValSec"});
-    this.controls.addButton({label: "Col 1", position: 12, identifier: "FirstColToggle"});
 
     this.controls.finishedAddingControls();
 
@@ -59,14 +76,8 @@ var SAGE2Viz = SAGE2_App.extend({
 
     // create visualization serverside
     this.updateServer(data);
-    
 
-    // get file name and type
-    var re = /.*\/(.+)\.(\w*)/;
-    var arr = re.exec(this.state.file);
-    console.log(arr);
-
-    this.updateTitle(arr[1] + " (" + arr[2].toUpperCase() + ")");
+    this.updateTitle("SAGE2 Viz Dataset");
   },
 
   updateServer: function(data) {
@@ -91,14 +102,6 @@ var SAGE2Viz = SAGE2_App.extend({
   },
 
   resize: function(date) {
-    var box = "0,0," + this.element.clientWidth + "," + this.element.clientHeight;
-    this.svg.attr('width',  this.element.clientWidth)
-      .attr('height', this.element.clientHeight)
-      .attr("viewBox", box);
-
-    this.svg.select(".bg")
-      .attr("width", +this.svg.attr("width"))
-      .attr("height", +this.svg.attr("height"));
 
     this.refresh(date);
     this.draw_d3(date);
@@ -109,10 +112,6 @@ var SAGE2Viz = SAGE2_App.extend({
       description: "separator"
     };
 
-  //   var sortUnsortOptionName = this.state.sorted ? "Unsort Data" : "Sort Data";
-  //   var firstColOptionName = this.state.useFirstColumn ?
-  //     "Don't Use First Column" : "Use First Column";
-
     var contextMenuEntries = [
       {
         description: "Create ",
@@ -120,168 +119,6 @@ var SAGE2Viz = SAGE2_App.extend({
         parameters: {}
       }
     ];
-
-  //     {
-  //       description: firstColOptionName,
-  //       callback: "toggleUseFirstColumn",
-  //       parameters: {}
-  //     },
-  //     {
-  //       description: sortUnsortOptionName,
-  //       callback: "toggleSort",
-  //       parameters: {}
-  //     },
-  //     separator,
-  //     {
-  //       description: "Next Primary Value",
-  //       callback: "incrementPrimary",
-  //       parameters: {val: 1}
-  //     },
-  //     {
-  //       description: "Previous Primary Value",
-  //       callback: "incrementPrimary",
-  //       parameters: {val: -1}
-  //     },
-  //     separator,
-  //     {
-  //       description: "Next Secondary Value",
-  //       callback: "incrementSecondary",
-  //       parameters: {val: 1}
-  //     },
-  //     {
-  //       description: "Previous Secondary Value",
-  //       callback: "incrementSecondary",
-  //       parameters: {val: -1}
-  //     },
-  //     separator,
-  //     {
-  //       description: "Save SVG result",
-  //       callback: "downloadSVG",
-  //       parameters: {}
-  //     }
-  //   ];
-
-  //   var modeOptions = new Array(this.drawModeNames.length);
-
-  //   modeOptions[0] = [
-  //     {
-  //       description: "Change Mode",
-  //       callback: "modeToggle",
-  //       parameters: {}
-  //     },
-  //     {
-  //       description: sortUnsortOptionName,
-  //       callback: "toggleSort",
-  //       parameters: {}
-  //     },
-  //     separator,
-  //     {
-  //       description: "Next Bar Category",
-  //       callback: "incrementPrimary",
-  //       parameters: {val: 1}
-  //     },
-  //     {
-  //       description: "Previous Bar Category",
-  //       callback: "incrementPrimary",
-  //       parameters: {val: -1}
-  //     },
-  //     separator,
-  //     {
-  //       description: "Next Bar Value",
-  //       callback: "incrementSecondary",
-  //       parameters: {val: 1}
-  //     },
-  //     {
-  //       description: "Previous Bar Value",
-  //       callback: "incrementSecondary",
-  //       parameters: {val: -1}
-  //     },
-  //     separator,
-  //     {
-  //       description: "Save SVG result",
-  //       callback: "downloadSVG",
-  //       parameters: {}
-  //     }
-  //   ];
-
-  //   modeOptions[1] = [
-  //     {
-  //       description: "Change Mode",
-  //       callback: "modeToggle",
-  //       parameters: {}
-  //     },
-  //     {
-  //       description: firstColOptionName,
-  //       callback: "toggleUseFirstColumn",
-  //       parameters: {}
-  //     },
-  //     {
-  //       description: sortUnsortOptionName,
-  //       callback: "toggleSort",
-  //       parameters: {}
-  //     },
-  //     separator,
-  //     {
-  //       description: "Next Sort Value",
-  //       callback: "incrementPrimary",
-  //       parameters: {val: 1}
-  //     },
-  //     {
-  //       description: "Previous Sort Value",
-  //       callback: "incrementPrimary",
-  //       parameters: {val: -1}
-  //     },
-  //     separator,
-  //     {
-  //       description: "Save SVG result",
-  //       callback: "downloadSVG",
-  //       parameters: {}
-  //     }
-  //   ];
-
-  //   modeOptions[2] = [
-  //     {
-  //       description: "Change Mode",
-  //       callback: "modeToggle",
-  //       parameters: {}
-  //     },
-  //     {
-  //       description: firstColOptionName,
-  //       callback: "toggleUseFirstColumn",
-  //       parameters: {}
-  //     },
-  //     separator,
-  //     {
-  //       description: "Next X Variable",
-  //       callback: "incrementPrimary",
-  //       parameters: {val: 1}
-  //     },
-  //     {
-  //       description: "Previous X Variable",
-  //       callback: "incrementPrimary",
-  //       parameters: {val: -1}
-  //     },
-  //     separator,
-  //     {
-  //       description: "Next Y Variable",
-  //       callback: "incrementSecondary",
-  //       parameters: {val: 1}
-  //     },
-  //     {
-  //       description: "Previous Y Variable",
-  //       callback: "incrementSecondary",
-  //       parameters: {val: -1}
-  //     },
-  //     separator,
-  //     {
-  //       description: "Save SVG result",
-  //       callback: "downloadSVG",
-  //       parameters: {}
-  //     }
-  //   ];
-
-  //   var contextMenuEntries = isNaN(this.state.drawMode) ? defaultEntries :
-  //     modeOptions[this.state.drawMode];
 
     return contextMenuEntries;
   },
@@ -326,4 +163,3 @@ var SAGE2Viz = SAGE2_App.extend({
   }
 
 });
-

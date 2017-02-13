@@ -1300,11 +1300,21 @@ function setupListeners() {
 		}
 	});
 
+	// Visualization Data update listener
+	wsio.on("visualizationUpdateData", function(data) {
+		console.log("SAGE2_Display: Update Vis Data:", data.id);
+
+		if (data.id && applications[data.id]) {
+			applications[data.id].updateData(data.data);
+
+		}
+	})
+
 	// Visualization View update listener
 	wsio.on("visualizationUpdateView", function(data) {
 		console.log("SAGE2_Display: Update Vis View:", data.id);
 
-		if (data.id) {
+		if (data.id && applications[data.id]) {
 			console.log("Example:", data.data[0]);
 			// for (var ind in data.data) {
 			// 	data.data[ind] = VisDataTypes.parse(data.data[ind]);
