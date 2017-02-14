@@ -36,6 +36,9 @@ function StickyItems() {
 * @method attachStickyItem
 */
 StickyItems.prototype.attachStickyItem = function(backgroundItem, stickyItem) {
+	if (backgroundItem.id === stickyItem.id) {
+		return;
+	}
 	if (this.stickyItemParent[backgroundItem.id]) {
 		if (this.stickyItemParent[backgroundItem.id].indexOf(stickyItem) < 0) {
 			this.stickyItemParent[backgroundItem.id].push(stickyItem);
@@ -88,9 +91,9 @@ StickyItems.prototype.removeElement = function(elem) {
 *
 * @method moveItemsStickingToUpdatedItem
 */
-StickyItems.prototype.moveItemsStickingToUpdatedItem = function(updatedItem) {
+StickyItems.prototype.moveItemsStickingToUpdatedItem = function (updatedItem) {
 	var moveItems = [];
-	if (this.stickyItemParent[updatedItem.elemId]) {
+	if (this.stickyItemParent[updatedItem.elemId] !== null && this.stickyItemParent[updatedItem.elemId] !== undefined) {
 		var list = this.stickyItemParent[updatedItem.elemId];
 		for (var l in list) {
 			list[l].left = updatedItem.elemLeft + this.stickyItemOffsetInfo[list[l].id].offsetX;
@@ -100,6 +103,8 @@ StickyItems.prototype.moveItemsStickingToUpdatedItem = function(updatedItem) {
 				elemWidth: list[l].width, elemHeight: list[l].height, date: new Date()
 			};
 			moveItems.push(item);
+			var oneDeepItems = this.moveItemsStickingToUpdatedItem(item);
+			Array.prototype.push.apply(moveItems, oneDeepItems);
 		}
 	}
 	return moveItems;
@@ -111,10 +116,18 @@ StickyItems.prototype.moveItemsStickingToUpdatedItem = function(updatedItem) {
 * @method getStickingItems
 */
 StickyItems.prototype.getStickingItems = function(elemId) {
-	if (this.stickyItemParent[elemId]) {
-		return this.stickyItemParent[elemId];
+	var stickingItems = [] ; 
+	if (this.stickyItemParent[elemId] !== null && this.stickyItemParent[elemId] !== undefined) {
+		var list = this.stickyItemParent[elemId] ;
+		for (var i in list ) {
+			stickingItems.push(list[i]) ;
+			var oneDeepItems = this.getStickingItems(list[i].id) ;
+			if (oneDeepItems.length > 0) {
+				Array.prototype.push.apply(stickingItems, oneDeepItems);
+			}
+		}
 	}
-	return [];
+	return stickingItems;
 };
 
 module.exports = StickyItems;
