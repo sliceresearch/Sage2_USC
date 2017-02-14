@@ -9679,13 +9679,11 @@ function deletePartition(id) {
 }
 
 function wsCreateSAGEVis(wsio, data) {
-
-	var pathFromUser = path.relative("C:\\user", data.filePath);
+	var pathFromUser = data.filePath.split("user/")[1];
 	var fullPath = path.join(mediaFolders.user.path, pathFromUser);
-	console.log(fullPath);
 
 	if (data && data.id) {
-		SAGE2_Vizs[data.id] = new Visualization(broadcast, data.filePath);
+		SAGE2_Vizs[data.id] = new Visualization(broadcast, data.filePath, data.id);
 
 		SAGE2_Vizs[data.id].loadDataSource(fullPath);
 		// SAGE2_Vizs[data.id].formatData({}, true, "Node");
@@ -9698,5 +9696,21 @@ function wsApplicationReady(wsio, data) {
 	// if it is a data view, the parent needs to update the view with the data on load
 	if (data.data.dataView && data.data.viewControllerParent) {
 		SAGE2_Vizs[data.data.viewControllerParent].updateView(data.id);
+	} else if (SAGE2_Vizs.hasOwnProperty(data.id)) {
+		// make sure data is ready and not updated yet
+
+		if (SAGE2_Vizs[data.id].dataReady && SAGE2_Vizs[data.id].dataChanged) {
+			SAGE2_Vizs[data.id].dataChanged = false;
+			wsio.emit('visualizationUpdateData',
+				{
+					id: data.id,
+					data: Object.keys(SAGE2_Vizs[data.id].data).map(d => {
+						let obj = {};
+						obj[d] = SAGE2_Vizs[data.id].data.type;
+
+						return obj;
+					})
+				});
+		}
 	}
 }

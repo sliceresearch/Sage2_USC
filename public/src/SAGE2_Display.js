@@ -1305,9 +1305,9 @@ function setupListeners() {
 		console.log("SAGE2_Display: Update Vis Data:", data.id);
 
 		if (data.id && applications[data.id]) {
-			applications[data.id].updateData(data.data);
-
+			applications[data.id].updateDataDefinition(data.data);
 		}
+
 	});
 
 	// Visualization View update listener

@@ -67,6 +67,8 @@ var SAGE2Viz = SAGE2_App.extend({
       .style("color", "#AAA")
       .text(arr[2].toUpperCase());
 
+    this.components.dataTypes = this.div.selectAll(".dataType");
+
     console.log("creating controls");
     this.controls.addButton({label: "Mode",  position: 1,  identifier: "ModeToggle"});
 
@@ -78,6 +80,33 @@ var SAGE2Viz = SAGE2_App.extend({
     this.updateServer(data);
 
     this.updateTitle("SAGE2 Viz Dataset");
+  },
+
+  updateDataDefinition: function(data) {
+    this.dataDefinition = data;
+
+    console.log(this.dataDefinition);
+
+    // remove all
+    this.components.dataTypes.remove();
+
+    // add new list
+    this.components.dataTypes
+      .data(this.dataDefinition)
+    .enter().append("div")
+      .attr("class", "dataType")
+      .attr("width", "100%")
+      .style("overflow", "hidden")
+      .style("font-size", "35px")
+      // .style("font-weight", "bold")
+      .style("background", "#444")
+      .style("border", "3px solid #666")
+      .style("border-radius", "10px")
+      .style("padding", "8px")
+      .style("margin", "5px")
+    .append("p")
+      .style("color", "#AAA")
+      .text((d) => (d.type + " : \"" + d.name + "\""));
   },
 
   updateServer: function(data) {

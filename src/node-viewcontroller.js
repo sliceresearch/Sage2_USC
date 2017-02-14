@@ -24,8 +24,7 @@
 var fs = require('fs');
 // var path = require('path');
 
-var DataFactory = require('./node-visdatafactory');
-
+// var DataFactory = require('./node-visdatafactory');
 
 // global view types enumerated
 
@@ -34,9 +33,10 @@ var DataFactory = require('./node-visdatafactory');
 	* @constructor
 	*/
 
-function Visualization(broadcastFunc, name) {
+function Visualization(broadcastFunc, name, id) {
 	this.send = broadcastFunc;
 	this.name = name;
+	this.id = id;
 
 	// the data for the visualization
 	this.data = null; // data
@@ -52,7 +52,11 @@ function Visualization(broadcastFunc, name) {
 	* @param {object} data - Data to be visualized
 	*/
 Visualization.prototype.setDataSource = function(data) {
+	this.dataReady = false;
 	this.data = data || {};
+	this.dataChanged = true;
+
+	this.formatData();
 };
 
 /**
@@ -132,40 +136,76 @@ Visualization.prototype.loadDataSource = function(dataPath) {
 	*		object type
 	*/
 Visualization.prototype.formatData = function(map, eachrow = false, rowType) {
+	this.dataChanged = true;
+
 	// let array = Array.isArray(this.data);
 
-	let parser = new DataFactory(map);
+	// let parser = new DataFactory(map);
 
-	// perform data regularization operations
-	for (let objKey in this.data) {
-		if (eachrow) {
-			this.data[objKey] = {
-				data: this.data[objKey],
-				dataType: rowType
+	// // perform data regularization operations
+	// for (let objKey in this.data) {
+	// 	if (eachrow) {
+	// 		this.data[objKey] = {
+	// 			data: this.data[objKey],
+	// 			dataType: rowType
+	// 		};
+	//
+	// 		// this.data[objKey] = parser.transform(
+	// 		parser.transform(this.data[objKey]);
+	//
+	// 	} else {
+	// 		var keys = Object.keys(this.data[objKey]);
+	//
+	// 		for (let dataKey of keys) {
+	// 			// transform the key of the data into the correct data class, store in same object
+	//
+	// 			this.data[objKey][dataKey] = {
+	// 				data: this.data[objKey][dataKey],
+	// 				dataType: map[dataKey]
+	// 			};
+	//
+	// 			// this.data[objKey][dataKey] = parser.transform(
+	// 			parser.transform(this.data[objKey][dataKey]);
+	// 		}
+	// 	}
+
+	let formattedData = {};
+
+	if (this.data.constructor == Array) {
+		formattedData.array = {
+			type: null,
+			data: this.data
+		};
+	// } else if (typeof this.data === "Object") {
+	} else {
+		for (let key of Object.keys(this.data)) {
+			formattedData[key] = {
+				type: null,
+				data: this.data[key]
 			};
-
-			// this.data[objKey] = parser.transform(
-			parser.transform(this.data[objKey]);
-
-		} else {
-			var keys = Object.keys(this.data[objKey]);
-
-			for (let dataKey of keys) {
-				// transform the key of the data into the correct data class, store in same object
-
-				this.data[objKey][dataKey] = {
-					data: this.data[objKey][dataKey],
-					dataType: map[dataKey]
-				};
-
-				// this.data[objKey][dataKey] = parser.transform(
-				parser.transform(this.data[objKey][dataKey]);
-			}
 		}
-
 	}
 
+	this.data = formattedData;
+
 	this.dataReady = true;
+
+	this.dataDetails = Object.keys(this.data).map(d => {
+		return {
+			name: d,
+			type: this.data[d].type
+		};
+	});
+
+	console.log(this.dataDetails);
+
+	this.dataChanged = false;
+
+	this.send('visualizationUpdateData',
+		{
+			id: this.id,
+			data: this.dataDetails
+		});
 };
 
 Visualization.prototype.addView = function(view) {
@@ -204,7 +244,7 @@ Visualization.prototype.createView = function(viewID) {
 };
 
 Visualization.prototype.updateView = function(viewID) {
-	if (this.views.hasOwnProperty(viewID)) {
+	if (this.views.hasOwnProperty(viewID) && this.dataReady) {
 		// if the object exists within the viewController
 
 		// calculate data subset which the view will be sent (depends on view type)

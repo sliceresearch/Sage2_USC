@@ -61,6 +61,9 @@ DataFactory.prototype.transform = function(options) {
 	// return new DataFactory.dataTypes[this.dataType](options);
 };
 
+
+
+
 // ====== Data Type Class Declarations ======
 
 
