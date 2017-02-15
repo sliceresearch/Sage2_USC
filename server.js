@@ -9513,6 +9513,8 @@ function wsWallScreenShotFromDisplay(wsio, data) {
 		csdSaveDataOnServer(wsio, fileSaveObject);
 		// manageUploadedFiles( path.join(mainFolder.path, "images", fileSaveObject.fileName), [0, 0], "image_viewer", "#B4B4B4", false);
 	}
+
+	masterDisplay.startedScreenShot = false; // getting this far meant that a full screenshot should have been created
 }
 
 /**
