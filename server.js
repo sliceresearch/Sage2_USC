@@ -2833,6 +2833,14 @@ function wsLoadApplication(wsio, data) {
 			}
 		}
 
+		// Get the size if any specificed
+		var initialSize = data.dimensions;
+		if (initialSize) {
+			appInstance.width  = initialSize[0];
+			appInstance.height = initialSize[1];
+			appInstance.aspect = initialSize[0] / initialSize[1];
+		}
+
 		handleNewApplication(appInstance, null);
 
 		addEventToUserLog(data.user, {type: "openApplication", data:
@@ -5606,8 +5614,30 @@ function pointerPressOnOpenSpace(uniqueID, pointerX, pointerY, data) {
 }
 
 function pointerPressOnStaticUI(uniqueID, pointerX, pointerY, data, obj, localPt) {
-	// don't allow data-pushing
+	// If the remote site is active (green button)
+	if (obj.data.connected === "on") {
+		// Validate the remote address
+		var remoteSite = findRemoteSiteByConnection(obj.data.wsio);
 
+		// Build the UI URL
+		var viewURL = 'https://' + remoteSite.wsio.remoteAddress.address + ':'
+			+ remoteSite.wsio.remoteAddress.port + '/index.html?viewonly=true';
+
+		// Create the webview to the remote UI
+		wsLoadApplication(obj.data.wsio, {
+			application: "/uploads/apps/Webview",
+			user: obj.data.wsio.id,
+			// pass the url in the data object
+			data: {
+				id:  uniqueID,
+				url: viewURL
+			},
+			position: [pointerX, config.ui.titleBarHeight + 10],
+			dimensions: [400, 120]
+		});
+	}
+
+	// don't allow data-pushing
 	/*
 	switch (obj.id) {
 		case "dataSharingRequestDialog": {
@@ -5921,7 +5951,8 @@ function pointerPressOnApplication(uniqueID, pointerX, pointerY, data, obj, loca
 			break;
 		case "dragCorner":
 			if (obj.data.application === "Webview") {
-				if (!sagePointers[uniqueID].visible) {
+				// resize with corner only in window mode
+				if (!sagePointers[uniqueID].visible || remoteInteraction[uniqueID].windowManagementMode()) {
 					selectApplicationForResize(uniqueID, obj.data, pointerX, pointerY, portalId);
 				} else {
 					// if corner click and webview, then send the click to app
@@ -6501,12 +6532,14 @@ function updatePointerPosition(uniqueID, pointerX, pointerY, data) {
 
 			let currentMoveItem = SAGE2Items.applications.list[updatedMoveItem.elemId];
 
-			broadcast('updatePartitionBorders', {id: currentMoveItem.ptnHovered, highlight: false});
+			if (currentMoveItem) {
+				broadcast('updatePartitionBorders', {id: currentMoveItem.ptnHovered, highlight: false});
 
-			// Calculate partition which item is over
-			currentMoveItem.ptnHovered = partitions.calculateNewPartition(currentMoveItem);
+				// Calculate partition which item is over
+				currentMoveItem.ptnHovered = partitions.calculateNewPartition(currentMoveItem);
 
-			broadcast('updatePartitionBorders', {id: currentMoveItem.ptnHovered, highlight: true});
+				broadcast('updatePartitionBorders', {id: currentMoveItem.ptnHovered, highlight: true});
+			}
 		}
 		return;
 	}
@@ -6674,7 +6707,8 @@ function pointerMoveOnApplication(uniqueID, pointerX, pointerY, data, obj, local
 		}
 		case "dragCorner": {
 			if (obj.data.application === "Webview") {
-				if (!sagePointers[uniqueID].visible) {
+				// resize corner only in window mode
+				if (!sagePointers[uniqueID].visible || remoteInteraction[uniqueID].windowManagementMode()) {
 					if (remoteInteraction[uniqueID].hoverCornerItem === null) {
 						remoteInteraction[uniqueID].setHoverCornerItem(obj.data);
 						broadcast('hoverOverItemCorner', {elemId: obj.data.id, flag: true});

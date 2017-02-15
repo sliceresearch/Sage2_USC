@@ -712,6 +712,32 @@ function ignoreFields(obj, fields) {
 }
 
 /**
+ * Utility function to test if a string or number represents a true value.
+ * Used for parsing JSON values
+ *
+ * @method parseBool
+ * @param value {Object} value to test
+ */
+function parseBool(value) {
+	if (typeof value === 'string') {
+		value = value.toLowerCase();
+	}
+	switch (value) {
+		case true:
+		case "true":
+		case 1:
+		case "1":
+		case "on":
+		case "yes": {
+			return true;
+		}
+		default: {
+			return false;
+		}
+	}
+}
+
+/**
  * Test if element is equal to true (used in .every call on an array)
  *
  * @method isTrue
