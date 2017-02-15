@@ -126,48 +126,10 @@ Visualization.prototype.loadDataSource = function(dataPath) {
 };
 
 /**
-	* Format first level of data using provided map from values used in data to recognized terms,
-	*
-	*
-	* @param {object} map - Mapping from data terms to recognized data types
-	* @param {boolean} eachrow - If eachrow is to be treated as a single object
-	*		as opposed to each row having multiple objects within it
-	* @param {string} rowType - Using eachrow, this is the specification of the rowType
-	*		object type
+	* Restructure data into type, data form
 	*/
-Visualization.prototype.formatData = function(map, eachrow = false, rowType) {
+Visualization.prototype.formatData = function() {
 	this.dataChanged = true;
-
-	// let array = Array.isArray(this.data);
-
-	// let parser = new DataFactory(map);
-
-	// // perform data regularization operations
-	// for (let objKey in this.data) {
-	// 	if (eachrow) {
-	// 		this.data[objKey] = {
-	// 			data: this.data[objKey],
-	// 			dataType: rowType
-	// 		};
-	//
-	// 		// this.data[objKey] = parser.transform(
-	// 		parser.transform(this.data[objKey]);
-	//
-	// 	} else {
-	// 		var keys = Object.keys(this.data[objKey]);
-	//
-	// 		for (let dataKey of keys) {
-	// 			// transform the key of the data into the correct data class, store in same object
-	//
-	// 			this.data[objKey][dataKey] = {
-	// 				data: this.data[objKey][dataKey],
-	// 				dataType: map[dataKey]
-	// 			};
-	//
-	// 			// this.data[objKey][dataKey] = parser.transform(
-	// 			parser.transform(this.data[objKey][dataKey]);
-	// 		}
-	// 	}
 
 	let formattedData = {};
 
@@ -206,6 +168,44 @@ Visualization.prototype.formatData = function(map, eachrow = false, rowType) {
 			id: this.id,
 			data: this.dataDetails
 		});
+};
+
+/**
+	* Add types to data as well as convert terms in data to recognized terms
+	*
+	* @param {object} map - Mapping from data terms to recognized data types
+	*/
+Visualization.prototype.typeCastData = function(map, eachrow = false, rowType) {
+	// let array = Array.isArray(this.data);
+
+	// let parser = new DataFactory(map);
+
+	// // perform data regularization operations
+	// for (let objKey in this.data) {
+	// 	if (eachrow) {
+	// 		this.data[objKey] = {
+	// 			data: this.data[objKey],
+	// 			dataType: rowType
+	// 		};
+	//
+	// 		// this.data[objKey] = parser.transform(
+	// 		parser.transform(this.data[objKey]);
+	//
+	// 	} else {
+	// 		var keys = Object.keys(this.data[objKey]);
+	//
+	// 		for (let dataKey of keys) {
+	// 			// transform the key of the data into the correct data class, store in same object
+	//
+	// 			this.data[objKey][dataKey] = {
+	// 				data: this.data[objKey][dataKey],
+	// 				dataType: map[dataKey]
+	// 			};
+	//
+	// 			// this.data[objKey][dataKey] = parser.transform(
+	// 			parser.transform(this.data[objKey][dataKey]);
+	// 		}
+	// 	}
 };
 
 Visualization.prototype.addView = function(view) {

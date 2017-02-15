@@ -9688,7 +9688,6 @@ function wsCreateSAGEVis(wsio, data) {
 		SAGE2_Vizs[data.id] = new Visualization(broadcast, data.filePath, data.id);
 
 		SAGE2_Vizs[data.id].loadDataSource(fullPath);
-		// SAGE2_Vizs[data.id].formatData({}, true, "Node");
 	}
 }
 

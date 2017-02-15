@@ -85,26 +85,26 @@ var SAGE2Viz = SAGE2_App.extend({
   updateDataDefinition: function(data) {
     this.dataDefinition = data;
 
-    console.log(this.dataDefinition);
-
     // remove all
     this.components.dataTypes.remove();
 
     // add new list
-    this.components.dataTypes
+    this.components.dataTypes = this.div.selectAll(".dataType")
       .data(this.dataDefinition)
     .enter().append("div")
       .attr("class", "dataType")
       .attr("width", "100%")
       .style("overflow", "hidden")
       .style("font-size", "35px")
-      // .style("font-weight", "bold")
       .style("background", "#444")
       .style("border", "3px solid #666")
       .style("border-radius", "10px")
       .style("padding", "8px")
       .style("margin", "5px")
-    .append("p")
+      .style("margin-left", "25px")
+      .style("margin-right", "25px");
+
+    this.components.dataTypes.append("p")
       .style("color", "#AAA")
       .text((d) => (d.type + " : \"" + d.name + "\""));
   },
