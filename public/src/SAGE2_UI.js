@@ -1220,8 +1220,8 @@ function handleClick(element) {
 	} else if (element.id === "applauncher"  || element.id === "applauncherContainer"  || element.id === "applauncherLabel") {
 		wsio.emit('requestAvailableApplications');
 	} else if (element.id === "mediabrowser" || element.id === "mediabrowserContainer" || element.id === "mediabrowserLabel") {
-		if (!hasMouse && !__SAGE2__.browser.isIPad &&
-			!__SAGE2__.browser.isAndroidTablet) {
+		if (!hasMouse) {
+			//  && !__SAGE2__.browser.isIPad && !__SAGE2__.browser.isAndroidTablet) {
 			// wsio.emit('requestStoredFiles');
 			showDialog('mediaBrowserDialog');
 		} else {
