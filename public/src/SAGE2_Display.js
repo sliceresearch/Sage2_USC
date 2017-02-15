@@ -1295,14 +1295,15 @@ function setupListeners() {
 
 	wsio.on('sendServerWallScreenShot', function(data) {
 		if (!__SAGE2__.browser.isElectron) {
-			return; // don't do anything if it isn't electron. may need to turn into response to server as "unavailable"
-		} else if (electronRequireObject == null) {
-			electronRequireObject = require('electron');
+			wsio.emit("wallScreenShotFromDisplay", {capable: false});
+		} else {
+			if (electronRequireObject == null) {
+				electronRequireObject = require('electron'); // ensure electron object has been initialized before using
+			}
+			electronRequireObject.remote.getCurrentWindow().capturePage(function(img) {
+				wsio.emit("wallScreenShotFromDisplay", {capable: true, imageAsPngData: img.toPng()});
+			});
 		}
-
-		electronRequireObject.remote.getCurrentWindow().capturePage(function(img) {
-			wsio.emit("wallScreenShotFromDisplay", {imageAsPngData: img.toPng()});
-		});
 
 	});
 }
