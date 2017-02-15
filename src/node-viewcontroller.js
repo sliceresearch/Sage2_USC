@@ -24,7 +24,7 @@
 var fs = require('fs');
 // var path = require('path');
 
-// var DataFactory = require('./node-visdatafactory');
+var DataFactory = require('./node-visdatafactory');
 
 // global view types enumerated
 
@@ -150,8 +150,6 @@ Visualization.prototype.formatData = function() {
 
 	this.data = formattedData;
 
-	this.dataReady = true;
-
 	this.dataDetails = Object.keys(this.data).map(d => {
 		return {
 			name: d,
@@ -159,14 +157,11 @@ Visualization.prototype.formatData = function() {
 		};
 	});
 
-	console.log(this.dataDetails);
-
-	this.dataChanged = false;
-
 	this.send('visualizationUpdateData',
 		{
 			id: this.id,
-			data: this.dataDetails
+			data: this.dataDetails,
+			isReady: false
 		});
 };
 
@@ -175,37 +170,52 @@ Visualization.prototype.formatData = function() {
 	*
 	* @param {object} map - Mapping from data terms to recognized data types
 	*/
-Visualization.prototype.typeCastData = function(map, eachrow = false, rowType) {
-	// let array = Array.isArray(this.data);
+Visualization.prototype.typeCastData = function(map) {
 
-	// let parser = new DataFactory(map);
+	/** --- miserables.json map example --- **
+	let map = {
+		"nodes": {
+		  type: "Node",
+			keyMap: {
+				name: name,
+				group: group
+			}
+		},
+		"links": {
+			type: "Link",
+			keyMap: {
+				source: source,
+				target: target,
+				value: value
+			}
+		}
+	};
+	*/
 
-	// // perform data regularization operations
-	// for (let objKey in this.data) {
-	// 	if (eachrow) {
-	// 		this.data[objKey] = {
-	// 			data: this.data[objKey],
-	// 			dataType: rowType
-	// 		};
-	//
-	// 		// this.data[objKey] = parser.transform(
-	// 		parser.transform(this.data[objKey]);
-	//
-	// 	} else {
-	// 		var keys = Object.keys(this.data[objKey]);
-	//
-	// 		for (let dataKey of keys) {
-	// 			// transform the key of the data into the correct data class, store in same object
-	//
-	// 			this.data[objKey][dataKey] = {
-	// 				data: this.data[objKey][dataKey],
-	// 				dataType: map[dataKey]
-	// 			};
-	//
-	// 			// this.data[objKey][dataKey] = parser.transform(
-	// 			parser.transform(this.data[objKey][dataKey]);
-	// 		}
-	// 	}
+	for (let key of Object.keys(map)) {
+		let parser = new DataFactory(map[key]);
+
+		this.data[key].type = map[key].type;
+
+		for (let objKey in this.data[key]) {
+
+			parser.transform(this.data[key][objKey]);
+		}
+	}
+
+	this.dataDetails = Object.keys(this.data).map(d => {
+		return {
+			name: d,
+			type: this.data[d].type
+		};
+	});
+
+	this.send('visualizationUpdateData',
+		{
+			id: this.id,
+			data: this.dataDetails,
+			isReady: true
+		});
 };
 
 Visualization.prototype.addView = function(view) {

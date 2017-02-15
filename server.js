@@ -1025,7 +1025,8 @@ function setupListeners(wsio) {
 	wsio.on('partitionsGrabAllContent',             wsPartitionsGrabAllContent);
 
 	// vis controller methods
-	wsio.on('createVisualization', 				wsCreateSAGEVis);
+	wsio.on('createVisualization', 									wsCreateSAGEVis);
+	wsio.on('formatVisualizationData', 							wsFormatSAGEVisData);
 
 }
 
@@ -9680,6 +9681,8 @@ function deletePartition(id) {
 	interactMgr.removeGeometry(ptn.id, "partitions");
 }
 
+// =============================================================================
+
 function wsCreateSAGEVis(wsio, data) {
 	var pathFromUser = data.filePath.split("user/")[1];
 	var fullPath = path.join(mediaFolders.user.path, pathFromUser);
@@ -9688,6 +9691,12 @@ function wsCreateSAGEVis(wsio, data) {
 		SAGE2_Vizs[data.id] = new Visualization(broadcast, data.filePath, data.id);
 
 		SAGE2_Vizs[data.id].loadDataSource(fullPath);
+	}
+}
+
+function wsFormatSAGEVisData(wsio, data) {
+	if (data && data.id && SAGE2_Vizs) {
+		SAGE2_Vizs[data.id].typeCastData(data.map);
 	}
 }
 

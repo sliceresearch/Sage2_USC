@@ -24,8 +24,6 @@
 	*/
 function DataFactory(map) {
 	this.map = map;
-
-	this.dataType = "Obj";
 }
 
 // basic visualization data types static to class
@@ -43,22 +41,20 @@ DataFactory.dataTypes = {
 /**
 	* Transform one data object
 	*
-	* @param {object} options - Data and datatype of the object to be transformed
+	* @param {object} data - data to be transformed by the map
 	*/
-DataFactory.prototype.transform = function(options) {
-	this.dataType = options.dataType || "Obj";
+DataFactory.prototype.transform = function(data) {
+	let keyMap = this.map.keyMap;
 
 	// when transforming an element, first map unrecognized terms
-	if (this.map) {
-		for (var key in options.data) {
-			if (this.map[key]) {
-				options.data[this.map[key]] = options.data[key];
-				delete options.data[key];
+	if (keyMap) {
+		for (var key in data) {
+			if (keyMap[key] && keyMap[key] !== key) {
+				data[keyMap[key]] = data[key];
+				delete data[key];
 			}
 		}
 	}
-
-	// return new DataFactory.dataTypes[this.dataType](options);
 };
 
 

@@ -1305,7 +1305,7 @@ function setupListeners() {
 		console.log("SAGE2_Display: Update Vis Data:", data.id);
 
 		if (data.id && applications[data.id]) {
-			applications[data.id].updateDataDefinition(data.data);
+			applications[data.id].updateDataDefinition(data.data, data.isReady);
 		}
 
 	});

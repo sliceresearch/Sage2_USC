@@ -82,8 +82,9 @@ var SAGE2Viz = SAGE2_App.extend({
     this.updateTitle("SAGE2 Viz Dataset");
   },
 
-  updateDataDefinition: function(data) {
+  updateDataDefinition: function(data, isReady) {
     this.dataDefinition = data;
+    this.dataReady = isReady;
 
     // remove all
     this.components.dataTypes.remove();
@@ -96,7 +97,7 @@ var SAGE2Viz = SAGE2_App.extend({
       .attr("width", "100%")
       .style("overflow", "hidden")
       .style("font-size", "35px")
-      .style("background", "#444")
+      .style("background", this.dataReady ? "#060" : "#600")
       .style("border", "3px solid #666")
       .style("border-radius", "10px")
       .style("padding", "8px")
@@ -106,7 +107,7 @@ var SAGE2Viz = SAGE2_App.extend({
 
     this.components.dataTypes.append("p")
       .style("color", "#AAA")
-      .text((d) => (d.type + " : \"" + d.name + "\""));
+      .text((d) => ((d.type ? d.type : "Unknown") + " : \"" + d.name + "\""));
   },
 
   updateServer: function(data) {
@@ -136,18 +137,28 @@ var SAGE2Viz = SAGE2_App.extend({
     this.draw_d3(date);
   },
 
-  getContextEntries: function() {
+  getFullContextMenuAndUpdate: function() {
     var separator = {
       description: "separator"
     };
 
-    var contextMenuEntries = [
-      {
-        description: "Create ",
+    let contextMenuEntries = [];
+
+    console.log(this.dataReady);
+
+    if (this.dataReady) {
+      contextMenuEntries.push({
+        description: "Create View",
         callback: "loadNodeLinkApp",
         parameters: {}
-      }
-    ];
+      });
+    } else {
+      contextMenuEntries.push({
+        description: "Prepare Data",
+        callback: "prepareDataServerside",
+        parameters: {}
+      })
+    }
 
     return contextMenuEntries;
   },
@@ -169,25 +180,37 @@ var SAGE2Viz = SAGE2_App.extend({
     if (eventType === "widgetEvent") {
       if (data.identifier === "NextValPrim") {
         this.incrementPrimary({val: 1});
-      } else if (data.identifier === "PrevValPrim") {
-        this.incrementPrimary({val: -1});
-      } else if (data.identifier === "SortToggle") {
-        this.toggleSort();
-      } else if (data.identifier === "NextValSec") {
-        this.incrementSecondary({val: 1});
-      } else if (data.identifier === "PrevValSec") {
-        this.incrementSecondary({val: -1});
-      } else if (data.identifier === "ModeToggle") {
-        this.modeToggle();
-      } else if (data.identifier === "FirstColToggle") {
-        this.toggleUseFirstColumn();
       }
     }
   },
 
   loadNodeLinkApp: function() {
     if (isMaster) {
-      wsio.emit('loadApplication', {application: "C:\\Users\\andre\\Documents\\sage2\\public\\uploads\\apps\\nodelink", user: "SAGE2", parent: this.id});
+      wsio.emit('loadApplication', {application: "/home/Documents/sage2/public/uploads/apps/nodelink", user: "SAGE2", parent: this.id});
+    }
+  },
+
+  prepareDataServerside: function() {
+    if (isMaster) {
+      let dataMap = {
+    		"nodes": {
+    		  type: "Node",
+    			keyMap: {
+    				name: "name",
+    				group: "group"
+    			}
+    		},
+    		"links": {
+    			type: "Link",
+    			keyMap: {
+    				source: "source",
+    				target: "target",
+    				value: "value"
+    			}
+    		}
+    	};
+
+      wsio.emit('formatVisualizationData', {id: this.id, map: dataMap, parent: this.id});
     }
   }
 
