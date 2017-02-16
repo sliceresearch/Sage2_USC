@@ -9440,7 +9440,7 @@ function wsWallScreenShotFromDisplay(wsio, data) {
 		for (var c = 0; c < config.layout.columns; c++) {
 			displayOrder.push([]);
 			for (var r = 0; r < config.layout.rows; r++) {
-				displayOrder[i].push("blank"); // starts off filled with strings of "blank" as a placeholder for length calculation.
+				displayOrder[c].push("blank"); // starts off filled with strings of "blank" as a placeholder for length calculation.
 			}
 		}
 		console.log("erase me, start");
