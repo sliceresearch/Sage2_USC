@@ -9365,6 +9365,19 @@ function wsStartWallScreenShot(wsio, data) {
 				masterDisplay.displayCheckIn[x].push([false]); // fill array of false
 			}
 		}
+
+
+		console.log();
+		console.log();
+		console.log();
+		console.log();
+
+		console.dir(masterDisplay.displayCheckIn);
+
+
+		console.log();
+		console.log();
+		console.log();		console.log();
 	}
 }
 
@@ -9446,6 +9459,7 @@ function wsWallScreenShotFromDisplay(wsio, data) {
 		for (var y = 0; y < masterDisplay.displayCheckIn[0].length; y++) {
 			if (masterDisplay.displayCheckIn[x][y] === false) { // === is critical since display wsio replaces false.
 				allDisplaysSubmittedScreenShots = false;
+				console.log("missing a tile piece failed the full tile test");
 				break;
 			}
 		}
@@ -9456,13 +9470,15 @@ function wsWallScreenShotFromDisplay(wsio, data) {
 			if (allDisplaysFromClients[i].capableOfScreenShot) { // if the display is capable
 				if (!allDisplaysFromClients[i].submittedScreenShot) { // and it hasn't submitted a screenshot, don't have all tiles
 					allDisplaysSubmittedScreenShots = false;
+				console.log("missing a tile piece failed the full tile test");
 					break;
 				}
 			}
 		}
 	}
 	// stop if not all displays submitted. Return here to prevent too many nested blocks
-	if (!allDisplaysSubmittedScreenShots) { return; }
+	if (!allDisplaysSubmittedScreenShots) {
+				console.log("not making a moisaic"); return; }
 	
 	// At this point ready to make a screen shot.
 	// First need the date to use as a unique name modifier.
@@ -9470,6 +9486,16 @@ function wsWallScreenShotFromDisplay(wsio, data) {
 
 	// more than 1 tile means that stitching needs to be applied.
 	if (allDisplaysFromClients.length > 1) {
+		console.log("");
+		console.log("");
+		console.log("");
+		console.log("");
+		console.log("");
+		console.log("config width, height:" + config.resolution.width + "," + config.resolution.height);
+		console.log("contents of displayCheckIn");
+		console.dir(masterDisplay.displayCheckIn);
+		
+
 		// stitching needs to be done by rows.
 		var basePath = path.join(mainFolder.path, "images"); // tile pieces are still saved in images
 		var currentPath;
@@ -9478,7 +9504,6 @@ function wsWallScreenShotFromDisplay(wsio, data) {
 		var mosaicImage = imageMagick().in("background", "black");
 		var needToSkip;
 
-		
 		/*
 			For each element in the display checkin
 				if it is false, then the display isn't connected
@@ -9502,6 +9527,8 @@ function wsWallScreenShotFromDisplay(wsio, data) {
 						mosaicImage = mosaicImage.in("-page", "+" + xMosaicPosition + "+" + yMosaicPosition);
 						mosaicImage = mosaicImage.in(currentPath);
 						tilesUsed.push(masterDisplay.displayCheckIn[x][y]);
+
+						console.log("offset on page:" + xMosaicPosition + "," + yMosaicPosition);
 					}
 				}
 				yMosaicPosition += config.resolution.height;
