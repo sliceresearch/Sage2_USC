@@ -289,7 +289,7 @@ function SAGE2_init() {
 	SAGE2_browser();
 
 	// Setup focus events
-	if ("Notification" in window) {
+	if ("Notification" in window && !viewOnlyMode) {
 		Notification.requestPermission(function (permission) {
 			console.log('Request', permission);
 		});
