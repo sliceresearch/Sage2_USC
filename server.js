@@ -9361,8 +9361,8 @@ function wsStartWallScreenShot(wsio, data) {
 		masterDisplay.displayCheckIn = []; // [x][y] the previous array is discarded
 		for (var x = 0; x < config.layout.columns; x++) {
 			masterDisplay.displayCheckIn.push([]);
-			for (var y = 0; y < config.layout.columns; y++) {
-				masterDisplay.displayCheckIn[x].push([false]); // fill array of false
+			for (var y = 0; y < config.layout.rows; y++) {
+				masterDisplay.displayCheckIn[x].push(false); // fill array of false
 			}
 		}
 
@@ -9501,7 +9501,7 @@ function wsWallScreenShotFromDisplay(wsio, data) {
 		var currentPath;
 		var tilesUsed = [];
 		var xMosaicPosition = 0, yMosaicPosition = 0;
-		var mosaicImage = imageMagick().in("background", "black");
+		var mosaicImage = imageMagick().in("-background", "black");
 		var needToSkip;
 
 		/*
