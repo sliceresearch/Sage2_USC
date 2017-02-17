@@ -9493,15 +9493,15 @@ function wsWallScreenShotFromDisplay(wsio, data) {
 				if (masterDisplay.displayCheckIn[x][y] !== false) { // reaching this point and false means the display is not connected.
 					needToSkip = false;
 					for (var i = 0; i < tilesUsed.length; i++) {
-						if (displayCheckIn[x][y] === tilesUsed[i]) { // tripping this check means that the display had width and height
+						if (masterDisplay.displayCheckIn[x][y] === tilesUsed[i]) { // tripping this check means that the display had width and height
 							needToSkip = true;
 						}
 					}
 					if (!needToSkip) {
-						currentPath = path.join(basePath, "wallScreenShot" + displayCheckIn[x][y].clientID + ".png");
+						currentPath = path.join(basePath, "wallScreenShot" + masterDisplay.displayCheckIn[x][y].clientID + ".png");
 						mosaicImage = mosaicImage.in("-page", "+" + xMosaicPosition + "+" + yMosaicPosition);
 						mosaicImage = mosaicImage.in(currentPath);
-						tilesUsed.push(displayCheckIn[x][y]);
+						tilesUsed.push(masterDisplay.displayCheckIn[x][y]);
 					}
 				}
 				yMosaicPosition += config.resolution.height;
