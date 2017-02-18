@@ -2511,18 +2511,32 @@ function setRmbContextMenuEntries(data) {
 	for (i = 0; i < entriesToAdd.length; i++) {
 		workingDiv = document.createElement('div');
 		// unique entry id
-		workingDiv.id = 'rmbContextMenuEntry' + i; // unique entry id
+		workingDiv.id = 'rmbContextMenuEntry' + i;
 		if (typeof entriesToAdd[i].entryColor === "string") {
-			workingDiv.startingBgColor = entriesToAdd[i].entryColor; // use given color if specified
+			// use given color if specified
+			workingDiv.startingBgColor = entriesToAdd[i].entryColor;
 		} else {
-			workingDiv.startingBgColor = "#FFF8E1"; // start as off-white color
+			// start as off-white color
+			workingDiv.startingBgColor = "#FFF8E1";
 		}
 		workingDiv.style.background = workingDiv.startingBgColor;
+		// Add a little padding
+		workingDiv.style.padding = "0 5px 0 5px";
+		// Align main text to the left
+		workingDiv.style.textAlign = "left";
 		// special case for a separator (line) entry
 		if (entriesToAdd[i].description === "separator") {
 			workingDiv.innerHTML = "<hr>";
 		} else {
-			workingDiv.innerHTML = "&nbsp&nbsp&nbsp" + entriesToAdd[i].description + "&nbsp&nbsp&nbsp";
+			if (entriesToAdd[i].accelerator) {
+				// Add description of the keyboard shortcut
+				workingDiv.innerHTML = "<p style='float: left;'>" + entriesToAdd[i].description + "</p>";
+				workingDiv.innerHTML += "<p style='float: right; padding-left: 5px;'> [" + entriesToAdd[i].accelerator + "]</p>";
+				workingDiv.innerHTML += "<div style='clear: both;'></div>";
+			} else {
+				// or just plain text
+				workingDiv.innerHTML = entriesToAdd[i].description;
+			}
 		}
 		// add input field if app says to.
 		workingDiv.inputField = false;
@@ -2533,7 +2547,8 @@ function setRmbContextMenuEntries(data) {
 			inputField.id = workingDiv.id + "Input";
 			// check if the data has a value field
 			inputField.defaultValue = entriesToAdd[i].value || "";
-			if (entriesToAdd[i].inputFieldSize) { // if specified state input field size
+			if (entriesToAdd[i].inputFieldSize) {
+				// if specified state input field size
 				inputField.size = entriesToAdd[i].inputFieldSize;
 			} else {
 				inputField.size = 5;
