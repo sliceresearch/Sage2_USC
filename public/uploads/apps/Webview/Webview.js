@@ -374,6 +374,7 @@ var Webview = SAGE2_App.extend({
 
 		entry = {};
 		entry.description = "Back";
+		entry.accelerator = "Alt \u2190";     // ALT <-
 		entry.callback = "navigation";
 		entry.parameters = {};
 		entry.parameters.action = "back";
@@ -381,6 +382,7 @@ var Webview = SAGE2_App.extend({
 
 		entry = {};
 		entry.description = "Forward";
+		entry.accelerator = "Alt \u2192";     // ALT ->
 		entry.callback = "navigation";
 		entry.parameters = {};
 		entry.parameters.action = "forward";
@@ -388,6 +390,7 @@ var Webview = SAGE2_App.extend({
 
 		entry = {};
 		entry.description = "Reload";
+		entry.accelerator = "Alt R";         // ALT r
 		entry.callback = "reloadPage";
 		entry.parameters = {};
 		entries.push(entry);
@@ -424,6 +427,7 @@ var Webview = SAGE2_App.extend({
 
 		entry = {};
 		entry.description = "Zoom in";
+		entry.accelerator = "Alt \u2191";     // ALT up-arrow
 		entry.callback = "zoomPage";
 		entry.parameters = {};
 		entry.parameters.dir = "zoomin";
@@ -431,6 +435,7 @@ var Webview = SAGE2_App.extend({
 
 		entry = {};
 		entry.description = "Zoom out";
+		entry.accelerator = "Alt \u2193";     // ALT down-arrow
 		entry.callback = "zoomPage";
 		entry.parameters = {};
 		entry.parameters.dir = "zoomout";
@@ -475,7 +480,7 @@ var Webview = SAGE2_App.extend({
 			}
 		});
 
-		entries.push({description: "separator"});
+		// entries.push({description: "separator"});
 
 		return entries;
 	},
@@ -665,6 +670,13 @@ var Webview = SAGE2_App.extend({
 							x: 0, y: 0,
 							canScroll: true
 						});
+					}
+					this.refresh(date);
+				} else if (data.code === 82 && data.state === "down") {
+					// r key
+					if (data.status.ALT) {
+						// ALT-r reloads
+						this.reloadPage({});
 					}
 					this.refresh(date);
 				} else if (data.code === 39 && data.state === "down") {
