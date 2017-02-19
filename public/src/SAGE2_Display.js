@@ -9,20 +9,15 @@
 // Copyright (c) 2014-15
 
 /* global ignoreFields, hostAlias, SAGE2WidgetControlInstance */
-/* global makeSvgBackgroundForWidgetConnectors */
-/* global addStyleElementForTitleColor */
+/* global makeSvgBackgroundForWidgetConnectors, addStyleElementForTitleColor */
 /* global removeStyleElementForTitleColor */
-/* global clearConnectorColor */
-/* global moveWidgetToAppConnector */
-/* global showWidgetToAppConnectors */
-/* global getWidgetControlInstanceById */
-/* global mapMoveToSlider */
-/* global getPropertyHandle */
-/* global insertTextIntoTextInputWidget */
-/* global removeWidgetToAppConnector */
+/* global clearConnectorColor, moveWidgetToAppConnector */
+/* global showWidgetToAppConnectors, getWidgetControlInstanceById */
+/* global mapMoveToSlider, getPropertyHandle */
+/* global insertTextIntoTextInputWidget, removeWidgetToAppConnector */
 /* global hideWidgetToAppConnectors */
-/* global createWidgetToAppConnector */
-/* global getTextFromTextInputWidget */
+/* global createWidgetToAppConnector, getTextFromTextInputWidget */
+/* global SAGE2_Partition, require */
 
 "use strict";
 
@@ -42,13 +37,14 @@ var wsio;
 var isMaster;
 var hostAlias = {};
 
-var itemCount = 0;
+var itemCount = 20;
 var controlItems   = {};
 var controlObjects = {};
 var lockedControlElements = {};
 var widgetConnectorRequestList = {};
 
 var applications = {};
+var partitions = {};
 var dependencies = {};
 var dataSharingPortals = {};
 
@@ -159,6 +155,19 @@ function setupFocusHandlers() {
 			}
 		}
 	});
+
+	if (__SAGE2__.browser.isElectron) {
+		// Display warning messages from the 'Main' Electron process
+		require('electron').ipcRenderer.on('warning', (event, message) => {
+			var problemDialog = ui.buildMessageBox('problemDialog', message);
+			ui.main.appendChild(problemDialog);
+			document.getElementById('problemDialog').style.display = "block";
+			// close the warning after 2.5 second
+			setTimeout(function() {
+				deleteElement('problemDialog');
+			}, 2500);
+		});
+	}
 }
 
 /**
@@ -582,6 +591,34 @@ function setupListeners() {
 
 	wsio.on('createAppWindow', function(data) {
 		createAppWindow(data, ui.main.id, ui.titleBarHeight, ui.titleTextSize, ui.offsetX, ui.offsetY);
+	});
+
+
+	/* Partition wsio calls */
+	wsio.on('createPartitionWindow', function(data) {
+		partitions[data.id] = new SAGE2_Partition(data);
+	});
+	wsio.on('deletePartitionWindow', function(data) {
+		partitions[data.id].deletePartition();
+		delete partitions[data.id];
+	});
+	wsio.on('partitionMoveAndResizeFinished', function(data) {
+		partitions[data.id].updatePositionAndSize(data);
+	});
+	wsio.on('partitionWindowTitleUpdate', function(data) {
+		partitions[data.id].updateTitle(data.title);
+	});
+	wsio.on('updatePartitionBorders', function(data) {
+		if (!data) {
+			for (var p in partitions) {
+				// console.log(p);
+				partitions[p].updateSelected(false);
+			}
+		} else {
+			if (partitions.hasOwnProperty(data.id)) {
+				partitions[data.id].updateSelected(data.highlight);
+			}
+		}
 	});
 
 	wsio.on('createAppWindowInDataSharingPortal', function(data) {

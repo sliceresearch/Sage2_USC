@@ -1,0 +1,6 @@
+#!/bin/sh
+
+./node_modules/.bin/electron-packager ./ --platform=darwin --arch=x64 --icon=sage2.icns --overwrite
+
+cp View-mac.command SAGE2_client-darwin-x64
+

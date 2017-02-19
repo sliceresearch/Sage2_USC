@@ -31,7 +31,10 @@ var audioCtx;
 var audioGainNodes   = {};
 var audioPannerNodes = {};
 
-
+// Number of sound instances being played at once
+var numberOfSounds    = 0;
+// Max number of sound played at once
+var maxNumberOfSounds = 5;
 
 // Explicitely close web socket when web browser is closed
 window.onbeforeunload = function() {
@@ -148,7 +151,8 @@ function setupListeners() {
 	var totalWidth;
 
 	wsio.on('initialize', function(data) {
-		// nothing
+		// Reset the counter for number sounds
+		numberOfSounds = 0;
 	});
 
 	wsio.on('setupDisplayConfiguration', function(json_cfg) {
@@ -175,7 +179,8 @@ function setupListeners() {
 
 		// Select the jinggle sound (default or configuration file)
 		// var jingle = "sage2_jinggle.mp3";
-		var jingle = "kola-startup.mp3";
+		// var jingle = "kola-startup.mp3";
+		var jingle = "blues_lick_in_a.mp3";
 		if (json_cfg.ui.startup_sound) {
 			// use the jingle file if specificied in configuration file
 			jingle = json_cfg.ui.startup_sound;
@@ -219,8 +224,18 @@ function setupListeners() {
 	});
 
 	wsio.on('createAppWindow', function(data) {
-		// Play an audio blip
-		createjs.Sound.play("newapp");
+		// Limit the number of sounds
+		if (numberOfSounds < maxNumberOfSounds) {
+			numberOfSounds = numberOfSounds + 1;
+
+			// Play an audio blip
+			var newAppSound = createjs.Sound.play("newapp");
+
+			// Callback when sound is done playing
+			newAppSound.on('complete', function(evt) {
+				numberOfSounds = numberOfSounds - 1;
+			});
+		}
 
 		if (data.application === "movie_player") {
 			var main = document.getElementById('main');
@@ -480,8 +495,18 @@ function setupListeners() {
 	});
 
 	wsio.on('deleteElement', function(data) {
-		// Play an audio blop
-		createjs.Sound.play("deleteapp");
+		// Limit the number of sounds
+		if (numberOfSounds < maxNumberOfSounds) {
+			numberOfSounds = numberOfSounds + 1;
+
+			// Play an audio blop
+			var deleteSound = createjs.Sound.play("deleteapp");
+
+			// Callback when sound is done playing
+			deleteSound.on('complete', function(evt) {
+				numberOfSounds = numberOfSounds - 1;
+			});
+		}
 
 		// Stop video
 		var vid = document.getElementById(data.elemId);

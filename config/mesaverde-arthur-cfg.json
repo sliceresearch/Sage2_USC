@@ -1,0 +1,86 @@
+/*
+	Configuration for Mesaverde
+*/
+{
+	name: "Green Table",
+	// hostname of the web server
+	host: "mesaverde.evl.uic.edu",
+	// port of the HTTPS server: 443 for default
+	port: 443,
+	// port of the HTTP public page
+	index_port: 80,
+	background: {
+		image: {
+			url: "images/background/osx_hero_2x_cc.jpg",
+			style: "stretch"
+		},
+		clip: true
+	},
+	ui: {
+		// clock setting: 12-hour or 24-hour
+		clock: 12,
+		show_url: true,
+        noDropShadow: true,
+		show_version: true,
+		auto_scale_ui: true
+	},
+	dimensions: {
+		// dimensions of one tile (can be overriden in displays section)
+		tile_width: 5.882,  // in meter, pixel area
+		tile_height: 1.171,  // in meter, pixel area
+		tile_borders: [ 0.0254, 0.0254, 0.0254, 0.0254 ], // mullions in meter, left, right, bottom, top
+		// prefered or common viewing distance to calculate UI sizes
+		viewing_distance: 2.6	// in meter
+	},
+	resolution: {
+		width: 11520,
+		height: 2160
+	},
+	layout: {
+		rows: 1,
+		columns: 1
+	},
+	displays: [
+		{
+			row: 0,
+			column: 0
+		}
+	],
+	alternate_hosts: [
+		"localhost",
+		"127.0.0.1",
+		"mesaverde.evlrn.uic.edu",
+	],
+	remote_sites: [
+		{
+			name: "CyberCommons",
+			host: "iridium.evl.uic.edu",
+			port: 443,
+			secure: true
+		},
+		{
+			name: "CAVE2",
+			host: "lyra.evl.uic.edu",
+			port: 443,
+			secure: true
+		},
+		{
+			name: "IceWall",
+			host: "thor.evl.uic.edu",
+			port: 443,
+			secure: true
+		},
+		{
+			name: "LAVA",
+			host: "pele.manoa.hawaii.edu",
+			port: 443,
+			secure: true
+		},
+		{
+			name: "Arthur",
+			host: "nishimoto.evl.uic.edu",
+			port: 9292,
+			secure: true
+		}
+	]
+}

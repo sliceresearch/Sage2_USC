@@ -195,8 +195,14 @@ function UIBuilder(json_cfg, clientID) {
 
 						_this.bg.style.top    = top.toString() + "px";
 						_this.bg.style.left   = left.toString() + "px";
-						_this.bg.style.width  = (_this.json_cfg.resolution.width - left).toString() + "px";
-						_this.bg.style.height = (_this.json_cfg.resolution.height - top).toString() + "px";
+						var tileW = _this.json_cfg.resolution.width *
+							(_this.json_cfg.displays[_this.clientID].width || 1);
+						var tileH = _this.json_cfg.resolution.height *
+							(_this.json_cfg.displays[_this.clientID].height || 1);
+						tileW -= left;
+						tileH -= top;
+						_this.bg.style.width  = tileW + "px";
+						_this.bg.style.height = tileH + "px";
 
 						_this.bg.style.backgroundImage    = "url(" + _this.json_cfg.background.image.url + ")";
 						_this.bg.style.backgroundPosition = "top left";
@@ -205,8 +211,10 @@ function UIBuilder(json_cfg, clientID) {
 
 						_this.main.style.top    = (-1 * top).toString()  + "px";
 						_this.main.style.left   = (-1 * left).toString() + "px";
-						_this.main.style.width  = _this.json_cfg.resolution.width  + "px";
-						_this.main.style.height = _this.json_cfg.resolution.height + "px";
+						_this.main.style.width  = _this.json_cfg.resolution.width *
+							(_this.json_cfg.displays[_this.clientID].width || 1)  + "px";
+						_this.main.style.height = _this.json_cfg.resolution.height *
+							(_this.json_cfg.displays[_this.clientID].height || 1) + "px";
 					} else {
 						var bgImgFinal;
 						var ext = _this.json_cfg.background.image.url.lastIndexOf(".");
@@ -586,9 +594,9 @@ function UIBuilder(json_cfg, clientID) {
 		var newDialogCancel = document.createElement("div");
 		newDialogCancel.id  = id + "_cancel";
 		newDialogCancel.style.position = "absolute";
-		newDialogCancel.style.left   = (6.5 * this.titleBarHeight).toString() + "px";
+		newDialogCancel.style.left   = (1.5 * this.titleBarHeight).toString() + "px";
 		newDialogCancel.style.bottom = (this.titleBarHeight).toString() + "px";
-		newDialogCancel.style.width  = (13 * this.titleBarHeight).toString() + "px";
+		newDialogCancel.style.width  = (23 * this.titleBarHeight).toString() + "px";
 		newDialogCancel.style.height = (3 * this.titleBarHeight).toString() + "px";
 		newDialogCancel.style.webkitBoxSizing = "border-box";
 		newDialogCancel.style.mozBoxSizing    = "border-box";
@@ -1454,6 +1462,16 @@ function UIBuilder(json_cfg, clientID) {
 			for (i = 0; i < itemlist.length; i++) {
 				itemlist[i].classList.toggle("windowItemNoBorder");
 			}
+			// Hide the partitions top bar
+			var ptnlist = document.getElementsByClassName("partitionTitle");
+			for (i = 0; i < ptnlist.length; i++) {
+				ptnlist[i].style.display = 'none';
+			}
+			// Hide the partitions background area
+			var ptntitlelist = document.getElementsByClassName("partitionArea");
+			for (i = 0; i < ptntitlelist.length; i++) {
+				ptntitlelist[i].style.display = 'none';
+			}
 			this.uiHidden = true;
 		}
 	};
@@ -1485,6 +1503,16 @@ function UIBuilder(json_cfg, clientID) {
 			var itemlist = document.getElementsByClassName("windowItem");
 			for (i = 0; i < itemlist.length; i++) {
 				itemlist[i].classList.toggle("windowItemNoBorder");
+			}
+			// Show the partitions top bar
+			var ptnlist = document.getElementsByClassName("partitionTitle");
+			for (i = 0; i < ptnlist.length; i++) {
+				ptnlist[i].style.display = 'block';
+			}
+			// Show the partitions background area
+			var ptntitlelist = document.getElementsByClassName("partitionArea");
+			for (i = 0; i < ptntitlelist.length; i++) {
+				ptntitlelist[i].style.display = 'block';
 			}
 			this.uiHidden = false;
 		}

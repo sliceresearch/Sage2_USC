@@ -47,13 +47,43 @@ var Webview = SAGE2_App.extend({
 		this.element.allowpopups = false;
 		this.element.allowfullscreen = false;
 		this.element.nodeintegration = 0;
+		// disable fullscreen
+		this.element.fullscreenable = false;
+		this.element.fullscreen = false;
+
 		// this.element.disablewebsecurity = true;
 
 		this.element.minwidth  = data.width;
 		this.element.minheight = data.height;
 
 		// Get the URL from parameter or session
-		this.element.src = data.params || this.state.url;
+		var view_url = data.params || this.state.url;
+		var video_id, ampersandPosition;
+
+		// A youtube URL with a 'watch' video
+		if (view_url.startsWith('https://www.youtube.com') &&
+				view_url.indexOf('embed') === -1 &&
+				view_url.indexOf("watch?v=") >= 0) {
+			// Search for the Youtube ID
+			video_id = view_url.split('v=')[1];
+			ampersandPosition = video_id.indexOf('&');
+			if (ampersandPosition != -1) {
+				video_id = video_id.substring(0, ampersandPosition);
+			}
+			view_url = 'https://www.youtube.com/embed/' + video_id + '?autoplay=0';
+		} else if (view_url.startsWith('https://youtu.be')) {
+			// youtube short URL (used in sharing)
+			video_id = view_url.split('/').pop();
+			view_url = 'https://www.youtube.com/embed/' + video_id + '?autoplay=0';
+		} else if (view_url.indexOf('vimeo') >= 0 && view_url.indexOf('player') === -1) {
+			// Search for the Vimeo ID
+			var m = view_url.match(/^.+vimeo.com\/(.*\/)?([^#\?]*)/);
+			var vimeo_id =  m ? m[2] || m[1] : null;
+			if (vimeo_id) {
+				view_url = 'https://player.vimeo.com/video/' + vimeo_id;
+			}
+		}
+		this.element.src = view_url;
 
 		// Store the zoom level, when in desktop emulation
 		this.zoomFactor = 1;
@@ -78,6 +108,8 @@ var Webview = SAGE2_App.extend({
 			// sync the state object
 			_this.SAGE2Sync(false);
 			_this.codeInject();
+			// update the context menu with the current URL
+			_this.getFullContextMenuAndUpdate();
 		});
 
 		// done loading
@@ -112,6 +144,17 @@ var Webview = SAGE2_App.extend({
 			event.preventDefault();
 		});
 
+		// Emitted when page receives favicon urls
+		this.element.addEventListener("page-favicon-updated", function(event) {
+			console.log('Webview>	page-favicon-updated', event.favicons, event.favicons[0]);
+			if (event.favicons && event.favicons[0]) {
+				_this.state.favicon = event.favicons[0];
+				// sync the state object
+				_this.SAGE2Sync(false);
+			}
+		});
+
+		// Console message from the embedded page
 		this.element.addEventListener('console-message', function(event) {
 			console.log('Webview>	console:', event.message);
 			// Add the message to the console layer
@@ -127,7 +170,6 @@ var Webview = SAGE2_App.extend({
 				console.log('Webview>	Not http URL, not opening', event.url);
 			}
 		});
-
 	},
 
 	/**
@@ -185,9 +227,13 @@ var Webview = SAGE2_App.extend({
 		// Called when window is resized
 		this.element.style.width  = this.sage2_width  + "px";
 		this.element.style.height = this.sage2_height + "px";
+
 		// resize the console layer
-		this.layer.style.width  = this.element.style.width;
-		this.layer.style.height = this.element.style.height;
+		if (this.layer) {
+			// make sure the layer exist first
+			this.layer.style.width  = this.element.style.width;
+			this.layer.style.height = this.element.style.height;
+		}
 		this.refresh(date);
 	},
 
@@ -234,6 +280,33 @@ var Webview = SAGE2_App.extend({
 			'\
 			var s2InjectForKeys = {};\
 			\
+			document.addEventListener("keypress", function(e) {\
+				var kue = new CustomEvent("keydown", {bubbles:true});\
+				kue.target = e.target;\
+				kue.view = e.view;\
+				kue.detail = e.detail;\
+				kue.char = e.char;\
+				kue.key = e.key;\
+				kue.charCode = e.charCode;\
+				kue.keyCode = e.keyCode;\
+				kue.which = e.which;\
+				kue.location = e.location;\
+				kue.repeat = e.repeat;\
+				kue.locale = e.locale;\
+				kue.ctrlKey = e.ctrlKey;\
+				kue.shiftKey = e.shiftKey;\
+				kue.altKey = e.altKey;\
+				kue.metaKey = e.metaKey;\
+				if (e.target.value == undefined) {\
+						s2InjectForKeys.lastClickedElement = e.target;\
+						s2InjectForKeys.lastClickedElement.dispatchEvent(kue);\
+						e.preventDefault();\
+					/*if (s2InjectForKeys.lastClickedElement != null) {\
+						s2InjectForKeys.lastClickedElement.dispatchEvent(kue);\
+						e.preventDefault();\
+					}*/\
+				}\
+			});\
 			document.addEventListener("click", function(e) {\
 				s2InjectForKeys.lastClickedElement = document.elementFromPoint(e.clientX, e.clientY);\
 			});\
@@ -278,7 +351,9 @@ var Webview = SAGE2_App.extend({
 				} else if(e.keyCode == 48) { /* 0 */\
 					sendChar =  ")";\
 				}\
-				s2InjectForKeys.lastClickedElement.value += sendChar;\
+				if (s2InjectForKeys.lastClickedElement.value != undefined) {\
+				} else {\
+				}\
 			});\
 			document.addEventListener("keyup", function(e) {\
 				if (e.keyCode == 0x10) {\
@@ -299,6 +374,7 @@ var Webview = SAGE2_App.extend({
 
 		entry = {};
 		entry.description = "Back";
+		entry.accelerator = "Alt \u2190";     // ALT <-
 		entry.callback = "navigation";
 		entry.parameters = {};
 		entry.parameters.action = "back";
@@ -306,6 +382,7 @@ var Webview = SAGE2_App.extend({
 
 		entry = {};
 		entry.description = "Forward";
+		entry.accelerator = "Alt \u2192";     // ALT ->
 		entry.callback = "navigation";
 		entry.parameters = {};
 		entry.parameters.action = "forward";
@@ -313,6 +390,7 @@ var Webview = SAGE2_App.extend({
 
 		entry = {};
 		entry.description = "Reload";
+		entry.accelerator = "Alt R";         // ALT r
 		entry.callback = "reloadPage";
 		entry.parameters = {};
 		entries.push(entry);
@@ -349,6 +427,7 @@ var Webview = SAGE2_App.extend({
 
 		entry = {};
 		entry.description = "Zoom in";
+		entry.accelerator = "Alt \u2191";     // ALT up-arrow
 		entry.callback = "zoomPage";
 		entry.parameters = {};
 		entry.parameters.dir = "zoomin";
@@ -356,6 +435,7 @@ var Webview = SAGE2_App.extend({
 
 		entry = {};
 		entry.description = "Zoom out";
+		entry.accelerator = "Alt \u2193";     // ALT down-arrow
 		entry.callback = "zoomPage";
 		entry.parameters = {};
 		entry.parameters.dir = "zoomout";
@@ -369,8 +449,11 @@ var Webview = SAGE2_App.extend({
 		// callback
 		entry.callback = "navigation";
 		// input setting
-		entry.inputField     = true;
+		entry.inputField = true;
+		// set the value to the current URL
+		entry.value = this.element.src;
 		entry.inputFieldSize = 20;
+		entry.inputDefault   = this.state.url;
 		// parameters of the callback function
 		entry.parameters = {};
 		entry.parameters.action = "address";
@@ -389,7 +472,15 @@ var Webview = SAGE2_App.extend({
 		entry.parameters.action = "search";
 		entries.push(entry);
 
-		entries.push({description: "separator"});
+		entries.push({
+			description: "Copy URL to clipboard",
+			callback: "SAGE2_copyURL",
+			parameters: {
+				url: this.state.url
+			}
+		});
+
+		// entries.push({description: "separator"});
 
 		return entries;
 	},
@@ -459,13 +550,13 @@ var Webview = SAGE2_App.extend({
 
 			// zoomin
 			if (dir === "zoomin") {
-				this.state.zoom *= 1.25;
+				this.state.zoom *= 1.50;
 				this.element.setZoomFactor(this.state.zoom);
 			}
 
 			// zoomout
 			if (dir === "zoomout") {
-				this.state.zoom /= 1.25;
+				this.state.zoom /= 1.50;
 				this.element.setZoomFactor(this.state.zoom);
 			}
 
@@ -579,6 +670,13 @@ var Webview = SAGE2_App.extend({
 							x: 0, y: 0,
 							canScroll: true
 						});
+					}
+					this.refresh(date);
+				} else if (data.code === 82 && data.state === "down") {
+					// r key
+					if (data.status.ALT) {
+						// ALT-r reloads
+						this.reloadPage({});
 					}
 					this.refresh(date);
 				} else if (data.code === 39 && data.state === "down") {

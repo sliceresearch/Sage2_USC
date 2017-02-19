@@ -1,5 +1,7 @@
 #!/bin/sh
 
+killall -9 chrome
+
 # 3072x1360
 global_param="--new-window --window-size=3072,1360 --kiosk --disable-popup-blocking --no-first-run --use-gl --enable-accelerated-compositing --allow-file-access-from-files --disable-session-crashed-bubble --allow-running-insecure-content --disable-infobars  --ignore-certificate-errors"
 
@@ -15,7 +17,7 @@ sleep 1.5
 UDD=$HOME/.config/chrome-nfs/thor0
 mkdir -p $UDD/Default
 param="$global_param --user-data-dir=$UDD"
-env DISPLAY=:0.1 google-chrome $param 'http://localhost/display.html?clientID=0' &
+env DISPLAY=:0.1 google-chrome $param 'http://localhost/display.html?clientID=1' &
 
 # Move Display Client to the proper screen
 sleep 1.5
@@ -38,7 +40,7 @@ xdotool mousemove --sync 0 0
 UDD=$HOME/.config/chrome-nfs/thor1
 mkdir -p $UDD/Default
 param="$global_param --user-data-dir=$UDD"
-env DISPLAY=:0.0 google-chrome $param 'http://localhost/display.html?clientID=1' &
+env DISPLAY=:0.0 google-chrome $param 'http://localhost/display.html?clientID=0' &
 
 sleep 1.5
 export DISPLAY=:0.0
