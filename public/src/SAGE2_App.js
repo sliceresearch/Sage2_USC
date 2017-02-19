@@ -1018,5 +1018,26 @@ var SAGE2_App = Class.extend({
 				saveData: data
 			});
 		}
+	},
+
+	/**
+	* 
+	*
+	*
+	*
+	*
+	*
+	*/
+	perfDataRequest: function(data) {
+		wsio.emit("perfDataRequestMessage", {
+			id: this.id,
+			request: data.request,
+			callback: data.callback
+		});
+	},
+	processPerfDataResponse: function(data) {
+		console.log("processing perf data response!");
+		this[data.callback](data);
 	}
+
 });

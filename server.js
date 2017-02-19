@@ -69,10 +69,10 @@ var Radialmenu          = require('./src/node-radialmenu');       // radial menu
 var Sage2ItemList       = require('./src/node-sage2itemlist');    // list of SAGE2 items
 var Sagepointer         = require('./src/node-sagepointer');      // handles sage pointers (creation, location, etc.)
 var StickyItems         = require('./src/node-stickyitems');
-var registry            = require('./src/node-registry');        // Registry Manager
+var registry            = require('./src/node-registry');         // Registry Manager
 var FileBufferManager	= require('./src/node-filebuffer');
 var PartitionList				= require('./src/node-partitionlist');		// list of SAGE2 Partitions
-
+var PerformanceManager	= require('./src/node-performance');	  // SAGE2 server and client performance data	
 //
 // Globals
 //
@@ -120,6 +120,7 @@ var startTime          = Date.now();
 var drawingManager;
 var pressingAlt        = true;
 var fileBufferManager  = new FileBufferManager();
+var performanceManager = new PerformanceManager();
 
 var partitions				 = new PartitionList(config);
 var draggingPartition	 = {};
@@ -1024,6 +1025,8 @@ function setupListeners(wsio) {
 	wsio.on('partitionScreen',                      wsPartitionScreen);
 	wsio.on('deleteAllPartitions',                  wsDeleteAllPartitions);
 	wsio.on('partitionsGrabAllContent',             wsPartitionsGrabAllContent);
+
+	wsio.on('perfDataRequestMessage', 				wsPerfDataRequestMessage);
 }
 
 /**
@@ -9731,4 +9734,31 @@ function deletePartition(id) {
 	broadcast('deletePartitionWindow', ptn.getDisplayInfo());
 	partitions.removePartition(ptn.id);
 	interactMgr.removeGeometry(ptn.id, "partitions");
+}
+
+function wsPerfDataRequestMessage(wsio, data) {
+	var outData = {
+		id : data.id,
+		callback: data.callback
+	};
+
+	switch(data.request) {
+		case "appList":
+			outData.appList = SAGE2Items.applications.list;
+		break;
+		case "serverData":
+			outData.hostMachine = performanceManager.getHostDetails();
+		break;
+		case "clientData":
+			outData.clients = performanceManager.getClientDetails(clients);
+		break;
+		case "configData":
+			outData.config = config;
+		case "appData":
+		break;
+		case "resourceInfo":
+		break;
+
+	}
+	broadcast('perfDataResponse', outData);
 }

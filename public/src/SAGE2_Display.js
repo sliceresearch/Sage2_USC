@@ -1305,6 +1305,14 @@ function setupListeners() {
 			}
 		}
 	});
+
+	wsio.on('perfDataResponse', function(data){
+		var app = applications[data.id];
+		console.log("perf data response received!");
+		if (app !== undefined && app !== null) {
+			app.processPerfDataResponse(data);
+		}
+	});
 }
 
 function createAppWindow(data, parentId, titleBarHeight, titleTextSize, offsetX, offsetY) {
