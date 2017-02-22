@@ -91,19 +91,47 @@ var chemViewer = SAGE2_App.extend({
 	loadMolecule: function (filename, title) {
 		this.ready = false;
 		var _this = this;
-		readFile(filename, function(err, data) {
-			var mol = ChemDoodle.readPDB(data);
-			// set the residue specs to control the atoms and bonds for the nucleic acid
-			mol.residueSpecs = new ChemDoodle.structures.VisualSpecifications();
-			// set representation of nucleic acid atoms and bonds to 'Wireframe'
-			mol.residueSpecs.set3DRepresentation('Wireframe');
-			_this.cartoonTransformer.loadMolecule(mol);
-			_this.ready = true;
-			// Update the title bar
-			var newTitle;
-			newTitle = _this.title + " - " + title;
-			_this.updateTitle(newTitle);
-		}, 'TEXT');
+		if (filename.endsWith('.pdb')) {
+			readFile(filename, function(err, data) {
+				var mol = ChemDoodle.readPDB(data);
+				// set the residue specs to control the atoms and bonds for the nucleic acid
+				mol.residueSpecs = new ChemDoodle.structures.VisualSpecifications();
+				// set representation of nucleic acid atoms and bonds to 'Wireframe'
+				mol.residueSpecs.set3DRepresentation('Wireframe');
+				_this.cartoonTransformer.loadMolecule(mol);
+
+				_this.ready = true;
+				// Update the title bar
+				var newTitle;
+				newTitle = _this.title + " - " + title;
+				_this.updateTitle(newTitle);
+			}, 'TEXT');
+		} else if (filename.endsWith('.cif')) {
+			readFile(filename, function(err, data) {
+				var mol = ChemDoodle.readCIF(data, 1, 1, 1);
+				mol.residueSpecs = new ChemDoodle.structures.VisualSpecifications();
+				mol.residueSpecs.set3DRepresentation('Wireframe');
+				_this.cartoonTransformer.loadContent([mol.molecule]);
+
+				_this.ready = true;
+				// Update the title bar
+				var newTitle;
+				newTitle = _this.title + " - " + title;
+				_this.updateTitle(newTitle);
+			}, 'TEXT');
+		} else if (filename.endsWith('.mol')) {
+			readFile(filename, function(err, data) {
+				var mol = ChemDoodle.readMOL(data, 1);
+				_this.cartoonTransformer.specs.set3DRepresentation('Ball and Stick');
+				_this.cartoonTransformer.loadMolecule(mol);
+
+				_this.ready = true;
+				// Update the title bar
+				var newTitle;
+				newTitle = _this.title + " - " + title;
+				_this.updateTitle(newTitle);
+			}, 'TEXT');
+		}
 	},
 
 	/**
@@ -299,6 +327,21 @@ var chemViewer = SAGE2_App.extend({
 			callback: "changeMolecule",
 			parameters: {
 				name: "hemoglobin.pdb"
+			}
+		});
+
+		entries.push({
+			description: "C14 H18 Mo2 S4",
+			callback: "changeMolecule",
+			parameters: {
+				name: "11224c1.cif"
+			}
+		});
+		entries.push({
+			description: "Caffeine",
+			callback: "changeMolecule",
+			parameters: {
+				name: "caffeine_3D.mol"
 			}
 		});
 

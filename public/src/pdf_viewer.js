@@ -640,6 +640,7 @@ var pdf_viewer = SAGE2_App.extend({
 
 		entry = {};
 		entry.description = "First Page";
+		entry.accelerator = "\u2191";     // up arrow
 		entry.callback = "changeThePage";
 		entry.parameters = {};
 		entry.parameters.page = "first";
@@ -647,6 +648,7 @@ var pdf_viewer = SAGE2_App.extend({
 
 		entry = {};
 		entry.description = "Previous Page";
+		entry.accelerator = "\u2190";     // left arrow
 		entry.callback = "changeThePage";
 		entry.parameters = {};
 		entry.parameters.page = "previous";
@@ -654,6 +656,7 @@ var pdf_viewer = SAGE2_App.extend({
 
 		entry = {};
 		entry.description = "Next Page";
+		entry.accelerator = "\u2192";     // right arrow
 		entry.callback = "changeThePage";
 		entry.parameters = {};
 		entry.parameters.page = "next";
@@ -661,6 +664,7 @@ var pdf_viewer = SAGE2_App.extend({
 
 		entry = {};
 		entry.description = "Last Page";
+		entry.accelerator = "\u2193";     // down arrow
 		entry.callback = "changeThePage";
 		entry.parameters = {};
 		entry.parameters.page = "last";
