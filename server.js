@@ -5671,6 +5671,12 @@ function pointerPressOnApplication(uniqueID, pointerX, pointerY, data, obj, loca
 				toggleApplicationFullscreen(uniqueID, obj.data, portalId);
 			}
 			break;
+		case "pinButton":
+			if (sagePointers[uniqueID].visible) {
+				// only if pointer on the wall, not the web UI
+				toggleStickyPin(obj.data);
+			}
+			break;
 		case "closeButton":
 			if (sagePointers[uniqueID].visible) {
 				// only if pointer on the wall, not the web UI
@@ -5707,6 +5713,10 @@ function pointerPressOnDataSharingPortal(uniqueID, pointerX, pointerY, data, obj
 		}
 		case "fullscreenButton": {
 			// toggleApplicationFullscreen(uniqueID, obj.data);
+			break;
+		}
+		case "pinButton": {
+			// toggleStickyPin(obj.data);
 			break;
 		}
 		case "closeButton": {
@@ -6170,6 +6180,10 @@ function pointerMoveOnApplication(uniqueID, pointerX, pointerY, data, obj, local
 			removeExistingHoverCorner(uniqueID, portalId);
 			break;
 		}
+		case "pinButton": {
+			removeExistingHoverCorner(uniqueID, portalId);
+			break;
+		}
 		case "closeButton": {
 			removeExistingHoverCorner(uniqueID, portalId);
 			break;
@@ -6248,6 +6262,10 @@ function pointerMoveOnDataSharingPortal(uniqueID, pointerX, pointerY, data, obj,
 			removeExistingHoverCorner(uniqueID, obj.data.id);
 			break;
 		}
+		case "pinButton": {
+			removeExistingHoverCorner(uniqueID, obj.data.id);
+			break;
+		}
 		case "closeButton": {
 			removeExistingHoverCorner(uniqueID, obj.data.id);
 			break;
@@ -6277,12 +6295,7 @@ function moveApplicationWindow(uniqueID, moveApp, portalId) {
 	}
 	var im = findInteractableManager(moveApp.elemId);
 	if (im) {
-		var backgroundObj = im.searchGeometry({x: moveApp.elemLeft - 1, y: moveApp.elemTop - 1});
-		if (backgroundObj !== null) {
-			if (SAGE2Items.applications.list.hasOwnProperty(backgroundObj.data.id)) {
-				attachAppIfSticky(backgroundObj.data, moveApp.elemId);
-			}
-		}
+		handleStickyItem(moveApp.elemId);
 		drawingManager.applicationMoved(moveApp.elemId, moveApp.elemLeft, moveApp.elemTop);
 		im.editGeometry(moveApp.elemId, "applications", "rectangle",
 			{x: moveApp.elemLeft, y: moveApp.elemTop, w: moveApp.elemWidth, h: moveApp.elemHeight + titleBarHeight});
@@ -6806,6 +6819,9 @@ function pointerDblClickOnApplication(uniqueID, pointerX, pointerY, obj, localPt
 		case "fullscreenButton": {
 			break;
 		}
+		case "pinButton": {
+			break;
+		}
 		case "closeButton": {
 			break;
 		}
@@ -6877,6 +6893,10 @@ function pointerScrollStartOnApplication(uniqueID, pointerX, pointerY, obj, loca
 			break;
 		}
 		case "fullscreenButton": {
+			selectApplicationForScrollResize(uniqueID, obj.data, pointerX, pointerY);
+			break;
+		}
+		case "pinButton": {
 			selectApplicationForScrollResize(uniqueID, obj.data, pointerX, pointerY);
 			break;
 		}
@@ -7591,6 +7611,10 @@ function handleNewApplication(appInstance, videohandle) {
 		x: appInstance.width - cornerSize,
 		y: appInstance.height + config.ui.titleBarHeight - cornerSize, w: cornerSize, h: cornerSize
 	}, 2);
+	if (appInstance.sticky === true) {
+		SAGE2Items.applications.addButtonToItem(appInstance.id, "pinButton", "rectangle",
+			{x: buttonsPad, y: 0, w: oneButton, h: config.ui.titleBarHeight}, 1);
+	}
 	SAGE2Items.applications.editButtonVisibilityOnItem(appInstance.id, "syncButton", false);
 
 	initializeLoadedVideo(appInstance, videohandle);
@@ -7631,6 +7655,10 @@ function handleNewApplicationInDataSharingPortal(appInstance, videohandle, porta
 		x: appInstance.width - cornerSize, y: appInstance.height + titleBarHeight - cornerSize,
 		w: cornerSize, h: cornerSize
 	}, 2);
+	if (appInstance.sticky === true) {
+		SAGE2Items.applications.addButtonToItem(appInstance.id, "pinButton", "rectangle",
+			{x: buttonsPad, y: 0, w: oneButton, h: titleBarHeight}, 1);
+	}
 	SAGE2Items.applications.editButtonVisibilityOnItem(appInstance.id, "syncButton", false);
 
 	initializeLoadedVideo(appInstance, videohandle);
@@ -7670,6 +7698,10 @@ function handleApplicationResize(appId) {
 		{x: startButtons + (2 * (buttonsPad + oneButton)), y: 0, w: oneButton, h: titleBarHeight});
 	SAGE2Items.applications.editButtonOnItem(appId, "dragCorner", "rectangle",
 		{x: app.width - cornerSize, y: app.height + titleBarHeight - cornerSize, w: cornerSize, h: cornerSize});
+	if (app.sticky === true) {
+		SAGE2Items.applications.editButtonOnItem(appInstance.id, "pinButton", "rectangle",
+			{x: buttonsPad, y: 0, w: oneButton, h: titleBarHeight});
+	}
 }
 
 function handleDataSharingPortalResize(portalId) {
@@ -7702,6 +7734,7 @@ function handleDataSharingPortalResize(portalId) {
 		{x: startButtons + buttonsPad + oneButton, y: 0, w: oneButton, h: config.ui.titleBarHeight});
 	SAGE2Items.portals.editButtonOnItem(portalId, "dragCorner", "rectangle",
 		{x: portalWidth - cornerSize, y: portalHeight + config.ui.titleBarHeight - cornerSize, w: cornerSize, h: cornerSize});
+
 }
 
 function findInteractableManager(appId) {
@@ -7947,16 +7980,47 @@ function wsRadialMenuMoved(wsio, data) {
 	}
 }
 
-
-function attachAppIfSticky(backgroundItem, appId) {
-	var app = SAGE2Items.applications.list[appId];
+function handleStickyItem(elemId) {
+	var app = SAGE2Items.applications.list[elemId];
 	if (app === null || app.sticky !== true) {
 		return;
 	}
 	stickyAppHandler.detachStickyItem(app);
-	if (backgroundItem !== null) {
-		stickyAppHandler.attachStickyItem(backgroundItem, app);
+	var im = findInteractableManager(elemId);
+	var backgroundObj = im.searchGeometry({x: app.left - 1, y: app.top - 1});
+	if (backgroundObj === null) {
+		hideStickyPin(app);
+			
+	} else if (SAGE2Items.applications.list.hasOwnProperty(backgroundObj.data.id)) {
+		if (app.pinned === true) {
+			stickyAppHandler.attachStickyItem(backgroundObj.data, app);
+		}
+		showStickyPin(app);
 	}
+}
+
+
+function toggleStickyPin(app) {
+	if (app === null || app.sticky !== true) {
+		return;
+	}
+	if (app.hasOwnProperty("pinned") === false || app.pinned !== true) {
+		app.pinned = true;
+	} else {
+		app.pinned = false;
+	}
+	handleStickyItem(app.id);
+	broadcast('showStickyPin', app);
+}
+
+function showStickyPin(app) {
+	SAGE2Items.applications.editButtonVisibilityOnItem(app.id, "pinButton", true);
+	broadcast('showStickyPin', app);
+}
+
+function hideStickyPin(app) {
+	SAGE2Items.applications.editButtonVisibilityOnItem(app.id, "pinButton", false);
+	broadcast('hideStickyPin', app);
 }
 
 
