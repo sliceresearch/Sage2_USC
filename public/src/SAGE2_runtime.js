@@ -28,7 +28,7 @@
  * @type {Object}
  */
 var __SAGE2__ = {};
-__SAGE2__.version = "1.5.0";
+__SAGE2__.version = "2.0.0";
 
 
 /**
@@ -712,6 +712,32 @@ function ignoreFields(obj, fields) {
 }
 
 /**
+ * Utility function to test if a string or number represents a true value.
+ * Used for parsing JSON values
+ *
+ * @method parseBool
+ * @param value {Object} value to test
+ */
+function parseBool(value) {
+	if (typeof value === 'string') {
+		value = value.toLowerCase();
+	}
+	switch (value) {
+		case true:
+		case "true":
+		case 1:
+		case "1":
+		case "on":
+		case "yes": {
+			return true;
+		}
+		default: {
+			return false;
+		}
+	}
+}
+
+/**
  * Test if element is equal to true (used in .every call on an array)
  *
  * @method isTrue
@@ -838,8 +864,33 @@ function addCookie(sKey, sValue) {
 	if (window.location.hostname === "127.0.0.1") {
 		domain = "127.0.0.1";
 	} else {
-		domain = window.location.hostname.split('.').slice(-2).join(".");
+		var domainPieces = window.location.hostname.split('.');
+		var maybeInt = parseInt(domainPieces[domainPieces.length - 1]);
+		var numberOfPiecesFromEndTokeep;
+
+		// if (maybeInt) { // this is a number, so must be last part of an ip address, need 4 parts
+		// 	numberOfPiecesFromEndTokeep = 4;
+		// } else if (domainPieces[domainPieces.length - 1] == "tw") {
+		// 	numberOfPiecesFromEndTokeep = 3;
+		// } else { // was a hostname extension
+		// 	numberOfPiecesFromEndTokeep = 2;
+		// }
+
+		// NaN triggers false on a test
+		if (maybeInt) {
+			// this is a number, so must be last part of an ip address
+			// use the whole hostname
+			numberOfPiecesFromEndTokeep = domainPieces.length;
+		} else {
+			// was a hostname extension
+			// to get domain, remove hostname
+			numberOfPiecesFromEndTokeep = domainPieces.length - 1;
+		}
+
+		// calculate the domain from the spliced hostname
+		domain = domainPieces.slice(-1 * numberOfPiecesFromEndTokeep).join(".");
 	}
+
 	document.cookie = encodeURIComponent(sKey) + "=" + encodeURIComponent(sValue) +
 		"; expires=Fri, 31 Dec 9999 23:59:59 GMT" +
 		"; domain=" + domain +
@@ -893,4 +944,42 @@ function getTransform(elem) {
 		}
 	}
 	return {translate: translate, scale: scale};
+}
+
+
+/**
+ * From stackoverflow:
+ * Copies a string to the clipboard. Must be called from within an
+ * event handler such as click. May return false if it failed, but
+ * this is not always possible. Browser support for Chrome 43+,
+ * Firefox 42+, Safari 10+, Edge and IE 10+.
+ * IE: The clipboard feature may be disabled by an administrator. By
+ * default a prompt is shown the first time the clipboard is
+ * used (per session)
+ *
+ * @method     copyToClipboard
+ * @param      {String}   text    The text to be copied
+ * @return     {Boolean}  A Boolean that is false if the command is not supported or enabled
+ */
+function SAGE2_copyToClipboard(text) {
+	if (window.clipboardData && window.clipboardData.setData) {
+		// IE specific code path to prevent textarea being shown while dialog is visible.
+		return window.clipboardData.setData("Text", text);
+	} else if (document.queryCommandSupported && document.queryCommandSupported("copy")) {
+		var textarea = document.createElement("textarea");
+		textarea.textContent = text;
+		// Prevent scrolling to bottom of page in MS Edge
+		textarea.style.position = "fixed";
+		document.body.appendChild(textarea);
+		textarea.select();
+		try {
+			// Security exception may be thrown by some browsers
+			return document.execCommand("copy");
+		} catch (ex) {
+			console.warn("Copy to clipboard failed.", ex);
+			return false;
+		} finally {
+			document.body.removeChild(textarea);
+		}
+	}
 }

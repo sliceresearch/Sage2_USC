@@ -1,8 +1,7 @@
-
 <!doctype html>
 <html>
   <head>
-    <title>Set Page Color Popup</title>
+    <title>SAGE2 Popup</title>
     <style>
     body {
       overflow: hidden;
@@ -27,7 +26,7 @@
       text-align: center;
       padding: 1px 3px;
       font-family: arial;
-      font-size: 1.3em;
+      font-size: 1.2em;
       width: 400px;
       margin-top: 1px;
       background: #cccccc;
@@ -35,10 +34,34 @@
     div:hover {
       background: #aaaaaa;
     }
+
+    server {
+      cursor: pointer;
+      text-align: center;
+      padding: 1px 3px;
+      font-family: arial;
+      font-size: 1.1em;
+      width: 400px;
+      margin-top: 1px;
+      background: #cccccc;
+    }
+    server:hover {
+      background: #aaaaaa;
+    }
+
     </style>
     <script src="popup.js"></script>
   </head>
   <body>
-  <h2 style="text-align:center;">Send a screenshot to a server below:</h2>
+
+  <h2 style="text-align:center;">Send the webpage to:</h2>
+  <div id="link_list">
+  </div>
+
+  <h2 style="text-align:center;">Send a screenshot to:</h2>
+  <div id="screenshot_list">
+  </div>
+
+
   </body>
 </html>

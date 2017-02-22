@@ -17,6 +17,8 @@
  * @submodule SAGE2DisplayUI
  */
 
+/* global viewOnlyMode */
+
 /**
  * User interface drawn using Canvas2D
  *
@@ -34,7 +36,9 @@ function SAGE2DisplayUI() {
 	this.uploadPercent = 0;
 	this.fileDropFontSize = 12;
 	this.applications = {};
-	this.appCount = 0;
+	this.appCount = 20;
+	this.partitions = {};
+	this.ptnCount = 0;
 	this.mediaStreamIcon = null;
 	this.pointerX = 0;
 	this.pointerY = 0;
@@ -169,14 +173,21 @@ SAGE2DisplayUI.prototype.resize = function(ratio) {
 	var displayUI        = document.getElementById('displayUIDiv');
 	var sage2UI          = document.getElementById('sage2UICanvas');
 	var applicationsDiv  = document.getElementById('applicationsDiv');
+	var partitionsDiv 	 = document.getElementById('partitionsDiv');
 
 	// Extra scaling factor
 	ratio = ratio || 1.0;
 	var menuScale = 1.0;
+
 	// var winWidth = window.innerWidth * ratio;
 	// if (window.innerWidth < 856) {
 	// 	menuScale = window.innerWidth / 856;
 	// }
+
+	// Not icon menu bar in view-only mode
+	if (viewOnlyMode) {
+		menuScale = 0;
+	}
 
 	// window width minus padding
 	var freeWidth   = window.innerWidth  - 26;
@@ -216,9 +227,12 @@ SAGE2DisplayUI.prototype.resize = function(ratio) {
 	sage2UI.height = drawHeight;
 	applicationsDiv.style.width  = drawWidth + "px";
 	applicationsDiv.style.height = drawHeight + "px";
+	partitionsDiv.style.width  = drawWidth + "px";
+	partitionsDiv.style.height = drawHeight + "px";
 	displayUI.style.height = (drawHeight + 5) + "px";
 
 	this.resizeAppWindows();
+	this.resizePartitionWindows();
 
 	this.draw();
 };
@@ -241,6 +255,27 @@ SAGE2DisplayUI.prototype.resizeAppWindows = function(event) {
 		appWindowArea.style.top    = Math.round(this.config.ui.titleBarHeight * this.scale) + "px";
 		appWindowArea.style.width  = Math.round(this.applications[key].width * this.scale) + "px";
 		appWindowArea.style.height = Math.round(this.applications[key].height * this.scale) + "px";
+	}
+};
+
+SAGE2DisplayUI.prototype.resizePartitionWindows = function(event) {
+	var key;
+	for (key in this.partitions) {
+		var ptnWindow = document.getElementById(key);
+		var ptnWindowTitle = document.getElementById(key + "_title");
+		var ptnWindowArea  = document.getElementById(key + "_area");
+
+		ptnWindow.style.width  = Math.round(this.partitions[key].width * this.scale) + "px";
+		ptnWindow.style.height = Math.round((this.partitions[key].height + this.config.ui.titleBarHeight) * this.scale) + "px";
+		ptnWindow.style.left   = Math.round(this.partitions[key].left * this.scale) + "px";
+		ptnWindow.style.top    = Math.round(this.partitions[key].top * this.scale) + "px";
+
+		ptnWindowTitle.style.width  = Math.round(this.partitions[key].width * this.scale) + "px";
+		ptnWindowTitle.style.height = Math.round(this.config.ui.titleBarHeight * this.scale) + "px";
+
+		ptnWindowArea.style.top    = Math.round(this.config.ui.titleBarHeight * this.scale) + "px";
+		ptnWindowArea.style.width  = Math.round(this.partitions[key].width * this.scale) + "px";
+		ptnWindowArea.style.height = Math.round(this.partitions[key].height * this.scale) + "px";
 	}
 };
 
@@ -342,7 +377,7 @@ SAGE2DisplayUI.prototype.addAppWindow = function(data) {
 	appWindow.style.height = Math.round((data.height + this.config.ui.titleBarHeight) * this.scale) + "px";
 	appWindow.style.left   = Math.round(data.left * this.scale) + "px";
 	appWindow.style.top    = Math.round(data.top * this.scale) + "px";
-	appWindow.style.zIndex = this.appCount;
+	appWindow.style.zIndex = this.appCount + 2;
 
 	var appWindowTitle = document.createElement('div');
 	appWindowTitle.id = data.id + "_title";
@@ -393,6 +428,50 @@ SAGE2DisplayUI.prototype.addAppWindow = function(data) {
 
 	this.appCount++;
 	this.applications[data.id] = data;
+};
+
+/**
+ * Add ui element showing partition
+ *
+ * @method addPartitionBorder
+ * @param data {Object} - contains partition information
+ */
+SAGE2DisplayUI.prototype.addPartitionBorder = function(data) {
+	var partitionsDiv  = document.getElementById('partitionsDiv');
+
+	var ptnWindow = document.createElement('div');
+	ptnWindow.id = data.id;
+	ptnWindow.className    = "ptnWindow";
+	ptnWindow.style.width  = Math.round(data.width * this.scale) + "px";
+	ptnWindow.style.height = Math.round((data.height + this.config.ui.titleBarHeight) * this.scale) + "px";
+	ptnWindow.style.left   = Math.round(data.left * this.scale) + "px";
+	ptnWindow.style.top    = Math.round(data.top * this.scale) + "px";
+	ptnWindow.style.zIndex = 1;
+
+	var ptnWindowTitle = document.createElement('div');
+	ptnWindowTitle.id = data.id + "_title";
+	ptnWindowTitle.className    = "ptnWindowTitle";
+	ptnWindowTitle.style.backgroundColor = data.color;
+	ptnWindowTitle.style.left   = "0px";
+	ptnWindowTitle.style.top    = "0px";
+	ptnWindowTitle.style.width  = Math.round(data.width * this.scale) + "px";
+	ptnWindowTitle.style.height = Math.round(this.config.ui.titleBarHeight * this.scale) + "px";
+
+	var ptnWindowArea = document.createElement('div');
+	ptnWindowArea.id = data.id + "_area";
+	ptnWindowArea.className    = "ptnWindowArea";
+	ptnWindowArea.style.backgroundColor = "rgba(1, 1, 1, 0.25)";
+	ptnWindowArea.style.left   = "0px";
+	ptnWindowArea.style.top    = Math.round(this.config.ui.titleBarHeight * this.scale) + "px";
+	ptnWindowArea.style.width  = Math.round(data.width * this.scale) + "px";
+	ptnWindowArea.style.height = Math.round(data.height * this.scale) + "px";
+
+	ptnWindow.appendChild(ptnWindowTitle);
+	ptnWindow.appendChild(ptnWindowArea);
+	partitionsDiv.appendChild(ptnWindow);
+
+	this.ptnCount++;
+	this.partitions[data.id] = data;
 };
 
 /**
@@ -455,6 +534,31 @@ SAGE2DisplayUI.prototype.setItemPositionAndSize = function(position_data) {
 };
 
 /**
+ * Move and scale a partition and redraw
+ *
+ * @method setPartitionPositionAndSize
+ * @param data {Object}  oject with .id .left .top .width .height fields
+ */
+SAGE2DisplayUI.prototype.setPartitionPositionAndSize = function(data) {
+	this.partitions[data.id] = data;
+
+	var ptnWindow = document.getElementById(data.id);
+	var ptnWindowTitle = document.getElementById(data.id + "_title");
+	var ptnWindowArea = document.getElementById(data.id + "_area");
+
+	ptnWindow.style.width = Math.round(data.width * this.scale) + "px";
+	ptnWindow.style.height = Math.round((data.height + this.config.ui.titleBarHeight) * this.scale) + "px";
+	ptnWindow.style.left = Math.round(data.left * this.scale) + "px";
+	ptnWindow.style.top = Math.round(data.top * this.scale) + "px";
+
+	ptnWindowTitle.style.width = Math.round(data.width * this.scale) + "px";
+
+	ptnWindowArea.style.width = Math.round(data.width * this.scale) + "px";
+	ptnWindowArea.style.height = Math.round(data.height * this.scale) + "px";
+};
+
+
+/**
  * Delete an application and draw
  *
  * @method deleteApp
@@ -466,6 +570,60 @@ SAGE2DisplayUI.prototype.deleteApp = function(id) {
 	applicationsDiv.removeChild(appWindow);
 
 	delete this.applications[id];
+};
+
+/**
+ * Delete a partition and draw
+ *
+ * @method deletePartition
+ * @param id {String} partition id
+ */
+SAGE2DisplayUI.prototype.deletePartition = function(id) {
+	var partitionsDiv  = document.getElementById('partitionsDiv');
+	var ptnWindow = document.getElementById(id);
+	partitionsDiv.removeChild(ptnWindow);
+
+	delete this.partitions[id];
+};
+
+SAGE2DisplayUI.prototype.updateHighlightedPartition = function(data) {
+	// for (var p in this.partitions) {
+	// 	var ptnElem = document.getElementById(p + "_area");
+
+
+	// 	ptnElem.style.backgroundColor = "rgba(1, 1, 1, 0.25)";
+	// 	ptnElem.style.border = "1px solid #a5a5a5";
+	// }
+
+	// // if a value was passed, highlight this value
+	// if (id) {
+	// 	let highlighted = document.getElementById(id + "_area");
+
+	// 	highlighted.style.backgroundColor = "rgba(1, 1, 1, 0.5)";
+	// 	highlighted.style.border = "6px solid #fff723";
+	// }
+
+	if (!data) {
+		for (var p in this.partitions) {
+			var ptnElem = document.getElementById(p + "_area");
+
+			ptnElem.style.backgroundColor = "rgba(1, 1, 1, 0.25)";
+			ptnElem.style.border = "1px solid #a5a5a5";
+		}
+	} else {
+		var highlighted = document.getElementById(data.id + "_area");
+
+		if (this.partitions.hasOwnProperty(data.id) && highlighted) {
+
+			if (data.highlight) {
+				highlighted.style.backgroundColor = "rgba(1, 1, 1, 0.5)";
+				highlighted.style.border = "6px solid #fff723";
+			} else {
+				highlighted.style.backgroundColor = "rgba(1, 1, 1, 0.25)";
+				highlighted.style.border = "1px solid #a5a5a5";
+			}
+		}
+	}
 };
 
 /**
@@ -726,4 +884,3 @@ SAGE2DisplayUI.prototype.keyPress = function(x, y, charCode) {
 	this.wsio.emit('keyPress', {code: charCode, character: String.fromCharCode(charCode)});
 	return true;
 };
-

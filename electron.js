@@ -80,6 +80,16 @@ function openWindow() {
 		mainWindow.show();
 	}
 
+	if (commander.audio) {
+		if (commander.width === 1280 && (commander.height === 720)) {
+			// if default values specified, tweak them for the audio manager
+			commander.width  = 800;
+			commander.height = 400;
+		}
+	}
+
+
+
 	// Setup initial position and size
 	mainWindow.setBounds({
 		x:      commander.xorigin,
@@ -145,9 +155,10 @@ function createWindow() {
 			nodeIntegration: true,
 			webSecurity: true,
 			backgroundThrottling: false,
-			plugins: commander.plugins
-			// allowDisplayingInsecureContent: true
-			// allowRunningInsecureContent: true
+			plugins: commander.plugins,
+			// allow this for now, problem loading webview recently
+			allowDisplayingInsecureContent: true,
+			allowRunningInsecureContent: true
 		}
 	};
 
@@ -173,6 +184,14 @@ function createWindow() {
 		openWindow();
 	}
 
+	// When the webview tries to download something
+	electron.session.defaultSession.on('will-download', (event, item, webContents) => {
+		// do nothing
+		event.preventDefault();
+		// send message to the render process (browser)
+		mainWindow.webContents.send('warning', 'File download not supported');
+	});
+
 	// Mute the audio (just in case)
 	var playAudio = commander.audio || (commander.display === 0);
 	mainWindow.webContents.setAudioMuted(!playAudio);
@@ -193,6 +212,9 @@ function createWindow() {
 	mainWindow.webContents.on('will-navigate', function(ev) {
 		// ev.preventDefault();
 	});
+
+	// Once all done, prevent changing the fullscreen state
+	mainWindow.setFullScreenable(false);
 }
 
 /**

@@ -12,6 +12,7 @@
 /* global cancelIdleCallback, requestIdleCallback */
 /* global showSAGE2PointerOverlayNoMouse, hideSAGE2PointerOverlayNoMouse */
 /* global pointerClick, sagePointerDisabled, sagePointerEnabled */
+/* global viewOnlyMode */
 
 "use strict";
 
@@ -70,7 +71,10 @@ function SAGE2_interaction(wsio) {
 	}
 
 	if (!cookieName && !localStorage.SAGE2_ptrColor) {
-		showDialog('settingsDialog2');
+		if (!viewOnlyMode) {
+			// only show dialog in full UI mode
+			showDialog('settingsDialog2');
+		}
 	}
 
 	// Post message to the Chrome extension to register the UI
@@ -278,7 +282,8 @@ function SAGE2_interaction(wsio) {
 		}
 		ext = ext.toLowerCase();
 		if (youtube >= 0) {
-			mimeType = "video/youtube";
+			// mimeType = "video/youtube";
+			mimeType = "application/url";
 		} else if (ext === "jpg") {
 			mimeType = "image/jpeg";
 		} else if (ext === "jpeg") {

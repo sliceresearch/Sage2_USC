@@ -1,0 +1,6 @@
+#!/bin/sh
+
+./node_modules/.bin/electron-packager ./ --platform=linux --arch=x64 --icon=sage2.icns --overwrite
+
+cp View-lnx.sh SAGE2_client-linux-x64
+
