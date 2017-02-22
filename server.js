@@ -8470,6 +8470,7 @@ function handleNewApplication(appInstance, videohandle) {
 		w: cornerSize, h: cornerSize
 	}, 2);
 	if (appInstance.sticky === true) {
+		appInstance.pinned = true;
 		SAGE2Items.applications.addButtonToItem(appInstance.id, "pinButton", "rectangle",
 			{x: buttonsPad, y: 0, w: oneButton, h: config.ui.titleBarHeight}, 1);
 	}
@@ -8522,6 +8523,7 @@ function handleNewApplicationInDataSharingPortal(appInstance, videohandle, porta
 		w: cornerSize, h: cornerSize
 	}, 2);
 	if (appInstance.sticky === true) {
+		appInstance.pinned = true;
 		SAGE2Items.applications.addButtonToItem(appInstance.id, "pinButton", "rectangle",
 			{x: buttonsPad, y: 0, w: oneButton, h: titleBarHeight}, 1);
 	}
@@ -8565,7 +8567,7 @@ function handleApplicationResize(appId) {
 	SAGE2Items.applications.editButtonOnItem(appId, "dragCorner", "rectangle",
 		{x: app.width - cornerSize, y: app.height + titleBarHeight - cornerSize, w: cornerSize, h: cornerSize});
 	if (app.sticky === true) {
-		SAGE2Items.applications.editButtonOnItem(appInstance.id, "pinButton", "rectangle",
+		SAGE2Items.applications.editButtonOnItem(app.id, "pinButton", "rectangle",
 			{x: buttonsPad, y: 0, w: oneButton, h: titleBarHeight});
 	}
 }
@@ -8850,12 +8852,13 @@ function handleStickyItem(elemId) {
 	}
 	stickyAppHandler.detachStickyItem(app);
 	var im = findInteractableManager(elemId);
-	var backgroundObj = im.searchGeometry({x: app.left - 1, y: app.top - 1});
+	var backgroundObj = im.searchGeometry({x: app.left - 2, y: app.top - 2});
 	if (backgroundObj === null) {
 		hideStickyPin(app);
 			
 	} else if (SAGE2Items.applications.list.hasOwnProperty(backgroundObj.data.id)) {
 		if (app.pinned === true) {
+			//console.log("attaching " + app.id + " to " + backgroundObj.data.id);
 			stickyAppHandler.attachStickyItem(backgroundObj.data, app);
 		}
 		showStickyPin(app);
