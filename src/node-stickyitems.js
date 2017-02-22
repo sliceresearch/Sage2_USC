@@ -116,12 +116,12 @@ StickyItems.prototype.moveItemsStickingToUpdatedItem = function (updatedItem) {
 * @method getStickingItems
 */
 StickyItems.prototype.getStickingItems = function(elemId) {
-	var stickingItems = [] ; 
+	var stickingItems = [];
 	if (this.stickyItemParent[elemId] !== null && this.stickyItemParent[elemId] !== undefined) {
-		var list = this.stickyItemParent[elemId] ;
-		for (var i in list ) {
-			stickingItems.push(list[i]) ;
-			var oneDeepItems = this.getStickingItems(list[i].id) ;
+		var list = this.stickyItemParent[elemId];
+		for (var i in list) {
+			stickingItems.push(list[i]);
+			var oneDeepItems = this.getStickingItems(list[i].id);
 			if (oneDeepItems.length > 0) {
 				Array.prototype.push.apply(stickingItems, oneDeepItems);
 			}

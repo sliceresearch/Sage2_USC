@@ -8855,7 +8855,6 @@ function handleStickyItem(elemId) {
 	var backgroundObj = im.searchGeometry({x: app.left - 2, y: app.top - 2});
 	if (backgroundObj === null) {
 		hideStickyPin(app);
-			
 	} else if (SAGE2Items.applications.list.hasOwnProperty(backgroundObj.data.id)) {
 		if (app.pinned === true) {
 			//console.log("attaching " + app.id + " to " + backgroundObj.data.id);
