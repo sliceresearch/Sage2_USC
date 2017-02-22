@@ -108,6 +108,10 @@ var SAGE2Viz = SAGE2_App.extend({
     this.components.dataTypes.append("p")
       .style("color", "#AAA")
       .text((d) => ((d.type ? d.type : "Unknown") + " : \"" + d.name + "\""));
+
+    if (this.isMaster) {
+      this.getFullContextMenuAndUpdate();
+    }
   },
 
   updateServer: function(data) {
@@ -137,7 +141,7 @@ var SAGE2Viz = SAGE2_App.extend({
     this.draw_d3(date);
   },
 
-  getFullContextMenuAndUpdate: function() {
+  getContextEntries: function() {
     var separator = {
       description: "separator"
     };
