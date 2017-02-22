@@ -4811,7 +4811,8 @@ if (config.remote_sites) {
 			name: element.name,
 			wsio: remote,
 			connected: "off",
-			geometry: rGeom
+			geometry: rGeom,
+			index: index
 		};
 		// Add the gemeotry for the button
 		interactMgr.addGeometry("remote_" + index, "staticUI", "rectangle", rGeom,  true, index, remoteSites[index]);
@@ -5660,7 +5661,18 @@ function pointerPressOnStaticUI(uniqueID, pointerX, pointerY, data, obj, localPt
 
 		// Build the UI URL
 		var viewURL = 'https://' + remoteSite.wsio.remoteAddress.address + ':'
-			+ remoteSite.wsio.remoteAddress.port + '/index.html?viewonly=true';
+			+ remoteSite.wsio.remoteAddress.port;
+		// pass the password or hash to the URL
+		if (config.remote_sites[remoteSite.index].password) {
+			viewURL += '/session.html?page=index.html?viewonly=true&session=' +
+				config.remote_sites[remoteSite.index].password;
+		} else if (config.remote_sites[remoteSite.index].hash) {
+			viewURL += '/session.html?page=index.html?viewonly=true&hash=' +
+				config.remote_sites[remoteSite.index].hash;
+		} else {
+			// no password
+			viewURL += '/index.html?viewonly=true';
+		}
 
 		// Create the webview to the remote UI
 		wsLoadApplication(obj.data.wsio, {
