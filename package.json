@@ -45,6 +45,7 @@
 		"url": "https://bitbucket.org/sage2/sage2/"
 	},
 	"dependencies": {
+		"chalk": "latest",
 		"color": "latest",
 		"commander": "latest",
 		"decompress-zip": "latest",
