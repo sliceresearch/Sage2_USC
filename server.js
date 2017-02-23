@@ -174,9 +174,14 @@ for (var folder in mediaFolders) {
 // Add back all the media folders to the configuration structure
 config.folders = mediaFolders;
 
-console.log(sageutils.header("SAGE2") + "Node Version: " + sageutils.getNodeVersion());
-console.log(sageutils.header("SAGE2") + "Detected Server OS as:\t" + platform);
-console.log(sageutils.header("SAGE2") + "SAGE2 Short Version:\t" + SAGE2_version);
+console.log();
+console.log(sageutils.header("SAGE2") + chalk.blue.underline.bold("Node Version:\t\t") +
+	chalk.green.bold(sageutils.getNodeVersion()));
+console.log(sageutils.header("SAGE2") + chalk.blue.underline.bold("Detected Server OS as:\t") +
+	chalk.green.bold(platform));
+console.log(sageutils.header("SAGE2") + chalk.blue.underline.bold("SAGE2 Short Version:\t") +
+	chalk.green.bold(SAGE2_version));
+console.log();
 
 // Initialize Server
 initializeSage2Server();
@@ -4905,10 +4910,13 @@ setTimeout(function() {
 
 sage2ServerS.on('listening', function(e) {
 	// Success
-	console.log(sageutils.header("SAGE2") + "Serving secure clients at " + chalk.cyan.bold.underline("https://" +
+	console.log(); // \n
+	console.log(sageutils.header("SAGE2") + chalk.bold.underline("Serving Securely:")); // \n
+	console.log(sageutils.header("SAGE2") + "- Web UI:\t " + chalk.cyan.bold.underline("https://" +
 		config.host + ":" + config.secure_port));
-	console.log(sageutils.header("SAGE2") + "Web console at " + chalk.cyan.bold.underline("https://" + config.host +
+	console.log(sageutils.header("SAGE2") + "- Web console:\t " + chalk.cyan.bold.underline("https://" + config.host +
 		":" + config.secure_port + "/admin/console.html"));
+	console.log(); // \n
 });
 
 // Place callback for errors in the 'listen' call for HTTP
@@ -4946,9 +4954,13 @@ sage2Server.on('listening', function(e) {
 		am_url = chalk.cyan.bold.underline("http://" + config.host + ":" + config.port +
 			"/session.html?page=audioManager.html&hash=" + global.__SESSION_ID);
 	}
-	console.log(sageutils.header("SAGE2") + "Serving web UI at " + ui_url);
-	console.log(sageutils.header("SAGE2") + "Display 0 at "      + dp_url);
-	console.log(sageutils.header("SAGE2") + "Audio manager at "  + am_url);
+
+	console.log(); // \n
+	console.log(sageutils.header("SAGE2") + chalk.bold.underline("Serving:")); // \n
+	console.log(sageutils.header("SAGE2") + "- Web UI:\t " + ui_url);
+	console.log(sageutils.header("SAGE2") + "- Display 0:\t "      + dp_url);
+	console.log(sageutils.header("SAGE2") + "- Audio manager: "  + am_url);
+	console.log(); // \n
 });
 
 // KILL intercept
