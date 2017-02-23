@@ -636,7 +636,8 @@ function closeWebSocketClient(wsio) {
 	var i;
 	var key;
 	if (wsio.clientType === "display") {
-		console.log(sageutils.header("Disconnect") + chalk.bold.red(wsio.id) + " (" + wsio.clientType + " " + wsio.clientID + ")");
+		console.log(sageutils.header("Disconnect") + chalk.bold.red(wsio.id) +
+			" (" + wsio.clientType + " " + wsio.clientID + ")");
 	} else {
 		if (wsio.clientType) {
 			console.log(sageutils.header("Disconnect") + chalk.bold.red(wsio.id) + " (" + wsio.clientType + ")");
@@ -4933,14 +4934,17 @@ sage2Server.on('error', function(e) {
 sage2Server.on('listening', function(e) {
 	// Success
 	var ui_url = chalk.cyan.bold.underline("http://" + config.host + ":" + config.port);
-	var dp_url = chalk.cyan.bold.underline("http://" + config.host + ":" + config.port + "/display.html?clientID=0");
-	var am_url = chalk.cyan.bold.underline("http://" + config.host + ":" + config.port + "/audioManager.html");
+	var dp_url = chalk.cyan.bold.underline("http://" + config.host + ":" + config.port +
+		"/display.html?clientID=0");
+	var am_url = chalk.cyan.bold.underline("http://" + config.host + ":" + config.port +
+		"/audioManager.html");
 	if (global.__SESSION_ID) {
-		ui_url = chalk.cyan.bold.underline("http://" + config.host + ":" + config.port + "/session.html?hash=" + global.__SESSION_ID);
-		dp_url = chalk.cyan.bold.underline("http://" + config.host + ":" + config.port + "/session.html?page=display.html?clientID=0&hash="
-			+ global.__SESSION_ID);
-		am_url = chalk.cyan.bold.underline("http://" + config.host + ":" + config.port + "/session.html?page=audioManager.html&hash="
-			+ global.__SESSION_ID);
+		ui_url = chalk.cyan.bold.underline("http://" + config.host + ":" + config.port +
+			"/session.html?hash=" + global.__SESSION_ID);
+		dp_url = chalk.cyan.bold.underline("http://" + config.host + ":" + config.port +
+			"/session.html?page=display.html?clientID=0&hash=" + global.__SESSION_ID);
+		am_url = chalk.cyan.bold.underline("http://" + config.host + ":" + config.port +
+			"/session.html?page=audioManager.html&hash=" + global.__SESSION_ID);
 	}
 	console.log(sageutils.header("SAGE2") + "Serving web UI at " + ui_url);
 	console.log(sageutils.header("SAGE2") + "Display 0 at "      + dp_url);

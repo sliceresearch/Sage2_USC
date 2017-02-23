@@ -435,7 +435,8 @@ function registerSAGE2(config) {
 		form: config,
 		method: "POST"},
 		function(err, response, body) {
-			console.log(header("SAGE2") + "Registration with EVL site:", (err === null) ? chalk.green.bold("success") : chalk.red.bold(err.code));
+			console.log(header("SAGE2") + "Registration with EVL site:",
+				(err === null) ? chalk.green.bold("success") : chalk.red.bold(err.code));
 		}
 	);
 }
@@ -455,7 +456,8 @@ function deregisterSAGE2(config, callback) {
 		form: config,
 		method: "POST"},
 		function(err, response, body) {
-			console.log(header("SAGE2") + "Deregistration with EVL site:", (err === null) ? chalk.green.bold("success") : chalk.red.bold(err.code));
+			console.log(header("SAGE2") + "Deregistration with EVL site:",
+				(err === null) ? chalk.green.bold("success") : chalk.red.bold(err.code));
 			if (callback) {
 				callback();
 			}
