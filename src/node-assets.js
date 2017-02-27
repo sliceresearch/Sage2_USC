@@ -877,9 +877,9 @@ var refreshApps = function(root, callback) {
 
 		exifAsync(thelist, function(err) {
 			if (err) {
-				console.log(sageutils.header("EXIF") + chalk.bgRed.underline.bold("Error:", err));
+				console.log(sageutils.header("EXIF") + chalk.red.bold("Error:", err));
 			} else {
-				console.log(sageutils.header("EXIF") + chalk.green.underline.bold("Processing finished for " + root));
+				console.log(sageutils.header("EXIF") + chalk.green.bold("Processing finished for " + root));
 				if (callback) {
 					callback(thelist.length);
 				}

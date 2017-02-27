@@ -175,11 +175,11 @@ for (var folder in mediaFolders) {
 config.folders = mediaFolders;
 
 console.log();
-console.log(sageutils.header("SAGE2") + chalk.blue.underline.bold("Node Version:\t\t") +
+console.log(sageutils.header("SAGE2") + chalk.blue.bold("Node Version:\t\t") +
 	chalk.green.bold(sageutils.getNodeVersion()));
-console.log(sageutils.header("SAGE2") + chalk.blue.underline.bold("Detected Server OS as:\t") +
+console.log(sageutils.header("SAGE2") + chalk.blue.bold("Detected Server OS as:\t") +
 	chalk.green.bold(platform));
-console.log(sageutils.header("SAGE2") + chalk.blue.underline.bold("SAGE2 Short Version:\t") +
+console.log(sageutils.header("SAGE2") + chalk.blue.bold("SAGE2 Short Version:\t") +
 	chalk.green.bold(SAGE2_version));
 console.log();
 

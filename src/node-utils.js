@@ -404,14 +404,14 @@ function checkPackages(inDevelopement) {
 
 			if (packages.missing.length > 0 || packages.outdated.length > 0) {
 				console.log("");
-				console.log(header("Packages") + chalk.yellow.underline.bold("Warning") +
+				console.log(header("Packages") + chalk.yellow.bold("Warning") +
 					" - Packages not up to date");
 				if (packages.missing.length  > 0) {
-					console.log(header("Packages") + "  " + chalk.red.underline.bold("Missing:"),
+					console.log(header("Packages") + "  " + chalk.red.bold("Missing:"),
 						chalk.red.bold(packages.missing));
 				}
 				if (packages.outdated.length > 0) {
-					console.log(header("Packages") + "  " + chalk.yellow.underline.bold("Outdated:"),
+					console.log(header("Packages") + "  " + chalk.yellow.bold("Outdated:"),
 						chalk.yellow.bold(packages.outdated));
 				}
 				console.log(header("Packages") + "To update, execute: " + chalk.yellow.bold("npm run in"));
