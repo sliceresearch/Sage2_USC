@@ -9401,6 +9401,20 @@ function wsStartWallScreenShot(wsio, data) {
 /**
  * Called when displays are sending screenshots.
  * Displays that are not capable of screenshots will report back saying so.
+ * Performs the following:
+ * 	if not display, stop
+ * 	if display is not capable, mark status, stop
+ * 	get all displays in array
+ * 	save the current display's screenshot
+ * 	mark this display in the correct check in position
+ * 		if display has width and height, mark those locations too
+ * 	if all display tiles screenshots have been submitted
+ * 		OR all displays have submitted a screenshot or are incapable
+ * 	then make a screenshot
+ * 		done with mosaic and offset tiles based on config information
+ * 		stitching is done in tmp folder to avoid problems caused by the folder monitor
+ * 	finally reset variable to allow another screenshot
+ *
  *
  * @method     wsWallScreenShotFromDisplay
  * @param      {Object}  wsio    The websocket
