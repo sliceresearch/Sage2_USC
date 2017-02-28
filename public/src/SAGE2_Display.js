@@ -243,7 +243,7 @@ function SAGE2_init() {
 					electronRequireObject = require('electron'); // ensure electron object has been initialized before using
 				}
 				capableOfScreenShot = true;
-			} catch(e) {
+			} catch (e) {
 				console.log("Error? Browser is detected as Electron but cannot perform require('electron')");
 			}
 		}

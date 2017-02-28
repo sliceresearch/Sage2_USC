@@ -9356,7 +9356,7 @@ function wsReportIfCanWallScreenShot(wsio, data) {
 		wsio.capableOfScreenShot = data.capableOfScreenShot;
 	} else if (wsio.clientType === "sageUI") {
 		var canWallScreenShot = false;
-		for (i = 0; i < clients.length; i++) {
+		for (var i = 0; i < clients.length; i++) {
 			if (clients[i].clientType === "display" && clients[i].capableOfScreenShot === true) {
 				canWallScreenShot = true;
 			}
