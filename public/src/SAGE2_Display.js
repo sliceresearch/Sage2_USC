@@ -26,6 +26,8 @@
 
 /* global SAGE2_Partition */
 
+/* global require */
+
 "use strict";
 
 /**

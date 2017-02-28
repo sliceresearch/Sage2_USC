@@ -9331,8 +9331,8 @@ function csdSaveDataOnServer(wsio, data) {
 		fs.writeFileSync(fullpath, buffer);
 	}  else if (data.fileType === "png") {
 		fullpath = path.join(mainFolder.path, "images", data.fileName);
-		var buffer = new Buffer(data.fileContent, "base64");
-		fs.writeFileSync(fullpath, buffer);
+		var pngBuffer = new Buffer(data.fileContent, "base64");
+		fs.writeFileSync(fullpath, pngBuffer);
 	} else {
 		console.log("ERROR:csdSaveDataOnServer: unable to save data on server for fileType " + data.fileType);
 	}
@@ -9357,7 +9357,6 @@ function wsStartWallScreenShot(wsio, data) {
 		}
 		// Need and additional tracking variable to prevent multiple users from spamming the screenshot command.
 		masterDisplay.startedScreenShot = true;
-		
 		masterDisplay.displayCheckIn = []; // [x][y] the previous array is discarded
 		for (var x = 0; x < config.layout.columns; x++) {
 			masterDisplay.displayCheckIn.push([]);
@@ -9365,19 +9364,6 @@ function wsStartWallScreenShot(wsio, data) {
 				masterDisplay.displayCheckIn[x].push(false); // fill array of false
 			}
 		}
-
-
-		console.log();
-		console.log();
-		console.log();
-		console.log();
-
-		console.dir(masterDisplay.displayCheckIn);
-
-
-		console.log();
-		console.log();
-		console.log();		console.log();
 	}
 }
 
@@ -9399,9 +9385,11 @@ function wsWallScreenShotFromDisplay(wsio, data) {
 		return; // can't do anything if the display isn't capable. TODO probably report to initiator wall isn't capable.
 	}
 
+	var xDisplay, yDisplay;
+	var i, x, y;
 	// first get all connected display clients. (is there a function or var that has this already?)
 	var allDisplaysFromClients = [];
-	for (var i = 0; i < clients.length; i++) {
+	for (i = 0; i < clients.length; i++) {
 		if (clients[i].clientType === "display") {
 			allDisplaysFromClients.push(clients[i]);
 		}
@@ -9429,18 +9417,24 @@ function wsWallScreenShotFromDisplay(wsio, data) {
 		// if there is a width and height defined, set this wsio in the other spaces
 		if (config.displays[wsio.clientID].width != undefined && config.displays[wsio.clientID].height != undefined) {
 			// set this wsio for each of the spaces
-			for (var x = 0; x < config.displays[wsio.clientID].width; x++) {
-				for (var y = 0; y < config.displays[wsio.clientID].height; y++) {
-					masterDisplay.displayCheckIn[config.displays[wsio.clientID].column + x][config.displays[wsio.clientID].row + y] = wsio;
+			for (x = 0; x < config.displays[wsio.clientID].width; x++) {
+				for (y = 0; y < config.displays[wsio.clientID].height; y++) {
+					xDisplay = config.displays[wsio.clientID].column + x;
+					yDisplay = config.displays[wsio.clientID].row + y;
+					masterDisplay.displayCheckIn[xDisplay][yDisplay] = wsio;
 				}
 			}
 		} else if (config.displays[wsio.clientID].width != undefined) {
-			for (var x = 0; x < config.displays[wsio.clientID].width; x++) {
-				masterDisplay.displayCheckIn[config.displays[wsio.clientID].column + x][config.displays[wsio.clientID].row] = wsio;
+			for (x = 0; x < config.displays[wsio.clientID].width; x++) {
+				xDisplay = config.displays[wsio.clientID].column + x;
+				yDisplay = config.displays[wsio.clientID].row;
+				masterDisplay.displayCheckIn[xDisplay][yDisplay] = wsio;
 			}
 		} else if (config.displays[wsio.clientID].height != undefined) {
-			for (var y = 0; y < config.displays[wsio.clientID].height; y++) {
-				masterDisplay.displayCheckIn[config.displays[wsio.clientID].column][config.displays[wsio.clientID].row + y] = wsio;
+			for (y = 0; y < config.displays[wsio.clientID].height; y++) {
+				xDisplay = config.displays[wsio.clientID].column;
+				yDisplay = config.displays[wsio.clientID].row + y;
+				masterDisplay.displayCheckIn[xDisplay][yDisplay] = wsio;
 			}
 		}
 	} else {
@@ -9450,27 +9444,25 @@ function wsWallScreenShotFromDisplay(wsio, data) {
 	/*
 		now check if everyone submitted.
 		NOTE: very possible to have timing issues. Counting on the fact that screenshot takes more time the non-capable response
-		
+
 		display check in necessary for weird pieces
 	*/
 	var allDisplaysSubmittedScreenShots = true;
 	// first check if each of the tiles in the wall have been filled
-	for (var x = 0; x < masterDisplay.displayCheckIn.length; x++) {
-		for (var y = 0; y < masterDisplay.displayCheckIn[0].length; y++) {
+	for (x = 0; x < masterDisplay.displayCheckIn.length; x++) {
+		for (y = 0; y < masterDisplay.displayCheckIn[0].length; y++) {
 			if (masterDisplay.displayCheckIn[x][y] === false) { // === is critical since display wsio replaces false.
 				allDisplaysSubmittedScreenShots = false;
-				console.log("missing a tile piece failed the full tile test");
 				break;
 			}
 		}
 	} // if there is a missing piece from the tiles, possible that there is no active display for it.
 	if (!allDisplaysSubmittedScreenShots) {
 		allDisplaysSubmittedScreenShots = true; // reset to true, it will be false if there is a missing piece
-		for (var i = 0; i < allDisplaysFromClients.length; i++) {
+		for (i = 0; i < allDisplaysFromClients.length; i++) {
 			if (allDisplaysFromClients[i].capableOfScreenShot) { // if the display is capable
 				if (!allDisplaysFromClients[i].submittedScreenShot) { // and it hasn't submitted a screenshot, don't have all tiles
 					allDisplaysSubmittedScreenShots = false;
-				console.log("missing a tile piece failed the full tile test");
 					break;
 				}
 			}
@@ -9478,24 +9470,15 @@ function wsWallScreenShotFromDisplay(wsio, data) {
 	}
 	// stop if not all displays submitted. Return here to prevent too many nested blocks
 	if (!allDisplaysSubmittedScreenShots) {
-				console.log("not making a moisaic"); return; }
-	
+		return;
+	}
+
 	// At this point ready to make a screen shot.
 	// First need the date to use as a unique name modifier.
 	var dateSuffix = formatDateToYYYYMMDD_HHMMSS(new Date());
 
 	// more than 1 tile means that stitching needs to be applied.
 	if (allDisplaysFromClients.length > 1) {
-		console.log("");
-		console.log("");
-		console.log("");
-		console.log("");
-		console.log("");
-		console.log("config width, height:" + config.resolution.width + "," + config.resolution.height);
-		console.log("contents of displayCheckIn");
-		console.dir(masterDisplay.displayCheckIn);
-		
-
 		// stitching needs to be done by rows.
 		var basePath = path.join(mainFolder.path, "images"); // tile pieces are still saved in images
 		var currentPath;
@@ -9512,18 +9495,20 @@ function wsWallScreenShotFromDisplay(wsio, data) {
 					so it needs to be skipped
 				tiles that dont need to be skipped will have their temp file referenced with offet of tile position * resolution
 		*/
-		for (var x = 0; x < masterDisplay.displayCheckIn.length; x++) {
+		for (x = 0; x < masterDisplay.displayCheckIn.length; x++) {
 			yMosaicPosition = 0; // reset for each column
-			for (var y = 0; y < masterDisplay.displayCheckIn[0].length; y++) {
+			for (y = 0; y < masterDisplay.displayCheckIn[0].length; y++) {
 				if (masterDisplay.displayCheckIn[x][y] !== false) { // reaching this point and false means the display is not connected.
 					needToSkip = false;
-					for (var i = 0; i < tilesUsed.length; i++) {
-						if (masterDisplay.displayCheckIn[x][y] === tilesUsed[i]) { // tripping this check means that the display had width and height
+					for (i = 0; i < tilesUsed.length; i++) {
+						// tripping this check means that the display had width and height
+						if (masterDisplay.displayCheckIn[x][y] === tilesUsed[i]) {
 							needToSkip = true;
 						}
 					}
 					if (!needToSkip) {
-						currentPath = path.join(basePath, "wallScreenShot" + masterDisplay.displayCheckIn[x][y].clientID + ".png");
+						currentPath = path.join(basePath,
+							"wallScreenShot" + masterDisplay.displayCheckIn[x][y].clientID + ".png");
 						mosaicImage = mosaicImage.in("-page", "+" + xMosaicPosition + "+" + yMosaicPosition);
 						mosaicImage = mosaicImage.in(currentPath);
 						tilesUsed.push(masterDisplay.displayCheckIn[x][y]);
@@ -9544,84 +9529,11 @@ function wsWallScreenShotFromDisplay(wsio, data) {
 			if (error) {
 				console.log(error);
 			} else {
-				fs.createReadStream(currentPath).pipe(fs.createWriteStream(path.join(mainFolder.path, "images", ("wallScreenShot" + dateSuffix + ".png"))));
+				fs.createReadStream(currentPath).pipe(
+					fs.createWriteStream(path.join(mainFolder.path, "images", ("wallScreenShot" + dateSuffix + ".png")))
+				);
 			}
 		});
-
-		// // at this point the displays should have correctly checked in.
-		// // first an array for the tiles
-		// var displayCount = 0;
-		// var displayOrder = []; // display[x][y]
-		// for (var c = 0; c < config.layout.columns; c++) {
-		// 	displayOrder.push([]);
-		// 	for (var r = 0; r < config.layout.rows; r++) {
-		// 		displayOrder[c].push("blank"); // starts off filled with strings of "blank" as a placeholder for length calculation.
-		// 	}
-		// }
-		// console.log("erase me, start");
-		// if (displayOrder.length == config.layout.columns) {
-		// 	console.log("ss display tile width OK");
-		// } else {
-		// 	console.log("ss display tile width INCORRECT");
-		// }
-		// if (displayOrder[0].length == config.layout.rows) {
-		// 	console.log("ss display tile height OK");
-		// } else {
-		// 	console.log("ss display tile height INCORRECT");
-		// }
-		// console.log("erase me, end");
-
-		// // adding displays to correct position in tile holder.
-		// for (var i = 0; i < masterDisplay.displayCheckIn.length; i++) {
-		// 	if (masterDisplay.displayCheckIn[i] === false) {
-		// 		console.log("Warning: screenshot missing piece from display " + i + " unsure if this will affect stitching.");
-		// 		continue; // if it got this far, probably means this display isn't connected.
-		// 	}
-		// 	displayOrder[config.displays[masterDisplay.displayCheckIn[i].clientID].column][config.displays[masterDisplay.displayCheckIn[i].clientID].row] = masterDisplay.displayCheckIn[i];
-		// }
-
-		// // stitching needs to be done by rows.
-		// var basePath = path.join(mainFolder.path, "images"); // tile pieces are still saved in images
-		// var currentPath;
-		// var rowPieces = [];
-		
-		// 	first make each of the rows (height)
-
-		// 	for() each of the rows, where height is found by [0].length because [x][y], and all [x].length is assumed to be equal (forms a square tile)
-		// 		the first image is [0][y]. Where 0 is used because it is the left most tile, but y changes.
-		// 		the name mods are used since the name should be standard based on earlier code.
-		// 		Note: filename was hardcoded and probably should be changed.
-		// 		push the imageMagick returned object based on current path.
-		// 		http://aheckmann.github.io/gm/docs.html
-		// 		search this file for other use cases of imageMagick
-
-		// 		for() each of the columns (width), starting at index 1 (since 0 was already pushed)
-		// 		 	path should be next column of the current row
-		// 		 	use .append which is the imageMagick obj append function
-		// 		 	[i] is valid since push was in row part of the loop
-
-		
-		// for (var i = 0; i < displayOrder[0].length; i++) { // loop equal to rows (height)
-		// 	currentPath = path.join(basePath, ("wallScreenShot" + displayOrder[0][i].clientID + ".png"));
-		// 	rowPieces.push(imageMagick(currentPath));
-		// 	for (var column = 1; column < displayOrder.length; column++) { // already got 0, so start at 1.
-		// 		currentPath = path.join(basePath, ("wallScreenShot" + displayOrder[column][i].clientID + ".png"));
-		// 		rowPieces[i] = rowPieces[i].append(currentPath, true); // attach the next piece in the row to the right
-		// 	}
-		// }
-		// // then append the rows below each other
-		// for (var i = 1; i < rowPieces.length; i++) {
-		// 	rowPieces[0] = rowPieces[0].append(rowPieces[i]); // append to the bottom of [0], which keeps increasing.
-		// }
-		// // finally write
-		// currentPath = path.join(basePath, ("wallScreenShot" + dateSuffix + ".png"));
-		// rowPieces[0].write(currentPath, function(error) {
-		// 	if (error) {
-		// 		throw error;
-		// 	}
-		// 	// Add the file to the asset library and open it
-		// 	manageUploadedFiles(currentPath, [0, 0], "image_viewer", "#B4B4B4", true);
-		// });
 	} else {
 		// just change the name
 		fileSaveObject.fileName = "wallScreenShot" + dateSuffix + ".png";
