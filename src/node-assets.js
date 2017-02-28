@@ -633,7 +633,7 @@ var exifAsync = function(cmds, cb) {
 				appIcon = path.join(file, instructions.icon);
 			}
 			var app = path.basename(file);
-			console.log(sageutils.header("EXIF") + "Adding " + chalk.blue.bold(app) + chalk.dim(" (App)"));
+			console.log(sageutils.header("EXIF") + "Adding " + chalk.cyan.bold(app) + chalk.dim(" (App)"));
 
 			var metadata = {};
 			if (instructions.title !== undefined && instructions.title !== null && instructions.title !== "") {

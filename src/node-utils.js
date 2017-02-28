@@ -403,7 +403,6 @@ function checkPackages(inDevelopement) {
 			}
 
 			if (packages.missing.length > 0 || packages.outdated.length > 0) {
-				console.log("");
 				console.log(header("Packages") + chalk.yellow.bold("Warning") +
 					" - Packages not up to date");
 				if (packages.missing.length  > 0) {
@@ -415,7 +414,6 @@ function checkPackages(inDevelopement) {
 						chalk.yellow.bold(packages.outdated));
 				}
 				console.log(header("Packages") + "To update, execute: " + chalk.yellow.bold("npm run in"));
-				console.log("");
 			} else {
 				console.log(header("Packages") + chalk.green.bold("All packages up to date"));
 			}
