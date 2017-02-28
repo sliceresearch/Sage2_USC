@@ -30,6 +30,7 @@ var ffmpeg    = require('fluent-ffmpeg');     // ffmpeg
 var gm        = require('gm');                // imagesmagick
 var json5     = require('json5');
 var mv        = require('mv');
+var chalk			= require('chalk');
 
 var exiftool  = require('../src/node-exiftool'); // gets exif tags for images
 var sageutils = require('../src/node-utils');    // provides utility functions
@@ -632,7 +633,7 @@ var exifAsync = function(cmds, cb) {
 				appIcon = path.join(file, instructions.icon);
 			}
 			var app = path.basename(file);
-			console.log(sageutils.header("EXIF") + "Adding " + app + " (App)");
+			console.log(sageutils.header("EXIF") + "Adding " + chalk.blue.bold(app) + chalk.dim(" (App)"));
 
 			var metadata = {};
 			if (instructions.title !== undefined && instructions.title !== null && instructions.title !== "") {
@@ -876,9 +877,9 @@ var refreshApps = function(root, callback) {
 
 		exifAsync(thelist, function(err) {
 			if (err) {
-				console.log(sageutils.header("EXIF") + "Error:", err);
+				console.log(sageutils.header("EXIF") + chalk.red.bold("Error:", err));
 			} else {
-				console.log(sageutils.header("EXIF") + "Processing finished for " + root);
+				console.log(sageutils.header("EXIF") + chalk.green.bold("Processing finished for " + root));
 				if (callback) {
 					callback(thelist.length);
 				}
@@ -938,7 +939,7 @@ var initialize = function(mainFolder, mediaFolders, whenDone) {
 		var root = mainFolder.path;
 		var relativePath = mainFolder.url;
 
-		console.log(sageutils.header("Assets") + 'Main asset folder: ' + root);
+		console.log(sageutils.header("Assets") + 'Main asset folder: ' + chalk.yellow.bold(root));
 
 		// Make sure the asset folder exists
 		var assetFolder = path.join(root, 'assets');
@@ -1033,7 +1034,7 @@ var initialize = function(mainFolder, mediaFolders, whenDone) {
 };
 
 var addAssetFolder = function(root, whenDone) {
-	console.log(sageutils.header("Assets") + 'Adding asset folder: ' + root);
+	console.log(sageutils.header("Assets") + 'Adding asset folder: ' + chalk.yellow.bold(root));
 	// Make sure the asset folder exists
 	var assetFolder = path.join(root, 'assets');
 	if (!sageutils.folderExists(assetFolder)) {
