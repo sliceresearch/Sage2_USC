@@ -766,7 +766,9 @@ Partition.prototype.updateNeighborPtnPositions = function() {
 
 						if (neighPtn.height < partitions.minSize.height) {
 							neighPtn.height = partitions.minSize.height;
-							neighPtn.top = this.top + this.height + titleBar;
+							neighPtn.top = botCoord - neighPtn.height;
+
+							this.height = neighPtn.top - this.top - titleBar;
 
 							ptnSizeChanged = true;
 

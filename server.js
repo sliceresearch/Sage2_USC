@@ -6572,12 +6572,18 @@ function updatePointerPosition(uniqueID, pointerX, pointerY, data) {
 			let currentMoveItem = SAGE2Items.applications.list[updatedMoveItem.elemId];
 
 			if (currentMoveItem) {
-				broadcast('updatePartitionBorders', {id: currentMoveItem.ptnHovered, highlight: false});
-
 				// Calculate partition which item is over
-				currentMoveItem.ptnHovered = partitions.calculateNewPartition(currentMoveItem);
+				let newPartitionHovered = partitions.calculateNewPartition(currentMoveItem);
 
-				broadcast('updatePartitionBorders', {id: currentMoveItem.ptnHovered, highlight: true});
+
+				if (currentMoveItem.ptnHovered != newPartitionHovered) {
+					broadcast('updatePartitionBorders', {id: currentMoveItem.ptnHovered, highlight: false});
+
+					// update ptnHovered with new partition
+					currentMoveItem.ptnHovered = newPartitionHovered;
+
+					broadcast('updatePartitionBorders', {id: currentMoveItem.ptnHovered, highlight: true});
+				}
 			}
 		}
 		return;

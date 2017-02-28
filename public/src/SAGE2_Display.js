@@ -609,14 +609,12 @@ function setupListeners() {
 		partitions[data.id].updateTitle(data.title);
 	});
 	wsio.on('updatePartitionBorders', function(data) {
-		if (!data) {
+		if (data && partitions.hasOwnProperty(data.id)) {
+			partitions[data.id].updateSelected(data.highlight);
+		} else {
 			for (var p in partitions) {
 				// console.log(p);
 				partitions[p].updateSelected(false);
-			}
-		} else {
-			if (partitions.hasOwnProperty(data.id)) {
-				partitions[data.id].updateSelected(data.highlight);
 			}
 		}
 	});
