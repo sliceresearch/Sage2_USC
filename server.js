@@ -9536,10 +9536,15 @@ function wsWallScreenShotFromDisplay(wsio, data) {
 			xMosaicPosition += config.resolution.width;
 		}
 		// ready for mosaic and write
-		currentPath = path.join(basePath, ("wallScreenShot" + dateSuffix + ".png"));
+		currentPath = path.join(mainFolder.path, "tmp", ("wallScreenShot" + dateSuffix + ".png"));
+
+		// the solution is probably to write to the temp folder then copy into the image folder
+
 		mosaicImage.mosaic().write(currentPath, function(error) {
 			if (error) {
 				console.log(error);
+			} else {
+				fs.createReadStream(currentPath).pipe(fs.createWriteStream(path.join(mainFolder.path, "images", ("wallScreenShot" + dateSuffix + ".png"))));
 			}
 		});
 
