@@ -236,6 +236,18 @@ function SAGE2_init() {
 		// Get the cookie for the session, if there's one
 		var session = getCookie("session");
 
+		var capableOfScreenShot = false;
+		if (__SAGE2__.browser.isElectron) {
+			try {
+				if (electronRequireObject == null) {
+					electronRequireObject = require('electron'); // ensure electron object has been initialized before using
+				}
+				capableOfScreenShot = true;
+			} catch(e) {
+				console.log("Error? Browser is detected as Electron but cannot perform require('electron')");
+			}
+		}
+
 		var clientDescription = {
 			clientType: "display",
 			clientID: clientID,
@@ -246,6 +258,7 @@ function SAGE2_init() {
 				console: false
 			},
 			isMobile: __SAGE2__.browser.isMobile,
+			capableOfScreenShot: capableOfScreenShot,
 			session: session
 		};
 		wsio.emit('addClient', clientDescription);
@@ -1306,7 +1319,6 @@ function setupListeners() {
 				wsio.emit("wallScreenShotFromDisplay", {capable: true, imageAsPngData: img.toPng()});
 			});
 		}
-
 	});
 }
 

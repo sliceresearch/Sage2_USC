@@ -784,6 +784,8 @@ function wsAddClient(wsio, data) {
 		// for mobile clients, default to window interaction mode
 		remoteInteraction[wsio.id].previousMode = 0;
 	}
+	// set if capable of a screenshot (is Electron and can access require('electron'))
+	wsio.capableOfScreenShot = data.capableOfScreenShot;
 }
 
 /**
@@ -1009,6 +1011,7 @@ function setupListeners(wsio) {
 	// might eventually break this up into individual ws functions
 	wsio.on('csdMessage',							wsCsdMessage);
 
+	wsio.on('reportIfCanWallScreenShot',            wsReportIfCanWallScreenShot);
 	wsio.on('startWallScreenShot',                  wsStartWallScreenShot);
 	wsio.on('wallScreenShotFromDisplay',            wsWallScreenShotFromDisplay);
 
@@ -9339,19 +9342,47 @@ function csdSaveDataOnServer(wsio, data) {
 }
 
 /**
- * Sent from UI, server gets it and tells displays to send back screenshots.
+ * Sent from UI, server gets it and tells displays to report if can screenshot.
+ * Purpose for UI init, is UI and displays do not go up at time of launch.
+ * UI each need to ask server if screenshot is capable.
  *
- * @method     wsStartJupyterSharing
+ * @method     wsReportIfCanWallScreenShot
+ * @param      {Object}  wsio    The websocket
+ * @param      {Object}  data    The data
+ */
+function wsReportIfCanWallScreenShot(wsio, data) {
+	// Sends back to UI response saying it is possible or not. There may be timing issues.
+	if (wsio.clientType === "display") {
+		wsio.capableOfScreenShot = data.capableOfScreenShot;
+	} else if (wsio.clientType === "sageUI") {
+		var canWallScreenShot = false;
+		for (i = 0; i < clients.length; i++) {
+			if (clients[i].clientType === "display" && clients[i].capableOfScreenShot === true) {
+				canWallScreenShot = true;
+			}
+		}
+		wsio.emit("reportIfCanWallScreenShot", {capableOfScreenShot: canWallScreenShot});
+	}
+}
+
+/**
+ * Sent from UI, server gets it and tells displays to send back screenshots.
+ * Only happens if a screenshot is not already in progress to prevent spam.
+ * The masterDisplay check in array is reset (discarded) and rebuilt. Inefficient?
+ *
+ * @method     wsStartWallScreenShot
  * @param      {Object}  wsio    The websocket
  * @param      {Object}  data    The data
  */
 function wsStartWallScreenShot(wsio, data) {
-	// prevent screenshot spamming
+	// If not already taking a screen shot, then can emit. This prevents spamming.
 	if (masterDisplay.startedScreenShot == undefined || masterDisplay.startedScreenShot == false) {
 		for (var i = 0; i < clients.length; i++) {
 			if (clients[i].clientType === "display") {
-				clients[i].submittedScreenShot = false;
-				clients[i].capableOfScreenShot = true;
+				clients[i].submittedScreenShot = false; // their submission status is reset
+				if (clients[i].capableOfScreenShot == undefined) { // necessary if displays state their status?
+					clients[i].capableOfScreenShot = true; // capabilities are set on response.
+				}
 				clients[i].emit("sendServerWallScreenShot");
 			}
 		}
@@ -9369,6 +9400,7 @@ function wsStartWallScreenShot(wsio, data) {
 
 /**
  * Called when displays are sending screenshots.
+ * Displays that are not capable of screenshots will report back saying so.
  *
  * @method     wsWallScreenShotFromDisplay
  * @param      {Object}  wsio    The websocket
@@ -9385,9 +9417,11 @@ function wsWallScreenShotFromDisplay(wsio, data) {
 		return; // can't do anything if the display isn't capable. TODO probably report to initiator wall isn't capable.
 	}
 
+	// lint compliance, declaring reused variables here.
 	var xDisplay, yDisplay;
 	var i, x, y;
-	// first get all connected display clients. (is there a function or var that has this already?)
+
+	// first get all connected display clients.
 	var allDisplaysFromClients = [];
 	for (i = 0; i < clients.length; i++) {
 		if (clients[i].clientType === "display") {
@@ -9395,21 +9429,21 @@ function wsWallScreenShotFromDisplay(wsio, data) {
 		}
 	}
 
-	// save the file
+	// save the file. First create information necessary.
 	var fileSaveObject = {};
-	fileSaveObject.fileName = "wallScreenShot" + wsio.clientID + ".png"; // client ID in this case refers to the display clientID url param. 0 by default
+	// client ID in this case refers to the display clientID url param. 0 by default
+	fileSaveObject.fileName = "wallScreenShot" + wsio.clientID + ".png"; // mirror overwrite is possible, is bad?
 	fileSaveObject.fileType = "png";
 	fileSaveObject.fileContent = data.imageAsPngData;
-
 	// create the current tile piece.
-	csdSaveDataOnServer(wsio, fileSaveObject);  // tile pieces are still saved in images
+	csdSaveDataOnServer(wsio, fileSaveObject);  // tile pieces individually saved
 
 	// set the tracking variables for the tile piece.
 	wsio.submittedScreenShot = true; // mark itself as having submitted a screenshot.
 
 	/*
 		This whole next section is about proper placement into the displayCheckIn[x][y]
-		Necessary because of systems that define a display as having width and height
+		Necessary because of systems that define a single display as having width and height
 	*/
 	if (masterDisplay.displayCheckIn[wsio.clientID] != undefined) {
 		//                          [ x                                   ][ y                                ]
@@ -9540,8 +9574,8 @@ function wsWallScreenShotFromDisplay(wsio, data) {
 		csdSaveDataOnServer(wsio, fileSaveObject);
 		// manageUploadedFiles( path.join(mainFolder.path, "images", fileSaveObject.fileName), [0, 0], "image_viewer", "#B4B4B4", false);
 	}
-
-	masterDisplay.startedScreenShot = false; // getting this far meant that a full screenshot should have been created
+	// getting this far meant that a full screenshot should have been created, reset variable to allow another capture
+	masterDisplay.startedScreenShot = false;
 }
 
 /**

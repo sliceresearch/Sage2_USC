@@ -672,6 +672,11 @@ function setupListeners() {
 			console.log("Error, csd data packet for client contained invalid function:" + data.func);
 		}
 	});
+
+	wsio.on('reportIfCanWallScreenShot', function(data) {
+		// currently this is a placeholder until a button can be added
+		console.log("The server at at least 1 display capable of a wallScreenShot");
+	});
 }
 
 
