@@ -158,7 +158,7 @@ function setupFocusHandlers() {
 
 	if (__SAGE2__.browser.isElectron) {
 		// Display warning messages from the 'Main' Electron process
-		require('electron').ipcRenderer.on('warning', (event, message) => {
+		require('electron').ipcRenderer.on('warning', function(event, message) {
 			var problemDialog = ui.buildMessageBox('problemDialog', message);
 			ui.main.appendChild(problemDialog);
 			document.getElementById('problemDialog').style.display = "block";

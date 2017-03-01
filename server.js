@@ -174,14 +174,12 @@ for (var folder in mediaFolders) {
 // Add back all the media folders to the configuration structure
 config.folders = mediaFolders;
 
-console.log();
-console.log(sageutils.header("SAGE2") + chalk.blue.bold("Node Version:\t\t") +
+console.log(sageutils.header("SAGE2") + chalk.cyan("Node Version:\t\t") +
 	chalk.green.bold(sageutils.getNodeVersion()));
-console.log(sageutils.header("SAGE2") + chalk.blue.bold("Detected Server OS as:\t") +
+console.log(sageutils.header("SAGE2") + chalk.cyan("Detected Server OS as:\t") +
 	chalk.green.bold(platform));
-console.log(sageutils.header("SAGE2") + chalk.blue.bold("SAGE2 Short Version:\t") +
+console.log(sageutils.header("SAGE2") + chalk.cyan("SAGE2 Short Version:\t") +
 	chalk.green.bold(SAGE2_version));
-console.log();
 
 // Initialize Server
 initializeSage2Server();
@@ -4949,13 +4947,11 @@ setTimeout(function() {
 
 sage2ServerS.on('listening', function(e) {
 	// Success
-	console.log(); // \n
-	console.log(sageutils.header("SAGE2") + chalk.bold.underline("Serving Securely:")); // \n
+	console.log(sageutils.header("SAGE2") + chalk.bold("Serving Securely:"));
 	console.log(sageutils.header("SAGE2") + "- Web UI:\t " + chalk.cyan.bold.underline("https://" +
 		config.host + ":" + config.secure_port));
 	console.log(sageutils.header("SAGE2") + "- Web console:\t " + chalk.cyan.bold.underline("https://" + config.host +
 		":" + config.secure_port + "/admin/console.html"));
-	console.log(); // \n
 });
 
 // Place callback for errors in the 'listen' call for HTTP
@@ -4963,16 +4959,13 @@ sage2Server.on('error', function(e) {
 	if (e.code === 'EACCES') {
 		console.log(sageutils.header("HTTP_Server") + "You are not allowed to use the port: ", config.port);
 		console.log(sageutils.header("HTTP_Server") + "  use a different port or get authorization (sudo, setcap, ...)");
-		console.log(" ");
 		process.exit(1);
 	} else if (e.code === 'EADDRINUSE') {
 		console.log(sageutils.header("HTTP_Server") + "The port is already in use by another process:", config.port);
 		console.log(sageutils.header("HTTP_Server") + "  use a different port or stop the offending process");
-		console.log(" ");
 		process.exit(1);
 	} else {
 		console.log(sageutils.header("HTTP_Server") + "Error in the listen call: ", e.code);
-		console.log(" ");
 		process.exit(1);
 	}
 });
@@ -4994,12 +4987,10 @@ sage2Server.on('listening', function(e) {
 			"/session.html?page=audioManager.html&hash=" + global.__SESSION_ID);
 	}
 
-	console.log(); // \n
-	console.log(sageutils.header("SAGE2") + chalk.bold.underline("Serving:")); // \n
+	console.log(sageutils.header("SAGE2") + chalk.bold("Serving:"));
 	console.log(sageutils.header("SAGE2") + "- Web UI:\t " + ui_url);
 	console.log(sageutils.header("SAGE2") + "- Display 0:\t "      + dp_url);
 	console.log(sageutils.header("SAGE2") + "- Audio manager: "  + am_url);
-	console.log(); // \n
 });
 
 // KILL intercept
