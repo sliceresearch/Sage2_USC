@@ -225,6 +225,7 @@ var movie_player = SAGE2_BlockStreamingApp.extend({
 		}
 		this.refresh(date);
 		this.playPauseBtn.state = 1 - this.playPauseBtn.state;
+		this.getFullContextMenuAndUpdate();
 	},
 
 	/**
@@ -316,12 +317,14 @@ var movie_player = SAGE2_BlockStreamingApp.extend({
 		if (this.state.paused) {
 			entry = {};
 			entry.description = "Play";
+			entry.accelerator = "p";
 			entry.callback = "contextTogglePlayPause";
 			entry.parameters = {};
 			entries.push(entry);
 		} else {
 			entry = {};
 			entry.description = "Pause";
+			entry.accelerator = "p";
 			entry.callback = "contextTogglePlayPause";
 			entry.parameters = {};
 			entries.push(entry);
@@ -329,6 +332,7 @@ var movie_player = SAGE2_BlockStreamingApp.extend({
 
 		entry = {};
 		entry.description = "Stop";
+		entry.accelerator = "s";
 		entry.callback = "stopVideo";
 		entry.parameters = {};
 		entries.push(entry);
@@ -341,11 +345,13 @@ var movie_player = SAGE2_BlockStreamingApp.extend({
 			entry = {};
 			entry.description = "Unmute";
 			entry.callback = "contextToggleMute";
+			entry.accelerator = "m";
 			entry.parameters = {};
 			entries.push(entry);
 		} else {
 			entry = {};
 			entry.description = "Mute";
+			entry.accelerator = "m";
 			entry.callback = "contextToggleMute";
 			entry.parameters = {};
 			entries.push(entry);
@@ -355,12 +361,14 @@ var movie_player = SAGE2_BlockStreamingApp.extend({
 		if (this.state.looped) {
 			entry = {};
 			entry.description = "Stop looping";
+			entry.accelerator = "l";
 			entry.callback = "toggleLoop";
 			entry.parameters = {};
 			entries.push(entry);
 		} else {
 			entry = {};
 			entry.description = "Loop video";
+			entry.accelerator = "l";
 			entry.callback = "toggleLoop";
 			entry.parameters = {};
 			entries.push(entry);
@@ -660,7 +668,7 @@ var movie_player = SAGE2_BlockStreamingApp.extend({
 					}
 					this.state.muted = true;
 				}
-			} else if (data.character === "1" || data.character === "r") {
+			} else if (data.character === "1" || data.character === "s") {
 				// 1 start of video
 				this.stopVideo();
 			}
