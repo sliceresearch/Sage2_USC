@@ -6947,7 +6947,6 @@ function moveApplicationWindow(uniqueID, moveApp, portalId) {
 	}
 	var im = findInteractableManager(moveApp.elemId);
 	if (im) {
-		handleStickyItem(moveApp.elemId);
 		drawingManager.applicationMoved(moveApp.elemId, moveApp.elemLeft, moveApp.elemTop);
 		im.editGeometry(moveApp.elemId, "applications", "rectangle",
 			{x: moveApp.elemLeft, y: moveApp.elemTop, w: moveApp.elemWidth, h: moveApp.elemHeight + titleBarHeight});
@@ -7545,7 +7544,7 @@ function dropMoveItem(uniqueID, app, valid, portalId) {
 	if (updatedItem !== null) {
 		moveApplicationWindow(uniqueID, updatedItem, portalId);
 	}
-
+	handleStickyItem(app.id);
 	broadcast('finishedMove', {id: app.id, date: Date.now()});
 
 	if (portalId !== undefined && portalId !== null) {
@@ -8473,6 +8472,7 @@ function handleNewApplication(appInstance, videohandle) {
 		appInstance.pinned = true;
 		SAGE2Items.applications.addButtonToItem(appInstance.id, "pinButton", "rectangle",
 			{x: buttonsPad, y: 0, w: oneButton, h: config.ui.titleBarHeight}, 1);
+		SAGE2Items.applications.editButtonVisibilityOnItem(appInstance.id, "pinButton", false);
 	}
 	SAGE2Items.applications.editButtonVisibilityOnItem(appInstance.id, "syncButton", false);
 
@@ -8526,6 +8526,7 @@ function handleNewApplicationInDataSharingPortal(appInstance, videohandle, porta
 		appInstance.pinned = true;
 		SAGE2Items.applications.addButtonToItem(appInstance.id, "pinButton", "rectangle",
 			{x: buttonsPad, y: 0, w: oneButton, h: titleBarHeight}, 1);
+		SAGE2Items.applications.editButtonVisibilityOnItem(appInstance.id, "pinButton", false);
 	}
 	SAGE2Items.applications.editButtonVisibilityOnItem(appInstance.id, "syncButton", false);
 
@@ -8845,6 +8846,13 @@ function wsRadialMenuMoved(wsio, data) {
 	}
 }
 
+/**
+* Called when an item is dropped after a move, and when a sticky item pin is toggled. This method
+* checks handles attaching of sticky items to background items and detaching previously attached
+* sticky items from background items (when the are moved away). It also handles hiding of pins of
+* items not pinned when their background is removed from underneath them
+*/
+
 function handleStickyItem(elemId) {
 	var app = SAGE2Items.applications.list[elemId];
 	if (app === null || app.sticky !== true) {
@@ -8852,18 +8860,34 @@ function handleStickyItem(elemId) {
 	}
 	stickyAppHandler.detachStickyItem(app);
 	var im = findInteractableManager(elemId);
-	var backgroundObj = im.searchGeometry({x: app.left - 2, y: app.top - 2});
+	var backgroundObj = im.getBackgroundObj(app, null);
 	if (backgroundObj === null) {
 		hideStickyPin(app);
 	} else if (SAGE2Items.applications.list.hasOwnProperty(backgroundObj.data.id)) {
 		if (app.pinned === true) {
-			//console.log("attaching " + app.id + " to " + backgroundObj.data.id);
 			stickyAppHandler.attachStickyItem(backgroundObj.data, app);
+		} else {
+			stickyAppHandler.registerNotPinnedApp(app);
 		}
 		showStickyPin(app);
 	}
+	var appsNotPinned = stickyAppHandler.getNotPinnedAppList();
+	var appsNotPinnedWithBackground = [];
+	for (var i in appsNotPinned) {
+		var tmpAppVariable = appsNotPinned[i];
+		if (im.getBackgroundObj(tmpAppVariable, null) === null) {
+			hideStickyPin(tmpAppVariable);
+		} else {
+			appsNotPinnedWithBackground.push(tmpAppVariable);
+		}
+	}
+	stickyAppHandler.refreshNotPinnedAppList(appsNotPinnedWithBackground);
 }
 
+
+/**
+* Called when user clicks on a sticky item pin. This method toggles the status of the pin.
+*/
 
 function toggleStickyPin(app) {
 	if (app === null || app.sticky !== true) {
@@ -8873,10 +8897,13 @@ function toggleStickyPin(app) {
 		app.pinned = true;
 	} else {
 		app.pinned = false;
+		stickyAppHandler.registerNotPinnedApp(app);
 	}
+
 	handleStickyItem(app.id);
 	broadcast('showStickyPin', app);
 }
+
 
 function showStickyPin(app) {
 	SAGE2Items.applications.editButtonVisibilityOnItem(app.id, "pinButton", true);

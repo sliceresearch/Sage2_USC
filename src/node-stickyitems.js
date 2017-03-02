@@ -28,6 +28,7 @@
 function StickyItems() {
 	this.stickyItemParent = {};
 	this.stickyItemOffsetInfo = {};
+	this.notPinnedAppsList = [];
 }
 
 /**
@@ -128,6 +129,38 @@ StickyItems.prototype.getStickingItems = function(elemId) {
 		}
 	}
 	return stickingItems;
+};
+
+/**
+*
+*
+* @method registerNotPinnedApp
+*/
+
+StickyItems.prototype.registerNotPinnedApp = function(app) {
+	if (app.sticky === true && app.pinned !== true) {
+		this.notPinnedAppsList.push(app);
+	}
+};
+
+/**
+*
+*
+* @method getNotPinnedAppList
+*/
+
+StickyItems.prototype.getNotPinnedAppList = function() {
+	return this.notPinnedAppsList;
+};
+
+/**
+*
+*
+* @method refreshNotPinnedAppList
+*/
+
+StickyItems.prototype.refreshNotPinnedAppList = function(appList) {
+	this.notPinnedAppsList = appList;
 };
 
 module.exports = StickyItems;
