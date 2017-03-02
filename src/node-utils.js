@@ -14,7 +14,7 @@
  * @class node-utils
  * @module server
  * @submodule node-utils
- * @requires package.json, request, semver
+ * @requires package.json, request, semver, chalk
  */
 
 // require variables to be declared
@@ -40,7 +40,7 @@ var request   = require('request');           // http requests
 var semver    = require('semver');            // parse version numbers
 var fsmonitor = require('fsmonitor');         // file system monitoring
 var sanitizer = require('sanitizer');         // Caja's HTML Sanitizer as a Node.js module
-
+var chalk     = require('chalk');							// colorize console output
 
 /**
  * Parse and store NodeJS version number: detect version 0.10.x or newer
@@ -273,9 +273,9 @@ function sanitizedURL(aURL) {
  */
 function header(h) {
 	if (h.length <= 6) {
-		return h + ">\t\t";
+		return chalk.green.bold.dim(h + ">\t\t");
 	}
-	return h + ">\t";
+	return chalk.green.bold.dim(h + ">\t");
 }
 
 
@@ -403,18 +403,19 @@ function checkPackages(inDevelopement) {
 			}
 
 			if (packages.missing.length > 0 || packages.outdated.length > 0) {
-				console.log("");
-				console.log(header("Packages") + "Warning - Packages not up to date");
+				console.log(header("Packages") + chalk.yellow.bold("Warning") +
+					" - Packages not up to date");
 				if (packages.missing.length  > 0) {
-					console.log(header("Packages") + "  Missing:",  packages.missing);
+					console.log(header("Packages") + "  " + chalk.red.bold("Missing:"),
+						chalk.red.bold(packages.missing));
 				}
 				if (packages.outdated.length > 0) {
-					console.log(header("Packages") + "  Outdated:", packages.outdated);
+					console.log(header("Packages") + "  " + chalk.yellow.bold("Outdated:"),
+						chalk.yellow.bold(packages.outdated));
 				}
-				console.log(header("Packages") + "To update, execute: npm run in");
-				console.log("");
+				console.log(header("Packages") + "To update, execute: " + chalk.yellow.bold("npm run in"));
 			} else {
-				console.log(header("Packages") + "All packages up to date");
+				console.log(header("Packages") + chalk.green.bold("All packages up to date"));
 			}
 		}
 	);
@@ -435,7 +436,8 @@ function registerSAGE2(config) {
 		form: config,
 		method: "POST"},
 		function(err, response, body) {
-			console.log(header("SAGE2") + "Registration with EVL site:", (err === null) ? "success" : err.code);
+			console.log(header("SAGE2") + "Registration with EVL site:",
+				(err === null) ? chalk.green.bold("success") : chalk.red.bold(err.code));
 		}
 	);
 }
@@ -455,7 +457,8 @@ function deregisterSAGE2(config, callback) {
 		form: config,
 		method: "POST"},
 		function(err, response, body) {
-			console.log(header("SAGE2") + "Deregistration with EVL site:", (err === null) ? "success" : err.code);
+			console.log(header("SAGE2") + "Deregistration with EVL site:",
+				(err === null) ? chalk.green.bold("success") : chalk.red.bold(err.code));
 			if (callback) {
 				callback();
 			}
@@ -561,7 +564,7 @@ function monitorFolders(folders, excludesFiles, excludesFolders, callback) {
 		var stat       = fs.lstatSync(folderpath);
 		// making sure it is a folder
 		if (stat.isDirectory()) {
-			console.log(header("Monitor") + "watching folder " + folderpath);
+			console.log(header("Monitor") + "watching folder " + chalk.yellow.bold(folderpath));
 			var monitor = fsmonitor.watch(folderpath, {
 				// excludes non-valid filenames
 				matches:  function(relpath) {
@@ -655,4 +658,3 @@ module.exports.mergeObjects      = mergeObjects;
 
 module.exports.encodeReservedURL  = encodeReservedURL;
 module.exports.encodeReservedPath = encodeReservedPath;
-
