@@ -1315,6 +1315,15 @@ function setupListeners() {
 	});
 
 	wsio.on('sendServerWallScreenShot', function(data) {
+		// first tell user that screenshot is happening, because screen will freeze
+		var makingScreenShotDialog = ui.buildMessageBox('makingScreenShotDialog', 'Please wait, wall is taking a screenshot');
+		ui.main.appendChild(makingScreenShotDialog);
+		document.getElementById('makingScreenShotDialog').style.display = "block";
+		// close the notification after about... 10 seconds?
+		setTimeout(function() {
+			deleteElement('makingScreenShotDialog');
+		}, 10000);
+		// now do check and perform capture if can
 		if (!__SAGE2__.browser.isElectron) {
 			wsio.emit("wallScreenShotFromDisplay", {capable: false});
 		} else {
