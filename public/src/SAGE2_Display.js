@@ -650,7 +650,7 @@ function setupListeners() {
 		// When fade over, really delete the element
 		setTimeout(function() {
 			deleteElem.parentNode.removeChild(deleteElem);
-		}, 300);
+		}, 400);
 
 		// Clean up the UI DOM
 		if (elem_data.elemId in controlObjects) {
