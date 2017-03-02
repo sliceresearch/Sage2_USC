@@ -17,6 +17,8 @@
  * @submodule SAGE2DisplayUI
  */
 
+/* global viewOnlyMode */
+
 /**
  * User interface drawn using Canvas2D
  *
@@ -176,10 +178,16 @@ SAGE2DisplayUI.prototype.resize = function(ratio) {
 	// Extra scaling factor
 	ratio = ratio || 1.0;
 	var menuScale = 1.0;
+
 	// var winWidth = window.innerWidth * ratio;
 	// if (window.innerWidth < 856) {
 	// 	menuScale = window.innerWidth / 856;
 	// }
+
+	// Not icon menu bar in view-only mode
+	if (viewOnlyMode) {
+		menuScale = 0;
+	}
 
 	// window width minus padding
 	var freeWidth   = window.innerWidth  - 26;

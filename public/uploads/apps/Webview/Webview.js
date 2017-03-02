@@ -37,6 +37,7 @@ var Webview = SAGE2_App.extend({
 
 		// move and resize callbacks
 		this.resizeEvents = "continuous";
+		this.modifiers    = [];
 
 		// not sure
 		this.element.style.display = "inline-flex";
@@ -170,7 +171,6 @@ var Webview = SAGE2_App.extend({
 				console.log('Webview>	Not http URL, not opening', event.url);
 			}
 		});
-
 	},
 
 	/**
@@ -375,6 +375,7 @@ var Webview = SAGE2_App.extend({
 
 		entry = {};
 		entry.description = "Back";
+		entry.accelerator = "Alt \u2190";     // ALT <-
 		entry.callback = "navigation";
 		entry.parameters = {};
 		entry.parameters.action = "back";
@@ -382,6 +383,7 @@ var Webview = SAGE2_App.extend({
 
 		entry = {};
 		entry.description = "Forward";
+		entry.accelerator = "Alt \u2192";     // ALT ->
 		entry.callback = "navigation";
 		entry.parameters = {};
 		entry.parameters.action = "forward";
@@ -389,6 +391,7 @@ var Webview = SAGE2_App.extend({
 
 		entry = {};
 		entry.description = "Reload";
+		entry.accelerator = "Alt R";         // ALT r
 		entry.callback = "reloadPage";
 		entry.parameters = {};
 		entries.push(entry);
@@ -425,6 +428,7 @@ var Webview = SAGE2_App.extend({
 
 		entry = {};
 		entry.description = "Zoom in";
+		entry.accelerator = "Alt \u2191";     // ALT up-arrow
 		entry.callback = "zoomPage";
 		entry.parameters = {};
 		entry.parameters.dir = "zoomin";
@@ -432,6 +436,7 @@ var Webview = SAGE2_App.extend({
 
 		entry = {};
 		entry.description = "Zoom out";
+		entry.accelerator = "Alt \u2193";     // ALT down-arrow
 		entry.callback = "zoomPage";
 		entry.parameters = {};
 		entry.parameters.dir = "zoomout";
@@ -476,7 +481,7 @@ var Webview = SAGE2_App.extend({
 			}
 		});
 
-		entries.push({description: "separator"});
+		// entries.push({description: "separator"});
 
 		return entries;
 	},
@@ -575,25 +580,29 @@ var Webview = SAGE2_App.extend({
 			var y = Math.round(position.y);
 			var _this = this;
 
-			if (eventType === "pointerPress" && (data.button === "left")) {
+			if (eventType === "pointerPress") {
 				// click
 				this.element.sendInputEvent({
 					type: "mouseDown",
 					x: x, y: y,
-					button: "left",
+					button: data.button,
+					modifiers: this.modifiers,
 					clickCount: 1
 				});
 			} else if (eventType === "pointerMove") {
 				// move
 				this.element.sendInputEvent({
-					type: "mouseMove", x: x, y: y
+					type: "mouseMove",
+					modifiers: this.modifiers,
+					x: x, y: y
 				});
-			} else if (eventType === "pointerRelease" && (data.button === "left")) {
+			} else if (eventType === "pointerRelease") {
 				// click release
 				this.element.sendInputEvent({
 					type: "mouseUp",
 					x: x, y: y,
-					button: "left",
+					button: data.button,
+					modifiers: this.modifiers,
 					clickCount: 1
 				});
 			} else if (eventType === "pointerScroll") {
@@ -602,6 +611,7 @@ var Webview = SAGE2_App.extend({
 					type: "mouseWheel",
 					deltaX: 0, deltaY: -1 * data.wheelDelta,
 					x: 0, y: 0,
+					modifiers: this.modifiers,
 					canScroll: true
 				});
 			} else if (eventType === "widgetEvent") {
@@ -620,6 +630,25 @@ var Webview = SAGE2_App.extend({
 					});
 				}, 0);
 			} else if (eventType === "specialKey") {
+				// clear the array
+				this.modifiers = [];
+				// store the modifiers values
+				if (data.status && data.status.SHIFT) {
+					this.modifiers.push("shift");
+				}
+				if (data.status && data.status.CTRL) {
+					this.modifiers.push("control");
+				}
+				if (data.status && data.status.ALT) {
+					this.modifiers.push("alt");
+				}
+				if (data.status && data.status.CMD) {
+					this.modifiers.push("meta");
+				}
+				if (data.status && data.status.CAPS) {
+					this.modifiers.push("capsLock");
+				}
+
 				// SHIFT key
 				if (data.code === 16) {
 					if (data.state === "down") {
@@ -666,6 +695,13 @@ var Webview = SAGE2_App.extend({
 							x: 0, y: 0,
 							canScroll: true
 						});
+					}
+					this.refresh(date);
+				} else if (data.code === 82 && data.state === "down") {
+					// r key
+					if (data.status.ALT) {
+						// ALT-r reloads
+						this.reloadPage({});
 					}
 					this.refresh(date);
 				} else if (data.code === 39 && data.state === "down") {

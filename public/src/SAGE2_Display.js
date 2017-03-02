@@ -9,22 +9,15 @@
 // Copyright (c) 2014-15
 
 /* global ignoreFields, hostAlias, SAGE2WidgetControlInstance */
-/* global makeSvgBackgroundForWidgetConnectors */
-/* global addStyleElementForTitleColor */
+/* global makeSvgBackgroundForWidgetConnectors, addStyleElementForTitleColor */
 /* global removeStyleElementForTitleColor */
-/* global clearConnectorColor */
-/* global moveWidgetToAppConnector */
-/* global showWidgetToAppConnectors */
-/* global getWidgetControlInstanceById */
-/* global mapMoveToSlider */
-/* global getPropertyHandle */
-/* global insertTextIntoTextInputWidget */
-/* global removeWidgetToAppConnector */
+/* global clearConnectorColor, moveWidgetToAppConnector */
+/* global showWidgetToAppConnectors, getWidgetControlInstanceById */
+/* global mapMoveToSlider, getPropertyHandle */
+/* global insertTextIntoTextInputWidget, removeWidgetToAppConnector */
 /* global hideWidgetToAppConnectors */
-/* global createWidgetToAppConnector */
-/* global getTextFromTextInputWidget */
-
-/* global SAGE2_Partition */
+/* global createWidgetToAppConnector, getTextFromTextInputWidget */
+/* global SAGE2_Partition, require */
 
 /* global require */
 
@@ -165,6 +158,19 @@ function setupFocusHandlers() {
 			}
 		}
 	});
+
+	if (__SAGE2__.browser.isElectron) {
+		// Display warning messages from the 'Main' Electron process
+		require('electron').ipcRenderer.on('warning', function(event, message) {
+			var problemDialog = ui.buildMessageBox('problemDialog', message);
+			ui.main.appendChild(problemDialog);
+			document.getElementById('problemDialog').style.display = "block";
+			// close the warning after 2.5 second
+			setTimeout(function() {
+				deleteElement('problemDialog');
+			}, 2500);
+		});
+	}
 }
 
 /**

@@ -11,7 +11,7 @@
 "use strict";
 
 /* global FileManager, SAGE2_interaction, SAGE2DisplayUI */
-/* global removeAllChildren, SAGE2_copyToClipboard */
+/* global removeAllChildren, SAGE2_copyToClipboard, parseBool */
 
 /**
  * Web user interface
@@ -92,6 +92,8 @@ var pointerX, pointerY;
 var sage2Version;
 
 var note;
+
+var viewOnlyMode;
 
 /**
  * Reload the page if a application cache update is available
@@ -280,11 +282,14 @@ function SAGE2_init() {
 		return;
 	}
 
+	// Check if the viewonly flag is passed in the URL
+	viewOnlyMode = parseBool(getParameterByName("viewonly"));
+
 	// Detect which browser is being used
 	SAGE2_browser();
 
 	// Setup focus events
-	if ("Notification" in window) {
+	if ("Notification" in window && !viewOnlyMode) {
 		Notification.requestPermission(function (permission) {
 			console.log('Request', permission);
 		});
@@ -308,7 +313,11 @@ function SAGE2_init() {
 		// Show and hide elements once connect to server
 		document.getElementById('loadingUI').style.display     = "none";
 		document.getElementById('displayUIDiv').style.display  = "block";
-		document.getElementById('menuContainer').style.display = "block";
+		if (viewOnlyMode) {
+			document.getElementById('menuContainer').style.display = "none";
+		} else {
+			document.getElementById('menuContainer').style.display = "block";
+		}
 
 		// Start an initial resize of the UI once we get a connection
 		SAGE2_resize();
@@ -503,6 +512,12 @@ function setupListeners() {
 		// Update the file manager
 		if (fileManager) {
 			fileManager.serverConfiguration(config);
+		}
+
+		if (config.name && config.name !== "Windows" && config.name !== "localhost") {
+			document.title = "SAGE2 - " + config.name;
+		} else {
+			document.title = "SAGE2 - " + config.host;
 		}
 	});
 
@@ -714,30 +729,32 @@ function SAGE2_resize(ratio) {
  * @param ratio {Number} scale factor
  */
 function resizeMenuUI(ratio) {
-	var menuContainer = document.getElementById('menuContainer');
-	var menuUI        = document.getElementById('menuUI');
+	if (!viewOnlyMode) {
+		var menuContainer = document.getElementById('menuContainer');
+		var menuUI        = document.getElementById('menuUI');
 
-	// Extra scaling factor
-	ratio = ratio || 1.0;
+		// Extra scaling factor
+		ratio = ratio || 1.0;
 
-	var menuScale = 1.0;
-	var freeWidth = window.innerWidth * ratio;
-	if (freeWidth < 1200) {
-		// 9 buttons, 120 pixels per button
-		// menuScale = freeWidth / 1080;
+		var menuScale = 1.0;
+		var freeWidth = window.innerWidth * ratio;
+		if (freeWidth < 1200) {
+			// 9 buttons, 120 pixels per button
+			// menuScale = freeWidth / 1080;
 
-		// 10 buttons, 120 pixels per button
-		menuScale = freeWidth / 1200;
+			// 10 buttons, 120 pixels per button
+			menuScale = freeWidth / 1200;
+		}
+
+		menuUI.style.webkitTransform = "scale(" + menuScale + ")";
+		menuUI.style.mozTransform = "scale(" + menuScale + ")";
+		menuUI.style.transform = "scale(" + menuScale + ")";
+		menuContainer.style.height = parseInt(86 * menuScale, 10) + "px";
+
+		// Center the menu bar
+		var mw = menuUI.getBoundingClientRect().width;
+		menuContainer.style.marginLeft = Math.round((window.innerWidth - mw) / 2) + "px";
 	}
-
-	menuUI.style.webkitTransform = "scale(" + menuScale + ")";
-	menuUI.style.mozTransform = "scale(" + menuScale + ")";
-	menuUI.style.transform = "scale(" + menuScale + ")";
-	menuContainer.style.height = parseInt(86 * menuScale, 10) + "px";
-
-	// Center the menu bar
-	var mw = menuUI.getBoundingClientRect().width;
-	menuContainer.style.marginLeft = Math.round((window.innerWidth - mw) / 2) + "px";
 }
 
 /**
@@ -1159,7 +1176,6 @@ function mouseCheck(event) {
 		return;
 	}
 	hasMouse = true;
-	document.title = "SAGE2 UI - Desktop";
 	console.log("Detected as desktop device");
 
 	document.addEventListener('mousedown',  pointerPress,    false);
@@ -1209,8 +1225,8 @@ function handleClick(element) {
 	} else if (element.id === "applauncher"  || element.id === "applauncherContainer"  || element.id === "applauncherLabel") {
 		wsio.emit('requestAvailableApplications');
 	} else if (element.id === "mediabrowser" || element.id === "mediabrowserContainer" || element.id === "mediabrowserLabel") {
-		if (!hasMouse && !__SAGE2__.browser.isIPad &&
-			!__SAGE2__.browser.isAndroidTablet) {
+		if (!hasMouse) {
+			//  && !__SAGE2__.browser.isIPad && !__SAGE2__.browser.isAndroidTablet) {
 			// wsio.emit('requestStoredFiles');
 			showDialog('mediaBrowserDialog');
 		} else {
@@ -2500,18 +2516,32 @@ function setRmbContextMenuEntries(data) {
 	for (i = 0; i < entriesToAdd.length; i++) {
 		workingDiv = document.createElement('div');
 		// unique entry id
-		workingDiv.id = 'rmbContextMenuEntry' + i; // unique entry id
+		workingDiv.id = 'rmbContextMenuEntry' + i;
 		if (typeof entriesToAdd[i].entryColor === "string") {
-			workingDiv.startingBgColor = entriesToAdd[i].entryColor; // use given color if specified
+			// use given color if specified
+			workingDiv.startingBgColor = entriesToAdd[i].entryColor;
 		} else {
-			workingDiv.startingBgColor = "#FFF8E1"; // start as off-white color
+			// start as off-white color
+			workingDiv.startingBgColor = "#FFF8E1";
 		}
 		workingDiv.style.background = workingDiv.startingBgColor;
+		// Add a little padding
+		workingDiv.style.padding = "0 5px 0 5px";
+		// Align main text to the left
+		workingDiv.style.textAlign = "left";
 		// special case for a separator (line) entry
 		if (entriesToAdd[i].description === "separator") {
 			workingDiv.innerHTML = "<hr>";
 		} else {
-			workingDiv.innerHTML = "&nbsp&nbsp&nbsp" + entriesToAdd[i].description + "&nbsp&nbsp&nbsp";
+			if (entriesToAdd[i].accelerator) {
+				// Add description of the keyboard shortcut
+				workingDiv.innerHTML = "<p style='float: left;'>" + entriesToAdd[i].description + "</p>";
+				workingDiv.innerHTML += "<p style='float: right; padding-left: 5px;'> [" + entriesToAdd[i].accelerator + "]</p>";
+				workingDiv.innerHTML += "<div style='clear: both;'></div>";
+			} else {
+				// or just plain text
+				workingDiv.innerHTML = entriesToAdd[i].description;
+			}
 		}
 		// add input field if app says to.
 		workingDiv.inputField = false;
@@ -2522,7 +2552,8 @@ function setRmbContextMenuEntries(data) {
 			inputField.id = workingDiv.id + "Input";
 			// check if the data has a value field
 			inputField.defaultValue = entriesToAdd[i].value || "";
-			if (entriesToAdd[i].inputFieldSize) { // if specified state input field size
+			if (entriesToAdd[i].inputFieldSize) {
+				// if specified state input field size
 				inputField.size = entriesToAdd[i].inputFieldSize;
 			} else {
 				inputField.size = 5;
