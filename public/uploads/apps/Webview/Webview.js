@@ -26,7 +26,7 @@ var Webview = SAGE2_App.extend({
 			this.layer.appendChild(this.pre);
 			this.console = false;
 			// add the preload clause
-			this.element.preload = this.resrcPath + "SAGE2_script_supplement.js"; // does this work per page?
+			// this.element.preload = this.resrcPath + "SAGE2_script_supplement.js";
 		} else {
 			// Create div into the DOM
 			this.SAGE2Init("div", data);
@@ -49,7 +49,7 @@ var Webview = SAGE2_App.extend({
 		this.element.plugins   = "on";
 		this.element.allowpopups = false;
 		this.element.allowfullscreen = false;
-		this.element.nodeintegration = 0;
+		this.element.nodeintegration = 1;
 		// disable fullscreen
 		this.element.fullscreenable = false;
 		this.element.fullscreen = false;
@@ -301,121 +301,6 @@ var Webview = SAGE2_App.extend({
 		this.element.executeJavaScript(this.codeToInject);
 	},
 
-	/**
-	erase me, this entire function should be erased if test is ok
-	Initial testing reveals:
-		the page is for most intents and purposes fully visible.
-			the exception is if there is a scroll bar.
-		javascript operates in the given browser.
-		different displays will still have the same coordinate system
-			exception: random content can alter coordinate locations
-
-		sendInputEvent
-			accelerator events have names http://electron.atom.io/docs/api/accelerator/
-			SAGE2 buttons can't pass symbols
-
-
-	Things to look out for:
-		Most errors are silent
-			might be possible to use console-message event: http://electron.atom.io/docs/api/web-view-tag/#event-console-message
-		alert effects still produce another window on display host
-			AND pause the page
-
-	*/
-	codeInjectOld: function() {
-		/* eslint-disable */
-		this.element.executeJavaScript(
-			'\
-			var s2InjectForKeys = {};\
-			\
-			document.addEventListener("keypress", function(e) {\
-				var kue = new CustomEvent("keydown", {bubbles:true});\
-				kue.target = e.target;\
-				kue.view = e.view;\
-				kue.detail = e.detail;\
-				kue.char = e.char;\
-				kue.key = e.key;\
-				kue.charCode = e.charCode;\
-				kue.keyCode = e.keyCode;\
-				kue.which = e.which;\
-				kue.location = e.location;\
-				kue.repeat = e.repeat;\
-				kue.locale = e.locale;\
-				kue.ctrlKey = e.ctrlKey;\
-				kue.shiftKey = e.shiftKey;\
-				kue.altKey = e.altKey;\
-				kue.metaKey = e.metaKey;\
-				if (e.target.value == undefined) {\
-						s2InjectForKeys.lastClickedElement = e.target;\
-						s2InjectForKeys.lastClickedElement.dispatchEvent(kue);\
-						e.preventDefault();\
-					/*if (s2InjectForKeys.lastClickedElement != null) {\
-						s2InjectForKeys.lastClickedElement.dispatchEvent(kue);\
-						e.preventDefault();\
-					}*/\
-				}\
-			});\
-			document.addEventListener("click", function(e) {\
-				s2InjectForKeys.lastClickedElement = document.elementFromPoint(e.clientX, e.clientY);\
-			});\
-			\
-			document.addEventListener("keydown", function(e) {\
-				/* Shift */\
-				if (e.keyCode == 16) {\
-					s2InjectForKeys.shift = true;\
-					return;\
-				}\
-				/* Backspace */\
-				if (e.keyCode == 8) {\
-					s2InjectForKeys.lastClickedElement.value = s2InjectForKeys.lastClickedElement.value.substring(0, s2InjectForKeys.lastClickedElement.value.length - 1);\
-					return;\
-				}\
-				/* Dont set keypress value if there was no clicked div */\
-				if (s2InjectForKeys.lastClickedElement.value == undefined) {\
-					return; \
-				}\
-				/* By default, characters are capitalized, if shift is not down, lower case them. */\
-				var sendChar = String.fromCharCode(e.keyCode);\
-				if (!s2InjectForKeys.shift) {\
-					sendChar = sendChar.toLowerCase();\
-				} else if(e.keyCode == 49) { /* 1 */\
-					sendChar =  "!";\
-				} else if(e.keyCode == 50) { /* 2 */\
-					sendChar =  "@";\
-				} else if(e.keyCode == 51) { /* 3 */\
-					sendChar =  "#";\
-				} else if(e.keyCode == 52) { /* 4 */\
-					sendChar =  "$";\
-				} else if(e.keyCode == 53) { /* 5 */\
-					sendChar =  "%";\
-				} else if(e.keyCode == 54) { /* 6 */\
-					sendChar =  "^";\
-				} else if(e.keyCode == 55) { /* 7 */\
-					sendChar =  "&";\
-				} else if(e.keyCode == 56) { /* 8 */\
-					sendChar =  "*";\
-				} else if(e.keyCode == 57) { /* 9 */\
-					sendChar =  "(";\
-				} else if(e.keyCode == 48) { /* 0 */\
-					sendChar =  ")";\
-				}\
-				if (s2InjectForKeys.lastClickedElement.value != undefined) {\
-				} else {\
-				}\
-			});\
-			document.addEventListener("keyup", function(e) {\
-				if (e.keyCode == 0x10) {\
-					s2InjectForKeys.shift = false;\
-				}\
-				if (e.keyCode == 8) {\
-					s2InjectForKeys.lastClickedElement.value = s2InjectForKeys.lastClickedElement.value.substring(0, s2InjectForKeys.lastClickedElement.value.length - 1);\
-				}\
-			});\
-			'
-		);
-		/* eslint-enable */
-	},
-
 	getContextEntries: function() {
 		var entries = [];
 		var entry;
@@ -539,7 +424,7 @@ var Webview = SAGE2_App.extend({
 		});
 		// erase me, these are just for testing data pass back
 		entries.push({
-			description: "Webview talk back: count tags",
+			description: "Webview talk back: what is location",
 			callback: "testWebviewTalkBack",
 			parameters: {
 				type: "whereAmI"
@@ -547,7 +432,7 @@ var Webview = SAGE2_App.extend({
 		});
 		// erase me, these are just for testing data pass back
 		entries.push({
-			description: "Webview talk back: count tags",
+			description: "Webview talk back: give back object",
 			callback: "testWebviewTalkBack",
 			parameters: {
 				type: "objectRetrievalTest"
@@ -561,7 +446,7 @@ var Webview = SAGE2_App.extend({
 
 	// erase me, just for testing data passing
 	testWebviewTalkBack: function(responseObject) {
-		webview.send(responseObject.type, "div");
+		this.element.send(responseObject.type, "div");
 	},
 
 
