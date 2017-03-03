@@ -25,6 +25,8 @@ var Webview = SAGE2_App.extend({
 			// Add it to the layer
 			this.layer.appendChild(this.pre);
 			this.console = false;
+			// add the preload clause
+			this.element.preload = this.resrcPath + "SAGE2_script_supplement.js"; // does this work per page?
 		} else {
 			// Create div into the DOM
 			this.SAGE2Init("div", data);
@@ -108,7 +110,6 @@ var Webview = SAGE2_App.extend({
 			_this.element.setZoomFactor(_this.state.zoom);
 			// sync the state object
 			_this.SAGE2Sync(false);
-			_this.codeInject();
 			// update the context menu with the current URL
 			_this.getFullContextMenuAndUpdate();
 		});
@@ -170,6 +171,16 @@ var Webview = SAGE2_App.extend({
 			} else {
 				console.log('Webview>	Not http URL, not opening', event.url);
 			}
+		});
+
+		// erase me, this is mainly for testing, but if it works out, maybe not necessary
+		// testing data send back.
+		this.element.addEventListener("ipc-message",function(event){
+		    console.log(event);
+		    if (typeof event === "object") {
+		    	console.log("Detected an object");
+		    	console.dir(event);
+		    }
 		});
 	},
 
@@ -256,6 +267,7 @@ var Webview = SAGE2_App.extend({
 	},
 
 	/**
+	erase me, this entire function should be erased if test is ok
 	Initial testing reveals:
 		the page is for most intents and purposes fully visible.
 			the exception is if there is a scroll bar.
@@ -275,7 +287,7 @@ var Webview = SAGE2_App.extend({
 			AND pause the page
 
 	*/
-	codeInject: function() {
+	codeInjectOld: function() {
 		/* eslint-disable */
 		this.element.executeJavaScript(
 			'\
@@ -481,10 +493,42 @@ var Webview = SAGE2_App.extend({
 			}
 		});
 
+
+		// erase me, these are just for testing data pass back
+		entries.push({
+			description: "Webview talk back: count tags",
+			callback: "testWebviewTalkBack",
+			parameters: {
+				type: "getDataFromWebview"
+			}
+		});
+		// erase me, these are just for testing data pass back
+		entries.push({
+			description: "Webview talk back: count tags",
+			callback: "testWebviewTalkBack",
+			parameters: {
+				type: "whereAmI"
+			}
+		});
+		// erase me, these are just for testing data pass back
+		entries.push({
+			description: "Webview talk back: count tags",
+			callback: "testWebviewTalkBack",
+			parameters: {
+				type: "objectRetrievalTest"
+			}
+		});
+
 		// entries.push({description: "separator"});
 
 		return entries;
 	},
+
+	// erase me, just for testing data passing
+	testWebviewTalkBack: function(responseObject) {
+		webview.send(responseObject.type, "div");
+	},
+
 
 	/**
 	 * Reload the content of the webview
