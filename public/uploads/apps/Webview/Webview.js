@@ -110,6 +110,7 @@ var Webview = SAGE2_App.extend({
 			_this.element.setZoomFactor(_this.state.zoom);
 			// sync the state object
 			_this.SAGE2Sync(false);
+			_this.getInjectCodeIfNecessaryThenInject();
 			// update the context menu with the current URL
 			_this.getFullContextMenuAndUpdate();
 		});
@@ -264,6 +265,40 @@ var Webview = SAGE2_App.extend({
 				console.log("sendAlertCode callback initiated");
 			}
 		);
+	},
+
+	/*
+		Checks if already collected data from file.
+		If not,
+			Uses xhr to access file
+	*/
+	getInjectCodeIfNecessaryThenInject: function() {
+		if(this.codeToInject === undefined || this.codeToInject === null) {
+			var _this = this;
+			var xhr = new XMLHttpRequest();
+			xhr.open("GET", this.resrcPath + "SAGE2_script_supplement.js", true);
+			xhr.onreadystatechange = function() {
+				if (xhr.readyState === 4 && xhr.status === 200) { // done and done
+					_this.codeToInject = xhr.responseText;
+					if (_this.codeToInject.indexOf("//") !== -1) {
+						console.log("Webview> Warning, script supplement contains // comment which may break it");
+					}
+					_this.codeInject();
+				}
+			};
+			xhr.send();
+			return;
+		} else {
+			this.codeInject();
+		}
+	},
+
+	/*
+		This should be called from getInjectCodeIfNecessaryThenInject().
+		It will be called in line if the code was already retrieved.
+	*/
+	codeInject: function() {
+		this.element.executeJavaScript(this.codeToInject);
 	},
 
 	/**
