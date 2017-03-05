@@ -263,7 +263,7 @@ var Webview = SAGE2_App.extend({
 			Uses xhr to access file
 	*/
 	getInjectCodeIfNecessaryThenInject: function() {
-		if(this.codeToInject === undefined || this.codeToInject === null) {
+		if (this.codeToInject === undefined || this.codeToInject === null) {
 			var _this = this;
 			var xhr = new XMLHttpRequest();
 			xhr.open("GET", this.resrcPath + "SAGE2_script_supplement.js", true);
