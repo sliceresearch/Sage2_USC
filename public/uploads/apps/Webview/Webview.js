@@ -173,16 +173,6 @@ var Webview = SAGE2_App.extend({
 				console.log('Webview>	Not http URL, not opening', event.url);
 			}
 		});
-
-		// erase me, this is mainly for testing, but if it works out, maybe not necessary
-		// testing data send back.
-		this.element.addEventListener("ipc-message",function(event){
-		    console.log(event);
-		    if (typeof event === "object") {
-		    	console.log("Detected an object");
-		    	console.dir(event);
-		    }
-		});
 	},
 
 	/**
@@ -413,42 +403,10 @@ var Webview = SAGE2_App.extend({
 			}
 		});
 
-
-		// erase me, these are just for testing data pass back
-		entries.push({
-			description: "Webview talk back: count tags",
-			callback: "testWebviewTalkBack",
-			parameters: {
-				type: "getDataFromWebview"
-			}
-		});
-		// erase me, these are just for testing data pass back
-		entries.push({
-			description: "Webview talk back: what is location",
-			callback: "testWebviewTalkBack",
-			parameters: {
-				type: "whereAmI"
-			}
-		});
-		// erase me, these are just for testing data pass back
-		entries.push({
-			description: "Webview talk back: give back object",
-			callback: "testWebviewTalkBack",
-			parameters: {
-				type: "objectRetrievalTest"
-			}
-		});
-
 		// entries.push({description: "separator"});
 
 		return entries;
 	},
-
-	// erase me, just for testing data passing
-	testWebviewTalkBack: function(responseObject) {
-		this.element.send(responseObject.type, "div");
-	},
-
 
 	/**
 	 * Reload the content of the webview

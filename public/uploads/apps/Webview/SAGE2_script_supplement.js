@@ -27,6 +27,7 @@ document.addEventListener("keypress", function(e) {
 		}*/
 	}
 });
+
 document.addEventListener("click", function(e) {
 	s2InjectForKeys.lastClickedElement = document.elementFromPoint(e.clientX, e.clientY);
 });
@@ -75,6 +76,7 @@ document.addEventListener("keydown", function(e) {
 	} else {
 	}
 });
+
 document.addEventListener("keyup", function(e) {
 	if (e.keyCode == 0x10) {
 		s2InjectForKeys.shift = false;
@@ -82,25 +84,4 @@ document.addEventListener("keyup", function(e) {
 	if (e.keyCode == 8) {
 		s2InjectForKeys.lastClickedElement.value = s2InjectForKeys.lastClickedElement.value.substring(0, s2InjectForKeys.lastClickedElement.value.length - 1);
 	}
-});
-
-const {ipcRenderer} = require('electron');
-
-ipcRenderer.on('getDataFromWebview', function(event, data){
-	var tagsOfType = document.body.getElementsByTagName(data); 
-    ipcRenderer.sendToHost("The Webview has " + tagsOfType.length + " elements of tag " + data);
-});
-
-ipcRenderer.on("whereAmI",function(event,data){
-    ipcRenderer.sendToHost("Location:" + window.location);
-});
-
-ipcRenderer.on("objectRetrievalTest",function(event,data){
-	var obj = {};
-	obj.location = window.location;
-	obj.divCount = document.body.getElementsByTagName(data).length;
-	obj.a = "alpha";
-	obj.b = "beta";
-	obj.c = "charlie";
-    ipcRenderer.sendToHost(obj);
 });
