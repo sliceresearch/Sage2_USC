@@ -119,6 +119,9 @@ function FileManager(wsio, mydiv, uniqueID) {
 			{id: "about_menu", value: "About"}
 		]}
 	];
+
+	this.persistMenuData = menu_data; // keep the reference to modify later.
+
 	var mymenu = {
 		id: "mymenu",
 		view: "menu",
@@ -569,6 +572,8 @@ function FileManager(wsio, mydiv, uniqueID) {
 			wsio.emit('deleteAllPartitions');
 		} else if (evt === "partitiongrab_menu") {
 			wsio.emit('partitionsGrabAllContent');
+		} else if (evt === "wallScreenShot_menu") {
+			wsio.emit("startWallScreenShot");
 		} else {
 			// dunno
 		}

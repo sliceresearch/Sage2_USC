@@ -792,6 +792,9 @@ function wsAddClient(wsio, data) {
 	}
 	// set if capable of a screenshot (is Electron and can access require('electron'))
 	wsio.capableOfScreenShot = data.capableOfScreenShot;
+	if (wsio.clientType === "sageUI") {
+		wsReportIfCanWallScreenShot(wsio, {});
+	}
 }
 
 /**
