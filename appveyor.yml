@@ -19,7 +19,7 @@ init:
   - move ffmpeg-3.2.2-win64-dev\lib C:\Dev\ffmpeg-win64-dev
   - move ffmpeg-3.2.2-win64-dev\include C:\Dev\ffmpeg-win64-dev
   - del /Q *.7z
-  - rmdir /Q /S ffmpeg-3.2-win64-dev
+  - rmdir /Q /S ffmpeg-3.2.2-win64-dev
   - dir C:\Dev
   - dir C:\Dev\ffmpeg-win64-dev\include
   - dir C:\Dev\ffmpeg-win64-dev\lib
