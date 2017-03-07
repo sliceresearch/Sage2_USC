@@ -25,6 +25,8 @@ var Webview = SAGE2_App.extend({
 			// Add it to the layer
 			this.layer.appendChild(this.pre);
 			this.console = false;
+			// add the preload clause
+			// this.element.preload = this.resrcPath + "SAGE2_script_supplement.js";
 		} else {
 			// Create div into the DOM
 			this.SAGE2Init("div", data);
@@ -47,7 +49,7 @@ var Webview = SAGE2_App.extend({
 		this.element.plugins   = "on";
 		this.element.allowpopups = false;
 		this.element.allowfullscreen = false;
-		this.element.nodeintegration = 0;
+		this.element.nodeintegration = 1;
 		// disable fullscreen
 		this.element.fullscreenable = false;
 		this.element.fullscreen = false;
@@ -108,7 +110,7 @@ var Webview = SAGE2_App.extend({
 			_this.element.setZoomFactor(_this.state.zoom);
 			// sync the state object
 			_this.SAGE2Sync(false);
-			_this.codeInject();
+			_this.getInjectCodeIfNecessaryThenInject();
 			// update the context menu with the current URL
 			_this.getFullContextMenuAndUpdate();
 		});
@@ -255,118 +257,38 @@ var Webview = SAGE2_App.extend({
 		);
 	},
 
-	/**
-	Initial testing reveals:
-		the page is for most intents and purposes fully visible.
-			the exception is if there is a scroll bar.
-		javascript operates in the given browser.
-		different displays will still have the same coordinate system
-			exception: random content can alter coordinate locations
+	/*
+		Checks if already collected data from file.
+		If not,
+			Uses xhr to access file
+	*/
+	getInjectCodeIfNecessaryThenInject: function() {
+		if (this.codeToInject === undefined || this.codeToInject === null) {
+			var _this = this;
+			var xhr = new XMLHttpRequest();
+			xhr.open("GET", this.resrcPath + "SAGE2_script_supplement.js", true);
+			xhr.onreadystatechange = function() {
+				if (xhr.readyState === 4 && xhr.status === 200) { // done and done
+					_this.codeToInject = xhr.responseText;
+					if (_this.codeToInject.indexOf("//") !== -1) {
+						console.log("Webview> Warning, script supplement contains // comment which may break it");
+					}
+					_this.codeInject();
+				}
+			};
+			xhr.send();
+			return;
+		} else {
+			this.codeInject();
+		}
+	},
 
-		sendInputEvent
-			accelerator events have names http://electron.atom.io/docs/api/accelerator/
-			SAGE2 buttons can't pass symbols
-
-
-	Things to look out for:
-		Most errors are silent
-			might be possible to use console-message event: http://electron.atom.io/docs/api/web-view-tag/#event-console-message
-		alert effects still produce another window on display host
-			AND pause the page
-
+	/*
+		This should be called from getInjectCodeIfNecessaryThenInject().
+		It will be called in line if the code was already retrieved.
 	*/
 	codeInject: function() {
-		/* eslint-disable */
-		this.element.executeJavaScript(
-			'\
-			var s2InjectForKeys = {};\
-			\
-			document.addEventListener("keypress", function(e) {\
-				var kue = new CustomEvent("keydown", {bubbles:true});\
-				kue.target = e.target;\
-				kue.view = e.view;\
-				kue.detail = e.detail;\
-				kue.char = e.char;\
-				kue.key = e.key;\
-				kue.charCode = e.charCode;\
-				kue.keyCode = e.keyCode;\
-				kue.which = e.which;\
-				kue.location = e.location;\
-				kue.repeat = e.repeat;\
-				kue.locale = e.locale;\
-				kue.ctrlKey = e.ctrlKey;\
-				kue.shiftKey = e.shiftKey;\
-				kue.altKey = e.altKey;\
-				kue.metaKey = e.metaKey;\
-				if (e.target.value == undefined) {\
-						s2InjectForKeys.lastClickedElement = e.target;\
-						s2InjectForKeys.lastClickedElement.dispatchEvent(kue);\
-						e.preventDefault();\
-					/*if (s2InjectForKeys.lastClickedElement != null) {\
-						s2InjectForKeys.lastClickedElement.dispatchEvent(kue);\
-						e.preventDefault();\
-					}*/\
-				}\
-			});\
-			document.addEventListener("click", function(e) {\
-				s2InjectForKeys.lastClickedElement = document.elementFromPoint(e.clientX, e.clientY);\
-			});\
-			\
-			document.addEventListener("keydown", function(e) {\
-				/* Shift */\
-				if (e.keyCode == 16) {\
-					s2InjectForKeys.shift = true;\
-					return;\
-				}\
-				/* Backspace */\
-				if (e.keyCode == 8) {\
-					s2InjectForKeys.lastClickedElement.value = s2InjectForKeys.lastClickedElement.value.substring(0, s2InjectForKeys.lastClickedElement.value.length - 1);\
-					return;\
-				}\
-				/* Dont set keypress value if there was no clicked div */\
-				if (s2InjectForKeys.lastClickedElement.value == undefined) {\
-					return; \
-				}\
-				/* By default, characters are capitalized, if shift is not down, lower case them. */\
-				var sendChar = String.fromCharCode(e.keyCode);\
-				if (!s2InjectForKeys.shift) {\
-					sendChar = sendChar.toLowerCase();\
-				} else if(e.keyCode == 49) { /* 1 */\
-					sendChar =  "!";\
-				} else if(e.keyCode == 50) { /* 2 */\
-					sendChar =  "@";\
-				} else if(e.keyCode == 51) { /* 3 */\
-					sendChar =  "#";\
-				} else if(e.keyCode == 52) { /* 4 */\
-					sendChar =  "$";\
-				} else if(e.keyCode == 53) { /* 5 */\
-					sendChar =  "%";\
-				} else if(e.keyCode == 54) { /* 6 */\
-					sendChar =  "^";\
-				} else if(e.keyCode == 55) { /* 7 */\
-					sendChar =  "&";\
-				} else if(e.keyCode == 56) { /* 8 */\
-					sendChar =  "*";\
-				} else if(e.keyCode == 57) { /* 9 */\
-					sendChar =  "(";\
-				} else if(e.keyCode == 48) { /* 0 */\
-					sendChar =  ")";\
-				}\
-				if (s2InjectForKeys.lastClickedElement.value != undefined) {\
-				} else {\
-				}\
-			});\
-			document.addEventListener("keyup", function(e) {\
-				if (e.keyCode == 0x10) {\
-					s2InjectForKeys.shift = false;\
-				}\
-				if (e.keyCode == 8) {\
-					s2InjectForKeys.lastClickedElement.value = s2InjectForKeys.lastClickedElement.value.substring(0, s2InjectForKeys.lastClickedElement.value.length - 1);\
-				}\
-			});\
-			'
-		);
-		/* eslint-enable */
+		this.element.executeJavaScript(this.codeToInject);
 	},
 
 	getContextEntries: function() {
