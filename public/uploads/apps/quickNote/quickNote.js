@@ -165,7 +165,7 @@ var quickNote = SAGE2_App.extend({
 		var min    = parseInt(parts[3].substring(2, 4)); // HH[MM]
 		// Moment conversion
 		var momentTime = {
-			month: month,
+			month: month - 1,
 			day: day,
 			hour: hour,
 			minute: min
