@@ -54,6 +54,7 @@ function SAGE2_init() {
 	var session = getParameterByName("session");
 	var page    = getParameterByName("page");
 	var hash    = getParameterByName("hash");
+	var mouse	= getParameterByName("mouse");
 
 	// Is there a session value
 	if (session !== "") {
@@ -63,6 +64,8 @@ function SAGE2_init() {
 	}
 	// Is there a page value
 	if (page !== "") {
+		if(mouse)
+			page += '&mouse=' + mouse;
 		pageRedirect = page;
 	}
 	// Is there a hash value
