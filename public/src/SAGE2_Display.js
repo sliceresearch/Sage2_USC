@@ -352,9 +352,9 @@ function setupUIMouse() {
 		rootelement.addEventListener('wheel',      emitter.pointerScroll,   true);
 		//rootelement.addEventListener('click',      emitter.pointerClick,    false);
 		rootelement.addEventListener('dblclick',   emitter.pointerDblClick, true);
-		rootelement.addEventListener('keyup',      emitter.pointerKeyUp, true);
-		rootelement.addEventListener('keydown',    emitter.pointerKeyDown,  true);
-		rootelement.addEventListener('keypress',    emitter.pointerKeyPress,  true);
+		document.addEventListener('keyup',      emitter.pointerKeyUp, true);
+		document.addEventListener('keydown',    emitter.pointerKeyDown,  true);
+		document.addEventListener('keypress',    emitter.pointerKeyPress,  true);
 
 		rootelement.addEventListener('mouseenter', emitter.startMouse,   false);
 		rootelement.addEventListener('mouseleave', emitter.stopMouse,   false);
@@ -1838,6 +1838,8 @@ function SAGE2_MouseEventEmitter(wsio) {
 	}
 
 	this.startMouseMethod = function(event) {
+		if(this.pointerActive)
+			return;
 		this.pointerActive = true;
 
 		if(!event.isTrusted) // don't react to custom software events like SAGE2_MouseEventEmitter
