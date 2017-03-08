@@ -1734,6 +1734,10 @@ function SAGE2_MouseEventEmitter(wsio) {
 		var diff = now - this.now;
 		// count the events
 		this.cnt++;
+		
+		this.deltaX += movementX;
+		this.deltaY += movementY;
+
 		if (diff >= (1000 / this.sendFrequency)) {
 			// Calculate the offset
 			// increase the speed for touch devices
@@ -1749,12 +1753,8 @@ function SAGE2_MouseEventEmitter(wsio) {
 			// Reset the time and count
 			this.now = now;
 			this.cnt = 0;
-		} else {
-			// if it's not time, just accumulate
-			this.deltaX += movementX;
-			this.deltaY += movementY;
-		}
-		
+		} 
+
 		event.preventDefault();
 		event.stopPropagation();
 	}
