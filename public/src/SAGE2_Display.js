@@ -62,7 +62,7 @@ var uiTimerDelay;
 var uiwsio;
 var useMouse;
 var hasMouse = true;
-var emitter;
+//var emitter;
 var pointerLabel = "MyTestPointer";
 var pointerColor = "#FF0000";
 var rootelement;
@@ -290,11 +290,22 @@ function SAGE2_init() {
 		}, 2000);
 	});
 
+	if(useMouse) {
 
-	if(useMouse)
-		setupUIMouse();
+		showDialog("settingsDialog");
+		var settingsbutton = document.getElementById("settingsCloseBtn");
+		if(settingsbutton)
+			settingsbutton.addEventListener('click', function(event){
 
+				hideDialog('settingsDialog');
+				pointerLabel = document.getElementById("sage2PointerLabel").value;
+				pointerColor = document.getElementById("sage2PointerColor").value;
+				setupUIMouse();		
 
+			});
+
+//		setupUIMouse();
+	}
 
 }
 
@@ -332,7 +343,7 @@ function setupUIMouse() {
 		});	
 
 		// the emitter holds all functions for mouseevent emitting to server
-		emitter = new SAGE2_MouseEventEmitter(uiwsio);
+		var emitter = new SAGE2_MouseEventEmitter(uiwsio);
 
 		rootelement = document.getElementById("main");
 		rootelement.addEventListener('mousedown',  emitter.pointerPress,    true);
@@ -1684,8 +1695,10 @@ function SAGE2_MouseEventEmitter(wsio) {
 	this.sendFrequency = 30;
 	// Timeout for when scrolling ends
 	this.scrollTimeId = null;
+	this.pointerActive = false;
 
 	this.pointerPressMethod = function(event) {
+		this.checkActivePointer(event);
 		if(!event.isTrusted) // don't react to custom software events like SAGE2_MouseEventEmitter
 			return;		
 		var btn = (event.button === 0) ? "left" : (event.button === 1) ? "middle" : "right";
@@ -1695,6 +1708,7 @@ function SAGE2_MouseEventEmitter(wsio) {
 	}
 
 	this.pointerReleaseMethod = function(event) {
+		this.checkActivePointer(event);
 		if(!event.isTrusted) // don't react to custom software events like SAGE2_MouseEventEmitter
 			return;		
 		var btn = (event.button === 0) ? "left" : (event.button === 1) ? "middle" : "right";
@@ -1704,15 +1718,16 @@ function SAGE2_MouseEventEmitter(wsio) {
 	}
 
 	this.pointerMoveMethod = function(event) {
+		this.checkActivePointer(event);
 		if(!event.isTrusted) // don't react to custom software events like SAGE2_MouseEventEmitter
 			return;		
-		console.log("pointermove");
+		//console.log("pointermove");
 		var movementX = event.movementX || event.mozMovementX || event.webkitMovementX || 0;
 		var movementY = event.movementY || event.mozMovementY || event.webkitMovementY || 0;
 
-		this.wsio.emit('pointerMove', {dx: movementX, dy: movementY});
+		//this.wsio.emit('pointerMove', {dx: movementX, dy: movementY});
 		//this.wsio.emit('pointerPosition', {pointerX: event.clientX, pointerY: event.clientY});
-		/*
+		
 		// Event filtering
 		var now  = Date.now();
 		// time difference since last event
@@ -1727,6 +1742,7 @@ function SAGE2_MouseEventEmitter(wsio) {
 			var py  = this.deltaY * scale;
 			// Send the event
 			this.wsio.emit('pointerMove', {dx: Math.round(px), dy: Math.round(py)});
+			console.log("pointermove: " + px + ' ' + py);
 			// Reset the accumulators
 			this.deltaX = 0;
 			this.deltaY = 0;
@@ -1738,12 +1754,13 @@ function SAGE2_MouseEventEmitter(wsio) {
 			this.deltaX += movementX;
 			this.deltaY += movementY;
 		}
-		*/
+		
 		event.preventDefault();
 		event.stopPropagation();
 	}
 
 	this.pointerScrollMethod = function(event) {
+		this.checkActivePointer(event);
 		if (this.scrollTimeId === null) {
 			this.wsio.emit('pointerScrollStart');
 		} else {
@@ -1762,21 +1779,23 @@ function SAGE2_MouseEventEmitter(wsio) {
 	}
 
 	this.pointerClickMethod = function(event) {
-	
+		this.checkActivePointer(event);
 
 		event.preventDefault();
 
 	}
 
 	this.pointerDblClickMethod = function(event) {
-	
+		this.checkActivePointer(event);
 		this.wsio.emit('pointerDblClick');
 		event.preventDefault();
 	}
 
 	this.pointerKeyDownMethod = function(event) {
-		
+		this.checkActivePointer(event);
 		var code = parseInt(event.keyCode, 10);
+
+		console.log('key down ' +  code);
 
 		this.wsio.emit('keyDown', {code: code});
 		if (code === 9) { // tab is a special case - must emulate keyPress event
@@ -1795,7 +1814,11 @@ function SAGE2_MouseEventEmitter(wsio) {
 
 
 	this.pointerKeyUpMethod = function(event) {
+		this.checkActivePointer(event);
 		var code = parseInt(event.keyCode, 10);
+
+		console.log('key up ' +  code);
+
 		if (code !== 27) {
 			this.wsio.emit('keyUp', {code: code});
 		}	
@@ -1804,13 +1827,19 @@ function SAGE2_MouseEventEmitter(wsio) {
 	}
 
 	this.pointerKeyPressMethod = function(event) {
+		this.checkActivePointer(event);
 		var code = parseInt(event.charCode, 10);
+
+		console.log('key press ' +  code);
+		
 		this.wsio.emit('keyPress', {code: code, character: String.fromCharCode(code)});
 
 		event.preventDefault();
 	}
 
 	this.startMouseMethod = function(event) {
+		this.pointerActive = true;
+
 		if(!event.isTrusted) // don't react to custom software events like SAGE2_MouseEventEmitter
 			return;		
 		console.log("starting SAGE2 mouse pointer");
@@ -1824,6 +1853,8 @@ function SAGE2_MouseEventEmitter(wsio) {
 
 
 	this.stopMouseMethod = function(event) {
+		this.pointerActive = false;
+
 		if(!event.isTrusted) // don't react to custom software events like SAGE2_MouseEventEmitter // don't react to custom software events like SAGE2_MouseEventEmitter
 			return;
 		console.log("stopping SAGE2 mouse pointer");
@@ -1833,6 +1864,11 @@ function SAGE2_MouseEventEmitter(wsio) {
 		//document.exitPointerLock();
 	}
 
+	this.checkActivePointer = function(event) {
+		if(! this.pointerActive) {
+			this.startMouseMethod(event);
+		}
+	}
 
 	this.pointerPress = this.pointerPressMethod.bind(this);
 	this.pointerRelease = this.pointerReleaseMethod.bind(this);
@@ -1847,4 +1883,31 @@ function SAGE2_MouseEventEmitter(wsio) {
 	this.stopMouse = this.stopMouseMethod.bind(this);
 
 
+}
+
+/**
+ * Show a given dialog
+ *
+ * @method showDialog
+ * @param id {String} element to show
+ */
+function showDialog(id) {
+	//openDialog = id;
+	document.getElementById('blackoverlay').style.display = "block";
+	document.getElementById(id).style.display = "block";
+}
+
+/**
+ * Show a given dialog
+ *
+ * @method hideDialog
+ * @param id {String} element to show
+ */
+function hideDialog(id) {
+	//openDialog = null;
+	document.getElementById('blackoverlay').style.display = "none";
+	document.getElementById(id).style.display = "none";
+	if (id == 'uiDrawZone') {
+		uiDrawZoneRemoveSelfAsClient();
+	}
 }
