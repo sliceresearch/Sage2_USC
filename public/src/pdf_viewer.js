@@ -24,6 +24,18 @@ PDFJS.verbosity       = PDFJS.VERBOSITY_LEVELS.warnings;
 PDFJS.maxCanvasPixels = 67108864; // 8k2
 PDFJS.disableStream   = true;
 
+// List of icons
+var svgImages = [
+	'arrowLeftBtnOff.svg',   // 0
+	'arrowLeftBtnOn.svg',    // 1
+	'arrowRightBtnOn.svg',   // 2
+	'arrowRightBtnOff.svg',  // 3
+	'addPage.svg',           // 4
+	'deletePage.svg',        // 5
+	'thumbnail.svg'];        // 6
+
+// Folder containing the icons
+var iconPath = "/images/appUi/";
 
 /**
  * PDF viewing application, based on pdf.js library
@@ -540,11 +552,33 @@ var pdf_viewer = SAGE2_App.extend({
 		return dx;
 	},
 
-	createMenuBar: function() {
-		// this is the gropu containing the commang bar
+	GoToNext: function(that) {
+		if (that.state.currentPage === that.pageDocument) {
+			return;
+		}
 
-		var svgImages = ['zoomInBtn.svg', 'zoomOutBtn.svg', 'stickyBtn.svg'];
-		var path = "/images/appUi/";
+		if (that.state.currentPage === that.pageDocument - 1) {
+			that.nextButton.ico.attr("xlink:href", iconPath + svgImages[3]);
+		}
+		that.previousButton.ico.attr("xlink:href", iconPath + svgImages[1]);
+		that.goToPage(that.state.currentPage + 1);
+		that.refresh();
+	},
+
+	GoToPrevious: function(that) {
+		if (that.state.currentPage === 1) {
+			return;
+		}
+
+		if (that.state.currentPage === 2) {
+			that.previousButton.ico.attr("xlink:href", iconPath + svgImages[0]);
+		}
+		that.goToPage(that.state.currentPage - 1);
+		that.nextButton.ico.attr("xlink:href", iconPath + svgImages[2]);
+		that.refresh();
+	},
+
+	createMenuBar: function() {
 
 		if (this.commandBarG) {
 			this.commandBarG.selectAll("*").remove();
@@ -566,55 +600,91 @@ var pdf_viewer = SAGE2_App.extend({
 			.attr("fill", "#272822");
 		this.commandBarBG.container = this.commandBarG;
 
-		// the minus button
-		this.minusButton = this.commandBarG.append("rect")
+		// the previous < button
+		this.previousButton = this.commandBarG.append("rect")
 			.attr("x", 0 + this.state.marginButton)
 			.attr("y", 0 + this.state.marginButton)
 			.attr("width", this.widthCommandButton)
 			.attr("height", this.widthCommandButton)
 			.attr("fill", "lightgray");
-		this.minusButton.ico = this.commandBarG.append("image")
-			.attr("x", 0 + this.state.marginButton)
+		this.previousButton.ico = this.commandBarG.append("image")
+			.attr("x",  0 + this.state.marginButton)
 			.attr("y", 0 + this.state.marginButton)
 			.attr("width", this.widthCommandButton)
 			.attr("height", this.widthCommandButton)
-			.attr("xlink:href", path + svgImages[1]);
-		this.minusButton.command = true;
-		this.minusButton.action = this.removePage;
-		this.minusButton.container = this.commandBarG;
-		this.interactable.push(this.minusButton);
+			.attr("xlink:href", iconPath + svgImages[0]);
+		this.previousButton.command = true;
+		this.previousButton.action = this.GoToPrevious;
+		this.previousButton.container = this.commandBarG;
+		this.interactable.push(this.previousButton);
+
+		// the next > button
+		this.nextButton = this.commandBarG.append("rect")
+			.attr("x", parseInt(this.previousButton.attr("x")) + this.widthCommandButton + this.state.marginButton)
+			.attr("y", 0 + this.state.marginButton)
+			.attr("width", this.widthCommandButton)
+			.attr("height", this.widthCommandButton)
+			.attr("fill", "lightgray");
+		this.nextButton.ico = this.commandBarG.append("image")
+			.attr("x", parseInt(this.previousButton.attr("x")) + this.widthCommandButton + this.state.marginButton)
+			.attr("y", 0 + this.state.marginButton)
+			.attr("width", this.widthCommandButton)
+			.attr("height", this.widthCommandButton)
+			.attr("xlink:href", iconPath + svgImages[2]);
+		this.nextButton.command = true;
+		this.nextButton.action = this.GoToNext;
+		this.nextButton.container = this.commandBarG;
+		this.interactable.push(this.nextButton);
 
 		// the plus button
 		this.plusButton = this.commandBarG.append("rect")
-			.attr("x", parseInt(this.minusButton.attr("x")) + this.widthCommandButton + this.state.marginButton)
+			.attr("x", parseInt(this.nextButton.attr("x")) + this.widthCommandButton + this.state.marginButton)
 			.attr("y", 0 + this.state.marginButton)
 			.attr("width", this.widthCommandButton)
 			.attr("height", this.widthCommandButton)
 			.attr("fill", "lightgray");
 		this.plusButton.ico = this.commandBarG.append("image")
-			.attr("x", parseInt(this.minusButton.attr("x")) + this.widthCommandButton + this.state.marginButton)
+			.attr("x", parseInt(this.nextButton.attr("x")) + this.widthCommandButton + this.state.marginButton)
 			.attr("y", 0 + this.state.marginButton)
 			.attr("width", this.widthCommandButton)
 			.attr("height", this.widthCommandButton)
-			.attr("xlink:href", path + svgImages[0]);
+			.attr("xlink:href", iconPath + svgImages[4]);
 		this.plusButton.command = true;
 		this.plusButton.action = this.addPage;
 		this.plusButton.container = this.commandBarG;
 		this.interactable.push(this.plusButton);
 
-		// the show thumbnails button
-		this.thumbnailsButton = this.commandBarG.append("rect")
+		// the minus button
+		this.minusButton = this.commandBarG.append("rect")
 			.attr("x", parseInt(this.plusButton.attr("x")) + this.widthCommandButton + this.state.marginButton)
 			.attr("y", 0 + this.state.marginButton)
 			.attr("width", this.widthCommandButton)
 			.attr("height", this.widthCommandButton)
 			.attr("fill", "lightgray");
-		this.thumbnailsButton.ico = this.commandBarG.append("image")
+		this.minusButton.ico = this.commandBarG.append("image")
 			.attr("x", parseInt(this.plusButton.attr("x")) + this.widthCommandButton + this.state.marginButton)
 			.attr("y", 0 + this.state.marginButton)
 			.attr("width", this.widthCommandButton)
 			.attr("height", this.widthCommandButton)
-			.attr("xlink:href", path + svgImages[2]);
+			.attr("xlink:href", iconPath + svgImages[5]);
+		this.minusButton.command = true;
+		this.minusButton.action = this.removePage;
+		this.minusButton.container = this.commandBarG;
+		this.interactable.push(this.minusButton);
+
+		// the show thumbnails button
+		this.thumbnailsButton = this.commandBarG.append("rect")
+			.attr("x", parseInt(this.minusButton.attr("x")) + this.widthCommandButton + this.state.marginButton)
+			.attr("y", 0 + this.state.marginButton)
+			.attr("width", this.widthCommandButton)
+			.attr("height", this.widthCommandButton)
+			.attr("fill", "lightgray");
+		this.thumbnailsButton.ico = this.commandBarG.append("image")
+			.attr("x", parseInt(this.minusButton.attr("x")) + this.widthCommandButton + this.state.marginButton)
+			.attr("y", 0 + this.state.marginButton)
+			.attr("width", this.widthCommandButton)
+			.attr("height", this.widthCommandButton)
+			.attr("xlink:href", iconPath + svgImages[6]);
 		this.thumbnailsButton.command = true;
 		this.thumbnailsButton.action = this.showThumbnails;
 		this.thumbnailsButton.container = this.commandBarG;
@@ -877,6 +947,7 @@ var pdf_viewer = SAGE2_App.extend({
 
 	}
 });
+
 
 // Extra functions
 
