@@ -125,7 +125,7 @@
 <br><br><br>
 
 <div class="entryDescription" style="text-align: center">
-	Saving will overwrite ~\Documents\SAGE2_Media\config\default-cfg.json and electron-cfg.json
+	Saving will overwrite ~\Documents\SAGE2_Media\config\default-cfg.json
 </div>
 
 <div id="saveButtonContainer">
@@ -422,7 +422,9 @@
 		rsNumber = remoteSiteEntryTracker.length;
 		tempValues = [("Name of Remote Site " + rsNumber), "inputForRsName",
 						("Hostname of Remote Site " + rsNumber), "inputForRsHost",
-						("Port of Remote Site " + rsNumber), "inputForRsPort"];
+						("Port of Remote Site " + rsNumber), "inputForRsPort",
+						("Password of Remote Site " + rsNumber), "inputForRsPassword",
+						("Pwd hash of Remote Site " + rsNumber), "inputForRsHash"];
 		tempRowHolder = [];
 
 
@@ -542,6 +544,14 @@
 			tempRemoteSiteHolder.value = cfg.remote_sites[i].host;
 			tempRemoteSiteHolder = document.getElementById("inputForRsPort" + (i + 1)); // starts at 1
 			tempRemoteSiteHolder.value = cfg.remote_sites[i].port;
+			tempRemoteSiteHolder = document.getElementById("inputForRsPassword" + (i + 1)); // starts at 1
+			if (cfg.remote_sites[i].password !== undefined) {
+				tempRemoteSiteHolder.value = cfg.remote_sites[i].password;
+			}
+			tempRemoteSiteHolder = document.getElementById("inputForRsHash" + (i + 1)); // starts at 1
+			if (cfg.remote_sites[i].session !== undefined) {
+				tempRemoteSiteHolder.value = cfg.remote_sites[i].session;
+			}
 		}
 	}
 
@@ -633,10 +643,24 @@
 				tempSite.port = undefined;
 			}
 
+			// remote sites might have password
+			tempEntry = document.getElementById("inputForRsPassword" + i);
+			if (tempEntry.value.trim().length > 1) {
+				tempSite.password = tempEntry.value.trim();
+			}
+			// remote sites might have hash, note hash and session naming
+			tempEntry = document.getElementById("inputForRsHash" + i);
+			if (tempEntry.value.trim().length > 1) {
+				tempSite.session = tempEntry.value.trim();
+			}
+
 			// if a remote site has invalid pieces notify
 			if (hasValues
 				&& ((tempSite.name == undefined) || (tempSite.host == undefined) || (tempSite.port == undefined))) {
 				alert("Error with remote site " + tempSite.name + " " + tempSite.host + " " + tempSite.port);
+				return;
+			} else if (hasValues && (tempSite.password !== undefined) && (tempSite.session !== undefined)) {
+				alert("Error with remote site " + tempSite.name + " " + tempSite.host + ". Both a password and hash were given. Only one of the two should be used.");
 				return;
 			} else if (hasValues) {
 				tempSite.secure = true;

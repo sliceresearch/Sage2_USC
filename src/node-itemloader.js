@@ -631,7 +631,8 @@ AppLoader.prototype.loadZipAppFromFile = function(file, mime_type, aUrl, externa
 
 				var appInstance = _this.readInstructionsFile(json_str, zipFolder, mime_type, external_url);
 				_this.scaleAppToFitDisplay(appInstance);
-				appInstance.file = file;
+				// Seems to cause issues, when drag-drop, the first time the app is opened.
+				// appInstance.file = file;
 				callback(appInstance);
 			});
 		});
