@@ -62,7 +62,7 @@ var uiTimerDelay;
 var uiwsio;
 var useMouse;
 var hasMouse = true;
-//var emitter;
+var emitter;
 var pointerLabel = "MyTestPointer";
 var pointerColor = "#FF0000";
 var rootelement;
@@ -243,6 +243,26 @@ function SAGE2_init() {
 
 	isMaster = false;
 
+
+	if(useMouse == 1) {
+
+		showDialog("settingsDialog");
+		var settingsbutton = document.getElementById("settingsCloseBtn");
+		if(settingsbutton)
+			settingsbutton.addEventListener('click', function(event){
+
+				hideDialog('settingsDialog');
+				pointerLabel = document.getElementById("sage2PointerLabel").value;
+				pointerColor = document.getElementById("sage2PointerColor").value;
+				setupUIMouse();		
+
+			});
+
+		
+	} else {
+		setupUIMouse();
+	}
+
 	wsio.open(function() {
 		console.log("Websocket opened");
 
@@ -290,22 +310,6 @@ function SAGE2_init() {
 		}, 2000);
 	});
 
-	if(useMouse) {
-
-		showDialog("settingsDialog");
-		var settingsbutton = document.getElementById("settingsCloseBtn");
-		if(settingsbutton)
-			settingsbutton.addEventListener('click', function(event){
-
-				hideDialog('settingsDialog');
-				pointerLabel = document.getElementById("sage2PointerLabel").value;
-				pointerColor = document.getElementById("sage2PointerColor").value;
-				setupUIMouse();		
-
-			});
-
-//		setupUIMouse();
-	}
 
 }
 
@@ -343,26 +347,55 @@ function setupUIMouse() {
 		});	
 
 		// the emitter holds all functions for mouseevent emitting to server
-		var emitter = new SAGE2_MouseEventEmitter(uiwsio);
+		emitter = new SAGE2_MouseEventEmitter(uiwsio);
 
-		rootelement = document.getElementById("main");
-		rootelement.addEventListener('mousedown',  emitter.pointerPress,    true);
-		rootelement.addEventListener('mouseup',    emitter.pointerRelease,  true);
-		rootelement.addEventListener('mousemove',  emitter.pointerMove,     true);
-		rootelement.addEventListener('wheel',      emitter.pointerScroll,   true);
+		//rootelement = document;//.getElementById("main");
+		document.addEventListener('mousedown',  emitter.pointerPress,    true);
+		document.addEventListener('mouseup',    emitter.pointerRelease,  true);
+		document.addEventListener('mousemove',  emitter.pointerMove,     true);
+		document.addEventListener('wheel',      emitter.pointerScroll,   true);
 		//rootelement.addEventListener('click',      emitter.pointerClick,    false);
-		rootelement.addEventListener('dblclick',   emitter.pointerDblClick, true);
+		document.addEventListener('dblclick',   emitter.pointerDblClick, true);
 		document.addEventListener('keyup',      emitter.pointerKeyUp, true);
 		document.addEventListener('keydown',    emitter.pointerKeyDown,  true);
 		document.addEventListener('keypress',    emitter.pointerKeyPress,  true);
 
-		rootelement.addEventListener('mouseenter', emitter.startMouse,   false);
-		rootelement.addEventListener('mouseleave', emitter.stopMouse,   false);
-		
+		if(useMouse == 1) {
+			var mainelement = document.getElementById("main");
+			mainelement.addEventListener('mouseenter', emitter.startMouse,   false);
+			mainelement.addEventListener('mouseleave', emitter.stopMouse,   false);
+		}
 		// prevent default context menu
 		document.oncontextmenu = document.body.oncontextmenu = function(){ return false;};
 
 	});
+}
+
+function setupCaptureMouse(element) {
+
+	if(useMouse == 0){
+		
+		emitter.pointerButton = element;
+		document.addEventListener('pointerlockchange', emitter.pointLockChangeListener, false);
+		document.addEventListener('mozpointerlockchange', emitter.pointLockChangeListener, false);
+
+		element.addEventListener('click', function(event) {
+			if(document.pointerLockElement)
+				return;
+			else {
+				element.requestPointerLock = element.requestPointerLock       ||
+											element.mozRequestPointerLock    ||
+											element.webkitRequestPointerLock;
+
+				if(element.requestPointerLock) {
+					element.requestPointerLock();
+				}
+				else {
+					console.log("Pointer lock not available");
+				}
+			}
+		}, false);
+	} 
 }
 
 function setupListeners() {
@@ -432,6 +465,9 @@ function setupListeners() {
 			}, uiTimerDelay * 1000);
 		}
 		makeSvgBackgroundForWidgetConnectors(ui.main.style.width, ui.main.style.height);
+
+		if(useMouse == 0)
+			setupCaptureMouse(document.getElementById("pointerButton"));
 	});
 
 	wsio.on('hideui', function(param) {
@@ -1697,6 +1733,39 @@ function SAGE2_MouseEventEmitter(wsio) {
 	this.scrollTimeId = null;
 	this.pointerActive = false;
 
+	this.pointerButton = null;
+
+	this.pointLockChangeListenerMethod = function(event) {
+		console.log('pointLockChangeListenerMethod');
+		if(document.pointerLockElement) {
+			this.startSAGE2Pointer();
+			if(this.pointerButton) {
+				this.pointerButton.style.color = "#000000";
+				this.pointerButton.style.backgroundColor = "#00BB33";
+				this.pointerButton.innerHTML = "Mouse Active";
+			}
+		} else {
+			this.stopSAGE2Pointer();
+			this.pointerButton.style.color = "#222222";
+			this.pointerButton.style.backgroundColor = "#FFFFFF";
+			this.pointerButton.innerHTML = 'Activate Mouse';
+		}
+	}
+
+	this.startSAGE2Pointer = function() {
+		if(this.pointerActive)
+			return;
+		console.log("starting SAGE2 mouse pointer");
+		this.pointerActive = true;
+		wsio.emit('startSagePointer', {label: pointerLabel, color: pointerColor});
+	}
+
+	this.stopSAGE2Pointer = function() {
+		console.log("stopping SAGE2 mouse pointer");
+		wsio.emit('stopSagePointer');
+		this.pointerActive = false;
+	}
+
 	this.pointerPressMethod = function(event) {
 		this.checkActivePointer(event);
 		if(!event.isTrusted) // don't react to custom software events like SAGE2_MouseEventEmitter
@@ -1718,13 +1787,15 @@ function SAGE2_MouseEventEmitter(wsio) {
 	}
 
 	this.pointerMoveMethod = function(event) {
-		this.checkActivePointer(event);
+		if(!this.checkActivePointer(event))
+			return;
 		if(!event.isTrusted) // don't react to custom software events like SAGE2_MouseEventEmitter
 			return;		
 		//console.log("pointermove");
 		var movementX = event.movementX || event.mozMovementX || event.webkitMovementX || 0;
 		var movementY = event.movementY || event.mozMovementY || event.webkitMovementY || 0;
 
+		JSON.stringify(event);
 		//this.wsio.emit('pointerMove', {dx: movementX, dy: movementY});
 		//this.wsio.emit('pointerPosition', {pointerX: event.clientX, pointerY: event.clientY});
 		
@@ -1796,19 +1867,24 @@ function SAGE2_MouseEventEmitter(wsio) {
 		var code = parseInt(event.keyCode, 10);
 
 		console.log('key down ' +  code);
-
-		this.wsio.emit('keyDown', {code: code});
-		if (code === 9) { // tab is a special case - must emulate keyPress event
-			this.wsio.emit('keyPress', {code: code, character: String.fromCharCode(code)});
-		}
-		// if a special key - prevent default (otherwise let continue to keyPress)
-		if (code === 8 || code === 9 || (code >= 16 && code <= 46 && code !== 32) ||
-			(code >= 91 && code <= 93) || (code >= 112 && code <= 145)) {
+		if (!useMouse && code === 27) {
+			this.stopMouseMethod(event);
 			if (event.preventDefault) {
 				event.preventDefault();
 			}
-		}	
-
+		} else {
+			this.wsio.emit('keyDown', {code: code});
+			if (code === 9) { // tab is a special case - must emulate keyPress event
+				this.wsio.emit('keyPress', {code: code, character: String.fromCharCode(code)});
+			}
+			// if a special key - prevent default (otherwise let continue to keyPress)
+			if (code === 8 || code === 9 || (code >= 16 && code <= 46 && code !== 32) ||
+				(code >= 91 && code <= 93) || (code >= 112 && code <= 145)) {
+				if (event.preventDefault) {
+					event.preventDefault();
+				}
+			}	
+		}
 		event.preventDefault();
 	}
 
@@ -1840,12 +1916,12 @@ function SAGE2_MouseEventEmitter(wsio) {
 	this.startMouseMethod = function(event) {
 		if(this.pointerActive)
 			return;
-		this.pointerActive = true;
+		
 
 		if(!event.isTrusted) // don't react to custom software events like SAGE2_MouseEventEmitter
 			return;		
-		console.log("starting SAGE2 mouse pointer");
-		wsio.emit('startSagePointer', {label: pointerLabel, color: pointerColor});
+
+		this.startSAGE2Pointer();
 
 		this.wsio.emit('pointerPosition', {pointerX: event.clientX, pointerY: event.clientY});
 		//this.wsio.emit('pointerMove', {dx: event.clientX, dy: event.clientY});
@@ -1855,22 +1931,26 @@ function SAGE2_MouseEventEmitter(wsio) {
 
 
 	this.stopMouseMethod = function(event) {
-		this.pointerActive = false;
-
+		
 		if(!event.isTrusted) // don't react to custom software events like SAGE2_MouseEventEmitter // don't react to custom software events like SAGE2_MouseEventEmitter
 			return;
-		console.log("stopping SAGE2 mouse pointer");
-		//this.wsio.emit('pointerMove', {dx: -event.clientX, dy: -event.clientY});
-		wsio.emit('stopSagePointer');
+
+		this.stopSAGE2Pointer();
 		event.preventDefault();
 		//document.exitPointerLock();
 	}
 
 	this.checkActivePointer = function(event) {
-		if(! this.pointerActive) {
+		if(this.pointerActive)
+			return true;
+		else if(useMouse == 1 && ! this.pointerActive) {
 			this.startMouseMethod(event);
-		}
+			return true;
+		} else
+			return false;
 	}
+
+	this.pointLockChangeListener = this.pointLockChangeListenerMethod.bind(this);
 
 	this.pointerPress = this.pointerPressMethod.bind(this);
 	this.pointerRelease = this.pointerReleaseMethod.bind(this);
