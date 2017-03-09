@@ -189,7 +189,7 @@ var Webview = SAGE2_App.extend({
 
 		// erase me, this is mainly for testing, but if it works out, maybe not necessary
 		// testing data send back.
-		this.element.addEventListener("ipc-message",function(event){
+		this.element.addEventListener("ipc-message", function(event) {
 
 			if (event.channel.type == "gmapSearchLocations") {
 				console.log("gmap has returned search results:");
@@ -214,11 +214,11 @@ var Webview = SAGE2_App.extend({
 				});
 
 			} else {
-			    console.log(event);
-			    if (typeof event === "object") {
-			    	console.log("Detected an object");
-			    	console.dir(event);
-			    }
+				console.log(event);
+				if (typeof event === "object") {
+					console.log("Detected an object");
+					console.dir(event);
+				}
 			}
 		});
 
@@ -469,7 +469,7 @@ var Webview = SAGE2_App.extend({
 // ------------------------------------------------------------------------------------------------------------
 // ------------------------------------------------------------------------------------------------------------
 
-		
+
 		entries.push({description: "separator"});
 		entries.push({description: "separator"});
 
@@ -524,7 +524,7 @@ var Webview = SAGE2_App.extend({
 		});
 
 		entries.push({description: "separator"});
-		
+
 		// erase me, these are just for testing data pass back
 		entries.push({
 			description: "subscribe gmapLocations",
@@ -534,7 +534,7 @@ var Webview = SAGE2_App.extend({
 				functionName: "gmapAddLocations",
 			}
 		});
-		
+
 		// erase me, these are just for testing data pass back
 		entries.push({
 			description: "subscribe gmapViewCenter",
@@ -564,12 +564,11 @@ var Webview = SAGE2_App.extend({
 				lat: parseFloat(coord[0]),
 				lng: parseFloat(coord[1]),
 				name: coord[2]
-			}
+			};
 			this.element.send(responseObject.type, marker);
 		} else if (responseObject.type === "gmapSearchType") {
 			this.element.send(responseObject.type, responseObject.clientInput);
-		}
-		else {
+		} else {
 			this.element.send(responseObject.type, responseObject.dataToSendToWebview);
 		}
 		// this.element.send(responseObject.type, "div");

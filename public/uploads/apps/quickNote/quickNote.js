@@ -380,25 +380,25 @@ var quickNote = SAGE2_App.extend({
 				type:  "button",
 				entryColor: "lightpink",
 				callback: "setColor",
-				parameters: { color:"lightpink" }
+				parameters: { color: "lightpink" }
 			},
 			{
 				type:  "button",
 				entryColor: "white",
 				callback: "setColor",
-				parameters: { color:"white" }
+				parameters: { color: "white" }
 			},
 			{
 				type:  "button",
 				entryColor: "Blue",
 				callback: "setColor",
-				parameters: { color:"lightblue" }
+				parameters: { color: "lightblue" }
 			},
 			{
 				type:  "button",
 				entryColor: "Green",
 				callback: "setColor",
-				parameters: { color:"lightgreen" }
+				parameters: { color: "lightgreen" }
 			},
 			{
 				type: "textarea",

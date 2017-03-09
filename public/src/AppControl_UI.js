@@ -132,7 +132,7 @@ function setupListeners() {
 	});
 
 	wsio.on("dtuRmbContextMenuContents", function(data) {
-		setRmbContextMenuEntries(data);
+		// ignore for now
 	});
 
 	wsio.on("csdSendDataToClient", function(data) {
@@ -140,9 +140,9 @@ function setupListeners() {
 		if (data.func === "controlPanelLayout") {
 			setupControlPanel(data);
 		} else if (data.func === "uiDrawSetCurrentStateAndShow") {
-			uiDrawSetCurrentStateAndShow(data);
+			// uiDrawSetCurrentStateAndShow(data); // keeping as reference to how doodle was done
 		} else if (data.func === "uiDrawMakeLine") {
-			uiDrawMakeLine(data);
+			// uiDrawMakeLine(data);
 		} else {
 			console.log("Error, csd data packet for client contained invalid function:" + data.func);
 		}
@@ -207,7 +207,7 @@ function SAGE2_browser() {
 // ------------------------------------------------------------------------------------------------------------------
 function getUrlParameters() {
 	var address = window.location.search;
-	if (address.indexOf("?") == -1 ) {
+	if (address.indexOf("?") == -1) {
 		return;
 	}
 
@@ -265,7 +265,7 @@ function requestControlDescriptionFromApp() {
 		pointerName: pointerName,
 		pointerColor: pointerColor,
 		uniqueID: uniqueID
-	}
+	};
 	dataForApp.type			= "sendDataToClient";
 	dataForApp.clientDest	= "allDisplays";
 	wsio.emit("csdMessage", dataForApp);
@@ -287,10 +287,10 @@ function setupControlPanel(data) {
 
 	for (var i = 0; i < layout.length; i++) {
 		item = layout[i];
-		
+
 		divToBe            = document.createElement(item.type);
 		divToBe.callback   = item.callback;
-		divToBe.parameters = item.parameters
+		divToBe.parameters = item.parameters;
 
 		if (item.type == "button") {
 			divToBe.textContent = "button";
@@ -306,7 +306,7 @@ function setupControlPanel(data) {
 
 				console.log("erase me, sending click effect for button");
 				console.dir(dataForApp);
-			}
+			};
 			divToBe.addEventListener("click", divToBe.clickEffect);
 		} else if (item.type == "textarea") {
 			divToBe.rows = item.rows;
@@ -323,14 +323,14 @@ function setupControlPanel(data) {
 
 				console.log("erase me, sending keyDown effect for textarea");
 				console.dir(dataForApp);
-			}
+			};
 			divToBe.addEventListener("keydown", divToBe.keyPressEffect);
 		} else {
 			console.log("Unknown layout type:" + item.type);
 		}
 
-		appControlPanelDiv.appendChild(divToBe);
-		appControlPanelDiv.appendChild(document.createElement("br"));
+		document.getElementById("appControlPanelDiv").appendChild(divToBe);
+		document.getElementById("appControlPanelDiv").appendChild(document.createElement("br"));
 	}
 } // end setupControlPanel
 
