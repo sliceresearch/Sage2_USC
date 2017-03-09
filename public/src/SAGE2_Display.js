@@ -160,7 +160,7 @@ function setupFocusHandlers() {
 
 	if (__SAGE2__.browser.isElectron) {
 		// Display warning messages from the 'Main' Electron process
-		require('electron').ipcRenderer.on('warning', (event, message) => {
+		require('electron').ipcRenderer.on('warning', function(event, message) {
 			var problemDialog = ui.buildMessageBox('problemDialog', message);
 			ui.main.appendChild(problemDialog);
 			document.getElementById('problemDialog').style.display = "block";
@@ -652,7 +652,7 @@ function setupListeners() {
 		// When fade over, really delete the element
 		setTimeout(function() {
 			deleteElem.parentNode.removeChild(deleteElem);
-		}, 300);
+		}, 400);
 
 		// Clean up the UI DOM
 		if (elem_data.elemId in controlObjects) {

@@ -51,6 +51,8 @@ var imageMagick;                                 // derived from graphicsmagick
 
 var WebsocketIO   = require('websocketio');      // creates WebSocket server and clients
 
+var chalk 				= require('chalk');						 // used for colorizing the console output
+
 // custom node modules
 var assets              = require('./src/node-assets');           // manages the list of files
 var commandline         = require('./src/node-sage2commandline'); // handles command line parameters for SAGE2
@@ -161,7 +163,7 @@ for (var folder in mediaFolders) {
 		if (!sageutils.folderExists(sessionDirectory)) {
 			sageutils.mkdirParent(sessionDirectory);
 		}
-		console.log(sageutils.header('Folders') + 'upload to ' + f.path);
+		console.log(sageutils.header('Folders') + 'upload to ' + chalk.yellow.bold(f.path));
 	}
 	var newdirs = ["apps", "assets", "images", "pdfs",
 		"tmp", "videos", "config", "whiteboard", "web"];
@@ -177,9 +179,12 @@ for (var folder in mediaFolders) {
 // Add back all the media folders to the configuration structure
 config.folders = mediaFolders;
 
-console.log(sageutils.header("SAGE2") + "Node Version: " + sageutils.getNodeVersion());
-console.log(sageutils.header("SAGE2") + "Detected Server OS as:\t" + platform);
-console.log(sageutils.header("SAGE2") + "SAGE2 Short Version:\t" + SAGE2_version);
+console.log(sageutils.header("SAGE2") + chalk.cyan("Node Version:\t\t") +
+	chalk.green.bold(sageutils.getNodeVersion()));
+console.log(sageutils.header("SAGE2") + chalk.cyan("Detected Server OS as:\t") +
+	chalk.green.bold(platform));
+console.log(sageutils.header("SAGE2") + chalk.cyan("SAGE2 Short Version:\t") +
+	chalk.green.bold(SAGE2_version));
 
 // Initialize Server
 initializeSage2Server();
@@ -259,14 +264,14 @@ function initializeSage2Server() {
 
 	// Setup tmp directory for SAGE2 server
 	process.env.TMPDIR = path.join(__dirname, "tmp");
-	console.log(sageutils.header("SAGE2") + "Temp folder: " + process.env.TMPDIR);
+	console.log(sageutils.header("SAGE2") + "Temp folder: " + chalk.yellow.bold(process.env.TMPDIR));
 	if (!sageutils.folderExists(process.env.TMPDIR)) {
 		fs.mkdirSync(process.env.TMPDIR);
 	}
 
 	// Setup tmp directory in uploads
 	var uploadTemp = path.join(__dirname, "public", "uploads", "tmp");
-	console.log(sageutils.header("SAGE2") + "Upload temp folder: " + uploadTemp);
+	console.log(sageutils.header("SAGE2") + "Upload temp folder: " + chalk.yellow.bold(uploadTemp));
 	if (!sageutils.folderExists(uploadTemp)) {
 		fs.mkdirSync(uploadTemp);
 	}
@@ -639,12 +644,13 @@ function closeWebSocketClient(wsio) {
 	var i;
 	var key;
 	if (wsio.clientType === "display") {
-		console.log(sageutils.header("Disconnect") + wsio.id + " (" + wsio.clientType + " " + wsio.clientID + ")");
+		console.log(sageutils.header("Disconnect") + chalk.bold.red(wsio.id) +
+			" (" + wsio.clientType + " " + wsio.clientID + ")");
 	} else {
 		if (wsio.clientType) {
-			console.log(sageutils.header("Disconnect") + wsio.id + " (" + wsio.clientType + ")");
+			console.log(sageutils.header("Disconnect") + chalk.bold.red(wsio.id) + " (" + wsio.clientType + ")");
 		} else {
-			console.log(sageutils.header("Disconnect") + wsio.id + " (unknown)");
+			console.log(sageutils.header("Disconnect") + chalk.bold.red(wsio.id) + " (unknown)");
 		}
 	}
 
@@ -758,10 +764,10 @@ function wsAddClient(wsio, data) {
 		if (masterDisplay === null) {
 			masterDisplay = wsio;
 		}
-		console.log(sageutils.header("Connect") + wsio.id + " (" + wsio.clientType + " " + wsio.clientID + ")");
+		console.log(sageutils.header("Connect") + chalk.bold.green(wsio.id) + " (" + wsio.clientType + " " + wsio.clientID + ")");
 	} else {
 		wsio.clientID = -1;
-		console.log(sageutils.header("Connect") + wsio.id + " (" + wsio.clientType + ")");
+		console.log(sageutils.header("Connect") + chalk.bold.green(wsio.id) + " (" + wsio.clientType + ")");
 		if (wsio.clientType === "remoteServer") {
 			// Remote info
 			// var remoteaddr = wsio.ws.upgradeReq.connection.remoteAddress;
@@ -2347,7 +2353,7 @@ function saveSession(filename) {
 
 	try {
 		fs.writeFileSync(fullpath, JSON.stringify(states, null, 4));
-		console.log(sageutils.header("Session") + "saved session file to " + fullpath);
+		console.log(sageutils.header("Session") + "saved session file to " + chalk.yellow.bold(fullpath));
 	} catch (err) {
 		console.log(sageutils.header("Session") + "error saving " + err);
 	}
@@ -2355,7 +2361,7 @@ function saveSession(filename) {
 	// write preview image
 	try {
 		fs.writeFileSync(fullPreviewPath, header + svg);
-		console.log(sageutils.header("Session") + "saved session preview image to " + fullPreviewPath);
+		console.log(sageutils.header("Session") + "saved session preview image to " + chalk.yellow.bold(fullPreviewPath));
 	} catch (err) {
 		console.log(sageutils.header("Session") + "error saving " + err);
 	}
@@ -4921,10 +4927,11 @@ setTimeout(function() {
 
 sage2ServerS.on('listening', function(e) {
 	// Success
-	console.log(sageutils.header("SAGE2") + "Serving secure clients at https://" +
-		config.host + ":" + config.secure_port);
-	console.log(sageutils.header("SAGE2") + "Web console at https://" + config.host +
-		":" + config.secure_port + "/admin/console.html");
+	console.log(sageutils.header("SAGE2") + chalk.bold("Serving Securely:"));
+	console.log(sageutils.header("SAGE2") + "- Web UI:\t " + chalk.cyan.bold.underline("https://" +
+		config.host + ":" + config.secure_port));
+	console.log(sageutils.header("SAGE2") + "- Web console:\t " + chalk.cyan.bold.underline("https://" + config.host +
+		":" + config.secure_port + "/admin/console.html"));
 });
 
 // Place callback for errors in the 'listen' call for HTTP
@@ -4932,16 +4939,13 @@ sage2Server.on('error', function(e) {
 	if (e.code === 'EACCES') {
 		console.log(sageutils.header("HTTP_Server") + "You are not allowed to use the port: ", config.port);
 		console.log(sageutils.header("HTTP_Server") + "  use a different port or get authorization (sudo, setcap, ...)");
-		console.log(" ");
 		process.exit(1);
 	} else if (e.code === 'EADDRINUSE') {
 		console.log(sageutils.header("HTTP_Server") + "The port is already in use by another process:", config.port);
 		console.log(sageutils.header("HTTP_Server") + "  use a different port or stop the offending process");
-		console.log(" ");
 		process.exit(1);
 	} else {
 		console.log(sageutils.header("HTTP_Server") + "Error in the listen call: ", e.code);
-		console.log(" ");
 		process.exit(1);
 	}
 });
@@ -4949,19 +4953,24 @@ sage2Server.on('error', function(e) {
 // Place callback for success in the 'listen' call for HTTP
 sage2Server.on('listening', function(e) {
 	// Success
-	var ui_url = "http://" + config.host + ":" + config.port;
-	var dp_url = "http://" + config.host + ":" + config.port + "/display.html?clientID=0";
-	var am_url = "http://" + config.host + ":" + config.port + "/audioManager.html";
+	var ui_url = chalk.cyan.bold.underline("http://" + config.host + ":" + config.port);
+	var dp_url = chalk.cyan.bold.underline("http://" + config.host + ":" + config.port +
+		"/display.html?clientID=0");
+	var am_url = chalk.cyan.bold.underline("http://" + config.host + ":" + config.port +
+		"/audioManager.html");
 	if (global.__SESSION_ID) {
-		ui_url = "http://" + config.host + ":" + config.port + "/session.html?hash=" + global.__SESSION_ID;
-		dp_url = "http://" + config.host + ":" + config.port + "/session.html?page=display.html?clientID=0&hash="
-			+ global.__SESSION_ID;
-		am_url = "http://" + config.host + ":" + config.port + "/session.html?page=audioManager.html&hash="
-			+ global.__SESSION_ID;
+		ui_url = chalk.cyan.bold.underline("http://" + config.host + ":" + config.port +
+			"/session.html?hash=" + global.__SESSION_ID);
+		dp_url = chalk.cyan.bold.underline("http://" + config.host + ":" + config.port +
+			"/session.html?page=display.html?clientID=0&hash=" + global.__SESSION_ID);
+		am_url = chalk.cyan.bold.underline("http://" + config.host + ":" + config.port +
+			"/session.html?page=audioManager.html&hash=" + global.__SESSION_ID);
 	}
-	console.log(sageutils.header("SAGE2") + "Serving web UI at " + ui_url);
-	console.log(sageutils.header("SAGE2") + "Display 0 at "      + dp_url);
-	console.log(sageutils.header("SAGE2") + "Audio manager at "  + am_url);
+
+	console.log(sageutils.header("SAGE2") + chalk.bold("Serving:"));
+	console.log(sageutils.header("SAGE2") + "- Web UI:\t " + ui_url);
+	console.log(sageutils.header("SAGE2") + "- Display 0:\t "      + dp_url);
+	console.log(sageutils.header("SAGE2") + "- Audio manager: "  + am_url);
 });
 
 // KILL intercept
@@ -5487,7 +5496,7 @@ function showPointer(uniqueID, data) {
 		return;
 	}
 
-	console.log(sageutils.header("Pointer") + "starting: " + uniqueID);
+	console.log(sageutils.header("Pointer") + chalk.green.bold("starting: ") + chalk.underline.bold(uniqueID));
 
 	if (data.sourceType === undefined) {
 		data.sourceType = "Pointer";
@@ -5502,7 +5511,7 @@ function hidePointer(uniqueID) {
 		return;
 	}
 
-	console.log(sageutils.header("Pointer") + "stopping: " + uniqueID);
+	console.log(sageutils.header("Pointer") + chalk.red.bold("stopping: ") + chalk.underline.bold(uniqueID));
 
 	sagePointers[uniqueID].stop();
 	var prevInteractionItem = remoteInteraction[uniqueID].getPreviousInteractionItem();
