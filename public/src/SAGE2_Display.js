@@ -326,6 +326,11 @@ function setupUIMouse() {
 	uiwsio.open(function() {
 		console.log('ui websocket opened');
 
+		uiwsio.on('initialize', function(data) {
+			var startTime  = new Date(data.start);
+			emitter.uID = data.UID;
+		});
+
 		var session = getCookie("session");
 
 		var clientDescription = {
@@ -542,6 +547,11 @@ function setupListeners() {
 	});
 
 	wsio.on('showSagePointer', function(pointer_data) {
+
+		var uid = pointer_data.id.substring(0, pointer_data.id.indexOf('_'));
+		if(emitter.uID == uid)
+			emitter.ourPointerDIV = pointer_data.id;
+
 		ui.showSagePointer(pointer_data);
 		resetIdle();
 		var uniqueID = pointer_data.id.slice(0, pointer_data.id.lastIndexOf("_"));
@@ -551,6 +561,12 @@ function setupListeners() {
 	});
 
 	wsio.on('hideSagePointer', function(pointer_data) {
+
+		var uid = pointer_data.id.substring(0, pointer_data.id.indexOf('_'));
+		if(emitter.uID == uid) {
+			emitter.ourPointerDIV = null;
+		}
+		
 		ui.hideSagePointer(pointer_data);
 		var uniqueID = pointer_data.id.slice(0, pointer_data.id.lastIndexOf("_"));
 		var re = /\.|\:/g;
@@ -1735,6 +1751,10 @@ function SAGE2_MouseEventEmitter(wsio) {
 
 	this.pointerButton = null;
 
+	this.uID = null;
+	this.ourPointerDIV = null;
+	this.ourPointerDIVObject = null;
+
 	this.pointLockChangeListenerMethod = function(event) {
 		console.log('pointLockChangeListenerMethod');
 		if(document.pointerLockElement) {
@@ -1795,7 +1815,8 @@ function SAGE2_MouseEventEmitter(wsio) {
 		var movementX = event.movementX || event.mozMovementX || event.webkitMovementX || 0;
 		var movementY = event.movementY || event.mozMovementY || event.webkitMovementY || 0;
 
-		JSON.stringify(event);
+
+
 		//this.wsio.emit('pointerMove', {dx: movementX, dy: movementY});
 		//this.wsio.emit('pointerPosition', {pointerX: event.clientX, pointerY: event.clientY});
 		
@@ -1815,6 +1836,27 @@ function SAGE2_MouseEventEmitter(wsio) {
 			var scale = 1; //(hasMouse ? this.sensitivity : 3 * this.sensitivity);
 			var px  = this.deltaX * scale;
 			var py  = this.deltaY * scale;
+
+			// check for offset of hardware and software mouse cursor, if this
+			// move command regards our pointer
+			// This offset can happen when the mouse cursor is quickly moved inside and outside the screen
+			if(useMouse == 1 && emitter.ourPointerDIV) {
+				if(!emitter.ourPointerDIVObject)
+					emitter.ourPointerDIVObject = document.getElementById(emitter.ourPointerDIV);
+				if(window.getComputedStyle) {
+					var transform = getComputedStyle(emitter.ourPointerDIVObject).transform;
+					var values = transform.substring(transform.indexOf("(") + 1, transform.indexOf(")")).split(',');
+					var pointerX = parseInt(values[4].trim());
+					var pointerY = parseInt(values[5].trim());
+
+					var adjpx = -(pointerX + px - event.clientX);
+					var adjpy = -(pointerY + py - event.clientY);
+
+					px += adjpx;
+					py += adjpy;
+				}
+			}
+
 			// Send the event
 			this.wsio.emit('pointerMove', {dx: Math.round(px), dy: Math.round(py)});
 			console.log("pointermove: " + px + ' ' + py);
