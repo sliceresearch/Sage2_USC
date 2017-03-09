@@ -173,7 +173,68 @@ var Webview = SAGE2_App.extend({
 				console.log('Webview>	Not http URL, not opening', event.url);
 			}
 		});
+
+
+
+
+
+
+
+
+
+// ------------------------------------------------------------------------------------------------------------
+// ------------------------------------------------------------------------------------------------------------
+// ------------------------------------------------------------------------------------------------------------
+
+
+		// erase me, this is mainly for testing, but if it works out, maybe not necessary
+		// testing data send back.
+		this.element.addEventListener("ipc-message",function(event){
+
+			if (event.channel.type == "gmapSearchLocations") {
+				console.log("gmap has returned search results:");
+				console.dir(event.channel.locationArray);
+
+
+				wsio.emit("csdMessage", {
+					type: "setValue",
+					nameOfValue: "gmapLocations",
+					value:       event.channel.locationArray,
+					description: "Sends whole array of strings?"
+				});
+
+				console.log("Should have sent to server");
+			} else if (event.channel.type == "gmapViewCenterLocation") {
+
+				wsio.emit("csdMessage", {
+					type: "setValue",
+					nameOfValue: "gmapViewCenter",
+					value:       event.channel.location,
+					description: "Send location of camera"
+				});
+
+			} else {
+			    console.log(event);
+			    if (typeof event === "object") {
+			    	console.log("Detected an object");
+			    	console.dir(event);
+			    }
+			}
+		});
+
 	},
+
+
+
+// ------------------------------------------------------------------------------------------------------------
+// ------------------------------------------------------------------------------------------------------------
+// ------------------------------------------------------------------------------------------------------------
+
+
+
+
+
+
 
 	/**
 	 * Determines if electron is the renderer (instead of a browser)
@@ -271,7 +332,8 @@ var Webview = SAGE2_App.extend({
 				if (xhr.readyState === 4 && xhr.status === 200) { // done and done
 					_this.codeToInject = xhr.responseText;
 					if (_this.codeToInject.indexOf("//") !== -1) {
-						console.log("Webview> Warning, script supplement contains // comment which may break it");
+						// after testing this seems to work
+						// console.log("Webview> Warning, script supplement contains // comment which may break it");
 					}
 					_this.codeInject();
 				}
@@ -291,92 +353,9 @@ var Webview = SAGE2_App.extend({
 		this.element.executeJavaScript(this.codeToInject);
 	},
 
-	sendAlertCode: function() {
-		this.element.executeJavaScript(
-			"alert('where is this and or does it work?')",
-			false,
-			function() {
-				console.log("sendAlertCode callback initiated");
-			}
-		);
-	},
-
-	codeInject: function() {
-		this.element.executeJavaScript(
-			'\
-			var cSpot = document.createElement("div");\
-			cSpot.style.width = "20px";\
-			cSpot.style.height = "20px";\
-			cSpot.style.background = "black";\
-			cSpot.style.position = "absolute";\
-			document.body.appendChild(cSpot);\
-			\
-			document.addEventListener("click", function(e) {\
-				cSpot.style.left = e.clientX + "px";\
-				cSpot.style.top = e.clientY + "px";\
-			});\
-			var s2InjectForKeys = {};\
-			\
-			document.addEventListener("mousemove", function(e) {\
-				s2InjectForKeys.x = e.clientX;\
-				s2InjectForKeys.y = e.clientY;\
-			});\
-			\
-			document.addEventListener("click", function(e) {\
-				s2InjectForKeys.lastClickedElement = document.elementFromPoint(e.clientX, e.clientY);\
-			});\
-			\
-			document.addEventListener("keydown", function(e) {\
-				if (e.keyCode == 16) {\
-					s2InjectForKeys.shift = true;\
-					return;\
-				}\
-				if (e.keyCode == 8) {\
-					s2InjectForKeys.lastClickedElement.value = s2InjectForKeys.lastClickedElement.value.substring(0, s2InjectForKeys.lastClickedElement.value.length - 1);\
-					return;\
-				}\
-				if (s2InjectForKeys.lastClickedElement.value == undefined) {\
-					return; \
-				}\
-				var sendChar = String.fromCharCode(e.keyCode);\
-				if (!s2InjectForKeys.shift) {\
-					sendChar = sendChar.toLowerCase();\
-				}\
-				s2InjectForKeys.lastClickedElement.value += sendChar;\
-			});\
-			document.addEventListener("keyup", function(e) {\
-				if (e.keyCode == 0x10) {\
-					s2InjectForKeys.shift = false;\
-				}\
-				if (e.keyCode == 8) {\
-					s2InjectForKeys.lastClickedElement.value = s2InjectForKeys.lastClickedElement.value.substring(0, s2InjectForKeys.lastClickedElement.value.length - 1);\
-				}\
-			});\
-			'
-		);
-	},
-
 	getContextEntries: function() {
 		var entries = [];
 		var entry;
-
-		entry = {};
-		entry.description = "Alert";
-		entry.callback = "sendAlertCode";
-		entry.parameters = {};
-		entries.push(entry);
-
-		entry = {};
-		entry.description = "code inject";
-		entry.callback = "codeInject";
-		entry.parameters = {};
-		entries.push(entry);
-
-
-		entry = {};
-		entry.description = "separator";
-		entries.push(entry);
-
 
 		entry = {};
 		entry.description = "Back";
@@ -486,10 +465,161 @@ var Webview = SAGE2_App.extend({
 			}
 		});
 
+// ------------------------------------------------------------------------------------------------------------
+// ------------------------------------------------------------------------------------------------------------
+// ------------------------------------------------------------------------------------------------------------
+
+		
+		entries.push({description: "separator"});
+		entries.push({description: "separator"});
+
+		// erase me, these are just for testing data pass back
+		entries.push({
+			description: "Inject: gmap focus to Hawaii",
+			callback: "testWebviewTalkBack",
+			parameters: {
+				type: "googleMapFocusOnLocation",
+				dataToSendToWebview: {lat: 21.2969392, lng: -157.8171122}
+			}
+		});
+		// erase me, these are just for testing data pass back
+		entries.push({
+			description: "Inject: gmap make marker",
+			callback: "testWebviewTalkBack",
+			inputField: true,
+			inputFieldSize: 20,
+			parameters: {
+				type: "gmapMakeMarker"
+			}
+		});
+
+		// erase me, these are just for testing data pass back
+		entries.push({
+			description: "Inject: gmap search",
+			callback: "testWebviewTalkBack",
+			inputField: true,
+			inputFieldSize: 20,
+			parameters: {
+				type: "gmapSearchType"
+			}
+		});
+
+		// erase me, these are just for testing data pass back
+		entries.push({
+			description: "Inject: activate view send",
+			callback: "testWebviewTalkBack",
+			parameters: {
+				type: "gmapSendViewLocation",
+				dataToSendToWebview: "none"
+			}
+		});
+
+		// erase me, these are just for testing data pass back
+		entries.push({
+			description: "Webview talk back: give back object",
+			callback: "testWebviewTalkBack",
+			parameters: {
+				type: "objectRetrievalTest"
+			}
+		});
+
+		entries.push({description: "separator"});
+		
+		// erase me, these are just for testing data pass back
+		entries.push({
+			description: "subscribe gmapLocations",
+			callback: "subscribeToValue",
+			parameters: {
+				valueName: "gmapLocations",
+				functionName: "gmapAddLocations",
+			}
+		});
+		
+		// erase me, these are just for testing data pass back
+		entries.push({
+			description: "subscribe gmapViewCenter",
+			callback: "subscribeToValue",
+			parameters: {
+				valueName: "gmapViewCenter",
+				functionName: "gmapSetViewCenter",
+			}
+		});
+
+
 		// entries.push({description: "separator"});
 
 		return entries;
 	},
+
+	// erase me, just for testing data passing
+	testWebviewTalkBack: function(responseObject) {
+
+		if (responseObject.type === "gmapMakeMarker") {
+			var coord = responseObject.clientInput.split(" ");
+			// combine all entries after 2 because it is probably a name
+			for (var i = 3; i < coord.length; i++) {
+				coord[2] += " " + coord[i];
+			}
+			var marker = {
+				lat: parseFloat(coord[0]),
+				lng: parseFloat(coord[1]),
+				name: coord[2]
+			}
+			this.element.send(responseObject.type, marker);
+		} else if (responseObject.type === "gmapSearchType") {
+			this.element.send(responseObject.type, responseObject.clientInput);
+		}
+		else {
+			this.element.send(responseObject.type, responseObject.dataToSendToWebview);
+		}
+		// this.element.send(responseObject.type, "div");
+	},
+
+	// erase me, just for testing data passing. rename for later...
+	subscribeToValue: function(responseObject) {
+		console.log("Subscription requested for:" + responseObject.valueName);
+		wsio.emit("csdMessage", {
+			type: "subscribeToValue",
+			nameOfValue: responseObject.valueName,
+			app:         this.id,
+			func:        responseObject.functionName
+		});
+	},
+
+	// assuming this is an array of Strings "lat lng name"
+	gmapAddLocations: function(dataFromServer) {
+		console.log("Subscription update:");
+		console.dir(dataFromServer);
+		for (var i = 0; i < dataFromServer.length; i++) {
+			this.testWebviewTalkBack({type: "gmapMakeMarker", clientInput: dataFromServer[i]});
+		}
+	},
+
+	gmapSetViewCenter: function(dataFromServer) {
+		this.element.send("googleMapFocusOnLocation", dataFromServer);
+	},
+
+// ------------------------------------------------------------------------------------------------------------
+// ------------------------------------------------------------------------------------------------------------
+// ------------------------------------------------------------------------------------------------------------
+// ------------------------------------------------------------------------------------------------------------
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 	/**
 	 * Reload the content of the webview
