@@ -58,7 +58,10 @@ var storedFileListEventHandlers = [];
 var ui;
 var uiTimer = null;
 var uiTimerDelay;
-var electronRequireObject = null;
+
+// Global variables for screenshot functionality
+var electronRequireObject  = null;
+var makingScreenShotDialog = null;
 
 // Explicitely close web socket when web browser is closed
 window.onbeforeunload = function() {
@@ -245,12 +248,13 @@ function SAGE2_init() {
 		var capableOfScreenShot = false;
 		if (__SAGE2__.browser.isElectron) {
 			try {
-				if (electronRequireObject == null) {
-					electronRequireObject = require('electron'); // ensure electron object has been initialized before using
+				if (electronRequireObject === null) {
+					// ensure electron object has been initialized before using
+					electronRequireObject = require('electron');
 				}
 				capableOfScreenShot = true;
 			} catch (e) {
-				console.log("Error? Browser is detected as Electron but cannot perform require('electron')");
+				console.log("Error> Browser is detected as Electron but cannot perform require('electron')");
 			}
 		}
 
@@ -1316,22 +1320,28 @@ function setupListeners() {
 
 	wsio.on('sendServerWallScreenShot', function(data) {
 		// first tell user that screenshot is happening, because screen will freeze
-		var makingScreenShotDialog = ui.buildMessageBox('makingScreenShotDialog', 'Please wait, wall is taking a screenshot');
+		makingScreenShotDialog = ui.buildMessageBox('makingScreenShotDialog',
+			'Please wait, wall is taking a screenshot');
+		// Add to the DOM
 		ui.main.appendChild(makingScreenShotDialog);
-		document.getElementById('makingScreenShotDialog').style.display = "block";
-		// close the notification after about... 10 seconds?
-		setTimeout(function() {
-			deleteElement('makingScreenShotDialog');
-		}, 10000);
+		// Make the dialog visible
+		makingScreenShotDialog.style.display = "block";
 		// now do check and perform capture if can
 		if (!__SAGE2__.browser.isElectron) {
 			wsio.emit("wallScreenShotFromDisplay", {capable: false});
 		} else {
-			if (electronRequireObject == null) {
-				electronRequireObject = require('electron'); // ensure electron object has been initialized before using
+			if (electronRequireObject === null) {
+				// ensure electron object has been initialized before using
+				electronRequireObject = require('electron');
 			}
 			electronRequireObject.remote.getCurrentWindow().capturePage(function(img) {
-				wsio.emit("wallScreenShotFromDisplay", {capable: true, imageAsPngData: img.toPng()});
+				// Send the image back to the server
+				wsio.emit("wallScreenShotFromDisplay", {
+					capable: true,
+					// imageAsPngData: img.toPng()
+					imageAsPngData: img.toJPEG(80)
+				});
+				deleteElement('makingScreenShotDialog');
 			});
 		}
 	});
