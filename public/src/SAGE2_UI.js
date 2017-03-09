@@ -2468,7 +2468,14 @@ function setRmbContextMenuEntries(data) {
 						}
 					}
 				} else if (this.callback === "SAGE2_UI_Special_Case_Launch_App_Control") {
-					var url = "appControl.html?appId=" + this.app;
+					var url;
+					if (this.parameters.url !== undefined && this.parameters.url !== null) {
+						url = this.parameters.url + "?appId=" + this.app;
+						url += "&pointerName=" + document.getElementById('sage2PointerLabel').value;
+						url += "&pointerColor='" + document.getElementById('sage2PointerColor').value + "'";
+					} else {
+						url = "appControl.html?appId=" + this.app;
+					}
 					open(url, "App Control Panel");
 				} else if (this.callback === "SAGE2_copyURL") {
 					// special case: want to copy the URL of the file to clipboard

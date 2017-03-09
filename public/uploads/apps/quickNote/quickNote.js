@@ -269,7 +269,9 @@ var quickNote = SAGE2_App.extend({
 		entry = {};
 		entry.description = "Edit";
 		entry.callback    = "SAGE2_UI_Special_Case_Launch_App_Control";
-		entry.parameters  = {};
+		entry.parameters  = {
+			url: this.resrcPath + "soloControl.html"
+		};
 		entries.push(entry);
 
 		entry = {};
@@ -343,6 +345,21 @@ var quickNote = SAGE2_App.extend({
 		});
 
 		return entries;
+	},
+
+	requestCurrentContent: function(obj) {
+		// pointerName: pointerName,
+		// pointerColor: pointerColor,
+		// uniqueID: uniqueID
+
+		var dataForClient = {};
+		dataForClient.type       = 'sendDataToClient';
+		dataForClient.appId      = this.id;
+		dataForClient.clientDest = obj.uniqueID;
+		dataForClient.func       = 'currentQuickNoteContent';
+		dataForClient.content    = this.element.innerHTML;
+
+		wsio.emit('csdMessage', dataForClient);
 	},
 
 	requestControlPanelLayout: function(obj) {
