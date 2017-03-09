@@ -54,11 +54,11 @@ body {
 	box-shadow: 8px 4px 15px #222222;
 
 	opacity: 1;
-	-webkit-transition: opacity 0.2s ease-in;
-	-moz-transition: opacity 0.2s ease-in;
-	-ms-transition: opacity 0.2s ease-in;
-	-o-transition: opacity 0.2s ease-in;
-	transition: opacity 0.2s ease-in;
+	-webkit-transition: opacity 0.4s ease-in;
+	-moz-transition: opacity 0.4s ease-in;
+	-ms-transition: opacity 0.4s ease-in;
+	-o-transition: opacity 0.4s ease-in;
+	transition: opacity 0.4s ease-in;
 }
 
 .windowDisappear {
