@@ -393,7 +393,7 @@ function setupFileDropHandler() {
 
 function setupCaptureMouse(element) {
 
-	if(useMouse == 0){
+	if(useMouse == 2){
 		
 		emitter.pointerButton = element;
 		document.addEventListener('pointerlockchange', emitter.pointLockChangeListener, false);
@@ -486,7 +486,7 @@ function setupListeners() {
 		}
 		makeSvgBackgroundForWidgetConnectors(ui.main.style.width, ui.main.style.height);
 
-		if(useMouse == 0)
+		if(useMouse == 2)
 			setupCaptureMouse(document.getElementById("pointerButton"));
 		
 		setupFileDropHandler();
@@ -1927,7 +1927,7 @@ function SAGE2_MouseEventEmitter(wsio) {
 		var code = parseInt(event.keyCode, 10);
 
 		console.log('key down ' +  code);
-		if (!useMouse && code === 27) {
+		if (useMouse == 2 && code === 27) {
 			this.stopMouseMethod(event);
 			if (event.preventDefault) {
 				event.preventDefault();

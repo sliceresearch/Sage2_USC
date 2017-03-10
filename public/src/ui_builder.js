@@ -267,7 +267,7 @@ function UIBuilder(json_cfg, clientID) {
 	this.build = function() {
 		console.log("Buidling the UI for the display");
 
-		if(useMouse == 0) {
+		if(useMouse == 2) {
 			var body = document.getElementsByTagName('body')[0];
 			body.style.cursor = "default";
 		}
@@ -362,7 +362,7 @@ function UIBuilder(json_cfg, clientID) {
 		this.upperBar.style.backgroundColor = backgroundColor;
 
 		var pointerButtonOffset = 0;
-		if(useMouse == 0){
+		if(useMouse == 2){
 			this.pointerButton.style.display = "table-cell";
 			this.pointerButton.style.verticalAlign = "middle";
 			this.pointerButton.style.position = "absolute";
