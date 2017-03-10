@@ -8382,7 +8382,7 @@ function deleteApplication(appId, portalId) {
 			sender.wsio.emit('stopMediaCapture', {streamId: sender.streamId});
 		}
 	}
-	
+
 	var stickingItems = stickyAppHandler.getFirstLevelStickingItems(app.id);
 	stickyAppHandler.removeElement(app);
 
@@ -8399,13 +8399,14 @@ function deleteApplication(appId, portalId) {
 
 	if (stickingItems.length > 0) {
 		for (var s in stickingItems) {
+			// When background gets deleted, sticking items stop sticking
 			toggleStickyPin(stickingItems[s].id);
 		}
 	} else {
 		// Refresh the pins on all the unpinned apps
 		handleStickyItem(null);
 	}
-	
+
 
 	broadcast('deleteElement', {elemId: appId});
 
@@ -8898,12 +8899,15 @@ function handleStickyItem(elemId) {
 	for (var i in appsNotPinned) {
 		var tmpAppVariable = SAGE2Items.applications.list[appsNotPinned[i].id];
 		if (tmpAppVariable === null || tmpAppVariable === undefined) {
+			//Apps on this list might have been deleted
 			continue;
 		}
 		im = findInteractableManager(tmpAppVariable.id);
 		if (im.getBackgroundObj(tmpAppVariable, null) === null) {
+			//If there is no background hide the pin
 			hideStickyPin(tmpAppVariable);
 		} else {
+			//If there is a background, continue to maintain the app on the not pinned list
 			appsNotPinnedWithBackground.push(tmpAppVariable);
 		}
 	}

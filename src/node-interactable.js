@@ -508,7 +508,7 @@ function findTopmostGeometry(point, geometryList, ignoreList) {
 */
 InteractableManager.prototype.getBackgroundObj = function(app, ignoreList) {
 	var layerId = this.getLayerId(app.id);
-	var obj = this.getObject(app.id, layerId);	
+	var obj = this.getObject(app.id, layerId);
 	if (obj === null) {
 		return null;
 	}
@@ -518,7 +518,7 @@ InteractableManager.prototype.getBackgroundObj = function(app, ignoreList) {
 		maxX: app.left + app.width,
 		maxY: app.top + app.height
 	};
-	
+
 	var zIndex = getZIndexOfObj(obj);
 	var results = [];
 	if (layerId !== undefined && layerId !== null) {

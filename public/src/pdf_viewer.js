@@ -793,15 +793,14 @@ var pdf_viewer = SAGE2_App.extend({
 		if (responseObject.clientInput) {
 			page = parseInt(responseObject.clientInput);
 			if (page > 0 && page <= this.pageDocument) {
-				if( page === 1)
+				if (page === 1) {
 					this.GoToFirst(this);
-				else if(page === this.pageDocument)
+				} else if (page === this.pageDocument) {
 					this.GoToLast(this);
-				else
-				{
+				} else {
 					this.previousButton.ico.attr("xlink:href", iconPath + svgImages[1]);
 					this.nextButton.ico.attr("xlink:href", iconPath + svgImages[2]);
-					this.goToPage(page); 
+					this.goToPage(page);
 				}
 			}
 		} else {
