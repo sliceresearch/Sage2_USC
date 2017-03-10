@@ -1927,7 +1927,6 @@ function SAGE2_MouseEventEmitter(wsio) {
 		var code = parseInt(event.keyCode, 10);
 
 		console.log('key down ' +  code);
-		return;
 		if (!useMouse && code === 27) {
 			this.stopMouseMethod(event);
 			if (event.preventDefault) {
@@ -1939,14 +1938,14 @@ function SAGE2_MouseEventEmitter(wsio) {
 				this.wsio.emit('keyPress', {code: code, character: String.fromCharCode(code)});
 			}
 			// if a special key - prevent default (otherwise let continue to keyPress)
-			if (code === 8 || code === 9 || (code >= 16 && code <= 46 && code !== 32) ||
-				(code >= 91 && code <= 93) || (code >= 112 && code <= 145) && (code != 122 && code != 123)) {
-				if (event.preventDefault) {
-					event.preventDefault();
-				}
+			if ((code === 8 || code === 9 || (code >= 16 && code <= 46 && code !== 32) ||
+				(code >= 91 && code <= 93) || (code >= 112 && code <= 145))) {
+				if(code != 122 && code != 123)//F11 F12
+					if (event.preventDefault) {
+						event.preventDefault();
+					}
 			}	
 		}
-		event.preventDefault();
 	}
 
 
