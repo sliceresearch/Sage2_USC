@@ -578,6 +578,20 @@ var pdf_viewer = SAGE2_App.extend({
 		that.refresh();
 	},
 
+	GoToFirst: function(that) {
+		that.goToPage(1);
+		that.previousButton.ico.attr("xlink:href", iconPath + svgImages[0]);
+		that.nextButton.ico.attr("xlink:href", iconPath + svgImages[2]);
+		that.refresh();
+	},
+
+	GoToLast: function(that) {
+		that.goToPage(that.pageDocument);
+		that.previousButton.ico.attr("xlink:href", iconPath + svgImages[1]);
+		that.nextButton.ico.attr("xlink:href", iconPath + svgImages[3]);
+		that.refresh();
+	},
+
 	createMenuBar: function() {
 
 		if (this.commandBarG) {
@@ -851,10 +865,7 @@ var pdf_viewer = SAGE2_App.extend({
 					this.translateGroup(this.imageVisualizer, this.state.horizontalOffset, 0);
 					this.generateMissingPages();
 				} else {
-					if (this.state.currentPage === this.pageDocument) {
-						return;
-					}
-					this.goToPage(this.state.currentPage + 1);
+					this.GoToNext(this);
 				}
 				this.refresh(date);
 			} else if (data.code === 37 && data.state === "down") {
@@ -873,19 +884,16 @@ var pdf_viewer = SAGE2_App.extend({
 					this.translateGroup(this.imageVisualizer, this.state.horizontalOffset, 0);
 					this.generateMissingPages();
 				} else {
-					if (this.state.currentPage === 1) {
-						return;
-					}
-					this.goToPage(this.state.currentPage - 1);
+					this.GoToPrevious(this);
 				}
 				this.refresh(date);
 			} else if (data.code === 38 && data.state === "down") {
 				// Up Arrow
-				this.goToPage(1);
+				this.GoToFirst(this);
 				this.refresh(date);
 			} else if (data.code === 40 && data.state === "down") {
 				// Down Arrow
-				this.goToPage(this.pageDocument);
+				this.GoToLast(this);
 				this.refresh(date);
 			}
 		}
@@ -896,16 +904,12 @@ var pdf_viewer = SAGE2_App.extend({
 		//   0/l - last
 		if (eventType === "keyboard") {
 			if (data.character === " ") {
-				if (this.state.currentPage === this.pageDocument) {
-					return;
-				}
-				this.goToPage(this.state.currentPage + 1);
-				this.refresh(date);
+				this.GoToNext(this);
 			} else if (data.character === "1" || data.character === "f") {
-				this.goToPage(1);
+				this.GoToFirst(this);
 				this.refresh(date);
 			} else if (data.character === "0" || data.character === "l") {
-				this.goToPage(this.pageDocument);
+				this.GoToLast(this);
 				this.refresh(date);
 			}
 		}
@@ -913,22 +917,16 @@ var pdf_viewer = SAGE2_App.extend({
 		if (eventType === "widgetEvent") {
 			switch (data.identifier) {
 				case "LastPage":
-					this.goToPage(this.pageDocument);
+					this.GoToLast(this);
 					break;
 				case "FirstPage":
-					this.goToPage(1);
+					this.GoToFirst(this);
 					break;
 				case "PreviousPage":
-					if (this.state.currentPage === 1) {
-						return;
-					}
-					this.goToPage(this.state.currentPage - 1);
+					this.GoToPrevious(this);
 					break;
 				case "NextPage":
-					if (this.state.currentPage === this.pageDocument) {
-						return;
-					}
-					this.goToPage(this.state.currentPage + 1);
+					this.GoToNext(this);
 					break;
 				case "Page":
 					switch (data.action) {
