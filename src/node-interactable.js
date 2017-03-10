@@ -416,6 +416,9 @@ InteractableManager.prototype.getObjectZIndexList = function(layerId, otherLayer
 * @return object {Object} geometric object with given id
 */
 InteractableManager.prototype.getObject = function(id, layerId) {
+	if (layerId === null || id === null) {
+		return null;
+	}
 	return this.interactableObjects[layerId][id];
 };
 
@@ -504,14 +507,18 @@ function findTopmostGeometry(point, geometryList, ignoreList) {
 * @return {Object} geometric object
 */
 InteractableManager.prototype.getBackgroundObj = function(app, ignoreList) {
+	var layerId = this.getLayerId(app.id);
+	var obj = this.getObject(app.id, layerId);	
+	if (obj === null) {
+		return null;
+	}
 	var box = {
 		minX: app.left,
 		minY: app.top,
 		maxX: app.left + app.width,
 		maxY: app.top + app.height
 	};
-	var layerId = this.getLayerId(app.id);
-	var obj = this.getObject(app.id, layerId);
+	
 	var zIndex = getZIndexOfObj(obj);
 	var results = [];
 	if (layerId !== undefined && layerId !== null) {

@@ -683,7 +683,6 @@ function setupListeners() {
 
 	wsio.on('updateItemOrder', function(order) {
 		resetIdle();
-
 		var key;
 		for (key in order) {
 			var selectedElemTitle = document.getElementById(key + "_title");

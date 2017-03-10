@@ -131,6 +131,20 @@ StickyItems.prototype.getStickingItems = function(elemId) {
 	return stickingItems;
 };
 
+
+/**
+*
+*
+* @method getFirstLevelStickingItems
+*/
+StickyItems.prototype.getFirstLevelStickingItems = function(elemId) {
+	if (this.stickyItemParent[elemId] !== null && this.stickyItemParent[elemId] !== undefined) {
+		return this.stickyItemParent[elemId];
+	}
+	return [];
+};
+
+
 /**
 *
 *

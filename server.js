@@ -5928,7 +5928,7 @@ function pointerPressOnApplication(uniqueID, pointerX, pointerY, data, obj, loca
 	im.moveObjectToFront(obj.id, "applications", ["portals"]);
 	var stickyList = stickyAppHandler.getStickingItems(obj.id);
 	for (var idx in stickyList) {
-		im.moveObjectToFront(stickyList[idx].id, obj.layerId);
+		im.moveObjectToFront(stickyList[idx].id, "applications", ["portals"]);
 	}
 	var newOrder = im.getObjectZIndexList("applications", ["portals"]);
 	broadcast('updateItemOrder', newOrder);
@@ -6004,7 +6004,7 @@ function pointerPressOnApplication(uniqueID, pointerX, pointerY, data, obj, loca
 		case "pinButton":
 			if (sagePointers[uniqueID].visible) {
 				// only if pointer on the wall, not the web UI
-				toggleStickyPin(obj.data);
+				toggleStickyPin(obj.data.id);
 			}
 			break;
 		case "closeButton":
@@ -6154,7 +6154,7 @@ function pointerPressOnDataSharingPortal(uniqueID, pointerX, pointerY, data, obj
 			break;
 		}
 		case "pinButton": {
-			// toggleStickyPin(obj.data);
+			// toggleStickyPin(obj.data.id);
 			break;
 		}
 		case "closeButton": {
@@ -6253,6 +6253,7 @@ function sendPointerPressToApplication(uniqueID, app, pointerX, pointerY, data) 
 		data: data,
 		date: Date.now()
 	};
+	handleStickyItem(app.id);
 
 	broadcast('eventInItem', event);
 
@@ -8381,6 +8382,9 @@ function deleteApplication(appId, portalId) {
 			sender.wsio.emit('stopMediaCapture', {streamId: sender.streamId});
 		}
 	}
+	
+	var stickingItems = stickyAppHandler.getFirstLevelStickingItems(app.id);
+	stickyAppHandler.removeElement(app);
 
 	SAGE2Items.applications.removeItem(appId);
 	var im = findInteractableManager(appId);
@@ -8393,7 +8397,16 @@ function deleteApplication(appId, portalId) {
 		}
 	}
 
-	stickyAppHandler.removeElement(app);
+	if (stickingItems.length > 0) {
+		for (var s in stickingItems) {
+			toggleStickyPin(stickingItems[s].id);
+		}
+	} else {
+		// Refresh the pins on all the unpinned apps
+		handleStickyItem(null);
+	}
+	
+
 	broadcast('deleteElement', {elemId: appId});
 
 	if (portalId !== undefined && portalId !== null) {
@@ -8857,33 +8870,37 @@ function wsRadialMenuMoved(wsio, data) {
 
 /**
 * Called when an item is dropped after a move, and when a sticky item pin is toggled. This method
-* checks handles attaching of sticky items to background items and detaching previously attached
+* checks attaching of sticky items to background items and detaching previously attached
 * sticky items from background items (when the are moved away). It also handles hiding of pins of
 * items not pinned when their background is removed from underneath them
 */
 
 function handleStickyItem(elemId) {
 	var app = SAGE2Items.applications.list[elemId];
-	if (app === null || app.sticky !== true) {
-		return;
-	}
-	stickyAppHandler.detachStickyItem(app);
-	var im = findInteractableManager(elemId);
-	var backgroundObj = im.getBackgroundObj(app, null);
-	if (backgroundObj === null) {
-		hideStickyPin(app);
-	} else if (SAGE2Items.applications.list.hasOwnProperty(backgroundObj.data.id)) {
-		if (app.pinned === true) {
-			stickyAppHandler.attachStickyItem(backgroundObj.data, app);
-		} else {
-			stickyAppHandler.registerNotPinnedApp(app);
+	var im;
+	if (app !== null && app !== undefined && app.sticky === true) {
+		stickyAppHandler.detachStickyItem(app);
+		im = findInteractableManager(elemId);
+		var backgroundObj = im.getBackgroundObj(app, null);
+		if (backgroundObj === null) {
+			hideStickyPin(app);
+		} else if (SAGE2Items.applications.list.hasOwnProperty(backgroundObj.data.id)) {
+			if (app.pinned === true) {
+				stickyAppHandler.attachStickyItem(backgroundObj.data, app);
+			} else {
+				stickyAppHandler.registerNotPinnedApp(app);
+			}
+			showStickyPin(app);
 		}
-		showStickyPin(app);
 	}
 	var appsNotPinned = stickyAppHandler.getNotPinnedAppList();
 	var appsNotPinnedWithBackground = [];
 	for (var i in appsNotPinned) {
-		var tmpAppVariable = appsNotPinned[i];
+		var tmpAppVariable = SAGE2Items.applications.list[appsNotPinned[i].id];
+		if (tmpAppVariable === null || tmpAppVariable === undefined) {
+			continue;
+		}
+		im = findInteractableManager(tmpAppVariable.id);
 		if (im.getBackgroundObj(tmpAppVariable, null) === null) {
 			hideStickyPin(tmpAppVariable);
 		} else {
@@ -8898,8 +8915,9 @@ function handleStickyItem(elemId) {
 * Called when user clicks on a sticky item pin. This method toggles the status of the pin.
 */
 
-function toggleStickyPin(app) {
-	if (app === null || app.sticky !== true) {
+function toggleStickyPin(appId) {
+	var app = SAGE2Items.applications.list[appId];
+	if (app === null || app === undefined || app.sticky !== true) {
 		return;
 	}
 	if (app.hasOwnProperty("pinned") === false || app.pinned !== true) {
@@ -8910,7 +8928,6 @@ function toggleStickyPin(app) {
 	}
 
 	handleStickyItem(app.id);
-	broadcast('showStickyPin', app);
 }
 
 
