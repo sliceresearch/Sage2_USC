@@ -1,689 +1,413 @@
+// SAGE2 is available for use under the SAGE2 Software License
 //
-// SAGE2 application: notepad
-// by: Krishna Bharadwaj <kbhara5@uic.edu>
+// University of Illinois at Chicago's Electronic Visualization Laboratory (EVL)
+// and University of Hawai'i at Manoa's Laboratory for Advanced Visualization and
+// Applications (LAVA)
 //
-// Copyright (c) 2015
+// See full text, terms and conditions in the LICENSE.txt included file
 //
+// Copyright (c) 2014
 
 "use strict";
 
-/* global  */
-if (!String.prototype.splice) {
+var	NotepadBlinker = function(id, ctx, date, color) {
+	this.id = id;
+	this.visible  = true;
+	this.color    = color;
+	this.blinkerX = null;
+	this.blinkerY = null;
+	this.textIdx  = null;
+	this.blinkerL = null;
+	this.blinkerC = null;
+	this.draw = function(text, fH) {
+		// This function assumes that offSet function is always called prior to this function
+		this.blinkerY += this.blinkerL * fH;
+		if (this.blinkerC > 0 && this.blinkerL in text) {
+			this.blinkerX += ctx.measureText(text[this.blinkerL].substring(0, this.blinkerC)).width;
+		}
 
-	/**
-	 * {JSDoc}
-	 *
-	 * The splice() method changes the content of a string by removing a range of
-	 * characters and/or adding new characters.
-	 *
-	 * @this {String}
-	 * @param {number} start Index at which to start changing the string.
-	 * @param {number} delCount An integer indicating the number of old chars to remove.
-	 * @param {string} newSubStr The String that is spliced in.
-	 * @return {string} A new string with the spliced substring.
-	 */
-	String.prototype.splice = function(start, delCount, newSubStr) {
-		return this.slice(0, start) + newSubStr + this.slice(start + Math.abs(delCount));
+		var col    = ctx.strokeStyle;
+		var offset = fH * 0.25;
+		var offY   = this.blinkerY + offset;
+		ctx.strokeStyle = "rgba(" + this.color[0] + "," + this.color[1] + "," + this.color[2] + ",1.0)";
+		ctx.beginPath();
+		ctx.moveTo(this.blinkerX, offY);
+		ctx.lineTo(this.blinkerX, offY - fH);
+		ctx.moveTo(this.blinkerX, offY);
+		ctx.closePath();
+		ctx.stroke();
+		ctx.strokeStyle = col;
 	};
-}
 
-function getPosition(str, m, i) {
-	return str.split(m, i).join(m).length;
-}
+	this.moveLC = function(l, c) {
+		this.blinkerL = l;
+		this.blinkerC = c;
+	};
+
+	this.offSet = function(x, y) {
+		this.blinkerX = x;
+		this.blinkerY = y;
+	};
+};
+
 
 var notepad = SAGE2_App.extend({
 	init: function(data) {
+		this.SAGE2Init("canvas", data);
 
-		// Create div into the DOM
-		this.SAGE2Init("div", data);
-		this.cloneable = true;
-		this.state.owner = data.state.owner;
-		this.state.createdOn = data.date;
-		this.state.buffer = (data.state.bufferEmpty) ? "" : data.state.buffer;
-		this.state.cursorTable = data.state.cursorTable || {};
-		this.state.bufferEmpty = false;
-		this.state.fileName = data.state.fileName || "untitled";
-		this.state.fontSize = data.state.fontSize || "32px";
-		// Set the DOM id
-		this.element.id = "div_" + data.id;
-		// Set the background to black
-		this.element.style.backgroundColor = 'black';
+		// Set the framerate
+		this.maxFPS = 4;
+		this.resizeEvents = "continuous";
 
-		// move and resize callbacks
-		this.resizeEvents = "onfinish";
-		// this.moveEvents   = "continuous";
+		this.linesVisble = null;
+		this.columns = null;
+		this.lines   = null;
 
-		// SAGE2 Application Settings
-		//
-		// Control the frame rate for an animation application
-		this.maxFPS = 2.0;
-		this.colorSchemeTable = [];
-		this.colorSchemeIndex = 0;
+		this.fontSize = 12;
+		this.font     = "Arial";
+		this.bold     = false;
+		this.height   = null;
+		this.space    = null;
+		this.lMargin  = 40;
+		this.fontHeight = null;
 
-		this.enableControls = true;
-		this.fontSize = 18.0;
-		this.fontScaleFactor = this.fontSize / this.getMinDim();
+		this.minDim  = null;
+		this.text    = "";
+		this.range   = [];
+		this.timer   = null;
+		this.blinkerArr = [];
+		this.specialKeyFlag = false;
 
-		this.createRuler();
-		this.setupDivElements();
-		this.makeColorSchemeTable();
+		var _this = this;
 
-		if (this.writeArea.scrollHeight === this.writeArea.clientHeight) {
-			var n = this.getNumberOfLines(false);
-			this.state.buffer = this.appendEmptyLines(this.state.buffer, n);
+		if (this.state.content === undefined || this.state.content.length === 0) {
+			if (this.state.file) {
+				readFile(this.state.file, function(err, text) {
+					if (!err) {
+						var arrayOfLines = text.match(/[^\r\n]+/g);
+						for (var j = 0; j < arrayOfLines.length; j++) {
+							_this.state.content[j + 1] = arrayOfLines[j];
+						}
+						_this.SAGE2Sync(true);
+					}
+				}, "TEXT");
+			} else {
+				this.state.content = [];
+			}
 		}
 
-		//this.controls.addButton({label: "color", position: 4, identifier: "color"});
-		this.controls.addButton({type: "zoom-in", position: 8, identifier: "increaseFont"});
-		this.controls.addButton({type: "zoom-out", position: 9, identifier: "decreaseFont"});
-		//this.controls.addButton({type: "new", position: 5, identifier: "NewNote"});
-		this.controls.addRadioButton({identifier: "colorScheme",
-			label: "Theme",
-			options: ["Dark", "Lite", "Cofi", "Blue"],
-			default: "Dark"
-		});
-		//TODO: Need to fetch user id and feed it as Owner
-		if (this.state.file) {
-			console.log(this.state.file);
-			readFile(this.state.file, function(error, fileContent) {
-				if (error === null || error === undefined) {
-					var fileName = this.state.file;
-					var end = fileName.lastIndexOf('.');
-					end = (end > -1) ? end : fileName.length;
-					fileName = fileName.slice(fileName.lastIndexOf('/') + 1, end);
-					this.state.fileName = fileName;
-					this.requestFileBuffer({
-						fileName: fileName,
-						extension: "md",
-						owner: this.state.owner,
-						createdOn: data.date,
-						content: fileContent
-					});
-					this.requestNewTitle(fileName + ' - notepad');
-					this.controls.addTextInput({value: this.state.fileName, identifier: "TextInput", label: "File"});
-					this.controls.finishedAddingControls();
-					this.state.buffer = fileContent;
-					this.refresh(data.date);
-				}
-			}.bind(this));
-		} else {
-			this.requestFileBuffer({
-				fileName: this.state.fileName,
-				extension: "md", owner: this.state.owner,
-				createdOn: data.date,
-				content: this.state.buffer
-			});
-			this.requestNewTitle(this.state.fileName + ' - notepad');
-			this.controls.addTextInput({value: this.state.fileName, identifier: "TextInput", label: "File"});
-			this.controls.finishedAddingControls();
+		this.ctx = this.element.getContext('2d');
+		this.minDim = Math.min(this.element.width, this.element.height);
+		this.computeMetrics();
+		if (isMaster) {
+			this.fileRead = true;
+			this.fileName = "Sample.txt";
 		}
-
-		this.changeColorScheme("Dark");
-		console.log("end of init");
-	},
-
-	getMinDim: function() {
-		return Math.min(this.element.clientWidth, this.element.clientHeight);
-	},
-
-	setFontSize: function(newSize) {
-		this.fontSize = newSize;
-		this.fontScaleFactor = this.fontSize / this.getMinDim();
-		this.computeDimensions();
-		this.scrollKnob.style.top = parseInt(this.writeArea.scrollTop / this.writeArea.scrollHeight
-			* parseInt(this.scrollBar.style.height)) + "px";
-	},
-
-	setupDivElements: function() {
-		var leftMargin = this.makeDivElement({
-			id: this.element.id + "leftMargin",
-			type: "span",
-			options: {
-				id: this.element.id + "leftMargin"
-			},
-			style: {
-				position: 'absolute',
-				display: 'block',
-				overflow: 'hidden',
-				wordWrap: 'break-word',
-				lineHeight: 1.2,
-				color: 'rgba(150,90,90,1.0)',
-				fontSize: parseInt(this.fontScaleFactor * this.getMinDim()) + "px",
-				backgroundColor: 'rgba(0,0,0,1.0)',
-				textAlign: "right"
-			}
-		}, true);
-
-		var scrollBar = this.makeDivElement({
-			id: this.element.id + "scrollBar",
-			type: "div",
-			options: {
-				id: this.element.id + "scrollBar"
-			},
-			style: {
-				position: 'absolute',
-				display: 'block',
-				borderRadius: "3px 3px 3px 3px",
-				backgroundColor: 'rgba(30,30,30,1.0)'
-			}
-		}, true);
-
-		var scrollKnob = this.makeDivElement({
-			id: this.element.id + "scrollKnob",
-			type: "div",
-			options: {
-				id: this.element.id + "scrollKnob"
-			},
-			style: {
-				position: 'absolute',
-				display: 'block',
-				borderRadius: "3px 3px 3px 3px",
-				backgroundColor: 'rgba(90,90,90,1.0)'
-			}
-		}, true);
-
-		var writeArea = this.makeDivElement({
-			id: this.element.id + "writeArea",
-			type: "span",
-			options: {
-				id: this.element.id + "writeArea"
-			},
-			style: {
-				display: 'block',
-				position: 'absolute',
-				overflow: 'hidden',
-				wordWrap: 'break-word',
-				lineHeight: 1.2,
-				color: 'rgba(150,90,90,1.0)',
-				fontSize: parseInt(this.fontScaleFactor * this.getMinDim()) + "px",
-				backgroundColor: 'rgba(0,0,0,1.0)'
-			}
-		}, true);
-		this.element.appendChild(scrollBar);
-		this.element.appendChild(leftMargin);
-		this.element.appendChild(writeArea);
-		this.scrollBar = scrollBar;
-		this.scrollBar.appendChild(scrollKnob);
-		this.scrollKnob = scrollKnob;
-		this.writeArea = writeArea;
-		this.leftMargin = leftMargin;
-		this.makeCaretHTML();
-		this.computeDimensions();
-	},
-
-	computeDimensions: function() {
-		var scrollBarWidth = parseInt(this.config.ui.titleBarHeight * 0.4);
-		var marginWidth = this.computeVisualLengthOfString('9999');
-		this.makeDivElement({
-			id: this.element.id + "leftMargin",
-			style: {
-				left: '5px',
-				top: '10px',
-				height: (parseInt(this.element.clientHeight) - 20).toString() + 'px',
-				width: marginWidth + 'px',
-				fontSize: parseInt(this.fontScaleFactor * this.getMinDim()) + "px"
-			}
-		}, false);
-
-		this.makeDivElement({
-			id: this.element.id + "scrollBar",
-			style: {
-				right: '5px',
-				top: '10px',
-				height: (parseInt(this.element.clientHeight) - 20).toString() + 'px',
-				width: scrollBarWidth + "px"
-			}
-		}, false);
-
-		this.makeDivElement({
-			id: this.element.id + "scrollKnob",
-			style: {
-				left: (parseInt(scrollBarWidth * 0.25)).toString() + "px",
-				top: '0px',
-				width: (parseInt(scrollBarWidth * 0.5)).toString() + "px",
-				height: (parseInt(this.element.clientHeight) - 20).toString() + 'px'
-			}
-		}, false);
-
-		this.makeDivElement({
-			id: this.element.id + "writeArea",
-			style: {
-				left: (marginWidth + 10).toString() + 'px',
-				top: '10px',
-				height: (parseInt(this.element.clientHeight) - 20).toString() + 'px',
-				width: (parseInt(this.element.clientWidth) - scrollBarWidth - marginWidth - 20).toString() + "px",
-				fontSize: parseInt(this.fontScaleFactor * this.getMinDim()) + "px"
-			}
-		}, false);
-		this.makeDivElement({
-			id: this.ruler.id,
-			style: {
-				fontSize: this.writeArea.style.fontSize, lineHeight: this.writeArea.style.lineHeight
-			}
-		}, false);
-		this.caretHandle.style.fontSize = this.writeArea.style.fontSize;
-		this.caretHandle.style.lineHeight = this.writeArea.style.lineHeight * 1.2;
-		this.computeKnobHeight();
-	},
-
-	getNumberOfLines: function(visible) {
-		var fontSize = parseInt(this.writeArea.style.fontSize);
-		var lineHeight = parseFloat(this.writeArea.style.lineHeight) || 1.0;
-		return parseInt((visible ? this.writeArea.clientHeight : this.writeArea.scrollHeight) / (fontSize * lineHeight));
-	},
-
-	getCharacterPositionClicked: function(position, str) {
-		var temp;
-		var i = 0;
-		var actualX = position.x - parseInt(this.writeArea.style.left);
-		temp = "";
-		while ((this.computeVisualLengthOfString(temp + str[i]) <= actualX) && i < str.length) {
-			temp += str[i];
-			i = i + 1;
-		}
-		return i;
-	},
-
-	makeDivElement: function(data, create) {
-		var div;
-		if (create === true) {
-			div = document.createElement(data.type);
-		} else {
-			div = document.getElementById(data.id);
-		}
-
-		var opt, style, o, s;
-		for (o in data.options) {
-			opt = data.options[o];
-			div[o] = opt;
-		}
-		for (s in data.style) {
-			style = data.style[s];
-			div.style[s] = style;
-		}
-		return div;
+		this.controls.finishedAddingControls();
 	},
 
 	load: function(date) {
-		console.log(this.state);
-		if (this.state.bufferEmpty === true) {
-			this.state.buffer = "";
-			this.state.bufferEmpty = false;
-		}
 		this.refresh(date);
+	},
+
+	computeMetrics: function() {
+		this.height = this.element.height;
+		this.fontHeight = this.getHeightOfText(this.bold, this.font, this.fontSize);
+		this.linesVisible = Math.floor(this.element.height / this.fontHeight);
+		this.space = this.ctx.measureText(" ").width;
+		this.columns = Math.floor(this.element.width / this.space);
+	},
+
+	findRange: function() {
+		this.range[0] = [1, this.linesVisible];
+	},
+
+	getHeightOfText: function(bold, font, size) {
+		var div = document.createElement('DIV');
+		div.innerHTML = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+		div.style.position = 'absolute';
+		div.style.top = '-100px';
+		div.style.left = '-100px';
+		div.style.fontFamily = font;
+		div.style.fontWeight = bold ? 'bold' : 'normal';
+		div.style.fontSize = size + 'pt';
+		document.body.appendChild(div);
+		var rsize = div.offsetHeight;
+		document.body.removeChild(div);
+		return rsize;
+	},
+
+	joinText: function() {
+		var buffer = "";
+		for (var parts = 0; parts < this.range.length; parts++) {
+			var start = this.range[parts][0];
+			var end   = this.range[parts][1];
+			for (var i = start; i <= end; i++) {
+				if (i in this.state.content) {
+					buffer = buffer + this.state.content[i];
+				}
+				buffer = buffer + "\r\n";
+			}
+		}
+		return buffer;
+	},
+
+	displayText: function() {
+		var count = 1;
+		for (var parts = 0; parts < this.range.length; parts++) {
+			var start = this.range[parts][0];
+			var end = this.range[parts][1];
+			for (var i = start; i <= end; i++) {
+
+				this.ctx.font = "16px " + this.font;
+				this.ctx.fillText(('000' + i).slice(-3), 5, count * this.fontHeight);
+				this.ctx.font = this.fontSize + "px " + this.font;
+				if (i in this.state.content && this.state.content[i] !== null) {
+					var wrSpc = this.element.width - (2 * this.space + this.lMargin);
+					if (this.ctx.measureText(this.state.content[i]).width > wrSpc) {
+						var cut = Math.floor(wrSpc / this.ctx.measureText(this.state.content[i]).width *
+							this.state.content[i].length);
+						var re = new RegExp(".{1," + cut + "}", "g");
+						var mLines = this.state.content[i].match(re);
+						for (var ml = 0; ml < mLines.length; ml++) {
+							this.ctx.fillText(mLines[ml], this.space + this.lMargin, count * this.fontHeight);
+							count++;
+						}
+
+					} else {
+						this.ctx.fillText(this.state.content[i], this.space + this.lMargin, count * this.fontHeight);
+					}
+				}
+				count++;
+			}
+		}
 	},
 
 	draw: function(date) {
-		//console.log(linesVisible - this.displayArray.length + 2);
-		if (this.writeArea.scrollHeight === this.writeArea.clientHeight) {
-			var n = this.getNumberOfLines(false);
-			this.state.buffer = this.appendEmptyLines(this.state.buffer, n);
-		}
-		var lines = this.state.buffer;
-		var posList = [];
-		for (var key in this.state.cursorTable) {
-			if (this.state.cursorTable.hasOwnProperty(key) === true) {
-				posList.push(this.state.cursorTable[key]);
+		// clear canvas
+		this.ctx.clearRect(0, 0, this.element.width, this.element.height);
+
+		this.ctx.fillStyle = "rgba(255, 255, 255, 1.0)";
+		this.ctx.fillRect(0, 0, this.element.width, this.element.height);
+		this.ctx.fillStyle = "rgba(150, 150, 150, 1.0)";
+		this.ctx.fillRect(0, 0, this.lMargin, this.element.height);
+		this.ctx.fillStyle = "rgba(200, 200, 200, 1.0)";
+		this.ctx.fillRect(this.element.width - 30, 0, 30, this.element.height);
+		this.ctx.strokeStyle = "rgba(0, 0, 0, 1.0)";
+		this.ctx.fillStyle = "rgba(0, 0, 0, 1.0)";
+		this.space = this.ctx.measureText(" ").width;
+		this.findRange();
+		this.displayText();
+		if (date.getMilliseconds() < 500) {
+			for (var bkr in this.blinkerArr) {
+				this.blinkerArr[bkr].offSet(this.space + this.lMargin, 0);
+				this.blinkerArr[bkr].draw(this.state.content, this.fontHeight);
 			}
 		}
-		var temp;
-		if (posList.length > 0) {
-			temp = posList.sort().map(function(d) {
-				var chunk = lines.slice(0, d);
-				lines = lines.slice(d);
-				return chunk;
-			}).join(this.caretHTML.innerHTML);
-			temp = (temp + this.caretHTML.innerHTML + lines).split('\n');
-		} else {
-			temp = lines.split('\n');
-		}
-
-		this.writeArea.innerHTML = temp.join('<br>');
-		this.leftMargin.innerHTML = (temp.map(function(d, i) {
-			return i + 1;
-		})).join('<br>');
-		this.computeKnobHeight();
-	},
-
-	appendEmptyLines: function(str, n) {
-		var temp = str.split('\n');
-		if (temp.length < n) {
-			temp = temp.concat(Array(n - temp.length + 2).join('\n').split('\n'));
-		}
-		return temp.join('\n');
 	},
 
 	resize: function(date) {
-		// Called when window is resized
-		this.setFontSize(this.fontSize);
-		this.refresh(date);
+		this.fontSize = Math.max(Math.floor(0.02 * this.element.height), 14);
+		this.computeMetrics();
+		this.draw(date);
 	},
 
-	move: function(date) {
-		// Called when window is moved (set moveEvents to continuous)
+
+	enterKey: function(curL, curC, userId) {
+		if (curL in this.state.content) {
+			var nl = this.state.content[curL].substring(curC, this.state.content[curL].length);
+			this.state.content[curL] = this.state.content[curL].substring(0, curC);
+			if (curL + 1 in this.state.content) {
+				this.state.content.splice(curL + 1, 0, nl);
+			} else {
+				this.state.content[curL + 1] = nl;
+			}
+		} else {
+			this.state.content[curL] = "";
+		}
+		this.blinkerArr[userId].moveLC(curL + 1, 0);
+	},
+
+	/**
+	* To enable right click context menu support,
+	* this function needs to be present with this format.
+	*/
+	getContextEntries: function() {
+		var entries = [];
+
+		// Special callback: dowload the file
+		entries.push({
+			description: "Download",
+			callback: "SAGE2_download",
+			parameters: {
+				url: this.state.file
+			}
+		});
+
+		return entries;
+	},
+
+	event: function(type, position, userId, data, date) {
+		var curL, curC, pre, post, t;
+		var x = position.x;
+		var y = position.y;
+		var user_color = userId.color || [255, 0, 0];
+		if (type === "pointerPress") {
+			if (data.button === "left") {
+				if ((userId.id in this.blinkerArr) === false) {
+					var bkr = new NotepadBlinker(userId.id, this.ctx, date, user_color);
+					this.blinkerArr[userId.id] = bkr;
+
+				} else {
+					this.blinkerArr[userId.id].color = user_color;
+				}
+				var lno = Math.ceil(y / this.fontHeight);
+				var tArIdx = lno;
+				if (tArIdx in this.state.content) {
+					var len = this.ctx.measureText(this.state.content[tArIdx]).width;
+					if (x >= len) {
+						this.blinkerArr[userId.id].moveLC(lno, this.state.content[tArIdx].length);
+					} else {
+						var c;
+						for (c = 0; c < this.state.content[tArIdx].length; c++) {
+							if (this.ctx.measureText(this.state.content[tArIdx].substring(0, c)).width > x) {
+								break;
+							}
+						}
+						this.blinkerArr[userId.id].moveLC(lno, c - 1);
+					}
+				} else {
+					this.blinkerArr[userId.id].moveLC(lno, 0);
+				}
+
+			} else if (data.button === "right") {
+				// right press
+			}
+		} else if (type === "pointerRelease") {
+			if (data.button === "left") {
+				// left release
+			} else if (data.button === "right") {
+				// right release
+			}
+		} else if (type === "pointerMove") {
+			// pointer move
+		} else if (type === "pointerDoubleClick") {
+			// double click
+		} else if (type === "keyboard") {
+			// the key character is stored in ascii in data.code
+			// all other keys will come in as typed:  'a', 'A', '1', '!' etc
+			// tabs and new lines ought to be coming in too
+			var theAsciiCode = data.code;
+			if ((userId.id in this.blinkerArr) === false) {
+				// Bad code. need to remove once the event handler has been modified.
+				return;
+			}
+			curL = this.blinkerArr[userId.id].blinkerL;
+			curC = this.blinkerArr[userId.id].blinkerC;
+			if (theAsciiCode === 13) {
+				this.enterKey(curL, curC, userId.id);
+			} else {
+				if (curL in this.state.content) {
+					this.state.content[curL] = this.state.content[curL].substring(0, curC) +  String.fromCharCode(theAsciiCode) +
+										this.state.content[curL].substring(curC, this.state.content[curL].length);
+				} else {
+					this.state.content[curL] = String.fromCharCode(theAsciiCode);
+				}
+				this.blinkerArr[userId.id].moveLC(curL, curC + 1);
+			}
+		} else if (type === "specialKey" && data.state === "down") {
+			var theJavascriptCode = data.code;
+			curL = userId.id && this.blinkerArr[userId.id].blinkerL;
+			curC = this.blinkerArr[userId.id].blinkerC;
+			if (theJavascriptCode === 8) {
+				if (curL in this.state.content) {
+					pre  = this.state.content[curL].substring(0, curC - 1);
+					post = this.state.content[curL].substring(curC, this.state.content[curL].length);
+					if (curC > 0) {
+						this.state.content[curL] = pre + post;
+						this.blinkerArr[userId.id].moveLC(curL, curC - 1);
+
+					} else if (curL > 1) {
+						t = "";
+						if (curL - 1 in this.state.content) {
+							t =  this.state.content[curL - 1];
+						}
+						this.state.content[curL - 1] = t + post;
+						this.state.content.splice(curL, 1);
+						this.blinkerArr[userId.id].moveLC(curL - 1, t.length);
+					}
+				} else if (curL - 1 in this.state.content) {
+					this.blinkerArr[userId.id].moveLC(curL - 1, this.state.content[curL - 1].length);
+				} else if (curL > 1) {
+					this.blinkerArr[userId.id].moveLC(curL - 1, 0);
+				}
+
+			} else if (theJavascriptCode === 46) {
+				pre  = this.state.content[curL].substring(0, curC);
+				post = this.state.content[curL].substring(curC + 1, this.state.content[curL].length);
+
+				if ((curL in this.state.content) === false) {
+					return;
+				}
+
+				if (curC < this.state.content[curL].length) {
+					this.state.content[curL] = pre + post;
+				} else {
+					t = "";
+					if (curL + 1 in this.state.content) {
+						t = this.state.content[curL + 1];
+						this.state.content.splice(curL + 1, 1);
+					}
+					this.state.content[curL] = this.state.content[curL]  + t;
+				}
+
+			} else if (theJavascriptCode === 37) {
+				if (curC > 0) {
+					curC--;
+				} else {
+					curL = curL - 1 || curL;
+					curC = (curL in this.state.content) ? this.state.content[curL].length : 0;
+				}
+				this.blinkerArr[userId.id].moveLC(curL, curC);
+
+			} else if (theJavascriptCode === 39) {
+				if (curL in this.state.content && curC < this.state.content[curL].length) {
+					curC++;
+				} else {
+					curL++;
+					curC = 0;
+				}
+				this.blinkerArr[userId.id].moveLC(curL, curC);
+			} else if (theJavascriptCode === 38) {
+				if (curL - 1 in this.state.content) {
+					curC = Math.min(curC, this.state.content[curL - 1].length);
+					curL--;
+				} else if (curL - 1 > 0) {
+					curL--;
+					curC = 0;
+				}
+				this.blinkerArr[userId.id].moveLC(curL, curC);
+			} else if (theJavascriptCode === 40) {
+				if (curL + 1 in this.state.content) {
+					curC = Math.min(curC, this.state.content[curL + 1].length);
+					curL++;
+				} else {
+					curL++;
+					curC = 0;
+				}
+				this.blinkerArr[userId.id].moveLC(curL, curC);
+			}
+
+		} else if (type === "pointerScroll") {
+			// not implemented yet
+		}
+
 		this.refresh(date);
 	},
 
 	quit: function() {
-		// Make sure to delete stuff (timers, ...)
-	},
-
-	changeColorScheme: function(name) {
-		var colorScheme = this.colorSchemeTable[name];
-		if (colorScheme !== null && colorScheme !== undefined) {
-			for (var c in colorScheme) {
-				this.makeDivElement({id: c,
-					style: {backgroundColor: colorScheme[c].backgroundColor, color: colorScheme[c].color}}, false);
-			}
-			this.caretHandle.style.color = colorScheme[this.writeArea.id].color;
-		}
-	},
-
-	addColorScheme: function(name, data) {
-		var colorScheme = {};
-		for (var i in data) {
-			colorScheme[data[i].id] = { color: data[i].color, backgroundColor: data[i].backgroundColor};
-		}
-		this.colorSchemeTable[name] = colorScheme;
-	},
-
-	makeColorSchemeTable: function() {
-		this.addColorScheme("Dark", [{id: this.element.id, backgroundColor: "#1E1E1E", color: "#000000"},
-			{id: this.writeArea.id, backgroundColor: "#1E1E1E", color: "#FFFFFF"},
-			{id: this.element.id + "leftMargin", backgroundColor: "#1E1E1E", color: "#787878"},
-			{id: this.element.id + "scrollBar", backgroundColor: "#1E1E1E", color: "#000000"},
-			{id: this.element.id + "scrollKnob", backgroundColor: "#5A5A5A", color: "#000000"}]);
-		this.addColorScheme("Lite", [{id: this.element.id, backgroundColor: "#F0F0F0", color: "#000000"},
-			{id: this.writeArea.id, backgroundColor: "#F0F0F0", color: "#000000"},
-			{id: this.element.id + "leftMargin", backgroundColor: "#F0F0F0", color: "#787878"},
-			{id: this.element.id + "scrollBar", backgroundColor: "#F0F0F0", color: "#000000"},
-			{id: this.element.id + "scrollKnob", backgroundColor: "#969696", color: "#000000"}]);
-		this.addColorScheme("Cofi", [{id: this.element.id, backgroundColor: "#4D351D", color: "#000000"},
-			{id: this.writeArea.id, backgroundColor: "#4D351D", color: "#CCB697"},
-			{id: this.element.id + "leftMargin", backgroundColor: "#4D351D", color: "#8B6E46"},
-			{id: this.element.id + "scrollBar", backgroundColor: "#4D351D", color: "#000000"},
-			{id: this.element.id + "scrollKnob", backgroundColor: "#B99768", color: "#000000"}]);
-		this.addColorScheme("Blue", [{id: this.element.id, backgroundColor: "#003399", color: "#000000"},
-			{id: this.writeArea.id, backgroundColor: "#003399", color: "#CCFFCC"},
-			{id: this.element.id + "leftMargin", backgroundColor: "#003399", color: "#0099CC"},
-			{id: this.element.id + "scrollBar", backgroundColor: "#003399", color: "#000000"},
-			{id: this.element.id + "scrollKnob", backgroundColor: "#66CCFF", color: "#000000"}]);
-	},
-
-	event: function(eventType, position, user_id, data, date) {
-		var cursor;
-		if (eventType === "pointerPress" && (data.button === "left")) {
-			// click
-			if (position.x > parseInt(this.scrollBar.style.right) - parseInt(this.scrollBar.style.width)
-				&& position.x < parseInt(this.scrollBar.style.right)
-				&& position.y > parseInt(this.scrollBar.style.top)
-				&& position.y < parseInt(this.scrollBar.style.top) + parseInt(this.scrollBar.style.height)) {
-				this.moveScrollKnob(position);
-			} else {
-				if (data.button === "left") {
-					if ((user_id.id in this.state.cursorTable) === false) {
-						this.state.cursorTable[user_id.id] = 0;
-					}
-				}
-				cursor = this.getStringIndex(position);
-				this.state.cursorTable[user_id.id] = cursor;
-				this.updateFileBufferCursorPosition({user_id: user_id.id, cursorPosition: cursor});
-				this.refresh(date);
-			}
-		} else if (eventType === "pointerMove" && this.dragging) {
-			// move
-		} else if (eventType === "pointerRelease" && (data.button === "left")) {
-			// click release
-		} else if (eventType === "pointerScroll") {
-			this.setWindowScroll(data.wheelDelta);
-			// Scroll events for zoom
-		} else if (eventType === "widgetEvent") {
-			// widget events
-			switch (data.identifier) {
-				case "colorScheme":
-					this.changeColorScheme(data.value);
-					break;
-				case "NewNote":
-					//this.requestForClone = true;
-					//this.state.bufferEmpty = true;
-					break;
-				case "TextInput":
-					this.requestFileBuffer({fileName: data.text, extension: "md", owner: this.state.owner, createdOn: null});
-					this.requestNewTitle(data.text + ' - notepad');
-					break;
-				case "increaseFont":
-					if (this.fontSize < 56) {
-						this.setFontSize(this.fontSize + 1);
-						this.refresh(date);
-					}
-					break;
-				case "decreaseFont":
-					if (this.fontSize > 12) {
-						this.setFontSize(this.fontSize - 1);
-						this.refresh(date);
-					}
-					break;
-				default:
-					console.log("No handler for:", data.identifier);
-					break;
-			}
-			this.refresh(date);
-		} else if (eventType === "keyboard") {
-			this.insertBufferUpdate(data, user_id);
-			this.refresh(date);
-		} else if (eventType === "specialKey" && data.state === "down") {
-			var lineOffset = 1;
-			switch (data.code) {
-				case 8:
-				case 35:
-				case 36:
-				case 37:
-				case 39:
-				case 46:
-					this.insertBufferUpdate(data, user_id);
-					this.refresh(date);
-					break;
-				case 38://UP
-				case 40://DOWN
-					if (data.code === 38) {
-						lineOffset += -2;
-					}
-					var fontSize = parseInt(this.writeArea.style.fontSize);
-					var lineHeight = parseFloat(this.writeArea.style.lineHeight) || 1.0;
-					var heightPerLine = fontSize * lineHeight;
-					var pos = this.state.cursorTable[user_id.id];
-					var positionXY = this.getXYFromIndex(pos);
-					positionXY.y += lineOffset * heightPerLine;
-					cursor = this.getStringIndex(positionXY);
-					this.state.cursorTable[user_id.id] = cursor;
-					this.updateFileBufferCursorPosition({user_id: user_id.id, cursorPosition: cursor});
-					this.refresh(date);
-					break;
-				default:
-					break;
-			}
-		}
-	},
-
-	insertBufferUpdate: function(data, user_id) {
-		if (data.bufferUpdate !== null && data.bufferUpdate !== undefined) {
-			var update = data.bufferUpdate;
-			var buff = this.state.buffer;
-			if (update.data !== null && update.data !== undefined) {
-				buff = buff.splice(update.index, update.deleteCount, update.data);
-			} else if (update.deleteCount > 0) {
-				buff = buff.splice(update.index + update.offset, update.deleteCount, "");
-			}
-
-			this.state.buffer = buff;
-			this.state.cursorTable[user_id.id] = update.index + update.offset;
-		}
-	},
-
-	createRuler: function() {
-		this.ruler = this.makeDivElement({
-			type: "span",
-			id: this.element.id + "ruler",
-			options: {
-				id: this.element.id + "ruler"
-			},
-			style: {
-				visibility: "hidden",
-				whiteSpace: "no-wrap",
-				fontSize: parseInt(this.fontScaleFactor * this.getMinDim()) + "px",
-				lineHeight: 1.2
-			}
-		}, true);
-		this.element.appendChild(this.ruler);
-	},
-
-	computeVisualLengthOfString: function(str) {
-		this.ruler.innerHTML = str;
-		return this.ruler.offsetWidth;
-	},
-
-	breakStringToLines: function(str) {
-		//str is assumed to contain no html tags including <br>
-		var temp;
-		var writeAreaWidth = this.writeArea.clientWidth;
-		var i = 0;
-		var lines = [];
-		while (i < str.length) {
-			temp = "";
-			while (((this.computeVisualLengthOfString(temp + str[i]) + 10) < writeAreaWidth) && i < str.length) {
-				temp += str[i];
-				i = i + 1;
-				if (str[i - 1] === '\n') {
-					break; // This works only because node-filebuffer is converting \r to \n
-				}
-			}
-			lines.push(temp);
-		}
-		return lines;
-	},
-
-	makeCaretHTML: function() {
-		if (this.caretHTML === null || this.caretHTML === undefined) {
-
-			var caret = this.makeDivElement({
-				type: "span",
-				options: {
-					className: "blinking-cursor",
-					innerHTML: ""
-				},
-				style: {
-					border: "1px solid",
-					color: 'rgba(30, 30, 80, 1.0)',
-					fontWeight: 200
-				}
-			}, true);
-			var caretDiv = this.makeDivElement({
-				type: "div",
-				id: this.element.id + "caret",
-				options: {
-					id: this.element.id + "caret"
-				},
-				style: {
-					border: "none"
-				}
-			}, true);
-			caretDiv.appendChild(caret);
-			this.caretHandle = caret;
-			this.caretHTML = caretDiv;
-		}
-	},
-
-	getStringIndex: function(position) {
-		var fontSize = parseInt(this.writeArea.style.fontSize);
-		var lineHeight = parseFloat(this.writeArea.style.lineHeight) || 1.0;
-		var heightPerLine = fontSize * lineHeight;
-		var elementHeight = parseInt(this.element.clientHeight);
-		var height = parseInt(this.writeArea.clientHeight);
-		var actualY = position.y - parseInt((elementHeight - height) / 2.0) + parseInt(this.writeArea.scrollTop);
-		var lineClicked = Math.ceil(actualY / heightPerLine);
-		var sentences = this.state.buffer.split('\n');
-		var visibleWidth = parseInt(this.writeArea.clientWidth);
-		var numberOfLines = 0;
-		var temp;
-		var stringIndex = 0;
-		//console.log(sentences.length, )
-		for (var i = 0; i < sentences.length; i++) {
-			temp = Math.max(1, Math.ceil(this.computeVisualLengthOfString(sentences[i]) / visibleWidth));
-			if (numberOfLines < lineClicked && numberOfLines + temp >= lineClicked) {
-				var lines = this.breakStringToLines(sentences[i]);
-				var idx = lineClicked - numberOfLines - 1;
-				console.log(idx, lines.length);
-				if (lines.length <= idx) {
-					break;
-				}
-				stringIndex += lines.slice(0, idx).join('').length;
-				stringIndex += this.getCharacterPositionClicked(position, lines[idx]);
-				break;
-			}
-			numberOfLines += temp;
-			stringIndex += (sentences[i].length + 1);
-		}
-
-		return stringIndex;
-	},
-
-	getXYFromIndex: function (index) {
-		var visibleWidth = parseInt(this.writeArea.clientWidth);
-		var sentences = this.state.buffer.slice(0, index).split('\n');
-		var numberOfLines = 0;
-		var i;
-		for (i = 0; i < sentences.length; i++) {
-			numberOfLines += Math.max(1, Math.ceil(this.computeVisualLengthOfString(sentences[i]) / visibleWidth));
-		}
-		var x = this.computeVisualLengthOfString(sentences[i - 1]) % visibleWidth;
-		var fontSize = parseInt(this.writeArea.style.fontSize);
-		var lineHeight = parseFloat(this.writeArea.style.lineHeight) || 1.0;
-		var heightPerLine = fontSize * lineHeight;
-		var y = (numberOfLines - 0.5) * heightPerLine - parseInt(this.writeArea.scrollTop);
-		var elementHeight = parseInt(this.element.clientHeight);
-		var height = parseInt(this.writeArea.clientHeight);
-		return ({x: x + parseInt(this.writeArea.style.left), y: y + parseInt((elementHeight - height) / 2.0)});
-
-	},
-
-	moveScrollKnob: function(position) {
-		var top = (position.y - parseInt(this.scrollBar.style.top)) -  parseInt(this.scrollKnob.style.height) / 2;
-		top = Math.min(Math.max(top, 0), parseInt(this.scrollBar.style.height) - parseInt(this.scrollKnob.style.height));
-		this.scrollKnob.style.top = top + "px";
-		this.setWindowScroll();
-	},
-
-	setWindowScroll: function(value) {
-		if (value !== undefined && value !== null) {
-			this.writeArea.scrollTop += value;
-			this.leftMargin.scrollTop = this.writeArea.scrollTop;
-			if (this.writeArea.scrollTop < 0) {
-				this.writeArea.scrollTop = 0;
-				this.leftMargin.scrollTop = 0;
-			}
-			this.scrollKnob.style.top = parseInt(this.writeArea.scrollTop
-				* parseInt(this.scrollBar.style.height) / this.writeArea.scrollHeight) + "px";
-		} else {
-			this.writeArea.scrollTop = parseInt(this.scrollKnob.style.top)
-				/ parseInt(this.scrollBar.style.height) * this.writeArea.scrollHeight;
-			this.leftMargin.scrollTop = parseInt(this.scrollKnob.style.top)
-				/ parseInt(this.scrollBar.style.height) * this.leftMargin.scrollHeight;
-		}
-	},
-
-	computeKnobHeight: function() {
-		var scrollHeight = parseInt(this.writeArea.scrollHeight);
-		var val = parseInt(this.scrollBar.style.height);
-		if (scrollHeight > 0) {
-			val = val * parseInt(this.writeArea.style.height) / scrollHeight;
-			this.scrollKnob.style.top = parseInt(this.writeArea.scrollTop
-				* parseInt(this.scrollBar.style.height) / scrollHeight) + "px";
-		}
-		this.scrollKnob.style.height = (val).toString() + "px";
-		this.leftMargin.style.paddingBottom = (parseInt(this.writeArea.scrollHeight)
-			- parseInt(this.leftMargin.scrollHeight)) + "px";
-		// console.log("height:", val);
+		// Save
 	}
 
-
 });
+
