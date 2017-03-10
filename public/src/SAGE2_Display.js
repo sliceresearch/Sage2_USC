@@ -67,6 +67,10 @@ var pointerLabel = "MyTestPointer";
 var pointerColor = "#FF0000";
 var rootelement;
 var button;
+
+// file Interaction
+var fileHandler;
+
 // Explicitely close web socket when web browser is closed
 window.onbeforeunload = function() {
 	if (wsio !== undefined) {
@@ -310,7 +314,6 @@ function SAGE2_init() {
 		}, 2000);
 	});
 
-
 }
 
 function setupUIMouse() {
@@ -374,6 +377,18 @@ function setupUIMouse() {
 		document.oncontextmenu = document.body.oncontextmenu = function(){ return false;};
 
 	});
+}
+
+function setupFileDropHandler() {
+	fileHandler = new SAGE2_FileDropHandler(wsio);
+
+
+	var target = document;//.getElementById("main").getElementsByTagName('svg')[0];
+	target.addEventListener('dragover',  fileHandler.preventDefault, false);
+	target.addEventListener('dragenter', fileHandler.fileDragEnter, false);
+	target.addEventListener('dragleave', fileHandler.fileDragLeave, false);
+	target.addEventListener('drop', fileHandler.fileDrop, false);
+
 }
 
 function setupCaptureMouse(element) {
@@ -473,6 +488,8 @@ function setupListeners() {
 
 		if(useMouse == 0)
 			setupCaptureMouse(document.getElementById("pointerButton"));
+		
+		setupFileDropHandler();
 	});
 
 	wsio.on('hideui', function(param) {
@@ -2006,6 +2023,153 @@ function SAGE2_MouseEventEmitter(wsio) {
 	this.startMouse = this.startMouseMethod.bind(this);
 	this.stopMouse = this.stopMouseMethod.bind(this);
 
+
+}
+
+function SAGE2_FileDropHandler(_wsio) {
+	var wsio = _wsio;
+	var myx = 1;
+	this.myotherx = -1;
+	console.log('calling filedrophandler');
+	
+	var progressBarContainer = document.createElement('div');
+	
+	progressBarContainer.style.width = "200px";
+	progressBarContainer.style.height = "15px";
+	progressBarContainer.style.borderRadius = "5px"
+	progressBarContainer.style.backgroundColor = "#000";
+	progressBarContainer.style.position = "absolute";
+	progressBarContainer.style.left   = (ui.json_cfg.totalWidth / 2).toString() + "px";
+	progressBarContainer.style.top    = ui.titleBarHeight.toString() + "px";
+	progressBarContainer.style.transform = "translateX(-50%)";
+	progressBarContainer.style.display = 'none';
+
+	document.getElementById('main').appendChild(progressBarContainer);
+
+	var progressBar = document.createElement('div');
+	progressBarContainer.appendChild(progressBar);
+
+	progressBar.id = 'progressBar';
+	
+	progressBar.style.backgroundColor = "#33FF44";
+	progressBar.style.height = "100%";
+	progressBar.style.borderRadius = "5px"
+
+	
+	
+	function preventDefault(event) {
+		if (event.preventDefault) {
+			// required by FF + Safari
+			event.preventDefault();
+		}
+		// tells the browser what drop effect is allowed here
+		event.dataTransfer.dropEffect = 'copy';
+		// required by IE
+		return false;
+	}
+	
+	function fileDragEnterHandler(event) {
+		myx++;
+		console.log('drag enter event' + myx);
+		event.preventDefault();
+	}
+
+	function fileDragLeaveHandler(event) {
+		console.log('drag leave event' + myx);
+		event.preventDefault();
+	}
+
+	function fileDropHandler(event) {
+		console.log('drag drop event' + myx);
+		
+		
+		var x = event.clientX + ui.offsetX;
+		var y = event.clientY + ui.offsetY;
+
+		if(event.dataTransfer.files.length > 0) {
+			uploadFiles(event.dataTransfer.files, x, y);
+		}  else {
+
+		}
+		event.preventDefault();
+	}
+
+	function uploadFiles(files, x, y) {
+		
+		var loaded = {};
+		
+		var total = 0;
+
+		
+
+		var progressCallback = function(event) {
+			console.log('upload progress');
+			progressBarContainer.style.display = 'inline';
+			if (loaded[event.target.id] === undefined) {
+				//total += event.total;
+			}
+			loaded[event.target.id] = event.loaded;
+			var uploaded = 0;
+			for (var key in loaded) {
+				//uploaded += loaded[key];
+			}
+			var pc = event.loaded / total * 100;
+			
+			progressBar.style.width = pc.toString() + "%";
+		}
+
+		var uploadCompleteCallback = function(event) {
+			console.log("upload complete");
+			
+			var sn = event.target.response.substring(event.target.response.indexOf("name: ") + 7);
+			var st = event.target.response.substring(event.target.response.indexOf("type: ") + 7);
+			var name = sn.substring(0, sn.indexOf("\n") - 2);
+			var type = st.substring(0, st.indexOf("\n") - 2);
+
+			// Parse the reply into JSON
+			var msgFromServer = JSON.parse(event.target.response);
+
+			// Check the return values for success/error
+			Object.keys(msgFromServer.files).map(function(k) {
+				name = msgFromServer.files[k].name;
+				type = msgFromServer.files[k].type;
+				if (!msgFromServer.fields.good) {
+					console.log('Unrecognized file type: ' + name + ' ' + type);
+				}
+			});
+
+
+			wsio.emit('uploadedFile', {name: name, type: type});
+			progressBarContainer.style.display = 'none';
+		}
+
+		for(var i = 0; i < files.length; i++) {
+			var formdata = new FormData();
+
+			formdata.append("file" + i.toString(), files[i]);
+			formdata.append("dropx", x);
+			formdata.append("dropy", y);
+			formdata.append("open", true);
+			formdata.append("SAGE2_ptrName", pointerLabel);
+			formdata.append("SAGE2_ptrColor", pointerColor);
+
+			var xhr = new XMLHttpRequest();
+			xhr.open("POST", "upload", true);
+			xhr.upload.id = "file" + i.toString();
+			xhr.upload.addEventListener("progress", progressCallback, false);
+			xhr.addEventListener("load", uploadCompleteCallback, false);
+			xhr.send(formdata);
+		}
+		console.log('after files sent');
+		//progressBarContainer.style.display = 'none';
+	}
+
+	
+
+	this.fileDragEnter = fileDragEnterHandler.bind(this);
+	this.fileDragLeave = fileDragLeaveHandler.bind(this);
+	this.fileDrop = fileDropHandler.bind(this);
+	this.preventDefault = preventDefault.bind(this);
 
 }
 
