@@ -793,24 +793,32 @@ var pdf_viewer = SAGE2_App.extend({
 		if (responseObject.clientInput) {
 			page = parseInt(responseObject.clientInput);
 			if (page > 0 && page <= this.pageDocument) {
-				this.goToPage(page);
+				if (page === 1) {
+					this.GoToFirst(this);
+				} else if (page === this.pageDocument) {
+					this.GoToLast(this);
+				} else {
+					this.previousButton.ico.attr("xlink:href", iconPath + svgImages[1]);
+					this.nextButton.ico.attr("xlink:href", iconPath + svgImages[2]);
+					this.goToPage(page);
+				}
 			}
 		} else {
 			// else check for these word options
 			if (page === "first") {
-				this.goToPage(1);
+				this.GoToFirst(this);
 			} else if (page === "previous") {
 				if (this.pageInCenter() === 1) {
 					return;
 				}
-				this.goToPage(this.pageInCenter() - 1);
+				this.GoToPrevious(this);
 			} else if (page === "next") {
 				if (this.pageInCenter() === this.pageDocument) {
 					return;
 				}
-				this.goToPage(this.pageInCenter() + 1);
+				this.GoToNext(this);
 			} else if (page === "last") {
-				this.goToPage(this.pageDocument);
+				this.GoToLast(this);
 			}
 		}
 		// This needs to be a new date for the extra function.

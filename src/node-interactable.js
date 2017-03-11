@@ -240,9 +240,9 @@ InteractableManager.prototype.editComplexGeometry = function(id, layerId, shapeD
 };
 
 /**
-* Edit geometric object position / size / type
+* Check if an object with given id exists or not
 *
-* @method editGeometry
+* @method hasObjectWithId
 * @param id {String} unique identifier for the geometric object
 * @return hasObject {Boolean} whether or not an object with the given id exists
 */
@@ -255,6 +255,24 @@ InteractableManager.prototype.hasObjectWithId = function(id) {
 	}
 	return false;
 };
+
+/**
+* Get the ID of the layer for this geometry
+*
+* @method getLayerId
+* @param id {String} unique identifier for the geometric object
+* @return layerId {string} unique identifier for the layer
+*/
+InteractableManager.prototype.getLayerId = function(id) {
+	var key;
+	for (key in this.interactableObjects) {
+		if (this.interactableObjects[key].hasOwnProperty(id)) {
+			return key;
+		}
+	}
+	return null;
+};
+
 
 /**
 * Edit visibility of geometric object
@@ -398,6 +416,9 @@ InteractableManager.prototype.getObjectZIndexList = function(layerId, otherLayer
 * @return object {Object} geometric object with given id
 */
 InteractableManager.prototype.getObject = function(id, layerId) {
+	if (layerId === null || id === null) {
+		return null;
+	}
 	return this.interactableObjects[layerId][id];
 };
 
@@ -475,6 +496,91 @@ function findTopmostGeometry(point, geometryList, ignoreList) {
 	}
 	return null;
 }
+
+/**
+* Search for topmost geometric object (optionally within a given layer)
+*
+* @method searchGeometryInBox
+* @param box {Object} {x1: , y1: , x2: , y2: }
+* @param layerId {String} unique identifier for the layer
+* @param ignoreList {Array} list of ids to ignore during the search
+* @return {Object} geometric object
+*/
+InteractableManager.prototype.getBackgroundObj = function(app, ignoreList) {
+	var layerId = this.getLayerId(app.id);
+	var obj = this.getObject(app.id, layerId);
+	if (obj === null) {
+		return null;
+	}
+	var box = {
+		minX: app.left,
+		minY: app.top,
+		maxX: app.left + app.width,
+		maxY: app.top + app.height
+	};
+
+	var zIndex = getZIndexOfObj(obj);
+	var results = [];
+	if (layerId !== undefined && layerId !== null) {
+		results.push(this.layers[layerId].objects.search(box));
+	} else {
+		var i;
+		var tmp;
+		results = [];
+		for (i = this.layerOrder.length - 1; i >= 0; i--) {
+			tmp = this.layers[this.layerOrder[i]].objects.search(box);
+			if (i < this.layerOrder.length - 1
+				&& this.layers[this.layerOrder[i]].zIndex === this.layers[this.layerOrder[i + 1]].zIndex) {
+				results[results.length - 1] = results[results.length - 1].concat(tmp);
+			} else {
+				results.push(tmp);
+			}
+		}
+	}
+
+	return findGeometryBelowZIndex(results, zIndex, ignoreList);
+};
+
+/**
+* Finds the geometry just below the zIndex (highest zIndex)
+*
+* @method findGeometryBelowZIndex
+* @param zIndex {Number} zIndex value of the app
+* @param geometryList {Array} list of geometric objects
+* @param ignoreList {Array} list of ids to ignore during the search
+* @return {Object} geometric object
+*/
+function findGeometryBelowZIndex(geometryList, zIndex, ignoreList) {
+	var i, j;
+	var topmost = null;
+	if (!(ignoreList instanceof Array)) {
+		ignoreList = [];
+	}
+	for (i = 0; i < geometryList.length; i++) {
+		for (j = 0; j < geometryList[i].length; j++) {
+			if (ignoreList.indexOf(geometryList[i][j].id) >= 0) {
+				continue;
+			}
+			if (geometryList[i][j].type === "circle") {
+				// TODO : Implement box and circle collision detection
+				continue;
+			} else {
+				if (geometryList[i][j].visible === true && (topmost === null || geometryList[i][j].zIndex > topmost.zIndex)
+					&& (geometryList[i][j].zIndex < zIndex)) {
+					topmost = geometryList[i][j];
+				}
+			}
+		}
+		if (topmost !== null) {
+			return topmost;
+		}
+	}
+	return null;
+}
+
+
+
+
 
 /**
 * Get method for the zIndex of an Object
