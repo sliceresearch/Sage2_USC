@@ -267,7 +267,9 @@ function UIBuilder(json_cfg, clientID) {
 	this.build = function() {
 		console.log("Buidling the UI for the display");
 
-		if(useMouse == 2) {
+		var useMouse = parseInt(getParameterByName("mouse")) || 0;
+
+		if (useMouse == 2) {
 			var body = document.getElementsByTagName('body')[0];
 			body.style.cursor = "default";
 		}
@@ -362,14 +364,14 @@ function UIBuilder(json_cfg, clientID) {
 		this.upperBar.style.backgroundColor = backgroundColor;
 
 		var pointerButtonOffset = 0;
-		if(useMouse == 2){
+		if (useMouse == 2) {
 			this.pointerButton.style.display = "table-cell";
 			this.pointerButton.style.verticalAlign = "middle";
 			this.pointerButton.style.position = "absolute";
-			this.pointerButton.style.borderRadius = "5px"
+			this.pointerButton.style.borderRadius = "5px";
 			this.pointerButton.style.whiteSpace = "nowrap";
 			this.pointerButton.style.fontSize   = Math.round(this.titleTextSize) + "px";
-			this.pointerButton.style.left = (10-this.offsetX).toString() + "px";
+			this.pointerButton.style.left = (10 - this.offsetX).toString() + "px";
 			this.pointerButton.style.color = "#222222";
 			this.pointerButton.style.backgroundColor = "#FFFFFF";
 			this.pointerButton.innerHTML = 'Activate Mouse';
@@ -379,7 +381,7 @@ function UIBuilder(json_cfg, clientID) {
 			var pointerButtonBounds = this.pointerButton.getBoundingClientRect();
 			var height = pointerButtonBounds.height;
 			var padheighthalf = (this.titleBarHeight - height) / 2;
-			this.pointerButton.style.padding = padheighthalf.toString() + "px 10px " + padheighthalf.toString() + "px 10px"; 
+			this.pointerButton.style.padding = padheighthalf.toString() + "px 10px " + padheighthalf.toString() + "px 10px";
 
 			pointerButtonOffset = pointerButtonBounds.width + 30;
 		}

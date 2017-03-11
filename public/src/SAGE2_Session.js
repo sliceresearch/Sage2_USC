@@ -64,8 +64,9 @@ function SAGE2_init() {
 	}
 	// Is there a page value
 	if (page !== "") {
-		if(mouse)
+		if (mouse)			{
 			page += '&mouse=' + mouse;
+		}
 		pageRedirect = page;
 	}
 	// Is there a hash value

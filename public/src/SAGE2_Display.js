@@ -238,7 +238,7 @@ function SAGE2_init() {
 	wsio = new WebsocketIO();
 	console.log("Connected to server: ", window.location.origin);
 
-	
+
 	// Detect the current browser
 	SAGE2_browser();
 
@@ -248,21 +248,22 @@ function SAGE2_init() {
 	isMaster = false;
 
 
-	if(useMouse == 1) {
+	if (useMouse == 1) {
 
 		showDialog("settingsDialog");
 		var settingsbutton = document.getElementById("settingsCloseBtn");
-		if(settingsbutton)
-			settingsbutton.addEventListener('click', function(event){
+		if (settingsbutton)			{
+			settingsbutton.addEventListener('click', function(event) {
 
 				hideDialog('settingsDialog');
 				pointerLabel = document.getElementById("sage2PointerLabel").value;
 				pointerColor = document.getElementById("sage2PointerColor").value;
-				setupUIMouse();		
+				setupUIMouse();
 
 			});
+		}
 
-		
+
 	} else {
 		setupUIMouse();
 	}
@@ -317,6 +318,7 @@ function SAGE2_init() {
 }
 
 function setupUIMouse() {
+
 	/*
 		Matthias Klapperstueck
 		add abbr. Sage2 Mouse Interaction code from UI
@@ -330,7 +332,6 @@ function setupUIMouse() {
 		console.log('ui websocket opened');
 
 		uiwsio.on('initialize', function(data) {
-			var startTime  = new Date(data.start);
 			emitter.uID = data.UID;
 		});
 
@@ -347,12 +348,12 @@ function setupUIMouse() {
 			browser: __SAGE2__.browser,
 			session: session
 		};
-		uiwsio.emit('addClient', clientDescription);	
+		uiwsio.emit('addClient', clientDescription);
 
 		uiwsio.emit('registerInteractionClient', {
 			name: pointerLabel,
 			color: pointerColor
-		});	
+		});
 
 		// the emitter holds all functions for mouseevent emitting to server
 		emitter = new SAGE2_MouseEventEmitter(uiwsio);
@@ -368,13 +369,15 @@ function setupUIMouse() {
 		document.addEventListener('keydown',    emitter.pointerKeyDown,  true);
 		document.addEventListener('keypress',    emitter.pointerKeyPress,  true);
 
-		if(useMouse == 1) {
+		if (useMouse == 1) {
 			var mainelement = document.getElementById("main");
 			mainelement.addEventListener('mouseenter', emitter.startMouse,   false);
 			mainelement.addEventListener('mouseleave', emitter.stopMouse,   false);
 		}
 		// prevent default context menu
-		document.oncontextmenu = document.body.oncontextmenu = function(){ return false;};
+		document.oncontextmenu = document.body.oncontextmenu = function() {
+			return false;
+		};
 
 	});
 }
@@ -393,29 +396,28 @@ function setupFileDropHandler() {
 
 function setupCaptureMouse(element) {
 
-	if(useMouse == 2){
-		
+	if (useMouse == 2) {
+
 		emitter.pointerButton = element;
 		document.addEventListener('pointerlockchange', emitter.pointLockChangeListener, false);
 		document.addEventListener('mozpointerlockchange', emitter.pointLockChangeListener, false);
 
 		element.addEventListener('click', function(event) {
-			if(document.pointerLockElement)
+			if (document.pointerLockElement)				{
 				return;
-			else {
+			}			else {
 				element.requestPointerLock = element.requestPointerLock       ||
 											element.mozRequestPointerLock    ||
 											element.webkitRequestPointerLock;
 
-				if(element.requestPointerLock) {
+				if (element.requestPointerLock) {
 					element.requestPointerLock();
-				}
-				else {
+				}				else {
 					console.log("Pointer lock not available");
 				}
 			}
 		}, false);
-	} 
+	}
 }
 
 function setupListeners() {
@@ -486,9 +488,10 @@ function setupListeners() {
 		}
 		makeSvgBackgroundForWidgetConnectors(ui.main.style.width, ui.main.style.height);
 
-		if(useMouse == 2)
+		if (useMouse == 2)			{
 			setupCaptureMouse(document.getElementById("pointerButton"));
-		
+		}
+
 		setupFileDropHandler();
 	});
 
@@ -566,8 +569,9 @@ function setupListeners() {
 	wsio.on('showSagePointer', function(pointer_data) {
 
 		var uid = pointer_data.id.substring(0, pointer_data.id.indexOf('_'));
-		if(emitter.uID == uid)
+		if (emitter.uID == uid)			{
 			emitter.ourPointerDIV = pointer_data.id;
+		}
 
 		ui.showSagePointer(pointer_data);
 		resetIdle();
@@ -580,10 +584,10 @@ function setupListeners() {
 	wsio.on('hideSagePointer', function(pointer_data) {
 
 		var uid = pointer_data.id.substring(0, pointer_data.id.indexOf('_'));
-		if(emitter.uID == uid) {
+		if (emitter.uID == uid) {
 			emitter.ourPointerDIV = null;
 		}
-		
+
 		ui.hideSagePointer(pointer_data);
 		var uniqueID = pointer_data.id.slice(0, pointer_data.id.lastIndexOf("_"));
 		var re = /\.|\:/g;
@@ -1774,9 +1778,9 @@ function SAGE2_MouseEventEmitter(wsio) {
 
 	this.pointLockChangeListenerMethod = function(event) {
 		console.log('pointLockChangeListenerMethod');
-		if(document.pointerLockElement) {
+		if (document.pointerLockElement) {
 			this.startSAGE2Pointer();
-			if(this.pointerButton) {
+			if (this.pointerButton) {
 				this.pointerButton.style.color = "#000000";
 				this.pointerButton.style.backgroundColor = "#00BB33";
 				this.pointerButton.innerHTML = "Mouse Active";
@@ -1787,47 +1791,52 @@ function SAGE2_MouseEventEmitter(wsio) {
 			this.pointerButton.style.backgroundColor = "#FFFFFF";
 			this.pointerButton.innerHTML = 'Activate Mouse';
 		}
-	}
+	};
 
 	this.startSAGE2Pointer = function() {
-		if(this.pointerActive)
+		if (this.pointerActive)			{
 			return;
+		}
 		console.log("starting SAGE2 mouse pointer");
 		this.pointerActive = true;
 		wsio.emit('startSagePointer', {label: pointerLabel, color: pointerColor});
-	}
+	};
 
 	this.stopSAGE2Pointer = function() {
 		console.log("stopping SAGE2 mouse pointer");
 		wsio.emit('stopSagePointer');
 		this.pointerActive = false;
-	}
+	};
 
 	this.pointerPressMethod = function(event) {
 		this.checkActivePointer(event);
-		if(!event.isTrusted) // don't react to custom software events like SAGE2_MouseEventEmitter
-			return;		
+		if (!event.isTrusted) { // don't react to custom software events like SAGE2_MouseEventEmitter
+			return;
+		}
 		var btn = (event.button === 0) ? "left" : (event.button === 1) ? "middle" : "right";
 		this.wsio.emit('pointerPress', {button: btn});
 		event.preventDefault();
 		event.stopPropagation();
-	}
+	};
 
 	this.pointerReleaseMethod = function(event) {
 		this.checkActivePointer(event);
-		if(!event.isTrusted) // don't react to custom software events like SAGE2_MouseEventEmitter
-			return;		
+		if (!event.isTrusted) {// don't react to custom software events like SAGE2_MouseEventEmitter
+			return;
+		}
 		var btn = (event.button === 0) ? "left" : (event.button === 1) ? "middle" : "right";
 		this.wsio.emit('pointerRelease', {button: btn});
 		event.preventDefault();
 		event.stopPropagation();
-	}
+	};
 
 	this.pointerMoveMethod = function(event) {
-		if(!this.checkActivePointer(event))
+		if (!this.checkActivePointer(event)) {
 			return;
-		if(!event.isTrusted) // don't react to custom software events like SAGE2_MouseEventEmitter
-			return;		
+		}
+		if (!event.isTrusted) { // don't react to custom software events like SAGE2_MouseEventEmitter
+			return;
+		}
 		//console.log("pointermove");
 		var movementX = event.movementX || event.mozMovementX || event.webkitMovementX || 0;
 		var movementY = event.movementY || event.mozMovementY || event.webkitMovementY || 0;
@@ -1836,14 +1845,14 @@ function SAGE2_MouseEventEmitter(wsio) {
 
 		//this.wsio.emit('pointerMove', {dx: movementX, dy: movementY});
 		//this.wsio.emit('pointerPosition', {pointerX: event.clientX, pointerY: event.clientY});
-		
+
 		// Event filtering
 		var now  = Date.now();
 		// time difference since last event
 		var diff = now - this.now;
 		// count the events
 		this.cnt++;
-		
+
 		this.deltaX += movementX;
 		this.deltaY += movementY;
 
@@ -1857,10 +1866,11 @@ function SAGE2_MouseEventEmitter(wsio) {
 			// check for offset of hardware and software mouse cursor, if this
 			// move command regards our pointer
 			// This offset can happen when the mouse cursor is quickly moved inside and outside the screen
-			if(useMouse == 1 && emitter.ourPointerDIV) {
-				if(!emitter.ourPointerDIVObject)
+			if (useMouse == 1 && emitter.ourPointerDIV) {
+				if (!emitter.ourPointerDIVObject)					{
 					emitter.ourPointerDIVObject = document.getElementById(emitter.ourPointerDIV);
-				if(window.getComputedStyle) {
+				}
+				if (window.getComputedStyle) {
 					var transform = getComputedStyle(emitter.ourPointerDIVObject).transform;
 					var values = transform.substring(transform.indexOf("(") + 1, transform.indexOf(")")).split(',');
 					var pointerX = parseInt(values[4].trim());
@@ -1883,11 +1893,11 @@ function SAGE2_MouseEventEmitter(wsio) {
 			// Reset the time and count
 			this.now = now;
 			this.cnt = 0;
-		} 
+		}
 
 		event.preventDefault();
 		event.stopPropagation();
-	}
+	};
 
 	this.pointerScrollMethod = function(event) {
 		this.checkActivePointer(event);
@@ -1902,27 +1912,27 @@ function SAGE2_MouseEventEmitter(wsio) {
 		this.scrollTimeId = setTimeout(function() {
 			_this.wsio.emit('pointerScrollEnd');
 			_this.scrollTimeId = null;
-		}, 500);	
+		}, 500);
 
 		event.preventDefault();
 		event.stopPropagation();
-	}
+	};
 
 	this.pointerClickMethod = function(event) {
 		this.checkActivePointer(event);
 
 		event.preventDefault();
 
-	}
+	};
 
 	this.pointerDblClickMethod = function(event) {
 		this.checkActivePointer(event);
 		this.wsio.emit('pointerDblClick');
 		event.preventDefault();
-	}
+	};
 
 	this.pointerKeyDownMethod = function(event) {
-		
+
 		this.checkActivePointer(event);
 		var code = parseInt(event.keyCode, 10);
 
@@ -1940,13 +1950,15 @@ function SAGE2_MouseEventEmitter(wsio) {
 			// if a special key - prevent default (otherwise let continue to keyPress)
 			if ((code === 8 || code === 9 || (code >= 16 && code <= 46 && code !== 32) ||
 				(code >= 91 && code <= 93) || (code >= 112 && code <= 145))) {
-				if(code != 122 && code != 123)//F11 F12
+				if (code != 122 && code != 123) { //F11 F12
 					if (event.preventDefault) {
 						event.preventDefault();
 					}
-			}	
+				}
+
+			}
 		}
-	}
+	};
 
 
 	this.pointerKeyUpMethod = function(event) {
@@ -1957,29 +1969,31 @@ function SAGE2_MouseEventEmitter(wsio) {
 
 		if (code !== 27) {
 			this.wsio.emit('keyUp', {code: code});
-		}	
+		}
 
 		event.preventDefault();
-	}
+	};
 
 	this.pointerKeyPressMethod = function(event) {
 		this.checkActivePointer(event);
 		var code = parseInt(event.charCode, 10);
 
 		console.log('key press ' +  code);
-		
+
 		this.wsio.emit('keyPress', {code: code, character: String.fromCharCode(code)});
 
 		event.preventDefault();
-	}
+	};
 
 	this.startMouseMethod = function(event) {
-		if(this.pointerActive)
+		if (this.pointerActive)			{
 			return;
-		
+		}
 
-		if(!event.isTrusted) // don't react to custom software events like SAGE2_MouseEventEmitter
-			return;		
+
+		if (!event.isTrusted) { // don't react to custom software events like SAGE2_MouseEventEmitter
+			return;
+		}
 
 		this.startSAGE2Pointer();
 
@@ -1987,28 +2001,30 @@ function SAGE2_MouseEventEmitter(wsio) {
 		//this.wsio.emit('pointerMove', {dx: event.clientX, dy: event.clientY});
 		event.preventDefault();
 
-	}												
+	};
 
 
 	this.stopMouseMethod = function(event) {
-		
-		if(!event.isTrusted) // don't react to custom software events like SAGE2_MouseEventEmitter // don't react to custom software events like SAGE2_MouseEventEmitter
+
+		if (!event.isTrusted) {// don't react to custom software events like SAGE2_MouseEventEmitter
 			return;
+		}
 
 		this.stopSAGE2Pointer();
 		event.preventDefault();
 		//document.exitPointerLock();
-	}
+	};
 
 	this.checkActivePointer = function(event) {
-		if(this.pointerActive)
+		if (this.pointerActive)			{
 			return true;
-		else if(useMouse == 1 && ! this.pointerActive) {
+		} else if (useMouse == 1 && !this.pointerActive) {
 			this.startMouseMethod(event);
 			return true;
-		} else
+		} else			{
 			return false;
-	}
+		}
+	};
 
 	this.pointLockChangeListener = this.pointLockChangeListenerMethod.bind(this);
 
@@ -2032,12 +2048,12 @@ function SAGE2_FileDropHandler(_wsio) {
 	var myx = 1;
 	this.myotherx = -1;
 	console.log('calling filedrophandler');
-	
+
 	var progressBarContainer = document.createElement('div');
-	
+
 	progressBarContainer.style.width = "200px";
 	progressBarContainer.style.height = "15px";
-	progressBarContainer.style.borderRadius = "5px"
+	progressBarContainer.style.borderRadius = "5px";
 	progressBarContainer.style.backgroundColor = "#000";
 	progressBarContainer.style.position = "absolute";
 	progressBarContainer.style.left   = (ui.json_cfg.totalWidth / 2).toString() + "px";
@@ -2051,13 +2067,13 @@ function SAGE2_FileDropHandler(_wsio) {
 	progressBarContainer.appendChild(progressBar);
 
 	progressBar.id = 'progressBar';
-	
+
 	progressBar.style.backgroundColor = "#33FF44";
 	progressBar.style.height = "100%";
-	progressBar.style.borderRadius = "5px"
+	progressBar.style.borderRadius = "5px";
 
-	
-	
+
+
 	function preventDefault(event) {
 		if (event.preventDefault) {
 			// required by FF + Safari
@@ -2068,7 +2084,7 @@ function SAGE2_FileDropHandler(_wsio) {
 		// required by IE
 		return false;
 	}
-	
+
 	function fileDragEnterHandler(event) {
 		myx++;
 		console.log('drag enter event' + myx);
@@ -2082,26 +2098,24 @@ function SAGE2_FileDropHandler(_wsio) {
 
 	function fileDropHandler(event) {
 		console.log('drag drop event' + myx);
-		
-		
+
+
 		var x = event.clientX + ui.offsetX;
 		var y = event.clientY + ui.offsetY;
 
-		if(event.dataTransfer.files.length > 0) {
+		if (event.dataTransfer.files.length > 0) {
 			uploadFiles(event.dataTransfer.files, x, y);
-		}  else {
-
 		}
 		event.preventDefault();
 	}
 
 	function uploadFiles(files, x, y) {
-		
+
 		var loaded = {};
-		
+
 		var total = 0;
 
-		
+
 
 		var progressCallback = function(event) {
 			console.log('upload progress');
@@ -2110,18 +2124,14 @@ function SAGE2_FileDropHandler(_wsio) {
 				//total += event.total;
 			}
 			loaded[event.target.id] = event.loaded;
-			var uploaded = 0;
-			for (var key in loaded) {
-				//uploaded += loaded[key];
-			}
 			var pc = event.loaded / total * 100;
-			
+
 			progressBar.style.width = pc.toString() + "%";
-		}
+		};
 
 		var uploadCompleteCallback = function(event) {
 			console.log("upload complete");
-			
+
 			var sn = event.target.response.substring(event.target.response.indexOf("name: ") + 7);
 			var st = event.target.response.substring(event.target.response.indexOf("type: ") + 7);
 			var name = sn.substring(0, sn.indexOf("\n") - 2);
@@ -2142,9 +2152,9 @@ function SAGE2_FileDropHandler(_wsio) {
 
 			wsio.emit('uploadedFile', {name: name, type: type});
 			progressBarContainer.style.display = 'none';
-		}
+		};
 
-		for(var i = 0; i < files.length; i++) {
+		for (var i = 0; i < files.length; i++) {
 			var formdata = new FormData();
 
 			formdata.append("file" + i.toString(), files[i]);
@@ -2165,7 +2175,7 @@ function SAGE2_FileDropHandler(_wsio) {
 		//progressBarContainer.style.display = 'none';
 	}
 
-	
+
 
 	this.fileDragEnter = fileDragEnterHandler.bind(this);
 	this.fileDragLeave = fileDragLeaveHandler.bind(this);
@@ -2181,7 +2191,6 @@ function SAGE2_FileDropHandler(_wsio) {
  * @param id {String} element to show
  */
 function showDialog(id) {
-	//openDialog = id;
 	document.getElementById('blackoverlay').style.display = "block";
 	document.getElementById(id).style.display = "block";
 }
@@ -2193,10 +2202,6 @@ function showDialog(id) {
  * @param id {String} element to show
  */
 function hideDialog(id) {
-	//openDialog = null;
 	document.getElementById('blackoverlay').style.display = "none";
 	document.getElementById(id).style.display = "none";
-	if (id == 'uiDrawZone') {
-		uiDrawZoneRemoveSelfAsClient();
-	}
 }
