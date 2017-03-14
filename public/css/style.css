@@ -54,11 +54,11 @@ body {
 	box-shadow: 8px 4px 15px #222222;
 
 	opacity: 1;
-	-webkit-transition: opacity 0.2s ease-in;
-	-moz-transition: opacity 0.2s ease-in;
-	-ms-transition: opacity 0.2s ease-in;
-	-o-transition: opacity 0.2s ease-in;
-	transition: opacity 0.2s ease-in;
+	-webkit-transition: opacity 0.4s ease-in;
+	-moz-transition: opacity 0.4s ease-in;
+	-ms-transition: opacity 0.4s ease-in;
+	-o-transition: opacity 0.4s ease-in;
+	transition: opacity 0.4s ease-in;
 }
 
 .windowDisappear {
@@ -254,4 +254,57 @@ body {
 
 .stateArray[synced=false] {
 	color: #727272;
+}
+
+.blinking-cursor {
+  -webkit-animation: 1s blink step-end infinite;
+  -moz-animation: 1s blink step-end infinite;
+  -ms-animation: 1s blink step-end infinite;
+  -o-animation: 1s blink step-end infinite;
+  animation: 1s blink step-end infinite;
+}
+
+@keyframes "blink" {
+  from, to {
+    opacity: 0.3;
+  }
+  50% {
+    opacity: 1.0;
+  }
+}
+
+@-moz-keyframes blink {
+  from, to {
+    opacity: 0.3;
+  }
+  50% {
+    opacity: 1.0;
+  }
+}
+
+@-webkit-keyframes "blink" {
+  from, to {
+    opacity: 0.3;
+  }
+  50% {
+    opacity: 1.0;
+  }
+}
+
+@-ms-keyframes "blink" {
+  from, to {
+    opacity: 0.3;
+  }
+  50% {
+    opacity: 1.0;
+  }
+}
+
+@-o-keyframes "blink" {
+  from, to {
+    opacity: 0.3;
+  }
+  50% {
+    opacity: 1.0;
+  }
 }
