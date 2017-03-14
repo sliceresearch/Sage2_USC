@@ -6,7 +6,7 @@ do
   nohup ./start-sage2-govlab-service-onceonly
   #./start-sage2-govlab-service-onceonly
   echo GOV Lab SAGE2 ending `date`
-  sleep 3
+  sleep 8
   # reset asset list (why do we need this?)
   # this is really a last resort as the master server stalls forever rebuilding assets :-(
   #rm -f /home/sage/Documents/SAGE2_Media/assets/assets.json
