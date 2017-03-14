@@ -338,6 +338,12 @@ PartitionList.prototype.updateNeighbors = function(ptnID) {
 	if (this.list.hasOwnProperty(ptnID)) {
 		// update neighbors of selected partition
 		if (this.list[ptnID].isSnapping) {
+			// reset snapping flags for sides of screen
+			this.list[ptnID].snapTop = false;
+			this.list[ptnID].snapRight = false;
+			this.list[ptnID].snapBottom = false;
+			this.list[ptnID].snapLeft = false;
+
 			// find all neighbors
 			this.list[ptnID].neighbors = this.findNeighbors(ptnID);
 

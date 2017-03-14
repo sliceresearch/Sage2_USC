@@ -717,9 +717,8 @@ Partition.prototype.updateNeighborPtnPositions = function() {
 							// set the nieghbors height to be a minimum value
 							neighPtn.height = partitions.minSize.height;
 
-							let thisBotCoord = this.top + this.height;
+							// keep the top of this partition so it doesn't go inside the neighbor
 							this.top = neighPtn.top + neighPtn.height + titleBar;
-							this.height = thisBotCoord - this.top;
 
 							// adjust this partitions size to match with it
 							ptnSizeChanged = true;
@@ -782,6 +781,7 @@ Partition.prototype.updateNeighborPtnPositions = function() {
 						if (neighPtn.height < partitions.minSize.height) {
 							neighPtn.height = partitions.minSize.height;
 
+							let thisBotCoord =
 							this.height = neighPtn.top + neighPtn.height - this.top;
 							ptnSizeChanged = true;
 
@@ -801,10 +801,8 @@ Partition.prototype.updateNeighborPtnPositions = function() {
 							// set the nieghbors width to be a minimum value
 							neighPtn.width = partitions.minSize.width;
 
-							// adjust this partitions size to match with it
-							let thisRightCoord = this.left + this.width;
+							// Prevent this partition from moving further into the neighbor
 							this.left = neighPtn.left + neighPtn.width;
-							this.width = thisRightCoord - this.left;
 
 							ptnSizeChanged = true;
 						}
