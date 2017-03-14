@@ -72,7 +72,7 @@ var Sage2ItemList       = require('./src/node-sage2itemlist');    // list of SAG
 var Sagepointer         = require('./src/node-sagepointer');      // handles sage pointers (creation, location, etc.)
 var StickyItems         = require('./src/node-stickyitems');
 var registry            = require('./src/node-registry');        // Registry Manager
-
+var FileBufferManager	= require('./src/node-filebuffer');
 var PartitionList				= require('./src/node-partitionlist');		// list of SAGE2 Partitions
 //
 // Globals
@@ -120,6 +120,7 @@ var mediaBlockSize     = 512;
 var startTime          = Date.now();
 var drawingManager;
 var pressingAlt        = true;
+var fileBufferManager  = new FileBufferManager();
 
 var partitions				 = new PartitionList(config);
 var draggingPartition	 = {};
@@ -994,6 +995,11 @@ function setupListeners(wsio) {
 	wsio.on('hideWidgetFromControl',                wsHideWidgetFromControl);
 	wsio.on('openRadialMenuFromControl',            wsOpenRadialMenuFromControl);
 	wsio.on('recordInnerGeometryForWidget',			wsRecordInnerGeometryForWidget);
+
+	wsio.on('requestNewTitle',						wsRequestNewTitle);
+	wsio.on('requestFileBuffer',					wsRequestFileBuffer);
+	wsio.on('closeFileBuffer',						wsCloseFileBuffer);
+	wsio.on('updateFileBufferCursorPosition', 		wsUpdateFileBufferCursorPosition);
 
 	wsio.on('createAppClone',                       wsCreateAppClone);
 
@@ -5961,7 +5967,7 @@ function pointerPressOnApplication(uniqueID, pointerX, pointerY, data, obj, loca
 	im.moveObjectToFront(obj.id, "applications", ["portals"]);
 	var stickyList = stickyAppHandler.getStickingItems(obj.id);
 	for (var idx in stickyList) {
-		im.moveObjectToFront(stickyList[idx].id, obj.layerId);
+		im.moveObjectToFront(stickyList[idx].id, "applications", ["portals"]);
 	}
 	var newOrder = im.getObjectZIndexList("applications", ["portals"]);
 	broadcast('updateItemOrder', newOrder);
@@ -6032,6 +6038,12 @@ function pointerPressOnApplication(uniqueID, pointerX, pointerY, data, obj, loca
 			if (sagePointers[uniqueID].visible) {
 				// only if pointer on the wall, not the web UI
 				toggleApplicationFullscreen(uniqueID, obj.data, portalId);
+			}
+			break;
+		case "pinButton":
+			if (sagePointers[uniqueID].visible) {
+				// only if pointer on the wall, not the web UI
+				toggleStickyPin(obj.data.id);
 			}
 			break;
 		case "closeButton":
@@ -6150,6 +6162,10 @@ function pointerPressOnDataSharingPortal(uniqueID, pointerX, pointerY, data, obj
 			// toggleApplicationFullscreen(uniqueID, obj.data);
 			break;
 		}
+		case "pinButton": {
+			// toggleStickyPin(obj.data.id);
+			break;
+		}
 		case "closeButton": {
 			// deleteApplication(obj.data.id);
 			break;
@@ -6246,6 +6262,7 @@ function sendPointerPressToApplication(uniqueID, app, pointerX, pointerY, data) 
 		data: data,
 		date: Date.now()
 	};
+	handleStickyItem(app.id);
 
 	broadcast('eventInItem', event);
 
@@ -6801,6 +6818,10 @@ function pointerMoveOnApplication(uniqueID, pointerX, pointerY, data, obj, local
 			removeExistingHoverCorner(uniqueID, portalId);
 			break;
 		}
+		case "pinButton": {
+			removeExistingHoverCorner(uniqueID, portalId);
+			break;
+		}
 		case "closeButton": {
 			removeExistingHoverCorner(uniqueID, portalId);
 			break;
@@ -6918,6 +6939,10 @@ function pointerMoveOnDataSharingPortal(uniqueID, pointerX, pointerY, data, obj,
 			removeExistingHoverCorner(uniqueID, obj.data.id);
 			break;
 		}
+		case "pinButton": {
+			removeExistingHoverCorner(uniqueID, obj.data.id);
+			break;
+		}
 		case "closeButton": {
 			removeExistingHoverCorner(uniqueID, obj.data.id);
 			break;
@@ -6947,12 +6972,6 @@ function moveApplicationWindow(uniqueID, moveApp, portalId) {
 	}
 	var im = findInteractableManager(moveApp.elemId);
 	if (im) {
-		var backgroundObj = im.searchGeometry({x: moveApp.elemLeft - 1, y: moveApp.elemTop - 1});
-		if (backgroundObj !== null) {
-			if (SAGE2Items.applications.list.hasOwnProperty(backgroundObj.data.id)) {
-				attachAppIfSticky(backgroundObj.data, moveApp.elemId);
-			}
-		}
 		drawingManager.applicationMoved(moveApp.elemId, moveApp.elemLeft, moveApp.elemTop);
 		im.editGeometry(moveApp.elemId, "applications", "rectangle",
 			{x: moveApp.elemLeft, y: moveApp.elemTop, w: moveApp.elemWidth, h: moveApp.elemHeight + titleBarHeight});
@@ -7597,7 +7616,7 @@ function dropMoveItem(uniqueID, app, valid, portalId) {
 	if (updatedItem !== null) {
 		moveApplicationWindow(uniqueID, updatedItem, portalId);
 	}
-
+	handleStickyItem(app.id);
 	broadcast('finishedMove', {id: app.id, date: Date.now()});
 
 	if (portalId !== undefined && portalId !== null) {
@@ -7711,6 +7730,9 @@ function pointerDblClickOnApplication(uniqueID, pointerX, pointerY, obj, localPt
 		case "fullscreenButton": {
 			break;
 		}
+		case "pinButton": {
+			break;
+		}
 		case "closeButton": {
 			break;
 		}
@@ -7782,6 +7804,10 @@ function pointerScrollStartOnApplication(uniqueID, pointerX, pointerY, obj, loca
 			break;
 		}
 		case "fullscreenButton": {
+			selectApplicationForScrollResize(uniqueID, obj.data, pointerX, pointerY);
+			break;
+		}
+		case "pinButton": {
 			selectApplicationForScrollResize(uniqueID, obj.data, pointerX, pointerY);
 			break;
 		}
@@ -8008,6 +8034,11 @@ function sendKeyDownToApplication(uniqueID, app, localPt, data) {
 			CMD:   remoteInteraction[uniqueID].CMD
 		}
 	};
+
+	if (fileBufferManager.hasFileBufferForApp(app.id)) {
+		eData.bufferUpdate = fileBufferManager.insertChar({appId: app.id, code: data.code,
+			printable: false, user_id: sagePointers[uniqueID].id});
+	}
 
 	var event = {id: app.id, type: "specialKey", position: ePosition, user: eUser, data: eData, date: Date.now()};
 	broadcast('eventInItem', event);
@@ -8284,6 +8315,10 @@ function sendKeyPressToApplication(uniqueID, app, localPt, data) {
 
 	var ePosition = {x: localPt.x, y: localPt.y - titleBarHeight};
 	var eUser = {id: sagePointers[uniqueID].id, label: sagePointers[uniqueID].label, color: sagePointers[uniqueID].color};
+	if (fileBufferManager.hasFileBufferForApp(app.id)) {
+		data.bufferUpdate = fileBufferManager.insertChar({appId: app.id, code: data.code,
+			printable: true, user_id: sagePointers[uniqueID].id});
+	}
 	var event = {id: app.id, type: "keyboard", position: ePosition, user: eUser, data: data, date: Date.now()};
 	broadcast('eventInItem', event);
 
@@ -8414,6 +8449,9 @@ function deleteApplication(appId, portalId) {
 		}
 	}
 
+	var stickingItems = stickyAppHandler.getFirstLevelStickingItems(app.id);
+	stickyAppHandler.removeElement(app);
+
 	SAGE2Items.applications.removeItem(appId);
 	var im = findInteractableManager(appId);
 	im.removeGeometry(appId, "applications");
@@ -8425,7 +8463,17 @@ function deleteApplication(appId, portalId) {
 		}
 	}
 
-	stickyAppHandler.removeElement(app);
+	if (stickingItems.length > 0) {
+		for (var s in stickingItems) {
+			// When background gets deleted, sticking items stop sticking
+			toggleStickyPin(stickingItems[s].id);
+		}
+	} else {
+		// Refresh the pins on all the unpinned apps
+		handleStickyItem(null);
+	}
+
+
 	broadcast('deleteElement', {elemId: appId});
 
 	if (portalId !== undefined && portalId !== null) {
@@ -8509,6 +8557,12 @@ function handleNewApplication(appInstance, videohandle) {
 		y: appInstance.height + config.ui.titleBarHeight - cornerSize,
 		w: cornerSize, h: cornerSize
 	}, 2);
+	if (appInstance.sticky === true) {
+		appInstance.pinned = true;
+		SAGE2Items.applications.addButtonToItem(appInstance.id, "pinButton", "rectangle",
+			{x: buttonsPad, y: 0, w: oneButton, h: config.ui.titleBarHeight}, 1);
+		SAGE2Items.applications.editButtonVisibilityOnItem(appInstance.id, "pinButton", false);
+	}
 	SAGE2Items.applications.editButtonVisibilityOnItem(appInstance.id, "syncButton", false);
 
 	initializeLoadedVideo(appInstance, videohandle);
@@ -8557,6 +8611,12 @@ function handleNewApplicationInDataSharingPortal(appInstance, videohandle, porta
 		x: appInstance.width - cornerSize, y: appInstance.height + titleBarHeight - cornerSize,
 		w: cornerSize, h: cornerSize
 	}, 2);
+	if (appInstance.sticky === true) {
+		appInstance.pinned = true;
+		SAGE2Items.applications.addButtonToItem(appInstance.id, "pinButton", "rectangle",
+			{x: buttonsPad, y: 0, w: oneButton, h: titleBarHeight}, 1);
+		SAGE2Items.applications.editButtonVisibilityOnItem(appInstance.id, "pinButton", false);
+	}
 	SAGE2Items.applications.editButtonVisibilityOnItem(appInstance.id, "syncButton", false);
 
 	initializeLoadedVideo(appInstance, videohandle);
@@ -8596,6 +8656,10 @@ function handleApplicationResize(appId) {
 		{x: startButtons + (2 * (buttonsPad + oneButton)), y: 0, w: oneButton, h: titleBarHeight});
 	SAGE2Items.applications.editButtonOnItem(appId, "dragCorner", "rectangle",
 		{x: app.width - cornerSize, y: app.height + titleBarHeight - cornerSize, w: cornerSize, h: cornerSize});
+	if (app.sticky === true) {
+		SAGE2Items.applications.editButtonOnItem(app.id, "pinButton", "rectangle",
+			{x: buttonsPad, y: 0, w: oneButton, h: titleBarHeight});
+	}
 }
 
 function handleDataSharingPortalResize(portalId) {
@@ -8628,6 +8692,7 @@ function handleDataSharingPortalResize(portalId) {
 		{x: startButtons + buttonsPad + oneButton, y: 0, w: oneButton, h: config.ui.titleBarHeight});
 	SAGE2Items.portals.editButtonOnItem(portalId, "dragCorner", "rectangle",
 		{x: portalWidth - cornerSize, y: portalHeight + config.ui.titleBarHeight - cornerSize, w: cornerSize, h: cornerSize});
+
 }
 
 function findInteractableManager(appId) {
@@ -8870,16 +8935,80 @@ function wsRadialMenuMoved(wsio, data) {
 	}
 }
 
+/**
+* Called when an item is dropped after a move, and when a sticky item pin is toggled. This method
+* checks attaching of sticky items to background items and detaching previously attached
+* sticky items from background items (when the are moved away). It also handles hiding of pins of
+* items not pinned when their background is removed from underneath them
+*/
 
-function attachAppIfSticky(backgroundItem, appId) {
+function handleStickyItem(elemId) {
+	var app = SAGE2Items.applications.list[elemId];
+	var im;
+	if (app !== null && app !== undefined && app.sticky === true) {
+		stickyAppHandler.detachStickyItem(app);
+		im = findInteractableManager(elemId);
+		var backgroundObj = im.getBackgroundObj(app, null);
+		if (backgroundObj === null) {
+			hideStickyPin(app);
+		} else if (SAGE2Items.applications.list.hasOwnProperty(backgroundObj.data.id)) {
+			if (app.pinned === true) {
+				stickyAppHandler.attachStickyItem(backgroundObj.data, app);
+			} else {
+				stickyAppHandler.registerNotPinnedApp(app);
+			}
+			showStickyPin(app);
+		}
+	}
+	var appsNotPinned = stickyAppHandler.getNotPinnedAppList();
+	var appsNotPinnedWithBackground = [];
+	for (var i in appsNotPinned) {
+		var tmpAppVariable = SAGE2Items.applications.list[appsNotPinned[i].id];
+		if (tmpAppVariable === null || tmpAppVariable === undefined) {
+			//Apps on this list might have been deleted
+			continue;
+		}
+		im = findInteractableManager(tmpAppVariable.id);
+		if (im.getBackgroundObj(tmpAppVariable, null) === null) {
+			//If there is no background hide the pin
+			hideStickyPin(tmpAppVariable);
+		} else {
+			//If there is a background, continue to maintain the app on the not pinned list
+			appsNotPinnedWithBackground.push(tmpAppVariable);
+		}
+	}
+	stickyAppHandler.refreshNotPinnedAppList(appsNotPinnedWithBackground);
+}
+
+
+/**
+* Called when user clicks on a sticky item pin. This method toggles the status of the pin.
+*/
+
+function toggleStickyPin(appId) {
 	var app = SAGE2Items.applications.list[appId];
-	if (app === null || app.sticky !== true) {
+	if (app === null || app === undefined || app.sticky !== true) {
 		return;
 	}
-	stickyAppHandler.detachStickyItem(app);
-	if (backgroundItem !== null) {
-		stickyAppHandler.attachStickyItem(backgroundItem, app);
+	if (app.hasOwnProperty("pinned") === false || app.pinned !== true) {
+		app.pinned = true;
+	} else {
+		app.pinned = false;
+		stickyAppHandler.registerNotPinnedApp(app);
 	}
+
+	handleStickyItem(app.id);
+}
+
+
+function showStickyPin(app) {
+	SAGE2Items.applications.editButtonVisibilityOnItem(app.id, "pinButton", true);
+	broadcast('showStickyPin', app);
+}
+
+function hideStickyPin(app) {
+	SAGE2Items.applications.editButtonVisibilityOnItem(app.id, "pinButton", false);
+	broadcast('hideStickyPin', app);
 }
 
 
@@ -9635,6 +9764,58 @@ function appFileSaveRequest(wsio, data) {
 
 	} else {
 		console.log(sageutils.header('File') + "file directory not specified. File not saved.");
+	}
+}
+
+function wsRequestFileBuffer(wsio, data) {
+	if (data.createdOn === null || data.createdOn === undefined) {
+		data.createdOn = Date.now();
+	}
+	var app = SAGE2Items.applications.list[data.id];
+	if (fileBufferManager.hasFileBufferForApp(data.id) === true) {
+		fileBufferManager.editCredentialsForBuffer({appId: data.id, owner: data.owner, createdOn: data.createdOn});
+	} else {
+		console.log("Creating file buffer for:", app.application);
+		fileBufferManager.requestBuffer({appId: data.id, owner: data.owner, createdOn: data.createdOn,
+			color: data.color, content: data.content});
+	}
+
+	if (data.fileName !== null && data.fileName !== undefined) {
+		// Create the folder as needed
+		var fileSaveDir = path.join(mainFolder.path, "notes");
+		fileSaveDir = path.join(fileSaveDir, app.application);
+
+		// Take the filename
+		var filename = data.fileName;
+		var ext = data.extension || "txt";
+		if (filename.indexOf("." + ext) === -1) {
+			// add extension if it is not present in name
+			filename += "." + ext;
+		}
+
+		// save the file in the specific application folder
+		if (data.subdir) {
+			// add a sub-directory if asked
+			fileSaveDir = path.join(fileSaveDir, data.subdir);
+		}
+		fileBufferManager.associateFile({appId: data.id, appName: app.application, fileDir: fileSaveDir, fileName: filename});
+	}
+}
+
+function wsCloseFileBuffer(wsio, data) {
+	console.log("Closing buffer for:", data.id);
+	fileBufferManager.closeFileBuffer(data.id);
+}
+
+function wsUpdateFileBufferCursorPosition(wsio, data) {
+	fileBufferManager.updateFileBufferCursorPosition(data);
+}
+
+function wsRequestNewTitle(wsio, data) {
+	var app = SAGE2Items.applications.list[data.id];
+	if (app !== null && app !== undefined) {
+		app.title = data.title;
+		broadcast('setTitle', data);
 	}
 }
 
