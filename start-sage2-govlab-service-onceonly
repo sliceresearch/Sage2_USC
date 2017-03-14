@@ -1,0 +1,104 @@
+#!/bin/bash
+
+# if any close, all are killed...
+
+echo `date` Starting SAGE2 servers
+
+export LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH
+
+SAGE2=/home/sage/sage2/govlab-201612/
+
+LOG=$SAGE2/master.log
+touch $LOG
+date >> $LOG
+node server.js -i -f $SAGE2/config/govlab.json -l </dev/null 2>&1 >> $LOG &
+MASTER=$!
+
+sleep 4
+
+# VNC clients
+LOG=$SAGE2/slave1.log
+touch $LOG
+date >> $LOG
+node server.js -i -f $SAGE2/config/govlab.json -a 9292,9291 -l </dev/null 2>&1 >> $LOG &
+SLAVE1=$!
+
+
+# laptop1 video capture
+LOG=$SAGE2/slave2.log
+touch $LOG
+date >> $LOG
+node server.js -i -f $SAGE2/config/govlab.json -a 9294,9293 -l </dev/null 2>&1 >> $LOG &
+SLAVE2=$!
+
+
+# Screen sharing
+LOG=$SAGE2/slave3.log
+touch $LOG
+date >> $LOG
+node server.js -i -f $SAGE2/config/govlab.json -a 9296,9295 -l </dev/null 2>&1 >> $LOG &
+SLAVE3=$!
+
+
+# laptop2 video capture
+LOG=$SAGE2/slave4.log
+touch $LOG
+date >> $LOG
+node server.js -i -f $SAGE2/config/govlab.json -a 9298,9297 -l </dev/null 2>&1 >> $LOG &
+SLAVE4=$!
+
+
+# VC video capture
+LOG=$SAGE2/slave5.log
+touch $LOG
+date >> $LOG
+node server.js -i -f $SAGE2/config/govlab.json -a 9300,9299 -l </dev/null 2>&1 >> $LOG &
+SLAVE5=$!
+
+
+# AppleTV (VC2) video capture
+LOG=$SAGE2/slave6.log
+touch $LOG
+date >> $LOG
+node server.js -i -f $SAGE2/config/govlab.json -a 9302,9301 -l </dev/null 2>&1 >> $LOG &
+SLAVE6=$!
+
+echo `date` sage2 server PIDs $MASTER $SLAVE1 $SLAVE2 $SLAVE3 $SLAVE4 $SLAVE5 $SLAVE6
+
+function doExit() {
+  echo `date` some SAGE2 process exited - kill all
+  echo `date` exited - kill all >> $SAGE2/master.log
+  for i in 1 2 3 4 5 6
+  do
+	  echo `date` exited - kill all >> $SAGE2/slave${i}.log
+  done
+  kill $MASTER &
+  kill $SLAVE1 &
+  kill $SLAVE2 &
+  kill $SLAVE3 &
+  kill $SLAVE4 &
+  kill $SLAVE5 &
+  kill $SLAVE6 &
+  wait $MASTER $SLAVE1 $SLAVE2 $SLAVE3 $SLAVE4 $SLAVE5 $SLAVE6
+  echo `date` all SAGE2 processes killed
+  exit
+}
+
+# wait for everything to get started...!
+sleep 10
+
+while true
+do
+  ps -p $MASTER > /dev/null || doExit
+  ps -p $SLAVE1 > /dev/null || doExit
+  ps -p $SLAVE2 > /dev/null || doExit
+  ps -p $SLAVE3 > /dev/null || doExit
+  ps -p $SLAVE4 > /dev/null || doExit
+  ps -p $SLAVE5 > /dev/null || doExit
+  ps -p $SLAVE6 > /dev/null || doExit
+  sleep 1
+done
+
+#sleep 4
+
+#/home/sage/script/sage2-govlab-vncsessions-restore-all

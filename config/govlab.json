@@ -1,0 +1,82 @@
+{
+	host: "10.234.2.22",
+	port: 9290,
+	url: "control.vxlab.rmit.edu.au",
+	index_port: 9280,
+        background: {
+		//color: "rgb(0,20,0)",
+                image: {
+                        url: "images/background/melbourne_skyline.jpg",
+                        style: "stretch"
+                },
+                //watermark: {
+                //        svg: "images/EVL-LAVA.svg",
+                //        color: "rgba(55, 55, 55, 0.3)"
+                //},
+                clip: true
+        },
+	ui: {
+		clock: 24,
+		show_url: true,
+		show_version: true,
+                pointerSize: 150,
+                titleBarHeight: 50,
+		auto_hide_ui: false,
+		auto_hide_delay: 30
+	},
+	resolution: {
+		width: 1920,
+		height: 1080
+	},
+	dimensions: {
+       		// dimensions of one tile
+       		tile_width:  1.205,  // in meter, pixel area
+       		tile_height: 0.680,  // in meter, pixel area
+		// how much bezel gap 
+		// (NEC X551UN)
+		tile_borders: {left: 0.0037, right: 0.0018, top: 0.0037, bottom: 0.0018},
+       		// prefered or common viewing distance to calculate UI sizes
+       		viewing_distance: 5.0	// in meter
+	},
+	layout: {
+		rows: 4,
+		columns: 7
+	},
+	displays: [
+		{ row: 0, column: 0 },
+		{ row: 1, column: 0 },
+		{ row: 2, column: 0 },
+		{ row: 0, column: 1 },
+		{ row: 1, column: 1 },
+		{ row: 2, column: 1 },
+		{ row: 0, column: 2 },
+		{ row: 1, column: 2 },
+		{ row: 2, column: 2 },
+		{ row: 0, column: 3 },
+		{ row: 1, column: 3 },
+		{ row: 2, column: 3 },
+		{ row: 0, column: 4 },
+		{ row: 1, column: 4 },
+		{ row: 2, column: 4 },
+		{ row: 0, column: 5 },
+		{ row: 1, column: 5 },
+		{ row: 2, column: 5 },
+		{ row: 0, column: 6 },
+		{ row: 1, column: 6 },
+		{ row: 2, column: 6 }
+	],
+	audio: {
+                initialVolume: 1,
+        },
+	alternate_hosts: [
+		"127.0.0.1", "10.234.2.22", "govlab.vxlab.rmit.edu.au", "gs2.vx.rmit.edu.au"
+	],
+	remote_sites: [
+          {
+	    name: "VxPortals",
+            host: "10.234.2.22",
+            port: 8900,
+            secure: true
+          }
+	]
+}

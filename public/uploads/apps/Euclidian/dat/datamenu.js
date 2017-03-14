@@ -1,0 +1,1 @@
+datamenuXYZ=[xyz30,NFxyz30,xyzfesto01,xyzfesto02,xyzfesto03]
