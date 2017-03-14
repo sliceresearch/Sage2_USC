@@ -126,6 +126,8 @@ var slaveServers       = {};
 var partitions				 = new PartitionList(config);
 var draggingPartition	 = {};
 
+var clipboard	= '';
+
 // Add extra folders defined in the configuration file
 if (config.folders) {
 	config.folders.forEach(function(f) {
@@ -438,11 +440,16 @@ function initializeSage2Server() {
 		}
 	});
 
-	// Initialize assets folders
-	assets.initialize(mainFolder, mediaFolders, function() {
-		// when processing assets done, send the file list
-		broadcast('storedFileList', getSavedFilesList());
-	});
+        if (program.slaveports === undefined) {
+		console.log("(Master:) assets initialization");
+		// Initialize assets folders
+		assets.initialize(mainFolder, mediaFolders, function() {
+			// when processing assets done, send the file list
+			broadcast('storedFileList', getSavedFilesList());
+		});
+	} else {
+		console.log("skip assets initialization");
+	}
 
 	drawingManager = new Drawing(config);
 	drawingManager.setCallbacks(
@@ -682,6 +689,7 @@ var stickyAppHandler     = new StickyItems();
 process.on('uncaughtException', function(err) {
 	// handle the error safely
 	console.trace("SAGE2>	", err);
+	console.trace("SAGE2>	", err.stack);
 });
 
 
@@ -692,6 +700,7 @@ process.on('uncaughtException', function(err) {
  * @param      {Websocket}  wsio    The websocket for this client
  */
 function openWebSocketClient(wsio) {
+	console.log("openWebSocketClient");
 	wsio.onclose(closeWebSocketClient);
 	wsio.on('addClient', wsAddClient);
 }
@@ -781,6 +790,7 @@ function closeWebSocketClient(wsio) {
  * @param      {Object}  data    initialization data
  */
 function wsAddClient(wsio, data) {
+	console.log("wsAddClient "+JSON.stringify(data));
 	// Check for password
 	if (config.passwordProtected) {
 		if (!data.session || data.session !== global.__SESSION_ID) {
@@ -830,7 +840,7 @@ function wsAddClient(wsio, data) {
 		wsio.clientID = -1;
 		console.log(sageutils.header("Connect") + wsio.id + " (" + wsio.clientType + ")");
 		if (masterServer!==undefined && masterServer!=null) {
-			console.log("register new client with master");
+			console.log("register new client with master "+wsio.clientType);
 			masterServer.emit('addClient', data);
 			console.log("- registered new client with master");
 		}
@@ -965,6 +975,10 @@ function setupListeners(wsio) {
 	wsio.on('keyUp',                                wsKeyUp);
 	wsio.on('keyPress',                             wsKeyPress);
 
+	wsio.on('clipboard',                            wsClipboard);
+	wsio.on('newPointCloud',                   	wsNewPointCloud);
+	wsio.on('addPointCloud',                        wsAddPointCloud);
+
 	wsio.on('uploadedFile',                         wsUploadedFile);
 
 	wsio.on('startNewMediaStream',                  wsStartNewMediaStream);
@@ -1080,6 +1094,8 @@ function setupListeners(wsio) {
 
 	wsio.on('sage2Log',                             wsPrintDebugInfo);
 	wsio.on('command',                              wsCommand);
+	wsio.on('getApps',                              wsGetApps);
+	wsio.on('setTitle',                              wsSetTitle);
 
 	wsio.on('createFolder',                         wsCreateFolder);
 
@@ -1510,6 +1526,25 @@ function wsKeyPress(wsio, data) {
 	keyPress(wsio.id, pointerX, pointerY, data);
 }
 
+// **************  Clipboard ******************
+
+function wsClipboard(wsio, data) {
+	console.log("clipboard update from client "+JSON.stringify(data));
+	clipboard = data.clipboard;
+	if (masterServer!==undefined && masterServer!=null) {
+		console.log("send to master: clipboard");
+		masterServer.emit('clipboard', data);
+	}
+}
+
+function wsNewPointCloud(wsio, data) {
+	console.log("newPointCloud");
+}
+
+function wsAddPointCloud(wsio, data) {
+	console.log("addPointCloud");
+}
+
 // **************  File Upload Functions *****************
 function wsUploadedFile(wsio, data) {
 	addEventToUserLog(wsio.id, {type: "fileUpload", data: data, time: Date.now()});
@@ -1529,7 +1564,7 @@ function wsRadialMenuClick(wsio, data) {
 // **************  Media Stream Functions *****************
 
 function wsStartNewMediaStream(wsio, data) {
-	console.log(sageutils.header("Media stream") + 'new stream: ' + data.id);
+	console.log(sageutils.header("wsStartNewMediaStream") + 'new stream: ' + data.id);
 
 	var i;
 	SAGE2Items.renderSync[data.id] = {clients: {}, chunks: [], frames: 0, start: Date.now()};
@@ -1627,7 +1662,7 @@ function wsUpdateMediaStreamFrame(wsio, dataOrBuffer) {
           //console.log("UpdateMediaStreamFrame: parameter is record");
           data = dataOrBuffer;
         } else {
-          console.log("UpdateMediaStreamFrame: parameter is Buffer "+dataOrBuffer.length);
+          //console.log("UpdateMediaStreamFrame: parameter is Buffer "+dataOrBuffer.length);
           data = {}
           // buffer: id, state-type, state-encoding, state-src
           data.id = byteBufferToString(dataOrBuffer);
@@ -1720,14 +1755,14 @@ function wsUpdateMediaStreamChunk(wsio, dataOrBuffer) {
                 // FIXME: removing the requirement for next-frame signalling creates a race between chunks of different frames
                 // buffer: id, state-type, state-encoding, state-src
                 var dataStr = byteBufferToString(dataOrBuffer);
-                console.log("chunk data "+dataStr);
+                //console.log("chunk data "+dataStr);
                 data = JSON.parse(dataStr);
                 var curState = SAGE2Items.renderSync[data.id];
                 data.state.src = dataOrBuffer.slice(dataStr.length + 1);
-                console.log("chunk size "+data.state.src.length);
+                //console.log("chunk size "+data.state.src.length);
                 var chunks = SAGE2Items.renderSync[data.id].chunks;
                 if (chunks === null || chunks === undefined || chunks.length === 0) {
-                        console.log("new frame: awaiting "+data.total+" chunks ");
+                        //console.log("new frame: awaiting "+data.total+" chunks ");
                         SAGE2Items.renderSync[data.id].chunks = initializeArray(data.total, "");
                         chunks = SAGE2Items.renderSync[data.id].chunks;
                 }
@@ -1735,7 +1770,7 @@ function wsUpdateMediaStreamChunk(wsio, dataOrBuffer) {
                         curState.frameCount = 0;
                 }
                 if (curState.frameCount+1 !== data.frameNr) {
-                        console.log("CHUNK FROM OTHER FRAME "+data.frameNr);
+                        //console.log("CHUNK FROM OTHER FRAME "+data.frameNr);
                 }
                 chunks[data.piece] = data.state.src;
                 if (allNonBlank(SAGE2Items.renderSync[data.id].chunks)) {
@@ -1851,23 +1886,24 @@ function wsStartNewMediaBlockStream(wsio, data) {
         appLoader.createMediaBlockStream(data.title, data.color, data.colorspace, data.width, data.height, function(appInstance) {
                 appInstance.id = data.id;
                 console.log("createMediaBlockStream "+JSON.stringify(data));
-                var pos = data.pos || [1.0,0.0];
-                var resize = false;
-                if (data.title==="laptop1") {
-                        console.log("laptop1");
-                        pos = [1970,0];
-                        resize = true;
-                }
-                if (data.title==="vc1") {
-                        console.log("vc1");
-                        pos = [5828,0];
-                        resize = true;
-                }
-                if (data.title==="laptop2") {
-                        console.log("laptop2");
-                        pos = [9686,0];
-                        resize = true;
-                }
+                //var pos = data.pos || [0.0,0.0];
+                var pos = [5805,18];
+                var resize = true;
+                //if (data.title==="laptop1") {
+                //        console.log("laptop1");
+                //        pos = [1970,0];
+                //        resize = true;
+                //}
+                //if (data.title==="vc1") {
+                //        console.log("vc1");
+                //        pos = [5828,0];
+                //        resize = true;
+                //}
+                //if (data.title==="laptop2") {
+                //        console.log("laptop2");
+                //        pos = [9686,0];
+                //        resize = true;
+                //}
                 console.log("pos "+pos);
                 setAppPosition(appInstance, pos);
                 handleNewApplication(appInstance, null);
@@ -2775,6 +2811,11 @@ function listMediaBlockStreams() {
 	listMediaStreams();
 }
 
+// get running app instances
+function wsGetApps(wsio) {
+	wsio.emit('appStatus',SAGE2Items.applications.list);
+}
+
 function listApplications() {
 	var i = 0;
 	var key;
@@ -2795,7 +2836,6 @@ function listApplications() {
 		i++;
 	}
 }
-
 
 // **************  Tiling Functions *****************
 
@@ -5316,6 +5356,34 @@ function processInputCommand(line) {
 			}
 			break;
 		}
+		case 'getapps': {
+			wsGetApps();
+			break;
+		}
+		case 'call': {
+			console.log("call "+JSON.stringify(command));
+			var fname = command[1];
+			console.log("call "+fname);
+			// FIXME: does this handle spaces?
+			var data = {};
+			if (command.length===4) {
+				data = JSON.parse(command[3]);
+			}
+			data.id = command[2];
+			console.log("call with data "+JSON.stringify(data));
+			if (clients===null || clients===undefined || clients.length < 1) {
+				console.log("no clients - unable to locate function to call");
+				break;
+			}
+			// hack: use arbitrary websocket to locate function by registered message name
+			var wsio = clients[0];
+			console.log("wsio.messages "+JSON.stringify(Object.keys(wsio.messages)));
+			var fn = wsio.messages[fname];
+			console.log("call fn "+fn);
+			fn(null,data);
+			console.log("called");
+			break;
+		}
 		case 'save': {
 			if (command[1] !== undefined) {
 				saveSession(command[1]);
@@ -5395,6 +5463,7 @@ function processInputCommand(line) {
 			break;
 		}
 		case 'resize': {
+			console.log("Command resize");
 			var ww, hh;
 			// command: resize appid width height (force exact resize)
 			// command: resize appid width  (keep aspect ratio)
@@ -5407,6 +5476,7 @@ function processInputCommand(line) {
 				ww = parseFloat(command[2]);
 				hh = 0;
 				wsAppResize(null, {id: command[1], width: ww, height: hh, keepRatio: true});
+				console.log(sageutils.header("Command") + "resizing (keeping ratio) to " + ww + "x" + hh);
 			} else {
 				console.log(sageutils.header("Command") + "should be: resize app_0 800 600");
 			}
@@ -5499,6 +5569,12 @@ function processInputCommand(line) {
 			break;
 		}
 	}
+}
+
+function wsSetTitle(wsio,data) {
+	console.log("wsSetTitle "+JSON.stringify(data));
+	//SAGE2Items.applications.list[data.id].title = data.newTitle;
+	broadcast('broadcast', {app:data.id, func:'updateTitle', data:data.newTitle});
 }
 
 function loopVideo(appId, setLoop) {
@@ -6833,6 +6909,9 @@ function pointerMoveOnApplication(uniqueID, pointerX, pointerY, data, obj, local
 	if (btn === null) {
 		removeExistingHoverCorner(uniqueID, portalId);
 		if (remoteInteraction[uniqueID].appInteractionMode()) {
+			// HACK: modify in-place existing data with clipboard text
+			data.clipboard = clipboard;
+			console.log("clipboard update to app: "+clipboard);
 			sendPointerMoveToApplication(uniqueID, obj.data, pointerX, pointerY, data);
 		}
 		return;
