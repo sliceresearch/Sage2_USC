@@ -898,6 +898,7 @@ AppLoader.prototype.manageAndLoadUploadedFile = function(file, callback) {
 	var cleanFilename = sanitize(file.name);
 	// Clean up further the file names
 	cleanFilename = cleanFilename.replace(/[\$\%\^\&\(\)]/g, '_');
+	console.log(cleanFilename);
 
 	// Check if there is a matching application
 	var app = registry.getDefaultApp(cleanFilename);
@@ -905,6 +906,7 @@ AppLoader.prototype.manageAndLoadUploadedFile = function(file, callback) {
 		callback(null);
 		return;
 	}
+
 	var mime_type = registry.getMimeType(cleanFilename);
 	var dir = registry.getDirectory(cleanFilename);
 
@@ -932,6 +934,7 @@ AppLoader.prototype.manageAndLoadUploadedFile = function(file, callback) {
 		if (err1) {
 			throw err1;
 		}
+
 		if (app === "custom_app" && mime_type === "application/zip") {
 			// Compressed ZIP file, load directly
 			_this.loadApplication({
@@ -939,6 +942,60 @@ AppLoader.prototype.manageAndLoadUploadedFile = function(file, callback) {
 				type: mime_type, name: cleanFilename, compressed: true}, function(appInstance, handle) {
 				callback(appInstance, handle);
 			});
+		} else if (app === "portable_session" && mime_type === "sage2/session") {
+			console.log("Grabbed portable session file for load: ", cleanFilename, mime_type);
+
+
+			let fse = require('fs-extra');
+			let unzipper = new Unzip(localPath);
+
+			console.log(localPath);
+
+			// create temporary directory to unzip content
+
+			console.log('-----------------------');
+			console.log(sageutils.header('Session') + 'Opening portable session: ' + cleanFilename);
+			var tempDir = path.join(path.join(_this.publicDir, "portable-sessions"), (cleanFilename + "-"));
+
+			console.log(tempDir);
+
+			fs.mkdtemp(tempDir, (err, folder) => {
+				if (err) {
+					throw err;
+				}
+
+				console.log(sageutils.header('Session') + 'Unpacking session in ' + folder);
+
+				// unzip
+				unzipper.on('error', function (err) {
+					console.log('Caught', err);
+				});
+
+				unzipper.on('extract', function (log) {
+					console.log('Finished extracting');
+				});
+
+				unzipper.on('progress', function (fileIndex, fileCount) {
+					console.log('Extracted file ' + (fileIndex + 1) + ' of ' + fileCount);
+				});
+
+				unzipper.extract({
+					path: folder
+				});
+
+				fse.removeSync(localPath);
+
+				// add all assets in this zip to server assets
+
+				// place session file in sessions folder
+
+				// load that session as usual
+
+
+			});
+
+
+
 		} else {
 			// try to process all the files with exiftool
 			exiftool.file(localPath, function(err2, data) {

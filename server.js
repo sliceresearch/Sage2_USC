@@ -2179,7 +2179,7 @@ function wsPackageSession(wsio, data) {
 					console.log(sageutils.header("Session") + "error saving " + err);
 				}
 
-				var output_zip = path.join(os.tmpdir(), sessionName + '.zip');
+				var output_zip = path.join(os.tmpdir(), sessionName + '.s2ps');
 				var output = fs.createWriteStream(output_zip);
 				var archive = archiver('zip', {
 					store: true // Sets the compression method to STORE.
@@ -4833,6 +4833,7 @@ function uploadForm(req, res) {
 		// Get the file (only one even if multiple drops, it comes one by one)
 		var file = files[ Object.keys(files)[0] ];
 		var app = registry.getDefaultApp(file.name);
+
 		if (app === undefined || app === "") {
 			fields.good = false;
 		} else {

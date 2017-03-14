@@ -55,6 +55,13 @@
             "types": [
                 "application/stream"
             ]
+        },
+        {
+            "name": "portable_session",
+            "types": [
+                "sage2/session"
+            ],
+            "directory": "portable-sessions"
         }
     ]
 }
