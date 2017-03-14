@@ -276,6 +276,10 @@ function SAGE2_init() {
 	//slaveInit("ws://10.234.2.22:8088/display.html");
 }
 
+// Hack: primitive support for point-of-view awareness (see car_3js)
+// Global variable enabling app instances on displays to distinguish between displays
+var displayUID;
+
 // connect to a Sage2 ``slave'' media streaming server and be ready to receive frames from it
 function slaveInit(id) {
 	var url = "ws://"+id+"/display.html";
@@ -302,6 +306,8 @@ function slaveInit(id) {
 	});
 }
 
+
+// FIXME: investigate: why not use setupListeners for slaves too?
 function setupSlaveListeners(anWsio) {
 
         anWsio.on('updateMediaStreamFrame', function(dataOrBuffer) {
@@ -363,8 +369,13 @@ function setupSlaveListeners(anWsio) {
 }
 
 function setupListeners(anWsio) {
+
+
 	anWsio.on('initialize', function(data) {
 		var startTime  = new Date(data.start);
+
+		// set display UID as global for app
+		displayUID = data.UID;
 
 		// Global initialization
 		SAGE2_initialize(startTime);
