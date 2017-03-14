@@ -955,35 +955,35 @@ AppLoader.prototype.manageAndLoadUploadedFile = function(file, callback) {
 
 			console.log('-----------------------');
 			console.log(sageutils.header('Session') + 'Opening portable session: ' + cleanFilename);
-			var tempDir = path.join(path.join(_this.publicDir, "portable-sessions"), (cleanFilename + "-"));
+			var tempDir = path.join(localPath.split(".")[0] + Date.now() + "-content");
 
-			console.log(tempDir);
-
-			fs.mkdtemp(tempDir, (err, folder) => {
+			fs.mkdir(tempDir, (err, folder) => {
 				if (err) {
 					throw err;
 				}
 
 				console.log(sageutils.header('Session') + 'Unpacking session in ' + folder);
-
 				// unzip
+
+				// catch errors while extracting
 				unzipper.on('error', function (err) {
 					console.log('Caught', err);
 				});
 
-				unzipper.on('extract', function (log) {
-					console.log('Finished extracting');
-				});
-
+				// display unzip progress
 				unzipper.on('progress', function (fileIndex, fileCount) {
 					console.log('Extracted file ' + (fileIndex + 1) + ' of ' + fileCount);
 				});
 
+				// start extraction
 				unzipper.extract({
-					path: folder
+					path: tempDir
 				});
 
-				fse.removeSync(localPath);
+				unzipper.on('extract', function (log) {
+					console.log('Finished extracting ' + cleanFilename);
+					fse.removeSync(localPath);
+				});
 
 				// add all assets in this zip to server assets
 

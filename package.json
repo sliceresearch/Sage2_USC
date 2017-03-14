@@ -73,7 +73,6 @@
 		"ytdl-core": "latest",
 		"fs-extra": "latest",
 		"archiver": "latest",
-		"decompress-zip": "latest",
 		"electron": "latest"
 	},
 	"optionalDependencies": {
