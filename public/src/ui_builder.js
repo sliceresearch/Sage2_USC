@@ -308,6 +308,35 @@ function UIBuilder(json_cfg, clientID) {
 			this.noDropShadow = false;
 		}
 
+		////// Thumbnail (VXLab hack)
+		//this.thumbNrDiv = document.createElement('div');
+		//this.thumbNrDiv.id = "thumbNrDiv";
+
+		//this.thumbNr = document.createElement('p');
+		//this.thumbNr.id = "thumbNr";
+
+		//var thumbTextColor = "rgba(55, 255, 255, 1.0)";
+		//this.thumbNr.textContent = "THUMB1";
+		//this.thumbNr.style.position   = "absolute";
+		//this.thumbNr.style.whiteSpace = "nowrap";
+		//this.thumbNr.style.fontSize   = "200pt";
+		//this.thumbNr.style.color      = thumbTextColor;
+		//this.thumbNr.style.left       = 2500;
+		//this.thumbNr.style.top        = -2500;
+		//this.thumbNr.style.webkitTransform  = "translateY(100%)";
+		//this.thumbNr.style.mozTransform  = "translateY(100%)";
+		//this.thumbNr.style.transform  = "translateY(100%)";
+
+		//this.thumbNrDiv.appendChild(this.thumbNr);
+
+		//this.thumbNrDiv.style.height = "500px";
+		//this.thumbNrDiv.style.left   = "500px";
+		//this.thumbNrDiv.style.top    = "-1500px";
+		//this.thumbNrDiv.style.zIndex = "19999";
+		//this.thumbNrDiv.style.backgroundColor = backgroundColor;
+		//this.main.appendChild(this.thumbNrDiv);
+		//////
+
 		// Build the upper bar
 		this.upperBar    = document.createElement('div');
 		this.upperBar.id = "upperBar";
