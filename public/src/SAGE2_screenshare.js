@@ -1381,7 +1381,7 @@ function keyPress(event) {
 function loadSelectedApplication() {
 	if (selectedAppEntry !== null) {
 		var app_path = selectedAppEntry.getAttribute("appfullpath");
-		wsio.emit('loadApplication', {application: app_path, user: interactor.uniqueID});
+		//wsio.emit('loadApplication', {application: app_path, user: interactor.uniqueID});
 	}
 }
 
@@ -1394,7 +1394,7 @@ function loadSelectedFile() {
 	if (selectedFileEntry !== null) {
 		var application = selectedFileEntry.getAttribute("application");
 		var file = selectedFileEntry.getAttribute("file");
-		wsio.emit('loadFileFromServer', {application: application, filename: file, user: interactor.uniqueID});
+		//wsio.emit('loadFileFromServer', {application: application, filename: file, user: interactor.uniqueID});
 	}
 }
 
