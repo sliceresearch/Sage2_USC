@@ -976,8 +976,7 @@ function setupListeners(wsio) {
 	wsio.on('keyPress',                             wsKeyPress);
 
 	wsio.on('clipboard',                            wsClipboard);
-	wsio.on('newPointCloud',                   	wsNewPointCloud);
-	wsio.on('addPointCloud',                        wsAddPointCloud);
+	wsio.on('newPointCloudFrame',                   wsNewPointCloudFrame);
 
 	wsio.on('uploadedFile',                         wsUploadedFile);
 
@@ -1537,13 +1536,53 @@ function wsClipboard(wsio, data) {
 	}
 }
 
-function wsNewPointCloud(wsio, data) {
-	console.log("newPointCloud");
+// **************  Point cloud *****************
+
+var PCApp = null;
+var PCAppKey = null;
+
+function findPCApp() {
+        var key;
+        if ((PCApp === null) || ((SAGE2Items.applications.list[PCAppKey]) === undefined)) {
+            console.log("findPCApp: searching for point cloud app");
+            for (key in SAGE2Items.applications.list) {
+                var a = SAGE2Items.applications.list[key];
+                console.log("- app "+key.toString()+" "+JSON.stringify(a));
+                if (a.application === "Euclidian") {
+                        console.log("PointCloud: found app");
+                        PCApp = a;
+                        PCAppKey = key;
+                }
+            }
+        }
+}
+
+function wsNewPointCloudFrame(wsio,data) {
+        console.log("wsNewPointCloudFrame");
+        //console.log("wsNewPointCloudFrame",JSON.stringify(data));
+        findPCApp();
+        wsio.emit('ack',{});
+        if (PCApp !== null) {
+            //data.data.localIP = wsio.id;
+            console.log("wsNewPointCloudFrame sending data");
+            //console.log("wsNewPointCloudFrame sending data "+JSON.stringify(data, null, 4));
+            var event = {
+                id: PCApp.id,
+                type: "newPointCloudFrame",
+                position: "undefined",
+                user: "fakeUser",
+                data: data,
+                date: Date.now()
+            }
+            broadcast('eventInItem', event);
+        };
 }
 
 function wsAddPointCloud(wsio, data) {
-	console.log("addPointCloud");
+        console.log("wsAddPointCloud");
+        //console.log("wsAddPointCloud",JSON.stringify(data));
 }
+
 
 // **************  File Upload Functions *****************
 function wsUploadedFile(wsio, data) {
