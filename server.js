@@ -2664,13 +2664,12 @@ function loadPortableSession(filename) {
 		if (err) {
 			console.log(sageutils.header("SAGE2") + "error reading session", err);
 		} else {
-			console.log(sageutils.header("SAGE2") + "reading session from " + fullpath);
+			console.log(sageutils.header("SAGE2") + "reading portable session from " + fullpath);
 
 			var session = JSON.parse(data);
 			console.log(sageutils.header("Session") + "number of applications", session.numapps);
 
 			let ptn;
-
 			// recreate partitions
 			if (session.partitions) {
 				let sessionPtnInfo = session.partitions[0]; // only 1 in portable session
@@ -2694,6 +2693,8 @@ function loadPortableSession(filename) {
 			session.apps.forEach(function(element, index, array) {
 				createAppFromDescription(element, function(appInstance, videohandle) {
 					appInstance.id = getUniqueAppId();
+					// this specific assignment is handled in handleNewApplication()
+					appInstance.partitionToReceiveApp = ptn.id; // deliberately place in this specific partition
 
 					if (appInstance.animation) {
 						var i;
@@ -2709,8 +2710,6 @@ function loadPortableSession(filename) {
 					handleNewApplication(appInstance, videohandle);
 				});
 			});
-
-			// TODO: correctly assign these apps specifically to the partiton 'ptn'
 		}
 	});
 }
@@ -8711,12 +8710,27 @@ function handleNewApplication(appInstance, videohandle) {
 	initializeLoadedVideo(appInstance, videohandle);
 
 	// assign content to a partition immediately when it is created
-	var changedPartitions = partitions.updateOnItemRelease(appInstance);
-	changedPartitions.forEach((id => {
-		updatePartitionInnerLayout(partitions.list[id]);
 
-		broadcast('partitionWindowTitleUpdate', partitions.list[id].getTitle());
-	}));
+	if (appInstance.partitionToReceiveApp && partitions.list[appInstance.partitionToReceiveApp]) {
+		// if it already has a partition assigned (in case of portable sessions)
+		// assign it to that partition
+
+		// grab the partition and delete that property
+		let partition = partitions.list[appInstance.partitionToReceiveApp];
+		delete appInstance.partitionToReceiveApp;
+
+		partition.addChild(appInstance);
+		broadcast('partitionWindowTitleUpdate', partition.getTitle());
+	} else {
+		// otherwise have it grabbed by partitions at the current position
+		var changedPartitions = partitions.updateOnItemRelease(appInstance);
+		changedPartitions.forEach((id => {
+			updatePartitionInnerLayout(partitions.list[id]);
+
+			broadcast('partitionWindowTitleUpdate', partitions.list[id].getTitle());
+		}));
+	}
+
 }
 
 function handleNewApplicationInDataSharingPortal(appInstance, videohandle, portalId) {
