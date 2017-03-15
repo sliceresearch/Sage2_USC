@@ -995,8 +995,14 @@ AppLoader.prototype.manageAndLoadUploadedFile = function(file, callback) {
 						app.filePath = path.join(tempDir, app.title);
 						console.log(app.filePath);
 						// file paths correctly updated (I believe)
-
 					}
+
+					// write changes to file
+
+					fs.writeFileSync(sessionFilePath, JSON.stringify(sessionFile));
+
+					// load session using session file
+					_this.loadSession(sessionFilePath);
 
 				});
 
@@ -1222,6 +1228,10 @@ AppLoader.prototype.readInstructionsFile = function(json_str, file, mime_type, e
 
 AppLoader.prototype.unpackPortableSession = function() {
 	// move code here later?
+};
+
+AppLoader.prototype.attachSessionLoadCallback = function(callback) {
+	this.loadSession = callback;
 };
 
 module.exports = AppLoader;

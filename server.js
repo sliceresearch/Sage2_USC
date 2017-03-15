@@ -344,6 +344,7 @@ function initializeSage2Server() {
 
 	// Initialize app loader
 	appLoader = new Loader(mainFolder.path, hostOrigin, config, imageMagickOptions, ffmpegOptions);
+	appLoader.attachSessionLoadCallback(loadSession);
 
 	// Initialize interactable manager and layers
 	interactMgr.addLayer("staticUI",     3);
