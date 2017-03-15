@@ -962,7 +962,7 @@ AppLoader.prototype.manageAndLoadUploadedFile = function(file, callback) {
 					throw err;
 				}
 
-				console.log(sageutils.header('Session') + 'Unpacking session in ' + folder);
+				console.log(sageutils.header('Session') + 'Unpacking session in ' + tempDir);
 				// unzip
 
 				// catch errors while extracting
@@ -983,13 +983,23 @@ AppLoader.prototype.manageAndLoadUploadedFile = function(file, callback) {
 				unzipper.on('extract', function (log) {
 					console.log('Finished extracting ' + cleanFilename);
 					fse.removeSync(localPath);
+					// add all assets in this zip to server assets
+					let sessionFilePath = path.join(tempDir, (cleanFilename.split(".s2ps")[0] + ".json"));
+
+					let sessionFile = JSON.parse(
+						fs.readFileSync(sessionFilePath).toString("utf-8")
+					);
+
+					// alter paths of assets in session file to point to the portable-sessions folder items
+					for (let app of sessionFile.apps) {
+						app.filePath = path.join(tempDir, app.title);
+						console.log(app.filePath);
+						// file paths correctly updated (I believe)
+
+					}
+
 				});
 
-				// add all assets in this zip to server assets
-
-				// place session file in sessions folder
-
-				// load that session as usual
 
 
 			});
@@ -1210,5 +1220,8 @@ AppLoader.prototype.readInstructionsFile = function(json_str, file, mime_type, e
 	};
 };
 
+AppLoader.prototype.unpackPortableSession = function() {
+	// move code here later?
+};
 
 module.exports = AppLoader;
