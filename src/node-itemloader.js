@@ -947,7 +947,7 @@ AppLoader.prototype.manageAndLoadUploadedFile = function(file, callback) {
 
 			_this.unpackPortableSession({
 				path: localPath,
-				name: cleanFilename,
+				name: cleanFilename
 			});
 
 
