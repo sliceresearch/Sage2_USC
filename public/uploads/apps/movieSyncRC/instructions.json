@@ -1,0 +1,18 @@
+{
+	"main_script": "movieSyncRC.js",
+	"icon": "movieSyncRC.png",
+	"width": 200,
+	"height": 400,
+	"animation": true,
+	"dependencies": [
+	],
+	"load": {
+		"associatedPlayers": []
+	},
+	"title": "Movie Sync RC",
+	"version": "1.0.0",
+	"description": "Use this to sync movie players",
+	"keywords": [ ],
+	"author": "Dylan Kobayashi <dylank@hawaii.edu>",
+	"license": "SAGE2-Software-License"
+}

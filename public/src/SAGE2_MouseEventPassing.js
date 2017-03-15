@@ -76,7 +76,7 @@ var SAGE2MEP = {
 		if (!tempTransform) {
 			tempTransform = pointerDiv.style.transform;
 		}
-		if (!tempTransform) {
+		if (!tempTransform && this.debug) {
 			console.log("Error, no transform detected. Not possible to convert mouse events.");
 		}
 		var xLocationOfPointerOnScreen = this.getXOfWebkitTranslate(tempTransform);
@@ -106,17 +106,21 @@ var SAGE2MEP = {
 			var parent = point.currentElement;
 			var boundsOfParent;
 			// get the app bounding box, while the id doesn't contain app_
-			while (parent.id.indexOf("app_") < 0) {
-				parent = parent.parentNode;
+			try {
+				while (parent.id.indexOf("app_") < 0) {
+					parent = parent.parentNode;
+				}
+			} catch (e) {
+				return;
 			}
 			boundsOfParent = parent.getBoundingClientRect();
 			var boundsOfCurrent = point.currentElement.getBoundingClientRect();
 			// difference because the app could be anywhere on SAGE2
-			console.log("parent " + parent.id + " " + boundsOfParent.left + "," + boundsOfParent.top);
-			console.log("child " + point.currentElement.id + " " + boundsOfCurrent.left + "," + boundsOfCurrent.top);
+			// console.log("parent " + parent.id + " " + boundsOfParent.left + "," + boundsOfParent.top);
+			// console.log("child " + point.currentElement.id + " " + boundsOfCurrent.left + "," + boundsOfCurrent.top);
 			offsetValues.x = point.xCurrent - (boundsOfCurrent.left - boundsOfParent.left);
 			offsetValues.y = point.yCurrent - (boundsOfCurrent.top - boundsOfParent.top);
-			console.log("offset " + offsetValues.x + "," + offsetValues.y);
+			// console.log("offset " + offsetValues.x + "," + offsetValues.y);
 		}
 
 		// Mouse events need to be made within their cases because the creation does extra stuff that doesn't allow easily modified return objects.
@@ -248,8 +252,8 @@ var SAGE2MEP = {
 					mouseEventToPass.offsetY = offsetValues.y;
 					mouseEventToPass.button = buttonValue;
 					mouseEventToPass.target = point.currentElement;
-					console.log("custom mouseEventToPass");
-					console.dir(mouseEventToPass);
+					// console.log("custom mouseEventToPass");
+					// console.dir(mouseEventToPass);
 
 					/*
 					 saving my tests for now as a comment block
@@ -532,25 +536,30 @@ var SAGE2MEP = {
 
 			var failSafeOnInf; //unsure if this is needed.
 
-			// keep looping until the pElem and cElem match. NOTE: not checking for html because this is within sage.
-			while (!foundCommonAncestor) {
-				failSafeOnInf++;
-				if (this.debug && failSafeOnInf > 500) {
-					console.log("SAGE2MEP> ERROR: failsafe break out of finding a common ancestor for event triggers.");
-					break;
-				}
-				point.mouseLeaveEventsToSend.push(pElem); // this element wasn't it, so it needs a leave event.
-				// TODO fix the first time usage error because there was no previous element.
-				pElem = pElem.parentNode; // move the check.
-				cElem = point.currentElement; // reset since it is possible that went from a child to ancestor.
-				while (cElem.nodeName != "HTML") {
-					if (pElem == cElem) {
-						foundCommonAncestor = true;
+			try{
+				// keep looping until the pElem and cElem match. NOTE: not checking for html because this is within sage.
+				while (!foundCommonAncestor) {
+					failSafeOnInf++;
+					if (this.debug && failSafeOnInf > 500) {
+						console.log("SAGE2MEP> ERROR: failsafe break out of finding a common ancestor for event triggers.");
 						break;
 					}
-					cElem = cElem.parentNode;
-				}
-			} // end while finding the common ancestor
+					point.mouseLeaveEventsToSend.push(pElem); // this element wasn't it, so it needs a leave event.
+					// TODO fix the first time usage error because there was no previous element.
+					pElem = pElem.parentNode; // move the check.
+					cElem = point.currentElement; // reset since it is possible that went from a child to ancestor.
+					while (cElem.nodeName != "HTML") {
+						if (pElem == cElem) {
+							foundCommonAncestor = true;
+							break;
+						}
+						cElem = cElem.parentNode;
+					}
+				} // end while finding the common ancestor
+			} catch (e) {
+				// this should trigger on the first time node enter, because there is no previous element at the time
+				foundCommonAncestor = false;
+			}
 
 			if (!foundCommonAncestor) {
 				if (this.debug) {
@@ -601,7 +610,9 @@ var SAGE2MEP = {
 			mouseEventToPass.target = point.mouseLeaveEventsToSend[i];
 			mouseEventToPass.relatedTarget = point.previousElement;
 
-			point.mouseLeaveEventsToSend[i].dispatchEvent(mouseEventToPass);
+			if (point.mouseLeaveEventsToSend[i] !== undefined && point.mouseLeaveEventsToSend[i] !== null) {
+				point.mouseLeaveEventsToSend[i].dispatchEvent(mouseEventToPass);
+			}
 		}
 
 	}, // end determineAndSendLeaveEvents
