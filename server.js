@@ -344,7 +344,7 @@ function initializeSage2Server() {
 
 	// Initialize app loader
 	appLoader = new Loader(mainFolder.path, hostOrigin, config, imageMagickOptions, ffmpegOptions);
-	appLoader.attachSessionLoadCallback(loadSession);
+	appLoader.attachPortableSessionLoadCallback(loadPortableSession);
 
 	// Initialize interactable manager and layers
 	interactMgr.addLayer("staticUI",     3);
@@ -2641,6 +2641,76 @@ function loadSession(filename) {
 					handleNewApplication(appInstance, videohandle);
 				});
 			});
+		}
+	});
+}
+
+function loadPortableSession(filename) {
+	filename = filename || 'default.json';
+
+	var fullpath;
+	if (sageutils.fileExists(path.resolve(filename))) {
+		fullpath = filename;
+	} else {
+		fullpath = path.join(sessionDirectory, filename);
+	}
+
+	// if it doesn't end in .json, add it
+	if (fullpath.indexOf(".json", fullpath.length - 5) === -1) {
+		fullpath += '.json';
+	}
+
+	fs.readFile(fullpath, function(err, data) {
+		if (err) {
+			console.log(sageutils.header("SAGE2") + "error reading session", err);
+		} else {
+			console.log(sageutils.header("SAGE2") + "reading session from " + fullpath);
+
+			var session = JSON.parse(data);
+			console.log(sageutils.header("Session") + "number of applications", session.numapps);
+
+			let ptn;
+
+			// recreate partitions
+			if (session.partitions) {
+				let sessionPtnInfo = session.partitions[0]; // only 1 in portable session
+
+				ptn = createPartition(
+					{
+						width: sessionPtnInfo.width,
+						height: sessionPtnInfo.height,
+						left: sessionPtnInfo.left,
+						top: sessionPtnInfo.top
+					},
+					sessionPtnInfo.color
+				);
+
+				ptn.innerMaximization = sessionPtnInfo.innerMaximization;
+				ptn.innerTiling = sessionPtnInfo.innerTiling;
+
+			}
+
+			// recreate apps
+			session.apps.forEach(function(element, index, array) {
+				createAppFromDescription(element, function(appInstance, videohandle) {
+					appInstance.id = getUniqueAppId();
+
+					if (appInstance.animation) {
+						var i;
+						SAGE2Items.renderSync[appInstance.id] = {clients: {}, date: Date.now()};
+						for (i = 0; i < clients.length; i++) {
+							if (clients[i].clientType === "display") {
+								SAGE2Items.renderSync[appInstance.id].clients[clients[i].id] = {wsio: clients[i],
+									readyForNextFrame: false, blocklist: []};
+							}
+						}
+					}
+
+					handleNewApplication(appInstance, videohandle);
+				});
+			});
+
+			// TODO: correctly assign these apps specifically to the partiton 'ptn'
 		}
 	});
 }

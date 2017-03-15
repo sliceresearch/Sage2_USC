@@ -945,71 +945,10 @@ AppLoader.prototype.manageAndLoadUploadedFile = function(file, callback) {
 		} else if (app === "portable_session" && mime_type === "sage2/session") {
 			console.log("Grabbed portable session file for load: ", cleanFilename, mime_type);
 
-
-			let fse = require('fs-extra');
-			let unzipper = new Unzip(localPath);
-
-			console.log(localPath);
-
-			// create temporary directory to unzip content
-
-			console.log('-----------------------');
-			console.log(sageutils.header('Session') + 'Opening portable session: ' + cleanFilename);
-			var tempDir = path.join(localPath.split(".")[0] + Date.now() + "-content");
-
-			fs.mkdir(tempDir, (err, folder) => {
-				if (err) {
-					throw err;
-				}
-
-				console.log(sageutils.header('Session') + 'Unpacking session in ' + tempDir);
-				// unzip
-
-				// catch errors while extracting
-				unzipper.on('error', function (err) {
-					console.log('Caught', err);
-				});
-
-				// display unzip progress
-				unzipper.on('progress', function (fileIndex, fileCount) {
-					console.log('Extracted file ' + (fileIndex + 1) + ' of ' + fileCount);
-				});
-
-				// start extraction
-				unzipper.extract({
-					path: tempDir
-				});
-
-				unzipper.on('extract', function (log) {
-					console.log('Finished extracting ' + cleanFilename);
-					fse.removeSync(localPath);
-					// add all assets in this zip to server assets
-					let sessionFilePath = path.join(tempDir, (cleanFilename.split(".s2ps")[0] + ".json"));
-
-					let sessionFile = JSON.parse(
-						fs.readFileSync(sessionFilePath).toString("utf-8")
-					);
-
-					// alter paths of assets in session file to point to the portable-sessions folder items
-					for (let app of sessionFile.apps) {
-						app.filePath = path.join(tempDir, app.title);
-						console.log(app.filePath);
-						// file paths correctly updated (I believe)
-					}
-
-					// write changes to file
-
-					fs.writeFileSync(sessionFilePath, JSON.stringify(sessionFile));
-
-					// load session using session file
-					_this.loadSession(sessionFilePath);
-
-				});
-
-
-
+			_this.unpackPortableSession({
+				path: localPath,
+				name: cleanFilename,
 			});
-
 
 
 		} else {
@@ -1226,12 +1165,75 @@ AppLoader.prototype.readInstructionsFile = function(json_str, file, mime_type, e
 	};
 };
 
-AppLoader.prototype.unpackPortableSession = function() {
-	// move code here later?
+AppLoader.prototype.unpackPortableSession = function(sessionInfo) {
+	let localPath = sessionInfo.path;
+	let cleanFilename = sessionInfo.name;
+
+	let _this = this;
+
+	let fse = require('fs-extra');
+	let unzipper = new Unzip(localPath);
+
+	console.log(localPath);
+
+	// create temporary directory to unzip content
+
+	console.log('-----------------------');
+	console.log(sageutils.header('Session') + 'Opening portable session: ' + cleanFilename);
+	var extractDir = path.join(localPath.split(".")[0] + Date.now() + "-content");
+
+	fs.mkdir(extractDir, (err, folder) => {
+		if (err) {
+			throw err;
+		}
+
+		console.log(sageutils.header('Session') + 'Unpacking session in ' + extractDir);
+		// unzip
+
+		// catch errors while extracting
+		unzipper.on('error', function (err) {
+			console.log('Caught', err);
+		});
+
+		// display unzip progress
+		unzipper.on('progress', function (fileIndex, fileCount) {
+			console.log('Extracted file ' + (fileIndex + 1) + ' of ' + fileCount);
+		});
+
+		// start extraction
+		unzipper.extract({
+			path: extractDir
+		});
+
+		unzipper.on('extract', function (log) {
+			console.log('Finished extracting ' + cleanFilename);
+			fse.removeSync(localPath);
+			// add all assets in this zip to server assets
+			let sessionFilePath = path.join(extractDir, (cleanFilename.split(".s2ps")[0] + ".json"));
+
+			let sessionFile = JSON.parse(
+				fs.readFileSync(sessionFilePath).toString("utf-8")
+			);
+
+			// alter paths of assets in session file to point to the portable-sessions folder items
+			for (let app of sessionFile.apps) {
+				app.filePath = path.join(extractDir, app.title);
+				console.log(app.filePath);
+				// file paths correctly updated (I believe)
+			}
+
+			// write changes to session file
+			fs.writeFileSync(sessionFilePath, JSON.stringify(sessionFile));
+
+			// load session using session file
+			_this.loadPortableSession(sessionFilePath);
+
+		});
+	});
 };
 
-AppLoader.prototype.attachSessionLoadCallback = function(callback) {
-	this.loadSession = callback;
+AppLoader.prototype.attachPortableSessionLoadCallback = function(callback) {
+	this.loadPortableSession = callback;
 };
 
 module.exports = AppLoader;
