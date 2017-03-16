@@ -154,10 +154,15 @@ Interaction.prototype.moveSelectedItem = function(pointerX, pointerY) {
 	// this.selectedMoveItem.top  = pointerY + this.selectOffsetY;
 	// this.selectedMoveItem.maximized = false;
 
+	// save the bottom and right coordinates for later use
+	let botCoord = this.selectedMoveItem.top + this.selectedMoveItem.height;
+	let rightCoord = this.selectedMoveItem.left + this.selectedMoveItem.width;
+
 	if (!this.selectedMoveItem.maximized) {
 		// move window as normal
 		this.selectedMoveItem.left = pointerX + this.selectOffsetX;
 		this.selectedMoveItem.top  = pointerY + this.selectOffsetY;
+
 	} else {
 		// if it is maximized
 		if (this.selectedMoveItem.maximizeConstraint === "width") {
@@ -187,6 +192,25 @@ Interaction.prototype.moveSelectedItem = function(pointerX, pointerY) {
 		} // end if maximizeConstraint === ...
 
 	} // end if maximized ...
+
+
+	// if it is a snapped partition, subtract the X, Y movement from width, height
+	if (this.selectedMoveItem.isSnapping && this.selectedMoveItem.partitionList) {
+		this.selectedMoveItem.width = rightCoord - this.selectedMoveItem.left;
+		this.selectedMoveItem.height = botCoord - this.selectedMoveItem.top;
+
+		// enforce min width
+		if (this.selectedMoveItem.width < this.selectedMoveItem.partitionList.minSize.width) {
+			this.selectedMoveItem.width = this.selectedMoveItem.partitionList.minSize.width;
+			this.selectedMoveItem.left = rightCoord - this.selectedMoveItem.width;
+		}
+
+		// enforce min height
+		if (this.selectedMoveItem.height < this.selectedMoveItem.partitionList.minSize.height) {
+			this.selectedMoveItem.height = this.selectedMoveItem.partitionList.minSize.height;
+			this.selectedMoveItem.top = botCoord - this.selectedMoveItem.height;
+		}
+	}
 
 	return {
 		elemId: this.selectedMoveItem.id, elemLeft: this.selectedMoveItem.left,
@@ -358,6 +382,11 @@ Interaction.prototype.resizeSelectedItem = function(pointerX, pointerY) {
 		return null;
 	}
 
+	// save the bottom and right coordinates for later use
+	let botCoord = this.selectedResizeItem.top + this.selectedResizeItem.height;
+	let rightCoord = this.selectedResizeItem.left + this.selectedResizeItem.width;
+
+
 	var iWidth  = pointerX - this.selectedResizeItem.left + this.selectOffsetX;
 	var iHeight = 1;
 	var resizeMode = this.SHIFT;
@@ -423,6 +452,21 @@ Interaction.prototype.resizeSelectedItem = function(pointerX, pointerY) {
 	this.selectedResizeItem.height = iHeight;
 	this.selectedResizeItem.maximized = false;
 
+
+	// if it is a partition enforce minimum size constraints
+	if (this.selectedResizeItem.partitionList) {
+		// enforce min width
+		if (this.selectedResizeItem.width < this.selectedResizeItem.partitionList.minSize.width) {
+			this.selectedResizeItem.width = this.selectedResizeItem.partitionList.minSize.width;
+			this.selectedResizeItem.left = rightCoord - this.selectedResizeItem.width;
+		}
+
+		// enforce min height
+		if (this.selectedResizeItem.height < this.selectedResizeItem.partitionList.minSize.height) {
+			this.selectedResizeItem.height = this.selectedResizeItem.partitionList.minSize.height;
+			this.selectedResizeItem.top = botCoord - this.selectedResizeItem.height;
+		}
+	}
 
 	return {
 		elemId: this.selectedResizeItem.id, elemLeft: this.selectedResizeItem.left,

@@ -712,7 +712,7 @@ Partition.prototype.updateNeighborPtnPositions = function() {
 
 			// check which of the 2 sides is the same
 			if (neighInfo.top === "bottom") {
-				boundCollections.top.min.push(neighPtn.top + partitions.minSize.height);
+				boundCollections.top.min.push(neighPtn.top + partitions.minSize.height - titleBar);
 			} else { // "top"
 				boundCollections.top.max.push(neighPtn.top + neighPtn.height - partitions.minSize.height);
 			}
@@ -720,7 +720,7 @@ Partition.prototype.updateNeighborPtnPositions = function() {
 		// if the bottom of this partition is shared with the top of another
 		if (neighInfo.bottom) {
 			if (neighInfo.bottom === "top") {
-				boundCollections.bottom.max.push(neighPtn.top + neighPtn.height - partitions.minSize.height);
+				boundCollections.bottom.max.push(neighPtn.top + neighPtn.height - partitions.minSize.height - titleBar);
 			} else { // "bottom"
 				boundCollections.bottom.min.push(neighPtn.top + partitions.minSize.height);
 			}
@@ -750,25 +750,29 @@ Partition.prototype.updateNeighborPtnPositions = function() {
 	}
 
 	// clamp this partition within the bounds
+
+	// clamp left
 	if (this.left < partitionMovementBounds.left.min) {
 		this.left = partitionMovementBounds.left.min;
 	} else if (this.left > partitionMovementBounds.left.max) {
 		this.left = partitionMovementBounds.left.max;
 	}
 
+	// clamp top
 	if (this.top < partitionMovementBounds.top.min) {
 		this.top = partitionMovementBounds.top.min;
 	} else if (this.top > partitionMovementBounds.top.max) {
 		this.top = partitionMovementBounds.top.max;
 	}
 
+	// clamp right
 	if (this.left + this.width < partitionMovementBounds.right.min) {
 		this.width = partitionMovementBounds.right.min - this.left;
 	} else if (this.left + this.width > partitionMovementBounds.right.max) {
 		this.width = partitionMovementBounds.right.max - this.left;
 	}
 
-
+	// clamp bottom
 	if (this.top + this.height < partitionMovementBounds.bottom.min) {
 		this.height = partitionMovementBounds.bottom.min - this.top;
 	} else if (this.top + this.height > partitionMovementBounds.bottom.max) {
