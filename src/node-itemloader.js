@@ -587,7 +587,8 @@ AppLoader.prototype.loadAppFromFileFromRegistry = function(file, mime_type, aUrl
 
 		var appInstance = _this.readInstructionsFile(json_str, localPath, mime_type, app_external_url);
 		appInstance.data.file = assets.getURL(file);
-		appInstance.file = file;
+		// Seems to cause issues, when drag-drop apps
+		// appInstance.file = file;
 		callback(appInstance);
 	});
 };
