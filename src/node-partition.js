@@ -681,6 +681,199 @@ Partition.prototype.updateChildrenPositions = function() {
 };
 
 Partition.prototype.updateNeighborPtnPositions = function() {
+	let partitions = this.partitionList;
+	let config = partitions.configuration;
+	let titleBar = config.ui.titleBarHeight;
+
+	// bounds to be used to clamp this partitions position/size and then update neighbors
+	let partitionMovementBounds = {
+		left: {},
+		right: {},
+		top: {},
+		bottom: {}
+	};
+
+	// initialized with maximum in every dimension
+	// after populating array, take max of min bounds, min of max bounds
+	let boundCollections = {
+		left: {min: [0], max: [config.totalWidth - partitions.minSize.width]},
+		right: {min: [partitions.minSize.width], max: [config.totalWidth]},
+		top: {min: [titleBar], max: [config.totalHeight - partitions.minSize.height]},
+		bottom: {min: [titleBar + partitions.minSize.height], max: [config.totalHeight - titleBar]}
+	};
+
+	// calculate the bounds that the current partition can move
+	for (let ptnID of Object.keys(this.neighbors)) {
+		let neighPtn = partitions.list[ptnID];
+		let neighInfo = this.neighbors[ptnID];
+
+		// if the top of this partition is shared with the bottom of another
+		if (neighInfo.top) {
+
+			// check which of the 2 sides is the same
+			if (neighInfo.top === "bottom") {
+				boundCollections.top.min.push(neighPtn.top + partitions.minSize.height);
+			} else { // "top"
+				boundCollections.top.max.push(neighPtn.top + neighPtn.height - partitions.minSize.height);
+			}
+		}
+		// if the bottom of this partition is shared with the top of another
+		if (neighInfo.bottom) {
+			if (neighInfo.bottom === "top") {
+				boundCollections.bottom.max.push(neighPtn.top + neighPtn.height - partitions.minSize.height);
+			} else { // "bottom"
+				boundCollections.bottom.min.push(neighPtn.top + partitions.minSize.height);
+			}
+		}
+		// if the left of this partition is shared with the right of another
+		if (neighInfo.left) {
+			if (neighInfo.left === "right") {
+				boundCollections.left.min.push(neighPtn.left + partitions.minSize.width);
+			} else { // "left"
+				boundCollections.left.max.push(neighPtn.left + neighPtn.width - partitions.minSize.width);
+			}
+		}
+		// if the right of this partition is shared with the left of another
+		if (neighInfo.right) {
+			if (neighInfo.right === "left") {
+				boundCollections.right.max.push(neighPtn.left + neighPtn.width - partitions.minSize.width);
+			} else { // "right"
+				boundCollections.right.min.push(neighPtn.left + partitions.minSize.width);
+			}
+		}
+	}
+
+	// calculate take max of min bounds, min of max bounds of each bound collection
+	for (let side of Object.keys(boundCollections)) {
+		partitionMovementBounds[side].min = Math.max(...boundCollections[side].min);
+		partitionMovementBounds[side].max = Math.min(...boundCollections[side].max);
+	}
+
+	// clamp this partition within the bounds
+	if (this.left < partitionMovementBounds.left.min) {
+		this.left = partitionMovementBounds.left.min;
+	} else if (this.left > partitionMovementBounds.left.max) {
+		this.left = partitionMovementBounds.left.max;
+	}
+
+	if (this.top < partitionMovementBounds.top.min) {
+		this.top = partitionMovementBounds.top.min;
+	} else if (this.top > partitionMovementBounds.top.max) {
+		this.top = partitionMovementBounds.top.max;
+	}
+
+	if (this.left + this.width < partitionMovementBounds.right.min) {
+		this.width = partitionMovementBounds.right.min - this.left;
+	} else if (this.left + this.width > partitionMovementBounds.right.max) {
+		this.width = partitionMovementBounds.right.max - this.left;
+	}
+
+
+	if (this.top + this.height < partitionMovementBounds.bottom.min) {
+		this.height = partitionMovementBounds.bottom.min - this.top;
+	} else if (this.top + this.height > partitionMovementBounds.bottom.max) {
+		this.height = partitionMovementBounds.bottom.max - this.top;
+	}
+
+	// update all neighbors based on this position of the partition
+
+	let updatedPtnIDs = [];
+
+	for (var neigh of Object.keys(this.neighbors)) {
+
+		// make sure this partition is in partitions (list)
+		if (partitions.list.hasOwnProperty(neigh)) {
+			let neighPtn = partitions.list[neigh];
+			let isUpdated = false;
+
+			// if the top of this partition is shared with the bottom of another
+			if (this.neighbors[neigh].top) {
+
+				// check which of the 2 sides is the same
+				if (this.neighbors[neigh].top === "bottom") {
+					// adjust height of neighbor
+					neighPtn.height = this.top - neighPtn.top - titleBar;
+
+					isUpdated = true;
+				} else { // "top"
+					// save bottom coordinate
+					let botCoord = neighPtn.top + neighPtn.height;
+
+					// adjust the top and height of neighbor
+					neighPtn.top = this.top;
+					neighPtn.height = botCoord - neighPtn.top;
+
+					isUpdated = true;
+				}
+			}
+			// if the bottom of this partition is shared with the top of another
+			if (this.neighbors[neigh].bottom) {
+				if (this.neighbors[neigh].bottom === "top") {
+					// save bottom coordinate
+					let botCoord = neighPtn.top + neighPtn.height;
+
+					// adjust the top and height of neighbor
+					neighPtn.top = this.top + this.height + titleBar;
+					neighPtn.height = botCoord - neighPtn.top;
+
+					isUpdated = true;
+				} else { // "bottom"
+					// adjust height of neighbor
+					neighPtn.height = this.top + this.height - neighPtn.top;
+
+					isUpdated = true;
+				}
+			}
+			// if the left of this partition is shared with the right of another
+			if (this.neighbors[neigh].left) {
+				if (this.neighbors[neigh].left === "right") {
+					// adjust width of neighbor
+					neighPtn.width = this.left - neighPtn.left;
+
+					isUpdated = true;
+				} else { // "left"
+					// save right coordinate
+					let rightCoord = neighPtn.left + neighPtn.width;
+
+					// adjust the left and width of neighbor
+					neighPtn.left = this.left;
+					neighPtn.width = rightCoord - neighPtn.left;
+
+					isUpdated = true;
+				}
+			}
+			// if the right of this partition is shared with the left of another
+			if (this.neighbors[neigh].right) {
+				if (this.neighbors[neigh].right === "left") {
+					// save right coordinate
+					let rightCoord = neighPtn.left + neighPtn.width;
+
+					// adjust the left and width of neighbor
+					neighPtn.left = this.left + this.width;
+					neighPtn.width = rightCoord - neighPtn.left;
+
+					isUpdated = true;
+				} else { // "right"
+					// adjust width of neighbor
+					neighPtn.width = this.left + this.width - neighPtn.left;
+
+					isUpdated = true;
+				}
+			}
+
+			if (isUpdated) {
+				updatedPtnIDs.push(neigh);
+			}
+		}
+	}
+
+
+	return updatedPtnIDs;
+
+};
+
+/* // OLD SNAPPING IMPLEMNETATION
+Partition.prototype.updateNeighborPtnPositions = function() {
 	var partitions = this.partitionList;
 	var titleBar = this.partitionList.configuration.ui.titleBarHeight;
 
@@ -878,7 +1071,7 @@ Partition.prototype.updateNeighborPtnPositions = function() {
 
 	return updatedPtnIDs;
 };
-
+*/
 // toggle snapped mode and update neighbors
 Partition.prototype.toggleSnapping = function() {
 	this.isSnapping = !this.isSnapping;
