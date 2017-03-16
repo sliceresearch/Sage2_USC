@@ -604,9 +604,6 @@ var movie_player = SAGE2_BlockStreamingApp.extend({
 	* @param valueUpdate {Object} contains last sent command
 	*/
 	videoSyncCommandHandler: function(valueUpdate) {
-		if (!this.shouldReceiveCommands) {
-			return;
-		}
 		var playStatusToSend = false;
 		var timestampToSend = valueUpdate.timestamp;
 		var shouldSendTimeUpdate = false;

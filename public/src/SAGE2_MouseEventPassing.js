@@ -536,7 +536,7 @@ var SAGE2MEP = {
 
 			var failSafeOnInf; //unsure if this is needed.
 
-			try{
+			try {
 				// keep looping until the pElem and cElem match. NOTE: not checking for html because this is within sage.
 				while (!foundCommonAncestor) {
 					failSafeOnInf++;

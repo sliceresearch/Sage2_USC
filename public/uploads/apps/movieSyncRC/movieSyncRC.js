@@ -15,6 +15,7 @@ var movieSyncRC = SAGE2_App.extend({
 		this.SAGE2Init("div", data);
 
 		this.resizeEvents = "onfinish";
+		this.moveEvents = "continuous";
 		this.passSAGE2PointerAsMouseEvents = true;
 
 		this.element.id = "div" + data.id;
@@ -129,15 +130,18 @@ var movieSyncRC = SAGE2_App.extend({
 		// associate variables
 		this.addPlayerDiv = document.getElementById(this.id + "addPlayerDiv");
 		this.addPlayerButton = document.getElementById(this.id + "addPlayerButton");
-		this.addPlayerDiv.style.fontSize = ui.titleTextSize + "px";
-		this.addPlayerButton.style.fontSize = ui.titleTextSize + "px";
+		this.addPlayerDiv.style.fontSize = (this.sage2_width / 9.2) + "px"; // hard code for now
+		this.addPlayerButton.style.fontSize = (this.sage2_width / 9.2) + "px"; // hard code for now
 		// create click effect
 		this.addPlayerButton.addEventListener("click", function() {
 			_this.doAssociatePlayer();
 		});
 		// list connected players
 		this.listAllPlayersDiv = document.getElementById(this.id + "listAllPlayersDiv");
-		this.listAllPlayersDiv.style.fontSize = ui.titleTextSize + "px";
+		this.listAllPlayersDiv.style.fontSize = (this.sage2_width / 9.2) + "px"; // hard code for now
+		while (this.listAllPlayersDiv.clientWidth > this.sage2_width) {
+			this.listAllPlayersDiv.style.fontSize = parseInt(this.listAllPlayersDiv.style.fontSize) - 1 + "px";
+		}
 		this.updateListOfAssociatedPlayers();
 
 		// associate button actions.
@@ -149,6 +153,16 @@ var movieSyncRC = SAGE2_App.extend({
 		this.stopButton.addEventListener("click", function() {
 			_this.stopButtonEffect();
 		});
+		// row 2
+		this.stepBackButton = document.getElementById(this.id + "stepBackButton");
+		this.stepBackButton.addEventListener("click", function() {
+			_this.stopButtonEffect();
+		});
+		this.stepForwardButton = document.getElementById(this.id + "stepForwardButton");
+		this.stepForwardButton.addEventListener("click", function() {
+			_this.stopButtonEffect();
+		});
+		// row 3
 		this.loopButton = document.getElementById(this.id + "loopButton");
 		this.loopButton.addEventListener("click", function() {
 			_this.loopButtonEffect();
@@ -163,6 +177,8 @@ var movieSyncRC = SAGE2_App.extend({
 		var _this = this;
 		var pTitleDiv, pBr, pHr, pRemoveButton, removeId;
 		this.listAllPlayersDiv.innerHTML = "Connected Movies:";
+		var fontSizeAsInt = (this.sage2_width / 9.2); // hardcode for now
+		this.listAllPlayersDiv.style.fontSize = fontSizeAsInt + "px";
 
 		for (var i = 0; i < this.state.associatedPlayers.length; i++) {
 			// new line per movie
@@ -173,20 +189,39 @@ var movieSyncRC = SAGE2_App.extend({
 			// add title div
 			pTitleDiv = document.createElement("div");
 			pTitleDiv.textContent = this.state.associatedPlayers[i].title;
-			pTitleDiv.style.fontSize = ui.titleTextSize + "px";
+			pTitleDiv.style.fontSize = fontSizeAsInt + "px";
+			while (pTitleDiv.clientWidth > this.sage2_width) {
+				pTitleDiv.style.fontSize = parseInt(pTitleDiv.style.fontSize) - 1 + "px";
+			}
 			pBr = document.createElement("br");
 			pTitleDiv.appendChild(pBr);
 			// create button
 			pRemoveButton = document.createElement("button");
 			pRemoveButton.textContent = "Remove";
 			pRemoveButton.style.background = "lightpink";
-			pRemoveButton.style.fontSize = ui.titleTextSize + "px";
+			pRemoveButton.style.fontSize = fontSizeAsInt + "px";
 			removeId = _this.state.associatedPlayers[i].id;
 			pRemoveButton.addEventListener("click", function() {
 				_this.removeAssociatedPlayer(removeId);
 			})
 			pTitleDiv.appendChild(pRemoveButton);
 			this.listAllPlayersDiv.appendChild(pTitleDiv);
+		}
+
+		this.updateLinesToPlayers();
+	},
+
+	updateLinesToPlayers: function() {
+		var lineHolder;
+		for (var i = 0; i < this.state.associatedPlayerLines.length; i++) {
+			lineHolder = this.state.associatedPlayerLines[i];
+			lineHolder.player
+			lineHolder.line.attr({
+				x1: (this.sage2_x + this.sage2_width / 2),
+				y1: (this.sage2_y + this.sage2_height / 2),
+				x2: (lineHolder.player.sage2_x + lineHolder.player.sage2_width / 2),
+				y2: (lineHolder.player.sage2_y + lineHolder.player.sage2_height / 2)
+			});
 		}
 	},
 
@@ -230,7 +265,11 @@ var movieSyncRC = SAGE2_App.extend({
 			this.disableAssociatePlayerButton();
 			this.getFullContextMenuAndUpdate();
 		}
+	},
 
+	move: function(date) {
+		console.log("move spam");
+		this.updateLinesToPlayers();
 	},
 
 	enableAssociatePlayerButton: function(playerObject) {
@@ -251,11 +290,24 @@ var movieSyncRC = SAGE2_App.extend({
 
 	doAssociatePlayer: function() {
 		if (this.playerRemoteIsOver !== null && this.playerRemoteIsOver !== undefined) {
+			// first add to associatedPlayers
 			this.state.associatedPlayers.push(this.playerRemoteIsOver);
+			// create  line, line position will be set later
+			var svgLine = svgBackgroundForWidgetConnectors.line(0, 0, 0, 0);
+			this.state.associatedPlayerLines.push({
+				player: this.playerRemoteIsOver,
+				line: svgLine
+			});
+			svgLine.attr({
+				id: this.id + "syncLineFor" + this.playerRemoteIsOver.id,
+				strokeWidth: ui.widgetControlSize * 0.18,
+				stroke:  "rgba(250,250,250,1.0)"
+			});
+
+			// cleaup and update
 			this.playerRemoteIsOver = null;
-			this.updateListOfAssociatedPlayers();
+			this.updateListOfAssociatedPlayers(); // updates lines
 			this.disableAssociatePlayerButton();
-			
 			this.getFullContextMenuAndUpdate();
 		}
 	},
@@ -264,16 +316,16 @@ var movieSyncRC = SAGE2_App.extend({
 		for (var i = 0; i < this.state.associatedPlayers.length; i++) {
 			if (this.state.associatedPlayers[i].id === idOfPlayerToRemove) {
 				this.state.associatedPlayers.splice(i, 1);
+				this.state.associatedPlayerLines[i].line.remove();
+				this.state.associatedPlayerLines.splice(i, 1);
 				break;
 			}
 		}
-		this.updateListOfAssociatedPlayers();
+		this.updateListOfAssociatedPlayers(); // updates lines
 	}, 
 
 	resize: function(date) {
-		this.element.style.background = this.backgroundChoice;
-		var percentChange = parseInt(this.element.clientWidth) / this.startingWidth;
-		this.element.style.fontSize = (this.startingFontSize * percentChange) + "px";
+		this.updateListOfAssociatedPlayers();
 	},
 
 	event: function(eventType, position, user_id, data, date) {
@@ -328,6 +380,18 @@ var movieSyncRC = SAGE2_App.extend({
 		entry = {};
 		entry.description = "Stop";
 		entry.callback    = "stopButtonEffect";
+		entry.parameters  = {};
+		entries.push(entry);
+
+		entry = {};
+		entry.description = "< Step Back";
+		entry.callback    = "stepBackButtonEffect";
+		entry.parameters  = {};
+		entries.push(entry);
+
+		entry = {};
+		entry.description = "> Step Forward";
+		entry.callback    = "stepForwardButtonEffect";
 		entry.parameters  = {};
 		entries.push(entry);
 
@@ -421,6 +485,42 @@ var movieSyncRC = SAGE2_App.extend({
 		}
 		this.getFullContextMenuAndUpdate();
 	},
+	stepBackButtonEffect: function() {
+		/*
+			timestamp - where to place. frame / fps
+			command   - this will be seek
+			play      - should it still be playing after the seek.
+		*/
+		var data = {
+			timestamp: 0,
+			command: "seek",
+			play: !this.pausedStatus
+		}
+		var ap;
+		// not playing first because steps should halt
+		this.pausedStatus = true;
+		for (var i = 0; i < this.state.associatedPlayers.length; i++) {
+			ap = this.state.associatedPlayers[i];
+			data.timestamp = (ap.state.frame / ap.state.framerate) - 1;
+			ap.videoSyncCommandHandler(data);
+		}
+		this.getFullContextMenuAndUpdate();
+	},
+	stepForwardButtonEffect: function() {
+		var data = {
+			timestamp: 0,
+			command: "seek",
+			play: !this.pausedStatus
+		}
+		var ap;
+		this.pausedStatus = true;
+		for (var i = 0; i < this.state.associatedPlayers.length; i++) {
+			ap = this.state.associatedPlayers[i];
+			data.timestamp = (ap.state.frame / ap.state.framerate) + 1;
+			ap.videoSyncCommandHandler(data);
+		}
+		this.getFullContextMenuAndUpdate();
+	},
 	loopButtonEffect: function() {
 		for (var i = 0; i < this.state.associatedPlayers.length; i++) {
 			this.state.associatedPlayers[i].state.looped = this.loopStatus;
@@ -452,9 +552,20 @@ var movieSyncRC = SAGE2_App.extend({
 		this.getFullContextMenuAndUpdate();
 	},
 	setPlayersToSecond: function(responseObject) {
-		var second = parseInt(responseObject.clientInput);
-
-		this.getFullContextMenuAndUpdate();
+		var second = parseFloat(responseObject.clientInput);
+		/*
+			timestamp - where to place. frame / fps
+			command   - this will be seek
+			play      - should it still be playing after the seek.
+		*/
+		var data = {
+			timestamp: second,
+			command: "seek",
+			play: !this.pausedStatus
+		}
+		for (var i = 0; i < this.state.associatedPlayers.length; i++) {
+			this.state.associatedPlayers[i].videoSyncCommandHandler(data);
+		}
 	},
 	contextMenuRemoveAssociatedPlayer: function(responseObject) {
 		this.removeAssociatedPlayer(responseObject.playerId);
