@@ -130,15 +130,15 @@ var movieSyncRC = SAGE2_App.extend({
 		// associate variables
 		this.addPlayerDiv = document.getElementById(this.id + "addPlayerDiv");
 		this.addPlayerButton = document.getElementById(this.id + "addPlayerButton");
-		this.addPlayerDiv.style.fontSize = (this.sage2_width / 9.2) + "px"; // hard code for now
-		this.addPlayerButton.style.fontSize = (this.sage2_width / 9.2) + "px"; // hard code for now
+		this.addPlayerDiv.style.fontSize = (this.sage2_width / 11.0) + "px"; // hard code for now
+		this.addPlayerButton.style.fontSize = (this.sage2_width / 11.0) + "px"; // hard code for now
 		// create click effect
 		this.addPlayerButton.addEventListener("click", function() {
 			_this.doAssociatePlayer();
 		});
 		// list connected players
 		this.listAllPlayersDiv = document.getElementById(this.id + "listAllPlayersDiv");
-		this.listAllPlayersDiv.style.fontSize = (this.sage2_width / 9.2) + "px"; // hard code for now
+		this.listAllPlayersDiv.style.fontSize = (this.sage2_width / 11.0) + "px"; // hard code for now
 		while (this.listAllPlayersDiv.clientWidth > this.sage2_width) {
 			this.listAllPlayersDiv.style.fontSize = parseInt(this.listAllPlayersDiv.style.fontSize) - 1 + "px";
 		}
@@ -156,11 +156,11 @@ var movieSyncRC = SAGE2_App.extend({
 		// row 2
 		this.stepBackButton = document.getElementById(this.id + "stepBackButton");
 		this.stepBackButton.addEventListener("click", function() {
-			_this.stopButtonEffect();
+			_this.stepBackButtonEffect();
 		});
 		this.stepForwardButton = document.getElementById(this.id + "stepForwardButton");
 		this.stepForwardButton.addEventListener("click", function() {
-			_this.stopButtonEffect();
+			_this.stepForwardButtonEffect();
 		});
 		// row 3
 		this.loopButton = document.getElementById(this.id + "loopButton");
@@ -176,8 +176,9 @@ var movieSyncRC = SAGE2_App.extend({
 	updateListOfAssociatedPlayers: function() {
 		var _this = this;
 		var pTitleDiv, pBr, pHr, pRemoveButton, removeId;
-		this.listAllPlayersDiv.innerHTML = "Connected Movies:";
-		var fontSizeAsInt = (this.sage2_width / 9.2); // hardcode for now
+		var title = "Connected Movies(" + this.state.associatedPlayers.length + "):";
+		this.listAllPlayersDiv.innerHTML = title;
+		var fontSizeAsInt = (this.sage2_width / 11.0); // hardcode for now
 		this.listAllPlayersDiv.style.fontSize = fontSizeAsInt + "px";
 
 		for (var i = 0; i < this.state.associatedPlayers.length; i++) {
@@ -268,7 +269,6 @@ var movieSyncRC = SAGE2_App.extend({
 	},
 
 	move: function(date) {
-		console.log("move spam");
 		this.updateLinesToPlayers();
 	},
 
@@ -284,6 +284,7 @@ var movieSyncRC = SAGE2_App.extend({
 
 	disableAssociatePlayerButton: function() {
 		if (this.addPlayerButton !== undefined) {
+			this.playerRemoteIsOver = null;
 			this.addPlayerButton.style.visibility = "hidden";
 		}
 	},
@@ -471,9 +472,9 @@ var movieSyncRC = SAGE2_App.extend({
 		this.pausedStatus = !this.pausedStatus;
 
 		if (this.pausedStatus) {
-			this.playPauseButton.src = "../../../images/appUi/playBtn.svg" 
+			this.playPauseButton.src = "../../../images/appUi/playBtn.svg";
 		} else {
-			this.playPauseButton.src = "../../../images/appUi/pauseBtn.svg" 
+			this.playPauseButton.src = "../../../images/appUi/pauseBtn.svg";
 		}
 		this.getFullContextMenuAndUpdate();
 	},
@@ -483,40 +484,31 @@ var movieSyncRC = SAGE2_App.extend({
 		for (var i = 0; i < this.state.associatedPlayers.length; i++) {
 			this.state.associatedPlayers[i]["stopVideo"](new Date());
 		}
+		this.playPauseButton.src = "../../../images/appUi/playBtn.svg";
 		this.getFullContextMenuAndUpdate();
 	},
+	// +1 / -1 not part of param because this is also an on remote button effect.
 	stepBackButtonEffect: function() {
-		/*
-			timestamp - where to place. frame / fps
-			command   - this will be seek
-			play      - should it still be playing after the seek.
-		*/
-		var data = {
-			timestamp: 0,
-			command: "seek",
-			play: !this.pausedStatus
-		}
-		var ap;
-		// not playing first because steps should halt
-		this.pausedStatus = true;
-		for (var i = 0; i < this.state.associatedPlayers.length; i++) {
-			ap = this.state.associatedPlayers[i];
-			data.timestamp = (ap.state.frame / ap.state.framerate) - 1;
-			ap.videoSyncCommandHandler(data);
-		}
-		this.getFullContextMenuAndUpdate();
+		this.stepEffect(-1);
 	},
 	stepForwardButtonEffect: function() {
+		this.stepEffect(1);
+	},
+	stepEffect: function(plusOrMinus1) {
+		// first make the videos pause
+		// this.pausedStatus = false;
+		// this.playPauseButtonEffect();
+		// then step
 		var data = {
 			timestamp: 0,
 			command: "seek",
 			play: !this.pausedStatus
 		}
 		var ap;
-		this.pausedStatus = true;
 		for (var i = 0; i < this.state.associatedPlayers.length; i++) {
 			ap = this.state.associatedPlayers[i];
-			data.timestamp = (ap.state.frame / ap.state.framerate) + 1;
+			ap.state.playAfterSeek = !this.pausedStatus;
+			data.timestamp = (ap.state.frame / ap.state.framerate) + plusOrMinus1;
 			ap.videoSyncCommandHandler(data);
 		}
 		this.getFullContextMenuAndUpdate();
@@ -571,8 +563,16 @@ var movieSyncRC = SAGE2_App.extend({
 		this.removeAssociatedPlayer(responseObject.playerId);
 	},
 
+	// ------------------------------------------------------------------------------------------------------------------------
+	// ------------------------------------------------------------------------------------------------------------------------
+	removeAllLinesBeforeClosing: function() {
+		for (var i = 0; i < this.state.associatedPlayerLines.length; i++) {
+			this.state.associatedPlayerLines[i].line.remove();
+		}
+	},
+
 	quit: function() {
-		// no additional calls needed.
+		this.removeAllLinesBeforeClosing();
 	}
 
 });

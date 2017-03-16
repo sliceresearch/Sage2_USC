@@ -622,6 +622,7 @@ var movie_player = SAGE2_BlockStreamingApp.extend({
 			this.playPauseBtn.state = 0; // show play
 			shouldSendTimeUpdate = true;
 		} else if (valueUpdate.command == "seek") {
+			this.state.playAfterSeek = valueUpdate.play;
 			playStatusToSend = valueUpdate.play;
 			this.playPauseBtn.state = playStatusToSend ? 1 : 0;
 			shouldSendTimeUpdate = true;
