@@ -680,7 +680,7 @@ Partition.prototype.updateChildrenPositions = function() {
 	return updatedChildren;
 };
 
-Partition.prototype.updateNeighborPtnPositions = function() {
+Partition.prototype.getMovementBoundaries = function() {
 	let partitions = this.partitionList;
 	let config = partitions.configuration;
 	let titleBar = config.ui.titleBarHeight;
@@ -749,6 +749,10 @@ Partition.prototype.updateNeighborPtnPositions = function() {
 		partitionMovementBounds[side].max = Math.min(...boundCollections[side].max);
 	}
 
+	return partitionMovementBounds;
+};
+
+Partition.prototype.clampPositionWithinBoundaries = function (boundaries) {
 	// clamp this partition within the bounds
 	let newPositionAfterClamp = {
 		left: this.left,
@@ -758,37 +762,49 @@ Partition.prototype.updateNeighborPtnPositions = function() {
 	};
 
 	// clamp left
-	if (this.left < partitionMovementBounds.left.min) {
-		newPositionAfterClamp.left = partitionMovementBounds.left.min;
-	} else if (this.left > partitionMovementBounds.left.max) {
-		newPositionAfterClamp.left = partitionMovementBounds.left.max;
+	if (this.left < boundaries.left.min) {
+		newPositionAfterClamp.left = boundaries.left.min;
+	} else if (this.left > boundaries.left.max) {
+		newPositionAfterClamp.left = boundaries.left.max;
 	}
 
 	// clamp top
-	if (this.top < partitionMovementBounds.top.min) {
-		newPositionAfterClamp.top = partitionMovementBounds.top.min;
-	} else if (this.top > partitionMovementBounds.top.max) {
-		newPositionAfterClamp.top = partitionMovementBounds.top.max;
+	if (this.top < boundaries.top.min) {
+		newPositionAfterClamp.top = boundaries.top.min;
+	} else if (this.top > boundaries.top.max) {
+		newPositionAfterClamp.top = boundaries.top.max;
 	}
 
-	// clamp rightthis
-	if (this.left + this.width < partitionMovementBounds.right.min) {
-		newPositionAfterClamp.right = partitionMovementBounds.right.min;
-	} else if (this.left + this.width > partitionMovementBounds.right.max) {
-		newPositionAfterClamp.right = partitionMovementBounds.right.max;
+	// clamp right
+	if (this.left + this.width < boundaries.right.min) {
+		newPositionAfterClamp.right = boundaries.right.min;
+	} else if (this.left + this.width > boundaries.right.max) {
+		newPositionAfterClamp.right = boundaries.right.max;
 	}
 
 	// clamp bottom
-	if (this.top + this.height < partitionMovementBounds.bottom.min) {
-		newPositionAfterClamp.bottom = partitionMovementBounds.bottom.min;
-	} else if (this.top + this.height > partitionMovementBounds.bottom.max) {
-		newPositionAfterClamp.bottom = partitionMovementBounds.bottom.max;
+	if (this.top + this.height < boundaries.bottom.min) {
+		newPositionAfterClamp.bottom = boundaries.bottom.min;
+	} else if (this.top + this.height > boundaries.bottom.max) {
+		newPositionAfterClamp.bottom = boundaries.bottom.max;
 	}
 
 	this.left = newPositionAfterClamp.left;
 	this.top = newPositionAfterClamp.top;
 	this.width = newPositionAfterClamp.right - this.left;
 	this.height = newPositionAfterClamp.bottom - this.top;
+};
+
+Partition.prototype.updateNeighborPtnPositions = function() {
+	let partitions = this.partitionList;
+	let config = partitions.configuration;
+	let titleBar = config.ui.titleBarHeight;
+
+	// bounds to be used to clamp this partitions position/size and then update neighbors
+	let partitionMovementBounds = this.getMovementBoundaries();
+
+	// clamp with those bounds
+	this.clampPositionWithinBoundaries(partitionMovementBounds);
 
 	// update all neighbors based on this position of the partition
 
@@ -882,211 +898,11 @@ Partition.prototype.updateNeighborPtnPositions = function() {
 		}
 	}
 
-
-	return updatedPtnIDs;
-
-};
-
-/* // OLD SNAPPING IMPLEMNETATION
-Partition.prototype.updateNeighborPtnPositions = function() {
-	var partitions = this.partitionList;
-	var titleBar = this.partitionList.configuration.ui.titleBarHeight;
-
-	var updatedPtnIDs;
-	var ptnSizeChanged = true;
-	let count = 0;
-
-	while (ptnSizeChanged && count < Object.keys(this.neighbors).length) {
-		ptnSizeChanged = false;
-		updatedPtnIDs = [];
-
-		count++;
-
-		// console.log("Updating Neighbor Sizes");
-
-		// then update neighbors dimensions
-		for (var neigh of Object.keys(this.neighbors)) {
-
-			// make sure this partition is in partitions (list)
-			if (partitions.list.hasOwnProperty(neigh)) {
-				var neighPtn = partitions.list[neigh];
-				var isUpdated = false;
-
-				// if the top of this partition is shared with the bottom of another
-				if (this.neighbors[neigh].top) {
-
-					// check which of the 2 sides is the same
-					if (this.neighbors[neigh].top === "bottom") {
-						// adjust height of neighbor
-						neighPtn.height = this.top - neighPtn.top - titleBar;
-
-						// prevent the height from being below the minimum
-						if (neighPtn.height < partitions.minSize.height) {
-							// set the nieghbors height to be a minimum value
-							neighPtn.height = partitions.minSize.height;
-
-							// keep the top of this partition so it doesn't go inside the neighbor
-							this.top = neighPtn.top + neighPtn.height + titleBar;
-
-							// adjust this partitions size to match with it
-							ptnSizeChanged = true;
-
-						}
-
-						isUpdated = true;
-					} else { // "top"
-
-						// save bottom coordinate
-						let botCoord = neighPtn.top + neighPtn.height;
-
-						// adjust the top and height of neighbor
-						neighPtn.top = this.top;
-						neighPtn.height = botCoord - neighPtn.top;
-
-						// prevent the height from being below the minimum
-						if (neighPtn.height < partitions.minSize.height) {
-							neighPtn.height = partitions.minSize.height;
-							// neighPtn.top = botCoord - neighPtn.height;
-
-							let thisBotCoord = this.top + this.height;
-							this.top = neighPtn.top;
-							this.height = thisBotCoord - this.top;
-
-							// this.top = neighPtn.top;
-							ptnSizeChanged = true;
-
-						}
-
-						isUpdated = true;
-					}
-				}
-				// if the bottom of this partition is shared with the top of another
-				if (this.neighbors[neigh].bottom) {
-					if (this.neighbors[neigh].bottom === "top") {
-
-						// save bottom coordinate
-						let botCoord = neighPtn.top + neighPtn.height;
-
-						// adjust the top and height of neighbor
-						neighPtn.top = this.top + this.height + titleBar;
-						neighPtn.height = botCoord - neighPtn.top;
-
-						if (neighPtn.height < partitions.minSize.height) {
-							neighPtn.height = partitions.minSize.height;
-							neighPtn.top = botCoord - neighPtn.height;
-
-							this.height = neighPtn.top - this.top - titleBar;
-
-							ptnSizeChanged = true;
-
-						}
-
-						isUpdated = true;
-					} else { // "bottom"
-						// adjust height of neighbor
-						neighPtn.height = this.top + this.height - neighPtn.top;
-
-						if (neighPtn.height < partitions.minSize.height) {
-							neighPtn.height = partitions.minSize.height;
-
-							this.height = neighPtn.top + neighPtn.height - this.top;
-							ptnSizeChanged = true;
-
-						}
-
-						isUpdated = true;
-					}
-				}
-				// if the left of this partition is shared with the right of another
-				if (this.neighbors[neigh].left) {
-					if (this.neighbors[neigh].left === "right") {
-						// adjust width of neighbor
-						neighPtn.width = this.left - neighPtn.left;
-
-						// prevent the width from being below the minimum
-						if (neighPtn.width < partitions.minSize.width) {
-							// set the nieghbors width to be a minimum value
-							neighPtn.width = partitions.minSize.width;
-
-							// Prevent this partition from moving further into the neighbor
-							this.left = neighPtn.left + neighPtn.width;
-
-							ptnSizeChanged = true;
-						}
-
-						isUpdated = true;
-					} else { // "left"
-						// save right coordinate
-						let rightCoord = neighPtn.left + neighPtn.width;
-
-						// adjust the left and width of neighbor
-						neighPtn.left = this.left;
-						neighPtn.width = rightCoord - neighPtn.left;
-
-						// prevent the width from being below the minimum
-						if (neighPtn.width < partitions.minSize.width) {
-							neighPtn.width = partitions.minSize.width;
-							neighPtn.left = rightCoord - neighPtn.width;
-
-
-							let thisRightCoord = this.left + this.width;
-							this.left = neighPtn.left;
-							this.width = thisRightCoord - this.left;
-							ptnSizeChanged = true;
-
-						}
-
-						isUpdated = true;
-					}
-				}
-				// if the right of this partition is shared with the left of another
-				if (this.neighbors[neigh].right) {
-					if (this.neighbors[neigh].right === "left") {
-						// save right coordinate
-						let rightCoord = neighPtn.left + neighPtn.width;
-
-						// adjust the left and width of neighbor
-						neighPtn.left = this.left + this.width;
-
-						neighPtn.width = rightCoord - neighPtn.left;
-
-						if (neighPtn.width < partitions.minSize.width) {
-							neighPtn.width = partitions.minSize.width;
-							neighPtn.left = rightCoord - neighPtn.width;
-
-							this.width = neighPtn.left - this.left;
-							ptnSizeChanged = true;
-
-						}
-
-						isUpdated = true;
-					} else { // "right"
-						// adjust width of neighbor
-						neighPtn.width = this.left + this.width - neighPtn.left;
-
-						if (neighPtn.width < partitions.minSize.width) {
-							neighPtn.width = partitions.minSize.width;
-
-							this.width = neighPtn.left + neighPtn.width - this.left;
-							ptnSizeChanged = true;
-
-						}
-
-						isUpdated = true;
-					}
-				}
-
-				if (isUpdated) {
-					updatedPtnIDs.push(neigh);
-				}
-			}
-		}
-	}
-
-
+	// return the IDs of updated partitions so the updates can be reflected in
+	// ui and display
 	return updatedPtnIDs;
 };
-*/
+
 // toggle snapped mode and update neighbors
 Partition.prototype.toggleSnapping = function() {
 	this.isSnapping = !this.isSnapping;
