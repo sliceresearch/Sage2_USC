@@ -750,34 +750,45 @@ Partition.prototype.updateNeighborPtnPositions = function() {
 	}
 
 	// clamp this partition within the bounds
+	let newPositionAfterClamp = {
+		left: this.left,
+		right: this.left + this.width,
+		top: this.top,
+		bottom: this.top + this.height
+	};
 
 	// clamp left
 	if (this.left < partitionMovementBounds.left.min) {
-		this.left = partitionMovementBounds.left.min;
+		newPositionAfterClamp.left = partitionMovementBounds.left.min;
 	} else if (this.left > partitionMovementBounds.left.max) {
-		this.left = partitionMovementBounds.left.max;
+		newPositionAfterClamp.left = partitionMovementBounds.left.max;
 	}
 
 	// clamp top
 	if (this.top < partitionMovementBounds.top.min) {
-		this.top = partitionMovementBounds.top.min;
+		newPositionAfterClamp.top = partitionMovementBounds.top.min;
 	} else if (this.top > partitionMovementBounds.top.max) {
-		this.top = partitionMovementBounds.top.max;
+		newPositionAfterClamp.top = partitionMovementBounds.top.max;
 	}
 
-	// clamp right
+	// clamp rightthis
 	if (this.left + this.width < partitionMovementBounds.right.min) {
-		this.width = partitionMovementBounds.right.min - this.left;
+		newPositionAfterClamp.right = partitionMovementBounds.right.min;
 	} else if (this.left + this.width > partitionMovementBounds.right.max) {
-		this.width = partitionMovementBounds.right.max - this.left;
+		newPositionAfterClamp.right = partitionMovementBounds.right.max;
 	}
 
 	// clamp bottom
 	if (this.top + this.height < partitionMovementBounds.bottom.min) {
-		this.height = partitionMovementBounds.bottom.min - this.top;
+		newPositionAfterClamp.bottom = partitionMovementBounds.bottom.min;
 	} else if (this.top + this.height > partitionMovementBounds.bottom.max) {
-		this.height = partitionMovementBounds.bottom.max - this.top;
+		newPositionAfterClamp.bottom = partitionMovementBounds.bottom.max;
 	}
+
+	this.left = newPositionAfterClamp.left;
+	this.top = newPositionAfterClamp.top;
+	this.width = newPositionAfterClamp.right - this.left;
+	this.height = newPositionAfterClamp.bottom - this.top;
 
 	// update all neighbors based on this position of the partition
 
