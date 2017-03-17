@@ -504,12 +504,20 @@ var movieSyncRC = SAGE2_App.extend({
 			command: "seek",
 			play: !this.pausedStatus
 		}
-		var ap;
+		var ap, resetReceiveCommands = false;
 		for (var i = 0; i < this.state.associatedPlayers.length; i++) {
 			ap = this.state.associatedPlayers[i];
 			ap.state.playAfterSeek = !this.pausedStatus;
 			data.timestamp = (ap.state.frame / ap.state.framerate) + plusOrMinus1;
+			// the following weird looking check is for backwards compatibility
+			if (ap.shouldReceiveCommands == false) {
+				resetReceiveCommands = true;
+				ap.shouldReceiveCommands = true;
+			}
 			ap.videoSyncCommandHandler(data);
+			if (resetReceiveCommands) {
+				ap.shouldReceiveCommands = false;
+			}
 		}
 		this.getFullContextMenuAndUpdate();
 	},
@@ -544,7 +552,8 @@ var movieSyncRC = SAGE2_App.extend({
 		this.getFullContextMenuAndUpdate();
 	},
 	setPlayersToSecond: function(responseObject) {
-		var second = parseFloat(responseObject.clientInput);
+		// there seems to be round down so + 1
+		var second = parseFloat(responseObject.clientInput) + 1;
 		/*
 			timestamp - where to place. frame / fps
 			command   - this will be seek
@@ -555,8 +564,18 @@ var movieSyncRC = SAGE2_App.extend({
 			command: "seek",
 			play: !this.pausedStatus
 		}
+		var ap, resetReceiveCommands = false;
 		for (var i = 0; i < this.state.associatedPlayers.length; i++) {
-			this.state.associatedPlayers[i].videoSyncCommandHandler(data);
+			// the following weird looking check is for backwards compatibility
+			ap = this.state.associatedPlayers[i];
+			if (ap.shouldReceiveCommands == false) {
+				resetReceiveCommands = true;
+				ap.shouldReceiveCommands = true;
+			}
+			ap.videoSyncCommandHandler(data);
+			if (resetReceiveCommands) {
+				ap.shouldReceiveCommands = false;
+			}
 		}
 	},
 	contextMenuRemoveAssociatedPlayer: function(responseObject) {
