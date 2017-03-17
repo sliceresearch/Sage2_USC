@@ -5670,7 +5670,8 @@ function pointerPressOnOpenSpace(uniqueID, pointerX, pointerY, data) {
 
 function pointerPressOnStaticUI(uniqueID, pointerX, pointerY, data, obj, localPt) {
 	// If the remote site is active (green button)
-	if (obj.data.connected === "on") {
+	// also disable action through the web ui (visible pointer)
+	if (obj.data.connected === "on" && sagePointers[uniqueID].visible) {
 		// Validate the remote address
 		var remoteSite = findRemoteSiteByConnection(obj.data.wsio);
 
