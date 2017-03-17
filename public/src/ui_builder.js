@@ -376,12 +376,13 @@ function UIBuilder(json_cfg, clientID) {
 			this.pointerButton.style.backgroundColor = "#FFFFFF";
 			this.pointerButton.innerHTML = 'Activate Mouse';
 			this.pointerButton.style.cursor = "default";
-			this.pointerButton.style.top = "50%";
 			this.pointerButton.style.transform = "translateY(-50%)";
 			var pointerButtonBounds = this.pointerButton.getBoundingClientRect();
 			var height = pointerButtonBounds.height;
 			var padheighthalf = (this.titleBarHeight - height) / 2;
 			this.pointerButton.style.padding = padheighthalf.toString() + "px 10px " + padheighthalf.toString() + "px 10px";
+
+			this.pointerButton.style.top = (height / 2 + padheighthalf - this.offsetY) + "px";
 
 			pointerButtonOffset = pointerButtonBounds.width + 30;
 		}
