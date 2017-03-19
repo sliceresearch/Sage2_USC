@@ -312,20 +312,17 @@ function SAGE2_init() {
 
 }
 
+/**
+ * 	Add a Sage2 Mouse Interaction client to the display UI
+ */
 function setupInteractionClient() {
-
-	/*
-		Matthias Klapperstueck
-		add parts of the Sage2 Mouse Interaction code from UI
-	*/
 
 	// open second websocket for sageUI client
 	// needed, as the server distinguishes display and UI based on clientType
 	uiwsio = new WebsocketIO();
 
 	uiwsio.open(function() {
-		console.log('ui websocket opened');
-
+		
 		uiwsio.on('initialize', function(data) {
 			mousehandler.uID = data.UID;
 		});
@@ -381,6 +378,7 @@ function setEventListener() {
 	document.addEventListener('keyup',      mousehandler.pointerKeyUp, true);
 	document.addEventListener('keydown',    mousehandler.pointerKeyDown,  true);
 	document.addEventListener('keypress',    mousehandler.pointerKeyPress,  true);
+	
 	// if seemless mode, also remove listeners for entering and exiting browser window 
 	if(mouseMode == 1) {
 		var mainelement = document.getElementById("main");
@@ -1844,7 +1842,7 @@ function createAppWindow(data, parentId, titleBarHeight, titleTextSize, offsetX,
 }
 
 /*
-	Mouse listeners for display
+	Mouse handler for our display
 */
 function SAGE2_MouseEventHandler(wsio) {
 
@@ -1869,8 +1867,19 @@ function SAGE2_MouseEventHandler(wsio) {
 	this.ourPointerDIV = null;
 	this.ourPointerDIVObject = null;
 
+	// Variables for delayed pointer adjustment
+
+	// a fixed delay time
+	this.delay = 10;
+	this.countDown;
+	this.lastEvent;
+
+	// the handle for the intervall function to cancel later on
+	this.intervallhandle;
+
+
 	this.pointLockChangeListenerMethod = function(event) {
-		console.log('pointLockChangeListenerMethod');
+		//console.log('pointLockChangeListenerMethod');
 		if (document.pointerLockElement) {
 			this.startSAGE2Pointer();
 			if (this.pointerButton) {
@@ -1890,7 +1899,7 @@ function SAGE2_MouseEventHandler(wsio) {
 		if (this.pointerActive)			{
 			return;
 		}
-		console.log("starting SAGE2 mouse pointer");
+		//console.log("starting SAGE2 mouse pointer");
 		this.pointerActive = true;
 
 		this.countDown= 0;
@@ -1899,7 +1908,7 @@ function SAGE2_MouseEventHandler(wsio) {
 	};
 
 	this.stopSAGE2Pointer = function() {
-		console.log("stopping SAGE2 mouse pointer");
+		//console.log("stopping SAGE2 mouse pointer");
 		wsio.emit('stopSagePointer');
 		this.pointerActive = false;
 		clearInterval(this.intervallhandle);
@@ -1927,9 +1936,6 @@ function SAGE2_MouseEventHandler(wsio) {
 		event.stopPropagation();
 	};
 
-	this.countDown;
-	this.lastEvent;
-	this.intervallhandle;
 	this.pointerMoveMethod = function(event) {
 		if (!this.checkActivePointer(event)) {
 			return;
@@ -1938,20 +1944,20 @@ function SAGE2_MouseEventHandler(wsio) {
 			return;
 		}
 
-		// only if seemless mode and our mouse cursor is active
+		// This is only if seemless mouse mode and our mouse cursor is active
 		// This code does some adjustments to the final software mmouse position
 		// as there seems to be a mismatch sometimes when doing hasty movements or
 		// there is a slow internet connection
-		// This code readjusts the mmouse position after a period of time using a counter, 
+		// This code readjusts the mouse position after a period of time using a counter, 
 		// which resets each time we receive a mousemove event
 		if(mouseMode == 1 && mousehandler.ourPointerDIV) {
 			
 			//setup countdown timer for mouse adjustment
 			if(this.countDown == 0) {
-				this.countDown = 100;
+				this.countDown = this.delay;
 				//this timer activates after 100ms of inactivity
 				this.intervallhandle = setInterval(function() {
-					this.countDown -= 10;
+					this.countDown--;
 					
 					// adjust hardware and software mouse positions in case
 					// they don't line up anymore (communication delay / irratic movements)
@@ -1966,16 +1972,17 @@ function SAGE2_MouseEventHandler(wsio) {
 							var values = transform.substring(transform.indexOf("(") + 1, transform.indexOf(")")).split(',');
 							var pointerX = parseInt(values[4].trim());
 							var pointerY = parseInt(values[5].trim());
-							
+							/* DEBUGGING
 							console.log('adjusend: ' + 
 							'pointerX/Y: ' + pointerX + '/' + pointerY 
 							+ 'eventX/Y: '+ this.lastEvent.clientX + '/' + this.lastEvent.clientY);
+							*/
 							var adjpx = -(pointerX - this.lastEvent.clientX);
 							var adjpy = -(pointerY - this.lastEvent.clientY);
 
 							
 							if(adjpx | adjpy != 0) {
-								console.log('adjusting: ' + adjpx + ',' + adjpy);
+								//console.log('adjusting: ' + adjpx + ',' + adjpy);
 								this.wsio.emit('pointerMove', {dx: Math.round(adjpx), dy: Math.round(adjpy)});
 							}
 						}
@@ -1984,11 +1991,10 @@ function SAGE2_MouseEventHandler(wsio) {
 				}.bind(this), 10);
 			} else {
 				//reset countdown timer
-				//console.log('resetting countdown');
-				this.countDown = 100;
+				this.countDown = this.delay;
 			}
 		}
-		//console.log("pointermove");
+		
 		var movementX = event.movementX || event.mozMovementX || event.webkitMovementX || 0;
 		var movementY = event.movementY || event.mozMovementY || event.webkitMovementY || 0;
 
@@ -2005,30 +2011,34 @@ function SAGE2_MouseEventHandler(wsio) {
 		if (diff >= (1000 / this.sendFrequency)) {
 			// Calculate the offset
 			// increase the speed for touch devices
-			var scale = 1;//innerWidth / outerWidth;//(hasMouse ? this.sensitivity : 3 * this.sensitivity);
+			
 			var px  = this.deltaX * scale;
 			var py  = this.deltaY * scale;
 						if (!mousehandler.ourPointerDIVObject)					{
 							mousehandler.ourPointerDIVObject = document.getElementById(mousehandler.ourPointerDIV);
 						}
+			/* DEBUGGING
 			if(mousehandler.ourPointerDIVObject) {
-			var transform = getComputedStyle(mousehandler.ourPointerDIVObject).transform;
-			var values = transform.substring(transform.indexOf("(") + 1, transform.indexOf(")")).split(',');
-			var pointerX = parseInt(values[4].trim());
-			var pointerY = parseInt(values[5].trim());
+				var transform = getComputedStyle(mousehandler.ourPointerDIVObject).transform;
+				var values = transform.substring(transform.indexOf("(") + 1, transform.indexOf(")")).split(',');
+				var pointerX = parseInt(values[4].trim());
+				var pointerY = parseInt(values[5].trim());
 
-			console.log('normsend: ' + 
-			'pointerX/Y: ' + pointerX + '/' + pointerY 
-			+ 'eventX/Y: '+ event.clientX + '/' + event.clientY);
-			}
-
-			//console.log('eventX/Y: '+ event.clientX + '/' + event.clientY);
+				console.log('normsend: ' + 
+							'pointerX/Y: ' + pointerX + '/' + pointerY 
+							+ 'eventX/Y: '+ event.clientX + '/' + event.clientY);
+				}
+			*/
+			
 			// Send the event
+			//console.log("pointermove: " + px + ' ' + py);
 			this.wsio.emit('pointerMove', {dx: Math.round(px), dy: Math.round(py)});
-			console.log("pointermove: " + px + ' ' + py);
+			
+			
 			// Reset the accumulators
 			this.deltaX = 0;
 			this.deltaY = 0;
+			
 			// Reset the time and count
 			this.now = now;
 			this.cnt = 0;
@@ -2076,7 +2086,7 @@ function SAGE2_MouseEventHandler(wsio) {
 		this.checkActivePointer(event);
 		var code = parseInt(event.keyCode, 10);
 
-		console.log('key down ' +  code);
+		
 		if (mouseMode == 2 && code === 27) {
 			this.stopMouseMethod(event);
 			if (event.preventDefault) {
@@ -2105,8 +2115,6 @@ function SAGE2_MouseEventHandler(wsio) {
 		this.checkActivePointer(event);
 		var code = parseInt(event.keyCode, 10);
 
-		console.log('key up ' +  code);
-
 		if (code !== 27) {
 			this.wsio.emit('keyUp', {code: code});
 		}
@@ -2117,8 +2125,6 @@ function SAGE2_MouseEventHandler(wsio) {
 	this.pointerKeyPressMethod = function(event) {
 		this.checkActivePointer(event);
 		var code = parseInt(event.charCode, 10);
-
-		console.log('key press ' +  code);
 
 		this.wsio.emit('keyPress', {code: code, character: String.fromCharCode(code)});
 
@@ -2138,7 +2144,7 @@ function SAGE2_MouseEventHandler(wsio) {
 		this.startSAGE2Pointer();
 
 		this.wsio.emit('pointerPosition', {pointerX: event.clientX, pointerY: event.clientY});
-		//this.wsio.emit('pointerMove', {dx: event.clientX, dy: event.clientY});
+		
 		event.preventDefault();
 
 	};
@@ -2194,10 +2200,7 @@ function SAGE2_MouseEventHandler(wsio) {
  */
 function SAGE2_FileDropHandler(_wsio) {
 	var wsio = _wsio;
-	var myx = 1;
-	this.myotherx = -1;
-	console.log('calling filedrophandler');
-
+	
 	var progressBarContainer = document.createElement('div');
 
 	progressBarContainer.style.width = "200px";
@@ -2235,20 +2238,14 @@ function SAGE2_FileDropHandler(_wsio) {
 	}
 
 	function fileDragEnterHandler(event) {
-		myx++;
-		console.log('drag enter event' + myx);
 		event.preventDefault();
 	}
 
 	function fileDragLeaveHandler(event) {
-		console.log('drag leave event' + myx);
 		event.preventDefault();
 	}
 
 	function fileDropHandler(event) {
-		console.log('drag drop event' + myx);
-
-
 		var x = (event.clientX + ui.offsetX) / ui.json_cfg.totalWidth;
 		var y = (event.clientY + ui.offsetY) / ui.json_cfg.totalHeight;
 
@@ -2264,8 +2261,6 @@ function SAGE2_FileDropHandler(_wsio) {
 
 		var total = 0;
 
-
-
 		var progressCallback = function(event) {
 			console.log('upload progress');
 			progressBarContainer.style.display = 'inline';
@@ -2279,8 +2274,7 @@ function SAGE2_FileDropHandler(_wsio) {
 		};
 
 		var uploadCompleteCallback = function(event) {
-			console.log("upload complete");
-
+		
 			var sn = event.target.response.substring(event.target.response.indexOf("name: ") + 7);
 			var st = event.target.response.substring(event.target.response.indexOf("type: ") + 7);
 			var name = sn.substring(0, sn.indexOf("\n") - 2);
@@ -2320,8 +2314,6 @@ function SAGE2_FileDropHandler(_wsio) {
 			xhr.addEventListener("load", uploadCompleteCallback, false);
 			xhr.send(formdata);
 		}
-		console.log('after files sent');
-		//progressBarContainer.style.display = 'none';
 	}
 
 
