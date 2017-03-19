@@ -60,10 +60,10 @@ var uiTimerDelay;
 // Mouse Interaction
 //var interactor;
 var uiwsio;
-var useMouse;
+var mouseMode;
 var hasMouse = true;
 var emitter;
-var pointerLabel = "MyTestPointer";
+var pointerLabel = "MyPointer";
 var pointerColor = "#FF0000";
 var rootelement;
 var button;
@@ -232,7 +232,7 @@ function resetIdle() {
  */
 function SAGE2_init() {
 	clientID = parseInt(getParameterByName("clientID")) || 0;
-	useMouse = parseInt(getParameterByName("mouse")) || 0;
+	mouseMode = parseInt(getParameterByName("mouse")) || 0;
 	console.log("clientID: " + clientID);
 
 	wsio = new WebsocketIO();
@@ -248,21 +248,22 @@ function SAGE2_init() {
 	isMaster = false;
 
 
-	if (useMouse == 1) {
+	var settingsbutton = document.getElementById("settingsCloseBtn");
+	if (settingsbutton)			{
+		settingsbutton.addEventListener('click', function(event) {
 
-		showDialog("settingsDialog");
-		var settingsbutton = document.getElementById("settingsCloseBtn");
-		if (settingsbutton)			{
-			settingsbutton.addEventListener('click', function(event) {
-
-				hideDialog('settingsDialog');
-				pointerLabel = document.getElementById("sage2PointerLabel").value;
-				pointerColor = document.getElementById("sage2PointerColor").value;
+			hideDialog('settingsDialog');
+			pointerLabel = document.getElementById("sage2PointerLabel").value;
+			pointerColor = document.getElementById("sage2PointerColor").value;
+			if(mouseMode == 1)
 				setupUIMouse();
 
-			});
-		}
+		});
+	}
 
+	if (mouseMode == 1) {
+
+		showDialog("settingsDialog");
 
 	} else {
 		setupUIMouse();
@@ -358,18 +359,8 @@ function setupUIMouse() {
 		// the emitter holds all functions for mouseevent emitting to server
 		emitter = new SAGE2_MouseEventEmitter(uiwsio);
 
-		//rootelement = document;//.getElementById("main");
-		document.addEventListener('mousedown',  emitter.pointerPress,    true);
-		document.addEventListener('mouseup',    emitter.pointerRelease,  true);
-		document.addEventListener('mousemove',  emitter.pointerMove,     true);
-		document.addEventListener('wheel',      emitter.pointerScroll,   true);
-		//rootelement.addEventListener('click',      emitter.pointerClick,    false);
-		document.addEventListener('dblclick',   emitter.pointerDblClick, true);
-		document.addEventListener('keyup',      emitter.pointerKeyUp, true);
-		document.addEventListener('keydown',    emitter.pointerKeyDown,  true);
-		document.addEventListener('keypress',    emitter.pointerKeyPress,  true);
-
-		if (useMouse == 1) {
+		setEventListener();
+		if (mouseMode == 1) {
 			var mainelement = document.getElementById("main");
 			mainelement.addEventListener('mouseenter', emitter.startMouse,   false);
 			mainelement.addEventListener('mouseleave', emitter.stopMouse,   false);
@@ -382,6 +373,39 @@ function setupUIMouse() {
 	});
 }
 
+var eventListenerSet = false;
+function setEventListener() {
+	if(eventListenerSet)
+		return;
+	eventListenerSet = true;
+	//rootelement = document;//.getElementById("main");
+	document.addEventListener('mousedown',  emitter.pointerPress,    true);
+	document.addEventListener('mouseup',    emitter.pointerRelease,  true);
+	document.addEventListener('mousemove',  emitter.pointerMove,     true);
+	document.addEventListener('wheel',      emitter.pointerScroll,   true);
+	//rootelement.addEventListener('click',      emitter.pointerClick,    false);
+	document.addEventListener('dblclick',   emitter.pointerDblClick, true);
+	document.addEventListener('keyup',      emitter.pointerKeyUp, true);
+	document.addEventListener('keydown',    emitter.pointerKeyDown,  true);
+	document.addEventListener('keypress',    emitter.pointerKeyPress,  true);
+
+}
+
+function unsetEventListener() {
+	if(!eventListenerSet)
+		return;
+	eventListenerSet = false;
+	document.removeEventListener('mousedown',  emitter.pointerPress,    true);
+	document.removeEventListener('mouseup',    emitter.pointerRelease,  true);
+	document.removeEventListener('mousemove',  emitter.pointerMove,     true);
+	document.removeEventListener('wheel',      emitter.pointerScroll,   true);
+	//rootelement.removeEventListener('click',      emitter.pointerClick,    false);
+	document.removeEventListener('dblclick',   emitter.pointerDblClick, true);
+	document.removeEventListener('keyup',      emitter.pointerKeyUp, true);
+	document.removeEventListener('keydown',    emitter.pointerKeyDown,  true);
+	document.removeEventListener('keypress',    emitter.pointerKeyPress,  true);
+
+}
 function setupFileDropHandler() {
 	fileHandler = new SAGE2_FileDropHandler(wsio);
 
@@ -394,10 +418,16 @@ function setupFileDropHandler() {
 
 }
 
-function setupCaptureMouse(element) {
+function setupCaptureMouse(element, settingsbutton) {
 
-	if (useMouse == 2) {
+	if (mouseMode == 2) {
 
+		settingsbutton.addEventListener('click', function(event){
+			unsetEventListener();
+			showDialog("settingsDialog");
+
+		});
+		emitter.settingsButton = settingsbutton;
 		emitter.pointerButton = element;
 		document.addEventListener('pointerlockchange', emitter.pointLockChangeListener, false);
 		document.addEventListener('mozpointerlockchange', emitter.pointLockChangeListener, false);
@@ -488,8 +518,10 @@ function setupListeners() {
 		}
 		makeSvgBackgroundForWidgetConnectors(ui.main.style.width, ui.main.style.height);
 
-		if (useMouse == 2)			{
-			setupCaptureMouse(document.getElementById("pointerButton"));
+		if (mouseMode == 2)			{
+			setupCaptureMouse(document.getElementById("pointerButton"), document.getElementById("settingsButton"));
+
+			
 		}
 
 		setupFileDropHandler();
@@ -1858,6 +1890,9 @@ function SAGE2_MouseEventEmitter(wsio) {
 		}
 		console.log("starting SAGE2 mouse pointer");
 		this.pointerActive = true;
+
+		this.countDown= 0;
+
 		wsio.emit('startSagePointer', {label: pointerLabel, color: pointerColor});
 	};
 
@@ -1865,6 +1900,7 @@ function SAGE2_MouseEventEmitter(wsio) {
 		console.log("stopping SAGE2 mouse pointer");
 		wsio.emit('stopSagePointer');
 		this.pointerActive = false;
+		clearInterval(this.intervallhandle);
 	};
 
 	this.pointerPressMethod = function(event) {
@@ -1889,6 +1925,9 @@ function SAGE2_MouseEventEmitter(wsio) {
 		event.stopPropagation();
 	};
 
+	this.countDown;
+	this.lastEvent;
+	this.intervallhandle;
 	this.pointerMoveMethod = function(event) {
 		if (!this.checkActivePointer(event)) {
 			return;
@@ -1896,14 +1935,57 @@ function SAGE2_MouseEventEmitter(wsio) {
 		if (!event.isTrusted) { // don't react to custom software events like SAGE2_MouseEventEmitter
 			return;
 		}
+
+		// only if seemless mode and mouse is active
+		if(mouseMode == 1 && emitter.ourPointerDIV) {
+			
+			//setup countdown timer for mouse adjustment
+			if(this.countDown == 0) {
+				this.countDown = 100;
+				//this timer activates after 100ms of inactivity
+				this.intervallhandle = setInterval(function() {
+					this.countDown -= 10;
+					
+					// adjust hardware and software mouse positions in case
+					// they don't line up anymore (communication delay / irratic movements)
+					if(this.countDown == 0){
+						clearInterval(this.intervallhandle);
+						
+						if (!emitter.ourPointerDIVObject)					{
+							emitter.ourPointerDIVObject = document.getElementById(emitter.ourPointerDIV);
+						}
+						if (window.getComputedStyle) {
+							var transform = getComputedStyle(emitter.ourPointerDIVObject).transform;
+							var values = transform.substring(transform.indexOf("(") + 1, transform.indexOf(")")).split(',');
+							var pointerX = parseInt(values[4].trim());
+							var pointerY = parseInt(values[5].trim());
+							var scale = innerWidth / outerWidth;//(hasMouse ? this.sensitivity : 3 * this.sensitivity);
+			
+
+							console.log('adjusend: ' + 
+							'pointerX/Y: ' + pointerX + '/' + pointerY 
+							+ 'eventX/Y: '+ this.lastEvent.clientX + '/' + this.lastEvent.clientY);
+							var adjpx = -(pointerX - this.lastEvent.clientX);
+							var adjpy = -(pointerY - this.lastEvent.clientY);
+
+							
+							if(adjpx | adjpy != 0) {
+								console.log('adjusting: ' + adjpx + ',' + adjpy);
+								this.wsio.emit('pointerMove', {dx: Math.round(adjpx), dy: Math.round(adjpy)});
+							}
+						}
+
+					}
+				}.bind(this), 10);
+			} else {
+				//reset countdown timer
+				//console.log('resetting countdown');
+				this.countDown = 100;
+			}
+		}
 		//console.log("pointermove");
 		var movementX = event.movementX || event.mozMovementX || event.webkitMovementX || 0;
 		var movementY = event.movementY || event.mozMovementY || event.webkitMovementY || 0;
-
-
-
-		//this.wsio.emit('pointerMove', {dx: movementX, dy: movementY});
-		//this.wsio.emit('pointerPosition', {pointerX: event.clientX, pointerY: event.clientY});
 
 		// Event filtering
 		var now  = Date.now();
@@ -1918,31 +2000,24 @@ function SAGE2_MouseEventEmitter(wsio) {
 		if (diff >= (1000 / this.sendFrequency)) {
 			// Calculate the offset
 			// increase the speed for touch devices
-			var scale = 1; //(hasMouse ? this.sensitivity : 3 * this.sensitivity);
+			var scale = 1;//innerWidth / outerWidth;//(hasMouse ? this.sensitivity : 3 * this.sensitivity);
 			var px  = this.deltaX * scale;
 			var py  = this.deltaY * scale;
+						if (!emitter.ourPointerDIVObject)					{
+							emitter.ourPointerDIVObject = document.getElementById(emitter.ourPointerDIV);
+						}
+			if(emitter.ourPointerDIVObject) {
+			var transform = getComputedStyle(emitter.ourPointerDIVObject).transform;
+			var values = transform.substring(transform.indexOf("(") + 1, transform.indexOf(")")).split(',');
+			var pointerX = parseInt(values[4].trim());
+			var pointerY = parseInt(values[5].trim());
 
-			// check for offset of hardware and software mouse cursor, if this
-			// move command regards our pointer
-			// This offset can happen when the mouse cursor is quickly moved inside and outside the screen
-			if (useMouse == 1 && emitter.ourPointerDIV) {
-				if (!emitter.ourPointerDIVObject)					{
-					emitter.ourPointerDIVObject = document.getElementById(emitter.ourPointerDIV);
-				}
-				if (window.getComputedStyle) {
-					var transform = getComputedStyle(emitter.ourPointerDIVObject).transform;
-					var values = transform.substring(transform.indexOf("(") + 1, transform.indexOf(")")).split(',');
-					var pointerX = parseInt(values[4].trim());
-					var pointerY = parseInt(values[5].trim());
-
-					var adjpx = -(pointerX + px - event.clientX);
-					var adjpy = -(pointerY + py - event.clientY);
-
-					px += adjpx;
-					py += adjpy;
-				}
+			console.log('normsend: ' + 
+			'pointerX/Y: ' + pointerX + '/' + pointerY 
+			+ 'eventX/Y: '+ event.clientX + '/' + event.clientY);
 			}
 
+			//console.log('eventX/Y: '+ event.clientX + '/' + event.clientY);
 			// Send the event
 			this.wsio.emit('pointerMove', {dx: Math.round(px), dy: Math.round(py)});
 			console.log("pointermove: " + px + ' ' + py);
@@ -1952,6 +2027,7 @@ function SAGE2_MouseEventEmitter(wsio) {
 			// Reset the time and count
 			this.now = now;
 			this.cnt = 0;
+			this.lastEvent = event;
 		}
 
 		event.preventDefault();
@@ -1996,7 +2072,7 @@ function SAGE2_MouseEventEmitter(wsio) {
 		var code = parseInt(event.keyCode, 10);
 
 		console.log('key down ' +  code);
-		if (useMouse == 2 && code === 27) {
+		if (mouseMode == 2 && code === 27) {
 			this.stopMouseMethod(event);
 			if (event.preventDefault) {
 				event.preventDefault();
@@ -2074,10 +2150,17 @@ function SAGE2_MouseEventEmitter(wsio) {
 		//document.exitPointerLock();
 	};
 
+	/*
+		This checks for an active pointer and returns true
+		only if our display activated a pointer (mode 1 and 2)
+
+		For mode 1 (seemless mode) the software mouse will be
+		activated if it wasn't active before
+	*/
 	this.checkActivePointer = function(event) {
 		if (this.pointerActive)			{
 			return true;
-		} else if (useMouse == 1 && !this.pointerActive) {
+		} else if (mouseMode == 1 && !this.pointerActive) {
 			this.startMouseMethod(event);
 			return true;
 		} else			{
@@ -2159,8 +2242,8 @@ function SAGE2_FileDropHandler(_wsio) {
 		console.log('drag drop event' + myx);
 
 
-		var x = event.clientX + ui.offsetX;
-		var y = event.clientY + ui.offsetY;
+		var x = (event.clientX + ui.offsetX) / ui.json_cfg.totalWidth;
+		var y = (event.clientY + ui.offsetY) / ui.json_cfg.totalHeight;
 
 		if (event.dataTransfer.files.length > 0) {
 			uploadFiles(event.dataTransfer.files, x, y);
@@ -2217,8 +2300,8 @@ function SAGE2_FileDropHandler(_wsio) {
 			var formdata = new FormData();
 
 			formdata.append("file" + i.toString(), files[i]);
-			formdata.append("dropx", x);
-			formdata.append("dropy", y);
+			formdata.append("dropX", x);
+			formdata.append("dropY", y);
 			formdata.append("open", true);
 			formdata.append("SAGE2_ptrName", pointerLabel);
 			formdata.append("SAGE2_ptrColor", pointerColor);
@@ -2250,6 +2333,8 @@ function SAGE2_FileDropHandler(_wsio) {
  * @param id {String} element to show
  */
 function showDialog(id) {
+	document.getElementById('sage2PointerLabel').value = pointerLabel;
+	document.getElementById('sage2PointerColor').value = pointerColor;
 	document.getElementById('blackoverlay').style.display = "block";
 	document.getElementById(id).style.display = "block";
 }
@@ -2263,4 +2348,5 @@ function showDialog(id) {
 function hideDialog(id) {
 	document.getElementById('blackoverlay').style.display = "none";
 	document.getElementById(id).style.display = "none";
+	setEventListener();
 }

@@ -267,9 +267,9 @@ function UIBuilder(json_cfg, clientID) {
 	this.build = function() {
 		console.log("Buidling the UI for the display");
 
-		var useMouse = parseInt(getParameterByName("mouse")) || 0;
+		var mouseMode = parseInt(getParameterByName("mouse")) || 0;
 
-		if (useMouse == 2) {
+		if (mouseMode == 2) {
 			var body = document.getElementsByTagName('body')[0];
 			body.style.cursor = "default";
 		}
@@ -336,6 +336,11 @@ function UIBuilder(json_cfg, clientID) {
 		// pointer button
 		this.pointerButton = document.createElement("p");
 		this.pointerButton.id = "pointerButton";
+		// settings button
+		this.settingsButton = document.createElement("img");
+		this.settingsButton.id = "settingsButton";
+
+
 		// time clock
 		this.clock = document.createElement('p');
 		this.clock.id  = "time";
@@ -347,6 +352,7 @@ function UIBuilder(json_cfg, clientID) {
 		version.id  = "version";
 
 		this.upperBar.appendChild(this.pointerButton);
+		this.upperBar.appendChild(this.settingsButton);
 		this.upperBar.appendChild(this.clock);
 		this.upperBar.appendChild(machine);
 		this.upperBar.appendChild(version);
@@ -363,8 +369,9 @@ function UIBuilder(json_cfg, clientID) {
 		this.upperBar.style.zIndex = "9999";
 		this.upperBar.style.backgroundColor = backgroundColor;
 
-		var pointerButtonOffset = 0;
-		if (useMouse == 2) {
+		var uiButtonsOffset = 0;
+		if (mouseMode == 2) {
+			var paddingHoriz = 10;
 			this.pointerButton.style.display = "table-cell";
 			this.pointerButton.style.verticalAlign = "middle";
 			this.pointerButton.style.position = "absolute";
@@ -380,18 +387,25 @@ function UIBuilder(json_cfg, clientID) {
 			var pointerButtonBounds = this.pointerButton.getBoundingClientRect();
 			var height = pointerButtonBounds.height;
 			var padheighthalf = (this.titleBarHeight - height) / 2;
-			this.pointerButton.style.padding = padheighthalf.toString() + "px 10px " + padheighthalf.toString() + "px 10px";
+			this.pointerButton.style.padding = padheighthalf.toString() + "px "  + paddingHoriz + "px " + padheighthalf.toString() + "px "  + paddingHoriz + "px";
 
 			this.pointerButton.style.top = (height / 2 + padheighthalf - this.offsetY) + "px";
 
-			pointerButtonOffset = pointerButtonBounds.width + 30;
+			this.settingsButton.src = "images/ui/graycircle-settings.svg"
+			this.settingsButton.style.position = "absolute";
+			this.settingsButton.style.height = this.titleBarHeight + "px";
+			this.settingsButton.style.left =  2* paddingHoriz + Math.round(pointerButtonBounds.right) + 5 + "px";
+			this.settingsButton.style.borderRadius = "5px"
+			this.settingsButton.style.color = "#222222";
+
+			uiButtonsOffset = /*pointerButtonBounds.right + */this.settingsButton.getBoundingClientRect().right + 30;
 		}
 
 		this.clock.style.position   = "absolute";
 		this.clock.style.whiteSpace = "nowrap";
 		this.clock.style.fontSize   = Math.round(this.titleTextSize) + "px";
 		this.clock.style.color      = textColor;
-		this.clock.style.left       = (pointerButtonOffset + -this.offsetX + this.titleBarHeight).toString() + "px";
+		this.clock.style.left       = (uiButtonsOffset + -this.offsetX + this.titleBarHeight).toString() + "px";
 		// center vertically: position top 50% and then translate by -50%
 		this.clock.style.top        = "50%";
 		this.clock.style.webkitTransform  = "translateY(-50%)";
@@ -402,7 +416,7 @@ function UIBuilder(json_cfg, clientID) {
 		machine.style.whiteSpace = "nowrap";
 		machine.style.fontSize   = Math.round(this.titleTextSize) + "px";
 		machine.style.color      = textColor;
-		machine.style.left       = (pointerButtonOffset + -this.offsetX + (6 * this.titleBarHeight)).toString() + "px";
+		machine.style.left       = (uiButtonsOffset + -this.offsetX + (6 * this.titleBarHeight)).toString() + "px";
 		machine.style.top        = "50%";
 		machine.style.webkitTransform  = "translateY(-50%)";
 		machine.style.mozTransform  = "translateY(-50%)";
