@@ -62,11 +62,11 @@ var uiTimerDelay;
 var uiwsio;
 var mouseMode;
 var hasMouse = true;
-var emitter;
+var mousehandler;
 var pointerLabel = "MyPointer";
 var pointerColor = "#FF0000";
-var rootelement;
 var button;
+var eventListenerSet = false;
 
 // file Interaction
 var fileHandler;
@@ -255,19 +255,13 @@ function SAGE2_init() {
 			hideDialog('settingsDialog');
 			pointerLabel = document.getElementById("sage2PointerLabel").value;
 			pointerColor = document.getElementById("sage2PointerColor").value;
-			if(mouseMode == 1)
-				setupUIMouse();
 
 		});
 	}
 
-	if (mouseMode == 1) {
-
-		showDialog("settingsDialog");
-
-	} else {
-		setupUIMouse();
-	}
+	// setup the display mouse interaction
+	setupInteractionClient();
+	
 
 	wsio.open(function() {
 		console.log("Websocket opened");
@@ -318,11 +312,11 @@ function SAGE2_init() {
 
 }
 
-function setupUIMouse() {
+function setupInteractionClient() {
 
 	/*
 		Matthias Klapperstueck
-		add abbr. Sage2 Mouse Interaction code from UI
+		add parts of the Sage2 Mouse Interaction code from UI
 	*/
 
 	// open second websocket for sageUI client
@@ -333,7 +327,7 @@ function setupUIMouse() {
 		console.log('ui websocket opened');
 
 		uiwsio.on('initialize', function(data) {
-			emitter.uID = data.UID;
+			mousehandler.uID = data.UID;
 		});
 
 		var session = getCookie("session");
@@ -356,14 +350,16 @@ function setupUIMouse() {
 			color: pointerColor
 		});
 
-		// the emitter holds all functions for mouseevent emitting to server
-		emitter = new SAGE2_MouseEventEmitter(uiwsio);
+		// the mousehandler holds all functions for mouseevent emitting to server
+		mousehandler = new SAGE2_MouseEventHandler(uiwsio);
 
-		setEventListener();
+		// in seemless mode, show settings dialog automatically
 		if (mouseMode == 1) {
-			var mainelement = document.getElementById("main");
-			mainelement.addEventListener('mouseenter', emitter.startMouse,   false);
-			mainelement.addEventListener('mouseleave', emitter.stopMouse,   false);
+			showDialog("settingsDialog");
+		} 
+		// in button mode, setup the listeners to avoid events getting to the apps
+		else {
+			setEventListener();
 		}
 		// prevent default context menu
 		document.oncontextmenu = document.body.oncontextmenu = function() {
@@ -373,44 +369,52 @@ function setupUIMouse() {
 	});
 }
 
-var eventListenerSet = false;
 function setEventListener() {
 	if(eventListenerSet)
 		return;
 	eventListenerSet = true;
-	//rootelement = document;//.getElementById("main");
-	document.addEventListener('mousedown',  emitter.pointerPress,    true);
-	document.addEventListener('mouseup',    emitter.pointerRelease,  true);
-	document.addEventListener('mousemove',  emitter.pointerMove,     true);
-	document.addEventListener('wheel',      emitter.pointerScroll,   true);
-	//rootelement.addEventListener('click',      emitter.pointerClick,    false);
-	document.addEventListener('dblclick',   emitter.pointerDblClick, true);
-	document.addEventListener('keyup',      emitter.pointerKeyUp, true);
-	document.addEventListener('keydown',    emitter.pointerKeyDown,  true);
-	document.addEventListener('keypress',    emitter.pointerKeyPress,  true);
-
+	document.addEventListener('mousedown',  mousehandler.pointerPress,    true);
+	document.addEventListener('mouseup',    mousehandler.pointerRelease,  true);
+	document.addEventListener('mousemove',  mousehandler.pointerMove,     true);
+	document.addEventListener('wheel',      mousehandler.pointerScroll,   true);
+	document.addEventListener('dblclick',   mousehandler.pointerDblClick, true);
+	document.addEventListener('keyup',      mousehandler.pointerKeyUp, true);
+	document.addEventListener('keydown',    mousehandler.pointerKeyDown,  true);
+	document.addEventListener('keypress',    mousehandler.pointerKeyPress,  true);
+	// if seemless mode, also remove listeners for entering and exiting browser window 
+	if(mouseMode == 1) {
+		var mainelement = document.getElementById("main");
+		mainelement.addEventListener('mouseenter', mousehandler.startMouse,   false);
+		mainelement.addEventListener('mouseleave', mousehandler.stopMouse,   false);
+	}
 }
 
 function unsetEventListener() {
 	if(!eventListenerSet)
 		return;
 	eventListenerSet = false;
-	document.removeEventListener('mousedown',  emitter.pointerPress,    true);
-	document.removeEventListener('mouseup',    emitter.pointerRelease,  true);
-	document.removeEventListener('mousemove',  emitter.pointerMove,     true);
-	document.removeEventListener('wheel',      emitter.pointerScroll,   true);
-	//rootelement.removeEventListener('click',      emitter.pointerClick,    false);
-	document.removeEventListener('dblclick',   emitter.pointerDblClick, true);
-	document.removeEventListener('keyup',      emitter.pointerKeyUp, true);
-	document.removeEventListener('keydown',    emitter.pointerKeyDown,  true);
-	document.removeEventListener('keypress',    emitter.pointerKeyPress,  true);
+	document.removeEventListener('mousedown',  mousehandler.pointerPress,    true);
+	document.removeEventListener('mouseup',    mousehandler.pointerRelease,  true);
+	document.removeEventListener('mousemove',  mousehandler.pointerMove,     true);
+	document.removeEventListener('wheel',      mousehandler.pointerScroll,   true);
+	document.removeEventListener('dblclick',   mousehandler.pointerDblClick, true);
+	document.removeEventListener('keyup',      mousehandler.pointerKeyUp, true);
+	document.removeEventListener('keydown',    mousehandler.pointerKeyDown,  true);
+	document.removeEventListener('keypress',    mousehandler.pointerKeyPress,  true);
+
+	// if seemles mouse mode, add listeners for entering and exiting browser window
+	if(mouseMode == 1) {
+		var mainelement = document.getElementById("main");
+		mainelement.removeEventListener('mouseenter', mousehandler.startMouse,   false);
+		mainelement.removeEventListener('mouseleave', mousehandler.stopMouse,   false);
+	}
 
 }
+
 function setupFileDropHandler() {
 	fileHandler = new SAGE2_FileDropHandler(wsio);
 
-
-	var target = document;//.getElementById("main").getElementsByTagName('svg')[0];
+	var target = document;
 	target.addEventListener('dragover',  fileHandler.preventDefault, false);
 	target.addEventListener('dragenter', fileHandler.fileDragEnter, false);
 	target.addEventListener('dragleave', fileHandler.fileDragLeave, false);
@@ -418,36 +422,35 @@ function setupFileDropHandler() {
 
 }
 
-function setupCaptureMouse(element, settingsbutton) {
+/*
+	Attaches listeners to the new UI buttons on the display for
+	mouse interaction and settings
+*/
+function setupUIElements(element, settingsbutton) {
 
-	if (mouseMode == 2) {
+	settingsbutton.addEventListener('click', function(event){
+		showDialog("settingsDialog");
+	});
+	mousehandler.settingsButton = settingsbutton;
+	mousehandler.pointerButton = element;
+	document.addEventListener('pointerlockchange', mousehandler.pointLockChangeListener, false);
+	document.addEventListener('mozpointerlockchange', mousehandler.pointLockChangeListener, false);
 
-		settingsbutton.addEventListener('click', function(event){
-			unsetEventListener();
-			showDialog("settingsDialog");
+	element.addEventListener('click', function(event) {
+		if (document.pointerLockElement)				{
+			return;
+		}			else {
+			element.requestPointerLock = element.requestPointerLock       ||
+										element.mozRequestPointerLock    ||
+										element.webkitRequestPointerLock;
 
-		});
-		emitter.settingsButton = settingsbutton;
-		emitter.pointerButton = element;
-		document.addEventListener('pointerlockchange', emitter.pointLockChangeListener, false);
-		document.addEventListener('mozpointerlockchange', emitter.pointLockChangeListener, false);
-
-		element.addEventListener('click', function(event) {
-			if (document.pointerLockElement)				{
-				return;
-			}			else {
-				element.requestPointerLock = element.requestPointerLock       ||
-											element.mozRequestPointerLock    ||
-											element.webkitRequestPointerLock;
-
-				if (element.requestPointerLock) {
-					element.requestPointerLock();
-				}				else {
-					console.log("Pointer lock not available");
-				}
+			if (element.requestPointerLock) {
+				element.requestPointerLock();
+			}				else {
+				console.log("Pointer lock not available");
 			}
-		}, false);
-	}
+		}
+	}, false);
 }
 
 function setupListeners() {
@@ -518,10 +521,9 @@ function setupListeners() {
 		}
 		makeSvgBackgroundForWidgetConnectors(ui.main.style.width, ui.main.style.height);
 
+		// if in button interaction mode, setup the UI elements
 		if (mouseMode == 2)			{
-			setupCaptureMouse(document.getElementById("pointerButton"), document.getElementById("settingsButton"));
-
-			
+			setupUIElements(document.getElementById("pointerButton"), document.getElementById("settingsButton"));
 		}
 
 		setupFileDropHandler();
@@ -601,8 +603,8 @@ function setupListeners() {
 	wsio.on('showSagePointer', function(pointer_data) {
 
 		var uid = pointer_data.id.substring(0, pointer_data.id.indexOf('_'));
-		if (emitter.uID == uid)			{
-			emitter.ourPointerDIV = pointer_data.id;
+		if (mousehandler.uID == uid)			{
+			mousehandler.ourPointerDIV = pointer_data.id;
 		}
 
 		ui.showSagePointer(pointer_data);
@@ -616,8 +618,8 @@ function setupListeners() {
 	wsio.on('hideSagePointer', function(pointer_data) {
 
 		var uid = pointer_data.id.substring(0, pointer_data.id.indexOf('_'));
-		if (emitter.uID == uid) {
-			emitter.ourPointerDIV = null;
+		if (mousehandler.uID == uid) {
+			mousehandler.ourPointerDIV = null;
 		}
 
 		ui.hideSagePointer(pointer_data);
@@ -1844,7 +1846,7 @@ function createAppWindow(data, parentId, titleBarHeight, titleTextSize, offsetX,
 /*
 	Mouse listeners for display
 */
-function SAGE2_MouseEventEmitter(wsio) {
+function SAGE2_MouseEventHandler(wsio) {
 
 	this.wsio = wsio;
 
@@ -1905,7 +1907,7 @@ function SAGE2_MouseEventEmitter(wsio) {
 
 	this.pointerPressMethod = function(event) {
 		this.checkActivePointer(event);
-		if (!event.isTrusted) { // don't react to custom software events like SAGE2_MouseEventEmitter
+		if (!event.isTrusted) { // don't react to custom software events like SAGE2_MouseEventHandler
 			return;
 		}
 		var btn = (event.button === 0) ? "left" : (event.button === 1) ? "middle" : "right";
@@ -1916,7 +1918,7 @@ function SAGE2_MouseEventEmitter(wsio) {
 
 	this.pointerReleaseMethod = function(event) {
 		this.checkActivePointer(event);
-		if (!event.isTrusted) {// don't react to custom software events like SAGE2_MouseEventEmitter
+		if (!event.isTrusted) {// don't react to custom software events like SAGE2_MouseEventHandler
 			return;
 		}
 		var btn = (event.button === 0) ? "left" : (event.button === 1) ? "middle" : "right";
@@ -1932,12 +1934,17 @@ function SAGE2_MouseEventEmitter(wsio) {
 		if (!this.checkActivePointer(event)) {
 			return;
 		}
-		if (!event.isTrusted) { // don't react to custom software events like SAGE2_MouseEventEmitter
+		if (!event.isTrusted) { // don't react to custom software events like SAGE2_MouseEventHandler
 			return;
 		}
 
-		// only if seemless mode and mouse is active
-		if(mouseMode == 1 && emitter.ourPointerDIV) {
+		// only if seemless mode and our mouse cursor is active
+		// This code does some adjustments to the final software mmouse position
+		// as there seems to be a mismatch sometimes when doing hasty movements or
+		// there is a slow internet connection
+		// This code readjusts the mmouse position after a period of time using a counter, 
+		// which resets each time we receive a mousemove event
+		if(mouseMode == 1 && mousehandler.ourPointerDIV) {
 			
 			//setup countdown timer for mouse adjustment
 			if(this.countDown == 0) {
@@ -1951,17 +1958,15 @@ function SAGE2_MouseEventEmitter(wsio) {
 					if(this.countDown == 0){
 						clearInterval(this.intervallhandle);
 						
-						if (!emitter.ourPointerDIVObject)					{
-							emitter.ourPointerDIVObject = document.getElementById(emitter.ourPointerDIV);
+						if (!mousehandler.ourPointerDIVObject)					{
+							mousehandler.ourPointerDIVObject = document.getElementById(mousehandler.ourPointerDIV);
 						}
 						if (window.getComputedStyle) {
-							var transform = getComputedStyle(emitter.ourPointerDIVObject).transform;
+							var transform = getComputedStyle(mousehandler.ourPointerDIVObject).transform;
 							var values = transform.substring(transform.indexOf("(") + 1, transform.indexOf(")")).split(',');
 							var pointerX = parseInt(values[4].trim());
 							var pointerY = parseInt(values[5].trim());
-							var scale = innerWidth / outerWidth;//(hasMouse ? this.sensitivity : 3 * this.sensitivity);
-			
-
+							
 							console.log('adjusend: ' + 
 							'pointerX/Y: ' + pointerX + '/' + pointerY 
 							+ 'eventX/Y: '+ this.lastEvent.clientX + '/' + this.lastEvent.clientY);
@@ -2003,11 +2008,11 @@ function SAGE2_MouseEventEmitter(wsio) {
 			var scale = 1;//innerWidth / outerWidth;//(hasMouse ? this.sensitivity : 3 * this.sensitivity);
 			var px  = this.deltaX * scale;
 			var py  = this.deltaY * scale;
-						if (!emitter.ourPointerDIVObject)					{
-							emitter.ourPointerDIVObject = document.getElementById(emitter.ourPointerDIV);
+						if (!mousehandler.ourPointerDIVObject)					{
+							mousehandler.ourPointerDIVObject = document.getElementById(mousehandler.ourPointerDIV);
 						}
-			if(emitter.ourPointerDIVObject) {
-			var transform = getComputedStyle(emitter.ourPointerDIVObject).transform;
+			if(mousehandler.ourPointerDIVObject) {
+			var transform = getComputedStyle(mousehandler.ourPointerDIVObject).transform;
 			var values = transform.substring(transform.indexOf("(") + 1, transform.indexOf(")")).split(',');
 			var pointerX = parseInt(values[4].trim());
 			var pointerY = parseInt(values[5].trim());
@@ -2126,7 +2131,7 @@ function SAGE2_MouseEventEmitter(wsio) {
 		}
 
 
-		if (!event.isTrusted) { // don't react to custom software events like SAGE2_MouseEventEmitter
+		if (!event.isTrusted) { // don't react to custom software events like SAGE2_MouseEventHandler
 			return;
 		}
 
@@ -2141,13 +2146,13 @@ function SAGE2_MouseEventEmitter(wsio) {
 
 	this.stopMouseMethod = function(event) {
 
-		if (!event.isTrusted) {// don't react to custom software events like SAGE2_MouseEventEmitter
+		if (!event.isTrusted) {// don't react to custom software events like SAGE2_MouseEventHandler
 			return;
 		}
 
 		this.stopSAGE2Pointer();
 		event.preventDefault();
-		//document.exitPointerLock();
+	
 	};
 
 	/*
@@ -2174,7 +2179,6 @@ function SAGE2_MouseEventEmitter(wsio) {
 	this.pointerRelease = this.pointerReleaseMethod.bind(this);
 	this.pointerMove = this.pointerMoveMethod.bind(this);
 	this.pointerScroll = this.pointerScrollMethod.bind(this);
-	//this.pointerClick = this.pointerClickMethod.bind(this);
 	this.pointerDblClick = this.pointerDblClickMethod.bind(this);
 	this.pointerKeyDown = this.pointerKeyDownMethod.bind(this);
 	this.pointerKeyUp = this.pointerKeyUpMethod.bind(this);
@@ -2185,6 +2189,9 @@ function SAGE2_MouseEventEmitter(wsio) {
 
 }
 
+/**
+ * This object handles the drag and drop of files on the display window
+ */
 function SAGE2_FileDropHandler(_wsio) {
 	var wsio = _wsio;
 	var myx = 1;
@@ -2327,7 +2334,8 @@ function SAGE2_FileDropHandler(_wsio) {
 }
 
 /**
- * Show a given dialog
+ * Show a given dialog and disable all the listeners attached to 
+ * the display window to have full input for the dialog
  *
  * @method showDialog
  * @param id {String} element to show
@@ -2337,10 +2345,13 @@ function showDialog(id) {
 	document.getElementById('sage2PointerColor').value = pointerColor;
 	document.getElementById('blackoverlay').style.display = "block";
 	document.getElementById(id).style.display = "block";
+	unsetEventListener();
+
 }
 
 /**
- * Show a given dialog
+ * Hide a given dialog and reattach all mouse listeners to the
+ * display window
  *
  * @method hideDialog
  * @param id {String} element to show
