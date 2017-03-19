@@ -387,15 +387,16 @@ function UIBuilder(json_cfg, clientID) {
 			var pointerButtonBounds = this.pointerButton.getBoundingClientRect();
 			var height = pointerButtonBounds.height;
 			var padheighthalf = (this.titleBarHeight - height) / 2;
-			this.pointerButton.style.padding = padheighthalf.toString() + "px "  + paddingHoriz + "px " + padheighthalf.toString() + "px "  + paddingHoriz + "px";
+			this.pointerButton.style.padding = padheighthalf.toString() + "px "  + paddingHoriz + "px "
+								+ padheighthalf.toString() + "px "  + paddingHoriz + "px";
 
 			this.pointerButton.style.top = (height / 2 + padheighthalf - this.offsetY) + "px";
 
-			this.settingsButton.src = "images/ui/graycircle-settings.svg"
+			this.settingsButton.src = "images/ui/graycircle-settings.svg";
 			this.settingsButton.style.position = "absolute";
 			this.settingsButton.style.height = this.titleBarHeight + "px";
-			this.settingsButton.style.left =  2* paddingHoriz + Math.round(pointerButtonBounds.right) + 5 + "px";
-			this.settingsButton.style.borderRadius = "5px"
+			this.settingsButton.style.left =  2 * paddingHoriz + Math.round(pointerButtonBounds.right) + 5 + "px";
+			this.settingsButton.style.borderRadius = "5px";
 			this.settingsButton.style.color = "#222222";
 
 			uiButtonsOffset = /*pointerButtonBounds.right + */this.settingsButton.getBoundingClientRect().right + 30;

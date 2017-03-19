@@ -261,7 +261,7 @@ function SAGE2_init() {
 
 	// setup the display mouse interaction
 	setupInteractionClient();
-	
+
 
 	wsio.open(function() {
 		console.log("Websocket opened");
@@ -322,7 +322,7 @@ function setupInteractionClient() {
 	uiwsio = new WebsocketIO();
 
 	uiwsio.open(function() {
-		
+
 		uiwsio.on('initialize', function(data) {
 			mousehandler.uID = data.UID;
 		});
@@ -350,12 +350,12 @@ function setupInteractionClient() {
 		// the mousehandler holds all functions for mouseevent emitting to server
 		mousehandler = new SAGE2_MouseEventHandler(uiwsio);
 
-		// in seemless mode, show settings dialog automatically
+		// In seemless mode, show settings dialog automatically
+		// When the dialog closes, it will enable the event listeners
 		if (mouseMode == 1) {
 			showDialog("settingsDialog");
-		} 
-		// in button mode, setup the listeners to avoid events getting to the apps
-		else {
+		} else {
+
 			setEventListener();
 		}
 		// prevent default context menu
@@ -367,8 +367,9 @@ function setupInteractionClient() {
 }
 
 function setEventListener() {
-	if(eventListenerSet)
+	if (eventListenerSet)		{
 		return;
+	}
 	eventListenerSet = true;
 	document.addEventListener('mousedown',  mousehandler.pointerPress,    true);
 	document.addEventListener('mouseup',    mousehandler.pointerRelease,  true);
@@ -378,9 +379,9 @@ function setEventListener() {
 	document.addEventListener('keyup',      mousehandler.pointerKeyUp, true);
 	document.addEventListener('keydown',    mousehandler.pointerKeyDown,  true);
 	document.addEventListener('keypress',    mousehandler.pointerKeyPress,  true);
-	
-	// if seemless mode, also remove listeners for entering and exiting browser window 
-	if(mouseMode == 1) {
+
+	// if seemless mode, also remove listeners for entering and exiting browser window
+	if (mouseMode == 1) {
 		var mainelement = document.getElementById("main");
 		mainelement.addEventListener('mouseenter', mousehandler.startMouse,   false);
 		mainelement.addEventListener('mouseleave', mousehandler.stopMouse,   false);
@@ -388,8 +389,9 @@ function setEventListener() {
 }
 
 function unsetEventListener() {
-	if(!eventListenerSet)
+	if (!eventListenerSet)		{
 		return;
+	}
 	eventListenerSet = false;
 	document.removeEventListener('mousedown',  mousehandler.pointerPress,    true);
 	document.removeEventListener('mouseup',    mousehandler.pointerRelease,  true);
@@ -401,7 +403,7 @@ function unsetEventListener() {
 	document.removeEventListener('keypress',    mousehandler.pointerKeyPress,  true);
 
 	// if seemles mouse mode, add listeners for entering and exiting browser window
-	if(mouseMode == 1) {
+	if (mouseMode == 1) {
 		var mainelement = document.getElementById("main");
 		mainelement.removeEventListener('mouseenter', mousehandler.startMouse,   false);
 		mainelement.removeEventListener('mouseleave', mousehandler.stopMouse,   false);
@@ -426,7 +428,7 @@ function setupFileDropHandler() {
 */
 function setupUIElements(element, settingsbutton) {
 
-	settingsbutton.addEventListener('click', function(event){
+	settingsbutton.addEventListener('click', function(event) {
 		showDialog("settingsDialog");
 	});
 	mousehandler.settingsButton = settingsbutton;
@@ -1902,7 +1904,7 @@ function SAGE2_MouseEventHandler(wsio) {
 		//console.log("starting SAGE2 mouse pointer");
 		this.pointerActive = true;
 
-		this.countDown= 0;
+		this.countDown = 0;
 
 		wsio.emit('startSagePointer', {label: pointerLabel, color: pointerColor});
 	};
@@ -1948,22 +1950,22 @@ function SAGE2_MouseEventHandler(wsio) {
 		// This code does some adjustments to the final software mmouse position
 		// as there seems to be a mismatch sometimes when doing hasty movements or
 		// there is a slow internet connection
-		// This code readjusts the mouse position after a period of time using a counter, 
+		// This code readjusts the mouse position after a period of time using a counter,
 		// which resets each time we receive a mousemove event
-		if(mouseMode == 1 && mousehandler.ourPointerDIV) {
-			
+		if (mouseMode == 1 && mousehandler.ourPointerDIV) {
+
 			//setup countdown timer for mouse adjustment
-			if(this.countDown == 0) {
+			if (this.countDown == 0) {
 				this.countDown = this.delay;
 				//this timer activates after 100ms of inactivity
 				this.intervallhandle = setInterval(function() {
 					this.countDown--;
-					
+
 					// adjust hardware and software mouse positions in case
 					// they don't line up anymore (communication delay / irratic movements)
-					if(this.countDown == 0){
+					if (this.countDown == 0) {
 						clearInterval(this.intervallhandle);
-						
+
 						if (!mousehandler.ourPointerDIVObject)					{
 							mousehandler.ourPointerDIVObject = document.getElementById(mousehandler.ourPointerDIV);
 						}
@@ -1972,16 +1974,17 @@ function SAGE2_MouseEventHandler(wsio) {
 							var values = transform.substring(transform.indexOf("(") + 1, transform.indexOf(")")).split(',');
 							var pointerX = parseInt(values[4].trim());
 							var pointerY = parseInt(values[5].trim());
+
 							/* DEBUGGING
-							console.log('adjusend: ' + 
-							'pointerX/Y: ' + pointerX + '/' + pointerY 
+							console.log('adjusend: ' +
+							'pointerX/Y: ' + pointerX + '/' + pointerY
 							+ 'eventX/Y: '+ this.lastEvent.clientX + '/' + this.lastEvent.clientY);
 							*/
 							var adjpx = -(pointerX - this.lastEvent.clientX);
 							var adjpy = -(pointerY - this.lastEvent.clientY);
 
-							
-							if(adjpx | adjpy != 0) {
+
+							if (adjpx | adjpy != 0) {
 								//console.log('adjusting: ' + adjpx + ',' + adjpy);
 								this.wsio.emit('pointerMove', {dx: Math.round(adjpx), dy: Math.round(adjpy)});
 							}
@@ -1994,7 +1997,7 @@ function SAGE2_MouseEventHandler(wsio) {
 				this.countDown = this.delay;
 			}
 		}
-		
+
 		var movementX = event.movementX || event.mozMovementX || event.webkitMovementX || 0;
 		var movementY = event.movementY || event.mozMovementY || event.webkitMovementY || 0;
 
@@ -2011,12 +2014,13 @@ function SAGE2_MouseEventHandler(wsio) {
 		if (diff >= (1000 / this.sendFrequency)) {
 			// Calculate the offset
 			// increase the speed for touch devices
-			
-			var px  = this.deltaX * scale;
-			var py  = this.deltaY * scale;
-						if (!mousehandler.ourPointerDIVObject)					{
-							mousehandler.ourPointerDIVObject = document.getElementById(mousehandler.ourPointerDIV);
-						}
+
+			var px  = this.deltaX;
+			var py  = this.deltaY;
+			if (!mousehandler.ourPointerDIVObject) {
+				mousehandler.ourPointerDIVObject = document.getElementById(mousehandler.ourPointerDIV);
+			}
+
 			/* DEBUGGING
 			if(mousehandler.ourPointerDIVObject) {
 				var transform = getComputedStyle(mousehandler.ourPointerDIVObject).transform;
@@ -2024,21 +2028,21 @@ function SAGE2_MouseEventHandler(wsio) {
 				var pointerX = parseInt(values[4].trim());
 				var pointerY = parseInt(values[5].trim());
 
-				console.log('normsend: ' + 
-							'pointerX/Y: ' + pointerX + '/' + pointerY 
+				console.log('normsend: ' +
+							'pointerX/Y: ' + pointerX + '/' + pointerY
 							+ 'eventX/Y: '+ event.clientX + '/' + event.clientY);
 				}
 			*/
-			
+
 			// Send the event
 			//console.log("pointermove: " + px + ' ' + py);
 			this.wsio.emit('pointerMove', {dx: Math.round(px), dy: Math.round(py)});
-			
-			
+
+
 			// Reset the accumulators
 			this.deltaX = 0;
 			this.deltaY = 0;
-			
+
 			// Reset the time and count
 			this.now = now;
 			this.cnt = 0;
@@ -2086,7 +2090,7 @@ function SAGE2_MouseEventHandler(wsio) {
 		this.checkActivePointer(event);
 		var code = parseInt(event.keyCode, 10);
 
-		
+
 		if (mouseMode == 2 && code === 27) {
 			this.stopMouseMethod(event);
 			if (event.preventDefault) {
@@ -2144,7 +2148,7 @@ function SAGE2_MouseEventHandler(wsio) {
 		this.startSAGE2Pointer();
 
 		this.wsio.emit('pointerPosition', {pointerX: event.clientX, pointerY: event.clientY});
-		
+
 		event.preventDefault();
 
 	};
@@ -2158,7 +2162,7 @@ function SAGE2_MouseEventHandler(wsio) {
 
 		this.stopSAGE2Pointer();
 		event.preventDefault();
-	
+
 	};
 
 	/*
@@ -2200,7 +2204,7 @@ function SAGE2_MouseEventHandler(wsio) {
  */
 function SAGE2_FileDropHandler(_wsio) {
 	var wsio = _wsio;
-	
+
 	var progressBarContainer = document.createElement('div');
 
 	progressBarContainer.style.width = "200px";
@@ -2274,7 +2278,7 @@ function SAGE2_FileDropHandler(_wsio) {
 		};
 
 		var uploadCompleteCallback = function(event) {
-		
+
 			var sn = event.target.response.substring(event.target.response.indexOf("name: ") + 7);
 			var st = event.target.response.substring(event.target.response.indexOf("type: ") + 7);
 			var name = sn.substring(0, sn.indexOf("\n") - 2);
@@ -2326,7 +2330,7 @@ function SAGE2_FileDropHandler(_wsio) {
 }
 
 /**
- * Show a given dialog and disable all the listeners attached to 
+ * Show a given dialog and disable all the listeners attached to
  * the display window to have full input for the dialog
  *
  * @method showDialog
