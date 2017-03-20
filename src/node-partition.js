@@ -712,7 +712,7 @@ Partition.prototype.getMovementBoundaries = function() {
 
 			// check which of the 2 sides is the same
 			if (neighInfo.top === "bottom") {
-				boundCollections.top.min.push(neighPtn.top + partitions.minSize.height - titleBar);
+				boundCollections.top.min.push(neighPtn.top + partitions.minSize.height + titleBar);
 			} else { // "top"
 				boundCollections.top.max.push(neighPtn.top + neighPtn.height - partitions.minSize.height);
 			}
@@ -753,6 +753,10 @@ Partition.prototype.getMovementBoundaries = function() {
 };
 
 Partition.prototype.clampPositionWithinBoundaries = function (boundaries) {
+	let partitions = this.partitionList;
+	let config = partitions.configuration;
+	let titleBar = config.ui.titleBarHeight;
+	
 	// clamp this partition within the bounds
 	let newPositionAfterClamp = {
 		left: this.left,
@@ -787,6 +791,20 @@ Partition.prototype.clampPositionWithinBoundaries = function (boundaries) {
 		newPositionAfterClamp.bottom = boundaries.bottom.min;
 	} else if (this.top + this.height > boundaries.bottom.max) {
 		newPositionAfterClamp.bottom = boundaries.bottom.max;
+	}
+
+	// check for screen boundary snapping
+	if (this.snapTop) {
+		newPositionAfterClamp.top = titleBar;
+	}
+	if (this.snapLeft) {
+		newPositionAfterClamp.left = 0;
+	}
+	if(this.snapRight) {
+		newPositionAfterClamp.right = config.totalWidth;
+	}
+	if(this.snapBottom) {
+		newPositionAfterClamp.bottom = config.totalHeight - titleBar;
 	}
 
 	this.left = newPositionAfterClamp.left;
