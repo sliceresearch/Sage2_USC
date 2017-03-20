@@ -7040,26 +7040,10 @@ function moveAndResizeApplicationWindow(resizeApp, portalId) {
 function moveAndResizePartitionWindow(uniqueID, movePartition) {
 	if (partitions.list.hasOwnProperty(movePartition.elemId)) {
 		var movedPtn = partitions.list[movePartition.elemId];
-		var titleBar = config.ui.titleBarHeight;
 
 
 		// if it is a snapping partition, update all of the neighbors as well
 		if (movedPtn.isSnapping) {
-			// first check its borders against borders of wall
-			//
-			// if (movedPtn.snapTop) {
-			// 	movedPtn.top = (titleBar);
-			// }
-			// if (movedPtn.snapBottom) {
-			// 	movedPtn.height = config.totalHeight - movedPtn.top - titleBar;
-			// }
-			//
-			// if (movedPtn.snapLeft) {
-			// 	movedPtn.left = 0;
-			// }
-			// if (movedPtn.snapRight) {
-			// 	movedPtn.width = config.totalWidth - movedPtn.left;
-			// }
 
 			// then update the neighboring partition positions
 			var updatedNeighbors = movedPtn.updateNeighborPtnPositions();

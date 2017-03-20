@@ -756,7 +756,7 @@ Partition.prototype.clampPositionWithinBoundaries = function (boundaries) {
 	let partitions = this.partitionList;
 	let config = partitions.configuration;
 	let titleBar = config.ui.titleBarHeight;
-	
+
 	// clamp this partition within the bounds
 	let newPositionAfterClamp = {
 		left: this.left,
@@ -800,10 +800,10 @@ Partition.prototype.clampPositionWithinBoundaries = function (boundaries) {
 	if (this.snapLeft) {
 		newPositionAfterClamp.left = 0;
 	}
-	if(this.snapRight) {
+	if (this.snapRight) {
 		newPositionAfterClamp.right = config.totalWidth;
 	}
-	if(this.snapBottom) {
+	if (this.snapBottom) {
 		newPositionAfterClamp.bottom = config.totalHeight - titleBar;
 	}
 
