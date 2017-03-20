@@ -8,6 +8,9 @@
 //
 // Copyright (c) 2016
 
+/* global svgBackgroundForWidgetConnectors */
+
+
 "use strict";
 
 var movieSyncRC = SAGE2_App.extend({
@@ -37,7 +40,7 @@ var movieSyncRC = SAGE2_App.extend({
 			y: 0,
 			w: 0,
 			h: 0,
-			setValues: function(nx, ny, nw, nh){
+			setValues: function(nx, ny, nw, nh) {
 				this.x = nx;
 				this.y = ny;
 				this.w = nw;
@@ -57,35 +60,37 @@ var movieSyncRC = SAGE2_App.extend({
 		this.loadHtmlFromFile(this.resrcPath + "design.html", this.element, function() {
 			_this.postHtmlFillActions();
 		});
+
+		console.log(require("os").cpus());
 	},
 
 	loadHtmlFromFile: function(relativePathFromAppFolder, whereToAppend, callback) {
 		var xhr = new XMLHttpRequest();
 		var _this = this;
 		xhr.onreadystatechange = function() {
-			if ( xhr.readyState === 4 ) {
-				if ( xhr.status === 200 || xhr.status === 0 ) {
+			if (xhr.readyState === 4) {
+				if (xhr.status === 200 || xhr.status === 0) {
 					// xhr.responseText should contain the contents.
 					_this.loadIntoAppendLocation(whereToAppend, xhr.responseText);
 					callback();
 				}
 			}
 		};
-		xhr.open( "GET", relativePathFromAppFolder, true );
-		xhr.setRequestHeader( "Content-Type", "text/plain" );
-		xhr.send( null );
+		xhr.open("GET", relativePathFromAppFolder, true);
+		xhr.setRequestHeader("Content-Type", "text/plain");
+		xhr.send(null);
 	},
 
 	loadIntoAppendLocation: function(whereToAppend, responseText) {
 		var content = "";
 		// id and spaces because people aren't always consistent
-		var idIndex, ids1, ids2, ids3;
+		var idIndex;
 
 		// find location of first id div. Because there will potentially be multiple apps.
 		idIndex = this.findNextIdInHtml(responseText);
 
 		// for each id, prefix it with this.id
-		while(idIndex !== -1) {
+		while (idIndex !== -1) {
 			// based on id location move it over
 			content += responseText.substring(0, idIndex);
 			responseText = responseText.substring(idIndex);
@@ -113,13 +118,13 @@ var movieSyncRC = SAGE2_App.extend({
 		var ids2 = responseText.indexOf("id  =");
 		var ids3 = responseText.indexOf("id   =");
 		// if (idIndex isn't found) or (is found but ids1 also found and smaller than idIndex)
-		if ( (idIndex === -1) || (ids1 > -1 && ids1 < idIndex)) {
+		if ((idIndex === -1) || (ids1 > -1 && ids1 < idIndex)) {
 			idIndex = ids1;
 		}
-		if ( (idIndex === -1) || (ids2 > -1 && ids2 < idIndex)) {
+		if ((idIndex === -1) || (ids2 > -1 && ids2 < idIndex)) {
 			idIndex = ids2;
 		}
-		if ( (idIndex === -1) || (ids3 > -1 && ids3 < idIndex)) {
+		if ((idIndex === -1) || (ids3 > -1 && ids3 < idIndex)) {
 			idIndex = ids3;
 		}
 		return idIndex;
@@ -204,7 +209,7 @@ var movieSyncRC = SAGE2_App.extend({
 			removeId = _this.state.associatedPlayers[i].id;
 			pRemoveButton.addEventListener("click", function() {
 				_this.removeAssociatedPlayer(removeId);
-			})
+			});
 			pTitleDiv.appendChild(pRemoveButton);
 			this.listAllPlayersDiv.appendChild(pTitleDiv);
 		}
@@ -216,7 +221,6 @@ var movieSyncRC = SAGE2_App.extend({
 		var lineHolder;
 		for (var i = 0; i < this.state.associatedPlayerLines.length; i++) {
 			lineHolder = this.state.associatedPlayerLines[i];
-			lineHolder.player
 			lineHolder.line.attr({
 				x1: (this.sage2_x + this.sage2_width / 2),
 				y1: (this.sage2_y + this.sage2_height / 2),
@@ -323,7 +327,7 @@ var movieSyncRC = SAGE2_App.extend({
 			}
 		}
 		this.updateListOfAssociatedPlayers(); // updates lines
-	}, 
+	},
 
 	resize: function(date) {
 		this.updateListOfAssociatedPlayers();
@@ -440,7 +444,7 @@ var movieSyncRC = SAGE2_App.extend({
 			entry.description = "separator";
 			entries.push(entry);
 			// add remove option for each
-			for (var i = 0; i < this.state.associatedPlayers.length; i++){
+			for (var i = 0; i < this.state.associatedPlayers.length; i++) {
 				entry = {};
 				entry.description = "Disassociate " + this.state.associatedPlayers[i].title;
 				entry.callback    = "contextMenuRemoveAssociatedPlayer";
@@ -466,7 +470,7 @@ var movieSyncRC = SAGE2_App.extend({
 	playPauseButtonEffect: function() {
 		for (var i = 0; i < this.state.associatedPlayers.length; i++) {
 			this.state.associatedPlayers[i].state.paused = this.pausedStatus;
-			this.state.associatedPlayers[i]["contextTogglePlayPause"](new Date());
+			this.state.associatedPlayers[i].contextTogglePlayPause(new Date());
 		}
 		// set after, and flip the status
 		this.pausedStatus = !this.pausedStatus;
@@ -482,7 +486,7 @@ var movieSyncRC = SAGE2_App.extend({
 		// not playing first because this is a stop button
 		this.pausedStatus = true;
 		for (var i = 0; i < this.state.associatedPlayers.length; i++) {
-			this.state.associatedPlayers[i]["stopVideo"](new Date());
+			this.state.associatedPlayers[i].stopVideo(new Date());
 		}
 		this.playPauseButton.src = "../../../images/appUi/playBtn.svg";
 		this.getFullContextMenuAndUpdate();
@@ -503,7 +507,7 @@ var movieSyncRC = SAGE2_App.extend({
 			timestamp: 0,
 			command: "seek",
 			play: !this.pausedStatus
-		}
+		};
 		var ap, resetReceiveCommands = false;
 		for (var i = 0; i < this.state.associatedPlayers.length; i++) {
 			ap = this.state.associatedPlayers[i];
@@ -524,36 +528,37 @@ var movieSyncRC = SAGE2_App.extend({
 	loopButtonEffect: function() {
 		for (var i = 0; i < this.state.associatedPlayers.length; i++) {
 			this.state.associatedPlayers[i].state.looped = this.loopStatus;
-			this.state.associatedPlayers[i]["toggleLoop"](new Date());
+			this.state.associatedPlayers[i].toggleLoop(new Date());
 		}
 		// set after, and flip the status
 		this.loopStatus = !this.loopStatus;
 
 		if (this.loopStatus) {
-			this.loopButton.src = "../../../images/appUi/dontLoopBtn.svg" 
+			this.loopButton.src = "../../../images/appUi/dontLoopBtn.svg";
 		} else {
-			this.loopButton.src = "../../../images/appUi/loopBtn.svg" 
+			this.loopButton.src = "../../../images/appUi/loopBtn.svg";
 		}
 		this.getFullContextMenuAndUpdate();
 	},
 	muteButtonEffect: function() {
 		for (var i = 0; i < this.state.associatedPlayers.length; i++) {
 			this.state.associatedPlayers[i].state.muted = this.muteStatus;
-			this.state.associatedPlayers[i]["contextToggleMute"](new Date());
+			this.state.associatedPlayers[i].contextToggleMute(new Date());
 		}
 		// set after, and flip the status
 		this.muteStatus = !this.muteStatus;
 
 		if (this.muteStatus) {
-			this.muteButton.src = "../../../images/appUi/muteBtn.svg" 
+			this.muteButton.src = "../../../images/appUi/muteBtn.svg";
 		} else {
-			this.muteButton.src = "../../../images/appUi/soundBtn.svg" 
+			this.muteButton.src = "../../../images/appUi/soundBtn.svg";
 		}
 		this.getFullContextMenuAndUpdate();
 	},
 	setPlayersToSecond: function(responseObject) {
 		// there seems to be round down so + 1
 		var second = parseFloat(responseObject.clientInput) + 1;
+
 		/*
 			timestamp - where to place. frame / fps
 			command   - this will be seek
@@ -563,7 +568,7 @@ var movieSyncRC = SAGE2_App.extend({
 			timestamp: second,
 			command: "seek",
 			play: !this.pausedStatus
-		}
+		};
 		var ap, resetReceiveCommands = false;
 		for (var i = 0; i < this.state.associatedPlayers.length; i++) {
 			// the following weird looking check is for backwards compatibility
