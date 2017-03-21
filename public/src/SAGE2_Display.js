@@ -613,6 +613,7 @@ function setupListeners() {
 		var re = /\.|\:/g;
 		var stlyeCaption = uniqueID.split(re).join("");
 		addStyleElementForTitleColor(stlyeCaption, pointer_data.color);
+		mousehandler.pointerActive = true;
 	});
 
 	wsio.on('hideSagePointer', function(pointer_data) {
@@ -627,6 +628,7 @@ function setupListeners() {
 		var re = /\.|\:/g;
 		var stlyeCaption = uniqueID.split(re).join("");
 		removeStyleElementForTitleColor(stlyeCaption, pointer_data.color);
+		mousehandler.pointerActive = false;
 	});
 
 	wsio.on('updateSagePointerPosition', function(pointer_data) {
@@ -1873,8 +1875,14 @@ function SAGE2_MouseEventHandler(wsio) {
 
 	// a fixed delay time
 	this.delay = 10;
+	// our timer that triggers the adjustment
 	this.countDown;
+	// saves the last event that was actually sent to sage2 server
+	// this is used for adjustment
 	this.lastEvent;
+	// saves the last moveevent to accurately calculate movement
+	// on devices with scaling active
+	this.lastMouseMoveEvent;
 
 	// the handle for the intervall function to cancel later on
 	this.intervallhandle;
@@ -1902,7 +1910,7 @@ function SAGE2_MouseEventHandler(wsio) {
 			return;
 		}
 		//console.log("starting SAGE2 mouse pointer");
-		this.pointerActive = true;
+		//this.pointerActive = true;
 
 		this.countDown = 0;
 
@@ -1912,7 +1920,7 @@ function SAGE2_MouseEventHandler(wsio) {
 	this.stopSAGE2Pointer = function() {
 		//console.log("stopping SAGE2 mouse pointer");
 		wsio.emit('stopSagePointer');
-		this.pointerActive = false;
+		//this.pointerActive = false;
 		clearInterval(this.intervallhandle);
 	};
 
@@ -1966,10 +1974,10 @@ function SAGE2_MouseEventHandler(wsio) {
 					if (this.countDown == 0) {
 						clearInterval(this.intervallhandle);
 
-						if (!mousehandler.ourPointerDIVObject)					{
+						if (!mousehandler.ourPointerDIVObject && mousehandler.ourPointerDIV)					{
 							mousehandler.ourPointerDIVObject = document.getElementById(mousehandler.ourPointerDIV);
 						}
-						if (window.getComputedStyle) {
+						if (window.getComputedStyle && mousehandler.ourPointerDIV) {
 							var transform = getComputedStyle(mousehandler.ourPointerDIVObject).transform;
 							var values = transform.substring(transform.indexOf("(") + 1, transform.indexOf(")")).split(',');
 							var pointerX = parseInt(values[4].trim());
@@ -1998,9 +2006,6 @@ function SAGE2_MouseEventHandler(wsio) {
 			}
 		}
 
-		var movementX = event.movementX || event.mozMovementX || event.webkitMovementX || 0;
-		var movementY = event.movementY || event.mozMovementY || event.webkitMovementY || 0;
-
 		// Event filtering
 		var now  = Date.now();
 		// time difference since last event
@@ -2008,16 +2013,25 @@ function SAGE2_MouseEventHandler(wsio) {
 		// count the events
 		this.cnt++;
 
-		this.deltaX += movementX;
-		this.deltaY += movementY;
-
+		// We cannot use event.movement for the seemless mousemode as there is a problem with scaling.
+		// Movement data is integer and rounded so we actually miss movement data
+		if(mouseMode == 1 && this.lastMouseMoveEvent != undefined) {
+			this.deltaX += event.clientX - this.lastMouseMoveEvent.clientX;
+			this.deltaY += event.clientY - this.lastMouseMoveEvent.clientY;
+		} else if (mouseMode == 2) {
+			this.deltaX += event.movementX;
+			this.deltaY += event.movementY;
+		}
+		
+		this.lastMouseMoveEvent = event;
+		
 		if (diff >= (1000 / this.sendFrequency)) {
 			// Calculate the offset
-			// increase the speed for touch devices
 
-			var px  = this.deltaX;
-			var py  = this.deltaY;
-			if (!mousehandler.ourPointerDIVObject) {
+			var px  = this.deltaX;// / devicePixelRatio;
+			var py  = this.deltaY;// / devicePixelRatio;
+			
+			if (!mousehandler.ourPointerDIVObject && mousehandler.ourPointerDIV) {
 				mousehandler.ourPointerDIVObject = document.getElementById(mousehandler.ourPointerDIV);
 			}
 
@@ -2168,19 +2182,16 @@ function SAGE2_MouseEventHandler(wsio) {
 	/*
 		This checks for an active pointer and returns true
 		only if our display activated a pointer (mode 1 and 2)
-
-		For mode 1 (seemless mode) the software mouse will be
-		activated if it wasn't active before
 	*/
 	this.checkActivePointer = function(event) {
-		if (this.pointerActive)			{
+		return this.pointerActive;
+		/*
+		if (this.pointerActive)	{
 			return true;
-		} else if (mouseMode == 1 && !this.pointerActive) {
-			this.startMouseMethod(event);
-			return true;
-		} else			{
+		} else {
 			return false;
 		}
+		*/
 	};
 
 	this.pointLockChangeListener = this.pointLockChangeListenerMethod.bind(this);
