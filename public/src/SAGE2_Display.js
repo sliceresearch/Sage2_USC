@@ -2015,22 +2015,22 @@ function SAGE2_MouseEventHandler(wsio) {
 
 		// We cannot use event.movement for the seemless mousemode as there is a problem with scaling.
 		// Movement data is integer and rounded so we actually miss movement data
-		if(mouseMode == 1 && this.lastMouseMoveEvent != undefined) {
+		if (mouseMode == 1 && this.lastMouseMoveEvent != undefined) {
 			this.deltaX += event.clientX - this.lastMouseMoveEvent.clientX;
 			this.deltaY += event.clientY - this.lastMouseMoveEvent.clientY;
 		} else if (mouseMode == 2) {
 			this.deltaX += event.movementX;
 			this.deltaY += event.movementY;
 		}
-		
+
 		this.lastMouseMoveEvent = event;
-		
+
 		if (diff >= (1000 / this.sendFrequency)) {
 			// Calculate the offset
 
 			var px  = this.deltaX;// / devicePixelRatio;
 			var py  = this.deltaY;// / devicePixelRatio;
-			
+
 			if (!mousehandler.ourPointerDIVObject && mousehandler.ourPointerDIV) {
 				mousehandler.ourPointerDIVObject = document.getElementById(mousehandler.ourPointerDIV);
 			}
@@ -2185,6 +2185,7 @@ function SAGE2_MouseEventHandler(wsio) {
 	*/
 	this.checkActivePointer = function(event) {
 		return this.pointerActive;
+
 		/*
 		if (this.pointerActive)	{
 			return true;
