@@ -2,46 +2,70 @@
 
 
 <div id="controls">
-	<img
-	id="playPauseButton"
-    src="../../../images/appUi/playBtn.svg" 
-    alt="play"
-    width="46%" />
-	<img
-	id="stopButton"
-    src="../../../images/appUi/homeBtn.svg" 
-    alt="play"
-    width="46%" />
-    <img
-    id="stepBackButton"
-    src="../../../images/appUi/previousBtn.svg" 
-    alt="play"
-    width="46%" />
-    <img
-    id="stepForwardButton"
-    src="../../../images/appUi/nextBtn.svg" 
-    alt="play"
-    width="46%" />
-	<img
-	id="loopButton"
-    src="../../../images/appUi/loopBtn.svg" 
-    alt="play"
-    width="46%" />
-	<img
-	id="muteButton"
-    src="../../../images/appUi/soundBtn.svg" 
-    alt="play"
-    width="46%" />
+    <table style="width:100%">
+        <tr>
+            <td id="timeDisplay" colspan="2" style="text-align: center;">
+                00:00
+            </td>
+        </tr>
+        <tr>
+            <td style="text-align: center; width:50%">
+                <img
+                id="playPauseButton"
+                src="../../../images/appUi/playBtn.svg" 
+                alt="play"
+                width="100%" />
+            </td>
+            <td style="text-align: center; width:50%">
+                <img
+                id="stopButton"
+                src="../../../images/appUi/homeBtn.svg" 
+                alt="play"
+                width="100%" />
+            </td>
+        </tr>
+        <tr>
+            <td style="text-align: center; width:50%">
+                <img
+                id="stepBackButton"
+                src="../../../images/appUi/previousBtn.svg" 
+                alt="play"
+                width="100%" />
+            </td>
+            <td style="text-align: center; width:50%">
+                <img
+                id="stepForwardButton"
+                src="../../../images/appUi/nextBtn.svg" 
+                alt="play"
+                width="100%" />
+            </td>
+        </tr>
+        <tr>
+            <td style="text-align: center; width:50%">
+                <img
+                id="loopButton"
+                src="../../../images/appUi/loopBtn.svg" 
+                alt="play"
+                width="100%" />
+            </td>
+            <td style="text-align: center; width:50%">
+                <img
+                id="muteButton"
+                src="../../../images/appUi/soundBtn.svg" 
+                alt="play"
+                width="100%" />
+            </td>
+        </tr>
+    </table>
+    <div id="addPlayerDiv" style="text-align: center">
+        <button id="addPlayerButton" style="width: 98%; background: lightgreen;"></button>
+        <br>
+    </div>
+    <div id="listAllPlayersDiv" style="white-space: nowrap;text-align: center">
+    Connected Movies
+    </div>
 </div>
 
-<div id="addPlayerDiv" style="margin:10px">
-<button id="addPlayerButton" style="background: lightgreen"></button>
-<br>
-</div>
-
-<div id="listAllPlayersDiv" style="margin:10px; white-space: nowrap;">
-Connected Movies:
-</div>
 
 
 

@@ -25,7 +25,7 @@ var movieSyncRC = SAGE2_App.extend({
 		this.element.style.fontSize   = ui.titleTextSize + "px";
 		// Using SAGE2 default font
 		this.element.style.fontFamily = "Arimo, Helvetica, sans-serif";
-		this.maxFPS = 3; // don't need super fast detection. instr
+		this.maxFPS = 10; // don't need super fast detection. instr
 
 
 		// Default starting attributes
@@ -34,7 +34,9 @@ var movieSyncRC = SAGE2_App.extend({
 		this.loopStatus = false;
 		this.muteStatus = false;
 
+		this.currentMaster = null;
 		this.playerRemoteIsOver = null;
+
 		this.rectangleHelper = {
 			x: 0,
 			y: 0,
@@ -60,8 +62,6 @@ var movieSyncRC = SAGE2_App.extend({
 		this.loadHtmlFromFile(this.resrcPath + "design.html", this.element, function() {
 			_this.postHtmlFillActions();
 		});
-
-		console.log(require("os").cpus());
 	},
 
 	loadHtmlFromFile: function(relativePathFromAppFolder, whereToAppend, callback) {
@@ -133,6 +133,7 @@ var movieSyncRC = SAGE2_App.extend({
 	postHtmlFillActions: function() {
 		var _this = this;
 		// associate variables
+		this.timeDisplay = document.getElementById(this.id + "timeDisplay");
 		this.addPlayerDiv = document.getElementById(this.id + "addPlayerDiv");
 		this.addPlayerButton = document.getElementById(this.id + "addPlayerButton");
 		this.addPlayerDiv.style.fontSize = (this.sage2_width / 11.0) + "px"; // hard code for now
@@ -144,9 +145,6 @@ var movieSyncRC = SAGE2_App.extend({
 		// list connected players
 		this.listAllPlayersDiv = document.getElementById(this.id + "listAllPlayersDiv");
 		this.listAllPlayersDiv.style.fontSize = (this.sage2_width / 11.0) + "px"; // hard code for now
-		while (this.listAllPlayersDiv.clientWidth > this.sage2_width) {
-			this.listAllPlayersDiv.style.fontSize = parseInt(this.listAllPlayersDiv.style.fontSize) - 1 + "px";
-		}
 		this.updateListOfAssociatedPlayers();
 
 		// associate button actions.
@@ -179,41 +177,31 @@ var movieSyncRC = SAGE2_App.extend({
 	},
 
 	updateListOfAssociatedPlayers: function() {
-		var _this = this;
-		var pTitleDiv, pBr, pHr, pRemoveButton, removeId;
-		var title = "Connected Movies(" + this.state.associatedPlayers.length + "):";
+		var pTitleDiv, pBr, pHr;
+		var title = "Connected Movies (" + this.state.associatedPlayers.length + ")";
 		this.listAllPlayersDiv.innerHTML = title;
 		var fontSizeAsInt = (this.sage2_width / 11.0); // hardcode for now
 		this.listAllPlayersDiv.style.fontSize = fontSizeAsInt + "px";
-
-		for (var i = 0; i < this.state.associatedPlayers.length; i++) {
-			// new line per movie
+		this.addPlayerButton.style.fontSize = fontSizeAsInt + "px";
+		// if there is a player
+		if (0 < this.state.associatedPlayers.length) {
+			// new line for master
 			pBr = document.createElement("br");
 			this.listAllPlayersDiv.appendChild(pBr);
 			pHr = document.createElement("hr");
 			this.listAllPlayersDiv.appendChild(pHr);
-			// add title div
+			// master is always the first player in the list
 			pTitleDiv = document.createElement("div");
-			pTitleDiv.textContent = this.state.associatedPlayers[i].title;
+			pTitleDiv.textContent = "Master:\n" + this.state.associatedPlayers[0].title;
 			pTitleDiv.style.fontSize = fontSizeAsInt + "px";
-			while (pTitleDiv.clientWidth > this.sage2_width) {
-				pTitleDiv.style.fontSize = parseInt(pTitleDiv.style.fontSize) - 1 + "px";
-			}
-			pBr = document.createElement("br");
-			pTitleDiv.appendChild(pBr);
-			// create button
-			pRemoveButton = document.createElement("button");
-			pRemoveButton.textContent = "Remove";
-			pRemoveButton.style.background = "lightpink";
-			pRemoveButton.style.fontSize = fontSizeAsInt + "px";
-			removeId = _this.state.associatedPlayers[i].id;
-			pRemoveButton.addEventListener("click", function() {
-				_this.removeAssociatedPlayer(removeId);
-			});
-			pTitleDiv.appendChild(pRemoveButton);
 			this.listAllPlayersDiv.appendChild(pTitleDiv);
 		}
-
+		// list update means master might have changed
+		if (this.state.associatedPlayers[0] === undefined) {
+			this.currentMaster = null;
+		} else if (this.currentMaster !== this.state.associatedPlayers[0]) {
+			this.currentMaster = this.state.associatedPlayers[0];
+		}
 		this.updateLinesToPlayers();
 	},
 
@@ -238,6 +226,8 @@ var movieSyncRC = SAGE2_App.extend({
 	* Used as a logic loop. Each draw() will check if over a movie player.
 	*/
 	draw: function(date) {
+		// frame sync if necessary
+		this.checkIfNeedToFrameSyncToMaster();
 		// this remote's size
 		var rx = this.sage2_x, ry = this.sage2_y, rw = this.sage2_width, rh = this.sage2_height;
 		var foundPlayer = false;
@@ -270,16 +260,118 @@ var movieSyncRC = SAGE2_App.extend({
 			this.disableAssociatePlayerButton();
 			this.getFullContextMenuAndUpdate();
 		}
+		this.checkForPlayerClosed();
+		this.updateLinesToPlayers();
+	},
+
+	/**
+	 * Master is associatedPlayers[0]
+	 */
+	checkIfNeedToFrameSyncToMaster: function() {
+		if (this.currentMaster === null) {
+			return;
+		} else if (applications[this.currentMaster.id] === undefined) {
+			this.removeAssociatedPlayer(this.currentMaster.id);
+			return; // extra double check
+		}
+		// update time display, start with seconds. timestamp used for later
+		var framerate = this.currentMaster.state.framerate;
+		var masterTimestamp = (this.currentMaster.state.frame / framerate);
+		var timeMinutes = parseInt(masterTimestamp / 60);
+		var timeSeconds = parseInt(masterTimestamp % 60);
+		timeSeconds = (timeSeconds > 9) ? ("" + timeSeconds) : ("0" + timeSeconds);
+		var timeMMSS = timeMinutes + ":" + timeSeconds;
+		this.timeDisplay.textContent = timeMMSS;
+
+		var needToSendPauseStatusUpdate = false,
+			needToSendLoopStatusUpdate = false;
+		// check if change in pausedStatus
+		if (this.currentMaster.state.paused !== this.pausedStatus) {
+			needToSendPauseStatusUpdate = true;
+			this.pausedStatus = this.currentMaster.state.paused;
+			this.updatePausedStatusIconsAndContext();
+		}
+		// check if change in loopStatus
+		if (this.currentMaster.state.looped !== this.loopStatus) {
+			needToSendLoopStatusUpdate = true;
+			this.loopStatus = this.currentMaster.state.looped;
+			this.updateLoopStatusIconsAndContext();
+		}
+		// Do not propagate mute, may want others quiet
+		if (this.currentMaster.state.muted !== this.muteStatus) {
+			this.muteStatus = this.currentMaster.state.muted;
+			this.updateMuteStatusIconsAndContext();
+		}
+
+		// first loop check since simple.
+		if (needToSendLoopStatusUpdate) {
+			// for each player AFTER master, set to opposite in order to toggle
+			for (let i = 1; i < this.state.associatedPlayers.length; i++) {
+				this.state.associatedPlayers[i].state.looped = !this.loopStatus;
+				this.state.associatedPlayers[i].toggleLoop(new Date());
+			}
+		}
+		// now check if need to update play/pause status
+		if (needToSendPauseStatusUpdate) {
+			// for each player AFTER master, set to opposite in order to toggle
+			for (let i = 1; i < this.state.associatedPlayers.length; i++) {
+				framerate = this.state.associatedPlayers[i].state.framerate;
+				this.state.associatedPlayers[i].state.frame = masterTimestamp * framerate;
+				this.state.associatedPlayers[i].state.paused = !this.pausedStatus;
+				this.state.associatedPlayers[i].contextTogglePlayPause(new Date());
+			}
+		} else {
+			// no major changes detected between master and remote
+			// check if there are frames differences in general.
+			var currentPlayerFrame, currentPlayerTimestamp, timeDiff;
+			var timeDiffTolerance = 2;
+			// for each player check if their timestamp too far out of sync
+			for (let i = 1; i < this.state.associatedPlayers.length; i++) {
+				framerate = this.state.associatedPlayers[i].state.framerate;
+				currentPlayerFrame = this.state.associatedPlayers[i].state.frame;
+				currentPlayerTimestamp = currentPlayerFrame / currentPlayerTimestamp;
+				timeDiff = masterTimestamp - currentPlayerTimestamp;
+				timeDiff = Math.abs(timeDiff);
+				// if the difference is greater than tollerance, then adjust
+				if (timeDiff > timeDiffTolerance) {
+					this.state.associatedPlayers[i].state.frame = masterTimestamp * framerate;
+					this.state.associatedPlayers[i].state.paused = !this.pausedStatus;
+					this.state.associatedPlayers[i].contextTogglePlayPause(new Date());
+				}
+				// if paused, then this should be stepped, diff probably caused by seek
+				// or a change in master
+				if (this.pausedStatus) {
+					this.stepEffect(0, "ignoreMaster");
+				}
+			}
+		} // end else check if any players have large frame difference
+	},
+
+	/**
+	 * If a player is closed, need to remove association.
+	 */
+	checkForPlayerClosed: function() {
+		var idsToRemove = [];
+		var i;
+		for (i = 0; i < this.state.associatedPlayers.length; i++) {
+			if (applications[this.state.associatedPlayers[i].id] === undefined) {
+				idsToRemove.push(this.state.associatedPlayers[i].id);
+			}
+		}
+		// collect ids first to avoid array position problems
+		for (i = 0; i < idsToRemove.length; i++) {
+			this.removeAssociatedPlayer(idsToRemove[i]);
+		}
 	},
 
 	move: function(date) {
-		this.updateLinesToPlayers();
+		// disabled for now
 	},
 
 	enableAssociatePlayerButton: function(playerObject) {
 		if (this.addPlayerButton !== undefined) {
 			this.addPlayerButton.style.visibility = "visible";
-			this.addPlayerButton.textContent = "Associate:" + playerObject.title;
+			this.addPlayerButton.textContent = "Sync:\n" + playerObject.title;
 			this.playerRemoteIsOver = playerObject;
 
 			this.getFullContextMenuAndUpdate();
@@ -474,7 +566,9 @@ var movieSyncRC = SAGE2_App.extend({
 		}
 		// set after, and flip the status
 		this.pausedStatus = !this.pausedStatus;
-
+		this.updatePausedStatusIconsAndContext();
+	},
+	updatePausedStatusIconsAndContext: function() {
 		if (this.pausedStatus) {
 			this.playPauseButton.src = "../../../images/appUi/playBtn.svg";
 		} else {
@@ -488,8 +582,7 @@ var movieSyncRC = SAGE2_App.extend({
 		for (var i = 0; i < this.state.associatedPlayers.length; i++) {
 			this.state.associatedPlayers[i].stopVideo(new Date());
 		}
-		this.playPauseButton.src = "../../../images/appUi/playBtn.svg";
-		this.getFullContextMenuAndUpdate();
+		this.updatePausedStatusIconsAndContext();
 	},
 	// +1 / -1 not part of param because this is also an on remote button effect.
 	stepBackButtonEffect: function() {
@@ -498,28 +591,29 @@ var movieSyncRC = SAGE2_App.extend({
 	stepForwardButtonEffect: function() {
 		this.stepEffect(1);
 	},
-	stepEffect: function(plusOrMinus1) {
-		// first make the videos pause
-		// this.pausedStatus = false;
-		// this.playPauseButtonEffect();
-		// then step
+	stepEffect: function(plusOrMinus1, shouldIgnoreMaster) {
+		// will error without currentMaster
+		if (this.currentMaster === null) {
+			return;
+		}
+		// frame match to master
 		var data = {
-			timestamp: 0,
+			timestamp: (this.currentMaster.state.frame / this.currentMaster.state.framerate),
 			command: "seek",
 			play: !this.pausedStatus
 		};
-		var ap, resetReceiveCommands = false;
-		for (var i = 0; i < this.state.associatedPlayers.length; i++) {
+		data.timestamp += plusOrMinus1;
+		var ap, i = 0;
+		i = (shouldIgnoreMaster) ? 1 : 0;
+		for (; i < this.state.associatedPlayers.length; i++) {
 			ap = this.state.associatedPlayers[i];
 			ap.state.playAfterSeek = !this.pausedStatus;
-			data.timestamp = (ap.state.frame / ap.state.framerate) + plusOrMinus1;
 			// the following weird looking check is for backwards compatibility
-			if (ap.shouldReceiveCommands == false) {
-				resetReceiveCommands = true;
+			if (ap.shouldReceiveCommands === false) {
 				ap.shouldReceiveCommands = true;
 			}
 			ap.videoSyncCommandHandler(data);
-			if (resetReceiveCommands) {
+			if (ap.shouldReceiveCommands !== undefined) {
 				ap.shouldReceiveCommands = false;
 			}
 		}
@@ -532,11 +626,13 @@ var movieSyncRC = SAGE2_App.extend({
 		}
 		// set after, and flip the status
 		this.loopStatus = !this.loopStatus;
-
+		this.updateLoopStatusIconsAndContext();
+	},
+	updateLoopStatusIconsAndContext: function() {
 		if (this.loopStatus) {
-			this.loopButton.src = "../../../images/appUi/dontLoopBtn.svg";
-		} else {
 			this.loopButton.src = "../../../images/appUi/loopBtn.svg";
+		} else {
+			this.loopButton.src = "../../../images/appUi/dontLoopBtn.svg";
 		}
 		this.getFullContextMenuAndUpdate();
 	},
@@ -547,7 +643,9 @@ var movieSyncRC = SAGE2_App.extend({
 		}
 		// set after, and flip the status
 		this.muteStatus = !this.muteStatus;
-
+		this.updateMuteStatusIconsAndContext();
+	},
+	updateMuteStatusIconsAndContext: function() {
 		if (this.muteStatus) {
 			this.muteButton.src = "../../../images/appUi/muteBtn.svg";
 		} else {
@@ -569,16 +667,15 @@ var movieSyncRC = SAGE2_App.extend({
 			command: "seek",
 			play: !this.pausedStatus
 		};
-		var ap, resetReceiveCommands = false;
+		var ap;
 		for (var i = 0; i < this.state.associatedPlayers.length; i++) {
 			// the following weird looking check is for backwards compatibility
 			ap = this.state.associatedPlayers[i];
-			if (ap.shouldReceiveCommands == false) {
-				resetReceiveCommands = true;
+			if (ap.shouldReceiveCommands === false) {
 				ap.shouldReceiveCommands = true;
 			}
 			ap.videoSyncCommandHandler(data);
-			if (resetReceiveCommands) {
+			if (ap.shouldReceiveCommands !== undefined) {
 				ap.shouldReceiveCommands = false;
 			}
 		}

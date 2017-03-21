@@ -1,8 +1,8 @@
 {
 	"main_script": "movieSyncRC.js",
 	"icon": "movieSyncRC.png",
-	"width": 400,
-	"height": 1400,
+	"width": 500,
+	"height": 1200,
 	"animation": true,
 	"dependencies": [
 	],
