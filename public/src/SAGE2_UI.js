@@ -692,13 +692,12 @@ function setupListeners() {
 		if (data.capableOfScreenShot) {
 			// currently this is a placeholder until a button can be added
 			console.log("The server at at least 1 display capable of a wallScreenShot");
-			// 
+			//
 			for (var i = 0; i < fileManager.persistMenuData.length; i++) {
 				if (fileManager.persistMenuData[i].id === "services_menu") {
 					fileManager.persistMenuData[i].submenu.push({id: "wallScreenShot_menu",  value: "Take screeshot of wall"});
 				}
 			}
-			
 		} else {
 			console.log("The server says it is not capable of screenshot, button will not be added.");
 		}
