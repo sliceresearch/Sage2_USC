@@ -374,55 +374,6 @@ var movie_player = SAGE2_BlockStreamingApp.extend({
 			entries.push(entry);
 		}
 
-		/*
-			This next section is synchronized controls for video player.
-			One cannot send and receive.
-		*/
-
-		entry = {};
-		entry.description = "separator";
-		entries.push(entry);
-
-		if (this.shouldSendCommands) {
-			entry = {};
-			entry.description = "Stop sending commands";
-			entry.callback = "contextVideoSyncHandler";
-			entry.parameters = {
-				send: false,
-				receive: false
-			};
-			entries.push(entry);
-		} else {
-			entry = {};
-			entry.description = "Send commands";
-			entry.callback = "contextVideoSyncHandler";
-			entry.parameters = {
-				send: true,
-				receive: false
-			};
-			entries.push(entry);
-		}
-
-		if (this.shouldReceiveCommands) {
-			entry = {};
-			entry.description = "Stop receiving commands";
-			entry.callback = "contextVideoSyncHandler";
-			entry.parameters = {
-				send: false,
-				receive: false
-			};
-			entries.push(entry);
-		} else {
-			entry = {};
-			entry.description = "Receive commands";
-			entry.callback = "contextVideoSyncHandler";
-			entry.parameters = {
-				send: false,
-				receive: true
-			};
-			entries.push(entry);
-		}
-
 		// If a sender, then have access to additional command, step forward and step back.
 		if (this.shouldSendCommands) {
 			entry = {};
