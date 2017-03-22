@@ -2230,8 +2230,12 @@ function saveSession(filename) {
 			// remove reference to parent partition if it exists
 			delete a.partition;
 		}
-		// Ignore media streaming applications for now (desktop sharing)
-		if (a.application !== 'media_stream' && a.application !== 'media_block_stream') {
+
+		// Test if the application is shared (coming from another server)
+		var isShared = (sharedApps[a.id] !== undefined);
+
+		// Ignore media streaming applications for now (desktop sharing) and shared applications
+		if (a.application !== 'media_stream' && a.application !== 'media_block_stream' && !isShared) {
 			states.apps.push(a);
 			states.numapps++;
 		}
