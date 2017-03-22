@@ -54,7 +54,7 @@ function generate() {
 		],
 		stripPrefix: rootDir
 	}, function() {
-		console.log('ServiceWorker>	Cache generated');
+		// console.log('ServiceWorker>	Cache generated');
 	});
 }
 
