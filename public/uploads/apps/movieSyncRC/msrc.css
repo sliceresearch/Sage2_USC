@@ -1,0 +1,14 @@
+/* required styles */
+
+.s2_msrc_icon_td {
+	text-align: center;
+	width:50%;
+	}
+.s2_msrc_add_btn {
+	width: 98%;
+	background: lightgreen;
+	}
+.s2_msrc_list_play {
+	white-space: nowrap;
+	text-align: center;
+}

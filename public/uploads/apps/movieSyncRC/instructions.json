@@ -5,6 +5,7 @@
 	"height": 1200,
 	"animation": true,
 	"dependencies": [
+		"msrc.css"
 	],
 	"load": {
 		"associatedPlayers": [],
