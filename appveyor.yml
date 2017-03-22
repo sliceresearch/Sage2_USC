@@ -12,6 +12,7 @@ configuration: Release
 platform: x64
 
 init:
+  - set PATH=C:\Program Files\Git\mingw64\bin;%PATH%
 #  - curl -LsSO http://ffmpeg.zeranoe.com/builds/win64/dev/ffmpeg-3.0.1-win64-dev.7z
   - curl -LsSO https://bitbucket.org/sage2/binaries/downloads/ffmpeg-3.2.2-win64-dev.zip
   - 7z x ffmpeg-3.2.2-win64-dev.zip -o. > nul
@@ -26,8 +27,8 @@ init:
   - dir C:\Dev\ffmpeg-win64-dev\lib
 
 install:
-  - ps: Get-NodeJsLatestBuild 6.9
-  - ps: Install-Product node 6.9.5 x64
+  - ps: Get-NodeJsLatestBuild 7.6
+  - ps: Install-Product node 7.6.0 x64
   - dir C:\avvm\node
   - node -v
   - cd %APPVEYOR_BUILD_FOLDER%
@@ -67,8 +68,8 @@ install:
   - del /Q *.7z
   - del /Q *.zip
   - cd bin
-  - curl -LsSO https://nodejs.org/dist/v6.9.5/win-x64/node.exe
-  - curl -LsSO https://nodejs.org/dist/v6.9.5/win-x64/node.lib
+  - curl -LsSO https://nodejs.org/dist/latest-v7.x/win-x64/node.exe
+  - curl -LsSO https://nodejs.org/dist/latest-v7.x/win-x64/node.lib
   - cd ..
   - cd sabi.js
   - npm install --production --msvs_version=2013

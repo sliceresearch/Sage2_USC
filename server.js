@@ -71,9 +71,10 @@ var Radialmenu          = require('./src/node-radialmenu');       // radial menu
 var Sage2ItemList       = require('./src/node-sage2itemlist');    // list of SAGE2 items
 var Sagepointer         = require('./src/node-sagepointer');      // handles sage pointers (creation, location, etc.)
 var StickyItems         = require('./src/node-stickyitems');
-var registry            = require('./src/node-registry');        // Registry Manager
+var registry            = require('./src/node-registry');         // Registry Manager
 var FileBufferManager	= require('./src/node-filebuffer');
-var PartitionList				= require('./src/node-partitionlist');		// list of SAGE2 Partitions
+var PartitionList	= require('./src/node-partitionlist');    // list of SAGE2 Partitions
+
 //
 // Globals
 //
@@ -122,9 +123,12 @@ var drawingManager;
 var pressingAlt        = true;
 var fileBufferManager  = new FileBufferManager();
 
-var partitions				 = new PartitionList(config);
-var draggingPartition	 = {};
-var cuttingPartition 	 = {};
+// Array containing the remote sites informations (toolbar on top of wall)
+var remoteSites = [];
+
+var partitions        = new PartitionList(config);
+var draggingPartition = {};
+var cuttingPartition  = {};
 
 // Add extra folders defined in the configuration file
 if (config.folders) {
@@ -358,6 +362,9 @@ function initializeSage2Server() {
 
 	// initialize dialog boxes
 	setUpDialogsAsInteractableObjects();
+
+	// Setup the remote sites for collaboration
+	initalizeRemoteSites();
 
 	// Set up http and https servers
 	var httpServerApp = new HttpServer(publicDirectory);
@@ -4762,42 +4769,44 @@ function manageUploadedFiles(files, position, ptrName, ptrColor, openAfter) {
 
 // **************  Remote Site Collaboration *****************
 
-var remoteSites = [];
-if (config.remote_sites) {
-	remoteSites = new Array(config.remote_sites.length);
-	config.remote_sites.forEach(function(element, index, array) {
-		var protocol = (element.secure === true) ? "wss" : "ws";
-		var wsURL = protocol + "://" + element.host + ":" + element.port.toString();
+function initalizeRemoteSites() {
+	if (config.remote_sites) {
+		remoteSites = new Array(config.remote_sites.length);
+		config.remote_sites.forEach(function(element, index, array) {
+			var protocol = (element.secure === true) ? "wss" : "ws";
+			var wsURL = protocol + "://" + element.host + ":" + element.port.toString();
 
-		var remote = createRemoteConnection(wsURL, element, index);
+			var rGeom = {};
+			rGeom.w = Math.min((0.5 * config.totalWidth) / remoteSites.length, config.ui.titleBarHeight * 6)
+				- (0.16 * config.ui.titleBarHeight);
+			rGeom.h = 0.84 * config.ui.titleBarHeight;
+			rGeom.x = (0.5 * config.totalWidth) + ((rGeom.w + (0.16 * config.ui.titleBarHeight))
+				* (index - (remoteSites.length / 2))) + (0.08 * config.ui.titleBarHeight);
+			rGeom.y = 0.08 * config.ui.titleBarHeight;
 
-		var rGeom = {};
-		rGeom.w = Math.min((0.5 * config.totalWidth) / remoteSites.length, config.ui.titleBarHeight * 6)
-			- (0.16 * config.ui.titleBarHeight);
-		rGeom.h = 0.84 * config.ui.titleBarHeight;
-		rGeom.x = (0.5 * config.totalWidth) + ((rGeom.w + (0.16 * config.ui.titleBarHeight)) * (index - (remoteSites.length / 2)))
-			+ (0.08 * config.ui.titleBarHeight);
-		rGeom.y = 0.08 * config.ui.titleBarHeight;
+			// Build the object
+			remoteSites[index] = {
+				name: element.name,
+				wsio: null,
+				connected: "off",
+				geometry: rGeom,
+				index: index
+			};
+			// Create a websocket connection to the site
+			remoteSites[index].wsio = createRemoteConnection(wsURL, element, index);
 
-		// Build the object
-		remoteSites[index] = {
-			name: element.name,
-			wsio: remote,
-			connected: "off",
-			geometry: rGeom,
-			index: index
-		};
-		// Add the gemeotry for the button
-		interactMgr.addGeometry("remote_" + index, "staticUI", "rectangle", rGeom,  true, index, remoteSites[index]);
+			// Add the gemeotry for the button
+			interactMgr.addGeometry("remote_" + index, "staticUI", "rectangle", rGeom,  true, index, remoteSites[index]);
 
-		// attempt to connect every 15 seconds, if connection failed
-		setInterval(function() {
-			if (remoteSites[index].connected !== "on") {
-				var rem = createRemoteConnection(wsURL, element, index);
-				remoteSites[index].wsio = rem;
-			}
-		}, 15000);
-	});
+			// attempt to connect every 15 seconds, if connection failed
+			setInterval(function() {
+				if (remoteSites[index].connected !== "on") {
+					var rem = createRemoteConnection(wsURL, element, index);
+					remoteSites[index].wsio = rem;
+				}
+			}, 15000);
+		});
+	}
 }
 
 function manageRemoteConnection(remote, site, index) {
@@ -5631,7 +5640,8 @@ function pointerPressOnOpenSpace(uniqueID, pointerX, pointerY, data) {
 
 function pointerPressOnStaticUI(uniqueID, pointerX, pointerY, data, obj, localPt) {
 	// If the remote site is active (green button)
-	if (obj.data.connected === "on") {
+	// also disable action through the web ui (visible pointer)
+	if (obj.data.connected === "on" && sagePointers[uniqueID].visible) {
 		// Validate the remote address
 		var remoteSite = findRemoteSiteByConnection(obj.data.wsio);
 
