@@ -307,8 +307,10 @@ var movieSyncRC = SAGE2_App.extend({
 		if (needToSendLoopStatusUpdate) {
 			// for each player AFTER master, set to opposite in order to toggle
 			for (let i = 1; i < this.state.associatedPlayers.length; i++) {
-				this.state.associatedPlayers[i].state.looped = !this.loopStatus;
-				this.state.associatedPlayers[i].toggleLoop(new Date());
+				if (this.state.associatedPlayers[i].state.looped !== this.loopStatus) {
+					this.state.associatedPlayers[i].toggleLoop(new Date());
+				}
+				// this.state.associatedPlayers[i].state.looped = !this.loopStatus;
 			}
 		}
 		// now check if need to update play/pause status
@@ -401,6 +403,11 @@ var movieSyncRC = SAGE2_App.extend({
 				stroke:  "rgba(250,250,250,1.0)"
 			});
 
+			// match loop status
+			if ( this.currentMaster !== null
+				&& this.playerRemoteIsOver.state.looped !== this.loopStatus) {
+				this.playerRemoteIsOver.toggleLoop(new Date());
+			}
 			// cleaup and update
 			this.playerRemoteIsOver = null;
 			this.updateListOfAssociatedPlayers(); // updates lines
