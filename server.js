@@ -47,11 +47,8 @@ var gm            = require('gm');               // graphicsmagick
 var json5         = require('json5');            // Relaxed JSON format
 var qrimage       = require('qr-image');         // qr-code generation
 var sprint        = require('sprint');           // pretty formating (sprintf)
-var imageMagick;                                 // derived from graphicsmagick
-
+var chalk         = require('chalk');            // used for colorizing the console output
 var WebsocketIO   = require('websocketio');      // creates WebSocket server and clients
-
-var chalk 				= require('chalk');						 // used for colorizing the console output
 
 // custom node modules
 var assets              = require('./src/node-assets');           // manages the list of files
@@ -72,43 +69,32 @@ var Sage2ItemList       = require('./src/node-sage2itemlist');    // list of SAG
 var Sagepointer         = require('./src/node-sagepointer');      // handles sage pointers (creation, location, etc.)
 var StickyItems         = require('./src/node-stickyitems');
 var registry            = require('./src/node-registry');         // Registry Manager
-var FileBufferManager	= require('./src/node-filebuffer');
-var PartitionList	= require('./src/node-partitionlist');    // list of SAGE2 Partitions
+var FileBufferManager   = require('./src/node-filebuffer');
+var PartitionList       = require('./src/node-partitionlist');    // list of SAGE2 Partitions
 
 //
 // Globals
 //
 
-// Global variable for all media folders
+// derived from graphicsmagick
+var imageMagick;
+
+// All media folders
 global.mediaFolders = {};
-// System folder, defined within SAGE2 installation
-mediaFolders.system =	{
-	name: "system",
-	path: "public/uploads/",
-	url:  "/uploads",
-	upload: false
-};
-// Home directory, defined as ~/Documents/SAGE2_Media or equivalent
-mediaFolders.user =	{
-	name: "user",
-	path: path.join(sageutils.getHomeDirectory(), "Documents", "SAGE2_Media", "/"),
-	url:  "/user",
-	upload: true
-};
 // Default upload folder
-var mainFolder = mediaFolders.user;
+var mainFolder;
 
 // Session hash for security
 global.__SESSION_ID    = null;
 
+var SAGE2_version;
+var platform;
+var program;
+var config;
 var sage2Server        = null;
 var sage2ServerS       = null;
 var wsioServer         = null;
 var wsioServerS        = null;
-var SAGE2_version      = sageutils.getShortVersion();
-var platform           = os.platform() === "win32" ? "Windows" : os.platform() === "darwin" ? "Mac OS X" : "Linux";
-var program            = commandline.initializeCommandLineParameters(SAGE2_version, emitLog);
-var config             = loadConfiguration();
 var imageMagickOptions = {imageMagick: true};
 var ffmpegOptions      = {};
 var hostOrigin         = "";
@@ -116,78 +102,341 @@ var SAGE2Items         = {};
 var sharedApps         = {};
 var users              = null;
 var appLoader          = null;
-var interactMgr        = new InteractableManager();
+var interactMgr        = null;
 var mediaBlockSize     = 512;
-var startTime          = Date.now();
-var drawingManager;
+var startTime          = null;
 var pressingAlt        = true;
-var fileBufferManager  = new FileBufferManager();
+var drawingManager;
+var fileBufferManager;
 
 // Array containing the remote sites informations (toolbar on top of wall)
 var remoteSites = [];
 
-var partitions        = new PartitionList(config);
+var partitions;
 var draggingPartition = {};
 var cuttingPartition  = {};
 
-// Add extra folders defined in the configuration file
-if (config.folders) {
-	config.folders.forEach(function(f) {
-		// Add a new folder into the collection
-		mediaFolders[f.name] = {};
-		mediaFolders[f.name].name   = f.name;
-		mediaFolders[f.name].path   = f.path;
-		mediaFolders[f.name].url    = f.url;
-		mediaFolders[f.name].upload = sageutils.isTrue(f.upload);
+var publicDirectory;
+var uploadsDirectory;
+var sessionDirectory;
+var whiteboardDirectory;
+
+// global variables to manage clients
+var clients;
+var masterDisplay;
+var webBrowserClient;
+var sagePointers;
+var remoteInteraction;
+var mediaBlockStreams;
+// a dict to keep track of app instance colors(for widget connectors)
+var appUserColors;
+
+// var remoteSharingRequestDialog;
+var remoteSharingWaitDialog;
+var remoteSharingSessions;
+
+// Sticky items and window position for new clones
+var stickyAppHandler;
+
+var csdDataStructure;
+
+var omicronRunning;
+var omicronManager;
+
+///////////////////////////////////////////
+// getUniqueAppId
+///////////////////////////////////////////
+var getUniqueAppId = function(param) {
+	// reset the counter
+	if (param && param === -1) {
+		getUniqueAppId.count = 0;
+		return;
+	}
+	var id = "app_" + getUniqueAppId.count.toString();
+	getUniqueAppId.count++;
+	return id;
+};
+getUniqueAppId.count = 0;
+
+var getNewUserId = (function() {
+	var count = 0;
+	return function() {
+		var id = "usr_" + count.toString();
+		count++;
+		return id;
+	};
+}());
+///////////////////////////////////////////
+
+
+function MAIN() {
+	// System folder, defined within SAGE2 installation
+	mediaFolders.system =	{
+		name: "system",
+		path: "public/uploads/",
+		url:  "/uploads",
+		upload: false
+	};
+	// Home directory, defined as ~/Documents/SAGE2_Media or equivalent
+	mediaFolders.user =	{
+		name: "user",
+		path: path.join(sageutils.getHomeDirectory(), "Documents", "SAGE2_Media", "/"),
+		url:  "/user",
+		upload: true
+	};
+	// Default upload folder
+	mainFolder = mediaFolders.user;
+
+	SAGE2_version      = sageutils.getShortVersion();
+	platform           = os.platform() === "win32" ? "Windows" : os.platform() === "darwin" ? "Mac OS X" : "Linux";
+	program            = commandline.initializeCommandLineParameters(SAGE2_version, emitLog);
+	config             = loadConfiguration();
+	imageMagickOptions = {imageMagick: true};
+	interactMgr        = new InteractableManager();
+	mediaBlockSize     = 512;
+	startTime          = Date.now();
+	fileBufferManager  = new FileBufferManager();
+
+	partitions = new PartitionList(config);
+
+	// Add extra folders defined in the configuration file
+	if (config.folders) {
+		config.folders.forEach(function(f) {
+			// Add a new folder into the collection
+			mediaFolders[f.name] = {};
+			mediaFolders[f.name].name   = f.name;
+			mediaFolders[f.name].path   = f.path;
+			mediaFolders[f.name].url    = f.url;
+			mediaFolders[f.name].upload = sageutils.isTrue(f.upload);
+		});
+	}
+
+	publicDirectory  = "public";
+	uploadsDirectory = path.join(publicDirectory, "uploads");
+	sessionDirectory = path.join(publicDirectory, "sessions");
+	whiteboardDirectory = sessionDirectory;
+
+	// Validate all the media folders
+	for (var folder in mediaFolders) {
+		var f = mediaFolders[folder];
+		console.log(sageutils.header('Folders') + f.name + " " + f.path + " " + f.url);
+		if (!sageutils.folderExists(f.path)) {
+			sageutils.mkdirParent(f.path);
+		}
+		if (mediaFolders[f.name].upload) {
+			mediaFolders.system.upload = false;
+			// Update the main upload folder
+			uploadsDirectory = f.path;
+			mainFolder = f;
+			sessionDirectory = path.join(uploadsDirectory, "sessions");
+			whiteboardDirectory = path.join(uploadsDirectory, "whiteboard");
+			if (!sageutils.folderExists(sessionDirectory)) {
+				sageutils.mkdirParent(sessionDirectory);
+			}
+			console.log(sageutils.header('Folders') + 'upload to ' + chalk.yellow.bold(f.path));
+		}
+		var newdirs = ["apps", "assets", "images", "pdfs",
+			"tmp", "videos", "config", "whiteboard", "web"];
+
+		newdirs.forEach(function(d) {
+			var newsubdir = path.join(mediaFolders[f.name].path, d);
+			if (!sageutils.folderExists(newsubdir)) {
+				sageutils.mkdirParent(newsubdir);
+			}
+		});
+	}
+
+	// Add back all the media folders to the configuration structure
+	config.folders = mediaFolders;
+
+	console.log(sageutils.header("SAGE2") + chalk.cyan("Node Version:\t\t") +
+		chalk.green.bold(sageutils.getNodeVersion()));
+	console.log(sageutils.header("SAGE2") + chalk.cyan("Detected Server OS as:\t") +
+		chalk.green.bold(platform));
+	console.log(sageutils.header("SAGE2") + chalk.cyan("SAGE2 Short Version:\t") +
+		chalk.green.bold(SAGE2_version));
+
+	// Export variables and functions to sub modules
+	exports.config    = config;
+	exports.broadcast = broadcast;
+	exports.dirname   = path.join(__dirname, "node_modules");
+
+	// global variables to manage clients
+	clients           = [];
+	masterDisplay     = null;
+	webBrowserClient  = null;
+	sagePointers      = {};
+	remoteInteraction = {};
+	mediaBlockStreams = {};
+	appUserColors     = {};
+
+	// remoteSharingRequestDialog = null;
+	remoteSharingWaitDialog = null;
+	remoteSharingSessions   = {};
+
+	// Sticky items and window position for new clones
+	stickyAppHandler = new StickyItems();
+
+	//
+	// Catch the uncaught errors that weren't wrapped in a domain or try catch statement
+	//
+	process.on('uncaughtException', function(err) {
+		// handle the error safely
+		console.trace("SAGE2>	", err);
 	});
+
+	csdDataStructure = {};
+	csdDataStructure.allValues = {};
+	csdDataStructure.numberOfValues = 0;
+	csdDataStructure.allNamesOfValues = [];
+	csdDataStructure.xAppLaunchCoordinate = 10;
+	csdDataStructure.yAppLaunchCoordinate = 100;
+
+	// **************  System Time - Updated Every Minute *****************
+	var cDate = new Date();
+	setTimeout(function() {
+		var now;
+		setInterval(function() {
+			now = new Date();
+			broadcast('setSystemTime', {date: now.toJSON(), offset: now.getTimezoneOffset()});
+		}, 60000);
+
+		now = new Date();
+		broadcast('setSystemTime', {date: now.toJSON(), offset: now.getTimezoneOffset()});
+	}, (61 - cDate.getSeconds()) * 1000);
+	// ***************************************************************************************
+
+	// Initialize Server
+	initializeSage2Server();
+
+	// **************  Omicron section *****************
+	omicronRunning = false;
+	omicronManager = new Omicron(config);
+
+	// Set callback functions so Omicron can generate SAGEPointer events
+	omicronManager.setCallbacks(
+			sagePointers,
+			createSagePointer,
+			showPointer,
+			pointerPress,
+			pointerMove,
+			pointerPosition,
+			hidePointer,
+			pointerRelease,
+			pointerScrollStart,
+			pointerScroll,
+			pointerScrollEnd,
+			pointerDblClick,
+			pointerCloseGesture,
+			keyDown,
+			keyUp,
+			keyPress,
+			createRadialMenu,
+			omi_pointerChangeMode,
+			remoteInteraction
+		);
+	omicronManager.linkDrawingManager(drawingManager);
+
+	// Place callback for success in the 'listen' call for HTTPS
+
+	sage2ServerS.on('listening', function(e) {
+		// Success
+		console.log(sageutils.header("SAGE2") + chalk.bold("Serving Securely:"));
+		console.log(sageutils.header("SAGE2") + "- Web UI:\t " + chalk.cyan.bold.underline("https://" +
+			config.host + ":" + config.secure_port));
+		console.log(sageutils.header("SAGE2") + "- Web console:\t " + chalk.cyan.bold.underline("https://" + config.host +
+			":" + config.secure_port + "/admin/console.html"));
+	});
+
+	// Place callback for errors in the 'listen' call for HTTP
+	sage2Server.on('error', function(e) {
+		if (e.code === 'EACCES') {
+			console.log(sageutils.header("HTTP_Server") + "You are not allowed to use the port: ", config.port);
+			console.log(sageutils.header("HTTP_Server") + "  use a different port or get authorization (sudo, setcap, ...)");
+			process.exit(1);
+		} else if (e.code === 'EADDRINUSE') {
+			console.log(sageutils.header("HTTP_Server") + "The port is already in use by another process:", config.port);
+			console.log(sageutils.header("HTTP_Server") + "  use a different port or stop the offending process");
+			process.exit(1);
+		} else {
+			console.log(sageutils.header("HTTP_Server") + "Error in the listen call: ", e.code);
+			process.exit(1);
+		}
+	});
+
+	// Place callback for success in the 'listen' call for HTTP
+	sage2Server.on('listening', function(e) {
+		// Success
+		var ui_url = chalk.cyan.bold.underline("http://" + config.host + ":" + config.port);
+		var dp_url = chalk.cyan.bold.underline("http://" + config.host + ":" + config.port +
+			"/display.html?clientID=0");
+		var am_url = chalk.cyan.bold.underline("http://" + config.host + ":" + config.port +
+			"/audioManager.html");
+		if (global.__SESSION_ID) {
+			ui_url = chalk.cyan.bold.underline("http://" + config.host + ":" + config.port +
+				"/session.html?hash=" + global.__SESSION_ID);
+			dp_url = chalk.cyan.bold.underline("http://" + config.host + ":" + config.port +
+				"/session.html?page=display.html?clientID=0&hash=" + global.__SESSION_ID);
+			am_url = chalk.cyan.bold.underline("http://" + config.host + ":" + config.port +
+				"/session.html?page=audioManager.html&hash=" + global.__SESSION_ID);
+		}
+
+		console.log(sageutils.header("SAGE2") + chalk.bold("Serving:"));
+		console.log(sageutils.header("SAGE2") + "- Web UI:\t " + ui_url);
+		console.log(sageutils.header("SAGE2") + "- Display 0:\t "      + dp_url);
+		console.log(sageutils.header("SAGE2") + "- Audio manager: "  + am_url);
+	});
+
+	// KILL intercept
+	process.on('SIGTERM', quitSAGE2);
+	// CTRL-C intercept
+	process.on('SIGINT',  quitSAGE2);
+
+
+	// Start the HTTP server (listen for IPv4 addresses 0.0.0.0)
+	sage2Server.listen(config.port, "0.0.0.0");
+	// Start the HTTPS server (listen for IPv4 addresses 0.0.0.0)
+	sage2ServerS.listen(config.secure_port, "0.0.0.0");
+
+	// ***************************************************************************************
+
+	// Load session file if specified on the command line (-s)
+	if (program.session) {
+		setTimeout(function() {
+			// if -s specified without argument
+			if (program.session === true) {
+				loadSession();
+			} else {
+				// if argument specified
+				loadSession(program.session);
+			}
+		}, 1000);
+	}
+
+	// Command loop: reading input commands - SHOULD MOVE LATER: INSIDE CALLBACK AFTER SERVER IS LISTENING
+	if (program.interactive) {
+		// Create line reader for stdin and stdout
+		var shell = readline.createInterface({
+			input:  process.stdin, output: process.stdout
+		});
+
+		// Set the prompt
+		shell.setPrompt("> ");
+
+		// Callback for each line
+		shell.on('line', function(line) {
+			processInputCommand(line);
+			shell.prompt();
+		}).on('close', function() {
+			// Saving stuff
+			quitSAGE2();
+		});
+	}
+
 }
 
-var publicDirectory  = "public";
-var uploadsDirectory = path.join(publicDirectory, "uploads");
-var sessionDirectory = path.join(publicDirectory, "sessions");
-var whiteboardDirectory = sessionDirectory;
-// Validate all the media folders
-for (var folder in mediaFolders) {
-	var f = mediaFolders[folder];
-	console.log(sageutils.header('Folders') + f.name + " " + f.path + " " + f.url);
-	if (!sageutils.folderExists(f.path)) {
-		sageutils.mkdirParent(f.path);
-	}
-	if (mediaFolders[f.name].upload) {
-		mediaFolders.system.upload = false;
-		// Update the main upload folder
-		uploadsDirectory = f.path;
-		mainFolder = f;
-		sessionDirectory = path.join(uploadsDirectory, "sessions");
-		whiteboardDirectory = path.join(uploadsDirectory, "whiteboard");
-		if (!sageutils.folderExists(sessionDirectory)) {
-			sageutils.mkdirParent(sessionDirectory);
-		}
-		console.log(sageutils.header('Folders') + 'upload to ' + chalk.yellow.bold(f.path));
-	}
-	var newdirs = ["apps", "assets", "images", "pdfs",
-		"tmp", "videos", "config", "whiteboard", "web"];
+MAIN();
 
-	newdirs.forEach(function(d) {
-		var newsubdir = path.join(mediaFolders[f.name].path, d);
-		if (!sageutils.folderExists(newsubdir)) {
-			sageutils.mkdirParent(newsubdir);
-		}
-	});
-}
-
-// Add back all the media folders to the configuration structure
-config.folders = mediaFolders;
-
-console.log(sageutils.header("SAGE2") + chalk.cyan("Node Version:\t\t") +
-	chalk.green.bold(sageutils.getNodeVersion()));
-console.log(sageutils.header("SAGE2") + chalk.cyan("Detected Server OS as:\t") +
-	chalk.green.bold(platform));
-console.log(sageutils.header("SAGE2") + chalk.cyan("SAGE2 Short Version:\t") +
-	chalk.green.bold(SAGE2_version));
-
-// Initialize Server
-initializeSage2Server();
 
 /**
  * initialize the SAGE2 server
@@ -453,9 +702,9 @@ function sendTouchToPalette(paletteID, x, y) {
 		data: {button: "left"},
 		date: Date.now()
 	};
-
 	broadcast('eventInItem', event);
 }
+
 function sendDragToPalette(paletteID, x, y) {
 	var ePosition = {x: x, y: y};
 	var eUser = {id: 1, label: "Touch", color: "none"};
@@ -468,7 +717,6 @@ function sendDragToPalette(paletteID, x, y) {
 		data: {button: "left"},
 		date: Date.now()
 	};
-
 	broadcast('eventInItem', event);
 }
 
@@ -484,7 +732,6 @@ function sendStyleToPalette(paletteID, style) {
 		data: {style: style},
 		date: Date.now()
 	};
-
 	broadcast('eventInItem', event);
 }
 
@@ -500,9 +747,7 @@ function sendSessionListToPalette(paletteID, data) {
 		data: data,
 		date: Date.now()
 	};
-
 	broadcast('eventInItem', event);
-
 }
 
 function sendChangeToPalette(paletteID, data) {
@@ -517,7 +762,6 @@ function sendChangeToPalette(paletteID, data) {
 		data: data,
 		date: Date.now()
 	};
-
 	broadcast('eventInItem', event);
 }
 
@@ -534,7 +778,6 @@ function movePaletteTo(paletteID, x, y, w, h) {
 			elemHeight: h,
 			date: new Date()
 		};
-
 		moveApplicationWindow(null, moveApp, null);
 	}
 }
@@ -579,51 +822,6 @@ function broadcast(name, data) {
 	wsioServer.broadcast(name, data);
 	wsioServerS.broadcast(name, data);
 }
-
-// Export variables and functions to sub modules
-exports.config    = config;
-exports.broadcast = broadcast;
-exports.dirname   = path.join(__dirname, "node_modules");
-
-
-/**
- * Print a message to all the web consoles
- *
- * @method     emitLog
- * @param      {Object}  data    object to print
- */
-function emitLog(data) {
-	if (wsioServer === null || wsioServerS === null) {
-		return;
-	}
-	broadcast('console', data);
-}
-
-
-// global variables to manage clients
-var clients           = [];
-var masterDisplay     = null;
-var webBrowserClient  = null;
-var sagePointers      = {};
-var remoteInteraction = {};
-var mediaBlockStreams = {};
-var appUserColors     = {}; // a dict to keep track of app instance colors(for widget connectors)
-
-// var remoteSharingRequestDialog = null;
-var remoteSharingWaitDialog    = null;
-var remoteSharingSessions      = {};
-
-// Sticky items and window position for new clones
-var stickyAppHandler     = new StickyItems();
-
-
-//
-// Catch the uncaught errors that weren't wrapped in a domain or try catch statement
-//
-process.on('uncaughtException', function(err) {
-	// handle the error safely
-	console.trace("SAGE2>	", err);
-});
 
 
 /**
@@ -4366,27 +4564,6 @@ function loadConfiguration() {
 	return userConfig;
 }
 
-var getUniqueAppId = function(param) {
-	// reset the counter
-	if (param && param === -1) {
-		getUniqueAppId.count = 0;
-		return;
-	}
-	var id = "app_" + getUniqueAppId.count.toString();
-	getUniqueAppId.count++;
-	return id;
-};
-getUniqueAppId.count = 0;
-
-var getNewUserId = (function() {
-	var count = 0;
-	return function() {
-		var id = "usr_" + count.toString();
-		count++;
-		return id;
-	};
-}());
-
 function getUniqueDataSharingId(remoteHost, remotePort, caller) {
 	var id;
 	if (caller === true) {
@@ -4903,98 +5080,6 @@ function createRemoteConnection(wsURL, element, index) {
 	return remote;
 }
 
-// **************  System Time - Updated Every Minute *****************
-var cDate = new Date();
-setTimeout(function() {
-	var now;
-	setInterval(function() {
-		now = new Date();
-		broadcast('setSystemTime', {date: now.toJSON(), offset: now.getTimezoneOffset()});
-	}, 60000);
-
-	now = new Date();
-	broadcast('setSystemTime', {date: now.toJSON(), offset: now.getTimezoneOffset()});
-}, (61 - cDate.getSeconds()) * 1000);
-
-
-// ***************************************************************************************
-
-// Place callback for success in the 'listen' call for HTTPS
-
-sage2ServerS.on('listening', function(e) {
-	// Success
-	console.log(sageutils.header("SAGE2") + chalk.bold("Serving Securely:"));
-	console.log(sageutils.header("SAGE2") + "- Web UI:\t " + chalk.cyan.bold.underline("https://" +
-		config.host + ":" + config.secure_port));
-	console.log(sageutils.header("SAGE2") + "- Web console:\t " + chalk.cyan.bold.underline("https://" + config.host +
-		":" + config.secure_port + "/admin/console.html"));
-});
-
-// Place callback for errors in the 'listen' call for HTTP
-sage2Server.on('error', function(e) {
-	if (e.code === 'EACCES') {
-		console.log(sageutils.header("HTTP_Server") + "You are not allowed to use the port: ", config.port);
-		console.log(sageutils.header("HTTP_Server") + "  use a different port or get authorization (sudo, setcap, ...)");
-		process.exit(1);
-	} else if (e.code === 'EADDRINUSE') {
-		console.log(sageutils.header("HTTP_Server") + "The port is already in use by another process:", config.port);
-		console.log(sageutils.header("HTTP_Server") + "  use a different port or stop the offending process");
-		process.exit(1);
-	} else {
-		console.log(sageutils.header("HTTP_Server") + "Error in the listen call: ", e.code);
-		process.exit(1);
-	}
-});
-
-// Place callback for success in the 'listen' call for HTTP
-sage2Server.on('listening', function(e) {
-	// Success
-	var ui_url = chalk.cyan.bold.underline("http://" + config.host + ":" + config.port);
-	var dp_url = chalk.cyan.bold.underline("http://" + config.host + ":" + config.port +
-		"/display.html?clientID=0");
-	var am_url = chalk.cyan.bold.underline("http://" + config.host + ":" + config.port +
-		"/audioManager.html");
-	if (global.__SESSION_ID) {
-		ui_url = chalk.cyan.bold.underline("http://" + config.host + ":" + config.port +
-			"/session.html?hash=" + global.__SESSION_ID);
-		dp_url = chalk.cyan.bold.underline("http://" + config.host + ":" + config.port +
-			"/session.html?page=display.html?clientID=0&hash=" + global.__SESSION_ID);
-		am_url = chalk.cyan.bold.underline("http://" + config.host + ":" + config.port +
-			"/session.html?page=audioManager.html&hash=" + global.__SESSION_ID);
-	}
-
-	console.log(sageutils.header("SAGE2") + chalk.bold("Serving:"));
-	console.log(sageutils.header("SAGE2") + "- Web UI:\t " + ui_url);
-	console.log(sageutils.header("SAGE2") + "- Display 0:\t "      + dp_url);
-	console.log(sageutils.header("SAGE2") + "- Audio manager: "  + am_url);
-});
-
-// KILL intercept
-process.on('SIGTERM', quitSAGE2);
-// CTRL-C intercept
-process.on('SIGINT',  quitSAGE2);
-
-
-// Start the HTTP server (listen for IPv4 addresses 0.0.0.0)
-sage2Server.listen(config.port, "0.0.0.0");
-// Start the HTTPS server (listen for IPv4 addresses 0.0.0.0)
-sage2ServerS.listen(config.secure_port, "0.0.0.0");
-
-
-// ***************************************************************************************
-
-// Load session file if specified on the command line (-s)
-if (program.session) {
-	setTimeout(function() {
-		// if -s specified without argument
-		if (program.session === true) {
-			loadSession();
-		} else {
-			// if argument specified
-			loadSession(program.session);
-		}
-	}, 1000);
-}
 
 function getSAGE2Path(getName) {
 	// pathname: result of the search
@@ -5228,26 +5313,6 @@ function processInputCommand(line) {
 			break;
 		}
 	}
-}
-
-// Command loop: reading input commands - SHOULD MOVE LATER: INSIDE CALLBACK AFTER SERVER IS LISTENING
-if (program.interactive) {
-	// Create line reader for stdin and stdout
-	var shell = readline.createInterface({
-		input:  process.stdin, output: process.stdout
-	});
-
-	// Set the prompt
-	shell.setPrompt("> ");
-
-	// Callback for each line
-	shell.on('line', function(line) {
-		processInputCommand(line);
-		shell.prompt();
-	}).on('close', function() {
-		// Saving stuff
-		quitSAGE2();
-	});
 }
 
 
@@ -6834,7 +6899,6 @@ function pointerMoveOnPartition(uniqueID, pointerX, pointerY, data, obj, localPt
 
 	switch (btn.id) {
 		case "titleBar":
-
 			break;
 		case "dragCorner":
 			if (remoteInteraction[uniqueID].hoverCornerItem === null) {
@@ -6849,16 +6913,12 @@ function pointerMoveOnPartition(uniqueID, pointerX, pointerY, data, obj, localPt
 			}
 			break;
 		case "tileButton":
-
 			break;
 		case "clearButton":
-
 			break;
 		case "fullscreenButton":
-
 			break;
 		case "closeButton":
-
 			break;
 	}
 }
@@ -8670,38 +8730,12 @@ function findApplicationPortal(app) {
 
 
 // **************  Omicron section *****************
-var omicronRunning = false;
-var omicronManager = new Omicron(config);
 
 // Helper function for omicron to switch pointer mode
 function omi_pointerChangeMode(uniqueID) {
 	remoteInteraction[uniqueID].toggleModes();
 	broadcast('changeSagePointerMode', {id: sagePointers[uniqueID].id, mode: remoteInteraction[uniqueID].interactionMode});
 }
-
-// Set callback functions so Omicron can generate SAGEPointer events
-omicronManager.setCallbacks(
-		sagePointers,
-		createSagePointer,
-		showPointer,
-		pointerPress,
-		pointerMove,
-		pointerPosition,
-		hidePointer,
-		pointerRelease,
-		pointerScrollStart,
-		pointerScroll,
-		pointerScrollEnd,
-		pointerDblClick,
-		pointerCloseGesture,
-		keyDown,
-		keyUp,
-		keyPress,
-		createRadialMenu,
-		omi_pointerChangeMode,
-		remoteInteraction
-	);
-omicronManager.linkDrawingManager(drawingManager);
 
 /* ****** Radial Menu section ************************************************************** */
 // createMediabrowser();
@@ -9169,10 +9203,9 @@ function csdGetPathOfApp(appName) {
 	var apps = assets.listApps();
 	// for each of the apps known to SAGE2, usually everything in public/uploads/apps
 	for (var i = 0; i < apps.length; i++) {
-		if (// if the name contains appName
-			apps[i].exif.FileName.indexOf(appName) === 0
-			|| apps[i].id.indexOf(appName) !== -1
-		) {
+		// if the name contains appName
+		if (apps[i].exif.FileName.indexOf(appName) === 0
+			|| apps[i].id.indexOf(appName) !== -1) {
 			return apps[i].id; // this is the path.
 		} // end if this app contains the specified name
 	} // end for each application available.
@@ -9336,12 +9369,6 @@ var csdDataStructure = {};
 			NOTE: broadcast currently only supports 1 parameter.
 	}
 */
-var csdDataStructure = {};
-csdDataStructure.allValues = {};
-csdDataStructure.numberOfValues = 0;
-csdDataStructure.allNamesOfValues = [];
-csdDataStructure.xAppLaunchCoordinate = 10;
-csdDataStructure.yAppLaunchCoordinate = 100;
 
 /**
 Will set the named value.
@@ -9710,11 +9737,11 @@ function wsRequestNewTitle(wsio, data) {
 }
 
 /**
-	* Create a new screen partition with dimensions specified in data
-	*
-	* @method wsCreatePartition
-	* @param {object} data - The dimensions of the partition to be created
-	*/
+ * Create a new screen partition with dimensions specified in data
+ *
+ * @method wsCreatePartition
+ * @param {object} data - The dimensions of the partition to be created
+ */
 function wsCreatePartition(wsio, data) {
 	// Create Test partition
 	console.log(sageutils.header('Partition') + "Creating a new partition");
@@ -9725,11 +9752,11 @@ function wsCreatePartition(wsio, data) {
 }
 
 /**
-	* Create a new screen partition with dimensions specified in data
-	*
-	* @method wsPartitionScreen
-	* @param {object} data - Contains the layout specificiation with which partitions will be created
-	*/
+ * Create a new screen partition with dimensions specified in data
+ *
+ * @method wsPartitionScreen
+ * @param {object} data - Contains the layout specificiation with which partitions will be created
+ */
 function wsPartitionScreen(wsio, data) {
 	console.log(sageutils.header('Partition') + "Dividing SAGE2 into partitions");
 
@@ -9789,14 +9816,13 @@ function divideAreaPartitions(data, x, y, width, height) {
 			}
 		}
 	}
-
 }
 
 /**
-	* Remove all partitions
-	*
-	* @method wsDeleteAllPartitions
-	*/
+ * Remove all partitions
+ *
+ * @method wsDeleteAllPartitions
+ */
 function wsDeleteAllPartitions(wsio) {
 	for (var key in partitions.list) {
 		// broadcast('deletePartitionWindow', partitions.list[key].getDisplayInfo());
@@ -9808,21 +9834,21 @@ function wsDeleteAllPartitions(wsio) {
 }
 
 /**
-	* Cause all apps to be associated with a partition if it is above one
-	* (WebSocket method)
-	*
-	* @method wsPartitionsGrabAllContent
-	*/
+ * Cause all apps to be associated with a partition if it is above one
+ * (WebSocket method)
+ *
+ * @method wsPartitionsGrabAllContent
+ */
 function wsPartitionsGrabAllContent(wsio) {
 	// associate any existing apps with partitions
 	partitionsGrabAllContent();
 }
 
 /**
-	* Cause all apps to be associated with a partition if it is above one
-	*
-	* @method partitionsGrabAllContent
-	*/
+ * Cause all apps to be associated with a partition if it is above one
+ *
+ * @method partitionsGrabAllContent
+ */
 function partitionsGrabAllContent() {
 	// associate any existing apps with partitions
 	for (var key in SAGE2Items.applications.list) {
@@ -9837,12 +9863,12 @@ function partitionsGrabAllContent() {
 }
 
 /**
-	* Create a new partition with a given set of dimensions and a color
-	*
-	* @method createPartition
-	* @param {object} dims - The dimensions of a partition in top, left, width, height
-	* @param {string} color - The color of the partition
-	*/
+ * Create a new partition with a given set of dimensions and a color
+ *
+ * @method createPartition
+ * @param {object} dims - The dimensions of a partition in top, left, width, height
+ * @param {string} color - The color of the partition
+ */
 function createPartition(dims, color) {
 	var myPtn = partitions.newPartition(dims, interactMgr, color);
 	broadcast('createPartitionWindow', myPtn.getDisplayInfo());
@@ -9852,15 +9878,28 @@ function createPartition(dims, color) {
 }
 
 /**
-	* Create a new partition with a given set of dimensions and a color
-	*
-	* @method createPartition
-	* @param {string} id - The id of the partition to be deleted
-	*/
+ * Create a new partition with a given set of dimensions and a color
+ *
+ * @method createPartition
+ * @param {string} id - The id of the partition to be deleted
+ */
 function deletePartition(id) {
 	var ptn = partitions.list[id];
 
 	broadcast('deletePartitionWindow', ptn.getDisplayInfo());
 	partitions.removePartition(ptn.id);
 	interactMgr.removeGeometry(ptn.id, "partitions");
+}
+
+/**
+ * Print a message to all the web consoles
+ *
+ * @method     emitLog
+ * @param      {Object}  data    object to print
+ */
+function emitLog(data) {
+	if (wsioServer === null || wsioServerS === null) {
+		return;
+	}
+	broadcast('console', data);
 }
