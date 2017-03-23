@@ -662,7 +662,7 @@ function closeWebSocketClient(wsio) {
 	// if client is a remote site, send disconnect message
 	var remote = findRemoteSiteByConnection(wsio);
 	if (remote !== null) {
-		console.log(sageutils.header("Remote") + "\"" + remote.name + "\" now offline");
+		console.log(sageutils.header("Remote") + chalk.cyan(remote.name) + " now offline");
 		remote.connected = "off";
 		var site = {name: remote.name, connected: remote.connected};
 		broadcast('connectedToRemoteSite', site);
@@ -4846,7 +4846,7 @@ function manageRemoteConnection(remote, site, index) {
 	remote.clientType = "remoteServer";
 
 	remote.onclose(function() {
-		console.log(sageutils.header("Remote") + "\"" + config.remote_sites[index].name + "\" offline");
+		console.log(sageutils.header("Remote") + chalk.cyan(config.remote_sites[index].name) + " offline");
 		// it was locked, keep the state locked
 		if (remoteSites[index].connected !== "locked") {
 			remoteSites[index].connected = "off";
@@ -4893,10 +4893,10 @@ function manageRemoteConnection(remote, site, index) {
 
 	remote.on('remoteConnection', function(remotesocket, data) {
 		if (data.status === "refused") {
-			console.log(sageutils.header('Remote') + "Connection refused to " + site.name + ": " + data.reason);
+			console.log(sageutils.header("Remote") + "Connection refused to " + chalk.cyan(site.name) + ": " + data.reason);
 			remoteSites[index].connected = "locked";
 		} else {
-			console.log(sageutils.header("Remote") + "Connected to " + site.name);
+			console.log(sageutils.header("Remote") + "Connected to " + chalk.cyan(site.name));
 			remoteSites[index].connected = "on";
 		}
 		var update_site = {name: remoteSites[index].name, connected: remoteSites[index].connected};
