@@ -2233,10 +2233,11 @@ function saveSession(filename) {
 		}
 
 		// Test if the application is shared (coming from another server)
-		var isShared = (sharedApps[a.id] !== undefined);
+		// appId contains a + character
+		var isNotShared = (a.id.indexOf('+') === -1);
 
 		// Ignore media streaming applications for now (desktop sharing) and shared applications
-		if (a.application !== 'media_stream' && a.application !== 'media_block_stream' && !isShared) {
+		if (a.application !== 'media_stream' && a.application !== 'media_block_stream' && isNotShared) {
 			states.apps.push(a);
 			states.numapps++;
 		}
