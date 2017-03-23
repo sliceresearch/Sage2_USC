@@ -38,6 +38,9 @@ var quickNote = SAGE2_App.extend({
 
 		// Keep a copy of the title
 		this.noteTitle = "";
+		
+		// Tracker for full page editors
+		this.saEditorIds = [];
 
 		// If loaded from session, this.state will have meaningful values.
 		this.setMessage(this.state);
@@ -146,6 +149,22 @@ var quickNote = SAGE2_App.extend({
 			this.formatAndSetTitle(msgParams.creationTime);
 		}
 		this.saveNote(msgParams.creationTime);
+
+		var dataForClient = {
+			type:       'sendDataToClient',
+			appId:      this.id,
+			clientDest: msgParams.uniqueID,
+			func:       'currentQuickNoteContent',
+			content:    this.element.innerHTML,
+			color:      this.backgroundChoice
+		};
+
+		for (var i = 0; i < this.saEditorIds.length; i++) {
+			if (this.saEditorIds[i] !== msgParams.uniqueID) {
+				dataForClient.clientDest = this.saEditorIds[i];
+				wsio.emit('csdMessage', dataForClient);
+			}
+		}
 	},
 
 	setColor: function(responseObject) {
@@ -268,9 +287,9 @@ var quickNote = SAGE2_App.extend({
 
 		entry = {};
 		entry.description = "Edit";
-		entry.callback    = "SAGE2_UI_Special_Case_Launch_App_Control";
+		entry.callback    = "SAGE2_openPage";
 		entry.parameters  = {
-			url: this.resrcPath + "soloControl.html"
+			url: this.resrcPath + "saControls.html"
 		};
 		entries.push(entry);
 
@@ -343,7 +362,6 @@ var quickNote = SAGE2_App.extend({
 				url: this.noteTitle + "\n" + this.state.clientInput + "\n"
 			}
 		});
-
 		return entries;
 	},
 
@@ -352,14 +370,26 @@ var quickNote = SAGE2_App.extend({
 		// pointerColor: pointerColor,
 		// uniqueID: uniqueID
 
-		var dataForClient = {};
-		dataForClient.type       = 'sendDataToClient';
-		dataForClient.appId      = this.id;
-		dataForClient.clientDest = obj.uniqueID;
-		dataForClient.func       = 'currentQuickNoteContent';
-		dataForClient.content    = this.element.innerHTML;
+		var dataForClient = {
+			type:       'sendDataToClient',
+			appId:      this.id,
+			clientDest: obj.uniqueID,
+			func:       'currentQuickNoteContent',
+			content:    this.element.innerHTML,
+			color:      this.backgroundChoice
+		};
 
+		if (!this.saEditorIds.includes(obj.uniqueID)) {
+			this.saEditorIds.push(obj.uniqueID);
+		}
 		wsio.emit('csdMessage', dataForClient);
+	},
+
+	removeSaEditor: function(obj) {
+		let index = this.saEditorIds.indexOf(obj.uniqueID);
+		if (index !== -1) {
+			this.saEditorIds.splice(index, 1);
+		}
 	},
 
 	requestControlPanelLayout: function(obj) {

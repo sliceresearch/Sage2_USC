@@ -6,30 +6,68 @@
 //
 // See full text, terms and conditions in the LICENSE.txt included file
 //
-// Copyright (c) 2014-15
+// Copyright (c) 2014-17
 
 "use strict";
 
-/**
- * Web user interface
- *
- * @module client
- * @submodule SAGE2_UI
- * @class SAGE2_UI
- */
-
+// marked for removal
 window.URL = (window.URL || window.webkitURL || window.msURL || window.oURL);
 navigator.getUserMedia   = (navigator.getUserMedia  || navigator.webkitGetUserMedia ||
 							navigator.mozGetUserMedia || navigator.msGetUserMedia);
 document.exitPointerLock = document.exitPointerLock ||
 							document.mozExitPointerLock  ||
 							document.webkitExitPointerLock;
+// end marked for removal
+
 var wsio;
 var appId, pointerName, pointerColor, uniqueID;
 
 
+
+/*
+For the most part, this file should not need to be edited once it is finalized.
+What happens in this file:
+	First a listener is added to detect when the page has finished loading
+		AppControl_init() called at that time
+
+	 AppControl_init()
+	 	First checks for URL parameters
+			appId
+			pointerName
+			pointerColor
+			missing any of these will prevent page from loading
+				they are automatically added as part of UI page open
+				error is thrown preventing rest of AppControl_init() from completing
+					bad practice?
+		Then create a websocket connection
+			connection is automatic to base hostname
+				defined in sage/public/src/webwebsocket.io.js
+				if wondering ..		/..		/..		/src/websocket.io.js
+							apps	uploads	public  /src/websocket.io.js
+				note: probably will init on wss, but is possible to use ws instead
+		Define open actions
+			setupListeners
+				remoteConnection
+					probably will be removed, currently used for status reporting
+				initialize
+					how this page can become aware of the ID assigned by server
+				utdConsoleMessage
+					probably will be removed, currently used for debug messages
+				dtuRmbContextMenuContents
+					might be useful to know what context menu functions are available
+					unsure, but this is the core available functionality.
+				csdSendDataToClient
+					IMPORTANT!! this is what allows app to trigger responses on this page
+					global function becomes activatable from the app
+			Cookie retrieval for session
+				TODO double check this actually gets retrieved properly.
+			Setup description of what this is to the server
+				TODO: possible to add another class of client?
+			Finally emit to server.
+*/
+
 /**
- * When the page loads, SAGE2 starts
+ * When the page loads, start communcation setup
  *
  */
 window.addEventListener("load", function(event) {
@@ -37,9 +75,7 @@ window.addEventListener("load", function(event) {
 });
 
 // ------------------------------------------------------------------------------------------------------------------
-// ------------------------------------------------------------------------------------------------------------------
 // From here should be just function definitions
-// ------------------------------------------------------------------------------------------------------------------
 // ------------------------------------------------------------------------------------------------------------------
 
 
@@ -91,22 +127,11 @@ function setupListeners() {
 		console.log("UTD message:" + data.message);
 	});
 	wsio.on("dtuRmbContextMenuContents", function(data) {
-		setRmbContextMenuEntries(data);
+		// setRmbContextMenuEntries(data);
 	});
 	wsio.on("csdSendDataToClient", function(data) {
 		// depending on the specified func does different things.
-
 		window[data.func](data);
-
-		// if (data.func === "controlPanelLayout") {
-		// 	setupControlPanel(data);
-		// } else if (data.func === "uiDrawSetCurrentStateAndShow") {
-		// 	uiDrawSetCurrentStateAndShow(data);
-		// } else if (data.func === "uiDrawMakeLine") {
-		// 	uiDrawMakeLine(data);
-		// } else {
-		// 	console.log("Error, csd data packet for client contained invalid function:" + data.func);
-		// }
 	});
 }
 // ------------------------------------------------------------------------------------------------------------------
@@ -196,110 +221,6 @@ function getUrlParameters() {
 		// TODO add more description and probably close the window
 	}
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// ------------------------------------------------------------------------------------------------------------------
-// ------------------------------------------------------------------------------------------------------------------
-// Functions involved with building the page.
-// ------------------------------------------------------------------------------------------------------------------
-// ------------------------------------------------------------------------------------------------------------------
-function requestControlDescriptionFromApp() {
-	var dataForApp = {};
-	dataForApp.app   = appId;
-	dataForApp.func  = "requestControlPanelLayout";
-	dataForApp.data  = {
-		pointerName: pointerName,
-		pointerColor: pointerColor,
-		uniqueID: uniqueID
-	}
-	dataForApp.type			= "sendDataToClient";
-	dataForApp.clientDest	= "allDisplays";
-	wsio.emit("csdMessage", dataForApp);
-}
-
-// ------------------------------------------------------------------------------------------------------------------
-// ------------------------------------------------------------------------------------------------------------------
-function setupControlPanel(data) {
-	console.log("erase me, data from app description");
-	console.dir(data);
-
-	if (data.appId != appId) {
-		console.log("Error mismatch id expected " + appId + " but got " + data.appId);
-		return;
-	}
-
-	var layout  = data.layout;
-	var item, divToBe;
-
-	for (var i = 0; i < layout.length; i++) {
-		item = layout[i];
-		
-		divToBe            = document.createElement(item.type);
-		divToBe.callback   = item.callback;
-		divToBe.parameters = item.parameters
-
-		if (item.type == "button") {
-			divToBe.textContent = "button";
-			divToBe.style.background = item.entryColor;
-
-			divToBe.clickEffect = function() {
-				var dataForApp = {};
-				dataForApp.app = appId;
-				dataForApp.func = this.callback;
-				dataForApp.parameters = this.parameters;
-				dataForApp.parameters.clientName = pointerName;
-				wsio.emit('utdCallFunctionOnApp', dataForApp);
-
-				console.log("erase me, sending click effect for button");
-				console.dir(dataForApp);
-			}
-			divToBe.addEventListener("click", divToBe.clickEffect);
-		} else if (item.type == "textarea") {
-			divToBe.rows = item.rows;
-			divToBe.cols = item.cols;
-
-			divToBe.keyPressEffect = function() {
-				var dataForApp = {};
-				dataForApp.app = appId;
-				dataForApp.func = this.callback;
-				dataForApp.parameters = this.parameters;
-				dataForApp.parameters.clientName = pointerName;
-				dataForApp.parameters.clientInput = pointerName;
-				wsio.emit('utdCallFunctionOnApp', dataForApp);
-
-				console.log("erase me, sending keyDown effect for textarea");
-				console.dir(dataForApp);
-			}
-			divToBe.addEventListener("keydown", divToBe.keyPressEffect);
-		} else {
-			console.log("Unknown layout type:" + item.type);
-		}
-
-		appControlPanelDiv.appendChild(divToBe);
-		appControlPanelDiv.appendChild(document.createElement("br"));
-	}
-} // end setupControlPanel
-
-
 
 
 

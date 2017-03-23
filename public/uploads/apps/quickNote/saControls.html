@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no" />
+
+<title>SAGE2 UI</title>
+
+<script type="text/license">
+	// SAGE2 is available for use under the SAGE2 Software License 
+	//      
+	// University of Illinois at Chicago's Electronic Visualization Laboratory (EVL)
+	// and University of Hawai'i at Manoa's Laboratory for Advanced Visualization and
+	// Applications (LAVA)
+	//      
+	// See full text, terms and conditions in the LICENSE.txt included file
+	//      
+	// Copyright (c) 2016
+</script>
+
+<!-- Websocket connection code located at /sage2/public/src -->
+<script async src="../../../src/websocket.io.js"></script>
+
+<!-- This file has automated actions -->
+<script async src="SAGE2_standAlone.js"></script>
+<!-- Put your custom code in this file -->
+<script async src="sa_main.js"></script>
+
+
+<style type="text/css">
+* {
+	font-family: Arial;
+}
+</style>
+
+</head>
+
+
+<!-- Design the body as you like -->
+
+<body>
+	<button id="SAGE2_returnToUi" style="font-size: 20px;">Return to UI</button>
+	<table>
+	<tr>
+		<td><h1>Quick Note Control Page</h1></td>
+	</tr>
+	<tr>
+	<td>
+	<table style="display:block; margin:auto;">
+		<tr>
+			<td><button class="colorButton" style="display:block; margin:auto; width: 100px; height: 50px; font-size: 20px; background: lightyellow">Yellow</button></td>
+			<td><button class="colorButton" style="display:block; margin:auto; width: 100px; height: 50px; font-size: 20px; background: lightblue">Blue</button></td>
+			<td><button class="colorButton" style="display:block; margin:auto; width: 100px; height: 50px; font-size: 20px; background: lightpink">Red</button></td>
+		</tr>
+		<tr>
+			<td><button class="colorButton" style="display:block; margin:auto; width: 100px; height: 50px; font-size: 20px; background: lightgreen">Green</button></td>
+			<td><button class="colorButton" style="display:block; margin:auto; width: 100px; height: 50px; font-size: 20px; background: lightsalmon">Orange</button></td>
+			<td><button class="colorButton" style="display:block; margin:auto; width: 100px; height: 50px; font-size: 20px; background: white">White</button></td>
+		</tr>
+		<tr>
+			<td colspan="3">
+				<textarea id="uiNoteMakerInputField" rows="5" cols="20" style="display:block; margin:auto; width:100%; font-size: 20px; overflow: scroll; resize:none"></textarea>
+			</td>
+		</tr>
+	</table>
+	</td>
+	</tr>
+	</table>
+</body>
+</html>
+

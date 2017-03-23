@@ -2467,7 +2467,7 @@ function setRmbContextMenuEntries(data) {
 							link.dispatchEvent(me);
 						}
 					}
-				} else if (this.callback === "SAGE2_UI_Special_Case_Launch_App_Control") {
+				} else if (this.callback === "SAGE2_openPage") {
 					var appUrl;
 					if (this.parameters.url !== undefined && this.parameters.url !== null) {
 						appUrl = this.parameters.url + "?appId=" + this.app;
@@ -2689,7 +2689,6 @@ function sendCsdMakeNote() {
 	data.params		= {};
 	data.params.clientName = document.getElementById('sage2PointerLabel').value;
 	data.params.clientInput = workingDiv.value;
-	workingDiv.value = ""; // clear out the input field.
 	if (document.getElementById("uiNoteMakerCheckAnonymous").checked) {
 		data.params.clientName = "Anonymous";
 	}
@@ -2700,6 +2699,10 @@ function sendCsdMakeNote() {
 		}
 	}
 	wsio.emit('csdMessage', data);
+	// clear out the input field after the enter has been applied.
+	setTimeout(function() {
+		workingDiv.value = "";
+	}, 20);
 }
 
 /**
