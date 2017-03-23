@@ -2333,11 +2333,16 @@ function saveSession(filename) {
 			"\" y=\"" + ap.top +
 			"\" style=\"fill: " + "#AAAAAA; fill-opacity: 0.5; stroke: black; stroke-width: 5;\">" + "</rect>";
 
-
-		var iconPath = path.join(mainFolder.path, path.relative("/user", ap.icon)) + "_256.jpg";
+		var iconPath;
+		if (ap.icon) {
+			// the application has a icon defined
+			iconPath = path.join(mainFolder.path, path.relative("/user", ap.icon)) + "_256.jpg";
+		} else {
+			// application does not have an icon (for instance, shared applciation)
+			iconPath = path.join(mainFolder.path, "assets/apps/unknownapp") + "_256.jpg";
+		}
 
 		var iconImageData = "";
-
 		try {
 			iconImageData = new Buffer(fs.readFileSync(iconPath)).toString('base64');
 		} catch (error) {
