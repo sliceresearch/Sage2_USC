@@ -777,14 +777,15 @@ function wsAddClient(wsio, data) {
 			// var remoteport = wsio.ws.upgradeReq.connection.remotePort;
 
 			// Checking if it's a known server
-			config.remote_sites.forEach(function(element, index, array) {
-				if (element.host === data.host &&
-					element.port === data.port &&
-					remoteSites[index].connected === "on") {
-					console.log(sageutils.header("Connect") + 'known remote site ' + data.host + ':' + data.port);
-					manageRemoteConnection(wsio, element, index);
-				}
-			});
+			// bug: Seems to create a race condition and works without, so far
+			// config.remote_sites.forEach(function(element, index, array) {
+			// 	if (element.host === data.host &&
+			// 		element.port === data.port &&
+			// 		remoteSites[index].connected === "on") {
+			// 		console.log(sageutils.header("Connect") + 'known remote site ' + data.host + ':' + data.port);
+			// 		manageRemoteConnection(wsio, element, index);
+			// 	}
+			// });
 		}
 	}
 
