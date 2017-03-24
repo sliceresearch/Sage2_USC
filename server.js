@@ -662,7 +662,7 @@ function closeWebSocketClient(wsio) {
 	// if client is a remote site, send disconnect message
 	var remote = findRemoteSiteByConnection(wsio);
 	if (remote !== null) {
-		console.log(sageutils.header("Remote") + "\"" + remote.name + "\" now offline");
+		console.log(sageutils.header("Remote") + chalk.cyan(remote.name) + " now offline");
 		remote.connected = "off";
 		var site = {name: remote.name, connected: remote.connected};
 		broadcast('connectedToRemoteSite', site);
@@ -777,14 +777,15 @@ function wsAddClient(wsio, data) {
 			// var remoteport = wsio.ws.upgradeReq.connection.remotePort;
 
 			// Checking if it's a known server
-			config.remote_sites.forEach(function(element, index, array) {
-				if (element.host === data.host &&
-					element.port === data.port &&
-					remoteSites[index].connected === "on") {
-					console.log(sageutils.header("Connect") + 'known remote site ' + data.host + ':' + data.port);
-					manageRemoteConnection(wsio, element, index);
-				}
-			});
+			// bug: Seems to create a race condition and works without, so far
+			// config.remote_sites.forEach(function(element, index, array) {
+			// 	if (element.host === data.host &&
+			// 		element.port === data.port &&
+			// 		remoteSites[index].connected === "on") {
+			// 		console.log(sageutils.header("Connect") + 'known remote site ' + data.host + ':' + data.port);
+			// 		manageRemoteConnection(wsio, element, index);
+			// 	}
+			// });
 		}
 	}
 
@@ -2240,8 +2241,13 @@ function saveSession(filename) {
 			// remove reference to parent partition if it exists
 			delete a.partition;
 		}
-		// Ignore media streaming applications for now (desktop sharing)
-		if (a.application !== 'media_stream' && a.application !== 'media_block_stream') {
+
+		// Test if the application is shared (coming from another server)
+		// appId contains a + character
+		var isNotShared = (a.id.indexOf('+') === -1);
+
+		// Ignore media streaming applications for now (desktop sharing) and shared applications
+		if (a.application !== 'media_stream' && a.application !== 'media_block_stream' && isNotShared) {
 			states.apps.push(a);
 			states.numapps++;
 		}
@@ -2339,11 +2345,16 @@ function saveSession(filename) {
 			"\" y=\"" + ap.top +
 			"\" style=\"fill: " + "#AAAAAA; fill-opacity: 0.5; stroke: black; stroke-width: 5;\">" + "</rect>";
 
-
-		var iconPath = path.join(mainFolder.path, path.relative("/user", ap.icon)) + "_256.jpg";
+		var iconPath;
+		if (ap.icon) {
+			// the application has a icon defined
+			iconPath = path.join(mainFolder.path, path.relative("/user", ap.icon)) + "_256.jpg";
+		} else {
+			// application does not have an icon (for instance, shared applciation)
+			iconPath = path.join(mainFolder.path, "assets/apps/unknownapp") + "_256.jpg";
+		}
 
 		var iconImageData = "";
-
 		try {
 			iconImageData = new Buffer(fs.readFileSync(iconPath)).toString('base64');
 		} catch (error) {
@@ -4846,7 +4857,7 @@ function manageRemoteConnection(remote, site, index) {
 	remote.clientType = "remoteServer";
 
 	remote.onclose(function() {
-		console.log(sageutils.header("Remote") + "\"" + config.remote_sites[index].name + "\" offline");
+		console.log(sageutils.header("Remote") + chalk.cyan(config.remote_sites[index].name) + " offline");
 		// it was locked, keep the state locked
 		if (remoteSites[index].connected !== "locked") {
 			remoteSites[index].connected = "off";
@@ -4893,10 +4904,10 @@ function manageRemoteConnection(remote, site, index) {
 
 	remote.on('remoteConnection', function(remotesocket, data) {
 		if (data.status === "refused") {
-			console.log(sageutils.header('Remote') + "Connection refused to " + site.name + ": " + data.reason);
+			console.log(sageutils.header("Remote") + "Connection refused to " + chalk.cyan(site.name) + ": " + data.reason);
 			remoteSites[index].connected = "locked";
 		} else {
-			console.log(sageutils.header("Remote") + "Connected to " + site.name);
+			console.log(sageutils.header("Remote") + "Connected to " + chalk.cyan(site.name));
 			remoteSites[index].connected = "on";
 		}
 		var update_site = {name: remoteSites[index].name, connected: remoteSites[index].connected};
