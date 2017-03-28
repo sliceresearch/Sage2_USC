@@ -313,37 +313,32 @@ var movieSyncRC = SAGE2_App.extend({
 				// this.state.associatedPlayers[i].state.looped = !this.loopStatus;
 			}
 		}
-		// now check if need to update play/pause status
+		// now check if need to update play/pause status, master had different status from sync
 		if (needToSendPauseStatusUpdate) {
 			// for each player AFTER master, set to opposite in order to toggle
-			for (let i = 1; i < this.state.associatedPlayers.length; i++) {
-				framerate = this.state.associatedPlayers[i].state.framerate;
-				this.state.associatedPlayers[i].state.frame = masterTimestamp * framerate;
-				this.state.associatedPlayers[i].state.paused = !this.pausedStatus;
-				this.state.associatedPlayers[i].contextTogglePlayPause(new Date());
-			}
+			this.playPauseButtonEffect({}, "syncToMasterPlayPauseStatus");
 		} else {
 			// no major changes detected between master and remote
 			// check if there are frames differences in general.
 			var currentPlayerFrame, currentPlayerTimestamp, timeDiff;
-			var timeDiffTolerance = 2;
+			var timeDiffTolerance = 1;
+			if (this.pausedStatus) { // if paused, have 0 tollerance.
+				timeDiffTolerance = 0;
+			}
 			// for each player check if their timestamp too far out of sync
 			for (let i = 1; i < this.state.associatedPlayers.length; i++) {
 				framerate = this.state.associatedPlayers[i].state.framerate;
 				currentPlayerFrame = this.state.associatedPlayers[i].state.frame;
-				currentPlayerTimestamp = currentPlayerFrame / currentPlayerTimestamp;
+				currentPlayerTimestamp = currentPlayerFrame / framerate;
 				timeDiff = masterTimestamp - currentPlayerTimestamp;
 				timeDiff = Math.abs(timeDiff);
-				// if the difference is greater than tollerance, then adjust
+				// if the difference is greater than tolerance, then adjust
 				if (timeDiff > timeDiffTolerance) {
+					// specific code because these are individuals.
 					this.state.associatedPlayers[i].state.frame = masterTimestamp * framerate;
 					this.state.associatedPlayers[i].state.paused = !this.pausedStatus;
 					this.state.associatedPlayers[i].contextTogglePlayPause(new Date());
-				}
-				// if paused, then this should be stepped, diff probably caused by seek
-				// or a change in master
-				if (this.pausedStatus) {
-					this.stepEffect(0, "ignoreMaster");
+					this.stepEffect(0, "ignoreMaster", this.state.associatedPlayers[i].id);
 				}
 			}
 		} // end else check if any players have large frame difference
@@ -566,14 +561,30 @@ var movieSyncRC = SAGE2_App.extend({
 		For each of the applications, first set the state because they need to all sync to the movieSyncRC.
 		Then apply the corresponding function
 	*/
-	playPauseButtonEffect: function() {
-		for (var i = 0; i < this.state.associatedPlayers.length; i++) {
+	playPauseButtonEffect: function(responseFromUser, matchToMaster) {
+		var masterTimestamp, framerate;
+		var i = 0;
+		if (this.currentMaster !== null) {
+			framerate = this.currentMaster.state.framerate;
+			masterTimestamp = (this.currentMaster.state.frame / framerate);
+			// skip master if should ignore.
+			if (matchToMaster !== undefined) {
+				i = 1; // skip master
+				this.pausedStatus = !this.currentMaster.state.paused;
+			}
+		}
+		for (; i < this.state.associatedPlayers.length; i++) {
+			framerate = this.state.associatedPlayers[i].state.framerate;
+			this.state.associatedPlayers[i].state.frame = masterTimestamp * framerate;
 			this.state.associatedPlayers[i].state.paused = this.pausedStatus;
 			this.state.associatedPlayers[i].contextTogglePlayPause(new Date());
 		}
 		// set after, and flip the status
 		this.pausedStatus = !this.pausedStatus;
 		this.updatePausedStatusIconsAndContext();
+		if (this.pausedStatus) {
+			this.stepEffect(0);
+		}
 	},
 	updatePausedStatusIconsAndContext: function() {
 		if (this.pausedStatus) {
@@ -598,7 +609,7 @@ var movieSyncRC = SAGE2_App.extend({
 	stepForwardButtonEffect: function() {
 		this.stepEffect(1);
 	},
-	stepEffect: function(plusOrMinus1, shouldIgnoreMaster) {
+	stepEffect: function(stepOffsetFromCurrentMasterTime, shouldIgnoreMaster, specificPlayer) {
 		// will error without currentMaster
 		if (this.currentMaster === null) {
 			return;
@@ -609,16 +620,22 @@ var movieSyncRC = SAGE2_App.extend({
 			command: "seek",
 			play: !this.pausedStatus
 		};
-		data.timestamp += plusOrMinus1;
+		data.timestamp += stepOffsetFromCurrentMasterTime;
 		var ap, i = 0;
+		// if should ignore master, start at index 1 instead of 0
 		i = (shouldIgnoreMaster) ? 1 : 0;
 		for (; i < this.state.associatedPlayers.length; i++) {
+			// if this is for a specific player, then set index to that player
+			if (specificPlayer !== undefined && this.state.associatedPlayers[i].id !== specificPlayer) {
+				continue;
+			}
 			ap = this.state.associatedPlayers[i];
 			ap.state.playAfterSeek = !this.pausedStatus;
 			// the following weird looking check is for backwards compatibility
 			if (ap.shouldReceiveCommands === false) {
 				ap.shouldReceiveCommands = true;
 			}
+			// seek to master + offset;
 			ap.videoSyncCommandHandler(data);
 			if (ap.shouldReceiveCommands !== undefined) {
 				ap.shouldReceiveCommands = false;

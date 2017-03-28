@@ -224,7 +224,7 @@ var movie_player = SAGE2_BlockStreamingApp.extend({
 			this.state.paused = true;
 		}
 		this.refresh(date);
-		this.playPauseBtn.state = 1 - this.playPauseBtn.state;
+		this.playPauseBtn.state = (this.state.paused) ? 0 : 1;
 		this.getFullContextMenuAndUpdate();
 	},
 
@@ -246,7 +246,7 @@ var movie_player = SAGE2_BlockStreamingApp.extend({
 			}
 			this.state.muted = true;
 		}
-		this.muteBtn.state = 1 - this.muteBtn.state;
+		this.muteBtn.state = (this.state.muted) ? 0 : 1;
 	},
 
 	/**
