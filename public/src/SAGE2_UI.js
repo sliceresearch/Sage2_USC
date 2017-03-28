@@ -678,7 +678,7 @@ function setupListeners() {
 	});
 
 	wsio.on('csdSendDataToClient', function(data) {
-		// depending on the specified func does different things.
+		// Depending on the specified func does different things
 		if (data.func === 'uiDrawSetCurrentStateAndShow') {
 			uiDrawSetCurrentStateAndShow(data);
 		} else if (data.func === 'uiDrawMakeLine') {
@@ -688,17 +688,19 @@ function setupListeners() {
 		}
 	});
 
+	// Message from server reporting screenshot ability of display clients
 	wsio.on('reportIfCanWallScreenShot', function(data) {
 		if (data.capableOfScreenShot) {
-			// currently this is a placeholder until a button can be added
-			console.log("The server at at least 1 display capable of a wallScreenShot");
-			for (var i = 0; i < fileManager.persistMenuData.length; i++) {
-				if (fileManager.persistMenuData[i].id === "services_menu") {
-					fileManager.persistMenuData[i].submenu.push({id: "wallScreenShot_menu",  value: "Take screeshot of wall"});
-				}
-			}
+			// Get the menu item from the filemanager
+			var mymenu = $$('mymenu').getSubMenu('services_menu');
+			// Add a new option for screenshot
+			mymenu.add({
+				id:    "wallScreenShot_menu",
+				value: "Take screeshot of wall"
+			});
 		} else {
-			console.log("The server says it is not capable of screenshot, button will not be added.");
+			// No luck (need to use Electron)
+			console.log("Server> No screenshot capability");
 		}
 	});
 }

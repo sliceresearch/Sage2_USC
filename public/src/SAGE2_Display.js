@@ -60,7 +60,6 @@ var uiTimer = null;
 var uiTimerDelay;
 
 // Global variables for screenshot functionality
-var electronRequireObject  = null;
 var makingScreenShotDialog = null;
 
 // Explicitely close web socket when web browser is closed
@@ -245,19 +244,6 @@ function SAGE2_init() {
 		// Get the cookie for the session, if there's one
 		var session = getCookie("session");
 
-		var capableOfScreenShot = false;
-		if (__SAGE2__.browser.isElectron) {
-			try {
-				if (electronRequireObject === null) {
-					// ensure electron object has been initialized before using
-					electronRequireObject = require('electron');
-				}
-				capableOfScreenShot = true;
-			} catch (e) {
-				console.log("Error> Browser is detected as Electron but cannot perform require('electron')");
-			}
-		}
-
 		var clientDescription = {
 			clientType: "display",
 			clientID: clientID,
@@ -267,8 +253,7 @@ function SAGE2_init() {
 				time: true,
 				console: false
 			},
-			isMobile: __SAGE2__.browser.isMobile,
-			capableOfScreenShot: capableOfScreenShot,
+			browser: __SAGE2__.browser,
 			session: session
 		};
 		wsio.emit('addClient', clientDescription);
@@ -1330,16 +1315,11 @@ function setupListeners() {
 		if (!__SAGE2__.browser.isElectron) {
 			wsio.emit("wallScreenShotFromDisplay", {capable: false});
 		} else {
-			if (electronRequireObject === null) {
-				// ensure electron object has been initialized before using
-				electronRequireObject = require('electron');
-			}
-			electronRequireObject.remote.getCurrentWindow().capturePage(function(img) {
-				// Send the image back to the server
+			require('electron').remote.getCurrentWindow().capturePage(function(img) {
+				// Send the image back to the server as JPEG
 				wsio.emit("wallScreenShotFromDisplay", {
 					capable: true,
-					// imageAsPngData: img.toPng()
-					imageAsPngData: img.toJPEG(80)
+					imageData: img.toJPEG(80)
 				});
 				deleteElement('makingScreenShotDialog');
 			});

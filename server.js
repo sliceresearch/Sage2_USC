@@ -721,7 +721,7 @@ function wsAddClient(wsio, data) {
 			console.log(sageutils.header("WebsocketIO") + "wrong session hash - closing");
 			// Send a message back to server
 			wsio.emit('remoteConnection', {status: "refused", reason: 'wrong session hash'});
-			// if server protected and wrong hash, close the socket and byebye
+			// If server protected and wrong hash, close the socket and byebye
 			wsio.ws.close();
 			return;
 		}
@@ -790,10 +790,18 @@ function wsAddClient(wsio, data) {
 		// for mobile clients, default to window interaction mode
 		remoteInteraction[wsio.id].previousMode = 0;
 	}
-	// set if capable of a screenshot (is Electron and can access require('electron'))
-	wsio.capableOfScreenShot = data.capableOfScreenShot;
+
+	// If it's a UI, send message to enable screenshot capability
 	if (wsio.clientType === "sageUI") {
-		wsReportIfCanWallScreenShot(wsio, {});
+		reportIfCanWallScreenShot();
+	}
+
+	// If it's a display, check for Electron and send enable screenshot capability
+	if (wsio.clientType === "display") {
+		// See in browser data structure if it's Electron
+		wsio.capableOfScreenShot = data.browser.isElectron;
+		// Send message to UI clients
+		reportIfCanWallScreenShot();
 	}
 }
 
@@ -1021,7 +1029,6 @@ function setupListeners(wsio) {
 	wsio.on('csdMessage',							wsCsdMessage);
 
 	// Screenshot messages
-	wsio.on('reportIfCanWallScreenShot',            wsReportIfCanWallScreenShot);
 	wsio.on('startWallScreenShot',                  wsStartWallScreenShot);
 	wsio.on('wallScreenShotFromDisplay',            wsWallScreenShotFromDisplay);
 
@@ -9408,23 +9415,19 @@ function csdSaveDataOnServer(wsio, data) {
  * Purpose for UI init, is UI and displays do not go up at time of launch.
  * UI each need to ask server if screenshot is capable.
  *
- * @method     wsReportIfCanWallScreenShot
- * @param      {Object}  wsio    The websocket
- * @param      {Object}  data    The data
+ * @method     ReportIfCanWallScreenShot
  */
-function wsReportIfCanWallScreenShot(wsio, data) {
-	// Sends back to UI response saying it is possible or not. There may be timing issues.
-	if (wsio.clientType === "display") {
-		wsio.capableOfScreenShot = data.capableOfScreenShot;
-	} else if (wsio.clientType === "sageUI") {
-		var canWallScreenShot = false;
-		for (var i = 0; i < clients.length; i++) {
-			if (clients[i].clientType === "display" && clients[i].capableOfScreenShot === true) {
-				canWallScreenShot = true;
-			}
+function reportIfCanWallScreenShot() {
+	var numOfDisplayClients = config.displays.length;
+	var canWallScreenShot = 0;
+	for (var i = 0; i < clients.length; i++) {
+		if (clients[i].clientType === "display" && clients[i].capableOfScreenShot === true) {
+			canWallScreenShot++;
 		}
-		wsio.emit("reportIfCanWallScreenShot", {capableOfScreenShot: canWallScreenShot});
 	}
+	broadcast("reportIfCanWallScreenShot", {
+		capableOfScreenShot: (canWallScreenShot === numOfDisplayClients)
+	});
 }
 
 /**
@@ -9441,11 +9444,11 @@ function wsStartWallScreenShot(wsio, data) {
 	if (masterDisplay.startedScreenShot === undefined || masterDisplay.startedScreenShot === false) {
 		for (var i = 0; i < clients.length; i++) {
 			if (clients[i].clientType === "display") {
-				// their submission status is reset
+				// Their submission status is reset
 				clients[i].submittedScreenShot = false;
-				// necessary if displays state their status?
+				// Necessary if displays state their status?
 				if (clients[i].capableOfScreenShot === undefined) {
-					// capabilities are set on response
+					// Capabilities are set on response
 					clients[i].capableOfScreenShot = true;
 				}
 				clients[i].emit("sendServerWallScreenShot");
@@ -9520,7 +9523,7 @@ function wsWallScreenShotFromDisplay(wsio, data) {
 	// TODO: mirror overwrite is possible, is bad?
 	fileSaveObject.fileName = "wallScreenShot" + wsio.clientID + ".jpg";
 	fileSaveObject.fileType = "jpg";
-	fileSaveObject.fileContent = data.imageAsPngData;
+	fileSaveObject.fileContent = data.imageData;
 	// Create the current tile piece and tile pieces individually saved
 	csdSaveDataOnServer(wsio, fileSaveObject);
 
