@@ -928,7 +928,11 @@ function FileManager(wsio, mydiv, uniqueID) {
 				var dItems  = _this.allTable.getSelectedId(true);
 
 				if (id === "Download") {
-					downloadItem(list.getItem(listId).id);
+					// Go over the list of selected items
+					for (i = 0; i < dItems.length; i++) {
+						// Trigger the download command
+						downloadItem(dItems[i].id);
+					}
 				} else if (id === "Copy URL") {
 					copyURLItem(list.getItem(listId).id);
 				} else if (id === "Open") {
