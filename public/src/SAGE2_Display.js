@@ -60,7 +60,7 @@ var uiTimer = null;
 var uiTimerDelay;
 
 // Global variables for screenshot functionality
-var makingScreenShotDialog = null;
+var makingScreenshotDialog = null;
 
 // Explicitely close web socket when web browser is closed
 window.onbeforeunload = function() {
@@ -1310,17 +1310,17 @@ function setupListeners() {
 		}
 	});
 
-	wsio.on('sendServerWallScreenShot', function(data) {
+	wsio.on('sendServerWallScreenshot', function(data) {
 		// first tell user that screenshot is happening, because screen will freeze
-		makingScreenShotDialog = ui.buildMessageBox('makingScreenShotDialog',
+		makingScreenshotDialog = ui.buildMessageBox('makingScreenshotDialog',
 			'Please wait, wall is taking a screenshot');
 		// Add to the DOM
-		ui.main.appendChild(makingScreenShotDialog);
+		ui.main.appendChild(makingScreenshotDialog);
 		// Make the dialog visible
-		makingScreenShotDialog.style.display = "block";
+		makingScreenshotDialog.style.display = "block";
 		// now do check and perform capture if can
 		if (!__SAGE2__.browser.isElectron) {
-			wsio.emit("wallScreenShotFromDisplay", {capable: false});
+			wsio.emit("wallScreenshotFromDisplay", {capable: false});
 		} else {
 			// set a rectangle of the client size
 			var captureRect = { x: 0, y: 0, width: ui.main.clientWidth, height: ui.main.clientHeight };
@@ -1337,12 +1337,12 @@ function setupListeners() {
 					imageData = img.toJPEG(80);
 				}
 				// Send the image back to the server as JPEG
-				wsio.emit("wallScreenShotFromDisplay", {
+				wsio.emit("wallScreenshotFromDisplay", {
 					capable: true,
 					imageData: imageData
 				});
 				// Close the dialog
-				deleteElement('makingScreenShotDialog');
+				deleteElement('makingScreenshotDialog');
 			});
 		}
 	});

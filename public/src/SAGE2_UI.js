@@ -689,13 +689,13 @@ function setupListeners() {
 	});
 
 	// Message from server reporting screenshot ability of display clients
-	wsio.on('reportIfCanWallScreenShot', function(data) {
-		if (data.capableOfScreenShot) {
+	wsio.on('reportIfCanWallScreenshot', function(data) {
+		if (data.capableOfScreenshot) {
 			// Get the menu item from the filemanager
 			var mymenu = $$('mymenu').getSubMenu('services_menu');
 			// Add a new option for screenshot
 			mymenu.add({
-				id:    "wallScreenShot_menu",
+				id:    "wallScreenshot_menu",
 				value: "Take screeshot of wall"
 			});
 		} else {

@@ -570,8 +570,8 @@ function FileManager(wsio, mydiv, uniqueID) {
 			wsio.emit('deleteAllPartitions');
 		} else if (evt === "partitiongrab_menu") {
 			wsio.emit('partitionsGrabAllContent');
-		} else if (evt === "wallScreenShot_menu") {
-			wsio.emit("startWallScreenShot");
+		} else if (evt === "wallScreenshot_menu") {
+			wsio.emit("startWallScreenshot");
 		} else {
 			// dunno
 		}
