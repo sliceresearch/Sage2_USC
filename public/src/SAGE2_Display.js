@@ -1322,12 +1322,26 @@ function setupListeners() {
 		if (!__SAGE2__.browser.isElectron) {
 			wsio.emit("wallScreenShotFromDisplay", {capable: false});
 		} else {
-			require('electron').remote.getCurrentWindow().capturePage(function(img) {
+			// set a rectangle of the client size
+			var captureRect = { x: 0, y: 0, width: ui.main.clientWidth, height: ui.main.clientHeight };
+			require('electron').remote.getCurrentWindow().capturePage(captureRect, function(img) {
+				var imageData, resized;
+				// get the size of the screenshot image
+				var shot = img.getSize();
+				if (shot.width !== captureRect.width) {
+					// in retina mode, need to downscale the image
+					resized = img.resize({width: captureRect.width, quality: 'better'});
+					// use JPEG with quality 80%
+					imageData = resized.toJPEG(80);
+				} else {
+					imageData = img.toJPEG(80);
+				}
 				// Send the image back to the server as JPEG
 				wsio.emit("wallScreenShotFromDisplay", {
 					capable: true,
-					imageData: img.toJPEG(80)
+					imageData: imageData
 				});
+				// Close the dialog
 				deleteElement('makingScreenShotDialog');
 			});
 		}
