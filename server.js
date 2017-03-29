@@ -802,15 +802,15 @@ function wsAddClient(wsio, data) {
 
 	// If it's a UI, send message to enable screenshot capability
 	if (wsio.clientType === "sageUI") {
-		reportIfCanWallScreenShot();
+		reportIfCanWallScreenshot();
 	}
 
 	// If it's a display, check for Electron and send enable screenshot capability
 	if (wsio.clientType === "display") {
 		// See in browser data structure if it's Electron
-		wsio.capableOfScreenShot = data.browser.isElectron;
+		wsio.capableOfScreenshot = data.browser.isElectron;
 		// Send message to UI clients
-		reportIfCanWallScreenShot();
+		reportIfCanWallScreenshot();
 	}
 }
 
@@ -1043,8 +1043,8 @@ function setupListeners(wsio) {
 	wsio.on('csdMessage',							wsCsdMessage);
 
 	// Screenshot messages
-	wsio.on('startWallScreenShot',                  wsStartWallScreenShot);
-	wsio.on('wallScreenShotFromDisplay',            wsWallScreenShotFromDisplay);
+	wsio.on('startWallScreenshot',                  wsStartWallScreenshot);
+	wsio.on('wallScreenshotFromDisplay',            wsWallScreenshotFromDisplay);
 
 	// application file saving message
 	wsio.on('appFileSaveRequest',                   appFileSaveRequest);
@@ -5154,7 +5154,7 @@ function processInputCommand(line) {
 		}
 		case 'screenshot': {
 			// send messages to take screenshot (dummy arguments)
-			wsStartWallScreenShot();
+			wsStartWallScreenshot();
 			break;
 		}
 		case 'moveby': {
@@ -9578,20 +9578,20 @@ function csdSaveDataOnServer(wsio, data) {
  * Calculate if we have enough screenshot-capable display clients
  * and send message to UI clients to enable the screenshot menu
  *
- * @method     ReportIfCanWallScreenShot
+ * @method     ReportIfCanWallScreenshot
  */
-function reportIfCanWallScreenShot() {
+function reportIfCanWallScreenshot() {
 	var numOfDisplayClients = config.displays.length;
-	var canWallScreenShot = 0;
+	var canWallScreenshot = 0;
 	// check if all display clients can take a screenshot
 	for (var i = 0; i < clients.length; i++) {
-		if (clients[i].clientType === "display" && clients[i].capableOfScreenShot === true) {
-			canWallScreenShot++;
+		if (clients[i].clientType === "display" && clients[i].capableOfScreenshot === true) {
+			canWallScreenshot++;
 		}
 	}
 	// Send the news to the UI clients
-	broadcast("reportIfCanWallScreenShot", {
-		capableOfScreenShot: (canWallScreenShot === numOfDisplayClients)
+	broadcast("reportIfCanWallScreenshot", {
+		capableOfScreenshot: (canWallScreenshot === numOfDisplayClients)
 	});
 }
 
@@ -9600,11 +9600,11 @@ function reportIfCanWallScreenShot() {
  * Only happens if a screenshot is not already in progress to prevent spam.
  * The masterDisplay check in array is reset (discarded) and rebuilt.
  *
- * @method     wsStartWallScreenShot
+ * @method     wsStartWallScreenshot
  * @param      {Object}  wsio    The websocket
  * @param      {Object}  data    The data
  */
-function wsStartWallScreenShot(wsio, data) {
+function wsStartWallScreenshot(wsio, data) {
 	// If not already taking a screen shot, then can emit, to prevent spamming
 	if (masterDisplay.startedScreenshot === undefined || masterDisplay.startedScreenshot === false) {
 		// Need and additional tracking variable to prevent multiple users
@@ -9623,13 +9623,13 @@ function wsStartWallScreenShot(wsio, data) {
 		for (var i = 0; i < clients.length; i++) {
 			if (clients[i].clientType === "display") {
 				// Their submission status is reset
-				clients[i].submittedScreenShot = false;
+				clients[i].submittedScreenshot = false;
 				// Necessary to ignore other displays
-				if (clients[i].capableOfScreenShot === undefined) {
+				if (clients[i].capableOfScreenshot === undefined) {
 					// Capabilities are set on response
-					clients[i].capableOfScreenShot = true;
+					clients[i].capableOfScreenshot = true;
 				}
-				clients[i].emit("sendServerWallScreenShot");
+				clients[i].emit("sendServerWallScreenshot");
 			}
 		}
 	}
@@ -9653,11 +9653,11 @@ function wsStartWallScreenShot(wsio, data) {
  * 	finally reset variable to allow another screenshot
  *
  *
- * @method     wsWallScreenShotFromDisplay
+ * @method     wsWallScreenshotFromDisplay
  * @param      {Object}  wsio    The websocket
  * @param      {Object}  data    The data
  */
-function wsWallScreenShotFromDisplay(wsio, data) {
+function wsWallScreenshotFromDisplay(wsio, data) {
 	if (wsio.clientType != "display") {
 		// Something incorrect happened for a non-display to submit a screenshot
 		return;
@@ -9665,7 +9665,7 @@ function wsWallScreenShotFromDisplay(wsio, data) {
 
 	// Check if the responded display was capable in the first place
 	if (!data.capable) {
-		wsio.capableOfScreenShot = false;
+		wsio.capableOfScreenshot = false;
 		// Can't do anything if the display isn't capable
 		return;
 	}
@@ -9686,7 +9686,7 @@ function wsWallScreenShotFromDisplay(wsio, data) {
 	var fileSaveObject = {};
 	// client ID in this case refers to the display clientID url param. 0 by default
 	// TODO: mirror overwrite is possible, is bad?
-	fileSaveObject.fileName = "wallScreenShot" + wsio.clientID + ".jpg";
+	fileSaveObject.fileName = "wallScreenshot_" + wsio.clientID + ".jpg";
 	fileSaveObject.fileType = "tmp";
 	fileSaveObject.fileContent = data.imageData;
 	// Create the current tile piece and tile pieces individually saved
@@ -9694,7 +9694,7 @@ function wsWallScreenShotFromDisplay(wsio, data) {
 
 	// Set the tracking variables for the tile piece
 	// Mark itself as having submitted a screenshot
-	wsio.submittedScreenShot = true;
+	wsio.submittedScreenshot = true;
 
 	//
 	// This whole next section is about proper placement into the displayCheckIn[x][y]
@@ -9723,25 +9723,25 @@ function wsWallScreenShotFromDisplay(wsio, data) {
 	//
 	// Display check in necessary for weird pieces
 	//
-	var allDisplaysSubmittedScreenShots = true;
+	var allDisplaysSubmittedScreenshots = true;
 	// First check if each of the tiles in the wall have been filled
 	for (i = 0; i < masterDisplay.displayCheckIn.length; i++) {
 		if (masterDisplay.displayCheckIn[i] === false) {
-			allDisplaysSubmittedScreenShots = false;
+			allDisplaysSubmittedScreenshots = false;
 			break;
 		}
 	}
 
 	// If there is a missing piece from the tiles, possible that there is no active display for it.
-	if (!allDisplaysSubmittedScreenShots) {
+	if (!allDisplaysSubmittedScreenshots) {
 		// Reset to true, it will be false if there is a missing piece
-		allDisplaysSubmittedScreenShots = true;
+		allDisplaysSubmittedScreenshots = true;
 		for (i = 0; i < allDisplaysFromClients.length; i++) {
 			// Check if the display is capable
-			if (allDisplaysFromClients[i].capableOfScreenShot) {
+			if (allDisplaysFromClients[i].capableOfScreenshot) {
 				// Check it hasn't submitted a screenshot, don't have all tiles
-				if (!allDisplaysFromClients[i].submittedScreenShot) {
-					allDisplaysSubmittedScreenShots = false;
+				if (!allDisplaysFromClients[i].submittedScreenshot) {
+					allDisplaysSubmittedScreenshots = false;
 					break;
 				}
 			}
@@ -9750,7 +9750,7 @@ function wsWallScreenShotFromDisplay(wsio, data) {
 
 	// Stop if not all displays submitted.
 	// Return here to prevent too many nested blocks
-	if (!allDisplaysSubmittedScreenShots) {
+	if (!allDisplaysSubmittedScreenshots) {
 		return;
 	}
 
@@ -9786,14 +9786,13 @@ function wsWallScreenShotFromDisplay(wsio, data) {
 
 			xMosaicPosition = x * config.resolution.width;
 			yMosaicPosition = y * config.resolution.height;
-			currentPath = path.join(basePath,
-				"wallScreenShot" + id + ".jpg");
+			currentPath = path.join(basePath, "wallScreenshot_" + id + ".jpg");
 			mosaicImage = mosaicImage.in("-page", "+" + xMosaicPosition + "+" + yMosaicPosition);
 			mosaicImage = mosaicImage.in(currentPath);
 		}
 
 		// Setting the output into the tmp folder
-		var fname = "wallScreenShot" + dateSuffix + ".jpg";
+		var fname = "screenshot-" + dateSuffix + ".jpg";
 		currentPath = path.join(mainFolder.path, "tmp", fname);
 
 		// Ready for mosaic and write
@@ -9814,11 +9813,13 @@ function wsWallScreenShotFromDisplay(wsio, data) {
 					// to be opened afterward
 					true
 				);
+				// Delete the temporary files
+				sageutils.deleteFiles(path.join(mainFolder.path, "tmp", "wallScreenshot_*"));
 			}
 		});
 	} else {
 		// Just change the name
-		fileSaveObject.fileName = "wallScreenShot" + dateSuffix + ".jpg";
+		fileSaveObject.fileName = "screenshot-" + dateSuffix + ".jpg";
 		csdSaveDataOnServer(wsio, fileSaveObject);
 		// Add the image into the asset management and open with a width 1/4 of the wall
 		manageUploadedFiles([{
@@ -9833,6 +9834,8 @@ function wsWallScreenShotFromDisplay(wsio, data) {
 			// to be opened afterward
 			true
 		);
+		// Delete the temporary files
+		sageutils.deleteFiles(path.join(mainFolder.path, "tmp", "wallScreenshot_*"));
 	}
 	// Reset variable to allow another capture
 	masterDisplay.startedScreenshot = false;
