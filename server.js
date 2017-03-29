@@ -4756,6 +4756,10 @@ function manageUploadedFiles(files, position, ptrName, ptrColor, openAfter) {
 				// Use the size from the drop information
 				if (position[2] && position[2] !== 0) {
 					appInstance.width = parseFloat(position[2]);
+					// If no height provided, calculate it from the aspect ratio
+					if (position[3] === undefined && appInstance.aspect) {
+						appInstance.height = appInstance.width / appInstance.aspect;
+					}
 				}
 				if (position[3] && position[3] !== 0) {
 					appInstance.height = parseFloat(position[3]);
@@ -5076,6 +5080,7 @@ function processInputCommand(line) {
 			console.log('regenerate\tregenerates the assets');
 			console.log('hideui\t\thide/show/delay the user interface');
 			console.log('sessions\tlist the available sessions');
+			console.log('screenshot\ttake a screenshot of the wall');
 			console.log('update\t\trun a git update');
 			console.log('version\t\tprint SAGE2 version');
 			console.log('exit\t\tstop SAGE2');
@@ -5145,6 +5150,11 @@ function processInputCommand(line) {
 		}
 		case 'sessions': {
 			printListSessions();
+			break;
+		}
+		case 'screenshot': {
+			// send messages to take screenshot (dummy arguments)
+			wsStartWallScreenShot();
 			break;
 		}
 		case 'moveby': {
@@ -9522,7 +9532,7 @@ function csdSaveDataOnServer(wsio, data) {
 		data.fileName = data.fileName.substring(data.fileName.indexOf("\\") + 1);
 	}
 
-	// Create the folder as needed
+	// Create the notes folder as needed
 	var notesFolder = path.join(mainFolder.path, "notes");
 	if (!sageutils.folderExists(notesFolder)) {
 		sageutils.mkdirParent(notesFolder);
@@ -9555,26 +9565,31 @@ function csdSaveDataOnServer(wsio, data) {
 		fullpath = path.join(mainFolder.path, "images", data.fileName);
 		var jpgBuffer = new Buffer(data.fileContent);
 		fs.writeFileSync(fullpath, jpgBuffer);
+	}  else if (data.fileType === "tmp") {
+		fullpath = path.join(mainFolder.path, "tmp", data.fileName);
+		var aBuffer = new Buffer(data.fileContent);
+		fs.writeFileSync(fullpath, aBuffer);
 	} else {
 		console.log("ERROR:csdSaveDataOnServer: unable to save data on server for fileType " + data.fileType);
 	}
 }
 
 /**
- * Sent from UI, server gets it and tells displays to report if can screenshot.
- * Purpose for UI init, is UI and displays do not go up at time of launch.
- * UI each need to ask server if screenshot is capable.
+ * Calculate if we have enough screenshot-capable display clients
+ * and send message to UI clients to enable the screenshot menu
  *
  * @method     ReportIfCanWallScreenShot
  */
 function reportIfCanWallScreenShot() {
 	var numOfDisplayClients = config.displays.length;
 	var canWallScreenShot = 0;
+	// check if all display clients can take a screenshot
 	for (var i = 0; i < clients.length; i++) {
 		if (clients[i].clientType === "display" && clients[i].capableOfScreenShot === true) {
 			canWallScreenShot++;
 		}
 	}
+	// Send the news to the UI clients
 	broadcast("reportIfCanWallScreenShot", {
 		capableOfScreenShot: (canWallScreenShot === numOfDisplayClients)
 	});
@@ -9583,37 +9598,38 @@ function reportIfCanWallScreenShot() {
 /**
  * Sent from UI, server gets it and tells displays to send back screenshots.
  * Only happens if a screenshot is not already in progress to prevent spam.
- * The masterDisplay check in array is reset (discarded) and rebuilt. Inefficient?
+ * The masterDisplay check in array is reset (discarded) and rebuilt.
  *
  * @method     wsStartWallScreenShot
  * @param      {Object}  wsio    The websocket
  * @param      {Object}  data    The data
  */
 function wsStartWallScreenShot(wsio, data) {
-	// If not already taking a screen shot, then can emit. This prevents spamming.
-	if (masterDisplay.startedScreenShot === undefined || masterDisplay.startedScreenShot === false) {
+	// If not already taking a screen shot, then can emit, to prevent spamming
+	if (masterDisplay.startedScreenshot === undefined || masterDisplay.startedScreenshot === false) {
+		// Need and additional tracking variable to prevent multiple users
+		// from spamming the screenshot command
+		masterDisplay.startedScreenshot = true;
+		// [x][y] the previous array is discarded
+		masterDisplay.displayCheckIn = [];
+		for (var x = 0; x < config.layout.columns; x++) {
+			for (var y = 0; y < config.layout.rows; y++) {
+				var idx = y * config.layout.columns + x;
+				// Set to false
+				masterDisplay.displayCheckIn[idx] = false;
+			}
+		}
+		// then send the messages
 		for (var i = 0; i < clients.length; i++) {
 			if (clients[i].clientType === "display") {
 				// Their submission status is reset
 				clients[i].submittedScreenShot = false;
-				// Necessary if displays state their status?
+				// Necessary to ignore other displays
 				if (clients[i].capableOfScreenShot === undefined) {
 					// Capabilities are set on response
 					clients[i].capableOfScreenShot = true;
 				}
 				clients[i].emit("sendServerWallScreenShot");
-			}
-		}
-		// Need and additional tracking variable to prevent multiple users
-		// from spamming the screenshot command.
-		masterDisplay.startedScreenShot = true;
-		// [x][y] the previous array is discarded
-		masterDisplay.displayCheckIn = [];
-		for (var x = 0; x < config.layout.columns; x++) {
-			masterDisplay.displayCheckIn.push([]);
-			for (var y = 0; y < config.layout.rows; y++) {
-				// fill array of false
-				masterDisplay.displayCheckIn[x].push(false);
 			}
 		}
 	}
@@ -9651,13 +9667,12 @@ function wsWallScreenShotFromDisplay(wsio, data) {
 	if (!data.capable) {
 		wsio.capableOfScreenShot = false;
 		// Can't do anything if the display isn't capable
-		// TODO: probably report to initiator wall isn't capable
 		return;
 	}
 
 	// Declaring reused variables here
 	var xDisplay, yDisplay;
-	var i, x, y;
+	var i, x, y, idx, id;
 
 	// First get all connected display clients
 	var allDisplaysFromClients = [];
@@ -9667,12 +9682,12 @@ function wsWallScreenShotFromDisplay(wsio, data) {
 		}
 	}
 
-	// Save the file. First create information necessary.
+	// First create information necessary to save the file
 	var fileSaveObject = {};
 	// client ID in this case refers to the display clientID url param. 0 by default
 	// TODO: mirror overwrite is possible, is bad?
 	fileSaveObject.fileName = "wallScreenShot" + wsio.clientID + ".jpg";
-	fileSaveObject.fileType = "jpg";
+	fileSaveObject.fileType = "tmp";
 	fileSaveObject.fileContent = data.imageData;
 	// Create the current tile piece and tile pieces individually saved
 	csdSaveDataOnServer(wsio, fileSaveObject);
@@ -9686,33 +9701,19 @@ function wsWallScreenShotFromDisplay(wsio, data) {
 	// Necessary because of systems that define a single display as having width and height
 	//
 	if (masterDisplay.displayCheckIn[wsio.clientID] != undefined) {
-		//                          [ x                                   ][ y                                ]
-		masterDisplay.displayCheckIn[config.displays[wsio.clientID].column][config.displays[wsio.clientID].row] = wsio;
-		// if there is a width and height defined, set this wsio in the other spaces
-		if (config.displays[wsio.clientID].width != undefined && config.displays[wsio.clientID].height != undefined) {
-			// set this wsio for each of the spaces
-			for (x = 0; x < config.displays[wsio.clientID].width; x++) {
-				for (y = 0; y < config.displays[wsio.clientID].height; y++) {
-					xDisplay = config.displays[wsio.clientID].column + x;
-					yDisplay = config.displays[wsio.clientID].row + y;
-					masterDisplay.displayCheckIn[xDisplay][yDisplay] = wsio;
-				}
-			}
-		} else if (config.displays[wsio.clientID].width != undefined) {
-			for (x = 0; x < config.displays[wsio.clientID].width; x++) {
-				xDisplay = config.displays[wsio.clientID].column + x;
-				yDisplay = config.displays[wsio.clientID].row;
-				masterDisplay.displayCheckIn[xDisplay][yDisplay] = wsio;
-			}
-		} else if (config.displays[wsio.clientID].height != undefined) {
+		idx = config.displays[wsio.clientID].row * config.layout.columns + config.displays[wsio.clientID].column;
+		masterDisplay.displayCheckIn[idx] = wsio;
+		// set this wsio for each of the spaces (client covering several tiles)
+		for (x = 0; x < config.displays[wsio.clientID].width; x++) {
 			for (y = 0; y < config.displays[wsio.clientID].height; y++) {
-				xDisplay = config.displays[wsio.clientID].column;
+				xDisplay = config.displays[wsio.clientID].column + x;
 				yDisplay = config.displays[wsio.clientID].row + y;
-				masterDisplay.displayCheckIn[xDisplay][yDisplay] = wsio;
+				idx = yDisplay * config.layout.columns + xDisplay;
+				masterDisplay.displayCheckIn[idx] = wsio;
 			}
 		}
 	} else {
-		console.log("Error: unknown display " + wsio.clientID + " checked in for screenshot");
+		console.log(sageutils.header('Screenshot') + "Unknown display " + wsio.clientID + " checked in for screenshot");
 	}
 
 	//
@@ -9724,15 +9725,13 @@ function wsWallScreenShotFromDisplay(wsio, data) {
 	//
 	var allDisplaysSubmittedScreenShots = true;
 	// First check if each of the tiles in the wall have been filled
-	for (x = 0; x < masterDisplay.displayCheckIn.length; x++) {
-		for (y = 0; y < masterDisplay.displayCheckIn[0].length; y++) {
-			// Strict equality is critical since display wsio replaces false.
-			if (masterDisplay.displayCheckIn[x][y] === false) {
-				allDisplaysSubmittedScreenShots = false;
-				break;
-			}
+	for (i = 0; i < masterDisplay.displayCheckIn.length; i++) {
+		if (masterDisplay.displayCheckIn[i] === false) {
+			allDisplaysSubmittedScreenShots = false;
+			break;
 		}
 	}
+
 	// If there is a missing piece from the tiles, possible that there is no active display for it.
 	if (!allDisplaysSubmittedScreenShots) {
 		// Reset to true, it will be false if there is a missing piece
@@ -9748,6 +9747,7 @@ function wsWallScreenShotFromDisplay(wsio, data) {
 			}
 		}
 	}
+
 	// Stop if not all displays submitted.
 	// Return here to prevent too many nested blocks
 	if (!allDisplaysSubmittedScreenShots) {
@@ -9762,12 +9762,13 @@ function wsWallScreenShotFromDisplay(wsio, data) {
 	if (allDisplaysFromClients.length > 1) {
 		// Stitching needs to be done by rows
 		// Tile pieces are still saved in images
-		var basePath = path.join(mainFolder.path, "images");
+		var basePath = path.join(mainFolder.path, "tmp");
 		var currentPath;
-		var tilesUsed = [];
-		var xMosaicPosition = 0, yMosaicPosition = 0;
+		var xMosaicPosition = 0;
+		var yMosaicPosition = 0;
 		var mosaicImage = imageMagick().in("-background", "black");
-		var needToSkip;
+		// var tilesUsed = [];
+		// var needToSkip;
 
 		//
 		//	For each element in the display checkin
@@ -9776,43 +9777,42 @@ function wsWallScreenShotFromDisplay(wsio, data) {
 		//			because if it was used, that display has width / height greater than 1 tile
 		//			so it needs to be skipped
 		//		tiles that dont need to be skipped will have their temp file referenced with offet of tile position * resolution
-		for (x = 0; x < masterDisplay.displayCheckIn.length; x++) {
-			// Reset for each column
-			yMosaicPosition = 0;
-			for (y = 0; y < masterDisplay.displayCheckIn[0].length; y++) {
-				// Reaching this point and false means the display is not connected
-				if (masterDisplay.displayCheckIn[x][y] !== false) {
-					needToSkip = false;
-					for (i = 0; i < tilesUsed.length; i++) {
-						// Tripping this check means that the display had width and height
-						if (masterDisplay.displayCheckIn[x][y] === tilesUsed[i]) {
-							needToSkip = true;
-						}
-					}
-					if (!needToSkip) {
-						currentPath = path.join(basePath,
-							"wallScreenShot" + masterDisplay.displayCheckIn[x][y].clientID + ".jpg");
-						mosaicImage = mosaicImage.in("-page", "+" + xMosaicPosition + "+" + yMosaicPosition);
-						mosaicImage = mosaicImage.in(currentPath);
-						tilesUsed.push(masterDisplay.displayCheckIn[x][y]);
+		for (i = 0; i < masterDisplay.displayCheckIn.length; i++) {
+			// Calculate the coordinates
+			id  = masterDisplay.displayCheckIn[i].clientID;
+			x   = config.displays[id].column;
+			y   = config.displays[id].row;
+			idx = y * config.layout.columns + x;
 
-						console.log("offset on page:" + xMosaicPosition + "," + yMosaicPosition);
-					}
-				}
-				yMosaicPosition += config.resolution.height;
-			}
-			xMosaicPosition += config.resolution.width;
+			xMosaicPosition = x * config.resolution.width;
+			yMosaicPosition = y * config.resolution.height;
+			currentPath = path.join(basePath,
+				"wallScreenShot" + id + ".jpg");
+			mosaicImage = mosaicImage.in("-page", "+" + xMosaicPosition + "+" + yMosaicPosition);
+			mosaicImage = mosaicImage.in(currentPath);
 		}
-		// Ready for mosaic and write
-		currentPath = path.join(mainFolder.path, "tmp", ("wallScreenShot" + dateSuffix + ".jpg"));
 
-		// The solution is probably to write to the temp folder then copy into the image folder
+		// Setting the output into the tmp folder
+		var fname = "wallScreenShot" + dateSuffix + ".jpg";
+		currentPath = path.join(mainFolder.path, "tmp", fname);
+
+		// Ready for mosaic and write
 		mosaicImage.mosaic().write(currentPath, function(error) {
 			if (error) {
-				console.log(error);
+				console.log(sageutils.header('Screenshot') + error);
 			} else {
-				fs.createReadStream(currentPath).pipe(
-					fs.createWriteStream(path.join(mainFolder.path, "images", ("wallScreenShot" + dateSuffix + ".jpg")))
+				// Add the image into the asset management and open with a width 1/4 of the wall
+				manageUploadedFiles([{
+					// output folder
+					path: currentPath,
+					// filename
+					name: fname}],
+					// position and size
+					[0, 0, config.totalWidth / 4],
+					// username and color
+					"screenshot", "#B4B4B4",
+					// to be opened afterward
+					true
 				);
 			}
 		});
@@ -9820,11 +9820,22 @@ function wsWallScreenShotFromDisplay(wsio, data) {
 		// Just change the name
 		fileSaveObject.fileName = "wallScreenShot" + dateSuffix + ".jpg";
 		csdSaveDataOnServer(wsio, fileSaveObject);
-		// manageUploadedFiles( path.join(mainFolder.path, "images", fileSaveObject.fileName), [0, 0], "image_viewer", "#B4B4B4", false);
+		// Add the image into the asset management and open with a width 1/4 of the wall
+		manageUploadedFiles([{
+			// output folder
+			path: path.join(mainFolder.path, "tmp", fileSaveObject.fileName),
+			// file name
+			name: fileSaveObject.fileName}],
+			// position and size
+			[0, 0, config.totalWidth / 4],
+			// username and color
+			"screenshot", "#B4B4B4",
+			// to be opened afterward
+			true
+		);
 	}
-	// Getting this far meant that a full screenshot should have been created
 	// Reset variable to allow another capture
-	masterDisplay.startedScreenShot = false;
+	masterDisplay.startedScreenshot = false;
 }
 
 /**
