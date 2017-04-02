@@ -605,6 +605,7 @@ function setupListeners() {
 		var uid = pointer_data.id.substring(0, pointer_data.id.indexOf('_'));
 		if (mousehandler.uID == uid)			{
 			mousehandler.ourPointerDIV = pointer_data.id;
+			mousehandler.pointerActive = true;
 		}
 
 		ui.showSagePointer(pointer_data);
@@ -613,7 +614,6 @@ function setupListeners() {
 		var re = /\.|\:/g;
 		var stlyeCaption = uniqueID.split(re).join("");
 		addStyleElementForTitleColor(stlyeCaption, pointer_data.color);
-		mousehandler.pointerActive = true;
 	});
 
 	wsio.on('hideSagePointer', function(pointer_data) {
@@ -621,6 +621,7 @@ function setupListeners() {
 		var uid = pointer_data.id.substring(0, pointer_data.id.indexOf('_'));
 		if (mousehandler.uID == uid) {
 			mousehandler.ourPointerDIV = null;
+			mousehandler.pointerActive = false;
 		}
 
 		ui.hideSagePointer(pointer_data);
@@ -628,7 +629,6 @@ function setupListeners() {
 		var re = /\.|\:/g;
 		var stlyeCaption = uniqueID.split(re).join("");
 		removeStyleElementForTitleColor(stlyeCaption, pointer_data.color);
-		mousehandler.pointerActive = false;
 	});
 
 	wsio.on('updateSagePointerPosition', function(pointer_data) {
