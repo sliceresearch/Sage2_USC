@@ -497,7 +497,25 @@ Interaction.prototype.maximizeSelectedItem = function(item, centered) {
 		titleBar = 0;
 	}
 
-	if (item.partition) {
+	if (item.partitionList && item.isSnapping) {
+		// if the item is a partition which is snapped, make it as large as it can get (keeping neighbor positions correct)
+		let newSize = item.getMovementBoundaries();
+
+		// back up values for restore
+		item.previous_left   = item.left;
+		item.previous_top    = item.top;
+		item.previous_width  = item.width;
+		item.previous_height = item.width / item.aspect;
+
+		item.left = newSize.left.min;
+		item.top = newSize.top.min;
+		item.width = newSize.right.max - item.left;
+		item.height = newSize.bottom.max - item.top;
+
+		item.maximized = true;
+
+	} else if (item.partition) {
+		// if the item is content in a partition
 		return item.partition.maximizeChild(item.id, this.SHIFT);
 	} else {
 		// normal wall maximization parameters

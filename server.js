@@ -6120,6 +6120,19 @@ function pointerPressOnPartition(uniqueID, pointerX, pointerY, data, obj, localP
 				partitions.updatePartitionGeometries(obj.id, interactMgr);
 				broadcast('partitionMoveAndResizeFinished', obj.data.getDisplayInfo());
 
+				// update neighbors if it is snapped
+				if (obj.data.isSnapping) {
+					let updatedNeighbors = obj.data.updateNeighborPtnPositions();
+
+					// update geometries/display/layout of any updated neighbors
+					for (var neigh of updatedNeighbors) {
+						partitions.updatePartitionGeometries(neigh, interactMgr);
+						broadcast('partitionMoveAndResizeFinished', partitions.list[neigh].getDisplayInfo());
+
+						updatePartitionInnerLayout(partitions.list[neigh], true);
+					}
+				}
+
 				// update child positions within partiton
 				updatePartitionInnerLayout(partitions.list[obj.id], false);
 			}
@@ -9119,6 +9132,7 @@ function wsUtdCallFunctionOnApp(wsio, data) {
 		}
 	}  else if (partitions.list.hasOwnProperty(data.app)) {
 		// the context menu is on a partition
+		let ptn = partitions.list[data.app];
 
 		if (data.func === "SAGE2DeleteElement") {
 			deletePartition(data.app);
@@ -9126,17 +9140,30 @@ function wsUtdCallFunctionOnApp(wsio, data) {
 			return;
 		} else if (data.func === "SAGE2Maximize") {
 			if (data.parameters.clientId) {
-				if (!partitions.list[data.app].maximized) {
-					remoteInteraction[data.parameters.clientId].maximizeSelectedItem(partitions.list[data.app]);
+				if (!ptn.maximized) {
+					remoteInteraction[data.parameters.clientId].maximizeSelectedItem(ptn);
 				} else {
-					remoteInteraction[data.parameters.clientId].restoreSelectedItem(partitions.list[data.app]);
+					remoteInteraction[data.parameters.clientId].restoreSelectedItem(ptn);
 				}
 
 				partitions.updatePartitionGeometries(data.app, interactMgr);
-				broadcast('partitionMoveAndResizeFinished', partitions.list[data.app].getDisplayInfo());
+				broadcast('partitionMoveAndResizeFinished', ptn.getDisplayInfo());
+
+				// update neighbors if it is snapped
+				if (ptn.isSnapping) {
+					let updatedNeighbors = ptn.updateNeighborPtnPositions();
+
+					// update geometries/display/layout of any updated neighbors
+					for (var neigh of updatedNeighbors) {
+						partitions.updatePartitionGeometries(neigh, interactMgr);
+						broadcast('partitionMoveAndResizeFinished', partitions.list[neigh].getDisplayInfo());
+
+						updatePartitionInnerLayout(partitions.list[neigh], true);
+					}
+				}
 
 				// update child positions within partiton
-				updatePartitionInnerLayout(partitions.list[data.app], false);
+				updatePartitionInnerLayout(ptn, false);
 			}
 		} else if (data.func === "clearPartition") {
 			// invoke clear with delete application method -- messy, should refactor
@@ -9968,6 +9995,13 @@ function createPartition(dims, color) {
 	*/
 function deletePartition(id) {
 	var ptn = partitions.list[id];
+
+	if (ptn.isSnapping) {
+		// remove itself from neighbors' neighbor lists
+		for (let neigh of Object.keys(ptn.neighbors)) {
+			delete partitions.list[neigh].neighbors[id];
+		}
+	}
 
 	broadcast('deletePartitionWindow', ptn.getDisplayInfo());
 	partitions.removePartition(ptn.id);

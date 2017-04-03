@@ -53,14 +53,6 @@ function Partition(dims, id, color, partitionList) {
 
 	// for the more geometric idea of partitions
 	this.isSnapping = dims.isSnapping || false;
-
-	// possibly maintaining list of neighbors?
-	// this.neighbors = {
-	// 	top: {},
-	// 	left: {},
-	// 	right: {},
-	// 	bottom: {}
-	// };
 }
 
 /**
