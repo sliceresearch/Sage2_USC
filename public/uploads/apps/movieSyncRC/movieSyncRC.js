@@ -399,7 +399,7 @@ var movieSyncRC = SAGE2_App.extend({
 			});
 
 			// match loop status
-			if ( this.currentMaster !== null
+			if (this.currentMaster !== null
 				&& this.playerRemoteIsOver.state.looped !== this.loopStatus) {
 				this.playerRemoteIsOver.toggleLoop(new Date());
 			}
