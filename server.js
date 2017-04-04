@@ -1158,6 +1158,7 @@ function initializeExistingApps(wsio) {
 			//   (especially true for slow update apps, like the clock)
 			broadcast('animateCanvas', {id: SAGE2Items.applications.list[key].id, date: Date.now()});
 		}
+		handleStickyItem(key);
 	}
 	for (key in SAGE2Items.portals.list) {
 		broadcast('initializeDataSharingSession', SAGE2Items.portals.list[key]);
@@ -1187,6 +1188,7 @@ function initializeExistingAppsPositionSizeTypeOnly(wsio) {
 			state: SAGE2Items.applications.list[key].data,
 			application: SAGE2Items.applications.list[key].application
 		});
+		handleStickyItem(key);
 	}
 
 	var newOrder = interactMgr.getObjectZIndexList("applications", ["portals"]);
@@ -5462,7 +5464,8 @@ function getAppPositionSize(appInstance) {
 		height:      appInstance.height,
 		icon:        appInstance.icon || null,
 		title:       appInstance.title,
-		color:       appInstance.color || null
+		color:       appInstance.color || null,
+		sticky: 	 appInstance.sticky
 	};
 }
 
@@ -8496,6 +8499,7 @@ function handleNewApplication(appInstance, videohandle) {
 		SAGE2Items.applications.addButtonToItem(appInstance.id, "pinButton", "rectangle",
 			{x: buttonsPad, y: 0, w: oneButton, h: config.ui.titleBarHeight}, 1);
 		SAGE2Items.applications.editButtonVisibilityOnItem(appInstance.id, "pinButton", false);
+		handleStickyItem(appInstance.id);
 	}
 	SAGE2Items.applications.editButtonVisibilityOnItem(appInstance.id, "syncButton", false);
 
@@ -8550,6 +8554,7 @@ function handleNewApplicationInDataSharingPortal(appInstance, videohandle, porta
 		SAGE2Items.applications.addButtonToItem(appInstance.id, "pinButton", "rectangle",
 			{x: buttonsPad, y: 0, w: oneButton, h: titleBarHeight}, 1);
 		SAGE2Items.applications.editButtonVisibilityOnItem(appInstance.id, "pinButton", false);
+		handleStickyItem(appInstance.id);
 	}
 	SAGE2Items.applications.editButtonVisibilityOnItem(appInstance.id, "syncButton", false);
 
@@ -8593,6 +8598,7 @@ function handleApplicationResize(appId) {
 	if (app.sticky === true) {
 		SAGE2Items.applications.editButtonOnItem(app.id, "pinButton", "rectangle",
 			{x: buttonsPad, y: 0, w: oneButton, h: titleBarHeight});
+		handleStickyItem(app.id);
 	}
 }
 
