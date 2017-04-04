@@ -49,7 +49,8 @@ var Webview = SAGE2_App.extend({
 		this.element.plugins   = "on";
 		this.element.allowpopups = false;
 		this.element.allowfullscreen = false;
-		this.element.nodeintegration = 1;
+		// turn off nodejs intergration for now
+		this.element.nodeintegration = 0;
 		// disable fullscreen
 		this.element.fullscreenable = false;
 		this.element.fullscreen = false;
