@@ -71,9 +71,10 @@ var Radialmenu          = require('./src/node-radialmenu');       // radial menu
 var Sage2ItemList       = require('./src/node-sage2itemlist');    // list of SAGE2 items
 var Sagepointer         = require('./src/node-sagepointer');      // handles sage pointers (creation, location, etc.)
 var StickyItems         = require('./src/node-stickyitems');
-var registry            = require('./src/node-registry');        // Registry Manager
+var registry            = require('./src/node-registry');         // Registry Manager
 var FileBufferManager	= require('./src/node-filebuffer');
-var PartitionList				= require('./src/node-partitionlist');		// list of SAGE2 Partitions
+var PartitionList	= require('./src/node-partitionlist');    // list of SAGE2 Partitions
+
 //
 // Globals
 //
@@ -122,9 +123,12 @@ var drawingManager;
 var pressingAlt        = true;
 var fileBufferManager  = new FileBufferManager();
 
-var partitions				 = new PartitionList(config);
-var draggingPartition	 = {};
-var cuttingPartition 	 = {};
+// Array containing the remote sites informations (toolbar on top of wall)
+var remoteSites = [];
+
+var partitions        = new PartitionList(config);
+var draggingPartition = {};
+var cuttingPartition  = {};
 
 // Add extra folders defined in the configuration file
 if (config.folders) {
@@ -358,6 +362,9 @@ function initializeSage2Server() {
 
 	// initialize dialog boxes
 	setUpDialogsAsInteractableObjects();
+
+	// Setup the remote sites for collaboration
+	initalizeRemoteSites();
 
 	// Set up http and https servers
 	var httpServerApp = new HttpServer(publicDirectory);
@@ -655,7 +662,7 @@ function closeWebSocketClient(wsio) {
 	// if client is a remote site, send disconnect message
 	var remote = findRemoteSiteByConnection(wsio);
 	if (remote !== null) {
-		console.log(sageutils.header("Remote") + "\"" + remote.name + "\" now offline");
+		console.log(sageutils.header("Remote") + chalk.cyan(remote.name) + " now offline");
 		remote.connected = "off";
 		var site = {name: remote.name, connected: remote.connected};
 		broadcast('connectedToRemoteSite', site);
@@ -770,14 +777,15 @@ function wsAddClient(wsio, data) {
 			// var remoteport = wsio.ws.upgradeReq.connection.remotePort;
 
 			// Checking if it's a known server
-			config.remote_sites.forEach(function(element, index, array) {
-				if (element.host === data.host &&
-					element.port === data.port &&
-					remoteSites[index].connected === "on") {
-					console.log(sageutils.header("Connect") + 'known remote site ' + data.host + ':' + data.port);
-					manageRemoteConnection(wsio, element, index);
-				}
-			});
+			// bug: Seems to create a race condition and works without, so far
+			// config.remote_sites.forEach(function(element, index, array) {
+			// 	if (element.host === data.host &&
+			// 		element.port === data.port &&
+			// 		remoteSites[index].connected === "on") {
+			// 		console.log(sageutils.header("Connect") + 'known remote site ' + data.host + ':' + data.port);
+			// 		manageRemoteConnection(wsio, element, index);
+			// 	}
+			// });
 		}
 	}
 
@@ -2225,8 +2233,13 @@ function saveSession(filename) {
 			// remove reference to parent partition if it exists
 			delete a.partition;
 		}
-		// Ignore media streaming applications for now (desktop sharing)
-		if (a.application !== 'media_stream' && a.application !== 'media_block_stream') {
+
+		// Test if the application is shared (coming from another server)
+		// appId contains a + character
+		var isNotShared = (a.id.indexOf('+') === -1);
+
+		// Ignore media streaming applications for now (desktop sharing) and shared applications
+		if (a.application !== 'media_stream' && a.application !== 'media_block_stream' && isNotShared) {
 			states.apps.push(a);
 			states.numapps++;
 		}
@@ -2324,11 +2337,16 @@ function saveSession(filename) {
 			"\" y=\"" + ap.top +
 			"\" style=\"fill: " + "#AAAAAA; fill-opacity: 0.5; stroke: black; stroke-width: 5;\">" + "</rect>";
 
-
-		var iconPath = path.join(mainFolder.path, path.relative("/user", ap.icon)) + "_256.jpg";
+		var iconPath;
+		if (ap.icon) {
+			// the application has a icon defined
+			iconPath = path.join(mainFolder.path, path.relative("/user", ap.icon)) + "_256.jpg";
+		} else {
+			// application does not have an icon (for instance, shared applciation)
+			iconPath = path.join(mainFolder.path, "assets/apps/unknownapp") + "_256.jpg";
+		}
 
 		var iconImageData = "";
-
 		try {
 			iconImageData = new Buffer(fs.readFileSync(iconPath)).toString('base64');
 		} catch (error) {
@@ -4764,42 +4782,44 @@ function manageUploadedFiles(files, position, ptrName, ptrColor, openAfter) {
 
 // **************  Remote Site Collaboration *****************
 
-var remoteSites = [];
-if (config.remote_sites) {
-	remoteSites = new Array(config.remote_sites.length);
-	config.remote_sites.forEach(function(element, index, array) {
-		var protocol = (element.secure === true) ? "wss" : "ws";
-		var wsURL = protocol + "://" + element.host + ":" + element.port.toString();
+function initalizeRemoteSites() {
+	if (config.remote_sites) {
+		remoteSites = new Array(config.remote_sites.length);
+		config.remote_sites.forEach(function(element, index, array) {
+			var protocol = (element.secure === true) ? "wss" : "ws";
+			var wsURL = protocol + "://" + element.host + ":" + element.port.toString();
 
-		var remote = createRemoteConnection(wsURL, element, index);
+			var rGeom = {};
+			rGeom.w = Math.min((0.5 * config.totalWidth) / remoteSites.length, config.ui.titleBarHeight * 6)
+				- (0.16 * config.ui.titleBarHeight);
+			rGeom.h = 0.84 * config.ui.titleBarHeight;
+			rGeom.x = (0.5 * config.totalWidth) + ((rGeom.w + (0.16 * config.ui.titleBarHeight))
+				* (index - (remoteSites.length / 2))) + (0.08 * config.ui.titleBarHeight);
+			rGeom.y = 0.08 * config.ui.titleBarHeight;
 
-		var rGeom = {};
-		rGeom.w = Math.min((0.5 * config.totalWidth) / remoteSites.length, config.ui.titleBarHeight * 6)
-			- (0.16 * config.ui.titleBarHeight);
-		rGeom.h = 0.84 * config.ui.titleBarHeight;
-		rGeom.x = (0.5 * config.totalWidth) + ((rGeom.w + (0.16 * config.ui.titleBarHeight)) * (index - (remoteSites.length / 2)))
-			+ (0.08 * config.ui.titleBarHeight);
-		rGeom.y = 0.08 * config.ui.titleBarHeight;
+			// Build the object
+			remoteSites[index] = {
+				name: element.name,
+				wsio: null,
+				connected: "off",
+				geometry: rGeom,
+				index: index
+			};
+			// Create a websocket connection to the site
+			remoteSites[index].wsio = createRemoteConnection(wsURL, element, index);
 
-		// Build the object
-		remoteSites[index] = {
-			name: element.name,
-			wsio: remote,
-			connected: "off",
-			geometry: rGeom,
-			index: index
-		};
-		// Add the gemeotry for the button
-		interactMgr.addGeometry("remote_" + index, "staticUI", "rectangle", rGeom,  true, index, remoteSites[index]);
+			// Add the gemeotry for the button
+			interactMgr.addGeometry("remote_" + index, "staticUI", "rectangle", rGeom,  true, index, remoteSites[index]);
 
-		// attempt to connect every 15 seconds, if connection failed
-		setInterval(function() {
-			if (remoteSites[index].connected !== "on") {
-				var rem = createRemoteConnection(wsURL, element, index);
-				remoteSites[index].wsio = rem;
-			}
-		}, 15000);
-	});
+			// attempt to connect every 15 seconds, if connection failed
+			setInterval(function() {
+				if (remoteSites[index].connected !== "on") {
+					var rem = createRemoteConnection(wsURL, element, index);
+					remoteSites[index].wsio = rem;
+				}
+			}, 15000);
+		});
+	}
 }
 
 function manageRemoteConnection(remote, site, index) {
@@ -4829,7 +4849,7 @@ function manageRemoteConnection(remote, site, index) {
 	remote.clientType = "remoteServer";
 
 	remote.onclose(function() {
-		console.log(sageutils.header("Remote") + "\"" + config.remote_sites[index].name + "\" offline");
+		console.log(sageutils.header("Remote") + chalk.cyan(config.remote_sites[index].name) + " offline");
 		// it was locked, keep the state locked
 		if (remoteSites[index].connected !== "locked") {
 			remoteSites[index].connected = "off";
@@ -4876,10 +4896,10 @@ function manageRemoteConnection(remote, site, index) {
 
 	remote.on('remoteConnection', function(remotesocket, data) {
 		if (data.status === "refused") {
-			console.log(sageutils.header('Remote') + "Connection refused to " + site.name + ": " + data.reason);
+			console.log(sageutils.header("Remote") + "Connection refused to " + chalk.cyan(site.name) + ": " + data.reason);
 			remoteSites[index].connected = "locked";
 		} else {
-			console.log(sageutils.header("Remote") + "Connected to " + site.name);
+			console.log(sageutils.header("Remote") + "Connected to " + chalk.cyan(site.name));
 			remoteSites[index].connected = "on";
 		}
 		var update_site = {name: remoteSites[index].name, connected: remoteSites[index].connected};
@@ -5634,7 +5654,8 @@ function pointerPressOnOpenSpace(uniqueID, pointerX, pointerY, data) {
 
 function pointerPressOnStaticUI(uniqueID, pointerX, pointerY, data, obj, localPt) {
 	// If the remote site is active (green button)
-	if (obj.data.connected === "on") {
+	// also disable action through the web ui (visible pointer)
+	if (obj.data.connected === "on" && sagePointers[uniqueID].visible) {
 		// Validate the remote address
 		var remoteSite = findRemoteSiteByConnection(obj.data.wsio);
 
