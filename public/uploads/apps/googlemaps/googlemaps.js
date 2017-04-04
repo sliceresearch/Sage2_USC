@@ -39,6 +39,13 @@ var googlemaps = SAGE2_App.extend({
 
 		this.initializeWidgets();
 		this.initializeOnceMapsLoaded();
+
+		// Markers for map
+		this.mapMarkers = [];
+		this.markerCycleIndex = 0;
+
+		// temporarily testing how well mouse conversion works
+		// this.passSAGE2PointerAsMouseEvents = true;
 	},
 
 	initializeWidgets: function() {
@@ -389,6 +396,143 @@ var googlemaps = SAGE2_App.extend({
 	},
 
 	/**
+	 * Adding a Markers
+	 * 
+	 * This function assumes the data is correctly formatted to have
+	 * {
+	 *  lat: float,
+	 *  lng: float,
+	 *  shouldFocusViewOnNewMarker: bool
+	 * }
+	 */
+	addMarkerToMap: function(markerLocation) {
+		if ( typeof markerLocation.lat === "string") {
+			markerLocation.lat = this.convertDegMinSecDirToSignedDegree(markerLocation.lat);
+			markerLocation.lng = this.convertDegMinSecDirToSignedDegree(markerLocation.lng);
+		}
+		// add marker to map at location
+		let markToAdd = new google.maps.Marker({
+          position: markerLocation,
+          map: this.map
+        });
+		// add to tracking array to allow removal later
+		this.mapMarkers.push(markToAdd);
+		markToAdd.markerLocation = markerLocation;
+		// center view if necessarya
+		if (markerLocation.shouldFocusViewOnNewMarker) {
+			this.map.setCenter(markerLocation);
+		}
+		if (this.gmapInfoWindow === undefined || this.gmapInfoWindow === null) {
+			this.gmapInfoWindow = new google.maps.InfoWindow();
+		}
+		// add a click effect to marker. not working?
+		var _this = this;
+		google.maps.event.addListener(markToAdd, 'mousedown', function(e) {
+			console.log("mark reacting to event");
+			console.dir(e);
+			_this.gmapInfoWindow.setContent("Latitude: " + markerLocation.lat
+											+ "<br>\nLongitude:" + markerLocation.lng);
+			_this.gmapInfoWindow.open(_this.map, _this);
+		});
+		this.getFullContextMenuAndUpdate();
+	},
+
+	/**
+	 * Converts string with degree, minute, second, direction. To signed degree.
+	 * To avoid being token specific, checks for numbers rather than symbols.
+	 * Example coordinates from some images:
+	 * 
+{
+	lat: "21 deg 41' 33.14\" N",
+	lng: "157 deg 50' 55.48\" W"
+}
+{
+	lat: "19 deg 48' 59.66\" N ",
+	lng:"156 deg 10' 45.01\" W "
+}
+{
+	lat:"21 deg 52' 26.86\" N "
+	lng:"159 deg 27' 22.96\" W "
+}
+	 */
+	convertDegMinSecDirToSignedDegree: function (input) {
+		var deg = "";
+		var index = 0, partIndex = -1; // find the number first, might be prefix fluff
+		var findingNextNumber = true;
+		var parts = ["", "", "", ""]; // deg, min, sec, dir
+		
+		while (index < input.length) {
+			// if finding next number
+			if (findingNextNumber) {
+				// if finding next number, but have gone through first 3, want direction
+				if (partIndex == 2) {
+					if (input.charAt(index) === "N"
+						|| input.charAt(index) === "S"
+						|| input.charAt(index) === "E"
+						|| input.charAt(index) === "W") {
+						parts[3] += input.charAt(index);
+					}
+				} else if (!isNaN(input.charAt(index))) {
+					// else if this char is a number moveup part index and stop looking
+					partIndex++;
+					findingNextNumber = false;
+				}
+			} // if at the next number, add to the part
+			if (!findingNextNumber) {
+				// if it is a number or a decimal, add it.
+				if (!isNaN(input.charAt(index))
+					|| input.charAt(index) === ".") {
+					parts[partIndex] += input.charAt(index);
+				} else {
+					// hitting a non-number or . means in between numbers
+					findingNextNumber = true;
+				}
+			} // always increase the index
+			index++;
+		}
+		// for all but the direction, convert to floats
+		for (let i = 0; i < parts.length - 1; i++) {
+			parts[i] = parseFloat(parts[i]);
+		}
+		var justDegrees = parts[0];
+		justDegrees += parts[1] / 60;
+		justDegrees += parts[2] / (60 * 60);
+
+		// flip the sign depending on which direction the count was in
+		if (parts[3] == "S" || parts[3] == "W") {
+			justDegrees = justDegrees * -1;
+		}
+		return justDegrees;
+	},
+
+	removeAllMarkersFromMap: function() {
+        for (let i = 0; i < this.mapMarkers.length; i++) {
+          this.mapMarkers[i].setMap(null);
+        }
+        this.mapMarkers = [];
+		this.getFullContextMenuAndUpdate();
+	},
+
+	focusOnMarkerIndex: function(responseObject) {
+		// if there are no markers, cannot focus on it
+		if (this.mapMarkers.length <= 0) {
+			return;
+		}
+		if (responseObject.cycle === "next") {
+			this.markerCycleIndex++;
+			if (this.markerCycleIndex >= this.mapMarkers.length) {
+				this.markerCycleIndex = 0;
+			}
+		} else {
+			this.markerCycleIndex--;
+			if (this.markerCycleIndex < 0) {
+				this.markerCycleIndex = this.mapMarkers.length - 1;
+			}
+		}
+		this.map.setCenter(this.mapMarkers[this.markerCycleIndex].markerLocation);
+	},
+
+	/**
 	* To enable right click context menu support this function needs to be present.
 	*
 	* Must return an array of entries. An entry is an object with three properties:
@@ -428,7 +572,35 @@ var googlemaps = SAGE2_App.extend({
 		entry.parameters = {};
 		entries.push(entry);
 
-		entries.push({description: "separator"});
+		if (this.mapMarkers.length > 0) {
+			entries.push({description: "separator"});
+
+			entry = {};
+			entry.description = "Remove all markers from map";
+			entry.callback = "removeAllMarkersFromMap";
+			entry.parameters = {};
+			entries.push(entry);
+
+			if (this.mapMarkers.length > 1) {
+				entry = {};
+				entry.description = "Go to next marker";
+				entry.callback = "focusOnMarkerIndex";
+				entry.parameters = {
+					cycle: "next"
+				};
+				entries.push(entry);
+
+				entry = {};
+				entry.description = "Go to prevous marker";
+				entry.callback = "focusOnMarkerIndex";
+				entry.parameters = {
+					cycle: "previous"
+				};
+				entries.push(entry);
+			}
+
+		}
+		
 
 		return entries;
 	},

@@ -150,6 +150,20 @@ var image_viewer = SAGE2_App.extend({
 			}
 		});
 
+		if (this.checkIfHasGpsData()) {
+			entries.push({
+				description: "Try plot geo location on open map",
+				callback: "tryPlotOnGoogleMap",
+				parameters: {}
+			});
+
+			entries.push({
+				description: "Plot geo location on new map",
+				callback: "plotOnNewGoogleMap",
+				parameters: {}
+			});
+		}
+
 		// Special callback: convert to a doodle.
 		// entries.push({
 		// 	description: "Make Doodle",
@@ -158,6 +172,54 @@ var image_viewer = SAGE2_App.extend({
 		// });
 
 		return entries;
+	},
+
+	checkIfHasGpsData: function() {
+		if (this.state
+			&& this.state.exif
+			&& this.state.exif.GPSLatitude
+			&& this.state.exif.GPSLongitude) {
+			return true;
+		}
+		// console.log("No gps data");
+		return false;
+	},
+
+	tryPlotOnGoogleMap: function() {
+		var mapAppIndex = this.checkForGoogleMapApp();
+		if (mapAppIndex !== -1) {
+			applications[mapAppIndex].addMarkerToMap({
+				lat: this.state.exif.GPSLatitude,
+				lng: this.state.exif.GPSLongitude,
+				shouldFocusViewOnNewMarker: true
+			}); // focus after plotting
+		}
+	},
+
+	checkForGoogleMapApp: function() {
+		var keys = Object.keys(applications);
+		for (let i = 0; i < keys.length; i++) {
+			if (applications[keys[i]].application == "googlemaps") {
+				return keys[i];
+			}
+		}
+		return -1;
+	},
+
+	plotOnNewGoogleMap: function() {
+		if (isMaster) {
+			var data = {};
+			data.type    = "launchAppWithValues";
+			data.appName = "googlemap";
+			data.func    = "addMarkerToMap";
+			data.xLaunch = this.sage2_x + 100;
+			data.yLaunch = this.sage2_y;
+			data.params  =  {};
+			data.params.lat = this.state.exif.GPSLatitude;
+			data.params.lng = this.state.exif.GPSLongitude;
+			data.params.shouldFocusViewOnNewMarker = true;
+			wsio.emit("csdMessage", data);
+		}
 	},
 
 	/**
