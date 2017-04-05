@@ -525,6 +525,14 @@ function setupListeners() {
 		displayUI.addAppWindow(data);
 	});
 
+	wsio.on('showStickyPin', function(data) {
+		displayUI.showStickyPin(data);
+	});
+
+	wsio.on('hideStickyPin', function(data) {
+		displayUI.hideStickyPin(data);
+	});
+
 	wsio.on('deleteElement', function(data) {
 		displayUI.deleteApp(data.elemId);
 	});
