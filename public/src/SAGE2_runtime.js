@@ -321,8 +321,8 @@ function _typeOf(value) {
  */
 function sage2Log(msgObject) {
 	// Local console print
-	console.log("%c[%s] %c%s", "color: blue;", msgObject.app,
-		"color: black;", JSON.stringify(msgObject.message));
+	console.log("%c[%s] %c%s", "color: cyan;", msgObject.app,
+		"color: grey;", JSON.stringify(msgObject.message));
 
 	// Add the display node ID to the message
 	msgObject.node = clientID;

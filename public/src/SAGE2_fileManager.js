@@ -34,7 +34,6 @@ function fileSizeIEC(a, b, c, d, e) {
 			a / b.pow(d, e)).toFixed(1) + ' ' + (e ? 'KMGTPEZY'[--e] : 'B');
 }
 
-
 /**
  * FileManager object
  *
@@ -52,6 +51,9 @@ function FileManager(wsio, mydiv, uniqueID) {
 	this.dragPosition = null;
 	this.json_cfg  = null;
 	this.http_port = null;
+
+	// Set the current sorting order
+	this.sorting = {by: "name", dir: "asc", as: "string"};
 
 	var _this = this;
 
@@ -137,6 +139,8 @@ function FileManager(wsio, mydiv, uniqueID) {
 		return obj.tooltip ? obj.tooltip : "";
 	}
 
+
+
 	this.main = webix.ui({
 		container: mydiv,
 		id: "layout",
@@ -177,11 +181,9 @@ function FileManager(wsio, mydiv, uniqueID) {
 				{
 					id: "all_table",
 					view: "datatable",
-					// editable: true,
 					gravity: 2, // two times bigger
 					columnWidth: 200,
 					resizeColumn: true,
-					// animate: false,
 					scroll: 'y',
 					drag: true,
 					select: "multiselect",
@@ -204,17 +206,17 @@ function FileManager(wsio, mydiv, uniqueID) {
 					columns: [
 						{id: "index", header: "",     width: 40, minWidth: 25, sort: "int"},
 						{id: "name",  header: "Name", minWidth: 180,
-							sort: "text", fillspace: true},
+							sort: "string", fillspace: true},
 						{id: "user",  header: "User", width: 80, minWidth: 50,
-							sort: "text", css: {'text-align': 'right'}},
+							sort: "string", css: {'text-align': 'right'}},
 						{id: "size",  header: "Size", width: 80, minWidth: 50,
 							sort: sortBySize, css: {'text-align': 'right'}},
 						{id: "date",  header: "Date", width: 150, minWidth: 80,
-							sort: sortByDate, css: {'text-align': 'center'}},
+							sort: sortByDate1, css: {'text-align': 'center'}},
 						{id: "ago",   header: "Modified", width: 100, minWidth: 80,
-							sort: sortByDate, css: {'text-align': 'right'}},
+							sort: sortByDate2, css: {'text-align': 'right'}},
 						{id: "type",  header: "Type", width: 80, minWidth: 50,
-							sort: "text", css: {'text-align': 'center'}}
+							sort: "string", css: {'text-align': 'center'}}
 					],
 					data: [
 					]
@@ -588,6 +590,20 @@ function FileManager(wsio, mydiv, uniqueID) {
 	// Get handle on the middle table data
 	this.allTable = $$("all_table");
 
+	// Remember the sorting direction
+	this.allTable.attachEvent("onAfterSort", function(sort_by, sort_dir, sort_as) {
+		_this.sorting.dir = sort_dir;
+		_this.sorting.as  = sort_as;
+	});
+	// Remember the sorting column
+	this.allTable.attachEvent("onHeaderClick", function(id, e, trg) {
+		_this.sorting.by = id.column;
+	});
+
+	// Sort the table with default order
+	this.allTable.sort(this.sorting.by, this.sorting.dir);
+	this.allTable.markSorting(this.sorting.by, this.sorting.dir);
+
 	// User selection
 	this.allTable.attachEvent("onSelectChange", function(evt) {
 		var elt = _this.allTable.getSelectedId();
@@ -841,6 +857,7 @@ function FileManager(wsio, mydiv, uniqueID) {
 		}
 		return false;
 	});
+
 	// Track the position of the dragged item
 	this.allTable.$dragPos = function(pos, event, node) {
 		// dragPosition used in drop function
@@ -928,7 +945,11 @@ function FileManager(wsio, mydiv, uniqueID) {
 				var dItems  = _this.allTable.getSelectedId(true);
 
 				if (id === "Download") {
-					downloadItem(list.getItem(listId).id);
+					// Go over the list of selected items
+					for (i = 0; i < dItems.length; i++) {
+						// Trigger the download command
+						downloadItem(dItems[i].id);
+					}
 				} else if (id === "Copy URL") {
 					copyURLItem(list.getItem(listId).id);
 				} else if (id === "Open") {
@@ -980,10 +1001,10 @@ function FileManager(wsio, mydiv, uniqueID) {
 							if (yesno) {
 								// for all elements
 								tbd.map(function(tid) {
-									// send delete message to server
-									wsio.emit('deleteElementFromStoredFiles',
-										{filename: tid});
-									_this.allTable.remove(tid);
+									// Send delete message to server
+									wsio.emit('deleteElementFromStoredFiles', {filename: tid});
+									// Element will be deleted from table by return message from server
+									// _this.allTable.remove(tid);
 								});
 							}
 						}
@@ -1019,19 +1040,6 @@ function FileManager(wsio, mydiv, uniqueID) {
 		// send the result
 		return response;
 	};
-
-	function sortByDate(a, b) {
-		// fileds are 'moment' objects
-		a = _this.allFiles[a.id].exif.FileModifyDate;
-		b = _this.allFiles[b.id].exif.FileModifyDate;
-		return a > b ? 1 : (a < b ? -1 : 0);
-	}
-	function sortBySize(a, b) {
-		// File size in byte
-		a = _this.allFiles[a.id].exif.FileSize;
-		b = _this.allFiles[b.id].exif.FileSize;
-		return a > b ? 1 : (a < b ? -1 : 0);
-	}
 
 	function downloadItem(elt) {
 		var url = _this.allFiles[elt].sage2URL;
@@ -1290,9 +1298,6 @@ function FileManager(wsio, mydiv, uniqueID) {
 		$$("search_text").setValue("");
 
 		this.refresh();
-		// Sort the table by name
-		this.allTable.sort("name", "asc");
-
 
 		// Get the existing selection
 		var treeSelection = _this.tree.getSelectedItem();
@@ -1310,9 +1315,34 @@ function FileManager(wsio, mydiv, uniqueID) {
 
 	};
 
+	function sortByDate1(a, b) {
+		// fileds are 'moment' objects
+		a = _this.allFiles[a.id].exif.FileModifyDate;
+		b = _this.allFiles[b.id].exif.FileModifyDate;
+		return a > b ? 1 : (a < b ? -1 : 0);
+	}
+	function sortByDate2(a, b) {
+		// fileds are 'moment' objects
+		a = _this.allFiles[a.id].exif.FileModifyDate;
+		b = _this.allFiles[b.id].exif.FileModifyDate;
+		return a > b ? 1 : (a < b ? -1 : 0);
+	}
+	function sortBySize(a, b) {
+		// File size in byte
+		a = _this.allFiles[a.id].exif.FileSize;
+		b = _this.allFiles[b.id].exif.FileSize;
+		return a > b ? 1 : (a < b ? -1 : 0);
+	}
+
 	this.refresh = function() {
 		this.tree.refresh();
 		this.allTable.refresh();
+		// Resort the table
+		if (typeof this.sorting.as === "string") {
+			this.allTable.sort('#' + this.sorting.by + '#', this.sorting.dir, this.sorting.as);
+		} else {
+			this.allTable.sort('', this.sorting.dir, this.sorting.as);
+		}
 		this.main.adjust();
 	};
 
