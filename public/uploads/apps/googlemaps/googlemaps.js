@@ -10,7 +10,7 @@
 
 "use strict";
 
-/* global google */
+/* global google svgForegroundForWidgetConnectors */
 
 //
 // The instruction.json file contains a default key to access the Google Maps API.
@@ -45,7 +45,7 @@ var googlemaps = SAGE2_App.extend({
 		this.markerCycleIndex = 0;
 
 		// temporarily testing how well mouse conversion works
-		// this.passSAGE2PointerAsMouseEvents = true;
+		this.passSAGE2PointerAsMouseEvents = true;
 	},
 
 	initializeWidgets: function() {
@@ -164,6 +164,7 @@ var googlemaps = SAGE2_App.extend({
 	},
 
 	draw: function(date) {
+		this.updateLinesToSource();
 	},
 
 	resize: function(date) {
@@ -200,6 +201,7 @@ var googlemaps = SAGE2_App.extend({
 		if (this.trafficTimer) {
 			clearInterval(this.trafficTimer);
 		}
+		this.removeAllLinkLines();
 	},
 
 	event: function(eventType, position, user_id, data, date) {
@@ -222,6 +224,8 @@ var googlemaps = SAGE2_App.extend({
 			this.dragging = false;
 			this.position.x = position.x;
 			this.position.y = position.y;
+			// check if there is a marker under the cursor
+			this.showMarkerInfoIfReleasedOver({x: position.x, y: position.y});
 
 			this.refresh(date);
 		} else if (eventType === "pointerDblClick") {
@@ -406,6 +410,7 @@ var googlemaps = SAGE2_App.extend({
 	 * }
 	 */
 	addMarkerToMap: function(markerLocation) {
+		var _this = this;
 		if ( typeof markerLocation.lat === "string") {
 			markerLocation.lat = this.convertDegMinSecDirToSignedDegree(markerLocation.lat);
 			markerLocation.lng = this.convertDegMinSecDirToSignedDegree(markerLocation.lng);
@@ -418,21 +423,26 @@ var googlemaps = SAGE2_App.extend({
 		// add to tracking array to allow removal later
 		this.mapMarkers.push(markToAdd);
 		markToAdd.markerLocation = markerLocation;
-		// center view if necessarya
-		if (markerLocation.shouldFocusViewOnNewMarker) {
-			this.map.setCenter(markerLocation);
-		}
+		// always center view on new marker
+		this.map.setCenter(markerLocation);
+		// add info window if it doesn't exist
 		if (this.gmapInfoWindow === undefined || this.gmapInfoWindow === null) {
 			this.gmapInfoWindow = new google.maps.InfoWindow();
+			google.maps.event.addListener(this.gmapInfoWindow,'closeclick',function(){
+				_this.removeAllLinkLines();
+			});
+		}
+		// add overlay for this map if doesn't exist
+		if (this.gmapOverlay === undefined || this.gmapOverlay === null) {
+			this.gmapOverlay = new google.maps.OverlayView();
+			this.gmapOverlay.draw = function() {}; // required?
+			this.gmapOverlay.setMap(this.map);
 		}
 		// add a click effect to marker. not working?
-		var _this = this;
-		google.maps.event.addListener(markToAdd, 'mousedown', function(e) {
-			console.log("mark reacting to event");
-			console.dir(e);
-			_this.gmapInfoWindow.setContent("Latitude: " + markerLocation.lat
-											+ "<br>\nLongitude:" + markerLocation.lng);
-			_this.gmapInfoWindow.open(_this.map, _this);
+		google.maps.event.addListener(markToAdd, 'click', function(e) {
+			_this.gmapInfoWindow.setContent("Latitude: " + this.markerLocation.lat
+											+ "<br>\nLongitude:" + this.markerLocation.lng);
+			_this.gmapInfoWindow.open(_this.map, this); // this is the marker
 		});
 		this.getFullContextMenuAndUpdate();
 	},
@@ -506,6 +516,8 @@ var googlemaps = SAGE2_App.extend({
 	},
 
 	removeAllMarkersFromMap: function() {
+		// if any of the maps have active lines, remove them
+		this.removeAllLinkLines();
         for (let i = 0; i < this.mapMarkers.length; i++) {
           this.mapMarkers[i].setMap(null);
         }
@@ -530,6 +542,79 @@ var googlemaps = SAGE2_App.extend({
 			}
 		}
 		this.map.setCenter(this.mapMarkers[this.markerCycleIndex].markerLocation);
+		this.showMarkerInfoIfReleasedOver({blank:"would have been coordinates"}, this.markerCycleIndex);
+
+		this.refresh(new Date());
+	},
+
+	// will check each marker to see if under the pointer
+	showMarkerInfoIfReleasedOver: function(releasePoint, indexMatcher) {
+		var mpos;
+		for (let i = 0; i < this.mapMarkers.length; i++) {
+			// this will get the position relative to app top left corner
+			mpos = this.gmapOverlay.getProjection().fromLatLngToContainerPixel(this.mapMarkers[i].position);
+			// if clicking by the marker
+			if ((indexMatcher !== undefined && indexMatcher === i) || ((releasePoint.x > mpos.x - 15)
+				&& (releasePoint.x < mpos.x + 15)
+				&& (releasePoint.y > mpos.y - 45)
+				&& (releasePoint.y < mpos.x + 5))){
+					// show the pop up google info window
+					google.maps.event.trigger(this.mapMarkers[i], 'click');
+					this.removeAllLinkLines();
+					// create a line to source app
+					let said = this.mapMarkers[i].markerLocation.sourceAppId;
+					let svgLine = svgForegroundForWidgetConnectors.line(0, 0, 0, 0);
+					this.mapMarkers[i].s2lineLink = svgLine;
+					svgLine.attr({
+						id: this.id + "syncLineFor" + said,
+						strokeWidth: ui.widgetControlSize * 0.18,
+						stroke:  "rgba(250,250,250,1.0)"
+					});
+				}
+		}
+	},
+
+	// redraw the line.
+	updateLinesToSource: function() {
+		var mpos, borderToleranceForMarkerRemoval = 15;
+		// for each marker
+		for (let i = 0; i < this.mapMarkers.length; i++) {
+			// if there is a line
+			if (this.mapMarkers[i].s2lineLink !== null && this.mapMarkers[i].s2lineLink !== undefined) {
+				// check if the app still exists
+				if (applications[this.mapMarkers[i].markerLocation.sourceAppId] === undefined) {
+					// if not, remove the line and move to the next marker
+					this.mapMarkers[i].s2lineLink.remove();
+					continue;
+				}
+				mpos = this.gmapOverlay.getProjection().fromLatLngToContainerPixel(this.mapMarkers[i].position);
+				// if the marker is too close or off the view, remove it
+				if (mpos.x < borderToleranceForMarkerRemoval
+					|| mpos.x > this.sage2_width - borderToleranceForMarkerRemoval
+					|| mpos.y < borderToleranceForMarkerRemoval
+					|| mpos.y > this.sage2_height - borderToleranceForMarkerRemoval) {
+					this.mapMarkers[i].s2lineLink.remove();
+					continue;
+				}
+				// if the line and app exist, then redraw
+				this.mapMarkers[i].s2lineLink.attr({
+					x1: (this.sage2_x + mpos.x),
+					y1: (this.sage2_y + mpos.y),
+					x2: (applications[this.mapMarkers[i].markerLocation.sourceAppId].sage2_x + 10),
+					y2: (applications[this.mapMarkers[i].markerLocation.sourceAppId].sage2_y
+						- ui.titleBarHeight + 10)
+				});
+			}
+		}
+	}, //applications[this.mapMarkers[i].markerLocation.sourceAppId].sage2_height / 2)
+
+	// if a marker has a link line, remove it from the svg space
+	removeAllLinkLines: function() {
+		for (var i = 0; i < this.mapMarkers.length; i++) {
+			if (this.mapMarkers[i].s2lineLink !== null && this.mapMarkers[i].s2lineLink !== undefined) {
+				this.mapMarkers[i].s2lineLink.remove();
+			}
+		}
 	},
 
 	/**

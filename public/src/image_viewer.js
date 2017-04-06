@@ -191,6 +191,7 @@ var image_viewer = SAGE2_App.extend({
 			applications[mapAppIndex].addMarkerToMap({
 				lat: this.state.exif.GPSLatitude,
 				lng: this.state.exif.GPSLongitude,
+				sourceAppId: this.id,
 				shouldFocusViewOnNewMarker: true
 			}); // focus after plotting
 		}
