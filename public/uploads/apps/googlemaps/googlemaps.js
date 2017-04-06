@@ -401,7 +401,7 @@ var googlemaps = SAGE2_App.extend({
 
 	/**
 	 * Adding a Markers
-	 * 
+	 *
 	 * This function assumes the data is correctly formatted to have
 	 * {
 	 *  lat: float,
@@ -411,15 +411,15 @@ var googlemaps = SAGE2_App.extend({
 	 */
 	addMarkerToMap: function(markerLocation) {
 		var _this = this;
-		if ( typeof markerLocation.lat === "string") {
+		if (typeof markerLocation.lat === "string") {
 			markerLocation.lat = this.convertDegMinSecDirToSignedDegree(markerLocation.lat);
 			markerLocation.lng = this.convertDegMinSecDirToSignedDegree(markerLocation.lng);
 		}
 		// add marker to map at location
 		let markToAdd = new google.maps.Marker({
-          position: markerLocation,
-          map: this.map
-        });
+			position: markerLocation,
+			map: this.map
+		});
 		// add to tracking array to allow removal later
 		this.mapMarkers.push(markToAdd);
 		markToAdd.markerLocation = markerLocation;
@@ -428,7 +428,7 @@ var googlemaps = SAGE2_App.extend({
 		// add info window if it doesn't exist
 		if (this.gmapInfoWindow === undefined || this.gmapInfoWindow === null) {
 			this.gmapInfoWindow = new google.maps.InfoWindow();
-			google.maps.event.addListener(this.gmapInfoWindow,'closeclick',function(){
+			google.maps.event.addListener(this.gmapInfoWindow, 'closeclick', function() {
 				_this.removeAllLinkLines();
 			});
 		}
@@ -451,7 +451,7 @@ var googlemaps = SAGE2_App.extend({
 	 * Converts string with degree, minute, second, direction. To signed degree.
 	 * To avoid being token specific, checks for numbers rather than symbols.
 	 * Example coordinates from some images:
-	 * 
+	 *
 {
 	lat: "21 deg 41' 33.14\" N",
 	lng: "157 deg 50' 55.48\" W"
@@ -466,11 +466,10 @@ var googlemaps = SAGE2_App.extend({
 }
 	 */
 	convertDegMinSecDirToSignedDegree: function (input) {
-		var deg = "";
 		var index = 0, partIndex = -1; // find the number first, might be prefix fluff
 		var findingNextNumber = true;
 		var parts = ["", "", "", ""]; // deg, min, sec, dir
-		
+		// for each of the characters
 		while (index < input.length) {
 			// if finding next number
 			if (findingNextNumber) {
@@ -518,10 +517,10 @@ var googlemaps = SAGE2_App.extend({
 	removeAllMarkersFromMap: function() {
 		// if any of the maps have active lines, remove them
 		this.removeAllLinkLines();
-        for (let i = 0; i < this.mapMarkers.length; i++) {
-          this.mapMarkers[i].setMap(null);
-        }
-        this.mapMarkers = [];
+		for (let i = 0; i < this.mapMarkers.length; i++) {
+			this.mapMarkers[i].setMap(null);
+		}
+		this.mapMarkers = [];
 		this.getFullContextMenuAndUpdate();
 	},
 
@@ -542,7 +541,7 @@ var googlemaps = SAGE2_App.extend({
 			}
 		}
 		this.map.setCenter(this.mapMarkers[this.markerCycleIndex].markerLocation);
-		this.showMarkerInfoIfReleasedOver({blank:"would have been coordinates"}, this.markerCycleIndex);
+		this.showMarkerInfoIfReleasedOver({blank: "would have been coordinates"}, this.markerCycleIndex);
 
 		this.refresh(new Date());
 	},
@@ -557,20 +556,20 @@ var googlemaps = SAGE2_App.extend({
 			if ((indexMatcher !== undefined && indexMatcher === i) || ((releasePoint.x > mpos.x - 15)
 				&& (releasePoint.x < mpos.x + 15)
 				&& (releasePoint.y > mpos.y - 45)
-				&& (releasePoint.y < mpos.x + 5))){
-					// show the pop up google info window
-					google.maps.event.trigger(this.mapMarkers[i], 'click');
-					this.removeAllLinkLines();
-					// create a line to source app
-					let said = this.mapMarkers[i].markerLocation.sourceAppId;
-					let svgLine = svgForegroundForWidgetConnectors.line(0, 0, 0, 0);
-					this.mapMarkers[i].s2lineLink = svgLine;
-					svgLine.attr({
-						id: this.id + "syncLineFor" + said,
-						strokeWidth: ui.widgetControlSize * 0.18,
-						stroke:  "rgba(250,250,250,1.0)"
-					});
-				}
+				&& (releasePoint.y < mpos.x + 5))) {
+				// show the pop up google info window
+				google.maps.event.trigger(this.mapMarkers[i], 'click');
+				this.removeAllLinkLines();
+				// create a line to source app
+				let said = this.mapMarkers[i].markerLocation.sourceAppId;
+				let svgLine = svgForegroundForWidgetConnectors.line(0, 0, 0, 0);
+				this.mapMarkers[i].s2lineLink = svgLine;
+				svgLine.attr({
+					id: this.id + "syncLineFor" + said,
+					strokeWidth: ui.widgetControlSize * 0.18,
+					stroke:  "rgba(250,250,250,1.0)"
+				});
+			}
 		}
 	},
 
@@ -685,7 +684,6 @@ var googlemaps = SAGE2_App.extend({
 			}
 
 		}
-		
 
 		return entries;
 	},

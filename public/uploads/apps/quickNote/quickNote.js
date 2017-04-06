@@ -38,7 +38,7 @@ var quickNote = SAGE2_App.extend({
 
 		// Keep a copy of the title
 		this.noteTitle = "";
-		
+
 		// Tracker for full page editors
 		this.saEditorIds = [];
 
