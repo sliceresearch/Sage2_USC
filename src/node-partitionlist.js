@@ -179,8 +179,8 @@ PartitionList.prototype.removeChildFromPartition = function(childID, partitionID
   *
   * @param {object} item - The item which was moved
   */
-PartitionList.prototype.updateOnItemRelease = function(item) {
-	var newPartitionID = this.calculateNewPartition(item);
+PartitionList.prototype.updateOnItemRelease = function(item, pointer) {
+	var newPartitionID = this.calculateNewPartition(item, pointer);
 	// console.log(item);
 
 	if (newPartitionID !== null) {
@@ -204,7 +204,7 @@ PartitionList.prototype.updateOnItemRelease = function(item) {
   *
   * @param {object} item - The item which was moved
   */
-PartitionList.prototype.calculateNewPartition = function(item) {
+PartitionList.prototype.calculateNewPartition = function(item, pointer) {
 	// check partitions to find if item falls into one
 	var partitionIDs = Object.keys(this.list);
 
@@ -216,13 +216,15 @@ PartitionList.prototype.calculateNewPartition = function(item) {
 		y: item.top + item.height / 2
 	};
 
+	let decisionCoord = pointer || itemCenter;
+
 	// check if item falls into any partition
 	partitionIDs.forEach((el) => {
 		var ptn = this.list[el];
 
 		// the centroid of the item must be within the bounds of the partition
-		if ((itemCenter.x >= ptn.left) && (itemCenter.x <= ptn.left + ptn.width) &&
-			(itemCenter.y >= ptn.top) && (itemCenter.y <= ptn.top + ptn.height)) {
+		if ((decisionCoord.x >= ptn.left) && (decisionCoord.x <= ptn.left + ptn.width) &&
+			(decisionCoord.y >= ptn.top) && (decisionCoord.y <= ptn.top + ptn.height)) {
 			// the centroid of the item is inside the partition
 
 			// if the partition is the parent automatically remain inside
@@ -240,8 +242,8 @@ PartitionList.prototype.calculateNewPartition = function(item) {
 
 			// calculate distance between item centroid and partition centroid
 			var distance = Math.sqrt(
-				Math.pow(itemCenter.x - partitionCenter.x, 2) +
-				Math.pow(itemCenter.y - partitionCenter.y, 2)
+				Math.pow(decisionCoord.x - partitionCenter.x, 2) +
+				Math.pow(decisionCoord.y - partitionCenter.y, 2)
 			);
 
 			if (distance < closestDistance) {

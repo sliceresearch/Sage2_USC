@@ -6618,7 +6618,7 @@ function updatePointerPosition(uniqueID, pointerX, pointerY, data) {
 
 			if (currentMoveItem) {
 				// Calculate partition which item is over
-				let newPartitionHovered = partitions.calculateNewPartition(currentMoveItem);
+				let newPartitionHovered = partitions.calculateNewPartition(currentMoveItem, {x: pointerX, y: pointerY});
 
 
 				if (currentMoveItem.ptnHovered != newPartitionHovered) {
@@ -7360,7 +7360,7 @@ function pointerRelease(uniqueID, pointerX, pointerY, data) {
 
 	// update parent partition of item when the app is released
 	if (selectedApp && selectedApp.id && SAGE2Items.applications.list.hasOwnProperty(selectedApp.id)) {
-		var changedPartitions = partitions.updateOnItemRelease(selectedApp);
+		var changedPartitions = partitions.updateOnItemRelease(selectedApp, {x: pointerX, y: pointerY});
 
 		moveAndResizeApplicationWindow({
 			elemId: selectedApp.id, elemLeft: selectedApp.left,
