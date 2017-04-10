@@ -899,7 +899,6 @@ AppLoader.prototype.manageAndLoadUploadedFile = function(file, callback) {
 	var cleanFilename = sanitize(file.name);
 	// Clean up further the file names
 	cleanFilename = cleanFilename.replace(/[\$\%\^\&\(\)]/g, '_');
-	console.log(cleanFilename);
 
 	// Check if there is a matching application
 	var app = registry.getDefaultApp(cleanFilename);

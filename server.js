@@ -2161,6 +2161,34 @@ function wsPackageSession(wsio, data) {
 					maximizeConstraint: "width"
 				};
 
+
+				let iconPath;
+
+				// if (sageutils.fileExists(path.resolve(data.id))) {
+				// 	iconPath = path.join(data.id;
+				// } else {
+				// 	iconPath = path.join(sessionDirectory, data.id);
+				// }
+
+				console.log(sessionName);
+
+				iconPath =
+					path.join(
+						path.join(sessionDirectory, ".previews"), sessionName
+					) + ".svg";
+
+				try {
+					fse.copySync(
+						iconPath,
+						path.join(folder, "sessionIcon.svg"),
+						{preserveTimestamps: true}
+					);
+
+					console.log(sageutils.header("Session") + 'Icon: ' + iconPath);
+				} catch (err) {
+					console.log("Error including session Icon", err);
+				}
+
 				// list apps
 				session.apps.forEach(function(element, index, array) {
 					states.apps.push(element);
@@ -2219,6 +2247,9 @@ function wsPackageSession(wsio, data) {
 
 				// finalize the archive
 				archive.finalize();
+
+				// send the update file list
+				broadcast('storedFileList', getSavedFilesList());
 			}
 		});
 
