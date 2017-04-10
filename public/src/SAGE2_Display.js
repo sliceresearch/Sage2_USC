@@ -114,7 +114,7 @@ function loadPointerData() {
 	if (localStorage.SAGE2_ptrColor === undefined ||
 		localStorage.SAGE2_ptrColor === null) {
 		localStorage.SAGE2_ptrColor = "#B4B4B4";
-	}		
+	}
 
 }
 
@@ -124,7 +124,7 @@ function savePointerData() {
 	addCookie('SAGE2_ptrName',  localStorage.SAGE2_ptrName);
 	addCookie('SAGE2_ptrColor', localStorage.SAGE2_ptrColor);
 
-	
+
 }
 
 // Get Browser-Specifc Prefix
