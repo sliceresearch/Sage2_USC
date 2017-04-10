@@ -1171,7 +1171,7 @@ AppLoader.prototype.unpackPortableSession = function(sessionInfo) {
 
 	let _this = this;
 
-	let fse = require('fs-extra');
+	// let fse = require('fs-extra');
 	let unzipper = new Unzip(localPath);
 
 	console.log(localPath);
@@ -1207,7 +1207,9 @@ AppLoader.prototype.unpackPortableSession = function(sessionInfo) {
 
 		unzipper.on('extract', function (log) {
 			console.log('Finished extracting ' + cleanFilename);
-			fse.removeSync(localPath);
+			// don't remove zip right now
+			// fse.removeSync(localPath);
+
 			// add all assets in this zip to server assets
 			let sessionFilePath = path.join(extractDir, (cleanFilename.split(".s2ps")[0] + ".json"));
 

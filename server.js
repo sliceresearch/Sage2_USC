@@ -2230,6 +2230,21 @@ function wsPackageSession(wsio, data) {
 					console.log('-----------------------');
 					// Deleting temp folder
 					fse.removeSync(folder);
+
+					// once write is done, add to file system
+					console.log(output_zip);
+
+					var fileObject = {};
+					fileObject[0] = {
+						name: sessionName + ".s2ps",
+						type: "s2ps",
+						path: output_zip
+					};
+
+					manageUploadedFiles(fileObject, [0, 0], null, "#B4B4B4", false);
+
+					// send the update file list
+					broadcast('storedFileList', getSavedFilesList());
 				});
 
 				// Catch this error explicitly
@@ -2248,8 +2263,8 @@ function wsPackageSession(wsio, data) {
 				// finalize the archive
 				archive.finalize();
 
-				// send the update file list
-				broadcast('storedFileList', getSavedFilesList());
+
+
 			}
 		});
 
