@@ -58,13 +58,11 @@ var uiTimer = null;
 var uiTimerDelay;
 
 // Mouse Interaction
-//var interactor;
 var uiwsio;
 var mouseMode;
 var hasMouse = true;
 var mousehandler;
-var pointerLabel = "MyPointer";
-var pointerColor = "#FF0000";
+
 var button;
 var eventListenerSet = false;
 
@@ -85,6 +83,49 @@ window.onbeforeunload = function() {
 window.addEventListener('load', function(event) {
 	SAGE2_init();
 });
+
+/**
+ * Loads the pointer name and color from stored cookie into local storage
+ * If there is no such data, the function returns false
+ */
+function loadPointerData() {
+	// Check if a domain cookie exists for the name
+	var cookieName = getCookie('SAGE2_ptrName');
+	if (cookieName) {
+		localStorage.SAGE2_ptrName = cookieName;
+	}
+	// Check if a domain cookie exists for the color
+	var cookieColor = getCookie('SAGE2_ptrColor');
+	if (cookieColor) {
+		localStorage.SAGE2_ptrColor = cookieColor;
+	}
+
+	// Deals with the name and color of the pointer
+	if (localStorage.SAGE2_ptrName  === undefined ||
+		localStorage.SAGE2_ptrName  === null ||
+		localStorage.SAGE2_ptrName  === "Default") {
+		if (hasMouse) {
+			localStorage.SAGE2_ptrName  = "SAGE2_user";
+		} else {
+			localStorage.SAGE2_ptrName  = "SAGE2_mobile";
+
+		}
+	}
+	if (localStorage.SAGE2_ptrColor === undefined ||
+		localStorage.SAGE2_ptrColor === null) {
+		localStorage.SAGE2_ptrColor = "#B4B4B4";
+	}		
+
+}
+
+function savePointerData() {
+
+
+	addCookie('SAGE2_ptrName',  localStorage.SAGE2_ptrName);
+	addCookie('SAGE2_ptrColor', localStorage.SAGE2_ptrColor);
+
+	
+}
 
 // Get Browser-Specifc Prefix
 function getBrowserPrefix() {
@@ -247,15 +288,17 @@ function SAGE2_init() {
 
 	isMaster = false;
 
+	loadPointerData();
 
 	var settingsbutton = document.getElementById("settingsCloseBtn");
 	if (settingsbutton)			{
 		settingsbutton.addEventListener('click', function(event) {
 
 			hideDialog('settingsDialog');
-			pointerLabel = document.getElementById("sage2PointerLabel").value;
-			pointerColor = document.getElementById("sage2PointerColor").value;
+			localStorage.SAGE2_ptrName = document.getElementById("sage2PointerLabel").value;
+			localStorage.SAGE2_ptrColor = document.getElementById("sage2PointerColor").value;
 
+			savePointerData();
 		});
 	}
 
@@ -343,8 +386,8 @@ function setupInteractionClient() {
 		uiwsio.emit('addClient', clientDescription);
 
 		uiwsio.emit('registerInteractionClient', {
-			name: pointerLabel,
-			color: pointerColor
+			name: localStorage.SAGE2_ptrName,
+			color: localStorage.SAGE2_ptrColor
 		});
 
 		// the mousehandler holds all functions for mouseevent emitting to server
@@ -1914,7 +1957,7 @@ function SAGE2_MouseEventHandler(wsio) {
 
 		this.countDown = 0;
 
-		wsio.emit('startSagePointer', {label: pointerLabel, color: pointerColor});
+		wsio.emit('startSagePointer', {label: localStorage.SAGE2_ptrName, color: localStorage.SAGE2_ptrColor});
 	};
 
 	this.stopSAGE2Pointer = function() {
@@ -2320,8 +2363,8 @@ function SAGE2_FileDropHandler(_wsio) {
 			formdata.append("dropX", x);
 			formdata.append("dropY", y);
 			formdata.append("open", true);
-			formdata.append("SAGE2_ptrName", pointerLabel);
-			formdata.append("SAGE2_ptrColor", pointerColor);
+			formdata.append("SAGE2_ptrName", localStorage.SAGE2_ptrName);
+			formdata.append("SAGE2_ptrColor", localStorage.SAGE2_ptrColor);
 
 			var xhr = new XMLHttpRequest();
 			xhr.open("POST", "upload", true);
@@ -2349,8 +2392,9 @@ function SAGE2_FileDropHandler(_wsio) {
  * @param id {String} element to show
  */
 function showDialog(id) {
-	document.getElementById('sage2PointerLabel').value = pointerLabel;
-	document.getElementById('sage2PointerColor').value = pointerColor;
+
+	document.getElementById('sage2PointerLabel').value = localStorage.SAGE2_ptrName;
+	document.getElementById('sage2PointerColor').value = localStorage.SAGE2_ptrColor;
 	document.getElementById('blackoverlay').style.display = "block";
 	document.getElementById(id).style.display = "block";
 	unsetEventListener();
