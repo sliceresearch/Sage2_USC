@@ -2164,14 +2164,6 @@ function wsPackageSession(wsio, data) {
 
 				let iconPath;
 
-				// if (sageutils.fileExists(path.resolve(data.id))) {
-				// 	iconPath = path.join(data.id;
-				// } else {
-				// 	iconPath = path.join(sessionDirectory, data.id);
-				// }
-
-				console.log(sessionName);
-
 				iconPath =
 					path.join(
 						path.join(sessionDirectory, ".previews"), sessionName
@@ -2232,16 +2224,16 @@ function wsPackageSession(wsio, data) {
 					fse.removeSync(folder);
 
 					// once write is done, add to file system
-					console.log(output_zip);
 
 					var fileObject = {};
 					fileObject[0] = {
 						name: sessionName + ".s2ps",
 						type: "s2ps",
-						path: output_zip
+						path: output_zip,
+						justUpload: true
 					};
 
-					manageUploadedFiles(fileObject, [0, 0], null, "#B4B4B4", false);
+					manageUploadedFiles(fileObject, [0, 0], "PackagedSession", "#B4B4B4", false);
 
 					// send the update file list
 					broadcast('storedFileList', getSavedFilesList());
@@ -4983,10 +4975,12 @@ function uploadForm(req, res) {
 	form.on('end', function() {
 		// saves files in appropriate directory and broadcasts the items to the displays
 		manageUploadedFiles(this.openedFiles, position, ptrName, ptrColor, openAfter);
+		console.log("Form end");
 	});
 }
 
 function manageUploadedFiles(files, position, ptrName, ptrColor, openAfter) {
+
 	var fileKeys = Object.keys(files);
 	fileKeys.forEach(function(key) {
 		var file = files[key];

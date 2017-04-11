@@ -945,11 +945,12 @@ AppLoader.prototype.manageAndLoadUploadedFile = function(file, callback) {
 		} else if (app === "portable_session" && mime_type === "sage2/session") {
 			console.log("Grabbed portable session file for load: ", cleanFilename, mime_type);
 
-			_this.unpackPortableSession({
-				path: localPath,
-				name: cleanFilename
-			});
-
+			if (!file.justUpload) { // dont unpack when it is just created
+				_this.unpackPortableSession({
+					path: localPath,
+					name: cleanFilename
+				});
+			}
 
 		} else {
 			// try to process all the files with exiftool
