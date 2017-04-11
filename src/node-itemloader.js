@@ -1172,7 +1172,7 @@ AppLoader.prototype.unpackPortableSession = function(sessionInfo) {
 
 	let _this = this;
 
-	// let fse = require('fs-extra');
+	let fse = require('fs-extra');
 	let unzipper = new Unzip(localPath);
 
 	console.log(localPath);
@@ -1181,7 +1181,7 @@ AppLoader.prototype.unpackPortableSession = function(sessionInfo) {
 
 	console.log('-----------------------');
 	console.log(sageutils.header('Session') + 'Opening portable session: ' + cleanFilename);
-	var extractDir = path.join(localPath.split(".")[0] + Date.now() + "-content");
+	var extractDir = path.join(localPath.split(".")[0] + "-content");
 
 	fs.mkdir(extractDir, (err, folder) => {
 		if (err) {
@@ -1213,6 +1213,9 @@ AppLoader.prototype.unpackPortableSession = function(sessionInfo) {
 
 			// add all assets in this zip to server assets
 			let sessionFilePath = path.join(extractDir, (cleanFilename.split(".s2ps")[0] + ".json"));
+			let newSessionFilePath = /*path.join(path.join(global.mediaFolders, "sessions"), ("PORTABLE_" + cleanFilename.split(".s2ps")[0] + ".json"));*/
+				path.join(global.mediaFolders.user.path, "sessions", ("PORTABLE - " + cleanFilename.split(".s2ps")[0] + ".json"));
+
 
 			let sessionFile = JSON.parse(
 				fs.readFileSync(sessionFilePath).toString("utf-8")
@@ -1221,15 +1224,26 @@ AppLoader.prototype.unpackPortableSession = function(sessionInfo) {
 			// alter paths of assets in session file to point to the portable-sessions folder items
 			for (let app of sessionFile.apps) {
 				app.filePath = path.join(extractDir, app.title);
-				console.log(app.filePath);
 				// file paths correctly updated (I believe)
 			}
 
 			// write changes to session file
-			fs.writeFileSync(sessionFilePath, JSON.stringify(sessionFile));
+			fs.writeFileSync(newSessionFilePath, JSON.stringify(sessionFile));
+
+			// copy icon over
+			let iconPath = {
+				pOld: path.join(extractDir, "sessionIcon.svg"),
+				pNew:	path.join(
+					global.mediaFolders.user.path,
+					"sessions",
+					".previews",
+					("PORTABLE - " + cleanFilename.split(".s2ps")[0] + ".svg"))
+			};
+
+			fse.copySync(iconPath.pOld, iconPath.pNew);
 
 			// load session using session file
-			_this.loadPortableSession(sessionFilePath);
+			_this.loadPortableSession(newSessionFilePath);
 
 		});
 	});
