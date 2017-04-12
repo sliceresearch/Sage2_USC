@@ -249,7 +249,7 @@ function FileManager(wsio, mydiv, uniqueID) {
 								if (obj.image) {
 									if (obj.session) {
 										// if it is from a session
-										return "<img src='" + obj.image + "'></img>";
+										return "<img src='" + obj.image + "' onerror=\"this.src='#'\"></img>";
 									}
 									return "<img src='" + obj.image + "_256.jpg'></img>";
 								}
