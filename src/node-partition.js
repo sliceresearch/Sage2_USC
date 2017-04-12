@@ -21,7 +21,6 @@
   * @class Partition
   * @constructor
   */
-
 function Partition(dims, id, color, partitionList) {
 	// the list which this partition is a part of
 	this.partitionList = partitionList;
@@ -626,7 +625,7 @@ Partition.prototype.restoreChild = function(id, shift) {
 };
 
 /**
-  * Updates the inner layout of the partition according to whether or not
+  * Updates the inner layout of the Partition according to whether or not
 	* the partition is in innerTiling mode or has a maximized child mode or both
   *
   * @param {string} id - The id of child to restore
@@ -641,6 +640,14 @@ Partition.prototype.updateInnerLayout = function() {
 	}
 };
 
+
+/**
+  * Updates positions of all children based on the relative positions of the children
+	* within the Partition and the size of the Partition. Used when a Partition is moved
+	* or resized and the children should also resize/move. Returns a list of children
+	* which have been moved.
+  *
+  */
 Partition.prototype.updateChildrenPositions = function() {
 	var updatedChildren = [];
 
@@ -672,6 +679,12 @@ Partition.prototype.updateChildrenPositions = function() {
 	return updatedChildren;
 };
 
+/**
+  * Returns the movement bounds of a Partition by the minimum and maximum coordinate
+	* that each side can move to. This is only applicable when a partition has neighbors
+	* while snapped.
+  *
+  */
 Partition.prototype.getMovementBoundaries = function() {
 	let partitions = this.partitionList;
 	let config = partitions.configuration;
@@ -744,6 +757,11 @@ Partition.prototype.getMovementBoundaries = function() {
 	return partitionMovementBounds;
 };
 
+/**
+  * Clamps each side of the Partition to be within each's respective boundary.
+  *
+	* @param {object} boundaries - The movement boundaries of a Partition (from Partition.getMovementBoundaries)
+  */
 Partition.prototype.clampPositionWithinBoundaries = function (boundaries) {
 	let partitions = this.partitionList;
 	let config = partitions.configuration;
@@ -805,6 +823,10 @@ Partition.prototype.clampPositionWithinBoundaries = function (boundaries) {
 	this.height = newPositionAfterClamp.bottom - this.top;
 };
 
+/**
+  * Updates the position of all of the Partitions neighbors based on the position of the Partition
+	* after it has been clamped into its boundaries.
+  */
 Partition.prototype.updateNeighborPtnPositions = function() {
 	let partitions = this.partitionList;
 	let config = partitions.configuration;
@@ -908,19 +930,24 @@ Partition.prototype.updateNeighborPtnPositions = function() {
 		}
 	}
 
-	// return the IDs of updated partitions so the updates can be reflected in
+	// return the IDs of updated Partitions so the updates can be reflected in
 	// ui and display
 	return updatedPtnIDs;
 };
 
-// toggle snapped mode and update neighbors
+/**
+  * Toggles whether or not the Partition is being snapped to its neighbors.
+  */
 Partition.prototype.toggleSnapping = function() {
 	this.isSnapping = !this.isSnapping;
 
 	this.updateNeighborPartitionList();
 };
 
-// update neighbors
+/**
+  * Updates the list of neighbors and which side they are neighboring on for this
+	* Partition
+  */
 Partition.prototype.updateNeighborPartitionList = function() {
 	this.partitionList.updateNeighbors(this.id);
 };
@@ -965,7 +992,7 @@ Partition.prototype.getTitle = function() {
 };
 
 /**
-  * Create the context menu based on the current state of the partition
+  * Create the context menu based on the current state of the Partition
   */
 Partition.prototype.getContextMenu = function() {
 	var contextMenu = [];
