@@ -14,7 +14,7 @@ stage:
 	unzip -q -u -d SAGE2 sage2.zip
 
 install:
-	cd SAGE2/sage2 && node install_dependencies.js --prod --win --target=0.12.0
+	cd SAGE2/sage2 && node install_dependencies.js --prod --win --target=6.0.0
 	cd SAGE2/sage2 && npm install kthxbai
 	cd SAGE2/sage2 && npm install yuidocjs
 	cd SAGE2/sage2 && npm run doc

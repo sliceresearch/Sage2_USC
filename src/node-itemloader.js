@@ -330,22 +330,11 @@ AppLoader.prototype.loadImageFromFile = function(file, mime_type, aUrl, external
 
 	} else if (mime_type === "image/svg+xml") {
 		// SVG file
-
-		// Query the exif data
-		// var vbox = assets.getTag(file, "ViewBox");
-		// var svgDims;
-		// if (vbox) {
-		// 	var box  = vbox.split(' ');
-		// 	svgDims = {width: parseInt(box[2]), height: parseInt(box[3])};
-		// } else {
-		// 	// Assume square image
-		// 	svgDims = {width: 600, height: 600};
-		// }
-		var svgExif   = assets.getExifData(file);
+		var svgExif = assets.getExifData(file);
 		if (svgExif) {
-			var svgWidth  = svgExif.ImageWidth  || 600;
-			var svgHeight = svgExif.ImageHeight || 600;
-			this.loadImageFromServer(svgWidth, svgHeight, mime_type, aUrl, external_url, name, svgExif,
+			var svgWidth  = parseInt(svgExif.ImageWidth,  10) || 600;
+			var svgHeight = parseInt(svgExif.ImageHeight, 10) || 600;
+			this.loadImageFromServer(svgWidth, svgHeight, mime_type, aUrl, external_url, svgExif.FileName, svgExif,
 				function(appInstance) {
 					appInstance.file = file;
 					callback(appInstance);
@@ -389,8 +378,10 @@ AppLoader.prototype.loadVideoFromFile = function(file, mime_type, aUrl, external
 		var _this = this;
 		var video = new Videodemuxer();
 		video.on('metadata', function(data) {
-			var metadata = {title: "Video Player", version: "2.0.0", description: "Video player for SAGE2",
-							author: "SAGE2", license: "SAGE2-Software-License", keywords: ["video", "movie", "player"]};
+			var metadata = {
+				title: "Video Player", version: "2.0.0", description: "Video player for SAGE2",
+				author: "SAGE2", license: "SAGE2-Software-License", keywords: ["video", "movie", "player"]
+			};
 			var exif = assets.getExifData(file);
 
 			var stretch = data.display_aspect_ratio / (data.width / data.height);
@@ -596,7 +587,8 @@ AppLoader.prototype.loadAppFromFileFromRegistry = function(file, mime_type, aUrl
 
 		var appInstance = _this.readInstructionsFile(json_str, localPath, mime_type, app_external_url);
 		appInstance.data.file = assets.getURL(file);
-		appInstance.file = file;
+		// Seems to cause issues, when drag-drop apps
+		// appInstance.file = file;
 		callback(appInstance);
 	});
 };
@@ -640,7 +632,8 @@ AppLoader.prototype.loadZipAppFromFile = function(file, mime_type, aUrl, externa
 
 				var appInstance = _this.readInstructionsFile(json_str, zipFolder, mime_type, external_url);
 				_this.scaleAppToFitDisplay(appInstance);
-				appInstance.file = file;
+				// Seems to cause issues, when drag-drop, the first time the app is opened.
+				// appInstance.file = file;
 				callback(appInstance);
 			});
 		});
@@ -894,8 +887,9 @@ AppLoader.prototype.loadFileFromLocalStorage = function(file, callback) {
 	}
 	var external_url = url.resolve(this.hostOrigin, a_url);
 
-	this.loadApplication({location: "file", path: localPath, url: a_url, external_url: external_url,
-			type: mime_type, name: file.filename, compressed: false, data: file.data}, function(appInstance, handle) {
+	this.loadApplication({
+		location: "file", path: localPath, url: a_url, external_url: external_url,
+		type: mime_type, name: file.filename, compressed: false, data: file.data}, function(appInstance, handle) {
 		callback(appInstance, handle);
 	});
 };
@@ -941,8 +935,9 @@ AppLoader.prototype.manageAndLoadUploadedFile = function(file, callback) {
 		}
 		if (app === "custom_app" && mime_type === "application/zip") {
 			// Compressed ZIP file, load directly
-			_this.loadApplication({location: "file", path: localPath, url: "", external_url: "",
-					type: mime_type, name: cleanFilename, compressed: true}, function(appInstance, handle) {
+			_this.loadApplication({
+				location: "file", path: localPath, url: "", external_url: "",
+				type: mime_type, name: cleanFilename, compressed: true}, function(appInstance, handle) {
 				callback(appInstance, handle);
 			});
 		} else {
@@ -957,8 +952,9 @@ AppLoader.prototype.manageAndLoadUploadedFile = function(file, callback) {
 						// calculate a complete URL with hostname
 						var external_url = url.resolve(_this.hostOrigin, aUrl);
 
-						_this.loadApplication({location: "file", path: localPath, url: aUrl, external_url: external_url,
-								type: mime_type, name: cleanFilename, compressed: false}, function(appInstance, handle) {
+						_this.loadApplication({
+							location: "file", path: localPath, url: aUrl, external_url: external_url,
+							type: mime_type, name: cleanFilename, compressed: false}, function(appInstance, handle) {
 							callback(appInstance, handle);
 						});
 					});

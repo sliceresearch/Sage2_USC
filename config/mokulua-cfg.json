@@ -1,0 +1,66 @@
+{
+    name: "Mokulua",
+    host: "mokulua.manoa.hawaii.edu",
+    port: 443,
+    index_port: 80,
+    background: {
+        color: "#333333",
+        watermark: {
+            svg: "images/EVL-LAVA.svg",
+            color: "rgba(255, 255, 255, 0.5)"
+        }
+    },
+    ui: {
+        clock: 12,
+        show_version: false,
+        show_url: true,
+        maxWindowWidth: 8192,
+        maxWindowHeight: 8192,
+        noDropShadow: true
+    },
+    resolution: {
+        width: 2160,
+        height: 3840
+    },
+    layout: {
+        rows: 1,
+        columns: 3
+    },
+    displays: [
+        {
+            row: 0,
+            column: 0,
+            width: 3,
+            height: 1
+        },
+        {
+            row: 0,
+            column: 1
+        },
+        {
+            row: 0,
+            column: 2
+        }
+    ],
+    alternate_hosts: [
+        "127.0.0.1"
+    ],
+    remote_sites: [
+        {
+            name: "Pele",
+            host: "pele.manoa.hawaii.edu",
+            port: 443,
+            secure: true
+        },
+        {
+            name: "CSE",
+            host: "cse-dataviz.uhh.hawaii.edu",
+            port: 443,
+            secure: true
+        }
+    ],
+    dependencies: {
+        ImageMagick: "bin/",
+        FFMpeg: "bin/"
+    }
+}

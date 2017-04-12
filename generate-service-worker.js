@@ -28,6 +28,7 @@ function generate() {
 	swPrecache.write(path.join(rootDir, 'service-worker.js'), {
 		cacheId: "SAGE2",
 		handleFetch: true,
+		logger: function() {},
 		verbose: false,
 		staticFileGlobs: [
 			rootDir + '/favicon.ico',
@@ -53,7 +54,7 @@ function generate() {
 		],
 		stripPrefix: rootDir
 	}, function() {
-		console.log('ServiceWorker>	Cache generated');
+		// console.log('ServiceWorker>	Cache generated');
 	});
 }
 

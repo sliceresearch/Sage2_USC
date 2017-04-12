@@ -119,9 +119,11 @@ Interaction.prototype.releaseItem = function(valid) {
 		this.selectedMoveItem.width  = this.selectedMoveItem.previous_width;
 		this.selectedMoveItem.height = this.selectedMoveItem.previous_height;
 
-		updatedItem = {elemId: this.selectedMoveItem.id, elemLeft: this.selectedMoveItem.left,
-					elemTop: this.selectedMoveItem.top, elemWidth: this.selectedMoveItem.width,
-					elemHeight: this.selectedMoveItem.height, date: new Date()};
+		updatedItem = {
+			elemId: this.selectedMoveItem.id, elemLeft: this.selectedMoveItem.left,
+			elemTop: this.selectedMoveItem.top, elemWidth: this.selectedMoveItem.width,
+			elemHeight: this.selectedMoveItem.height, date: new Date()
+		};
 	}
 
 	if (valid && this.selectedMoveItem !== null && this.selectedMoveItem.maximized === false) {
@@ -147,12 +149,74 @@ Interaction.prototype.moveSelectedItem = function(pointerX, pointerY) {
 		return null;
 	}
 
-	this.selectedMoveItem.left = pointerX + this.selectOffsetX;
-	this.selectedMoveItem.top  = pointerY + this.selectOffsetY;
-	this.selectedMoveItem.maximized = false;
-	return {elemId: this.selectedMoveItem.id, elemLeft: this.selectedMoveItem.left,
-			elemTop: this.selectedMoveItem.top, elemWidth: this.selectedMoveItem.width,
-			elemHeight: this.selectedMoveItem.height, date: new Date()};
+	// testing maximized item slide constrained by edges of screen
+	// this.selectedMoveItem.left = pointerX + this.selectOffsetX;
+	// this.selectedMoveItem.top  = pointerY + this.selectOffsetY;
+	// this.selectedMoveItem.maximized = false;
+
+	// save the bottom and right coordinates for later use
+	let botCoord = this.selectedMoveItem.top + this.selectedMoveItem.height;
+	let rightCoord = this.selectedMoveItem.left + this.selectedMoveItem.width;
+
+	if (!this.selectedMoveItem.maximized) {
+		// move window as normal
+		this.selectedMoveItem.left = pointerX + this.selectOffsetX;
+		this.selectedMoveItem.top  = pointerY + this.selectOffsetY;
+
+	} else {
+		// if it is maximized
+		if (this.selectedMoveItem.maximizeConstraint === "width") {
+			// if maximization is constrained by width
+			// only translate vertically
+			this.selectedMoveItem.left = 0;
+			this.selectedMoveItem.top  = pointerY + this.selectOffsetY;
+
+			this.selectedMoveItem.previous_top =
+				this.selectedMoveItem.top + this.selectedMoveItem.height / 2 -
+				this.selectedMoveItem.previous_height / 2;
+
+		} else if (this.selectedMoveItem.maximizeConstraint === "height") {
+			// if maximization is constrained by height
+			// only translate horizontally
+			this.selectedMoveItem.left = pointerX + this.selectOffsetX;
+			this.selectedMoveItem.top  = this.configuration.ui.titleBarHeight;
+
+			this.selectedMoveItem.previous_left =
+				this.selectedMoveItem.left + this.selectedMoveItem.width / 2 -
+				this.selectedMoveItem.previous_width / 2;
+		} else {
+			// move window as normal
+			// possible to change the way this works at later time
+			this.selectedMoveItem.left = pointerX + this.selectOffsetX;
+			this.selectedMoveItem.top  = pointerY + this.selectOffsetY;
+		} // end if maximizeConstraint === ...
+
+	} // end if maximized ...
+
+
+	// if it is a snapped partition, subtract the X, Y movement from width, height
+	if (this.selectedMoveItem.isSnapping && this.selectedMoveItem.partitionList) {
+		this.selectedMoveItem.width = rightCoord - this.selectedMoveItem.left;
+		this.selectedMoveItem.height = botCoord - this.selectedMoveItem.top;
+
+		// enforce min width
+		if (this.selectedMoveItem.width < this.selectedMoveItem.partitionList.minSize.width) {
+			this.selectedMoveItem.width = this.selectedMoveItem.partitionList.minSize.width;
+			this.selectedMoveItem.left = rightCoord - this.selectedMoveItem.width;
+		}
+
+		// enforce min height
+		if (this.selectedMoveItem.height < this.selectedMoveItem.partitionList.minSize.height) {
+			this.selectedMoveItem.height = this.selectedMoveItem.partitionList.minSize.height;
+			this.selectedMoveItem.top = botCoord - this.selectedMoveItem.height;
+		}
+	}
+
+	return {
+		elemId: this.selectedMoveItem.id, elemLeft: this.selectedMoveItem.left,
+		elemTop: this.selectedMoveItem.top, elemWidth: this.selectedMoveItem.width,
+		elemHeight: this.selectedMoveItem.height, date: new Date()
+	};
 };
 
 /**
@@ -167,11 +231,13 @@ Interaction.prototype.moveSelectedControl = function(pointerX, pointerY) {
 	this.selectedMoveControl.left = pointerX + this.selectOffsetX;
 	this.selectedMoveControl.top  = pointerY + this.selectOffsetY;
 
-	return {elemId: this.selectedMoveControl.id, appId: this.selectedMoveControl.appId,
-			elemLeft: this.selectedMoveControl.left, elemTop: this.selectedMoveControl.top,
-			elemWidth: this.selectedMoveControl.width, elemHeight: this.selectedMoveControl.height,
-			elemBarHeight: this.selectedMoveControl.barHeight, hasSideBar: this.selectedMoveControl.hasSideBar,
-			date: Date.now()};
+	return {
+		elemId: this.selectedMoveControl.id, appId: this.selectedMoveControl.appId,
+		elemLeft: this.selectedMoveControl.left, elemTop: this.selectedMoveControl.top,
+		elemWidth: this.selectedMoveControl.width, elemHeight: this.selectedMoveControl.height,
+		elemBarHeight: this.selectedMoveControl.barHeight, hasSideBar: this.selectedMoveControl.hasSideBar,
+		date: Date.now()
+	};
 };
 
 
@@ -279,9 +345,11 @@ Interaction.prototype.scrollSelectedItem = function(scale) {
 
 	this.selectedScrollItem.maximized = false;
 
-	return {elemId: this.selectedScrollItem.id, elemLeft: this.selectedScrollItem.left,
-			elemTop: this.selectedScrollItem.top, elemWidth: this.selectedScrollItem.width,
-			elemHeight: this.selectedScrollItem.height, date: new Date()};
+	return {
+		elemId: this.selectedScrollItem.id, elemLeft: this.selectedScrollItem.left,
+		elemTop: this.selectedScrollItem.top, elemWidth: this.selectedScrollItem.width,
+		elemHeight: this.selectedScrollItem.height, date: new Date()
+	};
 };
 
 /**
@@ -313,6 +381,11 @@ Interaction.prototype.resizeSelectedItem = function(pointerX, pointerY) {
 	if (this.selectedResizeItem === null) {
 		return null;
 	}
+
+	// save the bottom and right coordinates for later use
+	let botCoord = this.selectedResizeItem.top + this.selectedResizeItem.height;
+	let rightCoord = this.selectedResizeItem.left + this.selectedResizeItem.width;
+
 
 	var iWidth  = pointerX - this.selectedResizeItem.left + this.selectOffsetX;
 	var iHeight = 1;
@@ -361,67 +434,166 @@ Interaction.prototype.resizeSelectedItem = function(pointerX, pointerY) {
 		}
 	}
 
+	if (this.selectedResizeItem.partition) {
+		// if the item is in a partition
+		if (this.selectedResizeItem.maximized) {
+			// and it is maximized
+			// cancel maximized state of partition
+			this.selectedResizeItem.partition.innerMaximization = false;
+		}
+		if (this.selectedResizeItem.partition.innerTiling) {
+			// if the partition is tiled
+			// cancel the tiled state of the partition
+			this.selectedResizeItem.partition.toggleInnerTiling();
+		}
+	}
+
 	this.selectedResizeItem.width  = iWidth;
 	this.selectedResizeItem.height = iHeight;
 	this.selectedResizeItem.maximized = false;
 
-	return {elemId: this.selectedResizeItem.id, elemLeft: this.selectedResizeItem.left,
-			elemTop: this.selectedResizeItem.top, elemWidth: this.selectedResizeItem.width,
-			elemHeight: this.selectedResizeItem.height, date: new Date()};
+
+	// if it is a partition enforce minimum size constraints
+	if (this.selectedResizeItem.partitionList) {
+		// enforce min width
+		if (this.selectedResizeItem.width < this.selectedResizeItem.partitionList.minSize.width) {
+			this.selectedResizeItem.width = this.selectedResizeItem.partitionList.minSize.width;
+			this.selectedResizeItem.left = rightCoord - this.selectedResizeItem.width;
+		}
+
+		// enforce min height
+		if (this.selectedResizeItem.height < this.selectedResizeItem.partitionList.minSize.height) {
+			this.selectedResizeItem.height = this.selectedResizeItem.partitionList.minSize.height;
+			this.selectedResizeItem.top = botCoord - this.selectedResizeItem.height;
+		}
+	}
+
+	return {
+		elemId: this.selectedResizeItem.id, elemLeft: this.selectedResizeItem.left,
+		elemTop: this.selectedResizeItem.top, elemWidth: this.selectedResizeItem.width,
+		elemHeight: this.selectedResizeItem.height, date: new Date()
+	};
 };
 
 /**
  *@method maximizeSelectedItem
  */
 
-Interaction.prototype.maximizeSelectedItem = function(item) {
+Interaction.prototype.maximizeSelectedItem = function(item, centered) {
 	if (item === null) {
 		return null;
 	}
 
-	var wallRatio = this.configuration.totalWidth  / this.configuration.totalHeight;
-	var iCenterX  = this.configuration.totalWidth  / 2.0;
-	var iCenterY  = this.configuration.totalHeight / 2.0;
-	var iWidth    = 1;
-	var iHeight   = 1;
+	// normally is just the screen size, but if in partition it is the partition boundaries
+	var maxBound = {
+		left: 0,
+		top: 0,
+		width: 0,
+		height: 0
+	};
+
 	var titleBar = this.configuration.ui.titleBarHeight;
 	if (this.configuration.ui.auto_hide_ui === true) {
 		titleBar = 0;
 	}
 
-	if (this.SHIFT === true) {
-		item.aspect = item.native_width / item.native_height;
-	}
-	if (item.aspect > wallRatio) {
-		// Image wider than wall
-		iWidth  = this.configuration.totalWidth;
-		iHeight = iWidth / item.aspect;
+	if (item.partitionList && item.isSnapping) {
+		// if the item is a partition which is snapped, make it as large as it can get (keeping neighbor positions correct)
+		let newSize = item.getMovementBoundaries();
+
+		// back up values for restore
+		item.previous_left   = item.left;
+		item.previous_top    = item.top;
+		item.previous_width  = item.width;
+		item.previous_height = item.width / item.aspect;
+
+		item.left = newSize.left.min;
+		item.top = newSize.top.min;
+		item.width = newSize.right.max - item.left;
+		item.height = newSize.bottom.max - item.top;
+
+		item.maximized = true;
+
+	} else if (item.partition) {
+		// if the item is content in a partition
+		return item.partition.maximizeChild(item.id, this.SHIFT);
 	} else {
-		// Wall wider than image
-		iHeight = this.configuration.totalHeight - (2 * titleBar);
-		iWidth  = iHeight * item.aspect;
+		// normal wall maximization parameters
+		maxBound.left = 0;
+		maxBound.top = 0;
+		maxBound.width = this.configuration.totalWidth;
+		maxBound.height = this.configuration.totalHeight;
+
+		var outerRatio = maxBound.width  / maxBound.height;
+		var iCenterX  = centered ? maxBound.left + maxBound.width / 2.0 : item.left + item.width / 2.0;
+		var iCenterY  = centered ? maxBound.top + maxBound.height / 2.0 : item.top + item.height / 2.0;
+		var iWidth    = 1;
+		var iHeight   = 1;
+
+
+		if (this.SHIFT === true && item.resizeMode === "free") {
+			// previously would resize to native height/width
+			// item.aspect = item.native_width / item.native_height;
+
+			// Free Resize aspect ratio fills wall
+			iWidth = maxBound.width;
+			iHeight = maxBound.height - (2 * titleBar);
+			item.maximizeConstraint = "none";
+		} else {
+			if (item.aspect > outerRatio) {
+				// Image wider than wall area
+				iWidth  = maxBound.width;
+				iHeight = iWidth / item.aspect;
+				item.maximizeConstraint = "width";
+			} else {
+				// Wall area than image
+				iHeight = maxBound.height - (2 * titleBar);
+				iWidth  = iHeight * item.aspect;
+				item.maximizeConstraint = "height";
+			}
+		}
+
+		// back up values for restore
+		item.previous_left   = item.left;
+		item.previous_top    = item.top;
+		item.previous_width  = item.width;
+		item.previous_height = item.width / item.aspect;
+
+		// calculate new values
+		item.top    = iCenterY - (iHeight / 2);
+		item.width  = iWidth;
+		item.height = iHeight;
+
+		// keep window inside display horizontally
+		if (iCenterX - (iWidth / 2) < maxBound.left) {
+			item.left = maxBound.left;
+		} else if (iCenterX + (iWidth / 2) > maxBound.left + maxBound.width) {
+			item.left = maxBound.width + maxBound.left - iWidth;
+		} else {
+			item.left = iCenterX - (iWidth / 2);
+		}
+
+		// keep window inside display vertically
+		if (iCenterY - (iHeight / 2) < maxBound.top + titleBar) {
+			item.top = maxBound.top + titleBar;
+		} else if (iCenterY + (iHeight / 2) > maxBound.top + maxBound.height) {
+			item.top = maxBound.top + maxBound.height - iHeight - titleBar;
+		} else {
+			item.top = iCenterY - (iHeight / 2);
+		}
+
+		// Shift by 'titleBarHeight' if no auto-hide
+		if (this.configuration.ui.auto_hide_ui === true) {
+			item.top = item.top - this.configuration.ui.titleBarHeight;
+		}
+
+		item.maximized = true;
+
+		return {
+			elemId: item.id, elemLeft: item.left, elemTop: item.top,
+			elemWidth: item.width, elemHeight: item.height, date: new Date()
+		};
 	}
-	// back up values for restore
-	item.previous_left   = item.left;
-	item.previous_top    = item.top;
-	item.previous_width  = item.width;
-	item.previous_height = item.width / item.aspect;
-
-	// calculate new values
-	item.left   = iCenterX - (iWidth / 2);
-	item.top    = iCenterY - (iHeight / 2);
-	item.width  = iWidth;
-	item.height = iHeight;
-
-	// Shift by 'titleBarHeight' if no auto-hide
-	if (this.configuration.ui.auto_hide_ui === true) {
-		item.top = item.top - this.configuration.ui.titleBarHeight;
-	}
-
-	item.maximized = true;
-
-	return {elemId: item.id, elemLeft: item.left, elemTop: item.top,
-			elemWidth: item.width, elemHeight: item.height, date: new Date()};
 };
 
 Interaction.prototype.maximizeFullSelectedItem = function(item) {
@@ -450,8 +622,10 @@ Interaction.prototype.maximizeFullSelectedItem = function(item) {
 
 	item.maximized = true;
 
-	return {elemId: item.id, elemLeft: item.left, elemTop: item.top,
-			elemWidth: item.width, elemHeight: item.height, date: new Date()};
+	return {
+		elemId: item.id, elemLeft: item.left, elemTop: item.top,
+		elemWidth: item.width, elemHeight: item.height, date: new Date()
+	};
 };
 
 
@@ -463,15 +637,30 @@ Interaction.prototype.restoreSelectedItem = function(item) {
 		return null;
 	}
 
-	item.left   = item.previous_left;
-	item.top    = item.previous_top;
-	item.width  = item.previous_width;
-	item.height = item.previous_height;
+	if (item.partition) {
+		return item.partition.restoreChild(item.id, this.SHIFT);
+	}
+
+	if (this.SHIFT === true) {
+		// resize to native width/height
+		item.aspect = item.native_width / item.native_height;
+		item.left = item.previous_left + item.previous_width / 2 - item.native_width / 2;
+		item.top = item.previous_top + item.previous_height / 2 - item.native_height / 2;
+		item.width = item.native_width;
+		item.height = item.native_height;
+	} else {
+		item.left   = item.previous_left;
+		item.top    = item.previous_top;
+		item.width  = item.previous_width;
+		item.height = item.previous_height;
+	}
 
 	item.maximized = false;
 
-	return {elemId: item.id, elemLeft: item.left, elemTop: item.top,
-			elemWidth: item.width, elemHeight: item.height, date: new Date()};
+	return {
+		elemId: item.id, elemLeft: item.left, elemTop: item.top,
+		elemWidth: item.width, elemHeight: item.height, date: new Date()
+	};
 };
 
 /**

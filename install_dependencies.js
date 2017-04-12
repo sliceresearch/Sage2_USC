@@ -85,6 +85,12 @@ if (nums[0] === 6 && nums[1] >= 0 && nums[2] >= 0) {
 	console.log("Node version " + process.versions.node + ". Using binaries for 6.0.0+.");
 	target = "6.0.0";
 }
+// Node v7.0.0 and above
+if (nums[0] === 7 && nums[1] >= 0 && nums[2] >= 0) {
+	console.log("Node version " + process.versions.node + ". Using binaries for 7.0.0+.");
+	target = "7.0.0";
+}
+
 
 console.log("Installing for " + platformFull + ", Node v" + target);
 
@@ -117,7 +123,8 @@ packages.forEach(function(element, index, array) {
 	} else {
 		isSecure = true;
 	}
-	request({host: packageURL.host, path: packageURL.pathname + "/" + element.name + suffix}, isSecure, function(res) {
+	var theURL = packageURL.pathname + "/" + element.name + suffix;
+	request({host: packageURL.host, path: theURL}, isSecure, function(res) {
 		if (res.statusCode === 200) {
 			var writestream = fs.createWriteStream(path.join("node_modules", element.name + suffix));
 			writestream.on('error', function(err) {
@@ -133,7 +140,7 @@ packages.forEach(function(element, index, array) {
 			});
 			res.pipe(writestream);
 		} else {
-			console.log("could not find binary package " + element.name + suffix + ". compiling instead.");
+			console.log("could not find binary package " + theURL + ". Compiling instead.");
 			delete downloaded[element.name];
 			if (allTrueDict(downloaded)) {
 				// unzipModules();

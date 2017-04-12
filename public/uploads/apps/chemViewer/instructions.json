@@ -17,7 +17,7 @@
 	},
 	"title": "ChemViewer",
 	"version": "1.0.0",
-	"fileTypes": [ "pdb" ],
+	"fileTypes": [ "pdb", "cif", "mol" ],
 	"directory": "molecules",
 	"removeFromLauncher": false,
 	"plugin": "plugin.js",

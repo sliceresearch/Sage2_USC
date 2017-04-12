@@ -14,13 +14,18 @@
  * @class node-utils
  * @module server
  * @submodule node-utils
- * @requires package.json, request, semver
+ * @requires package.json, request, semver, chalk
  */
 
 // require variables to be declared
 "use strict";
 
 var SAGE2_version = require('../package.json');
+try {
+	var SAGE2_buildVersion = require('../VERSION.json');
+} catch (e) {
+	// nothing yet
+}
 
 var crypto  = require('crypto');              // https encryption
 var exec    = require('child_process').exec;  // execute external application
@@ -35,7 +40,7 @@ var request   = require('request');           // http requests
 var semver    = require('semver');            // parse version numbers
 var fsmonitor = require('fsmonitor');         // file system monitoring
 var sanitizer = require('sanitizer');         // Caja's HTML Sanitizer as a Node.js module
-
+var chalk     = require('chalk');							// colorize console output
 
 /**
  * Parse and store NodeJS version number: detect version 0.10.x or newer
@@ -158,6 +163,10 @@ function loadCABundle(filename) {
  * @return {String} version number as x.x.x
  */
 function getShortVersion() {
+	// try to get the version from the VERSION.json file
+	if (SAGE2_buildVersion && SAGE2_buildVersion.version) {
+		SAGE2_version.version = SAGE2_buildVersion.version;
+	}
 	return SAGE2_version.version;
 }
 
@@ -264,9 +273,9 @@ function sanitizedURL(aURL) {
  */
 function header(h) {
 	if (h.length <= 6) {
-		return h + ">\t\t";
+		return chalk.green.bold.dim(h + ">\t\t");
 	}
-	return h + ">\t";
+	return chalk.green.bold.dim(h + ">\t");
 }
 
 
@@ -372,10 +381,12 @@ function checkPackages(inDevelopement) {
 	if (indevel) {
 		command = "npm outdated --depth 0 --json";
 	}
-	exec(command, {cwd: path.normalize(path.join(__dirname, ".."))},
+	exec(command, {cwd: path.normalize(path.join(__dirname, "..")), timeout: 30000},
 		function(error, stdout, stderr) {
-			if (error) {
-				console.log("NPM>	Error running update");
+			// returns error code 1 if found outdated packages
+			if (error && error.code !== 1) {
+				console.log(header("Packages") + "Warning, error running update [ " + error.cmd + '] ',
+					'code: ' + error.code + ' signal: ' + error.signal);
 				return;
 			}
 
@@ -392,18 +403,19 @@ function checkPackages(inDevelopement) {
 			}
 
 			if (packages.missing.length > 0 || packages.outdated.length > 0) {
-				console.log("");
-				console.log(header("Packages") + "Warning - Packages not up to date");
+				console.log(header("Packages") + chalk.yellow.bold("Warning") +
+					" - Packages not up to date");
 				if (packages.missing.length  > 0) {
-					console.log(header("Packages") + "  Missing:",  packages.missing);
+					console.log(header("Packages") + "  " + chalk.red.bold("Missing:"),
+						chalk.red.bold(packages.missing));
 				}
 				if (packages.outdated.length > 0) {
-					console.log(header("Packages") + "  Outdated:", packages.outdated);
+					console.log(header("Packages") + "  " + chalk.yellow.bold("Outdated:"),
+						chalk.yellow.bold(packages.outdated));
 				}
-				console.log(header("Packages") + "To update, execute: npm run in");
-				console.log("");
+				console.log(header("Packages") + "To update, execute: " + chalk.yellow.bold("npm run in"));
 			} else {
-				console.log(header("Packages") + "All packages up to date");
+				console.log(header("Packages") + chalk.green.bold("All packages up to date"));
 			}
 		}
 	);
@@ -424,7 +436,8 @@ function registerSAGE2(config) {
 		form: config,
 		method: "POST"},
 		function(err, response, body) {
-			console.log(header("SAGE2") + "Registration with EVL site:", (err === null) ? "success" : err.code);
+			console.log(header("SAGE2") + "Registration with EVL site:",
+				(err === null) ? chalk.green.bold("success") : chalk.red.bold(err.code));
 		}
 	);
 }
@@ -444,7 +457,8 @@ function deregisterSAGE2(config, callback) {
 		form: config,
 		method: "POST"},
 		function(err, response, body) {
-			console.log(header("SAGE2") + "Deregistration with EVL site:", (err === null) ? "success" : err.code);
+			console.log(header("SAGE2") + "Deregistration with EVL site:",
+				(err === null) ? chalk.green.bold("success") : chalk.red.bold(err.code));
 			if (callback) {
 				callback();
 			}
@@ -528,18 +542,20 @@ function mkdirParent(dirPath) {
 
 
 /**
- * Place a callback on a list of folders to monitor.
+ * Place a callback on a list of folders to monitor
  *  callback triggered when a change is detected:
  *    this.root contains the monitored folder
  *  parameter contains the following list:
  *    addedFiles, modifiedFiles, removedFiles,
  *    addedFolders, modifiedFolders, removedFolders
  *
- * @method deregisterSAGE2
- * @param folders {Array} list of folders
- * @param callback {Function} to be called when a change is detected
+ * @method     monitorFolders
+ * @param      {Array}    folders          list of folders to monitor
+ * @param      {Array}    excludesFiles    The excludes files
+ * @param      {Array}    excludesFolders  The excludes folders
+ * @param      {Function}  callback         to be called when a change is detected
  */
-function monitorFolders(folders, excludes, callback) {
+function monitorFolders(folders, excludesFiles, excludesFolders, callback) {
 	// for each folder
 	for (var folder in folders) {
 		// get a full path
@@ -548,16 +564,21 @@ function monitorFolders(folders, excludes, callback) {
 		var stat       = fs.lstatSync(folderpath);
 		// making sure it is a folder
 		if (stat.isDirectory()) {
-			console.log(header("Monitor") + "watching folder " + folderpath);
+			console.log(header("Monitor") + "watching folder " + chalk.yellow.bold(folderpath));
 			var monitor = fsmonitor.watch(folderpath, {
-				// only matching: all true for now
+				// excludes non-valid filenames
 				matches:  function(relpath) {
-					return true;
+					var condition = excludesFiles.every(function(e, i, a) {
+						return !relpath.endsWith(e);
+					});
+					return condition;
 				},
-				// and excluding: nothing for now
+				// and ignores folders
 				excludes: function(relpath) {
-					return (excludes.indexOf(relpath) !== -1);
-					// return false;
+					var condition = excludesFolders.every(function(e, i, a) {
+						return !relpath.startsWith(e);
+					});
+					return !condition;
 				}
 			});
 			// place the callback the change event
@@ -637,4 +658,3 @@ module.exports.mergeObjects      = mergeObjects;
 
 module.exports.encodeReservedURL  = encodeReservedURL;
 module.exports.encodeReservedPath = encodeReservedPath;
-

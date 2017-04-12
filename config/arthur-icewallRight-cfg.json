@@ -4,10 +4,9 @@
 	port: 9292,
 	secure_port: 9090,
 	background: {
-		color: "#333333",
 		image: {
-			url: "images/background/kamping_icewall_half_fullColor.jpg",
-			style: "fit"
+			url: "user/images/background/kamping_icewall_half_fullColor.jpg",
+			style: "tile"
 		},
 	},
     audio: {

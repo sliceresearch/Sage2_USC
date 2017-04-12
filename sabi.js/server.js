@@ -40,7 +40,6 @@
 var os    = require('os');
 var url   = require('url');
 var fs    = require('fs');
-var util  = require('util');
 var net   = require('net');
 var path  = require('path');
 
@@ -101,17 +100,20 @@ var platform = os.platform() === "win32" ? "Windows" : os.platform() === "darwin
 var pathToSageUiPwdFile			= path.join(homedir(), "Documents", "SAGE2_Media", "passwd.json");
 var pathToWinDefaultConfig		= path.join(homedir(), "Documents", "SAGE2_Media", "config", "defaultWin-cfg.json");
 var pathToMacDefaultConfig		= path.join(homedir(), "Documents", "SAGE2_Media", "config", "default-cfg.json");
-var pathToWinStartupFolder		= path.join(homedir(), "AppData", "Roaming", "Microsoft", "Windows", "Start Menu", "Programs", "Startup", "startWebCon.bat" );
-var pathToMonitorDataFile		= path.join("scripts", "MonitorInfo.json"); //gets written here due to nature of the winScriptHelperWriteMonitorRes.exe file.
+// var pathToElectronConfig		= path.join(homedir(), "Documents", "SAGE2_Media", "config", "electron-cfg.json");
+var pathToElectronConfig		= path.join(homedir(), "Documents", "SAGE2_Media", "config", "defaultWin-cfg.json");
+var pathToWinStartupFolder		= path.join(homedir(), "AppData", "Roaming", "Microsoft", "Windows",
+														"Start Menu", "Programs", "Startup", "startWebCon.bat");
+ // MonitorInfo gets written here due to nature of the winScriptHelperWriteMonitorRes.exe file.
+var pathToMonitorDataFile		= path.join("scripts", "MonitorInfo.json");
 var pathToSabiConfigFolder		= path.join(homedir(), "Documents", "SAGE2_Media", "sabiConfig");
 var pathToFindMonitorData		= path.join(pathToSabiConfigFolder, "scripts", "winScriptHelperWriteMonitorRes.exe");
-var pathToSage2onbatScript		= path.join(pathToSabiConfigFolder, "scripts", "sage2_on.bat");
+// var pathToSage2onbatScript		= path.join(pathToSabiConfigFolder, "scripts", "sage2_on.bat");
 var pathToGoWindowsCertGenFile	= path.join(pathToSabiConfigFolder, "scripts", "GO-windows.bat"); // "../keys/GO-windows.bat";
-var pathToActivateGoWindowsCert = path.join(pathToSabiConfigFolder, "scripts", "activateWindowsCertGenerator.bat" );
-var pathToGitCredentials 		= path.join(homedir(), ".git-credentials");
-var needToRegenerateSageOnFile	= true; //always check at least once
+var pathToActivateGoWindowsCert = path.join(pathToSabiConfigFolder, "scripts", "activateWindowsCertGenerator.bat");
 var scriptExecutionFunction		= require('./src/script').Script;
 var commandExecutionFunction	= require('./src/script').Command;
+var spawn = require('child_process').spawn;
 
 // ---------------------------------------------
 //  Parse command line arguments
@@ -122,7 +124,7 @@ optimist = optimist.usage('Usage: $0 -h -p password -f [json file]');
 if (platform === "Windows") {
 	optimist = optimist.default('f', path.join('config', 'windows.json'));
 } else {
-	optimist = optimist.default('f', path.join('config', 'sabi.json'));	
+	optimist = optimist.default('f', path.join('config', 'sabi.json'));
 }
 // optimist = optimist.default('p', 'sage2');
 optimist = optimist.describe('f', 'Load a configuration file');
@@ -141,7 +143,7 @@ console.log('--------------------------------------------');
 // create folders
 //
 if (ConfigFile.indexOf("sage2") >= 0) {
-	console.log('Checking SAGE2 folders...')
+	console.log('Checking SAGE2 folders...');
 	var media = path.join(homedir(), "Documents", "SAGE2_Media");
 	if (!folderExists(media)) {
 		mkdirParent(media);
@@ -168,13 +170,13 @@ if (ConfigFile.indexOf("sage2") >= 0) {
 	if (platform === "Windows" && !fileExists(pathToWinDefaultConfig)) {
 		configInput = path.join("scripts", "defaultWin-cfg.json");
 		configOuput = pathToWinDefaultConfig;//path.join(media, "config", "defaultWin-cfg.json");
-		
+
 		console.log('Delete this comment later: config file does not exist tried to write to:' + configOuput);
 		console.log('    from file:' + configInput);
 
 		// do the actual copy
-		fs.createReadStream(configInput).pipe(fs.createWriteStream(configOuput));
-	} else if (platform === "Mac OS X" && !fileExists(pathToMacDefaultConfig) ) {
+		fs.writeFileSync(configOuput, fs.readFileSync(configInput));
+	} else if (platform === "Mac OS X" && !fileExists(pathToMacDefaultConfig)) {
 		configInput = path.join("scripts", "default-cfg.json");
 		configOuput = pathToMacDefaultConfig;//path.join(media, "config", "default-cfg.json");
 
@@ -182,15 +184,26 @@ if (ConfigFile.indexOf("sage2") >= 0) {
 		console.log('    from file:' + configInput);
 
 		// do the actual copy
-		fs.createReadStream(configInput).pipe(fs.createWriteStream(configOuput));
+		fs.writeFileSync(configOuput, fs.readFileSync(configInput));
+	}
+	// always move electron regardless of OS
+	if (!fileExists(pathToElectronConfig)) {
+		configInput = path.join("scripts", "defaultWin-cfg.json");
+		configOuput = pathToElectronConfig;//path.join(media, "config", "defaultWin-cfg.json");
+
+		console.log('Delete this comment later: config file does not exist tried to write to:' + configOuput);
+		console.log('    from file:' + configInput);
+
+		// do the actual copy
+		fs.writeFileSync(configOuput, fs.readFileSync(configInput));
 	}
 
 	//always ov
 	if (platform === "Windows") {
-		var sfpContents = 'cd "' + __dirname + '\\..' + '"\n';
+		var sfpContents = 'cd /d "' + __dirname + '\\..' + '"\n';
 		sfpContents += 'set PATH=%CD%\\bin;%PATH%;\n';
 		sfpContents += 'cd sabi.js\n';
-		sfpContents += 'start /MIN ..\\bin\\node server.js -f '+ pathToSabiConfigFolder +'\\config\\sage2.json %*';
+		sfpContents += 'start /MIN ..\\bin\\node server.js -f ' + pathToSabiConfigFolder + '\\config\\sage2.json %*';
 		fs.writeFileSync(pathToWinStartupFolder, sfpContents);
 
 		console.log('Startup file does not exist, adding it. Contents:' + sfpContents);
@@ -199,43 +212,43 @@ if (ConfigFile.indexOf("sage2") >= 0) {
 	//copy over additional files to run the sabi interface.
 	var sabiMediaCopy;
 	var sabiMediaCheck = path.join(pathToSabiConfigFolder, "config");
-		if (!folderExists(sabiMediaCheck)) {
-			mkdirParent(sabiMediaCheck);
-		}
+	if (!folderExists(sabiMediaCheck)) {
+		mkdirParent(sabiMediaCheck);
+	}
 	sabiMediaCheck = path.join(pathToSabiConfigFolder, "config", "sage2.json");
-		if (!fileExists(sabiMediaCheck)) {
-			sabiMediaCopy = path.join("config", "sage2.json");
-			fs.createReadStream(sabiMediaCopy).pipe(fs.createWriteStream(sabiMediaCheck));
-		}
+	if (!fileExists(sabiMediaCheck)) {
+		sabiMediaCopy = path.join("config", "sage2.json");
+		fs.writeFileSync(sabiMediaCheck, fs.readFileSync(sabiMediaCopy));
+	}
 	sabiMediaCheck = path.join(pathToSabiConfigFolder, "scripts");
-		if (!folderExists(sabiMediaCheck)) {
-			mkdirParent(sabiMediaCheck);
-		}
+	if (!folderExists(sabiMediaCheck)) {
+		mkdirParent(sabiMediaCheck);
+	}
 	sabiMediaCheck = path.join(pathToSabiConfigFolder, "scripts", "sage2_on.bat");
-		if (!fileExists(sabiMediaCheck)) {
-			sabiMediaCopy = path.join("scripts", "sage2_on.bat");
-			fs.createReadStream(sabiMediaCopy).pipe(fs.createWriteStream(sabiMediaCheck));
-		}
+	if (!fileExists(sabiMediaCheck)) {
+		sabiMediaCopy = path.join("scripts", "sage2_on.bat");
+		fs.writeFileSync(sabiMediaCheck, fs.readFileSync(sabiMediaCopy));
+	}
+	sabiMediaCheck = path.join(pathToSabiConfigFolder, "scripts", "s2_on_electron.bat");
+	if (!fileExists(sabiMediaCheck)) {
+		sabiMediaCopy = path.join("scripts", "s2_on_electron.bat");
+		fs.writeFileSync(sabiMediaCheck, fs.readFileSync(sabiMediaCopy));
+	}
 	sabiMediaCheck = path.join(pathToSabiConfigFolder, "scripts", "sage2_off.bat");
-		if (!fileExists(sabiMediaCheck)) {
-			sabiMediaCopy = path.join("scripts", "sage2_off.bat");
-			fs.createReadStream(sabiMediaCopy).pipe(fs.createWriteStream(sabiMediaCheck));
-		}
-	sabiMediaCheck = path.join(pathToSabiConfigFolder, "scripts", "winScriptHelperWriteMonitorRes.exe");
-		if (!fileExists(sabiMediaCheck)) {
-			sabiMediaCopy = path.join("scripts", "winScriptHelperWriteMonitorRes.exe");
-			fs.createReadStream(sabiMediaCopy).pipe(fs.createWriteStream(sabiMediaCheck));
-		}
+	if (!fileExists(sabiMediaCheck)) {
+		sabiMediaCopy = path.join("scripts", "sage2_off.bat");
+		fs.writeFileSync(sabiMediaCheck, fs.readFileSync(sabiMediaCopy));
+	}
+	sabiMediaCheck = path.join(pathToFindMonitorData);
+	if (!fileExists(sabiMediaCheck)) {
+		sabiMediaCopy = path.join("scripts", "winScriptHelperWriteMonitorRes.exe");
+		fs.writeFileSync(sabiMediaCheck, fs.readFileSync(sabiMediaCopy));
+	}
 	sabiMediaCheck = path.join(pathToSabiConfigFolder, "scripts", "GO-windows.bat");
-		if (!fileExists(sabiMediaCheck)) {
-			sabiMediaCopy = path.join("..", "keys", "GO-windows.bat");
-			fs.createReadStream(sabiMediaCopy).pipe(fs.createWriteStream(sabiMediaCheck));
-		}
-	// sabiMediaCheck = path.join(pathToSabiConfigFolder, "scripts", "activateWindowsCertGenerator.bat");
-	// 	if (!fileExists(sabiMediaCheck)) {
-	// 		sabiMediaCopy = path.join("scripts", "activateWindowsCertGenerator.bat");
-	// 		fs.createReadStream(sabiMediaCopy).pipe(fs.createWriteStream(sabiMediaCheck));
-	// 	}
+	if (!fileExists(sabiMediaCheck)) {
+		sabiMediaCopy = path.join("..", "keys", "GO-windows.bat");
+		fs.writeFileSync(sabiMediaCheck, fs.readFileSync(sabiMediaCopy));
+	}
 
 	makeMonitorInfoFile();
 
@@ -260,8 +273,7 @@ function mkdirParent(dirPath) {
 	try {
 		fs.mkdirSync(dirPath);
 		made = dirPath;
-	}
-	catch (err0) {
+	} catch (err0) {
 		switch (err0.code) {
 			case 'ENOENT' : {
 				made = mkdirParent(path.dirname(dirPath));
@@ -272,8 +284,7 @@ function mkdirParent(dirPath) {
 				var stat;
 				try {
 					stat = fs.statSync(dirPath);
-				}
-				catch (err1) {
+				} catch (err1) {
 					throw err0;
 				}
 				if (!stat.isDirectory()) {
@@ -349,20 +360,20 @@ function untildify(str) {
 // ---------------------------------------------
 
 //var configdata = fs.readFileSync(path.join(__dirname,ConfigFile)); //causes a problem if config files are in SAGE2_Media
-var configdata = fs.readFileSync( ConfigFile );
+var configdata = fs.readFileSync(ConfigFile);
 var cfg = JSON5.parse(configdata);
 
 // Get the port of the webserver from configuration file
 if (cfg.global.server_port) {
-	hport = parseInt( cfg.global.server_port );
+	hport = parseInt(cfg.global.server_port);
 }
 // Get the port for TCP connection from configuration file
 if (cfg.global.tcp_port) {
-	tcp_port = parseInt( cfg.global.tcp_port );
+	tcp_port = parseInt(cfg.global.tcp_port);
 }
 
 // ---------------------------------------------
-//  Return the mime type of a file 
+//  Return the mime type of a file
 //     used for the web server
 // ---------------------------------------------
 
@@ -374,15 +385,15 @@ function contentType(apath) {
 // ---------------------------------------------
 //  Sleep for a little while
 // ---------------------------------------------
-
-function sleep(milliseconds) {
-	var start = new Date().getTime();
-	for (var i = 0; i < 1e7; i++) {
-		if ((new Date().getTime() - start) > milliseconds){
-			break;
-		}
-	}
-}
+// commented out to make lint happy
+// function sleep(milliseconds) {
+// 	var start = new Date().getTime();
+// 	for (var i = 0; i < 1e7; i++) {
+// 		if ((new Date().getTime() - start) > milliseconds) {
+// 			break;
+// 		}
+// 	}
+// }
 
 
 // ---------------------------------------------
@@ -417,7 +428,8 @@ function buildMainPage(cfg) {
 
 	// Panel
 	if (numpages > 1) {
-		data += '<div data-role="panel" style="background: rgba(0,0,0,.80);" id="navpanel" data-display="overlay" data-theme="a">';
+		data += '<div data-role="panel" style="background: rgba(0,0,0,.80);"'
+				+ ' id="navpanel" data-display="overlay" data-theme="a">';
 		data += '<h2>Menu</h2>';
 		for (p in cfg.main.pages) {
 			b = cfg.main.pages[p];
@@ -428,7 +440,7 @@ function buildMainPage(cfg) {
 
 
 	data += '<div data-role="header" data-position="fixed">\n';
-	data += cfg.main.header ;
+	data += cfg.main.header;
 	if (numpages > 1) {
 		data += '<a href="#navpanel" data-icon="bars" data-role="button" data-inline="true" data-iconpos="notext">Panel</a>\n';
 	}
@@ -454,7 +466,7 @@ function buildMainPage(cfg) {
 			b = cfg.main.pages[p];
 			data += '<p> <a data-role="button" data-icon="arrow-r" data-iconpos="right" href="#' +  b  + '">' + b + '</a> </p>\n';
 		}
-		data += '</div>\n\n';		
+		data += '</div>\n\n';
 	}
 
 	data += '<div data-role="footer" data-position="fixed">\n';
@@ -482,13 +494,15 @@ function buildaPage(cfg, name) {
 		data += '<div data-role="page" id="' + name + '" data-theme="b">\n';
 
 		// Panel
-		data += '<div data-role="panel" id="navpanel" style="background: rgba(0,0,0,.80);" data-display="overlay" data-theme="a">';
+		data += '<div data-role="panel" id="navpanel" style="background: rgba(0,0,0,.80);"'
+				+ ' data-display="overlay" data-theme="a">';
 		data += '<h2>Menu</h2>';
 		data += '<p> <a data-role="button" data-icon="grid" data-iconpos="right" href="..">Home</a> </p>\n';
 		for (p in cfg.main.pages) {
 			b = cfg.main.pages[p];
-			if (b!=name) {
-				data += '<p> <a data-role="button" data-icon="arrow-r" data-iconpos="right" href="#' +  b  + '">' + b + '</a> </p>\n';
+			if (b != name) {
+				data += '<p> <a data-role="button" data-icon="arrow-r" data-iconpos="right" href="#'
+						+  b  + '">' + b + '</a> </p>\n';
 			}
 		}
 		data += '</div><!-- /panel --> ';
@@ -525,7 +539,7 @@ function buildaPage(cfg, name) {
 			if (c.image) {
 				data += '<div>\n';
 				if (c.description) {
-					data += c.description + '\n';				
+					data += c.description + '\n';
 				}
 				data += '<table style="width:100%;" cellpadding="10">\n';
 				data += '<colgroup>\n';
@@ -538,33 +552,33 @@ function buildaPage(cfg, name) {
 				data += '<td>\n<div>\n';
 				for (a in c.actions) {
 					theme = "a";
-					if (c.actions[a].theme){
+					if (c.actions[a].theme) {
 						theme = c.actions[a].theme;
 					}
 					role = "button";
 					if (c.actions[a].role) {
 						role = c.actions[a].role;
 					}
-					if (role=="button") {
+					if (role == "button") {
 						data += '<p><a data-icon="gear" data-role="button" data-theme="' + theme + '" class="sabijs" id="';
 						if (c.actions[a].macro) {
-							data += c.actions[a].macro +'">';
+							data += c.actions[a].macro + '">';
 						} else {
-							data += c.actions[a].action +'">';
+							data += c.actions[a].action + '">';
 						}
 						data += c.actions[a].title;
 						data += '</a> </p>\n';
-					} else if (role =="collapsible") {
+					} else if (role == "collapsible") {
 						collapsed = true;
 						if (c.actions[a].collapsed == "false") {
 							collapsed = false;
 						}
-						data += '<div data-role="collapsible" data-collapsed="' + collapsed +'" ';
+						data += '<div data-role="collapsible" data-collapsed="' + collapsed + '" ';
 						data += 'data-theme="' + theme + '" class="sabijs" id="';
 						if (c.actions[a].macro) {
-							data += c.actions[a].macro +'">\n';
+							data += c.actions[a].macro + '">\n';
 						} else {
-							data += c.actions[a].action +'">\n';
+							data += c.actions[a].action + '">\n';
 						}
 						data += '<h3>' + c.actions[a].title + '</h3>\n';
 						data += '<div data-role="fieldcontain"></div>\n';
@@ -583,25 +597,25 @@ function buildaPage(cfg, name) {
 						data += '<input type="range" data-track-theme="b" data-highlight="true" ';
 						data += 'value=' + medium + ' min=' + minv + ' max=' + maxv;
 						if (c.actions[a].macro) {
-							data += 'data-theme="' + theme + '" class="sabijs" id="' + c.actions[a].macro +'">\n';
+							data += 'data-theme="' + theme + '" class="sabijs" id="' + c.actions[a].macro + '">\n';
 						} else {
-							data += 'data-theme="' + theme + '" class="sabijs" id="' + c.actions[a].action +'">\n';
+							data += 'data-theme="' + theme + '" class="sabijs" id="' + c.actions[a].action + '">\n';
 						}
 						data += '</div>\n';
 					} else if (role == "inputText") {
 						data += '<p><input type="text" class="sabijs" placeholder="' + c.actions[a].placeholder + '" id="';
 						if (c.actions[a].macro) {
-							data += c.actions[a].macro +'">';
+							data += c.actions[a].macro + '">';
 						} else {
-							data += c.actions[a].action +'">';
+							data += c.actions[a].action + '">';
 						}
 						data += '</input> </p>\n';
 					} else if (role == "inputPassword") {
 						data += '<p><input type="password" class="sabijs" placeholder="' + c.actions[a].placeholder + '" id="';
 						if (c.actions[a].macro) {
-							data += c.actions[a].macro +'">';
+							data += c.actions[a].macro + '">';
 						} else {
-							data += c.actions[a].action +'">';
+							data += c.actions[a].action + '">';
 						}
 						data += '</input> </p>\n';
 					}
@@ -611,7 +625,7 @@ function buildaPage(cfg, name) {
 				data += '</table></div>\n';
 			} else {
 				if (c.description) {
-					data += '<p>' + c.description + '</p>\n';				
+					data += '<p>' + c.description + '</p>\n';
 				}
 				for (a in c.actions) {
 					theme = "a";
@@ -622,26 +636,26 @@ function buildaPage(cfg, name) {
 					if (c.actions[a].role) {
 						role = c.actions[a].role;
 					}
-					if (role=="button") {
+					if (role == "button") {
 						data += '<p><a data-icon="gear" data-role="button" data-theme="' + theme + '" class="sabijs" id="';
 						if (c.actions[a].macro) {
-							data += c.actions[a].macro +'">';
+							data += c.actions[a].macro + '">';
 						} else {
-							data += c.actions[a].action +'">';
+							data += c.actions[a].action + '">';
 						}
 						data += c.actions[a].title;
 						data += '</a> </p>\n';
-					} else if (role =="collapsible") {
+					} else if (role == "collapsible") {
 						collapsed = true;
 						if (c.actions[a].collapsed == "false") {
 							collapsed = false;
 						}
-						data += '<div data-role="collapsible" data-collapsed="' + collapsed +'" ';
+						data += '<div data-role="collapsible" data-collapsed="' + collapsed + '" ';
 						data += 'data-theme="' + theme + '" class="sabijs" id="';
 						if (c.actions[a].macro) {
-							data += c.actions[a].macro +'">\n';
+							data += c.actions[a].macro + '">\n';
 						} else {
-							data += c.actions[a].action +'">\n';
+							data += c.actions[a].action + '">\n';
 						}
 						data += '<h3>' + c.actions[a].title + '</h3>\n';
 						data += '<div data-role="fieldcontain"></div>\n';
@@ -655,7 +669,7 @@ function buildaPage(cfg, name) {
 
 	// Back to main page button
 	//data += '<p><a data-role="button" data-theme="b" data-icon="arrow-l" data-iconpos="left" href="#MAIN">Back to Main page</a></p>\n\n';
-	
+
 	if (numpages > 1) {
 		// End of page content
 		data += '</div>\n\n';
@@ -668,7 +682,7 @@ function buildaPage(cfg, name) {
 		// Put the navbar items in the navigation bar
 		for (p in cfg.main.pages) {
 			b = cfg.main.pages[p];
-			if (b!=name && cfg[b].navbar && cfg[b].navbar=="true" ) {
+			if (b != name && cfg[b].navbar && cfg[b].navbar == "true") {
 				data += '    <li> <a href="#' +  b  + '" data-icon="star">' + b + '</a> </li>\n';
 			}
 		}
@@ -709,7 +723,7 @@ function process_request(cfg, req, res) {
 						res.writeHead(200, {'Content-Type': 'text/html'});
 						res.write(content, 'utf8');
 						res.end();
-					} catch(e) {
+					} catch (e) {
 						console.log('Error with file, need read/write access', filename);
 						res.writeHead(404);
 						res.end();
@@ -721,7 +735,7 @@ function process_request(cfg, req, res) {
 			// Open the header template
 			apath = '/src/header';
 			// Read the data synchronously
-			data = fs.readFileSync(__dirname + apath);
+			let data = fs.readFileSync(__dirname + apath);
 
 			// Build the main page
 			data += buildMainPage(cfg);
@@ -766,16 +780,14 @@ function process_request(cfg, req, res) {
 			var params     = querystring.parse(parsed.query);
 			var action     = params.action;
 			var fileLength = 0;
-			var filename   = cfg.actions[action].editor;
+			let filename   = cfg.actions[action].editor;
 			filename = path.resolve(untildify(filename));
 			var wstream    = fs.createWriteStream(filename);
 
 			wstream.on('finish', function() {
 				// stream closed
 				console.log('HTTP>		PUT file has been written', filename, fileLength, 'bytes');
-				needToRegenerateSageOnFile = true;
-				updateCertificates();
-				makeMonitorInfoFile();
+				updateCertificates(); // keeping this if someone edits with basic / advanced
 			});
 			// Getting data
 			req.on('data', function(chunk) {
@@ -801,7 +813,7 @@ function process_request(cfg, req, res) {
 // Create the web server
 // ---------------------------------------------
 
-// hserver = http.createServer(function(req, res){
+// hserver = http.createServer(function(req, res) {
 // 	var secure = cfg.global.security;
 // 	if (secure && (secure === "true")) {
 // 		// apply basic login check
@@ -819,10 +831,9 @@ var secure = cfg.global.security;
 if (secure && (secure === "true")) {
 	// pass the digest object to do authentification
 	hserver = http.createServer(digest, function(req, res) {
-			process_request(cfg, req, res);
+		process_request(cfg, req, res);
 	});
-}
-else {
+} else {
 	hserver = http.createServer(function(req, res) {
 		// process one request
 		process_request(cfg, req, res);
@@ -842,48 +853,47 @@ function processTCPData(data) {
 
 	console.log("processTCPData: ", id);
 
-    // Is it a macro ?
-    if (macros && id in macros) {
-    	console.log("Found macro:",id);
-    	processMacro(id);
-    }
-    // Is it an action ?
-    if (actions && id in actions) {
-      // if the id is an action
-      var act = id;
-      if ( actions[act].oscmessage ) {
-          // the action is an OSC message
-          if (actions[act].parameters) {
-          	processOSC({message: actions[act].oscmessage,
-          		server: actions[act].server,
-          		parameters: [ actions[act].parameters ] } );
-          } else {
-          	processOSC({message: actions[act].oscmessage,
-          		server: actions[act].server } );
-          }
-      } else if ( actions[act].serial ) {
-        // the action is a serial-port message
-        processSerialPort({message:actions[act].serial, baud:actions[act].baud, port: actions[act].port});
-    } else if ( actions[act].command ) {
-        // the action is a command (as opposed to a script)
-        console.log("Command", actions[act].command);
-        processRPC( {method: 'command', value: [act, actions[act].command] } );
-    } else {
-        // The action is a script on the local machine
-        console.log("Should trigger:", actions[act].script);
-        processRPC( {method: 'action', value: [act, actions[act].script] } );
-    }
-}
-else {
-	console.log("Action unknown: [%s]", id);
-}
+	// Is it a macro ?
+	if (macros && id in macros) {
+		console.log("Found macro:", id);
+		processMacro(id);
+	}
+	// Is it an action ?
+	if (actions && id in actions) {
+		// if the id is an action
+		var act = id;
+		if (actions[act].oscmessage) {
+		// the action is an OSC message
+			if (actions[act].parameters) {
+				processOSC({message: actions[act].oscmessage,
+					server: actions[act].server,
+					parameters: [actions[act].parameters] });
+			} else {
+				processOSC({message: actions[act].oscmessage,
+					server: actions[act].server });
+			}
+		} else if (actions[act].serial) {
+			// the action is a serial-port message
+			processSerialPort({message: actions[act].serial, baud: actions[act].baud, port: actions[act].port});
+		} else if (actions[act].command) {
+			// the action is a command (as opposed to a script)
+			console.log("Command", actions[act].command);
+			processRPC({method: 'command', value: [act, actions[act].command] });
+		} else {
+			// The action is a script on the local machine
+			console.log("Should trigger:", actions[act].script);
+			processRPC({method: 'action', value: [act, actions[act].script] });
+		}
+	} else {
+		console.log("Action unknown: [%s]", id);
+	}
 }
 
 // Callback method executed when data is received from a socket
 //
 function receiveTCPData(socket, data) {
 	// Clean up the message
-	mesg = data.toString().replace(/(\r\n|\n|\r)/gm,"");
+	let mesg = data.toString().replace(/(\r\n|\n|\r)/gm, "");
 	if (mesg.length > 0) {
 		console.log("TCP message: [%s]", mesg);
 		if (mesg == "@quit") {
@@ -906,7 +916,7 @@ function closeTCPSocket(socket) {
 }
 
 //  Callback method executed when a new TCP socket is opened.
-// 
+//
 function newTCPSocket(socket) {
 	tcp_clients.push(socket);
 	console.log("Opening a new TCP client connection: %d client(s)", tcp_clients.length);
@@ -924,7 +934,7 @@ tcp_server = net.createServer(newTCPSocket);
 
 // Listen on port tcp_port
 tcp_server.listen(tcp_port);
-// console.log("TCP server running at localhost:" + tcp_port );
+// console.log("TCP server running at localhost:" + tcp_port);
 
 
 // ---------------------------------------------
@@ -948,39 +958,39 @@ function processMacro(data) {
 		console.log("Macro " + id + " : action " + act);
 
 		if (actions[act].oscmessage) {
-		    // the action is an OSC message
-		    if (actions[act].parameters) {
-		    	processOSC({message: actions[act].oscmessage, server: actions[act].server,
-		    		parameters: [ actions[act].parameters ]});
-		    } else {
-		    	processOSC({message: actions[act].oscmessage, server: actions[act].server});
-		    }
-		} else if ( actions[act].serial ) {
-		  // the action is a serial-port message
-		  processSerialPort({message:actions[act].serial, baud:actions[act].baud, port:actions[act].port});
-		} else if ( actions[act].command ) {
+			// the action is an OSC message
+			if (actions[act].parameters) {
+				processOSC({message: actions[act].oscmessage, server: actions[act].server,
+					parameters: [actions[act].parameters]});
+			} else {
+				processOSC({message: actions[act].oscmessage, server: actions[act].server});
+			}
+		} else if (actions[act].serial) {
+			// the action is a serial-port message
+			processSerialPort({message: actions[act].serial, baud: actions[act].baud, port: actions[act].port});
+		} else if (actions[act].command) {
 			// the action is a command (as opposed to a script)
 			console.log("Here", act, actions[act].command);
-			processRPC({method:'command', value:[act, actions[act].command]});
+			processRPC({method: 'command', value: [act, actions[act].command]});
 		} else {
-		  // The action is a script on a machine (remote or local)
-		  // if it's on a different server
-		  if (actions[act].server) {
-		  	var url = 'http://' + actions[act].server;
-		  	console.log("Connecting to:", url);
-		  	var remotesocket = cio.connect( url );
-		  	console.log("Connected to server: " + url);
-		  	remotesocket.emit('RPC', {method: 'action', value: [act, actions[act].script]});
-		  	remotesocket.once('return', function (data) {
-		  		console.log("remote status: ", data);
-		  	}); // jshint ignore:line
-		  } else {
-		    //if (actions[act].return == "process")
-		    //  this.sendCallandProcess('action', [act, actions[act].script]);
-		    // else
-		    processRPC({method:'action', value:[act, actions[act].script]});
+			// The action is a script on a machine (remote or local)
+			// if it's on a different server
+			if (actions[act].server) {
+				var url = 'http://' + actions[act].server;
+				console.log("Connecting to:", url);
+				var remotesocket = cio.connect(url);
+				console.log("Connected to server: " + url);
+				remotesocket.emit('RPC', {method: 'action', value: [act, actions[act].script]});
+				remotesocket.once('return', function (data) {
+					console.log("remote status: ", data);
+				}); // jshint ignore:line
+			} else {
+				//if (actions[act].return == "process")
+				//  this.sendCallandProcess('action', [act, actions[act].script]);
+				// else
+				processRPC({method: 'action', value: [act, actions[act].script]});
+			}
 		}
-	}
 		// End of the current action in macro
 	}
 }
@@ -1001,14 +1011,14 @@ function processEditor(data, socket) {
 				// If exists, is it readable/writable
 				fs.access(filename, fs.R_OK | fs.W_OK, function (err) {
 					if (err) {
-						console.log('Error with file, need read/write access', filename);				
+						console.log('Error with file, need read/write access', filename);
 					} else {
 						var content = fs.readFileSync(filename, 'utf8');
 						try {
 							// try to parse the JSON
 							var pretty  = JSON.stringify(JSON5.parse(content), null, 4);
 							socket.emit('file', {action: data.action, name: shortname, data: pretty});
-						} catch(e) {
+						} catch (e) {
 							// parsing failed, just send file content
 							socket.emit('file', {action: data.action, name: shortname, data: content});
 						}
@@ -1022,25 +1032,40 @@ function processEditor(data, socket) {
 	}
 }
 
-function processRPC(data, socket) { // dkedits made to account for makeNewMeetingID
+/*
+	data is an object TODO double check this
+		data.value	an array
+			0		action defined in sage2.json (sabi config file)
+			1		path of file to activate
+		data.method	sendPurpose
+
+*/
+function processRPC(data, socket) {
 	console.log("RPC for:", data);
-	var found = false; 
-	if (data.value[0].indexOf("sage2-on") !== -1) {
-		console.log('Delete this comment later: Intercepting sage2-on action.');
-		updateConfigFileToAccountForMonitorsAndResolution();
-		console.log("After update config file before write sage on file");
-		writeSageOnFileWithCorrectPortAndMeetingID(data);
-		needToRegenerateSageOnFile = false;
-	}
-	//interception to activate data.method actions script from SAGE2_Media\sabiConfig folder
-	if(data.value[1] && data.value[1].indexOf("scripts\\") === 0) {
+
+	/*
+		Path fix to use SAGE2_Media only if the path STARTS with scripts\
+
+		interception to activate data.method actions script from SAGE2_Media\sabiConfig folder
+		data.value[1] now contains full path to specified script. Probably: C:\users\userName\Documents\.....bat
+	*/
+	if (data.value[1] && data.value[1].indexOf("scripts\\") === 0) {
 		data.value[1] = pathToSabiConfigFolder + "\\" + data.value[1];
+	}
+	var found = false;
+	if (data.value[0].indexOf("sage2-on") !== -1 && data.value[1] != undefined) {
+		if (data.value[1].indexOf("electron") > -1) {
+			spawn(data.value[1], getLaunchParameters("electron"));
+		} else {
+			spawn(data.value[1], getLaunchParameters());
+		}
+		return;
 	}
 	for (var f in AppRPC) {
 		var func = AppRPC[f];
 		if (typeof func == "function") {
 			if (f == data.method) {
-				(func)(data,socket);
+				(func)(data, socket);
 				found = true;
 			}
 		}
@@ -1049,7 +1074,6 @@ function processRPC(data, socket) { // dkedits made to account for makeNewMeetin
 		var jsonString = '{ "pwd" : "' + data.value[0] + '" }';
 		console.log('meetingID save double checking:' + jsonString);
 		fs.writeFileSync(pathToSageUiPwdFile, jsonString);
-		needToRegenerateSageOnFile = true;
 	}
 	if (!found && data.method === "makeNewLauncherPassword") {
 		console.log('Setting new launcher password', data.value[0]);
@@ -1064,197 +1088,40 @@ function processRPC(data, socket) { // dkedits made to account for makeNewMeetin
 			//one time because each startup of sabi will re
 			var sfpContents = 'cd "' + __dirname + '\\..' + '"\n';
 			sfpContents += 'set PATH=%CD%\\bin;%PATH%;\n';
-			//sfpContents += 'git config credential.helper store\n'; 
+			//sfpContents += 'git config credential.helper store\n';
 			sfpContents += 'git fetch --all\n';
 			sfpContents += 'git reset --hard origin/master\n';
 			sfpContents += 'cd sabi.js\n';
-			sfpContents += 'start /MIN ..\\bin\\node server.js -f "'+ pathToSabiConfigFolder +'\\config\\sage2.json" %*';
+			sfpContents += 'start /MIN ..\\bin\\node server.js -f "' + pathToSabiConfigFolder + '\\config\\sage2.json" %*';
 			fs.writeFileSync(pathToWinStartupFolder, sfpContents);
 
 			commandExecutionFunction("shutdown -r -t 1", null);
-		}
-		else {
+		} else {
 			console.log("Error, update function not supported on this OS.");
 		}
 
 	}
 }
 
-function writeSageOnFileWithCorrectPortAndMeetingID( data ) {
-	var port 		= getPortUsedInConfig();
-	var meetingID 	= getMeetingIDFromPasswd();
-	var cfg 		= fs.readFileSync( pathToWinDefaultConfig, "utf8" );
-		cfg 		= JSON5.parse(cfg);
-	var monitorData = fs.readFileSync(pathToMonitorDataFile);
-		monitorData = JSON5.parse(monitorData);
-	var displayNumber = 0;
-
-	if (port === null) {
-		console.log("Error: null port value. Cannot write file new sage2_on file.");
-		return;
-	}
-
-	var onFileLocation = path.join(pathToSabiConfigFolder, data.value[1]);
-
-	if(onFileLocation === pathToSage2onbatScript) {
-		console.log( "Script to activate matches " + pathToSage2onbatScript );
-		console.log( "Going to overwrite it.");
-		var rewriteContents;
-			rewriteContents = "@rem off\n\n";
-			rewriteContents += "This fill will be automatically regenerated through sabi usage.\n\n";
-			rewriteContents += "start /MIN /D .. sage2.bat\n\n";
-			rewriteContents += "timeout 2\n\n";
-			rewriteContents += "rem clear the chrome folders\n";
-			rewriteContents += "rmdir /q /s %APPDATA%\\chrome\n\n";
-			rewriteContents += "rem audio client\n";
-			rewriteContents += "set datadir=%APPDATA%\\chrome\\audio\n";
-			rewriteContents += "mkdir %datadir%\n";
-			rewriteContents += 'start "" "C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe" --no-default-browser-check --new-window --disable-popup-blocking --no-first-run --enable-accelerated-compositing --allow-file-access-from-files --disable-session-crashed-bubble --allow-running-insecure-content --window-size=600,300 --window-position=0,0 --user-data-dir=%datadir% http://localhost:'
-			rewriteContents += port + '/audioManager.html?hash='+meetingID+' /B\n\n';
-			rewriteContents += "timeout 5\n\n";
-		for(var h = 0; h < cfg.layout.rows; h++) {
-			for(var w = 0; w < cfg.layout.columns; w++) {
-				displayNumber 	= (h * cfg.layout.columns + w);
-				rewriteContents += "timeout 2\n\n";	
-				rewriteContents += "rem display" + displayNumber + "\n";
-				rewriteContents += "set datadir=%APPDATA%\\chrome\\display" + displayNumber + "\n";
-				rewriteContents += "mkdir %datadir%\n";
-				rewriteContents += 'start "" "C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe" ';
-				rewriteContents += '--no-default-browser-check --new-window --disable-popup-blocking --no-first-run ';
-				rewriteContents += '--enable-accelerated-compositing --allow-file-access-from-files ';
-				rewriteContents += '--disable-session-crashed-bubble --allow-running-insecure-content ';
-				rewriteContents += '--window-size=500,500 --window-position='+ (monitorData.tileCoordinates[displayNumber].col + 100) +','+ (monitorData.tileCoordinates[displayNumber].row + 100) +'  '; 
-				rewriteContents += '--start-fullscreen --user-data-dir=%datadir% ';
-				rewriteContents += '"http://localhost:'+port+'/display.html?clientID='+displayNumber+'&hash='+meetingID+'" /B\n\n';
-			}
-		}
-		fs.writeFileSync(pathToSage2onbatScript, rewriteContents);
-	}//end if onFileLocation === pathToSage2onbatScript
-	else {
-		console.log("Script doesn't match.");
-		console.log("Will only change value of port and meeting id.");
-
-		var originalFileContents = fs.readFileSync(onFileLocation, "utf8");
-		var rewriteContents = originalFileContents.substring( 0, originalFileContents.indexOf("localhost") );
-			rewriteContents += "localhost:" + port;
-			originalFileContents = originalFileContents.substring( originalFileContents.indexOf("localhost") );
-			originalFileContents = originalFileContents.substring( originalFileContents.indexOf("/") );
-			rewriteContents += originalFileContents.substring(0, originalFileContents.indexOf("hash="));
-			rewriteContents += "hash=" + meetingID;
-			originalFileContents = originalFileContents.substring(originalFileContents.indexOf("\"") );
-		while(originalFileContents.indexOf("localhost") !== -1) {
-			rewriteContents += originalFileContents.substring( 0, originalFileContents.indexOf("localhost") );
-			rewriteContents += "localhost:" + port;
-			originalFileContents = originalFileContents.substring( originalFileContents.indexOf("localhost") );
-			originalFileContents = originalFileContents.substring( originalFileContents.indexOf("/") );
-			rewriteContents += originalFileContents.substring(0, originalFileContents.indexOf("hash="));
-			rewriteContents += "hash=" + meetingID;
-			originalFileContents = originalFileContents.substring(originalFileContents.indexOf("\"") );
-		}
-		rewriteContents += originalFileContents;
-			
-		fs.writeFileSync(onFileLocation, rewriteContents);
-	}
-
-}
-
-function oldwriteSageOnFileWithCorrectPortAndMeetingIDold() {
-	var port = getPortUsedInConfig();
-	var meetingID = getMeetingIDFromPasswd();
-
-	if (port === null) {
-		console.log("Error: null port value. Cannot write file new sage2_on file.");
-		return;
-	}
-	console.log('Delete this comment later:');
-	console.log('   Port:' + port);
-	console.log('   meetingID:' + meetingID);
-
-	if (!fileExists(pathToSage2onbatScript)) {
-		console.log("Error: sage2_on script missing");
-		return;
-	}
-
-	var scriptContents = fs.readFileSync( pathToSage2onbatScript, "utf8" );
-	console.log("scriptContents:" + scriptContents);
-	var rewriteContents = scriptContents.substring(0, scriptContents.indexOf("localhost:"));
-		rewriteContents += "localhost:" + port;
-	scriptContents = scriptContents.substring(scriptContents.indexOf("/audioManager"));
-		rewriteContents += scriptContents.substring(0, scriptContents.indexOf("audioManager.html"));
-		rewriteContents += "audioManager.html?hash="+meetingID;
-	scriptContents = scriptContents.substring(scriptContents.indexOf(" /B"));
-		rewriteContents += scriptContents.substring(0, scriptContents.indexOf("localhost:"));
-		rewriteContents += "localhost:" + port;
-	scriptContents = scriptContents.substring(scriptContents.indexOf("/display"));
-		rewriteContents += scriptContents.substring(0, scriptContents.indexOf("ID=0"));
-		if (meetingID === null) { rewriteContents += 'ID=0"'; }
-		else { rewriteContents += 'ID=0&hash='+meetingID+'"'; }
-	scriptContents = scriptContents.substring(scriptContents.indexOf(" /B"));
-		rewriteContents += scriptContents;
-
-	fs.writeFileSync(pathToSage2onbatScript, rewriteContents);
-}
-
-function updateConfigFileToAccountForMonitorsAndResolution() {
-	if(!fileExists(pathToMonitorDataFile)) {
-		console.log("Error, asynchronous file writer through script function");
-		process.exit();
-	}
-
-	var monitorData = fs.readFileSync(pathToMonitorDataFile);
-		monitorData = JSON5.parse(monitorData);
-	var cfg 		= fs.readFileSync(pathToWinDefaultConfig);
-		cfg 		= JSON5.parse(cfg);
-	var displays 	= [];
-	var tdisp;
-
-	var totalMonitors	= monitorData.tileWidth * monitorData.tileHeight;
-	cfg.layout.columns	= monitorData.tileWidth;
-	cfg.layout.rows		= monitorData.tileHeight;
-
-	for(var height = 0; height < cfg.layout.rows; height++){
-		for(var width = 0; width < cfg.layout.columns; width++){
-			tdisp = {};
-			tdisp.row = height;
-			tdisp.column = width;
-			displays.push(tdisp);
-		}
-	}
-
-	cfg.displays = displays;
-	fs.writeFileSync(pathToWinDefaultConfig, JSON5.stringify(cfg, null, 4));
-}
-
-
-function getPortUsedInConfig() {
-	var pathToConfig; //config name differs depending on OS.
-	if (platform === "Windows") { pathToConfig = pathToWinDefaultConfig; }
-	else if (platform === "Mac OS X") { pathToConfig = pathToMacDefaultConfig; }
-	
-	if (!fileExists(pathToConfig)) {
-		console.log("Error, config doesn't exist.");
+function getMeetingIDFromPasswd() {
+	//if there is no passwd file, then there is no need to add a hash to address.
+	if (!fileExists(pathToSageUiPwdFile)) {
 		return null;
 	}
 
-	var configdata = fs.readFileSync( pathToWinDefaultConfig );
-	var cfg = JSON5.parse(configdata);
-	return cfg.index_port;
-}
-
-function getMeetingIDFromPasswd() {
-	//if there is no passwd file, then there is no need to add a hash to address.
-	if (!fileExists(pathToSageUiPwdFile)) { return null; }
-	
-	var configdata = fs.readFileSync( pathToSageUiPwdFile );
+	var configdata = fs.readFileSync(pathToSageUiPwdFile);
 	var cfg = JSON5.parse(configdata);
 	return cfg.pwd;
 }
 
 function updateCertificates() {
 	var pathToConfig; //config name differs depending on OS.
-	if (platform === "Windows") { pathToConfig = pathToWinDefaultConfig; }
-	else if (platform === "Mac OS X") { pathToConfig = pathToMacDefaultConfig; }
-	
+	if (platform === "Windows") {
+		pathToConfig = pathToWinDefaultConfig;
+	} else if (platform === "Mac OS X") {
+		pathToConfig = pathToMacDefaultConfig;
+	}
+
 	if (!fileExists(pathToConfig)) {
 		console.log("Error, config doesn't exist.");
 		return null;
@@ -1266,18 +1133,18 @@ function updateCertificates() {
 	var alternate = cfg.alternate_hosts;
 
 	var rewriteContents = "REM Must be run as administrator\n";
-		//rewriteContents += "pushd %~dp0\n"; //Not sure what this does... it stores the directory the script is run from. But to retrieve the path, a popd must be used. No other scripts in the chain seem to use it.
-		rewriteContents += "call init_webserver.bat localhost\n";
-		rewriteContents += "call init_webserver.bat 127.0.0.1\n";
-		rewriteContents += "call init_webserver.bat " + host + "\n";
-		rewriteContents += "call init_webserver.bat " + alternate + "\n";
+	//rewriteContents += "pushd %~dp0\n"; //Not sure what this does... it stores the directory the script is run from. But to retrieve the path, a popd must be used. No other scripts in the chain seem to use it.
+	rewriteContents += "call init_webserver.bat localhost\n";
+	rewriteContents += "call init_webserver.bat 127.0.0.1\n";
+	rewriteContents += "call init_webserver.bat " + host + "\n";
+	rewriteContents += "call init_webserver.bat " + alternate + "\n";
 	fs.writeFileSync(pathToGoWindowsCertGenFile, rewriteContents);
 
-	var rewriteContents = "@echo off\n\n";
-		rewriteContents += 'start /MIN /D "..\\keys" ' + pathToGoWindowsCertGenFile;
+	rewriteContents = "@echo off\n\n";
+	rewriteContents += 'start /MIN /D "..\\keys" ' + pathToGoWindowsCertGenFile;
 	fs.writeFileSync(pathToActivateGoWindowsCert, rewriteContents);
 
-	scriptExecutionFunction( pathToActivateGoWindowsCert, false);
+	scriptExecutionFunction(pathToActivateGoWindowsCert, false);
 }
 
 function makeMonitorInfoFile() {
@@ -1291,11 +1158,11 @@ function processSerialPort(data) {
 		baudrate: parseInt(data.baud)
 	});
 	sp.on("data", function (data) {
-		console.log("Got: "+data);
+		console.log("Got: " + data);
 		sp.close();
 	});
-	sp.on( "error", function( msg ) {
-		console.log("error: " + msg );
+	sp.on("error", function(msg) {
+		console.log("error: " + msg);
 	});
 	sp.on('close', function (err) {
 		console.log('port closed');
@@ -1318,16 +1185,16 @@ function processOSC(data) {
 			reply = new osc.Message(data.message, params[0]);
 		}
 		if (params.length === 2) {
-			reply = new osc.Message(data.message, params[0],params[1]);
+			reply = new osc.Message(data.message, params[0], params[1]);
 		}
 		if (params.length === 3) {
-			reply = new osc.Message(data.message, params[0],params[1],params[2]);
+			reply = new osc.Message(data.message, params[0], params[1], params[2]);
 		}
 		if (params.length === 4) {
-			reply = new osc.Message(data.message, params[0],params[1],params[2],params[3]);
+			reply = new osc.Message(data.message, params[0], params[1], params[2], params[3]);
 		}
 		if (params.length === 5) {
-			reply = new osc.Message(data.message, params[0],params[1],params[2],params[3],params[4]);
+			reply = new osc.Message(data.message, params[0], params[1], params[2], params[3], params[4]);
 		}
 	} else {
 		reply = new osc.Message(data.message);
@@ -1349,7 +1216,7 @@ sio.on('connection', function (socket) {
 	socket.emit('start', ConfigFile);
 	*/
 	//Rather than send the name, send the contents. It has to get there anyway...
-	var cfg = fs.readFileSync( ConfigFile );
+	var cfg = fs.readFileSync(ConfigFile);
 	cfg = JSON5.parse(cfg);
 	socket.emit('start', cfg);
 
@@ -1374,8 +1241,25 @@ sio.on('connection', function (socket) {
 		processOSC(data);
 	});
 
-	socket.on('disconnect', function (socket) {
+	socket.on("disconnect", function (socket) {
 		console.log("Connection closed");
+	});
+
+	// additional support for assisted config
+
+	/*
+		This needs to send necessary config components for the assisted config autofill and suggest values.
+	*/
+	socket.on("requestConfigAndTips", function(data) {
+		socketOnRequestConfigAndTips(socket);
+	});
+
+	/*
+		This will be sent after user hits the save button.
+		Hopefully this triggers correctly before redirecting the page. Double check.
+	*/
+	socket.on("assistedConfigSend", function(data) {
+		socketOnAssistedConfigSend(socket, data);
 	});
 
 });
@@ -1387,6 +1271,194 @@ sio.on('connection', function (socket) {
 
 // Listen on the given port and IPv4 local interfaces
 hserver.listen(hport, "0.0.0.0");
-console.log("\nHTTP server running at http://localhost:" + hport );
+console.log("\nHTTP server running at http://localhost:" + hport);
 console.log("\n");
+
+
+
+
+
+
+// ------------------------------------------------------------------------------------------------------------
+// Additional functions to support assisted config
+
+
+
+/*
+	Main confusion is monitorData
+		tileWidth	actually how many detected monitors there are in the tiled display width
+		tileHeight	detected number of monitors in height
+		tileCoordinates
+		[
+			{
+			col 	x coordinate of top left corner of this particular monitor
+			row 	y coordinate of top left corner of this particular monitor
+			}
+		]
+
+*/
+function socketOnRequestConfigAndTips(socket) {
+	// read default
+	var cfg 		= fs.readFileSync(pathToWinDefaultConfig, "utf8");
+	cfg 		    = JSON5.parse(cfg);
+	var monitorData = fs.readFileSync(pathToMonitorDataFile);
+	monitorData     = JSON5.parse(monitorData);
+
+	// as mentioned earlier the tilewidth/height is how many detected monitors in the tile display layout
+	var tips = {};
+	tips.layoutWidth  = monitorData.tileWidth;
+	tips.layoutHeight = monitorData.tileHeight;
+	tips.resolutionWidth  = "unknown";
+	tips.resolutionHeight = "unknown";
+	var tw, th;
+
+	// if there are more than one detected, find where there is a difference in coordinates and set tips
+	for (var i = 1; i < monitorData.tileCoordinates.length; i++) {
+		tw = tips.resolutionWidth = Math.abs(monitorData.tileCoordinates[i - 1].col - monitorData.tileCoordinates[i].col);
+		th = tips.resolutionHeight = Math.abs(monitorData.tileCoordinates[i - 1].row - monitorData.tileCoordinates[i].row);
+		if (tw > 10) {
+			tips.resolutionWidth = tw;
+		}
+		if (th > 10) {
+			tips.resolutionHeight = th;
+		}
+	}
+
+	cfg.tips = tips;
+
+	socket.emit("requestConfigAndTipsResponse", cfg);
+}
+
+
+/*
+	The given config should be correct as it had to be checked in assistedConfig.html for Send button to work.
+	Still, have a couple safety checks.
+	Needs to copy over
+		host
+		port
+		index_port
+		resolution
+		layout
+		alternate_hosts
+		remote_sites
+
+*/
+function socketOnAssistedConfigSend(socket, sentCfg) {
+	var cfg           = JSON5.parse(fs.readFileSync(pathToWinDefaultConfig));
+	var electronCfg   = JSON5.parse(fs.readFileSync(pathToElectronConfig));
+	var totalMonitors = sentCfg.layout.columns * sentCfg.layout.rows;
+
+	// copy over layout
+	cfg.layout = sentCfg.layout;
+	// double check the displays
+	if (sentCfg.displays.length != totalMonitors) { // if display values don't match, make them
+		var tdisp;
+		cfg.displays = [];
+
+		for (var height = 0; height < cfg.layout.rows; height++) {
+			for (var width = 0; width < cfg.layout.columns; width++) {
+				tdisp = {};
+				tdisp.row = height;
+				tdisp.column = width;
+				cfg.displays.push(tdisp);
+			}
+		}
+	} else { // else it should be correct from UI
+		cfg.displays = sentCfg.displays;
+	}
+	// copy over all other relevent data.
+	cfg.host = sentCfg.host;
+	cfg.port = sentCfg.port;
+	cfg.index_port = sentCfg.index_port;
+	cfg.resolution = sentCfg.resolution;
+	cfg.alternate_hosts = sentCfg.alternate_hosts;
+	cfg.remote_sites = sentCfg.remote_sites;
+	// write
+	console.log("Updating default cfg");
+	fs.writeFileSync(pathToWinDefaultConfig, JSON5.stringify(cfg, null, 4));
+
+
+	// electron copy over
+	electronCfg.host = cfg.host;
+	electronCfg.port = cfg.port;
+	electronCfg.index_port      = cfg.index_port;
+	electronCfg.resolution      = {width: (cfg.resolution.width * cfg.layout.columns),
+		height: (cfg.resolution.height * cfg.layout.rows)};//cfg.resolution;
+	electronCfg.layout          = {rows: 1, columns: 1};
+	electronCfg.displays        = [{row: 0, column: 0}];
+	electronCfg.alternate_hosts = cfg.alternate_hosts;
+	electronCfg.remote_sites    = cfg.remote_sites;
+
+	// write
+	// console.log("Updating electron cfg");
+	// fs.writeFileSync(pathToElectronConfig, JSON5.stringify(electronCfg, null, 4));
+
+	if (sentCfg.makeCerts) {
+		updateCertificates();
+	}
+}
+
+
+/*
+	Get relevent electron data for launch.
+	Electron launcher is a bat that needs to be passed width, height, port, hash(if available)
+
+	rem %1 path electron config
+	rem %2 index_port, NOT https
+	rem %3 width
+	rem %4 height
+	rem %5 hash
+	rem %6 row count
+	rem %7 col count
+
+	this only works with windows, actually probably everything only works with windows.
+*/
+
+function getLaunchParameters(isElectron) {
+	var cfg;
+	var dataReturn = [];
+
+	// if launching electron, need to ensure that the defaultWin-cfg.json file has the correct width, height on display 0
+	if (isElectron != undefined && isElectron == "electron") {
+		cfg = JSON5.parse(fs.readFileSync(pathToElectronConfig));
+		cfg.displays[0].width = cfg.layout.columns;
+		cfg.displays[0].height = cfg.layout.rows;
+	} else {
+		cfg = JSON5.parse(fs.readFileSync(pathToWinDefaultConfig));
+		cfg.displays[0].width = 1;
+		cfg.displays[0].height = 1;
+	}
+
+
+
+	dataReturn.push(pathToElectronConfig);
+	dataReturn.push(cfg.index_port);
+
+	// electron bat is designed to get full resolution since it assumes only 1 electorn window.
+	if (isElectron != undefined && isElectron == "electron") {
+		dataReturn.push(cfg.resolution.width * cfg.layout.columns);
+		dataReturn.push(cfg.resolution.height * cfg.layout.rows);
+	} else {
+		dataReturn.push(cfg.resolution.width);
+		dataReturn.push(cfg.resolution.height);
+	}
+
+	dataReturn.push(getMeetingIDFromPasswd());
+	dataReturn.push(cfg.layout.rows);
+	dataReturn.push(cfg.layout.columns);
+
+
+	// now write the file with its adjustments
+	if (isElectron != undefined && isElectron == "electron") {
+		fs.writeFileSync(pathToElectronConfig, JSON5.stringify(cfg, null, 4));
+	} else {
+		fs.writeFileSync(pathToWinDefaultConfig, JSON5.stringify(cfg, null, 4));
+	}
+
+	return dataReturn;
+}
+
+
+
+
 

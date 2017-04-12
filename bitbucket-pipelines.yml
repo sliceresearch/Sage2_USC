@@ -1,7 +1,7 @@
 # This is a sample build configuration for Javascript.
 # Only use spaces to indent your .yml configuration.
 # You can specify a custom docker image from Dockerhub as your build environment.
-image: node:latest
+image: leeduc/pipelines-node-mongo
 
 pipelines:
   default:
@@ -10,5 +10,4 @@ pipelines:
           - npm --version
           - npm install --only=dev
           - npm run lint
-          - npm run style
           - npm run doc

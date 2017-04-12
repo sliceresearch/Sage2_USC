@@ -11,7 +11,7 @@
 "use strict";
 
 /* global FileManager, SAGE2_interaction, SAGE2DisplayUI */
-/* global removeAllChildren */
+/* global removeAllChildren, SAGE2_copyToClipboard, parseBool */
 
 /**
  * Web user interface
@@ -93,6 +93,8 @@ var sage2Version;
 
 var note;
 
+var viewOnlyMode;
+
 /**
  * Reload the page if a application cache update is available
  *
@@ -109,8 +111,8 @@ if (window.applicationCache) {
  */
 window.addEventListener('beforeunload', function(event) {
 	if (interactor && interactor.broadcasting) {
+		// In fact, the message is unused for most browser as security measure
 		var confirmationMessage = "SAGE2 Desktop sharing in progress";
-
 		event.returnValue = confirmationMessage;  // Gecko, Trident, Chrome 34+
 		return confirmationMessage;               // Gecko, WebKit, Chrome <34
 	}
@@ -280,11 +282,14 @@ function SAGE2_init() {
 		return;
 	}
 
+	// Check if the viewonly flag is passed in the URL
+	viewOnlyMode = parseBool(getParameterByName("viewonly"));
+
 	// Detect which browser is being used
 	SAGE2_browser();
 
 	// Setup focus events
-	if ("Notification" in window) {
+	if ("Notification" in window && !viewOnlyMode) {
 		Notification.requestPermission(function (permission) {
 			console.log('Request', permission);
 		});
@@ -308,7 +313,11 @@ function SAGE2_init() {
 		// Show and hide elements once connect to server
 		document.getElementById('loadingUI').style.display     = "none";
 		document.getElementById('displayUIDiv').style.display  = "block";
-		document.getElementById('menuContainer').style.display = "block";
+		if (viewOnlyMode) {
+			document.getElementById('menuContainer').style.display = "none";
+		} else {
+			document.getElementById('menuContainer').style.display = "block";
+		}
 
 		// Start an initial resize of the UI once we get a connection
 		SAGE2_resize();
@@ -396,7 +405,7 @@ function SAGE2_init() {
 	hasMouse = false;
 	console.log("Assuming mobile device");
 
-	// Event listener to the Chrome extension for desktop capture
+	// Event listener to the Chrome EXTENSION for desktop capture
 	window.addEventListener('message', function(event) {
 		if (event.origin !== window.location.origin) {
 			return;
@@ -413,6 +422,12 @@ function SAGE2_init() {
 		}
 		if (event.data.cmd === "screenshot") {
 			wsio.emit('loadImageFromBuffer', event.data);
+		}
+		if (event.data.cmd === "openlink") {
+			wsio.emit('openNewWebpage', {
+				id: interactor.uniqueID,
+				url: event.data.url
+			});
 		}
 	});
 
@@ -498,10 +513,24 @@ function setupListeners() {
 		if (fileManager) {
 			fileManager.serverConfiguration(config);
 		}
+
+		if (config.name && config.name !== "Windows" && config.name !== "localhost") {
+			document.title = "SAGE2 - " + config.name;
+		} else {
+			document.title = "SAGE2 - " + config.host;
+		}
 	});
 
 	wsio.on('createAppWindowPositionSizeOnly', function(data) {
 		displayUI.addAppWindow(data);
+	});
+
+	wsio.on('showStickyPin', function(data) {
+		displayUI.showStickyPin(data);
+	});
+
+	wsio.on('hideStickyPin', function(data) {
+		displayUI.hideStickyPin(data);
 	});
 
 	wsio.on('deleteElement', function(data) {
@@ -518,6 +547,34 @@ function setupListeners() {
 
 	wsio.on('setItemPositionAndSize', function(data) {
 		displayUI.setItemPositionAndSize(data);
+	});
+
+	// webUI partition wsio messages
+	wsio.on('createPartitionBorder', function(data) {
+		displayUI.addPartitionBorder(data);
+	});
+
+	wsio.on('deletePartitionWindow', function(data) {
+		displayUI.deletePartition(data.id);
+	});
+
+	wsio.on('partitionMoveAndResizeFinished', function(data) {
+		displayUI.setPartitionPositionAndSize(data);
+	});
+
+	wsio.on('updatePartitionBorders', function(data) {
+		displayUI.updateHighlightedPartition(data);
+	});
+
+	// Receive a message when an application state is upated
+	wsio.on('applicationState', function(data) {
+		if (data.application === "Webview") {
+			var icon = document.getElementById(data.id + "_icon");
+			if (icon && data.state.favicon) {
+				// Update the icon of the app window with the favicon of the site
+				icon.src = data.state.favicon;
+			}
+		}
 	});
 
 	// Server sends the SAGE2 version
@@ -675,30 +732,32 @@ function SAGE2_resize(ratio) {
  * @param ratio {Number} scale factor
  */
 function resizeMenuUI(ratio) {
-	var menuContainer = document.getElementById('menuContainer');
-	var menuUI        = document.getElementById('menuUI');
+	if (!viewOnlyMode) {
+		var menuContainer = document.getElementById('menuContainer');
+		var menuUI        = document.getElementById('menuUI');
 
-	// Extra scaling factor
-	ratio = ratio || 1.0;
+		// Extra scaling factor
+		ratio = ratio || 1.0;
 
-	var menuScale = 1.0;
-	var freeWidth = window.innerWidth * ratio;
-	if (freeWidth < 1200) {
-		// 9 buttons, 120 pixels per button
-		// menuScale = freeWidth / 1080;
+		var menuScale = 1.0;
+		var freeWidth = window.innerWidth * ratio;
+		if (freeWidth < 1200) {
+			// 9 buttons, 120 pixels per button
+			// menuScale = freeWidth / 1080;
 
-		// 10 buttons, 120 pixels per button
-		menuScale = freeWidth / 1200;
+			// 10 buttons, 120 pixels per button
+			menuScale = freeWidth / 1200;
+		}
+
+		menuUI.style.webkitTransform = "scale(" + menuScale + ")";
+		menuUI.style.mozTransform = "scale(" + menuScale + ")";
+		menuUI.style.transform = "scale(" + menuScale + ")";
+		menuContainer.style.height = parseInt(86 * menuScale, 10) + "px";
+
+		// Center the menu bar
+		var mw = menuUI.getBoundingClientRect().width;
+		menuContainer.style.marginLeft = Math.round((window.innerWidth - mw) / 2) + "px";
 	}
-
-	menuUI.style.webkitTransform = "scale(" + menuScale + ")";
-	menuUI.style.mozTransform = "scale(" + menuScale + ")";
-	menuUI.style.transform = "scale(" + menuScale + ")";
-	menuContainer.style.height = parseInt(86 * menuScale, 10) + "px";
-
-	// Center the menu bar
-	var mw = menuUI.getBoundingClientRect().width;
-	menuContainer.style.marginLeft = Math.round((window.innerWidth - mw) / 2) + "px";
 }
 
 /**
@@ -1120,7 +1179,6 @@ function mouseCheck(event) {
 		return;
 	}
 	hasMouse = true;
-	document.title = "SAGE2 UI - Desktop";
 	console.log("Detected as desktop device");
 
 	document.addEventListener('mousedown',  pointerPress,    false);
@@ -1170,8 +1228,8 @@ function handleClick(element) {
 	} else if (element.id === "applauncher"  || element.id === "applauncherContainer"  || element.id === "applauncherLabel") {
 		wsio.emit('requestAvailableApplications');
 	} else if (element.id === "mediabrowser" || element.id === "mediabrowserContainer" || element.id === "mediabrowserLabel") {
-		if (!hasMouse && !__SAGE2__.browser.isIPad &&
-			!__SAGE2__.browser.isAndroidTablet) {
+		if (!hasMouse) {
+			//  && !__SAGE2__.browser.isIPad && !__SAGE2__.browser.isAndroidTablet) {
 			// wsio.emit('requestStoredFiles');
 			showDialog('mediaBrowserDialog');
 		} else {
@@ -1328,6 +1386,11 @@ function handleClick(element) {
 				+ sage2Version.commit + " - " + sage2Version.date;
 			infoData.appendChild(info5);
 		}
+		// Show the type of web browser
+		var info4 = document.createElement('p');
+		info4.innerHTML = "<span style='font-weight:bold;'>Browser</span>: " + __SAGE2__.browser.browserType +
+			" " + __SAGE2__.browser.version;
+		infoData.appendChild(info4);
 		// Finally show the dialog
 		showDialog('infoDialog');
 	} else if (element.id === "ezNote" || element.id === "ezNoteContainer" || element.id === "ezNoteLabel") {
@@ -1353,6 +1416,11 @@ function handleClick(element) {
 		// App Launcher Dialog
 		loadSelectedApplication();
 		hideDialog('appLauncherDialog');
+	} else if (element.id === "appStoreBtn") {
+		hideDialog('appLauncherDialog');
+		// Open the appstore page
+		var awin4 = window.open("http://apps.sagecommons.org/", '_blank');
+		awin4.focus();
 	} else if (element.id === "appCloseBtn") {
 		selectedAppEntry = null;
 		hideDialog('appLauncherDialog');
@@ -1528,6 +1596,201 @@ function handleClick(element) {
 		});
 		$$('session_name').focus();
 
+	} else if (element.id === "createpartitions") {
+		// Create a partition layout
+		hideDialog('arrangementDialog');
+		showDialog('createpartitionsDialog');
+	} else if (element.id === "createpartitionsCloseBtn") {
+		hideDialog('createpartitionsDialog');
+	} else if (element.id === "createpartitionsCreateBtn") {
+		var dropdown = document.getElementById('partitionLayout');
+		var value = dropdown.options[dropdown.selectedIndex].value;
+
+		// check selected value
+		if (value === "0") {
+			// create partition division of screen
+			wsio.emit('partitionScreen',
+				{
+					type: "row",
+					ptn: true,
+					size: 12
+				});
+		} else if (value === "1") {
+			// create partition division of screen
+			wsio.emit('partitionScreen',
+				{
+					type: "row",
+					size: 12,
+					children: [
+						{
+							type: "col",
+							ptn: true,
+							size: 6
+						},
+						{
+							type: "col",
+							ptn: true,
+							size: 6
+						}
+					]
+				});
+		} else if (value === "2") {
+			// create partition division of screen
+			wsio.emit('partitionScreen',
+				{
+					type: "row",
+					size: 12,
+					children: [
+						{
+							type: "col",
+							ptn: true,
+							size: 4
+						},
+						{
+							type: "col",
+							ptn: true,
+							size: 4
+						},
+						{
+							type: "col",
+							ptn: true,
+							size: 4
+						}
+					]
+				});
+		} else if (value === "3") {
+			// create partition division of screen
+			wsio.emit('partitionScreen',
+				{
+					type: "col",
+					size: 12,
+					children: [
+						{
+							type: "row",
+							size: 6,
+							children: [
+								{
+									type: "col",
+									ptn: true,
+									size: 6
+								},
+								{
+									type: "col",
+									ptn: true,
+									size: 6
+								}
+							]
+						},
+						{
+							type: "row",
+							size: 6,
+							children: [
+								{
+									type: "col",
+									ptn: true,
+									size: 6
+								},
+								{
+									type: "col",
+									ptn: true,
+									size: 6
+								}
+							]
+						}
+					]
+				});
+		} else if (value === "4") {
+			// create partition division of screen
+			wsio.emit('partitionScreen',
+				{
+					type: "row",
+					size: 12,
+					children: [
+						{
+							type: "col",
+							size: 3,
+							children: [
+								{
+									type: "row",
+									ptn: true,
+									size: 8
+								},
+								{
+									type: "row",
+									ptn: true,
+									size: 4
+								}
+							]
+						},
+						{
+							type: "col",
+							ptn: true,
+							size: 6
+						},
+						{
+							type: "col",
+							size: 3,
+							children: [
+								{
+									type: "row",
+									ptn: true,
+									size: 4
+								},
+								{
+									type: "row",
+									ptn: true,
+									size: 8
+								}
+							]
+						}
+					]
+				});
+		} else if (value === "5") {
+			// create partition division of screen
+			wsio.emit('partitionScreen',
+				{
+					type: "col",
+					size: 12,
+					children: [
+						{
+							type: "row",
+							size: 8,
+							children: [
+								{
+									type: "col",
+									ptn: true,
+									size: 6
+								},
+								{
+									type: "col",
+									ptn: true,
+									size: 6
+								}
+							]
+						},
+						{
+							type: "row",
+							size: 4,
+							children: [
+								{
+									type: "col",
+									ptn: true,
+									size: 12
+								}
+							]
+						}
+					]
+				});
+		}
+		hideDialog('createpartitionsDialog');
+	} else if (element.id === "deletepartitions") {
+		// Delete all partitions
+		wsio.emit('deleteAllPartitions');
+		hideDialog('arrangementDialog');
+	} else if (element.id === "deleteapplications") {
+		// Assign content to partitions (partitions grab items which are above them)
+		wsio.emit('deleteAllApplications');
+		hideDialog('arrangementDialog');
 	} else if (element.id === "ffShareScreenBtn") {
 		// Firefox Share Screen Dialog
 		interactor.captureDesktop("screen");
@@ -2116,7 +2379,7 @@ function reloadIfServerRunning(callback) {
  * Will set the values of the right mouse button(rmb) context menu div.
  */
 function setupRmbContextMenuDiv() {
-	// override rmb contextmenu calls.
+	// override rmb contextmenu calls
 	document.addEventListener('contextmenu', function(e) {
 		// if a right click is made on canvas
 		if (e.target.id === "sage2UICanvas") {
@@ -2136,9 +2399,10 @@ function setupRmbContextMenuDiv() {
 			clearContextMenu();
 			hideRmbContextMenuDiv();
 			// The context menu will be filled and positioned after getting a response from server.
+
+			// prevent the standard context menu, only for the canvas
+			e.preventDefault();
 		}
-		// prevent the standard context menu
-		e.preventDefault();
 	}, false);
 }
 
@@ -2179,7 +2443,7 @@ function clearContextMenu() {
  *
  */
 function setRmbContextMenuEntries(data) {
-	//data.entries, data.app, data.x, data.y
+	// data.entries, data.app, data.x, data.y
 	var entriesToAdd = data.entries;
 	var app = data.app;
 	showRmbContextMenuDiv(data.x, data.y);
@@ -2194,7 +2458,7 @@ function setRmbContextMenuEntries(data) {
 				if (this.callback === "SAGE2_download") {
 					// special case: want to download the file
 					var url = this.parameters.url;
-					console.log('trying to download', url);
+					console.log('Download>	content', url);
 					if (url) {
 						// Download the file
 						var link = document.createElement('a');
@@ -2211,15 +2475,22 @@ function setRmbContextMenuEntries(data) {
 							link.dispatchEvent(me);
 						}
 					}
+				} else if (this.callback === "SAGE2_copyURL") {
+					// special case: want to copy the URL of the file to clipboard
+					var dlurl = this.parameters.url;
+					if (dlurl) {
+						// defined in SAGE2_runtime
+						SAGE2_copyToClipboard(dlurl);
+					}
 				} else {
 					// if an input field, need to modify the params to pass back before sending.
 					if (this.inputField === true) {
 						var inputField = document.getElementById(this.inputFieldId);
-						//dont do anything if there is nothing in the inputfield
+						// dont do anything if there is nothing in the inputfield
 						if (inputField.value.length <= 0) {
 							return;
 						}
-						//add the field clientInput to the parameters
+						// add the field clientInput to the parameters
 						this.parameters.clientInput = inputField.value;
 					}
 					// create data to send, then emit
@@ -2228,6 +2499,7 @@ function setRmbContextMenuEntries(data) {
 					data.func = this.callback;
 					data.parameters = this.parameters;
 					data.parameters.clientName = document.getElementById('sage2PointerLabel').value;
+					data.parameters.clientId   = interactor.uniqueID,
 					wsio.emit('utdCallFunctionOnApp', data);
 				}
 				// hide after use
@@ -2237,7 +2509,7 @@ function setRmbContextMenuEntries(data) {
 	} // end adding a send function to each menu entry
 	// always add the Close Menu entry.
 	var closeEntry = {};
-	closeEntry.description = "Close Menu";
+	closeEntry.description = "Close menu";
 	closeEntry.buttonEffect = function () {
 		hideRmbContextMenuDiv();
 	};
@@ -2247,27 +2519,44 @@ function setRmbContextMenuEntries(data) {
 	for (i = 0; i < entriesToAdd.length; i++) {
 		workingDiv = document.createElement('div');
 		// unique entry id
-		workingDiv.id = 'rmbContextMenuEntry' + i; // unique entry id
+		workingDiv.id = 'rmbContextMenuEntry' + i;
 		if (typeof entriesToAdd[i].entryColor === "string") {
-			workingDiv.startingBgColor = entriesToAdd[i].entryColor; // use given color if specified
+			// use given color if specified
+			workingDiv.startingBgColor = entriesToAdd[i].entryColor;
 		} else {
-			workingDiv.startingBgColor = "#FFF8E1"; // start as off-white color
+			// start as off-white color
+			workingDiv.startingBgColor = "#FFF8E1";
 		}
 		workingDiv.style.background = workingDiv.startingBgColor;
+		// Add a little padding
+		workingDiv.style.padding = "0 5px 0 5px";
+		// Align main text to the left
+		workingDiv.style.textAlign = "left";
 		// special case for a separator (line) entry
 		if (entriesToAdd[i].description === "separator") {
 			workingDiv.innerHTML = "<hr>";
 		} else {
-			workingDiv.innerHTML = "&nbsp&nbsp&nbsp" + entriesToAdd[i].description + "&nbsp&nbsp&nbsp";
+			if (entriesToAdd[i].accelerator) {
+				// Add description of the keyboard shortcut
+				workingDiv.innerHTML = "<p style='float: left;'>" + entriesToAdd[i].description + "</p>";
+				workingDiv.innerHTML += "<p style='float: right; padding-left: 5px;'> [" + entriesToAdd[i].accelerator + "]</p>";
+				workingDiv.innerHTML += "<div style='clear: both;'></div>";
+			} else {
+				// or just plain text
+				workingDiv.innerHTML = entriesToAdd[i].description;
+			}
 		}
 		// add input field if app says to.
 		workingDiv.inputField = false;
 		if (entriesToAdd[i].inputField === true) {
 			workingDiv.inputField = true;
 			var inputField = document.createElement('input');
-			inputField.id = workingDiv.id + "Input"; // unique input field
-			inputField.value = "";
-			if (entriesToAdd[i].inputFieldSize) { // if specified state input field size
+			// unique input field
+			inputField.id = workingDiv.id + "Input";
+			// check if the data has a value field
+			inputField.defaultValue = entriesToAdd[i].value || "";
+			if (entriesToAdd[i].inputFieldSize) {
+				// if specified state input field size
 				inputField.size = entriesToAdd[i].inputFieldSize;
 			} else {
 				inputField.size = 5;
@@ -2317,9 +2606,9 @@ function setRmbContextMenuEntries(data) {
 		workingDiv.app = app;
 		// if it is the last entry to add, put a hr tag after it to separate the close menu button
 		var rmbDiv = document.getElementById('rmbContextMenu');
-		if (i === entriesToAdd.length - 1) {
-			rmbDiv.appendChild(document.createElement('hr'));
-		}
+		// if (i === entriesToAdd.length - 1) {
+		// 	rmbDiv.appendChild(document.createElement('hr'));
+		// }
 		rmbDiv.appendChild(workingDiv);
 	} // end for each entry
 } // end setRmbContextMenuEntries
@@ -2704,16 +2993,18 @@ function uiDrawSendLineCommand(xDest, yDest, xPrev, yPrev) {
 	var strokeStyle	= document.getElementById('uiDrawColorPicker').value;
 	// If resize is greater than 0, its a 2^resize value, otherwise 1.
 	var modifier = (workingDiv.resizeCount > 0) ? (Math.pow(2, workingDiv.resizeCount)) : 1;
-	var dataForApp = {};
-	dataForApp.app			= workingDiv.appId;
-	dataForApp.func			= "drawLine";
-	dataForApp.data			= [xDest * modifier, yDest * modifier,
-								xPrev * modifier, yPrev * modifier,
-								lineWidth,
-								fillStyle, strokeStyle,
-								workingDiv.clientDest];
-	dataForApp.type			= "sendDataToClient";
-	dataForApp.clientDest	= "allDisplays";
+	var dataForApp  = {};
+	dataForApp.app  = workingDiv.appId;
+	dataForApp.func = "drawLine";
+	dataForApp.data = [
+		xDest * modifier, yDest * modifier,
+		xPrev * modifier, yPrev * modifier,
+		lineWidth,
+		fillStyle, strokeStyle,
+		workingDiv.clientDest
+	];
+	dataForApp.type       = "sendDataToClient";
+	dataForApp.clientDest = "allDisplays";
 	wsio.emit("csdMessage", dataForApp);
 }
 

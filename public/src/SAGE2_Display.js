@@ -9,20 +9,15 @@
 // Copyright (c) 2014-15
 
 /* global ignoreFields, hostAlias, SAGE2WidgetControlInstance */
-/* global makeSvgBackgroundForWidgetConnectors */
-/* global addStyleElementForTitleColor */
+/* global makeSvgBackgroundForWidgetConnectors, addStyleElementForTitleColor */
 /* global removeStyleElementForTitleColor */
-/* global clearConnectorColor */
-/* global moveWidgetToAppConnector */
-/* global showWidgetToAppConnectors */
-/* global getWidgetControlInstanceById */
-/* global mapMoveToSlider */
-/* global getPropertyHandle */
-/* global insertTextIntoTextInputWidget */
-/* global removeWidgetToAppConnector */
+/* global clearConnectorColor, moveWidgetToAppConnector */
+/* global showWidgetToAppConnectors, getWidgetControlInstanceById */
+/* global mapMoveToSlider, getPropertyHandle */
+/* global insertTextIntoTextInputWidget, removeWidgetToAppConnector */
 /* global hideWidgetToAppConnectors */
-/* global createWidgetToAppConnector */
-/* global getTextFromTextInputWidget */
+/* global createWidgetToAppConnector, getTextFromTextInputWidget */
+/* global SAGE2_Partition, require */
 
 "use strict";
 
@@ -42,13 +37,14 @@ var wsio;
 var isMaster;
 var hostAlias = {};
 
-var itemCount = 0;
+var itemCount = 20;
 var controlItems   = {};
 var controlObjects = {};
 var lockedControlElements = {};
 var widgetConnectorRequestList = {};
 
 var applications = {};
+var partitions = {};
 var dependencies = {};
 var dataSharingPortals = {};
 
@@ -159,6 +155,19 @@ function setupFocusHandlers() {
 			}
 		}
 	});
+
+	if (__SAGE2__.browser.isElectron) {
+		// Display warning messages from the 'Main' Electron process
+		require('electron').ipcRenderer.on('warning', function(event, message) {
+			var problemDialog = ui.buildMessageBox('problemDialog', message);
+			ui.main.appendChild(problemDialog);
+			document.getElementById('problemDialog').style.display = "block";
+			// close the warning after 2.5 second
+			setTimeout(function() {
+				deleteElement('problemDialog');
+			}, 2500);
+		});
+	}
 }
 
 /**
@@ -584,6 +593,32 @@ function setupListeners() {
 		createAppWindow(data, ui.main.id, ui.titleBarHeight, ui.titleTextSize, ui.offsetX, ui.offsetY);
 	});
 
+
+	/* Partition wsio calls */
+	wsio.on('createPartitionWindow', function(data) {
+		partitions[data.id] = new SAGE2_Partition(data);
+	});
+	wsio.on('deletePartitionWindow', function(data) {
+		partitions[data.id].deletePartition();
+		delete partitions[data.id];
+	});
+	wsio.on('partitionMoveAndResizeFinished', function(data) {
+		partitions[data.id].updatePositionAndSize(data);
+	});
+	wsio.on('partitionWindowTitleUpdate', function(data) {
+		partitions[data.id].updateTitle(data.title);
+	});
+	wsio.on('updatePartitionBorders', function(data) {
+		if (data && partitions.hasOwnProperty(data.id)) {
+			partitions[data.id].updateSelected(data.highlight);
+		} else {
+			for (var p in partitions) {
+				// console.log(p);
+				partitions[p].updateSelected(false);
+			}
+		}
+	});
+
 	wsio.on('createAppWindowInDataSharingPortal', function(data) {
 		var portal = dataSharingPortals[data.portal];
 
@@ -613,7 +648,7 @@ function setupListeners() {
 		// When fade over, really delete the element
 		setTimeout(function() {
 			deleteElem.parentNode.removeChild(deleteElem);
-		}, 300);
+		}, 400);
 
 		// Clean up the UI DOM
 		if (elem_data.elemId in controlObjects) {
@@ -646,7 +681,6 @@ function setupListeners() {
 
 	wsio.on('updateItemOrder', function(order) {
 		resetIdle();
-
 		var key;
 		for (key in order) {
 			var selectedElemTitle = document.getElementById(key + "_title");
@@ -687,16 +721,21 @@ function setupListeners() {
 			return;
 		}
 
-		var translate = "translate(" + position_data.elemLeft + "px," + position_data.elemTop + "px)";
-		var selectedElemTitle = document.getElementById(position_data.elemId + "_title");
-		selectedElemTitle.style.webkitTransform = translate;
-		selectedElemTitle.style.mozTransform    = translate;
-		selectedElemTitle.style.transform       = translate;
+		if (position_data.elemAnimate) {
+			moveItemWithAnimation(position_data);
+		} else {
+			var translate = "translate(" + position_data.elemLeft + "px," + position_data.elemTop + "px)";
+			var selectedElemTitle = document.getElementById(position_data.elemId + "_title");
+			selectedElemTitle.style.webkitTransform = translate;
+			selectedElemTitle.style.mozTransform    = translate;
+			selectedElemTitle.style.transform       = translate;
 
-		var selectedElem = document.getElementById(position_data.elemId);
-		selectedElem.style.webkitTransform = translate;
-		selectedElem.style.mozTransform    = translate;
-		selectedElem.style.transform       = translate;
+			var selectedElem = document.getElementById(position_data.elemId);
+			selectedElem.style.webkitTransform = translate;
+			selectedElem.style.mozTransform    = translate;
+			selectedElem.style.transform       = translate;
+		}
+
 
 		var app = applications[position_data.elemId];
 		if (app !== undefined) {
@@ -800,18 +839,31 @@ function setupListeners() {
 
 		var translate = "translate(" + position_data.elemLeft + "px," + position_data.elemTop + "px)";
 		var selectedElemTitle = document.getElementById(position_data.elemId + "_title");
-		selectedElemTitle.style.webkitTransform = translate;
-		selectedElemTitle.style.mozTransform    = translate;
-		selectedElemTitle.style.transform       = translate;
+		selectedElemTitle.style.width = Math.round(position_data.elemWidth).toString() + "px";
+
+		if (position_data.elemId.split("_")[0] === "portal") {
+			dataSharingPortals[position_data.elemId].setPosition(position_data.elemLeft, position_data.elemTop);
+			return;
+		}
+
+		if (position_data.elemAnimate) {
+			moveItemWithAnimation(position_data);
+		} else {
+			selectedElemTitle.style.webkitTransform = translate;
+			selectedElemTitle.style.mozTransform    = translate;
+			selectedElemTitle.style.transform       = translate;
+
+			selectedElem.style.webkitTransform = translate;
+			selectedElem.style.mozTransform    = translate;
+			selectedElem.style.transform       = translate;
+
+		}
+
 		selectedElemTitle.style.width = Math.round(position_data.elemWidth).toString() + "px";
 
 		var selectedElemState = document.getElementById(position_data.elemId + "_state");
 		selectedElemState.style.width = Math.round(position_data.elemWidth).toString() + "px";
 		selectedElemState.style.height = Math.round(position_data.elemHeight).toString() + "px";
-
-		selectedElem.style.webkitTransform = translate;
-		selectedElem.style.mozTransform    = translate;
-		selectedElem.style.transform       = translate;
 
 		var dragCorner = selectedElem.getElementsByClassName("dragCorner");
 		var cornerSize = Math.min(position_data.elemWidth, position_data.elemHeight) / 5;
@@ -1063,7 +1115,8 @@ function setupListeners() {
 			var ctrlId = ctrl.attr('id');
 			var action = "buttonPress";
 			var ctrlParent = ctrl.parent();
-			if (/button/.test(ctrlId)) {
+			var radioButtonSelected = null;
+			if (/button/.test(ctrlId) === true && /radio/.test(ctrlId) === false) {
 				ctrl = ctrlParent.select("svg");
 				var animationInfo = ctrlParent.data("animationInfo");
 				var state = animationInfo.state;
@@ -1076,18 +1129,9 @@ function setupListeners() {
 								ctrl.animate({fill: fillVal}, 400, mina.bounce);
 							});
 						}
-					}/* else if (state === 1) {
-						ctrlParent.select("#cover2").attr("visibility", "visible");
-						ctrlParent.select("#cover").attr("visibility", "hidden");
-						animationInfo.state = 0;
-					} else {
-						ctrlParent.select("#cover").attr("visibility", "visible");
-						ctrlParent.select("#cover2").attr("visibility", "hidden");
-						animationInfo.state = 1;
-					}*/
+					}
 				} else {
 					ctrl = ctrlParent.select("path") || ctrlParent.select("text");
-
 					if (animationInfo.textual === false && animationInfo.animation === true) {
 						var delay = animationInfo.delay;
 						var fromPath = animationInfo.from;
@@ -1110,6 +1154,14 @@ function setupListeners() {
 					}
 				}
 				ctrlId = ctrlParent.attr("id").replace("button", "");
+			} else if (/radio/.test(ctrlId) === true) {
+				var radioButtonId =  ctrlParent.attr("id");
+				var radioState = ctrlParent.data("radioState");
+				radioButtonSelected = ctrlId.replace(radioButtonId, "");
+				radioState.value = radioButtonSelected;
+				ctrlParent.data("radioState", radioState);
+				action = "radioButtonPress";
+				ctrlId = radioButtonId.replace("button_radio", "");
 			} else {
 				ctrlId = ctrlParent.attr("id").replace("slider", "");
 				action = "sliderRelease";
@@ -1131,7 +1183,11 @@ function setupListeners() {
 				case "ShareApp":
 					break;
 				default:
-					app.SAGE2Event("widgetEvent", null, data.user, {identifier: ctrlId, action: action}, new Date(data.date));
+					var widgetEventData = {identifier: ctrlId, action: action};
+					if (radioButtonSelected !== null) {
+						widgetEventData.value = radioButtonSelected;
+					}
+					app.SAGE2Event("widgetEvent", null, data.user, widgetEventData, new Date(data.date));
 					break;
 			}
 
@@ -1139,7 +1195,7 @@ function setupListeners() {
 			if (app.cloneable === true && app.requestForClone === true) {
 				app.requestForClone = false;
 				if (isMaster) {
-					wsio.emit('createAppClone', {id: appId, cloneData: app.cloneData});
+					wsio.emit('createAppClone', {id: appId, cloneData: app.state});
 				}
 			}
 
@@ -1171,7 +1227,6 @@ function setupListeners() {
 	wsio.on('moveSliderKnob', function(data) {
 		// TODO: add `date` to `data` object
 		//       DON'T USE `new Date()` CLIENT SIDE (apps will get out of sync)
-
 		var ctrl = getWidgetControlInstanceById(data.ctrl);
 		var slider = ctrl.parent();
 		var ctrHandle = document.getElementById(slider.data("instanceID"));
@@ -1256,6 +1311,14 @@ function setupListeners() {
 		dataSharingPortals[data.id] = new DataSharing(data);
 	});
 
+	wsio.on('setTitle', function(data) {
+		if (data.id !== null && data.id !== undefined) {
+			var titleDiv = document.getElementById(data.id + "_title");
+			var pElement = titleDiv.getElementsByTagName("p");
+			pElement[0].textContent = data.title;
+		}
+	});
+
 	wsio.on('setAppSharingFlag', function(data) {
 		var windowTitle = document.getElementById(data.id + "_title");
 		var windowIconSync = document.getElementById(data.id + "_iconSync");
@@ -1312,6 +1375,39 @@ function setupListeners() {
 				windowState.style.display = "none";
 			}
 		}
+	});
+
+	wsio.on('showStickyPin', function(data) {
+		if (data.sticky !== true) {
+			return;
+		}
+		var titleBarHeight = ui.titleBarHeight;
+		var iconWidth = Math.round(titleBarHeight) * (300 / 235);
+		var iconSpace = 0.1 * iconWidth;
+		var titleText = document.getElementById(data.id + "_text");
+		var windowIconPinned = document.getElementById(data.id + "_iconPinned");
+		var windowIconPinout = document.getElementById(data.id + "_iconPinout");
+		titleText.style.marginLeft = Math.round(iconWidth + 2 * iconSpace) + "px";
+		if (data.pinned === true) {
+			windowIconPinned.style.display = "block";
+			windowIconPinout.style.display = "none";
+		} else {
+			windowIconPinned.style.display = "none";
+			windowIconPinout.style.display = "block";
+		}
+	});
+
+	wsio.on('hideStickyPin', function(data) {
+		if (data.sticky !== true) {
+			return;
+		}
+		var titleBarHeight = ui.titleBarHeight;
+		var titleText = document.getElementById(data.id + "_text");
+		var windowIconPinned = document.getElementById(data.id + "_iconPinned");
+		var windowIconPinout = document.getElementById(data.id + "_iconPinout");
+		titleText.style.marginLeft = Math.round(titleBarHeight / 4.0) + "px";
+		windowIconPinned.style.display = "none";
+		windowIconPinout.style.display = "none";
 	});
 }
 
@@ -1377,12 +1473,31 @@ function createAppWindow(data, parentId, titleBarHeight, titleTextSize, offsetX,
 	windowIconClose.style.right    = "0px";
 	windowTitle.appendChild(windowIconClose);
 
+	if (data.sticky === true) {
+		var windowIconPinned = document.createElement("img");
+		windowIconPinned.id  = data.id + "_iconPinned";
+		windowIconPinned.src = "images/window-pinned.svg";
+		windowIconPinned.height = Math.round(titleBarHeight);
+		windowIconPinned.style.position = "absolute";
+		windowIconPinned.style.left    = Math.round(iconSpace) + "px";
+		windowIconPinned.style.display  = "none";
+		windowTitle.appendChild(windowIconPinned);
+
+		var windowIconPinout = document.createElement("img");
+		windowIconPinout.id  = data.id + "_iconPinout";
+		windowIconPinout.src = "images/window-pinout.svg";
+		windowIconPinout.height = Math.round(titleBarHeight);
+		windowIconPinout.style.position = "absolute";
+		windowIconPinout.style.left    = Math.round(iconSpace) + "px";
+		windowIconPinout.style.display  = "none";
+		windowTitle.appendChild(windowIconPinout);
+	}
 	var titleText = document.createElement("p");
 	titleText.id  = data.id + "_text";
 	titleText.style.lineHeight = Math.round(titleBarHeight) + "px";
 	titleText.style.fontSize   = Math.round(titleTextSize) + "px";
 	titleText.style.color      = "#FFFFFF";
-	titleText.style.marginLeft = Math.round(titleBarHeight / 4) + "px";
+	titleText.style.marginLeft = Math.round(titleBarHeight / 4.0) + "px";
 	titleText.textContent      = data.title;
 	windowTitle.appendChild(titleText);
 
@@ -1615,4 +1730,35 @@ function createAppWindow(data, parentId, titleBarHeight, titleTextSize, offsetX,
 
 
 	console.log("done")
+}
+
+/* global d3 */
+
+function moveItemWithAnimation(updatedApp) {
+	var elemTitle = d3.select("#" + updatedApp.elemId + "_title");
+	var elem = d3.select("#" + updatedApp.elemId);
+
+	var translate = "translate(" + updatedApp.elemLeft + "px," + updatedApp.elemTop + "px)";
+
+	// allow for transform transitions
+	elemTitle
+		.style("transition", " opacity 0.2s ease-in, transform 0.2s linear");
+
+	elem
+		.style("transition", " opacity 0.2s ease-in, transform 0.2s linear");
+
+	// update transforms
+
+	elemTitle
+		.style("transform", translate);
+
+	elem
+		.style("transform", translate);
+
+	// reset transition after transition time
+	elemTitle.transition().delay(200)
+		.style("transition", " opacity 0.2s ease-in");
+
+	elem.transition().delay(200)
+		.style("transition", " opacity 0.2s ease-in");
 }

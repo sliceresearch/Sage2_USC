@@ -18,7 +18,7 @@
  */
 
 /* global SAGE2_init, SAGE2_resize, escape, unescape, sage2Version, showDialog */
-/* global removeAllChildren */
+/* global removeAllChildren, SAGE2_copyToClipboard */
 
 "use strict";
 
@@ -33,7 +33,6 @@ function fileSizeIEC(a, b, c, d, e) {
 	return (b = Math, c = b.log, d = 1024, e = c(a) / c(d) | 0,
 			a / b.pow(d, e)).toFixed(1) + ' ' + (e ? 'KMGTPEZY'[--e] : 'B');
 }
-
 
 /**
  * FileManager object
@@ -53,6 +52,9 @@ function FileManager(wsio, mydiv, uniqueID) {
 	this.json_cfg  = null;
 	this.http_port = null;
 
+	// Set the current sorting order
+	this.sorting = {by: "name", dir: "asc", as: "string"};
+
 	var _this = this;
 
 	// WEBIX
@@ -63,11 +65,11 @@ function FileManager(wsio, mydiv, uniqueID) {
 			data: [
 				{id: "Image:/", value: "Image", icon: "search", data: [], tooltip: "Show all the images"},
 				{id: "Video:/", value: "Video", icon: "search", data: [], tooltip: "Show all the videos"},
-				{id: "PDF:/", value: "PDF", icon: "search", data: [], tooltip: "Show all the PDFs"},
-				{id: "Note:/", value: "Note", icon: "search", data: [], tooltip: "Show all the Notes"},
+				{id: "PDF:/", value: "PDF", icon: "search", data: [], tooltip: "Show all the PDF files"},
+				{id: "Note:/", value: "Note", icon: "search", data: [], tooltip: "Show all the notes"},
 				{id: "App:/", value: "Application", icon: "search", data: [], tooltip: "Show all the applications"},
 				{id: "Session:/", value: "Session", icon: "search", data: [], tooltip: "Show all the sessions"},
-				{id: "Mine:/", value: "Uploaded", icon: "search", data: [], tooltip: "Show all my uploaded files"}
+				{id: "Mine:/", value: "My files", icon: "search", data: [], tooltip: "Show all my uploaded files"}
 			]
 		}
 	];
@@ -90,12 +92,28 @@ function FileManager(wsio, mydiv, uniqueID) {
 			{id: "tile_menu",   value: "Tile content"},
 			{id: "clear_menu",  value: "Clear display"}
 		]},
-		{id: "mainadmin_menu",    value: "Admin", config: {width: 170}, submenu: [
+		{id: "mainadmin_menu", value: "Admin", config: {width: 170}, submenu: [
 			{id: "display_menu",  value: "Display client 0"},
 			{id: "overview_menu", value: "Display overview client"},
 			{id: "audio_menu",    value: "Audio manager"},
 			// {id: "drawing_menu",  value: "Drawing application"},
+			// {id: "partition_menu",  value: "Create Partition"},
 			{id: "console_menu",  value: "Server console"}
+		]},
+		{id: "mainpartition_menu", value: "Partitions", config: {width: 250}, submenu: [
+			{id: "2x1_menu", value: "2 Columns"},
+			{id: "3x1_menu", value: "3 Columns"},
+			{id: "2x2_menu", value: "2 Columns, 2 Rows"},
+			{id: "2s-1b-2s_menu", value: "Center Pane, 4 Mini"},
+			{id: "2b-1w_menu", value: "2 Pane, Taskbar"},
+			{$template: "Separator"},
+			{id: "partitiongrab_menu", value: "Assign Content to Partitions"},
+			{id: "deletepartition_menu", value: "Delete All Partitions"}
+		]},
+		{id: "services_menu", value: "Services", config: {width: 170}, submenu: [
+			{id: "appstore_menu",  value: "SAGE2 appstore"},
+			{id: "imageservice_menu",  value: "Large image processing"},
+			{id: "videoservice_menu",  value: "Video processing"}
 		]},
 		{id: "mainhelp_menu",  value: "Help", submenu: [
 			{id: "help_menu",  value: "Help"},
@@ -120,6 +138,8 @@ function FileManager(wsio, mydiv, uniqueID) {
 	function mytip(obj) {
 		return obj.tooltip ? obj.tooltip : "";
 	}
+
+
 
 	this.main = webix.ui({
 		container: mydiv,
@@ -161,11 +181,9 @@ function FileManager(wsio, mydiv, uniqueID) {
 				{
 					id: "all_table",
 					view: "datatable",
-					// editable: true,
 					gravity: 2, // two times bigger
 					columnWidth: 200,
 					resizeColumn: true,
-					// animate: false,
 					scroll: 'y',
 					drag: true,
 					select: "multiselect",
@@ -188,17 +206,17 @@ function FileManager(wsio, mydiv, uniqueID) {
 					columns: [
 						{id: "index", header: "",     width: 40, minWidth: 25, sort: "int"},
 						{id: "name",  header: "Name", minWidth: 180,
-							sort: "text", fillspace: true},
+							sort: "string", fillspace: true},
 						{id: "user",  header: "User", width: 80, minWidth: 50,
-							sort: "text", css: {'text-align': 'right'}},
+							sort: "string", css: {'text-align': 'right'}},
 						{id: "size",  header: "Size", width: 80, minWidth: 50,
 							sort: sortBySize, css: {'text-align': 'right'}},
 						{id: "date",  header: "Date", width: 150, minWidth: 80,
-							sort: sortByDate, css: {'text-align': 'center'}},
+							sort: sortByDate1, css: {'text-align': 'center'}},
 						{id: "ago",   header: "Modified", width: 100, minWidth: 80,
-							sort: sortByDate, css: {'text-align': 'right'}},
+							sort: sortByDate2, css: {'text-align': 'right'}},
 						{id: "type",  header: "Type", width: 80, minWidth: 50,
-							sort: "text", css: {'text-align': 'center'}}
+							sort: "string", css: {'text-align': 'center'}}
 					],
 					data: [
 					]
@@ -229,6 +247,10 @@ function FileManager(wsio, mydiv, uniqueID) {
 							id: "thumb",
 							template: function(obj) {
 								if (obj.image) {
+									if (obj.session) {
+										// if it is from a session
+										return "<img src='" + obj.image + "'></img>";
+									}
 									return "<img src='" + obj.image + "_256.jpg'></img>";
 								}
 								return "";
@@ -237,7 +259,7 @@ function FileManager(wsio, mydiv, uniqueID) {
 					]
 				}
 			]
-		}
+			}
 		]
 	});
 	this.tree = $$("tree1");
@@ -339,6 +361,15 @@ function FileManager(wsio, mydiv, uniqueID) {
 		} else if (evt === "overview_menu") {
 			var overviewUrl = "http://" + window.location.hostname + _this.http_port +  "/display.html?clientID=-1";
 			window.open(overviewUrl, '_blank');
+		} else if (evt === "imageservice_menu") {
+			var imageUrl = "https://sage2rtt.evl.uic.edu:3043/upload";
+			window.open(imageUrl, '_blank');
+		} else if (evt === "appstore_menu") {
+			var storeUrl = "http://apps.sagecommons.org/";
+			window.open(storeUrl, '_blank');
+		} else if (evt === "videoservice_menu") {
+			var videoUrl = "https://sage2rtt.evl.uic.edu:3043/video";
+			window.open(videoUrl, '_blank');
 		} else if (evt === "clear_menu") {
 			wsio.emit('clearDisplay');
 		} else if (evt === "tile_menu") {
@@ -366,6 +397,180 @@ function FileManager(wsio, mydiv, uniqueID) {
 			// window.open("drawing.html", '_blank');
 		} else if (evt === "console_menu") {
 			window.open("admin/console.html", '_blank');
+		} else if (evt === "partition_menu") {
+			// create partition
+			var ptnDims = {left: 200, top: 200, width: 1000, height: 700};
+			wsio.emit('createPartition', ptnDims);
+		} else if (evt === "2x1_menu") {
+			// create partition division of screen
+			wsio.emit('partitionScreen',
+				{
+					type: "row",
+					size: 12,
+					children: [
+						{
+							type: "col",
+							ptn: true,
+							size: 6
+						},
+						{
+							type: "col",
+							ptn: true,
+							size: 6
+						}
+					]
+				});
+		} else if (evt === "3x1_menu") {
+			// create partition division of screen
+			wsio.emit('partitionScreen',
+				{
+					type: "row",
+					size: 12,
+					children: [
+						{
+							type: "col",
+							ptn: true,
+							size: 4
+						},
+						{
+							type: "col",
+							ptn: true,
+							size: 4
+						},
+						{
+							type: "col",
+							ptn: true,
+							size: 4
+						}
+					]
+				});
+		} else if (evt === "2x2_menu") {
+			// create partition division of screen
+			wsio.emit('partitionScreen',
+				{
+					type: "col",
+					size: 12,
+					children: [
+						{
+							type: "row",
+							size: 6,
+							children: [
+								{
+									type: "col",
+									ptn: true,
+									size: 6
+								},
+								{
+									type: "col",
+									ptn: true,
+									size: 6
+								}
+							]
+						},
+						{
+							type: "row",
+							size: 6,
+							children: [
+								{
+									type: "col",
+									ptn: true,
+									size: 6
+								},
+								{
+									type: "col",
+									ptn: true,
+									size: 6
+								}
+							]
+						}
+					]
+				});
+		} else if (evt === "2s-1b-2s_menu") {
+			// create partition division of screen
+			wsio.emit('partitionScreen',
+				{
+					type: "row",
+					size: 12,
+					children: [
+						{
+							type: "col",
+							size: 3,
+							children: [
+								{
+									type: "row",
+									ptn: true,
+									size: 8
+								},
+								{
+									type: "row",
+									ptn: true,
+									size: 4
+								}
+							]
+						},
+						{
+							type: "col",
+							ptn: true,
+							size: 6
+						},
+						{
+							type: "col",
+							size: 3,
+							children: [
+								{
+									type: "row",
+									ptn: true,
+									size: 4
+								},
+								{
+									type: "row",
+									ptn: true,
+									size: 8
+								}
+							]
+						}
+					]
+				});
+		} else if (evt === "2b-1w_menu") {
+			// create partition division of screen
+			wsio.emit('partitionScreen',
+				{
+					type: "col",
+					size: 12,
+					children: [
+						{
+							type: "row",
+							size: 8,
+							children: [
+								{
+									type: "col",
+									ptn: true,
+									size: 6
+								},
+								{
+									type: "col",
+									ptn: true,
+									size: 6
+								}
+							]
+						},
+						{
+							type: "row",
+							size: 4,
+							children: [
+								{
+									type: "col",
+									ptn: true,
+									size: 12
+								}
+							]
+						}
+					]
+				});
+		} else if (evt === "deletepartition_menu") {
+			wsio.emit('deleteAllPartitions');
+		} else if (evt === "partitiongrab_menu") {
+			wsio.emit('partitionsGrabAllContent');
 		} else {
 			// dunno
 		}
@@ -385,6 +590,20 @@ function FileManager(wsio, mydiv, uniqueID) {
 	// Get handle on the middle table data
 	this.allTable = $$("all_table");
 
+	// Remember the sorting direction
+	this.allTable.attachEvent("onAfterSort", function(sort_by, sort_dir, sort_as) {
+		_this.sorting.dir = sort_dir;
+		_this.sorting.as  = sort_as;
+	});
+	// Remember the sorting column
+	this.allTable.attachEvent("onHeaderClick", function(id, e, trg) {
+		_this.sorting.by = id.column;
+	});
+
+	// Sort the table with default order
+	this.allTable.sort(this.sorting.by, this.sorting.dir);
+	this.allTable.markSorting(this.sorting.by, this.sorting.dir);
+
 	// User selection
 	this.allTable.attachEvent("onSelectChange", function(evt) {
 		var elt = _this.allTable.getSelectedId();
@@ -400,13 +619,13 @@ function FileManager(wsio, mydiv, uniqueID) {
 		metadata.config.elements = [];
 		metadata.config.elements.push({label: "Metadata", type: "label"});
 		metadata.config.elements.push({label: "Width",
-				value: _this.allFiles[elt.id].exif.ImageWidth || '-'});
+			value: _this.allFiles[elt.id].exif.ImageWidth || '-'});
 		metadata.config.elements.push({label: "Height",
-				value: _this.allFiles[elt.id].exif.ImageHeight || '-'});
+			value: _this.allFiles[elt.id].exif.ImageHeight || '-'});
 		metadata.config.elements.push({label: "Author",
-				value: _this.allFiles[elt.id].exif.Creator || '-'});
+			value: _this.allFiles[elt.id].exif.Creator || '-'});
 		metadata.config.elements.push({label: "File",
-				value: _this.allFiles[elt.id].exif.MIMEType || '-'});
+			value: _this.allFiles[elt.id].exif.MIMEType || '-'});
 
 		// Add an EXIF panel for pictures
 		var info;
@@ -535,10 +754,12 @@ function FileManager(wsio, mydiv, uniqueID) {
 
 			// Parse description
 			info = _this.allFiles[elt.id].exif.metadata.description || '';
-			metadata.config.elements.push({label: info, type: "label",
-					css: {height: "100px"}});
+			metadata.config.elements.push({
+				label: info, type: "label",
+				css: {height: "100px"}
+			});
 		} else if (_this.allFiles[elt.id].exif.MIMEType.indexOf('sage2/session') >= 0) {
-			// Noting yet
+			// Nothing yet
 		}
 
 		// Done updating metadata
@@ -546,7 +767,10 @@ function FileManager(wsio, mydiv, uniqueID) {
 
 		// Update the thumbnail
 		var thumb = $$("thumb");
-		thumb.data = {image: _this.allFiles[elt.id].exif.SAGE2thumbnail};
+		thumb.data = {
+			image: _this.allFiles[elt.id].exif.SAGE2thumbnail,
+			session: (_this.allFiles[elt.id].exif.MIMEType.indexOf('sage2/session') >= 0)
+		};
 		thumb.refresh();
 	});
 
@@ -554,23 +778,26 @@ function FileManager(wsio, mydiv, uniqueID) {
 		var appType = this.getApplicationFromId(tid);
 		// Opening an app
 		if (appType === "application/custom") {
-			wsio.emit('loadApplication',
-					{application: tid,
-					user: _this.uniqueID,
-					position: position});
+			wsio.emit('loadApplication', {
+				application: tid,
+				user: _this.uniqueID,
+				position: position
+			});
 		} else if (appType === "sage2/session") {
-			wsio.emit('loadFileFromServer',
-					{application: 'load_session',
-					filename: tid,
-					user: _this.uniqueID,
-					position: position});
+			wsio.emit('loadFileFromServer',	{
+				application: 'load_session',
+				filename: tid,
+				user: _this.uniqueID,
+				position: position
+			});
 		} else {
 			// Opening a file
-			wsio.emit('loadFileFromServer',
-					{application: appType,
-					filename: tid,
-					user: _this.uniqueID,
-					position: position});
+			wsio.emit('loadFileFromServer', {
+				application: appType,
+				filename: tid,
+				user: _this.uniqueID,
+				position: position
+			});
 		}
 	};
 
@@ -630,6 +857,7 @@ function FileManager(wsio, mydiv, uniqueID) {
 		}
 		return false;
 	});
+
 	// Track the position of the dragged item
 	this.allTable.$dragPos = function(pos, event, node) {
 		// dragPosition used in drop function
@@ -707,7 +935,7 @@ function FileManager(wsio, mydiv, uniqueID) {
 	webix.ui({
 		view: "contextmenu",
 		id: "cmenu",
-		data: ["Open", "Download", { $template: "Separator" }, "Delete"],
+		data: ["Open", "Copy URL", "Download", { $template: "Separator" }, "Delete"],
 		on: {
 			onItemClick: function(id) {
 				var i;
@@ -717,8 +945,13 @@ function FileManager(wsio, mydiv, uniqueID) {
 				var dItems  = _this.allTable.getSelectedId(true);
 
 				if (id === "Download") {
-					downloadItem(list.getItem(listId).id);
-
+					// Go over the list of selected items
+					for (i = 0; i < dItems.length; i++) {
+						// Trigger the download command
+						downloadItem(dItems[i].id);
+					}
+				} else if (id === "Copy URL") {
+					copyURLItem(list.getItem(listId).id);
 				} else if (id === "Open") {
 					var tbo = [];
 					if (dItems.length === 0) {
@@ -768,10 +1001,10 @@ function FileManager(wsio, mydiv, uniqueID) {
 							if (yesno) {
 								// for all elements
 								tbd.map(function(tid) {
-									// send delete message to server
-									wsio.emit('deleteElementFromStoredFiles',
-										{filename: tid});
-									_this.allTable.remove(tid);
+									// Send delete message to server
+									wsio.emit('deleteElementFromStoredFiles', {filename: tid});
+									// Element will be deleted from table by return message from server
+									// _this.allTable.remove(tid);
 								});
 							}
 						}
@@ -808,19 +1041,6 @@ function FileManager(wsio, mydiv, uniqueID) {
 		return response;
 	};
 
-	function sortByDate(a, b) {
-		// fileds are 'moment' objects
-		a = _this.allFiles[a.id].exif.FileModifyDate;
-		b = _this.allFiles[b.id].exif.FileModifyDate;
-		return a > b ? 1 : (a < b ? -1 : 0);
-	}
-	function sortBySize(a, b) {
-		// File size in byte
-		a = _this.allFiles[a.id].exif.FileSize;
-		b = _this.allFiles[b.id].exif.FileSize;
-		return a > b ? 1 : (a < b ? -1 : 0);
-	}
-
 	function downloadItem(elt) {
 		var url = _this.allFiles[elt].sage2URL;
 		if (url) {
@@ -842,6 +1062,14 @@ function FileManager(wsio, mydiv, uniqueID) {
 				link.dispatchEvent(me);
 				return true;
 			}
+		}
+	}
+
+	function copyURLItem(elt) {
+		var url = _this.allFiles[elt].sage2URL;
+		if (url) {
+			// Copy to clipboard (defined in SAGE2_runtime)
+			SAGE2_copyToClipboard(window.location.origin + url);
 		}
 	}
 
@@ -882,7 +1110,13 @@ function FileManager(wsio, mydiv, uniqueID) {
 				return val;
 			});
 		} else if (searchParam === "treeroot") {
-			_this.allTable.filter();
+			// List everything
+			// _this.allTable.filter();
+
+			// List all but the applications
+			_this.allTable.filter(function(obj) {
+				return _this.allFiles[obj.id].exif.MIMEType.indexOf('application/custom') < 0;
+			});
 		} else {
 			// var query = searchParam.split(':');
 			// if (query[0] === "Image") {
@@ -934,7 +1168,8 @@ function FileManager(wsio, mydiv, uniqueID) {
 				// Create a subfolder if needed
 
 				// var filepath = myFile.sage2URL.split('/');
-				var filepath = decodeURIComponent(myFile.sage2URL).split('/');
+				// var filepath = decodeURIComponent(myFile.sage2URL).split('/');
+				var filepath = myFile.sage2URL.split('/');
 
 				// Remove the fist two elements (root) and the last (filename)
 				var subdirArray = filepath.slice(2, -1);
@@ -945,7 +1180,8 @@ function FileManager(wsio, mydiv, uniqueID) {
 					// if it doesnt already exist
 					if (!_this.tree.getItem(newid)) {
 						var newElement = {
-							id: newid, value: sub,
+							// id: newid, value: sub,
+							id: newid, value: decodeURIComponent(sub),
 							icon: "folder", open: true, sage2URL: newid,
 							data: [], onContext: {}
 						};
@@ -1057,9 +1293,6 @@ function FileManager(wsio, mydiv, uniqueID) {
 		$$("search_text").setValue("");
 
 		this.refresh();
-		// Sort the table by name
-		this.allTable.sort("name", "asc");
-
 
 		// Get the existing selection
 		var treeSelection = _this.tree.getSelectedItem();
@@ -1077,9 +1310,34 @@ function FileManager(wsio, mydiv, uniqueID) {
 
 	};
 
+	function sortByDate1(a, b) {
+		// fileds are 'moment' objects
+		a = _this.allFiles[a.id].exif.FileModifyDate;
+		b = _this.allFiles[b.id].exif.FileModifyDate;
+		return a > b ? 1 : (a < b ? -1 : 0);
+	}
+	function sortByDate2(a, b) {
+		// fileds are 'moment' objects
+		a = _this.allFiles[a.id].exif.FileModifyDate;
+		b = _this.allFiles[b.id].exif.FileModifyDate;
+		return a > b ? 1 : (a < b ? -1 : 0);
+	}
+	function sortBySize(a, b) {
+		// File size in byte
+		a = _this.allFiles[a.id].exif.FileSize;
+		b = _this.allFiles[b.id].exif.FileSize;
+		return a > b ? 1 : (a < b ? -1 : 0);
+	}
+
 	this.refresh = function() {
 		this.tree.refresh();
 		this.allTable.refresh();
+		// Resort the table
+		if (typeof this.sorting.as === "string") {
+			this.allTable.sort('#' + this.sorting.by + '#', this.sorting.dir, this.sorting.as);
+		} else {
+			this.allTable.sort('', this.sorting.dir, this.sorting.as);
+		}
 		this.main.adjust();
 	};
 
