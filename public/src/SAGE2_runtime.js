@@ -28,7 +28,7 @@
  * @type {Object}
  */
 var __SAGE2__ = {};
-__SAGE2__.version = "1.0.0";
+__SAGE2__.version = "1.5.0";
 
 
 /**
@@ -58,9 +58,11 @@ function SAGE2_initialize(data_seed) {
 function SAGE2_browser() {
 	var browser = {};
 	var userAgent = window.navigator.userAgent.toLowerCase();
-	browser.isOpera    = userAgent.indexOf("opera") >= 0;
-	browser.isIE       = !browser.isOpera && (userAgent.indexOf("edge") >= 0 || userAgent.indexOf("msie") >= 0 ||
-			userAgent.indexOf("trident") >= 0);
+    // Internet Explorer 6-11
+	browser.isIE       = /*@cc_on!@*/false || !!document.documentMode;
+    // Edge 20+
+	browser.isEdge     = !browser.isIE && !!window.StyleMedia;
+	browser.isOpera    = userAgent.indexOf("opr") >= 0;
 	browser.isChrome   = !browser.isIE && userAgent.indexOf("chrome") >= 0;
 	browser.isWebKit   = userAgent.indexOf("webkit") >= 0;
 	browser.isSafari   = !browser.isChrome && !browser.isIE && userAgent.indexOf("safari") >= 0;
@@ -76,8 +78,48 @@ function SAGE2_browser() {
 	browser.isWindows  = userAgent.indexOf("windows") >= 0 || userAgent.indexOf("win32") >= 0;
 	browser.isMac      = !browser.isIOS && (userAgent.indexOf("macintosh") >= 0 || userAgent.indexOf("mac os x") >= 0);
 	browser.isLinux    = userAgent.indexOf("linux") >= 0;
+	browser.isElectron = (typeof window !== 'undefined' && window.process && window.process.type === "renderer") === true;
 	// Mobile clients
 	browser.isMobile   = browser.isWinPhone || browser.isIOS || browser.isAndroid;
+
+	// Store a string for the type of browser
+	var browserType = browser.isElectron ? "Electron" :
+		browser.isIE ? "Explorer" :
+		browser.isEdge ? "Edge" :
+		browser.isFirefox ? "Firefox" :
+		browser.isSafari ? "Safari" :
+		browser.isOpera ? "Opera" :
+		browser.isChrome ? "Chrome" : "---";
+	browser.browserType  = browserType;
+
+	// Detecting version
+	var _browser = {};
+	var match    = '';
+	var ua       = userAgent;
+	_browser.electron = /electron/.test(ua);
+	_browser.opr      = /mozilla/.test(ua) && /applewebkit/.test(ua) && /chrome/.test(ua) && /safari/.test(ua) && /opr/.test(ua);
+	_browser.firefox  = /mozilla/.test(ua) && /firefox/.test(ua);
+	_browser.msie     = /msie/.test(ua) || /trident/.test(ua) || /edge/.test(ua);
+	_browser.safari   = /safari/.test(ua)  && /applewebkit/.test(ua) && !/chrome/.test(ua);
+	_browser.chrome   = /webkit/.test(ua) && /chrome/.test(ua) && !/edge/.test(ua);
+	_browser.version  = '';
+	for (var x in _browser) {
+		if (_browser[x]) {
+			match = ua.match(
+				new RegExp("(" + (x === "msie" ? "msie|edge" : x === "safari" ? "version" : x) + ")( |\/)([0-9.]+)")
+				);
+			if (match) {
+				_browser.version = match[3];
+			} else {
+				match = ua.match(new RegExp("rv:([0-9]+)"));
+				_browser.version = match ? match[1] : "";
+			}
+			break;
+		}
+	}
+	browser.version = _browser.version;
+	// version done
+
 	// Keep a copy of the UA
 	browser.userAgent  = userAgent;
 	// Copy into the global object
@@ -673,10 +715,8 @@ function playPauseVideo(elemId) {
 	var videoElem = document.getElementById(elemId + "_video");
 	if (videoElem.paused === true) {
 		videoElem.play();
-		console.log("play");
 	} else {
 		videoElem.pause();
-		console.log("pause");
 	}
 }
 

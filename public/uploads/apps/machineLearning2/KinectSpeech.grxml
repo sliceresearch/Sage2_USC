@@ -1,0 +1,54 @@
+﻿<grammar version="1.0" xml:lang="en-US" root="rootRule" tag-format="semantics/1.0-literals" xmlns="http://www.w3.org/2001/06/grammar">
+  <rule id="rootRule">
+    <one-of>
+      <item>
+        <tag>start</tag>
+        <one-of>
+          <item>begin</item>
+        </one-of>
+      </item>
+
+      <item>
+        <tag>stop</tag>
+        <one-of>
+          <item>end</item>
+        </one-of>
+      </item>
+
+      <item>
+        <tag>calibrate</tag>
+        <one-of>
+          <item>calibrate</item>
+        </one-of>
+      </item>
+
+      <item>
+        <tag>upper left</tag>
+        <one-of>
+          <item>upper left</item>
+        </one-of>
+      </item>
+
+      <item>
+        <tag>lower left</tag>
+        <one-of>
+          <item>lower left</item>
+        </one-of>
+      </item>
+
+      <item>
+        <tag>upper right</tag>
+        <one-of>
+          <item>upper right</item>
+        </one-of>
+      </item>
+
+      <item>
+        <tag>lower right</tag>
+        <one-of>
+          <item>lower right</item>
+        </one-of>
+      </item>
+    </one-of>
+  </rule>
+</grammar>

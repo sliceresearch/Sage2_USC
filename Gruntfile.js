@@ -44,7 +44,6 @@ module.exports = function(grunt) {
 						"public/uploads/apps/flow/shared.js",
 						"public/uploads/apps/googlemaps/googlemaps.js",
 						"public/uploads/apps/notepad/notepad.js",
-						"public/uploads/apps/ParaSAGE/ParaSAGE.js",
 						"public/uploads/apps/photos/photos.js",
 						"public/uploads/apps/photos/photo_scrapbooks.js",
 						"public/uploads/apps/quickNote/quickNote.js",
@@ -54,6 +53,8 @@ module.exports = function(grunt) {
 						"public/uploads/apps/sticky_note/sticky_note.js",
 						"public/uploads/apps/web_earth/web_earth.js",
 						"public/uploads/apps/welcome/welcome.js",
+						"public/uploads/apps/Webview/Webview.js",
+						"public/uploads/apps/WhiteboardPalette/WhiteboardPalette.js",
 						"public/uploads/apps/zoom/zoom.js"
 					]
 				},
@@ -79,7 +80,7 @@ module.exports = function(grunt) {
 				options: { config: "build/jscs_sage2.json" }
 			},
 			appsFiles: {
-				src: [ 
+				src: [
 					"public/uploads/apps/UIC_crime_with_leaflet/leaflet.js",
 					"public/uploads/apps/US_weather/USweather.js",
 					"public/uploads/apps/car_threejs/car_threejs.js",
@@ -113,7 +114,7 @@ module.exports = function(grunt) {
 			compile: {
 				name: 'SAGE2',
 				description: 'A New Approach for Data Intensive Collaboration Using Scalable Resolution Shared Displays',
-				version: '1.0.0',
+				version: '1.5.0',
 				url: 'http://sage2.sagecommons.org',
 				options: {
 					linkNatives: "true",
@@ -182,10 +183,9 @@ module.exports = function(grunt) {
 	grunt.loadNpmTasks('grunt-contrib-uglify');
 	grunt.loadNpmTasks('grunt-mocha-cli');
 	grunt.loadNpmTasks('grunt-prompt');
-	grunt.loadNpmTasks('grunt-jscs');
 
 	// this would be run by typing "grunt test" on the command line
-	grunt.registerTask('all', ['eslint', 'jscs', 'yuidoc', 'uglify', 'mochacli']);
+	grunt.registerTask('all', ['eslint', 'yuidoc', 'uglify', 'mochacli']);
 
 	// the default task can be run just by typing "grunt" on the command line
 	grunt.registerTask('default', ['eslint']);
@@ -249,4 +249,3 @@ module.exports = function(grunt) {
 	// build a new app with questions
 	grunt.registerTask('newapp', ['prompt:genapp', 'genapp']);
 };
-

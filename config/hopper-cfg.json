@@ -1,0 +1,91 @@
+/*
+	default configuration of the server - Windows
+*/
+{
+	name: "hopper",
+	host: "hopper.evl.uic.edu",
+	port: 443,
+	index_port: 80,
+	background: {
+		color: "#333333",
+		watermark: {
+			svg: "images/EVL-LAVA.svg",
+			color: "rgba(255, 255, 255, 0.5)"
+		}
+	},
+        audio: {
+                initialVolume: 8,
+        },
+	ui: {
+		clock: 12,
+		show_version: false,
+		show_url: true,
+        maxWindowWidth: 8192,
+        maxWindowHeight: 8192,
+        noDropShadow: true,
+        auto_hide_ui: true,
+        auto_hide_delay: 5
+	},
+	dimensions:{
+		tile_width: 1.093,
+		tile_height: 1.292,
+		tile_borders: {left: 0, right:0, bottom: 0, top: 0},
+		viewing_distance: 4
+	},
+	resolution: {
+		width: 1366,//7680,
+		height: 2304//2100
+	},
+	layout: {
+		rows: 1,
+		columns: 4
+	},
+	displays: [
+		{
+			row: 0,
+			column: 0
+		},
+		{
+			row: 0,
+			column: 1
+		},
+		{
+			row: 0,
+			column: 2
+		},
+		{
+			row: 0,
+			column: 3
+		}
+	],
+	alternate_hosts: [
+        "localhost",
+        "127.0.0.1"
+	],
+	remote_sites: [
+	],
+	dependencies: {
+		ImageMagick: "C:/Program Files/ImageMagick-6.9.3-Q16/",
+		FFMpeg: "C:/Dev/ffmpeg-win64-shared/bin/"
+  },
+	experimental: {
+		omicron: {
+			// Standard 'SAGE' connection
+			// SAGE listens for a sageinputserver to stream events
+			enable: true,
+			dataPort: 30005,
+			eventDebug: false,
+
+			// Touch gestures
+			zoomGestureScale: 2000,
+			acceleratedDragScale: 3,
+			gestureDebug: false,
+
+			// Additional 'CAVE2' type connection
+			// SAGE connects to an oinputserver to get events
+			useOinputserver: true,
+			inputServerIP: "127.0.0.1",
+			msgPort: 28000
+		}
+	}
+}

@@ -101,6 +101,7 @@ var platform = os.platform() === "win32" ? "Windows" : os.platform() === "darwin
 var pathToSageUiPwdFile			= path.join(homedir(), "Documents", "SAGE2_Media", "passwd.json");
 var pathToWinDefaultConfig		= path.join(homedir(), "Documents", "SAGE2_Media", "config", "defaultWin-cfg.json");
 var pathToMacDefaultConfig		= path.join(homedir(), "Documents", "SAGE2_Media", "config", "default-cfg.json");
+var pathToElectronConfig		= path.join(homedir(), "Documents", "SAGE2_Media", "config", "electron-cfg.json");
 var pathToWinStartupFolder		= path.join(homedir(), "AppData", "Roaming", "Microsoft", "Windows", "Start Menu", "Programs", "Startup", "startWebCon.bat" );
 var pathToMonitorDataFile		= path.join("scripts", "MonitorInfo.json"); //gets written here due to nature of the winScriptHelperWriteMonitorRes.exe file.
 var pathToSabiConfigFolder		= path.join(homedir(), "Documents", "SAGE2_Media", "sabiConfig");
@@ -112,6 +113,7 @@ var pathToGitCredentials 		= path.join(homedir(), ".git-credentials");
 var needToRegenerateSageOnFile	= true; //always check at least once
 var scriptExecutionFunction		= require('./src/script').Script;
 var commandExecutionFunction	= require('./src/script').Command;
+var spawn = require('child_process').spawn;
 
 // ---------------------------------------------
 //  Parse command line arguments
@@ -184,6 +186,17 @@ if (ConfigFile.indexOf("sage2") >= 0) {
 		// do the actual copy
 		fs.createReadStream(configInput).pipe(fs.createWriteStream(configOuput));
 	}
+	// always move electron regardless of OS
+	if (!fileExists(pathToElectronConfig)) {
+		configInput = path.join("scripts", "defaultWin-cfg.json");
+		configOuput = pathToElectronConfig;//path.join(media, "config", "defaultWin-cfg.json");
+		
+		console.log('Delete this comment later: config file does not exist tried to write to:' + configOuput);
+		console.log('    from file:' + configInput);
+
+		// do the actual copy
+		fs.createReadStream(configInput).pipe(fs.createWriteStream(configOuput));
+	}
 
 	//always ov
 	if (platform === "Windows") {
@@ -214,6 +227,11 @@ if (ConfigFile.indexOf("sage2") >= 0) {
 	sabiMediaCheck = path.join(pathToSabiConfigFolder, "scripts", "sage2_on.bat");
 		if (!fileExists(sabiMediaCheck)) {
 			sabiMediaCopy = path.join("scripts", "sage2_on.bat");
+			fs.createReadStream(sabiMediaCopy).pipe(fs.createWriteStream(sabiMediaCheck));
+		}
+	sabiMediaCheck = path.join(pathToSabiConfigFolder, "scripts", "s2_on_electron.bat");
+		if (!fileExists(sabiMediaCheck)) {
+			sabiMediaCopy = path.join("scripts", "s2_on_electron.bat");
 			fs.createReadStream(sabiMediaCopy).pipe(fs.createWriteStream(sabiMediaCheck));
 		}
 	sabiMediaCheck = path.join(pathToSabiConfigFolder, "scripts", "sage2_off.bat");
@@ -1025,7 +1043,7 @@ function processEditor(data, socket) {
 function processRPC(data, socket) { // dkedits made to account for makeNewMeetingID
 	console.log("RPC for:", data);
 	var found = false; 
-	if (data.value[0].indexOf("sage2-on") !== -1) {
+	if (data.value[0].indexOf("sage2-on") !== -1) { // keep in mind this is the "actions" field of sage2.json config for sabi
 		console.log('Delete this comment later: Intercepting sage2-on action.');
 		updateConfigFileToAccountForMonitorsAndResolution();
 		console.log("After update config file before write sage on file");
@@ -1033,8 +1051,23 @@ function processRPC(data, socket) { // dkedits made to account for makeNewMeetin
 		needToRegenerateSageOnFile = false;
 	}
 	//interception to activate data.method actions script from SAGE2_Media\sabiConfig folder
-	if(data.value[1] && data.value[1].indexOf("scripts\\") === 0) {
+	// data.value[1] now contains full path to specified script. Probably: C:\users\userName\Documents\.....bat
+	if (data.value[1] && data.value[1].indexOf("scripts\\") === 0) {
 		data.value[1] = pathToSabiConfigFolder + "\\" + data.value[1];
+	}
+	// primitive redirect for electron launching
+	if (data.value[1] && data.value[1].indexOf("s2_on_electron") != -1) {
+		updateConfigFileToAccountForMonitorsAndResolution();
+		var objWithElectronLaunchData = updateElectronConfig(); // returns width, height, port, hash
+		var parameters = [];
+		parameters.push(pathToElectronConfig); // config file path for electron sage2 launch. 
+		parameters.push(objWithElectronLaunchData.port); // for audio
+		parameters.push(objWithElectronLaunchData.port); // the rest are for display
+		parameters.push(objWithElectronLaunchData.width);
+		parameters.push(objWithElectronLaunchData.height);
+		parameters.push(objWithElectronLaunchData.hash);
+		spawn(data.value[1], parameters);
+		return; // prevent the check through AppRPC
 	}
 	for (var f in AppRPC) {
 		var func = AppRPC[f];
@@ -1225,6 +1258,43 @@ function updateConfigFileToAccountForMonitorsAndResolution() {
 	fs.writeFileSync(pathToWinDefaultConfig, JSON5.stringify(cfg, null, 4));
 }
 
+function updateElectronConfig() {
+	if(!fileExists(pathToWinDefaultConfig)) {
+		console.log("Error, asynchronous file writer through script function");
+		process.exit();
+	}
+
+	var defaultWinCfg = JSON5.parse(fs.readFileSync(pathToWinDefaultConfig));
+	var electronCfg   = JSON5.parse(fs.readFileSync(pathToElectronConfig));
+	var dataReturn = {};
+
+	electronCfg.host = defaultWinCfg.host;
+	electronCfg.port = defaultWinCfg.port;
+	electronCfg.index_port = defaultWinCfg.index_port;
+	electronCfg.layout = {
+		rows: 1,
+		columns: 1
+	};
+	electronCfg.resolution = {
+		width: (defaultWinCfg.resolution.width * defaultWinCfg.layout.columns),
+		height: (defaultWinCfg.resolution.height * defaultWinCfg.layout.rows)
+	};
+	electronCfg.displays = [{
+		row: 0,
+		column: 0
+	}];
+	electronCfg.alternate_hosts = defaultWinCfg.alternate_hosts;
+	electronCfg.remote_sites = defaultWinCfg.remote_sites;
+
+	fs.writeFileSync(pathToElectronConfig, JSON5.stringify(electronCfg, null, 4));
+
+	dataReturn.width = electronCfg.resolution.width;
+	dataReturn.height = electronCfg.resolution.height;
+	dataReturn.port = electronCfg.index_port;
+	dataReturn.hash = getMeetingIDFromPasswd();
+
+	return dataReturn;
+}
 
 function getPortUsedInConfig() {
 	var pathToConfig; //config name differs depending on OS.

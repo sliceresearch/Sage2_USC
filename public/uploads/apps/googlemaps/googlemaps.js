@@ -290,15 +290,13 @@ var googlemaps = SAGE2_App.extend({
 			} else if (data.character === "t") {
 				this.toggleTraffic();
 			}
-			// else if (data.character === 'x') {
-			// 	// Press 'x' to close itself
-			// 	this.close();
-			// }
 			this.refresh(date);
 		} else if (eventType === "specialKey") {
-			if (data.code === 16) {
+			if (data.status && data.status.SHIFT) {
 				// Shift key
-				this.isShift = (data.state === "down");
+				this.isShift = true;
+			} else {
+				this.isShift = false;
 			}
 			if (data.code === 18 && data.state === "down") {      // alt
 				// zoom in
@@ -393,6 +391,7 @@ var googlemaps = SAGE2_App.extend({
 	*/
 	getContextEntries: function() {
 		var entries = [];
+
 		var entry   = {};
 		// label of them menu
 		entry.description = "Type a location:";
@@ -404,6 +403,20 @@ var googlemaps = SAGE2_App.extend({
 		entry.inputFieldSize = 20;
 		entries.push(entry);
 
+		entry = {};
+		entry.description = "Save current location";
+		entry.callback = "setDefault";
+		entry.parameters = {};
+		entries.push(entry);
+
+		entry = {};
+		entry.description = "Load saved location";
+		entry.callback = "loadDefault";
+		entry.parameters = {};
+		entries.push(entry);
+
+		entries.push({description: "separator"});
+
 		return entries;
 	},
 
@@ -411,9 +424,48 @@ var googlemaps = SAGE2_App.extend({
 	 * Callback from th web ui menu (right click)
 	*/
 	setLocation: function(msgParams) {
-		// receive an from the web ui
+		// receive an object from the web ui
 		// .clientInput for what they typed
 		this.codeAddress(msgParams.clientInput);
+	},
+
+	/**
+	 * Set default location from app menu
+	*/
+	setDefault: function(msgParams) {
+		// Select current position as default location for the application
+		this.saveFile("", "default", "json", JSON.stringify(this.state, null, "\t"));
+	},
+
+	/**
+	 * Reload the default location
+	*/
+	loadDefault: function(msgParams) {
+		var _this = this;
+		// Request the file already saved in the app private folder
+		this.loadSavedData("default.json", function(error, data) {
+			// Update the map with the result
+			_this.map.setCenter(data.center);
+			// Update the state variable
+			_this.state.center = {lat: data.center.lat, lng: data.center.lng};
+			// Setting the zoom
+			_this.map.setZoom(data.zoomLevel);
+			_this.state.zoomLevel = data.zoomLevel;
+			// Set map type
+			_this.map.setMapTypeId(data.mapType);
+			_this.state.mapType = data.mapType;
+			// Set traffic
+			if (data.layer.t) {
+				_this.trafficLayer.setMap(_this.map);
+				clearInterval(_this.trafficTimer);
+				_this.trafficTimer = setInterval(_this.trafficCB, 60 * 1000);
+			} else {
+				_this.trafficLayer.setMap(null);
+				clearInterval(_this.trafficTimer);
+			}
+			// Need to sync since it's an async function
+			_this.SAGE2Sync(true);
+		});
 	}
 
 });

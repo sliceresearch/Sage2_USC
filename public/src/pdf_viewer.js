@@ -58,7 +58,6 @@ var pdf_viewer = SAGE2_App.extend({
 		// Control the frame rate for an animation application
 		this.maxFPS = 2.0;
 
-		this.isShift        = false;
 		this.activeTouch    = [];
 		this.interactable   = [];
 		this.gotInformation = false;
@@ -668,7 +667,7 @@ var pdf_viewer = SAGE2_App.extend({
 
 		// Special callback: dowload the file
 		entries.push({
-			description: "Download",
+			description: "Download PDF",
 			callback: "SAGE2_download",
 			parameters: {
 				url: this.state.doc_url
@@ -745,15 +744,10 @@ var pdf_viewer = SAGE2_App.extend({
 		if (eventType === "specialKey") {
 			var newOffset, center, minOffset, step;
 
-			// Shift key
-			if (data.code === 16) {
-				this.isShift = (data.state === "down");
-			}
-
 			if (data.code === 39 && data.state === "down") {
 				// Right Arrow
 
-				if (this.isShift) {
+				if (data.status.SHIFT) {
 					// calculate a offset amount
 					step = (this.baseWidthPage + this.displacement) / 10;
 					// apply offset
@@ -776,7 +770,7 @@ var pdf_viewer = SAGE2_App.extend({
 			} else if (data.code === 37 && data.state === "down") {
 				// Left Arrow
 
-				if (this.isShift) {
+				if (data.status.SHIFT) {
 					// calculate a offset amount
 					step = (this.baseWidthPage + this.displacement) / 10;
 					// apply offset

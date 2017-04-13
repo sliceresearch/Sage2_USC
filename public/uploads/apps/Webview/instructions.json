@@ -8,7 +8,9 @@
 	"dependencies": [
 	],
 	"load": {
-		"url": "/uploads/web/index.html"
+		"url": "/uploads/web/index.html",
+		"zoom": 1,
+		"mode": "desktop"
 	},
 	"title": "Webview",
 	"version": "1.0.0",
