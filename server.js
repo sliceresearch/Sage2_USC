@@ -118,6 +118,10 @@ var startTime          = Date.now();
 var drawingManager;
 var pressingAlt        = true;
 
+var parentApps         = {}; // store parent-child relationships (one parent, many children), indexed by parentId
+var childApps         = {}; // store child-parent relationships (one parent, many children), indexed by childId
+
+
 // Add extra folders defined in the configuration file
 if (config.folders) {
 	config.folders.forEach(function(f) {
@@ -239,6 +243,18 @@ function initializeSage2Server() {
 		}
 	}
 
+	// Get full version of SAGE2 - git branch, commit, date
+	sageutils.getFullVersion(function(version) {
+		// fields: base commit branch date
+		SAGE2_version = version;
+		console.log(sageutils.header("SAGE2") + "Full Version:" + json5.stringify(SAGE2_version));
+		broadcast('setupSAGE2Version', SAGE2_version);
+
+		if (users !== null) {
+			users.session.version = SAGE2_version;
+		}
+	});
+
 	// Generate a qr image that points to sage2 server
 	var qr_png = qrimage.image(hostOrigin, { ec_level: 'M', size: 15, margin: 3, type: 'png' });
 	var qr_out = path.join(uploadsDirectory, "images", "QR.png");
@@ -330,6 +346,9 @@ function initializeSage2Server() {
 			}
 		}
 	);
+
+	// Initialize assets folders
+	assets.initialize(mainFolder, mediaFolders);
 
 	// Initialize app loader
 	appLoader = new Loader(mainFolder.path, hostOrigin, config, imageMagickOptions, ffmpegOptions);
@@ -981,7 +1000,7 @@ function setupListeners(wsio) {
 	wsio.on('recordInnerGeometryForWidget',			wsRecordInnerGeometryForWidget);
 
 	wsio.on('createAppClone',                       wsCreateAppClone);
-
+	wsio.on('appCreated', 							wsAppCreatedCallback);
 	wsio.on('sage2Log',                             wsPrintDebugInfo);
 	wsio.on('command',                              wsCommand);
 
@@ -1000,6 +1019,18 @@ function setupListeners(wsio) {
 	// generic message passing for data requests or for specific communications.
 	// might eventually break this up into individual ws functions
 	wsio.on('csdMessage',							wsCsdMessage);
+
+	//linked child parent functions
+	wsio.on('launchLinkedChildApp',					wsLaunchLinkedChildApp);
+	wsio.on('messageToParent',						wsMessageToParent);
+	wsio.on('messageToChild',						wsMessageToChild);
+	wsio.on('closeLinkedChildApp',					wsCloseLinkedChildApp);
+	wsio.on('moveLinkedChildApp',					wsMoveLinkedChildApp);
+	wsio.on('resizeLinkedChildApp',					wsResizeLinkedChildApp);
+
+	//articulate input service
+	wsio.on('googleVoiceSpeechInput',               wsGoogleVoiceSpeechInput);
+	wsio.on('gestureRecognitionStatus',             wsGestureRecognitionStatus);
 
 	// application file saving message
 	wsio.on('appFileSaveRequest',                   appFileSaveRequest);
@@ -1127,6 +1158,7 @@ function initializeExistingApps(wsio) {
 			//   (especially true for slow update apps, like the clock)
 			broadcast('animateCanvas', {id: SAGE2Items.applications.list[key].id, date: Date.now()});
 		}
+
 	}
 	for (key in SAGE2Items.portals.list) {
 		broadcast('initializeDataSharingSession', SAGE2Items.portals.list[key]);
@@ -1134,6 +1166,31 @@ function initializeExistingApps(wsio) {
 
 	var newOrder = interactMgr.getObjectZIndexList("applications", ["portals"]);
 	wsio.emit('updateItemOrder', newOrder);
+}
+
+// This is called after an app has been created on the display
+function wsAppCreatedCallback(wsio, data){
+	console.log("app created callback");
+	if (data.id in parentApps && parentApps[data.id] != null) {
+		var thisChildList = parentApps[ data.id ];
+		for( var c = 0; c < thisChildList.length; c++){
+			var childId = thisChildList[c];
+			var childObj = SAGE2Items.applications.list[ parentApps[data.id][c] ]
+			var childData = {
+				childAppType: childObj.type,
+				childAppName: childObj.application,
+				user: "parentApp", //would be nice to have actual app name... or sth
+				id: data.id,
+				msg: "none",
+				childId: childObj.id,
+				initState: childObj.data,
+				success: true
+			};
+
+			sendChildMonitoringEvent(childData.id, childData.childId, "childReopenedEvent", childData);
+		}
+	}
+
 }
 
 function initializeExistingAppsPositionSizeTypeOnly(wsio) {
@@ -2274,6 +2331,306 @@ function loadSession(filename) {
 	});
 }
 
+//************** Linked parent child app functions **********
+// this function is called when a parent app wants to launch a child app
+// this function launches the app (copy, past code from the load app function, not ideal but hack for now)
+function wsLaunchLinkedChildApp(wsio, data) {
+
+	// addition for parent-child apps:
+	console.log("launching child app", data.application);
+	var appName = "./public/uploads/" + data.application;
+	console.log(appName);
+
+	var appData = {application: "custom_app", filename: appName};
+
+
+	// from wsLoadApplication:
+	var appData = {application: "custom_app", filename: appName, data: data.data};
+	appLoader.loadFileFromLocalStorage(appData, function(appInstance) {
+		appInstance.id = getUniqueAppId();
+		if (appInstance.animation) {
+			var i;
+			SAGE2Items.renderSync[appInstance.id] = {clients: {}, date: Date.now()};
+			for (i = 0; i < clients.length; i++) {
+				if (clients[i].clientType === "display") {
+					SAGE2Items.renderSync[appInstance.id].clients[clients[i].id] = {
+						wsio: clients[i], readyForNextFrame: false, blocklist: []
+					};
+				}
+			}
+		}
+
+		// Grab position sent in data
+		// note: right now no position is ever sent, and if it were,
+		// it would do a conversion to wall coordinates, which may not be what we want
+		var position = data.position || [0, 0];
+		if (position[0] > 1) {
+			// value in pixels, used as origin
+			appInstance.left = position[0];
+		} else {
+			// value in percent
+			position[0] = Math.round(position[0] * config.totalWidth);
+			// Use the position as center of drop location
+			appInstance.left = position[0] - appInstance.width / 2;
+			if (appInstance.left < 0) {
+				appInstance.left = 0;
+			}
+		}
+		if (position[1] > 1) {
+			// value in pixels, used as origin
+			appInstance.top = position[1];
+		} else {
+			// value in percent
+			position[1] = Math.round(position[1] * config.totalHeight);
+			// Use the position as center of drop location
+			appInstance.top  = position[1] - appInstance.height / 2;
+			if (appInstance.top < 0) {
+				appInstance.top = 0;
+			}
+		}
+
+		// added stuff to handle parent child connections:
+		// grab the initialized data from the parent, and set it for the child
+		if (appInstance.data && data.initState) {
+			appInstance.data = data.initState;
+		}
+
+		appInstance.parentApp = data.id; // set parent
+		appInstance.childList = [];// new app has no children
+
+		// back to copying from wsLoadApplication:
+		handleNewApplication(appInstance, null);
+
+
+		// more stuff to handle parent child connections
+		// add parents and children to management structures
+		if (data.id in parentApps && parentApps[data.id] != null) {
+			parentApps[data.id].push(appInstance.id)
+		} else {
+			parentApps[data.id] = [];
+			parentApps[data.id].push(appInstance.id);
+		}
+		childApps[appInstance.id] = data.id;
+
+		// report to the console
+		console.log("appInstance.id = " + appInstance.id);
+
+		console.log(data.id + " is now the parent of: ");
+		for (i = 0; i < parentApps[data.id].length; i++) {
+			console.log("    " + parentApps[data.id][i]);
+		}
+
+		// send message to parent that child created
+		sendChildMonitoringEvent(data.id, appInstance.id, "childOpenEvent", {success: true});
+
+		// copied from wsLoadApplication
+		addEventToUserLog(data.user, {type: "openApplication", data:
+			{application: {id: appInstance.id, type: appInstance.application}}, time: Date.now()});
+	});
+
+}
+
+// this function is called when a parent app wants to close a child app
+function wsCloseLinkedChildApp(wsio, data) {
+
+	console.log("close child " + data.childId);
+
+	// make sure this is a valid parent child pair before closing
+	// get id of child and parent from data passed from the parent
+	var parentId = data.id; // from
+	var childId = data.childId; // to
+
+	var canContinue = validParentChildPair(parentId, childId);
+
+	if( canContinue ){
+		deleteApplication(childId);
+	}
+}
+
+// this function is called when a parent app wants to move a child app
+function wsMoveLinkedChildApp(wsio, data) {
+	//make sure this is a valid parent
+	console.log("move child " + data.childId + " x:" + data.x + " y:" + data.y);
+	// get id of child and parent from data passed from the parent
+	var parentId = data.id; // from
+	var childId = data.childId; // to
+
+	var canContinue = validParentChildPair(parentId, childId);
+
+	if( canContinue ){
+		wsAppMoveTo(null, {id: childId, x: data.x, y: data.y});
+
+		var im = findInteractableManager(childId);
+		im.moveObjectToFront(childId, "applications", ["portals"]);
+		var stickyList = stickyAppHandler.getStickingItems(childId);
+		for (var idx in stickyList) {
+			im.moveObjectToFront(stickyList[idx].id, obj.layerId);
+		}
+		var newOrder = im.getObjectZIndexList("applications", ["portals"]);
+		broadcast('updateItemOrder', newOrder);
+	}
+}
+
+// this function is called when a parent app wants to launch a child app
+function wsResizeLinkedChildApp(wsio, data) {
+	//make sure this is a valid parent
+	console.log("resize child " + data.childId + " w:" + data.w + " h:" + data.h);
+	// get id of child and parent from data passed from the parent
+	var parentId = data.id; // from
+	var childId = data.childId; // to
+
+	var canContinue = validParentChildPair(parentId, childId);
+
+	if( canContinue ){
+		wsAppResize(null, {id: childId, width: data.w, height: data.h, keepRatio: data.aspectKeep});
+
+		var im = findInteractableManager(childId);
+		im.moveObjectToFront(childId, "applications", ["portals"]);
+		var stickyList = stickyAppHandler.getStickingItems(childId);
+		for (var idx in stickyList) {
+			im.moveObjectToFront(stickyList[idx].id, obj.layerId);
+		}
+		var newOrder = im.getObjectZIndexList("applications", ["portals"]);
+		broadcast('updateItemOrder', newOrder);
+
+	}
+}
+
+// from child to parent
+function wsMessageToParent(wsio, data) {
+	console.log("wsMessageToParent " + data);
+
+	// get id of child from data
+	var childId = data.id; // to
+
+	// do parent lookup in associative array
+	var parentId = getParentApp(childId);
+
+	if (parentId != null) {
+		var theEvent = {id: parentId, childId: childId, type: "messageFromChild", params: data.params, date: Date.now()};
+		broadcast('messageEvent', theEvent);
+	}
+	// if parent not exist, send fail message to child
+}
+
+// from parent to child
+function wsMessageToChild(wsio, data) {
+	console.log("wsMessageToChild " + data.id + " child: " + data.childId);
+
+	// get id of child and parent from data passed from the parent
+	var parentId = data.id; // from
+	var childId = data.childId; // to
+
+	var canContinue = validParentChildPair(parentId, childId);
+
+	// if valid pair, continue
+	if (canContinue) {
+		var theEvent = {id: childId, parentId: parentId, type: "messageFromParent", params: data.params, date: Date.now()};
+		broadcast('messageEvent', theEvent);
+	} else {
+		console.log("failed to find child"); // eventually should send fail message to parent
+	}
+
+}
+
+function sendChildMonitoringEvent(parentId, childId, eventType, data) {
+	console.log(parentId + " " + childId + " " + eventType);
+	var data = {id: parentId, childId: childId, type: eventType, data: data, date: Date.now()};
+	broadcast('childMonitoringEvent', data);
+}
+
+function sendParentMonitoringEvent(childId, parentId, eventType, data) {
+	console.log(parentId + " " + childId + " " + eventType);
+	var data = {id: childId, parentId: parentId, type: eventType, data: data, date: Date.now()};
+	broadcast('parentMonitoringEvent', data);
+}
+
+function isAChildApp(childId) {
+	return (childId in childApps && childApps[childId] != null);
+}
+
+function isAParentApp(parentId) {
+	return (parentId in parentApps && parentApps[parentId] != null);
+}
+
+function getParentApp(childId) {
+	// does child have that parent
+	if (childId in childApps && childApps[childId] != null) {
+		var parent = childApps[childId];
+		return parent;
+	}
+	return null;
+}
+
+function validParentChildPair(parentId, childId) {
+
+	// safety checks:
+	var fail = false;
+
+	// does parent have that child
+	if (isAParentApp(parentId)) {
+		var childList = parentApps[parentId];
+		var found = false;
+		for (var i = 0; i < childList.length; i++) {
+			console.log("childList[i] =" + childList[i] + " childId = " + childId);
+			if (childList[i] == childId) {
+				found = true;
+			}
+		}
+
+		if (!found) {
+			fail = true;
+			console.log("childId not found");
+		}
+	} else {
+		console.log("parentId not in parentApps");
+		fail = true;
+	}
+
+	// does child have that parent
+	if (isAChildApp(childId)) {
+		var parent = getParentApp(childId);
+		if (parent != parentId) {
+			fail = true;
+			console.log("childId not found");
+		}
+	} else {
+		console.log(" childId not in childapps");
+		fail = true;
+	}
+
+	return !fail;
+}
+
+// ************** Goolge web-speech inputs to articulate *****
+
+// this could use some work, but works ok for prototype
+function wsGoogleVoiceSpeechInput(wsio, data){
+	console.log("in server");
+
+	//find articulate app (just articulate app for now)
+	var app = SAGE2Items.applications.getFirstItemWithTitle("articulate_ui");
+	//console.log(app);
+
+	if( app != null ){
+		var data = {id: app.id, data: data.text, date: Date.now()};
+		broadcast('textInputEvent', data);
+	}
+	else{
+		//launch articulate app ...?
+		//for now assume it is launched
+	}
+}
+//find kinect app to start gesture recognition
+function wsGestureRecognitionStatus(wsio, data){
+	console.log("status " + data.text);
+	var app = SAGE2Items.applications.getFirstItemWithTitle("machineLearning");
+	if( app != null ){
+		var data = {id: app.id, data: data.text, date: Date.now()};
+		broadcast('startGestureRecognition', data);
+}
+	//console.log(app);
+}
 // **************  Information Functions *****************
 
 function listClients() {
@@ -2623,6 +2980,20 @@ function wsLoadApplication(wsio, data) {
 			}
 		}
 
+		// added for parent-child monitoring and communication
+		if (isAParentApp(appInstance.id)) {
+			// console.log("is a parent of " + childApps[appInstance.id].length);
+			appInstance.childList = childApps[appInstance.id];
+		} else {
+			appInstance.childList = [];
+		}
+
+		if (isAChildApp(appInstance.id)) {
+			appInstance.parentApp = getParentApp(appInstance.id);
+		} else {
+			appInstance.parentApp = null; // set parent to null
+		}
+
 		handleNewApplication(appInstance, null);
 
 		addEventToUserLog(data.user, {type: "openApplication", data:
@@ -2909,6 +3280,8 @@ function calculateValidBlocks(app, blockSize, renderhandle) {
 }
 
 function wsDeleteElementFromStoredFiles(wsio, data) {
+	assets.deleteAsset(data.filename);
+
 	if (data.application === "load_session") {
 		// if it's a session
 		deleteSession(data.filename);
@@ -2920,6 +3293,9 @@ function wsDeleteElementFromStoredFiles(wsio, data) {
 			}
 		});
 	}
+
+	// send the update file list
+	broadcast('storedFileList', getSavedFilesList());
 }
 
 function wsMoveElementFromStoredFiles(wsio, data) {
@@ -5392,6 +5768,7 @@ function sendKinectInput(id, data) {	// From addClient type == sageUI
 		data: data,
 		date: Date.now()
 	};
+	//later:from skeleton to window
 
 	broadcast('eventInItem', event);
 
@@ -6298,6 +6675,12 @@ function moveApplicationWindow(uniqueID, moveApp, portalId) {
 			}
 		}
 
+		// check parent monitoring
+		if (isAChildApp(moveApp.elemId)) {
+			sendChildMonitoringEvent(getParentApp(moveApp.elemId), moveApp.elemId, "childMoveEvent",
+				{x: moveApp.elemLeft, y: moveApp.elemTop});
+		}
+
 		if (portalId !== undefined && portalId !== null) {
 			var ts = Date.now() + remoteSharingSessions[portalId].timeOffset;
 			remoteSharingSessions[portalId].wsio.emit('updateApplicationPosition',
@@ -6341,6 +6724,12 @@ function moveAndResizeApplicationWindow(resizeApp, portalId) {
 		if (app.id in SAGE2Items.renderSync && SAGE2Items.renderSync[app.id].newFrameGenerated === false) {
 			handleNewVideoFrame(app.id);
 		}
+	}
+
+	// check parent monitoring
+	if (isAChildApp(resizeApp.elemId)) {
+		sendChildMonitoringEvent(getParentApp(resizeApp.elemId), resizeApp.elemId, "childMoveAndResizeEvent",
+			{x: resizeApp.elemLeft, y: resizeApp.elemTop, w: resizeApp.elemWidth, h: resizeApp.elemHeight + titleBarHeight});
 	}
 
 	if (portalId !== undefined && portalId !== null) {
@@ -7494,6 +7883,35 @@ function deleteApplication(appId, portalId) {
 
 	stickyAppHandler.removeElement(app);
 	broadcast('deleteElement', {elemId: appId});
+
+	// handle parent/children
+	if (isAChildApp(appId)) {
+		sendChildMonitoringEvent(getParentApp(appId), appId, "childCloseEvent", {});
+
+		var childList = parentApps[childApps[appId]];
+		for (var i = 0; i < childList.length; i++) {
+			if (childList[i] == appId) {
+				childList.splice(i, 1);
+				parentApps[childApps[appId]] = childList;
+			}
+		}
+		childApps[appId] = null;
+
+		console.log("deleting a child");
+
+	}
+	if (isAParentApp(appId)) {
+		console.log("deleting a parent");
+
+		var childList = parentApps[appId];// get list of children
+		for (var i = 0; i < childList.length; i++) {
+			sendParentMonitoringEvent(childList[i], appId, "parentCloseEvent", {});
+			childApps[childList[i]] = null; // child is not longer parented
+		}
+
+		parentApps[appId] = null; // parent no longer has children
+
+	}
 
 	if (portalId !== undefined && portalId !== null) {
 		var ts = Date.now() + remoteSharingSessions[portalId].timeOffset;

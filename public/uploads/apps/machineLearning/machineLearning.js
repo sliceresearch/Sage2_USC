@@ -9,7 +9,7 @@ const bodyParts = {
 	"OMICRON_SKEL_HEAD": {
 		"partName": "head",
 		"shape": "circle",
-		"baseSize": 20
+		"baseSize": 30
 	},
 	"OMICRON_SKEL_LEFT_HAND": {
 		"partName": "leftHand",
@@ -139,7 +139,7 @@ var machineLearning = SAGE2_App.extend( {
 		// SAGE2 Application Settings
 		//
 		// Control the frame rate for an animation application
-		this.maxFPS = 2.0;
+		this.maxFPS = 100.0;
 		// Not adding controls but making the default buttons available
 		this.controls.finishedAddingControls();
 		this.enableControls = true;
@@ -172,7 +172,7 @@ var machineLearning = SAGE2_App.extend( {
 			"minY": -0.92, // meters
 			"maxY": 0.92, // meters
 			"heightOfKinect": 2.04, // meters
-			"kinectToCenterOfScreenVertical": 0.92, // meters
+			"kinectToCenterOfScreenVertical":1.0,// 0.92, // meters
 			"kinectToCenterOfScreenHorizontal": 0.06, // meters
 			"lengthFromDisplayToKinectGroundIntersect": 4.00, // meters
 			"angleFromKinectToDisplay": 63, // degrees
@@ -221,7 +221,9 @@ var machineLearning = SAGE2_App.extend( {
 			this.ctx.stroke();
 		}
 	},
-
+	startGestureRecognition: function(data, date){
+		console.log("in machinesLearning App!!");
+	},
 	// -------------- CALIBRATED TRIAL FUNCTIONS
 
 	drawCalibrationGuides: function() {
@@ -361,36 +363,215 @@ var machineLearning = SAGE2_App.extend( {
 	// 	this.ctx.fill();
 	// 	this.ctx.stroke();
 	// },
+drawSkeletonLines: function(){
+	for (const skeletonID in this.skeletons) {
+		const skeleton = this.skeletons[skeletonID];
 
+		this.ctx.strokeStyle = "magenta";
+		this.ctx.lineWidth = 3;
+		//head to shoulderCenter
+		this.ctx.beginPath();
+		this.ctx.moveTo(skeleton.head.x,  this.element.height - skeleton.head.y);
+		this.ctx.lineTo(skeleton.shoulderCenter.x, this.element.height - skeleton.shoulderCenter.y);
+		this.ctx.stroke();
+
+		//shoulderCenter to spine
+		this.ctx.beginPath();
+		this.ctx.moveTo(skeleton.shoulderCenter.x,  this.element.height - skeleton.shoulderCenter.y);
+		this.ctx.lineTo(skeleton.spine.x, this.element.height - skeleton.spine.y);
+		this.ctx.stroke();
+
+		//-------------------- Left side -----------------------------------------------
+
+		//shoulderCenter to leftShoulder
+		this.ctx.beginPath();
+		this.ctx.moveTo(skeleton.shoulderCenter.x,  this.element.height - skeleton.shoulderCenter.y);
+		this.ctx.lineTo(skeleton.leftShoulder.x, this.element.height - skeleton.leftShoulder.y);
+		this.ctx.stroke();
+
+		//leftShoulder to leftElbow
+		this.ctx.beginPath();
+		this.ctx.moveTo(skeleton.leftShoulder.x,  this.element.height - skeleton.leftShoulder.y);
+		this.ctx.lineTo(skeleton.leftElbow.x, this.element.height - skeleton.leftElbow.y);
+		this.ctx.stroke();
+
+		//leftElbow to leftWrist
+		this.ctx.beginPath();
+		this.ctx.moveTo(skeleton.leftElbow.x,  this.element.height - skeleton.leftElbow.y);
+		this.ctx.lineTo(skeleton.leftWrist.x, this.element.height - skeleton.leftWrist.y);
+		this.ctx.stroke();
+
+		//leftWrist to leftHand
+		this.ctx.beginPath();
+		this.ctx.moveTo(skeleton.leftWrist.x,  this.element.height - skeleton.leftWrist.y);
+		this.ctx.lineTo(skeleton.leftHand.x, this.element.height - skeleton.leftHand.y);
+		this.ctx.stroke();
+
+		//leftHand to leftFingerTip
+		this.ctx.beginPath();
+		this.ctx.moveTo(skeleton.leftHand.x,  this.element.height - skeleton.leftHand.y);
+		this.ctx.lineTo(skeleton.leftFingerTip.x, this.element.height - skeleton.leftFingerTip.y);
+		this.ctx.stroke();
+
+		//leftWrist to leftThumb
+		this.ctx.beginPath();
+		this.ctx.moveTo(skeleton.leftWrist.x,  this.element.height - skeleton.leftWrist.y);
+		this.ctx.lineTo(skeleton.leftThumb.x, this.element.height - skeleton.leftThumb.y);
+		this.ctx.stroke();
+
+		//spine to leftHip
+		this.ctx.beginPath();
+		this.ctx.moveTo(skeleton.spine.x,  this.element.height - skeleton.spine.y);
+		this.ctx.lineTo(skeleton.leftHip.x, this.element.height - skeleton.leftHip.y);
+		this.ctx.stroke();
+
+		//leftHip to leftKnee
+		this.ctx.beginPath();
+		this.ctx.moveTo(skeleton.leftHip.x,  this.element.height - skeleton.leftHip.y);
+		this.ctx.lineTo(skeleton.leftKnee.x, this.element.height - skeleton.leftKnee.y);
+		this.ctx.stroke();
+
+		//leftKnee to leftAnkle
+		this.ctx.beginPath();
+		this.ctx.moveTo(skeleton.leftKnee.x,  this.element.height - skeleton.leftKnee.y);
+		this.ctx.lineTo(skeleton.leftAnkle.x, this.element.height - skeleton.leftAnkle.y);
+		this.ctx.stroke();
+
+		//leftAnkle to leftFoot
+		this.ctx.beginPath();
+		this.ctx.moveTo(skeleton.leftAnkle.x,  this.element.height - skeleton.leftAnkle.y);
+		this.ctx.lineTo(skeleton.leftFoot.x, this.element.height - skeleton.leftFoot.y);
+		this.ctx.stroke();
+
+
+		//-------------------- Right side -----------------------------------------------
+
+		//shoulderCenter to rightShoulder
+		this.ctx.beginPath();
+		this.ctx.moveTo(skeleton.shoulderCenter.x,  this.element.height - skeleton.shoulderCenter.y);
+		this.ctx.lineTo(skeleton.rightShoulder.x, this.element.height - skeleton.rightShoulder.y);
+		this.ctx.stroke();
+
+		//rightShoulder to rightElbow
+		this.ctx.beginPath();
+		this.ctx.moveTo(skeleton.rightShoulder.x,  this.element.height - skeleton.rightShoulder.y);
+		this.ctx.lineTo(skeleton.rightElbow.x, this.element.height - skeleton.rightElbow.y);
+		this.ctx.stroke();
+
+		//rightElbow to rightWrist
+		this.ctx.beginPath();
+		this.ctx.moveTo(skeleton.rightElbow.x,  this.element.height - skeleton.rightElbow.y);
+		this.ctx.lineTo(skeleton.rightWrist.x, this.element.height - skeleton.rightWrist.y);
+		this.ctx.stroke();
+
+		//rightWrist to rightHand
+		this.ctx.beginPath();
+		this.ctx.moveTo(skeleton.rightWrist.x,  this.element.height - skeleton.rightWrist.y);
+		this.ctx.lineTo(skeleton.rightHand.x, this.element.height - skeleton.rightHand.y);
+		this.ctx.stroke();
+
+		//rightHand to rightFingerTip
+		this.ctx.beginPath();
+		this.ctx.moveTo(skeleton.rightHand.x,  this.element.height - skeleton.rightHand.y);
+		this.ctx.lineTo(skeleton.rightFingerTip.x, this.element.height - skeleton.rightFingerTip.y);
+		this.ctx.stroke();
+
+		//rightWrist to rightThumb
+		this.ctx.beginPath();
+		this.ctx.moveTo(skeleton.rightWrist.x,  this.element.height - skeleton.rightWrist.y);
+		this.ctx.lineTo(skeleton.rightThumb.x, this.element.height - skeleton.rightThumb.y);
+		this.ctx.stroke();
+
+		//spine to rightHip
+		this.ctx.beginPath();
+		this.ctx.moveTo(skeleton.spine.x,  this.element.height - skeleton.spine.y);
+		this.ctx.lineTo(skeleton.rightHip.x, this.element.height - skeleton.rightHip.y);
+		this.ctx.stroke();
+
+		//rightHip to rightKnee
+		this.ctx.beginPath();
+		this.ctx.moveTo(skeleton.rightHip.x,  this.element.height - skeleton.rightHip.y);
+		this.ctx.lineTo(skeleton.rightKnee.x, this.element.height - skeleton.rightKnee.y);
+		this.ctx.stroke();
+
+		//rightKnee to rightAnkle
+		this.ctx.beginPath();
+		this.ctx.moveTo(skeleton.rightKnee.x,  this.element.height - skeleton.rightKnee.y);
+		this.ctx.lineTo(skeleton.rightAnkle.x, this.element.height - skeleton.rightAnkle.y);
+		this.ctx.stroke();
+
+		//rightAnkle to rightFoot
+		this.ctx.beginPath();
+		this.ctx.moveTo(skeleton.rightAnkle.x,  this.element.height - skeleton.rightAnkle.y);
+		this.ctx.lineTo(skeleton.rightFoot.x, this.element.height - skeleton.rightFoot.y);
+		this.ctx.stroke();
+
+
+	}
+},
 	drawRawBodyParts: function () {
 		// drawing the ball
-		this.ctx.fillStyle = this.ball.color;
-		this.fillCircle(this.ball.x, this.ball.y, this.ball.radius * 2);
+	  // this.ctx.fillStyle = this.ball.color;
+	  // this.fillCircle(this.ball.x, this.ball.y, this.ball.radius * 2);
 
-		this.drawCalibrationGuides();
-		// this.drawBoundingBox();
+		//this.drawCalibrationGuides();
+		//this.drawBoundingBox();
 
 		for (const skeletonID in this.skeletons) {
 			const skeleton = this.skeletons[skeletonID];
 
 			this.fontSize = 32;
-			this.ctx.font = "32px Helvetica";
+			this.ctx.font = "48px Helvetica";
 			this.ctx.textAlign="center";
 
 			//status bar
 			this.drawStatusBar();
-
+			this.drawSkeletonLines();
 			this.ctx.fillStyle = skeleton.color;
-			this.ctx.fillText("leftHand", skeleton.leftHand.x, skeleton.leftHand.y);
+			this.ctx.fillText("Head", skeleton.head.x,  this.element.height - skeleton.head.y);
 
 			for (const bodyPartName in skeleton) {
 				const bodyPart = skeleton[bodyPartName];
 				const shape = bodyPart.shape;
-				const x = bodyPart.kinectX;
-				const y = bodyPart.kinectY;
+				const x = bodyPart.x;//bodyPart.kinectX;
+				const y = this.element.height - bodyPart.y;//To flip the skeleton upside
 				const z = bodyPart.z;
 				const size = bodyPart.baseSize / z;
-				this.ctx.fillStyle = bodyPart.colorOverride ? bodyPart.colorOverride : skeleton.color;
+				const skeletonColor = bodyPart.colorOverride ? bodyPart.colorOverride : skeleton.color;
+				this.ctx.fillStyle = skeletonColor; //bodyPart.colorOverride ? bodyPart.colorOverride : skeleton.color;
+				this.ctx.strokeStyle = skeletonColor;
+				// var wristX = 0;
+				// var wristY = 0;
+				// var elbowX = 0;
+				// var elbowY = 0;
+				// var line = false;
+				//
+				// if(bodyPart.partName === "head")
+				// //if (bodyPartName === "OMICRON_SKEL_HEAD")
+				// {
+				// 	 wristX = x;
+				// 	 wristY = y;
+				// 	 	console.log("HEAD");
+				// }
+				// else if(bodyPart.partName === "spine")
+				// //else if (bodyPartName === "OMICRON_SKEL_SPINE")
+				// {
+				// 	 elbowX = x;
+				// 	 elbowY = y;
+				//   line = true;
+				// 	 console.log("ELBOW");
+				// }
+				//
+				// if(line)
+				// {
+				// 	this.ctx.fillStyle = "Lime";
+				// 	this.ctx.lineWidth = 8;
+				// 	this.ctx.beginPath();
+				// 	this.ctx.moveTo(skeleton.head.x, skeleton.head.y);
+				// 	this.ctx.lineTo(skeleton.spine.x, skeleton.spine.y);
+				// 	this.ctx.stroke();
+				// 	console.log("LINE");
+				// }
 
 				if (shape === "circle") {
 					this.fillCircle(x, y, size);
@@ -436,7 +617,6 @@ var machineLearning = SAGE2_App.extend( {
 					this.ball.yDir = -this.ball.yDir;
 				}
 			}
-
 			// if (this.calibrations.calibrated) {
 			// 	this.drawWithCalibrations();
 			// }
@@ -449,6 +629,7 @@ var machineLearning = SAGE2_App.extend( {
 	//---------- DRAWING FUNCTIONS ----------//
 	//---------------------------------------//
 	draw: function(date) {
+
 		this.calibratedTrialModeDraw(date);
 	},
 
@@ -566,21 +747,104 @@ var machineLearning = SAGE2_App.extend( {
 	},
 
 	recognizePoint: function () {
-		const {rightShoulder, rightFingerTip} = this.mostRecentSkeleton;
 
-		const rightArmLength = this.armLength(rightShoulder, rightFingerTip);
+	 const {head, rightShoulder, rightFingerTip} = this.mostRecentSkeleton;
 
-		const minX = rightShoulder.kinectX - rightArmLength;
-		const maxX = rightShoulder.kinectX + rightArmLength;
-		const minY = rightShoulder.kinectY - rightArmLength;
-		const maxY = rightShoulder.kinectY + rightArmLength;
+	 //if(rightFingerTip.kinectY > rightShoulder.kinectY){
 
-		if (this.inRange(rightFingerTip.kinectX, rightFingerTip.kinectY, minX, maxX, minY, maxY)) {
-			const mappedX = this.map(rightFingerTip.kinectX, minX, maxX, 0, this.element.width);
-			const mappedY = this.map(-rightFingerTip.kinectY, minY, maxY, 0, this.element.height);
+	 //Centering head and rightFingerTip to create a virtual screen in front of the display
+	 const centroidHeadX = 0;
+	 const centroidHeadY = 0;
+	 const centroidRightFingerTipX = rightFingerTip.kinectX - head.kinectX;
+	 const centroidRightFingerTipY = rightFingerTip.kinectY - head.kinectY;
 
-			this.fillCircle(mappedX, mappedY, 20);
-		}
+   //Dimensions of the physical space
+	 const spaceMinX = this.physicalSpace.minX;
+	 const spaceMaxX = this.physicalSpace.maxX;
+	 const spaceMinY = this.physicalSpace.minY;
+	 const spaceMaxY = this.physicalSpace.maxY;
+
+	 //Dimensions of virtual touch screen
+	//  const minX = (((centroidHeadX - spaceMinX) * (rightFingerTip.z - head.z )) / head.z);// + head.z) - spaceMaxX;
+	//  const maxX = (((centroidHeadX - spaceMaxX) * (rightFingerTip.z - head.z )) / head.z);// + head.z) - spaceMaxX;
+	//  const minY = (((centroidHeadY - spaceMinY) * (rightFingerTip.z - head.z )) / head.z);// + head.kinectY) - spaceMaxY;
+	//  const maxY = (((centroidHeadY - spaceMaxY) * (rightFingerTip.z - head.z )) / head.z);// + head.kinectY) - spaceMaxY;
+
+	 const minX = -(((centroidHeadX - spaceMinX) * ( head.z - rightFingerTip.z )) / head.z);// + head.z) - spaceMaxX;
+	 const maxX = -(((centroidHeadX - spaceMaxX) * ( head.z - rightFingerTip.z )) / head.z);// + head.z) - spaceMaxX;
+	 const minY = -(((centroidHeadY - spaceMinY) * ( head.z - rightFingerTip.z )) / head.z);// + head.kinectY) - spaceMaxY;
+	 const maxY = -(((centroidHeadY - spaceMaxY) * ( head.z - rightFingerTip.z )) / head.z);// + head.kinectY) - spaceMaxY;
+
+	//  console.log("FX " + centroidRightFingerTipX);
+	//  console.log("FY " + -centroidRightFingerTipY);
+	//  console.log("HZ " + head.z);
+	//  console.log("FZ " + rightFingerTip.z);
+	//  console.log("minX " + minX);
+	//  console.log("maxX " + maxX);
+	//  console.log("minY " + minY);
+	//  console.log("maxY " + maxY);
+
+	 if (this.inRange(centroidRightFingerTipX, -centroidRightFingerTipY, minX, maxX, minY, maxY)){
+
+	 //Drawing the virtual screen just to figure out things
+	 this.ctx.strokeStyle = "rgba(240, 205, 50, 0.5)";
+	 this.ctx.fillStyle = "rgba(240, 205, 50, 0.5)";
+	 this.ctx.lineWidth = 3;
+	 this.ctx.beginPath();
+	 this.ctx.moveTo(this.map(minX, spaceMinX, spaceMaxX, 0, this.element.width), this.map(minY, spaceMinY, spaceMaxY, 0, this.element.height));
+	 this.ctx.lineTo(this.map(maxX, spaceMinX, spaceMaxX, 0, this.element.width), this.map(minY, spaceMinY, spaceMaxY, 0, this.element.height));
+	 this.ctx.lineTo(this.map(minX, spaceMinX, spaceMaxX, 0, this.element.width), this.map(maxY, spaceMinY, spaceMaxY, 0, this.element.height));
+   this.ctx.moveTo(this.map(maxX, spaceMinX, spaceMaxX, 0, this.element.width), this.map(maxY, spaceMinY, spaceMaxY, 0, this.element.height));
+	 this.ctx.lineTo(this.map(minX, spaceMinX, spaceMaxX, 0, this.element.width), this.map(maxY, spaceMinY, spaceMaxY, 0, this.element.height));
+	 this.ctx.lineTo(this.map(maxX, spaceMinX, spaceMaxX, 0, this.element.width), this.map(minY, spaceMinY, spaceMaxY, 0, this.element.height));
+	 this.ctx.stroke();
+	 this.ctx.fill();
+
+	 //Factors to map point from virtual screen to large display
+	 const factorX = (spaceMaxX - spaceMinX) / (maxX - minX);
+	 const factorY = (spaceMaxY - spaceMinY) / (maxY - minY);
+
+	 //Mapping from virtual screen to large screen positions
+	 const adjustedX = centroidRightFingerTipX * factorX;
+	 const adjustedY = centroidRightFingerTipY * factorY;
+
+	 //Retranslating point to relative position
+	 const translatedX = adjustedX + head.kinectX;
+	 const translatedY = adjustedY + head.kinectY;
+
+	 //Mapping from physical coordinates to screen coordinates
+	 const mappedX = this.map(translatedX, spaceMinX, spaceMaxX, 0, this.element.width);
+	 const mappedY = this.map(-translatedY, spaceMinY, spaceMaxY, 0, this.element.height);
+	 //const mappedX = this.map(rightFingerTip.kinectX, minX, maxX, 0, this.element.width);
+	 //const mappedY = this.map(-rightFingerTip.kinectY, minY, maxY, 0, this.element.height);
+
+	 this.fillCircle(mappedX, mappedY, 20);
+ }
+    //Old virtual screen
+		// const {rightShoulder, rightFingerTip} = this.mostRecentSkeleton;
+		//
+		// const rightArmLength = this.armLength(rightShoulder, rightFingerTip);
+		//
+		// const minX = rightShoulder.kinectX - rightArmLength;
+		// //console.log("minX: "+minX);
+		// const maxX = rightShoulder.kinectX + rightArmLength;
+		// //console.log("maxX: "+maxX);
+		// //console.log("fingX: "+rightFingerTip.kinectX);
+		// const minY = rightShoulder.kinectY - rightArmLength;
+		// const maxY = rightShoulder.kinectY + rightArmLength;
+		//
+		// if (this.inRange(rightFingerTip.kinectX, rightFingerTip.kinectY, minX, maxX, minY, maxY)) {
+		// 	const mappedX = this.map(rightFingerTip.kinectX, minX, maxX, 0, this.element.width);
+		// 	const mappedY = this.map(-rightFingerTip.kinectY, minY, maxY, 0, this.element.height);
+		//
+		// 	this.fillCircle(mappedX, mappedY, 20);
+		// 	if(mappedX >= 2680 && mappedX <= 2720 && mappedY >= 980 && mappedY <= 1020)
+		// 	{
+		// 	console.log("pointx "+ mappedX);
+		// 	//console.log("pointy "+mappedY);
+		//	}
+			//}
+		//}
 	},
 
 	//------------------------------------------//
@@ -640,7 +904,7 @@ var machineLearning = SAGE2_App.extend( {
 				}
 			}
 		}
-	}
+	},
 
 	event: function(eventType, position, user_id, data, date) {
 		const skeletonColors = ["red", "blue", "green", "orange", "pink"];
@@ -697,11 +961,11 @@ var machineLearning = SAGE2_App.extend( {
 
 			// physical coords -> screen coords
 			this.mapPhysicalSpaceToScreenSpace(skeletonID);
-			console.log(this.skeletons[skeletonID].head);
+			//console.log(this.skeletons[skeletonID].head);
 
 			this.skeletons[skeletonID].lastUpdate = date.getTime();
 			this.mostRecentSkeleton = this.skeletons[skeletonID];
-			console.log(this.mostRecentSkeleton.head);
+			//console.log(this.mostRecentSkeleton.head);
 
 			if (this.inProximity()) {
 				this.recognizePoint();
@@ -797,7 +1061,7 @@ var machineLearning = SAGE2_App.extend( {
 
 	//this is how we can print data to a file
 	logCalibratedData: function(filename){
-		console.log("logging data to file: " + filename);
+		//console.log("logging data to file: " + filename);
 		this.calibratedBuffer = "fingerX, fingerY, ballX, ballY, fingerIsPointingAtBall\n" + this.calibratedBuffer;
 		dataToSave = this.calibratedBuffer;
 		this.calibratedBuffer = "";
@@ -806,7 +1070,7 @@ var machineLearning = SAGE2_App.extend( {
 
 	//this is how we can print data to a file
 	logSkeletonData: function(filename){
-		console.log("logging data to file: " + filename);
+		//console.log("logging data to file: " + filename);
 
 		header = "";
 		for (const bodyPartName in this.mostRecentSkeleton) {
