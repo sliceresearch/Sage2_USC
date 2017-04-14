@@ -614,14 +614,12 @@ function setupListeners() {
 		partitions[data.id].updateTitle(data.title);
 	});
 	wsio.on('updatePartitionBorders', function(data) {
-		if (!data) {
+		if (data && partitions.hasOwnProperty(data.id)) {
+			partitions[data.id].updateSelected(data.highlight);
+		} else {
 			for (var p in partitions) {
 				// console.log(p);
 				partitions[p].updateSelected(false);
-			}
-		} else {
-			if (partitions.hasOwnProperty(data.id)) {
-				partitions[data.id].updateSelected(data.highlight);
 			}
 		}
 	});
@@ -728,16 +726,21 @@ function setupListeners() {
 			return;
 		}
 
-		var translate = "translate(" + position_data.elemLeft + "px," + position_data.elemTop + "px)";
-		var selectedElemTitle = document.getElementById(position_data.elemId + "_title");
-		selectedElemTitle.style.webkitTransform = translate;
-		selectedElemTitle.style.mozTransform    = translate;
-		selectedElemTitle.style.transform       = translate;
+		if (position_data.elemAnimate) {
+			moveItemWithAnimation(position_data);
+		} else {
+			var translate = "translate(" + position_data.elemLeft + "px," + position_data.elemTop + "px)";
+			var selectedElemTitle = document.getElementById(position_data.elemId + "_title");
+			selectedElemTitle.style.webkitTransform = translate;
+			selectedElemTitle.style.mozTransform    = translate;
+			selectedElemTitle.style.transform       = translate;
 
-		var selectedElem = document.getElementById(position_data.elemId);
-		selectedElem.style.webkitTransform = translate;
-		selectedElem.style.mozTransform    = translate;
-		selectedElem.style.transform       = translate;
+			var selectedElem = document.getElementById(position_data.elemId);
+			selectedElem.style.webkitTransform = translate;
+			selectedElem.style.mozTransform    = translate;
+			selectedElem.style.transform       = translate;
+		}
+
 
 		var app = applications[position_data.elemId];
 		if (app !== undefined) {
@@ -841,18 +844,31 @@ function setupListeners() {
 
 		var translate = "translate(" + position_data.elemLeft + "px," + position_data.elemTop + "px)";
 		var selectedElemTitle = document.getElementById(position_data.elemId + "_title");
-		selectedElemTitle.style.webkitTransform = translate;
-		selectedElemTitle.style.mozTransform    = translate;
-		selectedElemTitle.style.transform       = translate;
+		selectedElemTitle.style.width = Math.round(position_data.elemWidth).toString() + "px";
+
+		if (position_data.elemId.split("_")[0] === "portal") {
+			dataSharingPortals[position_data.elemId].setPosition(position_data.elemLeft, position_data.elemTop);
+			return;
+		}
+
+		if (position_data.elemAnimate) {
+			moveItemWithAnimation(position_data);
+		} else {
+			selectedElemTitle.style.webkitTransform = translate;
+			selectedElemTitle.style.mozTransform    = translate;
+			selectedElemTitle.style.transform       = translate;
+
+			selectedElem.style.webkitTransform = translate;
+			selectedElem.style.mozTransform    = translate;
+			selectedElem.style.transform       = translate;
+
+		}
+
 		selectedElemTitle.style.width = Math.round(position_data.elemWidth).toString() + "px";
 
 		var selectedElemState = document.getElementById(position_data.elemId + "_state");
 		selectedElemState.style.width = Math.round(position_data.elemWidth).toString() + "px";
 		selectedElemState.style.height = Math.round(position_data.elemHeight).toString() + "px";
-
-		selectedElem.style.webkitTransform = translate;
-		selectedElem.style.mozTransform    = translate;
-		selectedElem.style.transform       = translate;
 
 		var dragCorner = selectedElem.getElementsByClassName("dragCorner");
 		var cornerSize = Math.min(position_data.elemWidth, position_data.elemHeight) / 5;
@@ -1688,4 +1704,35 @@ function createAppWindow(data, parentId, titleBarHeight, titleTextSize, offsetX,
 	}
 
 	itemCount += 2;
+}
+
+/* global d3 */
+
+function moveItemWithAnimation(updatedApp) {
+	var elemTitle = d3.select("#" + updatedApp.elemId + "_title");
+	var elem = d3.select("#" + updatedApp.elemId);
+
+	var translate = "translate(" + updatedApp.elemLeft + "px," + updatedApp.elemTop + "px)";
+
+	// allow for transform transitions
+	elemTitle
+		.style("transition", " opacity 0.2s ease-in, transform 0.2s linear");
+
+	elem
+		.style("transition", " opacity 0.2s ease-in, transform 0.2s linear");
+
+	// update transforms
+
+	elemTitle
+		.style("transform", translate);
+
+	elem
+		.style("transform", translate);
+
+	// reset transition after transition time
+	elemTitle.transition().delay(200)
+		.style("transition", " opacity 0.2s ease-in");
+
+	elem.transition().delay(200)
+		.style("transition", " opacity 0.2s ease-in");
 }

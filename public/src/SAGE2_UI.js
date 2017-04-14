@@ -111,8 +111,8 @@ if (window.applicationCache) {
  */
 window.addEventListener('beforeunload', function(event) {
 	if (interactor && interactor.broadcasting) {
+		// In fact, the message is unused for most browser as security measure
 		var confirmationMessage = "SAGE2 Desktop sharing in progress";
-
 		event.returnValue = confirmationMessage;  // Gecko, Trident, Chrome 34+
 		return confirmationMessage;               // Gecko, WebKit, Chrome <34
 	}
@@ -523,6 +523,14 @@ function setupListeners() {
 
 	wsio.on('createAppWindowPositionSizeOnly', function(data) {
 		displayUI.addAppWindow(data);
+	});
+
+	wsio.on('showStickyPin', function(data) {
+		displayUI.showStickyPin(data);
+	});
+
+	wsio.on('hideStickyPin', function(data) {
+		displayUI.hideStickyPin(data);
 	});
 
 	wsio.on('deleteElement', function(data) {
@@ -1795,9 +1803,9 @@ function handleClick(element) {
 		// Delete all partitions
 		wsio.emit('deleteAllPartitions');
 		hideDialog('arrangementDialog');
-	} else if (element.id === "assigntopartitions") {
+	} else if (element.id === "deleteapplications") {
 		// Assign content to partitions (partitions grab items which are above them)
-		wsio.emit('partitionsGrabAllContent');
+		wsio.emit('deleteAllApplications');
 		hideDialog('arrangementDialog');
 	} else if (element.id === "ffShareScreenBtn") {
 		// Firefox Share Screen Dialog

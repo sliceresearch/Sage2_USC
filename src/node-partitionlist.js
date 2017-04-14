@@ -179,8 +179,8 @@ PartitionList.prototype.removeChildFromPartition = function(childID, partitionID
   *
   * @param {object} item - The item which was moved
   */
-PartitionList.prototype.updateOnItemRelease = function(item) {
-	var newPartitionID = this.calculateNewPartition(item);
+PartitionList.prototype.updateOnItemRelease = function(item, pointer) {
+	var newPartitionID = this.calculateNewPartition(item, pointer);
 	// console.log(item);
 
 	if (newPartitionID !== null) {
@@ -204,7 +204,7 @@ PartitionList.prototype.updateOnItemRelease = function(item) {
   *
   * @param {object} item - The item which was moved
   */
-PartitionList.prototype.calculateNewPartition = function(item) {
+PartitionList.prototype.calculateNewPartition = function(item, pointer) {
 	// check partitions to find if item falls into one
 	var partitionIDs = Object.keys(this.list);
 
@@ -216,13 +216,15 @@ PartitionList.prototype.calculateNewPartition = function(item) {
 		y: item.top + item.height / 2
 	};
 
+	let decisionCoord = pointer || itemCenter;
+
 	// check if item falls into any partition
 	partitionIDs.forEach((el) => {
 		var ptn = this.list[el];
 
 		// the centroid of the item must be within the bounds of the partition
-		if ((itemCenter.x >= ptn.left) && (itemCenter.x <= ptn.left + ptn.width) &&
-			(itemCenter.y >= ptn.top) && (itemCenter.y <= ptn.top + ptn.height)) {
+		if ((decisionCoord.x >= ptn.left) && (decisionCoord.x <= ptn.left + ptn.width) &&
+			(decisionCoord.y >= ptn.top) && (decisionCoord.y <= ptn.top + ptn.height)) {
 			// the centroid of the item is inside the partition
 
 			// if the partition is the parent automatically remain inside
@@ -240,8 +242,8 @@ PartitionList.prototype.calculateNewPartition = function(item) {
 
 			// calculate distance between item centroid and partition centroid
 			var distance = Math.sqrt(
-				Math.pow(itemCenter.x - partitionCenter.x, 2) +
-				Math.pow(itemCenter.y - partitionCenter.y, 2)
+				Math.pow(decisionCoord.x - partitionCenter.x, 2) +
+				Math.pow(decisionCoord.y - partitionCenter.y, 2)
 			);
 
 			if (distance < closestDistance) {
@@ -254,14 +256,152 @@ PartitionList.prototype.calculateNewPartition = function(item) {
 	return closestID;
 };
 
+/**
+  * Retrieve a list of partitions which are neighbors to a partition,
+  * along with the information of the side
+  *
+  * @param {string} ptnID - The Partition for which we are finding neighbors
+  */
+PartitionList.prototype.findNeighbors = function(ptnID) {
+	if (this.list.hasOwnProperty(ptnID)) {
+		let neighbors = {};
+		let thisPtn = this.list[ptnID];
+
+		let distanceTolerance = 25;
+
+		let titleBar = this.configuration.ui.titleBarHeight;
+
+		for (let id of Object.keys(this.list)) {
+			var ptn = this.list[id];
+
+			// only if the other partition is snapping as well
+			if (ptn.isSnapping) {
+				let anyAdjacent = false;
+
+				let adjacentSides = {
+					left: null,
+					right: null,
+					top: null,
+					bottom: null
+				};
+
+				// check top against top and bottom of other (can't be both, only one or the other)
+				if (Math.abs(thisPtn.top - (ptn.top + ptn.height + titleBar)) < distanceTolerance) {
+					adjacentSides.top = "bottom";
+					anyAdjacent = true;
+				} else if (Math.abs(thisPtn.top - ptn.top) < distanceTolerance) {
+					adjacentSides.top = "top";
+					anyAdjacent = true;
+				}
+
+				// check bottom against top and bottom of other
+				if (Math.abs((thisPtn.top + thisPtn.height + titleBar) - ptn.top) < distanceTolerance) {
+					adjacentSides.bottom = "top";
+					anyAdjacent = true;
+				} else if (Math.abs((thisPtn.top + thisPtn.height) - (ptn.top + ptn.height)) < distanceTolerance) {
+					adjacentSides.bottom = "bottom";
+					anyAdjacent = true;
+				}
+
+				// check left against left and right of other
+				if (Math.abs(thisPtn.left - (ptn.left + ptn.width)) < distanceTolerance) {
+					adjacentSides.left = "right";
+					anyAdjacent = true;
+				} else if (Math.abs(thisPtn.left - ptn.left) < distanceTolerance) {
+					adjacentSides.left = "left";
+					anyAdjacent = true;
+				}
+
+				// check right against left and right of other
+				if (Math.abs((thisPtn.left + thisPtn.width) - ptn.left) < distanceTolerance) {
+					adjacentSides.right = "left";
+					anyAdjacent = true;
+				} else if (Math.abs((thisPtn.left + thisPtn.width) - (ptn.left + ptn.width)) < distanceTolerance) {
+					adjacentSides.right = "right";
+					anyAdjacent = true;
+				}
+
+				// if any of the sides of the other partition are adjacent to this partition,
+				// add to list of neighbors
+				if (anyAdjacent) {
+					neighbors[ptn.id] = adjacentSides;
+				}
+
+			} // end if (ptn.isSnapping ...
+		} // end for (let ptn of ...
+		return neighbors;
+	}
+
+	return [];
+};
+
+/**
+  * Update the neighbors of a Partition, as well as update the Partition's neighbors
+	* as well.
+  *
+  * @param {string} ptnID - The Partition for which we are updating neighbors
+  */
+PartitionList.prototype.updateNeighbors = function(ptnID) {
+	if (this.list.hasOwnProperty(ptnID)) {
+		// update neighbors of selected partition
+		if (this.list[ptnID].isSnapping) {
+			// reset snapping flags for sides of screen
+			this.list[ptnID].snapTop = false;
+			this.list[ptnID].snapRight = false;
+			this.list[ptnID].snapBottom = false;
+			this.list[ptnID].snapLeft = false;
+
+			// find all neighbors
+			this.list[ptnID].neighbors = this.findNeighbors(ptnID);
+
+			// update its neighbors to correctly include the new partition
+			for (let nID of Object.keys(this.list[ptnID].neighbors)) {
+				let neighbor = this.list[nID];
+				// inefficient but a partition may have been deleted, so recalculate from remaining group
+				neighbor.neighbors = this.findNeighbors(nID);
+			}
+
+			if (Math.abs(this.list[ptnID].top - (this.configuration.ui.titleBarHeight)) < 25) {
+				this.list[ptnID].snapTop = true;
+			}
+
+			if (Math.abs(this.list[ptnID].left + this.list[ptnID].width - this.configuration.totalWidth) < 25) {
+				this.list[ptnID].snapRight = true;
+			}
+
+			if (Math.abs(this.list[ptnID].top + this.list[ptnID].height +
+				this.configuration.ui.titleBarHeight - this.configuration.totalHeight) < 25) {
+
+				this.list[ptnID].snapBottom = true;
+			}
+
+			if (Math.abs(this.list[ptnID].left) < 25) {
+				this.list[ptnID].snapLeft = true;
+			}
+		} else {
+			// if it is no longer a snapping partition, remove itself from neighbors' lists
+			for (let nID of Object.keys(this.list[ptnID].neighbors)) {
+				let neighbor = this.list[nID];
+
+				if (neighbor.neighbors[ptnID]) {
+					delete neighbor.neighbors[ptnID];
+				}
+			}
+
+			this.list[ptnID].neighbors = null;
+		}
+
+	}
+};
+
 
 /* **************************************************** */
 /* Methods using node-interactable for user interaction */
 
 /**
-	* Update the geometries of an item on resize
+	* Create the geometries for a new partition when it is created
 	*
-	* @param {string} ptnID - the ID of the partiton whos geometries will be updated
+	* @param {string} newID - the ID of the partiton whos geometries will be updated
 	*/
 PartitionList.prototype.createPartitionGeometries = function(newID, iMgr) {
 	// Add new partition to global interactMgr
