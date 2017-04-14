@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no" />
+
+<title>D3 Scatterplot testing</title>
+
+<script type="text/license">
+	// SAGE2 is available for use under the SAGE2 Software License 
+	//      
+	// University of Illinois at Chicago's Electronic Visualization Laboratory (EVL)
+	// and University of Hawai'i at Manoa's Laboratory for Advanced Visualization and
+	// Applications (LAVA)
+	//      
+	// See full text, terms and conditions in the LICENSE.txt included file
+	//      
+	// Copyright (c) 2016
+</script>
+
+
+<style type="text/css">
+* {
+	font-family: Arial;
+}
+
+
+.point {
+  fill: #999;
+  stroke: #fff;
+}
+
+
+.point.selected {
+  fill: red;
+  fill-opacity: 1;
+  stroke: brown;
+}
+
+.brush .extent {
+  stroke: #fff;
+  fill-opacity: .125;
+  shape-rendering: crispEdges;
+}
+
+.allPointerEvents {
+	pointer-events: all;
+}
+
+button {
+  position: absolute;
+  right: 30px;
+  top: 30px;
+}
+
+
+
+</style>
+
+</head>
+
+
+<!-- Design the body as you like -->
+
+<body>
+
+	<div id="nodeForD3"></div>
+
+
+
+</body>
+
+<!-- <script src="../../../../lib/d3.min.js"></script> -->
+<script src="d3v4.js"></script>
+<script src="main.js"></script>
+</html>
+
