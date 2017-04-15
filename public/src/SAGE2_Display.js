@@ -1347,10 +1347,10 @@ function setupListeners() {
 				if (shot.width !== captureRect.width) {
 					// in retina mode, need to downscale the image
 					resized = img.resize({width: captureRect.width, quality: 'better'});
-					// use JPEG with quality 80%
-					imageData = resized.toJPEG(80);
+					// use JPEG with quality 90%
+					imageData = resized.toJPEG(90);
 				} else {
-					imageData = img.toJPEG(80);
+					imageData = img.toJPEG(90);
 				}
 				// Send the image back to the server as JPEG
 				wsio.emit("wallScreenshotFromDisplay", {

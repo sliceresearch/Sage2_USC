@@ -9907,7 +9907,6 @@ function wsWallScreenshotFromDisplay(wsio, data) {
 		// var tilesUsed = [];
 		// var needToSkip;
 
-		//
 		//	For each element in the display checkin
 		//		if it is false, then the display isn't connected
 		//		but check if the wsio was already used
@@ -9933,7 +9932,7 @@ function wsWallScreenshotFromDisplay(wsio, data) {
 		currentPath = path.join(mainFolder.path, "tmp", fname);
 
 		// Ready for mosaic and write
-		mosaicImage.mosaic().write(currentPath, function(error) {
+		mosaicImage.mosaic().quality(90).write(currentPath, function(error) {
 			if (error) {
 				console.log(sageutils.header('Screenshot') + error);
 			} else {
