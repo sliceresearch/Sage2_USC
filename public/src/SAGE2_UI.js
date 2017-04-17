@@ -2178,17 +2178,6 @@ function escapeDialog(event) {
  * @param event {Event} event data
  */
 function noBackspace(event) {
-	// if keystrokes not captured and pressing  down '?'
-	//    then show help
-	if (event.keyCode === 191 && event.shiftKey  && event.type === "keydown" && !keyEvents) {
-		webix.modalbox({
-			title: "Mouse and keyboard operations and shortcuts",
-			buttons: ["Ok"],
-			text: "<img src=/images/cheat-sheet.jpg width=100%>",
-			width: "90%"
-		});
-	}
-
 	// backspace keyCode is 8
 	// allow backspace in text box: target.type is defined for input elements
 	if (parseInt(event.keyCode, 10) === 8 && !event.target.type) {
@@ -2198,11 +2187,26 @@ function noBackspace(event) {
 		&& event.target.id.indexOf("rmbContextMenuEntry") !== -1
 		&& event.target.id.indexOf("Input") !== -1
 		) {
+		// if a user hits enter within an rmbContextMenuEntry, it will cause the effect to happen
 		event.target.parentNode["buttonEffect" + event.target.id]();
 	} else if (event.ctrlKey && event.keyCode === 13 && event.target.id === "uiNoteMakerInputField") {
+		// ctrl + enter in note maker adds a line rather than send note
 		event.target.value += "\n";
 	} else if (event.keyCode === 13 && event.target.id === "uiNoteMakerInputField") {
+		// if a user hits enter within an rmbContextMenuEntry, it will cause the effect to happen
 		sendCsdMakeNote();
+		event.preventDefault(); // prevent new line on next note
+	} else if (event.keyCode === 191 && event.shiftKey && event.target.id === "uiNoteMakerInputField") {
+		// allow "?" within note creation
+	} else if (event.keyCode === 191 && event.shiftKey && event.type === "keydown" && !keyEvents) {
+		// if keystrokes not captured and pressing  down '?'
+		//    then show help
+		webix.modalbox({
+			title: "Mouse and keyboard operations and shortcuts",
+			buttons: ["Ok"],
+			text: "<img src=/images/cheat-sheet.jpg width=100%>",
+			width: "90%"
+		});
 	}
 	return true;
 }
@@ -2703,7 +2707,6 @@ function sendCsdMakeNote() {
 	data.params		= {};
 	data.params.clientName = document.getElementById('sage2PointerLabel').value;
 	data.params.clientInput = workingDiv.value;
-	workingDiv.value = ""; // clear out the input field.
 	if (document.getElementById("uiNoteMakerCheckAnonymous").checked) {
 		data.params.clientName = "Anonymous";
 	}
@@ -2714,6 +2717,7 @@ function sendCsdMakeNote() {
 		}
 	}
 	wsio.emit('csdMessage', data);
+	workingDiv.value = ""; // clear out the input field.
 }
 
 /**
