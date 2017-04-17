@@ -76,9 +76,9 @@ function FileManager(wsio, mydiv, uniqueID) {
 
 	// File manager menu bar
 	var menu_data = [
-		{id: "file_menu", value: "File", submenu: [
+		{id: "file_menu", value: "File", config: {width: 170}, submenu: [
 			{id: "folder_menu",  value: "New folder"},
-			{id: "upload_menu",  value: "Upload file"},
+			{id: "upload_menu",  value: "Upload a file"},
 			{id: "refresh_menu", value: "Refresh"},
 			{$template: "Separator"},
 			{id: "hidefm_menu", value: "Close Media Browser"}
@@ -86,12 +86,6 @@ function FileManager(wsio, mydiv, uniqueID) {
 		{id: "edit_menu", value: "Edit", submenu: [
 			{id: "delete_menu",   value: "Delete"},
 			{id: "download_menu", value: "Download"}
-		]},
-		{id: "view_menu", value: "View", submenu: [
-			{id: "hideui_menu", value: "Show/Hide UI"},
-			{$template: "Separator"},
-			{id: "tile_menu",   value: "Tile content"},
-			{id: "clear_menu",  value: "Clear display"}
 		]}
 	];
 	var mymenu = {
@@ -111,6 +105,16 @@ function FileManager(wsio, mydiv, uniqueID) {
 
 	// Top UI menu bar
 	var topmenu_data = [
+		{id: "topfile_menu", value: "File", config: {width: 170, zIndex: 10000}, submenu: [
+			{id: "upload_menu",  value: "Upload a file"},
+			{$template: "Separator"},
+			{id: "showfm_menu", value: "Open Media Browser"},
+			{id: "hidefm_menu", value: "Close Media Browser"},
+		]},
+		{id: "view_menu", value: "View", config: {width: 170, zIndex: 10000}, submenu: [
+			{id: "tile_menu",   value: "Tile content"},
+			{id: "clear_menu",  value: "Clear display"}
+		]},
 		{id: "mainpartition_menu", value: "Partitions", config: {width: 250, zIndex: 10000}, submenu: [
 			{id: "2x1_menu", value: "2 Columns"},
 			{id: "3x1_menu", value: "3 Columns"},
@@ -142,7 +146,7 @@ function FileManager(wsio, mydiv, uniqueID) {
 	var topmenu = {
 		id: "topmenu",
 		view: "menu",
-		openAction: "click",
+		// openAction: "click", // click to open
 		data: topmenu_data
 	};
 	webix.ui({
@@ -156,8 +160,26 @@ function FileManager(wsio, mydiv, uniqueID) {
 		]
 	});
 
+	// Top menubar above the UI
 	$$("topmenu").attachEvent("onMenuItemClick", function(evt) {
-		if (evt === "about_menu") {
+		var mainUI = document.getElementById('mainUI');
+		if (evt === "hidefm_menu") {
+			document.getElementById('fileManager').style.display = "none";
+			if (mainUI.style.display === "none") {
+				mainUI.style.display = "block";
+			}
+			SAGE2_resize();
+		} else if (evt === "upload_menu") {
+			// open the file uploader panel
+			showDialog('uploadDialog');
+		} else if (evt === "showfm_menu") {
+			document.getElementById('fileManager').style.display = "block";
+			SAGE2_resize();
+		} else if (evt === "clear_menu") {
+			wsio.emit('clearDisplay');
+		} else if (evt === "tile_menu") {
+			wsio.emit('tileApplications');
+		} else if (evt === "about_menu") {
 			var versionText = "SAGE2 Version:<br>";
 			if (sage2Version.branch && sage2Version.commit && sage2Version.date) {
 				versionText += "<b>v" + sage2Version.base + "-" + sage2Version.branch + "-" +
@@ -381,8 +403,6 @@ function FileManager(wsio, mydiv, uniqueID) {
 		return obj.tooltip ? obj.tooltip : "";
 	}
 
-
-
 	this.main = webix.ui({
 		container: mydiv,
 		id: "layout",
@@ -519,6 +539,7 @@ function FileManager(wsio, mydiv, uniqueID) {
 		$$("uploadlist").clearAll();
 	});
 
+	// Menubar of the file manager
 	$$("mymenu").attachEvent("onMenuItemClick", function(evt) {
 		var mainUI = document.getElementById('mainUI');
 		if (evt === "refresh_menu") {
@@ -1499,6 +1520,32 @@ function FileManager(wsio, mydiv, uniqueID) {
 			}
 			return true;
 		});
-	};
 
+		var adminmenu = $$('topmenu').getSubMenu('mainadmin_menu');
+		var displayList = [];
+		// add overview client
+		displayList[0] = {
+			id: "displayclient_00",
+			value: "Display -1",
+			href:  "http://" + window.location.hostname + this.http_port +  "/display.html?clientID=-1",
+			target: "_blank"
+		};
+		// add all display clients to list
+		for (var i = 0; i <  this.json_cfg.displays.length; i++) {
+			displayList[i + 1] = {
+				id:     "displayclient_" + i,
+				value:  "Display " + i,
+				href:   "http://" + window.location.hostname + this.http_port +  "/display.html?clientID=" + i,
+				target: "_blank"
+			};
+		}
+		adminmenu.add({
+			id:    "alldisplayclients_menu",
+			value: "Display Clients",
+			type: {subsign: true},
+			autowidth: true,
+			config: {zIndex: 10000},
+			submenu: displayList
+		});
+	};
 }
