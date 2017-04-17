@@ -1,0 +1,8 @@
+<?xml version="1.0"?>
+<svg width="320" height="255" xmlns="http://www.w3.org/2000/svg" xmlns:svg="http://www.w3.org/2000/svg">
+ <g>
+  <title>Layer 1</title>
+  <path fill="#666666" stroke="#010101" stroke-miterlimit="10" d="m10,10.5l0,235l300,0l0,-235l-300,0zm260,195l-220,0l0,-155l220,0l0,155z" id="svg_1"/>
+  <circle fill="#666666" stroke-width="null" stroke-dasharray="null" stroke-linejoin="null" stroke-linecap="null" cx="160" cy="127.5" r="59.943771" id="svg_6" stroke="#010101"/>
+ </g>
+</svg>
