@@ -54,7 +54,7 @@ var Webview = SAGE2_App.extend({
 		// disable fullscreen
 		this.element.fullscreenable = false;
 		this.element.fullscreen = false;
-
+		// security or not
 		// this.element.disablewebsecurity = true;
 
 		this.element.minwidth  = data.width;
@@ -289,7 +289,20 @@ var Webview = SAGE2_App.extend({
 		It will be called in line if the code was already retrieved.
 	*/
 	codeInject: function() {
+		// Inject JS code to handle events
 		this.element.executeJavaScript(this.codeToInject);
+		// Disabling text selection in page because it blocks the view sometimes
+		// done by injecting some CSS code
+		this.element.insertCSS(":not(input):not(textarea), " +
+			":not(input):not(textarea)::after, " +
+			":not(input):not(textarea)::before { " +
+				"-webkit-user-select: none; " +
+				"user-select: none; " +
+				"cursor: default; " +
+			"} " +
+			"input, button, textarea, :focus { " +
+				"outline: none; " +
+			"}");
 	},
 
 	getContextEntries: function() {

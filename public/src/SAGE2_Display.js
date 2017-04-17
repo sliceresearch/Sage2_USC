@@ -19,6 +19,8 @@
 /* global createWidgetToAppConnector, getTextFromTextInputWidget */
 /* global SAGE2_Partition, require */
 
+/* global require */
+
 "use strict";
 
 /**
@@ -56,6 +58,9 @@ var storedFileListEventHandlers = [];
 var ui;
 var uiTimer = null;
 var uiTimerDelay;
+
+// Global variables for screenshot functionality
+var makingScreenshotDialog = null;
 
 // Explicitely close web socket when web browser is closed
 window.onbeforeunload = function() {
@@ -248,7 +253,7 @@ function SAGE2_init() {
 				time: true,
 				console: false
 			},
-			isMobile: __SAGE2__.browser.isMobile,
+			browser: __SAGE2__.browser,
 			session: session
 		};
 		wsio.emit('addClient', clientDescription);
@@ -609,14 +614,12 @@ function setupListeners() {
 		partitions[data.id].updateTitle(data.title);
 	});
 	wsio.on('updatePartitionBorders', function(data) {
-		if (!data) {
+		if (data && partitions.hasOwnProperty(data.id)) {
+			partitions[data.id].updateSelected(data.highlight);
+		} else {
 			for (var p in partitions) {
 				// console.log(p);
 				partitions[p].updateSelected(false);
-			}
-		} else {
-			if (partitions.hasOwnProperty(data.id)) {
-				partitions[data.id].updateSelected(data.highlight);
 			}
 		}
 	});
@@ -723,16 +726,21 @@ function setupListeners() {
 			return;
 		}
 
-		var translate = "translate(" + position_data.elemLeft + "px," + position_data.elemTop + "px)";
-		var selectedElemTitle = document.getElementById(position_data.elemId + "_title");
-		selectedElemTitle.style.webkitTransform = translate;
-		selectedElemTitle.style.mozTransform    = translate;
-		selectedElemTitle.style.transform       = translate;
+		if (position_data.elemAnimate) {
+			moveItemWithAnimation(position_data);
+		} else {
+			var translate = "translate(" + position_data.elemLeft + "px," + position_data.elemTop + "px)";
+			var selectedElemTitle = document.getElementById(position_data.elemId + "_title");
+			selectedElemTitle.style.webkitTransform = translate;
+			selectedElemTitle.style.mozTransform    = translate;
+			selectedElemTitle.style.transform       = translate;
 
-		var selectedElem = document.getElementById(position_data.elemId);
-		selectedElem.style.webkitTransform = translate;
-		selectedElem.style.mozTransform    = translate;
-		selectedElem.style.transform       = translate;
+			var selectedElem = document.getElementById(position_data.elemId);
+			selectedElem.style.webkitTransform = translate;
+			selectedElem.style.mozTransform    = translate;
+			selectedElem.style.transform       = translate;
+		}
+
 
 		var app = applications[position_data.elemId];
 		if (app !== undefined) {
@@ -836,18 +844,31 @@ function setupListeners() {
 
 		var translate = "translate(" + position_data.elemLeft + "px," + position_data.elemTop + "px)";
 		var selectedElemTitle = document.getElementById(position_data.elemId + "_title");
-		selectedElemTitle.style.webkitTransform = translate;
-		selectedElemTitle.style.mozTransform    = translate;
-		selectedElemTitle.style.transform       = translate;
+		selectedElemTitle.style.width = Math.round(position_data.elemWidth).toString() + "px";
+
+		if (position_data.elemId.split("_")[0] === "portal") {
+			dataSharingPortals[position_data.elemId].setPosition(position_data.elemLeft, position_data.elemTop);
+			return;
+		}
+
+		if (position_data.elemAnimate) {
+			moveItemWithAnimation(position_data);
+		} else {
+			selectedElemTitle.style.webkitTransform = translate;
+			selectedElemTitle.style.mozTransform    = translate;
+			selectedElemTitle.style.transform       = translate;
+
+			selectedElem.style.webkitTransform = translate;
+			selectedElem.style.mozTransform    = translate;
+			selectedElem.style.transform       = translate;
+
+		}
+
 		selectedElemTitle.style.width = Math.round(position_data.elemWidth).toString() + "px";
 
 		var selectedElemState = document.getElementById(position_data.elemId + "_state");
 		selectedElemState.style.width = Math.round(position_data.elemWidth).toString() + "px";
 		selectedElemState.style.height = Math.round(position_data.elemHeight).toString() + "px";
-
-		selectedElem.style.webkitTransform = translate;
-		selectedElem.style.mozTransform    = translate;
-		selectedElem.style.transform       = translate;
 
 		var dragCorner = selectedElem.getElementsByClassName("dragCorner");
 		var cornerSize = Math.min(position_data.elemWidth, position_data.elemHeight) / 5;
@@ -1305,6 +1326,43 @@ function setupListeners() {
 		}
 	});
 
+	wsio.on('sendServerWallScreenshot', function(data) {
+		// first tell user that screenshot is happening, because screen will freeze
+		makingScreenshotDialog = ui.buildMessageBox('makingScreenshotDialog',
+			'Please wait, wall is taking a screenshot');
+		// Add to the DOM
+		ui.main.appendChild(makingScreenshotDialog);
+		// Make the dialog visible
+		makingScreenshotDialog.style.display = "block";
+		// now do check and perform capture if can
+		if (!__SAGE2__.browser.isElectron) {
+			wsio.emit("wallScreenshotFromDisplay", {capable: false});
+		} else {
+			// set a rectangle of the client size
+			var captureRect = { x: 0, y: 0, width: ui.main.clientWidth, height: ui.main.clientHeight };
+			require('electron').remote.getCurrentWindow().capturePage(captureRect, function(img) {
+				var imageData, resized;
+				// get the size of the screenshot image
+				var shot = img.getSize();
+				if (shot.width !== captureRect.width) {
+					// in retina mode, need to downscale the image
+					resized = img.resize({width: captureRect.width, quality: 'better'});
+					// use JPEG with quality 90%
+					imageData = resized.toJPEG(90);
+				} else {
+					imageData = img.toJPEG(90);
+				}
+				// Send the image back to the server as JPEG
+				wsio.emit("wallScreenshotFromDisplay", {
+					capable: true,
+					imageData: imageData
+				});
+				// Close the dialog
+				deleteElement('makingScreenshotDialog');
+			});
+		}
+	});
+
 	wsio.on('showStickyPin', function(data) {
 		if (data.sticky !== true) {
 			return;
@@ -1646,4 +1704,35 @@ function createAppWindow(data, parentId, titleBarHeight, titleTextSize, offsetX,
 	}
 
 	itemCount += 2;
+}
+
+/* global d3 */
+
+function moveItemWithAnimation(updatedApp) {
+	var elemTitle = d3.select("#" + updatedApp.elemId + "_title");
+	var elem = d3.select("#" + updatedApp.elemId);
+
+	var translate = "translate(" + updatedApp.elemLeft + "px," + updatedApp.elemTop + "px)";
+
+	// allow for transform transitions
+	elemTitle
+		.style("transition", " opacity 0.2s ease-in, transform 0.2s linear");
+
+	elem
+		.style("transition", " opacity 0.2s ease-in, transform 0.2s linear");
+
+	// update transforms
+
+	elemTitle
+		.style("transform", translate);
+
+	elem
+		.style("transform", translate);
+
+	// reset transition after transition time
+	elemTitle.transition().delay(200)
+		.style("transition", " opacity 0.2s ease-in");
+
+	elem.transition().delay(200)
+		.style("transition", " opacity 0.2s ease-in");
 }

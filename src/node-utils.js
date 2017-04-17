@@ -40,7 +40,8 @@ var request   = require('request');           // http requests
 var semver    = require('semver');            // parse version numbers
 var fsmonitor = require('fsmonitor');         // file system monitoring
 var sanitizer = require('sanitizer');         // Caja's HTML Sanitizer as a Node.js module
-var chalk     = require('chalk');							// colorize console output
+var chalk     = require('chalk');             // colorize console output
+var rimraf    = require('rimraf');            // command rm -rf for node
 
 /**
  * Parse and store NodeJS version number: detect version 0.10.x or newer
@@ -631,6 +632,25 @@ function mergeObjects(a, b, ignore) {
 	return modified;
 }
 
+/**
+ * Delete files, with glob, and a callback when done
+ *
+ * @method     deleteFiles
+ * @param      {String}    pattern  string
+ * @param      {Function}  cb       callback when done
+ */
+function deleteFiles(pattern, cb) {
+	// use the rimraf module
+	if (cb) {
+		rimraf(pattern, {glob: true}, cb);
+	} else {
+		rimraf(pattern, {glob: true}, function(err) {
+			if (err) {
+				console.log(header('Files') + 'error deleting files ' + pattern);
+			}
+		});
+	}
+}
 
 
 module.exports.nodeVersion       = _NODE_VERSION;
@@ -653,6 +673,7 @@ module.exports.loadCABundle      = loadCABundle;
 module.exports.monitorFolders    = monitorFolders;
 module.exports.getHomeDirectory  = getHomeDirectory;
 module.exports.mkdirParent       = mkdirParent;
+module.exports.deleteFiles       = deleteFiles;
 module.exports.sanitizedURL      = sanitizedURL;
 module.exports.mergeObjects      = mergeObjects;
 
