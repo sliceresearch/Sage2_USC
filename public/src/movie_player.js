@@ -224,7 +224,7 @@ var movie_player = SAGE2_BlockStreamingApp.extend({
 			this.state.paused = true;
 		}
 		this.refresh(date);
-		this.playPauseBtn.state = 1 - this.playPauseBtn.state;
+		this.playPauseBtn.state = (this.state.paused) ? 0 : 1;
 		this.getFullContextMenuAndUpdate();
 	},
 
@@ -246,7 +246,7 @@ var movie_player = SAGE2_BlockStreamingApp.extend({
 			}
 			this.state.muted = true;
 		}
-		this.muteBtn.state = 1 - this.muteBtn.state;
+		this.muteBtn.state = (this.state.muted) ? 0 : 1;
 	},
 
 	/**
@@ -267,7 +267,7 @@ var movie_player = SAGE2_BlockStreamingApp.extend({
 			}
 			this.state.looped = true;
 		}
-		this.loopBtn.state = 1 - this.loopBtn.state;
+		this.loopBtn.state = (this.state.looped) ? 0 : 1;
 		this.getFullContextMenuAndUpdate();
 	},
 
@@ -317,12 +317,14 @@ var movie_player = SAGE2_BlockStreamingApp.extend({
 		if (this.state.paused) {
 			entry = {};
 			entry.description = "Play";
+			entry.accelerator = "p";
 			entry.callback = "contextTogglePlayPause";
 			entry.parameters = {};
 			entries.push(entry);
 		} else {
 			entry = {};
 			entry.description = "Pause";
+			entry.accelerator = "p";
 			entry.callback = "contextTogglePlayPause";
 			entry.parameters = {};
 			entries.push(entry);
@@ -330,6 +332,7 @@ var movie_player = SAGE2_BlockStreamingApp.extend({
 
 		entry = {};
 		entry.description = "Stop";
+		entry.accelerator = "s";
 		entry.callback = "stopVideo";
 		entry.parameters = {};
 		entries.push(entry);
@@ -342,11 +345,13 @@ var movie_player = SAGE2_BlockStreamingApp.extend({
 			entry = {};
 			entry.description = "Unmute";
 			entry.callback = "contextToggleMute";
+			entry.accelerator = "m";
 			entry.parameters = {};
 			entries.push(entry);
 		} else {
 			entry = {};
 			entry.description = "Mute";
+			entry.accelerator = "m";
 			entry.callback = "contextToggleMute";
 			entry.parameters = {};
 			entries.push(entry);
@@ -356,63 +361,16 @@ var movie_player = SAGE2_BlockStreamingApp.extend({
 		if (this.state.looped) {
 			entry = {};
 			entry.description = "Stop looping";
+			entry.accelerator = "l";
 			entry.callback = "toggleLoop";
 			entry.parameters = {};
 			entries.push(entry);
 		} else {
 			entry = {};
 			entry.description = "Loop video";
+			entry.accelerator = "l";
 			entry.callback = "toggleLoop";
 			entry.parameters = {};
-			entries.push(entry);
-		}
-
-		/*
-			This next section is synchronized controls for video player.
-			One cannot send and receive.
-		*/
-
-		entry = {};
-		entry.description = "separator";
-		entries.push(entry);
-
-		if (this.shouldSendCommands) {
-			entry = {};
-			entry.description = "Stop sending commands";
-			entry.callback = "contextVideoSyncHandler";
-			entry.parameters = {
-				send: false,
-				receive: false
-			};
-			entries.push(entry);
-		} else {
-			entry = {};
-			entry.description = "Send commands";
-			entry.callback = "contextVideoSyncHandler";
-			entry.parameters = {
-				send: true,
-				receive: false
-			};
-			entries.push(entry);
-		}
-
-		if (this.shouldReceiveCommands) {
-			entry = {};
-			entry.description = "Stop receiving commands";
-			entry.callback = "contextVideoSyncHandler";
-			entry.parameters = {
-				send: false,
-				receive: false
-			};
-			entries.push(entry);
-		} else {
-			entry = {};
-			entry.description = "Receive commands";
-			entry.callback = "contextVideoSyncHandler";
-			entry.parameters = {
-				send: false,
-				receive: true
-			};
 			entries.push(entry);
 		}
 
@@ -597,9 +555,6 @@ var movie_player = SAGE2_BlockStreamingApp.extend({
 	* @param valueUpdate {Object} contains last sent command
 	*/
 	videoSyncCommandHandler: function(valueUpdate) {
-		if (!this.shouldReceiveCommands) {
-			return;
-		}
 		var playStatusToSend = false;
 		var timestampToSend = valueUpdate.timestamp;
 		var shouldSendTimeUpdate = false;
@@ -618,6 +573,7 @@ var movie_player = SAGE2_BlockStreamingApp.extend({
 			this.playPauseBtn.state = 0; // show play
 			shouldSendTimeUpdate = true;
 		} else if (valueUpdate.command == "seek") {
+			this.state.playAfterSeek = valueUpdate.play;
 			playStatusToSend = valueUpdate.play;
 			this.playPauseBtn.state = playStatusToSend ? 1 : 0;
 			shouldSendTimeUpdate = true;
@@ -661,7 +617,7 @@ var movie_player = SAGE2_BlockStreamingApp.extend({
 					}
 					this.state.muted = true;
 				}
-			} else if (data.character === "1" || data.character === "r") {
+			} else if (data.character === "1" || data.character === "s") {
 				// 1 start of video
 				this.stopVideo();
 			}

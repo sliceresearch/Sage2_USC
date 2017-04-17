@@ -321,8 +321,8 @@ function _typeOf(value) {
  */
 function sage2Log(msgObject) {
 	// Local console print
-	console.log("%c[%s] %c%s", "color: blue;", msgObject.app,
-		"color: black;", JSON.stringify(msgObject.message));
+	console.log("%c[%s] %c%s", "color: cyan;", msgObject.app,
+		"color: grey;", JSON.stringify(msgObject.message));
 
 	// Add the display node ID to the message
 	msgObject.node = clientID;
@@ -709,6 +709,32 @@ function ignoreFields(obj, fields) {
 		return undefined;
 	}
 	return result;
+}
+
+/**
+ * Utility function to test if a string or number represents a true value.
+ * Used for parsing JSON values
+ *
+ * @method parseBool
+ * @param value {Object} value to test
+ */
+function parseBool(value) {
+	if (typeof value === 'string') {
+		value = value.toLowerCase();
+	}
+	switch (value) {
+		case true:
+		case "true":
+		case 1:
+		case "1":
+		case "on":
+		case "yes": {
+			return true;
+		}
+		default: {
+			return false;
+		}
+	}
 }
 
 /**

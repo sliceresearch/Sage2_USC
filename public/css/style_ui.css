@@ -414,7 +414,7 @@ h2 {
 	text-align: center;
 }
 
-#assigntopartitionsContainer {
+#deleteApplicationsContainer {
 	width: 100px;
 	float: left;
 	text-align: center;
@@ -862,6 +862,7 @@ The z-index is very important.
 
 #uiDrawZoneEraseReference {
 	position:       absolute;
+	display:        "none";
 	top:            -100;
 	left:           -100;
 	width:          1;

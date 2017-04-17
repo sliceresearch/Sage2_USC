@@ -398,7 +398,8 @@ function UIBuilder(json_cfg, clientID) {
 		});
 
 		// Load the background SVG if specified
-		if (this.json_cfg.background.watermark !== undefined) {
+		if (this.json_cfg.background.watermark !== undefined &&
+			this.json_cfg.background.watermark.svg) {
 			// Use snap to load the SVG
 			Snap.load(this.json_cfg.background.watermark.svg, function(f) {
 				var water = f.select("svg");
@@ -594,9 +595,9 @@ function UIBuilder(json_cfg, clientID) {
 		var newDialogCancel = document.createElement("div");
 		newDialogCancel.id  = id + "_cancel";
 		newDialogCancel.style.position = "absolute";
-		newDialogCancel.style.left   = (6.5 * this.titleBarHeight).toString() + "px";
+		newDialogCancel.style.left   = (1.5 * this.titleBarHeight).toString() + "px";
 		newDialogCancel.style.bottom = (this.titleBarHeight).toString() + "px";
-		newDialogCancel.style.width  = (13 * this.titleBarHeight).toString() + "px";
+		newDialogCancel.style.width  = (23 * this.titleBarHeight).toString() + "px";
 		newDialogCancel.style.height = (3 * this.titleBarHeight).toString() + "px";
 		newDialogCancel.style.webkitBoxSizing = "border-box";
 		newDialogCancel.style.mozBoxSizing    = "border-box";
@@ -802,7 +803,9 @@ function UIBuilder(json_cfg, clientID) {
 		if (this.clientID !== -1) {
 			watermark.style.cursor = "none";
 		}
-		this.changeSVGColor(watermark, "path", null, this.json_cfg.background.watermark.color);
+		if (this.json_cfg.background.watermark.color) {
+			this.changeSVGColor(watermark, "path", null, this.json_cfg.background.watermark.color);
+		}
 
 		watermark.style.opacity  = 0.4;
 		watermark.style.position = "absolute";

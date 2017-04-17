@@ -184,6 +184,14 @@ function createWindow() {
 		openWindow();
 	}
 
+	// When the webview tries to download something
+	electron.session.defaultSession.on('will-download', (event, item, webContents) => {
+		// do nothing
+		event.preventDefault();
+		// send message to the render process (browser)
+		mainWindow.webContents.send('warning', 'File download not supported');
+	});
+
 	// Mute the audio (just in case)
 	var playAudio = commander.audio || (commander.display === 0);
 	mainWindow.webContents.setAudioMuted(!playAudio);

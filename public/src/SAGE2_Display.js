@@ -9,22 +9,17 @@
 // Copyright (c) 2014-15
 
 /* global ignoreFields, hostAlias, SAGE2WidgetControlInstance */
-/* global makeSvgBackgroundForWidgetConnectors */
-/* global addStyleElementForTitleColor */
+/* global makeSvgBackgroundForWidgetConnectors, addStyleElementForTitleColor */
 /* global removeStyleElementForTitleColor */
-/* global clearConnectorColor */
-/* global moveWidgetToAppConnector */
-/* global showWidgetToAppConnectors */
-/* global getWidgetControlInstanceById */
-/* global mapMoveToSlider */
-/* global getPropertyHandle */
-/* global insertTextIntoTextInputWidget */
-/* global removeWidgetToAppConnector */
+/* global clearConnectorColor, moveWidgetToAppConnector */
+/* global showWidgetToAppConnectors, getWidgetControlInstanceById */
+/* global mapMoveToSlider, getPropertyHandle */
+/* global insertTextIntoTextInputWidget, removeWidgetToAppConnector */
 /* global hideWidgetToAppConnectors */
-/* global createWidgetToAppConnector */
-/* global getTextFromTextInputWidget */
+/* global createWidgetToAppConnector, getTextFromTextInputWidget */
+/* global SAGE2_Partition, require */
 
-/* global SAGE2_Partition */
+/* global require */
 
 "use strict";
 
@@ -63,6 +58,9 @@ var storedFileListEventHandlers = [];
 var ui;
 var uiTimer = null;
 var uiTimerDelay;
+
+// Global variables for screenshot functionality
+var makingScreenshotDialog = null;
 
 // Explicitely close web socket when web browser is closed
 window.onbeforeunload = function() {
@@ -162,6 +160,19 @@ function setupFocusHandlers() {
 			}
 		}
 	});
+
+	if (__SAGE2__.browser.isElectron) {
+		// Display warning messages from the 'Main' Electron process
+		require('electron').ipcRenderer.on('warning', function(event, message) {
+			var problemDialog = ui.buildMessageBox('problemDialog', message);
+			ui.main.appendChild(problemDialog);
+			document.getElementById('problemDialog').style.display = "block";
+			// close the warning after 2.5 second
+			setTimeout(function() {
+				deleteElement('problemDialog');
+			}, 2500);
+		});
+	}
 }
 
 /**
@@ -242,7 +253,7 @@ function SAGE2_init() {
 				time: true,
 				console: false
 			},
-			isMobile: __SAGE2__.browser.isMobile,
+			browser: __SAGE2__.browser,
 			session: session
 		};
 		wsio.emit('addClient', clientDescription);
@@ -603,14 +614,12 @@ function setupListeners() {
 		partitions[data.id].updateTitle(data.title);
 	});
 	wsio.on('updatePartitionBorders', function(data) {
-		if (!data) {
+		if (data && partitions.hasOwnProperty(data.id)) {
+			partitions[data.id].updateSelected(data.highlight);
+		} else {
 			for (var p in partitions) {
 				// console.log(p);
 				partitions[p].updateSelected(false);
-			}
-		} else {
-			if (partitions.hasOwnProperty(data.id)) {
-				partitions[data.id].updateSelected(data.highlight);
 			}
 		}
 	});
@@ -644,7 +653,7 @@ function setupListeners() {
 		// When fade over, really delete the element
 		setTimeout(function() {
 			deleteElem.parentNode.removeChild(deleteElem);
-		}, 300);
+		}, 400);
 
 		// Clean up the UI DOM
 		if (elem_data.elemId in controlObjects) {
@@ -677,7 +686,6 @@ function setupListeners() {
 
 	wsio.on('updateItemOrder', function(order) {
 		resetIdle();
-
 		var key;
 		for (key in order) {
 			var selectedElemTitle = document.getElementById(key + "_title");
@@ -718,16 +726,21 @@ function setupListeners() {
 			return;
 		}
 
-		var translate = "translate(" + position_data.elemLeft + "px," + position_data.elemTop + "px)";
-		var selectedElemTitle = document.getElementById(position_data.elemId + "_title");
-		selectedElemTitle.style.webkitTransform = translate;
-		selectedElemTitle.style.mozTransform    = translate;
-		selectedElemTitle.style.transform       = translate;
+		if (position_data.elemAnimate) {
+			moveItemWithAnimation(position_data);
+		} else {
+			var translate = "translate(" + position_data.elemLeft + "px," + position_data.elemTop + "px)";
+			var selectedElemTitle = document.getElementById(position_data.elemId + "_title");
+			selectedElemTitle.style.webkitTransform = translate;
+			selectedElemTitle.style.mozTransform    = translate;
+			selectedElemTitle.style.transform       = translate;
 
-		var selectedElem = document.getElementById(position_data.elemId);
-		selectedElem.style.webkitTransform = translate;
-		selectedElem.style.mozTransform    = translate;
-		selectedElem.style.transform       = translate;
+			var selectedElem = document.getElementById(position_data.elemId);
+			selectedElem.style.webkitTransform = translate;
+			selectedElem.style.mozTransform    = translate;
+			selectedElem.style.transform       = translate;
+		}
+
 
 		var app = applications[position_data.elemId];
 		if (app !== undefined) {
@@ -831,18 +844,31 @@ function setupListeners() {
 
 		var translate = "translate(" + position_data.elemLeft + "px," + position_data.elemTop + "px)";
 		var selectedElemTitle = document.getElementById(position_data.elemId + "_title");
-		selectedElemTitle.style.webkitTransform = translate;
-		selectedElemTitle.style.mozTransform    = translate;
-		selectedElemTitle.style.transform       = translate;
+		selectedElemTitle.style.width = Math.round(position_data.elemWidth).toString() + "px";
+
+		if (position_data.elemId.split("_")[0] === "portal") {
+			dataSharingPortals[position_data.elemId].setPosition(position_data.elemLeft, position_data.elemTop);
+			return;
+		}
+
+		if (position_data.elemAnimate) {
+			moveItemWithAnimation(position_data);
+		} else {
+			selectedElemTitle.style.webkitTransform = translate;
+			selectedElemTitle.style.mozTransform    = translate;
+			selectedElemTitle.style.transform       = translate;
+
+			selectedElem.style.webkitTransform = translate;
+			selectedElem.style.mozTransform    = translate;
+			selectedElem.style.transform       = translate;
+
+		}
+
 		selectedElemTitle.style.width = Math.round(position_data.elemWidth).toString() + "px";
 
 		var selectedElemState = document.getElementById(position_data.elemId + "_state");
 		selectedElemState.style.width = Math.round(position_data.elemWidth).toString() + "px";
 		selectedElemState.style.height = Math.round(position_data.elemHeight).toString() + "px";
-
-		selectedElem.style.webkitTransform = translate;
-		selectedElem.style.mozTransform    = translate;
-		selectedElem.style.transform       = translate;
 
 		var dragCorner = selectedElem.getElementsByClassName("dragCorner");
 		var cornerSize = Math.min(position_data.elemWidth, position_data.elemHeight) / 5;
@@ -1118,7 +1144,7 @@ function setupListeners() {
 			if (app.cloneable === true && app.requestForClone === true) {
 				app.requestForClone = false;
 				if (isMaster) {
-					wsio.emit('createAppClone', {id: appId, cloneData: app.cloneData});
+					wsio.emit('createAppClone', {id: appId, cloneData: app.state});
 				}
 			}
 
@@ -1234,6 +1260,14 @@ function setupListeners() {
 		dataSharingPortals[data.id] = new DataSharing(data);
 	});
 
+	wsio.on('setTitle', function(data) {
+		if (data.id !== null && data.id !== undefined) {
+			var titleDiv = document.getElementById(data.id + "_title");
+			var pElement = titleDiv.getElementsByTagName("p");
+			pElement[0].textContent = data.title;
+		}
+	});
+
 	wsio.on('setAppSharingFlag', function(data) {
 		var windowTitle = document.getElementById(data.id + "_title");
 		var windowIconSync = document.getElementById(data.id + "_iconSync");
@@ -1290,6 +1324,76 @@ function setupListeners() {
 				windowState.style.display = "none";
 			}
 		}
+	});
+
+	wsio.on('sendServerWallScreenshot', function(data) {
+		// first tell user that screenshot is happening, because screen will freeze
+		makingScreenshotDialog = ui.buildMessageBox('makingScreenshotDialog',
+			'Please wait, wall is taking a screenshot');
+		// Add to the DOM
+		ui.main.appendChild(makingScreenshotDialog);
+		// Make the dialog visible
+		makingScreenshotDialog.style.display = "block";
+		// now do check and perform capture if can
+		if (!__SAGE2__.browser.isElectron) {
+			wsio.emit("wallScreenshotFromDisplay", {capable: false});
+		} else {
+			// set a rectangle of the client size
+			var captureRect = { x: 0, y: 0, width: ui.main.clientWidth, height: ui.main.clientHeight };
+			require('electron').remote.getCurrentWindow().capturePage(captureRect, function(img) {
+				var imageData, resized;
+				// get the size of the screenshot image
+				var shot = img.getSize();
+				if (shot.width !== captureRect.width) {
+					// in retina mode, need to downscale the image
+					resized = img.resize({width: captureRect.width, quality: 'better'});
+					// use JPEG with quality 90%
+					imageData = resized.toJPEG(90);
+				} else {
+					imageData = img.toJPEG(90);
+				}
+				// Send the image back to the server as JPEG
+				wsio.emit("wallScreenshotFromDisplay", {
+					capable: true,
+					imageData: imageData
+				});
+				// Close the dialog
+				deleteElement('makingScreenshotDialog');
+			});
+		}
+	});
+
+	wsio.on('showStickyPin', function(data) {
+		if (data.sticky !== true) {
+			return;
+		}
+		var titleBarHeight = ui.titleBarHeight;
+		var iconWidth = Math.round(titleBarHeight) * (300 / 235);
+		var iconSpace = 0.1 * iconWidth;
+		var titleText = document.getElementById(data.id + "_text");
+		var windowIconPinned = document.getElementById(data.id + "_iconPinned");
+		var windowIconPinout = document.getElementById(data.id + "_iconPinout");
+		titleText.style.marginLeft = Math.round(iconWidth + 2 * iconSpace) + "px";
+		if (data.pinned === true) {
+			windowIconPinned.style.display = "block";
+			windowIconPinout.style.display = "none";
+		} else {
+			windowIconPinned.style.display = "none";
+			windowIconPinout.style.display = "block";
+		}
+	});
+
+	wsio.on('hideStickyPin', function(data) {
+		if (data.sticky !== true) {
+			return;
+		}
+		var titleBarHeight = ui.titleBarHeight;
+		var titleText = document.getElementById(data.id + "_text");
+		var windowIconPinned = document.getElementById(data.id + "_iconPinned");
+		var windowIconPinout = document.getElementById(data.id + "_iconPinout");
+		titleText.style.marginLeft = Math.round(titleBarHeight / 4.0) + "px";
+		windowIconPinned.style.display = "none";
+		windowIconPinout.style.display = "none";
 	});
 }
 
@@ -1355,12 +1459,31 @@ function createAppWindow(data, parentId, titleBarHeight, titleTextSize, offsetX,
 	windowIconClose.style.right    = "0px";
 	windowTitle.appendChild(windowIconClose);
 
+	if (data.sticky === true) {
+		var windowIconPinned = document.createElement("img");
+		windowIconPinned.id  = data.id + "_iconPinned";
+		windowIconPinned.src = "images/window-pinned.svg";
+		windowIconPinned.height = Math.round(titleBarHeight);
+		windowIconPinned.style.position = "absolute";
+		windowIconPinned.style.left    = Math.round(iconSpace) + "px";
+		windowIconPinned.style.display  = "none";
+		windowTitle.appendChild(windowIconPinned);
+
+		var windowIconPinout = document.createElement("img");
+		windowIconPinout.id  = data.id + "_iconPinout";
+		windowIconPinout.src = "images/window-pinout.svg";
+		windowIconPinout.height = Math.round(titleBarHeight);
+		windowIconPinout.style.position = "absolute";
+		windowIconPinout.style.left    = Math.round(iconSpace) + "px";
+		windowIconPinout.style.display  = "none";
+		windowTitle.appendChild(windowIconPinout);
+	}
 	var titleText = document.createElement("p");
 	titleText.id  = data.id + "_text";
 	titleText.style.lineHeight = Math.round(titleBarHeight) + "px";
 	titleText.style.fontSize   = Math.round(titleTextSize) + "px";
 	titleText.style.color      = "#FFFFFF";
-	titleText.style.marginLeft = Math.round(titleBarHeight / 4) + "px";
+	titleText.style.marginLeft = Math.round(titleBarHeight / 4.0) + "px";
 	titleText.textContent      = data.title;
 	windowTitle.appendChild(titleText);
 
@@ -1581,4 +1704,35 @@ function createAppWindow(data, parentId, titleBarHeight, titleTextSize, offsetX,
 	}
 
 	itemCount += 2;
+}
+
+/* global d3 */
+
+function moveItemWithAnimation(updatedApp) {
+	var elemTitle = d3.select("#" + updatedApp.elemId + "_title");
+	var elem = d3.select("#" + updatedApp.elemId);
+
+	var translate = "translate(" + updatedApp.elemLeft + "px," + updatedApp.elemTop + "px)";
+
+	// allow for transform transitions
+	elemTitle
+		.style("transition", " opacity 0.2s ease-in, transform 0.2s linear");
+
+	elem
+		.style("transition", " opacity 0.2s ease-in, transform 0.2s linear");
+
+	// update transforms
+
+	elemTitle
+		.style("transform", translate);
+
+	elem
+		.style("transform", translate);
+
+	// reset transition after transition time
+	elemTitle.transition().delay(200)
+		.style("transition", " opacity 0.2s ease-in");
+
+	elem.transition().delay(200)
+		.style("transition", " opacity 0.2s ease-in");
 }
