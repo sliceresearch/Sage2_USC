@@ -13,21 +13,21 @@ platform: x64
 init:
   - set PATH=C:\Program Files\Git\mingw64\bin;%PATH%
 #  - curl -LsSO http://ffmpeg.zeranoe.com/builds/win64/dev/ffmpeg-3.0.1-win64-dev.7z
-  - curl -LsSO https://bitbucket.org/sage2/binaries/downloads/ffmpeg-3.2.2-win64-dev.zip
-  - 7z x ffmpeg-3.2.2-win64-dev.zip -o. > nul
+  - curl -LsSO https://bitbucket.org/sage2/binaries/downloads/ffmpeg-3.2.4-win64-dev.zip
+  - 7z x ffmpeg-3.2.4-win64-dev.zip -o. > nul
   - mkdir C:\Dev\
   - mkdir C:\Dev\ffmpeg-win64-dev
-  - move ffmpeg-3.2.2-win64-dev\lib C:\Dev\ffmpeg-win64-dev
-  - move ffmpeg-3.2.2-win64-dev\include C:\Dev\ffmpeg-win64-dev
+  - move ffmpeg-3.2.4-win64-dev\lib C:\Dev\ffmpeg-win64-dev
+  - move ffmpeg-3.2.4-win64-dev\include C:\Dev\ffmpeg-win64-dev
   - del /Q *.7z
-  - rmdir /Q /S ffmpeg-3.2.2-win64-dev
+  - rmdir /Q /S ffmpeg-3.2.4-win64-dev
   - dir C:\Dev
   - dir C:\Dev\ffmpeg-win64-dev\include
   - dir C:\Dev\ffmpeg-win64-dev\lib
 
 install:
-  - ps: Get-NodeJsLatestBuild 7.6
-  - ps: Install-Product node 7.6.0 x64
+  - ps: Get-NodeJsLatestBuild 7.8
+  - ps: Install-Product node 7.8.0 x64
   - dir C:\avvm\node
   - node -v
   - cd %APPVEYOR_BUILD_FOLDER%
@@ -38,29 +38,29 @@ install:
   - npm install -g kthxbai
   - kthxbai
 #  - curl -LsSO http://ffmpeg.zeranoe.com/builds/win64/shared/ffmpeg-3.0.1-win64-shared.7z
-  - curl -LsSO https://bitbucket.org/sage2/binaries/downloads/ffmpeg-3.2.2-win64-shared.zip
-  - 7z x ffmpeg-3.2.2-win64-shared.zip -o.  > nul
-  - copy ffmpeg-3.2.2-win64-shared\bin\*.dll node_modules\node-demux\build\Release\
-  - copy ffmpeg-3.2.2-win64-shared\bin\*.dll bin\
-  - copy ffmpeg-3.2.2-win64-shared\bin\*.exe bin\
-  - rmdir /Q /S ffmpeg-3.2.2-win64-shared
+  - curl -LsSO https://bitbucket.org/sage2/binaries/downloads/ffmpeg-3.2.4-win64-shared.zip
+  - 7z x ffmpeg-3.2.4-win64-shared.zip -o.  > nul
+  - copy ffmpeg-3.2.4-win64-shared\bin\*.dll node_modules\node-demux\build\Release\
+  - copy ffmpeg-3.2.4-win64-shared\bin\*.dll bin\
+  - copy ffmpeg-3.2.4-win64-shared\bin\*.exe bin\
+  - rmdir /Q /S ffmpeg-3.2.4-win64-shared
 #  - curl -LsSO http://www.sno.phy.queensu.ca/~phil/exiftool/exiftool-10.25.zip
-  - curl -LsSO https://bitbucket.org/sage2/binaries/downloads/exiftool-10.45.zip
-  - 7z x exiftool-10.45.zip > nul
+  - curl -LsSO https://bitbucket.org/sage2/binaries/downloads/exiftool-10.49.zip
+  - 7z x exiftool-10.49.zip > nul
   - move exiftool(-k).exe bin\exiftool.exe
   - move bin\sage2.bat sage2.bat
   - move bin\sabi.bat sabi.bat
   - move /Y config\defaultWinstall-cfg.json config\defaultWin-cfg.json
 #  - curl -LsSO https://github.com/ArtifexSoftware/ghostpdl-downloads/releases/download/gs919/gs919w64.exe
-  - curl -LsSO https://bitbucket.org/sage2/binaries/downloads/gs920w64.exe
-  - 7z x -y gs920w64.exe bin lib -ogs > nul
+  - curl -LsSO https://bitbucket.org/sage2/binaries/downloads/gs921w64.exe
+  - 7z x -y gs921w64.exe bin lib -ogs > nul
   - copy gs\bin\* bin\
   - copy bin\gswin64c.exe bin\gswin32c.exe
   - xcopy /S /I /Y /Q gs\lib lib
   - rmdir /Q /S gs
 #  - curl -LsSO http://www.imagemagick.org/download/binaries/ImageMagick-6.9.6-3-portable-Q16-x64.zip
-  - curl -LsSO https://bitbucket.org/sage2/binaries/downloads/ImageMagick-6.9.7-10-portable-Q16-x64.zip
-  - 7z x -y ImageMagick-6.9.7-10-portable-Q16-x64.zip -oim > nul
+  - curl -LsSO https://bitbucket.org/sage2/binaries/downloads/ImageMagick-6.9.8-3-portable-Q16-x64.zip
+  - 7z x -y ImageMagick-6.9.8-3-portable-Q16-x64.zip -oim > nul
   - rmdir /Q /S im\www im\images
   - copy im\* bin
   - rmdir /Q /S im
