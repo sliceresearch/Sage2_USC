@@ -314,8 +314,12 @@ function SAGE2_init() {
 		document.getElementById('loadingUI').style.display     = "none";
 		document.getElementById('displayUIDiv').style.display  = "block";
 		if (viewOnlyMode) {
+			// remove the button container
 			document.getElementById('menuContainer').style.display = "none";
+			// remove the top menu bar
+			document.getElementById('mainMenuBar').style.display   = "none";
 		} else {
+			// show the button container
 			document.getElementById('menuContainer').style.display = "block";
 		}
 
