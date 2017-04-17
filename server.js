@@ -9382,6 +9382,10 @@ function csdSetValue(wsio, data) {
 	} else {
 		// value exists, just update it.
 		csdDataStructure.allValues[ "" + data.nameOfValue ].value = data.value;
+		// potentially the new value isn't the same and a description can be useful
+		if (data.description) {
+			csdDataStructure.allValues[ "" + data.nameOfValue ].description = data.description;
+		}
 	}
 	// send to each of the subscribers.
 	var dataForApp = {};
@@ -9401,6 +9405,8 @@ function csdSetValue(wsio, data) {
 
 /**
 Will send back the named value if it exists.
+Should it send back null if the value doesn't exist?
+The current behavior is do nothing. Maybe sending null isn't bad.
 
 Needs
 	data.nameOfValue
@@ -9425,8 +9431,8 @@ function csdGetValue(wsio, data) {
 }
 
 /**
-Adds the app to the named value as a subscriber. However the named value must exist.
-This will NOT automatically add a subscriber if the values doesn't exist but is added later.
+Adds the app to the named value as a subscriber.
+Changed from previous behavior. If the value doesn't exist, it will create a "blank" value and subscribe to it.
 
 Needs
 	data.nameOfValue
@@ -9434,20 +9440,34 @@ Needs
 	data.func
 */
 function csdSubscribeToValue(wsio, data) {
-	// don't do anything if this isn't filled out.
+	// Need to have a name. Without a name, nothing can be done.
 	if (data.nameOfValue === undefined || data.nameOfValue === null) {
 		return;
 	}
 	// also don't do anything if the value doesn't exist
 	if (csdDataStructure.allValues["" + data.nameOfValue] === undefined) {
-		return;
+		data.value = null; // nothing, it'll be replace later if at all
+		csdSetValue(wsio, data);
 	}
-	// make the new subscriber entry
-	var newCsdSubscriber  = {};
-	newCsdSubscriber.app  = data.app;
-	newCsdSubscriber.func = data.func;
-	// add it to that value
-	csdDataStructure.allValues[ "" + data.nameOfValue ].subscribers.push(newCsdSubscriber);
+
+	let foundSubscriber = false;
+	for (let i = 0; i < csdDataStructure.allValues[ "" + data.nameOfValue ].subscribers.length; i++) {
+		// do not double add if the app and function are the same this permits same app diff function
+		if (csdDataStructure.allValues[ "" + data.nameOfValue ].subscribers[i].app == data.app
+			&& csdDataStructure.allValues[ "" + data.nameOfValue ].subscribers[i].func == data.func) {
+			foundSubscriber = true;
+			break;
+		}
+	}
+	// if app is not already subscribing
+	if (!foundSubscriber) {
+		// make the new subscriber entry
+		var newCsdSubscriber  = {};
+		newCsdSubscriber.app  = data.app;
+		newCsdSubscriber.func = data.func;
+		// add it to that value
+		csdDataStructure.allValues[ "" + data.nameOfValue ].subscribers.push(newCsdSubscriber);
+	}
 }
 
 
