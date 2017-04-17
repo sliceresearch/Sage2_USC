@@ -111,8 +111,8 @@ if (window.applicationCache) {
  */
 window.addEventListener('beforeunload', function(event) {
 	if (interactor && interactor.broadcasting) {
+		// In fact, the message is unused for most browser as security measure
 		var confirmationMessage = "SAGE2 Desktop sharing in progress";
-
 		event.returnValue = confirmationMessage;  // Gecko, Trident, Chrome 34+
 		return confirmationMessage;               // Gecko, WebKit, Chrome <34
 	}
@@ -525,6 +525,14 @@ function setupListeners() {
 		displayUI.addAppWindow(data);
 	});
 
+	wsio.on('showStickyPin', function(data) {
+		displayUI.showStickyPin(data);
+	});
+
+	wsio.on('hideStickyPin', function(data) {
+		displayUI.hideStickyPin(data);
+	});
+
 	wsio.on('deleteElement', function(data) {
 		displayUI.deleteApp(data.elemId);
 	});
@@ -678,13 +686,29 @@ function setupListeners() {
 	});
 
 	wsio.on('csdSendDataToClient', function(data) {
-		// depending on the specified func does different things.
+		// Depending on the specified func does different things
 		if (data.func === 'uiDrawSetCurrentStateAndShow') {
 			uiDrawSetCurrentStateAndShow(data);
 		} else if (data.func === 'uiDrawMakeLine') {
 			uiDrawMakeLine(data);
 		} else {
 			console.log("Error, csd data packet for client contained invalid function:" + data.func);
+		}
+	});
+
+	// Message from server reporting screenshot ability of display clients
+	wsio.on('reportIfCanWallScreenshot', function(data) {
+		if (data.capableOfScreenshot) {
+			// Get the menu item from the filemanager
+			var mymenu = $$('mymenu').getSubMenu('services_menu');
+			// Add a new option for screenshot
+			mymenu.add({
+				id:    "wallScreenshot_menu",
+				value: "Take screeshot of wall"
+			});
+		} else {
+			// No luck (need to use Electron)
+			console.log("Server> No screenshot capability");
 		}
 	});
 }
@@ -1779,9 +1803,9 @@ function handleClick(element) {
 		// Delete all partitions
 		wsio.emit('deleteAllPartitions');
 		hideDialog('arrangementDialog');
-	} else if (element.id === "assigntopartitions") {
+	} else if (element.id === "deleteapplications") {
 		// Assign content to partitions (partitions grab items which are above them)
-		wsio.emit('partitionsGrabAllContent');
+		wsio.emit('deleteAllApplications');
 		hideDialog('arrangementDialog');
 	} else if (element.id === "ffShareScreenBtn") {
 		// Firefox Share Screen Dialog

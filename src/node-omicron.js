@@ -256,7 +256,8 @@ OmicronManager.prototype.connect = function(msgPort) {
 	});
 	omicronManager.oinputserverSocket.on('data', function(e) {
 		// console.log(sageutils.header('Omicron') + 'oinputserver receiving data:', e);
-		omicronManager.processIncomingEvent(e);
+		// TCP stream
+		//omicronManager.processIncomingEvent(e);
 	});
 };
 
@@ -810,9 +811,9 @@ OmicronManager.prototype.processPointerEvent = function(e, sourceID, posX, posY,
 	typeStrings[21] = "Rotate";
 
 	if (e.type === 4) { // EventType: MOVE
-		if (omicronManager.sagePointers[address] === undefined) {
-			return;
-		}
+		//if (omicronManager.sagePointers[address] === undefined) {
+		//	return;
+		//}
 
 		if (omicronManager.gestureDebug) {
 			//console.log(sageutils.header('Omicron') + "Touch move at - (" + posX.toFixed(2) + "," + posY.toFixed(2) + ") initPos: ("
@@ -845,9 +846,9 @@ OmicronManager.prototype.processPointerEvent = function(e, sourceID, posX, posY,
 		}
 		*/
 	} else if (e.type === 5) { // EventType: DOWN
-		if (omicronManager.sagePointers[address] !== undefined) {
-			return;
-		}
+		//if (omicronManager.sagePointers[address] !== undefined) {
+		//	return;
+		//}
 
 		if (omicronManager.gestureDebug) {
 			console.log(sageutils.header('Omicron') +
@@ -886,9 +887,9 @@ OmicronManager.prototype.processPointerEvent = function(e, sourceID, posX, posY,
 		omicronManager.pointerPress(address, posX, posY, { button: "left" });
 
 	} else if (e.type === 6) { // EventType: UP
-		if (omicronManager.sagePointers[address] === undefined) {
-			return;
-		}
+		//if (omicronManager.sagePointers[address] === undefined) {
+		//	return;
+		//}
 
 		if (omicronManager.gestureDebug) {
 			// console.log("Touch release");

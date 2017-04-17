@@ -30,7 +30,7 @@ var ffmpeg    = require('fluent-ffmpeg');     // ffmpeg
 var gm        = require('gm');                // imagesmagick
 var json5     = require('json5');
 var mv        = require('mv');
-var chalk			= require('chalk');
+var chalk     = require('chalk');
 
 var exiftool  = require('../src/node-exiftool'); // gets exif tags for images
 var sageutils = require('../src/node-utils');    // provides utility functions
