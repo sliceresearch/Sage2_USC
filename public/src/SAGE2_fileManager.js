@@ -84,8 +84,11 @@ function FileManager(wsio, mydiv, uniqueID) {
 			{id: "hidefm_menu", value: "Close Media Browser"}
 		]},
 		{id: "edit_menu", value: "Edit", submenu: [
+			{id: "open_menu",   value: "Open"},
+			{id: "copyurl_menu",   value: "Copy URL"},
+			{id: "download_menu", value: "Download"},
+			{$template: "Separator"},
 			{id: "delete_menu",   value: "Delete"},
-			{id: "download_menu", value: "Download"}
 		]}
 	];
 	var mymenu = {
@@ -541,6 +544,7 @@ function FileManager(wsio, mydiv, uniqueID) {
 
 	// Menubar of the file manager
 	$$("mymenu").attachEvent("onMenuItemClick", function(evt) {
+		var dItems, numItems, i;
 		var mainUI = document.getElementById('mainUI');
 		if (evt === "refresh_menu") {
 			wsio.emit('requestStoredFiles');
@@ -620,6 +624,65 @@ function FileManager(wsio, mydiv, uniqueID) {
 				_this.main.config.height = window.innerHeight;
 			}
 			_this.main.adjust();
+		} else if (evt === "open_menu") {
+			// Get selected items
+			dItems = _this.allTable.getSelectedId(true);
+			var tbo = [];
+			// otherwise take all selected items
+			for (i = 0; i < dItems.length; i++) {
+				tbo.push(dItems[i].id);
+			}
+			// Open all the content one at a time
+			tbo.map(function(tid) {
+				_this.openItem(tid);
+			});
+		} else if (evt === "copyurl_menu") {
+			// Get selected items
+			dItems = _this.allTable.getSelectedId(true);
+			copyURLItem(dItems[0].id);
+		} else if (evt === "download_menu") {
+			// Get selected items
+			dItems = _this.allTable.getSelectedId(true);
+			// Go over the list of selected items
+			for (i = 0; i < dItems.length; i++) {
+				// Trigger the download command
+				downloadItem(dItems[i].id);
+			}
+		} else if (evt === "delete_menu") {
+			// Get selected items
+			dItems = _this.allTable.getSelectedId(true);
+			var tbd = [];
+			var textTbd = "<ol style=\"list-style-position: inside;padding:10px;text-align:left;\">";
+			numItems = 0;
+			if (dItems.length > 0) {
+				for (i = 0; i < dItems.length; i++) {
+					tbd.push(dItems[i].id);
+					// Only list first 15 items...
+					if (i < 14) {
+						textTbd += '<li>' + dItems[i].id + '</li>';
+					} else if (i === 14) {
+						textTbd += '<li>...</li>';
+					}
+					numItems++;
+				}
+				textTbd += "</ol>";
+				webix.confirm({
+					title: "Confirm deletion - " + numItems + " item(s)",
+					width: "75%",
+					ok: "Yes",
+					cancel: "No",
+					text: textTbd,
+					callback: function(yesno) {
+						if (yesno) {
+							// for all elements
+							tbd.map(function(tid) {
+								// Send delete message to server
+								wsio.emit('deleteElementFromStoredFiles', {filename: tid});
+							});
+						}
+					}
+				});
+			}
 		} else {
 			// dunno
 		}
