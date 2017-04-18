@@ -335,7 +335,12 @@ PartitionList.prototype.findNeighbors = function(ptnID) {
 	return [];
 };
 
-
+/**
+  * Update the neighbors of a Partition, as well as update the Partition's neighbors
+	* as well.
+  *
+  * @param {string} ptnID - The Partition for which we are updating neighbors
+  */
 PartitionList.prototype.updateNeighbors = function(ptnID) {
 	if (this.list.hasOwnProperty(ptnID)) {
 		// update neighbors of selected partition

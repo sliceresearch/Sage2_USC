@@ -19,6 +19,8 @@
 /* global createWidgetToAppConnector, getTextFromTextInputWidget */
 /* global SAGE2_Partition, require */
 
+/* global require */
+
 "use strict";
 
 /**
@@ -56,6 +58,9 @@ var storedFileListEventHandlers = [];
 var ui;
 var uiTimer = null;
 var uiTimerDelay;
+
+// Global variables for screenshot functionality
+var makingScreenshotDialog = null;
 
 // Explicitely close web socket when web browser is closed
 window.onbeforeunload = function() {
@@ -248,7 +253,7 @@ function SAGE2_init() {
 				time: true,
 				console: false
 			},
-			isMobile: __SAGE2__.browser.isMobile,
+			browser: __SAGE2__.browser,
 			session: session
 		};
 		wsio.emit('addClient', clientDescription);
@@ -1318,6 +1323,43 @@ function setupListeners() {
 				windowTitle.style.backgroundColor = "#39C4A6";
 				windowState.style.display = "none";
 			}
+		}
+	});
+
+	wsio.on('sendServerWallScreenshot', function(data) {
+		// first tell user that screenshot is happening, because screen will freeze
+		makingScreenshotDialog = ui.buildMessageBox('makingScreenshotDialog',
+			'Please wait, wall is taking a screenshot');
+		// Add to the DOM
+		ui.main.appendChild(makingScreenshotDialog);
+		// Make the dialog visible
+		makingScreenshotDialog.style.display = "block";
+		// now do check and perform capture if can
+		if (!__SAGE2__.browser.isElectron) {
+			wsio.emit("wallScreenshotFromDisplay", {capable: false});
+		} else {
+			// set a rectangle of the client size
+			var captureRect = { x: 0, y: 0, width: ui.main.clientWidth, height: ui.main.clientHeight };
+			require('electron').remote.getCurrentWindow().capturePage(captureRect, function(img) {
+				var imageData, resized;
+				// get the size of the screenshot image
+				var shot = img.getSize();
+				if (shot.width !== captureRect.width) {
+					// in retina mode, need to downscale the image
+					resized = img.resize({width: captureRect.width, quality: 'better'});
+					// use JPEG with quality 90%
+					imageData = resized.toJPEG(90);
+				} else {
+					imageData = img.toJPEG(90);
+				}
+				// Send the image back to the server as JPEG
+				wsio.emit("wallScreenshotFromDisplay", {
+					capable: true,
+					imageData: imageData
+				});
+				// Close the dialog
+				deleteElement('makingScreenshotDialog');
+			});
 		}
 	});
 

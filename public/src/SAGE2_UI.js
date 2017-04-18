@@ -686,13 +686,29 @@ function setupListeners() {
 	});
 
 	wsio.on('csdSendDataToClient', function(data) {
-		// depending on the specified func does different things.
+		// Depending on the specified func does different things
 		if (data.func === 'uiDrawSetCurrentStateAndShow') {
 			uiDrawSetCurrentStateAndShow(data);
 		} else if (data.func === 'uiDrawMakeLine') {
 			uiDrawMakeLine(data);
 		} else {
 			console.log("Error, csd data packet for client contained invalid function:" + data.func);
+		}
+	});
+
+	// Message from server reporting screenshot ability of display clients
+	wsio.on('reportIfCanWallScreenshot', function(data) {
+		if (data.capableOfScreenshot) {
+			// Get the menu item from the filemanager
+			var mymenu = $$('mymenu').getSubMenu('services_menu');
+			// Add a new option for screenshot
+			mymenu.add({
+				id:    "wallScreenshot_menu",
+				value: "Take screeshot of wall"
+			});
+		} else {
+			// No luck (need to use Electron)
+			console.log("Server> No screenshot capability");
 		}
 	});
 }
