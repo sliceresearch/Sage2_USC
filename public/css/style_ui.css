@@ -901,6 +901,11 @@ The z-index is very important.
 	cursor: default;
 }
 
+.textDialog {
+	text-align:  left;
+	padding-left: 10px;
+}
+
 .button {
 	padding: 10px 12px;
 	border-radius: 12px;

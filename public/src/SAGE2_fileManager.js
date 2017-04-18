@@ -18,7 +18,7 @@
  */
 
 /* global SAGE2_init, SAGE2_resize, escape, unescape, sage2Version, showDialog */
-/* global removeAllChildren, SAGE2_copyToClipboard */
+/* global removeAllChildren, SAGE2_copyToClipboard, displayUI */
 
 "use strict";
 
@@ -109,16 +109,19 @@ function FileManager(wsio, mydiv, uniqueID) {
 	// Top UI menu bar
 	var topmenu_data = [
 		{id: "topfile_menu", value: "File", config: {width: 170, zIndex: 10000}, submenu: [
-			{id: "upload_menu",  value: "Upload a file"},
+			{id: "upload_menu", value: "Upload a file"},
 			{$template: "Separator"},
 			{id: "showfm_menu", value: "Open Media Browser"},
 			{id: "hidefm_menu", value: "Close Media Browser"}
 		]},
 		{id: "view_menu", value: "View", config: {width: 170, zIndex: 10000}, submenu: [
+			{id: "settings_menu", value: "Settings"},
+			{$template: "Separator"},
 			{id: "tile_menu",   value: "Tile content"},
 			{id: "clear_menu",  value: "Clear display"}
 		]},
 		{id: "mainpartition_menu", value: "Partitions", config: {width: 250, zIndex: 10000}, submenu: [
+			{id: "1x1_menu", value: "Fullscreen"},
 			{id: "2x1_menu", value: "2 Columns"},
 			{id: "3x1_menu", value: "3 Columns"},
 			{id: "2x2_menu", value: "2 Columns, 2 Rows"},
@@ -182,17 +185,33 @@ function FileManager(wsio, mydiv, uniqueID) {
 			wsio.emit('clearDisplay');
 		} else if (evt === "tile_menu") {
 			wsio.emit('tileApplications');
+		} else if (evt === "settings_menu") {
+			showDialog('settingsDialog');
 		} else if (evt === "about_menu") {
-			var versionText = "SAGE2 Version:<br>";
+			var versionText = "<p>";
+			// Add new information
+			versionText += "<p class='textDialog'><span style='font-weight:bold;'>Host</span>: " + displayUI.config.host + "</p>";
+			versionText += "<p class='textDialog'><span style='font-weight:bold;'>Resolution</span>: " +
+				displayUI.config.totalWidth + " x " +  displayUI.config.totalHeight + " pixels";
+			versionText += " (" + displayUI.config.layout.columns + " by " + displayUI.config.layout.rows + " tiles";
+			versionText += "  - " + displayUI.config.resolution.width + " x " + displayUI.config.resolution.height + ")" + "</p>";
+			// Add version
+			versionText += "<p class='textDialog'><span style='font-weight:bold;'>SAGE2 Version:</span>";
 			if (sage2Version.branch && sage2Version.commit && sage2Version.date) {
 				versionText += "<b>v" + sage2Version.base + "-" + sage2Version.branch + "-" +
 					sage2Version.commit + "</b> " + sage2Version.date;
 			} else {
 				versionText += "<b>v" + sage2Version.base + "</b>";
 			}
+			// Show the type of web browser
+			versionText += "<p class='textDialog'><span style='font-weight:bold;'>Browser</span>: " +
+				__SAGE2__.browser.browserType + " " + __SAGE2__.browser.version + "</p>";
+			versionText += "</p>";
+			// Open the popup
 			webix.alert({
 				type: "alert-warning",
 				title: "SAGE2 (tm)",
+				width: "420px",
 				ok: "OK",
 				text: versionText
 			});
@@ -222,6 +241,14 @@ function FileManager(wsio, mydiv, uniqueID) {
 			// window.open("drawing.html", '_blank');
 		} else if (evt === "console_menu") {
 			window.open("admin/console.html", '_blank');
+		} else if (evt === "1x1_menu") {
+			// create partition division of screen
+			wsio.emit('partitionScreen',
+				{
+					type: "row",
+					ptn: true,
+					size: 12
+				});
 		} else if (evt === "2x1_menu") {
 			// create partition division of screen
 			wsio.emit('partitionScreen',
@@ -229,16 +256,8 @@ function FileManager(wsio, mydiv, uniqueID) {
 					type: "row",
 					size: 12,
 					children: [
-						{
-							type: "col",
-							ptn: true,
-							size: 6
-						},
-						{
-							type: "col",
-							ptn: true,
-							size: 6
-						}
+						{type: "col", ptn: true, size: 6},
+						{type: "col", ptn: true, size: 6}
 					]
 				});
 		} else if (evt === "3x1_menu") {
@@ -248,21 +267,9 @@ function FileManager(wsio, mydiv, uniqueID) {
 					type: "row",
 					size: 12,
 					children: [
-						{
-							type: "col",
-							ptn: true,
-							size: 4
-						},
-						{
-							type: "col",
-							ptn: true,
-							size: 4
-						},
-						{
-							type: "col",
-							ptn: true,
-							size: 4
-						}
+						{type: "col", ptn: true, size: 4},
+						{type: "col", ptn: true, size: 4},
+						{type: "col", ptn: true, size: 4}
 					]
 				});
 		} else if (evt === "2x2_menu") {
@@ -276,32 +283,16 @@ function FileManager(wsio, mydiv, uniqueID) {
 							type: "row",
 							size: 6,
 							children: [
-								{
-									type: "col",
-									ptn: true,
-									size: 6
-								},
-								{
-									type: "col",
-									ptn: true,
-									size: 6
-								}
+								{type: "col", ptn: true, size: 6},
+								{type: "col", ptn: true, size: 6}
 							]
 						},
 						{
 							type: "row",
 							size: 6,
 							children: [
-								{
-									type: "col",
-									ptn: true,
-									size: 6
-								},
-								{
-									type: "col",
-									ptn: true,
-									size: 6
-								}
+								{type: "col", ptn: true, size: 6},
+								{type: "col", ptn: true, size: 6}
 							]
 						}
 					]
@@ -317,37 +308,17 @@ function FileManager(wsio, mydiv, uniqueID) {
 							type: "col",
 							size: 3,
 							children: [
-								{
-									type: "row",
-									ptn: true,
-									size: 8
-								},
-								{
-									type: "row",
-									ptn: true,
-									size: 4
-								}
+								{type: "row", ptn: true, size: 8},
+								{type: "row", ptn: true, size: 4}
 							]
 						},
-						{
-							type: "col",
-							ptn: true,
-							size: 6
-						},
+						{type: "col", ptn: true, size: 6},
 						{
 							type: "col",
 							size: 3,
 							children: [
-								{
-									type: "row",
-									ptn: true,
-									size: 4
-								},
-								{
-									type: "row",
-									ptn: true,
-									size: 8
-								}
+								{type: "row", ptn: true, size: 4},
+								{type: "row", ptn: true, size: 8}
 							]
 						}
 					]
@@ -363,27 +334,15 @@ function FileManager(wsio, mydiv, uniqueID) {
 							type: "row",
 							size: 8,
 							children: [
-								{
-									type: "col",
-									ptn: true,
-									size: 6
-								},
-								{
-									type: "col",
-									ptn: true,
-									size: 6
-								}
+								{type: "col", ptn: true, size: 6},
+								{type: "col", ptn: true, size: 6}
 							]
 						},
 						{
 							type: "row",
 							size: 4,
 							children: [
-								{
-									type: "col",
-									ptn: true,
-									size: 12
-								}
+								{type: "col", ptn: true, size: 12}
 							]
 						}
 					]
