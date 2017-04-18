@@ -109,7 +109,7 @@ function FileManager(wsio, mydiv, uniqueID) {
 			{id: "upload_menu",  value: "Upload a file"},
 			{$template: "Separator"},
 			{id: "showfm_menu", value: "Open Media Browser"},
-			{id: "hidefm_menu", value: "Close Media Browser"},
+			{id: "hidefm_menu", value: "Close Media Browser"}
 		]},
 		{id: "view_menu", value: "View", config: {width: 170, zIndex: 10000}, submenu: [
 			{id: "tile_menu",   value: "Tile content"},
