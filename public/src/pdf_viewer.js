@@ -707,6 +707,8 @@ var pdf_viewer = SAGE2_App.extend({
 
 	load: function(date) {
 		// this.updateAppFromState(date);
+		this.goToPage(this.state.currentPage);
+		this.refresh(date);
 	},
 
 	draw: function(date) {

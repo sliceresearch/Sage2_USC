@@ -2192,6 +2192,8 @@ function noBackspace(event) {
 	} else if (event.ctrlKey && event.keyCode === 13 && event.target.id === "uiNoteMakerInputField") {
 		// ctrl + enter in note maker adds a line rather than send note
 		event.target.value += "\n";
+	} else if (event.shiftKey && event.keyCode === 13 && event.target.id === "uiNoteMakerInputField") {
+		// shift + enter adds a line
 	} else if (event.keyCode === 13 && event.target.id === "uiNoteMakerInputField") {
 		// if a user hits enter within an rmbContextMenuEntry, it will cause the effect to happen
 		sendCsdMakeNote();
