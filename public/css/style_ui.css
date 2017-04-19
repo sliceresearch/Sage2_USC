@@ -986,6 +986,22 @@ The z-index is very important.
 	display: block;
 }
 
+/* Styling top menu bar */
+.my_style .webix_layout_toolbar.webix_toolbar{
+	background: #787878;
+	border: none;
+}
+.my_style a.webix_list_item{
+	background: #787878;
+}
+.my_style a.webix_list_item:focus{
+	background: #787878;
+}
+.my_style a.webix_list_item:hover{
+	background: #666666;
+}
+
+
 /******** Text - Width Test ********/
 #textWidthTest {
 	font-size: 11px;

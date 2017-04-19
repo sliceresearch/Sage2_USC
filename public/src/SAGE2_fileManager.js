@@ -88,7 +88,7 @@ function FileManager(wsio, mydiv, uniqueID) {
 			{id: "copyurl_menu",   value: "Copy URL"},
 			{id: "download_menu", value: "Download"},
 			{$template: "Separator"},
-			{id: "delete_menu",   value: "Delete"},
+			{id: "delete_menu",   value: "Delete"}
 		]}
 	];
 	var mymenu = {
@@ -160,13 +160,15 @@ function FileManager(wsio, mydiv, uniqueID) {
 	webix.ui({
 		container: document.getElementById('mainMenuBar'),
 		id: "toplayout",
-		css: { border: "solid 1px #565656;"},
+	    css: "my_style",
 		rows: [
 			{
-				view: "toolbar", cols: [topmenu]
+				view: "toolbar",
+				cols: [topmenu]
 			}
 		]
 	});
+
 	// Disable the screenshot menu. Will wbe enabled later froms server
 	$$('topmenu').disableItem('wallScreenshot_menu');
 
