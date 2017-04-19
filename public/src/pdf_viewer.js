@@ -706,9 +706,23 @@ var pdf_viewer = SAGE2_App.extend({
 	},
 
 	load: function(date) {
-		// this.updateAppFromState(date);
-		this.goToPage(this.state.currentPage);
-		this.refresh(date);
+		/*
+		There has to be a better way than this.
+		There is currently a bug(?) where this load will double proc on remote site interaction.
+		The first proc will be the current page, then the second proc will be the changed page state.
+		This is a problem because the first proc sends BACK or originator, changing their state to what it was.
+		Then their load function gets activated and causes a loop.
+		Also, there might be a cleaner function to use than resize.
+		This odd behavir might have to do with the goToPage having two modifyState() call.
+		The modifyState() performs a sync, but goToPage calls it twice, the 2nd is the page change.
+		This might be causing the rapid swap. One early packet for dx (and old page #) then 2nd packet that has new page#
+		But receiving site gets old page # first, then part of the code sends a sync, then it gets 2nd packet with real page#.
+		Unsure atm, ran out of time to test with remote site.
+		*/
+		var _this = this;
+		setTimeout(function() {
+			_this.resize(date);
+		}, 200);
 	},
 
 	draw: function(date) {
