@@ -78,9 +78,9 @@ function FileManager(wsio, mydiv, uniqueID) {
 	var menu_data = [
 		{id: "file_menu", value: "File", config: {width: 170}, submenu: [
 			{id: "folder_menu",  value: "New folder"},
-			{id: "upload_menu",  value: "Upload a file"},
-			{id: "refresh_menu", value: "Refresh"},
+			{id: "upload_menu",  value: "Upload an image"},
 			{$template: "Separator"},
+			{id: "refresh_menu", value: "Refresh Media Browser"},
 			{id: "hidefm_menu", value: "Close Media Browser"}
 		]},
 		{id: "edit_menu", value: "Edit", submenu: [
@@ -109,7 +109,7 @@ function FileManager(wsio, mydiv, uniqueID) {
 	// Top UI menu bar
 	var topmenu_data = [
 		{id: "topfile_menu", value: "File", config: {width: 170, zIndex: 10000}, submenu: [
-			{id: "upload_menu", value: "Upload a file"},
+			{id: "upload_menu", value: "Upload an image"},
 			{$template: "Separator"},
 			{id: "showfm_menu", value: "Open Media Browser"},
 			{id: "hidefm_menu", value: "Close Media Browser"}
@@ -118,7 +118,9 @@ function FileManager(wsio, mydiv, uniqueID) {
 			{id: "settings_menu", value: "Settings"},
 			{$template: "Separator"},
 			{id: "tile_menu",   value: "Tile content"},
-			{id: "clear_menu",  value: "Clear display"}
+			{id: "clear_menu",  value: "Clear display"},
+			{$template: "Separator"},
+			{id: "wallScreenshot_menu", value: "Take screenshot"}
 		]},
 		{id: "mainpartition_menu", value: "Partitions", config: {width: 250, zIndex: 10000}, submenu: [
 			{id: "1x1_menu", value: "Fullscreen"},
@@ -165,6 +167,8 @@ function FileManager(wsio, mydiv, uniqueID) {
 			}
 		]
 	});
+	// Disable the screenshot menu. Will wbe enabled later froms server
+	$$('topmenu').disableItem('wallScreenshot_menu');
 
 	// Top menubar above the UI
 	$$("topmenu").attachEvent("onMenuItemClick", function(evt) {

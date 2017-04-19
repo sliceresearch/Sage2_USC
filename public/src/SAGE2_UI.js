@@ -703,16 +703,8 @@ function setupListeners() {
 	// Message from server reporting screenshot ability of display clients
 	wsio.on('reportIfCanWallScreenshot', function(data) {
 		if (data.capableOfScreenshot) {
-			// Get the menu item from the filemanager
-			var srvmenu = $$('topmenu').getSubMenu('services_menu');
-			var wscmenu = srvmenu.getItem('wallScreenshot_menu');
-			if (!wscmenu) {
-				// Add a new option for screenshot
-				srvmenu.add({
-					id:    "wallScreenshot_menu",
-					value: "Take screeshot of wall"
-				});
-			}
+			// Enable the menu item
+			$$('topmenu').enableItem('wallScreenshot_menu');
 		} else {
 			// No luck (need to use Electron)
 			console.log("Server> No screenshot capability");
