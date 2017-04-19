@@ -171,8 +171,8 @@ PerformanceManager.prototype.recordMessage = function(fName, wsio, data, outBoun
 
 	this.messageInfoList.push(message);
 
-	if (this.messageInfoList.length > 5000) {
-		var temp = this.messageInfoList.splice(0, 5000);
+	if (this.messageInfoList.length > 100) {
+		var temp = this.messageInfoList.splice(0, 100);
 		fs.appendFile(this.logFile, JSON.stringify(temp), function (err) {
 			if (err){
 				console.log("Error: performance log could not be saved!");
