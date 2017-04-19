@@ -45,6 +45,7 @@
 		"url": "https://bitbucket.org/sage2/sage2/"
 	},
 	"dependencies": {
+		"chalk": "latest",
 		"color": "latest",
 		"commander": "latest",
 		"decompress-zip": "latest",
@@ -70,6 +71,7 @@
 		"sw-precache": "latest",
 		"debug": "latest",
 		"ytdl-core": "latest",
+		"rimraf": "latest",
 		"electron": "latest"
 	},
 	"optionalDependencies": {

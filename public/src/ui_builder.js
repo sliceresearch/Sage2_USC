@@ -398,7 +398,8 @@ function UIBuilder(json_cfg, clientID) {
 		});
 
 		// Load the background SVG if specified
-		if (this.json_cfg.background.watermark !== undefined) {
+		if (this.json_cfg.background.watermark !== undefined &&
+			this.json_cfg.background.watermark.svg) {
 			// Use snap to load the SVG
 			Snap.load(this.json_cfg.background.watermark.svg, function(f) {
 				var water = f.select("svg");
@@ -802,7 +803,9 @@ function UIBuilder(json_cfg, clientID) {
 		if (this.clientID !== -1) {
 			watermark.style.cursor = "none";
 		}
-		this.changeSVGColor(watermark, "path", null, this.json_cfg.background.watermark.color);
+		if (this.json_cfg.background.watermark.color) {
+			this.changeSVGColor(watermark, "path", null, this.json_cfg.background.watermark.color);
+		}
 
 		watermark.style.opacity  = 0.4;
 		watermark.style.position = "absolute";

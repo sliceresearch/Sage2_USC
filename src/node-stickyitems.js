@@ -28,6 +28,7 @@
 function StickyItems() {
 	this.stickyItemParent = {};
 	this.stickyItemOffsetInfo = {};
+	this.notPinnedAppsList = [];
 }
 
 /**
@@ -48,8 +49,8 @@ StickyItems.prototype.attachStickyItem = function(backgroundItem, stickyItem) {
 		this.stickyItemParent[backgroundItem.id].push(stickyItem);
 	}
 	this.stickyItemOffsetInfo[stickyItem.id] = {
-		offsetX: stickyItem.left - backgroundItem.left,
-		offsetY: stickyItem.top - backgroundItem.top
+		offsetX: 100.0 * (stickyItem.left - backgroundItem.left) / backgroundItem.width,
+		offsetY: 100.0 * (stickyItem.top - backgroundItem.top) / backgroundItem.height
 	};
 };
 
@@ -96,8 +97,8 @@ StickyItems.prototype.moveItemsStickingToUpdatedItem = function (updatedItem) {
 	if (this.stickyItemParent[updatedItem.elemId] !== null && this.stickyItemParent[updatedItem.elemId] !== undefined) {
 		var list = this.stickyItemParent[updatedItem.elemId];
 		for (var l in list) {
-			list[l].left = updatedItem.elemLeft + this.stickyItemOffsetInfo[list[l].id].offsetX;
-			list[l].top  = updatedItem.elemTop + this.stickyItemOffsetInfo[list[l].id].offsetY;
+			list[l].left = updatedItem.elemLeft + this.stickyItemOffsetInfo[list[l].id].offsetX / 100.0 * updatedItem.elemWidth;
+			list[l].top  = updatedItem.elemTop + this.stickyItemOffsetInfo[list[l].id].offsetY / 100.0 * updatedItem.elemHeight;
 			var item     = {
 				elemId: list[l].id, elemLeft: list[l].left, elemTop: list[l].top,
 				elemWidth: list[l].width, elemHeight: list[l].height, date: new Date()
@@ -116,18 +117,64 @@ StickyItems.prototype.moveItemsStickingToUpdatedItem = function (updatedItem) {
 * @method getStickingItems
 */
 StickyItems.prototype.getStickingItems = function(elemId) {
-	var stickingItems = [] ; 
+	var stickingItems = [];
 	if (this.stickyItemParent[elemId] !== null && this.stickyItemParent[elemId] !== undefined) {
-		var list = this.stickyItemParent[elemId] ;
-		for (var i in list ) {
-			stickingItems.push(list[i]) ;
-			var oneDeepItems = this.getStickingItems(list[i].id) ;
+		var list = this.stickyItemParent[elemId];
+		for (var i in list) {
+			stickingItems.push(list[i]);
+			var oneDeepItems = this.getStickingItems(list[i].id);
 			if (oneDeepItems.length > 0) {
 				Array.prototype.push.apply(stickingItems, oneDeepItems);
 			}
 		}
 	}
 	return stickingItems;
+};
+
+
+/**
+*
+*
+* @method getFirstLevelStickingItems
+*/
+StickyItems.prototype.getFirstLevelStickingItems = function(elemId) {
+	if (this.stickyItemParent[elemId] !== null && this.stickyItemParent[elemId] !== undefined) {
+		return this.stickyItemParent[elemId];
+	}
+	return [];
+};
+
+
+/**
+*
+*
+* @method registerNotPinnedApp
+*/
+
+StickyItems.prototype.registerNotPinnedApp = function(app) {
+	if (app.sticky === true && app.pinned !== true) {
+		this.notPinnedAppsList.push(app);
+	}
+};
+
+/**
+*
+*
+* @method getNotPinnedAppList
+*/
+
+StickyItems.prototype.getNotPinnedAppList = function() {
+	return this.notPinnedAppsList;
+};
+
+/**
+*
+*
+* @method refreshNotPinnedAppList
+*/
+
+StickyItems.prototype.refreshNotPinnedAppList = function(appList) {
+	this.notPinnedAppsList = appList;
 };
 
 module.exports = StickyItems;
