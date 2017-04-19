@@ -1036,7 +1036,6 @@ var SAGE2_App = Class.extend({
 		});
 	},
 	processPerfDataResponse: function(data) {
-		console.log("processing perf data response!");
 		this[data.callback](data);
 	}
 

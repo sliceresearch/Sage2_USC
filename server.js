@@ -179,6 +179,8 @@ console.log(sageutils.header("SAGE2") + "Node Version: " + sageutils.getNodeVers
 console.log(sageutils.header("SAGE2") + "Detected Server OS as:\t" + platform);
 console.log(sageutils.header("SAGE2") + "SAGE2 Short Version:\t" + SAGE2_version);
 
+
+
 // Initialize Server
 initializeSage2Server();
 
@@ -188,6 +190,9 @@ initializeSage2Server();
  * @method     initializeSage2Server
  */
 function initializeSage2Server() {
+	
+	performanceManager.setupLogFile(path.join(mediaFolders.user.path, 'tmp', 'perfLog.json'));
+	performanceManager.wrapDataTransferFunctions(WebsocketIO);
 	// Remove API keys from being investigated further
 	// if (config.apis) delete config.apis;
 
@@ -9758,6 +9763,9 @@ function wsPerfDataRequestMessage(wsio, data) {
 		break;
 		case "resourceInfo":
 		break;
+		case "messageInfo":
+			outData.messageInfo  = performanceManager.getMessageInfo();
+			break;
 
 	}
 	broadcast('perfDataResponse', outData);
