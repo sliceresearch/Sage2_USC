@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no" />
+
+<title>External Host connect to SAGE2 test</title>
+
+<script type="text/license">
+	// SAGE2 is available for use under the SAGE2 Software License 
+	//      
+	// University of Illinois at Chicago's Electronic Visualization Laboratory (EVL)
+	// and University of Hawai'i at Manoa's Laboratory for Advanced Visualization and
+	// Applications (LAVA)
+	//      
+	// See full text, terms and conditions in the LICENSE.txt included file
+	//      
+	// Copyright (c) 2016
+</script>
+
+<script async src="websocket.io.js"></script>
+
+<!-- SAGE2 code -->
+<script async src="SAGE2_standAlone.js"></script>
+<script async src="main.js"></script>
+
+
+<style type="text/css">
+* {
+	font-family: Arial;
+}
+</style>
+
+</head>
+
+<body>
+
+<h1> External App connection to SAGE2 </h1>
+
+<h3>Set String </h3>
+Name:<input id="setName" type="text" size="15"><br>
+String Value:<input id="setValue" type="text" size="50"><br>
+<button id="setButton"> Activate </button>
+
+<h3>Set Number </h3>
+Name:<input id="snName" type="text" size="15"><br>
+String Value:<input id="snValue" type="text" size="50"><br>
+<button id="snButton"> Activate </button>
+
+<h3>Set Object </h3>
+Name:<input id="soName" type="text" size="15"><br>
+String Value:<input id="soValue" type="text" size="50"><br>
+<button id="soButton"> Activate </button>
+
+
+<h3>Get Data: </h3>
+Name:<input id="getName" type="text" size="15"><br>
+<button id="getButton"> Activate </button>
+
+<h3>Status: </h3>
+<div id="status"></div>
+
+</body>
+</html>
+
