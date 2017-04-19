@@ -9545,10 +9545,6 @@ var csdDataStructure = {};
 	csdDataStructure.allNamesOfValues = [];
 		strings to denote the names used for values
 		order is based on when it was first set (not alphabetical)
-	csdDataStructure.xAppLaunchCoordinate = 0.05;
-		for the csdLaunchAppWithValues positioning
-	csdDataStructure.yAppLaunchCoordinate = 0.05;
-		for the csdLaunchAppWithValues positioning
 
 	The allValues is comprised of entry objects
 	{
@@ -9574,20 +9570,13 @@ csdDataStructure.numberOfValues = 0;
 csdDataStructure.allNamesOfValues = [];
 csdDataStructure.appLaunch = {};
 csdDataStructure.appLaunch.xStart = 10;
-csdDataStructure.appLaunch.yStart = 10;
+csdDataStructure.appLaunch.yStart = 50;
 csdDataStructure.appLaunch.xLast = -1;
 csdDataStructure.appLaunch.yLast = -1;
 csdDataStructure.appLaunch.widthLast = -1;
 csdDataStructure.appLaunch.heightLast = -1;
 csdDataStructure.appLaunch.tallestInRow = -1;
-csdDataStructure.appLaunch.padding = 10;
-
-csdDataStructure.xAppLaunchCoordinate = 10;
-csdDataStructure.yAppLaunchCoordinate = 50;
-csdDataStructure.lastLaunchedAppWidth = -1;
-csdDataStructure.lastLaunchedAppHeight = -1;
-csdDataStructure.lastLaunchedAppXPos = -1;
-csdDataStructure.lastLaunchedAppYPos = -1;
+csdDataStructure.appLaunch.padding = 20;
 
 /**
 Will set the named value.

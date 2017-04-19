@@ -2705,17 +2705,17 @@ function sendCsdMakeNote() {
 	var data = {};
 	data.type		= "launchAppWithValues";
 	data.appName	= "quickNote";
-	data.func		= "setMessage";
-	data.params		= {};
-	data.params.clientName = document.getElementById('sage2PointerLabel').value;
-	data.params.clientInput = workingDiv.value;
+	// data.func		= "setMessage";
+	data.csdInitValues		= {};
+	data.csdInitValues.clientName = document.getElementById('sage2PointerLabel').value;
+	data.csdInitValues.clientInput = workingDiv.value;
 	if (document.getElementById("uiNoteMakerCheckAnonymous").checked) {
-		data.params.clientName = "Anonymous";
+		data.csdInitValues.clientName = "Anonymous";
 	}
-	data.params.colorChoice = "lightyellow";
+	data.csdInitValues.colorChoice = "lightyellow";
 	for (var i = 1; i <= 6; i++) {
 		if (document.getElementById("uinmColorPick" + i).colorWasPicked) {
-			data.params.colorChoice = document.getElementById("uinmColorPick" + i).style.background;
+			data.csdInitValues.colorChoice = document.getElementById("uinmColorPick" + i).style.background;
 		}
 	}
 	wsio.emit('csdMessage', data);

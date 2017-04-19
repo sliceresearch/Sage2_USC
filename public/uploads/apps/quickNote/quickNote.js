@@ -50,6 +50,17 @@ var quickNote = SAGE2_App.extend({
 		if (data.state.contentsOfNoteFile) {
 			this.parseDataFromServer(data.state.contentsOfNoteFile);
 		}
+
+		var _this = this;
+		// if it was passed additional init values
+		if (data.csdInitValues) {
+			data.csdInitValues.serverDate = new Date(Date.now());
+			_this.setMessage(data.csdInitValues);
+			setTimeout(function() {
+				//_this.setMessage(data.csdInitValues);
+				_this.updateTitle(_this.noteTitle);
+			}, 200);
+		}
 	},
 
 	/**
@@ -82,6 +93,11 @@ var quickNote = SAGE2_App.extend({
 			// determine the number of lines needed
 			let lines = msgParams.clientInput.split("\n");
 			this.needTextZoneHeight = lines.length + 1; // have extra line to show no missing text
+			for (let i = 0; i < lines.length; i++) {
+				if (lines[i].length > this.startingTextZoneWidth) {
+					this.needTextZoneHeight += parseInt(lines[i].length / this.startingTextZoneWidth);
+				}
+			}
 
 			for (let i = 0; i < words.length; i++) {
 				// if a word is larget than the zone width
