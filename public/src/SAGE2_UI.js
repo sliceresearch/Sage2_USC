@@ -2644,7 +2644,7 @@ function setupUiNoteMaker() {
 	var inputField = document.getElementById('uiNoteMakerInputField');
 	inputField.id = "uiNoteMakerInputField";
 	inputField.rows = 5;
-	inputField.cols = 20;
+	inputField.cols = 24;
 	var sendButton = document.getElementById('uiNoteMakerSendButton');
 	// click effect to make a note on the display (app launch)
 	sendButton.addEventListener('click', function() {
@@ -2683,14 +2683,14 @@ function setUiNoteColorSelect(colorNumber) {
 		workingDiv = document.getElementById("uinmColorPick" + i);
 		workingDiv.style.border = "1px solid black";
 		workingDiv.colorWasPicked = false;
-		workingDiv.style.width = "65px";
-		workingDiv.style.height = "45px";
+		workingDiv.style.width = (parseInt(workingDiv.style.width) + 8) + "px";
+		workingDiv.style.height = (parseInt(workingDiv.style.height) + 8) + "px";
 	}
 	workingDiv = document.getElementById("uinmColorPick" + colorNumber);
 	workingDiv.style.border = "3px solid black";
 	workingDiv.colorWasPicked = true;
-	workingDiv.style.width = "59px";
-	workingDiv.style.height = "39px";
+	workingDiv.style.width = (parseInt(workingDiv.style.width) - 8) + "px";
+	workingDiv.style.height = (parseInt(workingDiv.style.height) - 8) + "px";
 }
 
 /**
