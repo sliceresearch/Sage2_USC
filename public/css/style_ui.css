@@ -862,7 +862,7 @@ The z-index is very important.
 
 #uiDrawZoneEraseReference {
 	position:       absolute;
-	display:        "none";
+	display:        none;
 	top:            -100;
 	left:           -100;
 	width:          1;
@@ -991,6 +991,7 @@ The z-index is very important.
 	background: #787878;
 	border: none;
 }
+
 .my_style a.webix_list_item{
 	background: #787878;
 }

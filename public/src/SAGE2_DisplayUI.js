@@ -234,7 +234,7 @@ SAGE2DisplayUI.prototype.resize = function(ratio) {
 
 	// adjust the top menubar width
 	var mainMenuBar = document.getElementById('mainMenuBar');
-	mainMenuBar.style.width = (window.innerWidth - 2) + "px";
+	mainMenuBar.style.width = window.innerWidth + "px";
 	$$("toplayout").adjust();
 
 	this.resizeAppWindows();

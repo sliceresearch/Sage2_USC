@@ -160,7 +160,10 @@ function FileManager(wsio, mydiv, uniqueID) {
 	webix.ui({
 		container: document.getElementById('mainMenuBar'),
 		id: "toplayout",
-	    css: "my_style",
+		// CSS styling for colors
+		css: "my_style",
+		// Remove the css borders for full width
+		borderless: true,
 		rows: [
 			{
 				view: "toolbar",
@@ -377,7 +380,8 @@ function FileManager(wsio, mydiv, uniqueID) {
 		css: { border: "solid 1px #565656;"},
 		rows: [
 			{
-				view: "toolbar", cols: [mymenu, mytoolbar]
+				view: "toolbar",
+				cols: [mymenu, mytoolbar]
 			},
 			{ cols: [
 				{
