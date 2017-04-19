@@ -18,7 +18,7 @@
  */
 
 /* global SAGE2_init, SAGE2_resize, escape, unescape, sage2Version, showDialog */
-/* global removeAllChildren, SAGE2_copyToClipboard, displayUI */
+/* global removeAllChildren, SAGE2_copyToClipboard, displayUI, dateToYYYYMMDDHHMMSS */
 
 "use strict";
 
@@ -110,6 +110,7 @@ function FileManager(wsio, mydiv, uniqueID) {
 	var topmenu_data = [
 		{id: "topfile_menu", value: "File", config: {width: 170, zIndex: 10000}, submenu: [
 			{id: "upload_menu", value: "Upload an image"},
+			{id: "session_menu", value: "Save the session"},
 			{$template: "Separator"},
 			{id: "showfm_menu", value: "Open Media Browser"},
 			{id: "hidefm_menu", value: "Close Media Browser"}
@@ -187,6 +188,9 @@ function FileManager(wsio, mydiv, uniqueID) {
 		} else if (evt === "upload_menu") {
 			// open the file uploader panel
 			showDialog('uploadDialog');
+		} else if (evt === "session_menu") {
+			// open the session popup
+			_this.saveSession();
 		} else if (evt === "showfm_menu") {
 			document.getElementById('fileManager').style.display = "block";
 			SAGE2_resize();
@@ -1274,6 +1278,60 @@ function FileManager(wsio, mydiv, uniqueID) {
 
 			}
 		}
+	};
+
+	this.saveSession = function() {
+		// generate a default name
+		var template = "session_" + dateToYYYYMMDDHHMMSS(new Date());
+
+		// Build a webix dialog
+		webix.ui({
+			view: "window",
+			id: "session_popup",
+			position: "center",
+			modal: true,
+			zIndex: 9999,
+			head: "Save the current session",
+			width: 400,
+			body: {
+				view: "form",
+				borderless: false,
+				elements: [
+					{view: "text", value: template, id: "session_filename",
+						label: "Please enter a session name:", name: "session"},
+					{margin: 5, cols: [
+						{view: "button", value: "Cancel", click: function() {
+							this.getTopParentView().hide();
+						}},
+						{view: "button", value: "Save", type: "form", click: function() {
+							var values = this.getFormView().getValues();
+							wsio.emit('saveSesion', values.session);
+							this.getTopParentView().hide();
+						}}
+					]}
+				],
+				elementsConfig: {
+					labelPosition: "top"
+				}
+			}
+		}).show();
+
+		// Attach handlers for keyboard
+		$$("session_filename").attachEvent("onKeyPress", function(code, e) {
+			// ESC closes
+			if (code === 27 && !e.ctrlKey && !e.shiftKey && !e.altKey) {
+				this.getTopParentView().hide();
+				return false;
+			}
+			// ENTER activates
+			if (code === 13 && !e.ctrlKey && !e.shiftKey && !e.altKey) {
+				var values = this.getFormView().getValues();
+				wsio.emit('saveSesion', values.session);
+				this.getTopParentView().hide();
+				return false;
+			}
+		});
+		$$('session_filename').focus();
 	};
 
 	// Server sends the media files list
