@@ -105,10 +105,10 @@ var quickNote = SAGE2_App.extend({
 					hasModifiedWord = true;
 					let pieces = "";
 					// split it into pieces that will fit within one line
-					while(words[i].length > this.startingTextZoneWidth) {
-						pieces += words[i].substring(0,this.startingTextZoneWidth);
+					while (words[i].length > this.startingTextZoneWidth) {
+						pieces += words[i].substring(0, this.startingTextZoneWidth);
 						pieces += " ";
-						words[i] = words[i].substring(this.startingTextZoneWidth)
+						words[i] = words[i].substring(this.startingTextZoneWidth);
 						this.needTextZoneHeight++; // inflates lines usage by 1
 					}
 					pieces += words[i];
@@ -192,7 +192,7 @@ var quickNote = SAGE2_App.extend({
 		}
 
 		// adjust height to show all text. minimum 5 lines enforce(?)
-		this.needTextZoneHeight = (this.needTextZoneHeight < 5) ? 5: this.needTextZoneHeight;
+		this.needTextZoneHeight = (this.needTextZoneHeight < 5) ? 5 : this.needTextZoneHeight;
 		this.sendResize(this.sage2_width,
 						this.needTextZoneHeight * this.startingFontHeight * this.sizeModification);
 

@@ -303,8 +303,6 @@ var Webview = SAGE2_App.extend({
 			"input, button, textarea, :focus { " +
 				"outline: none; " +
 			"}");
-		// after 2 seconds activate connection to sage server.
-		var _this = this;
 	},
 
 	getContextEntries: function() {
