@@ -32,7 +32,7 @@ certutil -f /tmp/pass -d sql:$HOME/.pki/nssdb -N
 /bin/rm -f /tmp/pass
 
 # Generate new keys
-servers="$HOSTNAME localhost 127.0.0.1"
+servers="$HOSTNAME localhost 127.0.0.1 10.234.2.22"
 
 for f in `echo $servers`
 do
