@@ -122,6 +122,8 @@ var pressingAlt        = true;
 // master SAGE2 server for scalability
 var masterServer       = null;
 var slaveServers       = {};
+// from id to server
+var slaveAppToServer   = {};
 
 var partitions				 = new PartitionList(config);
 var draggingPartition	 = {};
@@ -314,33 +316,37 @@ function initializeSage2Server() {
 	// try to exclude some folders from the monitoring
 	var excludesFiles   = ['.DS_Store', 'Thumbs.db', 'passwd.json'];
 	var excludesFolders = ['assets', 'apps', 'config', 'savedFiles', 'sessions', 'tmp', 'web'];
-	sageutils.monitorFolders(listOfFolders, excludesFiles, excludesFolders,
-		function(change) {
-			console.log(sageutils.header("Monitor") + "Changes detected in", this.root);
-			if (change.modifiedFiles.length > 0) {
-				console.log(sageutils.header("Monitor") + "	Modified files: %j",   change.modifiedFiles);
-				// broadcast the new file list
-				assets.refresh(this.root, function(count) {
-					broadcast('storedFileList', getSavedFilesList());
-				});
+        if (program.slaveports === undefined) {
+		sageutils.monitorFolders(listOfFolders, excludesFiles, excludesFolders,
+			function(change) {
+				console.log(sageutils.header("Monitor") + "Changes detected in", this.root);
+				if (change.modifiedFiles.length > 0) {
+					console.log(sageutils.header("Monitor") + "	Modified files: %j",   change.modifiedFiles);
+					// broadcast the new file list
+					assets.refresh(this.root, function(count) {
+						broadcast('storedFileList', getSavedFilesList());
+					});
+				}
+				if (change.addedFiles.length > 0) {
+					// console.log(sageutils.header("Monitor") + "	Added files:    %j",   change.addedFiles);
+				}
+				if (change.removedFiles.length > 0) {
+					// console.log(sageutils.header("Monitor") + "	Removed files:  %j",   change.removedFiles);
+				}
+				if (change.addedFolders.length > 0) {
+					// console.log(sageutils.header("Monitor") + "	Added folders:    %j", change.addedFolders);
+				}
+				if (change.modifiedFolders.length > 0) {
+					// console.log(sageutils.header("Monitor") + "	Modified folders: %j", change.modifiedFolders);
+				}
+				if (change.removedFolders.length > 0) {
+					// console.log(sageutils.header("Monitor") + "	Removed folders:  %j", change.removedFolders);
+				}
 			}
-			if (change.addedFiles.length > 0) {
-				// console.log(sageutils.header("Monitor") + "	Added files:    %j",   change.addedFiles);
-			}
-			if (change.removedFiles.length > 0) {
-				// console.log(sageutils.header("Monitor") + "	Removed files:  %j",   change.removedFiles);
-			}
-			if (change.addedFolders.length > 0) {
-				// console.log(sageutils.header("Monitor") + "	Added folders:    %j", change.addedFolders);
-			}
-			if (change.modifiedFolders.length > 0) {
-				// console.log(sageutils.header("Monitor") + "	Modified folders: %j", change.modifiedFolders);
-			}
-			if (change.removedFolders.length > 0) {
-				// console.log(sageutils.header("Monitor") + "	Removed folders:  %j", change.removedFolders);
-			}
-		}
-	);
+		);
+        } else {
+		console.log("Slave: skip monitoring assets");
+	}
 
 	// Initialize app loader
 	appLoader = new Loader(mainFolder.path, hostOrigin, config, imageMagickOptions, ffmpegOptions);
@@ -411,9 +417,19 @@ function initializeSage2Server() {
 				masterServer.emit('addSlaveServer', clientDescription);
 			});
 
+			masterServer.on('displayAddSlaveServer', function(wsio,data) {
+				console.log("added slave server ", JSON.stringify(data));
+			});
+
 			masterServer.on('eventInItem', wsEventInItem);
 			masterServer.on('setItemPosition', moveResize);
 			masterServer.on('setItemPositionAndSize', moveResize);
+			masterServer.on('storedFileList', function(wsio,data) {
+				console.log("received storedFileList");
+				// this is causing the process to hang(?)
+				assets.initializeFromList(data, mainFolder, mediaFolders);
+				console.log("actioned storedFileList");
+			});
 
 			masterServer.on('deleteApplication', wsDeleteApplication);
 
@@ -1635,10 +1651,12 @@ function wsStartNewMediaStream(wsio, data) {
 			addEventToUserLog(wsio.id, {type: "mediaStreamStart", data: eLogData, time: Date.now()});
 		});
 
+	// Slave server: relay request to master server
 	if (masterServer!==undefined && masterServer!=null) {
 		console.log("master - start new media stream");
 		masterServer.emit('startNewMediaStream', data);
-		// HACK! fake the first frame response which goes only to the master server
+		// HACK! fake the first frame response which would otherwise go only to the master server
+		// TODO: why does this work?
 	 	wsio.emit('requestNextFrame', {});
 	}
 	
@@ -1956,6 +1974,7 @@ function wsStartNewMediaBlockStream(wsio, data) {
 		console.log("master - start new media block stream");
 		masterServer.emit('startNewMediaBlockStream', data);
 		// HACK! fake the first frame response which goes only to the master server
+		// TODO: how does this work??
 	 	wsio.emit('requestNextFrame', {});
 	}
 }
@@ -2075,6 +2094,7 @@ function wsPrintDebugInfo(wsio, data) {
 }
 
 function wsRequestVideoFrame(wsio, data) {
+	console.log("wsRequestVideoFrame",JSON.stringify(data));
 	SAGE2Items.renderSync[data.id].clients[wsio.id].readyForNextFrame = true;
 	handleNewClientReady(data.id);
 }
@@ -2111,6 +2131,7 @@ function wsFinishedRenderingAppFrame(wsio, data) {
 }
 
 function wsUpdateAppState(wsio, data) {
+	console.log("wsUpdateAppState",JSON.stringify(data));
 	// Using updates only from master
 	if (wsio === masterDisplay && SAGE2Items.applications.list.hasOwnProperty(data.id)) {
 		var app = SAGE2Items.applications.list[data.id];
@@ -3208,6 +3229,7 @@ function wsLoadImageFromBuffer(wsio, data) {
 }
 
 function wsLoadFileFromServer(wsio, data) {
+	console.log("wsLoadFileFromServer", data);
 	if (data.application === "load_session") {
 		// if it's a session, then load it
 		loadSession(data.filename);
@@ -3244,6 +3266,15 @@ function wsLoadFileFromServer(wsio, data) {
 			}
 
 			appInstance.id = getUniqueAppId();
+
+			// Set identity of the slave server so that displays can find it
+			if (masterServer!==undefined && masterServer!=null) {
+				appInstance.slaveServerId = data.slaveServerId;
+				data.slaveServerId = config.host+":"+config.port;
+				masterServer.emit('loadFileFromServer', data);
+			} else {
+				appInstance.slaveServerId = data.slaveServerId;
+			}
 
 			// Add the application in the list of renderSync if needed
 			if (appInstance.animation) {
@@ -3604,6 +3635,7 @@ function wsSetVolume(wsio, data) {
 // **************  Video / Audio Synchonization *****************
 
 function wsPlayVideo(wsio, data) {
+	console.log("wsPlayVideo ", data);
 	if (SAGE2Items.renderSync[data.id] === undefined || SAGE2Items.renderSync[data.id] === null) {
 		return;
 	}
@@ -5317,14 +5349,18 @@ if (program.session) {
 }
 
 function getSAGE2Path(getName) {
+	console.log("getSAGE2Path: "+getName);
 	// pathname: result of the search
 	var pathname = null;
 	// walk through the list of folders
 	for (var f in mediaFolders) {
+		console.log("getSAGE2Path folder: "+f);
 		// Get the folder object
 		var folder = mediaFolders[f];
+		console.log("getSAGE2Path folder at: "+folder);
 		// Look for the folder url in the request
 		var pubdir = getName.split(folder.url);
+		console.log("getSAGE2Path pubdir "+pubdir);
 		if (pubdir.length === 2) {
 			// convert the URL into a path
 			var suburl = path.join('.', pubdir[1]);
@@ -5337,6 +5373,7 @@ function getSAGE2Path(getName) {
 	if (!pathname) {
 		pathname = getName;
 	}
+	console.log("getSAGE2Path result "+pathname);
 	return pathname;
 }
 
@@ -5361,6 +5398,7 @@ function processInputCommand(line) {
 			console.log('save\t\tsave state of running applications into a session');
 			console.log('load\t\tload a session and restore applications');
 			console.log('open\t\topen a file: open file_url [0.5, 0.5]');
+			console.log('openfile\t\topen a FILE: open file_url [0.5, 0.5]');
 			console.log('play\t\tplay a media stream: appid');
 			console.log('pause\t\tpause a media stream: appid');
 			console.log('loop\t\tloop a media stream (yes/no): appid boolean');
@@ -5454,8 +5492,10 @@ function processInputCommand(line) {
                                 if (command.length >= 6) {
                                         resy = parseInt(command[5]);
                                 }
+                                console.log("cmd "+file);
                                 console.log("cmd open resize "+resx+" "+resy);
                                 var mt = assets.getMimeType(getSAGE2Path(file));
+                                console.log("cmd open mimetype "+mt);
                                 if (mt === "application/custom") {
                                         wsLoadApplication(null,
                                                 {application: file,
@@ -5470,6 +5510,35 @@ function processInputCommand(line) {
                                                 rwidth: resx,
 						rheight: resy});
                                 }
+                        } else {
+                                console.log(sageutils.header("Command") + "should be: open /user/file.pdf [0.5 0.5]");
+                        }
+                        break;
+                }
+		// deprecated - to be removed
+                case 'openfile': {
+                        if (command[1] !== undefined) {
+                                var pos  = [0.0, 0.0];
+                                var file = command[1];
+                                var resx = undefined;
+                                var resy = undefined;
+                                if (command.length >= 4) {
+                                        pos = [parseFloat(command[2]), parseFloat(command[3])];
+                                }
+                                if (command.length >= 5) {
+                                        resx = parseInt(command[4]);
+                                }
+                                if (command.length >= 6) {
+                                        resy = parseInt(command[5]);
+                                }
+                                console.log("cmd openfile "+file);
+                                console.log("cmd openfile resize "+resx+" "+resy);
+				wsLoadFileFromServer(null, {application: "something",
+					filename: file,
+					user: "127.0.0.1:42",
+					position: pos,
+					rwidth: resx,
+					rheight: resy});
                         } else {
                                 console.log(sageutils.header("Command") + "should be: open /user/file.pdf [0.5 0.5]");
                         }
@@ -8557,6 +8626,8 @@ function pointerCloseGesture(uniqueID, pointerX, pointerY, time, gesture) {
 }
 
 function handleNewApplication(appInstance, videohandle) {
+	console.log("handleNewApplication", JSON.stringify(appInstance));
+	//appInstance.slaveServerId = config.host+":"+config.port;
 	broadcast('createAppWindow', appInstance);
 	broadcast('createAppWindowPositionSizeOnly', getAppPositionSize(appInstance));
 
