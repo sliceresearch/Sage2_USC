@@ -31,8 +31,8 @@ var quickNote = SAGE2_App.extend({
 		at 300px wide, this is 15px per character.
 		each character is roughly 26.8px tall
 		*/
-		this.startingFontSize       = 20;
-		this.startingAppWidth       = 300; // Hardcode necessary to keep scale on resize/restart/reload
+		this.startingFontSize       = 19.9;
+		this.startingAppWidth       = 300; // Hardcode necessary(?) to keep scale on resize/restart/reload
 		this.startingAppHeight      = 134; // 5 lines is 26.8 * 5 = 134;
 		this.startingFontHeight     = 26.8;
 		this.startingTextZoneWidth  = 25;
