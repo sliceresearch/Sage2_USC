@@ -303,6 +303,16 @@ var Webview = SAGE2_App.extend({
 			"input, button, textarea, :focus { " +
 				"outline: none; " +
 			"}");
+		// after 2 seconds activate connection to sage server.
+		var _this = this;
+		setTimeout(function() {
+			// call the init connection function telling the the hostname shown in upper right, this webview appid, session
+			var scriptToSend = "SAGE2Connection.initS2Connection('"
+				+ document.getElementById("machine").textContent + "', '"
+				+ _this.id + "', '"
+				+ getCookie("session") + "')";
+			_this.element.executeJavaScript(scriptToSend);
+		},200);
 	},
 
 	getContextEntries: function() {
