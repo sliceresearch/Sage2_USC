@@ -85,7 +85,7 @@ function doExit() {
 }
 
 # wait for everything to get started...!
-sleep 10
+sleep 20
 
 while true
 do
