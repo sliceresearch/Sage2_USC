@@ -706,6 +706,7 @@ var pdf_viewer = SAGE2_App.extend({
 	},
 
 	load: function(date) {
+
 		/*
 		There has to be a better way than this.
 		There is currently a bug(?) where this load will double proc on remote site interaction.

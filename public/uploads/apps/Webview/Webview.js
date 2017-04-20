@@ -312,7 +312,7 @@ var Webview = SAGE2_App.extend({
 				+ _this.id + "', '"
 				+ getCookie("session") + "')";
 			_this.element.executeJavaScript(scriptToSend);
-		},200);
+		}, 200);
 	},
 
 	getContextEntries: function() {
