@@ -643,6 +643,18 @@ function setupListeners(anWsio) {
 				applications[appId].refresh(new Date(date));
 				applications[appId].setValidBlocksFalse();
 				anWsio.emit('requestVideoFrame', {id: appId});
+				//var slaveServerId = data.slaveServerId;
+				//if (slaveServerId!==undefined && slaveServerId!==null) {
+				//	console.log("slaveServerId",slaveServerId);
+				//	var sws = slaveConnections[slaveServerId];
+				//	if (sws !== null && sws !== undefined) {
+				//		console.log("requestVideoFrame...");
+				//		sws.emit('requestVideoFrame', {id: data.id});
+				//	}
+				//} else {
+				//	anWsio.emit('requestVideoFrame', {id: data.id});
+				//}
+
 			}
 		}
 	});
@@ -1596,7 +1608,6 @@ function createAppWindow(data, anWsio, parentId, titleBarHeight, titleTextSize, 
 			}
 			if (data.application === "movie_player") {
 				setTimeout(function() {
-					anWsio.emit('requestVideoFrame', {id: data.id});
 					var slaveServerId = data.slaveServerId;
 					if (slaveServerId!==undefined && slaveServerId!==null) {
 						console.log("slaveServerId",slaveServerId);
@@ -1604,9 +1615,9 @@ function createAppWindow(data, anWsio, parentId, titleBarHeight, titleTextSize, 
 						if (sws !== null && sws !== undefined) {
 							console.log("requestVideoFrame...");
 							sws.emit('requestVideoFrame', {id: data.id});
-							
 						}
-						
+					} else {
+						anWsio.emit('requestVideoFrame', {id: data.id});
 					}
 				}, 500);
 			}

@@ -3263,13 +3263,19 @@ function wsLoadFileFromServer(wsio, data) {
 				}
 			}
 
-			appInstance.id = getUniqueAppId();
+			if (data.globalAppId !==null && data.globalAppId !==undefined) {
+				appInstance.id = data.globalAppId;
+			} else {
+				appInstance.id = getUniqueAppId();
+			}
 
-			// Set identity of the slave server so that displays can find it
+			// if on slave server - delegate handleNewApplication to master
 			if (masterServer!==undefined && masterServer!=null) {
+				// Set identity of the slave server so that displays can find it
 				appInstance.slaveServerId = data.slaveServerId;
 				data.slaveServerId = config.host+":"+config.port;
-				//masterServer.emit('loadFileFromServer', data);
+				data.globalAppId = appInstance.id;
+				masterServer.emit('loadFileFromServer', data);
 			} else {
 				appInstance.slaveServerId = data.slaveServerId;
 			}
@@ -3287,7 +3293,10 @@ function wsLoadFileFromServer(wsio, data) {
 				}
 			}
 
-			handleNewApplication(appInstance, videohandle);
+			// ONLY if on master - handle here and now
+			//if (masterServer===undefined || masterServer===null) {
+				handleNewApplication(appInstance, videohandle);
+			//}
 			var resizeCmd = {id: appInstance.id, keepRatio: true};
                         if (data.rwidth !== undefined) {
                           resizeCmd.width = data.rwidth; 
@@ -4737,7 +4746,7 @@ var getUniqueAppId = function(param) {
 		getUniqueAppId.count = 0;
 		return;
 	}
-	var id = "app_" + getUniqueAppId.count.toString();
+	var id = "app_" + config.host + ":" + config.secure_port + "_" + getUniqueAppId.count.toString();
 	getUniqueAppId.count++;
 	return id;
 };
@@ -8635,8 +8644,10 @@ function pointerCloseGesture(uniqueID, pointerX, pointerY, time, gesture) {
 function handleNewApplication(appInstance, videohandle) {
 	console.log("handleNewApplication", JSON.stringify(appInstance));
 	//appInstance.slaveServerId = config.host+":"+config.port;
-	broadcast('createAppWindow', appInstance);
-	broadcast('createAppWindowPositionSizeOnly', getAppPositionSize(appInstance));
+	if (masterServer===undefined || masterServer===null) {
+		broadcast('createAppWindow', appInstance);
+		broadcast('createAppWindowPositionSizeOnly', getAppPositionSize(appInstance));
+	}
 
 	// reserve 20 backmost layers for partitions
 	var zIndex = SAGE2Items.applications.numItems + SAGE2Items.portals.numItems + 20;
