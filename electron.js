@@ -32,6 +32,12 @@ var version    = require('./package.json').version;
 /**
  * Setup the command line argument parsing (commander module)
  */
+var args = process.argv;
+if (args.length === 1) {
+	// seems to make commander happy when using binary packager
+	args = args[0];
+}
+
 commander
 	.version(version)
 	.option('-s, --server <s>',    'Server URL (string)', 'http://localhost:9292')
@@ -49,7 +55,7 @@ commander
 	.option('--hash <s>',          'Server password hash (string)', null)
 	.option('--cache',             'Clear the cache', false)
 	.option('--console',           'Open the devtools console', false)
-	.parse(process.argv);
+	.parse(args);
 
 
 if (commander.plugins) {
