@@ -40,6 +40,8 @@ window.URL = (window.URL || window.webkitURL || window.msURL || window.oURL);
 
 var clientID;
 var wsio;
+var masterWsio; // === wsio
+
 // slave servers to subscribe to
 var slaveServers = {};
 var slaveConnections = {};
@@ -218,6 +220,7 @@ function SAGE2_init() {
 	console.log("clientID: " + clientID);
 
 	wsio = new WebsocketIO();
+	masterWsio = wsio;
 	console.log("Connected to server: ", window.location.origin);
 
 	// Detect the current browser
@@ -289,7 +292,9 @@ function slaveInit(id) {
 	slaveWsio.open(function() {
 		console.log("... connection opened");
 		slaveConnections[id]=slaveWsio;
-		setupSlaveListeners(slaveWsio);
+		//setupSlaveListeners(slaveWsio);
+		// TODO: Check, does it really work to use standard setupListeners for slave server connection?
+		setupListeners(slaveWsio);
 		var clientDescription = {
 			clientType: "display",
 			clientID: clientID,
@@ -306,71 +311,10 @@ function slaveInit(id) {
 	});
 }
 
-
-// FIXME: investigate: why not use setupListeners for slaves too?
-function setupSlaveListeners(anWsio) {
-
-        anWsio.on('updateMediaStreamFrame', function(dataOrBuffer) {
-                // NB: Cloned code
-                var data;
-                if (dataOrBuffer.id !== undefined) {
-                  console.log("display.UpdateMediaStreamFrame: parameter is record");
-                  data = dataOrBuffer;
-                } else {
-                  console.log("display.UpdateMediaStreamFrame: parameter is Buffer");
-                  data = {}
-                  // buffer: id, state-type, state-encoding, state-src
-                  data.id = byteBufferToString(dataOrBuffer);
-                  var buf2 = dataOrBuffer.slice(data.id.length + 1, dataOrBuffer.length);
-                  data.state = {}
-                  data.state.type = byteBufferToString(buf2);
-                  var buf3 = buf2.subarray(data.state.type.length + 1);
-                  data.state.encoding = "base64";
-                  var buf4 = buf3.subarray(data.state.encoding.length + 1, buf3.length);
-                  // There is a maximum stack size. We cannot call String.fromCharCode with as many arguments as we want
-                  //data.state.src = btoa(String.fromCharCode.apply(null, buf4));
-                  var uarr = buf4;
-                  var strings = [], chunksize = 0xffff;
-                  var len = uarr.length;
-                  for (var i = 0; i * chunksize < len; i++){
-                    strings.push(String.fromCharCode.apply(null, uarr.subarray(i * chunksize, (i + 1) * chunksize)));
-                  }
-                  data.state.src = btoa(strings.join(''));
-                }
-                anWsio.emit('receivedMediaStreamFrame', {id: data.id});
-                var app = applications[data.id];
-                if (app !== undefined && app !== null) {
-                        app.SAGE2Load(data.state, new Date(data.date));
-                }
-                // update clones in data-sharing portals
-                var key;
-                for (key in dataSharingPortals) {
-                        app = applications[data.id + "_" + key];
-                        if (app !== undefined && app !== null) {
-                                app.SAGE2Load(data.state, new Date(data.date));
-                        }
-                }
-        });
-
-	anWsio.on('updateMediaBlockStreamFrame', function(data) {
-		var appId     = byteBufferToString(data);
-		var blockIdx  = byteBufferToInt(data.subarray(appId.length + 1, appId.length + 3));
-		var date      = byteBufferToInt(data.subarray(appId.length + 3, appId.length + 11));
-		var yuvBuffer = data.subarray(appId.length + 11, data.length);
-		if (applications[appId] !== undefined && applications[appId] !== null) {
-			applications[appId].textureData(blockIdx, yuvBuffer);
-			if (applications[appId].receivedBlocks.every(isTrue) === true) {
-				applications[appId].refresh(new Date(date));
-				applications[appId].setValidBlocksFalse();
-				anWsio.emit('receivedMediaBlockStreamFrame', {id: appId});
-			}
-		}
-	});
-}
-
 function setupListeners(anWsio) {
 
 
+	if (anWsio===masterWsio) {
 	anWsio.on('initialize', function(data) {
 		var startTime  = new Date(data.start);
 
@@ -383,15 +327,18 @@ function setupListeners(anWsio) {
 		// Request list of assets
 		wsio.emit('requestStoredFiles');
 	});
+	}
 
+	if (anWsio===masterWsio) {
 	anWsio.on('setAsMasterDisplay', function() {
 		isMaster = true;
 	});
+	}
 
 	// new media streaming slave registered
 	anWsio.on('displayAddSlaveServer', function(data) {
 		console.log("Possibly-new slave server ", data);
-		console.log("Slave servers:", slaveServers);
+		console.log("Current slave servers:", slaveServers);
 		if (!(data.id in slaveServers)) {
 			console.log("... add new slave server ", data);
 			slaveServers[data.id]=data;
@@ -425,7 +372,7 @@ function setupListeners(anWsio) {
 	});
 
 
-
+	if (anWsio===masterWsio) {
 	anWsio.on('setupDisplayConfiguration', function(json_cfg) {
 		var i;
 		var http_port;
@@ -453,6 +400,7 @@ function setupListeners(anWsio) {
 		}
 		makeSvgBackgroundForWidgetConnectors(ui.main.style.width, ui.main.style.height);
 	});
+	}
 
 	anWsio.on('hideui', function(param) {
 		if (param) {
@@ -473,10 +421,13 @@ function setupListeners(anWsio) {
 		}
 	});
 
+	if (anWsio===masterWsio) {
 	anWsio.on('setupSAGE2Version', function(version) {
 		ui.updateVersionText(version);
 	});
+	}
 
+	if (anWsio===masterWsio) {
 	anWsio.on('setSystemTime', function(data) {
 		var m = moment(data.date);
 		var local = new Date();
@@ -484,6 +435,7 @@ function setupListeners(anWsio) {
 		m.add(offset, 'minutes');
 		ui.setTime(m);
 	});
+	}
 
 	anWsio.on('addRemoteSite', function(data) {
 		ui.addRemoteSite(data);
@@ -503,9 +455,11 @@ function setupListeners(anWsio) {
 		}
 	});
 
-	anWsio.on('drawingInit', function(data) {
-		ui.drawingInit(data);
-	});
+	//if (anWsio===masterWsio) {
+		anWsio.on('drawingInit', function(data) {
+			ui.drawingInit(data);
+		});
+	//}
 
 	anWsio.on('drawingUpdate', function(data) {
 		ui.updateObject(data);
@@ -623,10 +577,10 @@ function setupListeners(anWsio) {
                 // NB: Cloned code
                 var data;
                 if (dataOrBuffer.id !== undefined) {
-                  console.log("display.UpdateMediaStreamFrame: parameter is record");
+                  //console.log("display.UpdateMediaStreamFrame: parameter is record");
                   data = dataOrBuffer;
                 } else {
-                  console.log("display.UpdateMediaStreamFrame: parameter is Buffer");
+                  //console.log("display.UpdateMediaStreamFrame: parameter is Buffer");
                   data = {}
                   // buffer: id, state-type, state-encoding, state-src
                   data.id = byteBufferToString(dataOrBuffer);
@@ -707,12 +661,14 @@ function setupListeners(anWsio) {
 		}
 	});
 
+	//if (anWsio===masterWsio) {
 	anWsio.on('updateValidStreamBlocks', function(data) {
 		if (applications[data.id] !== undefined && applications[data.id] !== null) {
 			applications[data.id].validBlocks = data.blockList;
 			applications[data.id].setValidBlocksFalse();
 		}
 	});
+	//}
 
 	anWsio.on('updateWebpageStreamFrame', function(data) {
 		anWsio.emit('receivedWebpageStreamFrame', {id: data.id, client: clientID});
@@ -811,6 +767,7 @@ function setupListeners(anWsio) {
 		}
 	});
 
+	//if (anWsio===masterWsio) {
 	anWsio.on('updateItemOrder', function(order) {
 		resetIdle();
 
@@ -831,6 +788,7 @@ function setupListeners(anWsio) {
 			}
 		}
 	});
+	//}
 
 	anWsio.on('hoverOverItemCorner', function(elem_data) {
 		var selectedElem = document.getElementById(elem_data.elemId);

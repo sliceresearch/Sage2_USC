@@ -2131,7 +2131,6 @@ function wsFinishedRenderingAppFrame(wsio, data) {
 }
 
 function wsUpdateAppState(wsio, data) {
-	console.log("wsUpdateAppState",JSON.stringify(data));
 	// Using updates only from master
 	if (wsio === masterDisplay && SAGE2Items.applications.list.hasOwnProperty(data.id)) {
 		var app = SAGE2Items.applications.list[data.id];
@@ -3229,7 +3228,6 @@ function wsLoadImageFromBuffer(wsio, data) {
 }
 
 function wsLoadFileFromServer(wsio, data) {
-	console.log("wsLoadFileFromServer", data);
 	if (data.application === "load_session") {
 		// if it's a session, then load it
 		loadSession(data.filename);
@@ -3271,7 +3269,7 @@ function wsLoadFileFromServer(wsio, data) {
 			if (masterServer!==undefined && masterServer!=null) {
 				appInstance.slaveServerId = data.slaveServerId;
 				data.slaveServerId = config.host+":"+config.port;
-				masterServer.emit('loadFileFromServer', data);
+				//masterServer.emit('loadFileFromServer', data);
 			} else {
 				appInstance.slaveServerId = data.slaveServerId;
 			}
@@ -3383,12 +3381,21 @@ function initializeLoadedVideo(appInstance, videohandle) {
 	}
 }
 
+var framesDropped = 0;
+function frameDrop(id) {
+	framesDropped = framesDropped + 1;
+	if (framesDropped>0 && framesDropped % 10 === 0) {
+		console.log("Frames dropped: ",framesDropped);
+	}	
+}
+
 // move this function elsewhere
 function handleNewVideoFrame(id) {
 	var videohandle = SAGE2Items.renderSync[id];
 
 	videohandle.newFrameGenerated = true;
 	if (!allTrueDict(videohandle.clients, "readyForNextFrame")) {
+		frameDrop(id);
 		return false;
 	}
 

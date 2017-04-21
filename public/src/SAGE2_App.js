@@ -86,7 +86,6 @@ var SAGE2_App = Class.extend({
 	* @param data {Object} contains initialization values (id, width, height, state, ...)
 	*/
 	SAGE2Init: function(type, data) {
-		console.log("appInit ",JSON.stringify(data));
 		// Save the application ID
 		this.id = data.id;
 		// Save the type of the application
@@ -151,9 +150,6 @@ var SAGE2_App = Class.extend({
 		this.fileReceived   = false;
 
 		this.slaveServer = data.slaveServer;
-		if (data.slaveServer !== null && data.slaveServer !== undefined) {
-			console.log("AppInit - slave server exists");
-		}
 
 		this.SAGE2CopyState(data.state);
 		this.SAGE2InitializeAppOptionsFromState();
@@ -484,31 +480,27 @@ var SAGE2_App = Class.extend({
 	},
 
 	SAGE2Sync: function(updateRemote) {
-		console.log("SAGE2Sync");
 		this.SAGE2UpdateAppOptionsFromState();
 
 		if (isMaster) {
-			console.log("SAGE2Sync isMaster: emit updateAppState");
-
 			var syncedState = this.SAGE2CopySyncedState(this.state, this.SAGE2StateOptions);
-			wsio.emit('updateAppState', {
-				id: this.id,
-				localState: this.state,
-				remoteState: syncedState,
-				updateRemote: updateRemote
-			});
 
 
 			if (this.slaveServer!==undefined && this.slaveServer!==null) {
-				console.log("send update to slaveServer");
 				this.slaveServer.emit('updateAppState', {
 					id: this.id,
 					localState: this.state,
 					remoteState: syncedState,
 					updateRemote: updateRemote
 				});
+			} else {
+				wsio.emit('updateAppState', {
+					id: this.id,
+					localState: this.state,
+					remoteState: syncedState,
+					updateRemote: updateRemote
+				});
 			}
-
 		}
 	},
 
