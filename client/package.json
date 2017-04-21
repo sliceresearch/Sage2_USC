@@ -4,7 +4,7 @@
   "description": "Electron-based SAGE2 client",
   "main": "electron.js",
   "devDependencies": {
-    "electron-prebuilt": "latest",
+    "electron": "latest",
     "electron-packager": "latest"
   },
   "dependencies": {

@@ -32,6 +32,12 @@ var version    = require('./package.json').version;
 /**
  * Setup the command line argument parsing (commander module)
  */
+var args = process.argv;
+if (args.length === 1) {
+	// seems to make commander happy when using binary packager
+	args = args[0];
+}
+
 commander
 	.version(version)
 	.option('-s, --server <s>',    'Server URL (string)', 'http://localhost:9292')
@@ -49,7 +55,7 @@ commander
 	.option('--hash <s>',          'Server password hash (string)', null)
 	.option('--cache',             'Clear the cache', false)
 	.option('--console',           'Open the devtools console', false)
-	.parse(process.argv);
+	.parse(args);
 
 
 if (commander.plugins) {
@@ -155,9 +161,10 @@ function createWindow() {
 			nodeIntegration: true,
 			webSecurity: true,
 			backgroundThrottling: false,
-			plugins: commander.plugins
-			// allowDisplayingInsecureContent: true
-			// allowRunningInsecureContent: true
+			plugins: commander.plugins,
+			// allow this for now, problem loading webview recently
+			allowDisplayingInsecureContent: true,
+			allowRunningInsecureContent: true
 		}
 	};
 
@@ -183,6 +190,14 @@ function createWindow() {
 		openWindow();
 	}
 
+	// When the webview tries to download something
+	electron.session.defaultSession.on('will-download', (event, item, webContents) => {
+		// do nothing
+		event.preventDefault();
+		// send message to the render process (browser)
+		mainWindow.webContents.send('warning', 'File download not supported');
+	});
+
 	// Mute the audio (just in case)
 	var playAudio = commander.audio || (commander.display === 0);
 	mainWindow.webContents.setAudioMuted(!playAudio);
@@ -203,6 +218,9 @@ function createWindow() {
 	mainWindow.webContents.on('will-navigate', function(ev) {
 		// ev.preventDefault();
 	});
+
+	// Once all done, prevent changing the fullscreen state
+	mainWindow.setFullScreenable(false);
 }
 
 /**
