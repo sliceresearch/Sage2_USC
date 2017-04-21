@@ -49,6 +49,7 @@ commander
 	.option('-n, --no_decoration', 'Remove window decoration (boolean)', false)
 	.option('-x, --xorigin <n>',   'Window position x (int)', myParseInt, 0)
 	.option('-y, --yorigin <n>',   'Window position y (int)', myParseInt, 0)
+	.option('-m, --monitor <n>',   'Select a monitor (int)', myParseInt, null)
 	.option('--width <n>',         'Window width (int)', myParseInt, 1280)
 	.option('--height <n>',        'Window height (int)', myParseInt, 720)
 	.option('--password <s>',      'Server password (string)', null)
@@ -94,8 +95,6 @@ function openWindow() {
 		}
 	}
 
-
-
 	// Setup initial position and size
 	mainWindow.setBounds({
 		x:      commander.xorigin,
@@ -139,6 +138,14 @@ function openWindow() {
 		}
 	}
 	mainWindow.loadURL(location);
+
+	mainWindow.on('show', function() {
+		if (commander.monitor !== null) {
+			mainWindow.setFullScreen(true);
+		}
+		// Once all done, prevent changing the fullscreen state
+		mainWindow.setFullScreenable(false);
+	});
 }
 
 /**
@@ -147,6 +154,21 @@ function openWindow() {
  * @method     createWindow
  */
 function createWindow() {
+	// If a monitor is specified
+	if (commander.monitor !== null) {
+		// get all the display data
+		let displays = electron.screen.getAllDisplays();
+		// get the bounds of the interesting one
+		let bounds = displays[commander.monitor].bounds;
+		// overwrite the values specified
+		commander.width   = bounds.width;
+		commander.height  = bounds.height;
+		commander.xorigin = bounds.x;
+		commander.yorigin = bounds.y;
+		commander.no_decoration = true;
+	}
+
+	// Create option data structure
 	var options = {
 		width:  commander.width,
 		height: commander.height,
@@ -218,9 +240,6 @@ function createWindow() {
 	mainWindow.webContents.on('will-navigate', function(ev) {
 		// ev.preventDefault();
 	});
-
-	// Once all done, prevent changing the fullscreen state
-	mainWindow.setFullScreenable(false);
 }
 
 /**
