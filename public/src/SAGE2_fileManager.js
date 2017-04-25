@@ -139,12 +139,6 @@ function FileManager(wsio, mydiv, uniqueID) {
 			{id: "imageservice_menu",  value: "Large image processing"},
 			{id: "videoservice_menu",  value: "Video processing"}
 		]},
-		{id: "mainadmin_menu",  value: "Admin", config: {width: 170, zIndex: 10000}, submenu: [
-			{id: "display_menu",  value: "Display client 0"},
-			{id: "overview_menu", value: "Display overview client"},
-			{id: "audio_menu",    value: "Audio manager"},
-			{id: "console_menu",  value: "Server console"}
-		]},
 		{id: "mainhelp_menu",  value: "Help", config: {zIndex: 10000}, submenu: [
 			{id: "help_menu",  value: "Help"},
 			{id: "info_menu",  value: "Information"},
@@ -152,12 +146,30 @@ function FileManager(wsio, mydiv, uniqueID) {
 		]}
 	];
 
+	// Advanced setting, right-aligned in the top menubar
+	var advancedToolbar = {
+		view: "toolbar", paddingY: 0, css: {'text-align': 'right'}, elements: [
+			{view: "menu", id: "advancedToolbar", paddingY: 0, borderless: true, data: [
+				{id: "mainadmin_menu",    value: "Advanced", config: {zIndex: 10000}, submenu: [
+					{id: "display_menu",  value: "Display client 0"},
+					{id: "overview_menu", value: "Display overview client"},
+					{id: "audio_menu",    value: "Audio manager"},
+					{id: "console_menu",  value: "Server console"}
+				]}
+			]}
+		]
+	};
+
 	var topmenu = {
 		id: "topmenu",
 		view: "menu",
-		// openAction: "click", // click to open
+		// click to open
+		// openAction: "click",
 		data: topmenu_data
 	};
+
+	// Top menubar above the UI
+	// Create the top menubar, with menu and avanced settings in the right-aligned toolbar
 	webix.ui({
 		container: document.getElementById('mainMenuBar'),
 		id: "toplayout",
@@ -165,18 +177,16 @@ function FileManager(wsio, mydiv, uniqueID) {
 		css: "my_style",
 		// Remove the css borders for full width
 		borderless: true,
-		rows: [
-			{
-				view: "toolbar",
-				cols: [topmenu]
-			}
-		]
+		rows: [{
+			view: "toolbar",
+			cols: [topmenu, advancedToolbar]
+		}]
 	});
 
 	// Disable the screenshot menu. Will wbe enabled later froms server
 	$$('topmenu').disableItem('wallScreenshot_menu');
 
-	// Top menubar above the UI
+	// Set the actions for the top menubar
 	$$("topmenu").attachEvent("onMenuItemClick", function(evt) {
 		var mainUI = document.getElementById('mainUI');
 		if (evt === "hidefm_menu") {
@@ -223,7 +233,7 @@ function FileManager(wsio, mydiv, uniqueID) {
 			// Open the popup
 			webix.alert({
 				type: "alert-warning",
-				title: "SAGE2 (tm)",
+				title: "SAGE2\™",
 				width: "420px",
 				ok: "OK",
 				text: versionText
@@ -232,12 +242,6 @@ function FileManager(wsio, mydiv, uniqueID) {
 			window.open("help/info.html", '_blank');
 		} else if (evt === "help_menu") {
 			window.open("help/index.html", '_blank');
-		} else if (evt === "display_menu") {
-			var displayUrl = "http://" + window.location.hostname + _this.http_port +  "/display.html?clientID=0";
-			window.open(displayUrl, '_blank');
-		} else if (evt === "overview_menu") {
-			var overviewUrl = "http://" + window.location.hostname + _this.http_port +  "/display.html?clientID=-1";
-			window.open(overviewUrl, '_blank');
 		} else if (evt === "imageservice_menu") {
 			var imageUrl = "https://sage2rtt.evl.uic.edu:3043/upload";
 			window.open(imageUrl, '_blank');
@@ -247,21 +251,13 @@ function FileManager(wsio, mydiv, uniqueID) {
 		} else if (evt === "videoservice_menu") {
 			var videoUrl = "https://sage2rtt.evl.uic.edu:3043/video/";
 			window.open(videoUrl, '_blank');
-		} else if (evt === "audio_menu") {
-			var audioUrl = "http://" + window.location.hostname + _this.http_port +  "/audioManager.html";
-			window.open(audioUrl, '_blank');
-		} else if (evt === "drawing_menu") {
-			// window.open("drawing.html", '_blank');
-		} else if (evt === "console_menu") {
-			window.open("admin/console.html", '_blank');
 		} else if (evt === "1x1_menu") {
 			// create partition division of screen
-			wsio.emit('partitionScreen',
-				{
-					type: "row",
-					ptn: true,
-					size: 12
-				});
+			wsio.emit('partitionScreen', {
+				type: "row",
+				ptn: true,
+				size: 12
+			});
 		} else if (evt === "2x1_menu") {
 			// create partition division of screen
 			wsio.emit('partitionScreen',
@@ -366,6 +362,26 @@ function FileManager(wsio, mydiv, uniqueID) {
 			wsio.emit('partitionsGrabAllContent');
 		} else if (evt === "wallScreenshot_menu") {
 			wsio.emit("startWallScreenshot");
+		} else {
+			// dunno
+		}
+	});
+
+	// Set the actions for the advanced menu
+	$$("advancedToolbar").attachEvent("onMenuItemClick", function(evt) {
+		if (evt === "display_menu") {
+			var displayUrl = "http://" + window.location.hostname + _this.http_port +  "/display.html?clientID=0";
+			window.open(displayUrl, '_blank');
+		} else if (evt === "overview_menu") {
+			var overviewUrl = "http://" + window.location.hostname + _this.http_port +  "/display.html?clientID=-1";
+			window.open(overviewUrl, '_blank');
+		} else if (evt === "audio_menu") {
+			var audioUrl = "http://" + window.location.hostname + _this.http_port +  "/audioManager.html";
+			window.open(audioUrl, '_blank');
+		} else if (evt === "drawing_menu") {
+			// window.open("drawing.html", '_blank');
+		} else if (evt === "console_menu") {
+			window.open("admin/console.html", '_blank');
 		} else {
 			// dunno
 		}
@@ -1611,7 +1627,8 @@ function FileManager(wsio, mydiv, uniqueID) {
 			return true;
 		});
 
-		var adminmenu = $$('topmenu').getSubMenu('mainadmin_menu');
+		// Adding list of diplay clients
+		var adminmenu = $$('advancedToolbar').getSubMenu('mainadmin_menu');
 		var displayList = [];
 		// add overview client
 		displayList[0] = {
@@ -1637,5 +1654,6 @@ function FileManager(wsio, mydiv, uniqueID) {
 			config: {zIndex: 10000},
 			submenu: displayList
 		});
+
 	};
 }
