@@ -2,5 +2,7 @@
 
 ./node_modules/.bin/electron-packager ./ --platform=darwin --arch=x64 --icon=sage2.icns --overwrite
 
-cp View-mac.command SAGE2_client-darwin-x64
+cp README.mac     SAGE2_client-darwin-x64/README
+cp View.mac       SAGE2_client-darwin-x64/Display0.command
+cp Fullscreen.mac SAGE2_client-darwin-x64/Fullscreen.command
 

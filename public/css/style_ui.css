@@ -817,11 +817,17 @@ The z-index is very important.
 #uiNoteMakerInputField {
 	resize: none;
 	font-size: 20px;
+	font-family: Lucidia Console, Monaco, monospace;
+}
+
+.uinmColorPickColumn {
+	height: 71px;
+	width: 	101px;
 }
 
 .uinmColorPickBlock {
-	width: 	65px;
-	height: 45px;
+	width: 	95px;
+	height: 65px;
 	border: 1px solid black;
 }
 

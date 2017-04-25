@@ -2896,6 +2896,10 @@ function wsLoadApplication(wsio, data) {
 
 		// Get the drop position and convert it to wall coordinates
 		var position = data.position || [0, 0];
+
+
+
+
 		if (position[0] > 1) {
 			// value in pixels, used as origin
 			appInstance.left = position[0];
@@ -2927,6 +2931,67 @@ function wsLoadApplication(wsio, data) {
 			appInstance.width  = initialSize[0];
 			appInstance.height = initialSize[1];
 			appInstance.aspect = initialSize[0] / initialSize[1];
+		}
+
+		/*
+		If this app is launched from csd command and the position isn't specified, then need to calculate
+		First check if it is the first app, they all start from the same place
+		If not the first, then check if the position of (last x + last width + padding + this width < wall width)
+			if fits, add to this row
+			if not fit, then check if fits on next row (last y + last tallest + padding + this height < wall height)
+				if fit, add to next row
+				if no fit, then restart
+		*/
+		if (data.csdLaunch && !data.wasCsdPositionStated) {
+			let xApp, yApp;
+			// if this is the first app.
+			if (csdDataStructure.appLaunch.xLast === -1) {
+				xApp = csdDataStructure.appLaunch.xStart;
+				yApp = csdDataStructure.appLaunch.yStart;
+			} else {
+				// if not the first app, check that this app fits in the current row
+				let fit = false;
+				if (csdDataStructure.appLaunch.xLast + csdDataStructure.appLaunch.widthLast
+				+ csdDataStructure.appLaunch.padding + appInstance.width < config.totalWidth) {
+					if (csdDataStructure.appLaunch.yLast + appInstance.height < config.totalHeight) {
+						fit = true;
+					}
+				}
+				// if the app fits, then let use the modified position
+				if (fit) {
+					xApp = csdDataStructure.appLaunch.xLast + csdDataStructure.appLaunch.widthLast
+					+ csdDataStructure.appLaunch.padding;
+					yApp = csdDataStructure.appLaunch.yLast;
+				} else { // need to see if fits on next row or restart.
+					// either way changing row, set this app's height as tallest in row.
+					csdDataStructure.appLaunch.tallestInRow = appInstance.height;
+					// if fits on next row, put it there
+					if (csdDataStructure.appLaunch.yLast + csdDataStructure.appLaunch.tallestInRow
+					+ csdDataStructure.appLaunch.padding + appInstance.height < config.totalHeight) {
+						xApp = csdDataStructure.appLaunch.xStart;
+						yApp = csdDataStructure.appLaunch.yLast + csdDataStructure.appLaunch.tallestInRow
+						+ csdDataStructure.appLaunch.padding;
+					} else { // doesn't fit, restart
+						xApp = csdDataStructure.appLaunch.xStart;
+						yApp = csdDataStructure.appLaunch.yStart;
+					}
+				}
+			}
+			// set the app values
+			appInstance.left = xApp;
+			appInstance.top = yApp;
+			// track the values to position adjust next app
+			csdDataStructure.appLaunch.xLast = appInstance.left;
+			csdDataStructure.appLaunch.yLast = appInstance.top;
+			csdDataStructure.appLaunch.widthLast = appInstance.width;
+			csdDataStructure.appLaunch.heightLast = appInstance.height;
+			if (appInstance.height > csdDataStructure.appLaunch.tallestInRow) {
+				csdDataStructure.appLaunch.tallestInRow = appInstance.height;
+			}
+		}
+		// if the csd action supplied more values to init with
+		if (data.csdLaunch && data.csdInitValues) {
+			appInstance.csdInitValues = data.csdInitValues;
 		}
 
 		handleNewApplication(appInstance, null);
@@ -9381,29 +9446,21 @@ function csdLaunchAppWithValues(wsio, data) {
 	var appLoadData = { };
 	appLoadData.application = fullpath;
 	appLoadData.user = wsio.id; // needed for the wsLoadApplication function
-	var whatTheNewAppIdShouldBe = "app_" + getUniqueAppId.count;
-
+	appLoadData.wasCsdPositionStated = false;
+	appLoadData.csdLaunch = true;
+	if (data.csdInitValues) {
+		appLoadData.csdInitValues = data.csdInitValues;
+	}
 	// If the launch location is defined, use it, otherwise use the stagger position.
 	if (data.xLaunch !== null && data.xLaunch !== undefined) {
 		appLoadData.position = [data.xLaunch, data.yLaunch];
-	} else {
-		// stagger the start location to prevent them from stacking on top of each other.
-		// this is just a temporary solution.
-		// percents
-		appLoadData.position = [csdDataStructure.xAppLaunchCoordinate, csdDataStructure.yAppLaunchCoordinate];
-		// after launch reset position
-		csdDataStructure.xAppLaunchCoordinate += 600;
-		if (csdDataStructure.xAppLaunchCoordinate >= config.totalWidth - 500) {
-			csdDataStructure.yAppLaunchCoordinate += 600;
-			csdDataStructure.xAppLaunchCoordinate = 10;
-			if (csdDataStructure.yAppLaunchCoordinate >= config.totalHeight - 500) {
-				csdDataStructure.yAppLaunchCoordinate = 100;
-			}
-		}
+		appLoadData.wasCsdPositionStated = true;
 	}
-
+	// get this before the app is created. id start from 0. count is the next one
+	var whatTheNewAppIdShouldBe = "app_" + getUniqueAppId.count;
 	// call the previously made wsLoadApplication funciton and give it the required data.
 	wsLoadApplication(wsio, appLoadData);
+
 	// if a data.func is defined make a delayed call to it on the app. Otherwise, its just an app launch.
 	if (data.func !== undefined) {
 		setTimeout(
@@ -9488,10 +9545,6 @@ var csdDataStructure = {};
 	csdDataStructure.allNamesOfValues = [];
 		strings to denote the names used for values
 		order is based on when it was first set (not alphabetical)
-	csdDataStructure.xAppLaunchCoordinate = 0.05;
-		for the csdLaunchAppWithValues positioning
-	csdDataStructure.yAppLaunchCoordinate = 0.05;
-		for the csdLaunchAppWithValues positioning
 
 	The allValues is comprised of entry objects
 	{
@@ -9515,8 +9568,15 @@ var csdDataStructure = {};
 csdDataStructure.allValues = {};
 csdDataStructure.numberOfValues = 0;
 csdDataStructure.allNamesOfValues = [];
-csdDataStructure.xAppLaunchCoordinate = 10;
-csdDataStructure.yAppLaunchCoordinate = 100;
+csdDataStructure.appLaunch = {};
+csdDataStructure.appLaunch.xStart = 10;
+csdDataStructure.appLaunch.yStart = 50;
+csdDataStructure.appLaunch.xLast = -1;
+csdDataStructure.appLaunch.yLast = -1;
+csdDataStructure.appLaunch.widthLast = -1;
+csdDataStructure.appLaunch.heightLast = -1;
+csdDataStructure.appLaunch.tallestInRow = -1;
+csdDataStructure.appLaunch.padding = 20;
 
 /**
 Will set the named value.
@@ -9546,6 +9606,10 @@ function csdSetValue(wsio, data) {
 	} else {
 		// value exists, just update it.
 		csdDataStructure.allValues[ "" + data.nameOfValue ].value = data.value;
+		// potentially the new value isn't the same and a description can be useful
+		if (data.description) {
+			csdDataStructure.allValues[ "" + data.nameOfValue ].description = data.description;
+		}
 	}
 	// send to each of the subscribers.
 	var dataForApp = {};
@@ -9565,6 +9629,8 @@ function csdSetValue(wsio, data) {
 
 /**
 Will send back the named value if it exists.
+Should it send back null if the value doesn't exist?
+The current behavior is do nothing. Maybe sending null isn't bad.
 
 Needs
 	data.nameOfValue
@@ -9589,8 +9655,8 @@ function csdGetValue(wsio, data) {
 }
 
 /**
-Adds the app to the named value as a subscriber. However the named value must exist.
-This will NOT automatically add a subscriber if the values doesn't exist but is added later.
+Adds the app to the named value as a subscriber.
+Changed from previous behavior. If the value doesn't exist, it will create a "blank" value and subscribe to it.
 
 Needs
 	data.nameOfValue
@@ -9598,20 +9664,34 @@ Needs
 	data.func
 */
 function csdSubscribeToValue(wsio, data) {
-	// don't do anything if this isn't filled out.
+	// Need to have a name. Without a name, nothing can be done.
 	if (data.nameOfValue === undefined || data.nameOfValue === null) {
 		return;
 	}
 	// also don't do anything if the value doesn't exist
 	if (csdDataStructure.allValues["" + data.nameOfValue] === undefined) {
-		return;
+		data.value = null; // nothing, it'll be replace later if at all
+		csdSetValue(wsio, data);
 	}
-	// make the new subscriber entry
-	var newCsdSubscriber  = {};
-	newCsdSubscriber.app  = data.app;
-	newCsdSubscriber.func = data.func;
-	// add it to that value
-	csdDataStructure.allValues[ "" + data.nameOfValue ].subscribers.push(newCsdSubscriber);
+
+	let foundSubscriber = false;
+	for (let i = 0; i < csdDataStructure.allValues[ "" + data.nameOfValue ].subscribers.length; i++) {
+		// do not double add if the app and function are the same this permits same app diff function
+		if (csdDataStructure.allValues[ "" + data.nameOfValue ].subscribers[i].app == data.app
+			&& csdDataStructure.allValues[ "" + data.nameOfValue ].subscribers[i].func == data.func) {
+			foundSubscriber = true;
+			break;
+		}
+	}
+	// if app is not already subscribing
+	if (!foundSubscriber) {
+		// make the new subscriber entry
+		var newCsdSubscriber  = {};
+		newCsdSubscriber.app  = data.app;
+		newCsdSubscriber.func = data.func;
+		// add it to that value
+		csdDataStructure.allValues[ "" + data.nameOfValue ].subscribers.push(newCsdSubscriber);
+	}
 }
 
 

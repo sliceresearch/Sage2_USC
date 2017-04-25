@@ -2178,17 +2178,6 @@ function escapeDialog(event) {
  * @param event {Event} event data
  */
 function noBackspace(event) {
-	// if keystrokes not captured and pressing  down '?'
-	//    then show help
-	if (event.keyCode === 191 && event.shiftKey  && event.type === "keydown" && !keyEvents) {
-		webix.modalbox({
-			title: "Mouse and keyboard operations and shortcuts",
-			buttons: ["Ok"],
-			text: "<img src=/images/cheat-sheet.jpg width=100%>",
-			width: "90%"
-		});
-	}
-
 	// backspace keyCode is 8
 	// allow backspace in text box: target.type is defined for input elements
 	if (parseInt(event.keyCode, 10) === 8 && !event.target.type) {
@@ -2198,11 +2187,28 @@ function noBackspace(event) {
 		&& event.target.id.indexOf("rmbContextMenuEntry") !== -1
 		&& event.target.id.indexOf("Input") !== -1
 		) {
+		// if a user hits enter within an rmbContextMenuEntry, it will cause the effect to happen
 		event.target.parentNode["buttonEffect" + event.target.id]();
 	} else if (event.ctrlKey && event.keyCode === 13 && event.target.id === "uiNoteMakerInputField") {
+		// ctrl + enter in note maker adds a line rather than send note
 		event.target.value += "\n";
+	} else if (event.shiftKey && event.keyCode === 13 && event.target.id === "uiNoteMakerInputField") {
+		// shift + enter adds a line
 	} else if (event.keyCode === 13 && event.target.id === "uiNoteMakerInputField") {
+		// if a user hits enter within an rmbContextMenuEntry, it will cause the effect to happen
 		sendCsdMakeNote();
+		event.preventDefault(); // prevent new line on next note
+	} else if (event.keyCode === 191 && event.shiftKey && event.target.id === "uiNoteMakerInputField") {
+		// allow "?" within note creation
+	} else if (event.keyCode === 191 && event.shiftKey && event.type === "keydown" && !keyEvents) {
+		// if keystrokes not captured and pressing  down '?'
+		//    then show help
+		webix.modalbox({
+			title: "Mouse and keyboard operations and shortcuts",
+			buttons: ["Ok"],
+			text: "<img src=/images/cheat-sheet.jpg width=100%>",
+			width: "90%"
+		});
 	}
 	return true;
 }
@@ -2638,7 +2644,7 @@ function setupUiNoteMaker() {
 	var inputField = document.getElementById('uiNoteMakerInputField');
 	inputField.id = "uiNoteMakerInputField";
 	inputField.rows = 5;
-	inputField.cols = 20;
+	inputField.cols = 24;
 	var sendButton = document.getElementById('uiNoteMakerSendButton');
 	// click effect to make a note on the display (app launch)
 	sendButton.addEventListener('click', function() {
@@ -2677,14 +2683,14 @@ function setUiNoteColorSelect(colorNumber) {
 		workingDiv = document.getElementById("uinmColorPick" + i);
 		workingDiv.style.border = "1px solid black";
 		workingDiv.colorWasPicked = false;
-		workingDiv.style.width = "65px";
-		workingDiv.style.height = "45px";
+		workingDiv.style.width = (parseInt(workingDiv.style.width) + 8) + "px";
+		workingDiv.style.height = (parseInt(workingDiv.style.height) + 8) + "px";
 	}
 	workingDiv = document.getElementById("uinmColorPick" + colorNumber);
 	workingDiv.style.border = "3px solid black";
 	workingDiv.colorWasPicked = true;
-	workingDiv.style.width = "59px";
-	workingDiv.style.height = "39px";
+	workingDiv.style.width = (parseInt(workingDiv.style.width) - 8) + "px";
+	workingDiv.style.height = (parseInt(workingDiv.style.height) - 8) + "px";
 }
 
 /**
@@ -2699,21 +2705,21 @@ function sendCsdMakeNote() {
 	var data = {};
 	data.type		= "launchAppWithValues";
 	data.appName	= "quickNote";
-	data.func		= "setMessage";
-	data.params		= {};
-	data.params.clientName = document.getElementById('sage2PointerLabel').value;
-	data.params.clientInput = workingDiv.value;
-	workingDiv.value = ""; // clear out the input field.
+	// data.func		= "setMessage";
+	data.csdInitValues		= {};
+	data.csdInitValues.clientName = document.getElementById('sage2PointerLabel').value;
+	data.csdInitValues.clientInput = workingDiv.value;
 	if (document.getElementById("uiNoteMakerCheckAnonymous").checked) {
-		data.params.clientName = "Anonymous";
+		data.csdInitValues.clientName = "Anonymous";
 	}
-	data.params.colorChoice = "lightyellow";
+	data.csdInitValues.colorChoice = "lightyellow";
 	for (var i = 1; i <= 6; i++) {
 		if (document.getElementById("uinmColorPick" + i).colorWasPicked) {
-			data.params.colorChoice = document.getElementById("uinmColorPick" + i).style.background;
+			data.csdInitValues.colorChoice = document.getElementById("uinmColorPick" + i).style.background;
 		}
 	}
 	wsio.emit('csdMessage', data);
+	workingDiv.value = ""; // clear out the input field.
 }
 
 /**
