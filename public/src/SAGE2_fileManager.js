@@ -95,7 +95,7 @@ function FileManager(wsio, mydiv, uniqueID) {
 				mainUI.style.display = "block";
 			}
 			SAGE2_resize();
-		}},
+		}}
 	};
 
 	// Edit menu of the media browser
@@ -131,7 +131,7 @@ function FileManager(wsio, mydiv, uniqueID) {
 		delete_menu: {value: "Delete", callback: function (evt) {
 			// Delete one or several selected files
 			deleteFilesUI();
-		}},
+		}}
 	};
 
 	// File manager menu bar
@@ -179,7 +179,7 @@ function FileManager(wsio, mydiv, uniqueID) {
 				mainUI.style.display = "block";
 			}
 			SAGE2_resize();
-		}},
+		}}
 	};
 
 	// View menu
@@ -322,7 +322,7 @@ function FileManager(wsio, mydiv, uniqueID) {
 		videoservice_menu: {value: "Video processing", callback: function (evt) {
 			var videoUrl = "https://sage2rtt.evl.uic.edu:3043/video/";
 			window.open(videoUrl, '_blank');
-		}},
+		}}
 	};
 
 	// Help
@@ -343,7 +343,7 @@ function FileManager(wsio, mydiv, uniqueID) {
 				ok: "OK",
 				text: versionText
 			});
-		}},
+		}}
 	};
 
 	// Assemble the top menu bar
@@ -352,10 +352,10 @@ function FileManager(wsio, mydiv, uniqueID) {
 			submenu: buildSubmenu(fileActions)
 		},
 		{id: "view_menu", value: "View", config: {width: 170, zIndex: 10000},
-			submenu: buildSubmenu(viewActions),
+			submenu: buildSubmenu(viewActions)
 		},
 		{id: "mainpartition_menu", value: "Partitions", config: {width: 250, zIndex: 10000},
-			submenu: buildSubmenu(partitionsActions),
+			submenu: buildSubmenu(partitionsActions)
 		},
 		{id: "services_menu", value: "Services", config: {width: 170, zIndex: 10000},
 			submenu: buildSubmenu(servicesActions)
