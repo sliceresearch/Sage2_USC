@@ -9837,20 +9837,6 @@ function reportIfCanWallScreenshot() {
 	broadcast("reportIfCanWallScreenshot", {
 		capableOfScreenshot: canWallScreenshot
 	});
-
-	// old code
-	// var numOfDisplayClients = config.displays.length;
-	// var canWallScreenshot = 0;
-	// // check if all display clients can take a screenshot
-	// for (let i = 0; i < clients.length; i++) {
-	// 	if (clients[i].clientType === "display" && clients[i].capableOfScreenshot === true) {
-	// 		canWallScreenshot++;
-	// 	}
-	// }
-	// Send the news to the UI clients
-	// broadcast("reportIfCanWallScreenshot", {
-	// 	capableOfScreenshot: (canWallScreenshot === numOfDisplayClients)
-	// });
 }
 
 /**
