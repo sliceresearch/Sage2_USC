@@ -9347,8 +9347,14 @@ function wsCsdMessage(wsio, data) {
 		case "subscribeToValue":
 			csdSubscribeToValue(wsio, data);
 			break;
+		case "subscribeToNewValueNotification":
+			csdSubscribeToNewValueNotification(wsio, data);
+			break;
 		case "getAllTrackedValues":
 			csdGetAllTrackedValues(wsio, data);
+			break;
+		case "getAllTrackedDescriptions":
+			csdGetAllTrackedDescriptions(wsio, data);
 			break;
 		case "saveDataOnServer":
 			csdSaveDataOnServer(wsio, data);
@@ -9569,6 +9575,7 @@ csdDataStructure.allValues = {};
 csdDataStructure.numberOfValues = 0;
 csdDataStructure.allNamesOfValues = [];
 csdDataStructure.appLaunch = {};
+csdDataStructure.newValueWatchers = [];
 csdDataStructure.appLaunch.xStart = 10;
 csdDataStructure.appLaunch.yStart = 50;
 csdDataStructure.appLaunch.xLast = -1;
@@ -9588,22 +9595,33 @@ Needs
 */
 function csdSetValue(wsio, data) {
 	// don't do anything if this isn't filled out.
-	if (data.nameOfValue === undefined || data.nameOfValue === null) {
+	if (data.nameOfValue === undefined || data.nameOfValue === null || data.value === undefined) {
 		return;
 	}
+	var addedNewValue = false;
 	// check if there is no entry for that value
 	if (csdDataStructure.allValues["" + data.nameOfValue] === undefined) {
 		// need to make an entry for this value
-		var newCsdValue = {};
+		let newCsdValue = {};
 		newCsdValue.name			= data.nameOfValue;
 		newCsdValue.value			= data.value;
 		newCsdValue.description		= data.description;
 		newCsdValue.subscribers		= [];
+		// placeholder for subscription ahead of time
+		if (data.subscribePlaceholder) {
+			// this should be the only way a value is undefined
+			newCsdValue.value = undefined;
+		}
 		// add it and update tracking vars.
 		csdDataStructure.allValues["" + data.nameOfValue] = newCsdValue;
 		csdDataStructure.numberOfValues++;
 		csdDataStructure.allNamesOfValues.push("" + data.nameOfValue);
+		addedNewValue = true;
 	} else {
+		// undefined should only possible through subscription placeholder
+		if (undefined === csdDataStructure.allValues[ "" + data.nameOfValue ].value) {
+			addedNewValue = true;
+		}
 		// value exists, just update it.
 		csdDataStructure.allValues[ "" + data.nameOfValue ].value = data.value;
 		// potentially the new value isn't the same and a description can be useful
@@ -9611,15 +9629,34 @@ function csdSetValue(wsio, data) {
 			csdDataStructure.allValues[ "" + data.nameOfValue ].description = data.description;
 		}
 	}
-	// send to each of the subscribers.
+	// send to each of the new value watchers, currently only works with displays clients
 	var dataForApp = {};
-	for (var i = 0; i < csdDataStructure.allValues[ "" + data.nameOfValue ].subscribers.length; i++) {
+	dataForApp.data = {
+		nameOfValue: data.nameOfValue,
+		description: data.description
+	};
+	if (addedNewValue) {
+		for (let i = 0; i < csdDataStructure.newValueWatchers.length; i++) {
+			// fill the data object for the app, using display's broadcast packet
+			dataForApp.app  = csdDataStructure.newValueWatchers[i].app;
+			dataForApp.func = csdDataStructure.newValueWatchers[i].func;
+			// send to all display clients(since they all need to update)
+			for (let j = 0; j < clients.length; j++) {
+				if (clients[j].clientType === "display") {
+					clients[j].emit('broadcast', dataForApp);
+				}
+			}
+		}
+	}
+
+	// now send to each of the subscribers to the value
+	dataForApp.data = csdDataStructure.allValues["" + data.nameOfValue].value;
+	for (let i = 0; i < csdDataStructure.allValues[ "" + data.nameOfValue ].subscribers.length; i++) {
 		// fill the data object for the app, using display's broadcast packet
 		dataForApp.app  = csdDataStructure.allValues["" + data.nameOfValue].subscribers[i].app;
 		dataForApp.func = csdDataStructure.allValues["" + data.nameOfValue].subscribers[i].func;
-		dataForApp.data = csdDataStructure.allValues["" + data.nameOfValue].value;
 		// send to all display clients(since they all need to update)
-		for (var j = 0; j < clients.length; j++) {
+		for (let j = 0; j < clients.length; j++) {
 			if (clients[j].clientType === "display") {
 				clients[j].emit('broadcast', dataForApp);
 			}
@@ -9662,6 +9699,8 @@ Needs
 	data.nameOfValue
 	data.app
 	data.func
+optional
+	data.unsubscribe = true to remove from list of subscribers
 */
 function csdSubscribeToValue(wsio, data) {
 	// Need to have a name. Without a name, nothing can be done.
@@ -9670,7 +9709,8 @@ function csdSubscribeToValue(wsio, data) {
 	}
 	// also don't do anything if the value doesn't exist
 	if (csdDataStructure.allValues["" + data.nameOfValue] === undefined) {
-		data.value = null; // nothing, it'll be replace later if at all
+		data.value = null; // nothing
+		data.subscribePlaceholder = true;
 		csdSetValue(wsio, data);
 	}
 
@@ -9680,13 +9720,16 @@ function csdSubscribeToValue(wsio, data) {
 		if (csdDataStructure.allValues[ "" + data.nameOfValue ].subscribers[i].app == data.app
 			&& csdDataStructure.allValues[ "" + data.nameOfValue ].subscribers[i].func == data.func) {
 			foundSubscriber = true;
+			if (data.unsubscribe) {
+				csdDataStructure.allValues[ "" + data.nameOfValue ].subscribers.splice(i, 1);
+			}
 			break;
 		}
 	}
 	// if app is not already subscribing
-	if (!foundSubscriber) {
+	if (!foundSubscriber && !data.unsubscribe) {
 		// make the new subscriber entry
-		var newCsdSubscriber  = {};
+		let newCsdSubscriber  = {};
 		newCsdSubscriber.app  = data.app;
 		newCsdSubscriber.func = data.func;
 		// add it to that value
@@ -9694,11 +9737,39 @@ function csdSubscribeToValue(wsio, data) {
 	}
 }
 
+/**
+Will send a notification to app when a new value gets created.
+App will get the value's name and description.
+
+Needs
+	data.app
+	data.func
+optional:
+	data.unsubscribe = true will remove from notification list
+*/
+function csdSubscribeToNewValueNotification(wsio, data) {
+	// create the element
+    var appWatcher = {
+        app = data.app,
+        func = data.func
+    }
+	// make sure it wasn't already added
+    for (let i = 0; i < csdDataStructure.newValueWatchers.length; i++) {
+        if (csdDataStructure.newValueWatchers[i].app === appWatcher.app
+        && csdDataStructure.newValueWatchers[i].func === appWatcher.func) {
+			if (data.unsubscribe) {
+				csdDataStructure.newValueWatchers.splice(i, 1);
+			}
+            return; // they are already subscribed, or this was an unsubscribe
+        }
+    }
+    csdDataStructure.newValueWatchers.push(appWatcher);
+}
+
 
 
 /**
-Adds the app to the named value as a subscriber. However the named value must exist.
-This will NOT automatically add a subscriber if the values doesn't exist but is added later.
+Gets all tracked values and gives to requesting app. This could be really large.
 
 Needs
 	data.nameOfValue
@@ -9718,6 +9789,28 @@ function csdGetAllTrackedValues(wsio, data) {
 	}
 	wsio.emit('broadcast', dataForApp);
 }
+
+/**
+Gets all tracked value names and descriptions, gives to requesting app.
+
+Needs
+	data.app
+	data.func
+*/
+function csdGetAllTrackedDescriptions(wsio, data) {
+	var dataForApp = {};
+	dataForApp.data = [];
+	dataForApp.app  = data.app;
+	dataForApp.func = data.func;
+	for (var i = 0; i < csdDataStructure.allNamesOfValues.length; i++) {
+		dataForApp.data.push(
+			{	name: csdDataStructure.allNamesOfValues[i],
+				value: csdDataStructure.allValues[ csdDataStructure.allNamesOfValues[i] ].description
+			});
+	}
+	wsio.emit('broadcast', dataForApp);
+}
+
 
 
 
