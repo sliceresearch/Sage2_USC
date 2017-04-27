@@ -2,7 +2,7 @@ FROM    ubuntu
 MAINTAINER	EVL avatar <evl.avatar@gmail.com>
 RUN     apt-get -y update
 RUN     apt-get install -y software-properties-common
-RUN     add-apt-repository -y ppa:mc3man/trusty-media
+RUN     add-apt-repository -y ppa:mc3man/xerus-media
 RUN     apt-get -y update
 RUN     apt-get -y install libavformat-extra-54 libavformat-dev libavcodec-extra-54 libavcodec-dev ffmpeg libavutil-dev git curl libswscale-dev
 RUN     curl -sL https://deb.nodesource.com/setup_7.x | sudo bash -
