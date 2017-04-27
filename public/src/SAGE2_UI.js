@@ -111,8 +111,8 @@ if (window.applicationCache) {
  */
 window.addEventListener('beforeunload', function(event) {
 	if (interactor && interactor.broadcasting) {
+		// In fact, the message is unused for most browser as security measure
 		var confirmationMessage = "SAGE2 Desktop sharing in progress";
-
 		event.returnValue = confirmationMessage;  // Gecko, Trident, Chrome 34+
 		return confirmationMessage;               // Gecko, WebKit, Chrome <34
 	}
@@ -525,6 +525,14 @@ function setupListeners() {
 		displayUI.addAppWindow(data);
 	});
 
+	wsio.on('showStickyPin', function(data) {
+		displayUI.showStickyPin(data);
+	});
+
+	wsio.on('hideStickyPin', function(data) {
+		displayUI.hideStickyPin(data);
+	});
+
 	wsio.on('deleteElement', function(data) {
 		displayUI.deleteApp(data.elemId);
 	});
@@ -678,13 +686,32 @@ function setupListeners() {
 	});
 
 	wsio.on('csdSendDataToClient', function(data) {
-		// depending on the specified func does different things.
+		// Depending on the specified func does different things
 		if (data.func === 'uiDrawSetCurrentStateAndShow') {
 			uiDrawSetCurrentStateAndShow(data);
 		} else if (data.func === 'uiDrawMakeLine') {
 			uiDrawMakeLine(data);
 		} else {
 			console.log("Error, csd data packet for client contained invalid function:" + data.func);
+		}
+	});
+
+	// Message from server reporting screenshot ability of display clients
+	wsio.on('reportIfCanWallScreenshot', function(data) {
+		if (data.capableOfScreenshot) {
+			if (!this.addedScreenshotButton) {
+				// Get the menu item from the filemanager
+				var mymenu = $$('mymenu').getSubMenu('services_menu');
+				// Add a new option for screenshot
+				mymenu.add({
+					id:    "wallScreenshot_menu",
+					value: "Take screeshot of wall"
+				});
+				this.addedScreenshotButton = true;
+			}
+		} else {
+			// No luck (need to use Electron)
+			console.log("Server> No screenshot capability");
 		}
 	});
 }
@@ -1779,9 +1806,9 @@ function handleClick(element) {
 		// Delete all partitions
 		wsio.emit('deleteAllPartitions');
 		hideDialog('arrangementDialog');
-	} else if (element.id === "assigntopartitions") {
+	} else if (element.id === "deleteapplications") {
 		// Assign content to partitions (partitions grab items which are above them)
-		wsio.emit('partitionsGrabAllContent');
+		wsio.emit('deleteAllApplications');
 		hideDialog('arrangementDialog');
 	} else if (element.id === "ffShareScreenBtn") {
 		// Firefox Share Screen Dialog
@@ -2154,17 +2181,6 @@ function escapeDialog(event) {
  * @param event {Event} event data
  */
 function noBackspace(event) {
-	// if keystrokes not captured and pressing  down '?'
-	//    then show help
-	if (event.keyCode === 191 && event.shiftKey  && event.type === "keydown" && !keyEvents) {
-		webix.modalbox({
-			title: "Mouse and keyboard operations and shortcuts",
-			buttons: ["Ok"],
-			text: "<img src=/images/cheat-sheet.jpg width=100%>",
-			width: "90%"
-		});
-	}
-
 	// backspace keyCode is 8
 	// allow backspace in text box: target.type is defined for input elements
 	if (parseInt(event.keyCode, 10) === 8 && !event.target.type) {
@@ -2174,11 +2190,28 @@ function noBackspace(event) {
 		&& event.target.id.indexOf("rmbContextMenuEntry") !== -1
 		&& event.target.id.indexOf("Input") !== -1
 		) {
+		// if a user hits enter within an rmbContextMenuEntry, it will cause the effect to happen
 		event.target.parentNode["buttonEffect" + event.target.id]();
 	} else if (event.ctrlKey && event.keyCode === 13 && event.target.id === "uiNoteMakerInputField") {
+		// ctrl + enter in note maker adds a line rather than send note
 		event.target.value += "\n";
+	} else if (event.shiftKey && event.keyCode === 13 && event.target.id === "uiNoteMakerInputField") {
+		// shift + enter adds a line
 	} else if (event.keyCode === 13 && event.target.id === "uiNoteMakerInputField") {
+		// if a user hits enter within an rmbContextMenuEntry, it will cause the effect to happen
 		sendCsdMakeNote();
+		event.preventDefault(); // prevent new line on next note
+	} else if (event.keyCode === 191 && event.shiftKey && event.target.id === "uiNoteMakerInputField") {
+		// allow "?" within note creation
+	} else if (event.keyCode === 191 && event.shiftKey && event.type === "keydown" && !keyEvents) {
+		// if keystrokes not captured and pressing  down '?'
+		//    then show help
+		webix.modalbox({
+			title: "Mouse and keyboard operations and shortcuts",
+			buttons: ["Ok"],
+			text: "<img src=/images/cheat-sheet.jpg width=100%>",
+			width: "90%"
+		});
 	}
 	return true;
 }
@@ -2624,7 +2657,7 @@ function setupUiNoteMaker() {
 	var inputField = document.getElementById('uiNoteMakerInputField');
 	inputField.id = "uiNoteMakerInputField";
 	inputField.rows = 5;
-	inputField.cols = 20;
+	inputField.cols = 24;
 	var sendButton = document.getElementById('uiNoteMakerSendButton');
 	// click effect to make a note on the display (app launch)
 	sendButton.addEventListener('click', function() {
@@ -2663,14 +2696,14 @@ function setUiNoteColorSelect(colorNumber) {
 		workingDiv = document.getElementById("uinmColorPick" + i);
 		workingDiv.style.border = "1px solid black";
 		workingDiv.colorWasPicked = false;
-		workingDiv.style.width = "65px";
-		workingDiv.style.height = "45px";
+		workingDiv.style.width = (parseInt(workingDiv.style.width) + 8) + "px";
+		workingDiv.style.height = (parseInt(workingDiv.style.height) + 8) + "px";
 	}
 	workingDiv = document.getElementById("uinmColorPick" + colorNumber);
 	workingDiv.style.border = "3px solid black";
 	workingDiv.colorWasPicked = true;
-	workingDiv.style.width = "59px";
-	workingDiv.style.height = "39px";
+	workingDiv.style.width = (parseInt(workingDiv.style.width) - 8) + "px";
+	workingDiv.style.height = (parseInt(workingDiv.style.height) - 8) + "px";
 }
 
 /**
@@ -2685,24 +2718,21 @@ function sendCsdMakeNote() {
 	var data = {};
 	data.type		= "launchAppWithValues";
 	data.appName	= "quickNote";
-	data.func		= "setMessage";
-	data.params		= {};
-	data.params.clientName = document.getElementById('sage2PointerLabel').value;
-	data.params.clientInput = workingDiv.value;
+	// data.func		= "setMessage";
+	data.csdInitValues		= {};
+	data.csdInitValues.clientName = document.getElementById('sage2PointerLabel').value;
+	data.csdInitValues.clientInput = workingDiv.value;
 	if (document.getElementById("uiNoteMakerCheckAnonymous").checked) {
-		data.params.clientName = "Anonymous";
+		data.csdInitValues.clientName = "Anonymous";
 	}
-	data.params.colorChoice = "lightyellow";
+	data.csdInitValues.colorChoice = "lightyellow";
 	for (var i = 1; i <= 6; i++) {
 		if (document.getElementById("uinmColorPick" + i).colorWasPicked) {
-			data.params.colorChoice = document.getElementById("uinmColorPick" + i).style.background;
+			data.csdInitValues.colorChoice = document.getElementById("uinmColorPick" + i).style.background;
 		}
 	}
 	wsio.emit('csdMessage', data);
-	// clear out the input field after the enter has been applied.
-	setTimeout(function() {
-		workingDiv.value = "";
-	}, 20);
+	workingDiv.value = ""; // clear out the input field.
 }
 
 /**

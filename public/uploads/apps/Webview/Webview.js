@@ -7,7 +7,7 @@
 
 "use strict";
 
-/* global  */
+/* global  require*/
 
 var Webview = SAGE2_App.extend({
 	init: function(data) {
@@ -25,8 +25,6 @@ var Webview = SAGE2_App.extend({
 			// Add it to the layer
 			this.layer.appendChild(this.pre);
 			this.console = false;
-			// add the preload clause
-			// this.element.preload = this.resrcPath + "SAGE2_script_supplement.js";
 		} else {
 			// Create div into the DOM
 			this.SAGE2Init("div", data);
@@ -54,7 +52,9 @@ var Webview = SAGE2_App.extend({
 		// disable fullscreen
 		this.element.fullscreenable = false;
 		this.element.fullscreen = false;
-
+		// add the preload clause
+		this.addPreloadFile();
+		// security or not
 		// this.element.disablewebsecurity = true;
 
 		this.element.minwidth  = data.width;
@@ -111,7 +111,8 @@ var Webview = SAGE2_App.extend({
 			_this.element.setZoomFactor(_this.state.zoom);
 			// sync the state object
 			_this.SAGE2Sync(false);
-			_this.getInjectCodeIfNecessaryThenInject();
+			// code injection to support key translation
+			this.codeInject();
 			// update the context menu with the current URL
 			_this.getFullContextMenuAndUpdate();
 		});
@@ -175,66 +176,7 @@ var Webview = SAGE2_App.extend({
 			}
 		});
 
-
-
-
-
-
-
-
-
-// ------------------------------------------------------------------------------------------------------------
-// ------------------------------------------------------------------------------------------------------------
-// ------------------------------------------------------------------------------------------------------------
-
-
-		// erase me, this is mainly for testing, but if it works out, maybe not necessary
-		// testing data send back.
-		this.element.addEventListener("ipc-message", function(event) {
-
-			if (event.channel.type == "gmapSearchLocations") {
-				console.log("gmap has returned search results:");
-				console.dir(event.channel.locationArray);
-
-
-				wsio.emit("csdMessage", {
-					type: "setValue",
-					nameOfValue: "gmapLocations",
-					value:       event.channel.locationArray,
-					description: "Sends whole array of strings?"
-				});
-
-				console.log("Should have sent to server");
-			} else if (event.channel.type == "gmapViewCenterLocation") {
-
-				wsio.emit("csdMessage", {
-					type: "setValue",
-					nameOfValue: "gmapViewCenter",
-					value:       event.channel.location,
-					description: "Send location of camera"
-				});
-
-			} else {
-				console.log(event);
-				if (typeof event === "object") {
-					console.log("Detected an object");
-					console.dir(event);
-				}
-			}
-		});
-
 	},
-
-
-
-// ------------------------------------------------------------------------------------------------------------
-// ------------------------------------------------------------------------------------------------------------
-// ------------------------------------------------------------------------------------------------------------
-
-
-
-
-
 
 
 	/**
@@ -245,6 +187,26 @@ var Webview = SAGE2_App.extend({
 	 */
 	isElectron: function() {
 		return (typeof window !== 'undefined' && window.process && window.process.type === "renderer");
+	},
+
+	/**
+	 * Loads the components to do a file preload on a webpage.
+	 * Needs to be within an Electron browser to work.
+	 *
+	 * @method     addPreloadFile
+	 */
+	addPreloadFile: function() {
+		if (!this.isElectron) {
+			return;
+		}
+		var path = require("path");
+		var app = require("electron").remote.app;
+		var appPath = app.getAppPath();
+		var subPath = appPath.split("node_modules");
+		var rootPath = subPath[0];
+		var preloadPath = path.join(rootPath, 'public/uploads/apps/Webview', 'SAGE2_script_supplement.js');
+		console.log(preloadPath);
+		this.element.preload = "file://" + preloadPath;
 	},
 
 	load: function(date) {
@@ -320,38 +282,21 @@ var Webview = SAGE2_App.extend({
 	},
 
 	/*
-		Checks if already collected data from file.
-		If not,
-			Uses xhr to access file
-	*/
-	getInjectCodeIfNecessaryThenInject: function() {
-		if (this.codeToInject === undefined || this.codeToInject === null) {
-			var _this = this;
-			var xhr = new XMLHttpRequest();
-			xhr.open("GET", this.resrcPath + "SAGE2_script_supplement.js", true);
-			xhr.onreadystatechange = function() {
-				if (xhr.readyState === 4 && xhr.status === 200) { // done and done
-					_this.codeToInject = xhr.responseText;
-					if (_this.codeToInject.indexOf("//") !== -1) {
-						// after testing this seems to work
-						// console.log("Webview> Warning, script supplement contains // comment which may break it");
-					}
-					_this.codeInject();
-				}
-			};
-			xhr.send();
-			return;
-		} else {
-			this.codeInject();
-		}
-	},
-
-	/*
-		This should be called from getInjectCodeIfNecessaryThenInject().
-		It will be called in line if the code was already retrieved.
+		Called after each page load, currentl prevents the lock from input focus.
 	*/
 	codeInject: function() {
-		this.element.executeJavaScript(this.codeToInject);
+		// Disabling text selection in page because it blocks the view sometimes
+		// done by injecting some CSS code
+		this.element.insertCSS(":not(input):not(textarea), " +
+			":not(input):not(textarea)::after, " +
+			":not(input):not(textarea)::before { " +
+				"-webkit-user-select: none; " +
+				"user-select: none; " +
+				"cursor: default; " +
+			"} " +
+			"input, button, textarea, :focus { " +
+				"outline: none; " +
+			"}");
 	},
 
 	getContextEntries: function() {

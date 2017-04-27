@@ -2,7 +2,7 @@
 	"main_script": "quickNote.js",
 	"icon": "quickNote.png",
 	"width": 300,
-	"height": 150,
+	"height": 134,
 	"animation": false,
 	"sticky": true,
 	"dependencies": [

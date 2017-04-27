@@ -111,9 +111,9 @@ function FileManager(wsio, mydiv, uniqueID) {
 			{id: "deletepartition_menu", value: "Delete All Partitions"}
 		]},
 		{id: "services_menu", value: "Services", config: {width: 170}, submenu: [
-			{id: "appstore_menu",  value: "SAGE2 appstore"},
-			{id: "imageservice_menu",  value: "Large image processing"},
-			{id: "videoservice_menu",  value: "Video processing"}
+			{id: "appstore_menu",       value: "SAGE2 appstore"},
+			{id: "imageservice_menu",   value: "Large image processing"},
+			{id: "videoservice_menu",   value: "Video processing"}
 		]},
 		{id: "mainhelp_menu",  value: "Help", submenu: [
 			{id: "help_menu",  value: "Help"},
@@ -121,6 +121,7 @@ function FileManager(wsio, mydiv, uniqueID) {
 			{id: "about_menu", value: "About"}
 		]}
 	];
+
 	var mymenu = {
 		id: "mymenu",
 		view: "menu",
@@ -571,6 +572,8 @@ function FileManager(wsio, mydiv, uniqueID) {
 			wsio.emit('deleteAllPartitions');
 		} else if (evt === "partitiongrab_menu") {
 			wsio.emit('partitionsGrabAllContent');
+		} else if (evt === "wallScreenshot_menu") {
+			wsio.emit("startWallScreenshot");
 		} else {
 			// dunno
 		}

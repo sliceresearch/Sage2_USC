@@ -71,6 +71,7 @@
 		"sw-precache": "latest",
 		"debug": "latest",
 		"ytdl-core": "latest",
+		"rimraf": "latest",
 		"electron": "latest"
 	},
 	"optionalDependencies": {

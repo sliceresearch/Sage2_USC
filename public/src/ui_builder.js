@@ -803,7 +803,9 @@ function UIBuilder(json_cfg, clientID) {
 		if (this.clientID !== -1) {
 			watermark.style.cursor = "none";
 		}
-		this.changeSVGColor(watermark, "path", null, this.json_cfg.background.watermark.color);
+		if (this.json_cfg.background.watermark.color) {
+			this.changeSVGColor(watermark, "path", null, this.json_cfg.background.watermark.color);
+		}
 
 		watermark.style.opacity  = 0.4;
 		watermark.style.position = "absolute";
