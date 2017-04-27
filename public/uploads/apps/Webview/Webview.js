@@ -297,6 +297,15 @@ var Webview = SAGE2_App.extend({
 			"input, button, textarea, :focus { " +
 				"outline: none; " +
 			"}");
+
+		/* For testing later
+		// call the init connection function telling the the hostname shown in upper right, this webview appid, session
+		var scriptToSend = "SAGE2Connection.initS2Connection('"
+			+ document.getElementById("machine").textContent + "', '"
+			+ _this.id + "', '"
+			+ getCookie("session") + "')";
+		this.element.executeJavaScript(scriptToSend);
+		*/
 	},
 
 	getContextEntries: function() {
@@ -411,158 +420,9 @@ var Webview = SAGE2_App.extend({
 			}
 		});
 
-// ------------------------------------------------------------------------------------------------------------
-// ------------------------------------------------------------------------------------------------------------
-// ------------------------------------------------------------------------------------------------------------
-
-
-		entries.push({description: "separator"});
-		entries.push({description: "separator"});
-
-		// erase me, these are just for testing data pass back
-		entries.push({
-			description: "Inject: gmap focus to Hawaii",
-			callback: "testWebviewTalkBack",
-			parameters: {
-				type: "googleMapFocusOnLocation",
-				dataToSendToWebview: {lat: 21.2969392, lng: -157.8171122}
-			}
-		});
-		// erase me, these are just for testing data pass back
-		entries.push({
-			description: "Inject: gmap make marker",
-			callback: "testWebviewTalkBack",
-			inputField: true,
-			inputFieldSize: 20,
-			parameters: {
-				type: "gmapMakeMarker"
-			}
-		});
-
-		// erase me, these are just for testing data pass back
-		entries.push({
-			description: "Inject: gmap search",
-			callback: "testWebviewTalkBack",
-			inputField: true,
-			inputFieldSize: 20,
-			parameters: {
-				type: "gmapSearchType"
-			}
-		});
-
-		// erase me, these are just for testing data pass back
-		entries.push({
-			description: "Inject: activate view send",
-			callback: "testWebviewTalkBack",
-			parameters: {
-				type: "gmapSendViewLocation",
-				dataToSendToWebview: "none"
-			}
-		});
-
-		// erase me, these are just for testing data pass back
-		entries.push({
-			description: "Webview talk back: give back object",
-			callback: "testWebviewTalkBack",
-			parameters: {
-				type: "objectRetrievalTest"
-			}
-		});
-
-		entries.push({description: "separator"});
-
-		// erase me, these are just for testing data pass back
-		entries.push({
-			description: "subscribe gmapLocations",
-			callback: "subscribeToValue",
-			parameters: {
-				valueName: "gmapLocations",
-				functionName: "gmapAddLocations",
-			}
-		});
-
-		// erase me, these are just for testing data pass back
-		entries.push({
-			description: "subscribe gmapViewCenter",
-			callback: "subscribeToValue",
-			parameters: {
-				valueName: "gmapViewCenter",
-				functionName: "gmapSetViewCenter",
-			}
-		});
-
-
-		// entries.push({description: "separator"});
 
 		return entries;
 	},
-
-	// erase me, just for testing data passing
-	testWebviewTalkBack: function(responseObject) {
-
-		if (responseObject.type === "gmapMakeMarker") {
-			var coord = responseObject.clientInput.split(" ");
-			// combine all entries after 2 because it is probably a name
-			for (var i = 3; i < coord.length; i++) {
-				coord[2] += " " + coord[i];
-			}
-			var marker = {
-				lat: parseFloat(coord[0]),
-				lng: parseFloat(coord[1]),
-				name: coord[2]
-			};
-			this.element.send(responseObject.type, marker);
-		} else if (responseObject.type === "gmapSearchType") {
-			this.element.send(responseObject.type, responseObject.clientInput);
-		} else {
-			this.element.send(responseObject.type, responseObject.dataToSendToWebview);
-		}
-		// this.element.send(responseObject.type, "div");
-	},
-
-	// erase me, just for testing data passing. rename for later...
-	subscribeToValue: function(responseObject) {
-		console.log("Subscription requested for:" + responseObject.valueName);
-		wsio.emit("csdMessage", {
-			type: "subscribeToValue",
-			nameOfValue: responseObject.valueName,
-			app:         this.id,
-			func:        responseObject.functionName
-		});
-	},
-
-	// assuming this is an array of Strings "lat lng name"
-	gmapAddLocations: function(dataFromServer) {
-		console.log("Subscription update:");
-		console.dir(dataFromServer);
-		for (var i = 0; i < dataFromServer.length; i++) {
-			this.testWebviewTalkBack({type: "gmapMakeMarker", clientInput: dataFromServer[i]});
-		}
-	},
-
-	gmapSetViewCenter: function(dataFromServer) {
-		this.element.send("googleMapFocusOnLocation", dataFromServer);
-	},
-
-// ------------------------------------------------------------------------------------------------------------
-// ------------------------------------------------------------------------------------------------------------
-// ------------------------------------------------------------------------------------------------------------
-// ------------------------------------------------------------------------------------------------------------
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 

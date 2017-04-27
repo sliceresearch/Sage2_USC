@@ -23,6 +23,11 @@ var miniCon = SAGE2_App.extend({
 		this.element.style.background = "black";
 		this.element.style.fontSize = ui.titleTextSize;
 		this.element.style.color = "green";
+
+
+		this.listOfCsdVariables = [];
+
+		this.csdBroadcast();
 	},
 
 	load: function(date) {
@@ -105,6 +110,47 @@ var miniCon = SAGE2_App.extend({
 
 	quit: function() {
 		// no additional calls needed.
+	},
+
+	csdBroadcast: function() {
+		if (!isMaster) {
+			return; // try to prevent spamming
+		}
+		var dataForServer = {
+			type: "getAllTrackedDescriptions",
+			app: this.id,
+			func: "csdHandlerInitialVariableList"
+		};
+		// erase me
+		console.log("erase me, miniCon subscribing to new variables");
+		console.dir(dataForServer);
+		wsio.emit("csdMessage", dataForServer);
+
+		dataForServer = {
+			type: "subscribeToNewValueNotification",
+			app: this.id,
+			func: "csdHandlerForNewVariableNotification"
+		};
+		// erase me
+		console.log("erase me, miniCon subscribing to new variables");
+		console.dir(dataForServer);
+		wsio.emit("csdMessage", dataForServer);
+		
+	},
+
+	csdHandlerInitialVariableList: function(serverVariables) {
+		this.listOfCsdVariables = this.listOfCsdVariables.concat(serverVariables);
+	},
+
+	csdHandlerForNewVariableNotification: function(addedVar) {
+		if (!isMaster) {
+			return; // prevent spam
+		}
+		console.log("erase me, miniCon notified of new variable named " + addedVar.nameOfValue
+		+ " has description: " + addedVar.description);
+
+		this.listOfCsdVariables.push(addedVar);
+
 	}
 
 });

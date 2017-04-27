@@ -49,6 +49,7 @@ var image_viewer = SAGE2_App.extend({
 
 		this.updateAppFromState();
 		this.addWidgetControlsToImageViewer();
+		this.csdBroadcast();
 	},
 
 	/**
@@ -364,6 +365,29 @@ var image_viewer = SAGE2_App.extend({
 		// UI stuff
 		this.controls.addButton({label: "info", position: 7, identifier: "Info"});
 		this.controls.finishedAddingControls();
+	},
+
+	csdBroadcast: function() {
+		if (!isMaster) {
+			return; // try to prevent spamming
+		}
+		if (this.checkIfHasGpsData()) {
+			var dataForServer = {
+				type: "setValue",
+				nameOfValue: this.id + ":source:geoLocation",
+				description: "an image geolocation",
+				value: {}
+			};
+			dataForServer.value.source = this.id;
+			dataForServer.value.location = {
+				lat: this.state.exif.GPSLatitude,
+				lng: this.state.exif.GPSLongitude
+			};
+			//erase me
+			console.log("new image on wall is giving server data");
+			console.dir(dataForServer);
+			wsio.emit("csdMessage", dataForServer);
+		}
 	}
 
 });

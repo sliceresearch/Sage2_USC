@@ -39,6 +39,9 @@ Overwriting them will cause problems.
 // ------------------------------------------------------------------------------------------------------------------
 The following will activate as soon as the script is loaded.
 */
+
+document.getElementById("codeInput").style.height = window.innerHeight * 0.8 + "px";
+
 document.getElementById("SAGE2_returnToUi").addEventListener("click", function() {
 	var dataForApp = {};
 	dataForApp.app = appId;

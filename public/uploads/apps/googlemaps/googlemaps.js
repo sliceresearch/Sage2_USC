@@ -46,6 +46,8 @@ var googlemaps = SAGE2_App.extend({
 
 		// temporarily testing how well mouse conversion works
 		this.passSAGE2PointerAsMouseEvents = true;
+
+		this.csdBroadcast();
 	},
 
 	initializeWidgets: function() {
@@ -175,6 +177,17 @@ var googlemaps = SAGE2_App.extend({
 	updateCenter: function() {
 		var c = this.map.getCenter();
 		this.state.center = {lat: c.lat(), lng: c.lng()};
+
+		if (isMaster) {
+			var dataForServer = {
+				type: "setValue",
+				nameOfValue: this.id + ":source:geoLocation",
+				value: {}
+			};
+			dataForServer.value.source = this.id;
+			dataForServer.value.location = this.state.center;
+			wsio.emit("csdMessage", dataForServer);
+		}
 	},
 
 	updateLayers: function() {
@@ -425,6 +438,7 @@ var googlemaps = SAGE2_App.extend({
 		markToAdd.markerLocation = markerLocation;
 		// always center view on new marker
 		this.map.setCenter(markerLocation);
+		this.updateCenter();
 		// add info window if it doesn't exist
 		if (this.gmapInfoWindow === undefined || this.gmapInfoWindow === null) {
 			this.gmapInfoWindow = new google.maps.InfoWindow();
@@ -541,6 +555,7 @@ var googlemaps = SAGE2_App.extend({
 			}
 		}
 		this.map.setCenter(this.mapMarkers[this.markerCycleIndex].markerLocation);
+		this.updateCenter();
 		this.showMarkerInfoIfReleasedOver({blank: "would have been coordinates"}, this.markerCycleIndex);
 
 		this.refresh(new Date());
@@ -734,6 +749,69 @@ var googlemaps = SAGE2_App.extend({
 			// Need to sync since it's an async function
 			_this.SAGE2Sync(true);
 		});
+	},
+
+	csdBroadcast: function() {
+		if (!isMaster) {
+			return; // try to prevent spamming
+		}
+		var dataForServer = {
+			type: "subscribeToNewValueNotification",
+			app: this.id,
+			func: "csdHandlerForNewVariableNotification"
+		};
+		// erase me
+		console.log("erase me, maps subscribing to new variables");
+		console.dir(dataForServer);
+		wsio.emit("csdMessage", dataForServer);
+
+		// send the center of this
+		dataForServer = {
+			type: "setValue",
+			nameOfValue: this.id + ":source:geoLocation",
+			description: "the map's center geolocation value",
+			value: {}
+		};
+		dataForServer.value.source = this.id;
+		dataForServer.value.location = this.state.center;
+		wsio.emit("csdMessage", dataForServer);
+	},
+
+	csdHandlerForNewVariableNotification: function(addedVar) {
+		if (!isMaster) {
+			return; // prevent spam
+		}
+		console.log("erase me, maps notified of new variable named " + addedVar.nameOfValue
+		+ " has description: " + addedVar.description);
+		if (addedVar.description.indexOf("geolocation") !== -1
+		&& addedVar.description.indexOf("image") !== -1) {
+			console.log("erase me, has also detected that new var is a geo location");
+			var dataForServer = {
+				type: "getValue",
+				nameOfValue: addedVar.nameOfValue,
+				app: this.id,
+				func: "geoDataFromServer"
+			};
+			//erase me
+			console.log("erase me, map asking for the geo data");
+			wsio.emit("csdMessage", dataForServer);
+		}
+	},
+
+	geoDataFromServer: function(value) {
+		// all display clients need this to sync correctly
+		console.log("erase me, got geo data, plotting it");
+		this.addMarkerToMap({
+			lat: value.location.lat,
+			lng: value.location.lng,
+			sourceAppId: value.source,
+			shouldFocusViewOnNewMarker: true
+		});
+	},
+
+	setView: function(serverVar) {
+		this.map.setCenter(serverVar.location);
+		this.updateCenter();
 	}
 
 });

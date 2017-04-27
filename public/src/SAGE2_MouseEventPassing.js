@@ -52,6 +52,9 @@ var SAGE2MEP = {
 	Correct appId is necessary to differentiate between pointers over different apps.
 	*/
 	processAndPassEvents: function(appId, type, position, user, data, date) {
+		if (!position) {
+			return;
+		}
 
 		var indexOfApp = this.getIndexOfApp(appId);
 		var indexOfPointer = this.getIndexOfPointer(indexOfApp, user.id);
