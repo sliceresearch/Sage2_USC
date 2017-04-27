@@ -9750,8 +9750,8 @@ optional:
 function csdSubscribeToNewValueNotification(wsio, data) {
 	// create the element
     var appWatcher = {
-        app = data.app,
-        func = data.func
+        app: data.app,
+        func: data.func
     }
 	// make sure it wasn't already added
     for (let i = 0; i < csdDataStructure.newValueWatchers.length; i++) {
