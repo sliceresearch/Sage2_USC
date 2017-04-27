@@ -1,4 +1,4 @@
-FROM    ubuntu:14.04
+FROM    ubuntu:16.04
 MAINTAINER	EVL avatar <evl.avatar@gmail.com>
 RUN     sudo apt-get -y update
 RUN     sudo apt-get install -y software-properties-common
