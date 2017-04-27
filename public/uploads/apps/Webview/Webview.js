@@ -112,7 +112,7 @@ var Webview = SAGE2_App.extend({
 			// sync the state object
 			_this.SAGE2Sync(false);
 			// code injection to support key translation
-			this.codeInject();
+			_this.codeInject();
 			// update the context menu with the current URL
 			_this.getFullContextMenuAndUpdate();
 		});
