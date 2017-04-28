@@ -9805,7 +9805,7 @@ function csdGetAllTrackedDescriptions(wsio, data) {
 	for (var i = 0; i < csdDataStructure.allNamesOfValues.length; i++) {
 		dataForApp.data.push(
 			{	nameOfValue: csdDataStructure.allNamesOfValues[i],
-				value: csdDataStructure.allValues[ csdDataStructure.allNamesOfValues[i] ].description
+				description: csdDataStructure.allValues[ csdDataStructure.allNamesOfValues[i] ].description
 			});
 	}
 	wsio.emit('broadcast', dataForApp);
