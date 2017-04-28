@@ -14,7 +14,7 @@
  * @class node-utils
  * @module server
  * @submodule node-utils
- * @requires package.json, request, semver
+ * @requires package.json, request, semver, chalk
  */
 
 // require variables to be declared
@@ -40,7 +40,8 @@ var request   = require('request');           // http requests
 var semver    = require('semver');            // parse version numbers
 var fsmonitor = require('fsmonitor');         // file system monitoring
 var sanitizer = require('sanitizer');         // Caja's HTML Sanitizer as a Node.js module
-
+var chalk     = require('chalk');             // colorize console output
+var rimraf    = require('rimraf');            // command rm -rf for node
 
 /**
  * Parse and store NodeJS version number: detect version 0.10.x or newer
@@ -273,9 +274,9 @@ function sanitizedURL(aURL) {
  */
 function header(h) {
 	if (h.length <= 6) {
-		return h + ">\t\t";
+		return chalk.green.bold.dim(h + ">\t\t");
 	}
-	return h + ">\t";
+	return chalk.green.bold.dim(h + ">\t");
 }
 
 
@@ -381,10 +382,12 @@ function checkPackages(inDevelopement) {
 	if (indevel) {
 		command = "npm outdated --depth 0 --json";
 	}
-	exec(command, {cwd: path.normalize(path.join(__dirname, ".."))},
+	exec(command, {cwd: path.normalize(path.join(__dirname, "..")), timeout: 30000},
 		function(error, stdout, stderr) {
-			if (error) {
-				console.log("NPM>	Error running update");
+			// returns error code 1 if found outdated packages
+			if (error && error.code !== 1) {
+				console.log(header("Packages") + "Warning, error running update [ " + error.cmd + '] ',
+					'code: ' + error.code + ' signal: ' + error.signal);
 				return;
 			}
 
@@ -401,18 +404,19 @@ function checkPackages(inDevelopement) {
 			}
 
 			if (packages.missing.length > 0 || packages.outdated.length > 0) {
-				console.log("");
-				console.log(header("Packages") + "Warning - Packages not up to date");
+				console.log(header("Packages") + chalk.yellow.bold("Warning") +
+					" - Packages not up to date");
 				if (packages.missing.length  > 0) {
-					console.log(header("Packages") + "  Missing:",  packages.missing);
+					console.log(header("Packages") + "  " + chalk.red.bold("Missing:"),
+						chalk.red.bold(packages.missing));
 				}
 				if (packages.outdated.length > 0) {
-					console.log(header("Packages") + "  Outdated:", packages.outdated);
+					console.log(header("Packages") + "  " + chalk.yellow.bold("Outdated:"),
+						chalk.yellow.bold(packages.outdated));
 				}
-				console.log(header("Packages") + "To update, execute: npm run in");
-				console.log("");
+				console.log(header("Packages") + "To update, execute: " + chalk.yellow.bold("npm run in"));
 			} else {
-				console.log(header("Packages") + "All packages up to date");
+				console.log(header("Packages") + chalk.green.bold("All packages up to date"));
 			}
 		}
 	);
@@ -433,7 +437,8 @@ function registerSAGE2(config) {
 		form: config,
 		method: "POST"},
 		function(err, response, body) {
-			console.log(header("SAGE2") + "Registration with EVL site:", (err === null) ? "success" : err.code);
+			console.log(header("SAGE2") + "Registration with EVL site:",
+				(err === null) ? chalk.green.bold("success") : chalk.red.bold(err.code));
 		}
 	);
 }
@@ -453,7 +458,8 @@ function deregisterSAGE2(config, callback) {
 		form: config,
 		method: "POST"},
 		function(err, response, body) {
-			console.log(header("SAGE2") + "Deregistration with EVL site:", (err === null) ? "success" : err.code);
+			console.log(header("SAGE2") + "Deregistration with EVL site:",
+				(err === null) ? chalk.green.bold("success") : chalk.red.bold(err.code));
 			if (callback) {
 				callback();
 			}
@@ -559,7 +565,7 @@ function monitorFolders(folders, excludesFiles, excludesFolders, callback) {
 		var stat       = fs.lstatSync(folderpath);
 		// making sure it is a folder
 		if (stat.isDirectory()) {
-			console.log(header("Monitor") + "watching folder " + folderpath);
+			console.log(header("Monitor") + "watching folder " + chalk.yellow.bold(folderpath));
 			var monitor = fsmonitor.watch(folderpath, {
 				// excludes non-valid filenames
 				matches:  function(relpath) {
@@ -626,6 +632,25 @@ function mergeObjects(a, b, ignore) {
 	return modified;
 }
 
+/**
+ * Delete files, with glob, and a callback when done
+ *
+ * @method     deleteFiles
+ * @param      {String}    pattern  string
+ * @param      {Function}  cb       callback when done
+ */
+function deleteFiles(pattern, cb) {
+	// use the rimraf module
+	if (cb) {
+		rimraf(pattern, {glob: true}, cb);
+	} else {
+		rimraf(pattern, {glob: true}, function(err) {
+			if (err) {
+				console.log(header('Files') + 'error deleting files ' + pattern);
+			}
+		});
+	}
+}
 
 
 module.exports.nodeVersion       = _NODE_VERSION;
@@ -648,9 +673,9 @@ module.exports.loadCABundle      = loadCABundle;
 module.exports.monitorFolders    = monitorFolders;
 module.exports.getHomeDirectory  = getHomeDirectory;
 module.exports.mkdirParent       = mkdirParent;
+module.exports.deleteFiles       = deleteFiles;
 module.exports.sanitizedURL      = sanitizedURL;
 module.exports.mergeObjects      = mergeObjects;
 
 module.exports.encodeReservedURL  = encodeReservedURL;
 module.exports.encodeReservedPath = encodeReservedPath;
-

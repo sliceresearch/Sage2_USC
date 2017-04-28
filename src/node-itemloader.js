@@ -587,7 +587,8 @@ AppLoader.prototype.loadAppFromFileFromRegistry = function(file, mime_type, aUrl
 
 		var appInstance = _this.readInstructionsFile(json_str, localPath, mime_type, app_external_url);
 		appInstance.data.file = assets.getURL(file);
-		appInstance.file = file;
+		// Seems to cause issues, when drag-drop apps
+		// appInstance.file = file;
 		callback(appInstance);
 	});
 };
@@ -631,7 +632,8 @@ AppLoader.prototype.loadZipAppFromFile = function(file, mime_type, aUrl, externa
 
 				var appInstance = _this.readInstructionsFile(json_str, zipFolder, mime_type, external_url);
 				_this.scaleAppToFitDisplay(appInstance);
-				appInstance.file = file;
+				// Seems to cause issues, when drag-drop, the first time the app is opened.
+				// appInstance.file = file;
 				callback(appInstance);
 			});
 		});

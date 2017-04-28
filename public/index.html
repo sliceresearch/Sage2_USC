@@ -4,7 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no" />
 
-<title>SAGE2 UI - Mobile</title>
+<title>SAGE2</title>
 
 <script type="text/license">
 	// SAGE2 is available for use under the SAGE2 Software License
@@ -99,6 +99,11 @@
 			<h1 style="margin-top:40px;font-size:32px;text-align:center;text-valign:center;">Loading SAGE2 Interface...</h1>
 		</div>
 
+		<div class="clear"></div>
+		<div id="mainMenuBar" style="margin: 0 0;height:40px;"></div>
+
+		<div class="clear"></div>
+
 		<div id="displayUIDiv" style="display:none;">
 			<div id="partitionsDiv"></div>
 			<div id="applicationsDiv"></div>
@@ -129,14 +134,14 @@
 						<img id="arrangement"  alt="arrangement"  src="images/ui/graycircle-arrangement.svg"  width="48" height="48"/>
 						<p id="arrangementLabel">Arrangement</p>
 					</td>
-					<td id="settingsContainer">
+					<!-- <td id="settingsContainer">
 						<img id="settings"     alt="settings"     src="images/ui/graycircle-settings.svg"     width="48" height="48"/>
 						<p id="settingsLabel">Settings</p>
 					</td>
 					<td id="infoContainer">
 						<img id="info"         alt="info"         src="images/ui/graycircle-info.svg"         width="48" height="48"/>
 						<p id="infoLabel">Information</p>
-					</td>
+					</td> -->
 					<td id="ezNoteContainer">
 						<img id="ezNote"       alt="ezNote"     src="images/ui/graycircle-ezNote.svg"       width="48" height="48"/>
 						<p id="ezNote">Quick Note</p>
@@ -250,12 +255,12 @@
 				<img alt="deletepartitions" id="deletepartitions" src="images/ui/graycircle-deletepartitions.svg" width="64" height="64"/>
 				<p>Delete Partitions</p>
 			</div>
-			<div id="assigntopartitionsContainer">
-				<img alt="assigntopartitions" id="assigntopartitions" src="images/ui/graycircle-assigntopartitions.svg" width="64" height="64"/>
-				<p>Assign to Partitions</p>
+			<div id="deleteApplicationsContainer">
+				<img alt="deleteapplications" id="deleteapplications" src="images/ui/graycircle-clearcontent.svg" width="64" height="64"/>
+				<p>Delete Apps</p>
 			</div>
 		</div>
-			
+
 		<div id="arrangementButtons">
 			<span id="arrangementCloseBtn" class="button">Close</span>
 		</div>
@@ -277,7 +282,7 @@
 						</td>
 						<td style="align:left;">
 							<select id="partitionLayout">
-								<option value="0">Full Screen</option>
+								<option value="0">Fullscreen</option>
 								<option value="1">2 Columns</option>
 								<option value="2">3 Columns</option>
 								<option value="3" selected="selected">2 Columns, 2 Rows</option>
@@ -438,7 +443,7 @@
 
 	<div id="uploadDialog" class="dialog">
 		<span id="localFilesBtn" class="button">Picture</span>
-		<span id="dropboxFilesBtn" class="button">Dropbox</span>
+		<!--<span id="dropboxFilesBtn" class="button">Dropbox</span>-->
 		<span id="cancelFilesBtn" class="button">Close</span>
 	</div>
 	<div id="localfileDialog" class="dialog">
@@ -484,15 +489,15 @@
 					</tr>
 					<tr>
 						<td>&nbsp&nbsp</td>
-						<td> <div id="uinmColorPick1" class="uinmColorPickBlock"></div> </td>
-						<td> <div id="uinmColorPick2" class="uinmColorPickBlock"></div> </td>
-						<td> <div id="uinmColorPick3" class="uinmColorPickBlock"></div> </td>
+						<td class="uinmColorPickColumn"> <div id="uinmColorPick1" class="uinmColorPickBlock"></div> </td>
+						<td class="uinmColorPickColumn"> <div id="uinmColorPick2" class="uinmColorPickBlock"></div> </td>
+						<td class="uinmColorPickColumn"> <div id="uinmColorPick3" class="uinmColorPickBlock"></div> </td>
 					</tr>
 					<tr>
 						<td>&nbsp&nbsp</td>
-						<td> <div id="uinmColorPick4" class="uinmColorPickBlock"></div> </td>
-						<td> <div id="uinmColorPick5" class="uinmColorPickBlock"></div> </td>
-						<td> <div id="uinmColorPick6" class="uinmColorPickBlock"></div> </td>
+						<td class="uinmColorPickColumn"> <div id="uinmColorPick4" class="uinmColorPickBlock"></div> </td>
+						<td class="uinmColorPickColumn"> <div id="uinmColorPick5" class="uinmColorPickBlock"></div> </td>
+						<td class="uinmColorPickColumn"> <div id="uinmColorPick6" class="uinmColorPickBlock"></div> </td>
 					</tr>
 				</table>
 			</div>
@@ -541,6 +546,7 @@
 		</div>
 		<br>
 	</div>
+
 	<div id="uiDrawZoneEraseReference">
 	</div>
 

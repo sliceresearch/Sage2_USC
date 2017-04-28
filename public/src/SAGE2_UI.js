@@ -11,7 +11,7 @@
 "use strict";
 
 /* global FileManager, SAGE2_interaction, SAGE2DisplayUI */
-/* global removeAllChildren, SAGE2_copyToClipboard */
+/* global removeAllChildren, SAGE2_copyToClipboard, parseBool */
 
 /**
  * Web user interface
@@ -93,6 +93,8 @@ var sage2Version;
 
 var note;
 
+var viewOnlyMode;
+
 /**
  * Reload the page if a application cache update is available
  *
@@ -109,8 +111,8 @@ if (window.applicationCache) {
  */
 window.addEventListener('beforeunload', function(event) {
 	if (interactor && interactor.broadcasting) {
+		// In fact, the message is unused for most browser as security measure
 		var confirmationMessage = "SAGE2 Desktop sharing in progress";
-
 		event.returnValue = confirmationMessage;  // Gecko, Trident, Chrome 34+
 		return confirmationMessage;               // Gecko, WebKit, Chrome <34
 	}
@@ -238,7 +240,7 @@ function setupFocusHandlers() {
 	document.addEventListener(visEvent, function(event) {
 		if (document[hidden]) {
 			if (interactor && interactor.broadcasting) {
-				note = notifyMe("Keep SAGE2 UI visible during screen sharing");
+				note = notifyMe("Keep browser tab with SAGE2 UI visible during screen sharing");
 			}
 		} else {
 			if (note) {
@@ -280,11 +282,14 @@ function SAGE2_init() {
 		return;
 	}
 
+	// Check if the viewonly flag is passed in the URL
+	viewOnlyMode = parseBool(getParameterByName("viewonly"));
+
 	// Detect which browser is being used
 	SAGE2_browser();
 
 	// Setup focus events
-	if ("Notification" in window) {
+	if ("Notification" in window && !viewOnlyMode) {
 		Notification.requestPermission(function (permission) {
 			console.log('Request', permission);
 		});
@@ -308,7 +313,15 @@ function SAGE2_init() {
 		// Show and hide elements once connect to server
 		document.getElementById('loadingUI').style.display     = "none";
 		document.getElementById('displayUIDiv').style.display  = "block";
-		document.getElementById('menuContainer').style.display = "block";
+		if (viewOnlyMode) {
+			// remove the button container
+			document.getElementById('menuContainer').style.display = "none";
+			// remove the top menu bar
+			document.getElementById('mainMenuBar').style.display   = "none";
+		} else {
+			// show the button container
+			document.getElementById('menuContainer').style.display = "block";
+		}
 
 		// Start an initial resize of the UI once we get a connection
 		SAGE2_resize();
@@ -396,7 +409,7 @@ function SAGE2_init() {
 	hasMouse = false;
 	console.log("Assuming mobile device");
 
-	// Event listener to the Chrome extension for desktop capture
+	// Event listener to the Chrome EXTENSION for desktop capture
 	window.addEventListener('message', function(event) {
 		if (event.origin !== window.location.origin) {
 			return;
@@ -413,6 +426,12 @@ function SAGE2_init() {
 		}
 		if (event.data.cmd === "screenshot") {
 			wsio.emit('loadImageFromBuffer', event.data);
+		}
+		if (event.data.cmd === "openlink") {
+			wsio.emit('openNewWebpage', {
+				id: interactor.uniqueID,
+				url: event.data.url
+			});
 		}
 	});
 
@@ -498,10 +517,24 @@ function setupListeners() {
 		if (fileManager) {
 			fileManager.serverConfiguration(config);
 		}
+
+		if (config.name && config.name !== "Windows" && config.name !== "localhost") {
+			document.title = "SAGE2 - " + config.name;
+		} else {
+			document.title = "SAGE2 - " + config.host;
+		}
 	});
 
 	wsio.on('createAppWindowPositionSizeOnly', function(data) {
 		displayUI.addAppWindow(data);
+	});
+
+	wsio.on('showStickyPin', function(data) {
+		displayUI.showStickyPin(data);
+	});
+
+	wsio.on('hideStickyPin', function(data) {
+		displayUI.hideStickyPin(data);
 	});
 
 	wsio.on('deleteElement', function(data) {
@@ -657,13 +690,24 @@ function setupListeners() {
 	});
 
 	wsio.on('csdSendDataToClient', function(data) {
-		// depending on the specified func does different things.
+		// Depending on the specified func does different things
 		if (data.func === 'uiDrawSetCurrentStateAndShow') {
 			uiDrawSetCurrentStateAndShow(data);
 		} else if (data.func === 'uiDrawMakeLine') {
 			uiDrawMakeLine(data);
 		} else {
 			console.log("Error, csd data packet for client contained invalid function:" + data.func);
+		}
+	});
+
+	// Message from server reporting screenshot ability of display clients
+	wsio.on('reportIfCanWallScreenshot', function(data) {
+		if (data.capableOfScreenshot) {
+			// Enable the menu item
+			$$('topmenu').enableItem('wallScreenshot_menu');
+		} else {
+			// No luck (need to use Electron)
+			console.log("Server> No screenshot capability");
 		}
 	});
 }
@@ -703,30 +747,33 @@ function SAGE2_resize(ratio) {
  * @param ratio {Number} scale factor
  */
 function resizeMenuUI(ratio) {
-	var menuContainer = document.getElementById('menuContainer');
-	var menuUI        = document.getElementById('menuUI');
+	if (!viewOnlyMode) {
+		var menuContainer = document.getElementById('menuContainer');
+		var menuUI        = document.getElementById('menuUI');
 
-	// Extra scaling factor
-	ratio = ratio || 1.0;
+		// Extra scaling factor
+		ratio = ratio || 1.0;
 
-	var menuScale = 1.0;
-	var freeWidth = window.innerWidth * ratio;
-	if (freeWidth < 1200) {
-		// 9 buttons, 120 pixels per button
-		// menuScale = freeWidth / 1080;
+		var menuScale = 1.0;
+		var freeWidth = window.innerWidth * ratio;
+		if (freeWidth < 960) {
+			// 9 buttons, 120 pixels per button
+			// menuScale = freeWidth / 1080;
+			// 10 buttons, 120 pixels per button
+			// menuScale = freeWidth / 1200;
+			// 8 buttons, 120 pixels per button
+			menuScale = freeWidth / 960;
+		}
 
-		// 10 buttons, 120 pixels per button
-		menuScale = freeWidth / 1200;
+		menuUI.style.webkitTransform = "scale(" + menuScale + ")";
+		menuUI.style.mozTransform = "scale(" + menuScale + ")";
+		menuUI.style.transform = "scale(" + menuScale + ")";
+		menuContainer.style.height = parseInt(86 * menuScale, 10) + "px";
+
+		// Center the menu bar
+		var mw = menuUI.getBoundingClientRect().width;
+		menuContainer.style.marginLeft = Math.round((window.innerWidth - mw) / 2) + "px";
 	}
-
-	menuUI.style.webkitTransform = "scale(" + menuScale + ")";
-	menuUI.style.mozTransform = "scale(" + menuScale + ")";
-	menuUI.style.transform = "scale(" + menuScale + ")";
-	menuContainer.style.height = parseInt(86 * menuScale, 10) + "px";
-
-	// Center the menu bar
-	var mw = menuUI.getBoundingClientRect().width;
-	menuContainer.style.marginLeft = Math.round((window.innerWidth - mw) / 2) + "px";
 }
 
 /**
@@ -1148,7 +1195,6 @@ function mouseCheck(event) {
 		return;
 	}
 	hasMouse = true;
-	document.title = "SAGE2 UI - Desktop";
 	console.log("Detected as desktop device");
 
 	document.addEventListener('mousedown',  pointerPress,    false);
@@ -1198,8 +1244,8 @@ function handleClick(element) {
 	} else if (element.id === "applauncher"  || element.id === "applauncherContainer"  || element.id === "applauncherLabel") {
 		wsio.emit('requestAvailableApplications');
 	} else if (element.id === "mediabrowser" || element.id === "mediabrowserContainer" || element.id === "mediabrowserLabel") {
-		if (!hasMouse && !__SAGE2__.browser.isIPad &&
-			!__SAGE2__.browser.isAndroidTablet) {
+		if (!hasMouse) {
+			//  && !__SAGE2__.browser.isIPad && !__SAGE2__.browser.isAndroidTablet) {
 			// wsio.emit('requestStoredFiles');
 			showDialog('mediaBrowserDialog');
 		} else {
@@ -1757,9 +1803,9 @@ function handleClick(element) {
 		// Delete all partitions
 		wsio.emit('deleteAllPartitions');
 		hideDialog('arrangementDialog');
-	} else if (element.id === "assigntopartitions") {
+	} else if (element.id === "deleteapplications") {
 		// Assign content to partitions (partitions grab items which are above them)
-		wsio.emit('partitionsGrabAllContent');
+		wsio.emit('deleteAllApplications');
 		hideDialog('arrangementDialog');
 	} else if (element.id === "ffShareScreenBtn") {
 		// Firefox Share Screen Dialog
@@ -2132,17 +2178,6 @@ function escapeDialog(event) {
  * @param event {Event} event data
  */
 function noBackspace(event) {
-	// if keystrokes not captured and pressing  down '?'
-	//    then show help
-	if (event.keyCode === 191 && event.shiftKey  && event.type === "keydown" && !keyEvents) {
-		webix.modalbox({
-			title: "Mouse and keyboard operations and shortcuts",
-			buttons: ["Ok"],
-			text: "<img src=/images/cheat-sheet.jpg width=100%>",
-			width: "90%"
-		});
-	}
-
 	// backspace keyCode is 8
 	// allow backspace in text box: target.type is defined for input elements
 	if (parseInt(event.keyCode, 10) === 8 && !event.target.type) {
@@ -2152,11 +2187,28 @@ function noBackspace(event) {
 		&& event.target.id.indexOf("rmbContextMenuEntry") !== -1
 		&& event.target.id.indexOf("Input") !== -1
 		) {
+		// if a user hits enter within an rmbContextMenuEntry, it will cause the effect to happen
 		event.target.parentNode["buttonEffect" + event.target.id]();
 	} else if (event.ctrlKey && event.keyCode === 13 && event.target.id === "uiNoteMakerInputField") {
+		// ctrl + enter in note maker adds a line rather than send note
 		event.target.value += "\n";
+	} else if (event.shiftKey && event.keyCode === 13 && event.target.id === "uiNoteMakerInputField") {
+		// shift + enter adds a line
 	} else if (event.keyCode === 13 && event.target.id === "uiNoteMakerInputField") {
+		// if a user hits enter within an rmbContextMenuEntry, it will cause the effect to happen
 		sendCsdMakeNote();
+		event.preventDefault(); // prevent new line on next note
+	} else if (event.keyCode === 191 && event.shiftKey && event.target.id === "uiNoteMakerInputField") {
+		// allow "?" within note creation
+	} else if (event.keyCode === 191 && event.shiftKey && event.type === "keydown" && !keyEvents) {
+		// if keystrokes not captured and pressing  down '?'
+		//    then show help
+		webix.modalbox({
+			title: "Mouse and keyboard operations and shortcuts",
+			buttons: ["Ok"],
+			text: "<img src=/images/cheat-sheet.jpg width=100%>",
+			width: "90%"
+		});
 	}
 	return true;
 }
@@ -2251,7 +2303,7 @@ function hideDialog(id) {
 	document.getElementById('blackoverlay').style.display = "none";
 	document.getElementById(id).style.display = "none";
 	document.getElementById('uiDrawZoneEraseReference').style.left = "-100px";
-	document.getElementById('uiDrawZoneEraseReference').style.top = "-100px";
+	document.getElementById('uiDrawZoneEraseReference').style.top  = "-100px";
 	if (id == 'uiDrawZone') {
 		uiDrawZoneRemoveSelfAsClient();
 	}
@@ -2469,6 +2521,7 @@ function setRmbContextMenuEntries(data) {
 					data.func = this.callback;
 					data.parameters = this.parameters;
 					data.parameters.clientName = document.getElementById('sage2PointerLabel').value;
+					data.parameters.clientId   = interactor.uniqueID,
 					wsio.emit('utdCallFunctionOnApp', data);
 				}
 				// hide after use
@@ -2478,7 +2531,7 @@ function setRmbContextMenuEntries(data) {
 	} // end adding a send function to each menu entry
 	// always add the Close Menu entry.
 	var closeEntry = {};
-	closeEntry.description = "Close Menu";
+	closeEntry.description = "Close menu";
 	closeEntry.buttonEffect = function () {
 		hideRmbContextMenuDiv();
 	};
@@ -2488,18 +2541,32 @@ function setRmbContextMenuEntries(data) {
 	for (i = 0; i < entriesToAdd.length; i++) {
 		workingDiv = document.createElement('div');
 		// unique entry id
-		workingDiv.id = 'rmbContextMenuEntry' + i; // unique entry id
+		workingDiv.id = 'rmbContextMenuEntry' + i;
 		if (typeof entriesToAdd[i].entryColor === "string") {
-			workingDiv.startingBgColor = entriesToAdd[i].entryColor; // use given color if specified
+			// use given color if specified
+			workingDiv.startingBgColor = entriesToAdd[i].entryColor;
 		} else {
-			workingDiv.startingBgColor = "#FFF8E1"; // start as off-white color
+			// start as off-white color
+			workingDiv.startingBgColor = "#FFF8E1";
 		}
 		workingDiv.style.background = workingDiv.startingBgColor;
+		// Add a little padding
+		workingDiv.style.padding = "0 5px 0 5px";
+		// Align main text to the left
+		workingDiv.style.textAlign = "left";
 		// special case for a separator (line) entry
 		if (entriesToAdd[i].description === "separator") {
 			workingDiv.innerHTML = "<hr>";
 		} else {
-			workingDiv.innerHTML = "&nbsp&nbsp&nbsp" + entriesToAdd[i].description + "&nbsp&nbsp&nbsp";
+			if (entriesToAdd[i].accelerator) {
+				// Add description of the keyboard shortcut
+				workingDiv.innerHTML = "<p style='float: left;'>" + entriesToAdd[i].description + "</p>";
+				workingDiv.innerHTML += "<p style='float: right; padding-left: 5px;'> [" + entriesToAdd[i].accelerator + "]</p>";
+				workingDiv.innerHTML += "<div style='clear: both;'></div>";
+			} else {
+				// or just plain text
+				workingDiv.innerHTML = entriesToAdd[i].description;
+			}
 		}
 		// add input field if app says to.
 		workingDiv.inputField = false;
@@ -2510,7 +2577,8 @@ function setRmbContextMenuEntries(data) {
 			inputField.id = workingDiv.id + "Input";
 			// check if the data has a value field
 			inputField.defaultValue = entriesToAdd[i].value || "";
-			if (entriesToAdd[i].inputFieldSize) { // if specified state input field size
+			if (entriesToAdd[i].inputFieldSize) {
+				// if specified state input field size
 				inputField.size = entriesToAdd[i].inputFieldSize;
 			} else {
 				inputField.size = 5;
@@ -2560,9 +2628,9 @@ function setRmbContextMenuEntries(data) {
 		workingDiv.app = app;
 		// if it is the last entry to add, put a hr tag after it to separate the close menu button
 		var rmbDiv = document.getElementById('rmbContextMenu');
-		if (i === entriesToAdd.length - 1) {
-			rmbDiv.appendChild(document.createElement('hr'));
-		}
+		// if (i === entriesToAdd.length - 1) {
+		// 	rmbDiv.appendChild(document.createElement('hr'));
+		// }
 		rmbDiv.appendChild(workingDiv);
 	} // end for each entry
 } // end setRmbContextMenuEntries
@@ -2576,7 +2644,7 @@ function setupUiNoteMaker() {
 	var inputField = document.getElementById('uiNoteMakerInputField');
 	inputField.id = "uiNoteMakerInputField";
 	inputField.rows = 5;
-	inputField.cols = 20;
+	inputField.cols = 24;
 	var sendButton = document.getElementById('uiNoteMakerSendButton');
 	// click effect to make a note on the display (app launch)
 	sendButton.addEventListener('click', function() {
@@ -2615,14 +2683,14 @@ function setUiNoteColorSelect(colorNumber) {
 		workingDiv = document.getElementById("uinmColorPick" + i);
 		workingDiv.style.border = "1px solid black";
 		workingDiv.colorWasPicked = false;
-		workingDiv.style.width = "65px";
-		workingDiv.style.height = "45px";
+		workingDiv.style.width = (parseInt(workingDiv.style.width) + 8) + "px";
+		workingDiv.style.height = (parseInt(workingDiv.style.height) + 8) + "px";
 	}
 	workingDiv = document.getElementById("uinmColorPick" + colorNumber);
 	workingDiv.style.border = "3px solid black";
 	workingDiv.colorWasPicked = true;
-	workingDiv.style.width = "59px";
-	workingDiv.style.height = "39px";
+	workingDiv.style.width = (parseInt(workingDiv.style.width) - 8) + "px";
+	workingDiv.style.height = (parseInt(workingDiv.style.height) - 8) + "px";
 }
 
 /**
@@ -2637,21 +2705,21 @@ function sendCsdMakeNote() {
 	var data = {};
 	data.type		= "launchAppWithValues";
 	data.appName	= "quickNote";
-	data.func		= "setMessage";
-	data.params		= {};
-	data.params.clientName = document.getElementById('sage2PointerLabel').value;
-	data.params.clientInput = workingDiv.value;
-	workingDiv.value = ""; // clear out the input field.
+	// data.func		= "setMessage";
+	data.csdInitValues		= {};
+	data.csdInitValues.clientName = document.getElementById('sage2PointerLabel').value;
+	data.csdInitValues.clientInput = workingDiv.value;
 	if (document.getElementById("uiNoteMakerCheckAnonymous").checked) {
-		data.params.clientName = "Anonymous";
+		data.csdInitValues.clientName = "Anonymous";
 	}
-	data.params.colorChoice = "lightyellow";
+	data.csdInitValues.colorChoice = "lightyellow";
 	for (var i = 1; i <= 6; i++) {
 		if (document.getElementById("uinmColorPick" + i).colorWasPicked) {
-			data.params.colorChoice = document.getElementById("uinmColorPick" + i).style.background;
+			data.csdInitValues.colorChoice = document.getElementById("uinmColorPick" + i).style.background;
 		}
 	}
 	wsio.emit('csdMessage', data);
+	workingDiv.value = ""; // clear out the input field.
 }
 
 /**
@@ -2692,8 +2760,8 @@ function setupUiDrawCanvas() {
 				this.pmy = event.offsetY;
 			}
 			var workingDiv = document.getElementById('uiDrawZoneEraseReference');
-			workingDiv.style.left = (event.pageX - parseInt(workingDiv.style.width) / 2) + "px";
-			workingDiv.style.top = (event.pageY - parseInt(workingDiv.style.height) / 2) + "px";
+			workingDiv.style.left = (event.pageX - parseInt(workingDiv.style.width)  / 2) + "px";
+			workingDiv.style.top  = (event.pageY - parseInt(workingDiv.style.height) / 2) + "px";
 		}
 	);
 	// closes the draw area (but really hides it)
@@ -2839,7 +2907,7 @@ function uiDrawSelectThickness(selectedDivId) {
 			workingDiv.style.border = "3px solid red";
 			// change the reference draw circle
 			workingDiv = document.getElementById('uiDrawZoneEraseReference');
-			workingDiv.style.width = thickness + "px";
+			workingDiv.style.width  = thickness + "px";
 			workingDiv.style.height = thickness + "px";
 		} else {
 			workingDiv = document.getElementById('uidztp' + i);
@@ -2869,12 +2937,12 @@ function uiDrawTouchMove(event) {
 	var workingDiv = document.getElementById('uiDrawZoneCanvas');
 	var touches = event.changedTouches;
 	var touchId;
-	var cbb = workingDiv.getBoundingClientRect(); //canvas bounding box: cbb
+	var cbb = workingDiv.getBoundingClientRect(); // canvas bounding box: cbb
 	for (var i = 0; i < touches.length; i++) {
 		touchId = uiDrawGetTouchId(touches[i].identifier);
-		//only if it is a known touch continuation
+		// only if it is a known touch continuation
 		if (touchId !== -1) {
-			//xDest, yDest, xPrev, yPrev
+			// xDest, yDest, xPrev, yPrev
 			uiDrawSendLineCommand(
 				touches[i].pageX - cbb.left,
 				touches[i].pageY - cbb.top,
@@ -2886,8 +2954,8 @@ function uiDrawTouchMove(event) {
 		}
 	}
 	workingDiv = document.getElementById('uiDrawZoneEraseReference');
-	workingDiv.style.left = (touches[0].pageX - parseInt(workingDiv.style.width) / 2) + "px";
-	workingDiv.style.top = (touches[0].pageY - parseInt(workingDiv.style.height) / 2) + "px";
+	workingDiv.style.left = (touches[0].pageX - parseInt(workingDiv.style.width) / 2)  + "px";
+	workingDiv.style.top  = (touches[0].pageY - parseInt(workingDiv.style.height) / 2) + "px";
 }
 
 /**
@@ -2906,7 +2974,7 @@ function uiDrawTouchEnd(event) {
 	}
 	workingDiv = document.getElementById('uiDrawZoneEraseReference');
 	workingDiv.style.left = "-100px";
-	workingDiv.style.top = "-100px";
+	workingDiv.style.top  = "-100px";
 }
 
 /**
@@ -3054,12 +3122,12 @@ This is necessary because the doodle canvas space is a shared draw space,
 	even if they are not currently editing the app.
 */
 function uiDrawZoneRemoveSelfAsClient() {
-	var workingDiv			= document.getElementById('uiDrawZoneCanvas');
-	var dataForApp			= {};
-	dataForApp.app			= workingDiv.appId;
-	dataForApp.func			= "removeClientIdAsEditor";
-	dataForApp.data			= [workingDiv.clientDest];
-	dataForApp.type			= "sendDataToClient";
-	dataForApp.clientDest	= "allDisplays";
+	var workingDiv  = document.getElementById('uiDrawZoneCanvas');
+	var dataForApp  = {};
+	dataForApp.app  = workingDiv.appId;
+	dataForApp.func = "removeClientIdAsEditor";
+	dataForApp.data = [workingDiv.clientDest];
+	dataForApp.type = "sendDataToClient";
+	dataForApp.clientDest = "allDisplays";
 	wsio.emit("csdMessage", dataForApp);
 }

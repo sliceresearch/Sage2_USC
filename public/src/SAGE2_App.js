@@ -148,7 +148,7 @@ var SAGE2_App = Class.extend({
 		this.fileRead       = false;
 		this.fileWrite      = false;
 		this.fileReceived   = false;
-
+		this.hasFileBuffer = false;
 		this.SAGE2CopyState(data.state);
 		this.SAGE2InitializeAppOptionsFromState();
 	},
@@ -297,7 +297,7 @@ var SAGE2_App = Class.extend({
 			this.event(eventType, position, user_id, data, date);
 
 			if (this.passSAGE2PointerAsMouseEvents) {
-				SAGE2MEP.processAndPassEvents(this.element.id, eventType, position,
+				SAGE2MEP.processAndPassEvents(this.id, eventType, position,
 					user_id, data, date);
 			}
 			this.SAGE2UserModification = false;
@@ -735,6 +735,9 @@ var SAGE2_App = Class.extend({
 		if (typeof this.quit === 'function') {
 			this.quit();
 		}
+		if (isMaster && this.hasFileBuffer === true) {
+			wsio.emit('closeFileBuffer', {id: this.div.id});
+		}
 	},
 
 	/**
@@ -772,12 +775,14 @@ var SAGE2_App = Class.extend({
 	* @method sendFullscreen
 	*/
 	sendFullscreen: function() {
-		var msgObject = {};
-		// Add the display node ID to the message
-		msgObject.node = clientID;
-		msgObject.id   = this.id;
-		// send the message to server
-		wsio.emit('appFullscreen', msgObject);
+		if (isMaster) {
+			var msgObject = {};
+			// Add the display node ID to the message
+			msgObject.node = clientID;
+			msgObject.id   = this.id;
+			// send the message to server
+			wsio.emit('appFullscreen', msgObject);
+		}
 	},
 
 	/**
@@ -860,6 +865,43 @@ var SAGE2_App = Class.extend({
 	},
 
 	/**
+	* Application request for fileBuffer
+	*
+	* @method requestFileBuffer
+	* @param fileName {String} name of the file to which data will be saved.
+	*/
+	requestFileBuffer: function (data) {
+		this.hasFileBuffer = true;
+		if (isMaster) {
+			var msgObject = {};
+			msgObject.id        = this.div.id;
+			msgObject.fileName  = data.fileName;
+			msgObject.owner     = data.owner;
+			msgObject.createdOn = data.createdOn;
+			msgObject.extension = data.extension;
+			msgObject.content   = data.content;
+			// Send the message to the server
+			wsio.emit('requestFileBuffer', msgObject);
+		}
+	},
+
+	/**
+	* Application request for a new title
+	*
+	* @method requestNewTitle
+	* @param newTitle {String} Text that will be set as the new title for this instance of the app.
+	*/
+	requestNewTitle: function (newTitle) {
+		if (isMaster) {
+			var msgObject = {};
+			msgObject.id        = this.div.id;
+			msgObject.title     = newTitle;
+			// Send the message to the server
+			wsio.emit('requestNewTitle', msgObject);
+		}
+	},
+
+	/**
 	* Performs full fill of app context menu and sends update to server.
 	* This provides one place(mostly) to change code for context menu.
 	*
@@ -874,8 +916,16 @@ var SAGE2_App = Class.extend({
 			if (typeof this.getContextEntries === "function") {
 				rmbData.entries = this.getContextEntries();
 				rmbData.entries.push({
+					description: "separator"
+				});
+				rmbData.entries.push({
 					description: "Send to back",
 					callback: "SAGE2SendToBack",
+					parameters: {}
+				});
+				rmbData.entries.push({
+					description: "Maximize",
+					callback: "SAGE2Maximize",
 					parameters: {}
 				});
 				rmbData.entries.push({
@@ -894,6 +944,13 @@ var SAGE2_App = Class.extend({
 				}];
 			}
 			wsio.emit("dtuRmbContextMenuContents", rmbData);
+		}
+	},
+
+	updateFileBufferCursorPosition: function(cursorData) {
+		if (isMaster) {
+			cursorData.appId = this.div.id;
+			wsio.emit("updateFileBufferCursorPosition", cursorData);
 		}
 	},
 
