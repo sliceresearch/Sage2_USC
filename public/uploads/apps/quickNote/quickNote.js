@@ -20,7 +20,7 @@ var quickNote = SAGE2_App.extend({
 		this.element.style.background = "lightyellow";
 		this.element.style.fontSize   = ui.titleTextSize + "px";
 		// Using SAGE2 default font
-		this.element.style.fontFamily = "Lucidia Console, Monaco, monospace";
+		this.element.style.fontFamily = "Courier New, Consolas, Menlo, monospace";
 		// Default starting attributes
 		this.backgroundChoice = "lightyellow";
 
