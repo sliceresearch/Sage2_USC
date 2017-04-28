@@ -14,7 +14,7 @@ date >> $LOG
 node server.js -i -f $SAGE2/config/govlab.json -l </dev/null 2>&1 >> $LOG &
 MASTER=$!
 
-sleep 4
+sleep 2
 
 # VNC clients
 LOG=$SAGE2/slave1.log
@@ -90,12 +90,12 @@ sleep 20
 while true
 do
   ps -p $MASTER > /dev/null || doExit
-  ps -p $SLAVE1 > /dev/null || doExit
-  ps -p $SLAVE2 > /dev/null || doExit
-  ps -p $SLAVE3 > /dev/null || doExit
-  ps -p $SLAVE4 > /dev/null || doExit
-  ps -p $SLAVE5 > /dev/null || doExit
-  ps -p $SLAVE6 > /dev/null || doExit
+  #ps -p $SLAVE1 > /dev/null || doExit
+  #ps -p $SLAVE2 > /dev/null || doExit
+  #ps -p $SLAVE3 > /dev/null || doExit
+  #ps -p $SLAVE4 > /dev/null || doExit
+  #ps -p $SLAVE5 > /dev/null || doExit
+  #ps -p $SLAVE6 > /dev/null || doExit
   sleep 1
 done
 

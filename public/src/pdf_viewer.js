@@ -573,7 +573,7 @@ var pdf_viewer = SAGE2_App.extend({
 		this.translateGroup(this.imageVisualizer, this.state.horizontalOffset, 0);
 
                 var msg = {pageNr:page, url:this.state.doc_url, startText:this.startText[page]};
-                console.log('emit goToPage '+JSON.stringify(msg));
+                //console.log('emit goToPage '+JSON.stringify(msg));
                 //this.modifyState("pageText",this.startText[page]);
                 if (isMaster) {
                   wsio.emit('goToPage',msg);
@@ -775,6 +775,7 @@ var pdf_viewer = SAGE2_App.extend({
 	* @param date {Date} current time from the server
 	*/
 	event: function(eventType, position, user, data, date) {
+		//console.log("event: ",eventType,data);
 		if (eventType === "pointerPress" && (data.button === "left")) {
 			if (this.showUI) {
 				this.leftClickDown(position.x, position.y, user.id);

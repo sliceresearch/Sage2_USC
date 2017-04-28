@@ -2094,7 +2094,7 @@ function wsPrintDebugInfo(wsio, data) {
 }
 
 function wsRequestVideoFrame(wsio, data) {
-	console.log("wsRequestVideoFrame",JSON.stringify(data));
+	//console.log("wsRequestVideoFrame",JSON.stringify(data));
 	SAGE2Items.renderSync[data.id].clients[wsio.id].readyForNextFrame = true;
 	handleNewClientReady(data.id);
 }
@@ -3391,20 +3391,103 @@ function initializeLoadedVideo(appInstance, videohandle) {
 }
 
 var framesDropped = 0;
-function frameDrop(id) {
+var framesDroppedUpstream = 0;
+var framesDroppedDownstream = 0;
+
+var loggedIntervals = {};
+
+function timerLog(id,tag,time) {
+	var log = timerInit(id,tag);
+	log.max = Math.max(time, log.max);
+	log.min = Math.min(time, log.min);
+	log.total = log.total + time;
+	log.count = log.count + 1;
+	log.avg = log.total / log.count;
+	log.samples.push(time);
+	log.hist = histogram(log);
+	var display = {};
+	display.id = log.id;
+	display.tag = log.tag;
+	display.count = log.count;
+	display.max = log.max;
+	display.min = log.min;
+	display.hist = log.hist;
+	display.avg = log.avg;
+	if (log.count % 200 === 0) {
+		console.log("logTime: ",JSON.stringify(display));
+	}
+	//console.log("loggedIntervals",JSON.stringify(loggedIntervals));
+}
+
+function histogram(log) {
+	var digits = Math.floor(Math.log(log.avg) / Math.log(10));
+	var binsize = Math.pow(10, digits);
+	//console.log("bin size",binsize);
+	var hist = {};
+	for (var i = 0; i< log.samples.length; i++) {
+		var v = log.samples[i];
+		var bin = Math.floor(v / binsize) * binsize;
+		//console.log(v,"->",bin);
+		if (hist[bin]===null || hist[bin]===undefined) {
+			hist[bin]=0;
+		}
+		hist[bin] = hist[bin] + 1;
+	}	
+	return JSON.stringify(hist);
+}
+
+function timerInit(id,tag) {
+	var log = null;
+	var key = id+"_"+tag;
+	if (loggedIntervals[key]===null || loggedIntervals[key]===undefined) {
+		log = {total:0, count: 0, id: id, tag: tag, max:0, min:Infinity, samples:[]};
+		loggedIntervals[key] = log;
+	} else {
+		log = loggedIntervals[key];
+	}
+	return log;
+}
+
+function timerStart(id,tag) {
+	var log = timerInit(id,tag);
+	log.lastStart = new Date();
+}
+
+function timerStop(id,tag) {
+	var log = timerInit(id,tag);
+	if (log.lastStart!==null && log.lastStart!==undefined) {
+		timerLog(id, tag, new Date() - log.lastStart);
+	} 
+}
+
+function frameDrop(id,data) {
 	framesDropped = framesDropped + 1;
-	if (framesDropped>0 && framesDropped % 10 === 0) {
+	if (data!==null && data!==undefined) {
+		if (data.upstream) {
+			framesDroppedUpstream = framesDroppedUpstream + 1;
+		}
+		if (data.downstream) {
+			framesDroppedDownstream = framesDroppedDownstream + 1;
+		}
+	}
+	if (framesDropped>0 && framesDropped % 200 === 0) {
 		console.log("Frames dropped: ",framesDropped);
+		console.log("Frames dropped upstream: ",framesDroppedUpstream);
+		console.log("Frames dropped downstream: ",framesDroppedDownstream);
 	}	
 }
 
 // move this function elsewhere
 function handleNewVideoFrame(id) {
+	timerStop(id,"demuxIAT");
+	timerStart(id,"demuxIAT");
+	timerStart(id,"sendFrameLatency");
 	var videohandle = SAGE2Items.renderSync[id];
 
 	videohandle.newFrameGenerated = true;
 	if (!allTrueDict(videohandle.clients, "readyForNextFrame")) {
-		frameDrop(id);
+		// this frame will never be seen - therefore it is ``dropped''
+		frameDrop(id,{downstream:true});
 		return false;
 	}
 
@@ -3417,10 +3500,16 @@ function handleNewClientReady(id) {
 	var videohandle = SAGE2Items.renderSync[id];
 
 	// if no new frame is generate or not all display clients have finished rendering previous frame - return
-	if (videohandle.newFrameGenerated !== true || !allTrueDict(videohandle.clients, "readyForNextFrame")) {
+	var upstream_blocked = (videohandle.newFrameGenerated !== true);
+	var downstream_blocked = !allTrueDict(videohandle.clients, "readyForNextFrame");
+	// display is waiting - not technically ``dropped'' but ...
+	if (!downstream_blocked) {
+		timerStop(id,"sendFrameLatency");
+	}
+	//if (videohandle.newFrameGenerated !== true || !allTrueDict(videohandle.clients, "readyForNextFrame")) {}
+	if (upstream_blocked || downstream_blocked) {
 		return false;
 	}
-
 	updateVideoFrame(id);
 	return true;
 }
@@ -3429,7 +3518,8 @@ function updateVideoFrame(id) {
 	var i;
 	var key;
 	var videohandle = SAGE2Items.renderSync[id];
-
+	
+	var d1 = new Date();
 	videohandle.newFrameGenerated = false;
 	for (key in videohandle.clients) {
 		videohandle.clients[key].wsio.emit('updateFrameIndex', {id: id, frameIdx: videohandle.frameIdx});
@@ -3444,7 +3534,10 @@ function updateVideoFrame(id) {
 			videohandle.clients[key].readyForNextFrame = false;
 		}
 	}
+	var d2 = new Date();
+	timerLog(id,"updateVideoFrame",d2 - d1);
 }
+	
 
 // move this function elsewhere
 function calculateValidBlocks(app, blockSize, renderhandle) {
@@ -3590,7 +3683,8 @@ function wsAddNewWebElement(wsio, data) {
 // **************  Folder management     *****************
 
 function wsGoToPage(wsio, data) {
-       broadcast('goToPage', data);
+	console.log('goToPage',JSON.stringify(data));
+	broadcast('goToPage', data);
 }
 
 function wsCreateFolder(wsio, data) {
@@ -5417,7 +5511,7 @@ function processInputCommand(line) {
 			console.log('openfile\t\topen a FILE: open file_url [0.5, 0.5]');
 			console.log('play\t\tplay a media stream: appid');
 			console.log('pause\t\tpause a media stream: appid');
-			console.log('loop\t\tloop a media stream (yes/no): appid boolean');
+			console.log('loop\t\tloop a media stream (true/false): appid boolean');
 			console.log('resize\t\tresize a window: appid width height');
 			console.log('moveby\t\tshift a window: appid dx dy');
 			console.log('moveto\t\tmove a window: appid x y');
