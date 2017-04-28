@@ -47,7 +47,9 @@ var googlemaps = SAGE2_App.extend({
 		// temporarily testing how well mouse conversion works
 		this.passSAGE2PointerAsMouseEvents = true;
 
+		// testing broadcast capabilities
 		this.csdBroadcast();
+		this.lastViewSetTime = Date.now();
 	},
 
 	initializeWidgets: function() {
@@ -810,8 +812,11 @@ var googlemaps = SAGE2_App.extend({
 	},
 
 	setView: function(serverVar) {
-		this.map.setCenter(serverVar.location);
-		this.updateCenter();
+		if (this.lastViewSetTime + 1000 < Date.now()) {
+			this.map.setCenter(serverVar.location);
+			this.updateCenter();
+			this.lastViewSetTime = Date.now();
+		}
 	}
 
 });

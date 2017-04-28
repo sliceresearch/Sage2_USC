@@ -1,6 +1,5 @@
 {
 	"main_script": "d3Scatter.js",
-	"icon": "term.png",
 	"width": 300,
 	"height": 600,
 	"animation": false,
@@ -9,9 +8,9 @@
 	],
 	"load": {
 	},
-	"title": "Mini Console",
+	"title": "d3 scatter test",
 	"version": "1.0.0",
-	"description": "Remote js test",
+	"description": "d3 js test",
 	"keywords": [  ],
 	"author": "Dylan Kobayashi <dylank@hawaii.edu>",
 	"license": "SAGE2-Software-License"

@@ -122,7 +122,7 @@ var miniCon = SAGE2_App.extend({
 			func: "csdHandlerInitialVariableList"
 		};
 		// erase me
-		console.log("erase me, miniCon subscribing to new variables");
+		console.log("erase me, miniCon asking for existing variables");
 		console.dir(dataForServer);
 		wsio.emit("csdMessage", dataForServer);
 
@@ -148,9 +148,19 @@ var miniCon = SAGE2_App.extend({
 		}
 		console.log("erase me, miniCon notified of new variable named " + addedVar.nameOfValue
 		+ " has description: " + addedVar.description);
-
 		this.listOfCsdVariables.push(addedVar);
+	},
+
+	printAvailableVariables: function() {
+		this.logOverride("");
+		for (let i = 0; i < this.listOfCsdVariables.length; i++) {
+			this.logOverride("&nbsp&nbsp" + this.listOfCsdVariables[i].description);
+			this.logOverride("" + this.listOfCsdVariables[i].nameOfValue);
+		}
+		this.logOverride("---Variables on server: " + this.listOfCsdVariables.length + "---");
+
 
 	}
+
 
 });

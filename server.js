@@ -9783,7 +9783,7 @@ function csdGetAllTrackedValues(wsio, data) {
 	dataForApp.func = data.func;
 	for (var i = 0; i < csdDataStructure.allNamesOfValues.length; i++) {
 		dataForApp.data.push(
-			{	name: csdDataStructure.allNamesOfValues[i],
+			{	nameOfValue: csdDataStructure.allNamesOfValues[i],
 				value: csdDataStructure.allValues[ csdDataStructure.allNamesOfValues[i] ]
 			});
 	}
@@ -9804,8 +9804,8 @@ function csdGetAllTrackedDescriptions(wsio, data) {
 	dataForApp.func = data.func;
 	for (var i = 0; i < csdDataStructure.allNamesOfValues.length; i++) {
 		dataForApp.data.push(
-			{	name: csdDataStructure.allNamesOfValues[i],
-				value: csdDataStructure.allValues[ csdDataStructure.allNamesOfValues[i] ].description
+			{	nameOfValue: csdDataStructure.allNamesOfValues[i],
+				description: csdDataStructure.allValues[ csdDataStructure.allNamesOfValues[i] ].description
 			});
 	}
 	wsio.emit('broadcast', dataForApp);
