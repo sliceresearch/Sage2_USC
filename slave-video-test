@@ -1,0 +1,49 @@
+#!/bin/bash
+
+SAGECMD=/home/sage/sage2/commands/bin/sage_command.js
+HOST=10.234.2.22
+MPORT=9290
+SPORT=9292
+FILE=$1
+
+
+# Pause is required to avoid seeing after-effects of memory or process leak from playing videos
+#function doExit() {
+#	node $SAGECMD localhost:${PORT} pause $APP
+#}
+
+node $SAGECMD ${HOST}:9290 clear
+node $SAGECMD ${HOST}:9292 clear
+node $SAGECMD ${HOST}:9294 clear
+node $SAGECMD ${HOST}:9296 clear
+node $SAGECMD ${HOST}:9298 clear
+node $SAGECMD ${HOST}:9300 clear
+node $SAGECMD ${HOST}:9302 clear
+
+node $SAGECMD ${HOST}:9290 open /user/videos/Roundabout%201_HD.mp4
+node $SAGECMD ${HOST}:9292 open /user/videos/Roundabout%202_HD.mp4
+node $SAGECMD ${HOST}:9294 open /user/videos/Roundabout%203_HD.mp4
+node $SAGECMD ${HOST}:9296 open /user/videos/Roundabout%204_HD.mp4
+node $SAGECMD ${HOST}:9298 open /user/videos/Roundabout%205_HD.mp4
+node $SAGECMD ${HOST}:9300 open /user/videos/euclidian-vxportals-live-MAH09421.MP4
+node $SAGECMD ${HOST}:9302 open /user/videos/effusion-spee3d-Copy%20of%20MAH07775.MP4
+
+sleep 1
+
+node $SAGECMD ${HOST}:9290 loop app_10.234.2.22:9290_0 true
+node $SAGECMD ${HOST}:9292 loop app_10.234.2.22:9292_0 true
+node $SAGECMD ${HOST}:9294 loop app_10.234.2.22:9294_0 true
+node $SAGECMD ${HOST}:9296 loop app_10.234.2.22:9296_0 true
+node $SAGECMD ${HOST}:9298 loop app_10.234.2.22:9298_0 true
+node $SAGECMD ${HOST}:9300 loop app_10.234.2.22:9300_0 true
+node $SAGECMD ${HOST}:9302 loop app_10.234.2.22:9302_0 true
+
+~/script/arrangeapps
+
+node $SAGECMD ${HOST}:9290 play app_10.234.2.22:9290_0
+node $SAGECMD ${HOST}:9292 play app_10.234.2.22:9292_0
+node $SAGECMD ${HOST}:9294 play app_10.234.2.22:9294_0
+node $SAGECMD ${HOST}:9296 play app_10.234.2.22:9296_0
+node $SAGECMD ${HOST}:9298 play app_10.234.2.22:9298_0
+node $SAGECMD ${HOST}:9300 play app_10.234.2.22:9300_0
+node $SAGECMD ${HOST}:9302 play app_10.234.2.22:9302_0

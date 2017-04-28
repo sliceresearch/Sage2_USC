@@ -1067,6 +1067,11 @@ function setupListeners(anWsio) {
 		}
 	});
 
+	// only master - slave servers somehow replicate copies which messes up e.g. goToPage messages in pdf viewer
+	// FIXME:
+	// (1) proper generic routing of messages from master to the delegated slave server
+	// (2) proper integration with remote servers(...?)
+        if (anWsio===masterWsio) {
 	anWsio.on('eventInItem', function(event_data) {
 		var app = applications[event_data.id];
 		if (app) {
@@ -1074,6 +1079,7 @@ function setupListeners(anWsio) {
 			app.SAGE2Event(event_data.type, event_data.position, event_data.user, event_data.data, date);
 		}
 	});
+	}
 
 	anWsio.on('requestNewControl', function(data) {
 		var dt = new Date(data.date);

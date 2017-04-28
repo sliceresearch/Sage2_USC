@@ -1,0 +1,7 @@
+#!/bin/bash
+
+SAGECMD=/home/sage/sage2/commands/bin/sage_command.js
+HOST=10.234.2.22
+MPORT=9290
+
+node $SAGECMD ${HOST}:${MPORT} assets | grep -i $*

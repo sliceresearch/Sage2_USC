@@ -1,0 +1,53 @@
+#!/bin/bash
+
+SAGECMD=/home/sage/sage2/commands/bin/sage_command.js
+HOST=10.234.2.22
+MPORT=9290
+SPORT=9292
+FILE=$1
+
+
+# Pause is required to avoid seeing after-effects of memory or process leak from playing videos
+#function doExit() {
+#	node $SAGECMD localhost:${PORT} pause $APP
+#}
+
+node $SAGECMD ${HOST}:9290 clear
+node $SAGECMD ${HOST}:9292 clear
+node $SAGECMD ${HOST}:9294 clear
+node $SAGECMD ${HOST}:9296 clear
+node $SAGECMD ${HOST}:9298 clear
+
+node $SAGECMD ${HOST}:9290 open /user/videos/Roundabout%201_HD.mp4
+node $SAGECMD ${HOST}:9290 open /user/videos/Roundabout%202_HD.mp4
+node $SAGECMD ${HOST}:9290 open /user/videos/Roundabout%203_HD.mp4
+node $SAGECMD ${HOST}:9290 open /user/videos/Roundabout%204_HD.mp4
+node $SAGECMD ${HOST}:9290 open /user/videos/Roundabout%205_HD.mp4
+node $SAGECMD ${HOST}:9290 open /user/videos/euclidian-vxportals-live-MAH09421.MP4
+node $SAGECMD ${HOST}:9290 open /user/videos/effusion-spee3d-Copy%20of%20MAH07775.MP4
+
+sleep 1
+
+~/script/arrangeapps
+
+node $SAGECMD ${HOST}:9290 loop app_10.234.2.22:9290_0 yes
+node $SAGECMD ${HOST}:9290 loop app_10.234.2.22:9290_1 yes
+node $SAGECMD ${HOST}:9290 loop app_10.234.2.22:9290_2 yes
+node $SAGECMD ${HOST}:9290 loop app_10.234.2.22:9290_3 yes
+node $SAGECMD ${HOST}:9290 loop app_10.234.2.22:9290_4 yes
+node $SAGECMD ${HOST}:9290 loop app_10.234.2.22:9290_5 yes
+node $SAGECMD ${HOST}:9290 loop app_10.234.2.22:9290_6 yes
+node $SAGECMD ${HOST}:9290 loop app_10.234.2.22:9290_7 yes
+node $SAGECMD ${HOST}:9290 loop app_10.234.2.22:9290_8 yes
+
+node $SAGECMD ${HOST}:9290 play app_10.234.2.22:9290_0
+node $SAGECMD ${HOST}:9290 play app_10.234.2.22:9290_1
+node $SAGECMD ${HOST}:9290 play app_10.234.2.22:9290_2
+node $SAGECMD ${HOST}:9290 play app_10.234.2.22:9290_3
+node $SAGECMD ${HOST}:9290 play app_10.234.2.22:9290_4
+node $SAGECMD ${HOST}:9290 play app_10.234.2.22:9290_5
+node $SAGECMD ${HOST}:9290 play app_10.234.2.22:9290_6
+node $SAGECMD ${HOST}:9290 play app_10.234.2.22:9290_7
+node $SAGECMD ${HOST}:9290 play app_10.234.2.22:9290_8
+
+node $SAGECMD ${HOST}:9290 apps
