@@ -139,13 +139,16 @@ function openWindow() {
 	}
 	mainWindow.loadURL(location);
 
-	mainWindow.on('show', function() {
-		if (commander.monitor !== null) {
+	if (commander.monitor !== null) {
+		mainWindow.on('show', function() {
 			mainWindow.setFullScreen(true);
-		}
+			// Once all done, prevent changing the fullscreen state
+			mainWindow.setFullScreenable(false);
+		});
+	} else {
 		// Once all done, prevent changing the fullscreen state
 		mainWindow.setFullScreenable(false);
-	});
+	}
 }
 
 /**
