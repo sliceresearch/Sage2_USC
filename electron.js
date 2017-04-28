@@ -143,9 +143,9 @@ function openWindow() {
 		if (commander.monitor !== null) {
 			mainWindow.setFullScreen(true);
 		}
-		// Once all done, prevent changing the fullscreen state
-		mainWindow.setFullScreenable(false);
 	});
+	// Once all done, prevent changing the fullscreen state
+	mainWindow.setFullScreenable(false);
 }
 
 /**
