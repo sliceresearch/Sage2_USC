@@ -1039,7 +1039,7 @@ var SAGE2_App = Class.extend({
 			console.log("resize child");
 			resizeLinkedChildApp(data); //defined in runtime
 		}
-	}
+	},
 
 	updateFileBufferCursorPosition: function(cursorData) {
 		if (isMaster) {

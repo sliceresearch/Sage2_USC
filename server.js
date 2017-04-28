@@ -1056,6 +1056,8 @@ function setupListeners(wsio) {
 	wsio.on('deleteAllPartitions',                  wsDeleteAllPartitions);
 	wsio.on('partitionsGrabAllContent',             wsPartitionsGrabAllContent);
 
+	wsio.on('voteInPoll', 							wsVoteInPoll);
+
 }
 
 /**
@@ -10424,4 +10426,24 @@ function deletePartition(id) {
 	broadcast('deletePartitionWindow', ptn.getDisplayInfo());
 	partitions.removePartition(ptn.id);
 	interactMgr.removeGeometry(ptn.id, "partitions");
+}
+
+
+function wsVoteInPoll(wsio, data){
+	console.log("vote in poll: data " );
+	console.log( data );
+	//find articulate app (just articulate app for now)
+	var app = SAGE2Items.applications.getFirstItemWithTitle("poll_viewer");
+	console.log(app);
+	var position = {x: 10, y: 10};
+	var event = {
+		id: app.id,
+		type: "specialKey",
+		position: position,
+		user: "null",
+		data: data,
+		date: Date.now()
+	};
+
+	broadcast('eventInItem', event);
 }

@@ -1,0 +1,27 @@
+{
+	"main_script": "poll_viewer.js",
+	"icon": "poll_viewer.png",
+	"width": 1000,
+	"height": 800,
+	"resize": "free",
+	"animation": true,			
+	"dependencies": [
+	],
+	"load": {
+		"value": 4,
+		"votes": {
+			"A": 0,
+			"B": 0,
+			"C": 0,
+			"D": 0,
+			"E": 0
+		},
+		"voteTotal": 0
+	},
+	"title": "poll_viewer",
+	"version": "1.0.0",
+	"description": "SAGE2 application to show student poll results",
+	"keywords": [ "sage2", "poll_viewer" ],
+	"author": "Jillian Aurisano <jillian.aurisano@gmail.com>",
+	"license": "SAGE2-Software-License"
+}

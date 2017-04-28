@@ -20,7 +20,6 @@
  * @submodule SAGE2_UI
  * @class SAGE2_UI
  */
-
 window.URL = (window.URL || window.webkitURL || window.msURL || window.oURL);
 navigator.getUserMedia   = (navigator.getUserMedia  || navigator.webkitGetUserMedia ||
 							navigator.mozGetUserMedia || navigator.msGetUserMedia);
@@ -407,6 +406,7 @@ function SAGE2_init() {
 
 	// Event listener to the Chrome EXTENSION for desktop capture
 	window.addEventListener('message', function(event) {
+
 		if (event.origin !== window.location.origin) {
 			return;
 		}
@@ -1179,7 +1179,6 @@ function mouseCheck(event) {
 		return;
 	}
 	hasMouse = true;
-	console.log("Detected as desktop device");
 
 	document.addEventListener('mousedown',  pointerPress,    false);
 	document.addEventListener('mouseup',    pointerRelease,  false);
@@ -1221,9 +1220,12 @@ function pointerClick(event) {
  */
 function handleClick(element) {
 	// Menu Buttons
+
 	if (element.id === "sage2pointer"        || element.id === "sage2pointerContainer" || element.id === "sage2pointerLabel") {
 		interactor.startSAGE2Pointer(element.id);
 	} else if (element.id === "sharescreen"  || element.id === "sharescreenContainer"  || element.id === "sharescreenLabel") {
+		
+
 		interactor.startScreenShare();
 	} else if (element.id === "applauncher"  || element.id === "applauncherContainer"  || element.id === "applauncherLabel") {
 		wsio.emit('requestAvailableApplications');
@@ -2264,8 +2266,7 @@ function loadSelectedFile() {
  * @method showDialog
  * @param id {String} element to show
  */
-function showDialog(id) {
-	openDialog = id;
+function showDialog(id) {	openDialog = id;
 	document.getElementById('blackoverlay').style.display = "block";
 	document.getElementById(id).style.display = "block";
 }

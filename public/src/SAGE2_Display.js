@@ -984,7 +984,9 @@ function setupListeners() {
 
 	wsio.on('eventInItem', function(event_data) {
 		var app = applications[event_data.id];
+		console.log(event_data.id);
 		if (app) {
+			console.log("event");
 			var date = new Date(event_data.date);
 			app.SAGE2Event(event_data.type, event_data.position, event_data.user, event_data.data, date);
 		}
