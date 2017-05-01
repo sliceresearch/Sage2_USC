@@ -1,0 +1,38 @@
+@echo off
+
+set CLIENT=0
+set SERVER=http://localhost:9292
+
+
+if "%1"=="" goto blank
+
+start /MIN /D "%~dp0" SAGE2_client.exe  -- %*
+goto done
+
+:blank
+start /MIN /D "%~dp0" SAGE2_client.exe  -- -s %SERVER% -d %CLIENT%
+
+:done
+
+rem On Windows, put SAGE2/Electron paramters aftrer the --
+
+rem #  Electron SAGE2 arguments
+rem # -h, --help           output usage information
+rem # -V, --version        output the version number
+rem # -s, --server <s>     Server URL (string)
+rem # -d, --display <n>    Display client ID number (int)
+rem # -u, --ui             Open the user interface (instead of display)
+rem # -a, --audio          Open the audio manager (instead of display)
+rem # -f, --fullscreen     Fullscreen (boolean)
+rem # -p, --plugins        Enables plugins and flash (boolean)
+rem # -n, --no_decoration  Remove window decoration (boolean)
+rem # -x, --xorigin <n>    Window position x (int)
+rem # -y, --yorigin <n>    Window position y (int)
+rem # -m, --monitor <n>    Select a monitor (int)
+rem # --width <n>          Window width (int)
+rem # --height <n>         Window height (int)
+rem # --password <s>       Server password (string)
+rem # --hash <s>           Server password hash (string)
+rem # --cache              Clear the cache
+rem # --console            Open the devtools console
+

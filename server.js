@@ -71,9 +71,10 @@ var Radialmenu          = require('./src/node-radialmenu');       // radial menu
 var Sage2ItemList       = require('./src/node-sage2itemlist');    // list of SAGE2 items
 var Sagepointer         = require('./src/node-sagepointer');      // handles sage pointers (creation, location, etc.)
 var StickyItems         = require('./src/node-stickyitems');
-var registry            = require('./src/node-registry');        // Registry Manager
+var registry            = require('./src/node-registry');         // Registry Manager
 var FileBufferManager	= require('./src/node-filebuffer');
-var PartitionList				= require('./src/node-partitionlist');		// list of SAGE2 Partitions
+var PartitionList	= require('./src/node-partitionlist');    // list of SAGE2 Partitions
+
 //
 // Globals
 //
@@ -122,9 +123,12 @@ var drawingManager;
 var pressingAlt        = true;
 var fileBufferManager  = new FileBufferManager();
 
-var partitions				 = new PartitionList(config);
-var draggingPartition	 = {};
-var cuttingPartition 	 = {};
+// Array containing the remote sites informations (toolbar on top of wall)
+var remoteSites = [];
+
+var partitions        = new PartitionList(config);
+var draggingPartition = {};
+var cuttingPartition  = {};
 
 // Add extra folders defined in the configuration file
 if (config.folders) {
@@ -358,6 +362,9 @@ function initializeSage2Server() {
 
 	// initialize dialog boxes
 	setUpDialogsAsInteractableObjects();
+
+	// Setup the remote sites for collaboration
+	initalizeRemoteSites();
 
 	// Set up http and https servers
 	var httpServerApp = new HttpServer(publicDirectory);
@@ -655,7 +662,7 @@ function closeWebSocketClient(wsio) {
 	// if client is a remote site, send disconnect message
 	var remote = findRemoteSiteByConnection(wsio);
 	if (remote !== null) {
-		console.log(sageutils.header("Remote") + "\"" + remote.name + "\" now offline");
+		console.log(sageutils.header("Remote") + chalk.cyan(remote.name) + " now offline");
 		remote.connected = "off";
 		var site = {name: remote.name, connected: remote.connected};
 		broadcast('connectedToRemoteSite', site);
@@ -722,7 +729,7 @@ function wsAddClient(wsio, data) {
 			console.log(sageutils.header("WebsocketIO") + "wrong session hash - closing");
 			// Send a message back to server
 			wsio.emit('remoteConnection', {status: "refused", reason: 'wrong session hash'});
-			// if server protected and wrong hash, close the socket and byebye
+			// If server protected and wrong hash, close the socket and byebye
 			wsio.ws.close();
 			return;
 		}
@@ -770,14 +777,15 @@ function wsAddClient(wsio, data) {
 			// var remoteport = wsio.ws.upgradeReq.connection.remotePort;
 
 			// Checking if it's a known server
-			config.remote_sites.forEach(function(element, index, array) {
-				if (element.host === data.host &&
-					element.port === data.port &&
-					remoteSites[index].connected === "on") {
-					console.log(sageutils.header("Connect") + 'known remote site ' + data.host + ':' + data.port);
-					manageRemoteConnection(wsio, element, index);
-				}
-			});
+			// bug: Seems to create a race condition and works without, so far
+			// config.remote_sites.forEach(function(element, index, array) {
+			// 	if (element.host === data.host &&
+			// 		element.port === data.port &&
+			// 		remoteSites[index].connected === "on") {
+			// 		console.log(sageutils.header("Connect") + 'known remote site ' + data.host + ':' + data.port);
+			// 		manageRemoteConnection(wsio, element, index);
+			// 	}
+			// });
 		}
 	}
 
@@ -790,6 +798,19 @@ function wsAddClient(wsio, data) {
 	if (data.browser && data.browser.isMobile && remoteInteraction[wsio.id]) {
 		// for mobile clients, default to window interaction mode
 		remoteInteraction[wsio.id].previousMode = 0;
+	}
+
+	// If it's a UI, send message to enable screenshot capability
+	if (wsio.clientType === "sageUI") {
+		reportIfCanWallScreenshot();
+	}
+
+	// If it's a display, check for Electron and send enable screenshot capability
+	if (wsio.clientType === "display") {
+		// See in browser data structure if it's Electron
+		wsio.capableOfScreenshot = data.browser.isElectron;
+		// Send message to UI clients
+		reportIfCanWallScreenshot();
 	}
 }
 
@@ -917,6 +938,7 @@ function setupListeners(wsio) {
 	wsio.on('moveElementFromStoredFiles',           wsMoveElementFromStoredFiles);
 	wsio.on('saveSesion',                           wsSaveSesion);
 	wsio.on('clearDisplay',                         wsClearDisplay);
+	wsio.on('deleteAllApplications',								wsDeleteAllApplications);
 	wsio.on('tileApplications',                     wsTileApplications);
 
 	// Radial menu should have its own message section? Just appended here for now.
@@ -1020,6 +1042,10 @@ function setupListeners(wsio) {
 	// generic message passing for data requests or for specific communications.
 	// might eventually break this up into individual ws functions
 	wsio.on('csdMessage',							wsCsdMessage);
+
+	// Screenshot messages
+	wsio.on('startWallScreenshot',                  wsStartWallScreenshot);
+	wsio.on('wallScreenshotFromDisplay',            wsWallScreenshotFromDisplay);
 
 	// application file saving message
 	wsio.on('appFileSaveRequest',                   appFileSaveRequest);
@@ -1158,6 +1184,7 @@ function initializeExistingApps(wsio) {
 			//   (especially true for slow update apps, like the clock)
 			broadcast('animateCanvas', {id: SAGE2Items.applications.list[key].id, date: Date.now()});
 		}
+		handleStickyItem(key);
 	}
 	for (key in SAGE2Items.portals.list) {
 		broadcast('initializeDataSharingSession', SAGE2Items.portals.list[key]);
@@ -1187,6 +1214,7 @@ function initializeExistingAppsPositionSizeTypeOnly(wsio) {
 			state: SAGE2Items.applications.list[key].data,
 			application: SAGE2Items.applications.list[key].application
 		});
+		handleStickyItem(key);
 	}
 
 	var newOrder = interactMgr.getObjectZIndexList("applications", ["portals"]);
@@ -2223,8 +2251,13 @@ function saveSession(filename) {
 			// remove reference to parent partition if it exists
 			delete a.partition;
 		}
-		// Ignore media streaming applications for now (desktop sharing)
-		if (a.application !== 'media_stream' && a.application !== 'media_block_stream') {
+
+		// Test if the application is shared (coming from another server)
+		// appId contains a + character
+		var isNotShared = (a.id.indexOf('+') === -1);
+
+		// Ignore media streaming applications for now (desktop sharing) and shared applications
+		if (a.application !== 'media_stream' && a.application !== 'media_block_stream' && isNotShared) {
 			states.apps.push(a);
 			states.numapps++;
 		}
@@ -2322,11 +2355,16 @@ function saveSession(filename) {
 			"\" y=\"" + ap.top +
 			"\" style=\"fill: " + "#AAAAAA; fill-opacity: 0.5; stroke: black; stroke-width: 5;\">" + "</rect>";
 
-
-		var iconPath = path.join(mainFolder.path, path.relative("/user", ap.icon)) + "_256.jpg";
+		var iconPath;
+		if (ap.icon) {
+			// the application has a icon defined
+			iconPath = path.join(mainFolder.path, path.relative("/user", ap.icon)) + "_256.jpg";
+		} else {
+			// application does not have an icon (for instance, shared applciation)
+			iconPath = path.join(mainFolder.path, "assets/apps/unknownapp") + "_256.jpg";
+		}
 
 		var iconImageData = "";
-
 		try {
 			iconImageData = new Buffer(fs.readFileSync(iconPath)).toString('base64');
 		} catch (error) {
@@ -2451,6 +2489,15 @@ function loadSession(filename) {
 
 			// recreate partitions
 			if (session.partitions) {
+
+				// if there are any existing partitions
+				if (partitions.count > 0) {
+					// remove them and replace with partitions from sessions
+					for (var id of Object.keys(partitions.list)) {
+						deletePartition(id);
+					}
+				}
+
 				session.partitions.forEach(function(element, index, array) {
 					// remake partition
 					var ptn = createPartition(
@@ -2458,7 +2505,8 @@ function loadSession(filename) {
 							width: element.width,
 							height: element.height,
 							left: element.left,
-							top: element.top
+							top: element.top,
+							isSnapping: element.isSnapping
 						},
 						element.color
 					);
@@ -2471,7 +2519,9 @@ function loadSession(filename) {
 			}
 
 			// Assign the windows to partitions
-			partitionsGrabAllContent();
+			// don't assign existing content to partitions from session
+
+			// partitionsGrabAllContent();
 
 			// recreate apps
 			session.apps.forEach(function(element, index, array) {
@@ -2764,17 +2814,43 @@ function tileApplications() {
 	}
 }
 
-// Remove all applications
+// Remove all apps and partitions
 function clearDisplay() {
+	deleteAllPartitions();
+	deleteAllApplications();
+}
+
+// Remove all applications
+function deleteAllApplications() {
 	var i;
 	var all = Object.keys(SAGE2Items.applications.list);
 	for (i = 0; i < all.length; i++) {
 		deleteApplication(all[i]);
 	}
+
 	// Reset the app_id counter to 0
 	getUniqueAppId(-1);
 }
 
+// Remove all Partitions
+function deleteAllPartitions() {
+	// delete all partitions
+	for (var key of Object.keys(partitions.list)) {
+		deletePartition(key);
+	}
+
+	// reset partition counter to 0
+	partitions.totalCreated = 0;
+}
+
+/**
+	* Remove all applications
+	*
+	* @method wsDeleteAllApplications
+	*/
+function wsDeleteAllApplications(wsio) {
+	deleteAllApplications();
+}
 
 // handlers for messages from UI
 function wsClearDisplay(wsio, data) {
@@ -2820,6 +2896,10 @@ function wsLoadApplication(wsio, data) {
 
 		// Get the drop position and convert it to wall coordinates
 		var position = data.position || [0, 0];
+
+
+
+
 		if (position[0] > 1) {
 			// value in pixels, used as origin
 			appInstance.left = position[0];
@@ -2851,6 +2931,67 @@ function wsLoadApplication(wsio, data) {
 			appInstance.width  = initialSize[0];
 			appInstance.height = initialSize[1];
 			appInstance.aspect = initialSize[0] / initialSize[1];
+		}
+
+		/*
+		If this app is launched from csd command and the position isn't specified, then need to calculate
+		First check if it is the first app, they all start from the same place
+		If not the first, then check if the position of (last x + last width + padding + this width < wall width)
+			if fits, add to this row
+			if not fit, then check if fits on next row (last y + last tallest + padding + this height < wall height)
+				if fit, add to next row
+				if no fit, then restart
+		*/
+		if (data.csdLaunch && !data.wasCsdPositionStated) {
+			let xApp, yApp;
+			// if this is the first app.
+			if (csdDataStructure.appLaunch.xLast === -1) {
+				xApp = csdDataStructure.appLaunch.xStart;
+				yApp = csdDataStructure.appLaunch.yStart;
+			} else {
+				// if not the first app, check that this app fits in the current row
+				let fit = false;
+				if (csdDataStructure.appLaunch.xLast + csdDataStructure.appLaunch.widthLast
+				+ csdDataStructure.appLaunch.padding + appInstance.width < config.totalWidth) {
+					if (csdDataStructure.appLaunch.yLast + appInstance.height < config.totalHeight) {
+						fit = true;
+					}
+				}
+				// if the app fits, then let use the modified position
+				if (fit) {
+					xApp = csdDataStructure.appLaunch.xLast + csdDataStructure.appLaunch.widthLast
+					+ csdDataStructure.appLaunch.padding;
+					yApp = csdDataStructure.appLaunch.yLast;
+				} else { // need to see if fits on next row or restart.
+					// either way changing row, set this app's height as tallest in row.
+					csdDataStructure.appLaunch.tallestInRow = appInstance.height;
+					// if fits on next row, put it there
+					if (csdDataStructure.appLaunch.yLast + csdDataStructure.appLaunch.tallestInRow
+					+ csdDataStructure.appLaunch.padding + appInstance.height < config.totalHeight) {
+						xApp = csdDataStructure.appLaunch.xStart;
+						yApp = csdDataStructure.appLaunch.yLast + csdDataStructure.appLaunch.tallestInRow
+						+ csdDataStructure.appLaunch.padding;
+					} else { // doesn't fit, restart
+						xApp = csdDataStructure.appLaunch.xStart;
+						yApp = csdDataStructure.appLaunch.yStart;
+					}
+				}
+			}
+			// set the app values
+			appInstance.left = xApp;
+			appInstance.top = yApp;
+			// track the values to position adjust next app
+			csdDataStructure.appLaunch.xLast = appInstance.left;
+			csdDataStructure.appLaunch.yLast = appInstance.top;
+			csdDataStructure.appLaunch.widthLast = appInstance.width;
+			csdDataStructure.appLaunch.heightLast = appInstance.height;
+			if (appInstance.height > csdDataStructure.appLaunch.tallestInRow) {
+				csdDataStructure.appLaunch.tallestInRow = appInstance.height;
+			}
+		}
+		// if the csd action supplied more values to init with
+		if (data.csdLaunch && data.csdInitValues) {
+			appInstance.csdInitValues = data.csdInitValues;
 		}
 
 		handleNewApplication(appInstance, null);
@@ -4721,6 +4862,10 @@ function manageUploadedFiles(files, position, ptrName, ptrColor, openAfter) {
 				// Use the size from the drop information
 				if (position[2] && position[2] !== 0) {
 					appInstance.width = parseFloat(position[2]);
+					// If no height provided, calculate it from the aspect ratio
+					if (position[3] === undefined && appInstance.aspect) {
+						appInstance.height = appInstance.width / appInstance.aspect;
+					}
 				}
 				if (position[3] && position[3] !== 0) {
 					appInstance.height = parseFloat(position[3]);
@@ -4762,42 +4907,44 @@ function manageUploadedFiles(files, position, ptrName, ptrColor, openAfter) {
 
 // **************  Remote Site Collaboration *****************
 
-var remoteSites = [];
-if (config.remote_sites) {
-	remoteSites = new Array(config.remote_sites.length);
-	config.remote_sites.forEach(function(element, index, array) {
-		var protocol = (element.secure === true) ? "wss" : "ws";
-		var wsURL = protocol + "://" + element.host + ":" + element.port.toString();
+function initalizeRemoteSites() {
+	if (config.remote_sites) {
+		remoteSites = new Array(config.remote_sites.length);
+		config.remote_sites.forEach(function(element, index, array) {
+			var protocol = (element.secure === true) ? "wss" : "ws";
+			var wsURL = protocol + "://" + element.host + ":" + element.port.toString();
 
-		var remote = createRemoteConnection(wsURL, element, index);
+			var rGeom = {};
+			rGeom.w = Math.min((0.5 * config.totalWidth) / remoteSites.length, config.ui.titleBarHeight * 6)
+				- (0.16 * config.ui.titleBarHeight);
+			rGeom.h = 0.84 * config.ui.titleBarHeight;
+			rGeom.x = (0.5 * config.totalWidth) + ((rGeom.w + (0.16 * config.ui.titleBarHeight))
+				* (index - (remoteSites.length / 2))) + (0.08 * config.ui.titleBarHeight);
+			rGeom.y = 0.08 * config.ui.titleBarHeight;
 
-		var rGeom = {};
-		rGeom.w = Math.min((0.5 * config.totalWidth) / remoteSites.length, config.ui.titleBarHeight * 6)
-			- (0.16 * config.ui.titleBarHeight);
-		rGeom.h = 0.84 * config.ui.titleBarHeight;
-		rGeom.x = (0.5 * config.totalWidth) + ((rGeom.w + (0.16 * config.ui.titleBarHeight)) * (index - (remoteSites.length / 2)))
-			+ (0.08 * config.ui.titleBarHeight);
-		rGeom.y = 0.08 * config.ui.titleBarHeight;
+			// Build the object
+			remoteSites[index] = {
+				name: element.name,
+				wsio: null,
+				connected: "off",
+				geometry: rGeom,
+				index: index
+			};
+			// Create a websocket connection to the site
+			remoteSites[index].wsio = createRemoteConnection(wsURL, element, index);
 
-		// Build the object
-		remoteSites[index] = {
-			name: element.name,
-			wsio: remote,
-			connected: "off",
-			geometry: rGeom,
-			index: index
-		};
-		// Add the gemeotry for the button
-		interactMgr.addGeometry("remote_" + index, "staticUI", "rectangle", rGeom,  true, index, remoteSites[index]);
+			// Add the gemeotry for the button
+			interactMgr.addGeometry("remote_" + index, "staticUI", "rectangle", rGeom,  true, index, remoteSites[index]);
 
-		// attempt to connect every 15 seconds, if connection failed
-		setInterval(function() {
-			if (remoteSites[index].connected !== "on") {
-				var rem = createRemoteConnection(wsURL, element, index);
-				remoteSites[index].wsio = rem;
-			}
-		}, 15000);
-	});
+			// attempt to connect every 15 seconds, if connection failed
+			setInterval(function() {
+				if (remoteSites[index].connected !== "on") {
+					var rem = createRemoteConnection(wsURL, element, index);
+					remoteSites[index].wsio = rem;
+				}
+			}, 15000);
+		});
+	}
 }
 
 function manageRemoteConnection(remote, site, index) {
@@ -4827,7 +4974,7 @@ function manageRemoteConnection(remote, site, index) {
 	remote.clientType = "remoteServer";
 
 	remote.onclose(function() {
-		console.log(sageutils.header("Remote") + "\"" + config.remote_sites[index].name + "\" offline");
+		console.log(sageutils.header("Remote") + chalk.cyan(config.remote_sites[index].name) + " offline");
 		// it was locked, keep the state locked
 		if (remoteSites[index].connected !== "locked") {
 			remoteSites[index].connected = "off";
@@ -4874,10 +5021,10 @@ function manageRemoteConnection(remote, site, index) {
 
 	remote.on('remoteConnection', function(remotesocket, data) {
 		if (data.status === "refused") {
-			console.log(sageutils.header('Remote') + "Connection refused to " + site.name + ": " + data.reason);
+			console.log(sageutils.header("Remote") + "Connection refused to " + chalk.cyan(site.name) + ": " + data.reason);
 			remoteSites[index].connected = "locked";
 		} else {
-			console.log(sageutils.header("Remote") + "Connected to " + site.name);
+			console.log(sageutils.header("Remote") + "Connected to " + chalk.cyan(site.name));
 			remoteSites[index].connected = "on";
 		}
 		var update_site = {name: remoteSites[index].name, connected: remoteSites[index].connected};
@@ -5039,6 +5186,7 @@ function processInputCommand(line) {
 			console.log('regenerate\tregenerates the assets');
 			console.log('hideui\t\thide/show/delay the user interface');
 			console.log('sessions\tlist the available sessions');
+			console.log('screenshot\ttake a screenshot of the wall');
 			console.log('update\t\trun a git update');
 			console.log('version\t\tprint SAGE2 version');
 			console.log('exit\t\tstop SAGE2');
@@ -5108,6 +5256,11 @@ function processInputCommand(line) {
 		}
 		case 'sessions': {
 			printListSessions();
+			break;
+		}
+		case 'screenshot': {
+			// send messages to take screenshot (dummy arguments)
+			wsStartWallScreenshot();
 			break;
 		}
 		case 'moveby': {
@@ -5462,7 +5615,8 @@ function getAppPositionSize(appInstance) {
 		height:      appInstance.height,
 		icon:        appInstance.icon || null,
 		title:       appInstance.title,
-		color:       appInstance.color || null
+		color:       appInstance.color || null,
+		sticky: 	 appInstance.sticky
 	};
 }
 
@@ -6023,38 +6177,16 @@ function pointerPressOnPartition(uniqueID, pointerX, pointerY, data, obj, localP
 
 	// pointer press on ptn window
 	if (btn === null) {
-		if (data.button === "left" && remoteInteraction[uniqueID].CTRL) {
-			// start tracking size to create new partition
-			cuttingPartition[uniqueID] = {};
-			cuttingPartition[uniqueID].start = {x: pointerX, y: pointerY};
-			cuttingPartition[uniqueID].ptn = obj.data;
+		if (data.button === "left") {
+			if (remoteInteraction[uniqueID].CTRL) {
+				// start tracking size to create new partition
+				cuttingPartition[uniqueID] = {};
+				cuttingPartition[uniqueID].start = {x: pointerX, y: pointerY};
+				cuttingPartition[uniqueID].ptn = obj.data;
+			} else {
+				selectApplicationForMove(uniqueID, obj.data, pointerX, pointerY);
+			}
 		}
-
-		// if (data.button === "right") {
-		// 	var elemCtrl = SAGE2Items.widgets.list[obj.id + uniqueID + "_controls"];
-		// 	if (!elemCtrl) {
-		// 		// if no UI element, send event to app if in interaction mode
-		// 		if (remoteInteraction[uniqueID].appInteractionMode()) {
-		// 			sendPointerPressToApplication(uniqueID, obj.data, pointerX, pointerY, data);
-		// 		}
-		// 		// Request a control (do not know in advance)
-		// 		broadcast('requestNewControl', {elemId: obj.id, user_id: uniqueID,
-		// 			user_label: sagePointers[uniqueID] ? sagePointers[uniqueID].label : "",
-		// 			x: pointerX, y: pointerY, date: Date.now() });
-		// 	} else if (elemCtrl.show === false) {
-		// 		showControl(elemCtrl, uniqueID, pointerX, pointerY);
-		// 		addEventToUserLog(uniqueID, {type: "widgetMenu", data: {action: "open", application:
-		// 			{id: obj.id, type: obj.data.application}}, time: Date.now()});
-		// 	} else {
-		// 		moveControlToPointer(elemCtrl, uniqueID, pointerX, pointerY);
-		// 	}
-		// } else {
-		// 	if (remoteInteraction[uniqueID].appInteractionMode()) {
-		// 		sendPointerPressToApplication(uniqueID, obj.data, pointerX, pointerY, data);
-		// 	} else {
-		// 		selectApplicationForMove(uniqueID, obj.data, pointerX, pointerY, portalId);
-		// 	}
-		// }
 		return;
 	}
 
@@ -6063,16 +6195,13 @@ function pointerPressOnPartition(uniqueID, pointerX, pointerY, data, obj, localP
 			selectApplicationForMove(uniqueID, obj.data, pointerX, pointerY);
 			break;
 		case "dragCorner":
-			if (sagePointers[uniqueID].visible) {
-				// only if pointer on the wall, not the web UI
-				selectApplicationForResize(uniqueID, obj.data, pointerX, pointerY, portalId);
-			}
+			selectApplicationForResize(uniqueID, obj.data, pointerX, pointerY, portalId);
 			break;
 		case "tileButton":
 			if (sagePointers[uniqueID].visible) {
 				var changedPartitions = partitions.list[obj.id].toggleInnerTiling();
 
-				updatePartitionInnerLayout(partitions.list[obj.id]);
+				updatePartitionInnerLayout(partitions.list[obj.id], true);
 
 				changedPartitions.forEach(el => {
 					broadcast('partitionWindowTitleUpdate', partitions.list[el].getTitle());
@@ -6106,18 +6235,26 @@ function pointerPressOnPartition(uniqueID, pointerX, pointerY, data, obj, localP
 				partitions.updatePartitionGeometries(obj.id, interactMgr);
 				broadcast('partitionMoveAndResizeFinished', obj.data.getDisplayInfo());
 
+				// update neighbors if it is snapped
+				if (obj.data.isSnapping) {
+					let updatedNeighbors = obj.data.updateNeighborPtnPositions();
+
+					// update geometries/display/layout of any updated neighbors
+					for (var neigh of updatedNeighbors) {
+						partitions.updatePartitionGeometries(neigh, interactMgr);
+						broadcast('partitionMoveAndResizeFinished', partitions.list[neigh].getDisplayInfo());
+
+						updatePartitionInnerLayout(partitions.list[neigh], true);
+					}
+				}
+
 				// update child positions within partiton
-				updatePartitionInnerLayout(partitions.list[obj.id]);
+				updatePartitionInnerLayout(partitions.list[obj.id], false);
 			}
 			break;
 		case "closeButton":
 			if (sagePointers[uniqueID].visible) {
 				// only if pointer on the wall, not the web UI
-
-				// close partition (drop all windows inside)
-				// broadcast('deletePartitionWindow', obj.data.getDisplayInfo());
-				// partitions.removePartition(obj.id);
-				// interactMgr.removeGeometry(obj.id, "partitions");
 
 				deletePartition(obj.id);
 			}
@@ -6572,12 +6709,18 @@ function updatePointerPosition(uniqueID, pointerX, pointerY, data) {
 			let currentMoveItem = SAGE2Items.applications.list[updatedMoveItem.elemId];
 
 			if (currentMoveItem) {
-				broadcast('updatePartitionBorders', {id: currentMoveItem.ptnHovered, highlight: false});
-
 				// Calculate partition which item is over
-				currentMoveItem.ptnHovered = partitions.calculateNewPartition(currentMoveItem);
+				let newPartitionHovered = partitions.calculateNewPartition(currentMoveItem, {x: pointerX, y: pointerY});
 
-				broadcast('updatePartitionBorders', {id: currentMoveItem.ptnHovered, highlight: true});
+
+				if (currentMoveItem.ptnHovered != newPartitionHovered) {
+					broadcast('updatePartitionBorders', {id: currentMoveItem.ptnHovered, highlight: false});
+
+					// update ptnHovered with new partition
+					currentMoveItem.ptnHovered = newPartitionHovered;
+
+					broadcast('updatePartitionBorders', {id: currentMoveItem.ptnHovered, highlight: true});
+				}
 			}
 		}
 		return;
@@ -7024,21 +7167,40 @@ function moveAndResizeApplicationWindow(resizeApp, portalId) {
 
 function moveAndResizePartitionWindow(uniqueID, movePartition) {
 	if (partitions.list.hasOwnProperty(movePartition.elemId)) {
+		var movedPtn = partitions.list[movePartition.elemId];
+
+
+		// if it is a snapping partition, update all of the neighbors as well
+		if (movedPtn.isSnapping) {
+
+			// then update the neighboring partition positions
+			var updatedNeighbors = movedPtn.updateNeighborPtnPositions();
+
+			// update geometries/display/layout of any updated neighbors
+			for (var neigh of updatedNeighbors) {
+				partitions.updatePartitionGeometries(neigh, interactMgr);
+				broadcast('partitionMoveAndResizeFinished', partitions.list[neigh].getDisplayInfo());
+
+				updatePartitionInnerLayout(partitions.list[neigh], true);
+			}
+
+		}
 
 		partitions.updatePartitionGeometries(movePartition.elemId, interactMgr);
-		broadcast('partitionMoveAndResizeFinished', partitions.list[movePartition.elemId].getDisplayInfo());
+		broadcast('partitionMoveAndResizeFinished', movedPtn.getDisplayInfo());
 
-		updatePartitionInnerLayout(partitions.list[movePartition.elemId]);
+		updatePartitionInnerLayout(movedPtn, true);
 	}
 }
 
-function updatePartitionInnerLayout(partition) {
+function updatePartitionInnerLayout(partition, animateAppMovement) {
 	partition.updateInnerLayout();
 
 	// update children of partition
 	let updatedChildren = partition.updateChildrenPositions();
 
 	for (let child of updatedChildren) {
+		child.elemAnimate = animateAppMovement;
 		moveAndResizeApplicationWindow(child);
 	}
 }
@@ -7198,6 +7360,9 @@ function pointerRelease(uniqueID, pointerX, pointerY, data) {
 			broadcast('partitionMoveAndResizeFinished', draggingPartition[uniqueID].ptn.getDisplayInfo());
 
 			broadcast('partitionWindowTitleUpdate', draggingPartition[uniqueID].ptn.getTitle());
+
+			// make dragged partition grab content which it is under
+			partitionsGrabAllContent();
 		}
 		// stop creation of partition
 		delete draggingPartition[uniqueID];
@@ -7242,6 +7407,7 @@ function pointerRelease(uniqueID, pointerX, pointerY, data) {
 				var cutPtnItems = Object.assign({}, oldPtn.children);
 				// var ptnColor = oldPtn.color;
 				var ptnTiled = oldPtn.innerTiling; // to preserve tiling of new partitions
+				var ptnSnapping = oldPtn.isSnapping;
 
 				// delete the old partition
 				deletePartition(oldPtn.id);
@@ -7251,13 +7417,21 @@ function pointerRelease(uniqueID, pointerX, pointerY, data) {
 					partitions.updateOnItemRelease(cutPtnItems[key]);
 				}
 
+				newPtn1.isSnapping = ptnSnapping;
+				newPtn2.isSnapping = ptnSnapping;
+
+				if (ptnSnapping) {
+					partitions.updateNeighbors(newPtn1.id);
+					partitions.updateNeighbors(newPtn2.id);
+				}
+
 				// if the old partition was tiled, set the new displays to be tiled
 				if (ptnTiled) {
 					newPtn1.toggleInnerTiling();
-					updatePartitionInnerLayout(newPtn1);
+					updatePartitionInnerLayout(newPtn1, true);
 
 					newPtn2.toggleInnerTiling();
-					updatePartitionInnerLayout(newPtn2);
+					updatePartitionInnerLayout(newPtn2, true);
 				}
 
 				// update parititon titles
@@ -7278,7 +7452,7 @@ function pointerRelease(uniqueID, pointerX, pointerY, data) {
 
 	// update parent partition of item when the app is released
 	if (selectedApp && selectedApp.id && SAGE2Items.applications.list.hasOwnProperty(selectedApp.id)) {
-		var changedPartitions = partitions.updateOnItemRelease(selectedApp);
+		var changedPartitions = partitions.updateOnItemRelease(selectedApp, {x: pointerX, y: pointerY});
 
 		moveAndResizeApplicationWindow({
 			elemId: selectedApp.id, elemLeft: selectedApp.left,
@@ -7289,7 +7463,7 @@ function pointerRelease(uniqueID, pointerX, pointerY, data) {
 		changedPartitions.forEach(el => {
 			broadcast('partitionWindowTitleUpdate', partitions.list[el].getTitle());
 
-			updatePartitionInnerLayout(partitions.list[el]);
+			updatePartitionInnerLayout(partitions.list[el], true);
 		});
 
 		// remove partition edge highlight
@@ -8340,7 +8514,7 @@ function toggleApplicationFullscreen(uniqueID, app, dblClick) {
 		moveAndResizeApplicationWindow(resizeApp);
 
 		if (app.partition) {
-			updatePartitionInnerLayout(app.partition);
+			updatePartitionInnerLayout(app.partition, true);
 			broadcast('partitionWindowTitleUpdate', app.partition.getTitle());
 		}
 
@@ -8363,10 +8537,14 @@ function deleteApplication(appId, portalId) {
 
 	// if the app being deleted was in a partition, update partition
 	if (app.partition) {
-		let ptn = app.partition.releaseChild(app.id);
 
-		updatePartitionInnerLayout(partitions.list[ptn]);
-		broadcast('partitionWindowTitleUpdate', partitions.list[ptn].getTitle());
+		let ptnId = app.partition.releaseChild(app.id)[0]; // only 1 partition effected
+
+		if (partitions.list.hasOwnProperty(ptnId)) {
+			// make sure this id is a partition
+			updatePartitionInnerLayout(partitions.list[ptnId], true);
+			broadcast('partitionWindowTitleUpdate', partitions.list[ptnId].getTitle());
+		}
 	}
 
 	var application = app.application;
@@ -8497,6 +8675,7 @@ function handleNewApplication(appInstance, videohandle) {
 		SAGE2Items.applications.addButtonToItem(appInstance.id, "pinButton", "rectangle",
 			{x: buttonsPad, y: 0, w: oneButton, h: config.ui.titleBarHeight}, 1);
 		SAGE2Items.applications.editButtonVisibilityOnItem(appInstance.id, "pinButton", false);
+		handleStickyItem(appInstance.id);
 	}
 	SAGE2Items.applications.editButtonVisibilityOnItem(appInstance.id, "syncButton", false);
 
@@ -8505,7 +8684,7 @@ function handleNewApplication(appInstance, videohandle) {
 	// assign content to a partition immediately when it is created
 	var changedPartitions = partitions.updateOnItemRelease(appInstance);
 	changedPartitions.forEach((id => {
-		updatePartitionInnerLayout(partitions.list[id]);
+		updatePartitionInnerLayout(partitions.list[id], true);
 
 		broadcast('partitionWindowTitleUpdate', partitions.list[id].getTitle());
 	}));
@@ -8551,6 +8730,7 @@ function handleNewApplicationInDataSharingPortal(appInstance, videohandle, porta
 		SAGE2Items.applications.addButtonToItem(appInstance.id, "pinButton", "rectangle",
 			{x: buttonsPad, y: 0, w: oneButton, h: titleBarHeight}, 1);
 		SAGE2Items.applications.editButtonVisibilityOnItem(appInstance.id, "pinButton", false);
+		handleStickyItem(appInstance.id);
 	}
 	SAGE2Items.applications.editButtonVisibilityOnItem(appInstance.id, "syncButton", false);
 
@@ -8594,6 +8774,7 @@ function handleApplicationResize(appId) {
 	if (app.sticky === true) {
 		SAGE2Items.applications.editButtonOnItem(app.id, "pinButton", "rectangle",
 			{x: buttonsPad, y: 0, w: oneButton, h: titleBarHeight});
+		handleStickyItem(app.id);
 	}
 }
 
@@ -8989,26 +9170,43 @@ function wsUtdWhatAppIsAt(wsio, data) {
  */
 function wsUtdRequestRmbContextMenu(wsio, data) {
 	var obj = interactMgr.searchGeometry({x: data.x, y: data.y});
-	if (obj !== null && SAGE2Items.applications.list[obj.data.id]) {
-		if (SAGE2Items.applications.list[obj.data.id].contextMenu) {
-			// If we already have the menu info, send it
+
+	if (obj !== null) {
+		// check type of item under click
+		if (SAGE2Items.applications.list.hasOwnProperty(obj.data.id)) {
+			// if an app was under the rmb click
+			if (SAGE2Items.applications.list[obj.data.id].contextMenu) {
+
+				// If we already have the menu info, send it
+				wsio.emit('dtuRmbContextMenuContents', {
+					x: data.xClick,
+					y: data.yClick,
+					app: obj.data.id,
+					entries: SAGE2Items.applications.list[obj.data.id].contextMenu
+				});
+
+			} else {
+				// Default response
+				wsio.emit('dtuRmbContextMenuContents', {
+					x: data.xClick,
+					y: data.yClick,
+					app: obj.data.id,
+					entries: [{
+						description: "App not yet loaded on display client yet."
+					}]
+				});
+
+			}
+		} else if (partitions.list.hasOwnProperty(obj.data.id)) {
+			// if a partition was under the rmb click
 			wsio.emit('dtuRmbContextMenuContents', {
 				x: data.xClick,
 				y: data.yClick,
 				app: obj.data.id,
-				entries: SAGE2Items.applications.list[obj.data.id].contextMenu
-			});
-		} else {
-			// Default response
-			wsio.emit('dtuRmbContextMenuContents', {
-				x: data.xClick,
-				y: data.yClick,
-				app: obj.data.id,
-				entries: [{
-					description: "App not yet loaded on display client yet."
-				}]
+				entries: partitions.list[obj.data.id].getContextMenu()
 			});
 		}
+
 	}
 }
 
@@ -9016,38 +9214,89 @@ function wsUtdRequestRmbContextMenu(wsio, data) {
  * Asks for rmb context menu from app under x,y coordinate.
  */
 function wsUtdCallFunctionOnApp(wsio, data) {
-	if (data.func === "SAGE2DeleteElement") {
-		deleteApplication(data.app);
-		// closing of applications are handled by the called function.
-		return;
-	} else if (data.func === "SAGE2SendToBack") {
-		// data.app should contain the id.
-		var im = findInteractableManager(data.app);
-		im.moveObjectToBack(data.app, "applications");
-		var newOrder = im.getObjectZIndexList("applications");
-		broadcast('updateItemOrder', newOrder);
-		return;
-	} else if (data.func === "SAGE2Maximize") {
-		if (data.parameters.clientId && SAGE2Items.applications.list[data.app]) {
-			toggleApplicationFullscreen(data.parameters.clientId,
-				SAGE2Items.applications.list[data.app],
-				true);
+	// check if the id is an applications or partition
+	if (SAGE2Items.applications.list.hasOwnProperty(data.app)) {
+		if (data.func === "SAGE2DeleteElement") {
+			deleteApplication(data.app);
+			// closing of applications are handled by the called function.
+			return;
+		} else if (data.func === "SAGE2SendToBack") {
+			// data.app should contain the id.
+			var im = findInteractableManager(data.app);
+			im.moveObjectToBack(data.app, "applications");
+			var newOrder = im.getObjectZIndexList("applications");
+			broadcast('updateItemOrder', newOrder);
+			return;
+		} else if (data.func === "SAGE2Maximize") {
+			if (data.parameters.clientId && SAGE2Items.applications.list[data.app]) {
+				toggleApplicationFullscreen(data.parameters.clientId,
+					SAGE2Items.applications.list[data.app],
+					true);
+			}
+			return;
 		}
-		return;
+
+		// Using broadcast means the parameter must be in data.data
+		data.data = data.parameters;
+		// add the serverDate property
+		data.data.serverDate = Date.now();
+		// add the clientId property
+		data.data.clientId = wsio.id;
+		// send to all display clients(since they all need to update)
+		for (var i = 0; i < clients.length; i++) {
+			if (clients[i].clientType === "display") {
+				clients[i].emit('broadcast', data);
+			}
+		}
+	}  else if (partitions.list.hasOwnProperty(data.app)) {
+		// the context menu is on a partition
+		let ptn = partitions.list[data.app];
+
+		if (data.func === "SAGE2DeleteElement") {
+			deletePartition(data.app);
+			// closing of applications are handled by the called function.
+			return;
+		} else if (data.func === "SAGE2Maximize") {
+			if (data.parameters.clientId) {
+				if (!ptn.maximized) {
+					remoteInteraction[data.parameters.clientId].maximizeSelectedItem(ptn);
+				} else {
+					remoteInteraction[data.parameters.clientId].restoreSelectedItem(ptn);
+				}
+
+				partitions.updatePartitionGeometries(data.app, interactMgr);
+				broadcast('partitionMoveAndResizeFinished', ptn.getDisplayInfo());
+
+				// update neighbors if it is snapped
+				if (ptn.isSnapping) {
+					let updatedNeighbors = ptn.updateNeighborPtnPositions();
+
+					// update geometries/display/layout of any updated neighbors
+					for (var neigh of updatedNeighbors) {
+						partitions.updatePartitionGeometries(neigh, interactMgr);
+						broadcast('partitionMoveAndResizeFinished', partitions.list[neigh].getDisplayInfo());
+
+						updatePartitionInnerLayout(partitions.list[neigh], true);
+					}
+				}
+
+				// update child positions within partiton
+				updatePartitionInnerLayout(ptn, false);
+			}
+		} else if (data.func === "clearPartition") {
+			// invoke clear with delete application method -- messy, should refactor
+			partitions.list[data.app][data.func](deleteApplication);
+		} else {
+			// invoke the other callback
+			partitions.list[data.app][data.func]();
+		}
+
+		updatePartitionInnerLayout(partitions.list[data.app], true);
+
+		broadcast('partitionWindowTitleUpdate', partitions.list[data.app].getTitle());
+
 	}
 
-	// Using broadcast means the parameter must be in data.data
-	data.data = data.parameters;
-	// add the serverDate property
-	data.data.serverDate = Date.now();
-	// add the clientId property
-	data.data.clientId = wsio.id;
-	// send to all display clients(since they all need to update)
-	for (var i = 0; i < clients.length; i++) {
-		if (clients[i].clientType === "display") {
-			clients[i].emit('broadcast', data);
-		}
-	}
 }
 
 /**
@@ -9197,29 +9446,21 @@ function csdLaunchAppWithValues(wsio, data) {
 	var appLoadData = { };
 	appLoadData.application = fullpath;
 	appLoadData.user = wsio.id; // needed for the wsLoadApplication function
-	var whatTheNewAppIdShouldBe = "app_" + getUniqueAppId.count;
-
+	appLoadData.wasCsdPositionStated = false;
+	appLoadData.csdLaunch = true;
+	if (data.csdInitValues) {
+		appLoadData.csdInitValues = data.csdInitValues;
+	}
 	// If the launch location is defined, use it, otherwise use the stagger position.
 	if (data.xLaunch !== null && data.xLaunch !== undefined) {
 		appLoadData.position = [data.xLaunch, data.yLaunch];
-	} else {
-		// stagger the start location to prevent them from stacking on top of each other.
-		// this is just a temporary solution.
-		// percents
-		appLoadData.position = [csdDataStructure.xAppLaunchCoordinate, csdDataStructure.yAppLaunchCoordinate];
-		// after launch reset position
-		csdDataStructure.xAppLaunchCoordinate += 600;
-		if (csdDataStructure.xAppLaunchCoordinate >= config.totalWidth - 500) {
-			csdDataStructure.yAppLaunchCoordinate += 600;
-			csdDataStructure.xAppLaunchCoordinate = 10;
-			if (csdDataStructure.yAppLaunchCoordinate >= config.totalHeight - 500) {
-				csdDataStructure.yAppLaunchCoordinate = 100;
-			}
-		}
+		appLoadData.wasCsdPositionStated = true;
 	}
-
+	// get this before the app is created. id start from 0. count is the next one
+	var whatTheNewAppIdShouldBe = "app_" + getUniqueAppId.count;
 	// call the previously made wsLoadApplication funciton and give it the required data.
 	wsLoadApplication(wsio, appLoadData);
+
 	// if a data.func is defined make a delayed call to it on the app. Otherwise, its just an app launch.
 	if (data.func !== undefined) {
 		setTimeout(
@@ -9304,10 +9545,6 @@ var csdDataStructure = {};
 	csdDataStructure.allNamesOfValues = [];
 		strings to denote the names used for values
 		order is based on when it was first set (not alphabetical)
-	csdDataStructure.xAppLaunchCoordinate = 0.05;
-		for the csdLaunchAppWithValues positioning
-	csdDataStructure.yAppLaunchCoordinate = 0.05;
-		for the csdLaunchAppWithValues positioning
 
 	The allValues is comprised of entry objects
 	{
@@ -9331,8 +9568,15 @@ var csdDataStructure = {};
 csdDataStructure.allValues = {};
 csdDataStructure.numberOfValues = 0;
 csdDataStructure.allNamesOfValues = [];
-csdDataStructure.xAppLaunchCoordinate = 10;
-csdDataStructure.yAppLaunchCoordinate = 100;
+csdDataStructure.appLaunch = {};
+csdDataStructure.appLaunch.xStart = 10;
+csdDataStructure.appLaunch.yStart = 50;
+csdDataStructure.appLaunch.xLast = -1;
+csdDataStructure.appLaunch.yLast = -1;
+csdDataStructure.appLaunch.widthLast = -1;
+csdDataStructure.appLaunch.heightLast = -1;
+csdDataStructure.appLaunch.tallestInRow = -1;
+csdDataStructure.appLaunch.padding = 20;
 
 /**
 Will set the named value.
@@ -9362,6 +9606,10 @@ function csdSetValue(wsio, data) {
 	} else {
 		// value exists, just update it.
 		csdDataStructure.allValues[ "" + data.nameOfValue ].value = data.value;
+		// potentially the new value isn't the same and a description can be useful
+		if (data.description) {
+			csdDataStructure.allValues[ "" + data.nameOfValue ].description = data.description;
+		}
 	}
 	// send to each of the subscribers.
 	var dataForApp = {};
@@ -9381,6 +9629,8 @@ function csdSetValue(wsio, data) {
 
 /**
 Will send back the named value if it exists.
+Should it send back null if the value doesn't exist?
+The current behavior is do nothing. Maybe sending null isn't bad.
 
 Needs
 	data.nameOfValue
@@ -9405,8 +9655,8 @@ function csdGetValue(wsio, data) {
 }
 
 /**
-Adds the app to the named value as a subscriber. However the named value must exist.
-This will NOT automatically add a subscriber if the values doesn't exist but is added later.
+Adds the app to the named value as a subscriber.
+Changed from previous behavior. If the value doesn't exist, it will create a "blank" value and subscribe to it.
 
 Needs
 	data.nameOfValue
@@ -9414,20 +9664,34 @@ Needs
 	data.func
 */
 function csdSubscribeToValue(wsio, data) {
-	// don't do anything if this isn't filled out.
+	// Need to have a name. Without a name, nothing can be done.
 	if (data.nameOfValue === undefined || data.nameOfValue === null) {
 		return;
 	}
 	// also don't do anything if the value doesn't exist
 	if (csdDataStructure.allValues["" + data.nameOfValue] === undefined) {
-		return;
+		data.value = null; // nothing, it'll be replace later if at all
+		csdSetValue(wsio, data);
 	}
-	// make the new subscriber entry
-	var newCsdSubscriber  = {};
-	newCsdSubscriber.app  = data.app;
-	newCsdSubscriber.func = data.func;
-	// add it to that value
-	csdDataStructure.allValues[ "" + data.nameOfValue ].subscribers.push(newCsdSubscriber);
+
+	let foundSubscriber = false;
+	for (let i = 0; i < csdDataStructure.allValues[ "" + data.nameOfValue ].subscribers.length; i++) {
+		// do not double add if the app and function are the same this permits same app diff function
+		if (csdDataStructure.allValues[ "" + data.nameOfValue ].subscribers[i].app == data.app
+			&& csdDataStructure.allValues[ "" + data.nameOfValue ].subscribers[i].func == data.func) {
+			foundSubscriber = true;
+			break;
+		}
+	}
+	// if app is not already subscribing
+	if (!foundSubscriber) {
+		// make the new subscriber entry
+		var newCsdSubscriber  = {};
+		newCsdSubscriber.app  = data.app;
+		newCsdSubscriber.func = data.func;
+		// add it to that value
+		csdDataStructure.allValues[ "" + data.nameOfValue ].subscribers.push(newCsdSubscriber);
+	}
 }
 
 
@@ -9485,7 +9749,7 @@ function csdSaveDataOnServer(wsio, data) {
 		data.fileName = data.fileName.substring(data.fileName.indexOf("\\") + 1);
 	}
 
-	// Create the folder as needed
+	// Create the notes folder as needed
 	var notesFolder = path.join(mainFolder.path, "notes");
 	if (!sageutils.folderExists(notesFolder)) {
 		sageutils.mkdirParent(notesFolder);
@@ -9510,9 +9774,314 @@ function csdSaveDataOnServer(wsio, data) {
 		fs.writeFileSync(fullpath, buffer);
 		fullpath = path.join(notesFolder, data.fileName);
 		fs.writeFileSync(fullpath, buffer);
+	}  else if (data.fileType === "png") {
+		fullpath = path.join(mainFolder.path, "images", data.fileName);
+		var pngBuffer = new Buffer(data.fileContent, "base64");
+		fs.writeFileSync(fullpath, pngBuffer);
+	}  else if (data.fileType === "jpg") {
+		fullpath = path.join(mainFolder.path, "images", data.fileName);
+		var jpgBuffer = new Buffer(data.fileContent);
+		fs.writeFileSync(fullpath, jpgBuffer);
+	}  else if (data.fileType === "tmp") {
+		fullpath = path.join(mainFolder.path, "tmp", data.fileName);
+		var aBuffer = new Buffer(data.fileContent);
+		fs.writeFileSync(fullpath, aBuffer);
 	} else {
 		console.log("ERROR:csdSaveDataOnServer: unable to save data on server for fileType " + data.fileType);
 	}
+}
+
+/**
+ * Calculate if we have enough screenshot-capable display clients
+ * and send message to UI clients to enable the screenshot menu
+ *
+ * @method     ReportIfCanWallScreenshot
+ */
+function reportIfCanWallScreenshot() {
+	// tile check since it is possible that one display extends beyond one tile
+	var layout = [];
+	var idx;
+	for (let x = 0; x < config.layout.columns; x++) {
+		for (let y = 0; y < config.layout.rows; y++) {
+			idx = y * config.layout.columns + x;
+			// Set to false
+			layout[idx] = false;
+		}
+	}
+	// check if entire wall's tiles can take a screenshot, some displays cover more than one tile
+	var entry, xDisplay, yDisplay;
+	for (let i = 0; i < clients.length; i++) {
+		if (clients[i].clientType === "display" && clients[i].capableOfScreenshot === true) {
+			entry = config.displays[clients[i].clientID];
+			idx = entry.row * config.layout.columns + entry.column;
+			layout[idx] = true;
+			// ok to do because       0 < > == undefined      is false
+			for (let x = 0; x < entry.width; x++) {
+				for (let y = 0; y < entry.height; y++) {
+					xDisplay = entry.column + x;
+					yDisplay = entry.row + y;
+					idx = yDisplay * config.layout.columns + xDisplay;
+					layout[idx] = true;
+				}
+			}
+		}
+	}
+	// if all tiles are able to screenshot then the wall can screenshot
+	var canWallScreenshot = true;
+	for (let i = 0; i < layout.length; i++) {
+		if (!layout[i]) {
+			canWallScreenshot = false;
+			break;
+		}
+	}
+	broadcast("reportIfCanWallScreenshot", {
+		capableOfScreenshot: canWallScreenshot
+	});
+}
+
+/**
+ * Sent from UI, server gets it and tells displays to send back screenshots.
+ * Only happens if a screenshot is not already in progress to prevent spam.
+ * The masterDisplay check in array is reset (discarded) and rebuilt.
+ *
+ * @method     wsStartWallScreenshot
+ * @param      {Object}  wsio    The websocket
+ * @param      {Object}  data    The data
+ */
+function wsStartWallScreenshot(wsio, data) {
+	// If not already taking a screen shot, then can emit, to prevent spamming
+	if (masterDisplay.startedScreenshot === undefined || masterDisplay.startedScreenshot === false) {
+		// Need and additional tracking variable to prevent multiple users
+		// from spamming the screenshot command
+		masterDisplay.startedScreenshot = true;
+		// [x][y] the previous array is discarded
+		masterDisplay.displayCheckIn = [];
+		for (var x = 0; x < config.layout.columns; x++) {
+			for (var y = 0; y < config.layout.rows; y++) {
+				var idx = y * config.layout.columns + x;
+				// Set to false
+				masterDisplay.displayCheckIn[idx] = false;
+			}
+		}
+		// then send the messages
+		for (var i = 0; i < clients.length; i++) {
+			if (clients[i].clientType === "display") {
+				// Their submission status is reset
+				clients[i].submittedScreenshot = false;
+				// Necessary to ignore other displays
+				if (clients[i].capableOfScreenshot === undefined) {
+					// Capabilities are set on response
+					clients[i].capableOfScreenshot = true;
+				}
+				clients[i].emit("sendServerWallScreenshot");
+			}
+		}
+	}
+}
+
+/**
+ * Called when displays are sending screenshots.
+ * Displays that are not capable of screenshots will report back saying so.
+ * Performs the following:
+ * 	if not display, stop
+ * 	if display is not capable, mark status, stop
+ * 	get all displays in array
+ * 	save the current display's screenshot
+ * 	mark this display in the correct check in position
+ * 		if display has width and height, mark those locations too
+ * 	if all display tiles screenshots have been submitted
+ * 		OR all displays have submitted a screenshot or are incapable
+ * 	then make a screenshot
+ * 		done with mosaic and offset tiles based on config information
+ * 		stitching is done in tmp folder to avoid problems caused by the folder monitor
+ * 	finally reset variable to allow another screenshot
+ *
+ *
+ * @method     wsWallScreenshotFromDisplay
+ * @param      {Object}  wsio    The websocket
+ * @param      {Object}  data    The data
+ */
+function wsWallScreenshotFromDisplay(wsio, data) {
+	if (wsio.clientType != "display") {
+		// Something incorrect happened for a non-display to submit a screenshot
+		return;
+	}
+
+	// Check if the responded display was capable in the first place
+	if (!data.capable) {
+		wsio.capableOfScreenshot = false;
+		// Can't do anything if the display isn't capable
+		return;
+	}
+
+	// Declaring reused variables here
+	var xDisplay, yDisplay;
+	var i, x, y, idx, id;
+
+	// First get all connected display clients
+	var allDisplaysFromClients = [];
+	for (i = 0; i < clients.length; i++) {
+		if (clients[i].clientType === "display") {
+			allDisplaysFromClients.push(clients[i]);
+		}
+	}
+
+	// First create information necessary to save the file
+	var fileSaveObject = {};
+	// client ID in this case refers to the display clientID url param. 0 by default
+	// TODO: mirror overwrite is possible, is bad?
+	fileSaveObject.fileName = "wallScreenshot_" + wsio.clientID + ".jpg";
+	fileSaveObject.fileType = "tmp";
+	fileSaveObject.fileContent = data.imageData;
+	// Create the current tile piece and tile pieces individually saved
+	csdSaveDataOnServer(wsio, fileSaveObject);
+
+	// Set the tracking variables for the tile piece
+	// Mark itself as having submitted a screenshot
+	wsio.submittedScreenshot = true;
+
+	//
+	// This whole next section is about proper placement into the displayCheckIn[x][y]
+	// Necessary because of systems that define a single display as having width and height
+	//
+	if (masterDisplay.displayCheckIn[wsio.clientID] != undefined) {
+		idx = config.displays[wsio.clientID].row * config.layout.columns + config.displays[wsio.clientID].column;
+		masterDisplay.displayCheckIn[idx] = wsio;
+		// set this wsio for each of the spaces (client covering several tiles)
+		for (x = 0; x < config.displays[wsio.clientID].width; x++) {
+			for (y = 0; y < config.displays[wsio.clientID].height; y++) {
+				xDisplay = config.displays[wsio.clientID].column + x;
+				yDisplay = config.displays[wsio.clientID].row + y;
+				idx = yDisplay * config.layout.columns + xDisplay;
+				masterDisplay.displayCheckIn[idx] = wsio;
+			}
+		}
+	} else {
+		console.log(sageutils.header('Screenshot') + "Unknown display " + wsio.clientID + " checked in for screenshot");
+	}
+
+	//
+	// Now check if everyone submitted.
+	// NOTE: very possible to have timing issues.
+	//   Counting on the fact that screenshot takes more time the non-capable response
+	//
+	// Display check in necessary for weird pieces
+	//
+	var allDisplaysSubmittedScreenshots = true;
+	// First check if each of the tiles in the wall have been filled
+	for (i = 0; i < masterDisplay.displayCheckIn.length; i++) {
+		if (masterDisplay.displayCheckIn[i] === false) {
+			allDisplaysSubmittedScreenshots = false;
+			break;
+		}
+	}
+
+	// If there is a missing piece from the tiles, possible that there is no active display for it.
+	if (!allDisplaysSubmittedScreenshots) {
+		// Reset to true, it will be false if there is a missing piece
+		allDisplaysSubmittedScreenshots = true;
+		for (i = 0; i < allDisplaysFromClients.length; i++) {
+			// Check if the display is capable
+			if (allDisplaysFromClients[i].capableOfScreenshot) {
+				// Check it hasn't submitted a screenshot, don't have all tiles
+				if (!allDisplaysFromClients[i].submittedScreenshot) {
+					allDisplaysSubmittedScreenshots = false;
+					break;
+				}
+			}
+		}
+	}
+
+	// Stop if not all displays submitted.
+	// Return here to prevent too many nested blocks
+	if (!allDisplaysSubmittedScreenshots) {
+		return;
+	}
+
+	// At this point ready to make a screen shot
+	// First need the date to use as a unique name modifier
+	var dateSuffix = formatDateToYYYYMMDD_HHMMSS(new Date());
+
+	// More than 1 tile means that stitching needs to be applied
+	if (allDisplaysFromClients.length > 1) {
+		// Stitching needs to be done by rows
+		// Tile pieces are still saved in images
+		var basePath = path.join(mainFolder.path, "tmp");
+		var currentPath;
+		var xMosaicPosition = 0;
+		var yMosaicPosition = 0;
+		var mosaicImage = imageMagick().in("-background", "black");
+		// var tilesUsed = [];
+		// var needToSkip;
+
+		//	For each element in the display checkin
+		//		if it is false, then the display isn't connected
+		//		but check if the wsio was already used
+		//			because if it was used, that display has width / height greater than 1 tile
+		//			so it needs to be skipped
+		//		tiles that dont need to be skipped will have their temp file referenced with offet of tile position * resolution
+		for (i = 0; i < masterDisplay.displayCheckIn.length; i++) {
+			// Calculate the coordinates
+			id  = masterDisplay.displayCheckIn[i].clientID;
+			x   = config.displays[id].column;
+			y   = config.displays[id].row;
+			idx = y * config.layout.columns + x;
+
+			xMosaicPosition = x * config.resolution.width;
+			yMosaicPosition = y * config.resolution.height;
+			currentPath = path.join(basePath, "wallScreenshot_" + id + ".jpg");
+			mosaicImage = mosaicImage.in("-page", "+" + xMosaicPosition + "+" + yMosaicPosition);
+			mosaicImage = mosaicImage.in(currentPath);
+		}
+
+		// Setting the output into the tmp folder
+		var fname = "screenshot-" + dateSuffix + ".jpg";
+		currentPath = path.join(mainFolder.path, "tmp", fname);
+
+		// Ready for mosaic and write
+		mosaicImage.mosaic().quality(90).write(currentPath, function(error) {
+			if (error) {
+				console.log(sageutils.header('Screenshot') + error);
+			} else {
+				// Add the image into the asset management and open with a width 1/4 of the wall
+				manageUploadedFiles([{
+					// output folder
+					path: currentPath,
+					// filename
+					name: fname}],
+					// position and size
+					[0, 0, config.totalWidth / 4],
+					// username and color
+					"screenshot", "#B4B4B4",
+					// to be opened afterward
+					true
+				);
+				// Delete the temporary files
+				sageutils.deleteFiles(path.join(mainFolder.path, "tmp", "wallScreenshot_*"));
+			}
+		});
+	} else {
+		// Just change the name
+		fileSaveObject.fileName = "screenshot-" + dateSuffix + ".jpg";
+		csdSaveDataOnServer(wsio, fileSaveObject);
+		// Add the image into the asset management and open with a width 1/4 of the wall
+		manageUploadedFiles([{
+			// output folder
+			path: path.join(mainFolder.path, "tmp", fileSaveObject.fileName),
+			// file name
+			name: fileSaveObject.fileName}],
+			// position and size
+			[0, 0, config.totalWidth / 4],
+			// username and color
+			"screenshot", "#B4B4B4",
+			// to be opened afterward
+			true
+		);
+		// Delete the temporary files
+		sageutils.deleteFiles(path.join(mainFolder.path, "tmp", "wallScreenshot_*"));
+	}
+	// Reset variable to allow another capture
+	masterDisplay.startedScreenshot = false;
 }
 
 /**
@@ -9724,6 +10293,8 @@ function wsCreatePartition(wsio, data) {
 function wsPartitionScreen(wsio, data) {
 	console.log(sageutils.header('Partition') + "Dividing SAGE2 into partitions");
 
+	partitions.unusedColors = partitions.defaultColors.slice(0, partitions.defaultColors.length);
+
 	divideAreaPartitions(
 		data,
 		0,
@@ -9731,6 +10302,8 @@ function wsPartitionScreen(wsio, data) {
 		config.totalWidth,
 		config.totalHeight - config.ui.titleBarHeight
 	);
+
+	delete partitions.unusedColors;
 }
 
 function divideAreaPartitions(data, x, y, width, height) {
@@ -9738,7 +10311,17 @@ function divideAreaPartitions(data, x, y, width, height) {
 	let currX = x,
 		currY = y;
 
-	let randColor = partitions.defaultColors[Math.floor(Math.random() * 12)];
+	// if we are out of unused colors, reset the list
+	if (partitions.unusedColors.length === 0) {
+		partitions.unusedColors = partitions.defaultColors.slice(0, partitions.defaultColors.length);
+	}
+
+	let randIndex = Math.floor(Math.random() * partitions.unusedColors.length);
+
+	let randColor = partitions.unusedColors[randIndex];
+
+	// delete the random color from the unused colors
+	partitions.unusedColors.splice(randIndex, 1);
 
 	if (data.ptn) {
 		let newPtn = createPartition(
@@ -9746,7 +10329,8 @@ function divideAreaPartitions(data, x, y, width, height) {
 				left: x,
 				top: y,
 				width: width,
-				height: height - config.ui.titleBarHeight
+				height: height - config.ui.titleBarHeight,
+				isSnapping: true
 			},
 			randColor
 		);
@@ -9789,13 +10373,7 @@ function divideAreaPartitions(data, x, y, width, height) {
 	* @method wsDeleteAllPartitions
 	*/
 function wsDeleteAllPartitions(wsio) {
-	for (var key in partitions.list) {
-		// broadcast('deletePartitionWindow', partitions.list[key].getDisplayInfo());
-		// partitions.removePartition(key);
-		// interactMgr.removeGeometry(key, "partitions");
-
-		deletePartition(key);
-	}
+	deleteAllPartitions();
 }
 
 /**
@@ -9820,7 +10398,7 @@ function partitionsGrabAllContent() {
 		var changedPartitions = partitions.updateOnItemRelease(SAGE2Items.applications.list[key]);
 
 		changedPartitions.forEach((id => {
-			updatePartitionInnerLayout(partitions.list[id]);
+			updatePartitionInnerLayout(partitions.list[id], true);
 
 			broadcast('partitionWindowTitleUpdate', partitions.list[id].getTitle());
 		}));
@@ -9839,6 +10417,11 @@ function createPartition(dims, color) {
 	broadcast('createPartitionWindow', myPtn.getDisplayInfo());
 	broadcast('createPartitionBorder', myPtn.getDisplayInfo());
 
+	// on creation, if it is snapping, update the neighbors
+	if (myPtn.isSnapping) {
+		partitions.updateNeighbors(myPtn.id);
+	}
+
 	return myPtn;
 }
 
@@ -9850,6 +10433,13 @@ function createPartition(dims, color) {
 	*/
 function deletePartition(id) {
 	var ptn = partitions.list[id];
+
+	if (ptn.isSnapping) {
+		// remove itself from neighbors' neighbor lists
+		for (let neigh of Object.keys(ptn.neighbors)) {
+			delete partitions.list[neigh].neighbors[id];
+		}
+	}
 
 	broadcast('deletePartitionWindow', ptn.getDisplayInfo());
 	partitions.removePartition(ptn.id);

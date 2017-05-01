@@ -297,7 +297,7 @@ var SAGE2_App = Class.extend({
 			this.event(eventType, position, user_id, data, date);
 
 			if (this.passSAGE2PointerAsMouseEvents) {
-				SAGE2MEP.processAndPassEvents(this.element.id, eventType, position,
+				SAGE2MEP.processAndPassEvents(this.id, eventType, position,
 					user_id, data, date);
 			}
 			this.SAGE2UserModification = false;

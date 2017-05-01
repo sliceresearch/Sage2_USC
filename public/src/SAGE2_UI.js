@@ -111,8 +111,8 @@ if (window.applicationCache) {
  */
 window.addEventListener('beforeunload', function(event) {
 	if (interactor && interactor.broadcasting) {
+		// In fact, the message is unused for most browser as security measure
 		var confirmationMessage = "SAGE2 Desktop sharing in progress";
-
 		event.returnValue = confirmationMessage;  // Gecko, Trident, Chrome 34+
 		return confirmationMessage;               // Gecko, WebKit, Chrome <34
 	}
@@ -240,7 +240,7 @@ function setupFocusHandlers() {
 	document.addEventListener(visEvent, function(event) {
 		if (document[hidden]) {
 			if (interactor && interactor.broadcasting) {
-				note = notifyMe("Keep SAGE2 UI visible during screen sharing");
+				note = notifyMe("Keep browser tab with SAGE2 UI visible during screen sharing");
 			}
 		} else {
 			if (note) {
@@ -314,8 +314,12 @@ function SAGE2_init() {
 		document.getElementById('loadingUI').style.display     = "none";
 		document.getElementById('displayUIDiv').style.display  = "block";
 		if (viewOnlyMode) {
+			// remove the button container
 			document.getElementById('menuContainer').style.display = "none";
+			// remove the top menu bar
+			document.getElementById('mainMenuBar').style.display   = "none";
 		} else {
+			// show the button container
 			document.getElementById('menuContainer').style.display = "block";
 		}
 
@@ -525,6 +529,14 @@ function setupListeners() {
 		displayUI.addAppWindow(data);
 	});
 
+	wsio.on('showStickyPin', function(data) {
+		displayUI.showStickyPin(data);
+	});
+
+	wsio.on('hideStickyPin', function(data) {
+		displayUI.hideStickyPin(data);
+	});
+
 	wsio.on('deleteElement', function(data) {
 		displayUI.deleteApp(data.elemId);
 	});
@@ -678,13 +690,24 @@ function setupListeners() {
 	});
 
 	wsio.on('csdSendDataToClient', function(data) {
-		// depending on the specified func does different things.
+		// Depending on the specified func does different things
 		if (data.func === 'uiDrawSetCurrentStateAndShow') {
 			uiDrawSetCurrentStateAndShow(data);
 		} else if (data.func === 'uiDrawMakeLine') {
 			uiDrawMakeLine(data);
 		} else {
 			console.log("Error, csd data packet for client contained invalid function:" + data.func);
+		}
+	});
+
+	// Message from server reporting screenshot ability of display clients
+	wsio.on('reportIfCanWallScreenshot', function(data) {
+		if (data.capableOfScreenshot) {
+			// Enable the menu item
+			$$('topmenu').enableItem('wallScreenshot_menu');
+		} else {
+			// No luck (need to use Electron)
+			console.log("Server> No screenshot capability");
 		}
 	});
 }
@@ -733,12 +756,13 @@ function resizeMenuUI(ratio) {
 
 		var menuScale = 1.0;
 		var freeWidth = window.innerWidth * ratio;
-		if (freeWidth < 1200) {
+		if (freeWidth < 960) {
 			// 9 buttons, 120 pixels per button
 			// menuScale = freeWidth / 1080;
-
 			// 10 buttons, 120 pixels per button
-			menuScale = freeWidth / 1200;
+			// menuScale = freeWidth / 1200;
+			// 8 buttons, 120 pixels per button
+			menuScale = freeWidth / 960;
 		}
 
 		menuUI.style.webkitTransform = "scale(" + menuScale + ")";
@@ -1779,9 +1803,9 @@ function handleClick(element) {
 		// Delete all partitions
 		wsio.emit('deleteAllPartitions');
 		hideDialog('arrangementDialog');
-	} else if (element.id === "assigntopartitions") {
+	} else if (element.id === "deleteapplications") {
 		// Assign content to partitions (partitions grab items which are above them)
-		wsio.emit('partitionsGrabAllContent');
+		wsio.emit('deleteAllApplications');
 		hideDialog('arrangementDialog');
 	} else if (element.id === "ffShareScreenBtn") {
 		// Firefox Share Screen Dialog
@@ -2154,17 +2178,6 @@ function escapeDialog(event) {
  * @param event {Event} event data
  */
 function noBackspace(event) {
-	// if keystrokes not captured and pressing  down '?'
-	//    then show help
-	if (event.keyCode === 191 && event.shiftKey  && event.type === "keydown" && !keyEvents) {
-		webix.modalbox({
-			title: "Mouse and keyboard operations and shortcuts",
-			buttons: ["Ok"],
-			text: "<img src=/images/cheat-sheet.jpg width=100%>",
-			width: "90%"
-		});
-	}
-
 	// backspace keyCode is 8
 	// allow backspace in text box: target.type is defined for input elements
 	if (parseInt(event.keyCode, 10) === 8 && !event.target.type) {
@@ -2174,11 +2187,28 @@ function noBackspace(event) {
 		&& event.target.id.indexOf("rmbContextMenuEntry") !== -1
 		&& event.target.id.indexOf("Input") !== -1
 		) {
+		// if a user hits enter within an rmbContextMenuEntry, it will cause the effect to happen
 		event.target.parentNode["buttonEffect" + event.target.id]();
 	} else if (event.ctrlKey && event.keyCode === 13 && event.target.id === "uiNoteMakerInputField") {
+		// ctrl + enter in note maker adds a line rather than send note
 		event.target.value += "\n";
+	} else if (event.shiftKey && event.keyCode === 13 && event.target.id === "uiNoteMakerInputField") {
+		// shift + enter adds a line
 	} else if (event.keyCode === 13 && event.target.id === "uiNoteMakerInputField") {
+		// if a user hits enter within an rmbContextMenuEntry, it will cause the effect to happen
 		sendCsdMakeNote();
+		event.preventDefault(); // prevent new line on next note
+	} else if (event.keyCode === 191 && event.shiftKey && event.target.id === "uiNoteMakerInputField") {
+		// allow "?" within note creation
+	} else if (event.keyCode === 191 && event.shiftKey && event.type === "keydown" && !keyEvents) {
+		// if keystrokes not captured and pressing  down '?'
+		//    then show help
+		webix.modalbox({
+			title: "Mouse and keyboard operations and shortcuts",
+			buttons: ["Ok"],
+			text: "<img src=/images/cheat-sheet.jpg width=100%>",
+			width: "90%"
+		});
 	}
 	return true;
 }
@@ -2273,7 +2303,7 @@ function hideDialog(id) {
 	document.getElementById('blackoverlay').style.display = "none";
 	document.getElementById(id).style.display = "none";
 	document.getElementById('uiDrawZoneEraseReference').style.left = "-100px";
-	document.getElementById('uiDrawZoneEraseReference').style.top = "-100px";
+	document.getElementById('uiDrawZoneEraseReference').style.top  = "-100px";
 	if (id == 'uiDrawZone') {
 		uiDrawZoneRemoveSelfAsClient();
 	}
@@ -2614,7 +2644,7 @@ function setupUiNoteMaker() {
 	var inputField = document.getElementById('uiNoteMakerInputField');
 	inputField.id = "uiNoteMakerInputField";
 	inputField.rows = 5;
-	inputField.cols = 20;
+	inputField.cols = 24;
 	var sendButton = document.getElementById('uiNoteMakerSendButton');
 	// click effect to make a note on the display (app launch)
 	sendButton.addEventListener('click', function() {
@@ -2653,14 +2683,14 @@ function setUiNoteColorSelect(colorNumber) {
 		workingDiv = document.getElementById("uinmColorPick" + i);
 		workingDiv.style.border = "1px solid black";
 		workingDiv.colorWasPicked = false;
-		workingDiv.style.width = "65px";
-		workingDiv.style.height = "45px";
+		workingDiv.style.width = (parseInt(workingDiv.style.width) + 8) + "px";
+		workingDiv.style.height = (parseInt(workingDiv.style.height) + 8) + "px";
 	}
 	workingDiv = document.getElementById("uinmColorPick" + colorNumber);
 	workingDiv.style.border = "3px solid black";
 	workingDiv.colorWasPicked = true;
-	workingDiv.style.width = "59px";
-	workingDiv.style.height = "39px";
+	workingDiv.style.width = (parseInt(workingDiv.style.width) - 8) + "px";
+	workingDiv.style.height = (parseInt(workingDiv.style.height) - 8) + "px";
 }
 
 /**
@@ -2675,21 +2705,21 @@ function sendCsdMakeNote() {
 	var data = {};
 	data.type		= "launchAppWithValues";
 	data.appName	= "quickNote";
-	data.func		= "setMessage";
-	data.params		= {};
-	data.params.clientName = document.getElementById('sage2PointerLabel').value;
-	data.params.clientInput = workingDiv.value;
-	workingDiv.value = ""; // clear out the input field.
+	// data.func		= "setMessage";
+	data.csdInitValues		= {};
+	data.csdInitValues.clientName = document.getElementById('sage2PointerLabel').value;
+	data.csdInitValues.clientInput = workingDiv.value;
 	if (document.getElementById("uiNoteMakerCheckAnonymous").checked) {
-		data.params.clientName = "Anonymous";
+		data.csdInitValues.clientName = "Anonymous";
 	}
-	data.params.colorChoice = "lightyellow";
+	data.csdInitValues.colorChoice = "lightyellow";
 	for (var i = 1; i <= 6; i++) {
 		if (document.getElementById("uinmColorPick" + i).colorWasPicked) {
-			data.params.colorChoice = document.getElementById("uinmColorPick" + i).style.background;
+			data.csdInitValues.colorChoice = document.getElementById("uinmColorPick" + i).style.background;
 		}
 	}
 	wsio.emit('csdMessage', data);
+	workingDiv.value = ""; // clear out the input field.
 }
 
 /**
@@ -2730,8 +2760,8 @@ function setupUiDrawCanvas() {
 				this.pmy = event.offsetY;
 			}
 			var workingDiv = document.getElementById('uiDrawZoneEraseReference');
-			workingDiv.style.left = (event.pageX - parseInt(workingDiv.style.width) / 2) + "px";
-			workingDiv.style.top = (event.pageY - parseInt(workingDiv.style.height) / 2) + "px";
+			workingDiv.style.left = (event.pageX - parseInt(workingDiv.style.width)  / 2) + "px";
+			workingDiv.style.top  = (event.pageY - parseInt(workingDiv.style.height) / 2) + "px";
 		}
 	);
 	// closes the draw area (but really hides it)
@@ -2877,7 +2907,7 @@ function uiDrawSelectThickness(selectedDivId) {
 			workingDiv.style.border = "3px solid red";
 			// change the reference draw circle
 			workingDiv = document.getElementById('uiDrawZoneEraseReference');
-			workingDiv.style.width = thickness + "px";
+			workingDiv.style.width  = thickness + "px";
 			workingDiv.style.height = thickness + "px";
 		} else {
 			workingDiv = document.getElementById('uidztp' + i);
@@ -2907,12 +2937,12 @@ function uiDrawTouchMove(event) {
 	var workingDiv = document.getElementById('uiDrawZoneCanvas');
 	var touches = event.changedTouches;
 	var touchId;
-	var cbb = workingDiv.getBoundingClientRect(); //canvas bounding box: cbb
+	var cbb = workingDiv.getBoundingClientRect(); // canvas bounding box: cbb
 	for (var i = 0; i < touches.length; i++) {
 		touchId = uiDrawGetTouchId(touches[i].identifier);
-		//only if it is a known touch continuation
+		// only if it is a known touch continuation
 		if (touchId !== -1) {
-			//xDest, yDest, xPrev, yPrev
+			// xDest, yDest, xPrev, yPrev
 			uiDrawSendLineCommand(
 				touches[i].pageX - cbb.left,
 				touches[i].pageY - cbb.top,
@@ -2924,8 +2954,8 @@ function uiDrawTouchMove(event) {
 		}
 	}
 	workingDiv = document.getElementById('uiDrawZoneEraseReference');
-	workingDiv.style.left = (touches[0].pageX - parseInt(workingDiv.style.width) / 2) + "px";
-	workingDiv.style.top = (touches[0].pageY - parseInt(workingDiv.style.height) / 2) + "px";
+	workingDiv.style.left = (touches[0].pageX - parseInt(workingDiv.style.width) / 2)  + "px";
+	workingDiv.style.top  = (touches[0].pageY - parseInt(workingDiv.style.height) / 2) + "px";
 }
 
 /**
@@ -2944,7 +2974,7 @@ function uiDrawTouchEnd(event) {
 	}
 	workingDiv = document.getElementById('uiDrawZoneEraseReference');
 	workingDiv.style.left = "-100px";
-	workingDiv.style.top = "-100px";
+	workingDiv.style.top  = "-100px";
 }
 
 /**
@@ -3092,12 +3122,12 @@ This is necessary because the doodle canvas space is a shared draw space,
 	even if they are not currently editing the app.
 */
 function uiDrawZoneRemoveSelfAsClient() {
-	var workingDiv			= document.getElementById('uiDrawZoneCanvas');
-	var dataForApp			= {};
-	dataForApp.app			= workingDiv.appId;
-	dataForApp.func			= "removeClientIdAsEditor";
-	dataForApp.data			= [workingDiv.clientDest];
-	dataForApp.type			= "sendDataToClient";
-	dataForApp.clientDest	= "allDisplays";
+	var workingDiv  = document.getElementById('uiDrawZoneCanvas');
+	var dataForApp  = {};
+	dataForApp.app  = workingDiv.appId;
+	dataForApp.func = "removeClientIdAsEditor";
+	dataForApp.data = [workingDiv.clientDest];
+	dataForApp.type = "sendDataToClient";
+	dataForApp.clientDest = "allDisplays";
 	wsio.emit("csdMessage", dataForApp);
 }

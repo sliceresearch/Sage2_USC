@@ -206,7 +206,8 @@ SAGE2DisplayUI.prototype.resize = function(ratio) {
 		drawHeight = Math.floor(freeWidth * ratio / sage2Aspect);
 	}
 
-	var freeHeight  = (window.innerHeight * ratio) - 24 - (86 * menuScale);
+	// height minus the button labels and the buttons and the top menubar
+	var freeHeight  = (window.innerHeight * ratio) - 24 - (86 * menuScale) - 40;
 	if (freeHeight < 100) {
 		freeHeight = 100;
 	}
@@ -225,11 +226,16 @@ SAGE2DisplayUI.prototype.resize = function(ratio) {
 
 	sage2UI.width  = drawWidth;
 	sage2UI.height = drawHeight;
-	applicationsDiv.style.width  = drawWidth + "px";
+	applicationsDiv.style.width  = drawWidth  + "px";
 	applicationsDiv.style.height = drawHeight + "px";
-	partitionsDiv.style.width  = drawWidth + "px";
-	partitionsDiv.style.height = drawHeight + "px";
+	partitionsDiv.style.width    = drawWidth  + "px";
+	partitionsDiv.style.height   = drawHeight + "px";
 	displayUI.style.height = (drawHeight + 5) + "px";
+
+	// adjust the top menubar width
+	var mainMenuBar = document.getElementById('mainMenuBar');
+	mainMenuBar.style.width = window.innerWidth + "px";
+	$$("toplayout").adjust();
 
 	this.resizeAppWindows();
 	this.resizePartitionWindows();
@@ -255,6 +261,13 @@ SAGE2DisplayUI.prototype.resizeAppWindows = function(event) {
 		appWindowArea.style.top    = Math.round(this.config.ui.titleBarHeight * this.scale) + "px";
 		appWindowArea.style.width  = Math.round(this.applications[key].width * this.scale) + "px";
 		appWindowArea.style.height = Math.round(this.applications[key].height * this.scale) + "px";
+
+		if (this.applications[key].sticky === true) {
+			var windowIconPinned = document.getElementById(key + "_iconPinned");
+			var windowIconPinout = document.getElementById(key + "_iconPinout");
+			windowIconPinned.style.height = Math.round(this.config.ui.titleBarHeight * this.scale) + "px";
+			windowIconPinout.style.height = Math.round(this.config.ui.titleBarHeight * this.scale) + "px";
+		}
 	}
 };
 
@@ -421,6 +434,27 @@ SAGE2DisplayUI.prototype.addAppWindow = function(data) {
 		appIcon.src = "images/unknownapp_512.png";
 	}
 
+	if (data.sticky === true) {
+		var windowIconPinned = document.createElement("img");
+		windowIconPinned.id  = data.id + "_iconPinned";
+		windowIconPinned.className = "invertedIcon";
+		windowIconPinned.src = "images/ui/window-pinnedUI.svg";
+		windowIconPinned.style.height = Math.round(this.config.ui.titleBarHeight * this.scale) + "px";
+		windowIconPinned.style.position = "absolute";
+		windowIconPinned.style.left    = "0px";
+		windowIconPinned.style.display  = "none";
+		appWindowTitle.appendChild(windowIconPinned);
+
+		var windowIconPinout = document.createElement("img");
+		windowIconPinout.id  = data.id + "_iconPinout";
+		windowIconPinout.className = "invertedIcon";
+		windowIconPinout.src = "images/ui/window-pinoutUI.svg";
+		windowIconPinout.style.height = Math.round(this.config.ui.titleBarHeight * this.scale) + "px";
+		windowIconPinout.style.position = "absolute";
+		windowIconPinout.style.left    = "0px";
+		windowIconPinout.style.display  = "none";
+		appWindowTitle.appendChild(windowIconPinout);
+	}
 	appWindowArea.appendChild(appIcon);
 	appWindow.appendChild(appWindowTitle);
 	appWindow.appendChild(appWindowArea);
@@ -428,6 +462,32 @@ SAGE2DisplayUI.prototype.addAppWindow = function(data) {
 
 	this.appCount++;
 	this.applications[data.id] = data;
+};
+
+
+SAGE2DisplayUI.prototype.showStickyPin = function(data) {
+	if (data.sticky !== true) {
+		return;
+	}
+	var windowIconPinned = document.getElementById(data.id + "_iconPinned");
+	var windowIconPinout = document.getElementById(data.id + "_iconPinout");
+	if (data.pinned === true) {
+		windowIconPinned.style.display = "block";
+		windowIconPinout.style.display = "none";
+	} else {
+		windowIconPinned.style.display = "none";
+		windowIconPinout.style.display = "block";
+	}
+};
+
+SAGE2DisplayUI.prototype.hideStickyPin = function(data) {
+	if (data.sticky !== true) {
+		return;
+	}
+	var windowIconPinned = document.getElementById(data.id + "_iconPinned");
+	var windowIconPinout = document.getElementById(data.id + "_iconPinout");
+	windowIconPinned.style.display = "none";
+	windowIconPinout.style.display = "none";
 };
 
 /**
