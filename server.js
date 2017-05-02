@@ -9891,44 +9891,17 @@ function csdSaveDataOnServer(wsio, data) {
  * @method     ReportIfCanWallScreenshot
  */
 function reportIfCanWallScreenshot() {
-	// tile check since it is possible that one display extends beyond one tile
-	var layout = [];
-	var idx;
-	for (let x = 0; x < config.layout.columns; x++) {
-		for (let y = 0; y < config.layout.rows; y++) {
-			idx = y * config.layout.columns + x;
-			// Set to false
-			layout[idx] = false;
-		}
-	}
-	// check if entire wall's tiles can take a screenshot, some displays cover more than one tile
-	var entry, xDisplay, yDisplay;
+	var numOfDisplayClients = config.displays.length;
+	var canWallScreenshot = 0;
+	// check if all display clients can take a screenshot
 	for (let i = 0; i < clients.length; i++) {
 		if (clients[i].clientType === "display" && clients[i].capableOfScreenshot === true) {
-			entry = config.displays[clients[i].clientID];
-			idx = entry.row * config.layout.columns + entry.column;
-			layout[idx] = true;
-			// ok to do because       0 < > == undefined      is false
-			for (let x = 0; x < entry.width; x++) {
-				for (let y = 0; y < entry.height; y++) {
-					xDisplay = entry.column + x;
-					yDisplay = entry.row + y;
-					idx = yDisplay * config.layout.columns + xDisplay;
-					layout[idx] = true;
-				}
-			}
+			canWallScreenshot++;
 		}
 	}
-	// if all tiles are able to screenshot then the wall can screenshot
-	var canWallScreenshot = true;
-	for (let i = 0; i < layout.length; i++) {
-		if (!layout[i]) {
-			canWallScreenshot = false;
-			break;
-		}
-	}
+	// Send the news to the UI clients
 	broadcast("reportIfCanWallScreenshot", {
-		capableOfScreenshot: canWallScreenshot
+		capableOfScreenshot: (canWallScreenshot === numOfDisplayClients)
 	});
 }
 
