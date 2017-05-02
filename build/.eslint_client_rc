@@ -47,7 +47,7 @@
 		"new-cap": ["error", {"capIsNew": false, "properties": false}],
 		"keyword-spacing": 2,
 		"dot-notation": 2,
-	    "lines-around-comment": 2,
+		"lines-around-comment": 2,
 		"linebreak-style": [2, "unix"],
 		"no-unused-vars": [2, {"vars": "local", "args": "none"}],
 
@@ -56,5 +56,6 @@
 		"no-loop-func": 0,
 		"no-underscore-dangle": 0,
 		"no-use-before-define": 0,
+		"comma-dangle": ["error", "never"],
     }
 }

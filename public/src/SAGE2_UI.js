@@ -240,7 +240,7 @@ function setupFocusHandlers() {
 	document.addEventListener(visEvent, function(event) {
 		if (document[hidden]) {
 			if (interactor && interactor.broadcasting) {
-				note = notifyMe("Keep SAGE2 UI visible during screen sharing");
+				note = notifyMe("Keep browser tab with SAGE2 UI visible during screen sharing");
 			}
 		} else {
 			if (note) {
@@ -314,8 +314,12 @@ function SAGE2_init() {
 		document.getElementById('loadingUI').style.display     = "none";
 		document.getElementById('displayUIDiv').style.display  = "block";
 		if (viewOnlyMode) {
+			// remove the button container
 			document.getElementById('menuContainer').style.display = "none";
+			// remove the top menu bar
+			document.getElementById('mainMenuBar').style.display   = "none";
 		} else {
+			// show the button container
 			document.getElementById('menuContainer').style.display = "block";
 		}
 
@@ -699,16 +703,8 @@ function setupListeners() {
 	// Message from server reporting screenshot ability of display clients
 	wsio.on('reportIfCanWallScreenshot', function(data) {
 		if (data.capableOfScreenshot) {
-			if (!this.addedScreenshotButton) {
-				// Get the menu item from the filemanager
-				var mymenu = $$('mymenu').getSubMenu('services_menu');
-				// Add a new option for screenshot
-				mymenu.add({
-					id:    "wallScreenshot_menu",
-					value: "Take screeshot of wall"
-				});
-				this.addedScreenshotButton = true;
-			}
+			// Enable the menu item
+			$$('topmenu').enableItem('wallScreenshot_menu');
 		} else {
 			// No luck (need to use Electron)
 			console.log("Server> No screenshot capability");
@@ -760,12 +756,13 @@ function resizeMenuUI(ratio) {
 
 		var menuScale = 1.0;
 		var freeWidth = window.innerWidth * ratio;
-		if (freeWidth < 1200) {
+		if (freeWidth < 960) {
 			// 9 buttons, 120 pixels per button
 			// menuScale = freeWidth / 1080;
-
 			// 10 buttons, 120 pixels per button
-			menuScale = freeWidth / 1200;
+			// menuScale = freeWidth / 1200;
+			// 8 buttons, 120 pixels per button
+			menuScale = freeWidth / 960;
 		}
 
 		menuUI.style.webkitTransform = "scale(" + menuScale + ")";
@@ -2306,7 +2303,7 @@ function hideDialog(id) {
 	document.getElementById('blackoverlay').style.display = "none";
 	document.getElementById(id).style.display = "none";
 	document.getElementById('uiDrawZoneEraseReference').style.left = "-100px";
-	document.getElementById('uiDrawZoneEraseReference').style.top = "-100px";
+	document.getElementById('uiDrawZoneEraseReference').style.top  = "-100px";
 	if (id == 'uiDrawZone') {
 		uiDrawZoneRemoveSelfAsClient();
 	}
@@ -2773,8 +2770,8 @@ function setupUiDrawCanvas() {
 				this.pmy = event.offsetY;
 			}
 			var workingDiv = document.getElementById('uiDrawZoneEraseReference');
-			workingDiv.style.left = (event.pageX - parseInt(workingDiv.style.width) / 2) + "px";
-			workingDiv.style.top = (event.pageY - parseInt(workingDiv.style.height) / 2) + "px";
+			workingDiv.style.left = (event.pageX - parseInt(workingDiv.style.width)  / 2) + "px";
+			workingDiv.style.top  = (event.pageY - parseInt(workingDiv.style.height) / 2) + "px";
 		}
 	);
 	// closes the draw area (but really hides it)
@@ -2920,7 +2917,7 @@ function uiDrawSelectThickness(selectedDivId) {
 			workingDiv.style.border = "3px solid red";
 			// change the reference draw circle
 			workingDiv = document.getElementById('uiDrawZoneEraseReference');
-			workingDiv.style.width = thickness + "px";
+			workingDiv.style.width  = thickness + "px";
 			workingDiv.style.height = thickness + "px";
 		} else {
 			workingDiv = document.getElementById('uidztp' + i);
@@ -2950,12 +2947,12 @@ function uiDrawTouchMove(event) {
 	var workingDiv = document.getElementById('uiDrawZoneCanvas');
 	var touches = event.changedTouches;
 	var touchId;
-	var cbb = workingDiv.getBoundingClientRect(); //canvas bounding box: cbb
+	var cbb = workingDiv.getBoundingClientRect(); // canvas bounding box: cbb
 	for (var i = 0; i < touches.length; i++) {
 		touchId = uiDrawGetTouchId(touches[i].identifier);
-		//only if it is a known touch continuation
+		// only if it is a known touch continuation
 		if (touchId !== -1) {
-			//xDest, yDest, xPrev, yPrev
+			// xDest, yDest, xPrev, yPrev
 			uiDrawSendLineCommand(
 				touches[i].pageX - cbb.left,
 				touches[i].pageY - cbb.top,
@@ -2967,8 +2964,8 @@ function uiDrawTouchMove(event) {
 		}
 	}
 	workingDiv = document.getElementById('uiDrawZoneEraseReference');
-	workingDiv.style.left = (touches[0].pageX - parseInt(workingDiv.style.width) / 2) + "px";
-	workingDiv.style.top = (touches[0].pageY - parseInt(workingDiv.style.height) / 2) + "px";
+	workingDiv.style.left = (touches[0].pageX - parseInt(workingDiv.style.width) / 2)  + "px";
+	workingDiv.style.top  = (touches[0].pageY - parseInt(workingDiv.style.height) / 2) + "px";
 }
 
 /**
@@ -2987,7 +2984,7 @@ function uiDrawTouchEnd(event) {
 	}
 	workingDiv = document.getElementById('uiDrawZoneEraseReference');
 	workingDiv.style.left = "-100px";
-	workingDiv.style.top = "-100px";
+	workingDiv.style.top  = "-100px";
 }
 
 /**
@@ -3135,12 +3132,12 @@ This is necessary because the doodle canvas space is a shared draw space,
 	even if they are not currently editing the app.
 */
 function uiDrawZoneRemoveSelfAsClient() {
-	var workingDiv			= document.getElementById('uiDrawZoneCanvas');
-	var dataForApp			= {};
-	dataForApp.app			= workingDiv.appId;
-	dataForApp.func			= "removeClientIdAsEditor";
-	dataForApp.data			= [workingDiv.clientDest];
-	dataForApp.type			= "sendDataToClient";
-	dataForApp.clientDest	= "allDisplays";
+	var workingDiv  = document.getElementById('uiDrawZoneCanvas');
+	var dataForApp  = {};
+	dataForApp.app  = workingDiv.appId;
+	dataForApp.func = "removeClientIdAsEditor";
+	dataForApp.data = [workingDiv.clientDest];
+	dataForApp.type = "sendDataToClient";
+	dataForApp.clientDest = "allDisplays";
 	wsio.emit("csdMessage", dataForApp);
 }

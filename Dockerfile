@@ -1,16 +1,24 @@
 FROM    ubuntu
 MAINTAINER	EVL avatar <evl.avatar@gmail.com>
-RUN     apt-get -y update
-RUN     apt-get install -y software-properties-common
+RUN     apt-get update && apt-get install -y \
+		software-properties-common \
+		git \
+		curl \
+		bzip2
 RUN     add-apt-repository -y ppa:mc3man/xerus-media
-RUN     apt-get -y update
-RUN     apt-get -y install libavformat libavformat-dev libavcodec libavcodec-dev ffmpeg libavutil-dev git curl libswscale libswscale-dev
-RUN     curl -sL https://deb.nodesource.com/setup_7.x | sudo bash -
-RUN     apt-get -y install g++ make wget nodejs ghostscript bzip2 devscripts libx264-dev yasm libnss3-tools libimage-exiftool-perl libgs-dev
-RUN     apt-get -y install imagemagick libmagickcore-dev libmagickwand-dev libmagick++-dev libgraphviz-dev
+RUN     curl -sL https://deb.nodesource.com/setup_7.x | bash -
+RUN     apt-get update && apt-get install -y \
+		ffmpeg \
+		ghostscript \
+		libnss3-tools \
+		libimage-exiftool-perl \
+		imagemagick \
+		nodejs \
+	&& rm -rf /var/lib/apt/lists/*
 
 COPY    package.json /tmp/package.json
-RUN     cd /tmp; npm install
+COPY    install_dependencies.js /tmp/install_dependencies.js
+RUN     cd /tmp; npm run in
 RUN     mkdir -p /sage2; cp -a /tmp/node_modules /sage2/
 
 COPY    . /sage2
