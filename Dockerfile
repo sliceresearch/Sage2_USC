@@ -1,14 +1,13 @@
 FROM    ubuntu
 MAINTAINER	EVL avatar <evl.avatar@gmail.com>
 RUN     apt-get update && apt-get install -y \
-		software-properties-common
+		software-properties-common \
+		git \
+		curl \
+		bzip2
 RUN     add-apt-repository -y ppa:mc3man/xerus-media
 RUN     curl -sL https://deb.nodesource.com/setup_7.x | bash -
 RUN     apt-get update && apt-get install -y \
-		apt-utils \
-		git \
-		curl \
-		bzip2 \
 		ffmpeg \
 		ghostscript \
 		libnss3-tools \
