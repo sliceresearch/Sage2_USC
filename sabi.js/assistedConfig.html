@@ -194,7 +194,6 @@
 		{ entry: "spacer"},
 		{ entry: "Layout Width", id:"layoutWidth", placeholder:"1", description:"If you have more than one monitor, this is the number of monitors that make up your tiled display's width."},
 		{ entry: "Layout Height", id:"layoutHeight", placeholder:"1", description:"Your tiled display's height."},
-		{ entry: "checkbox", id:"shouldKeepAllDisplays", placeholder:"Keep all display positions? ", description:"Default: unchecked. Assisted config will set display 0 to span all tiles. If more than one, should the config keep the other displays?"},
 		{ entry: "spacer"},
 	];
 	var alternateHostEntryTracker = [];
@@ -233,41 +232,6 @@
 
 				tdHolder1.textContent = "\u00A0";
 				trHolder.appendChild(tdHolder1);
-				entryTable.appendChild(trHolder);
-
-			} else if (inputPieces[i].entry === "checkbox") {
-				trHolder = document.createElement("tr");
-				tdHolder1 = document.createElement("td");
-				tdHolder2 = document.createElement("td");
-				inputHolder = document.createElement("input");
-				checkboxLabel = document.createElement("label");
-
-				tdHolder1.classList.add("entryTitle");
-				inputHolder.type = "checkbox";
-				inputHolder.id = "inputFor" + inputPieces[i].id;
-				inputHolder.checked = false;
-				inputHolder.style.width = "2%";
-				checkboxLabel.classList.add("entryInput");
-				tdHolder1.textContent = inputPieces[i].placeholder;
-
-				trHolder.appendChild(tdHolder1);
-				tdHolder2.appendChild(inputHolder);
-				tdHolder2.appendChild(checkboxLabel);
-				tdHolder2.style.textAlign = "left";
-				trHolder.appendChild(tdHolder2);
-				entryTable.appendChild(trHolder);
-
-				trHolder = document.createElement("tr");
-				tdHolder1 = document.createElement("td");
-				tdHolder2 = document.createElement("td");
-
-				tdHolder1.classList.add("entryTitle");
-				tdHolder2.classList.add("entryDescription");
-				tdHolder2.id = "descriptionFor" + inputPieces[i].id;
-				tdHolder2.textContent = inputPieces[i].description;
-
-				trHolder.appendChild(tdHolder1);
-				trHolder.appendChild(tdHolder2);
 				entryTable.appendChild(trHolder);
 
 			} else {
@@ -705,21 +669,14 @@
 		}
 		serverGivenCfgCopy.remote_sites = tempList;
 
-		// fill the displays layout
-		tempList = [];
-		for (var rows = 0; rows < serverGivenCfgCopy.layout.rows; rows++) {
-			for (var cols = 0; cols < serverGivenCfgCopy.layout.columns; cols++) {
-				tempList.push({row: rows, column: cols});
-			}
-		}
-		tempList[0].width = serverGivenCfgCopy.layout.columns;
-		tempList[0].height = serverGivenCfgCopy.layout.rows;
-		
+		// only keep display 0
+		tempList = [{
+			row: 0,
+			column: 0,
+			width: serverGivenCfgCopy.layout.columns,
+			height: serverGivenCfgCopy.layout.rows
+		}];
 		serverGivenCfgCopy.displays = tempList;
-
-		if (document.getElementById("inputForshouldKeepAllDisplays").checked){
-			serverGivenCfgCopy.displays = [tempList[0]];
-		}
 
 		// print
 		console.dir(serverGivenCfgCopy);
@@ -734,7 +691,7 @@
 		// send to server
 		socket.emit("assistedConfigSend", serverGivenCfgCopy);
 
-		// redirectToAdminPanel();
+		redirectToAdminPanel();
 	}
 
 	/*
