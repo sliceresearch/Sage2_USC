@@ -1713,30 +1713,23 @@ function createAppWindow(data, parentId, titleBarHeight, titleTextSize, offsetX,
 /* global d3 */
 
 function moveItemWithAnimation(updatedApp) {
-	var elemTitle = d3.select("#" + updatedApp.elemId + "_title");
-	var elem = d3.select("#" + updatedApp.elemId);
+	var elemTitle = document.getElementById(updatedApp.elemId + "_title");
+	var elem = document.getElementById(updatedApp.elemId);
 
 	var translate = "translate(" + updatedApp.elemLeft + "px," + updatedApp.elemTop + "px)";
 
 	// allow for transform transitions
-	elemTitle
-		.style("transition", " opacity 0.2s ease-in, transform 0.2s linear");
+	elemTitle.style.transition = "opacity 0.2s ease-in, transform 0.2s linear"
 
-	elem
-		.style("transition", " opacity 0.2s ease-in, transform 0.2s linear");
+	elem.style.transition = "opacity 0.2s ease-in, transform 0.2s linear"
 
 	// update transforms
+	elemTitle.style.transform = translate;
+	elem.style.transform = translate;
 
-	elemTitle
-		.style("transform", translate);
-
-	elem
-		.style("transform", translate);
-
-	// reset transition after transition time
-	elemTitle.transition().delay(200)
-		.style("transition", " opacity 0.2s ease-in");
-
-	elem.transition().delay(200)
-		.style("transition", " opacity 0.2s ease-in");
+	// reset transition after transform transition time
+	setTimeout(function() {
+		elemTitle.style.transition = "opacity 0.2s ease-in";
+		elem.style.transition = "opacity 0.2s ease-in";
+	}, 200);
 }
