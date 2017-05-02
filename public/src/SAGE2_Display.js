@@ -1719,9 +1719,9 @@ function moveItemWithAnimation(updatedApp) {
 	var translate = "translate(" + updatedApp.elemLeft + "px," + updatedApp.elemTop + "px)";
 
 	// allow for transform transitions
-	elemTitle.style.transition = "opacity 0.2s ease-in, transform 0.2s linear"
+	elemTitle.style.transition = "opacity 0.2s ease-in, transform 0.2s linear";
 
-	elem.style.transition = "opacity 0.2s ease-in, transform 0.2s linear"
+	elem.style.transition = "opacity 0.2s ease-in, transform 0.2s linear";
 
 	// update transforms
 	elemTitle.style.transform = translate;
