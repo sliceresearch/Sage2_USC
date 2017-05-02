@@ -669,13 +669,13 @@
 		}
 		serverGivenCfgCopy.remote_sites = tempList;
 
-		// fill the displays layout
-		tempList = [];
-		for (var rows = 0; rows < serverGivenCfgCopy.layout.rows; rows++) {
-			for (var cols = 0; cols < serverGivenCfgCopy.layout.columns; cols++) {
-				tempList.push({row: rows, column: cols});
-			}
-		}
+		// only keep display 0
+		tempList = [{
+			row: 0,
+			column: 0,
+			width: serverGivenCfgCopy.layout.columns,
+			height: serverGivenCfgCopy.layout.rows
+		}];
 		serverGivenCfgCopy.displays = tempList;
 
 		// print
