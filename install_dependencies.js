@@ -106,8 +106,8 @@ var suffix = "_" + platform + "_" + target + ".tar.gz";
 var packages = [
 	// {name: "node-demux",  url: "https://bitbucket.org/tmarrinan/binary-modules/downloads"},
 	// {name: "websocketio", url: "https://bitbucket.org/tmarrinan/binary-modules/downloads"}
-	{name: "node-demux",  url: "https://bitbucket.org/sage2/binaries/downloads"},
-	{name: "websocketio", url: "https://bitbucket.org/sage2/binaries/downloads"}
+	// {name: "websocketio", url: "https://bitbucket.org/sage2/binaries/downloads"}
+	{name: "node-demux",  url: "https://bitbucket.org/sage2/binaries/downloads"}
 ];
 
 var downloaded = {};
@@ -189,7 +189,6 @@ function unzipModules() {
 	if (isEmpty(downloaded)) {
 		process.stdout.write("\n");
 		console.log("INSTALL FINISHED!");
-		// install();
 	} else {
 		var key;
 		for (key in downloaded) {
@@ -202,7 +201,6 @@ function unzipModules() {
 
 function unzipModule(keys, idx) {
 	if (idx >= keys.length) {
-		// install();
 		return;
 	}
 

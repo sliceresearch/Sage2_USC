@@ -32,6 +32,12 @@ var version    = require('./package.json').version;
 /**
  * Setup the command line argument parsing (commander module)
  */
+var args = process.argv;
+if (args.length === 1) {
+	// seems to make commander happy when using binary packager
+	args = args[0];
+}
+
 commander
 	.version(version)
 	.option('-s, --server <s>',    'Server URL (string)', 'http://localhost:9292')
@@ -43,13 +49,14 @@ commander
 	.option('-n, --no_decoration', 'Remove window decoration (boolean)', false)
 	.option('-x, --xorigin <n>',   'Window position x (int)', myParseInt, 0)
 	.option('-y, --yorigin <n>',   'Window position y (int)', myParseInt, 0)
+	.option('-m, --monitor <n>',   'Select a monitor (int)', myParseInt, null)
 	.option('--width <n>',         'Window width (int)', myParseInt, 1280)
 	.option('--height <n>',        'Window height (int)', myParseInt, 720)
 	.option('--password <s>',      'Server password (string)', null)
 	.option('--hash <s>',          'Server password hash (string)', null)
 	.option('--cache',             'Clear the cache', false)
 	.option('--console',           'Open the devtools console', false)
-	.parse(process.argv);
+	.parse(args);
 
 
 if (commander.plugins) {
@@ -87,8 +94,6 @@ function openWindow() {
 			commander.height = 400;
 		}
 	}
-
-
 
 	// Setup initial position and size
 	mainWindow.setBounds({
@@ -133,6 +138,17 @@ function openWindow() {
 		}
 	}
 	mainWindow.loadURL(location);
+
+	if (commander.monitor !== null) {
+		mainWindow.on('show', function() {
+			mainWindow.setFullScreen(true);
+			// Once all done, prevent changing the fullscreen state
+			mainWindow.setFullScreenable(false);
+		});
+	} else {
+		// Once all done, prevent changing the fullscreen state
+		mainWindow.setFullScreenable(false);
+	}
 }
 
 /**
@@ -141,6 +157,21 @@ function openWindow() {
  * @method     createWindow
  */
 function createWindow() {
+	// If a monitor is specified
+	if (commander.monitor !== null) {
+		// get all the display data
+		let displays = electron.screen.getAllDisplays();
+		// get the bounds of the interesting one
+		let bounds = displays[commander.monitor].bounds;
+		// overwrite the values specified
+		commander.width   = bounds.width;
+		commander.height  = bounds.height;
+		commander.xorigin = bounds.x;
+		commander.yorigin = bounds.y;
+		commander.no_decoration = true;
+	}
+
+	// Create option data structure
 	var options = {
 		width:  commander.width,
 		height: commander.height,
@@ -212,9 +243,6 @@ function createWindow() {
 	mainWindow.webContents.on('will-navigate', function(ev) {
 		// ev.preventDefault();
 	});
-
-	// Once all done, prevent changing the fullscreen state
-	mainWindow.setFullScreenable(false);
 }
 
 /**

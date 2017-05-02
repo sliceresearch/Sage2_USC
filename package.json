@@ -71,12 +71,12 @@
 		"sw-precache": "latest",
 		"debug": "latest",
 		"ytdl-core": "latest",
+		"websocketio": "latest",
 		"rimraf": "latest",
 		"electron": "latest"
 	},
 	"optionalDependencies": {
-		"websocketio": "latest",
-		"node-demux" : "latest"
+                "node-demux" : "latest"
 	},
 	"devDependencies": {
 		"grunt": "latest",

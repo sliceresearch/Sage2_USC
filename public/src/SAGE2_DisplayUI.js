@@ -206,7 +206,8 @@ SAGE2DisplayUI.prototype.resize = function(ratio) {
 		drawHeight = Math.floor(freeWidth * ratio / sage2Aspect);
 	}
 
-	var freeHeight  = (window.innerHeight * ratio) - 24 - (86 * menuScale);
+	// height minus the button labels and the buttons and the top menubar
+	var freeHeight  = (window.innerHeight * ratio) - 24 - (86 * menuScale) - 40;
 	if (freeHeight < 100) {
 		freeHeight = 100;
 	}
@@ -225,11 +226,16 @@ SAGE2DisplayUI.prototype.resize = function(ratio) {
 
 	sage2UI.width  = drawWidth;
 	sage2UI.height = drawHeight;
-	applicationsDiv.style.width  = drawWidth + "px";
+	applicationsDiv.style.width  = drawWidth  + "px";
 	applicationsDiv.style.height = drawHeight + "px";
-	partitionsDiv.style.width  = drawWidth + "px";
-	partitionsDiv.style.height = drawHeight + "px";
+	partitionsDiv.style.width    = drawWidth  + "px";
+	partitionsDiv.style.height   = drawHeight + "px";
 	displayUI.style.height = (drawHeight + 5) + "px";
+
+	// adjust the top menubar width
+	var mainMenuBar = document.getElementById('mainMenuBar');
+	mainMenuBar.style.width = window.innerWidth + "px";
+	$$("toplayout").adjust();
 
 	this.resizeAppWindows();
 	this.resizePartitionWindows();

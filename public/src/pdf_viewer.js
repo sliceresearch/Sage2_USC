@@ -545,9 +545,11 @@ var pdf_viewer = SAGE2_App.extend({
 		// var center = (this.baseWidthPage / 2) * (this.state.numberOfPageToShow - 1);
 		// var dx = center - (this.baseWidthPage + this.displacement) * (page - 1);
 		var dx = -1 * (this.baseWidthPage + this.displacement) * (page - 1);
-		this.modifyState("horizontalOffset", dx);
+		this.state.horizontalOffset = dx;
 		this.generateMissingPages();
-		this.modifyState("currentPage", page);
+		if (this.state.currentPage !== page) {
+			this.modifyState("currentPage", page);
+		}
 		this.translateGroup(this.imageVisualizer, this.state.horizontalOffset, 0);
 		return dx;
 	},
@@ -706,7 +708,7 @@ var pdf_viewer = SAGE2_App.extend({
 	},
 
 	load: function(date) {
-		// this.updateAppFromState(date);
+		this.goToPage(this.state.currentPage);
 	},
 
 	draw: function(date) {
