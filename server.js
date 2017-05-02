@@ -9812,6 +9812,9 @@ function reportIfCanWallScreenshot() {
 	var entry, xDisplay, yDisplay;
 	for (let i = 0; i < clients.length; i++) {
 		if (clients[i].clientType === "display" && clients[i].capableOfScreenshot === true) {
+			if (clients[i].clientID === -1) {
+				continue; // should overview displays be counted?
+			}
 			entry = config.displays[clients[i].clientID];
 			idx = entry.row * config.layout.columns + entry.column;
 			layout[idx] = true;

@@ -1421,12 +1421,8 @@ function getLaunchParameters(isElectron) {
 	// if launching electron, need to ensure that the defaultWin-cfg.json file has the correct width, height on display 0
 	if (isElectron != undefined && isElectron == "electron") {
 		cfg = JSON5.parse(fs.readFileSync(pathToElectronConfig));
-		cfg.displays[0].width = cfg.layout.columns;
-		cfg.displays[0].height = cfg.layout.rows;
 	} else {
 		cfg = JSON5.parse(fs.readFileSync(pathToWinDefaultConfig));
-		cfg.displays[0].width = 1;
-		cfg.displays[0].height = 1;
 	}
 
 
@@ -1446,14 +1442,6 @@ function getLaunchParameters(isElectron) {
 	dataReturn.push(getMeetingIDFromPasswd());
 	dataReturn.push(cfg.layout.rows);
 	dataReturn.push(cfg.layout.columns);
-
-
-	// now write the file with its adjustments
-	if (isElectron != undefined && isElectron == "electron") {
-		fs.writeFileSync(pathToElectronConfig, JSON5.stringify(cfg, null, 4));
-	} else {
-		fs.writeFileSync(pathToWinDefaultConfig, JSON5.stringify(cfg, null, 4));
-	}
 
 	return dataReturn;
 }
