@@ -80,7 +80,7 @@ function FileManager(wsio, mydiv, uniqueID) {
 			// Try to create a folder
 			createFolderUI();
 		}},
-		upload_menu: {value: "Upload an image", callback: function (evt) {
+		upload_menu: {value: "Upload an Image", callback: function (evt) {
 			// open the file uploader panel
 			showDialog('uploadDialog');
 		}},
@@ -159,11 +159,11 @@ function FileManager(wsio, mydiv, uniqueID) {
 
 	// File menu
 	var fileActions = {
-		upload_menu: {value: "Upload an image", callback: function (evt) {
+		upload_menu: {value: "Upload an Image", callback: function (evt) {
 			// open the file uploader panel
 			showDialog('uploadDialog');
 		}},
-		session_menu: {value: "Save the session", callback: function (evt) {
+		session_menu: {value: "Save the Session", callback: function (evt) {
 			// open the session popup
 			_this.saveSession();
 		}},
@@ -179,24 +179,6 @@ function FileManager(wsio, mydiv, uniqueID) {
 				mainUI.style.display = "block";
 			}
 			SAGE2_resize();
-		}}
-	};
-
-	// View menu
-	var viewActions = {
-		settings_menu: {value: "Settings", callback: function (evt) {
-			showDialog('settingsDialog');
-		}},
-		separator1: {value: "separator"},
-		tile_menu: {value: "Tile content", callback: function (evt) {
-			wsio.emit('tileApplications');
-		}},
-		clear_menu: {value: "Clear display", callback: function (evt) {
-			wsio.emit('clearDisplay');
-		}},
-		separator2: {value: "separator"},
-		wallScreenshot_menu: {value: "Take screenshot", callback: function (evt) {
-			wsio.emit("startWallScreenshot");
 		}}
 	};
 
@@ -301,25 +283,52 @@ function FileManager(wsio, mydiv, uniqueID) {
 				});
 		}},
 		separator: {value: "separator"},
-		partitiongrab_menu: {value: "Assign Content to Partitions", callback: function (evt) {
-			wsio.emit('partitionsGrabAllContent');
+		partitiongrab_menu: {
+			value: "Fit Content",
+			callback: function (evt) {
+				wsio.emit('partitionsGrabAllContent');
+			}}
+	};
+
+	// View menu
+	var viewActions = {
+		settings_menu: {value: "Settings", callback: function (evt) {
+			showDialog('settingsDialog');
 		}},
-		deletepartition_menu: {value: "Delete All Partitions", callback: function (evt) {
+		separator1: {value: "separator"},
+		tile_menu: {value: "Tile Content", callback: function (evt) {
+			// Tile applications on the wall
+			wsio.emit('tileApplications');
+		}},
+		clear_menu: {value: "Clear Display", callback: function (evt) {
+			// Remove apps and partitions
+			wsio.emit('clearDisplay');
+		}},
+		deleteapps_menu: {value: "Delete Applications", callback: function (evt) {
+			// Remove apps and keep the partitions
+			wsio.emit('deleteAllApplications');
+		}},
+		deletepartition_menu: {value: "Delete Partitions", callback: function (evt) {
 			wsio.emit('deleteAllPartitions');
+		}},
+		partitions_menu: {value: "Create Partitions", submenu: buildSubmenu(partitionsActions)},
+		separator3: {value: "separator"},
+		wallScreenshot_menu: {value: "Take Screenshot", callback: function (evt) {
+			wsio.emit("startWallScreenshot");
 		}}
 	};
 
 	// Services menu
 	var servicesActions = {
-		appstore_menu: {value: "SAGE2 appstore", callback: function (evt) {
+		appstore_menu: {value: "SAGE2 Appstore", callback: function (evt) {
 			var storeUrl = "http://apps.sagecommons.org/";
 			window.open(storeUrl, '_blank');
 		}},
-		imageservice_menu: {value: "Large image processing", callback: function (evt) {
+		imageservice_menu: {value: "Large Image Processing", callback: function (evt) {
 			var imageUrl = "https://sage2rtt.evl.uic.edu:3043/upload";
 			window.open(imageUrl, '_blank');
 		}},
-		videoservice_menu: {value: "Video processing", callback: function (evt) {
+		videoservice_menu: {value: "Video Processing", callback: function (evt) {
 			var videoUrl = "https://sage2rtt.evl.uic.edu:3043/video/";
 			window.open(videoUrl, '_blank');
 		}}
@@ -354,9 +363,6 @@ function FileManager(wsio, mydiv, uniqueID) {
 		{id: "view_menu", value: "View", config: {width: 170, zIndex: 10000},
 			submenu: buildSubmenu(viewActions)
 		},
-		{id: "mainpartition_menu", value: "Partitions", config: {width: 250, zIndex: 10000},
-			submenu: buildSubmenu(partitionsActions)
-		},
 		{id: "services_menu", value: "Services", config: {width: 170, zIndex: 10000},
 			submenu: buildSubmenu(servicesActions)
 		},
@@ -367,19 +373,19 @@ function FileManager(wsio, mydiv, uniqueID) {
 
 	// Build the Advanced menu
 	var advancedToolbarActions = {
-		display_menu: {value: "Display client 0", callback: function (evt) {
+		display_menu: {value: "Display Client 0", callback: function (evt) {
 			var displayUrl = "http://" + window.location.hostname + _this.http_port +  "/display.html?clientID=0";
 			window.open(displayUrl, '_blank');
 		}},
-		overview_menu: {value: "Display overview client", callback: function (evt) {
+		overview_menu: {value: "Display Overview Client", callback: function (evt) {
 			var overviewUrl = "http://" + window.location.hostname + _this.http_port +  "/display.html?clientID=-1";
 			window.open(overviewUrl, '_blank');
 		}},
-		audio_menu: {value: "Audio manager", callback: function (evt) {
+		audio_menu: {value: "Audio Manager", callback: function (evt) {
 			var audioUrl = "http://" + window.location.hostname + _this.http_port +  "/audioManager.html";
 			window.open(audioUrl, '_blank');
 		}},
-		console_menu: {value: "Server console", callback: function (evt) {
+		console_menu: {value: "Server Console", callback: function (evt) {
 			window.open("admin/console.html", '_blank');
 		}}
 	};
@@ -387,10 +393,13 @@ function FileManager(wsio, mydiv, uniqueID) {
 	// Advanced setting, right-aligned in the top menubar
 	var advancedToolbar = {
 		view: "toolbar", paddingY: 0, css: {'text-align': 'right'}, elements: [
-			{view: "menu", id: "advancedToolbar", paddingY: 0, borderless: true, data: [
-				{id: "mainadmin_menu", value: "Advanced", config: {zIndex: 10000},
-					submenu: buildSubmenu(advancedToolbarActions)}
-			]}
+			{view: "menu", id: "advancedToolbar", paddingY: 0, borderless: true,
+				data: [
+					{id: "mainadmin_menu", value: "Advanced", config: {zIndex: 10000},
+						submenu: buildSubmenu(advancedToolbarActions)
+					}
+				]
+			}
 		]
 	};
 
@@ -421,17 +430,17 @@ function FileManager(wsio, mydiv, uniqueID) {
 	$$('topmenu').disableItem('wallScreenshot_menu');
 
 	// Set the actions for the file menu
-	menuCallback($$("topmenu"), fileActions);
+	attachCallbacks($$("topmenu").getSubMenu('topfile_menu'), fileActions);
 	// Set the actions for the view menu
-	menuCallback($$("topmenu"), viewActions);
-	// Set the actions for the partition menu
-	menuCallback($$("topmenu"), partitionsActions);
+	attachCallbacks($$('topmenu').getSubMenu('view_menu'), viewActions);
 	// Set the actions for the services menu
-	menuCallback($$("topmenu"), servicesActions);
+	attachCallbacks($$("topmenu").getSubMenu('services_menu'), servicesActions);
 	// Set the actions for the help menu
-	menuCallback($$("topmenu"), helpActions);
+	attachCallbacks($$("topmenu").getSubMenu('mainhelp_menu'), helpActions);
 	// Set the actions for the advanced menu
-	menuCallback($$("advancedToolbar"), advancedToolbarActions);
+	attachCallbacks($$("advancedToolbar").getSubMenu('mainadmin_menu'), advancedToolbarActions);
+	// Set the actions for the partition menu
+	attachCallbacks($$('topmenu').getSubMenu('partitions_menu'), partitionsActions);
 
 	/////////////////////////////////////////////////////////////////////////////
 
@@ -560,8 +569,10 @@ function FileManager(wsio, mydiv, uniqueID) {
 	this.tree = $$("tree1");
 
 	// Set the actions for the media browser menu
-	menuCallback($$("menuMediaBrowser"), fileMediaActions);
-	menuCallback($$("menuMediaBrowser"), editMediaActions);
+	attachCallbacks($$("menuMediaBrowser").getSubMenu('file_menu'),
+		fileMediaActions);
+	attachCallbacks($$("menuMediaBrowser").getSubMenu('edit_menu'),
+		editMediaActions);
 
 	// Prevent HTML drop on rest of the page
 	webix.event(window, 'dragover', function(evt) {
@@ -995,20 +1006,26 @@ function FileManager(wsio, mydiv, uniqueID) {
 	///////////////////////////////////////////////////////////////////////////////////
 
 	/**
-     * Setup the callbacks for a menu
+     * Setup the callbacks for a menu, using a closure (tricky one)
 	 *
-	 * @method menuCallback
+	 * @method attachCallbacks
 	 * @param element {Object} webix menu object to attach the callbacks to
 	 * @param actions {Object} object containing the callback for each id
 	 */
-	function menuCallback(element, actions) {
-		element.attachEvent("onMenuItemClick", function(evt) {
-			if (evt in actions) {
-				if (actions[evt].callback) {
-					actions[evt].callback();
-				}
-			}
-		});
+	function attachCallbacks(element, actions) {
+		if (element) {
+			element.attachEvent("onItemClick", (function (act) {
+				// Create a closure to keep a local copy of the array 'actions'
+				return function(evt, e, node) {
+					if (evt in act) {
+						if (act[evt].callback) {
+							act[evt].callback();
+						}
+					}
+				};
+			}(actions)));
+			// pass the local variable to the closure
+		}
 	}
 
 	/**
@@ -1024,6 +1041,11 @@ function FileManager(wsio, mydiv, uniqueID) {
 			// test for a special value to build a separator
 			if (actions[a].value === "separator") {
 				entries.push({$template: "Separator"});
+			} else if (actions[a].submenu) {
+				entries.push({id: a, value: actions[a].value,
+					config: {autowidth: true, zIndex: 10000},
+					submenu: actions[a].submenu
+				});
 			} else {
 				// otherwise just add the object
 				entries.push({id: a, value: actions[a].value});
