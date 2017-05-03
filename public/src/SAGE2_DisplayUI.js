@@ -938,3 +938,8 @@ SAGE2DisplayUI.prototype.keyPress = function(x, y, charCode) {
 	this.wsio.emit('keyPress', {code: charCode, character: String.fromCharCode(charCode)});
 	return true;
 };
+
+
+SAGE2DisplayUI.prototype.scaleScreenCoords = function(x, y){
+	return {"x": (x / this.config.totalWidth), "y": (y / this.config.totalHeight)};
+}
