@@ -130,7 +130,7 @@ var pdf_viewer = SAGE2_App.extend({
 	loadPDF: function(docURL) {
 		var _this = this;
 		PDFJS.getDocument(docURL).then(function(solver) {
-
+			setTimeout(function() { console.log(docURL); }, 1000);
 			// saving the solver
 			_this.solver = solver;
 

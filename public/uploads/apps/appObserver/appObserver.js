@@ -30,6 +30,8 @@ var appObserver = SAGE2_App.extend({
 
 		// tracking variables
 		this.appsKnown = []; // array of app objects
+
+		this.tryRetrievePdfAtUrl("http://lava.manoa.hawaii.edu/wp-content/uploads/2017/02/Kawano_Destiny_EI201701.pdf");
 	},
 
 	load: function(date) {
@@ -49,6 +51,9 @@ var appObserver = SAGE2_App.extend({
 		for (let i = 0; i < newIds.length; i++) {
 			currentApp = applications[newIds[i]];
 			if (currentApp.application === "pdf_viewer") {
+				if (currentApp.solver === undefined) {
+					return; // need the solver to do some of the work.
+				}
 				modifiedPath = currentApp.resrcPath;
 
 				while (modifiedPath.charAt(modifiedPath.length - 1) === "/") {
@@ -56,9 +61,10 @@ var appObserver = SAGE2_App.extend({
 				}
 
 				if (modifiedPath && modifiedPath.indexOf("://") !== -1) {
-					modifiedPath = modifiedPath.substring(modifiedPath.indexOf("://") + 3); // should chop protocol http[s]://
-					modifiedPath = modifiedPath.substring(modifiedPath.indexOf("/"));  // should chop hostname but keep /
-					modifiedPath = document.getElementById("machine").textContent + modifiedPath;
+					// modifiedPath = modifiedPath.substring(modifiedPath.indexOf("://") + 3); // should chop protocol http[s]://
+					// modifiedPath = modifiedPath.substring(modifiedPath.indexOf("/"));  // should chop hostname but keep /
+					// modifiedPath = document.getElementById("machine").textContent + modifiedPath;
+					modifiedPath = currentApp.state.doc_url;
 					this.addLineToDisplay("&nbsp&nbsp modified path: " + modifiedPath);
 				} else {
 					this.addLineToDisplay("&nbsp&nbsp **WARNING**: could not find '://' in path");
@@ -68,7 +74,7 @@ var appObserver = SAGE2_App.extend({
 				this.addLineToDisplay("&nbsp&nbsp title : " + currentApp.title);
 				this.addLineToDisplay("PDF: " + currentApp.id);
 
-				this.fileGrab(modifiedPath);
+				this.fileGrabPdf(modifiedPath, currentApp);
 
 			} else {
 				this.addLineToDisplay("App (not pdf) detected: " + currentApp.id);
@@ -95,13 +101,13 @@ var appObserver = SAGE2_App.extend({
 		return diff;
 	},
 
-	fileGrab: function(pdfPath) {
+	fileGrabPdf: function(pdfPath, currentApp) {
 		var fs = require("fs");
 		var path = require("path");
 
 		var pathToCheck = null;
 
-		// if it is within the SAGE2_Media folder it will have the /user/ in path.
+		// if it is within the SAGE2_Media folder it will have the /user/  + filenamein path.
 		if (pdfPath.indexOf("/users/") !== -1) {
 			pathToCheck = pdfPath.substring(pdfPath.indexOf("/users/") + 7);
 			pathToCheck = path.join(homedir(), "Documents", "SAGE2_Media", pathToCheck);
@@ -120,11 +126,7 @@ var appObserver = SAGE2_App.extend({
 		if (pathToCheck) {
 			try {
 				var fileContent = fs.readFileSync(pathToCheck);
-				this.addLineToDisplay("");
-				this.addLineToDisplay("");
-				this.addLineToDisplay("");
-				this.addLineToDisplay("");
-
+				// this kills browser, probably doesn't correctly format in HTML
 				// this.addLineToDisplay(fileContent);
 
 				this.addLineToDisplay("");
@@ -135,6 +137,24 @@ var appObserver = SAGE2_App.extend({
 				this.addLineToDisplay("Error trying to read pdf");
 			}
 		}
+		if (currentApp) {
+			var _this = this;
+			this.pageText = [];
+			for (let p = 0; p < currentApp.solver.numPages; p++) {
+				this.pageText.push("");
+				currentApp.solver.getPage(p + 1).then(function(page){
+					page.getTextContent().then(function(textContent) {
+						for (let i = 0; i < textContent.items.length; i++) {
+							_this.pageText[p] += textContent.items[i].str;
+						}
+						_this.lastText = textContent;
+						_this.addLineToDisplay("Got text content");
+					})
+				});
+
+				_this.addLineToDisplay("page" + p);
+			}
+		} // if current app
 
 	},
 
@@ -157,6 +177,49 @@ var appObserver = SAGE2_App.extend({
 		}
 
 		return home || null;
+	},
+
+	tryRetrievePdfAtUrl: function(url) {
+		var _this = this;
+
+		var http = require('http');
+		var fs = require('fs');
+		var path = require("path");
+
+		var filename = url.substring(url.lastIndexOf("/") + 1);
+		var file;
+		file = path.join(this.homedir(), "Documents", "SAGE2_Media", "pdfs", filename);
+		file = fs.createWriteStream(file);
+		var request = http.get(url, function(response) {
+			response.pipe(file);
+			_this.addLineToDisplay("retrieved");
+			
+			setTimeout(function() {
+				var doc_url = "http://localhost:9292/user/pdfs/" + filename;
+				// doc_url = "http://localhost:9292/uploads/pdfs/SAGE2_collaborate_com2014.pdf";
+				doc_url = "http://lava.manoa.hawaii.edu/wp-content/uploads/2017/02/Kawano_Destiny_EI201701.pdf";
+				console.log("retrieve pdf:" + doc_url);
+				PDFJS.getDocument(cleanURL(doc_url)).then(function(solver) {
+					// saving the solver
+					_this.retrievedPdf = solver;
+					_this.retrievedPdfPageText = [];
+					for (let p = 0; p < _this.retrievedPdf.numPages; p++) {
+						_this.retrievedPdfPageText.push("");
+						_this.retrievedPdf.getPage(p + 1).then(function(page){
+							page.getTextContent().then(function(textContent) {
+								for (let i = 0; i < textContent.items.length; i++) {
+									_this.retrievedPdfPageText[p] += textContent.items[i].str;
+								}
+								_this.lastText = textContent;
+								_this.addLineToDisplay("Got text content");
+							})
+						});
+
+						_this.addLineToDisplay("page" + p);
+					}
+				});
+			}, 5000); // 5 second delay, something is messing with the file. Does pipe not complete immediately? or sage folder watch?
+		});
 	},
 
 	resize: function(date) {
