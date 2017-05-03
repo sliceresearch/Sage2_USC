@@ -756,13 +756,15 @@ function resizeMenuUI(ratio) {
 
 		var menuScale = 1.0;
 		var freeWidth = window.innerWidth * ratio;
-		if (freeWidth < 960) {
+		if (freeWidth < 840) {
 			// 9 buttons, 120 pixels per button
 			// menuScale = freeWidth / 1080;
 			// 10 buttons, 120 pixels per button
 			// menuScale = freeWidth / 1200;
 			// 8 buttons, 120 pixels per button
-			menuScale = freeWidth / 960;
+			// menuScale = freeWidth / 960;
+			// 7 buttons, 120 pixels per button
+			menuScale = freeWidth / 840;
 		}
 
 		menuUI.style.webkitTransform = "scale(" + menuScale + ")";
@@ -1804,7 +1806,7 @@ function handleClick(element) {
 		wsio.emit('deleteAllPartitions');
 		hideDialog('arrangementDialog');
 	} else if (element.id === "deleteapplications") {
-		// Assign content to partitions (partitions grab items which are above them)
+		// Delete the applications and keep the partitions
 		wsio.emit('deleteAllApplications');
 		hideDialog('arrangementDialog');
 	} else if (element.id === "ffShareScreenBtn") {
