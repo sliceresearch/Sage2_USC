@@ -1710,8 +1710,6 @@ function createAppWindow(data, parentId, titleBarHeight, titleTextSize, offsetX,
 	itemCount += 2;
 }
 
-/* global d3 */
-
 function moveItemWithAnimation(updatedApp) {
 	var elemTitle = document.getElementById(updatedApp.elemId + "_title");
 	var elem = document.getElementById(updatedApp.elemId);
@@ -1720,7 +1718,6 @@ function moveItemWithAnimation(updatedApp) {
 
 	// allow for transform transitions
 	elemTitle.style.transition = "opacity 0.2s ease-in, transform 0.2s linear";
-
 	elem.style.transition = "opacity 0.2s ease-in, transform 0.2s linear";
 
 	// update transforms
