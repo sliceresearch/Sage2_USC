@@ -21,7 +21,7 @@ var miniCon = SAGE2_App.extend({
 		this.element.style.fontFamily = "Arimo, Helvetica, sans-serif";
 		// Default starting attributes
 		this.element.style.background = "black";
-		this.element.style.fontSize = ui.titleTextSize;
+		this.element.style.fontSize = ui.titleTextSize + "px";
 		this.element.style.color = "green";
 
 
