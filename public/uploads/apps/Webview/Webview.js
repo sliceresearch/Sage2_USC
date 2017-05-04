@@ -54,8 +54,8 @@ var Webview = SAGE2_App.extend({
 		this.element.fullscreen = false;
 		// add the preload clause
 		this.addPreloadFile();
-		// security or not
-		// this.element.disablewebsecurity = true;
+		// security or not: this seems to be an issue often on Windows
+		this.element.disablewebsecurity = true;
 
 		this.element.minwidth  = data.width;
 		this.element.minheight = data.height;
