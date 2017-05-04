@@ -159,27 +159,39 @@ function FileManager(wsio, mydiv, uniqueID) {
 
 	// File menu
 	var fileActions = {
-		upload_menu: {value: "Upload an Image", callback: function (evt) {
-			// open the file uploader panel
-			showDialog('uploadDialog');
-		}},
-		session_menu: {value: "Save the Session", callback: function (evt) {
-			// open the session popup
-			_this.saveSession();
-		}},
-		separator: {value: "separator"},
-		showfm_menu: {value: "Open Media Browser", callback: function (evt) {
-			document.getElementById('fileManager').style.display = "block";
-			SAGE2_resize();
-		}},
-		hidefm_menu: {value: "Close Media Browser", callback: function (evt) {
-			var mainUI = document.getElementById('mainUI');
-			document.getElementById('fileManager').style.display = "none";
-			if (mainUI.style.display === "none") {
-				mainUI.style.display = "block";
+		upload_menu: {value: "Upload an Image",
+			tooltip: "Uploads an image to the SAGE2 server and opens it",
+			callback: function (evt) {
+				// open the file uploader panel
+				showDialog('uploadDialog');
 			}
-			SAGE2_resize();
-		}}
+		},
+		session_menu: {value: "Save the Session",
+			tooltip: "Saves the opened applications and their states in a session file",
+			callback: function (evt) {
+				// open the session popup
+				_this.saveSession();
+			}
+		},
+		separator: {value: "separator"},
+		showfm_menu: {value: "Open Media Browser",
+			tooltip: "Shows the file media browser below the user interface",
+			callback: function (evt) {
+				document.getElementById('fileManager').style.display = "block";
+				SAGE2_resize();
+			}
+		},
+		hidefm_menu: {value: "Close Media Browser",
+			tooltip: "Hides the file media broswer",
+			callback: function (evt) {
+				var mainUI = document.getElementById('mainUI');
+				document.getElementById('fileManager').style.display = "none";
+				if (mainUI.style.display === "none") {
+					mainUI.style.display = "block";
+				}
+				SAGE2_resize();
+			}
+		}
 	};
 
 	// Partitions menu
@@ -292,110 +304,172 @@ function FileManager(wsio, mydiv, uniqueID) {
 
 	// View menu
 	var viewActions = {
-		settings_menu: {value: "Settings", callback: function (evt) {
-			showDialog('settingsDialog');
-		}},
+		settings_menu: {value: "Settings",
+			tooltip: "Opens the pointer and screen sharing settings panel",
+			callback: function (evt) {
+				showDialog('settingsDialog');
+			}
+		},
 		separator1: {value: "separator"},
-		tile_menu: {value: "Tile Content", callback: function (evt) {
-			// Tile applications on the wall
-			wsio.emit('tileApplications');
-		}},
-		clear_menu: {value: "Clear Display", callback: function (evt) {
-			// Remove apps and partitions
-			wsio.emit('clearDisplay');
-		}},
-		deleteapps_menu: {value: "Delete Applications", callback: function (evt) {
-			// Remove apps and keep the partitions
-			wsio.emit('deleteAllApplications');
-		}},
-		deletepartition_menu: {value: "Delete Partitions", callback: function (evt) {
-			wsio.emit('deleteAllPartitions');
-		}},
+		tile_menu: {value: "Tile Content",
+			tooltip: "Applies an automatic layout algorithm to tile the current windows",
+			callback: function (evt) {
+				// Tile applications on the wall
+				wsio.emit('tileApplications');
+			}
+		},
+		clear_menu: {value: "Clear Display",
+			tooltip: "Deletes all applications and partitions",
+			callback: function (evt) {
+				// Remove apps and partitions
+				wsio.emit('clearDisplay');
+			}
+		},
+		deleteapps_menu: {value: "Delete Applications",
+			tooltip: "Closes all the applications but leaves the partitions",
+			callback: function (evt) {
+				// Remove apps and keep the partitions
+				wsio.emit('deleteAllApplications');
+			}
+		},
+		deletepartition_menu: {value: "Delete Partitions",
+			tooltip: "Deletes only the partitions but not the applications",
+			callback: function (evt) {
+				wsio.emit('deleteAllPartitions');
+			}
+		},
 		partitions_menu: {value: "Create Partitions", submenu: buildSubmenu(partitionsActions)},
 		separator3: {value: "separator"},
-		wallScreenshot_menu: {value: "Take Screenshot", callback: function (evt) {
-			wsio.emit("startWallScreenshot");
-		}}
+		wallScreenshot_menu: {value: "Take Screenshot",
+			tooltip: "Captures a screenshot of the wall and opens it up",
+			callback: function (evt) {
+				wsio.emit("startWallScreenshot");
+			}
+		}
 	};
 
 	// Services menu
 	var servicesActions = {
-		appstore_menu: {value: "SAGE2 Appstore", callback: function (evt) {
-			var storeUrl = "http://apps.sagecommons.org/";
-			window.open(storeUrl, '_blank');
-		}},
-		imageservice_menu: {value: "Large Image Processing", callback: function (evt) {
-			var imageUrl = "https://sage2rtt.evl.uic.edu:3043/upload";
-			window.open(imageUrl, '_blank');
-		}},
-		videoservice_menu: {value: "Video Processing", callback: function (evt) {
-			var videoUrl = "https://sage2rtt.evl.uic.edu:3043/video/";
-			window.open(videoUrl, '_blank');
-		}}
+		appstore_menu: {value: "SAGE2 Appstore",
+			tooltip: "Opens the appstore where you can download new applications\nthat can be added to your wall",
+			callback: function (evt) {
+				var storeUrl = "http://apps.sagecommons.org/";
+				window.open(storeUrl, '_blank');
+			}
+		},
+		imageservice_menu: {value: "Large Image Processing",
+			tooltip: "Opens a service that lets you process large images into pyramidal representation:\n" +
+				"download the DZI file and drop it onto your wall",
+			callback: function (evt) {
+				var imageUrl = "https://sage2rtt.evl.uic.edu:3043/upload";
+				window.open(imageUrl, '_blank');
+			}
+		},
+		videoservice_menu: {value: "Video Processing",
+			tooltip: "Opens a service that lets you convert video files to MP4 format",
+			callback: function (evt) {
+				var videoUrl = "https://sage2rtt.evl.uic.edu:3043/video/";
+				window.open(videoUrl, '_blank');
+			}
+		}
 	};
 
 	// Help
 	var helpActions = {
-		help_menu: {value: "Help", callback: function (evt) {
-			window.open("help/index.html", '_blank');
-		}},
-		info_menu: {value: "Information", callback: function (evt) {
-			window.open("help/info.html", '_blank');
-		}},
-		about_menu: {value: "About", callback: function (evt) {
-			var versionText = buildAboutHTML();
-			// Open the popup
-			webix.alert({
-				type: "alert-warning",
-				title: "SAGE2\™",
-				width: "420px",
-				ok: "OK",
-				text: versionText
-			});
-		}}
+		help_menu: {value: "Help",
+			tooltip: "Presents help on how to setup desktop sharing and\nlist supported media formats",
+			callback: function (evt) {
+				window.open("help/index.html", '_blank');
+			}
+		},
+		info_menu: {value: "Information",
+			tooltip: "Shows references and links about SAGE2",
+			callback: function (evt) {
+				window.open("help/info.html", '_blank');
+			}
+		},
+		about_menu: {value: "About",
+			tooltip: "Shows the SAGE2 server version and configuration",
+			callback: function (evt) {
+				var versionText = buildAboutHTML();
+				// Open the popup
+				webix.alert({
+					type: "alert-warning",
+					title: "SAGE2\™",
+					width: "420px",
+					ok: "OK",
+					text: versionText
+				});
+			}
+		}
 	};
 
 	// Assemble the top menu bar
 	var topmenu_data = [
-		{id: "topfile_menu", value: "File", config: {width: 170, zIndex: 10000},
+		{id: "topfile_menu", value: "File",
+			config: {width: 170, zIndex: 9000},
 			submenu: buildSubmenu(fileActions)
 		},
-		{id: "view_menu", value: "View", config: {width: 170, zIndex: 10000},
+		{id: "view_menu", value: "View", config: {width: 170, zIndex: 9000},
 			submenu: buildSubmenu(viewActions)
 		},
-		{id: "services_menu", value: "Services", config: {width: 170, zIndex: 10000},
+		{id: "services_menu", value: "Services", config: {width: 170, zIndex: 9000},
 			submenu: buildSubmenu(servicesActions)
 		},
-		{id: "mainhelp_menu",  value: "Help", config: {zIndex: 10000},
+		{id: "mainhelp_menu",  value: "Help", config: {zIndex: 9000},
 			submenu: buildSubmenu(helpActions)
 		}
 	];
 
 	// Build the Advanced menu
 	var advancedToolbarActions = {
-		display_menu: {value: "Display Client 0", callback: function (evt) {
-			var displayUrl = "http://" + window.location.hostname + _this.http_port +  "/display.html?clientID=0";
-			window.open(displayUrl, '_blank');
-		}},
-		overview_menu: {value: "Display Overview Client", callback: function (evt) {
-			var overviewUrl = "http://" + window.location.hostname + _this.http_port +  "/display.html?clientID=-1";
-			window.open(overviewUrl, '_blank');
-		}},
-		audio_menu: {value: "Audio Manager", callback: function (evt) {
-			var audioUrl = "http://" + window.location.hostname + _this.http_port +  "/audioManager.html";
-			window.open(audioUrl, '_blank');
-		}},
-		console_menu: {value: "Server Console", callback: function (evt) {
-			window.open("admin/console.html", '_blank');
-		}}
+		display_menu: {value: "Display Client 0",
+			tooltip: "Opens a new page with the first display client",
+			callback: function (evt) {
+				var displayUrl = "http://" + window.location.hostname + _this.http_port +  "/display.html?clientID=0";
+				window.open(displayUrl, '_blank');
+			}
+		},
+		overview_menu: {value: "Display Overview Client",
+			tooltip: "Opens a new page with the overview display client",
+			callback: function (evt) {
+				var overviewUrl = "http://" + window.location.hostname + _this.http_port +  "/display.html?clientID=-1";
+				window.open(overviewUrl, '_blank');
+			}
+		},
+		audio_menu: {value: "Audio Manager",
+			tooltip: "Opens a new page with the audio manager",
+			callback: function (evt) {
+				var audioUrl = "http://" + window.location.hostname + _this.http_port +  "/audioManager.html";
+				window.open(audioUrl, '_blank');
+			}
+		},
+		console_menu: {value: "Server Console",
+			tooltip: "Opens a new page displaying the server debug messages",
+			callback: function (evt) {
+				window.open("admin/console.html", '_blank');
+			}
+		}
 	};
 
 	// Advanced setting, right-aligned in the top menubar
 	var advancedToolbar = {
 		view: "toolbar", paddingY: 0, css: {'text-align': 'right'}, elements: [
 			{view: "menu", id: "advancedToolbar", paddingY: 0, borderless: true,
+				tooltip: false,
+				submenuConfig: {
+					tooltip: {
+						// function building the tooltip text
+						template: showTooltip,
+						// tooltip position offset
+						dx: 50, dy: 5,
+						width: 100
+					},
+					// Delay the tooltip by 0.5s
+					mouseEventDelay: 500
+				},
 				data: [
-					{id: "mainadmin_menu", value: "Advanced", config: {zIndex: 10000},
+					{id: "mainadmin_menu", value: "Advanced", config: {zIndex: 9000},
 						submenu: buildSubmenu(advancedToolbarActions)
 					}
 				]
@@ -408,7 +482,19 @@ function FileManager(wsio, mydiv, uniqueID) {
 		view: "menu",
 		// click to open
 		// openAction: "click",
-		data: topmenu_data
+		data: topmenu_data,
+		tooltip: false,
+		submenuConfig: {
+			tooltip: {
+				// function building the tooltip text
+				template: showTooltip,
+				// tooltip position offset
+				dx: 50, dy: 5,
+				width: 100
+			},
+			// Delay the tooltip by 0.5s
+			mouseEventDelay: 500
+		}
 	};
 
 	// Top menubar above the UI
@@ -1042,13 +1128,18 @@ function FileManager(wsio, mydiv, uniqueID) {
 			if (actions[a].value === "separator") {
 				entries.push({$template: "Separator"});
 			} else if (actions[a].submenu) {
-				entries.push({id: a, value: actions[a].value,
-					config: {autowidth: true, zIndex: 10000},
-					submenu: actions[a].submenu
+				entries.push({id: a,
+					value: actions[a].value,
+					config: {autowidth: true, zIndex: 9000},
+					submenu: actions[a].submenu,
+					tooltip: actions[a].tooltip
 				});
 			} else {
 				// otherwise just add the object
-				entries.push({id: a, value: actions[a].value});
+				entries.push({id: a,
+					value: actions[a].value,
+					tooltip: actions[a].tooltip
+				});
 			}
 		}
 		return entries;
@@ -1075,22 +1166,23 @@ function FileManager(wsio, mydiv, uniqueID) {
 		var versionText = "<p>";
 		// Add new information
 		versionText += "<p class='textDialog'><span style='font-weight:bold;'>Host</span>: " + displayUI.config.host + "</p>";
+		// Show the type of web browser
+		versionText += "<p class='textDialog'><span style='font-weight:bold;'>Browser</span>: " +
+			__SAGE2__.browser.browserType + " " + __SAGE2__.browser.version + "</p>";
+		versionText += "</p>";
+		// Configuration
 		versionText += "<p class='textDialog'><span style='font-weight:bold;'>Resolution</span>: " +
 			displayUI.config.totalWidth + " x " +  displayUI.config.totalHeight + " pixels";
 		versionText += " (" + displayUI.config.layout.columns + " by " + displayUI.config.layout.rows + " tiles";
 		versionText += "  - " + displayUI.config.resolution.width + " x " + displayUI.config.resolution.height + ")" + "</p>";
 		// Add version
-		versionText += "<p class='textDialog'><span style='font-weight:bold;'>SAGE2 Version:</span>";
+		versionText += "<p class='textDialog'><span style='font-weight:bold;'>SAGE2 Version: </span>";
 		if (sage2Version.branch && sage2Version.commit && sage2Version.date) {
 			versionText += "<b>v" + sage2Version.base + "-" + sage2Version.branch + "-" +
 				sage2Version.commit + "</b> " + sage2Version.date;
 		} else {
 			versionText += "<b>v" + sage2Version.base + "</b>";
 		}
-		// Show the type of web browser
-		versionText += "<p class='textDialog'><span style='font-weight:bold;'>Browser</span>: " +
-			__SAGE2__.browser.browserType + " " + __SAGE2__.browser.version + "</p>";
-		versionText += "</p>";
 
 		return versionText;
 	}
@@ -1717,7 +1809,7 @@ function FileManager(wsio, mydiv, uniqueID) {
 			value: "Display Clients",
 			type: {subsign: true},
 			autowidth: true,
-			config: {zIndex: 10000},
+			config: {zIndex: 9000},
 			submenu: displayList
 		});
 
