@@ -4,7 +4,7 @@
 	"width": 500,
 	"height": 500,
 	"animation": false,
-	"sticky": true,
+	"sticky": false,
 	"dependencies": [
 	],
 	"load": {

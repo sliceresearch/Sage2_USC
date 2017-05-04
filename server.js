@@ -3664,13 +3664,24 @@ function wsCommand(wsio, data) {
 function wsOpenNewWebpage(wsio, data) {
 	console.log(sageutils.header('Webview') + "opening " + data.url);
 
+	var posX = 0;
+	var posY = 0;
+
+	if( data.x )
+		posX = data.x;
+	if( data.y )
+		posY = data.y;
+
+
 	wsLoadApplication(null, {
 		application: "/uploads/apps/Webview",
 		user: wsio.id,
 		// pass the url in the data object
 		data: data,
-		position: [0, 0]
+		position: [posX, posY]
 	});
+
+
 
 	// Check if the web-browser is connected
 	if (webBrowserClient !== null) {
@@ -9588,7 +9599,14 @@ function wsUtdCallFunctionOnApp(wsio, data) {
 		} else if (data.func === "clearPartition") {
 			// invoke clear with delete application method -- messy, should refactor
 			partitions.list[data.app][data.func](deleteApplication);
-		} else {
+		} else if(data.func === "setDropPartition"){
+			var dropPartitionId = data.app; 
+			console.log("dropPartition set");
+			console.log(dropPartitionId);
+
+			broadcast('updateDropPartition', {id: dropPartitionId});
+		}
+		else {
 			// invoke the other callback
 			partitions.list[data.app][data.func]();
 		}
@@ -10260,6 +10278,7 @@ function wsRequestNewTitle(wsio, data) {
 function wsCreatePartition(wsio, data) {
 	// Create Test partition
 	console.log(sageutils.header('Partition') + "Creating a new partition");
+	console.log(data);
 	var newPtn = createPartition(data, "#ffffff");
 
 	// update the title of the new partition

@@ -1014,6 +1014,11 @@ Partition.prototype.getContextMenu = function() {
 		callback: "SAGE2DeleteElement",
 		parameters: {}
 	});
+	contextMenu.push({
+		description: "Make Drop Partition",
+		callback: "setDropPartition",
+		parameters: {}
+	}); 
 
 	return contextMenu;
 };
