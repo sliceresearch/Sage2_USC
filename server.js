@@ -120,7 +120,7 @@ var interactMgr        = new InteractableManager();
 var mediaBlockSize     = 512;
 var startTime          = Date.now();
 var drawingManager;
-var pressingAlt        = true;
+var pressingCTRL       = true;
 var fileBufferManager  = new FileBufferManager();
 
 // Array containing the remote sites informations (toolbar on top of wall)
@@ -6494,15 +6494,15 @@ function pointerMove(uniqueID, pointerX, pointerY, data) {
 			uniqueID, pointerX, pointerY, 10, 10);
 	}
 
-	// Trick: press ALT key while moving switches interaction mode
-	if (sagePointers[uniqueID] && remoteInteraction[uniqueID].ALT && pressingAlt) {
+	// Trick: press CTRL key while moving switches interaction mode
+	if (sagePointers[uniqueID] && remoteInteraction[uniqueID].CTRL && pressingCTRL) {
 		remoteInteraction[uniqueID].toggleModes();
 		broadcast('changeSagePointerMode', {id: sagePointers[uniqueID].id, mode: remoteInteraction[uniqueID].interactionMode});
-		pressingAlt = false;
-	} else if (sagePointers[uniqueID] && !remoteInteraction[uniqueID].ALT && !pressingAlt) {
+		pressingCTRL = false;
+	} else if (sagePointers[uniqueID] && !remoteInteraction[uniqueID].CTRL && !pressingCTRL) {
 		remoteInteraction[uniqueID].toggleModes();
 		broadcast('changeSagePointerMode', {id: sagePointers[uniqueID].id, mode: remoteInteraction[uniqueID].interactionMode});
-		pressingAlt = true;
+		pressingCTRL = true;
 	}
 
 	sagePointers[uniqueID].updatePointerPosition(data, config.totalWidth, config.totalHeight);
