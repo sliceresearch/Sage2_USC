@@ -9641,11 +9641,12 @@ function csdSetValue(wsio, data) {
 			dataForApp.app  = csdDataStructure.newValueWatchers[i].app;
 			dataForApp.func = csdDataStructure.newValueWatchers[i].func;
 			// send to all display clients(since they all need to update)
-			for (let j = 0; j < clients.length; j++) {
-				if (clients[j].clientType === "display") {
-					clients[j].emit('broadcast', dataForApp);
-				}
-			}
+			// for (let j = 0; j < clients.length; j++) {
+			// 	if (clients[j].clientType === "display") {
+			// 		clients[j].emit('broadcast', dataForApp);
+			// 	}
+			// }
+			broadcast('broadcast', dataForApp);
 		}
 	}
 
@@ -9656,11 +9657,12 @@ function csdSetValue(wsio, data) {
 		dataForApp.app  = csdDataStructure.allValues["" + data.nameOfValue].subscribers[i].app;
 		dataForApp.func = csdDataStructure.allValues["" + data.nameOfValue].subscribers[i].func;
 		// send to all display clients(since they all need to update)
-		for (let j = 0; j < clients.length; j++) {
-			if (clients[j].clientType === "display") {
-				clients[j].emit('broadcast', dataForApp);
-			}
-		}
+		// for (let j = 0; j < clients.length; j++) {
+		// 	if (clients[j].clientType === "display") {
+		// 		clients[j].emit('broadcast', dataForApp);
+		// 	}
+		// }
+		broadcast('broadcast', dataForApp);
 	}
 }
 
