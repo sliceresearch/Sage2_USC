@@ -19,18 +19,19 @@ install:
   - dir C:\avvm\node
   - node -v
   - cd %APPVEYOR_BUILD_FOLDER%
+  - cd client
   - npm install --production --msvs_version=2013
-  - npm install npm
-  - npm install -g kthxbai
-  - kthxbai
+  - npm run build_win
+  - ren SAGE2_client-win32-x64 SAGE2_client-%APPVEYOR_BUILD_VERSION%
+  - 7z a -sfx7z.sfx SAGE2_client-%APPVEYOR_BUILD_VERSION%.exe SAGE2_client-%APPVEYOR_BUILD_VERSION% > nul
 
 build: off
 
 test: off
 
 artifacts:
-  - path: SAGE2_client-win32-x64.zip
-    name: sage2-win64
+  - path: SAGE2_client-$(APPVEYOR_BUILD_VERSION).exe
+    name: sage2_client
 
 deploy:
   - provider: FTP
@@ -40,7 +41,7 @@ deploy:
     password:
       secure: L4I4NkKN7mrQww7GgwPLrA==
     folder: /
-    artifact: sage2-win64
+    artifact: sage2_client
 
 notifications:
   - provider: Slack
