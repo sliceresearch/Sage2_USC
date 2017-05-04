@@ -24,14 +24,52 @@ var appObserver = SAGE2_App.extend({
 		this.element.style.fontSize = ui.titleTextSize + "px";
 		this.element.style.color = "green";
 
-
-		//
+		// updates per second
 		this.maxFPS = 1; // once a second? too much?
+		this.appSpecificSetup();
+	},
 
+	appSpecificSetup: function() {
 		// tracking variables
 		this.appsKnown = []; // array of app objects
+		this.pdfContents = []; // array of objects for each pdf
+		/*
+		{
+			filename: "string of filename, includes .pdf",
+			pageCount: int total number of pages
+			pageText: [] one per page since no way to get entire text?
+			fullText: "string of all pages together, or waste of space?"
+		}
+		*/
+		// only if master try get the pdf
+		if (this.isMaster) {
+			this.tryRetrievePdfAtUrl("http://lava.manoa.hawaii.edu/wp-content/uploads/2017/02/Kawano_Destiny_EI201701.pdf");
+		}
+		this.sendUpdatedPdfTexts();
 
-		this.tryRetrievePdfAtUrl("http://lava.manoa.hawaii.edu/wp-content/uploads/2017/02/Kawano_Destiny_EI201701.pdf");
+	},
+
+	sendUpdatedPdfTexts: function() {
+		// only send if master
+		if (isMaster) {
+			// send the center of this
+			var dataForServer = {
+				type: "setValue",
+				nameOfValue: this.id + ":source:pdfTexts",
+				description: {
+					"overview": "array of objects containing pdf names and text", // better word for this?
+					structure: { // should this be in the semantic web format? Will forcing people make them not want to use?
+						filename: "string of filename",
+						text: "entire pdf text",
+					}
+				},
+				value: []
+			};
+			dataForServer.value = this.pdfContents;
+			dataForServer.value.source = this.id;
+			wsio.emit("csdMessage", dataForServer);
+			this.addLineToDisplay("Sending data to server");
+		}
 	},
 
 	load: function(date) {
@@ -46,6 +84,7 @@ var appObserver = SAGE2_App.extend({
 		var modifiedPath;
 		var currentApp;
 		
+		// if there are new ids, then print the amount
 		(newIds.length > 0) ? this.addLineToDisplay("new ids: " + newIds): "";
 
 		for (let i = 0; i < newIds.length; i++) {
@@ -102,6 +141,9 @@ var appObserver = SAGE2_App.extend({
 	},
 
 	fileGrabPdf: function(pdfPath, currentApp) {
+		if (!isMaster) {
+			return; // don't do the work multiple times
+		}
 		var fs = require("fs");
 		var path = require("path");
 
@@ -123,6 +165,8 @@ var appObserver = SAGE2_App.extend({
 			this.addLineToDisplay("Don't know where this pdf came from: " + pdfPath);
 		}
 
+		// must be in either /users/ or public/uploads/
+		// if not then it doesn't exist
 		if (pathToCheck) {
 			try {
 				var fileContent = fs.readFileSync(pathToCheck);
@@ -137,26 +181,51 @@ var appObserver = SAGE2_App.extend({
 				this.addLineToDisplay("Error trying to read pdf");
 			}
 		}
+		// if there is a pdf app open, it should have the solver which can be used to read the file
 		if (currentApp) {
 			var _this = this;
-			this.pageText = [];
-			for (let p = 0; p < currentApp.solver.numPages; p++) {
-				this.pageText.push("");
-				currentApp.solver.getPage(p + 1).then(function(page){
-					page.getTextContent().then(function(textContent) {
-						for (let i = 0; i < textContent.items.length; i++) {
-							_this.pageText[p] += textContent.items[i].str;
-						}
-						_this.lastText = textContent;
-						_this.addLineToDisplay("Got text content");
-					})
-				});
+			/*
+			{
+				filename: "string of filename, includes .pdf",
+				pageCount: int total number of pages
+				pageText: [] one per page since no way to get entire text?
+				fullText: "string of all pages together, or waste of space?"
+			}
+			*/
+			var pdfEntry = {
+				filename:  currentApp.title,
+				pageCount: currentApp.solver.numPages,
+				pageText:  Array(currentApp.solver.numPages).fill(""),
+				fullText: ""
+			};
 
+			var allPagePromises = [];
+
+			this.pdfContents.push(pdfEntry);
+			for (let p = 0; p < currentApp.solver.numPages; p++) {
+				// for each page need to send a separate get text request
+				var solverPage = currentApp.solver.getPage(p + 1);
+				// each page promise needs to be added
+				allPagePromises.push(solverPage.then(function(page){
+					var ptc = page.getTextContent();
+					return ptc.then(function(textContent) {
+						for (let i = 0; i < textContent.items.length; i++) {
+							pdfEntry.pageText[p] += textContent.items[i].str;
+						}
+						_this.addLineToDisplay("Got text content");
+						return true;
+					})
+				}));
+				// print that started the page p
 				_this.addLineToDisplay("page" + p);
 			}
+			Promise.all(allPagePromises).then(function() {
+				_this.addLineToDisplay("All page promises triggered");
+				pdfEntry.fullText += pdfEntry.pageText.join(""); // join text, dont use symbol separate between elements
+				_this.sendUpdatedPdfTexts();
+			});
 		} // if current app
-
-	},
+	}, // end fileGrabPdf
 
 	// Github: sindresorhus/os-homedir
 	homedir: function() {
@@ -197,7 +266,7 @@ var appObserver = SAGE2_App.extend({
 			setTimeout(function() {
 				var doc_url = "http://localhost:9292/user/pdfs/" + filename;
 				// doc_url = "http://localhost:9292/uploads/pdfs/SAGE2_collaborate_com2014.pdf";
-				doc_url = "http://lava.manoa.hawaii.edu/wp-content/uploads/2017/02/Kawano_Destiny_EI201701.pdf";
+				// doc_url = "http://lava.manoa.hawaii.edu/wp-content/uploads/2017/02/Kawano_Destiny_EI201701.pdf";
 				console.log("retrieve pdf:" + doc_url);
 				PDFJS.getDocument(cleanURL(doc_url)).then(function(solver) {
 					// saving the solver
@@ -210,7 +279,6 @@ var appObserver = SAGE2_App.extend({
 								for (let i = 0; i < textContent.items.length; i++) {
 									_this.retrievedPdfPageText[p] += textContent.items[i].str;
 								}
-								_this.lastText = textContent;
 								_this.addLineToDisplay("Got text content");
 							})
 						});
