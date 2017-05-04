@@ -102,7 +102,7 @@
 			// If specified, SAGE will actively attempt to connect to
 			// an oinputserver on the specified IP and data port
 			inputServerIP: "127.0.0.1",
-			dataPort: 30005,
+			dataPort: 30015,
 			
 			eventDebug: false,
 			
