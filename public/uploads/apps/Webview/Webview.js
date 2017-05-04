@@ -151,8 +151,8 @@ var Webview = SAGE2_App.extend({
 
 		// Emitted when page receives favicon urls
 		this.element.addEventListener("page-favicon-updated", function(event) {
-			console.log('Webview>	page-favicon-updated', event.favicons, event.favicons[0]);
 			if (event.favicons && event.favicons[0]) {
+				console.log('Webview>	page-favicon-updated', event.favicons, event.favicons[0]);
 				_this.state.favicon = event.favicons[0];
 				// sync the state object
 				_this.SAGE2Sync(false);
@@ -166,13 +166,21 @@ var Webview = SAGE2_App.extend({
 			_this.pre.innerHTML += 'Webview> ' + event.message + '\n';
 		});
 
-		// When the webview tries to open a new window
+		// When the webview tries to open a new window, for insance with ALT-click
 		this.element.addEventListener("new-window", function(event) {
 			// only accept http protocols
 			if (event.url.startsWith('http:') || event.url.startsWith('https:')) {
-				_this.changeURL(event.url, false);
+				// Do not open a new view, just navigate to the new URL
+				// _this.changeURL(event.url, false);
+				// Request a new webview application
+				wsio.emit('openNewWebpage', {
+					// should be uniqueID, but no interactor object here
+					id: this.id,
+					// send the new URL
+					url: event.url
+				});
 			} else {
-				console.log('Webview>	Not http URL, not opening', event.url);
+				console.log('Webview>	Not a HTTP URL, not opening [', event.url, ']', event);
 			}
 		});
 	},
