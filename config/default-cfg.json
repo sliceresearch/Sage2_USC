@@ -3,9 +3,9 @@
 */
 {
 	name: "mysite",
-	host: "localhost",
-	port: 9090,
-	index_port: 9292,
+	host: "localhost",/*"aurisano-macbook.evl.uic.edu",*//*"soundbender-wl.evl.uic.edu",*/
+	port: 9292,
+	index_port: 9090,
 	background: {
 		color: "#333333",
 		watermark: {
@@ -13,9 +13,6 @@
 			color: "rgba(255, 255, 255, 0.5)"
 		}
 	},
-        audio: {
-                initialVolume: 8,
-        },
 	ui: {
 		clock: 12,
 		show_version: false,
@@ -25,25 +22,22 @@
                 noDropShadow: true
 	},
 	resolution: {
-		width: 960,
-		height: 1080
+		width: 8196,
+		height: 2304
 	},
 	layout: {
 		rows: 1,
-		columns: 2
+		columns: 1
 	},
 	displays: [
 		{
 			row: 0,
 			column: 0
-		},
-		{
-			row: 0,
-			column: 1
 		}
 	],
 	alternate_hosts: [
-		"127.0.0.1"
+		"127.0.0.1",
+		"localhost"
 	],
 	remote_sites: [
 	]

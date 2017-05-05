@@ -47,6 +47,9 @@ function SAGE2_interaction(wsio) {
 	this.chunk         = 32 * 1024; // 32 KB
 	this.maxUploadSize = 20 * (1024 * 1024 * 1024); // 20GB just as a precaution
 	this.array_xhr     = [];
+	this.dropPartitionId = "null";
+	this.dropPartitionX = 0;
+	this.dropPartitionY = 0;
 
 	// Event filtering for mouseMove
 	this.now = Date.now();
@@ -615,12 +618,23 @@ function SAGE2_interaction(wsio) {
 			var frame = this.captureMediaFrame();
 			this.pix  = frame;
 			var raw   = atob(frame.split(",")[1]); // base64 to string
+
+			var x = 0; 
+			var y = 0;
+			if( this.dropPartitionId != "null" ){
+				x = this.dropPartitionX;
+				y = this.dropPartitionY; 
+				console.log("going to set the drop pos " + x + " " + y);
+
+			}
+
 			this.wsio.emit('startNewMediaStream', {
 				id: this.uniqueID + "|0",
 				title: localStorage.SAGE2_ptrName + ": Shared Screen",
 				color: localStorage.SAGE2_ptrColor,
 				src: raw, type: "image/jpeg", encoding: "binary",
-				width: mediaVideo.videoWidth, height: mediaVideo.videoHeight
+				width: mediaVideo.videoWidth, height: mediaVideo.videoHeight,
+				x: x, y: y
 			});
 
 			this.broadcasting = true;

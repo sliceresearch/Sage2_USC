@@ -74,7 +74,7 @@ var StickyItems         = require('./src/node-stickyitems');
 var registry            = require('./src/node-registry');         // Registry Manager
 var FileBufferManager	= require('./src/node-filebuffer');
 var PartitionList	= require('./src/node-partitionlist');    // list of SAGE2 Partitions
-
+var dropPartitionId = "null";
 //
 // Globals
 //
@@ -856,6 +856,9 @@ function initializeWSClient(wsio, reqConfig, reqVersion, reqTime, reqConsole) {
 		}
 		initializeExistingAppsPositionSizeTypeOnly(wsio);
 		initializeExistingPartitionsUI(wsio);
+
+		if( dropPartitionId ) 
+			broadcast('updateDropPartition', {id: dropPartitionId});
 	}
 
 	var remote = findRemoteSiteByConnection(wsio);
@@ -1530,10 +1533,16 @@ function wsStartNewMediaStream(wsio, data) {
 	// forcing 'int' type for width and height
 	data.width  = parseInt(data.width,  10);
 	data.height = parseInt(data.height, 10);
+	// data.x = parseInt(data.x, 10);
+	// data.y = parseInt(data.y, 10);
+	console.log(data.x);
 
-	appLoader.createMediaStream(data.src, data.type, data.encoding, data.title, data.color, data.width, data.height,
+
+	appLoader.createMediaStream(data.src, data.type, data.encoding, data.title, data.color, data.width, data.height, data.x, data.y,
 		function(appInstance) {
 			appInstance.id = data.id;
+			appInstance.top = data.y;
+			appInstance.left = data.x;
 			handleNewApplication(appInstance, null);
 
 			var eLogData = {
@@ -1717,6 +1726,10 @@ function wsStartNewMediaBlockStream(wsio, data) {
 	//     for some reasons, messages from websocket lib from Linux send strings for ints
 	data.width  = parseInt(data.width,  10);
 	data.height = parseInt(data.height, 10);
+	data.x = parseInt(data.x, 10);
+	data.y = parseInt(data.x, 10);
+	console.log(data.x);
+
 
 	console.log(sageutils.header("Block stream") + data.width + 'x' + data.height + ' ' + data.colorspace);
 
@@ -1727,8 +1740,10 @@ function wsStartNewMediaBlockStream(wsio, data) {
 		}
 	}
 
-	appLoader.createMediaBlockStream(data.title, data.color, data.colorspace, data.width, data.height, function(appInstance) {
+	appLoader.createMediaBlockStream(data.title, data.color, data.colorspace, data.width, data.height, data.x, data.y, function(appInstance) {
 		appInstance.id = data.id;
+		appInstance.top = data.y;
+		appInstance.left = data.x;
 		handleNewApplication(appInstance, null);
 		calculateValidBlocks(appInstance, mediaBlockSize, SAGE2Items.renderSync[appInstance.id]);
 	});
@@ -8947,6 +8962,9 @@ function pointerCloseGesture(uniqueID, pointerX, pointerY, time, gesture) {
 }
 
 function handleNewApplication(appInstance, videohandle) {
+	console.log("HANDLE ");
+	// console.log(appInstance);
+
 	broadcast('createAppWindow', appInstance);
 	broadcast('createAppWindowPositionSizeOnly', getAppPositionSize(appInstance));
 
@@ -9600,7 +9618,7 @@ function wsUtdCallFunctionOnApp(wsio, data) {
 			// invoke clear with delete application method -- messy, should refactor
 			partitions.list[data.app][data.func](deleteApplication);
 		} else if(data.func === "setDropPartition"){
-			var dropPartitionId = data.app; 
+			dropPartitionId = data.app; 
 			console.log("dropPartition set");
 			console.log(dropPartitionId);
 

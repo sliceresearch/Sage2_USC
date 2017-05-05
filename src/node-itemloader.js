@@ -666,7 +666,7 @@ AppLoader.prototype.loadZipAppFromFile = function(file, mime_type, aUrl, externa
 	});
 };
 
-AppLoader.prototype.createMediaStream = function(source, type, encoding, name, color, width, height, callback) {
+AppLoader.prototype.createMediaStream = function(source, type, encoding, name, color, width, height, x, y, callback) {
 	var aspectRatio = width / height;
 
 	var metadata         = {};
@@ -690,8 +690,8 @@ AppLoader.prototype.createMediaStream = function(source, type, encoding, name, c
 			encoding: encoding
 		},
 		resrc: null,
-		left: this.titleBarHeight,
-		top: 1.5 * this.titleBarHeight,
+		left: x+ this.titleBarHeight,
+		top: y+ 1.5 * this.titleBarHeight,
 		width: width,
 		height: height,
 		native_width: width,
@@ -713,7 +713,7 @@ AppLoader.prototype.createMediaStream = function(source, type, encoding, name, c
 };
 
 
-AppLoader.prototype.createMediaBlockStream = function(name, color, colorspace, width, height, callback) {
+AppLoader.prototype.createMediaBlockStream = function(name, color, colorspace, width, height, x, y, callback) {
 	var aspectRatio = width / height;
 
 	var metadata         = {};
@@ -737,8 +737,8 @@ AppLoader.prototype.createMediaBlockStream = function(name, color, colorspace, w
 			height: height
 		},
 		resrc: null,
-		left: this.titleBarHeight,
-		top: 1.5 * this.titleBarHeight,
+		left: x + this.titleBarHeight,
+		top: y + 1.5 * this.titleBarHeight,
 		width: width,
 		height: height,
 		native_width: width,
