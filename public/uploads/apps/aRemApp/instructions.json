@@ -1,0 +1,20 @@
+{
+	"main_script": "aRemApp.js",
+        "icon": "aRemApp.png",
+	"width": 500,
+	"height": 500,
+	"animation": true,
+	"sticky": true,
+	"dependencies": [
+	],
+	"load": {
+		"numToShow": 0,
+		"araPointers": null
+	},
+	"title": "aRemApp",
+	"version": "1.0.0",
+	"description": "aRemApp",
+	"keywords": [ "draw" ],
+	"author": "Dylan Kobayashi <dylank@hawaii.edu>",
+	"license": "SAGE2-Software-License"
+}

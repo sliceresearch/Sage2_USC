@@ -482,6 +482,7 @@ function setupListeners() {
 		var app = applications[data.id];
 		if (app !== undefined && app !== null) {
 			app.SAGE2Load(data.state, new Date(data.date));
+			app.drawRemotePointerGhosts();
 		}
 	});
 

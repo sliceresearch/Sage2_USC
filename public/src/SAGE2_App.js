@@ -296,12 +296,66 @@ var SAGE2_App = Class.extend({
 			this.SAGE2UserModification = true;
 			this.event(eventType, position, user_id, data, date);
 
+			// If the app has specified, convert pointer actions into mouse events.
 			if (this.passSAGE2PointerAsMouseEvents) {
 				SAGE2MEP.processAndPassEvents(this.id, eventType, position,
 					user_id, data, date);
 			}
+
+			// If the pointer is moved, keep track of it for remote ghost effect.
+			if (isMaster && eventType === "pointerMove") {
+				this.trackPointerForRemoteGhosting(user_id, position, date);
+			}
+
 			this.SAGE2UserModification = false;
 		}
+	},
+
+	/**
+	* trackPointerForRemoteGhosting method called after event handling.
+	* Used to send position to remote sites to indicate where pointer is located.
+	*
+	* @method trackPointerForRemoteGhosting
+	* @param userInfo {Object} contains id, label, color attributes.
+	* @param position {Object} contains x, y attributes.
+	* @param date {Object} object.
+	*/
+	trackPointerForRemoteGhosting: function(userInfo, position, date) {
+		var pointerRef = null;
+		var pointerDiv = null;
+		// Search if the pointer is already being tracked
+		for (var i = 0; i < this.state.pointersOverApp.length; i++) {
+			// Two equals instead of three because there seems to be auto conversion with a pointer id.
+			if (this.state.pointersOverApp[i].id == ("" + userInfo.id)) {
+				pointerRef = this.state.pointersOverApp[i];
+				break;
+			}
+		}
+		// If not found, then need to make new entry.
+		if (pointerRef === null) {
+			pointerRef = {};
+			pointerRef.id = ("" + userInfo.id);
+			this.state.pointersOverApp.push(pointerRef);
+			// Also make visual value for it
+			pointDiv = document.createElement("div");
+			pointDiv.id = this.id + pointerRef.id;
+			pointDiv.style.position = "absolute";
+			pointDiv.style.width = "20px";
+			pointDiv.style.height = "20px";
+			var appContainer = document.getElementById(this.id);
+			appContainer.appendChild(pointDiv);
+		}
+		// Update values
+		pointerRef.color = userInfo.color;
+		pointerRef.label = userInfo.label;
+		pointerRef.x = position.x;
+		pointerRef.y = position.y;
+
+		// Uses an app variable called this.pointerUpdateTimer
+		this.SAGE2UserModification = true;
+		this.drawRemotePointerGhosts();
+		this.SAGE2Sync(true);
+		this.SAGE2UserModification = false;
 	},
 
 	/**
@@ -724,6 +778,32 @@ var SAGE2_App = Class.extend({
 			// update time and misc
 			_this.postDraw(date);
 		});
+	},
+
+	/**
+	* Called by refresh, happens after draw. Will draw remote pointer ghosts.
+	*
+	* @method drawRemotePointerGhosts
+	*/
+	drawRemotePointerGhosts: function() {
+		var workingDiv;
+		for (var i = 0; i < this.state.pointersOverApp.length; i++) {
+			workingDiv = this.id + this.state.pointersOverApp[i].id;
+			workingDiv = document.getElementById(workingDiv);
+			if (workingDiv === undefined || workingDiv === null) {
+				workingDiv = document.createElement("div");
+				workingDiv.id = this.id + this.state.pointersOverApp[i].id;
+				workingDiv.style.position = "absolute";
+				workingDiv.style.width = "20px";
+				workingDiv.style.height = "20px";
+				var appContainer = document.getElementById(this.id);
+				appContainer.appendChild(workingDiv);
+			}
+			workingDiv.style.left = this.state.pointersOverApp[i].x + "px";
+			workingDiv.style.top = this.state.pointersOverApp[i].y + "px";
+			workingDiv.style.background = this.state.pointersOverApp[i].color;
+			workingDiv.innerHTML = this.state.pointersOverApp[i].label;
+		}
 	},
 
 	/**
