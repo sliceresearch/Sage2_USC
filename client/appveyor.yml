@@ -34,7 +34,7 @@ build: off
 test: off
 
 artifacts:
-  - path: SAGE2_client-$(APPVEYOR_BUILD_VERSION).exe
+  - path: client\SAGE2_client-$(APPVEYOR_BUILD_VERSION).exe
     name: sage2_client
 
 deploy:
