@@ -194,6 +194,7 @@ var appObserver = SAGE2_App.extend({
 			*/
 			var pdfEntry = {
 				filename:  currentApp.title,
+				url: currentApp.state.doc_url,
 				pageCount: currentApp.solver.numPages,
 				pageText:  Array(currentApp.solver.numPages).fill(""),
 				fullText: ""

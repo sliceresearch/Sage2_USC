@@ -44,14 +44,14 @@ var allPdfTextContainer = {};
 
 SAGE2Connection.initS2Connection("localhost:9292", null, true, null);
 
-var wsioToExternal = new SAGE2Connection.WebsocketIO("168.105.4.130:3000/papers");
+var wsioToExternal = new SAGE2Connection.WebsocketIO("168.105.4.130:3000");
 
 wsioToExternal.open(function() {
 	addLineToOutput("Connecting to external server (not sage2)");
-	wsioToExternal.ws.send(JSON.stringify({
-		type: "document",
-		message: "Initial connection"
-	}));
+	// wsioToExternal.ws.send(JSON.stringify({
+	// 	type: "document",
+	// 	message: "Initial connection"
+	// }));
 });
 // socket close event (i.e. server crashed)
 wsioToExternal.on("close", function(evt) {
@@ -145,14 +145,17 @@ function handleAllPdfTextContainment(data) {
 	addLineToOutput("");
 	allPdfTextContainer = data;
 
-	
-	addLineToOutput("Trying to send data to external site");
-	addLineToOutput("");
+	var localhostSwapOut = "168.105.18.142";
 
-	if (allPdfTextContainer[0] && allPdfTextContainer[0].fullText) {
+	if (allPdfTextContainer[0] && allPdfTextContainer[0].url) {
+		addLineToOutput("Trying to send data to external site");
+		addLineToOutput("");
+		if (allPdfTextContainer[0].url.indexOf("localhost") !== -1) {
+			allPdfTextContainer[0].url = allPdfTextContainer[0].url.replace(/localhost/gi, localhostSwapOut);
+		}
 		wsioToExternal.ws.send(JSON.stringify({
 			type: "document",
-			message: allPdfTextContainer[0].fullText
+			url: allPdfTextContainer[0].url
 		}));
 	}
 }
