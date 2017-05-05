@@ -23,16 +23,15 @@ install:
   - npm install --production --msvs_version=2013
   - npm run update
   - npm run build_win
-  - ren SAGE2_client-win32-x64 SAGE2_client-%APPVEYOR_BUILD_VERSION%
-  - 7z a -sfx7z.sfx SAGE2_client-%APPVEYOR_BUILD_VERSION%.exe SAGE2_client-%APPVEYOR_BUILD_VERSION% > nul
-  - move SAGE2_client-%APPVEYOR_BUILD_VERSION%.exe ..
+  - 7z a -sfx7z.sfx SAGE2_client-win64.exe SAGE2_client-win32-x64 > nul
+  - move SAGE2_client-win64.exe ..
 
 build: off
 
 test: off
 
 artifacts:
-  - path: SAGE2_client-$(APPVEYOR_BUILD_VERSION).exe
+  - path: SAGE2_client-win64.exe
     name: sage2_client
 
 deploy:
