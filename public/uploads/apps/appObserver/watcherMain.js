@@ -46,6 +46,9 @@ SAGE2Connection.initS2Connection("localhost:9292", null, true, null);
 
 var wsioToExternal = new SAGE2Connection.WebsocketIO("168.105.4.130:3000");
 
+var localhostSwapOut = "168.105.18.142";
+
+
 wsioToExternal.open(function() {
 	addLineToOutput("Connecting to external server (not sage2)");
 	// wsioToExternal.ws.send(JSON.stringify({
@@ -145,8 +148,6 @@ function handleAllPdfTextContainment(data) {
 	addLineToOutput("");
 	allPdfTextContainer = data;
 
-	var localhostSwapOut = "168.105.18.142";
-
 	if (allPdfTextContainer[0] && allPdfTextContainer[0].url) {
 		addLineToOutput("Trying to send data to external site");
 		addLineToOutput("");
@@ -157,6 +158,8 @@ function handleAllPdfTextContainment(data) {
 			type: "document",
 			url: allPdfTextContainer[0].url
 		}));
+		addLineToOutput("After send command");
+		addLineToOutput("");
 	}
 }
 
