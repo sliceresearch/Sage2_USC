@@ -156,6 +156,8 @@ var SAGE2_App = Class.extend({
 	SAGE2Load: function(state, date) {
 		this.SAGE2CopyState(state);
 		this.SAGE2UpdateAppOptionsFromState();
+		
+		this.remotePointerUpdateCheck();
 
 		this.load(date);
 	},
@@ -302,9 +304,12 @@ var SAGE2_App = Class.extend({
 					user_id, data, date);
 			}
 
-			// If the pointer is moved, keep track of it for remote ghost effect.
+			// If the pointer is moved, keep track of it for showing remote pointer
 			if (isMaster && eventType === "pointerMove") {
-				this.trackPointerForRemoteGhosting(user_id, position, date);
+				// if app is shared, then track pointer
+				if (this.isSharedWithRemoteSite()) {
+					this.trackRemotePointer(user_id, position);
+				}
 			}
 
 			this.SAGE2UserModification = false;
@@ -312,50 +317,72 @@ var SAGE2_App = Class.extend({
 	},
 
 	/**
-	* trackPointerForRemoteGhosting method called after event handling.
-	* Used to send position to remote sites to indicate where pointer is located.
+	* Used to check if display believes this app is shared with a remote site.
+	* This is done by checking if the sync icon is visible.
 	*
-	* @method trackPointerForRemoteGhosting
-	* @param userInfo {Object} contains id, label, color attributes.
-	* @param position {Object} contains x, y attributes.
-	* @param date {Object} object.
+	* @method isSharedWithRemoteSite
 	*/
-	trackPointerForRemoteGhosting: function(userInfo, position, date) {
-		var pointerRef = null;
-		var pointerDiv = null;
-		// Search if the pointer is already being tracked
-		for (var i = 0; i < this.state.pointersOverApp.length; i++) {
-			// Two equals instead of three because there seems to be auto conversion with a pointer id.
-			if (this.state.pointersOverApp[i].id == ("" + userInfo.id)) {
-				pointerRef = this.state.pointersOverApp[i];
-				break;
+	isSharedWithRemoteSite: function() {
+		var windowIconSync = document.getElementById(this.id + "_iconSync");
+		var windowIconUnSync = document.getElementById(this.id + "_iconUnSync");
+		// if either sync button is visible, then this app is shared.
+		if (windowIconSync.style.display !== "none" || windowIconUnSync.style.display !== "none") {
+			return true;
+		}
+		return false;
+	},
+
+	/**
+	* When a pointer is moved over an app, is shared, and was a move event, this will activate.
+	* Tracks pointers that have moved over the app.
+	*
+	* @method trackRemotePointer
+	* @param user_id {Object} contains information about user: color, id, label
+	* @param position {Object} contains location of cursor with app's top left corner as origin
+	*/
+	trackRemotePointer: function(user_id, position) {
+		// first check if this user's pointer is already being tracked.
+		var found = -1;
+		for (let i = 0; i < this.state.pointersOverApp.length; i++) {
+			if (this.state.pointersOverApp[i].id === user_id.id) {
+				found = i;
 			}
 		}
-		// If not found, then need to make new entry.
-		if (pointerRef === null) {
-			pointerRef = {};
-			pointerRef.id = ("" + userInfo.id);
-			this.state.pointersOverApp.push(pointerRef);
-			// Also make visual value for it
-			pointDiv = document.createElement("div");
-			pointDiv.id = this.id + pointerRef.id;
-			pointDiv.style.position = "absolute";
-			pointDiv.style.width = "20px";
-			pointDiv.style.height = "20px";
-			var appContainer = document.getElementById(this.id);
-			appContainer.appendChild(pointDiv);
+		// if not found, create entry
+		var pointer;
+		if (found === -1) {
+			pointer = {
+				id: user_id.id,
+				server: document.getElementById("machine").textContent
+			};
+			this.state.pointersOverApp.push(pointer);
+		} else {
+			pointer = this.state.pointersOverApp[found];
 		}
-		// Update values
-		pointerRef.color = userInfo.color;
-		pointerRef.label = userInfo.label;
-		pointerRef.x = position.x;
-		pointerRef.y = position.y;
-
-		// Uses an app variable called this.pointerUpdateTimer
-		this.SAGE2UserModification = true;
-		this.drawRemotePointerGhosts();
+		// update the pointer values
+		pointer.color = user_id.color;
+		pointer.label = user_id.label;
+		pointer.position = position;
+		pointer.positionInPercent = {
+			x: (position.x / this.sage2_width),
+			y: (position.y / this.sage2_height)
+		};
+		pointer.lastUpdate = Date.now();
+		// sync across sites. maybe needs a delay or interval rather than spam when move happens?
 		this.SAGE2Sync(true);
-		this.SAGE2UserModification = false;
+	},
+
+	/**
+	* Called from SAGE2Load, this will check all of pointers detected over app.
+	* Apps should not draw their own pointers because there is currently no pointer leave event in SAGE2.
+	* Should a pointer go from one app to another, both apps will believe the pointer is over them.
+	*
+	* @method remotePointerUpdateCheck
+	*/
+	remotePointerUpdateCheck: function() {
+		for (let i = 0; i < this.state.pointersOverApp.length; i++) {
+			SAGE2RemoteSitePointer.showPointer(this.state.pointersOverApp[i], this);
+		}
 	},
 
 	/**
@@ -778,32 +805,6 @@ var SAGE2_App = Class.extend({
 			// update time and misc
 			_this.postDraw(date);
 		});
-	},
-
-	/**
-	* Called by refresh, happens after draw. Will draw remote pointer ghosts.
-	*
-	* @method drawRemotePointerGhosts
-	*/
-	drawRemotePointerGhosts: function() {
-		var workingDiv;
-		for (var i = 0; i < this.state.pointersOverApp.length; i++) {
-			workingDiv = this.id + this.state.pointersOverApp[i].id;
-			workingDiv = document.getElementById(workingDiv);
-			if (workingDiv === undefined || workingDiv === null) {
-				workingDiv = document.createElement("div");
-				workingDiv.id = this.id + this.state.pointersOverApp[i].id;
-				workingDiv.style.position = "absolute";
-				workingDiv.style.width = "20px";
-				workingDiv.style.height = "20px";
-				var appContainer = document.getElementById(this.id);
-				appContainer.appendChild(workingDiv);
-			}
-			workingDiv.style.left = this.state.pointersOverApp[i].x + "px";
-			workingDiv.style.top = this.state.pointersOverApp[i].y + "px";
-			workingDiv.style.background = this.state.pointersOverApp[i].color;
-			workingDiv.innerHTML = this.state.pointersOverApp[i].label;
-		}
 	},
 
 	/**

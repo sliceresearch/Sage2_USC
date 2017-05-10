@@ -413,6 +413,8 @@ function setupListeners() {
 	});
 
 	wsio.on('createSagePointer', function(pointer_data) {
+		// console.log("erase me, what is the data needed to create a pointer");
+		// console.dir(pointer_data);
 		if (window.ui) {
 			ui.createSagePointer(pointer_data);
 		} else {
@@ -440,6 +442,8 @@ function setupListeners() {
 	});
 
 	wsio.on('updateSagePointerPosition', function(pointer_data) {
+		// console.log("erase me, what is the data needed to update pointer position");
+		// console.dir(pointer_data);
 		if (ui) {
 			ui.updateSagePointerPosition(pointer_data);
 		}
@@ -482,7 +486,6 @@ function setupListeners() {
 		var app = applications[data.id];
 		if (app !== undefined && app !== null) {
 			app.SAGE2Load(data.state, new Date(data.date));
-			app.drawRemotePointerGhosts();
 		}
 	});
 
@@ -1552,6 +1555,10 @@ function createAppWindow(data, parentId, titleBarHeight, titleTextSize, offsetX,
 
 	// convert url if hostname is alias for current origin
 	var url = cleanURL(data.url);
+
+	// Create tracking for all apps by default stacking another state load value.
+	if (data.data === null || data.data === undefined) { data.data = {}; }
+	data.data.pointersOverApp = [];
 
 	function loadApplication() {
 		var init = {
