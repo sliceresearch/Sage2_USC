@@ -9,7 +9,6 @@ Other
 ~~~~~
 - Merge branch 'mediabrowser' [Luc Renambot]
 - Merge branch 'master' into mediabrowser. [Luc Renambot]
-- Merge branch 'master' into mediabrowser. [Luc Renambot]
 - A few utility functions to build the menus for the toolbar and
   mediabrowser: menu item definition and callback in one datai
   structure. [Luc Renambot]
@@ -40,9 +39,6 @@ Other
 - Merge branch 'master' of bitbucket.org:sage2/sage2. [Luc Renambot]
 - Merge branch 'master' of https://bitbucket.org/sage2/sage2. [D K]
 - Update _this vs this. [D K]
-- Dockerfile. [Luc Renambot]
-- Dockerfile. [Luc Renambot]
-- Dockerfile. [Luc Renambot]
 - Dockerfile. [Luc Renambot]
 - Trying Docker without sudo and using latest ubuntu. [Luc Renambot]
 - Going back to 14.04 ;-( [Luc Renambot]
@@ -102,7 +98,6 @@ Other
 - Quick fix for double down/up events. [Arthur Nishimoto]
 - Merge PartitionSnapping into master - Andrew Burks. [Andrew Burks]
 - Merge branch 'master' into wallScreenCap. [Luc Renambot]
-- Merge branch 'master' into wallScreenCap. [Luc Renambot]
 - Change screenShot to screenshot in var and func. [Luc Renambot]
 - Delete temp file after the screenshot. [Luc Renambot]
 - Add the package rimraf as dependency, to delete files with glob. [Luc
@@ -159,8 +154,6 @@ Other
 - Merge branch 'master' into videoSync. [D K]
 - Merged in samw10/sage2/samw10/thiselementid-doesnt-exist-thisid-
   contai-1490860190918 (pull request #8) [samw10]
-
-  this.element.id doesn't exist. this.id contains the data it needs
 - This.element.id doesn't exist. this.id contains the data it needs.
   [samw10]
 - Change message colors in browser console to make it readdable. [Luc
@@ -217,7 +210,6 @@ Other
 - Merge branch 'master' into stickyitems. [krishnaBharadwaj]
 - Bug fixes, background item delete corner case handled.
   [krishnaBharadwaj]
-- Merge branch 'master' into stickyitems. [krishnaBharadwaj]
 - Merge branch 'master' into stickyitems. [krishnaBharadwaj]
 - Pin updates only on move stop, Items stick at any point and not just
   left-top. [krishnaBharadwaj]
@@ -438,8 +430,6 @@ Other
 - Whiteboard ignores SAGEPointer move events that are not currently
   being dragged (fix undefined id in ui_builder) [Arthur Nishimoto]
 - Merge branch 'master' of bitbucket.org:sage2/sage2. [Arthur Nishimoto]
-- Merge branch 'master' of bitbucket.org:sage2/sage2. [Arthur Nishimoto]
-- Merge branch 'master' of bitbucket.org:sage2/sage2. [Arthur Nishimoto]
 - Fixed a few bugs, changed threshold for distance to cut.
   [AndrewTBurks]
 - Added a partition creation option for 1 Full Screen partition. Added a
@@ -501,5 +491,4 @@ Other
   [d-k-k]
 - Added .DS_Store to gitignore. Mac seems to continously generate the
   file after the Sierra update whenever a file is edited. [d-k-k]
-
 

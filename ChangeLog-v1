@@ -36,7 +36,6 @@ Other
 ~~~~~
 - Merge branch 'master' of bitbucket.org:sage2/sage2. [Luc Renambot]
 - Merge branch 'master' into widgets. [krishnaBharadwaj]
-- Merge branch 'master' into widgets. [krishnaBharadwaj]
 - Widgets and keyboard events fixed. [krishnaBharadwaj]
 - Removed debug statement. [krishnaBharadwaj]
 - Merge branch 'master' into widgets. [krishnaBharadwaj]
@@ -100,7 +99,6 @@ Other
 - Merge branch 'master' into groups. [Luc Renambot]
 - Forgot a plugin file for calvin comics. [Luc Renambot]
 - Merge branch 'master' into groups. [Luc Renambot]
-- Merge branch 'master' into groups. [Luc Renambot]
 - Updated 'welcome' app: update image every 15min, start in fullscreen.
   [Luc Renambot]
 - App can request to be fullscreen. [Luc Renambot]
@@ -110,8 +108,6 @@ Other
   Renambot]
 - Merge branch 'master' into groups. [Luc Renambot]
 - Working on new way to get images into comics app. [Luc Renambot]
-- Merge branch 'master' into groups. [Luc Renambot]
-- Merge branch 'master' into groups. [Luc Renambot]
 - Merge branch 'master' into groups. [Luc Renambot]
 - Merge branch 'groups' of bitbucket.org:sage2/sage2 into groups. [Luc
   Renambot]
@@ -258,7 +254,6 @@ Other
   Some people reported issues. [Luc Renambot]
 - Removed async load of libraries for now. [Luc Renambot]
 - Sage2.bat. [Luc Renambot]
-- Sage2.bat. [Luc Renambot]
 - Appveyor. [Luc Renambot]
 - Put some help on the mobile trackpad. [Luc Renambot]
 - Removed --depth=1 in git update. [Luc Renambot]
@@ -301,7 +296,6 @@ Other
 - Enable 'async' on javascript loading (should load a little faster)
   [Luc Renambot]
 - Merge branch 'master' of bitbucket.org:sage2/sage2. [Luc Renambot]
-- Updated for https on lyra. [Andy J]
 - Updated for https on lyra. [Andy J]
 - Back port HTTP compression (from modules branch) [Luc Renambot]
 - Simplify dependency loading in car_threejs app. [Luc Renambot]
@@ -369,9 +363,6 @@ Other
 - Remove timers for client with animated apps. Updated createFolder
   function. [Luc Renambot]
 - Appveyor. [Luc Renambot]
-- Appveyor. [Luc Renambot]
-- Appveyor. [Luc Renambot]
-- Appveyor. [Luc Renambot]
 - Set default screen sharing to Medium and 7 quality. [Luc Renambot]
 - Another tweak at UI resize. [Luc Renambot]
 - Updated height of UI to be half height when file manager open. [Luc
@@ -409,18 +400,6 @@ Other
 - Fix visibility of app when created while in "ui hidden" mode. Fix #59.
   [Luc Renambot]
 - Appveyor. [Luc Renambot]
-- Appveyor. [Luc Renambot]
-- Appveyor. [Luc Renambot]
-- Appveyor. [Luc Renambot]
-- Appveyor. [Luc Renambot]
-- Appveyor. [Luc Renambot]
-- Appveyor. [Luc Renambot]
-- Appveyor. [Luc Renambot]
-- Appveyor. [Luc Renambot]
-- Appveyor. [Luc Renambot]
-- Appveyor. [Luc Renambot]
-- Appveyor. [Luc Renambot]
-- Appveyor. [Luc Renambot]
 - Added an admin menu in the file manager. [Luc Renambot]
 - Basic support for session in the file manager. [Luc Renambot]
 - Added npm install for Windows. [Luc Renambot]
@@ -438,13 +417,9 @@ Other
 - Allow explicitely cross-origin texture for the 'car' demo. [Luc
   Renambot]
 - Appveyor. [Luc Renambot]
-- Appveyor. [Luc Renambot]
 - Appveyor file with git. [Luc Renambot]
 - Removing git from appveyor. [Luc Renambot]
 - Tweaking git appveyor. [Luc Renambot]
-- Tweaking git appveyor. [Luc Renambot]
-- Tweaking portable git. [Luc Renambot]
-- Tweaking portable git. [Luc Renambot]
 - Tweaking portable git. [Luc Renambot]
 - Adding portable git. [Luc Renambot]
 - Missing dll for git.exe. [Luc Renambot]
@@ -454,17 +429,10 @@ Other
 - Adding sage2.bat launch. [Luc Renambot]
 - Adding node to appveyor. [Luc Renambot]
 - Appveyor. [Luc Renambot]
-- Appveyor. [Luc Renambot]
-- Appveyor. [Luc Renambot]
-- Appveyor. [Luc Renambot]
-- Appveyor. [Luc Renambot]
-- Appveyor. [Luc Renambot]
 - Switched to grunt-eslint package. [Luc Renambot]
 - Appveyor version. [Luc Renambot]
 - Appveyor.yml. [Luc Renambot]
-- Appveyor.yml. [Luc Renambot]
 - Added slack notification appveyor. [Luc Renambot]
-- Appveyor.yml. [Luc Renambot]
 - Appveyor.yml. [Luc Renambot]
 - Adding appveyor.yml for Windows CI. [Luc Renambot]
 - Fixed paths after shortening line lengths. [Arthur Nishimoto]
@@ -565,24 +533,6 @@ Other
 - Cleanup code of the apps. [Luc Renambot]
 - Add 'style' task: npm run style. [Luc Renambot]
 - Cleanup. [Luc Renambot]
-- Cleanup. [Luc Renambot]
-- Cleanup. [Luc Renambot]
-- Cleanup. [Luc Renambot]
-- Cleanup. [Luc Renambot]
-- Cleanup. [Luc Renambot]
-- Cleanup. [Luc Renambot]
-- Cleanup. [Luc Renambot]
-- Cleanup. [Luc Renambot]
-- Cleanup. [Luc Renambot]
-- Cleanup. [Luc Renambot]
-- Cleanup. [Luc Renambot]
-- Cleanup. [Luc Renambot]
-- Cleanup. [Luc Renambot]
-- Cleanup. [Luc Renambot]
-- Cleanup. [Luc Renambot]
-- Cleanup. [Luc Renambot]
-- Cleanup. [Luc Renambot]
-- Cleanup. [Luc Renambot]
 - Cleanup md5 file. [Luc Renambot]
 - Replace fileExists test by folderExists whn appropriate. [Luc
   Renambot]
@@ -632,7 +582,6 @@ Other
 - Fix for 'edge' detection. [Luc Renambot]
 - Adding 'edge' as a Windows web browser (browser detection) [Luc
   Renambot]
-- DefaultWin-cfg.json edited online with Bitbucket. [Tommy Marrinan]
 - DefaultWin-cfg.json edited online with Bitbucket. [Tommy Marrinan]
 - Added getHomeDirectory function in utils. [Luc Renambot]
 - Updated zoom app and added default image (from NASA) [Luc Renambot]
@@ -750,9 +699,6 @@ Other
 - Merge branch 'master' of https://bitbucket.org/sage2/sage2. [Luc
   Renambot]
 - Fix showwidgetlink bug. [Tommy Marrinan]
-- Fix showwidgetlink bug. [Tommy Marrinan]
-- Fix showwidgetlink bug. [Tommy Marrinan]
-- Fix showwidgetlink bug. [Tommy Marrinan]
 - Updated config for bigdaddy. [Luc Renambot]
 - Config files for wall of CAVE2. [Luc Renambot]
 - Fix desktop sharing for "overview" client (-1), based on Ian Peake
@@ -781,12 +727,8 @@ Other
 - Added a test call to fsmonitor. [Luc Renambot]
 - Added fsmonitor package to detect file system changes. [Luc Renambot]
 - Merged in MatthewTurk/sage2/watermark (pull request #2) [Luc Renambot]
-
-  Check for watermark in config.
 - Check for watermark in config. [Matthew Turk]
 - Merged in MatthewTurk/sage2/fs-mv (pull request #3) [Luc Renambot]
-
-  Use the mv package to avoid possible errors with fs.rename.
 - Use the mv package to avoid possible errors with fs.rename. [Matthew
   Turk]
 - Ensure block stream app exists. [Tommy Marrinan]
@@ -933,7 +875,6 @@ Other
 - Fix remote app pushing. [Tommy Marrinan]
 - Removed print statement. [Tommy Marrinan]
 - Updated most apps to new API. [Tommy Marrinan]
-- Updated most apps to new API. [Tommy Marrinan]
 - Merged with master. [Tommy Marrinan]
 - Added visibility funtions and 'onVisible' callback to app, and updated
   image_viewer to use it. [Luc Renambot]
@@ -978,36 +919,16 @@ Other
   Marrinan]
 - Fix google maps loading API and state. [Luc Renambot]
 - Fixing pointer release. [Tommy Marrinan]
-- Fixing pointer release. [Tommy Marrinan]
-- Test pointer release. [Tommy Marrinan]
-- Test pointer release. [Tommy Marrinan]
-- Test pointer release. [Tommy Marrinan]
-- Test pointer release. [Tommy Marrinan]
-- Test pointer release. [Tommy Marrinan]
-- Test pointer release. [Tommy Marrinan]
-- Test pointer release. [Tommy Marrinan]
 - Test pointer release. [Tommy Marrinan]
 - Toggle modes for remote sage pointer. [Tommy Marrinan]
 - Testing sharing apps. [Tommy Marrinan]
-- Testing sharing apps. [Tommy Marrinan]
-- Pass key events to portals. [Tommy Marrinan]
-- Pass key events to portals. [Tommy Marrinan]
 - Pass key events to portals. [Tommy Marrinan]
 - Clone media stream in portal (remote) [Tommy Marrinan]
-- Clone media stream in portal (remote) - TEST. [Tommy Marrinan]
-- Clone media stream in portal (remote) - TEST. [Tommy Marrinan]
-- Clone media stream in portal (remote) - TEST. [Tommy Marrinan]
-- Clone media stream in portal (remote) - TEST. [Tommy Marrinan]
-- Clone media stream in portal (remote) - TEST. [Tommy Marrinan]
 - Clone media stream in portal (remote) - TEST. [Tommy Marrinan]
 - Clone media stream in portal (local) [Tommy Marrinan]
 - Updated DataSharing to prototype scheme. [Tommy Marrinan]
 - Fixed app sync issue caused by inconsistent titlebar heights. [Tommy
   Marrinan]
-- Debugging titlebar height differences. [Tommy Marrinan]
-- Debugging titlebar height differences. [Tommy Marrinan]
-- Debugging titlebar height differences. [Tommy Marrinan]
-- Debugging titlebar height differences. [Tommy Marrinan]
 - Debugging titlebar height differences. [Tommy Marrinan]
 - Properly size interactable buttons to portal titble bar height. [Tommy
   Marrinan]
@@ -1015,7 +936,6 @@ Other
 - Sync titleBarHeight in portal. [Tommy Marrinan]
 - Removed sharing area border - testing. [Tommy Marrinan]
 - Remove debug statement. [Tommy Marrinan]
-- Create consistent id for data sharing session. [Tommy Marrinan]
 - Create consistent id for data sharing session. [Tommy Marrinan]
 - Remove debug print statements. [Tommy Marrinan]
 - Take border into account when calculating app.sage2 position/size.
@@ -1031,7 +951,6 @@ Other
   Marrinan]
 - Fixed doc_url for pdf. [Tommy Marrinan]
 - Fixing app position on shared area. [Tommy Marrinan]
-- Fixing pointer position on shared area. [Tommy Marrinan]
 - Fixing pointer position on shared area. [Tommy Marrinan]
 - Modified tmarrinan config. [Tommy Marrinan]
 - Added pointer to non-scaled overlay. [Tommy Marrinan]
@@ -1062,8 +981,6 @@ Other
 - Merged with interactable - disabled data-pushing. [Tommy Marrinan]
 - Merge branch 'interactable' into data-duplication. [Tommy Marrinan]
 - Readded functionality for cancel, accept, reject. [Tommy Marrinan]
-- Readded functionality for cancel, accept, reject. [Tommy Marrinan]
-- Fix geometry bug. [Tommy Marrinan]
 - Fix geometry bug. [Tommy Marrinan]
 - Added interactable objects for dialog boxes. [Tommy Marrinan]
 - Remove debug printout. [Tommy Marrinan]
@@ -1072,7 +989,6 @@ Other
 - Merged interactable into data-duplication. [Tommy Marrinan]
 - Added SAGE2_DataSharing.js. [Tommy Marrinan]
 - Create initial visible area for data-sharing session. [Tommy Marrinan]
-- Bug fix. [Tommy Marrinan]
 - Bug fix. [Tommy Marrinan]
 - Remove console.log. [Tommy Marrinan]
 - Standardize data session object. [Tommy Marrinan]
@@ -1094,7 +1010,6 @@ Other
 - Fix bug in dialog pointer press. [Thomas Marrinan]
 - Debug pointer press on dialog. [Thomas Marrinan]
 - Check for pointer press on accept / reject buttons. [Thomas Marrinan]
-- Changed accept / reject position. [Thomas Marrinan]
 - Changed accept / reject position. [Thomas Marrinan]
 - Make data sharing dialog stay ontop of app windows. [Thomas Marrinan]
 - Edit remote hostname in dialog. [Thomas Marrinan]
@@ -1323,7 +1238,6 @@ Other
 - Cleaning up code. [Tommy Marrinan]
 - Created function to handle new applications. [Tommy Marrinan]
 - Added getItemById to sage2itemlist. [Tommy Marrinan]
-- Added getItemById to sage2itemlist. [Tommy Marrinan]
 - Added sage2itemlist. [Tommy Marrinan]
 - Initialize thumbnail visibility false. [Tommy Marrinan]
 - Added visible flag to geometric objects. [Tommy Marrinan]
@@ -1540,8 +1454,6 @@ Other
   Renambot]
 - Update session id template comments. [Thomas Marrinan]
 - Cleaned up session id template. [Thomas Marrinan]
-- Cleaned up session id template. [Thomas Marrinan]
-- Cleaned up session id template. [Thomas Marrinan]
 - Update: connectors work for press and release actions.
   [krishnaBharadwaj]
 - Cleaned up some console messages. [krishnaBharadwaj]
@@ -1622,8 +1534,6 @@ Other
 - Added block streaming app. [mvictoras]
 - Added media_stream back. [mvictoras]
 - Revert "Reverted the block streaming commint" [mvictoras]
-
-  This reverts commit 9eabe8f0a4850925eae8b4c7cab7d47c97b783cc [formerly 8b808d1b97980b877ce9251600a3a34bcc4250a3].
 - Fix bug #35 with PDF opening in all display clients (including
   overview) [Luc Renambot]
 - Modules are now OS dependent. replace 'npm install' with 'npm run in'
@@ -1674,7 +1584,6 @@ Other
 - Logging most delete actions (still need to catch clear all and close
   from widget menu. [Thomas Marrinan]
 - Logging key down, key up, key press. [Thomas Marrinan]
-- Logging pointer press, release, and scroll. [Thomas Marrinan]
 - Logging pointer press, release, and scroll. [Thomas Marrinan]
 - Log SAGE2 Pointer mode changes. [Thomas Marrinan]
 - Log file uploads from web interface. [Thomas Marrinan]
@@ -1874,7 +1783,6 @@ Other
   or audio to be accessed either way (index still redeirects to HTTPS
   regardless) [Thomas Marrinan]
 - Added files to publicHTTP. [Thomas Marrinan]
-- Added files to publicHTTP. [Thomas Marrinan]
 - Moved display and audio to HTTP. [Thomas Marrinan]
 - Merge branch 'master' into videostream. [Thomas Marrinan]
 - Merge branch 'videostream' of https://bitbucket.org/sage2/sage2 into
@@ -1891,7 +1799,6 @@ Other
 - Cleaned up a bit. [Thomas Marrinan]
 - Movie app plays videos. [Thomas Marrinan]
 - Update blocklists on display client side. [Thomas Marrinan]
-- Update blocklists on display client side. [Thomas Marrinan]
 - Fixed merge conflicts with master. [Thomas Marrinan]
 - Calculate which video blocks to send to which displays. [Thomas
   Marrinan]
@@ -1901,7 +1808,6 @@ Other
 - Added yuv420 shaders. [Thomas Marrinan]
 - Video blocks registered in app. [Thomas Marrinan]
 - View frame of video in app. [Thomas Marrinan]
-- Merge branch 'master' into videostream. [Thomas Marrinan]
 - Merge branch 'master' into videostream. [Thomas Marrinan]
 - Send frame to display client. [Thomas Marrinan]
 - Break video frames into pixel blocks. [Thomas Marrinan]
@@ -1914,7 +1820,6 @@ Other
 - Merge branch 'master' into videostream. [Thomas Marrinan]
 - Merged with master. [Thomas Marrinan]
 - Clean up old code. [Thomas Marrinan]
-- Merge branch 'master' into videostream. [Thomas Marrinan]
 - Merge branch 'master' into videostream. [Thomas Marrinan]
 - Initial integration of ffmpeg live decode of video on server side.
   [Thomas Marrinan]
@@ -1943,7 +1848,6 @@ Other
   [krishnaBharadwaj]
 - Merge branch 'master' into widgets. [krishnaBharadwaj]
 - Fixed broken build. [Victor Mateevitsi]
-- Fixed jshint. [Victor Mateevitsi]
 - Fixed jshint. [Victor Mateevitsi]
 - Added coverage directory to ignore list. [Victor Mateevitsi]
 - 'Viewer' application (i.e. with file types associated) are not listed
@@ -2022,7 +1926,6 @@ Other
 - Merged with latest version from master. [Victor Mateevitsi]
 - Disabled insteractive mode for startup script. [Victor Mateevitsi]
 - Merged with master. [Victor Mateevitsi]
-- Merged with master. [Victor Mateevitsi]
 - Working version of ndpi uploader. TODO: clean up code and optimize.
   [Victor Mateevitsi]
 - Fixed mime types. Added directory support for custom apps. [Victor
@@ -2053,10 +1956,6 @@ Other
 - Modified startup script for CAVE2: using local storage for Chrome
   profile and using --app option. [Alessandro Febretti]
 - Merge branch 'master' of https://bitbucket.org/sage2/sage2. [Andy J]
-- Merge branch 'master' of https://bitbucket.org/sage2/sage2. [Andy J]
-- Fixed errors with jshint. [Andy J]
-- Fixed errors with jshint. [Andy J]
-- Fixed errors with jshint. [Andy J]
 - Fixed errors with jshint. [Andy J]
 - FIX: Events lined up with scrolling content window. [Arthur Nishimoto]
 - FIX: Thumbnail content window only accepts events within its bounds.
@@ -2107,8 +2006,6 @@ Other
 - Adding Hawaii addresses in configs. [Luc Renambot]
 - Updated to master only grabbing data. [Andy J]
 - Converted over to master only getting data. [Andy J]
-- Updated version for use of master. [Andy J]
-- Updated version for use of master. [Andy J]
 - Updated version for use of master. [Andy J]
 - Sticky note added. [krishnaBharadwaj]
 - Merge branch 'master' into widgets. [krishnaBharadwaj]
@@ -2176,8 +2073,6 @@ Other
   [krishnaBharadwaj]
 - Added scrapbook names to data file. [Andy J]
 - Added location names to data file. [Andy J]
-- Added location names to data file. [Andy J]
-- Widget buttons now have text. [Andy J]
 - Widget buttons now have text. [Andy J]
 - Merge branch 'master' of https://bitbucket.org/sage2/sage2. [Andy J]
 - Merge branch 'widgets' [krishnaBharadwaj]
@@ -2267,7 +2162,6 @@ Other
   [Luc Renambot]
 - Running 'jshint' [Luc Renambot]
 - Updated menu resize. [Thomas Marrinan]
-- Updated menu resize. [Thomas Marrinan]
 - Update sage2 UI for menu icons to scale with device pixelRatio.
   [Thomas Marrinan]
 - Tweaked text colors. [Andy J]
@@ -2335,12 +2229,7 @@ Other
 - Added Master Display Client. Apps can call isMaster to check if it is
   the master display client. Still need broadcast. [Thomas Marrinan]
 - Moved data to external file. [Andy J]
-- Moved data to external file. [Andy J]
-- Moved data to external file. [Andy J]
 - New logo for CAVE2 monitor app. [Luc Renambot]
-- Updated to new widnet code. [Andy J]
-- Updated to new widnet code. [Andy J]
-- Updated to new widnet code. [Andy J]
 - Updated to new widnet code. [Andy J]
 - Merge branch 'master' of https://bitbucket.org/sage2/sage2. [Andy J]
 - Updated UIC_crime_with_leaflet/leaflet.js widget buttons.
@@ -2349,18 +2238,6 @@ Other
 - Merge branch 'master' into widgets. [krishnaBharadwaj]
 - Fix command line options 'quiet' and 'logging' [Luc Renambot]
 - New command line options: [Luc Renambot]
-
-  Usage: server [options]
-
-    Options:
-
-      -h, --help                  output usage information
-      -V, --version               output the version number
-      -i, --no-interactive        Non interactive prompt
-      -f, --configuration <file>  Specify a configuration file
-      -l, --logfile [file]        Specify a log file
-      -q, --no-output             Quiet, no output
-      -s, --session [name]        Load a session file (last session if omitted)
 - Fix CSS for UI. [Luc Renambot]
 - Fix UI for Windows IE and HTML cleanup for UI. [Luc Renambot]
 - Absolute positioning of buttons based on sequence numbers, Demo app
@@ -2381,22 +2258,14 @@ Other
 - Styling the buttons for image upload. [Luc Renambot]
 - Added pdf.js settings (no change in behavior) [Luc Renambot]
 - Added simple widget controller. [Andy J]
-- Added simple widget controller. [Andy J]
-- Added simple widget menu. [Andy J]
 - Added simple widget menu. [Andy J]
 - Moved photo scrapbook list to external file. [Andy J]
-- Moved photo scrapbook list to external file. [Andy J]
-- Moved photo scrapbook list to external file. [Andy J]
-- Moved radar stations into external js file. [Andy J]
 - Moved radar stations into external js file. [Andy J]
 - New external list of sites to view. [Andy J]
 - Merge branch 'master' of https://bitbucket.org/sage2/sage2. [Luc
   Renambot]
 - Merge branch 'master' of https://bitbucket.org/sage2/sage2. [Andy J]
 - Trying sage server for https requests. [Andy J]
-- Merge branch 'master' of https://bitbucket.org/sage2/sage2. [Andy J]
-- Merge branch 'master' of https://bitbucket.org/sage2/sage2. [Andy J]
-- Merge branch 'master' of https://bitbucket.org/sage2/sage2. [Andy J]
 - Merge branch 'master' of https://bitbucket.org/sage2/sage2. [Andy J]
 - Not sure what this change was. [Andy J]
 - Added 'upload' button: meant for mobile device to upload documents -
@@ -2447,11 +2316,6 @@ Other
 - Fix 'moved' callback values. [Luc Renambot]
 - Added a 'moved' callback for app to know when they are moved: [Luc
   Renambot]
-
-  moved: function(px, py, wx, wy, date) {
-  		// px, py : position in wall coordination
-  		// wx, wy : width and height of the wall
-  	}
 - Added systemd sage2 service. [SAGE]
 - Merge branch 'master' of https://bitbucket.org/sage2/sage2.
   [krishnaBharadwaj]
@@ -2475,7 +2339,6 @@ Other
 - Merge branch 'master' into widgets. [krishnaBharadwaj]
 - New design for widgets. [krishnaBharadwaj]
 - Merge branch 'master' into widgets. [krishnaBharadwaj]
-- Merge branch 'master' into widgets. [krishnaBharadwaj]
 - New layout for widgets. [krishnaBharadwaj]
 - Adding button on web UI to open the web browser. [Luc Renambot]
 - CHANGE: Radial menu content/app opening disabled while scrolling FIX:
@@ -2491,7 +2354,6 @@ Other
 - Merge branch 'master' of https://bitbucket.org/sage2/sage2.
   [tmarrinan]
 - Replaced city of chicago webcam with new chicago cam. [Andy J]
-- Updated Dante Windows config. [tmarrinan]
 - Updated Dante Windows config. [tmarrinan]
 - Updagte iridium config. [Luc Renambot]
 - Added icons for all applications. [Luc Renambot]
@@ -2533,7 +2395,6 @@ Other
 - Adding logos to the image folder. [Luc Renambot]
 - Three.js shader (2D) demo. [Luc Renambot]
 - Solved touch vs. mouse for Android. [Thomas Marrinan]
-- Solved touch vs. mouse for Android. [Thomas Marrinan]
 - Solved touch vs. mouse for iOS. [Thomas Marrinan]
 - Fix touch vs click for iOS. [Thomas Marrinan]
 - Fix for ffmpeg on windows. [Thomas Marrinan]
@@ -2557,7 +2418,6 @@ Other
 - Fixed drag and drop to upload new apps (as zip) [Thomas Marrinan]
 - Delte file from ui working again. icons for new documents show once
   loaded. [Thomas Marrinan]
-- Fixed exit SAGE2 Pointer bug. [Thomas Marrinan]
 - Fixed exit SAGE2 Pointer bug. [Thomas Marrinan]
 - FIX: Radial menu no longer blocks animated apps. [Arthur Nishimoto]
 - FIX: Radial menu application loading. [Arthur Nishimoto]
@@ -2872,8 +2732,6 @@ Other
 - Added background color for fullscreen mode. [Andy J]
 - Wide images now align to top rather than center of window. [Andy J]
 - Added background color for fullscreen mode. [Andy J]
-- Added background color for fullscreen mode. [Andy J]
-- Added background color for fullscreen mode. [Andy J]
 - Fixing list session function. [Luc Renambot]
 - CHANGE: Thumbnail buttons respond only to left click FIX: Cleanup of
   debug messages. [Arthur Nishimoto]
@@ -2901,7 +2759,6 @@ Other
 - Add an option to show/hide UI elements on the wall automatically after
   a delay:         auto_hide_ui: true/false         auto_hide_delay:
   delay time in seconds. [Luc Renambot]
-- Fixed sageUI scroll resize. [Thomas Marrinan]
 - Fixed sageUI scroll resize. [Thomas Marrinan]
 - Fixed resize scaling issue. center remains fixed (was caused by
   rounding errors). [Thomas Marrinan]
@@ -2958,8 +2815,6 @@ Other
 - Updated pdfjs to version 1.0.227. [Thomas Marrinan]
 - Removed older versions of apps. [Andy J]
 - Renamed app and new icon. [Andy J]
-- Renamed app and new icon. [Andy J]
-- Renamed app and new icon. [Andy J]
 - And now the whiteboard app ;-) [Luc Renambot]
 - First pass at a whiteboard application. [Luc Renambot]
 - Fixes for drawing. [Luc Renambot]
@@ -3003,9 +2858,6 @@ Other
 - FIX: Apps updated to use exif-like data structure. [Arthur Nishimoto]
 - FIX: Updated for event API changes. [Arthur Nishimoto]
 - Merge branch 'master' into TouchUI. [Arthur Nishimoto]
-- Updated event callback. [Andy J]
-- Updated event callback. [Andy J]
-- Updated event callback. [Andy J]
 - Updated event callback. [Andy J]
 - Fix touch events for UI. [Luc Renambot]
 - Fix index page: "li" layout. [Luc Renambot]
@@ -3096,8 +2948,6 @@ Other
 - Adding icon to leaflet app. [Luc Renambot]
 - Updated tank barrier generation. [Thomas Marrinan]
 - Updated tank game - synchronize displays. [Thomas Marrinan]
-- Updated tank game - synchronize displays. [Thomas Marrinan]
-- Fixed error handler for reading git version. [Thomas Marrinan]
 - Fixed error handler for reading git version. [Thomas Marrinan]
 - FIX: Thumbnail browsers wraps buttons on initialization. [Arthur
   Nishimoto]
@@ -3152,7 +3002,6 @@ Other
 - Removed pdfinfo module. [Luc Renambot]
 - Metadata work. [Luc Renambot]
 - Added debugging for mediastream freezing. [Thomas Marrinan]
-- Added debugging for mediastream freezing. [Thomas Marrinan]
 - CHANGE: Only thumbnail browser receives app interaction events
   regardless of pointer state FIX: Custom app animations. [Arthur
   Nishimoto]
@@ -3185,15 +3034,10 @@ Other
 - Merge branch 'master' of bitbucket.org:sage2/sage2. [Thomas Marrinan]
 - Leaflet + D3 map example showing crime around UIC. [Andy J]
 - Merging. [Andy J]
-- Merging. [Andy J]
 - Clicking updates entire map to different data view. [Andy J]
 - Fixed bug for background with color only. [Thomas Marrinan]
 - Fixed multiple resource loading bug. [Thomas Marrinan]
 - README.md edited online with Bitbucket. [Tommy Marrinan]
-- README.md edited online with Bitbucket. [Luc Renambot]
-- README.md edited online with Bitbucket. [Luc Renambot]
-- README.md edited online with Bitbucket. [Luc Renambot]
-- README.md edited online with Bitbucket. [Luc Renambot]
 - README.md edited online with Bitbucket. [Luc Renambot]
 - Adding README.md in `zoom` application. [Luc Renambot]
 - Updated youtube download package. [krishnaBharadwaj]
@@ -3228,7 +3072,6 @@ Other
   UI is now a drop zone too. [Luc Renambot]
 - Merge branch 'master' into widgets. [krishnaBharadwaj]
 - README.md edited online with Bitbucket. [Luc Renambot]
-- README.md edited online with Bitbucket. [Luc Renambot]
 - Color tweaks. [Andy J]
 - Fixed svg / viewbox scaling. [Andy J]
 - Fixes svg / viewbox scaling. [Andy J]
@@ -3246,7 +3089,6 @@ Other
   test against its presence to detect if running in SAGE2 or standalone.
   [Luc Renambot]
 - Better use of local svg icons. [Andy J]
-- Local svg icon set. [Andy J]
 - Local svg icon set. [Andy J]
 - Weather icons are now svg for better scalability. [Andy J]
 - Added better error checking to image load. [Andy J]
@@ -3324,29 +3166,14 @@ Other
 - Made weather continuous refresh - fixed tile mode. [aej]
 - Cleaned up weather app. [aej]
 - Weather.js edited online with Bitbucket. [Andrew Johnson]
-- Weather.js edited online with Bitbucket. [Andrew Johnson]
-- Weather.js edited online with Bitbucket. [Andrew Johnson]
-- Weather.js edited online with Bitbucket. [Andrew Johnson]
-- Weather.js edited online with Bitbucket. [Andrew Johnson]
 - Fixed #11. SAGE UI resizes to fit all content on the page. [Thomas
   Marrinan]
-- Weather.js edited online with Bitbucket. [Andrew Johnson]
-- Weather.js edited online with Bitbucket. [Andrew Johnson]
-- Weather.js edited online with Bitbucket. [Andrew Johnson]
-- Weather.js edited online with Bitbucket. [Andrew Johnson]
-- Weather.js edited online with Bitbucket. [Andrew Johnson]
-- Weather.js edited online with Bitbucket. [Andrew Johnson]
 - Weather.js edited online with Bitbucket. [Andrew Johnson]
 - Added tiling and clear functions (in the UI and in the REPL command
   line)    code translated from Ratko's DIM in SAGE. [Luc Renambot]
 - New license headers. [Luc Renambot]
 - New SAGE2 license from UIC-UH. [Luc Renambot]
 - Weather.js edited online with Bitbucket. [Andrew Johnson]
-- Weather.js edited online with Bitbucket. [Andrew Johnson]
-- Weather.js edited online with Bitbucket. [Andrew Johnson]
-- Weather.js edited online with Bitbucket. [Andrew Johnson]
-- Weather.js edited online with Bitbucket. [Andrew Johnson]
-- README.md edited online with Bitbucket. [Tommy Marrinan]
 - README.md edited online with Bitbucket. [Tommy Marrinan]
 - Added Andy's weather app Initial commit Can run only one instance of
   the app because of scope pollution: to be fixed. [Luc Renambot]
@@ -3358,15 +3185,13 @@ Other
 - Split the code for the display side (new file "ui-builder.js") which
   builds most of the UI elements visible on the wall (except apps which
   remains in index.html) [Luc Renambot]
-
-  JSHint on the client-side code
 - Quick fix: disable background image in the overview display (id -1)
   also: google maps seems to be creating a problem. [Luc Renambot]
 - Added a new display client (-1): shows the whole display   press 'f'
   to cyle between fit view and native view   in fit mode, adjust to the
-  browser window size. [Luc Renambot]
-
+  browser window size.
   Added a 'clear' command in the server REPL (read–eval–print loop)
+  [Luc Renambot]
 - Bringing sessions to the UI (save and load) [Luc Renambot]
 - Added basic session support, saved into JSON files into 'sessions'
   folder:   start server in interactive mode:  -i   commands:
@@ -3374,12 +3199,6 @@ Other
   a running session (no name specified goes to 'default')       load
   [name] -> load a saved session (no name specified goes to 'default')
   [Luc Renambot]
-
-  Add basic state for the 'bounce' application
-    might not still complete
-
-  Updated 'observe' polyfill
-    not full happy yet with this
 - NEW: Node-Omicron wand controls. [anishi2]
 - Merge remote-tracking branch 'remotes/origin/master' into TouchUI.
   [Arthur Nishimoto]
@@ -3391,8 +3210,6 @@ Other
 - Added fps control (30fps) [SAGE]
 - Added demo from https://playcanvas.com Seems it wants to be unity3d
   all in browser. [Luc Renambot]
-- README.md edited online with Bitbucket. [Tommy Marrinan]
-- README.md edited online with Bitbucket. [Tommy Marrinan]
 - README.md edited online with Bitbucket. [Tommy Marrinan]
 - Updated PDF library. [Luc Renambot]
 - Fixing certificate business. [Luc Renambot]
@@ -3516,8 +3333,6 @@ Other
 - Merge branch 'TouchUI' of https://bitbucket.org/sage2/sage2 into
   TouchUI. [Arthur Nishimoto]
 - README.md edited online with Bitbucket. [tmarrinan]
-- README.md edited online with Bitbucket. [tmarrinan]
-- README.md edited online with Bitbucket. [tmarrinan]
 - Pass to jshint. [Luc Renambot]
 - README.md edited online with Bitbucket. [tmarrinan]
 - Updated dante (windows) [tmarrinan]
@@ -3525,10 +3340,7 @@ Other
 - README.md edited online with Bitbucket. [tmarrinan]
 - Fixed package.json typo. [Thomas Marrinan]
 - README.md edited online with Bitbucket. [tmarrinan]
-- README.md edited online with Bitbucket. [tmarrinan]
-- README.md edited online with Bitbucket. [tmarrinan]
 - Merged with master. [Thomas Marrinan]
-- Update README.md. [Luc Renambot]
 - Update README.md. [Luc Renambot]
 - Added license notice in CSS files. [Luc Renambot]
 - Added license information in .js files. [Luc Renambot]
@@ -3550,24 +3362,13 @@ Other
 - Merge branch 'master' of https://github.com/uic-evl/SAGE2. [Arthur
   Nishimoto]
 - Update README.md. [tmarrinan]
-- Update README.md. [tmarrinan]
-- Update README.md. [tmarrinan]
-- Update README.md. [tmarrinan]
-- Update README.md. [tmarrinan]
-- Update README.md. [tmarrinan]
-- Update README.md. [tmarrinan]
 - Update README.md. [Luc Renambot]
-- Update README.md. [tmarrinan]
-- Update README.md. [tmarrinan]
 - Update README.md. [tmarrinan]
 - FIX: Windows HTTPS keys script now runs multiple lines. [Arthur
   Nishimoto]
 - Update README.md. [tmarrinan]
-- Update README.md. [tmarrinan]
-- Update README.md. [tmarrinan]
 - Fixed icewall config - default ports. [Thomas Marrinan]
 - Updated icewall GO scripts. [Thomas Marrinan]
-- Updated Readme.md. [Thomas Marrinan]
 - Updated Readme.md. [Thomas Marrinan]
 - Updated package.json. [Thomas Marrinan]
 - Merged package.json. [Thomas Marrinan]
@@ -3578,54 +3379,21 @@ Other
 - New apps size capped at display width and height. [Thomas Marrinan]
 - Fixed pushing media stream to remote site. [Thomas Marrinan]
 - Working on pushing media stream to remote site. [Thomas Marrinan]
-- Working on pushing media stream to remote site. [Thomas Marrinan]
-- Working on pushing media stream to remote site. [Thomas Marrinan]
-- Working on pushing media stream to remote site. [Thomas Marrinan]
-- Working on pushing media stream to remote site. [Thomas Marrinan]
-- Working on pushing media stream to remote site. [Thomas Marrinan]
-- Working on pushing media stream to remote site. [Thomas Marrinan]
-- Working on pushing media stream to remote site. [Thomas Marrinan]
-- Working on pushing media stream to remote site. [Thomas Marrinan]
-- Working on pushing media stream to remote site. [Thomas Marrinan]
-- Working on pushing media stream to remote site. [Thomas Marrinan]
-- Working on pushing media stream to remote site. [Thomas Marrinan]
-- Working on pushing media stream to remote site. [Thomas Marrinan]
-- Working on pushing media stream to remote site. [Thomas Marrinan]
 - Fixed screen sharing. [Thomas Marrinan]
 - Cleaned out commented out code. [Thomas Marrinan]
 - Pushing apps to remote sites complete. [Thomas Marrinan]
 - Push app to remote server. [Thomas Marrinan]
-- Push app to remote server. [Thomas Marrinan]
-- Push app to remote server. [Thomas Marrinan]
-- Push app to remote server. [Thomas Marrinan]
-- Push app to remote server. [Thomas Marrinan]
-- Push app to remote server. [Thomas Marrinan]
-- Push app to remote server. [Thomas Marrinan]
-- Push app to remote server. [Thomas Marrinan]
-- Push app to remote server. [Thomas Marrinan]
 - Condense app creating. [Thomas Marrinan]
-- Initial remote interaction as apps. [Thomas Marrinan]
-- Initial remote interaction as apps. [Thomas Marrinan]
-- Initial remote interaction as apps. [Thomas Marrinan]
-- Initial remote interaction as apps. [Thomas Marrinan]
-- Initial remote interaction as apps. [Thomas Marrinan]
-- Initial remote interaction as apps. [Thomas Marrinan]
-- Initial remote interaction as apps. [Thomas Marrinan]
-- Initial remote interaction as apps. [Thomas Marrinan]
 - Initial remote interaction as apps. [Thomas Marrinan]
 - Update interaction and SAGE UI for Apps. [Thomas Marrinan]
 - Merge branch 'clean' of github.com:tmarrinan/WebSAGE into clean.
   [Thomas Marrinan]
 - Added try/catch for key loading and appropriate error printout. [Luc
   Renambot]
-
-  Luc
 - Add apps through drag-and-drop url and file browser on server. [Thomas
   Marrinan]
 - Added media stream app. [Thomas Marrinan]
 - Image, video, and pdf applications working. [Thomas Marrinan]
-- Initial step where everything is an application. [Thomas Marrinan]
-- Initial step where everything is an application. [Thomas Marrinan]
 - Initial step where everything is an application. [Thomas Marrinan]
 - Webbrowser support from external app. [Thomas Marrinan]
 - Added event for pointer scroll. [Thomas Marrinan]
@@ -3640,7 +3408,6 @@ Other
 - Fix. [Luc Renambot]
 - Reload display page after server crashes. [Luc Renambot]
 - Improved media stream chunks and video sync. [Thomas Marrinan]
-- Improved media stream chunks and video sync. [Thomas Marrinan]
 - Started clean of sagePointer and sageUI. [Thomas Marrinan]
 - Fixed youtube - avoids 3d mp4. [Thomas Marrinan]
 - Added streaming in chunks - allows smooth pointer actions. [Thomas
@@ -3650,16 +3417,6 @@ Other
 - Added streaming in chunks - allows smooth pointer actions. [Thomas
   Marrinan]
 - Cleaned comments. [Thomas Marrinan]
-- Cleaned remote site pushing. [Thomas Marrinan]
-- Cleaned remote site pushing. [Thomas Marrinan]
-- Cleaned remote site pushing. [Thomas Marrinan]
-- Cleaned remote site pushing. [Thomas Marrinan]
-- Cleaned remote site pushing. [Thomas Marrinan]
-- Cleaned remote site pushing. [Thomas Marrinan]
-- Cleaned remote site pushing. [Thomas Marrinan]
-- Cleaned remote site pushing. [Thomas Marrinan]
-- Cleaned remote site pushing. [Thomas Marrinan]
-- Cleaned remote site pushing. [Thomas Marrinan]
 - Cleaned remote site pushing. [Thomas Marrinan]
 - Fixed remote server. [Thomas Marrinan]
 - Merge branch 'clean' of github.com:tmarrinan/WebSAGE into clean.
@@ -3676,21 +3433,14 @@ Other
 - Ported sagePointer functionality to sagePointer.js - used by both
   sageUI and sagePointerApp. [Thomas Marrinan]
 - Clean -basic functionality for sageUI. [Thomas Marrinan]
-- Clean -basic functionality for sageUI. [Thomas Marrinan]
 - Clean -basic functionality for display and sagePointer. [Thomas
   Marrinan]
-- Continued clean up. [Thomas Marrinan]
 - Continued clean up. [Thomas Marrinan]
 - Merge branch 'master' into clean. [Thomas Marrinan]
 - Initial commit. [Thomas Marrinan]
 - Switched back to awesomium. [Victor Mateevitsi]
 - Switched to working version of awesomium. [Victor Mateevitsi]
 - Update README.md. [renambot]
-
-  another little fix
-- Update README.md. [renambot]
-
-  switch openmpi to openmp (OpenMP used to do parallel RGB pixel conversion from Awesomium)
 - Using javascript 'strict' mode in server fixed a few variable
   definitions. [Luc Renambot]
 - Using JSON5 for configuration file, just a little less strict. Still
@@ -3701,11 +3451,6 @@ Other
 - Added comments. [Thomas Marrinan]
 - Added a configuration for experimental features. First one is web-
   browser. [Luc Renambot]
-
-  Add this in the configuration file:
-  	"experimental": {
-  		"webbrowser": true
-  	},
 - Added HOSTNAME in key generation Updated email address in
   package.json. [Luc Renambot]
 - Adding comments. [Thomas Marrinan]
@@ -3730,7 +3475,6 @@ Other
 - Fixed small bugs so it can run on iridium. [Victor Mateevitsi]
 - Added documentation for Mac OSX and Linux. [Victor Mateevitsi]
 - Documentation for webBrowser installation. [Victor Mateevitsi]
-- Documentation for webBrowser installation. [Victor Mateevitsi]
 - Initial version of webBrowser. [Victor Mateevitsi]
 - Added more background options - fit, stretch, and tile. [Thomas
   Marrinan]
@@ -3739,39 +3483,20 @@ Other
 - Added more background options - fit, stretch, and tile. [Thomas
   Marrinan]
 - Adding support for remote apps. [Thomas Marrinan]
-- Adding support for remote apps. [Thomas Marrinan]
-- Adding support for remote apps. [Thomas Marrinan]
-- Adding support for remote apps. [Thomas Marrinan]
-- Adding support for remote apps. [Thomas Marrinan]
-- Adding support for remote apps. [Thomas Marrinan]
 - Merged with master. [Thomas Marrinan]
 - Allows for tiled background. [Thomas Marrinan]
-- Allows for tiled background. [Thomas Marrinan]
 - Remote site connection based on address and port. [Thomas Marrinan]
-- Fixed audio bugs for video playback. [Thomas Marrinan]
-- Fixed audio bugs for video playback. [Thomas Marrinan]
-- Fixed audio bugs for video playback. [Thomas Marrinan]
-- Fixed audio bugs for video playback. [Thomas Marrinan]
-- Fixed audio bugs for video playback. [Thomas Marrinan]
-- Fixed audio bugs for video playback. [Thomas Marrinan]
-- Fixed audio bugs for video playback. [Thomas Marrinan]
-- Fixed audio bugs for video playback. [Thomas Marrinan]
-- Fixed audio bugs for video playback. [Thomas Marrinan]
-- Fixed audio bugs for video playback. [Thomas Marrinan]
 - Fixed audio bugs for video playback. [Thomas Marrinan]
 - Merged with remoteSahring. [Thomas Marrinan]
 - About to merge with master. [Thomas Marrinan]
 - Edit GO-scripts. [Thomas Marrinan]
 - Updated iridium config. [tmarrinan]
-- Updated iridium config. [tmarrinan]
 - Added small dealy in mac GO script. [Thomas Marrinan]
 - Fixed screen share removal for remote sites. [Thomas Marrinan]
-- Fixed screen share removal for remote sites. [Thomas Marrinan]
 - Fixed screen share with joining/leaving display client issues. [Thomas
   Marrinan]
 - Fixed screen share with joining/leaving display client issues. [Thomas
   Marrinan]
-- Added secure websocket on same port as server. [Thomas Marrinan]
 - Added secure websocket on same port as server. [Thomas Marrinan]
 - Fix style and clock. [Thomas Marrinan]
 - Merge branch 'remoteSharing' of github.com:tmarrinan/WebSAGE into
@@ -3779,40 +3504,6 @@ Other
 - Fix for key gen. on Mac. [Luc Renambot]
 - Continue trying to connect to remote sites. [Thomas Marrinan]
 - Add mac launch script. [Thomas Marrinan]
-- Initial support for remote screen sharing. [Thomas Marrinan]
-- Initial support for remote screen sharing. [Thomas Marrinan]
-- Initial support for remote screen sharing. [Thomas Marrinan]
-- Initial support for remote screen sharing. [Thomas Marrinan]
-- Initial support for remote screen sharing. [Thomas Marrinan]
-- Initial support for remote screen sharing. [Thomas Marrinan]
-- Initial support for remote screen sharing. [Thomas Marrinan]
-- Initial support for remote screen sharing. [Thomas Marrinan]
-- Initial support for remote screen sharing. [Thomas Marrinan]
-- Initial support for remote screen sharing. [Thomas Marrinan]
-- Initial support for remote screen sharing. [Thomas Marrinan]
-- Initial support for remote screen sharing. [Thomas Marrinan]
-- Initial support for remote screen sharing. [Thomas Marrinan]
-- Initial support for remote screen sharing. [Thomas Marrinan]
-- Initial support for remote screen sharing. [Thomas Marrinan]
-- Initial support for remote screen sharing. [Thomas Marrinan]
-- Initial support for remote screen sharing. [Thomas Marrinan]
-- Initial support for remote screen sharing. [Thomas Marrinan]
-- Initial support for remote screen sharing. [Thomas Marrinan]
-- Initial support for remote screen sharing. [Thomas Marrinan]
-- Initial support for remote screen sharing. [Thomas Marrinan]
-- Initial support for remote screen sharing. [Thomas Marrinan]
-- Initial support for remote screen sharing. [Thomas Marrinan]
-- Initial support for remote screen sharing. [Thomas Marrinan]
-- Initial support for remote screen sharing. [Thomas Marrinan]
-- Initial support for remote screen sharing. [Thomas Marrinan]
-- Initial support for remote screen sharing. [Thomas Marrinan]
-- Initial support for remote screen sharing. [Thomas Marrinan]
-- Initial support for remote screen sharing. [Thomas Marrinan]
-- Initial support for remote screen sharing. [Thomas Marrinan]
-- Initial support for remote screen sharing. [Thomas Marrinan]
-- Initial support for remote screen sharing. [Thomas Marrinan]
-- Initial support for remote screen sharing. [Thomas Marrinan]
-- Initial support for remote screen sharing. [Thomas Marrinan]
 - Initial support for remote screen sharing. [Thomas Marrinan]
 - Fixed default port crash error. [Thomas Marrinan]
 - Merge branch 'remoteSharing' of github.com:tmarrinan/WebSAGE into
@@ -3827,11 +3518,8 @@ Other
 - Updated master. [Thomas Marrinan]
 - Update desktop-cfg.json. [tmarrinan]
 - Update README.md. [tmarrinan]
-- Update README.md. [tmarrinan]
 - Merged with remoteSharing. [Thomas Marrinan]
 - Ready to merge into master. [Thomas Marrinan]
-- Modified remote sharing. [Thomas Marrinan]
-- Modified remote sharing. [Thomas Marrinan]
 - Modified remote sharing. [Thomas Marrinan]
 - Single connection for server to server. [Thomas Marrinan]
 - Fixed thor scripts. [Thomas Marrinan]
@@ -3861,7 +3549,6 @@ Other
 - Show connected and disconnected remote servers. [Thomas Marrinan]
 - Display remote sites. [Thomas Marrinan]
 - Receive message from remote site. [Thomas Marrinan]
-- Receive message from remote site. [Thomas Marrinan]
 - Connect to remote sites. [Thomas Marrinan]
 - Added remote sites to config. [Thomas Marrinan]
 - Initial remote pushing test. [Thomas Marrinan]
@@ -3874,9 +3561,6 @@ Other
   "alternate_hosts": [ "iridium.evl.optiputer.net" ], The field "host"
   is used as primary interface ./GO script in keys folder to generate a
   list of keys at once. [Luc Renambot]
-
-  luc
-- Fixed launch scripts for icewall. [Thomas Marrinan]
 - Fixed launch scripts for icewall. [Thomas Marrinan]
 - Fixed key generation. [tmarrinan]
 - Tested interaction on wall. [Thomas Marrinan]
@@ -3900,9 +3584,6 @@ Other
 - Finalized sagePointer app. [Thomas Marrinan]
 - Merge branch 'master' into sagePointer. [Thomas Marrinan]
 - Update README.md. [tmarrinan]
-- Update README.md. [tmarrinan]
-- Update README.md. [tmarrinan]
-- Update README.md. [tmarrinan]
 - Remove pdfutils from package.json. [Thomas Marrinan]
 - Merged with master. [Thomas Marrinan]
 - Merge branch 'master' into pdfinfo. [Thomas Marrinan]
@@ -3915,8 +3596,6 @@ Other
   hides that window. [Arthur Nishimoto]
 - Added error handling for crashes. [Thomas Marrinan]
 - Modified init_webserver.sh to run without questions. [Luc Renambot]
-
-  Luc
 - Merged with master and added pointer and screen share functions.
   [Thomas Marrinan]
 - Merge branch 'master' into sagePointer. [Thomas Marrinan]
@@ -3966,7 +3645,6 @@ Other
 - Keypress events should work. changed window title to include hostname
   and SageUI. [Jillian Aurisano]
 - Keyboard events should be working. [Jillian Aurisano]
-- Merge with master. [Jillian Aurisano]
 - Merge with master. [Jillian Aurisano]
 - Bug fixes. [tmarrinan]
 - Fixing bugs in interactions. [Jillian Aurisano]
@@ -4046,7 +3724,6 @@ Other
 - Added kinetic.jsjs canvas support. [tmarrinan]
 - Add basic support for processing.js. [tmarrinan]
 - Changed unzip protocol to more robust module. [tmarrinan]
-- Changed unzip protocol to more robust module. [tmarrinan]
 - Fix unzip multiple instance of same file. [tmarrinan]
 - Wihandle window manager resize and multiple youtube formats.
   [tmarrinan]
@@ -4068,8 +3745,6 @@ Other
 - Dynamic adding of images. [tmarrinan]
 - WindowManager drag and drop file upload. [tmarrinan]
 - WindowManager scroll resize. [tmarrinan]
-- Fixed tab spacing. [tmarrinan]
-- Fixed tab spacing. [tmarrinan]
 - Fixed tab spacing. [tmarrinan]
 - Updated windowManager: window positioning. [tmarrinan]
 - Upload initial code. [Thomas Marrinan]

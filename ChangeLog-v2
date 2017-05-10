@@ -171,7 +171,6 @@ V2.0.0
 - Moved broadcast calls to after wsioServer init to avoid crash. [d-k-k]
 - Merge branch 'master' of bitbucket.org:sage2/sage2. [Luc Renambot]
 - Merge branch 'master' of https://bitbucket.org/sage2/sage2. [d-k-k]
-- Merge branch 'master' of https://bitbucket.org/sage2/sage2. [d-k-k]
 - Sabi button edit to electron ready to test. [d-k-k]
 - Making application right-click menu more consistent. [Luc Renambot]
 - Fix delete item with a callback to update the file manager. [Luc
@@ -243,7 +242,6 @@ V2.0.0
 - Fixed improper function declarations, some linting. [AndrewTBurks]
 - Merge branch 'master' into Andrew-Branch. [AndrewTBurks]
 - Bitbucket-pipelines.yml edited online with Bitbucket. [Luc Renambot]
-- Bitbucket-pipelines.yml edited online with Bitbucket. [Luc Renambot]
 - Appveyor. [d-k-k]
 - Support for keys on numbers. [d-k-k]
 - Added auto-refresh option to webview (for 5 min.) [Luc Renambot]
@@ -285,8 +283,6 @@ V2.0.0
 - Fixing mistake in zoom app. [Luc Renambot]
 - Fix title bug in doodle, when loading 'lastDoodle' [Luc Renambot]
 - Merge branch 'master' of bitbucket.org:sage2/sage2. [Luc Renambot]
-- Bitbucket-pipelines.yml edited online with Bitbucket. [Luc Renambot]
-- Bitbucket-pipelines.yml edited online with Bitbucket. [Luc Renambot]
 - Bitbucket-pipelines.yml edited online with Bitbucket. [Luc Renambot]
 - Fix bug in tile size calulation in server (was messing up borders
   calulation) [Luc Renambot]
@@ -563,7 +559,6 @@ V2.0.0
 - Merge. [VanBronckhorst]
 - Disable from palette. [VanBronckhorst]
 - Bugfix. [VanBronckhorst]
-- Bugfix. [VanBronckhorst]
 - [Whiteboard] Typo and bug fix. [Davide Tantillo]
 - [Whiteboard] Resolved bug when erasing and creating selection. [Davide
   Tantillo]
@@ -621,8 +616,6 @@ V2.0.0
   drawing manager and see the update on clientID -1. [Davide Tantillo]
 - Merge branch 'Whiteboard' of https://bitbucket.org/sage2/sage2 into
   Whiteboard. [VanBronckhorst]
-
-  Merge
 - [Whiteboard] Small strokes can become erases. [Davide Tantillo]
 - [Whiteboard] Erasing of not deleted object on client. [Davide
   Tantillo]
@@ -643,8 +636,6 @@ V2.0.0
 - Fixes. [VanBronckhorst]
 - Merge branch 'Whiteboard' of https://bitbucket.org/sage2/sage2 into
   Whiteboard. [VanBronckhorst]
-
-  Merge
 - [Whiteboard] Remove callback corrected. [Davide Tantillo]
 - [Whiteboard] Eliminated addition of ID in dictionaryId so that fake
   object are createrd. [Davide Tantillo]
@@ -659,8 +650,6 @@ V2.0.0
 - Selection in every way. [VanBronckhorst]
 - Merge branch 'Whiteboard' of https://bitbucket.org/sage2/sage2 into
   Whiteboard. [VanBronckhorst]
-
-  merging
 - [Whiteboard] Selection movement and resizing. [Davide Tantillo]
 - [Whiteboard] Start to manage update of multiple object rather than an
   init all. [Davide Tantillo]
@@ -689,8 +678,6 @@ V2.0.0
 - [Whiteboard] Davide schedule (for HCI course) [Davide Tantillo]
 - Merge branch 'Whiteboard' of https://bitbucket.org/sage2/sage2 into
   Whiteboard. [VanBronckhorst]
-
-  Merge.
 - [Whiteboard] Fix load id. [Davide Tantillo]
 - [Whiteboard] Correction on load of id. [Davide Tantillo]
 - [Whiteboard] Correction of inconsistency in the new id management.
@@ -750,8 +737,6 @@ V2.0.0
 - Svg over every tile. [VanBronckhorst]
 - Merge branch 'master' of https://bitbucket.org/sage2/sage2 into
   Whiteboard. [VanBronckhorst]
-
-  merge with last modifications
 - Merge branch 'master' of https://bitbucket.org/sage2/sage2 into
   Whiteboard. [VanBronckhorst]
 - Svg over every tile, style compliant. [VanBronckhorst]
@@ -960,12 +945,9 @@ V2.0.0
 - Fix visibility for irregular tiles. [Luc Renambot]
 - Merged in retronator/sage2-display-span/pull-request (pull request #5)
   [Luc Renambot]
-
-  Support flexible display sizes by spanning across multiple areas.
 - Compatibility with ordinary config files. [Matej Jan]
 - Support for displays spanning multiple screens. [Matej Jan]
 - Remove comments and git stuff from appveyor. [Luc Renambot]
-- Appveyor. [Luc Renambot]
 - Appveyor. [Luc Renambot]
 - Appveyor updating imagemagick. [D K]
 - Merge branch 'master' of https://bitbucket.org/sage2/sage2. [D K]
@@ -1044,15 +1026,11 @@ V2.0.0
 - Right click context menu replacement and start of UI to Display
   messaging. [D K]
 - Merge branch 'master' into sabiUpdater. [D K]
-- Merge branch 'master' into sabiUpdater. [D K]
-- Merge branch 'master' into sabiUpdater. [D K]
-- Merge branch 'master' into sabiUpdater. [D K]
 - Merge with master. [D K]
 - Merge and appveyor changed to use imagemagick 6.9.3-5. [d-k-k]
 - Merge conflict resole on ImageMagick filename. [d-k-k]
 - Forgot the 7z entry name change. [D K]
 - Updated appveyor file to imagemagic 7.0.0-0. [D K]
-- Merge branch 'master' into sabiUpdater. [D K]
 - Merge branch 'master' into sabiUpdater. [D K]
 - Modified appveyor file. [D K]
 - Merge branch 'master' into sabiUpdater. [d-k-k]
@@ -1060,7 +1038,6 @@ V2.0.0
   depoloyment. [D K]
 - Whitespace change to retrigger appveyor. [d-k-k]
 - Fixed error with line break for updating. [d-k-k]
-- Merge branch 'master' into dkbin. [d-k-k]
 - Merge branch 'master' into dkbin. [d-k-k]
 - Trivial change to restart appveyor. It failed due to gs dl timeout. [D
   K]
@@ -1136,8 +1113,6 @@ V2.0.0
   Renambot]
 - Revert "Fix media_stream sharing (desktop sharing): using port instead
   of secure port in id calculation" [Luc Renambot]
-
-  This reverts commit 5797f8ee62daa15ba556c46904610e666b6b01f2.
 - Simple fix to add the site session with addClient for remote sites.
   Requires the config to be edited to add a session entry for each
   remote site. [D K]
@@ -1175,8 +1150,6 @@ V2.0.0
 - Fix bug in googlemap: geocoder function is async, so need to call
   SAGE2Sync to synchronize the state variable. [Luc Renambot]
 - Revert "timezone app bug fixed" [Luc Renambot]
-
-  This reverts commit 13ad88e2dd54ad3d33f03844edf286130bfa951c.
 - Timezone app bug fixed. [andreino7]
 - Adding Dylan's event processing functions. [Luc Renambot]
 - Fixing authors file. [Luc Renambot]
@@ -1280,9 +1253,6 @@ V2.0.0
 - Merge branch 'secure' of https://bitbucket.org/sage2/sage2 into
   secure. [Luc Renambot]
 - Duplicate. [Luc Renambot]
-- Duplicate. [Luc Renambot]
-- Duplicate. [Luc Renambot]
-- Duplicate. [Luc Renambot]
 - Fix duplicate in eslint configuration file. [Luc Renambot]
 - Update on the pointer benchmark. [Luc Renambot]
 - Put a error handler in the write stream for HTTP PUT commands. [Luc
@@ -1328,8 +1298,6 @@ V2.0.0
   function by a path function) [Luc Renambot]
 - Update to the Chrome extension: v1.4.1. Supports multiple walls.
   That's it for now. [Luc Renambot]
-- Appveyor. [Luc Renambot]
-- Appveyor. [Luc Renambot]
 - Appveyor. [Luc Renambot]
 - Updating configuration file with default value for audio:
   audio.initialVolume. [Luc Renambot]
@@ -1377,7 +1345,6 @@ V2.0.0
 - Fix port numbers in filemanager and ui builder. [Luc Renambot]
 - Fix port numbers in admin page. [Luc Renambot]
 - Updated rproxy port names ot match http port names. [Tommy Marrinan]
-- Updated rproxy port names ot match http port names. [Tommy Marrinan]
 - Updated config port naming convention - http: port, https: secure_port
   (legacy support, won't break old configs) [Tommy Marrinan]
 - Initial app audio volume configurable via config.json option
@@ -1420,8 +1387,6 @@ V2.0.0
   Renambot]
 - Fixing typo in cheat-sheet (thanks Arthur) [Luc Renambot]
 - Appveyor. [Luc Renambot]
-- Appveyor. [Luc Renambot]
-- Appveyor. [Luc Renambot]
 - Fix detecting ? key in the UI. [Luc Renambot]
 - Added '?' to display help on wall and web UI. [Luc Renambot]
 - Added a function buildImageBox to display image and restructured the
@@ -1431,7 +1396,6 @@ V2.0.0
 - Add license file for webix. [Luc Renambot]
 - Add cheat-sheet in images. [Luc Renambot]
 - Update webix library. [Luc Renambot]
-- Appveyor. [Luc Renambot]
 - Appveyor. [Luc Renambot]
 - Add position and size optional parameters to the sage_upload.js
   command line tool. [Luc Renambot]
@@ -1448,7 +1412,6 @@ V2.0.0
 - Updating traffic layer in GoogleMaps: url for the traffic tiles
   changed. [Luc Renambot]
 - Appveyor. [Luc Renambot]
-- Appveyor. [Luc Renambot]
 - Updated car_threejs app for API changes in Three.js. [Luc Renambot]
 - Added public/sage2.appcache in gitignore. [Luc Renambot]
 - Updated lib three.js r73. [Luc Renambot]
@@ -1459,8 +1422,6 @@ V2.0.0
   report). [Luc Renambot]
 - Appveyor. [Luc Renambot]
 - Merge tag 'v1.0.0-Koolau' [Luc Renambot]
-
-  v1.0.0-Koolau
 - Cheat sheet. [Luc Renambot]
 - Put back the close icon in the titlebar. [Luc Renambot]
 - Fix corner and right-click (again) [Luc Renambot]
@@ -1492,7 +1453,6 @@ V2.0.0
 - Disable 'x' key to quit googlemaps. [Luc Renambot]
 - Disabled 'x' key to close builtin apps. [Luc Renambot]
 - Change printouts. [Luc Renambot]
-- Change printouts. [Luc Renambot]
 - Loading the right picture from state in Welcome app. [Luc Renambot]
 - Adding missing fields when sharing app with RPC (it might still need
   the app to be installed locally) [Luc Renambot]
@@ -1511,15 +1471,11 @@ V2.0.0
 - Adding backend support for admin password. [Luc Renambot]
 - Removed builtin git for now. [Luc Renambot]
 - Appveyor. [Luc Renambot]
-- Appveyor. [Luc Renambot]
-- Appveyor. [Luc Renambot]
-- Appveyor. [Luc Renambot]
 - Registration hostname changed (again) [Luc Renambot]
 - Added sage2_off script for Windows. [Luc Renambot]
 - Appveyor. [Luc Renambot]
 - Testing self-extract zip. [Luc Renambot]
 - Tweak win scripts. [Luc Renambot]
-- Win. [Luc Renambot]
 - Win. [Luc Renambot]
 - Tweak scripts. [Luc Renambot]
 - Appveyor. [Luc Renambot]
@@ -1621,8 +1577,6 @@ V2.0.0
 - Appveyor. [Luc Renambot]
 - Sabi.js for windows fix. [Luc Renambot]
 - Appveyor. [Luc Renambot]
-- Appveyor. [Luc Renambot]
-- Appveyor. [Luc Renambot]
 - Adding sabi script. [Luc Renambot]
 - Ignoring config folder. [Luc Renambot]
 - Fixing loading app from the registry. [Luc Renambot]
@@ -1641,7 +1595,6 @@ V2.0.0
 - Added unsync svg. [Tommy Marrinan]
 - Bring back icons when synced. [Tommy Marrinan]
 - Merged master into data-sync. [Tommy Marrinan]
-- Fix bg obj when moving app. [Tommy Marrinan]
 - Fix bg obj when moving app. [Tommy Marrinan]
 - Merged with master - fixed conflicts. [Tommy Marrinan]
 - Add dante to tmarrinan config. [Tommy Marrinan]
@@ -1671,5 +1624,4 @@ V2.0.0
 - Merge branch 'master' into data-sync. [Tommy Marrinan]
 - Added default widget button for share with remote site. [Tommy
   Marrinan]
-
 
