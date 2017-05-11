@@ -287,17 +287,17 @@ function pointerPress(event) {
 	var id = uniqueID;
 	var btn;
 	if (event.type === "touchstart") {
-		var touchId = event.touches[event.touches.length-1].identifier;
-		if (touchId >= 16)
+		var touchId = event.touches[event.touches.length - 1].identifier;
+		if (touchId >= 16) {
 			return;
+		}
 		id = uniqueID + "|" + touchId;
 		wsio.emit('startSagePointer', {id: id, label: "touch:" + touchId, color: "#FFFFFF", sourceType: "Touch"});
 		btn = "left";
-		var x = event.touches[event.touches.length-1].clientX + ui.offsetX;
-		var y = event.touches[event.touches.length-1].clientY + ui.offsetY;
+		var x = event.touches[event.touches.length - 1].clientX + ui.offsetX;
+		var y = event.touches[event.touches.length - 1].clientY + ui.offsetY;
 		wsio.emit('pointerPosition', {id: id, pointerX: x, pointerY: y});
-	}
-	else {
+	} else {
 		console.log("mouse press");
 		var btnName = ["left", "middle", "right"];
 		btn = btnName[event.button];
@@ -313,12 +313,12 @@ function pointerRelease(event) {
 	var btn;
 	if (event.type === "touchend") {
 		var touchId = event.changedTouches[0].identifier;
-		if (touchId >= 16)
+		if (touchId >= 16) {
 			return;
+		}
 		id = uniqueID + "|" + touchId;
 		btn = "left";
-	}
-	else {
+	} else {
 		var btnName = ["left", "middle", "right"];
 		btn = btnName[event.button];
 	}
@@ -336,13 +336,13 @@ function pointerMove(event) {
 	var x, y;
 	if (event.type === "touchmove") {
 		var touchId = event.changedTouches[0].identifier;
-		if (touchId >= 16)
+		if (touchId >= 16) {
 			return;
+		}
 		id = uniqueID + "|" + touchId;
 		x = event.changedTouches[0].clientX + ui.offsetX;
 		y = event.changedTouches[0].clientY + ui.offsetY;
-	}
-	else {
+	} else {
 		x = event.clientX + ui.offsetX;
 		y = event.clientY + ui.offsetY;
 	}
@@ -373,8 +373,8 @@ function setupListeners() {
 		uniqueID = data.UID;
 		var i;
 		wsio.emit('registerInteractionClient', {name: "Master", color: "#FFFFFF"});
-		for (i=0; i<16; i++) {
-			wsio.emit('registerInteractionClient', {id: uniqueID + "|" + i, name: "touch:"+i, color: "#FFFFFF"});
+		for (i = 0; i < 16; i++) {
+			wsio.emit('registerInteractionClient', {id: uniqueID + "|" + i, name: "touch:" + i, color: "#FFFFFF"});
 		}
 		wsio.emit('startSagePointer', {label: "Master", color: "#FFFFFF", sourceType: "Pointer"});
 	});

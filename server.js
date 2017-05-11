@@ -651,7 +651,7 @@ function closeWebSocketClient(wsio) {
 			" (" + wsio.clientType + " " + wsio.clientID + ")");
 		hidePointer(wsio.id);
 		delete sagePointers[wsio.id];
-		for (i=0; i<16; i++) {
+		for (i = 0; i < 16; i++) {
 			hidePointer(wsio.id + "|" + i);
 			removeControlsForUser(wsio.id + "|" + i);
 			delete sagePointers[wsio.id + "|" + i];
@@ -1379,8 +1379,9 @@ function wsRegisterInteractionClient(wsio, data) {
 
 function wsStartSagePointer(wsio, data) {
 	var id = wsio.id;
-	if (data && data.id)
+	if (data && data.id) {
 		id = data.id;
+	}
 
 	// Switch interaction from window mode (on web) to app mode (wall)
 	remoteInteraction[id].interactionMode = remoteInteraction[id].getPreviousMode();
@@ -1393,8 +1394,9 @@ function wsStartSagePointer(wsio, data) {
 
 function wsStopSagePointer(wsio, data) {
 	var id = wsio.id;
-	if (data && data.id)
+	if (data && data.id) {
 		id = data.id;
+	}
 
 	hidePointer(id);
 
@@ -1415,8 +1417,9 @@ function wsStopSagePointer(wsio, data) {
 
 function wsPointerPress(wsio, data) {
 	var id = wsio.id;
-	if (data && data.id)
+	if (data && data.id) {
 		id = data.id;
+	}
 
 	var pointerX = sagePointers[id].left;
 	var pointerY = sagePointers[id].top;
@@ -1426,8 +1429,9 @@ function wsPointerPress(wsio, data) {
 
 function wsPointerRelease(wsio, data) {
 	var id = wsio.id;
-	if (data && data.id)
+	if (data && data.id) {
 		id = data.id;
+	}
 
 	var pointerX = sagePointers[id].left;
 	var pointerY = sagePointers[id].top;
@@ -1443,8 +1447,9 @@ function wsPointerRelease(wsio, data) {
 
 function wsPointerDblClick(wsio, data) {
 	var id = wsio.id;
-	if (data && data.id)
+	if (data && data.id) {
 		id = data.id;
+	}
 
 	var pointerX = sagePointers[id].left;
 	var pointerY = sagePointers[id].top;
@@ -1454,16 +1459,18 @@ function wsPointerDblClick(wsio, data) {
 
 function wsPointerPosition(wsio, data) {
 	var id = wsio.id;
-	if (data && data.id)
+	if (data && data.id) {
 		id = data.id;
+	}
 
 	pointerPosition(id, data);
 }
 
 function wsPointerMove(wsio, data) {
 	var id = wsio.id;
-	if (data && data.id)
+	if (data && data.id) {
 		id = data.id;
+	}
 
 	var pointerX = sagePointers[id].left;
 	var pointerY = sagePointers[id].top;
@@ -1473,8 +1480,9 @@ function wsPointerMove(wsio, data) {
 
 function wsPointerScrollStart(wsio, data) {
 	var id = wsio.id;
-	if (data && data.id)
+	if (data && data.id) {
 		id = data.id;
+	}
 
 	var pointerX = sagePointers[id].left;
 	var pointerY = sagePointers[id].top;
@@ -1484,8 +1492,9 @@ function wsPointerScrollStart(wsio, data) {
 
 function wsPointerScroll(wsio, data) {
 	var id = wsio.id;
-	if (data && data.id)
+	if (data && data.id) {
 		id = data.id;
+	}
 
 	// Casting the parameters to correct type
 	data.wheelDelta = parseInt(data.wheelDelta, 10);
@@ -1495,16 +1504,18 @@ function wsPointerScroll(wsio, data) {
 
 function wsPointerScrollEnd(wsio, data) {
 	var id = wsio.id;
-	if (data && data.id)
+	if (data && data.id) {
 		id = data.id;
+	}
 
 	pointerScrollEnd(id);
 }
 
 function wsPointerDraw(wsio, data) {
 	var id = wsio.id;
-	if (data && data.id)
+	if (data && data.id) {
 		id = data.id;
+	}
 
 	pointerDraw(id, data);
 }
