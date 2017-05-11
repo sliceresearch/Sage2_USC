@@ -33,6 +33,7 @@
 
 window.URL = (window.URL || window.webkitURL || window.msURL || window.oURL);
 
+var uniqueID;
 var clientID;
 var wsio;
 
@@ -282,7 +283,78 @@ function SAGE2_init() {
 	});
 }
 
+function pointerPress(event) {
+	var id = uniqueID;
+	var btn;
+	if (event.type === "touchstart") {
+		var touchId = event.touches[event.touches.length-1].identifier;
+		id = uniqueID + "|" + touchId;
+		wsio.emit('startSagePointer', {id: id, label: "touch:" + touchId, color: "#FFFFFF", sourceType: "Touch"});
+		btn = "left";
+		var x = event.touches[event.touches.length-1].clientX + ui.offsetX;
+		var y = event.touches[event.touches.length-1].clientY + ui.offsetY;
+		wsio.emit('pointerPosition', {id: id, pointerX: x, pointerY: y});
+	}
+	else {
+		console.log("mouse press");
+		var btnName = ["left", "middle", "right"];
+		btn = btnName[event.button];
+	}
+	wsio.emit('pointerPress', {id: id, button: btn});
+
+	event.stopPropagation();
+	event.preventDefault();
+}
+
+function pointerRelease(event) {
+	var id = uniqueID;
+	var btn;
+	if (event.type === "touchend") {
+		var touchId = event.changedTouches[0].identifier;
+		id = uniqueID + "|" + touchId;
+		btn = "left";
+	}
+	else {
+		var btnName = ["left", "middle", "right"];
+		btn = btnName[event.button];
+	}
+	wsio.emit('pointerRelease', {id: id, button: btn});
+	if (event.type === "touchend") {
+		wsio.emit('stopSagePointer', {id: id});
+	}
+
+	event.stopPropagation();
+	event.preventDefault();
+}
+
+function pointerMove(event) {
+	var id = uniqueID;
+	var x, y;
+	if (event.type === "touchmove") {
+		var touchId = event.changedTouches[0].identifier;
+		id = uniqueID + "|" + touchId;
+		x = event.changedTouches[0].clientX + ui.offsetX;
+		y = event.changedTouches[0].clientY + ui.offsetY;
+	}
+	else {
+		x = event.clientX + ui.offsetX;
+		y = event.clientY + ui.offsetY;
+	}
+	wsio.emit('pointerPosition', {id: id, pointerX: x, pointerY: y});
+
+	event.stopPropagation();
+	event.preventDefault();
+}
+
 function setupListeners() {
+	document.addEventListener('mousedown',  pointerPress,   false);
+	document.addEventListener('mouseup',    pointerRelease, false);
+	document.addEventListener('mousemove',  pointerMove,    false);
+	document.addEventListener('touchstart', pointerPress,   false);
+	document.addEventListener('touchend',   pointerRelease, false);
+	document.addEventListener('touchmove',  pointerMove,    false);
+
+
 	wsio.on('initialize', function(data) {
 		var startTime  = new Date(data.start);
 
@@ -291,6 +363,17 @@ function setupListeners() {
 
 		// Request list of assets
 		wsio.emit('requestStoredFiles');
+
+		uniqueID = data.UID;
+		var i;
+		wsio.emit('registerInteractionClient', {name: "Master", color: "#FFFFFF"});
+		for (i=0; i<16; i++) {
+			wsio.emit('registerInteractionClient', {id: uniqueID + "|" + i, name: "touch:"+i, color: "#FFFFFF"});
+		}
+		wsio.emit('startSagePointer', {label: "Master", color: "#FFFFFF", sourceType: "Pointer"});
+
+		wsio.emit('startSagePointer', {id: uniqueID + "|0", label: "touch:0", color: "#FFFFFF", sourceType: "Touch"});
+		wsio.emit('pointerPosition', {id: uniqueID + "|0", pointerX: 100, pointerY: 100});
 	});
 
 	wsio.on('setAsMasterDisplay', function() {

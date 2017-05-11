@@ -28,6 +28,7 @@ body {
 	height: 100%;
 	cursor: none;
 	overflow: hidden;
+	touch-action: none;
 }
 
 #background {

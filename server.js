@@ -649,6 +649,14 @@ function closeWebSocketClient(wsio) {
 	if (wsio.clientType === "display") {
 		console.log(sageutils.header("Disconnect") + chalk.bold.red(wsio.id) +
 			" (" + wsio.clientType + " " + wsio.clientID + ")");
+		hidePointer(wsio.id);
+		delete sagePointers[wsio.id];
+		for (i=0; i<16; i++) {
+			hidePointer(wsio.id + "|" + i);
+			removeControlsForUser(wsio.id + "|" + i);
+			delete sagePointers[wsio.id + "|" + i];
+			delete remoteInteraction[wsio.id + "|" + i];
+		}
 	} else {
 		if (wsio.clientType) {
 			console.log(sageutils.header("Disconnect") + chalk.bold.red(wsio.id) + " (" + wsio.clientType + ")");
@@ -847,6 +855,7 @@ function initializeWSClient(wsio, reqConfig, reqVersion, reqTime, reqConsole) {
 	}
 
 	if (wsio.clientType === "display") {
+		createSagePointer(wsio.id);
 		initializeExistingSagePointers(wsio);
 		initializeExistingPartitions(wsio);
 		initializeExistingApps(wsio);
@@ -1319,14 +1328,24 @@ function wsRegisterInteractionClient(wsio, data) {
 	var key;
 
 	// Update color and name of pointer when UI connects
-	sagePointers[wsio.id].color = data.color;
-	sagePointers[wsio.id].name  = data.name;
+	var id = wsio.id;
+	if (data && data.id) {
+		id = data.id;
+		createSagePointer(id);
+	}
+
+	sagePointers[id].color = data.color;
+	sagePointers[id].name  = data.name;
+	sagePointers[id].left = config.resolution.width;
+	sagePointers[id].top = config.resolution.height;
+	sagePointers[id].visibleLeft = config.resolution.width;
+	sagePointers[id].visibleTop = config.resolution.height;
 
 	if (program.trackUsers === true) {
 		var newUser = true;
 		for (key in users) {
 			if (users[key].name === data.name && users[key].color.toLowerCase() === data.color.toLowerCase()) {
-				users[key].ip = wsio.id;
+				users[key].ip = id;
 				if (users[key].actions === undefined) {
 					users[key].actions = [];
 				}
@@ -1335,20 +1354,20 @@ function wsRegisterInteractionClient(wsio, data) {
 			}
 		}
 		if (newUser === true) {
-			var id = getNewUserId();
-			users[id] = {};
-			users[id].name = data.name;
-			users[id].color = data.color;
-			users[id].ip = wsio.id;
-			if (users[id].actions === undefined) {
-				users[id].actions = [];
+			var uid = getNewUserId();
+			users[uid] = {};
+			users[uid].name = data.name;
+			users[uid].color = data.color;
+			users[uid].ip = id;
+			if (users[uid].actions === undefined) {
+				users[uid].actions = [];
 			}
-			users[id].actions.push({type: "connect", data: null, time: Date.now()});
+			users[uid].actions.push({type: "connect", data: null, time: Date.now()});
 		}
 	} else {
 		for (key in users) {
 			if (users[key].name === data.name && users[key].color.toLowerCase() === data.color.toLowerCase()) {
-				users[key].ip = wsio.id;
+				users[key].ip = id;
 				if (users[key].actions === undefined) {
 					users[key].actions = [];
 				}
@@ -1359,43 +1378,59 @@ function wsRegisterInteractionClient(wsio, data) {
 }
 
 function wsStartSagePointer(wsio, data) {
+	var id = wsio.id;
+	if (data && data.id)
+		id = data.id;
+
 	// Switch interaction from window mode (on web) to app mode (wall)
-	remoteInteraction[wsio.id].interactionMode = remoteInteraction[wsio.id].getPreviousMode();
-	broadcast('changeSagePointerMode', {id: sagePointers[wsio.id].id, mode: remoteInteraction[wsio.id].getPreviousMode()});
+	remoteInteraction[id].interactionMode = remoteInteraction[id].getPreviousMode();
+	broadcast('changeSagePointerMode', {id: sagePointers[id].id, mode: remoteInteraction[id].getPreviousMode()});
 
-	showPointer(wsio.id, data);
+	showPointer(id, data);
 
-	addEventToUserLog(wsio.id, {type: "SAGE2PointerStart", data: null, time: Date.now()});
+	addEventToUserLog(id, {type: "SAGE2PointerStart", data: null, time: Date.now()});
 }
 
 function wsStopSagePointer(wsio, data) {
-	hidePointer(wsio.id);
+	var id = wsio.id;
+	if (data && data.id)
+		id = data.id;
+
+	hidePointer(id);
 
 	// return to window interaction mode after stopping pointer
-	remoteInteraction[wsio.id].saveMode();
-	if (remoteInteraction[wsio.id].appInteractionMode()) {
-		remoteInteraction[wsio.id].toggleModes();
-		broadcast('changeSagePointerMode', {id: sagePointers[wsio.id].id, mode: remoteInteraction[wsio.id].interactionMode});
+	remoteInteraction[id].saveMode();
+	if (remoteInteraction[id].appInteractionMode()) {
+		remoteInteraction[id].toggleModes();
+		broadcast('changeSagePointerMode', {id: sagePointers[id].id, mode: remoteInteraction[id].interactionMode});
 	}
 
 	var key;
 	for (key in remoteSharingSessions) {
-		remoteSharingSessions[key].wsio.emit('stopRemoteSagePointer', {id: wsio.id});
+		remoteSharingSessions[key].wsio.emit('stopRemoteSagePointer', {id: id});
 	}
 
-	addEventToUserLog(wsio.id, {type: "SAGE2PointerEnd", data: null, time: Date.now()});
+	addEventToUserLog(id, {type: "SAGE2PointerEnd", data: null, time: Date.now()});
 }
 
 function wsPointerPress(wsio, data) {
-	var pointerX = sagePointers[wsio.id].left;
-	var pointerY = sagePointers[wsio.id].top;
+	var id = wsio.id;
+	if (data && data.id)
+		id = data.id;
 
-	pointerPress(wsio.id, pointerX, pointerY, data);
+	var pointerX = sagePointers[id].left;
+	var pointerY = sagePointers[id].top;
+
+	pointerPress(id, pointerX, pointerY, data);
 }
 
 function wsPointerRelease(wsio, data) {
-	var pointerX = sagePointers[wsio.id].left;
-	var pointerY = sagePointers[wsio.id].top;
+	var id = wsio.id;
+	if (data && data.id)
+		id = data.id;
+
+	var pointerX = sagePointers[id].left;
+	var pointerY = sagePointers[id].top;
 
 	/*
 	if (data.button === 'left')
@@ -1403,47 +1438,75 @@ function wsPointerRelease(wsio, data) {
 	else
 		pointerReleaseRight(wsio.id, pointerX, pointerY);
 	*/
-	pointerRelease(wsio.id, pointerX, pointerY, data);
+	pointerRelease(id, pointerX, pointerY, data);
 }
 
 function wsPointerDblClick(wsio, data) {
-	var pointerX = sagePointers[wsio.id].left;
-	var pointerY = sagePointers[wsio.id].top;
+	var id = wsio.id;
+	if (data && data.id)
+		id = data.id;
 
-	pointerDblClick(wsio.id, pointerX, pointerY);
+	var pointerX = sagePointers[id].left;
+	var pointerY = sagePointers[id].top;
+
+	pointerDblClick(id, pointerX, pointerY);
 }
 
 function wsPointerPosition(wsio, data) {
-	pointerPosition(wsio.id, data);
+	var id = wsio.id;
+	if (data && data.id)
+		id = data.id;
+
+	pointerPosition(id, data);
 }
 
 function wsPointerMove(wsio, data) {
-	var pointerX = sagePointers[wsio.id].left;
-	var pointerY = sagePointers[wsio.id].top;
+	var id = wsio.id;
+	if (data && data.id)
+		id = data.id;
 
-	pointerMove(wsio.id, pointerX, pointerY, data);
+	var pointerX = sagePointers[id].left;
+	var pointerY = sagePointers[id].top;
+
+	pointerMove(id, pointerX, pointerY, data);
 }
 
 function wsPointerScrollStart(wsio, data) {
-	var pointerX = sagePointers[wsio.id].left;
-	var pointerY = sagePointers[wsio.id].top;
+	var id = wsio.id;
+	if (data && data.id)
+		id = data.id;
+
+	var pointerX = sagePointers[id].left;
+	var pointerY = sagePointers[id].top;
 
 	pointerScrollStart(wsio.id, pointerX, pointerY);
 }
 
 function wsPointerScroll(wsio, data) {
+	var id = wsio.id;
+	if (data && data.id)
+		id = data.id;
+
 	// Casting the parameters to correct type
 	data.wheelDelta = parseInt(data.wheelDelta, 10);
 
-	pointerScroll(wsio.id, data);
+	pointerScroll(id, data);
 }
 
 function wsPointerScrollEnd(wsio, data) {
-	pointerScrollEnd(wsio.id);
+	var id = wsio.id;
+	if (data && data.id)
+		id = data.id;
+
+	pointerScrollEnd(id);
 }
 
 function wsPointerDraw(wsio, data) {
-	pointerDraw(wsio.id, data);
+	var id = wsio.id;
+	if (data && data.id)
+		id = data.id;
+
+	pointerDraw(id, data);
 }
 
 function wsKeyDown(wsio, data) {
@@ -5629,6 +5692,8 @@ function createSagePointer(uniqueID, portal) {
 	remoteInteraction[uniqueID] = new Interaction(config);
 	remoteInteraction[uniqueID].local = portal ? false : true;
 
+	console.log("create mode: " + remoteInteraction[uniqueID].interactionMode);
+
 	broadcast('createSagePointer', sagePointers[uniqueID]);
 }
 
@@ -7490,8 +7555,11 @@ function pointerRelease(uniqueID, pointerX, pointerY, data) {
 			break;
 		}
 		case "applications": {
+			console.log("pointer release in app");
 			if (dropSelectedItem(uniqueID, true, portal.id) === null) {
+				console.log("not dropping");
 				if (remoteInteraction[uniqueID].appInteractionMode()) {
+					console.log("app interaction");
 					sendPointerReleaseToApplication(uniqueID, obj.data, pointerX, pointerY, data);
 				}
 			}
