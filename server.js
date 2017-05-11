@@ -47,11 +47,10 @@ var gm            = require('gm');               // graphicsmagick
 var json5         = require('json5');            // Relaxed JSON format
 var qrimage       = require('qr-image');         // qr-code generation
 var sprint        = require('sprint');           // pretty formating (sprintf)
+var WebsocketIO   = require('websocketio');      // creates WebSocket server and clients
+var chalk         = require('chalk');            // used for colorizing the console output
 var imageMagick;                                 // derived from graphicsmagick
 
-var WebsocketIO   = require('websocketio');      // creates WebSocket server and clients
-
-var chalk 				= require('chalk');						 // used for colorizing the console output
 
 // custom node modules
 var assets              = require('./src/node-assets');           // manages the list of files

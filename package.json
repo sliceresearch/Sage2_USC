@@ -73,7 +73,6 @@
 		"ytdl-core": "latest",
 		"websocketio": "latest",
 		"rimraf": "latest",
-		"peer": "latest",
 		"electron": "latest"
 	},
 	"optionalDependencies": {
