@@ -377,9 +377,6 @@ function setupListeners() {
 			wsio.emit('registerInteractionClient', {id: uniqueID + "|" + i, name: "touch:"+i, color: "#FFFFFF"});
 		}
 		wsio.emit('startSagePointer', {label: "Master", color: "#FFFFFF", sourceType: "Pointer"});
-
-		wsio.emit('startSagePointer', {id: uniqueID + "|0", label: "touch:0", color: "#FFFFFF", sourceType: "Touch"});
-		wsio.emit('pointerPosition', {id: uniqueID + "|0", pointerX: 100, pointerY: 100});
 	});
 
 	wsio.on('setAsMasterDisplay', function() {

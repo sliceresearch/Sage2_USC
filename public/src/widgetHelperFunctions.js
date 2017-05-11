@@ -313,10 +313,10 @@ function removeStyleElementForTitleColor(caption) {
 }
 
 function hideWidgetToAppConnectors(appId) {
-	var selectedAppTitle;
+	//var selectedAppTitle;
 	if (appId in controlObjects) {
-		selectedAppTitle = document.getElementById(appId + "_title");
-		selectedAppTitle.className = "windowTitle";
+		//selectedAppTitle = document.getElementById(appId + "_title");
+		//selectedAppTitle.className = "windowTitle";
 		for (var item in controlItems) {
 			if (item.indexOf(appId) > -1) {
 				clearConnectorColor(item, appId);
@@ -339,11 +339,10 @@ function clearConnectorColor(instanceID, appId) {
 			stroke: "rgba(220,220,220,0.8)"
 		});
 	}
-	if (appId in controlObjects) {
-
-		var selectedAppTitle = document.getElementById(appId + "_title");
-		selectedAppTitle.className = "windowTitle";
-	}
+	//if (appId in controlObjects) {
+		//var selectedAppTitle = document.getElementById(appId + "_title");
+		//selectedAppTitle.className = "windowTitle";
+	//}
 }
 
 function moveWidgetToAppConnector(instanceID, x1, y1, x2, y2, cutLength) {
@@ -392,14 +391,14 @@ function setConnectorColor(instanceID, color) {
 }
 
 function showWidgetToAppConnectors(data) {
-	var selectedAppTitle, re, styleCaption;
-	selectedAppTitle = document.getElementById(data.id + "_title");
-	if (!selectedAppTitle) {
-		return;
-	}
-	re = /\.|\:/g;
-	styleCaption = data.user_id.split(re).join("");
-	selectedAppTitle.className = dynamicStyleSheets[styleCaption] ? "title" + styleCaption : "windowTitle";
+	//var selectedAppTitle, re, styleCaption;
+	//selectedAppTitle = document.getElementById(data.id + "_title");
+	//if (!selectedAppTitle) {
+	//	return;
+	//}
+	//re = /\.|\:/g;
+	//styleCaption = data.user_id.split(re).join("");
+	//selectedAppTitle.className = dynamicStyleSheets[styleCaption] ? "title" + styleCaption : "windowTitle";
 	for (var item in controlItems) {
 		if (item.indexOf(data.id) > -1 && controlItems[item].show) {
 			setConnectorColor(item, data.user_color);
