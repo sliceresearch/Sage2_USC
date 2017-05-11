@@ -42,12 +42,12 @@ var StickySchedule = SAGE2_App.extend({
 		this.floorPlanShown = false;
 		this.extraInfoShown = false;
 		this.floorPlanNeedsDraw = false;
-		this.textSize = 20;
+		this.textSize = "30px";
 		this.textColor = "rgba(150, 150, 150, 1.0)";
 		this.defaultFill = "rgba(10, 10, 10, 0.1)";
 		this.defaultStroke = "rgba(180, 180, 180, 0.8)";
-		this.stickyFontSize = 12;
-		this.stickyFontSizeInCell = 19;
+		this.stickyFontSize = "24px";
+		this.stickyFontSizeInCell = "30px";
 		this.turn = 0;
 		this.currentScheduler = 0;
 		this.floorImgW = 0;
@@ -226,7 +226,7 @@ var StickySchedule = SAGE2_App.extend({
 
 		this.snapCanvas.text(gridXEnd / 2, cellY * 0.8, "StickySchedule: Conference Scheduler").attr({
 				fill: this.textColor,
-				'font-size': "40",
+				"font-size": "42px",
 				"text-anchor" : "middle"
 		});
 
@@ -247,7 +247,12 @@ var StickySchedule = SAGE2_App.extend({
 				stroke: this.defaultStroke,
 				strokeWidth: 3
 			});
-			this.snapCanvas.text(cellX + (cellW*0.5), cellY + (dayH*0.5), "Day " + (i+1) + ": " + tday + " (" + tdate + ")").attr({
+			this.snapCanvas.text(cellX + (cellW*0.5), cellY + (dayH*0.4), "Day " + (i+1) + ": " + tday).attr({
+				fill: this.textColor,
+				"font-size": this.textSize,
+				"text-anchor": "middle"
+			});
+			this.snapCanvas.text(cellX + (cellW*0.5), cellY + (dayH*0.8), "(" + tdate + ")").attr({
 				fill: this.textColor,
 				"font-size": this.textSize,
 				"text-anchor": "middle"
@@ -294,17 +299,20 @@ var StickySchedule = SAGE2_App.extend({
 			cellX += cellW;
 		}
 
-		var imgW = sessionW;
-		var imgH = dayH + cellH;
-		var imgX = tableX1 - imgW;
-		var imgY = tableY1 - imgH;
-		this.snapCanvas.rect(imgX, imgY, imgW, imgH).attr({
+		var logoW = sessionW;
+		var logoH = dayH + cellH;
+		var logoX = tableX1 - logoW;
+		var logoY = tableY1 - logoH;
+		this.snapCanvas.rect(logoX, logoY, logoW, logoH).attr({
 			fill: this.defaultFill,
 			stroke: this.defaultStroke,
 			strokeWidth: 3
 		});
-		imgX = imgX + ((imgW-imgH) / 2);
-		this.snapCanvas.image(this.resrcPath +"resrc/images/logo.png", imgX, imgY+1.5, imgH, imgH-3);
+		var imgH = parseInt(logoH * 0.9, 10);
+		var imgW = parseInt(imgH * (951.0 / 847.0), 10);
+		var imgX = logoX + (logoW / 2) - (imgW / 2);
+		var imgY = logoY + (logoH / 2) - (imgH / 2);
+		this.snapCanvas.image(this.resrcPath +"resrc/images/logo.png", imgX, imgY, imgW, imgH);
 
 		var hallCounter;
 		var cellCounter = 0;
@@ -385,10 +393,10 @@ var StickySchedule = SAGE2_App.extend({
 			cellX = tableX1;
 		}
 
-		var stickyW = parseInt((this.svgW - gridXEnd) * 0.8, 10);
-		var stickyH = parseInt(this.svgH * 0.8, 10);
-		var offsetX = parseInt(stickyW * 0.1, 10);
-		var offsetY = parseInt(stickyH * 0.1, 10);
+		var stickyW = parseInt((this.svgW - gridXEnd) * 0.9, 10);
+		var stickyH = parseInt(this.svgH * 0.9, 10);
+		var offsetX = parseInt((this.svgW - gridXEnd) * 0.05, 10);
+		var offsetY = parseInt(this.svgH * 0.05, 10);
 		var reservoirRatio = 3;
 
 		var i;
@@ -429,10 +437,10 @@ var StickySchedule = SAGE2_App.extend({
 		var gridHRatio = 0.9;
 		var gridXEnd = parseInt(this.svgW * gridWRatio, 10);
 		var gridYEnd = parseInt(this.svgH * gridHRatio, 10);
-		var stickyW = parseInt((this.svgW - gridXEnd) * 0.8, 10);
-		var stickyH = parseInt(this.svgH * 0.8, 10);
-		var offsetX = parseInt(stickyW * 0.1, 10);
-		var offsetY = parseInt(stickyH * 0.1, 10);
+		var stickyW = parseInt((this.svgW - gridXEnd) * 0.9, 10);
+		var stickyH = parseInt(this.svgH * 0.9, 10);
+		var offsetX = parseInt((this.svgW - gridXEnd) * 0.05, 10);
+		var offsetY = parseInt(this.svgH * 0.05, 10);
 		var reservoirRatio = 3;
 
 		var i, j, k;
@@ -443,7 +451,7 @@ var StickySchedule = SAGE2_App.extend({
 		var cellY = offsetY;
 		var origCellY;
 		var stickyReservoirW = cellW * reservoirRatio;
-		var postItW = parseInt(stickyReservoirW / 7.8, 10);
+		var postItW = parseInt(stickyReservoirW / 6.7, 10);
 		var padding = parseInt(postItW * 0.1, 10);
 		var postItH = parseInt((cellH / 2.0) - (1.5 * padding), 10);
 		var wrapW = this.svgW - offsetX - padding;
@@ -462,9 +470,9 @@ var StickySchedule = SAGE2_App.extend({
 					cellY += postItH + padding;
 				}
 				this.stickyNotes.push({rect: null, text: null, theme: theme, x: cellX+padding, y: cellY+padding, w: postItW, h: postItH, origX: cellX+padding, origY: cellY+padding, origW: postItW, origH: postItH, cells: []});
-				sessionTitle = "<b>" + this.state.paperList[theme][j].title + "</b>";
-				sessionAward = (this.state.paperList[theme][j].best) ? " &#x2605;"/*" &#x1f3c6;"*/ : ""
-				htmlText = "<div xmlns=\"http://www.w3.org/1999/xhtml\" style=\"color:black; width: 100%; height: 100%;\">" + sessionTitle + sessionAward + "</div>";
+				sessionTitle = this.state.paperList[theme][j].title;
+				sessionAward = (this.state.paperList[theme][j].best) ? "&#x2605;"/*" &#x1f3c6;"*/ : ""
+				htmlText = "<div xmlns=\"http://www.w3.org/1999/xhtml\" style=\"color: #000000; width: 100%; height: 100%; overflow: hidden;\"><p style=\"font-weight: normal; word-break: break-word; hyphens: auto;\">" + sessionAward + sessionTitle + "</p></div>";
 				this.stickyNotes[this.stickyNotes.length-1].rect = this.snapCanvas.rect(0, 0, postItW, postItH).attr({
 					id: this.id + "_sticky_" + i + "." + j,
 					fill: this.state.conferenceInfo.sessionTypes[i].color,
@@ -476,7 +484,7 @@ var StickySchedule = SAGE2_App.extend({
 				this.stickyNotes[this.stickyNotes.length-1].text.setAttribute("id", this.id + "_sticky_text_" + i + "." + j);
 				this.stickyNotes[this.stickyNotes.length-1].text.setAttribute("x", 0);
        			this.stickyNotes[this.stickyNotes.length-1].text.setAttribute("y", 0);
-       			this.stickyNotes[this.stickyNotes.length-1].text.setAttribute("style", "display: block; padding: " + (padding / 3) + "px; width: " + (postItW - (2 * padding / 3)) + "px; height: " + (postItH - (2 * padding / 3)) + "px; font-size: " + this.stickyFontSize + "px;");
+       			this.stickyNotes[this.stickyNotes.length-1].text.setAttribute("style", "display: block; padding: " + (padding / 6) + "px; width: " + (postItW - (2 * padding / 6)) + "px; height: " + (postItH - (2 * padding / 6)) + "px; font-family: Tahoma, Geneva, sans-serif; font-size: " + this.stickyFontSize + ";");
        			this.stickyNotes[this.stickyNotes.length-1].text.setAttribute("transform", "translate(" + (cellX+padding) + "," + (cellY+padding) + ")");
 				this.stickyNotes[this.stickyNotes.length-1].text.innerHTML = htmlText;
 				this.snapCanvas.append(this.stickyNotes[this.stickyNotes.length-1].text);
@@ -832,6 +840,7 @@ var StickySchedule = SAGE2_App.extend({
 						stickyText = this.stickyNotes[this.dragging[user_id.id].sticky].text;
 						stickyText.style.width = (this.stickyNotes[selected].w - (2 * this.stickyPadding / 3)) + "px";
 						stickyText.style.height = (this.stickyNotes[selected].h - (2 * this.stickyPadding / 3)) + "px";
+						console.log(this.stickyFontSizeInCell);
 						stickyText.style.fontSize = this.stickyFontSizeInCell;
 						stickyText.setAttribute("transform", "translate(" + this.stickyNotes[selected].x + "," + this.stickyNotes[selected].y + ")");
 					}

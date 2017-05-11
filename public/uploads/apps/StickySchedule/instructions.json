@@ -1,6 +1,6 @@
 {
 	"main_script": "StickySchedule.js",
-	"icon": "resrc/images/logo.png",
+	"icon": "icon.png",
 	"width": 1600,
 	"height": 650,
 	"animation": false,

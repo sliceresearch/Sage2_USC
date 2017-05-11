@@ -5703,8 +5703,6 @@ function createSagePointer(uniqueID, portal) {
 	remoteInteraction[uniqueID] = new Interaction(config);
 	remoteInteraction[uniqueID].local = portal ? false : true;
 
-	console.log("create mode: " + remoteInteraction[uniqueID].interactionMode);
-
 	broadcast('createSagePointer', sagePointers[uniqueID]);
 }
 
@@ -7566,11 +7564,8 @@ function pointerRelease(uniqueID, pointerX, pointerY, data) {
 			break;
 		}
 		case "applications": {
-			console.log("pointer release in app");
 			if (dropSelectedItem(uniqueID, true, portal.id) === null) {
-				console.log("not dropping");
 				if (remoteInteraction[uniqueID].appInteractionMode()) {
-					console.log("app interaction");
 					sendPointerReleaseToApplication(uniqueID, obj.data, pointerX, pointerY, data);
 				}
 			}

@@ -234,6 +234,9 @@ function SAGE2_init() {
 
 	// Setup focus events
 	setupFocusHandlers();
+	document.body.oncontextmenu = function(event) {
+		return false;
+	};
 
 	isMaster = false;
 
@@ -298,7 +301,6 @@ function pointerPress(event) {
 		var y = event.touches[event.touches.length - 1].clientY + ui.offsetY;
 		wsio.emit('pointerPosition', {id: id, pointerX: x, pointerY: y});
 	} else {
-		console.log("mouse press");
 		var btnName = ["left", "middle", "right"];
 		btn = btnName[event.button];
 	}
@@ -352,6 +354,11 @@ function pointerMove(event) {
 	event.preventDefault();
 }
 
+function ignoreEvent(event) {
+	event.stopPropagation();
+	event.preventDefault();
+}
+
 function setupListeners() {
 	document.addEventListener('mousedown',  pointerPress,   false);
 	document.addEventListener('mouseup',    pointerRelease, false);
@@ -359,6 +366,8 @@ function setupListeners() {
 	document.addEventListener('touchstart', pointerPress,   false);
 	document.addEventListener('touchend',   pointerRelease, false);
 	document.addEventListener('touchmove',  pointerMove,    false);
+	document.addEventListener('click',      ignoreEvent,    false);
+	document.addEventListener('dblclick',   ignoreEvent,    false);
 
 
 	wsio.on('initialize', function(data) {
