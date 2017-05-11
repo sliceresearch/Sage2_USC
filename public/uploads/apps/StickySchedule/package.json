@@ -1,0 +1,14 @@
+{
+  "name": "StickySchedule",
+  "version": "1.0.0",
+  "main": "StickySchedule.js",
+  "devDependencies": {
+    "eslint": "latest"
+  },
+  "scripts": {
+    "lint": "eslint -c eslintrc StickySchedule.js"
+  },
+  "author": "Thomas Marrinan <thomas.j.marrinan@gmail.com>",
+  "license": "BSD-2-Clause",
+  "description": "SAGE2 application StickySchedule"
+}

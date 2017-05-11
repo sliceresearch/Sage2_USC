@@ -1,0 +1,25 @@
+{
+	"dates": {
+		"start": "2017-10-25",
+		"end": "2017-10-29"
+	},
+	"sessionTypes": [
+		{"name": "InfoVis", "color": "#DE8FD1", "person": "John"},
+		{"name": "SciVis", "color": "#8EE13E", "person": "Mary"},
+		{"name": "VAST", "color": "#76CBC8", "person": "Alice"},
+		{"name": "BioVis", "color": "#FFAAAA", "person": "Bob"},
+		{"name": "Keynote", "color": "#FDF490"},
+		{"name": "Lunch", "color": "#FEBB43"}
+	],
+	"sessions": [
+		{"label": "9:00 - 10:30", "constraints": {"type": "Keynote", "days": [0]}},
+		{"label": "10:30 - 12:00 ", "constraints": null},
+		{"label": "12:00 - 14:00 (Lunch)", "constraints": {"type": "Lunch", "days": [0, 1, 2, 3, 4]}},
+		{"label": "14:00 - 15:30", "constraints": null},
+		{"label": "15:30 - 17:00", "constraints": {"type": "Keynote", "days": [4]}}
+	],
+	"rooms": [
+		{"name": "Grand Hall", "capacity": 250, "projector": {"size": "5.2m x 2.9m", "resolution": "1920x1080"}},
+		{"name": "Ballroom", "capacity": 175, "projector": {"size": "4.8m x 2.7m", "resolution": "1920x1080"}}
+	]
+}

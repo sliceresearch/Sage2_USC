@@ -1,0 +1,54 @@
+{
+	"InfoVis": [
+		{"title": "Interaction", "speakers": ["a", "b", "c", "d"], "best": false},
+		{"title": "Immersive Analytics", "speakers": ["a", "b", "c", "d"], "best": true},
+		{"title": "Geo-visualization", "speakers": ["a", "b", "c", "d"], "best": false},
+		{"title": "Applications", "speakers": ["a", "b", "c", "d"], "best": false},
+		{"title": "Evaluation", "speakers": ["a", "b", "c", "d"], "best": false},
+		{"title": "Graphs", "speakers": ["a", "b", "c", "d"], "best": false},
+		{"title": "Storytelling / Presentation", "speakers": ["a", "b", "c", "d"], "best": false},
+		{"title": "Time Series", "speakers": ["a", "b", "c", "d"], "best": false},
+		{"title": "Scalable Algorithms", "speakers": ["a", "b", "c", "d"], "best": false},
+		{"title": "Visualization Education", "speakers": ["a", "b", "c", "d"], "best": false},
+		{"title": "Panel", "speakers": ["a", "b", "c", "d"], "best": false}
+	],
+	"SciVis": [
+		{"title": "Molecular and Shape Visualization", "speakers": ["a", "b", "c", "d"], "best": false},
+		{"title": "Design Studies and Evaluation", "speakers": ["a", "b", "c", "d"], "best": false},
+		{"title": "Topology-based Techniques", "speakers": ["a", "b", "c", "d"], "best": false},
+		{"title": "Ensembles, Multivariate, and Comparative", "speakers": ["a", "b", "c", "d"], "best": false},
+		{"title": "Rendering", "speakers": ["a", "b", "c", "d"], "best": false},
+		{"title": "Presentation, Production, and Dissemination", "speakers": ["a", "b", "c", "d"], "best": false},
+		{"title": "Vectors and Tensors", "speakers": ["a", "b", "c", "d"], "best": true},
+		{"title": "Biomedication Visualization", "speakers": ["a", "b", "c", "d"], "best": false}
+	],
+	"VAST": [
+		{"title": "Traffic and Urban Planning", "speakers": ["a", "b", "c", "d"], "best": false},
+		{"title": "Exploratory Analysis", "speakers": ["a", "b", "c", "d"], "best": false},
+		{"title": "Machine Learning", "speakers": ["a", "b", "c", "d"], "best": false},
+		{"title": "Textual Data", "speakers": ["a", "b", "c", "d"], "best": true},
+		{"title": "Managing Visual Analytics Process", "speakers": ["a", "b", "c", "d"], "best": false},
+		{"title": "Social Media Data and Events", "speakers": ["a", "b", "c", "d"], "best": false},
+		{"title": "Complementing Visual and Algorithmic Analysis", "speakers": ["a", "b", "c", "d"], "best": false},
+		{"title": "Visual Knowledge Discovery and Sensemaking", "speakers": ["a", "b", "c", "d"], "best": false}
+	],
+	"BioVis": [
+		{"title": "Abstract Data and Pathway Visualization", "speakers": ["S. Engle", "C. Ma", "V. Vad", "P. Murray"], "best": true},
+		{"title": "Protein and Microscopy Data Visualization", "speakers": ["M. Jaresova", "M. Abdellah", "R. Theart", "K. Furmanova"], "best": false},
+		{"title": "Statistical Analysis", "speakers": ["E. Maguire", "P. Dragicevic"], "best": false},
+		{"title": "The Power of Alternate Representations", "speakers": ["S. Carpendale"], "best": false},
+		{"title": "Design Contest", "speakers": ["H. Younesy", "C. Stolte"], "best": false},
+		{"title": "BioVis Data Contest", "speakers": ["R. Machiraju"], "best": false}
+	],
+	"Keynote": [
+		{"title": "Visualizing Knowhow, Technological Diffusion and the Wealth of Nations", "speakers": ["Prof. Ricardo Hausmann"]},
+		{"title": "The Three Laws of Communication", "speakers": ["Jean-luc Doumont, PhD"]}
+	],
+	"Lunch": [
+		{"title": "Lunch", "speakers": []},
+		{"title": "Lunch", "speakers": []},
+		{"title": "Lunch", "speakers": []},
+		{"title": "Lunch", "speakers": []},
+		{"title": "Lunch", "speakers": []}
+	]
+}

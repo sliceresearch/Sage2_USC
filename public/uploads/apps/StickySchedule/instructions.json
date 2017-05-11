@@ -1,19 +1,19 @@
 {
-	"main_script": "src/StickySchedule.js",
+	"main_script": "StickySchedule.js",
 	"icon": "resrc/images/logo.png",
 	"width": 1600,
-	"height": 500,
-	"resize": "free",
+	"height": 650,
+	"animation": false,
 	"dependencies": [
 	],
 	"load": {
-		"value": 4,
-		"val2" : 5
+		"conferenceInfo": null,
+		"paperList": null
 	},
 	"title": "StickySchedule",
 	"version": "1.0.0",
-	"description": "SAGE2 application for Scheduling Conferences",
-	"keywords": [ "sage2", "ConferenceScheduler" ],
-	"author": "Vishal Doshi <vdoshi3@uic.edu>",
+	"description": "SAGE2 application for conference scheduling",
+	"keywords": [ "sage2", "StickySchedule" ],
+	"author": "Thomas Marrinan <thomas.j.marrinan@gmail.com>",
 	"license": "SAGE2-Software-License"
 }
