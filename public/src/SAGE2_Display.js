@@ -288,6 +288,8 @@ function pointerPress(event) {
 	var btn;
 	if (event.type === "touchstart") {
 		var touchId = event.touches[event.touches.length-1].identifier;
+		if (touchId >= 16)
+			return;
 		id = uniqueID + "|" + touchId;
 		wsio.emit('startSagePointer', {id: id, label: "touch:" + touchId, color: "#FFFFFF", sourceType: "Touch"});
 		btn = "left";
@@ -311,6 +313,8 @@ function pointerRelease(event) {
 	var btn;
 	if (event.type === "touchend") {
 		var touchId = event.changedTouches[0].identifier;
+		if (touchId >= 16)
+			return;
 		id = uniqueID + "|" + touchId;
 		btn = "left";
 	}
@@ -332,6 +336,8 @@ function pointerMove(event) {
 	var x, y;
 	if (event.type === "touchmove") {
 		var touchId = event.changedTouches[0].identifier;
+		if (touchId >= 16)
+			return;
 		id = uniqueID + "|" + touchId;
 		x = event.changedTouches[0].clientX + ui.offsetX;
 		y = event.changedTouches[0].clientY + ui.offsetY;
