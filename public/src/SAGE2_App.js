@@ -356,6 +356,7 @@ var SAGE2_App = Class.extend({
 				server: document.getElementById("machine").textContent
 			};
 			this.state.pointersOverApp.push(pointer);
+			SAGE2RemoteSitePointer.addAppToTracking(this); // pointer add means app should be added to tracking
 		} else {
 			pointer = this.state.pointersOverApp[found];
 		}
@@ -368,6 +369,7 @@ var SAGE2_App = Class.extend({
 			y: (position.y / this.sage2_height)
 		};
 		pointer.lastUpdate = Date.now();
+		pointer.hidden = false;
 		// sync across sites. maybe needs a delay or interval rather than spam when move happens?
 		this.SAGE2Sync(true);
 	},

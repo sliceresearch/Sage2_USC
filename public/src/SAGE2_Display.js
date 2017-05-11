@@ -413,8 +413,6 @@ function setupListeners() {
 	});
 
 	wsio.on('createSagePointer', function(pointer_data) {
-		// console.log("erase me, what is the data needed to create a pointer");
-		// console.dir(pointer_data);
 		if (window.ui) {
 			ui.createSagePointer(pointer_data);
 		} else {
@@ -434,6 +432,7 @@ function setupListeners() {
 	});
 
 	wsio.on('hideSagePointer', function(pointer_data) {
+		SAGE2RemoteSitePointer.notifyAppsPointerIsHidden(pointer_data);
 		ui.hideSagePointer(pointer_data);
 		var uniqueID = pointer_data.id.slice(0, pointer_data.id.lastIndexOf("_"));
 		var re = /\.|\:/g;
@@ -442,8 +441,6 @@ function setupListeners() {
 	});
 
 	wsio.on('updateSagePointerPosition', function(pointer_data) {
-		// console.log("erase me, what is the data needed to update pointer position");
-		// console.dir(pointer_data);
 		if (ui) {
 			ui.updateSagePointerPosition(pointer_data);
 		}

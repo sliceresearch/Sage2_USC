@@ -14,6 +14,7 @@ var SAGE2RemoteSitePointer = {
 	allRemotePointers: [],
 	allPointersOnThisSite: [],
 	pointerUpdateInterval: 100, // ms
+	allAppsWithRemotePointerTracking: {},
 
 
 	/**
@@ -45,8 +46,11 @@ var SAGE2RemoteSitePointer = {
 	* @param app {Object} app which called this function
 	*/
 	showPointer: function(pointer_data, app) {
-		var found = -1;
 		var localHostName = document.getElementById("machine").textContent;
+		if (localHostName === pointer_data.server) {
+			return;
+		}
+		var found = -1;
 		// for each remote pointer, see if it already exists
 		for(let i = 0; i < this.allRemotePointers.length; i++) {
 			if (this.allRemotePointers[i].id === pointer_data.id) {
@@ -78,20 +82,57 @@ var SAGE2RemoteSitePointer = {
 			pointer.color = pointer_data.color;
 			pointer.left = pointer_data.positionInPercent.x * app.sage2_width + app.sage2_x;
 			pointer.top = pointer_data.positionInPercent.y * app.sage2_height + app.sage2_y;
+			pointer.hidden = pointer_data.hidden;
 		}
 		/*
 		If the remote pointer's last update was less than the given update time, then move it.
 		This matters when pointers move across apps.
 		*/
 		if (pointer.lastUpdate <= pointer_data.lastUpdate) {
-			// update position
-			ui.updateSagePointerPosition(pointer);
+			if (pointer.hidden) {
+				ui.hideSagePointer(pointer);
+			} else {
+				// update position
+				ui.showSagePointer(pointer);
+			}
 			pointer.lastUpdate = pointer_data.lastUpdate
 		}
 	},
 
+	/**
+	* This is used to track apps that use remote pointer data.
+	* More specifically how to remove the pointer when a user leaves pointer mode.
+	*
+	* @method addAppToTracking
+	* @param app {Object} the app which is using remote pointer data
+	*/
+	addAppToTracking: function(app) {
+		if (this.allAppsWithRemotePointerTracking["" + app.id] === undefined) {
+			this.allAppsWithRemotePointerTracking["" + app.id] = app;
+		}
+	},
 
-	hidePointer: function() {
-
+	/**
+	* This is used to track apps that use remote pointer data.
+	* More specifically how to remove the pointer when a user leaves pointer mode.
+	*
+	* @method notifyAppsPointerIsHidden
+	* @param pointer_data {Object} contains information about user: color, id, label
+	*/
+	notifyAppsPointerIsHidden: function(pointer_data) {
+		var currentApp;
+		var currentPointer;
+		for (let key in this.allAppsWithRemotePointerTracking) {
+			currentApp = this.allAppsWithRemotePointerTracking[key]
+			for (let i = 0; i < currentApp.state.pointersOverApp.length; i++) {
+				currentPointer = currentApp.state.pointersOverApp[i];
+				if (currentPointer.id === pointer_data.id) {
+					currentPointer.hidden = true;
+					currentPointer.lastUpdate = Date.now();
+					currentApp.SAGE2Sync(true);
+					break; // go to next app, id should be unique
+				}
+			}
+		}
 	}
 };
