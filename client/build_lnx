@@ -1,7 +1,16 @@
 #!/bin/sh
 
+# update the electron.js file
+npm run update
+
+# add the webview runtime
+mkdir -p public/uploads/apps/Webview
+cp ../public/uploads/apps/Webview/SAGE2_script_supplement.js public/uploads/apps/Webview/SAGE2_script_supplement.js
+
+# package the app
 ./node_modules/.bin/electron-packager ./ --platform=linux --arch=x64 --icon=sage2.icns --overwrite
 
+# add some utility files
 cp README.lnx     SAGE2_client-linux-x64/README
 cp View.lnx       SAGE2_client-linux-x64/Display0.sh
 cp Fullscreen.lnx SAGE2_client-linux-x64/Fullscreen.sh
