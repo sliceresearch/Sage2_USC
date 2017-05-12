@@ -22,7 +22,11 @@ install:
   - cd client
   - npm install --production --msvs_version=2013
   - copy /Y ..\electron.js  electron.js
-  - mkdir /s public\uploads\apps\Webview
+  - dir
+  - mkdir public
+  - mkdir public\uploads
+  - mkdir public\uploads\apps
+  - mkdir public\uploads\apps\Webview
   - copy /Y ..\public\uploads\apps\Webview\SAGE2_script_supplement.js public\uploads\apps\Webview\SAGE2_script_supplement.js
   - .\node_modules\.bin\electron-packager . --platform=win32 --arch=x64 --icon=sage2.ico --overwrite
   - copy /Y README.win      SAGE2_client-win32-x64\README
