@@ -1,6 +1,6 @@
 @echo off
 
-npm run update
+call npm run update
 md /s public\uploads\apps\Webview
 copy /Y ..\public\uploads\apps\Webview\SAGE2_script_supplement.js public\uploads\apps\Webview\SAGE2_script_supplement.js
 
