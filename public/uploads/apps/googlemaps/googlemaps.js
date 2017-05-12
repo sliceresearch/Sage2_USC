@@ -50,6 +50,7 @@ var googlemaps = SAGE2_App.extend({
 		// testing broadcast capabilities
 		this.csdBroadcast();
 		this.lastViewSetTime = Date.now();
+		this.plotAnyNewGeoSource = false;
 	},
 
 	initializeWidgets: function() {
@@ -673,6 +674,25 @@ var googlemaps = SAGE2_App.extend({
 		entry.parameters = {};
 		entries.push(entry);
 
+		// if always plotting, then toggle off
+		if (this.plotAnyNewGeoSource) {
+			entry = {};
+			entry.description = "Stop automatic plotting";
+			entry.callback = "toggleAutomaticPlot";
+			entry.parameters = {
+				plot: false
+			};
+			entries.push(entry);
+		} else {
+			entry = {};
+			entry.description = "Plot any app that gives geo data";
+			entry.callback = "toggleAutomaticPlot";
+			entry.parameters = {
+				plot: true
+			};
+			entries.push(entry);
+		}
+
 		if (this.mapMarkers.length > 0) {
 			entries.push({description: "separator"});
 
@@ -777,6 +797,44 @@ var googlemaps = SAGE2_App.extend({
 		dataForServer.value.source = this.id;
 		dataForServer.value.location = this.state.center;
 		wsio.emit("csdMessage", dataForServer);
+
+		// tell server it will accept geolocation for plotting
+		dataForServer = {
+			type: "setValue",
+			nameOfValue: this.id + ":destination:geoLocation:markerPlot",
+			description: "plots geo marker on this map",
+			value: {}
+		};
+		dataForServer.value.source = this.id;
+		dataForServer.value.location = this.state.center;
+		wsio.emit("csdMessage", dataForServer);
+
+		// tell server it will accept geolocation for plotting
+		dataForServer = {
+			type: "setValue",
+			nameOfValue: this.id + ":destination:geoLocation:viewCenter",
+			description: "this will set the maps center view",
+			value: {}
+		};
+		dataForServer.value.source = this.id;
+		dataForServer.value.location = this.state.center;
+		wsio.emit("csdMessage", dataForServer);
+
+		// 1 second later it will subscribe to the values, because it takes those values
+		setTimeout(function() {
+			// subscribe to its data feed
+			dataForServer = {
+				type: "subscribeToValue",
+				nameOfValue: this.id + ":destination:geoLocation:markerPlot",
+				app: this.id,
+				func: "geoDataFromServer"
+			};
+			wsio.emit("csdMessage", dataForServer);
+			// subscribe to its data feed
+			dataForServer.nameOfValue = this.id + ":destination:geoLocation:viewCenter";
+			dataForServer.func = "setView";
+			wsio.emit("csdMessage", dataForServer);
+		}, 1000);
 	},
 
 	csdHandlerForNewVariableNotification: function(addedVar) {
@@ -785,8 +843,11 @@ var googlemaps = SAGE2_App.extend({
 		}
 		console.log("erase me, maps notified of new variable named " + addedVar.nameOfValue
 		+ " has description: " + addedVar.description);
-		if (addedVar.description.indexOf("geolocation") !== -1
-		&& addedVar.description.indexOf("image") !== -1) {
+		// if this should plot any new geo data source
+		if (this.plotAnyNewGeoSource
+			&& addedVar.description.indexOf("geolocation") !== -1
+			&& addedVar.description.indexOf("source") !== -1
+			&& addedVar.description.indexOf("image") !== -1) {
 			console.log("erase me, has also detected that new var is a geo location");
 			var dataForServer = {
 				type: "getValue",
@@ -809,6 +870,10 @@ var googlemaps = SAGE2_App.extend({
 			sourceAppId: value.source,
 			shouldFocusViewOnNewMarker: true
 		});
+	},
+
+	toggleAutomaticPlot: function(responseObject) {
+		this.plotAnyNewGeoSource = responseObject.plot;
 	},
 
 	setView: function(serverVar) {
