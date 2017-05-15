@@ -494,7 +494,9 @@ function SAGE2_interaction(wsio) {
 	* @param data {Object} data
 	*/
 	this.captureDesktop = function(data) {
+		console.log("captureDesktop");
 		if (__SAGE2__.browser.isChrome === true) {
+			console.log("supported constraints",navigator.mediaDevices.getSupportedConstraints());
 			var constraints = {
 				chromeMediaSource: 'desktop',
 				chromeMediaSourceId: data,

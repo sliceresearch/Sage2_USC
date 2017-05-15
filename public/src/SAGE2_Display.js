@@ -1409,7 +1409,8 @@ function setupListeners(anWsio) {
 
 function createAppWindow(data, anWsio, parentId, titleBarHeight, titleTextSize, offsetX, offsetY) {
 	resetIdle();
-	console.log("display.createAppWindow slaveServer... ", JSON.stringify(data));
+	//console.log("display.createAppWindow slaveServer... ", JSON.stringify(data));
+	console.log("display.createAppWindow ",data.title,"server",anWsio.url);
 
 	var parent = document.getElementById(parentId);
 

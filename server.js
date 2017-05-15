@@ -203,10 +203,10 @@ function initializeSage2Server() {
 
 	// Check for missing packages
 	//     pass parameter `true` for devel packages also
-	if (process.arch !== 'arm') {
+	//if (process.arch !== 'arm') {
 		// seems very slow to do on ARM processor (Raspberry PI)
-		sageutils.checkPackages();
-	}
+		//sageutils.checkPackages();
+	//}
 
 	// Setup binaries path
 	if (config.dependencies !== undefined) {
@@ -1635,6 +1635,7 @@ function wsStartNewMediaStream(wsio, data) {
 
 	appLoader.createMediaStream(data.src, data.type, data.encoding, data.title, data.color, data.width, data.height,
 		function(appInstance) {
+                        appInstance.slaveServerId = data.slaveServerId;
 			appInstance.id = data.id;
                         var pos = data.pos || [1.0,0.0];
                         var resize = data.resize || 1920;
@@ -1654,6 +1655,7 @@ function wsStartNewMediaStream(wsio, data) {
 	// Slave server: relay request to master server
 	if (masterServer!==undefined && masterServer!=null) {
 		console.log("master - start new media stream");
+                data.slaveServerId = config.host+":"+config.port;
 		masterServer.emit('startNewMediaStream', data);
 		// HACK! fake the first frame response which would otherwise go only to the master server
 		// TODO: why does this work?
