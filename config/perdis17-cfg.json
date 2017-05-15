@@ -1,0 +1,50 @@
+/*
+	PerDis '17 configuration of the server - Windows
+*/
+{
+	name: "PerDis '17",
+	host: "localhost",
+	port: 8080,
+	secure_port: 8443,
+	background: {
+		color: "#33334A",
+		watermark: {
+			svg: "images/EVL-LAVA.svg",
+			color: "rgba(255, 255, 255, 0.5)"
+		}
+	},
+        audio: {
+                initialVolume: 8,
+        },
+	ui: {
+		clock: 24,
+		show_version: false,
+		show_url: true,
+                maxWindowWidth: 2400,
+                maxWindowHeight: 1200,
+                noDropShadow: true
+	},
+	resolution: {
+		width: 1920,
+		height: 1080
+	},
+	layout: {
+		rows: 1,
+		columns: 1
+	},
+	displays: [
+		{
+			row: 0,
+			column: 0
+		}
+	],
+	alternate_hosts: [
+		"127.0.0.1"
+	],
+	remote_sites: [
+	],
+	dependencies: {
+		ImageMagick: "C:/Program Files/ImageMagick-6.9.8-Q16/",
+		FFMpeg: "C:/Dev/ffmpeg-win64-shared/bin/"
+    }
+}
