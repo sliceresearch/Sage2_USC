@@ -11,9 +11,9 @@
 		"paperList": null
 	},
 	"title": "StickySchedule",
-	"version": "1.0.0",
+	"version": "1.0.1",
 	"description": "SAGE2 application for conference scheduling",
-	"keywords": [ "sage2", "StickySchedule" ],
+	"keywords": [ "conference scheduling", "sticky notes", "multi-user" ],
 	"author": "Thomas Marrinan <thomas.j.marrinan@gmail.com>",
 	"license": "SAGE2-Software-License"
 }
