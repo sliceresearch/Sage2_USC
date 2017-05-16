@@ -708,10 +708,8 @@ var pdf_viewer = SAGE2_App.extend({
 	},
 
 	load: function(date) {
-		/*
-		This check is necessary for remote sharing.
-		Under conditions that seem to always trigger for remote pointers, generateMissingPages() will infinitely loop.
-		*/
+		// This check is necessary for remote sharing.
+		// Activating generateMissingPages() will infinitely loop on first sync.
 		if (!this.hadFirstRemoteLoad) {
 			this.hadFirstRemoteLoad = true;
 			return;

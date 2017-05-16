@@ -8636,7 +8636,16 @@ function pointerCloseGesture(uniqueID, pointerX, pointerY, time, gesture) {
 function handleNewApplication(appInstance, videohandle) {
 	// Create tracking for all apps by default stacking another state load value.
 	// It must be done here due to how mergeObjects() works as specified in src/node-utils.js
-	if (appInstance.data === null || appInstance.data === undefined) { appInstance.data = {}; }
+	if (appInstance.data === null || appInstance.data === undefined) {
+		console.log();
+		console.log();
+		console.log();
+		console.log("erase me, app should always have data, right?");
+		console.log();
+		console.log();
+		console.log();
+		appInstance.data = {};
+	}
 	appInstance.data.pointersOverApp = [];
 	broadcast('createAppWindow', appInstance);
 	broadcast('createAppWindowPositionSizeOnly', getAppPositionSize(appInstance));

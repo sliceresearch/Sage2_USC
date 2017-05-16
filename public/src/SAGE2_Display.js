@@ -18,6 +18,8 @@
 /* global hideWidgetToAppConnectors */
 /* global createWidgetToAppConnector, getTextFromTextInputWidget */
 /* global SAGE2_Partition, require */
+/* global SAGE2RemoteSitePointer */
+
 
 /* global require */
 
@@ -1552,10 +1554,6 @@ function createAppWindow(data, parentId, titleBarHeight, titleTextSize, offsetX,
 
 	// convert url if hostname is alias for current origin
 	var url = cleanURL(data.url);
-
-	// Create tracking for all apps by default stacking another state load value.
-	if (data.data === null || data.data === undefined) { data.data = {}; }
-	data.data.pointersOverApp = [];
 
 	function loadApplication() {
 		var init = {

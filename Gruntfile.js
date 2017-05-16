@@ -97,7 +97,7 @@ module.exports = function(grunt) {
 						"public/src/pointer.js", "public/src/SAGE2_WidgetButtonTypes.js",
 						"public/src/SAGE2_WidgetControl.js", "public/src/SAGE2_WidgetControlInstance.js",
 						"public/src/widgetHelperFunctions.js", "public/src/radialMenu.js",
-						"public/src/SAGE2_Display.js" ],
+						"public/src/SAGE2_Display.js", "public/src/SAGE2_RemoteSitePointer.js" ],
 					'public/min/audio.min.js':
 						["public/src/websocket.io.js",
 						"public/src/SAGE2_runtime.js",

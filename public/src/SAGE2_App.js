@@ -8,7 +8,7 @@
 //
 // Copyright (c) 2014-2015
 
-/* global ignoreFields, SAGE2WidgetControl, SAGE2MEP */
+/* global ignoreFields, SAGE2WidgetControl, SAGE2MEP, SAGE2RemoteSitePointer */
 /* global addStoredFileListEventHandler, removeStoredFileListEventHandler */
 
 /**
@@ -156,7 +156,7 @@ var SAGE2_App = Class.extend({
 	SAGE2Load: function(state, date) {
 		this.SAGE2CopyState(state);
 		this.SAGE2UpdateAppOptionsFromState();
-		
+
 		this.remotePointerUpdateCheck();
 
 		this.load(date);
@@ -822,7 +822,7 @@ var SAGE2_App = Class.extend({
 			wsio.emit('closeFileBuffer', {id: this.div.id});
 		}
 		// hide remote pointers if any
-
+		SAGE2RemoteSitePointer.appQuitHidePointers(this);
 	},
 
 	/**

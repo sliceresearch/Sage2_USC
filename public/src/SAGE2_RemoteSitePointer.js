@@ -25,7 +25,7 @@ var SAGE2RemoteSitePointer = {
 	*/
 	trackLocalPointer: function(pointer_data) {
 		var found = false;
-		for(let i = 0; i < this.allPointersOnThisSite.length; i++) {
+		for (let i = 0; i < this.allPointersOnThisSite.length; i++) {
 			if (this.allPointersOnThisSite[i].id === pointer_data.id) {
 				this.allPointersOnThisSite[i] = pointer_data;
 				found = true;
@@ -52,7 +52,7 @@ var SAGE2RemoteSitePointer = {
 		}
 		var found = -1;
 		// for each remote pointer, see if it already exists
-		for(let i = 0; i < this.allRemotePointers.length; i++) {
+		for (let i = 0; i < this.allRemotePointers.length; i++) {
 			if (this.allRemotePointers[i].id === pointer_data.id) {
 				found = i;
 			}
@@ -84,6 +84,7 @@ var SAGE2RemoteSitePointer = {
 			pointer.top = pointer_data.positionInPercent.y * app.sage2_height + app.sage2_y;
 			pointer.hidden = pointer_data.hidden;
 		}
+
 		/*
 		If the remote pointer's last update was less than the given update time, then move it.
 		This matters when pointers move across apps.
@@ -95,7 +96,7 @@ var SAGE2RemoteSitePointer = {
 				// update position
 				ui.showSagePointer(pointer);
 			}
-			pointer.lastUpdate = pointer_data.lastUpdate
+			pointer.lastUpdate = pointer_data.lastUpdate;
 		}
 	},
 
@@ -123,7 +124,7 @@ var SAGE2RemoteSitePointer = {
 		var currentPointer;
 		for (let i = 0; i < app.state.pointersOverApp.length; i++) {
 			currentPointer = app.state.pointersOverApp[i];
-			currentPointer.lastUpdate = Date.now();
+			currentPointer.lastUpdate = currentPointer.lastUpdate + 1;
 			currentPointer.hidden = true;
 			this.updateRemotePointer(currentPointer, app);
 		}
