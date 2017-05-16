@@ -574,7 +574,7 @@ function setupListeners(anWsio) {
 	});
 
 	anWsio.on('updateMediaStreamFrame', function(dataOrBuffer) {
-		console.log("updateMediaStreamFrame", anWsio.url);
+		//console.log("updateMediaStreamFrame", anWsio.url);
                 // NB: Cloned code
                 var data;
                 if (dataOrBuffer.id !== undefined) {
@@ -604,8 +604,11 @@ function setupListeners(anWsio) {
                 }
 		anWsio.emit('receivedMediaStreamFrame', {id: data.id});
 		var app = applications[data.id];
+		console.log("apps",applications.size);
 		if (app !== undefined && app !== null) {
+			console.log("updateMediaStreamFrame ", data.id, data.state.type, data.state.encoding);
 			app.SAGE2Load(data.state, new Date(data.date));
+			app.refresh(data.date);
 		}
 		// update clones in data-sharing portals
 		var key;
@@ -1538,26 +1541,24 @@ function createAppWindow(data, anWsio, parentId, titleBarHeight, titleTextSize, 
 	parent.appendChild(windowItem);
 
 	// FIXME: copied code from below
-	var slaveServerId = data.slaveServerId;
-	if (slaveServerId!==undefined && slaveServerId!==null) {
-		console.log("slaveServerId",slaveServerId);
-		var sws = slaveConnections[slaveServerId];
-		if (sws !== null && sws !== undefined) {
-			init.slaveServer = sws;
-		}
+	var ssid = data.slaveServerId;
+        var slavews = null
+	if (ssid!==undefined && ssid!==null) {
+		console.log("slaveServerId", ssid);
+		var slavews = slaveConnections[ssid];
 	}
 
 	// App launched in window
 	if (data.application === "media_stream") {
 		anWsio.emit('receivedMediaStreamFrame', {id: data.id});
-		if (sws !== null && sws !== undefined) {
-			sws.emit('receivedMediaStreamFrame', {id: data.id});
+		if (slavews !== null && slavews !== undefined) {
+			slavews.emit('receivedMediaStreamFrame', {id: data.id});
 		}
 	}
 	if (data.application === "media_block_stream") {
 		anWsio.emit('receivedMediaBlockStreamFrame', {id: data.id, newClient: true});
-		if (sws !== null && sws !== undefined) {
-			sws.emit('receivedMediaBlockStreamFrame', {id: data.id, newClient: true});
+		if (slavews !== null && sws !== undefined) {
+			slavews.emit('receivedMediaBlockStreamFrame', {id: data.id, newClient: true});
 		}
 	}
 

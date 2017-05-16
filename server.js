@@ -949,6 +949,10 @@ function initializeWSClient(wsio, reqConfig, reqVersion, reqTime, reqConsole) {
 		initializeExistingAppsPositionSizeTypeOnly(wsio);
 		initializeExistingPartitionsUI(wsio);
 	}
+	// if on slave we still want to do local initialization
+	if (wsio.clientType === "display" && (masterServer !==null && masterServer !== undefined)) {
+		initializeExistingAppsOnSlave(wsio);
+	}
 
 	var remote = findRemoteSiteByConnection(wsio);
 	if (remote !== null) {
@@ -1249,31 +1253,48 @@ function initializeExistingWallUI(wsio) {
 	}
 }
 
-function initializeExistingApps(wsio) {
+function initializeExistingAppsOnSlave(wsio) {
 	var key;
-
 	for (key in SAGE2Items.applications.list) {
 		// remove partition value from application while sending wsio message (circular structure)
 		// does this cause issues?
 		var appCopy = Object.assign({}, SAGE2Items.applications.list[key]);
 		delete appCopy.partition;
+		//
+		if (SAGE2Items.renderSync.hasOwnProperty(key)) {
+			SAGE2Items.renderSync[key].clients[wsio.id] = {wsio: wsio, readyForNextFrame: false, blocklist: []};
+			calculateValidBlocks(SAGE2Items.applications.list[key], mediaBlockSize, SAGE2Items.renderSync[key]);
+			// Need to reset the animation loop
+			//   a new client could come while other clients were done rendering
+			//   (especially true for slow update apps, like the clock)
+			broadcast('animateCanvas', {id: SAGE2Items.applications.list[key].id, date: Date.now()});
+		}
+	}
+}
 
-		if (masterServer === null || masterServer === undefined) {
-			wsio.emit('createAppWindow', appCopy);
-			if (SAGE2Items.renderSync.hasOwnProperty(key)) {
-				SAGE2Items.renderSync[key].clients[wsio.id] = {wsio: wsio, readyForNextFrame: false, blocklist: []};
-				calculateValidBlocks(SAGE2Items.applications.list[key], mediaBlockSize, SAGE2Items.renderSync[key]);
-				// Need to reset the animation loop
-				//   a new client could come while other clients were done rendering
-				//   (especially true for slow update apps, like the clock)
-				broadcast('animateCanvas', {id: SAGE2Items.applications.list[key].id, date: Date.now()});
-			}
+function initializeExistingApps(wsio) {
+	var key;
+	//
+	for (key in SAGE2Items.applications.list) {
+		// remove partition value from application while sending wsio message (circular structure)
+		// does this cause issues?
+		var appCopy = Object.assign({}, SAGE2Items.applications.list[key]);
+		delete appCopy.partition;
+		//
+		wsio.emit('createAppWindow', appCopy);
+		if (SAGE2Items.renderSync.hasOwnProperty(key)) {
+			SAGE2Items.renderSync[key].clients[wsio.id] = {wsio: wsio, readyForNextFrame: false, blocklist: []};
+			calculateValidBlocks(SAGE2Items.applications.list[key], mediaBlockSize, SAGE2Items.renderSync[key]);
+			// Need to reset the animation loop
+			//   a new client could come while other clients were done rendering
+			//   (especially true for slow update apps, like the clock)
+			broadcast('animateCanvas', {id: SAGE2Items.applications.list[key].id, date: Date.now()});
 		}
 	}
 	for (key in SAGE2Items.portals.list) {
 		broadcast('initializeDataSharingSession', SAGE2Items.portals.list[key]);
 	}
-
+	//
 	var newOrder = interactMgr.getObjectZIndexList("applications", ["portals"]);
 	wsio.emit('updateItemOrder', newOrder);
 }
@@ -1716,6 +1737,8 @@ function doOverlap(x_1, y_1, width_1, height_1, x_2, y_2, width_2, height_2) {
 }
 
 function wsUpdateMediaStreamFrame(wsio, dataOrBuffer) {
+	//console.log("---------------------------");
+	//console.log("wsUpdateMediaStreamFrame");
 	var key;
 
         // NB: Cloned code
@@ -1732,6 +1755,7 @@ function wsUpdateMediaStreamFrame(wsio, dataOrBuffer) {
 
 	// Remote sites have a pass back issue that needs to be caught
 	if (SAGE2Items.renderSync[data.id] === undefined || SAGE2Items.renderSync[data.id] === null) {
+		console.log("wsUpdateMediaStreamFrame undefined");
 		return;
 	}
 
@@ -1745,6 +1769,7 @@ function wsUpdateMediaStreamFrame(wsio, dataOrBuffer) {
 		stream.data = data.state;
 	} else {
 		// if can't find the application, it's being destroyed...
+		console.log("wsUpdateMediaStreamFrame app was destroyed");
 		return;
 	}
 
@@ -1790,9 +1815,11 @@ function wsUpdateMediaStreamFrame(wsio, dataOrBuffer) {
 		if (doOverlap(left, top, stream.width, stream.height,
 			offsetX, offsetY, checkWidth, checkHeight)) {
 			// send the full frame to be displayed
+			//console.log("wsUpdateMediaStreamFrame full frame to ", SAGE2Items.renderSync[data.id].clients[key].wsio.remoteAddress);
 			SAGE2Items.renderSync[data.id].clients[key].wsio.emit('updateMediaStreamFrame', dataOrBuffer);
 		} else {
 			// otherwise send a dummy small image
+			//console.log("wsUpdateMediaStreamFrame dummy image to ", SAGE2Items.renderSync[data.id].clients[key].wsio.remoteAddress);
 			SAGE2Items.renderSync[data.id].clients[key].wsio.emit('updateMediaStreamFrame', data_copy);
 		}
 	}
