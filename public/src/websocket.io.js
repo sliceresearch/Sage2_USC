@@ -98,6 +98,7 @@ function WebsocketIO(url) {
 					_this.remoteListeners[msg.d.listener] = msg.d.alias;
 					return;
 				}
+				console.log("WebsocketIO> ", this.url, fName, "(string)");
 				_this.messages[fName](msg.d);
 			} else {
 				var uInt8 = new Uint8Array(message.data);
@@ -107,6 +108,7 @@ function WebsocketIO(url) {
 							String.fromCharCode(uInt8[3]);
 				fName = _this.localListeners[func];
 				var buffer = uInt8.subarray(4, uInt8.length);
+				console.log("WebsocketIO> ", this.url, fName, "(buffer)");
 				_this.messages[fName](buffer);
 			}
 		};

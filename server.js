@@ -123,7 +123,7 @@ var pressingAlt        = true;
 var masterServer       = null;
 var slaveServers       = {};
 // from id to server
-var slaveAppToServer   = {};
+var slaveAppServer   = {};
 
 var partitions				 = new PartitionList(config);
 var draggingPartition	 = {};
@@ -923,7 +923,8 @@ function initializeWSClient(wsio, reqConfig, reqVersion, reqTime, reqConsole) {
 		wsio.emit('console', json5.stringify(config, null, 4));
 	}
 
-	if (wsio.clientType === "display") {
+	// only if we are master and client is display
+	if (wsio.clientType === "display" && (masterServer ===null || masterServer !== undefined)) {
 		initializeExistingSagePointers(wsio);
 		initializeExistingPartitions(wsio);
 		initializeExistingApps(wsio);
@@ -1633,6 +1634,7 @@ function wsStartNewMediaStream(wsio, data) {
 	data.width  = parseInt(data.width,  10);
 	data.height = parseInt(data.height, 10);
 
+	// (slave server does not send initialization to display yet...?)
 	appLoader.createMediaStream(data.src, data.type, data.encoding, data.title, data.color, data.width, data.height,
 		function(appInstance) {
                         appInstance.slaveServerId = data.slaveServerId;
@@ -8740,6 +8742,16 @@ function pointerCloseGesture(uniqueID, pointerX, pointerY, time, gesture) {
 function handleNewApplication(appInstance, videohandle) {
 	console.log("handleNewApplication", JSON.stringify(appInstance));
 	//appInstance.slaveServerId = config.host+":"+config.port;
+
+	// IP: fix me: this should not be needed
+	// In particular, in the case where a display needs restarting, the master server should already have
+	// for relevant apps the .slaveServerId attribute set and ready to be sent
+	//
+	//if (appInstance.slaveServerId !== null && appInstance.slaveServerId !== undefined) {
+	//	console.log("register app",appInstance.id,"to slave server",appInstance.slaveServerId);
+	//}
+
+	// only on master server...
 	if (masterServer===undefined || masterServer===null) {
 		broadcast('createAppWindow', appInstance);
 		broadcast('createAppWindowPositionSizeOnly', getAppPositionSize(appInstance));

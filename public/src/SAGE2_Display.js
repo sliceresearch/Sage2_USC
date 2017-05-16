@@ -574,6 +574,7 @@ function setupListeners(anWsio) {
 	});
 
 	anWsio.on('updateMediaStreamFrame', function(dataOrBuffer) {
+		//console.log("updateMediaStreamFrame", anWsio.url);
                 // NB: Cloned code
                 var data;
                 if (dataOrBuffer.id !== undefined) {
@@ -589,6 +590,7 @@ function setupListeners(anWsio) {
                   data.state.type = byteBufferToString(buf2);
                   var buf3 = buf2.subarray(data.state.type.length + 1);
                   data.state.encoding = "base64";
+		  //console.log("video frame size: ",buf3.length);
                   var buf4 = buf3.subarray(data.state.encoding.length + 1, buf3.length);
                   // There is a maximum stack size. We cannot call String.fromCharCode with as many arguments as we want
                   //data.state.src = btoa(String.fromCharCode.apply(null, buf4));
@@ -690,6 +692,7 @@ function setupListeners(anWsio) {
 	});
 
 	anWsio.on('createAppWindow', function(data) {
+		console.log("anWsio.on createAppWindow");
 		createAppWindow(data, anWsio, ui.main.id, ui.titleBarHeight, ui.titleTextSize, ui.offsetX, ui.offsetY);
 	});
 
@@ -1409,8 +1412,8 @@ function setupListeners(anWsio) {
 
 function createAppWindow(data, anWsio, parentId, titleBarHeight, titleTextSize, offsetX, offsetY) {
 	resetIdle();
-	//console.log("display.createAppWindow slaveServer... ", JSON.stringify(data));
 	console.log("display.createAppWindow ",data.title,"server",anWsio.url);
+	console.log(data);
 
 	var parent = document.getElementById(parentId);
 
