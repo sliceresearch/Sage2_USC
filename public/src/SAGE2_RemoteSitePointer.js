@@ -41,11 +41,11 @@ var SAGE2RemoteSitePointer = {
 	* This will be called anytime an app has a data sync.
 	* Show all remote pointers if they should be over this app.
 	*
-	* @method showPointer
+	* @method updateRemotePointer
 	* @param pointer_data {Object} contains information about user: color, id, label, positionInPercent, lastUpdate
 	* @param app {Object} app which called this function
 	*/
-	showPointer: function(pointer_data, app) {
+	updateRemotePointer: function(pointer_data, app) {
 		var localHostName = document.getElementById("machine").textContent;
 		if (localHostName === pointer_data.server) {
 			return;
@@ -75,7 +75,7 @@ var SAGE2RemoteSitePointer = {
 			ui.createSagePointer(pointer);
 			ui.showSagePointer(pointer);
 			this.allRemotePointers.push(pointer_data);
-		} else { // if it does exist, use the existing one
+		} else { // if exists, use existing. Data overwritten in case user changes values, but not lastUpdate
 			pointer = this.allRemotePointers[found];
 			pointer.id = pointer_data.id;
 			pointer.label = pointer_data.label + "@" + pointer_data.server;
@@ -113,6 +113,23 @@ var SAGE2RemoteSitePointer = {
 	},
 
 	/**
+	* When an app quits / terminates, hide the associated remote pointers so they aren't stuck on the screen.
+	* Done by setting hidden to true and setting last update to now, then calling the update function, which will hide.
+	*
+	* @method appQuitingHidePointers
+	* @param app {Object} the app which check for remote pointer removal
+	*/
+	appQuitHidePointers: function(app) {
+		var currentPointer;
+		for (let i = 0; i < app.state.pointersOverApp.length; i++) {
+			currentPointer = app.state.pointersOverApp[i];
+			currentPointer.lastUpdate = Date.now();
+			currentPointer.hidden = true;
+			this.updateRemotePointer(currentPointer, app);
+		}
+	},
+
+	/**
 	* This is used to track apps that use remote pointer data.
 	* More specifically how to remove the pointer when a user leaves pointer mode.
 	*
@@ -123,7 +140,7 @@ var SAGE2RemoteSitePointer = {
 		var currentApp;
 		var currentPointer;
 		for (let key in this.allAppsWithRemotePointerTracking) {
-			currentApp = this.allAppsWithRemotePointerTracking[key]
+			currentApp = this.allAppsWithRemotePointerTracking[key];
 			for (let i = 0; i < currentApp.state.pointersOverApp.length; i++) {
 				currentPointer = currentApp.state.pointersOverApp[i];
 				if (currentPointer.id === pointer_data.id) {

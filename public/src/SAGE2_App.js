@@ -383,7 +383,7 @@ var SAGE2_App = Class.extend({
 	*/
 	remotePointerUpdateCheck: function() {
 		for (let i = 0; i < this.state.pointersOverApp.length; i++) {
-			SAGE2RemoteSitePointer.showPointer(this.state.pointersOverApp[i], this);
+			SAGE2RemoteSitePointer.updateRemotePointer(this.state.pointersOverApp[i], this);
 		}
 	},
 
@@ -821,6 +821,8 @@ var SAGE2_App = Class.extend({
 		if (isMaster && this.hasFileBuffer === true) {
 			wsio.emit('closeFileBuffer', {id: this.div.id});
 		}
+		// hide remote pointers if any
+
 	},
 
 	/**
