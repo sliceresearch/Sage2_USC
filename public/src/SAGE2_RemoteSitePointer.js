@@ -38,6 +38,19 @@ var SAGE2RemoteSitePointer = {
 	},
 
 	/**
+	* Usually called after SAGE2Load, to see if this app needs to have pointers updated.
+	* However also can be called after resize or move to make sure the pointers don't get left behind.
+	*
+	* @method checkIfAppNeedsUpdate
+	* @param app {Object} app which called this function
+	*/
+	checkIfAppNeedsUpdate: function(app) {
+		for (let i = 0; i < app.state.pointersOverApp.length; i++) {
+			this.updateRemotePointer(app.state.pointersOverApp[i], app);
+		}
+	},
+
+	/**
 	* This will be called anytime an app has a data sync.
 	* Show all remote pointers if they should be over this app.
 	*

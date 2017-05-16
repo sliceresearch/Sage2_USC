@@ -157,7 +157,8 @@ var SAGE2_App = Class.extend({
 		this.SAGE2CopyState(state);
 		this.SAGE2UpdateAppOptionsFromState();
 
-		this.remotePointerUpdateCheck();
+		// update remote pointers if any over this app
+		SAGE2RemoteSitePointer.checkIfAppNeedsUpdate(this);
 
 		this.load(date);
 	},
@@ -372,19 +373,6 @@ var SAGE2_App = Class.extend({
 		pointer.hidden = false;
 		// sync across sites. maybe needs a delay or interval rather than spam when move happens?
 		this.SAGE2Sync(true);
-	},
-
-	/**
-	* Called from SAGE2Load, this will check all of pointers detected over app.
-	* Apps should not draw their own pointers because there is currently no pointer leave event in SAGE2.
-	* Should a pointer go from one app to another, both apps will believe the pointer is over them.
-	*
-	* @method remotePointerUpdateCheck
-	*/
-	remotePointerUpdateCheck: function() {
-		for (let i = 0; i < this.state.pointersOverApp.length; i++) {
-			SAGE2RemoteSitePointer.updateRemotePointer(this.state.pointersOverApp[i], this);
-		}
 	},
 
 	/**

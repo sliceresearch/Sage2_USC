@@ -956,6 +956,7 @@ function setupListeners() {
 				app.move(date);
 			}
 		}
+		SAGE2RemoteSitePointer.checkIfAppNeedsUpdate(app);
 	});
 
 	wsio.on('startResize', function(data) {
@@ -979,6 +980,7 @@ function setupListeners() {
 				app.resize(date);
 			}
 		}
+		SAGE2RemoteSitePointer.checkIfAppNeedsUpdate(app);
 	});
 
 	wsio.on('animateCanvas', function(data) {
