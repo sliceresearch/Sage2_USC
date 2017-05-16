@@ -98,6 +98,7 @@ function WebsocketIO(url) {
 					_this.remoteListeners[msg.d.listener] = msg.d.alias;
 					return;
 				}
+				//console.log("WebsocketIO> ", this.url, fName, JSON.stringify(msg.d), "(string)");
 				console.log("WebsocketIO> ", this.url, fName, "(string)");
 				_this.messages[fName](msg.d);
 			} else {

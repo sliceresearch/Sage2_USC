@@ -574,7 +574,7 @@ function setupListeners(anWsio) {
 	});
 
 	anWsio.on('updateMediaStreamFrame', function(dataOrBuffer) {
-		//console.log("updateMediaStreamFrame", anWsio.url);
+		console.log("updateMediaStreamFrame", anWsio.url);
                 // NB: Cloned code
                 var data;
                 if (dataOrBuffer.id !== undefined) {
@@ -1537,12 +1537,28 @@ function createAppWindow(data, anWsio, parentId, titleBarHeight, titleTextSize, 
 	parent.appendChild(windowTitle);
 	parent.appendChild(windowItem);
 
+	// FIXME: copied code from below
+	var slaveServerId = data.slaveServerId;
+	if (slaveServerId!==undefined && slaveServerId!==null) {
+		console.log("slaveServerId",slaveServerId);
+		var sws = slaveConnections[slaveServerId];
+		if (sws !== null && sws !== undefined) {
+			init.slaveServer = sws;
+		}
+	}
+
 	// App launched in window
 	if (data.application === "media_stream") {
 		anWsio.emit('receivedMediaStreamFrame', {id: data.id});
+		if (sws !== null && sws !== undefined) {
+			sws.emit('receivedMediaStreamFrame', {id: data.id});
+		}
 	}
 	if (data.application === "media_block_stream") {
 		anWsio.emit('receivedMediaBlockStreamFrame', {id: data.id, newClient: true});
+		if (sws !== null && sws !== undefined) {
+			sws.emit('receivedMediaBlockStreamFrame', {id: data.id, newClient: true});
+		}
 	}
 
 	// convert url if hostname is alias for current origin

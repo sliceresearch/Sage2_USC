@@ -6,7 +6,7 @@ echo `date` Starting SAGE2 servers
 
 export LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH
 
-SAGE2=/home/sage/sage2/govlab-201612/
+SAGE2=/home/sage/sage2/govlab-201704/
 
 LOG=$SAGE2/master.log
 touch $LOG
