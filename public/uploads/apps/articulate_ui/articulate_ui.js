@@ -10,8 +10,8 @@ var articulate_ui = SAGE2_App.extend( {
 		// Create div into the DOM
 		this.SAGE2Init("canvas", data);
 		// Set the background to black
-		this.element.style.backgroundColor = '#111111';
-		this.element.style.opacity = .9;		
+		this.element.style.backgroundColor = '#000000';
+		this.element.style.opacity = 1.0;
 
 		// move and resize callbacks
 		this.resizeEvents = "continuous";
@@ -28,9 +28,10 @@ var articulate_ui = SAGE2_App.extend( {
 		this.ctx = this.element.getContext('2d');
 
 		this.counter = 0;
-		this.debugMode = true; 
+		this.debugMode = true;
+		this.targetAppID = null;
 
-		//-------- THIS IS JUST FOR DEBUGGING - quickly launching pre-loaded visualization specs, rather than 
+		//-------- THIS IS JUST FOR DEBUGGING - quickly launching pre-loaded visualization specs, rather than
 		//------------- basically rather than complete the circuit from the input UI, to the NLP server, back to this app
 		//------------- instead I just access these pre-loaded specs to make sure the parsing and vis lauching code works
 
@@ -41,7 +42,7 @@ var articulate_ui = SAGE2_App.extend( {
 		// 		{"plot-type":{"valueType":"STRING","string":"BAR","chars":"BAR"},"x-axis":{"valueType":"STRING","string":"crimetype","chars":"crimetype"},"y-axis":{"valueType":"STRING","string":"TOTAL_CRIME","chars":"TOTAL_CRIME"},"data-query":{"valueType":"STRING","string":"SELECT count(*) as TOTAL_CRIME,`crimetype` FROM chicagocrime WHERE `locationtype`='restaurant' GROUP BY crimetype","chars":"SELECT count(*) as TOTAL_CRIME,`crimetype` FROM chicagocrime WHERE `locationtype`='restaurant' GROUP BY crimetype"},"data-query-result":[{"valueType":"STRING","string":"(total_crime,2);(crimetype,arson)","chars":"(total_crime,2);(crimetype,arson)"},{"valueType":"STRING","string":"(total_crime,238);(crimetype,assault)","chars":"(total_crime,238);(crimetype,assault)"},{"valueType":"STRING","string":"(total_crime,302);(crimetype,battery)","chars":"(total_crime,302);(crimetype,battery)"},{"valueType":"STRING","string":"(total_crime,134);(crimetype,burglary)","chars":"(total_crime,134);(crimetype,burglary)"},{"valueType":"STRING","string":"(total_crime,1);(crimetype,crim-sexual-assault)","chars":"(total_crime,1);(crimetype,crim-sexual-assault)"},{"valueType":"STRING","string":"(total_crime,177);(crimetype,criminal-damage)","chars":"(total_crime,177);(crimetype,criminal-damage)"},{"valueType":"STRING","string":"(total_crime,447);(crimetype,criminal-trespass)","chars":"(total_crime,447);(crimetype,criminal-trespass)"},{"valueType":"STRING","string":"(total_crime,905);(crimetype,deceptive-practice)","chars":"(total_crime,905);(crimetype,deceptive-practice)"},{"valueType":"STRING","string":"(total_crime,2);(crimetype,gambling)","chars":"(total_crime,2);(crimetype,gambling)"},{"valueType":"STRING","string":"(total_crime,3);(crimetype,intimidation)","chars":"(total_crime,3);(crimetype,intimidation)"},{"valueType":"STRING","string":"(total_crime,1);(crimetype,kidnapping)","chars":"(total_crime,1);(crimetype,kidnapping)"},{"valueType":"STRING","string":"(total_crime,63);(crimetype,liquor-law-violation)","chars":"(total_crime,63);(crimetype,liquor-law-violation)"},{"valueType":"STRING","string":"(total_crime,2);(crimetype,motor-vehicle-theft)","chars":"(total_crime,2);(crimetype,motor-vehicle-theft)"},{"valueType":"STRING","string":"(total_crime,26);(crimetype,narcotics)","chars":"(total_crime,26);(crimetype,narcotics)"},{"valueType":"STRING","string":"(total_crime,1);(crimetype,obscenity)","chars":"(total_crime,1);(crimetype,obscenity)"},{"valueType":"STRING","string":"(total_crime,8);(crimetype,offense-involving-children)","chars":"(total_crime,8);(crimetype,offense-involving-children)"},{"valueType":"STRING","string":"(total_crime,104);(crimetype,other-offense)","chars":"(total_crime,104);(crimetype,other-offense)"},{"valueType":"STRING","string":"(total_crime,18);(crimetype,public-peace-violation)","chars":"(total_crime,18);(crimetype,public-peace-violation)"},{"valueType":"STRING","string":"(total_crime,63);(crimetype,robbery)","chars":"(total_crime,63);(crimetype,robbery)"},{"valueType":"STRING","string":"(total_crime,4);(crimetype,sex-offense)","chars":"(total_crime,4);(crimetype,sex-offense)"},{"valueType":"STRING","string":"(total_crime,2);(crimetype,stalking)","chars":"(total_crime,2);(crimetype,stalking)"},{"valueType":"STRING","string":"(total_crime,5150);(crimetype,theft)","chars":"(total_crime,5150);(crimetype,theft)"}] }
 		// ];
 
-		// I think these are the most recent tests I ran... 
+		// I think these are the most recent tests I ran...
 		this.specificationObjects = [
 			{"horizontalAxis":"year","horizontalGroupAxis":"crimetype","verticalAxis":"TOTAL_CRIME","plotType":"LINE","dataQuery":"SELECT count(*) as TOTAL_CRIME,`year`,`crimetype` FROM chicagocrime GROUP BY year, crimetype","dataQueryResult":["(total_crime,16);(year,2010);(crimetype,arson)","(total_crime,1096);(year,2010);(crimetype,assault)","(total_crime,2611);(year,2010);(crimetype,battery)","(total_crime,883);(year,2010);(crimetype,burglary)","(total_crime,43);(year,2010);(crimetype,crim-sexual-assault)","(total_crime,2051);(year,2010);(crimetype,criminal-damage)","(total_crime,1129);(year,2010);(crimetype,criminal-trespass)","(total_crime,1289);(year,2010);(crimetype,deceptive-practice)","(total_crime,21);(year,2010);(crimetype,gambling)","(total_crime,4);(year,2010);(crimetype,homicide)","(total_crime,28);(year,2010);(crimetype,interference-with-public-officer)","(total_crime,12);(year,2010);(crimetype,intimidation)","(total_crime,3);(year,2010);(crimetype,kidnapping)","(total_crime,70);(year,2010);(crimetype,liquor-law-violation)","(total_crime,942);(year,2010);(crimetype,motor-vehicle-theft)","(total_crime,1561);(year,2010);(crimetype,narcotics)","(total_crime,4);(year,2010);(crimetype,obscenity)","(total_crime,62);(year,2010);(crimetype,offense-involving-children)","(total_crime,2);(year,2010);(crimetype,other-narcotic-violation)","(total_crime,918);(year,2010);(crimetype,other-offense)","(total_crime,209);(year,2010);(crimetype,prostitution)","(total_crime,3);(year,2010);(crimetype,public-indecency)","(total_crime,232);(year,2010);(crimetype,public-peace-violation)","(total_crime,828);(year,2010);(crimetype,robbery)","(total_crime,52);(year,2010);(crimetype,sex-offense)","(total_crime,8);(year,2010);(crimetype,stalking)","(total_crime,11450);(year,2010);(crimetype,theft)","(total_crime,78);(year,2010);(crimetype,weapons-violation)","(total_crime,9);(year,2011);(crimetype,arson)","(total_crime,1035);(year,2011);(crimetype,assault)","(total_crime,2363);(year,2011);(crimetype,battery)","(total_crime,781);(year,2011);(crimetype,burglary)","(total_crime,45);(year,2011);(crimetype,crim-sexual-assault)","(total_crime,1771);(year,2011);(crimetype,criminal-damage)","(total_crime,934);(year,2011);(crimetype,criminal-trespass)","(total_crime,1755);(year,2011);(crimetype,deceptive-practice)","(total_crime,27);(year,2011);(crimetype,gambling)","(total_crime,5);(year,2011);(crimetype,homicide)","(total_crime,36);(year,2011);(crimetype,interference-with-public-officer)","(total_crime,13);(year,2011);(crimetype,intimidation)","(total_crime,5);(year,2011);(crimetype,kidnapping)","(total_crime,81);(year,2011);(crimetype,liquor-law-violation)","(total_crime,902);(year,2011);(crimetype,motor-vehicle-theft)","(total_crime,1355);(year,2011);(crimetype,narcotics)","(total_crime,3);(year,2011);(crimetype,obscenity)","(total_crime,74);(year,2011);(crimetype,offense-involving-children)","(total_crime,1);(year,2011);(crimetype,other-narcotic-violation)","(total_crime,931);(year,2011);(crimetype,other-offense)","(total_crime,162);(year,2011);(crimetype,prostitution)","(total_crime,5);(year,2011);(crimetype,public-indecency)","(total_crime,184);(year,2011);(crimetype,public-peace-violation)","(total_crime,801);(year,2011);(crimetype,robbery)","(total_crime,70);(year,2011);(crimetype,sex-offense)","(total_crime,21);(year,2011);(crimetype,stalking)","(total_crime,10822);(year,2011);(crimetype,theft)","(total_crime,78);(year,2011);(crimetype,weapons-violation)","(total_crime,5);(year,2012);(crimetype,arson)","(total_crime,971);(year,2012);(crimetype,assault)","(total_crime,2350);(year,2012);(crimetype,battery)","(total_crime,814);(year,2012);(crimetype,burglary)","(total_crime,47);(year,2012);(crimetype,crim-sexual-assault)","(total_crime,1723);(year,2012);(crimetype,criminal-damage)","(total_crime,927);(year,2012);(crimetype,criminal-trespass)","(total_crime,1880);(year,2012);(crimetype,deceptive-practice)","(total_crime,24);(year,2012);(crimetype,gambling)","(total_crime,7);(year,2012);(crimetype,homicide)","(total_crime,56);(year,2012);(crimetype,interference-with-public-officer)","(total_crime,9);(year,2012);(crimetype,intimidation)","(total_crime,12);(year,2012);(crimetype,kidnapping)","(total_crime,73);(year,2012);(crimetype,liquor-law-violation)","(total_crime,820);(year,2012);(crimetype,motor-vehicle-theft)","(total_crime,1119);(year,2012);(crimetype,narcotics)","(total_crime,3);(year,2012);(crimetype,non-criminal)","(total_crime,2);(year,2012);(crimetype,obscenity)","(total_crime,97);(year,2012);(crimetype,offense-involving-children)","(total_crime,1);(year,2012);(crimetype,other-narcotic-violation)","(total_crime,791);(year,2012);(crimetype,other-offense)","(total_crime,119);(year,2012);(crimetype,prostitution)","(total_crime,1);(year,2012);(crimetype,public-indecency)","(total_crime,170);(year,2012);(crimetype,public-peace-violation)","(total_crime,669);(year,2012);(crimetype,robbery)","(total_crime,76);(year,2012);(crimetype,sex-offense)","(total_crime,17);(year,2012);(crimetype,stalking)","(total_crime,10961);(year,2012);(crimetype,theft)","(total_crime,84);(year,2012);(crimetype,weapons-violation)","(total_crime,5);(year,2013);(crimetype,arson)","(total_crime,878);(year,2013);(crimetype,assault)","(total_crime,2150);(year,2013);(crimetype,battery)","(total_crime,733);(year,2013);(crimetype,burglary)","(total_crime,50);(year,2013);(crimetype,crim-sexual-assault)","(total_crime,1394);(year,2013);(crimetype,criminal-damage)","(total_crime,1064);(year,2013);(crimetype,criminal-trespass)","(total_crime,1895);(year,2013);(crimetype,deceptive-practice)","(total_crime,17);(year,2013);(crimetype,gambling)","(total_crime,6);(year,2013);(crimetype,homicide)","(total_crime,38);(year,2013);(crimetype,interference-with-public-officer)","(total_crime,5);(year,2013);(crimetype,intimidation)","(total_crime,8);(year,2013);(crimetype,kidnapping)","(total_crime,47);(year,2013);(crimetype,liquor-law-violation)","(total_crime,693);(year,2013);(crimetype,motor-vehicle-theft)","(total_crime,933);(year,2013);(crimetype,narcotics)","(total_crime,2);(year,2013);(crimetype,obscenity)","(total_crime,96);(year,2013);(crimetype,offense-involving-children)","(total_crime,1);(year,2013);(crimetype,other-narcotic-violation)","(total_crime,738);(year,2013);(crimetype,other-offense)","(total_crime,107);(year,2013);(crimetype,prostitution)","(total_crime,3);(year,2013);(crimetype,public-indecency)","(total_crime,203);(year,2013);(crimetype,public-peace-violation)","(total_crime,552);(year,2013);(crimetype,robbery)","(total_crime,50);(year,2013);(crimetype,sex-offense)","(total_crime,9);(year,2013);(crimetype,stalking)","(total_crime,10051);(year,2013);(crimetype,theft)","(total_crime,69);(year,2013);(crimetype,weapons-violation)","(total_crime,7);(year,2014);(crimetype,arson)","(total_crime,850);(year,2014);(crimetype,assault)","(total_crime,2124);(year,2014);(crimetype,battery)","(total_crime,567);(year,2014);(crimetype,burglary)","(total_crime,1);(year,2014);(crimetype,concealed-carry-license-violation)","(total_crime,48);(year,2014);(crimetype,crim-sexual-assault)","(total_crime,1345);(year,2014);(crimetype,criminal-damage)","(total_crime,800);(year,2014);(crimetype,criminal-trespass)","(total_crime,1873);(year,2014);(crimetype,deceptive-practice)","(total_crime,4);(year,2014);(crimetype,gambling)","(total_crime,6);(year,2014);(crimetype,homicide)","(total_crime,40);(year,2014);(crimetype,interference-with-public-officer)","(total_crime,9);(year,2014);(crimetype,intimidation)","(total_crime,2);(year,2014);(crimetype,kidnapping)","(total_crime,40);(year,2014);(crimetype,liquor-law-violation)","(total_crime,524);(year,2014);(crimetype,motor-vehicle-theft)","(total_crime,610);(year,2014);(crimetype,narcotics)","(total_crime,2);(year,2014);(crimetype,non-criminal)","(total_crime,4);(year,2014);(crimetype,obscenity)","(total_crime,94);(year,2014);(crimetype,offense-involving-children)","(total_crime,1);(year,2014);(crimetype,other-narcotic-violation)","(total_crime,631);(year,2014);(crimetype,other-offense)","(total_crime,96);(year,2014);(crimetype,prostitution)","(total_crime,1);(year,2014);(crimetype,public-indecency)","(total_crime,143);(year,2014);(crimetype,public-peace-violation)","(total_crime,458);(year,2014);(crimetype,robbery)","(total_crime,43);(year,2014);(crimetype,sex-offense)","(total_crime,15);(year,2014);(crimetype,stalking)","(total_crime,9154);(year,2014);(crimetype,theft)","(total_crime,46);(year,2014);(crimetype,weapons-violation)"]},
 			{"horizontalAxis":"NON_UNIT","horizontalGroupAxis":"neighborhood","verticalAxis":"TOTAL_CRIME","plotType":"BAR","dataQuery":"SELECT count(*) as TOTAL_CRIME,`neighborhood` FROM chicagocrime WHERE (`location`='street') AND (`crimetype`='theft') GROUP BY neighborhood","dataQueryResult":["(total_crime,901);(neighborhood,loop)","(total_crime,4360);(neighborhood,near-west-side)","(total_crime,2429);(neighborhood,river-north)","(total_crime,2896);(neighborhood,uic)"]},
@@ -50,7 +51,7 @@ var articulate_ui = SAGE2_App.extend( {
 
 		//in practice, I don't use colors well.  Ideally, we would want this to be 'smarter'
 		// now it just cycles through these colors, unless assigned by the nlp side
-		this.colors = ["steelblue", "mediumseagreen", "cadetblue", "lightskyblue"]; 
+		this.colors = ["steelblue", "mediumseagreen", "cadetblue", "lightskyblue"];
 
 
 		//this stores the commands that are visible and displayed to the user
@@ -72,13 +73,13 @@ var articulate_ui = SAGE2_App.extend( {
 		this.refresh(date);
 	},
 
-	
+
 
 	//----------------------------------------//
 	//---------- DRAWING FUNCTIONS ----------//
 	//---------------------------------------//
 	//I used the canvas to draw because I find it preferable for text, and I am more accustumed to it
-	//but this isn't necessary 
+	//but this isn't necessary
 	draw: function(date) {
 		console.log('articulate_ui> Draw with state value', this.state.value);
 
@@ -86,7 +87,7 @@ var articulate_ui = SAGE2_App.extend( {
 
 		this.fontSize = 32;
 		this.ctx.font = "32px Helvetica";
-		this.ctx.textAlign="left"; 
+		this.ctx.textAlign="left";
 
 		//status bar
 		this.ctx.fillStyle = "rgba(23, 191, 140, 1.0)"
@@ -99,15 +100,15 @@ var articulate_ui = SAGE2_App.extend( {
 
 		this.fontSize = 32;
 		this.ctx.font = this.fontSize+"px Ariel";
-		this.ctx.textAlign="left"; 
+		this.ctx.textAlign="left";
 		this.ctx.fillStyle = "rgba(225, 225, 225, 1.0)";
 		theY = this.userInputArea.y+32+this.gap;
 
-		//no idea if this works... 
+		//no idea if this works...
 		startIdx = 0;
 		if( this.commands.length*32 > this.element.length-100 ) {
 			diff = (this.element.length-100) - (this.commands.length*32);
-			startIdx = diff % 32; 
+			startIdx = diff % 32;
 		}
 
 		// but this works...
@@ -121,7 +122,7 @@ var articulate_ui = SAGE2_App.extend( {
 		// this.ctx.fillRect(100, this.element.height - 100, this.element.width-200, 75 );
 		// this.ctx.fillStyle = "rgba(0, 0, 0, 1.0)";
 		// this.ctx.font = "24px Ariel";
-		// this.ctx.textAlign="left"; 
+		// this.ctx.textAlign="left";
 		// this.ctx.fillText("generate vis", 110, this.element.height - 50 );
 	},
 
@@ -150,11 +151,11 @@ var articulate_ui = SAGE2_App.extend( {
 		if (eventType === "pointerPress" && (data.button === "left")) { //when I am debugging, I use pointer presses to launch example visualizations
 			if( isMaster && this.debugMode ){
 
-				this.readExample2(this.specificationObjects[this.counter], this.colors[this.counter]); 
+				//this.readExample2(this.specificationObjects[this.counter], this.colors[this.counter]);
 				//this.contactArticulateHub("show me theft in loop by location type"); //or can use it to contact articulate hub with a dummy question
 			}
 
-			//I can't remember why this code is here... 
+			//I can't remember why this code is here...
 			this.counter++;
 			if( this.counter >= this.specificationObjects.length )
 			{
@@ -195,14 +196,17 @@ var articulate_ui = SAGE2_App.extend( {
 
 	// this is where commands come from the UI
 	// so when the user speaks, and presses 'send to sage2', it ends up here
-	textInputEvent: function(text, date){
+	textInputEvent: function(text, targetAppID, date){
+		console.log("in articulate");
+		this.targetAppID = targetAppID;
+		console.log("targetApp " + this.targetAppID);
 		this.commands[this.commands.length-1] = text;
-		this.commands.push(">"); 
+		this.commands.push(">");
 
-		if( isMaster ){
-			//send to articulate hub... 
+		//if( isMaster ){
+			//send to articulate hub...
 			this.contactArticulateHub(text);  //send to the articulate hub
-		}
+		//}
 
 
 		// if( text.indexOf("Launch example") > -1 ){
@@ -224,12 +228,15 @@ var articulate_ui = SAGE2_App.extend( {
 	//contact the smart hub-- only called by master
 	contactArticulateHub: function(msg){
 		console.log("sending msg: " , msg);
+		if(msg.includes("Close")){
 
-		//msg = "show me theft in loop by location type";//msg.replace(" ", "%"); 
+		}else{
+			//msg = "Can I see crimes on streets by crime type"; //msg.replace(" ", "%");
+		}
 		url = "https://articulate.evl.uic.edu:8443/smarthub/webapi/myresource/query/";
 
 		//url = "https://articulate.evl.uic.edu:8443/smarthub/webapi/myresource/query/can%we%look%at%total%crime%by%locationtype%in%2013%for%UIC";
-		url = url+msg; 
+		url = url+msg;
 
 		this.callbackFunc = this.callback.bind(this);
 
@@ -243,7 +250,7 @@ var articulate_ui = SAGE2_App.extend( {
 
 		var xhr = new XMLHttpRequest();
 		xhr.open("GET", filename, true);
-		xhr.onreadystatechange = function() { 
+		xhr.onreadystatechange = function() {
 			if (xhr.readyState === 4) {
 				if (xhr.status === 200) {
 					if (dataType === "TEXT") {
@@ -269,48 +276,75 @@ var articulate_ui = SAGE2_App.extend( {
 	callback: function(err, specObj) {
 			if (err)			{
 				console.log("error connecting to articulate smart hub");
-				return;
+				//return;
 			}
 			console.log("GOT THE RESPONSE: ");
-			console.log(specObj); 
+			console.log(specObj);
 
 			//OLD
-			//this.handleResponse(specObj); 
+			//this.handleResponse(specObj);
 			if( isMaster)
 				this.readExample2(specObj, this.colors[this.counter]); // call the parser
 
 			//then broadcast the results to display nodes!
-			//broadcast( "handleResponse", {response:"responseTest"} ); 
+			//broadcast( "handleResponse", {response:"responseTest"} );
 		},
 
 
 	// parse the data
 	// the specification object is not nicely formatting- parsing is a pain!  =(
 	readExample2: function(specificationObj, color){
-
-		if( specificationObj.specType == "Layout") //only used for close operations
+		if(specificationObj == null){
+			//console.log("children " + this.childList[this.childList.length-1].childId);
+			for(var key in this.childList)
+			{
+				if(this.childList[key].childId == this.targetAppID)
+				var closeAppIndex = this.childList.indexOf(this.childList[key]);
+				this.closeChild(closeAppIndex);
+				console.log("Cloose "+this.childList[key].childId);
+			}
+			//this.closeChild(this.getNumberOfChildren()-1); //right now we just close the last one, later will use a unique id of the vis
+		}
+		else if (specificationObj["request"] == "close.01"){
+			for(var key in this.childList)
+			{
+				if(this.childList[key].childId == this.targetAppID)
+				var closeAppIndex = this.childList.indexOf(this.childList[key]);
+				this.closeChild(closeAppIndex);
+				console.log("Cloose "+this.childList[key].childId);
+			}
+		}
+		else if( specificationObj.specType == "Layout") //only used for close operations
 		{
 			if( specificationObj.request.indexOf("close") != -1 )
 			{
-				this.closeChild(this.getNumberOfChildren()-1); //right now we just close the last one, later will use a unique id of the vis
+				for(var key in this.childList)
+				{
+					if(this.childList[key].childId == this.targetAppID)
+					var closeAppIndex = this.childList.indexOf(this.childList[key]);
+					this.closeChild(closeAppIndex);
+					console.log("Cloose "+this.childList[key].childId);
+				}
+				//this.closeChild(this.getNumberOfChildren()-1); //right now we just close the last one, later will use a unique id of the vis
 			}
 		}
 		else // else make a vis!
 		{
 			type = specificationObj["plotType"].toLowerCase(); //what kind of plot: bar chart, map, line chart
-			x = specificationObj["horizontalGroupAxis"].toLowerCase(); 
+			x = specificationObj["horizontalGroupAxis"].toLowerCase();
 			y = specificationObj["verticalAxis"].toLowerCase();
-			id = null; //not using right now... 
-			if( specificationObj["horizontalAxis"] ) // this  just required some additional parsing... 
+			hub_id = specificationObj["id"];
+			id = null;//specificationObj["id"]; //not using right now...
+			if( specificationObj["horizontalAxis"] ) // this  just required some additional parsing...
 				if( specificationObj["horizontalAxis"] == "NON_UNIT")
-					id = null;
-				else 
+					id = null;//specificationObj["id"];
+				else
 					id = specificationObj["horizontalAxis"].toLowerCase();
-			data = []; 
+			data = [];
 
 			//print for sanity
-			console.log('type' + type + "x " + x + " y " + y + " id " + id);
-			maxVal = 0; 
+			console.log('type' + type + "x " + x + " y " + y + " hub_id " + hub_id);
+			maxVal = 0;
 
 			//handling individual types
 			// horrible parsing... =(
@@ -318,12 +352,12 @@ var articulate_ui = SAGE2_App.extend( {
 			// so the values and labels for a bar chart
 			// the values and locations for a heat map
 			// the values, dates, and labels for a line chart
-			if( type == "map"){ 
+			if( type == "map"){
 				for(i = 0; i < specificationObj["dataQueryResult"].length; i++){
-					line = specificationObj["dataQueryResult"][i]; 
+					line = specificationObj["dataQueryResult"][i];
 					console.log(line);
 
-					while( line.indexOf("(") != -1 ) 
+					while( line.indexOf("(") != -1 )
 						line = line.replace("(", "#");
 					while( line.indexOf(")") != -1 )
 						line = line.replace(")", "#");
@@ -342,13 +376,13 @@ var articulate_ui = SAGE2_App.extend( {
 						val = parseFloat(tokens[8]);
 						obj["value"] = val;
 						if( val > maxVal )
-							maxVal = val; 
+							maxVal = val;
 					}
 					else {
 						//to do... maybe?
 					}
 
-					data.push(obj);		
+					data.push(obj);
 				}
 				// data parsed!
 
@@ -365,7 +399,7 @@ var articulate_ui = SAGE2_App.extend( {
 					title: "visualization response"
 				};
 			}
-			else if( type == "bar" ){ 
+			else if( type == "bar" ){
 				for(i = 0; i < specificationObj["dataQueryResult"].length; i++){ //same thing parse the data
 					line = specificationObj["dataQueryResult"][i];
 					console.log(line);
@@ -390,13 +424,13 @@ var articulate_ui = SAGE2_App.extend( {
 					else {
 						//to do
 					}
-		
+
 
 					data.push(obj);
 					// console.log(obj);
 				}
 
-				//launch app 
+				//launch app
 				applicationType ="custom",
 				application = "apps/vega_vis_app"; 	 //its a vega app
 				msg = "this is a message from articulate_ui", //not used so much, but could
@@ -447,7 +481,7 @@ var articulate_ui = SAGE2_App.extend( {
 						obj["x"] = tokens[6];
 						obj["id"] = tokens[10];
 					}
-		
+
 
 					data.push(obj);
 					// console.log(obj);
@@ -455,7 +489,7 @@ var articulate_ui = SAGE2_App.extend( {
 
 				//launch app
 				applicationType ="custom",
-				application = "apps/vega_vis_app"; // launch the vega app	
+				application = "apps/vega_vis_app"; // launch the vega app
 				msg = "this is a message from articulate_ui",
 				console.log(data);
 
@@ -466,7 +500,7 @@ var articulate_ui = SAGE2_App.extend( {
 					y: y.toLowerCase(), //y axis (usually counts)
 					id: id, //what are the lines
 					color: color, //i can't remember where the colors for the lines get set- maybe in the vega vis app... but someday need to be able to pass array of colors associated with lines
-					visId: this.counter, //unique id for the vis 
+					visId: this.counter, //unique id for the vis
 					data: data, //data to draw
 					title: "visualization response"
 				};
@@ -474,6 +508,8 @@ var articulate_ui = SAGE2_App.extend( {
 
 			// launch the app we created!
 			this.launchNewChild(applicationType, application, initState, msg);//defined in sage2 app
+			//this.closeChild(this.getNumberOfChildren()-1);
+			//console.log("after " + this.childList.length);
 		}
 
 	},
@@ -487,7 +523,7 @@ var articulate_ui = SAGE2_App.extend( {
 	// 	// console.log(data.response);
 
 	// 	applicationType ="custom",
-	// 	application = "apps/d3plus_visapp", 	
+	// 	application = "apps/d3plus_visapp",
 	// 	msg = "this is a message from articulate_ui",
 
 
@@ -502,7 +538,7 @@ var articulate_ui = SAGE2_App.extend( {
 	// 		id = specificationObj.id.string.toLowerCase();
 	// 	else
 	// 		id = null;
-	// 	data = []; 
+	// 	data = [];
 
 	// 	//console.log('type' + type + "x " + x + " y " + y);
 	// 	for(i = 0; i < specificationObj["data-query-result"].length; i++){
@@ -546,10 +582,10 @@ var articulate_ui = SAGE2_App.extend( {
 	// },
 
 	// //here is where the parent launches the child app
-	// //we will have to add appropriate data variables 
+	// //we will have to add appropriate data variables
 	// launchVis: function(){
 	// 	applicationType ="custom",
-	// 	application = "apps/d3plus_visapp", 	
+	// 	application = "apps/d3plus_visapp",
 	// 	msg = "this is a message from articulate_ui",
 	// 	initState = {  // these values will load on child app init
 	// 			value: 10,
@@ -557,7 +593,7 @@ var articulate_ui = SAGE2_App.extend( {
 	// 			x: "year",
 	// 			y: "value",
 	// 			id: "name",
-	// 			data: 
+	// 			data:
 	// 			[
 	// 			    {"year": 2010, "name":"TEST", "value": 15},
 	// 			    {"year": 2010, "name":"Loop", "value": 10},
@@ -588,12 +624,12 @@ var articulate_ui = SAGE2_App.extend( {
 
 	// launchVis2: function(){
 	// 	applicationType ="custom",
-	// 	application = "apps/vega_vis_app", 	
+	// 	application = "apps/vega_vis_app",
 	// 	msg = "this is a message from articulate_ui",
 	// 	// initState = {  // these values will load on child app init
-	// 	// 		value: 10, 
+	// 	// 		value: 10,
 	// 	// 		// specFile: "uploads/apps/vega_vis_app/data/spec.json"
-				
+
 	// 	// 	};
 
 	// 	initState = {  // these values will load on child app init
@@ -601,25 +637,25 @@ var articulate_ui = SAGE2_App.extend( {
 	// 		type: "bar",
 	// 		x: "year",
 	// 		y: "total_crime",
-	// 		data: 
+	// 		data:
 	// 		[
 	// 		    {"x": "2010", "y": 15},
 	// 		    {"x": "2011", "y": 10},
 	// 		    {"x": "2012", "y": 5},
 	// 		    {"x": "2013", "y": 50}
-	// 	    ], 
+	// 	    ],
 	// 	    color: "steelblue"
 	// 	};
 
 	// 	this.launchNewChild(applicationType, application, initState, msg);//defined in sage2 app
 	// },
 
-	
+
 
 	// readExample: function(specificationObj, color){
 
 	// 	applicationType ="custom",
-	// 	application = "apps/vega_vis_app";//"apps/d3plus_visapp", 	
+	// 	application = "apps/vega_vis_app";//"apps/d3plus_visapp",
 	// 	msg = "this is a message from articulate_ui",
 
 	// 	type = specificationObj["plot-type"].string.toLowerCase();
@@ -629,7 +665,7 @@ var articulate_ui = SAGE2_App.extend( {
 	// 		id = specificationObj["id"].string.toLowerCase();
 	// 	else
 	// 		id = null;
-	// 	data = []; 
+	// 	data = [];
 
 	// 	console.log('type' + type + "x " + x + " y " + y);
 	// 	for(i = 0; i < specificationObj["data-query-result"].length; i++){

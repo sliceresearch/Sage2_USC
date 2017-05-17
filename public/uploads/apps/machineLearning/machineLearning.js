@@ -123,7 +123,70 @@ const bodyParts = {
 	},
 
 };
-
+// var wsio;
+// wsio = new WebsocketIO();
+//
+// wsio.open(function() {
+//     console.log("Websocket opened");
+//
+//     setupListeners();
+//
+//     var clientDescription = {
+//       clientType: "kinectUI",
+//       requests: {
+//         config: false,
+//         version: false,
+//         time: false,
+//         console: false
+//       }
+//       // },
+//       // browser: __SAGE2__.browser
+//     };
+//     wsio.emit('addClient', clientDescription);
+//   });
+//
+// // socket close event (i.e. server crashed)
+//   wsio.on('close', function(evt) {
+//     // show a popup for a long time
+//     showMessage("Server offline", 2147483647);
+//     // try to reload every few seconds
+//     var refresh = setInterval(function() {
+//       reloadIfServerRunning(function() {
+//         clearInterval(refresh);
+//       });
+//     }, 2000);
+//   });
+//
+// 	function init(){
+// 	  console.log("init");
+// 	}
+//
+// 	function setupListeners() {
+// 	  wsio.on('initialize', function(data){
+// 	    //interactor.setInteractionId(data.UID);
+//   });
+//
+//   // Open a popup on message sent from server
+//   wsio.on('errorMessage', showMessage);
+//
+//     // Server sends the SAGE2 version
+//   wsio.on('setupSAGE2Version', function(data) {
+//     sage2Version = data;
+//     console.log('SAGE2: version', data.base, data.branch, data.commit, data.date);
+//   });
+// }
+// function showMessage(message, delay) {
+//   var aMessage = webix.alert({
+//     type:  "alert-error",
+//     title: "SAGE2 Error",
+//     ok:    "OK",
+//     text:  message
+//   });
+//   setTimeout(function() {
+//     webix.modalbox.hide(aMessage);
+//   }, delay ? delay : 2000);
+// }
+//kinect App
 var machineLearning = SAGE2_App.extend( {
 	init: function(data) {
 		// Create div into the DOM
@@ -158,7 +221,7 @@ var machineLearning = SAGE2_App.extend( {
 		this.trialNumber = 0;
 
 		this.regularTrialMode = true;
-
+		this.recognitionStatus = 'false';
 		// rotation matrix math:
 		// measured angle between kinect and screen = 63 degrees
 		// rotated -27 degrees so kinect is perpendicular to screen on x-axis
@@ -222,7 +285,8 @@ var machineLearning = SAGE2_App.extend( {
 		}
 	},
 	startGestureRecognition: function(data, date){
-		console.log("in machinesLearning App!!");
+		this.recognitionStatus = data;
+		console.log("in machinesLearning App! "+this.recognitionStatus);
 	},
 	// -------------- CALIBRATED TRIAL FUNCTIONS
 
@@ -750,8 +814,6 @@ drawSkeletonLines: function(){
 
 	 const {head, rightShoulder, rightFingerTip} = this.mostRecentSkeleton;
 
-	 //if(rightFingerTip.kinectY > rightShoulder.kinectY){
-
 	 //Centering head and rightFingerTip to create a virtual screen in front of the display
 	 const centroidHeadX = 0;
 	 const centroidHeadY = 0;
@@ -765,40 +827,26 @@ drawSkeletonLines: function(){
 	 const spaceMaxY = this.physicalSpace.maxY;
 
 	 //Dimensions of virtual touch screen
-	//  const minX = (((centroidHeadX - spaceMinX) * (rightFingerTip.z - head.z )) / head.z);// + head.z) - spaceMaxX;
-	//  const maxX = (((centroidHeadX - spaceMaxX) * (rightFingerTip.z - head.z )) / head.z);// + head.z) - spaceMaxX;
-	//  const minY = (((centroidHeadY - spaceMinY) * (rightFingerTip.z - head.z )) / head.z);// + head.kinectY) - spaceMaxY;
-	//  const maxY = (((centroidHeadY - spaceMaxY) * (rightFingerTip.z - head.z )) / head.z);// + head.kinectY) - spaceMaxY;
-
 	 const minX = -(((centroidHeadX - spaceMinX) * ( head.z - rightFingerTip.z )) / head.z);// + head.z) - spaceMaxX;
 	 const maxX = -(((centroidHeadX - spaceMaxX) * ( head.z - rightFingerTip.z )) / head.z);// + head.z) - spaceMaxX;
 	 const minY = -(((centroidHeadY - spaceMinY) * ( head.z - rightFingerTip.z )) / head.z);// + head.kinectY) - spaceMaxY;
 	 const maxY = -(((centroidHeadY - spaceMaxY) * ( head.z - rightFingerTip.z )) / head.z);// + head.kinectY) - spaceMaxY;
 
-	//  console.log("FX " + centroidRightFingerTipX);
-	//  console.log("FY " + -centroidRightFingerTipY);
-	//  console.log("HZ " + head.z);
-	//  console.log("FZ " + rightFingerTip.z);
-	//  console.log("minX " + minX);
-	//  console.log("maxX " + maxX);
-	//  console.log("minY " + minY);
-	//  console.log("maxY " + maxY);
-
 	 if (this.inRange(centroidRightFingerTipX, -centroidRightFingerTipY, minX, maxX, minY, maxY)){
 
-	 //Drawing the virtual screen just to figure out things
-	 this.ctx.strokeStyle = "rgba(240, 205, 50, 0.5)";
-	 this.ctx.fillStyle = "rgba(240, 205, 50, 0.5)";
-	 this.ctx.lineWidth = 3;
-	 this.ctx.beginPath();
-	 this.ctx.moveTo(this.map(minX, spaceMinX, spaceMaxX, 0, this.element.width), this.map(minY, spaceMinY, spaceMaxY, 0, this.element.height));
-	 this.ctx.lineTo(this.map(maxX, spaceMinX, spaceMaxX, 0, this.element.width), this.map(minY, spaceMinY, spaceMaxY, 0, this.element.height));
-	 this.ctx.lineTo(this.map(minX, spaceMinX, spaceMaxX, 0, this.element.width), this.map(maxY, spaceMinY, spaceMaxY, 0, this.element.height));
-   this.ctx.moveTo(this.map(maxX, spaceMinX, spaceMaxX, 0, this.element.width), this.map(maxY, spaceMinY, spaceMaxY, 0, this.element.height));
-	 this.ctx.lineTo(this.map(minX, spaceMinX, spaceMaxX, 0, this.element.width), this.map(maxY, spaceMinY, spaceMaxY, 0, this.element.height));
-	 this.ctx.lineTo(this.map(maxX, spaceMinX, spaceMaxX, 0, this.element.width), this.map(minY, spaceMinY, spaceMaxY, 0, this.element.height));
-	 this.ctx.stroke();
-	 this.ctx.fill();
+	 //Drawing the virtual screen just to figure things out
+	//  this.ctx.strokeStyle = "rgba(240, 205, 50, 0.5)";
+	//  this.ctx.fillStyle = "rgba(240, 205, 50, 0.5)";
+	//  this.ctx.lineWidth = 3;
+	//  this.ctx.beginPath();
+	//  this.ctx.moveTo(this.map(minX, spaceMinX, spaceMaxX, 0, this.element.width), this.map(minY, spaceMinY, spaceMaxY, 0, this.element.height));
+	//  this.ctx.lineTo(this.map(maxX, spaceMinX, spaceMaxX, 0, this.element.width), this.map(minY, spaceMinY, spaceMaxY, 0, this.element.height));
+	//  this.ctx.lineTo(this.map(minX, spaceMinX, spaceMaxX, 0, this.element.width), this.map(maxY, spaceMinY, spaceMaxY, 0, this.element.height));
+  //  this.ctx.moveTo(this.map(maxX, spaceMinX, spaceMaxX, 0, this.element.width), this.map(maxY, spaceMinY, spaceMaxY, 0, this.element.height));
+	//  this.ctx.lineTo(this.map(minX, spaceMinX, spaceMaxX, 0, this.element.width), this.map(maxY, spaceMinY, spaceMaxY, 0, this.element.height));
+	//  this.ctx.lineTo(this.map(maxX, spaceMinX, spaceMaxX, 0, this.element.width), this.map(minY, spaceMinY, spaceMaxY, 0, this.element.height));
+	//  this.ctx.stroke();
+	//  this.ctx.fill();
 
 	 //Factors to map point from virtual screen to large display
 	 const factorX = (spaceMaxX - spaceMinX) / (maxX - minX);
@@ -815,12 +863,19 @@ drawSkeletonLines: function(){
 	 //Mapping from physical coordinates to screen coordinates
 	 const mappedX = this.map(translatedX, spaceMinX, spaceMaxX, 0, this.element.width);
 	 const mappedY = this.map(-translatedY, spaceMinY, spaceMaxY, 0, this.element.height);
-	 //const mappedX = this.map(rightFingerTip.kinectX, minX, maxX, 0, this.element.width);
-	 //const mappedY = this.map(-rightFingerTip.kinectY, minY, maxY, 0, this.element.height);
+
+	 //const x = (head.z * (rightFingerTip.kinectX - head.kinectX))/(head.z - rightFingerTip.z) + head.kinectX;
+	 //const y = (head.z * (rightFingerTip.kinectY - head.kinectY))/(head.z - rightFingerTip.z) + head.kinectY;
 
 	 this.fillCircle(mappedX, mappedY, 20);
+
+	 //if the server needs to capture pointing --> send pointing position
+	 if(this.recognitionStatus == 'true'){
+	   //sending the pointing position to the server
+	   wsio.emit("pointingGesturePosition", {x: mappedX, y:mappedY});
+	 }
  }
-    //Old virtual screen
+    //Old virtual screen by Rayan
 		// const {rightShoulder, rightFingerTip} = this.mostRecentSkeleton;
 		//
 		// const rightArmLength = this.armLength(rightShoulder, rightFingerTip);

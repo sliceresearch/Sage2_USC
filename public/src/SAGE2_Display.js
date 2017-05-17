@@ -938,7 +938,7 @@ function setupListeners() {
 		}
 	});
 
-	// Parent child communication and linking functions 
+	// Parent child communication and linking functions
 	wsio.on('messageEvent', function(event_data) {
 		var date = new Date(event_data.date);
 		var app  = applications[event_data.id];
@@ -954,15 +954,21 @@ function setupListeners() {
 		app.SAGE2TextInputEvent(event_data); //event_data.type, event_data.position, event_data.user, event_data.data, date);
 	});
 
+	wsio.on('startGestureRecognition', function(event_data) {
+		var date = new Date(event_data.date);
+		var app  = applications[event_data.id];
+		event_data.date = date;
+		app.SAGE2StartGestureRecognition(event_data); //event_data.type, event_data.position, event_data.user, event_data.data, date);
+	});
 
-	//not sure if I am using this... 
+	//not sure if I am using this...
 	wsio.on('launchChildAppResponse',  function(data) {
 		// var date = new Date(event_data.date);
 		var app  = applications[data.id];
 		app.SAGE2ChildAppLaunchResponse(data); //event_data.type, event_data.position, event_data.user, event_data.data, date);
 	});
 
-	//not using right now... 
+	//not using right now...
 	wsio.on('setParent',  function(data) {
 		// var date = new Date(event_data.date);
 		var app  = applications[data.id];
@@ -1478,13 +1484,13 @@ function createAppWindow(data, parentId, titleBarHeight, titleTextSize, offsetX,
 				newapp.init(init);
 				newapp.refresh(date);
 
-				
+
 
 
 				// Sending the context menu info to the server
 				if (isMaster) {
 					newapp.getFullContextMenuAndUpdate();
-					wsio.emit('appCreated', {id: data.id});	
+					wsio.emit('appCreated', {id: data.id});
 				}
 
 				applications[data.id]   = newapp;
@@ -1505,12 +1511,12 @@ function createAppWindow(data, parentId, titleBarHeight, titleTextSize, offsetX,
 			app.init(init);
 			app.refresh(date);
 
-			
+
 
 			// Sending the context menu info to the server
 			if (isMaster) {
 				app.getFullContextMenuAndUpdate();
-				wsio.emit('appCreated', {id: data.id});	
+				wsio.emit('appCreated', {id: data.id});
 			}
 
 			applications[data.id] = app;

@@ -37,7 +37,7 @@
   }
   .final {
     color: black;
-    padding-right: 3px; 
+    padding-right: 3px;
   }
   .interim {
     color: gray;
@@ -326,7 +326,7 @@ var first_char = /\S/;
 function capitalize(s) {
   return s.replace(first_char, function(m) { return m.toUpperCase(); });
 }
-// 
+//
 // function copyButton() {
   // if (recognizing) {
     // recognizing = false;
@@ -351,13 +351,14 @@ function speechToSageButton() {
 }
 
 function startButton(event) {
+  startGestureRecognition('true');
   if (recognizing) {
     recognition.stop();
+    startGestureRecognition('false');
     return;
   }
   final_transcript = '';
   recognition.lang = select_dialect.value;
-  console.log("rec lang ", recognition.lang);
   recognition.start();
   ignore_onend = false;
   final_span.innerHTML = '';
@@ -440,6 +441,7 @@ wsio.open(function() {
   });
 
 function init(){
+  startGestureRecognition('false');
   console.log("init");
 
 }
@@ -460,7 +462,7 @@ function setupListeners() {
     console.log('SAGE2: version', data.base, data.branch, data.commit, data.date);
   });
 }
-
+//---------------------------------------------------------------
 // Show error message for 2 seconds (or time given as parameter)
 function showMessage(message, delay) {
   var aMessage = webix.alert({
@@ -473,8 +475,11 @@ function showMessage(message, delay) {
     webix.modalbox.hide(aMessage);
   }, delay ? delay : 2000);
 }
-
+function startGestureRecognition(gRecognitionStatus) {
+  wsio.emit("gestureRecognitionStatus", {text: gRecognitionStatus});
+}
 function sendToSage() {
+  startGestureRecognition('false');
   var n = final_transcript.indexOf('\n');
   if (n < 0 || n >= 80) {
     n = 40 + final_transcript.substring(40).indexOf(' ');

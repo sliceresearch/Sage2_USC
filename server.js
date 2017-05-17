@@ -119,7 +119,8 @@ var drawingManager;
 var pressingAlt        = true;
 
 var parentApps         = {}; // store parent-child relationships (one parent, many children), indexed by parentId
-var childApps         = {}; // store child-parent relationships (one parent, many children), indexed by childId
+var childApps          = {}; // store child-parent relationships (one parent, many children), indexed by childId
+var pointedToApps      = []; //store list of apps user points to during pointing gesture --> to get most frequent
 
 
 // Add extra folders defined in the configuration file
@@ -1030,9 +1031,12 @@ function setupListeners(wsio) {
 	wsio.on('resizeLinkedChildApp',					wsResizeLinkedChildApp);
 
 	//articulate input service
+	//voice command from VoiceUI
 	wsio.on('googleVoiceSpeechInput',               wsGoogleVoiceSpeechInput);
-
+	//status of capturing gesture or not (true/false)
 	wsio.on('gestureRecognitionStatus',             wsGestureRecognitionStatus);
+	//pointing gesture position from kinect App
+  wsio.on('pointingGesturePosition',              wsPointingGesturePosition);
 
 	// application file saving message
 	wsio.on('appFileSaveRequest',                   appFileSaveRequest);
@@ -2439,18 +2443,19 @@ function wsLaunchLinkedChildApp(wsio, data) {
 // this function is called when a parent app wants to close a child app
 function wsCloseLinkedChildApp(wsio, data) {
 
-	console.log("close child " + data.childId);
+	console.log("close child:: " + data.childId);
 
 	// make sure this is a valid parent child pair before closing
 	// get id of child and parent from data passed from the parent
 	var parentId = data.id; // from
 	var childId = data.childId; // to
 
-	var canContinue = validParentChildPair(parentId, childId);
+	//var canContinue = validParentChildPair(parentId, childId);
 
-	if( canContinue ){
+	//if( canContinue ){
 		deleteApplication(childId);
-	}
+		console.log("child is deleted");
+	//}
 }
 
 // this function is called when a parent app wants to move a child app
@@ -2612,15 +2617,17 @@ function validParentChildPair(parentId, childId) {
 
 // this could use some work, but works ok for prototype
 function wsGoogleVoiceSpeechInput(wsio, data){
-	console.log(data);
+	//console.log(data);
 
 	//find articulate app (just articulate app for now)
 	var app = SAGE2Items.applications.getFirstItemWithTitle("articulate_ui");
-	console.log(app);
-	console.log("in server");
+	//console.log(app);
 
 	if( app != null ){
-		var data = {id: app.id, data: data.text, date: Date.now()};
+		console.log("arraylength2 " + pointedToApps.length);
+		var targetAppID = mostOccurrenceItem(pointedToApps);
+		console.log("targetAppID in server " + targetAppID);
+		var data = {id: app.id, data: data.text, targetAppID: targetAppID, date: Date.now()};
 		broadcast('textInputEvent', data);
 	}
 	else{
@@ -2632,6 +2639,9 @@ function wsGoogleVoiceSpeechInput(wsio, data){
 //find kinect app to start gesture recognition
 function wsGestureRecognitionStatus(wsio, data){
 	console.log("status " + data.text);
+	if(data.text == 'true'){
+		//pointedToApps = [];
+	}
 	var app = SAGE2Items.applications.getFirstItemWithTitle("machineLearning");
 	if( app != null ){
 		var data = {id: app.id, data: data.text, date: Date.now()};
@@ -2639,6 +2649,41 @@ function wsGestureRecognitionStatus(wsio, data){
 }
 	//console.log(app);
 }
+
+//receiving pointing positions and finding pointed to apps
+function wsPointingGesturePosition(wsio, data){
+	for (var key in SAGE2Items.applications.list) {
+		var app = SAGE2Items.applications.list[key];
+		if(app.title != "machineLearning" && app.title != "articulate_ui" && app.title != "background"){
+			if(data.x >= app.left && data.x <= (app.left + app.width) && data.y >= app.top && data.y <= (app.top + app.height)){
+				pointedToApps[pointedToApps.length]= app.id;
+			}
+		}
+	}
+	console.log("arraylength1 " + pointedToApps.length);
+	//console.log("x " + data.x + "y " + data.y);
+}
+function mostOccurrenceItem(array){
+	if(array.length == 0){
+		return null;
+	}
+	var modeMap = {};
+	var maxEl = array[0], maxCount = 1;
+	for(var i = 0; i < array.length; i++){
+		var el = array[i];
+    if(modeMap[el] == null){
+			modeMap[el] = 1;
+		}else{
+			modeMap[el]++;
+		}
+		if(modeMap[el] > maxCount){
+			maxEl = el;
+      maxCount = modeMap[el];
+		}
+	}
+	return maxEl;
+}
+
 // **************  Information Functions *****************
 
 function listClients() {

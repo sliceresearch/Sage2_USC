@@ -905,7 +905,6 @@ var SAGE2_App = Class.extend({
 		}
 	},
 
-
 ////////////////////// INTER APP COMMUNICATION
 
 	/**
@@ -928,7 +927,6 @@ var SAGE2_App = Class.extend({
 			launchLinkedChildApp(data); //defined in runtime
 		}
 		this.childList.push( data );
-
 	},
 
 	/**
@@ -945,10 +943,10 @@ var SAGE2_App = Class.extend({
 			childId: child.childId,
 			id: this.id
 		};
-		if( isMaster ){
-			console.log("close child" + child.childId);
+		//if( isMaster ){
+			console.log("close child: " + child.childId);
 			closeLinkedChildApp(data); //defined in runtime
-		}
+		//}
 	},
 
 	moveChild: function( n, x, y ){
@@ -1096,12 +1094,16 @@ var SAGE2_App = Class.extend({
     		}
 		}
 	},
-
+	//
 	SAGE2TextInputEvent: function(data){
 		console.log("text in!" + data);
-		this.textInputEvent(data.data, data.date);
+		this.textInputEvent(data.data, data.targetAppID, data.date);
 	},
 
+	SAGE2StartGestureRecognition: function(data){
+		console.log("status in!" + data);
+		this.startGestureRecognition(data.data, data.date);
+	},
 	/**
 	 * Uses WebSocket to send a request to the server to save a file from the app
 	 * into the media folders. The file will be placed in a subdirectory of the media
@@ -1164,8 +1166,9 @@ var SAGE2_App = Class.extend({
 					ext:    ext
 				},
 				saveData: data
+
+
 			});
 		}
-	}
->>>>>>> kinect
+	},
 });
