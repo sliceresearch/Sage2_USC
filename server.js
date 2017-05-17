@@ -923,32 +923,36 @@ function initializeWSClient(wsio, reqConfig, reqVersion, reqTime, reqConsole) {
 		wsio.emit('console', json5.stringify(config, null, 4));
 	}
 
-	// only if we are master and client is display
-	if (wsio.clientType === "display" && (masterServer ===null || masterServer !== undefined)) {
-		initializeExistingSagePointers(wsio);
-		initializeExistingPartitions(wsio);
-		initializeExistingApps(wsio);
-		initializeRemoteServerInfo(wsio);
-		initializeExistingWallUI(wsio);
-		setTimeout(initializeExistingControls, 6000, wsio); // why can't this be done immediately with the rest?
-		console.log("Send slave servers...", slaveServers);
-		for (var ss in slaveServers) {
-			console.log("- send slave server details: ", slaveServers[ss]);
-			wsio.emit('displayAddSlaveServer', slaveServers[ss]);
+	// only from master
+	if (masterServer ===null || masterServer === undefined) {
+		// only if we are master
+		if (wsio.clientType === "display") {
+			initializeExistingSagePointers(wsio);
+			initializeExistingPartitions(wsio);
+			initializeExistingApps(wsio);
+			initializeRemoteServerInfo(wsio);
+			initializeExistingWallUI(wsio);
+			setTimeout(initializeExistingControls, 6000, wsio); // why can't this be done immediately with the rest?
+			console.log("Send slave servers...", slaveServers);
+			for (var ss in slaveServers) {
+				console.log("- send slave server details: ", slaveServers[ss]);
+				wsio.emit('displayAddSlaveServer', slaveServers[ss]);
+			}
+		} else if (wsio.clientType === "audioManager") {
+			initializeExistingAppsAudio(wsio);
+		} else if (wsio.clientType === "sageUI") {
+			createSagePointer(wsio.id);
+			var key;
+			for (key in remoteSharingSessions) {
+				remoteSharingSessions[key].wsio.emit('createRemoteSagePointer', {
+					id: wsio.id, portal: {host: config.host, port: config.port}
+				});
+			}
+			initializeExistingAppsPositionSizeTypeOnly(wsio);
+			initializeExistingPartitionsUI(wsio);
 		}
-	} else if (wsio.clientType === "audioManager") {
-		initializeExistingAppsAudio(wsio);
-	} else if (wsio.clientType === "sageUI") {
-		createSagePointer(wsio.id);
-		var key;
-		for (key in remoteSharingSessions) {
-			remoteSharingSessions[key].wsio.emit('createRemoteSagePointer', {
-				id: wsio.id, portal: {host: config.host, port: config.port}
-			});
-		}
-		initializeExistingAppsPositionSizeTypeOnly(wsio);
-		initializeExistingPartitionsUI(wsio);
 	}
+
 	// if on slave we still want to do local initialization
 	if (wsio.clientType === "display" && (masterServer !==null && masterServer !== undefined)) {
 		initializeExistingAppsOnSlave(wsio);
