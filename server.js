@@ -951,11 +951,13 @@ function initializeWSClient(wsio, reqConfig, reqVersion, reqTime, reqConsole) {
 			initializeExistingAppsPositionSizeTypeOnly(wsio);
 			initializeExistingPartitionsUI(wsio);
 		}
-	}
-
-	// if on slave we still want to do local initialization
-	if (wsio.clientType === "display" && (masterServer !==null && masterServer !== undefined)) {
-		initializeExistingAppsOnSlave(wsio);
+	} else {
+		// if on slave we still want to do local initialization
+		if (wsio.clientType === "display") {
+			initializeExistingAppsOnSlave(wsio);
+		} else if (wsio.clientType === "sageUI") {
+			createSagePointer(wsio.id);
+		}
 	}
 
 	var remote = findRemoteSiteByConnection(wsio);
