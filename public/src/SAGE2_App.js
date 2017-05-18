@@ -306,11 +306,17 @@ var SAGE2_App = Class.extend({
 			}
 
 			// If the pointer is moved, keep track of it for showing remote pointer
-			if (isMaster && eventType === "pointerMove") {
+			if (isMaster && eventType === "pointerMove" && this.isSharedWithRemoteSite()) {
 				// if app is shared, then track pointer
-				if (this.isSharedWithRemoteSite()) {
-					this.trackRemotePointer(user_id, position);
-				}
+				SAGE2RemoteSitePointer.trackPointer(this, user_id, position);
+			} else if (isMaster  && SAGE2RemoteSitePointer.shouldPassEvents && this.isSharedWithRemoteSite()) {
+				SAGE2RemoteSitePointer.trackEvent(this, {
+					eventType: eventType,
+					position: position,
+					user_id: user_id,
+					data: data,
+					date: date
+				});
 			}
 
 			this.SAGE2UserModification = false;
@@ -331,48 +337,6 @@ var SAGE2_App = Class.extend({
 			return true;
 		}
 		return false;
-	},
-
-	/**
-	* When a pointer is moved over an app, is shared, and was a move event, this will activate.
-	* Tracks pointers that have moved over the app.
-	*
-	* @method trackRemotePointer
-	* @param user_id {Object} contains information about user: color, id, label
-	* @param position {Object} contains location of cursor with app's top left corner as origin
-	*/
-	trackRemotePointer: function(user_id, position) {
-		// first check if this user's pointer is already being tracked.
-		var found = -1;
-		for (let i = 0; i < this.state.pointersOverApp.length; i++) {
-			if (this.state.pointersOverApp[i].id === user_id.id) {
-				found = i;
-			}
-		}
-		// if not found, create entry
-		var pointer;
-		if (found === -1) {
-			pointer = {
-				id: user_id.id,
-				server: document.getElementById("machine").textContent
-			};
-			this.state.pointersOverApp.push(pointer);
-			SAGE2RemoteSitePointer.addAppToTracking(this); // pointer add means app should be added to tracking
-		} else {
-			pointer = this.state.pointersOverApp[found];
-		}
-		// update the pointer values
-		pointer.color = user_id.color;
-		pointer.label = user_id.label;
-		pointer.position = position;
-		pointer.positionInPercent = {
-			x: (position.x / this.sage2_width),
-			y: (position.y / this.sage2_height)
-		};
-		pointer.lastUpdate = Date.now();
-		pointer.hidden = false;
-		// sync across sites. maybe needs a delay or interval rather than spam when move happens?
-		this.SAGE2Sync(true);
 	},
 
 	/**

@@ -15,25 +15,82 @@ var SAGE2RemoteSitePointer = {
 	allPointersOnThisSite: [],
 	pointerUpdateInterval: 100, // ms
 	allAppsWithRemotePointerTracking: {},
+	shouldPassEvents: true,
 
 
 	/**
-	* For local tracking as a separation from remote pointers.
+	* Will be activated locally, but stores the data into state to share remotely.
 	*
-	* @method trackLocalPointer
-	* @param pointer_data {Object} contains information about user: color, id, label
+	* @method trackPointer
+	* @param app {Object} app which called this function
+	* @param user_id {Object} contains information about user: color, id, label
+	* @param position {Object} contains location of cursor with app's top left corner as origin
 	*/
-	trackLocalPointer: function(pointer_data) {
-		var found = false;
-		for (let i = 0; i < this.allPointersOnThisSite.length; i++) {
-			if (this.allPointersOnThisSite[i].id === pointer_data.id) {
-				this.allPointersOnThisSite[i] = pointer_data;
-				found = true;
-				break;
+	trackPointer: function(app, user_id, position) {
+		// first check if this user's pointer is already being tracked.
+		var found = -1;
+		for (let i = 0; i < app.state.pointersOverApp.length; i++) {
+			if (app.state.pointersOverApp[i].id === user_id.id) {
+				found = i;
 			}
 		}
-		if (!found) {
-			this.allPointersOnThisSite.push(pointer_data);
+		// if not found, create entry
+		var pointer;
+		if (found === -1) {
+			pointer = {
+				id: user_id.id,
+				server: document.getElementById("machine").textContent,
+				eventQueue: []
+			};
+			app.state.pointersOverApp.push(pointer);
+			SAGE2RemoteSitePointer.addAppToTracking(app); // pointer add means app should be added to tracking
+		} else {
+			pointer = app.state.pointersOverApp[found];
+		}
+		// update the pointer values
+		pointer.color = user_id.color;
+		pointer.label = user_id.label;
+		pointer.position = position;
+		pointer.positionInPercent = {
+			x: (position.x / app.sage2_width),
+			y: (position.y / app.sage2_height)
+		};
+		pointer.lastUpdate = Date.now();
+		pointer.hidden = false;
+		// sync across sites. maybe needs a delay or interval rather than spam when move happens?
+		app.SAGE2Sync(true);
+	},
+
+	/**
+	* Testing event passing for remote pointers
+	*
+	* @method trackEvent
+	* @param app {Object} app which called this function
+	* @param event {Object} contains information about event: eventType, position, user_id, data, date
+	*/
+	trackEvent: function(app, event) {
+		// this can potentially cause problems with apps like google maps where infinite loops can be generated.
+		if (!this.shouldPassEvents) {
+			return;
+		}
+
+		// first check if this user's pointer is already being tracked.
+		var found = -1;
+		for (let i = 0; i < app.state.pointersOverApp.length; i++) {
+			if (app.state.pointersOverApp[i].id === event.user_id.id) {
+				found = i;
+			}
+		}
+		// if not found, can't do anything
+		if (found !== -1) {
+			var pointer;
+			pointer = app.state.pointersOverApp[found];
+			pointer.lastUpdate = Date.now();
+			pointer.hidden = false;
+			pointer.eventQueue.push(event);
+			event.s2rspTime = pointer.lastUpdate;
+			// sync across sites. maybe needs a delay or interval rather than spam when move happens?
+			app.SAGE2Sync(true);
 		}
 	},
 
@@ -110,6 +167,17 @@ var SAGE2RemoteSitePointer = {
 				ui.showSagePointer(pointer);
 			}
 			pointer.lastUpdate = pointer_data.lastUpdate;
+
+			// event pass if enabled
+			if (this.shouldPassEvents) {
+				var pEvent;
+				while (pointer_data.eventQueue.length > 0) {
+					pEvent = pointer_data.eventQueue.shift();
+					if (pEvent.s2rspTime === pointer_data.lastUpdate) {
+						app.event(pEvent.eventType, pEvent.position, pEvent.user_id, pEvent.data, pEvent.date);
+					}
+				}
+			}
 		}
 	},
 
