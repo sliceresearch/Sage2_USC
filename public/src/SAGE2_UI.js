@@ -1273,7 +1273,7 @@ function handleClick(element) {
 			id: "browser_form",
 			position: "center",
 			modal: true,
-			zIndex: 9999,
+			zIndex: 1999,
 			head: "Open a browser window",
 			width: 400,
 			body: {
@@ -1572,7 +1572,7 @@ function handleClick(element) {
 			id: "session_form",
 			position: "center",
 			modal: true,
-			zIndex: 9999,
+			zIndex: 1999,
 			head: "Save session",
 			width: 400,
 			body: {

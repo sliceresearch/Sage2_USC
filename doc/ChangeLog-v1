@@ -1,0 +1,3751 @@
+SAGE2 v1.0.0
+------------
+
+Fix
+~~~
+- Touch related fix. [krishnaBharadwaj]
+- Z-index and positioning of the background svg. [krishnaBharadwaj]
+- Date value sent from server to sync widget events across clients.
+  [krishnaBharadwaj]
+- Pdf viewer buttons and slider show up on the UI only when there are
+  multiple pages. [krishnaBharadwaj]
+- Widget demo app updated with changes in api. [krishnaBharadwaj]
+- Re-adding widget controls to image viewer which was lost in one of the
+  earlier api change updates. [krishnaBharadwaj]
+- Date passed to zoomIn and zoomOut calls. [krishnaBharadwaj]
+- Release any where properly triggers slider release action.
+  [krishnaBharadwaj]
+- Widget entries removed when ap is deleted. [krishnaBharadwaj]
+- Jshint. [krishnaBharadwaj]
+- App title bar goes to default color when widget bar is closed.
+  [krishnaBharadwaj]
+- Connectors show proper color when multiple users contest over apps and
+  widgets. [krishnaBharadwaj]
+- Connectors switch colors for multiple users in the expected way.
+  [krishnaBharadwaj]
+- Picked up control now moves over the other controls.
+  [krishnaBharadwaj]
+- Widget to app link hides if pointer hides while being on the widget.
+  [krishnaBharadwaj]
+- Slider caption error fixed. [krishnaBharadwaj]
+- User widget now closes when the client connection is closed.
+  [krishnaBharadwaj]
+- Widget position updates properly after reappear. [krishnaBharadwaj]
+
+Other
+~~~~~
+- Merge branch 'master' of bitbucket.org:sage2/sage2. [Luc Renambot]
+- Merge branch 'master' into widgets. [krishnaBharadwaj]
+- Widgets and keyboard events fixed. [krishnaBharadwaj]
+- Removed debug statement. [krishnaBharadwaj]
+- Merge branch 'master' into widgets. [krishnaBharadwaj]
+- Movie Player UI fix. [krishnaBharadwaj]
+- Added 'r' as rewind for movie player. [Luc Renambot]
+- Updated car demo to use new base class for webgl: Garry Keltie
+  garry.keltie@gmail.com. [Luc Renambot]
+- Added SAGE2_WebGLApp base class for WebGL app: Garry Keltie
+  garry.keltie@gmail.com. [Luc Renambot]
+- Merge branch 'master' of bitbucket.org:sage2/sage2. [Luc Renambot]
+- Merge branch 'master' of bitbucket.org:sage2/sage2. [Arthur Nishimoto]
+- Added maximum scroll bounds for WallUI Thumbnail Window for both
+  Pointer drag and scroll wheel events. [Arthur Nishimoto]
+- Fixining loading custom type apps from registry. Now stereo images
+  load from the filemanager. [Luc Renambot]
+- Making sure stereo image is not too big on the wall. [Luc Renambot]
+- Merge branch 'master' of bitbucket.org:sage2/sage2. [Luc Renambot]
+- Style. [Arthur Nishimoto]
+- Added arthur-icewallRight config. [Arthur Nishimoto]
+- Merge branch 'TouchUI' [Arthur Nishimoto]
+- Fixed WallUI metadata window File Date tag. [Arthur Nishimoto]
+- Restored WallUI Arrangement submenu Moved WallUI SaveSession button to
+  submenu WallUI Tile and Clear All fixed. [Arthur Nishimoto]
+- WallUI metadata window uses more human readable file sizes. [Arthur
+  Nishimoto]
+- Fixed WallUI load session. [Arthur Nishimoto]
+- Updated icewall go-script. [Arthur Nishimoto]
+- Merge remote-tracking branch 'remotes/origin/master' into TouchUI.
+  [Arthur Nishimoto]
+- Merge branch 'TouchUI' of bitbucket.org:sage2/sage2 into TouchUI.
+- Merged master into TouchUI. [Arthur Nishimoto]
+- Fixed multi-line metadata on the Wall UI. [Arthur Nishimoto]
+- Wall UI scrolling restrictions now apply to mouse scroll events.
+  [Arthur Nishimoto]
+- Fixed Wall UI application thumbnail tiling. [Arthur Nishimoto]
+- Fixed pixelsToMeters variable usage Wall UI metadata window text now
+  wraps. [Arthur Nishimoto]
+- Merge remote-tracking branch 'remotes/origin/master' into TouchUI.
+  [Arthur Nishimoto]
+- Added max/min bounds to auto_scale_ui. [Arthur Nishimoto]
+- Added touch offset to config. [Arthur Nishimoto]
+- Tweaked printouts. [Luc Renambot]
+- Values between 0 and 1 are percent in resize commands. [Luc Renambot]
+- Updated version of exiftool and ImageMagick. [Luc Renambot]
+- Add commands to REPL: open for opening assets (specifiy sage2URL),
+  moveto for absolute movement, and moveby for relative movement. Values
+  small than 1 are percent values, and bigger than 1 are pixel values.
+  [Luc Renambot]
+- Print URL of assets in 'assets' command. [Luc Renambot]
+- Fix benchmark tests: use websocketio and fix messages. [Luc Renambot]
+- Fix scripts in 'bin' to use 'websocketio' module now (from npm) [Luc
+  Renambot]
+- Merge branch 'master' of https://bitbucket.org/sage2/sage2. [Luc
+  Renambot]
+- Moved whiteboard to sage2_apps repository. [Luc Renambot]
+- Moving tweetcloud2 to sage2_apps repository. [Luc Renambot]
+- Update the plugins to load modules from the server's folder. [Luc
+  Renambot]
+- Removed twitter keys from configuration files. [Luc Renambot]
+- 'welcome' app go fullscreen only on create (not reload) [Luc Renambot]
+- Merge branch 'master' into groups. [Luc Renambot]
+- Forgot a plugin file for calvin comics. [Luc Renambot]
+- Merge branch 'master' into groups. [Luc Renambot]
+- Updated 'welcome' app: update image every 15min, start in fullscreen.
+  [Luc Renambot]
+- App can request to be fullscreen. [Luc Renambot]
+- Added command 'fullscreen' in REPL (fullscreen app_0) and for apps.
+  [Luc Renambot]
+- Update RPC API. Fixed chronicles_of_spaceman_spiff image display. [Luc
+  Renambot]
+- Merge branch 'master' into groups. [Luc Renambot]
+- Working on new way to get images into comics app. [Luc Renambot]
+- Merge branch 'master' into groups. [Luc Renambot]
+- Merge branch 'groups' of bitbucket.org:sage2/sage2 into groups. [Luc
+  Renambot]
+- Merge branch 'master' of https://bitbucket.org/sage2/sage2 into
+  groups. [Luc Renambot]
+- Merge branch 'master' into groups. [Luc Renambot]
+- Streamlined load app plugins. [Luc Renambot]
+- Tweak the greeting in 'welcome' [Luc Renambot]
+- Resize on finish for 'welcome' app. [Luc Renambot]
+- Automatically find and load a plugin file for an app. [Luc Renambot]
+- Adding 'welcome' app. [Luc Renambot]
+- Adding 'welcome' app plugin into server. [Luc Renambot]
+- Adding new apps into linting/styling checks. [Luc Renambot]
+- Adding lib 'moment' into display side (used for handling time objects)
+  [Luc Renambot]
+- Merge branch 'master' into groups. [Luc Renambot]
+- Updated tweetcloud app (tweetcloud2) to use server side module. [Luc
+  Renambot]
+- Experiment: moved the server-side code of 'tweetcloud' into a app
+  plugin. [Luc Renambot]
+- Moved twitter code in one place. [Luc Renambot]
+- Converted the "searchTweets" call to a more generic "applicationRPC"
+  [Luc Renambot]
+- Enable fileManager on Andoid tablets, and fix (again) the drop
+  position on touch devices. [Luc Renambot]
+- Keep the drag position, used in drop function. [Luc Renambot]
+- Detect Android tablets through UserAgent. [Luc Renambot]
+- Updated lib Webix. [Luc Renambot]
+- Fallback if date of file is not valid, in fileManager. [Luc Renambot]
+- Removing printout. [Luc Renambot]
+- Trying Node v5.0.0. [Luc Renambot]
+- FileManager (web ui) supports several levels of folders. A folder
+  shows all its files and of all its sub-directories. Only non-empty
+  folders at shown at load time. [Luc Renambot]
+- Disabling request for data portal (for now) [Luc Renambot]
+- Fix 'next page' in pdf_viewer (starts at 1, not 0) [Luc Renambot]
+- Trick: press ALT key while moving temporarily switches interaction
+  mode (window vs app). Triggered using pointer move, so move the
+  pointer ;-) [Luc Renambot]
+- Re-enabled the upload menu for pics. [Luc Renambot]
+- Fix drop position on touch devices. [Luc Renambot]
+- Fix middle click. [Luc Renambot]
+- Bring back the middle click to change interaction mode. [Luc Renambot]
+- Adding additional SVG elements in the browser cache. [Luc Renambot]
+- Updated svg file for UI. [Luc Renambot]
+- Add new icons for mobile trackpad. [Luc Renambot]
+- Add a few more functionality to mobile trackpad. [Luc Renambot]
+- Mobile pointer start in window interaction mode (most common) [Luc
+  Renambot]
+- PDF: loop back to first page when moving forward. [Luc Renambot]
+- Handled path better in item loader. [Luc Renambot]
+- Mapped the delete key to any mode (no only in window mode). [Luc
+  Renambot]
+- Added a test before handling the corner of an app. [Luc Renambot]
+- Added an application function 'close' to close itself. Mapped to
+  keyboard 'x' on a few builtin apps. [Luc Renambot]
+- Updated PDFjs library (re-applied Tommy's fix) [Luc Renambot]
+- Fix when opening files from extra media folders. [Luc Renambot]
+- Printouts. [Luc Renambot]
+- Remove comment. [Luc Renambot]
+- Fixes for creating folder in web ui. [Luc Renambot]
+- Add force-click to close app in web UI. Works on safari with new mac
+  laptop. To be tested on iphone 6s. [Luc Renambot]
+- Switch default interaction to 'application' interaction: directly
+  interact with the app. Move with titlebar, double-click titlebar for
+  maximize (or the icon). Resize with bottom right corner. [Luc
+  Renambot]
+- Changed the tip of the mouse pointer: now show the crossbar for
+  resize. [Luc Renambot]
+- In PDF: no more mouse clik for navigation. Added spacebar to next
+  page. Arrow keys for previous/next. Press '1' for first page, and '0'
+  for last page. [Luc Renambot]
+- Press '1' in movie player to rewind the movie (and pause) [Luc
+  Renambot]
+- Change alert to 'error' when server down. [Luc Renambot]
+- Changed help panel for new interaction mode. [Luc Renambot]
+- Show a popup on the wall when server goes down. [Luc Renambot]
+- Movie player: replace 'stop' icon with "rewind" [Luc Renambot]
+- Movie player: swap state icons for "mute" and "loop" [Luc Renambot]
+- Merge branch 'master' of https://bitbucket.org/sage2/sage2. [Luc
+  Renambot]
+- Updating and refreshing the fileManager web UI as needed. Keeps the
+  current selection and clear the search text box. [Luc Renambot]
+- Polyfill: adding startsWith to string type if missing (es6 ?) [Luc
+  Renambot]
+- Show error popup on the web UI when trying to upload unsupported file
+  types. [Luc Renambot]
+- Formatting messages. [Luc Renambot]
+- Dont load the video demuxer on ARM processor. [Luc Renambot]
+- Config files for a Raspeberry PI (v1) [Luc Renambot]
+- Added iPhone/iPad detection in browser UserAgent. [Luc Renambot]
+- Fix drag-drop in fileManager: an item needs to be selected to be
+  dragged onto the wall. [Luc Renambot]
+- Fix drag-drop on web UI. Enable fileManager UI on iPad. [Luc Renambot]
+- Fix scale of web ui html page. [Luc Renambot]
+- Add missing font for webix. [Luc Renambot]
+- Fix drawing radial menu button bug in Firefox: add an extra drawImage
+  to rasterize the SVG icon in Firefox (the blending operation seems to
+  the ignored on SVG paths). [Luc Renambot]
+- Scaling of elements in mobile trackpad. [Luc Renambot]
+- Increase pointer speed for touch devices. [Luc Renambot]
+- Tweak fileManager menus. [Luc Renambot]
+- Updated the control for frame quality in desktop sharing: now also a
+  low/medium/high selection. [Luc Renambot]
+- Enable file moving by drag-drop in web filemanager (not tested much
+  yet) [Luc Renambot]
+- Node4. [Luc Renambot]
+- Typo. [Luc Renambot]
+- Update ffmpeg win64 binaries. [Luc Renambot]
+- Updating ffmpeg binaries. [Luc Renambot]
+- Updating exiftool and ghostscript binaries. [Luc Renambot]
+- Updating appveyor to Node 4.2.1. [Luc Renambot]
+- Changed output errors during 'git update' [Luc Renambot]
+- Adding missing font for Webix. [Luc Renambot]
+- Fix fileManager for Windows URLs. [Luc Renambot]
+- Added a trackpad icon in the mobile web trackpad. [Luc Renambot]
+- Default session folder in user's directory. [Luc Renambot]
+- Set default values in desktop sharing (shouldnt matter) [Luc Renambot]
+- Appveyor. [Luc Renambot]
+- Fix drop file: using new default destination folder. [Luc Renambot]
+- For hidding the borders, now use the values in meters from the
+  'dimensions' configuration object. [Luc Renambot]
+- Updated the tile_borders configuration to be an object (left, right,
+  bottom, top) [Luc Renambot]
+- Updated configuration for auto_scale_ui. [Arthur Nishimoto]
+- Merge branch 'TouchUI' [Arthur Nishimoto]
+- Merge remote-tracking branch 'remotes/origin/master' into TouchUI.
+  [Arthur Nishimoto]
+- Put back commented code. [Luc Renambot]
+- Removed 128-pixel thumbnail size and decrease a little image quality
+  (so now it's 512 or 256) [Luc Renambot]
+- Making user's folder the default one for assets. [Luc Renambot]
+- Edit for CAVE2 configuration: password and shortname. [Luc Renambot]
+- Luc's office configuration. [Luc Renambot]
+- Display 'url' parameter on the wall instead of the hostname of the
+  machine, if specified (allow for URL shorterner and redirection) [Luc
+  Renambot]
+- Minor change to mediabrowser icon highlighting. [Arthur Nishimoto]
+- Config flag 'enable_perceptual_scaling' renamed 'auto_ui_scaling'
+  [Arthur Nishimoto]
+- Merge remote-tracking branch 'remotes/origin/master' into TouchUI.
+  [Arthur Nishimoto]
+- Disable image_viewer optimization (image unloaded when not visible).
+  Some people reported issues. [Luc Renambot]
+- Removed async load of libraries for now. [Luc Renambot]
+- Sage2.bat. [Luc Renambot]
+- Appveyor. [Luc Renambot]
+- Put some help on the mobile trackpad. [Luc Renambot]
+- Removed --depth=1 in git update. [Luc Renambot]
+- Tweaks to CSS in webix. [Luc Renambot]
+- Appveyor. [Luc Renambot]
+- Test to enable 'git update' [Luc Renambot]
+- Loading the app scripts with 'async = false'. It seems to help with
+  race condition when loading multiple instances of the same app
+  (especially from a session). [Luc Renambot]
+- Moved the sage2.appcache file to sage2.appcache.template and removed
+  from git. [Luc Renambot]
+- Updated 'photos' app to provide settings as a function instead of
+  global variable. Should help when loading multiple instances of the
+  app. [Luc Renambot]
+- Adding a test to make sure the UI object is loaded. [Luc Renambot]
+- Fixed content browser touch interaction. Pointer hover over effect
+  disabled. [Arthur Nishimoto]
+- Merge branch 'master' into TouchUI. [Arthur Nishimoto]
+- Added a limit to the frequency of non-critical touch events (like
+  drag) sent to clients. [Arthur Nishimoto]
+- Merge remote-tracking branch 'remotes/origin/master' into TouchUI.
+  [Arthur Nishimoto]
+- Merge remote-tracking branch 'remotes/origin/master' into TouchUI.
+  [Arthur Nishimoto]
+- Merge branch 'master' of bitbucket.org:sage2/sage2. [Arthur Nishimoto]
+- Fix for SVG button ontop of window (max,close): wasn't correct on
+  Safari. [Luc Renambot]
+- Fixes for Safari 9: DOM element ids are global variables (didnt know
+  that) [Luc Renambot]
+- Update to webix 3.0. [Luc Renambot]
+- Set core SAGE2 files to be cacheable for one week (like css, core js,
+  ui elements, ... but not assets and app sources) [Luc Renambot]
+- Setting default html viewport in display.html. [Luc Renambot]
+- Update app cache with svg icons. [Luc Renambot]
+- Merge branch 'master' into widgets. [krishnaBharadwaj]
+- Tweaks for js laoding. [Luc Renambot]
+- Remove async loading for few core js files. [Luc Renambot]
+- Enable http caching of UI elements and fonts. Back port from 'modules'
+  branch. Should load faster on repeat visits. [Luc Renambot]
+- Enable 'async' on javascript loading (should load a little faster)
+  [Luc Renambot]
+- Merge branch 'master' of bitbucket.org:sage2/sage2. [Luc Renambot]
+- Updated for https on lyra. [Andy J]
+- Back port HTTP compression (from modules branch) [Luc Renambot]
+- Simplify dependency loading in car_threejs app. [Luc Renambot]
+- Forgot the new png icons. [Luc Renambot]
+- Replaced the WebP image by PNG (mostly 8-bit ones) for now. [Luc
+  Renambot]
+- Don't load the background image in mobile display clients (can be
+  pretty large) [Luc Renambot]
+- Merge branch 'master' of bitbucket.org:sage2/sage2. [Luc Renambot]
+- Updated url of chicago data to https. [Luc Renambot]
+- Merge branch 'master' into widgets. [krishnaBharadwaj]
+- Tweaks in AudioManager trying to deal with sync (not perfect) [Luc
+  Renambot]
+- Sending a sync event when pressing 'play' in movie player. [Luc
+  Renambot]
+- Making firefox work as an AudioManager: odd things (reload, audio tag,
+  crashes, ...) but should work now. [Luc Renambot]
+- Launch audio manager and display client 0 from filemanager menu. [Luc
+  Renambot]
+- Another test before removing animateTimer. [Luc Renambot]
+- Simplify UI elements. [Luc Renambot]
+- Add a test in searchGeometry, so server doesn't crash (doesnt solve
+  the cause of the problem though). [Luc Renambot]
+- Update snap.svg to v0.4.1. [Luc Renambot]
+- Simplify styling of UI elements. [Luc Renambot]
+- Place focus handlers in a function (instead of global code) [Luc
+  Renambot]
+- Fix background repeat. [Luc Renambot]
+- Appveyor. [Luc Renambot]
+- Little cleanup of HTML files. [Luc Renambot]
+- Merge branch 'master' of bitbucket.org:sage2/sage2. [Luc Renambot]
+- Node v4.x.x no longer require minor level compatibility (only major
+  version) [tmarrinan]
+- Merge branch 'master' of bitbucket.org:sage2/sage2. [tmarrinan]
+- Updated tmarrinan config. [tmarrinan]
+- Cleanup a little CSS files. [Luc Renambot]
+- Load fonts in HTML (instead of import in CSS) [Luc Renambot]
+- Add style sheet in HTML instead of in javascript. [Luc Renambot]
+- Cleanup comments. [Luc Renambot]
+- Check if timer exists before trying to delete it. [Luc Renambot]
+- Create sub-folder icons as needed, in fileManager. [Luc Renambot]
+- Remove debug printouts. [Luc Renambot]
+- Changed dev / prod modes for npm run in (prod is default now) [Tommy
+  Marrinan]
+- Fixed binary install version check for 0.12.x. [Tommy Marrinan]
+- Merge branch 'master' of bitbucket.org:sage2/sage2. [Tommy Marrinan]
+- Creating sub-folder in the web filemanager. Not fully functional yet.
+  [Luc Renambot]
+- RecursiveReaddirSync function to list all files in a folder. [Luc
+  Renambot]
+- Merge branch 'master' of https://bitbucket.org/sage2/sage2. [Luc
+  Renambot]
+- Detect if a display client is a mobile device and try to close it if
+  it looses 'focus' [Luc Renambot]
+- Merge branch 'master' of https://bitbucket.org/sage2/sage2. [Luc
+  Renambot]
+- Updated luc's wall configuration for mullions. [Luc Renambot]
+- Extend the browser detection: UA copied into structure and added
+  isMobile flag (browser.isWinPhone || browser.isIOS ||
+  browser.isAndroid) [Luc Renambot]
+- Updated npm run in to pull auto built modules. [Tommy Marrinan]
+- Using websocketio module (instead of custom stand alone file), and
+  grabbing binary modules from auto builds (still need auto Mac OS X
+  builds) [Tommy Marrinan]
+- Remove timers for client with animated apps. Updated createFolder
+  function. [Luc Renambot]
+- Appveyor. [Luc Renambot]
+- Set default screen sharing to Medium and 7 quality. [Luc Renambot]
+- Another tweak at UI resize. [Luc Renambot]
+- Updated height of UI to be half height when file manager open. [Luc
+  Renambot]
+- Added function/message to create a folder. [Luc Renambot]
+- Drag and drop should work now from every browser (and even text) [Luc
+  Renambot]
+- Merge branch 'master' of bitbucket.org:sage2/sage2. [Luc Renambot]
+- Remove desktop sharing timer, for now. [Luc Renambot]
+- Updated for new API in desktop sharing: now track.stop instead of
+  stream.stop (chrome 45 and up) [Luc Renambot]
+- Using websocket constants when testing if socket is open. [Luc
+  Renambot]
+- Update webix library. [Luc Renambot]
+- File manager show/hide menu. [Luc Renambot]
+- Added ipad in browser identification. [Luc Renambot]
+- Updated assets management across multiple folders (should process the
+  assets only once and remember). [Luc Renambot]
+- Appveyor. [Luc Renambot]
+- Quick implementation for screen border offsets (didn't check if UI and
+  events should be updated) [Luc Renambot]
+- Fixing desktop sharing for firefox. [Luc Renambot]
+- Update for Firefox. [Luc Renambot]
+- Undo what done yesterday for desktop sharing. [Luc Renambot]
+- Creating a timer into a web worker to keep desktop sharing up to
+  speed. [Luc Renambot]
+- Test speedup capture desktop. [Luc Renambot]
+- App UI buttons updated. [krishnaBharadwaj]
+- Merge branch 'master' of bitbucket.org:sage2/sage2. [Arthur Nishimoto]
+- Mac build. [Luc Renambot]
+- Removing big inary installation files (put on bitbucket.org if needed)
+  [Luc Renambot]
+- Updated Mac build. [Luc Renambot]
+- Updated bin binary package. [Luc Renambot]
+- Fix visibility of app when created while in "ui hidden" mode. Fix #59.
+  [Luc Renambot]
+- Appveyor. [Luc Renambot]
+- Added an admin menu in the file manager. [Luc Renambot]
+- Basic support for session in the file manager. [Luc Renambot]
+- Added npm install for Windows. [Luc Renambot]
+- Tweaks for Windows install. [Luc Renambot]
+- Adding another 'crossOrigin' flag in the car demo. [Luc Renambot]
+- Tweaking UI scale calculation. [Arthur Nishimoto]
+- Switch appveyor uploads to ftp.sagecommons.org. [Luc Renambot]
+- Appveyor.yml. [Luc Renambot]
+- Updating for 'flow' [Luc Renambot]
+- Adding "flow" app. [Luc Renambot]
+- Merge branch 'master' of bitbucket.org:sage2/sage2. [Luc Renambot]
+- Dont crash if npm update error. [Luc Renambot]
+- Windows build. [Luc Renambot]
+- Appveyor. [Luc Renambot]
+- Allow explicitely cross-origin texture for the 'car' demo. [Luc
+  Renambot]
+- Appveyor. [Luc Renambot]
+- Appveyor file with git. [Luc Renambot]
+- Removing git from appveyor. [Luc Renambot]
+- Tweaking git appveyor. [Luc Renambot]
+- Tweaking portable git. [Luc Renambot]
+- Adding portable git. [Luc Renambot]
+- Missing dll for git.exe. [Luc Renambot]
+- Copy git into bin folder. [Luc Renambot]
+- Sage2.bat in appveyor. [Luc Renambot]
+- Sage2.bat to appveyor. [Luc Renambot]
+- Adding sage2.bat launch. [Luc Renambot]
+- Adding node to appveyor. [Luc Renambot]
+- Appveyor. [Luc Renambot]
+- Switched to grunt-eslint package. [Luc Renambot]
+- Appveyor version. [Luc Renambot]
+- Appveyor.yml. [Luc Renambot]
+- Added slack notification appveyor. [Luc Renambot]
+- Appveyor.yml. [Luc Renambot]
+- Adding appveyor.yml for Windows CI. [Luc Renambot]
+- Fixed paths after shortening line lengths. [Arthur Nishimoto]
+- Jscs fixes. [Arthur Nishimoto]
+- Fixed application loading from wall menu. [Arthur Nishimoto]
+- Merge branch 'TouchUI' [Arthur Nishimoto]
+- Mesaverde canoe UI scaling config. [Arthur Nishimoto]
+- Updated dante and iridium UI scaling configs. [Arthur Nishimoto]
+- Merge remote-tracking branch 'remotes/origin/master' into TouchUI.
+  [Arthur Nishimoto]
+- Fixed image, pdf, and video opening from ThumbnailBrowser. [Arthur
+  Nishimoto]
+- Added iridium2 scaling test config. [Arthur Nishimoto]
+- Added config flag to use calculated viewer distance. [Arthur
+  Nishimoto]
+- Node-radialmenu calculates scaling based on display config. Also
+  calculates optimal viewing distance (not currently used). [Arthur
+  Nishimoto]
+- Merge remote-tracking branch 'remotes/origin/master' into TouchUI.
+  [Arthur Nishimoto]
+- Merge branch 'master' into TouchUI. [Arthur Nishimoto]
+- Started adding display dimension information to configs Content Radial
+  Menu starting to read new config parameters. [Arthur Nishimoto]
+- Thumbnail window can be scrolled using pointerScroll events. [Arthur
+  Nishimoto]
+- Test for pointerLock support (safari) [Luc Renambot]
+- Fix 'press to delete' in the touch UI, disable webix touch management.
+  [Luc Renambot]
+- Putting some tests in server.js to avoid crashing during interaction.
+  [Luc Renambot]
+- Updating webix version (2.5) [Luc Renambot]
+- Change default desktop sharing resolution to High (1920 width) instead
+  of full resolution. [Luc Renambot]
+- Clean URL (local files match hostname of display URL) [Tommy Marrinan]
+- Add folder and searches icons for media folders. [Luc Renambot]
+- Set with of filemanager to 98% [Luc Renambot]
+- UI client requests SAGE2 version. [Luc Renambot]
+- Adding CSS file for fileManager. [Luc Renambot]
+- Adding drop location when opening app and files (not only on upload)
+  [Luc Renambot]
+- Adding fileManager to main UI. [Luc Renambot]
+- Moving webix to public/lib. [Luc Renambot]
+- Removed file manager from 'admin' [Luc Renambot]
+- Styling the password page. [Luc Renambot]
+- Avoid crashing if old session trying to load an item. [Luc Renambot]
+- Avoid crashing if instructions.json in not in a application folder.
+  [Luc Renambot]
+- Commented some 'fsmonitor' lines. [Luc Renambot]
+- Show main UI only once connected (should remove the weird layout
+  during load) [Luc Renambot]
+- Double-click an item to open on the wall. [Luc Renambot]
+- Updated CSS to show sorting indicator. [Luc Renambot]
+- Changed image label in filemanager. [Luc Renambot]
+- Removed updating asset list automatically (added recently) since goes
+  into endless loop. [Luc Renambot]
+- Handling file reload better, adding folder icons for media folders
+  defined on the server. [Luc Renambot]
+- Adding the apps in file list request. Adding the folder info in the
+  configuration structure before sending it to the clients. [Luc
+  Renambot]
+- Fix for opening apps. [Luc Renambot]
+- File manager update: delete, open, refresh and upload functions added
+  (still lots to do) [Luc Renambot]
+- Asset management: deleteAsset function added, refresh function added.
+  [Luc Renambot]
+- Monitoring all media folders. Testing reloading asset list on new
+  files. Tweaked upload to make webix uploader happy. [Luc Renambot]
+- Removing HTML elements from file manager page. [Luc Renambot]
+- Adding "return" after "POST" handler. [Luc Renambot]
+- Doing the filter with a regex (case insensitive) [Luc Renambot]
+- Merge branch 'master' of bitbucket.org:sage2/sage2. [Luc Renambot]
+- Password hide and redirect from previous page. [d-k-k]
+- Added menubar (only "about" menu item active) and filter box
+  (functional) [Luc Renambot]
+- Merge branch 'master' into widgets. [krishnaBharadwaj]
+- Wording change. [d-k-k]
+- Minor fix. [krishnaBharadwaj]
+- Merge branch 'master' into widgets. [krishnaBharadwaj]
+- Fix eslint on client side code. [Luc Renambot]
+- Update in eslint changed a few rules. [Luc Renambot]
+- Update metadata panel in file manager. [Luc Renambot]
+- Improve file manager (still no backend actions) [Luc Renambot]
+- Changed exiftool to not convert file sizes to human readable forms.
+  [Luc Renambot]
+- Prototype file manager (not functional) [Luc Renambot]
+- Missing var. [Luc Renambot]
+- Adding moment.js for time management and webix for file manager ui.
+  [Luc Renambot]
+- Fix bug checking for folder existence. [Luc Renambot]
+- Fixes in video player: fix issue #46 video playing over overview
+  client. Updating textures and drawing blocks of only valid blocks
+  (might get a little faster on cluster). [Luc Renambot]
+- Fix typo in server: dislpay vs display. [Luc Renambot]
+- Added client side code to eslint. Added JSCS style checker on all
+  code. [Luc Renambot]
+- Cleanup admin code. [Luc Renambot]
+- Cleanup client side code. [Luc Renambot]
+- Cleanup code of the apps. [Luc Renambot]
+- Add 'style' task: npm run style. [Luc Renambot]
+- Cleanup. [Luc Renambot]
+- Cleanup md5 file. [Luc Renambot]
+- Replace fileExists test by folderExists whn appropriate. [Luc
+  Renambot]
+- Remove jscsrc file (configured in grunt now) [Luc Renambot]
+- Style correction in server.js. [Luc Renambot]
+- Split fileExists function in two: fileExists and folderExists. [Luc
+  Renambot]
+- Adding jscs javascript style checker (npm run style) run by grunt
+  command. [Luc Renambot]
+- Fix loading assets. [Luc Renambot]
+- Fix loading a session containing assets from external folders. [Luc
+  Renambot]
+- Resolve a double encoding of the url. [Luc Renambot]
+- Update: changed the arrangement of buttons to clockwise starting from
+  left of the UI. [krishnaBharadwaj]
+- Close app button shape fixed to octagon. [krishnaBharadwaj]
+- Close app button icon on title bar replaced. [krishnaBharadwaj]
+- Merge branch 'master' of https://bitbucket.org/sage2/sage2.
+  [krishnaBharadwaj]
+- Use the function mkdirParent to create new folders for media library.
+  [Luc Renambot]
+- Add a function mkdirParent to create a folder hierarchy in one call.
+  [Luc Renambot]
+- Fix firefox scrollbars on display and UI clients. [Luc Renambot]
+- Merge branch 'master' of https://bitbucket.org/sage2/sage2.
+  [krishnaBharadwaj]
+- Add thumbs.db to ignore list. [Luc Renambot]
+- Basic support for various media folders. [Luc Renambot]
+- Handle media from various folders. [Luc Renambot]
+- Create routes in the http handler to handle multiple media folders.
+  [Luc Renambot]
+- Handle assets from multiple folders. [Luc Renambot]
+- Move encodeReservedURL function into the runtime. [Luc Renambot]
+- Add a sage2URL property to asset, to handle multiple folders. [Luc
+  Renambot]
+- Remove comment in index.html. [Luc Renambot]
+- Changed editor title page. [Luc Renambot]
+- Add extra media folder to test in "luc-config" [Luc Renambot]
+- Flipping default button states for svg icon buttons.
+  [krishnaBharadwaj]
+- Adding play button svg. [krishnaBharadwaj]
+- Loading secondary svgs to change state for buttons. [krishnaBharadwaj]
+- Updating apps for widget api changes. [krishnaBharadwaj]
+- UI svgs to repo. [krishnaBharadwaj]
+- Slider color matches button color. [krishnaBharadwaj]
+- Merge branch 'master' into widgets. [krishnaBharadwaj]
+- Fix for 'edge' detection. [Luc Renambot]
+- Adding 'edge' as a Windows web browser (browser detection) [Luc
+  Renambot]
+- DefaultWin-cfg.json edited online with Bitbucket. [Tommy Marrinan]
+- Added getHomeDirectory function in utils. [Luc Renambot]
+- Updated zoom app and added default image (from NASA) [Luc Renambot]
+- Removed texture_cube. [Luc Renambot]
+- Removed evl_weather. [Luc Renambot]
+- Remove modestmap demo and stereo_viewer (luc's version) [Luc Renambot]
+- Rename chronograph to clock_svg. [Luc Renambot]
+- Delete clock and cave2_monitor. [Luc Renambot]
+- Updated name of car app. [Luc Renambot]
+- Removed threejs_sample and threejs_shader and renamed
+  threejs_loader_ctm to car_threejs. [Luc Renambot]
+- Cleanup photos app. [Luc Renambot]
+- Renamed evl_photos to photos. [Luc Renambot]
+- First batch of app deletions. Moved to
+  https://bitbucket.org/sage2/sage2_apps/ in the Javascript sub-folder.
+  [Luc Renambot]
+- Merge branch 'TouchUI' [Arthur Nishimoto]
+- Re-enabled saveSession radial button Fixed close button interactable
+  geometry Server now sends pointerColor info to content browser.
+  [Arthur Nishimoto]
+- Merge remote-tracking branch 'remotes/origin/master' into TouchUI.
+  [Arthur Nishimoto]
+- Cleaned up tinted image drawing. [Arthur Nishimoto]
+- Fixed radial button lit state resetting on thumbnail window
+  pointerMove Fixed thumbnail window scroll lock correctly prevents
+  clicking on thumbnail on scroll release. [Arthur Nishimoto]
+- Merge branch 'master' into TouchUI. [Arthur Nishimoto]
+- Fixed initial thumbnail window position and size. [Arthur Nishimoto]
+- Removed old radialMenu code Thumbnail scrolling now ends if pointer
+  release was outside thumbnail window. [Arthur Nishimoto]
+- FIX: Restored pointer events passed to thumbnail window. [Arthur
+  Nishimoto]
+- Toggling thumbnail window now sets the interactable geometry for the
+  window. [Arthur Nishimoto]
+- Fixed content radial menu close button Content radial menu buttons can
+  now toggle thumbnail windows. [Arthur Nishimoto]
+- Fixed content browser radial menu button geometry Button visual states
+  now update to press/move/release events. [Arthur Nishimoto]
+- Radial menu buttons now highlight on pointer over (geometry incorrect)
+  [Arthur Nishimoto]
+- Content browser radial menu buttons use interactable for pointer
+  press/move/release. [Arthur Nishimoto]
+- Fixed ContentBrowser radial menu geometry scaling with ui
+  widgetControlSize. [Arthur Nishimoto]
+- Merge remote-tracking branch 'remotes/origin/master' into TouchUI.
+  [Arthur Nishimoto]
+- Fixed content browser radial menu button geometry layer order. [Arthur
+  Nishimoto]
+- Merge remote-tracking branch 'remotes/origin/master' into TouchUI.
+  [Arthur Nishimoto]
+- Interactable geometry placed over ContentBrowser radial buttons.
+  [Arthur Nishimoto]
+- Reorganized how ContentBrowser radial buttons are stored and
+  interactable geometry generated. [Arthur Nishimoto]
+- ContentBrowser radial menu displays buttons specified by server
+  (button interaction WIP) [Arthur Nishimoto]
+- Merge remote-tracking branch 'remotes/origin/master' into TouchUI.
+  [Arthur Nishimoto]
+- Started server specified radial button layout. [Arthur Nishimoto]
+- Changed touch pointer color. [Arthur Nishimoto]
+- Merge branch 'master' into TouchUI. [Arthur Nishimoto]
+- Fixed thumbnail window using correct default icon for bad filenames.
+  [Arthur Nishimoto]
+- Merge branch 'master' into TouchUI. [Arthur Nishimoto]
+- FIX: File names containing :#$%^&@ will no longer break the thumbnail
+  window. [Arthur Nishimoto]
+- Radial menus can have independent scaling (WIP) [Arthur Nishimoto]
+- Double buffer media stream. [unknown]
+- When socket is disconnected, try to close the stream window. [Luc
+  Renambot]
+- Cleanup in admin pages. [Luc Renambot]
+- Removed eslint as dependency since we use it through grunt (installed
+  twice) [Luc Renambot]
+- Changed eslint rule temporarily to fix their bug. [Luc Renambot]
+- Fix issue #52. [Krishna Bharadwaj]
+- Updated variable in drawing application. [Luc Renambot]
+- Fix issue #53 updating drawing app to new messages. [Luc Renambot]
+- Used an image for padlock (unicode character didnt work on Linux) [Luc
+  Renambot]
+- Add a padlock symbol next to hostname if password is setup. [Luc
+  Renambot]
+- Updated mergeObject to work with old sessions (different objects) [Luc
+  Renambot]
+- Merge branch 'master' of https://bitbucket.org/sage2/sage2. [Luc
+  Renambot]
+- Cleanup and help for commands in sage2/bin. [Luc Renambot]
+- Firefox script for cybercommons. [Luc Renambot]
+- Updating apps requiring D3. Now a builtin to SAGE2. [Luc Renambot]
+- Adding D3 as a builtin. [Luc Renambot]
+- Adding D3 as a builtin library. [Luc Renambot]
+- Adding file editor and file list pages in admin section. [Luc
+  Renambot]
+- Adding the ACE editor. [Luc Renambot]
+- Added command line scripts to access remote server: one command,
+  upload, or a shell (REPL) [Luc Renambot]
+- Add a 'route' for HTTP to acess configuration files (/config/...) [Luc
+  Renambot]
+- Add json files in tracking with nodemon. [Luc Renambot]
+- Svgs for buttons. [krishnaBharadwaj]
+- Merge branch 'master' into widgets. [krishnaBharadwaj]
+- Better handling if screen sharing extension not installed. Points
+  directly to Chrome store. [Luc Renambot]
+- Update key generation to 2048bits and SHA-256 to remove browser
+  warnings. [Luc Renambot]
+- Changes to widget specification functions to make adding controls more
+  simple. [krishnaBharadwaj]
+- Merge branch 'master' into widgets. [krishnaBharadwaj]
+- Remove debug statement. [Luc Renambot]
+- Allow backspace in text input boxes (editing pointer name). If name is
+  Default, change it too. [Luc Renambot]
+- Delaying the initial resize of the UI (once websocket is opened) since
+  sometimes the help panel gets wrong dimensions (probaly SVG not
+  finished loading) [Luc Renambot]
+- Updated user name: from Default to SAGE2_user. [Luc Renambot]
+- Merge branch 'master' of https://bitbucket.org/sage2/sage2. [Luc
+  Renambot]
+- Fix showwidgetlink bug. [Tommy Marrinan]
+- Updated config for bigdaddy. [Luc Renambot]
+- Config files for wall of CAVE2. [Luc Renambot]
+- Fix desktop sharing for "overview" client (-1), based on Ian Peake
+  code. [Luc Renambot]
+- Update merge objects. [Tommy Marrinan]
+- Pdf_viewer: left/right click go back/go forward one page. [Tommy
+  Marrinan]
+- Merge branch 'master' of bitbucket.org:sage2/sage2. [Tommy Marrinan]
+- Using 'unknown' app icon instead of blank in remote app. [Luc
+  Renambot]
+- Windows can be moved, fullscreened, and closed in app interaction mode
+  by using title bar. [Tommy Marrinan]
+- Clean up of last commit. [Tommy Marrinan]
+- Fixed sharing images. [Tommy Marrinan]
+- Fix aspect ratio bug in watermark in web UI. [Luc Renambot]
+- Send media stream frames (i.e. desktop sharing) only to clients
+  showing the application (otherwise a dummy 1x1 GIF image). Removed a
+  lot of dead commented-out code. [Luc Renambot]
+- Ignore watermark if not defined. [Luc Renambot]
+- Updated bbox of sage2.svg. [Luc Renambot]
+- Sage2 logo now default watermark. [Luc Renambot]
+- Removed logo above web ui. [Luc Renambot]
+- Sage2 logo now default watermark. [Luc Renambot]
+- Fix opacity of logo watermark on the wall. [Luc Renambot]
+- Added the function 'monitorFolders' to node-util. [Luc Renambot]
+- Added a test call to fsmonitor. [Luc Renambot]
+- Added fsmonitor package to detect file system changes. [Luc Renambot]
+- Merged in MatthewTurk/sage2/watermark (pull request #2) [Luc Renambot]
+- Check for watermark in config. [Matthew Turk]
+- Merged in MatthewTurk/sage2/fs-mv (pull request #3) [Luc Renambot]
+- Use the mv package to avoid possible errors with fs.rename. [Matthew
+  Turk]
+- Ensure block stream app exists. [Tommy Marrinan]
+- Adding rgb shaders. [Tommy Marrinan]
+- Enalbe block streaming apps to define colorspace (added support for
+  RGBA in addition to YUV420p) [Tommy Marrinan]
+- Merge branch 'master' into widgets. [krishnaBharadwaj]
+- Fixing streaming app leak. [Tommy Marrinan]
+- Merge branch 'master' of https://bitbucket.org/sage2/sage2. [Luc
+  Renambot]
+- Fixing media_block_stream app. [Tommy Marrinan]
+- Making sure app is ready before moving. [Luc Renambot]
+- Fix stereo_image app (state.file contains filename) [Luc Renambot]
+- New command to generate a default application from a template: "npm
+  run newapp" and answer the questions (template files in doc/templates)
+  [Luc Renambot]
+- Update lyra config (cave2) [Luc Renambot]
+- Update: complex geometry can be added to interaction manager.
+  [krishnaBharadwaj]
+- Merge branch 'master' into widgets. [krishnaBharadwaj]
+- Merge branch 'master' of bitbucket.org:sage2/sage2. [Arthur Nishimoto]
+- Fixed touch three-finger gesture to open widgets on apps. [Arthur
+  Nishimoto]
+- Small changes to the widget link style. [krishnaBharadwaj]
+- Merge branch 'master' into widgets. [krishnaBharadwaj]
+- Initial implementation of HTTP PUT command. [Luc Renambot]
+- Removed some comments. [Luc Renambot]
+- Merge branch 'master' into widgets. [krishnaBharadwaj]
+- Update webgl context creation in texture_cube. [Luc Renambot]
+- Added shotcuts 'l' for loop and 'm' for mute for movie player app.
+  [Luc Renambot]
+- On IE, treat the svg logo and watermark as images, no color adjustment
+  possible. [Luc Renambot]
+- Use the png image for the window buttons (instead of webp) [Luc
+  Renambot]
+- Merge branch 'master' into widgets. [krishnaBharadwaj]
+- If element is iframe, resize as a div. [Luc Renambot]
+- Formatting in src/node-httpserver.js. [Luc Renambot]
+- Changed CSS to include 'fonts.css' and updating font-family to Arimo.
+  [Luc Renambot]
+- Deleting TTF fonts. [Luc Renambot]
+- Changed fonts from TTF (large files) to WOFF/WOFF2 (small files, Web
+  Open Font Format) [Luc Renambot]
+- Formating iridium-cfg.json. [Luc Renambot]
+- Server prints URLs with session ID encoded, if needed. [Luc Renambot]
+- Simplify URL parsing for session. [Luc Renambot]
+- Split the session code out in its own file, and some cleaning up. [Luc
+  Renambot]
+- Delete non needed files. [Luc Renambot]
+- Delete mouse_event_example for now. [Luc Renambot]
+- Merge branch 'passwordConnect' [Luc Renambot]
+- Fixed error with page param. [Dylan]
+- Merge with master. [Dylan]
+- Master merge 5/3. [Dylan]
+- Edited command line file. [Dylan]
+- Master merge 15 04 23. [Dylan]
+- Password hashes saved and read from passwd.json in the keys folder.
+  [Dylan]
+- Write test. [Dylan]
+- Fix crash case when no coookies. [Dylan]
+- Fix. [Dylan]
+- Fixed the button. [Dylan]
+- Forgot md5 on client. [Dylan]
+- Md5 hashing on server. [Dylan]
+- Merged with master April 13. [Dylan]
+- Changes to test and session now stored as hash. [Dylan]
+- Testing javascript conversion. [Dylan]
+- Notes regarding md5 hash. [Dylan]
+- Added url param for page redirect. Intended for startup script display
+  connection. [Dylan]
+- Reads sessionID from config file and allows session.html to take url
+  param. [Dylan]
+- Merge with master 150331. [Dylan]
+- Mouse event testing app. [Dylan]
+- Removed unnecessary cookie. [Dylan]
+- Merge with master 0324. [Dylan]
+- Testing pwd with cookies in header. [Dylan]
+- Fixed errors with merge removal. [Dylan]
+- Merget with master 0323. [Dylan]
+- Recommit without undoing changes. [Dylan]
+- Went back to old node-httpserver.js, due to unknown deletes. [Dylan]
+- Cmd line params should be handled now. [Kiyoji]
+- Added cmd flag detect. Doesn't actually do anything. [Kiyoji]
+- Just added a session.html file. None of the code works with it.
+  [Kiyoji]
+- Git test with just comment change on server.js. [Kiyoji]
+- Big commit: documentation reorganization, two modules (client module
+  and server module) and everything else is sub-module of client or
+  server. [Luc Renambot]
+- Just a file to structure the documentation. [Luc Renambot]
+- Tweak in doc for public/src/radialMenu.js. [Luc Renambot]
+- Doc for src/node-exiftool.js. [Luc Renambot]
+- Added dependencies of comment section. [Luc Renambot]
+- Basic doc for src/node-coordinateCalculator.js. [Luc Renambot]
+- Fix doc for src/node-livevideodecoder.js. [Luc Renambot]
+- Doc for src/node-httpserver.js. [Luc Renambot]
+- Doc template for livevideodecoder (not used anymore I believe) [Luc
+  Renambot]
+- Tweak in node-omicron.js doc. [Luc Renambot]
+- Comments for src/node-pixelblock.js. [Luc Renambot]
+- Doc template and style editing in  src/node-radialmenu.js. [Luc
+  Renambot]
+- Doc. for src/node-sagepointer.js. [Luc Renambot]
+- Doc placeholder in node-stickyitems.js. [Luc Renambot]
+- Merge branch 'master' of bitbucket.org:sage2/sage2. [Luc Renambot]
+- FIX: Thumbnail preview image. [Arthur Nishimoto]
+- Merge branch 'TouchUI' [Arthur Nishimoto]
+- Merge remote-tracking branch 'remotes/origin/master' into TouchUI.
+- FIX: Radial menu lines. [Arthur Nishimoto]
+- CHANGE: RemoteSite button hidden (until implemented) NEW: Menu buttons
+  have a DISABLED (ignore events) and HIDDEN (ignore events, don't draw)
+  state and get/set methods. [Arthur Nishimoto]
+- Additional comments for radialMenu. [Arthur Nishimoto]
+- CHANGE: Remaining bracket formatting. [Arthur Nishimoto]
+- CHANGE: Metadata tags defined in an array instead of if-blocks FIX:
+  Bracket formatting (up to line 812) [Arthur Nishimoto]
+- CHANGE: SAGE2_Display now requests server files (for RadialMenu)
+  CHANGE: RadialMenu uses display websocket instead of creating its own
+  CHANGE: Slightly increased radial menu bounding box to avoid clipping
+  'drag button' svg REMOVE: Unused/obsolete radial menu png files.
+  [Arthur Nishimoto]
+- NEW: Additional icewallAN config. [Arthur Nishimoto]
+- Merge branch 'master' into TouchUI. [Arthur Nishimoto]
+- CHANGE: Started internal redesign of radial menu. [Arthur Nishimoto]
+- Merge remote-tracking branch 'remotes/origin/data-duplication' into
+  TouchUI. [Arthur Nishimoto]
+- FIX: Radial menu now tracks/follows pointers that clicked on it, but
+  no longer over the menu (i.e. dragged really fast) [Arthur Nishimoto]
+- Merge branch 'master' of https://bitbucket.org/sage2/sage2 into
+  stable. [Luc Renambot]
+- Stop killing node in cluster mode. [Luc Renambot]
+- Add master display node when displaying the list of clients. [Luc
+  Renambot]
+- Testing if socket is opened before sending. [Luc Renambot]
+- Fix widget stuff for client -1. [Luc Renambot]
+- Make sure the app still exist when calling broadcast function. [Luc
+  Renambot]
+- Widget links functional. [krishnaBharadwaj]
+- Widget dial and title bar coloring from user color. [krishnaBharadwaj]
+- Merge branch 'master' into widgets. [krishnaBharadwaj]
+- Fixed createAppFromDescription for custom apps. [Andy J]
+- Merge branch 'master' into widgets. [krishnaBharadwaj]
+- Updated global variables list. [Luc Renambot]
+- Fix remote app pushing. [Tommy Marrinan]
+- Removed print statement. [Tommy Marrinan]
+- Updated most apps to new API. [Tommy Marrinan]
+- Merged with master. [Tommy Marrinan]
+- Added visibility funtions and 'onVisible' callback to app, and updated
+  image_viewer to use it. [Luc Renambot]
+- Fixed radial menu only flag. [Arthur Nishimoto]
+- Merge branch 'master' of bitbucket.org:sage2/sage2. [Arthur Nishimoto]
+- Test if remote server is connected before sending the app. [Luc
+  Renambot]
+- Added flag to only show Thumbnail window. [Arthur Nishimoto]
+- Fixed initial thumbnail window geometry position. [Arthur Nishimoto]
+- Merged with master and fixed small bug. [Tommy Marrinan]
+- Merge branch 'master' into data-duplication. [Tommy Marrinan]
+- Merged with master. [Tommy Marrinan]
+- Updated SAGE2 UI. uses DOM elements rather than canvas - enables
+  zIndex reordering. also properly handles events (wherever mouse is
+  hovering - not last avtive) [Tommy Marrinan]
+- Fixed media stream hover corner and start/finish move/resize. [Tommy
+  Marrinan]
+- Fixed media stream error. [Tommy Marrinan]
+- Auto-save user-log every 5 mins (not just on quit) [Tommy Marrinan]
+- Updating movie player sync. [Tommy Marrinan]
+- Added sync option to update only local, or local and remote. [Tommy
+  Marrinan]
+- Updating app api - less functions needed. different monitoring system
+  for app.state. [Tommy Marrinan]
+- Fixed video sync bugs. [Tommy Marrinan]
+- Fix movie_player sync. [Tommy Marrinan]
+- Videos sync states across data portals. [Tommy Marrinan]
+- Google maps app handles updated state properly. [Tommy Marrinan]
+- Sync apps by state. [Tommy Marrinan]
+- App delete synced. [Tommy Marrinan]
+- App move resize fully synced. [Tommy Marrinan]
+- Update display of hover corner on remote site. [Tommy Marrinan]
+- App move and resize working. [Tommy Marrinan]
+- Message to update app order (includes apps and their zIndexes) [Tommy
+  Marrinan]
+- Removed listeners for remote events (mouse press/release, key down/up,
+  etc.). added listeners for high-level functions (move app, update app
+  state, etc.) [Tommy Marrinan]
+- More robust check for if dependency is a url or local file. [Tommy
+  Marrinan]
+- Updated googlemaps app - dependencies declared in instructions. [Tommy
+  Marrinan]
+- Fix google maps loading API and state. [Luc Renambot]
+- Fixing pointer release. [Tommy Marrinan]
+- Test pointer release. [Tommy Marrinan]
+- Toggle modes for remote sage pointer. [Tommy Marrinan]
+- Testing sharing apps. [Tommy Marrinan]
+- Pass key events to portals. [Tommy Marrinan]
+- Clone media stream in portal (remote) [Tommy Marrinan]
+- Clone media stream in portal (remote) - TEST. [Tommy Marrinan]
+- Clone media stream in portal (local) [Tommy Marrinan]
+- Updated DataSharing to prototype scheme. [Tommy Marrinan]
+- Fixed app sync issue caused by inconsistent titlebar heights. [Tommy
+  Marrinan]
+- Debugging titlebar height differences. [Tommy Marrinan]
+- Properly size interactable buttons to portal titble bar height. [Tommy
+  Marrinan]
+- Fix bug. [Tommy Marrinan]
+- Sync titleBarHeight in portal. [Tommy Marrinan]
+- Removed sharing area border - testing. [Tommy Marrinan]
+- Remove debug statement. [Tommy Marrinan]
+- Create consistent id for data sharing session. [Tommy Marrinan]
+- Remove debug print statements. [Tommy Marrinan]
+- Take border into account when calculating app.sage2 position/size.
+  [Tommy Marrinan]
+- Move portal offset as static value in left,top. [Tommy Marrinan]
+- Fix app url creation in item loader (always use forward slash) [Tommy
+  Marrinan]
+- Check if exif exists. [Tommy Marrinan]
+- Log user data for sharing new app. [Tommy Marrinan]
+- App.sage2_ position/size calculated correctly for portals. [Tommy
+  Marrinan]
+- App.sage2_ position/size calculated correctly for portals. [Tommy
+  Marrinan]
+- Fixed doc_url for pdf. [Tommy Marrinan]
+- Fixing app position on shared area. [Tommy Marrinan]
+- Fixing pointer position on shared area. [Tommy Marrinan]
+- Modified tmarrinan config. [Tommy Marrinan]
+- Added pointer to non-scaled overlay. [Tommy Marrinan]
+- Pointer release forwarded to shared apps. toggle modes not yet since
+  now key press. [Tommy Marrinan]
+- Small fixes to pointer positioning. [Tommy Marrinan]
+- Sync app move / resize. [Tommy Marrinan]
+- Sync app move / resize. still need pointer release to drop selected
+  app. [Tommy Marrinan]
+- Sync pointer press. [Tommy Marrinan]
+- Shared pointer stops when local pointer stops. [Tommy Marrinan]
+- Remote pointers show and move in portal. [Tommy Marrinan]
+- Start remote pointer inside portal (show / hide) [Tommy Marrinan]
+- Shared apps move and resize properly (locally) [Tommy Marrinan]
+- App move and reize find correct interableManager. [Tommy Marrinan]
+- Send app to remote portal. [Tommy Marrinan]
+- Duplicate app inside portal. [Tommy Marrinan]
+- Changed data sharing portals to their own item list (with same zIndex
+  as applications) [Tommy Marrinan]
+- Data-sharing portal can be resized. [Tommy Marrinan]
+- Create new app from description. [Tommy Marrinan]
+- Find if app is dropped on data-sharing portal. [Tommy Marrinan]
+- SageUI no longer stops displaying all apps. [Tommy Marrinan]
+- Portal zIndex handled properly. [Tommy Marrinan]
+- CreateNewDataSharingSession inside a function. [Tommy Marrinan]
+- Hide data-sharing dialogs server side. [Tommy Marrinan]
+- Give data-sharing area a semi-transparent backround. [Tommy Marrinan]
+- Merged with interactable - disabled data-pushing. [Tommy Marrinan]
+- Merge branch 'interactable' into data-duplication. [Tommy Marrinan]
+- Readded functionality for cancel, accept, reject. [Tommy Marrinan]
+- Fix geometry bug. [Tommy Marrinan]
+- Added interactable objects for dialog boxes. [Tommy Marrinan]
+- Remove debug printout. [Tommy Marrinan]
+- Updated unique messages. [Tommy Marrinan]
+- Merge branch 'interactable' into data-duplication. [Tommy Marrinan]
+- Merged interactable into data-duplication. [Tommy Marrinan]
+- Added SAGE2_DataSharing.js. [Tommy Marrinan]
+- Create initial visible area for data-sharing session. [Tommy Marrinan]
+- Bug fix. [Tommy Marrinan]
+- Remove console.log. [Tommy Marrinan]
+- Standardize data session object. [Tommy Marrinan]
+- Bug fux. [Tommy Marrinan]
+- Initial creation call for data session. [Tommy Marrinan]
+- Fixed accept request. [Tommy Marrinan]
+- Accept request sends message to remote server. [Tommy Marrinan]
+- Fixed typo. [Tommy Marrinan]
+- Reject request sends message to remote server. [Tommy Marrinan]
+- Cancel request sends message to remote server. [Tommy Marrinan]
+- Merge branch 'master' into data-duplication. [Tommy Marrinan]
+- Merge branch 'master' into data-duplication. [Thomas Marrinan]
+- Fixed dialog sizing / positioning. [Thomas Marrinan]
+- Fixed error. [Thomas Marrinan]
+- Added wait dialog. [Thomas Marrinan]
+- Cleaning up. [Thomas Marrinan]
+- Fix bug in dialog pointer press. [Thomas Marrinan]
+- Debug pointer press on dialog. [Thomas Marrinan]
+- Fix bug in dialog pointer press. [Thomas Marrinan]
+- Debug pointer press on dialog. [Thomas Marrinan]
+- Check for pointer press on accept / reject buttons. [Thomas Marrinan]
+- Changed accept / reject position. [Thomas Marrinan]
+- Make data sharing dialog stay ontop of app windows. [Thomas Marrinan]
+- Edit remote hostname in dialog. [Thomas Marrinan]
+- Centered dialog box horizontally. [Thomas Marrinan]
+- Edited style for accept / reject buttons. [Thomas Marrinan]
+- Added accept / reject buttons. [Thomas Marrinan]
+- Fixed style typo of data sharing request dialog. [Thomas Marrinan]
+- Added dialog to ui_builder for data-sharing requests. [Thomas
+  Marrinan]
+- Merged master into branch and fixed conflicts. [Thomas Marrinan]
+- Merged with master - fixed conflicts. [Thomas Marrinan]
+- Finished debug. [Thomas Marrinan]
+- Debug testing. [Thomas Marrinan]
+- Inital request message for data-sharing session. [Thomas Marrinan]
+- Disabled data-pushing. detect site to start data-duplication session.
+  [Thomas Marrinan]
+- Cleaned up radial menu changes. [Thomas Marrinan]
+- Added remote sites button to radial menu (along with pre-loading
+  images. [Thomas Marrinan]
+- Widget Buttons can now use svg images. [krishnaBharadwaj]
+- Removed self executing function used for creating widget controls in
+  Radar App. [krishnaBharadwaj]
+- Making the data we get from C++ lib is valid. [Luc Renambot]
+- Dragging and releasing content over Radial Menu or Widgets releasing
+  content instead of sticking to pointer. [Arthur Nishimoto]
+- Updated Radial Menu geometry show/hide visibility. [Arthur Nishimoto]
+- Files names with odd characters [:#$%^&@] no longer breaks the
+  thumbnail window. Will show default icon in this case. [Arthur
+  Nishimoto]
+- Fixed state variable. [Andy J]
+- Merge branch 'master' of https://bitbucket.org/sage2/sage2. [Andy J]
+- Fix visibility in imageviewer when using overview client (-1) [Luc
+  Renambot]
+- Fixes #49 : no ':' inside sessions names. Use '_' as separator. [Luc
+  Renambot]
+- Fixed merge conflicts. [Tommy Marrinan]
+- Fixed test errors. [Tommy Marrinan]
+- Fixed dropping apps to remote site. [Tommy Marrinan]
+- Update config for midori machine (2x 4K) [Luc Renambot]
+- Adding smaller png image, just in case. [Luc Renambot]
+- Added default JPG images. [Luc Renambot]
+- Making UI images smaller (jpg) and smaller (512,256,128) [Luc
+  Renambot]
+- Adding default icon to stickynote app. [Luc Renambot]
+- Merge branch 'master' into widgets. [krishnaBharadwaj]
+- Switched npm test to grunt. [Victor Mateevitsi]
+- Commented out jshint in test, to test. [Luc Renambot]
+- Removed 'plato' tool (source analysis report), since not that useful.
+  [Luc Renambot]
+- Cleanup package.json. [Luc Renambot]
+- Put a minifying action in grunt (for client side) [Luc Renambot]
+- Only create the logs folder if userTracking enabled. [Luc Renambot]
+- Added config/custom.types to gitignore. [Luc Renambot]
+- Trying to use 'grunt' for tasks instead of putting everything into
+  package.json. Removed jshint (only use eslint) [Luc Renambot]
+- Move eslint configuration files to 'build' folder. [Luc Renambot]
+- Default "Close Widget" button repositioned to the center of the UI.
+  [krishnaBharadwaj]
+- Merge branch 'master' into widgets. [krishnaBharadwaj]
+- Updating apps to app.event based widget actions, complete.
+  [krishnaBharadwaj]
+- Updating apps to app.event based widget actions, Contd..
+  [krishnaBharadwaj]
+- Updating apps to app.event based widget actions. [krishnaBharadwaj]
+- Update: Default "Close App" button repositioned. [krishnaBharadwaj]
+- PDF viewer updated to handle widget events. [krishnaBharadwaj]
+- Update: Default buttons work properly in the new app.event based
+  widget action scheme. [krishnaBharadwaj]
+- Widget control actions are now defined in app.event.
+  [krishnaBharadwaj]
+- FIX: Edit visibility functionality of widget controls. Widgets hide
+  and reappear properly. [krishnaBharadwaj]
+- Merge branch 'master' of https://bitbucket.org/sage2/sage2.
+  [krishnaBharadwaj]
+- Testing codeship. [Victor Mateevitsi]
+- Merge branch 'master' of https://bitbucket.org/sage2/sage2. [Andy J]
+- Merge branch 'master' into interactable. [Luc Renambot]
+- Content Browser can only be dragged from the Radial Menu. Fixed server
+  crash on Thumbnail Window scroll event in interaction mode. [Arthur
+  Nishimoto]
+- Restored Radial Menu related changes that got lost in the previous
+  merge. [Arthur Nishimoto]
+- Merge branch 'interactable' of https://bitbucket.org/sage2/sage2 into
+  interactable. [krishnaBharadwaj]
+- FIX: Slider move and update, Widget Control move. [krishnaBharadwaj]
+- Fixed Thumbnail Window geometry. Radial Menu and Thumbnail Window now
+  operational under Interactable. [Arthur Nishimoto]
+- Merge branch 'interactable' of bitbucket.org:sage2/sage2 into
+  interactable. [Arthur Nishimoto]
+- FIX: Initial thumbnail window div position. [Arthur Nishimoto]
+- FIX: Radial menu correctly sets geometry on open and close. [Arthur
+  Nishimoto]
+- FIX: Multi-user radial menu drag. [Arthur Nishimoto]
+- FIX: Radial menu dragging if pointer is leaves menu. [Arthur
+  Nishimoto]
+- Small printout changes. [Luc Renambot]
+- Small code formatting. [Luc Renambot]
+- Listen only to IPv4 addresses and a few log tweaks. [Luc Renambot]
+- Merge branch 'master' into interactable. [Luc Renambot]
+- Restored client radialMenu to server thumbnail window state connection
+  (Geometry alignment WIP) [Arthur Nishimoto]
+- Thumbnail window context correctly positioned on update (still wrong
+  initially) [Arthur Nishimoto]
+- Radial menu opening, dragging, and clicking buttons now functional
+  (Thumbnail window WIP) [Arthur Nishimoto]
+- Server now correctly sets aligns radial menu geometry and display
+  client visuals. [Arthur Nishimoto]
+- Merge branch 'interactable' of https://bitbucket.org/sage2/sage2 into
+  interactable. [krishnaBharadwaj]
+- Added a function to load a CA bundle file (several certificates into
+  one file) instead of loading separate files. [Luc Renambot]
+- Added ability to load CA certificate files for domains (up to 4 files,
+  -ca.crt -ca1.crt -ca2.crt -ca3.crt). Should get a 'A' score now with
+  https://www.ssllabs.com/ssltest/ [Luc Renambot]
+- Various pointer and buttons for Firefox, update Snapsvg to v0.4,
+  removed CSS transform when pointer hidden, added browser detection to
+  the runtime. [Luc Renambot]
+- Widgets functional, sticky items functional. [krishnaBharadwaj]
+- Node-RadialMenu now receives press/move/release events. [Arthur
+  Nishimoto]
+- Data pushing re-enabled. [Tommy Marrinan]
+- Relaxed version control when installing binary packages: >= 0.10.36
+  and >= 0.12.0. Works fine on MacOSX. [Luc Renambot]
+- Updated remote clientDescription. [Tommy Marrinan]
+- Merge branch 'master' into interactable. [Tommy Marrinan]
+- Cleaning up. [Tommy Marrinan]
+- Fixed app update state and app resizing itself. [Tommy Marrinan]
+- Removed app.redraw constraint. fps handled server side. [Tommy
+  Marrinan]
+- App animations working with new renderSync object. [Tommy Marrinan]
+- Removed commented out code. [Tommy Marrinan]
+- More efficient distance calculation (remove sqrt since just finding
+  min) [Tommy Marrinan]
+- Removed debug message. [Tommy Marrinan]
+- Tile and clear working. [Tommy Marrinan]
+- Merge branch 'interactable' of bitbucket.org:sage2/sage2 into
+  interactable. [Tommy Marrinan]
+- Merge branch 'interactable' of bitbucket.org:sage2/sage2 into
+  interactable. [Luc Renambot]
+- Add a few more URLs in the console output. [Luc Renambot]
+- Videos working. [Tommy Marrinan]
+- Initial video player working. still need to recalculate blocks on
+  move/resize. [Tommy Marrinan]
+- Media streams stop when deleted. [Tommy Marrinan]
+- Media stream (screen sharing) working. [Tommy Marrinan]
+- Late joiner now shows apps. [Tommy Marrinan]
+- Key press, key up, key down updated. [Tommy Marrinan]
+- Pass pointer scroll to apps. [Tommy Marrinan]
+- Pointer scroll working. [Tommy Marrinan]
+- Start / stop sage pointer messages. [Tommy Marrinan]
+- SAGE2 Pointer starts in location where it was last visible. [Tommy
+  Marrinan]
+- Added functionality for close app (button in upper right) [Tommy
+  Marrinan]
+- PointerPosition added (directly from web UI. [Tommy Marrinan]
+- Application order (zIndex) handled properly on client side as well as
+  server. [Tommy Marrinan]
+- Resize by dragging corner working. [Tommy Marrinan]
+- Added fullscreen toggle. [Tommy Marrinan]
+- Merge branch 'interactable' of bitbucket.org:sage2/sage2 into
+  interactable. [Tommy Marrinan]
+- Shorter printouts in assets. [Luc Renambot]
+- Tweak the 'monitor' command: npm run monitor (using nodemon) [Luc
+  Renambot]
+- Made pointer modes work properly for press/move/release. [Tommy
+  Marrinan]
+- Changed a new Date() to Date.now() [Tommy Marrinan]
+- Fixed merge conflict. [Tommy Marrinan]
+- Added visibility calculations inside image_viewer. Image loads from
+  URL now, not from buffer. Makes sessions much smaller. [Luc Renambot]
+- Merge branch 'interactable' of bitbucket.org:sage2/sage2 into
+  interactable. [Luc Renambot]
+- Fix bug for animation application. [Luc Renambot]
+- Initial redesign of pointer press, move, release. note: many things
+  broken. [Tommy Marrinan]
+- Replacing uniqueID with wsio.id. [Tommy Marrinan]
+- Add functions in runtime to return smallest encoded GIFs. [Luc
+  Renambot]
+- Removing unnecessary message fields from wsio clients. [Tommy
+  Marrinan]
+- Cleaning up. [Tommy Marrinan]
+- Add a line of help in the web console. [Luc Renambot]
+- In the web console, scroll vertically, clip horizontally. [Luc
+  Renambot]
+- Add the command typed into the terminal. [Luc Renambot]
+- Update the 'git update' functionality to the running branch. Changed
+  some printouts. Removed double delete call. [Luc Renambot]
+- Changed printout. [Luc Renambot]
+- Removed json5 from sage2commandline.js. [Tommy Marrinan]
+- Removed recursive console.log in emitLog. [Tommy Marrinan]
+- Removed debug comments. [Tommy Marrinan]
+- Fixed console emitString in server.js. [Tommy Marrinan]
+- Fixed merge conflicts. [Tommy Marrinan]
+- Separated the JS code from the web console. [Luc Renambot]
+- Merge branch 'interactable' of bitbucket.org:sage2/sage2 into
+  interactable. [Luc Renambot]
+- Restructure REPL to work with web console. Formatting. [Luc Renambot]
+- Tweak printout. [Luc Renambot]
+- Add header and tweak console.log. [Luc Renambot]
+- Add printout header. [Luc Renambot]
+- Fix message handling in the web console. [Luc Renambot]
+- Optimizing WebSocketIO. sending 4 character unique alias for listener
+  names. [Tommy Marrinan]
+- Updated console.html with new websocket api requirements. [Tommy
+  Marrinan]
+- Merge branch 'interactable' of bitbucket.org:sage2/sage2 into
+  interactable. [Tommy Marrinan]
+- Fix websocket class name in console.html. [Luc Renambot]
+- Updated server.js broadcast to use new  websocket.io API. [Tommy
+  Marrinan]
+- Updating websocket.io API. broadcast part of class now - autodetects
+  who is listening. [Tommy Marrinan]
+- Fixed find/replace typo. [Tommy Marrinan]
+- Moved more into initialize function. [Tommy Marrinan]
+- Began organizing server initialization and global var declaration.
+  [Tommy Marrinan]
+- Began organizing server initialization and global var declaration.
+  [Tommy Marrinan]
+- Made WebsocketIO print nicely. [Tommy Marrinan]
+- Added sage2commandline. [Tommy Marrinan]
+- Merge branch 'interactable' of bitbucket.org:sage2/sage2 into
+  interactable. [Tommy Marrinan]
+- Little hint fixes. [Luc Renambot]
+- Fixed bug in sage2itemlist. [Tommy Marrinan]
+- Updated console logging. [Tommy Marrinan]
+- Cleaning up code. [Tommy Marrinan]
+- Created function to handle new applications. [Tommy Marrinan]
+- Added getItemById to sage2itemlist. [Tommy Marrinan]
+- Added sage2itemlist. [Tommy Marrinan]
+- Initialize thumbnail visibility false. [Tommy Marrinan]
+- Added visible flag to geometric objects. [Tommy Marrinan]
+- Created addGeometry for remote site staticUI buttons, new radialMenus,
+  new widgets, and new applications. [Tommy Marrinan]
+- Updated remote site spacing. [Tommy Marrinan]
+- Updated configs. [Tommy Marrinan]
+- Updated remote site button layout. [Tommy Marrinan]
+- Updated remote site button size. [Thomas Marrinan]
+- Include interactable manager in server. [Tommy Marrinan]
+- Changes method from public to private. [Tommy Marrinan]
+- Initial commit. [Tommy Marrinan]
+- Added state to the app. [Andy J]
+- User definable parameters now easier to understand. [Andy J]
+- Made jshint happy. [Andy J]
+- Added more comments. [Andy J]
+- Image # now part of state information. [Andy J]
+- Initial commit of 'WebGL Earth'-based demo. No interaction, just
+  rotating. [Luc Renambot]
+- Added control to reset map and limited zoom oput. [Andy J]
+- Added a few more surrounding police districts. [Andy J]
+- Updated version number. [Andy J]
+- State of icons now saved/shared. [Andy J]
+- Updated version number. [Andy J]
+- State of which radar station is now saved/shared. [Andy J]
+- Added full list of US stations as a comment. [Andy J]
+- Merge branch 'master' into widgets. [krishnaBharadwaj]
+- Moved some constants to the instructions file to make them easier to
+  modify. [Andy J]
+- Another attempt to fix fading bug in optimized code. [Andy J]
+- Commenting out unused code. [Luc Renambot]
+- Hide the cursor over the SVG logo. [Luc Renambot]
+- Making the clock apps running at 2fps to avoid skipping seconds. [Luc
+  Renambot]
+- Fixed bug in image order in more efficient version. [Andy J]
+- Fixing Docker. [Victor Mateevitsi]
+- Fixing docker. [Victor Mateevitsi]
+- Fixing docker compilation. [Victor Mateevitsi]
+- Merge branch 'master' of https://bitbucket.org/sage2/sage2. [Andy J]
+- Replaced console.log by process.stdout.write in warning from
+  broadcast. [Luc Renambot]
+- Adding DynamicImage as a global variable. [Luc Renambot]
+- More efficient svg element management. [Andy J]
+- Merge branch 'master' of https://bitbucket.org/sage2/sage2. [Andy J]
+- Should no longer be wasting memory creating new image objects. [Andy
+  J]
+- Added DynamicImage class for images that change src attribute. [Tommy
+  Marrinan]
+- Added controls to image viewer. [krishnaBharadwaj]
+- Dynamic style elements for title bar colors disabled.
+  [krishnaBharadwaj]
+- Merge branch 'master' into widgets. [krishnaBharadwaj]
+- Fixed notepad application: animation was broken. [Luc Renambot]
+- Fix bug in d3_sample app: date vs data.date. [Luc Renambot]
+- Making sure the radial menu gets the same app list as the web UI. [Luc
+  Renambot]
+- Only show/hide wand button works when wand is hidden. [Arthur
+  Nishimoto]
+- Fixed wand radial menu/widget dragging. [Arthur Nishimoto]
+- Updated makefiles to include generated doc. [Luc Renambot]
+- Add API section in the help (generated doc) [Luc Renambot]
+- Merge branch 'master' of https://bitbucket.org/sage2/sage2. [Luc
+  Renambot]
+- Changed tmarrinan-cfg. [Tommy Marrinan]
+- Merge branch 'master' of bitbucket.org:sage2/sage2. [Luc Renambot]
+- Added a printout if no handler for a received message. [Luc Renambot]
+- Adding a benchmark to upload many images. [Luc Renambot]
+- Added noDropShadow to mesaverde configuration. [Luc Renambot]
+- Widget links disabled (Commented out temporarily) [krishnaBharadwaj]
+- Widget links positioned using css transforms. [krishnaBharadwaj]
+- Added ffmpeg dylib for Mac installation. [Luc Renambot]
+- Updating build makefiles. [Luc Renambot]
+- Fix typo. [Luc Renambot]
+- Add checkPackages function to sageutils module. [Luc Renambot]
+- Change debug info. [Luc Renambot]
+- Removed a debug line. [Luc Renambot]
+- Increasing buffer size. [Luc Renambot]
+- Merge branch 'master' of bitbucket.org:sage2/sage2. [Luc Renambot]
+- Fixed host origin for app urls when using default ports. [Thomas
+  Marrinan]
+- Move checking packages into a function. [Luc Renambot]
+- Update makefile for Windows. [Luc Renambot]
+- Working on build scripts. [Luc Renambot]
+- Move nodemon package to dev dependencies. [Luc Renambot]
+- Added comment for command line options of install script. [Thomas
+  Marrinan]
+- Fixed dependency check and install script. [Thomas Marrinan]
+- Added check to see if packages are up to date. [Thomas Marrinan]
+- Intercept backspace event, so no going back to previous page by
+  mistake. [Luc Renambot]
+- Added a production install mode (npm run inprod). Modified installer
+  to force a specific OS. [Luc Renambot]
+- Add doc folder to the ignore list for jshint. [Luc Renambot]
+- Restore doc settings. [Luc Renambot]
+- Added some global variables to eslint definition. [Luc Renambot]
+- Remove console.log in SAGE2_UI.js. [Luc Renambot]
+- Putting back the documentation (!!) [Luc Renambot]
+- Fix position of version and logo for overview client (-1) [Luc
+  Renambot]
+- Merge branch 'master' of https://bitbucket.org/sage2/sage2. [Arthur
+  Nishimoto]
+- Defining the background.clip value if undefined (true by default) [Luc
+  Renambot]
+- Added clip true. [Andy J]
+- FIX: Default mediabrowser icons (sessions and any other content
+  without a thumbnail) [Arthur Nishimoto]
+- Removed older radial UI images. Added newer ones missing from last
+  commit. [Arthur Nishimoto]
+- Merge branch 'master' of https://bitbucket.org/sage2/sage2. [Arthur
+  Nishimoto]
+- Making sure that port numbers in the configuration file are numbers.
+  [Luc Renambot]
+- Fixed clean url hostAlias with default ports. [Thomas Marrinan]
+- Fixing (again) node version. [Luc Renambot]
+- Merge branch 'master' of bitbucket.org:sage2/sage2. [Thomas Marrinan]
+- Update the node version detection. [Luc Renambot]
+- Put back    .eslint_client_rc. [Luc Renambot]
+- Fixed omicron wand. [Thomas Marrinan]
+- SAGE2_Display now requests server files since mediabrowser now uses
+  display client socket instead of creating its own. [Arthur Nishimoto]
+- Additional comments for radialMenu FIX: Radial menu lines CHANGE:
+  RemoteSite button hidden (until implemented) NEW: Menu buttons have a
+  DISABLED (ignore events) and HIDDEN (ignore events, don't draw) state
+  and get/set methods CHANGE: Metadata tags defined in an array instead
+  of if-blocks FIX: Bracket formatting CHANGE: RadialMenu uses display
+  websocket instead of creating its own CHANGE: Slightly increased
+  radial menu bounding box to avoid clipping 'drag button' svg. [Arthur
+  Nishimoto]
+- Doc for node-websocket.io.js. [Luc Renambot]
+- Doc for SAGE2_UI.js. [Luc Renambot]
+- Doc for SAGE2_Display.js. [Luc Renambot]
+- Fixes and documentation on text.js. [Luc Renambot]
+- Fix doc entry. [Luc Renambot]
+- Comments for SAGE2_interaction.js. [Luc Renambot]
+- Mv SAGE2DisplayUI.js SAGE2_DisplayUI.js. [Luc Renambot]
+- Comments for SAGE2DisplayUI.js. [Luc Renambot]
+- Merge branch 'master' of bitbucket.org:sage2/sage2. [Luc Renambot]
+- Merge branch 'master' into widgets. [krishnaBharadwaj]
+- First pass at documentation for radialMenu. [Luc Renambot]
+- Documentation for ui_builder. [Luc Renambot]
+- Widget code split into multiple files. [krishnaBharadwaj]
+- Replace draw by refresh for block streaming app. [Luc Renambot]
+- Merge branch 'master' of https://bitbucket.org/sage2/sage2.
+  [tmarrinan]
+- FIX: node-omicron using a specific interface to listen on. [Arthur
+  Nishimoto]
+- Removed dante from GO-windows.bat key generator. [tmarrinan]
+- Updated install script (unzip one at a time) [tmarrinan]
+- Doc for SAGE2_AudioManager and use functions from runtime. [Luc
+  Renambot]
+- Comments in SAGE2_AudioManager. [Luc Renambot]
+- Comments in SAGE2_DrawingApp. [Luc Renambot]
+- Update websocket class to WebsocketIO. [Luc Renambot]
+- Merge branch 'master' into widgets. [krishnaBharadwaj]
+- Comment for SAGE2_runtime.js. [Luc Renambot]
+- Touch related bug fixes. [krishnaBharadwaj]
+- Merge branch 'master' into widgets. [krishnaBharadwaj]
+- Some doc in sagePointer.js (not much) [Luc Renambot]
+- Comments in sagePointer.js. [Luc Renambot]
+- Deleted videoControls.js, not used anymore. [Luc Renambot]
+- Merge branch 'master' of bitbucket.org:sage2/sage2. [Luc Renambot]
+- Merge branch 'master' of https://bitbucket.org/sage2/sage2. [Arthur
+  Nishimoto]
+- FIX: Widgets on touch. [Arthur Nishimoto]
+- Comment for websocket. [Luc Renambot]
+- Delete windowManager.js since not used in the web UI. [Luc Renambot]
+- FIX: this undefines in node-omicron. [Arthur Nishimoto]
+- Fix jshint. [Luc Renambot]
+- Add header to SAGE2DisplayUI.js. [Luc Renambot]
+- Doc for pointer. [Luc Renambot]
+- Doc for pdf_viewer. [Luc Renambot]
+- Doc for media_block_stream and media_stream. [Luc Renambot]
+- Doc for SAGE2_BlockStreamingApp.js. [Luc Renambot]
+- Remove old code. [Luc Renambot]
+- Doc for movie player app. [Luc Renambot]
+- Fixed bug in new install script. [Thomas Marrinan]
+- Merge branch 'master' of bitbucket.org:sage2/sage2. [Thomas Marrinan]
+- Remove debug and access to global variable. [Luc Renambot]
+- Adding comments into SAGE2_App.js file. [Luc Renambot]
+- Removed binary modules from repo. [Thomas Marrinan]
+- Install script now downloads binary modules based on version as well
+  as os. [Thomas Marrinan]
+- Add module definition to Class.js (doc) [Luc Renambot]
+- Make Class.js strict and add documentation fields. [Luc Renambot]
+- Merge branch 'master' of bitbucket.org:sage2/sage2. [Luc Renambot]
+- Increased maxBuffer when installing dependencies (would crash under
+  Linux) [Luc Renambot]
+- Updated unity3d demo (need an app from Unity) [Luc Renambot]
+- Removed debug info. [Luc Renambot]
+- Set mime default type in constructor, and fix bug when creating empty
+  file. [Luc Renambot]
+- Removed mime.default_type from itemloader (should be in registry) [Luc
+  Renambot]
+- Removed default mime type for http server (conflicting with registry),
+  it shouldn't be needed. [Luc Renambot]
+- Prepping for more doc support. [Luc Renambot]
+- Edit documentation tags. [Luc Renambot]
+- Update path for yuidoc. [Luc Renambot]
+- Update for doc generation. [Luc Renambot]
+- Fix jshint code. [Luc Renambot]
+- Splitting display side code from its HTML page. [Luc Renambot]
+- Splitting drawing app from its HTML page. [Luc Renambot]
+- Fix jshint. [Luc Renambot]
+- Split the audio manager code into its own js file. [Luc Renambot]
+- Fixing jshint issues. [Luc Renambot]
+- Split the JS code from the HTML for the web UI (new file:
+  public/src/SAGE2_UI.js) [Luc Renambot]
+- Deleting sageUI-OLD.html. [Luc Renambot]
+- Remove code to mazimize in  left/right/top/bottom regions (should be
+  done with partitions) [Luc Renambot]
+- Added 'plato' sources analysis (npm run report  --> goes into
+  doc/report) [Luc Renambot]
+- Update to package.json: putting jshint in dev dependencies. [Luc
+  Renambot]
+- Update session id template comments. [Thomas Marrinan]
+- Cleaned up session id template. [Thomas Marrinan]
+- Update: connectors work for press and release actions.
+  [krishnaBharadwaj]
+- Cleaned up some console messages. [krishnaBharadwaj]
+- Minor fix to the connector toggle code. [krishnaBharadwaj]
+- Merge branch 'master' into widgets. [krishnaBharadwaj]
+- Update session id for template. [Thomas Marrinan]
+- Added comments for session id template. [Thomas Marrinan]
+- Clean up url query parsing. [Thomas Marrinan]
+- Log version under session. [Thomas Marrinan]
+- Fixed ui not showing name/color of shared screens. [Thomas Marrinan]
+- Merge branch 'master' of bitbucket.org:sage2/sage2. [Thomas Marrinan]
+- Merge branch 'docker' [Victor Mateevitsi]
+- Key generation fix. [Victor Mateevitsi]
+- Key fixes. [Victor Mateevitsi]
+- Docker fixes. [Victor Mateevitsi]
+- Fixing key scripts. [Victor Mateevitsi]
+- Dockerfile fixes. [Victor Mateevitsi]
+- Updating Go-docker script. [Victor Mateevitsi]
+- Docker latest working file. [Victor Mateevitsi]
+- Docker related scripts. [Victor Mateevitsi]
+- Docker working version. [Victor Mateevitsi]
+- Docker testing. [Victor Mateevitsi]
+- Testing docker. [Victor Mateevitsi]
+- Prepped session id for implementation. [Thomas Marrinan]
+- Cleaned up scroll event logging. [Thomas Marrinan]
+- Cleaned up eventlogging code. [Thomas Marrinan]
+- Fixed corner resize bug. [Thomas Marrinan]
+- Fixed load video from remote site title error. [Thomas Marrinan]
+- Videos pushed to remote sites take 'state' into account. [Thomas
+  Marrinan]
+- Video state properly handled when loaded from session. [Thomas
+  Marrinan]
+- Delay session load from command line by second - allow server to
+  properly load. [Thomas Marrinan]
+- Fixed session loading scope issue. [Thomas Marrinan]
+- Removed log of width/height for videos. [Thomas Marrinan]
+- Cleaned up itemloader. [Thomas Marrinan]
+- Updated load video from session (handle URLs as well as from file)
+  [Thomas Marrinan]
+- Fixed late joiner for videos (still might require more testing to
+  ensure fix for all cases) [Thomas Marrinan]
+- Title bar takes the color of pointer when pointer is on app.
+  [krishnaBharadwaj]
+- Work in progress on late joiner display widget creation.
+  [krishnaBharadwaj]
+- Merge branch 'master' into widgets. [krishnaBharadwaj]
+- Updated CAVE2 scripts and configuration. [Luc Renambot]
+- Merge branch 'master' of https://bitbucket.org/sage2/sage2. [Andy J]
+- Merge branch 'master' of https://bitbucket.org/sage2/sage2.
+  [tmarrinan]
+- Add dante.evl.uic.edu instead of localhost. [tmarrinan]
+- Tweaked script to bring both windows to fullscreen and added comments.
+  [Andy J]
+- Merge branch 'master' of https://bitbucket.org/sage2/sage2. [Arthur
+  Nishimoto]
+- Allow range in http headers. [Luc Renambot]
+- FIX: jshint. [Arthur Nishimoto]
+- FIX: Widget touch control FIX: Event logging crashing on touch.
+  [Arthur Nishimoto]
+- Switched audioManager to http url in the admin page. [Luc Renambot]
+- Cleaned install_dependencies.js. [Thomas Marrinan]
+- Added windows binary modules (ws, node-demux) [Thomas Marrinan]
+- Fixed jshint. [Victor Mateevitsi]
+- Merge branch 'master' of bitbucket.org:sage2/sage2. [Thomas Marrinan]
+- Added an extra 'redraw' in PDF widget code. [Luc Renambot]
+- Updated binary module structure. [Thomas Marrinan]
+- Merged with master. [Victor Mateevitsi]
+- Fix install dependencies. [Thomas Marrinan]
+- Fixed jshint. [Victor Mateevitsi]
+- Removed wallMenuUI. [Thomas Marrinan]
+- Merge branch 'master' of bitbucket.org:sage2/sage2. [Thomas Marrinan]
+- Putting back omicron settings for 'iridium' at EVL. [Luc Renambot]
+- Removed conflict from previous merge. [Luc Renambot]
+- Merged with master. [Victor Mateevitsi]
+- Fixed decklink streaming. [Victor Mateevitsi]
+- Merged with master. [Victor Mateevitsi]
+- Fixed late joiner bug. [Victor Mateevitsi]
+- Added block streaming app. [mvictoras]
+- Added media_stream back. [mvictoras]
+- Revert "Reverted the block streaming commint" [mvictoras]
+- Fix bug #35 with PDF opening in all display clients (including
+  overview) [Luc Renambot]
+- Modules are now OS dependent. replace 'npm install' with 'npm run in'
+  [Thomas Marrinan]
+- Fix hint in server. [Luc Renambot]
+- Fix audio in youtube videos. [Luc Renambot]
+- Fix texture alignment in WebGL. [Luc Renambot]
+- Fixed audio vs video url for youtube. [Thomas Marrinan]
+- Update: widget to app connection shows when user is on app.
+  [krishnaBharadwaj]
+- User color applied to widget connector and widget center.
+  [krishnaBharadwaj]
+- Merge branch 'master' into widgets. [krishnaBharadwaj]
+- Merge branch 'master' into data-pushing. [Thomas Marrinan]
+- Updating some links. [Luc Renambot]
+- Changed track users protocol. -t will track all users. -t [file] will
+  track only users in specified file. [Thomas Marrinan]
+- Added track users option 'all' (-t all) to track all users. [Thomas
+  Marrinan]
+- Merge branch 'master' into data-pushing. [Thomas Marrinan]
+- Updated ffmpeg path for video thumbnails. [Luc Renambot]
+- Added radial menu actions to interaction logging. [Thomas Marrinan]
+- Merge branch 'master' of bitbucket.org:sage2/sage2. [Luc Renambot]
+- Merge branch 'master' of https://bitbucket.org/sage2/sage2. [Arthur
+  Nishimoto]
+- NEW: Radial menu button clicks sent to server. [Arthur Nishimoto]
+- Update GO script for luc. [Luc Renambot]
+- Removing wallMenuUI from the apps. [Luc Renambot]
+- About to merge master into data-pushing. [Thomas Marrinan]
+- Merge branch 'master' into data-pushing. [Thomas Marrinan]
+- Cleanup registry a little. [Luc Renambot]
+- Removed pointer mode switch from log. [Thomas Marrinan]
+- Removed pdf debug statement. [Thomas Marrinan]
+- Fixed sharing pdfs with remote site. [Thomas Marrinan]
+- Added functionality for videos by URL and remote sites. [Thomas
+  Marrinan]
+- Merge branch 'master' into data-pushing. [Thomas Marrinan]
+- Fixing "load image from URL" [Luc Renambot]
+- Updated close widget and close app logging. [Thomas Marrinan]
+- Merge branch 'master' into data-pushing. [Thomas Marrinan]
+- Updated logging scheme (consistent data between events) [Thomas
+  Marrinan]
+- Updated widget open/close messages. [Thomas Marrinan]
+- Merged with master. [Thomas Marrinan]
+- Logging most widget calls - just need user info added to original
+  creation. [Thomas Marrinan]
+- Logging open file and app from web UI. [Thomas Marrinan]
+- Logging most delete actions (still need to catch clear all and close
+  from widget menu. [Thomas Marrinan]
+- Logging key down, key up, key press. [Thomas Marrinan]
+- Logging pointer press, release, and scroll. [Thomas Marrinan]
+- Log SAGE2 Pointer mode changes. [Thomas Marrinan]
+- Log file uploads from web interface. [Thomas Marrinan]
+- Create logs directory if it doesn't exist. [Thomas Marrinan]
+- Initial creation of logging users. tracks connect and disconnect.
+  [Thomas Marrinan]
+- Links between widgets and apps, functional. [krishnaBharadwaj]
+- Merge branch 'master' into widgets. [krishnaBharadwaj]
+- Merge branch 'TouchUI' [Arthur Nishimoto]
+- Merge remote-tracking branch 'remotes/origin/master' into TouchUI.
+  [Arthur Nishimoto]
+- FIX: Touch zoom and reopened menus overlapping. [Arthur Nishimoto]
+- NEW: Added sourceType to Pointer objects CHANGE: Touch displays
+  differently from SAGEPointers. [Arthur Nishimoto]
+- A little better UI layout (not finished yet) [Luc Renambot]
+- Jshint fix. [Victor Mateevitsi]
+- Fixed jshint timeout. Added public/src directory. [Victor Mateevitsi]
+- Merge branch 'master' into widgets. [krishnaBharadwaj]
+- Fix the web console. [Luc Renambot]
+- Adding a web console in the admin pages. [Luc Renambot]
+- Update index URL list in admin page. [Luc Renambot]
+- Adding a git update function. [Luc Renambot]
+- About to merge with Master. [krishnaBharadwaj]
+- Caption added to pdf slider. [krishnaBharadwaj]
+- Widget demo and google maps apps updated, caption added to slider and
+  textinput. [krishnaBharadwaj]
+- Merge branch 'master' into widgets. [krishnaBharadwaj]
+- Update with key for forecast app. [Luc Renambot]
+- Leave the 'apis' keys in the configuration structure (goes to display
+  nodes) [Luc Renambot]
+- New weather app with location and map overview: snap.svg based. [Luc
+  Renambot]
+- Fix aspect ratio in UI. [Luc Renambot]
+- Tweaked the UI: buttons under the UI in most cases. [Luc Renambot]
+- Updated mesaverde config to clip display. [Luc Renambot]
+- Merge branch 'master' of bitbucket.org:sage2/sage2. [Luc Renambot]
+- Keep a copy of the wall configuration inside the app object
+  (this.config in SAGE2_App) [Luc Renambot]
+- Making sure to delete traffic callback in google maps. [Luc Renambot]
+- Widget per user per app functional. [krishnaBharadwaj]
+- Merge branch 'master' into widgets. [krishnaBharadwaj]
+- FIX: Omicron ports. [Arthur Nishimoto]
+- Merge branch 'master' of https://bitbucket.org/sage2/sage2. [Arthur
+  Nishimoto]
+- Reverted the block streaming commint. [mvictoras]
+- Merge branch 'master' of bitbucket.org:sage2/sage2. [Victor
+  Mateevitsi]
+- Using optimized broadcast only for pointerPosition for now. [Luc
+  Renambot]
+- Optimizing communications: runs 40 pointers with 36 display clients at
+  a decent speed now. [Luc Renambot]
+- Updated test pointer scripts. [Luc Renambot]
+- Start pointer in random position for test. [Luc Renambot]
+- Adding checks in pointer creation code. [Luc Renambot]
+- Moved pointer stress tests into benchmarks folder. [Luc Renambot]
+- Increased timeout. [Victor Mateevitsi]
+- Fixed jshint errors. [Victor Mateevitsi]
+- Fixed streaming. [Victor Mateevitsi]
+- Fixed jshint errors. [Victor Mateevitsi]
+- Removed merging artifact. [Victor Mateevitsi]
+- Merged with master. [Victor Mateevitsi]
+- Media_stream now supports block streaming. [Victor Mateevitsi]
+- Working media_streaming app. [mvictoras]
+- Work in progress. [mvictoras]
+- Updated randomPointer app. [Luc Renambot]
+- Merge branch 'master' of bitbucket.org:sage2/sage2. [Luc Renambot]
+- Updated preeka configuration files. [Luc Renambot]
+- Added test program generating losts of pointers. [Luc Renambot]
+- Fix hostOrigin for apps to download content from https to http (cause
+  errors because of mixed sources) [Luc Renambot]
+- Removed debug statements. [Luc Renambot]
+- Convert CAVE2 monitor app to new API. [Luc Renambot]
+- NEW: 1euro filter for Wand movement in CAVE2. [Arthur Nishimoto]
+- Widget per user, initial commit. [krishnaBharadwaj]
+- UI added to apps, merge from widgets branch into master.
+  [krishnaBharadwaj]
+- Merge branch 'master' into widgets. [krishnaBharadwaj]
+- Merge branch 'master' of https://bitbucket.org/sage2/sage2.
+  [krishnaBharadwaj]
+- Updated script to kill prior instances. [Andy J]
+- DefaultWin-cfg.json edited online with Bitbucket. [Tommy Marrinan]
+- Send animation messages at the app rate instead of 60fps. Default rate
+  now 30fps. [Luc Renambot]
+- Debug statement in websocket. [Luc Renambot]
+- Remove sending pointer events continously from UI clients to server.
+  Drawback: need to click to put focus on app (for keystroke). Not
+  optimal yet, need a little work. [Luc Renambot]
+- Remove lots of unnecessary events to UI: start/stop move and resize.
+  Only needed for 'fullApps' clients. [Luc Renambot]
+- Comment out a 'resize' command in PDF app, it was triggering error.
+  Not necessary I believe. [Luc Renambot]
+- Fixed sagePoitner.js for new message. [Luc Renambot]
+- Saving a few bytes in each pointer messages:    using {f:, d:}  for
+  websocket messages (instead func and data),         using {dx:, dy}
+  for pointerMove events (instead for deltaX, deltaY)     message called
+  'ptm' instead of 'pointerMove'   making sure to send 'int' values
+  (instead of floats) saving over 22 bytes per message. [Luc Renambot]
+- Minor fix in SAGE2_App.js. [krishnaBharadwaj]
+- Merge branch 'master' into widgets. [krishnaBharadwaj]
+- Updated mouse move frequency to 25fps, giving an effective 20fps
+  update (1/3 reduction) [Luc Renambot]
+- Filter mouseMove events at 20fps (instead of 60fps) [Luc Renambot]
+- Remove debug statement. [Luc Renambot]
+- Add a test for null URL in cleanURL function (was triggered by screen
+  sharing) [Luc Renambot]
+- Updated apps - finished. [Thomas Marrinan]
+- Updated apps - alphabetically through texture_cube. [Thomas Marrinan]
+- Merge branch 'master' into widgets. [krishnaBharadwaj]
+- Merge branch 'master' of bitbucket.org:sage2/sage2. [Thomas Marrinan]
+- Updated audioManager. [tmarrinan]
+- Updated most GO-scripts: use http. [Thomas Marrinan]
+- Videos load properly from sessions. [Thomas Marrinan]
+- Added checks to make sure video exists in audioManager. [Thomas
+  Marrinan]
+- Fixed calculation of valid blocks when tiling. [Thomas Marrinan]
+- Fixed issues with decoding one frame (on load and seek) [Thomas
+  Marrinan]
+- Decodes one frame (when originally loaded, and when seeked). fixed
+  small bug with first frame. [Thomas Marrinan]
+- Decodes one frame (when originally loaded, and when seeked) [Thomas
+  Marrinan]
+- Running jshint on client-side code. [Luc Renambot]
+- Running jshint. [Luc Renambot]
+- Added a flag in configuration to make registration to EVL's site
+  optional (register_site:false). True if not specified. [Luc Renambot]
+- Added a util function: sageutils.isTrue to test if a number of string
+  represents a true value. [Luc Renambot]
+- Merge with master. [Victor Mateevitsi]
+- Updated apps - alphabetically through modest. [Thomas Marrinan]
+- Merge branch 'master' of bitbucket.org:sage2/sage2. [Thomas Marrinan]
+- Merge branch 'master' of bitbucket.org:sage2/sage2. [Luc Renambot]
+- Added option to change startup sound: cfg . ui . startup_sound. [Luc
+  Renambot]
+- Updated apps - alphabetically through evl_weather. [Thomas Marrinan]
+- Updated URL cleaning - http vs https. Updated atom smasher and bounce
+  apps. [Thomas Marrinan]
+- Fixed drone.io errors. Added public to ignore directories. [Victor
+  Mateevitsi]
+- Clean up from merge. [Thomas Marrinan]
+- Removed public_HTTPS. [Thomas Marrinan]
+- Removed 3dpics from stereo app. [Thomas Marrinan]
+- Updated stereo_image app to auto adjust interleave based on y
+  position. [Thomas Marrinan]
+- Merged stereo_image viewer into video_stream branch. [Thomas Marrinan]
+- Movie player widget buttons update properly (eg. stop btn causes play-
+  pause btn to show play icon) [Thomas Marrinan]
+- Merged with master. [Thomas Marrinan]
+- Fixed file registry bug. [Thomas Marrinan]
+- Properly display videos with non-square pixels. [Thomas Marrinan]
+- Removed test html from audiomanager. [Thomas Marrinan]
+- Loop video functional. [Thomas Marrinan]
+- Added mute functionality. [Thomas Marrinan]
+- Play pause stop and seek fully functional. [Thomas Marrinan]
+- Update video player when moved or resized - onfinish. [Thomas
+  Marrinan]
+- Updated stop action for videos. [Thomas Marrinan]
+- Added stop function... not fully functional. [Thomas Marrinan]
+- Merge branch 'master' into videostream. [Thomas Marrinan]
+- Fix potential crash when deleting video that is still playing. [Thomas
+  Marrinan]
+- Fixed errors when uploading new video and double-click resize. [Thomas
+  Marrinan]
+- Updated movie player widgets. [Thomas Marrinan]
+- Updated blocklist for streaming (clear list before computing new list)
+  [Tommy Marrinan]
+- Initialize webgl canvas at display size (max size of canvas) [Thomas
+  Marrinan]
+- Added fast forward and rewind widget functionality - crashes if pushed
+  multiple time too fast or when movie is playing. [Thomas Marrinan]
+- Added fast forward and rewind widget functionality - crashes if pushed
+  multiple time too fast or when movie is playing. [Thomas Marrinan]
+- Movie player slider widget functional. [Thomas Marrinan]
+- Resolved merge conflicts with master. [Thomas Marrinan]
+- Format widget code for easier reading. [Thomas Marrinan]
+- Format slider label to show time (HH:MM:SS) [Thomas Marrinan]
+- Removed border and draw once shaders have loaded. [Thomas Marrinan]
+- Bottom-left button toggles play/pause. slider updates with frame index
+  as video plays. [Thomas Marrinan]
+- Fixed verical clipping error. [Thomas Marrinan]
+- Merged with master. [Thomas Marrinan]
+- Removed debugging console.logs. [Thomas Marrinan]
+- Video player resizes webgl only to visible size. hopefully solves
+  crashing issue. [Thomas Marrinan]
+- Added todos for resize and move. [Thomas Marrinan]
+- Fixed titleBarHeight offset error. [Thomas Marrinan]
+- Updating video player to only make webgl as big as viewable portion of
+  the app. [Thomas Marrinan]
+- Updated media_stream (screen sharing) app. [tmarrinan]
+- Merged with master. [Thomas Marrinan]
+- Merge branch 'videostream' of https://bitbucket.org/sage2/sage2 into
+  videostream. [Thomas Marrinan]
+- Added widgets for movie player. [Thomas Marrinan]
+- Pixel blocks updated on move and resize. [Thomas Marrinan]
+- Initial streaming working - need to update valid pixel blocks per
+  display. [Thomas Marrinan]
+- Merged public_HTTP and public HTTPS into one directory. Allows display
+  or audio to be accessed either way (index still redeirects to HTTPS
+  regardless) [Thomas Marrinan]
+- Added files to publicHTTP. [Thomas Marrinan]
+- Moved display and audio to HTTP. [Thomas Marrinan]
+- Merge branch 'master' into videostream. [Thomas Marrinan]
+- Merge branch 'videostream' of https://bitbucket.org/sage2/sage2 into
+  videostream. [Thomas Marrinan]
+- Updated binary websocket protocol. [Thomas Marrinan]
+- Merge branch 'videostream' of bitbucket.org:sage2/sage2 into
+  videostream. [Thomas Marrinan]
+- Fixed message if video not on all clients. [tmarrinan]
+- Merge branch 'videostream' of https://bitbucket.org/sage2/sage2 into
+  videostream. [tmarrinan]
+- Fixed merge conflicts with master. [Thomas Marrinan]
+- Merge branch 'videostream' of https://bitbucket.org/sage2/sage2 into
+  videostream. [Thomas Marrinan]
+- Cleaned up a bit. [Thomas Marrinan]
+- Movie app plays videos. [Thomas Marrinan]
+- Update blocklists on display client side. [Thomas Marrinan]
+- Fixed merge conflicts with master. [Thomas Marrinan]
+- Calculate which video blocks to send to which displays. [Thomas
+  Marrinan]
+- Merge branch 'master' into videostream. [Thomas Marrinan]
+- Update valid block list on move or resize. [Thomas Marrinan]
+- Render valid blocks (1st frame only for now) [Thomas Marrinan]
+- Added yuv420 shaders. [Thomas Marrinan]
+- Video blocks registered in app. [Thomas Marrinan]
+- View frame of video in app. [Thomas Marrinan]
+- Merge branch 'master' into videostream. [Thomas Marrinan]
+- Send frame to display client. [Thomas Marrinan]
+- Break video frames into pixel blocks. [Thomas Marrinan]
+- Play audio on audioManager. [Thomas Marrinan]
+- Merge branch 'master' into videostream. [Thomas Marrinan]
+- Modify volume of individual videos from audioManager. [Thomas
+  Marrinan]
+- Start decoding movie on server side and extracting frames. [Thomas
+  Marrinan]
+- Merge branch 'master' into videostream. [Thomas Marrinan]
+- Merged with master. [Thomas Marrinan]
+- Clean up old code. [Thomas Marrinan]
+- Merge branch 'master' into videostream. [Thomas Marrinan]
+- Initial integration of ffmpeg live decode of video on server side.
+  [Thomas Marrinan]
+- Widgets added to apps. [krishnaBharadwaj]
+- Merge branch 'master' into widgets. [krishnaBharadwaj]
+- Updated preeka configuratin. [Luc Renambot]
+- Merge branch 'master' of bitbucket.org:sage2/sage2. [Luc Renambot]
+- FIX: Restarting display clients will clear radial menus on the server
+  CHANGE: SAGEPointer attempting to open a second radial menu will move
+  the original one to the current pointer position. [Arthur Nishimoto]
+- Added an optional 'name' field in the configuration file. [Luc
+  Renambot]
+- Remove printouts from googlemaps. [Luc Renambot]
+- Added a 'jinggle' when AudioManager get the init message from server
+  (calibrate your speakers) [Luc Renambot]
+- Changed title of audio manager, same pattern as display node. [Luc
+  Renambot]
+- Added new command line arguments to chrome: --disable-infobars
+  --ignore-certificate-errors --no-default-browser-check. [Luc Renambot]
+- Updated 'luc' wall config. [Luc Renambot]
+- Adding debug print to google maps. [Luc Renambot]
+- Added a 'preload' flag in AudioManager, seems to make Firefox happy,
+  should fix issue #33. [Luc Renambot]
+- Google Maps: update traffic layer once per 1min. [Luc Renambot]
+- State of button can be changed from the App, loop icon changed.
+  [krishnaBharadwaj]
+- Merge branch 'master' into widgets. [krishnaBharadwaj]
+- Fixed broken build. [Victor Mateevitsi]
+- Fixed jshint. [Victor Mateevitsi]
+- Added coverage directory to ignore list. [Victor Mateevitsi]
+- 'Viewer' application (i.e. with file types associated) are not listed
+  in the application launcher. [Luc Renambot]
+- Merged with master. [Victor Mateevitsi]
+- Remove the added requirement for CA in wildcard certificate. [Luc
+  Renambot]
+- Added code coverage. [Victor Mateevitsi]
+- Fixed jshint. [Victor Mateevitsi]
+- Merged with master. [Victor Mateevitsi]
+- Lock and update callbacks for slider, merged from widgets branch.
+  [krishnaBharadwaj]
+- Added test for starting sage2 server. [Victor Mateevitsi]
+- Loop, mute, and stop button covers added. [krishnaBharadwaj]
+- Merge branch 'master' into widgets. [krishnaBharadwaj]
+- Fixed merge conflicts. [Thomas Marrinan]
+- Added generic open file function for filetypes that are defined
+  through instructions.json and exist in fileRegistry. [Victor
+  Mateevitsi]
+- Fixed errors in stereo_image app. [Thomas Marrinan]
+- Added stereo_image application. [Thomas Marrinan]
+- Lock and update callbacks to slider widget. [krishnaBharadwaj]
+- Merge branch 'master' into widgets. [krishnaBharadwaj]
+- Fix for SNI callback in HTTPS server for node version 11.x and 1.x.
+  [Luc Renambot]
+- FIX: Cleaned up Omicron debugging messages. [Arthur Nishimoto]
+- FIX: SAGEPointer can only open one radial menu at a time. [Arthur
+  Nishimoto]
+- Merge remote-tracking branch 'remotes/origin/master' into TouchUI.
+  [Arthur Nishimoto]
+- Remove password question in GO-linux for key generation. [Luc
+  Renambot]
+- Reset the keys database on Linux when running GO-linux. [Luc Renambot]
+- Added dependenciy to 'semver' package (for version number parsing)
+  [Luc Renambot]
+- Fix jshint. [Luc Renambot]
+- Merge branch 'master' of bitbucket.org:sage2/sage2. [Luc Renambot]
+- Remove debug prints. [Luc Renambot]
+- Add min window size to CAVE2 configuration. [Luc Renambot]
+- Fix for app registry: added function to get default app from mime
+  type, used for URL-based apps. [Luc Renambot]
+- Check app dimensions against min window size at startup. [Luc
+  Renambot]
+- Relax SSL checks when upload content from URL (strictSSL: false) [Luc
+  Renambot]
+- Updated GO-icewall script (display.html) [Thomas Marrinan]
+- Fix drawing app if Wacom pluging not present. [Luc Renambot]
+- Fixed jshint error. [Victor Mateevitsi]
+- Added directory support. [Victor Mateevitsi]
+- Update for io.js v1: added functions in  sage-utils 'fileExists' and
+  'secureContext'. Multi-home machine support is broken for now. [Luc
+  Renambot]
+- FIX: jshint. [Arthur Nishimoto]
+- FIX: Thumbnail window no longer scrolls beyond left edge. FIX:
+  Thumbnail window no longer scrolls if there are not enough thumbnails.
+  FIX: App thumbnail size. [Arthur Nishimoto]
+- FIX: Radial menu local/global variables. [Arthur Nishimoto]
+- FIX: Multi-menu interaction for pointer and touch. [Arthur Nishimoto]
+- Merge remote-tracking branch 'remotes/origin/master' into TouchUI.
+  [Arthur Nishimoto]
+- Fixed jshint errors. [Victor Mateevitsi]
+- Custom.types gets created if it does not exist. [Victor Mateevitsi]
+- Fixed custom apps loading problem. [Victor Mateevitsi]
+- Fixed tabs. [Victor Mateevitsi]
+- Reverted to master branch version. [Victor Mateevitsi]
+- Merged with master. [Victor Mateevitsi]
+- Removed unused histoServer. [Victor Mateevitsi]
+- Reverting values to default. [Victor Mateevitsi]
+- Switched registry with database. [Victor Mateevitsi]
+- Fixed the stash errors. [Victor Mateevitsi]
+- FileSupport work in progress. [Victor Mateevitsi]
+- Added mocha for unit testing support. [Victor Mateevitsi]
+- Removed itemloader histo code. [Victor Mateevitsi]
+- Removed ndpi executables. [Victor Mateevitsi]
+- Removed histo app. [Victor Mateevitsi]
+- Merged with latest version from master. [Victor Mateevitsi]
+- Disabled insteractive mode for startup script. [Victor Mateevitsi]
+- Merged with master. [Victor Mateevitsi]
+- Working version of ndpi uploader. TODO: clean up code and optimize.
+  [Victor Mateevitsi]
+- Fixed mime types. Added directory support for custom apps. [Victor
+  Mateevitsi]
+- Merge remote-tracking branch 'origin/master' into fileSupport. [Victor
+  Mateevitsi]
+- Fixes #17. Added support for apps to register their own filetypes.
+  [Victor Mateevitsi]
+- Filetype support for apps in instructions.json. [Victor Mateevitsi]
+- FileRegistry.json gets built if not available. [Victor Mateevitsi]
+- Replaced mime_type with applicationRegistry.json. [Victor Mateevitsi]
+- Firts version of registry Manager. Currently supports only pdf files.
+  [Victor Mateevitsi]
+- CHANGE: Cleaned up thumbnail tiling. [Arthur Nishimoto]
+- Merge remote-tracking branch 'remotes/origin/master' into TouchUI.
+  [Arthur Nishimoto]
+- Added mocha for unit testing support. [Victor Mateevitsi]
+- Update GO scripts to fix --no-first-run option. [Alessandro Febretti]
+- Updated code to generate randomized filename suffix in master. [Andy
+  J]
+- Updated code to generate randomized filename suffix in master. [Andy
+  J]
+- Improved random number and cluster handling. [Andy J]
+- Sage walls now initial scrapbook. [Andy J]
+- Merge branch 'master' of https://bitbucket.org/sage2/sage2. [Andy J]
+- Merge branch 'master' of https://bitbucket.org/sage2/sage2.
+  [Alessandro Febretti]
+- Modified startup script for CAVE2: using local storage for Chrome
+  profile and using --app option. [Alessandro Febretti]
+- Merge branch 'master' of https://bitbucket.org/sage2/sage2. [Andy J]
+- Fixed errors with jshint. [Andy J]
+- FIX: Events lined up with scrolling content window. [Arthur Nishimoto]
+- FIX: Thumbnail content window only accepts events within its bounds.
+  Also corrected for scaling. [Arthur Nishimoto]
+- CHANGE: Cleaned up thumbnail positioning for all content types.
+  [Arthur Nishimoto]
+- FIX: Content window scrolling FIX: Image thumbnails tile correctly.
+  [Arthur Nishimoto]
+- FIX: Radial menu buttons only redraw on first move/over event. [Arthur
+  Nishimoto]
+- CHANGE: New radial menus must be at least one radial menu diameter
+  from existing menus. [Arthur Nishimoto]
+- CHANGE: Radial menu state reset on reopening (from SAGEPointer)
+  [Arthur Nishimoto]
+- FIX: Radial menu prevents scroll and double click events from going
+  through it. [Arthur Nishimoto]
+- FIX: Server-side radial menu position. [Arthur Nishimoto]
+- FIX: Radial menu server-side info. [Arthur Nishimoto]
+- FIX: Wand scaling and clicking (widget/menu dragging WIP) [Arthur
+  Nishimoto]
+- CHANGE: Server only sends radial menu messages when over menu CHANGE:
+  Server now has additional information on radial menu size/position.
+  [Arthur Nishimoto]
+- Default buttons to widgets. [krishnaBharadwaj]
+- Merge branch 'master' into widgets. [krishnaBharadwaj]
+- Added initial support for dropping SVG files. [Luc Renambot]
+- Update asset generation for dropping new files. [Thomas Marrinan]
+- Asset thumbnails generated one at a time. [Thomas Marrinan]
+- Adding Todd's atom_smasher application. [Luc Renambot]
+- Adding VROOM configuration file. [Luc Renambot]
+- Merge branch 'TouchUI' [Arthur Nishimoto]
+- FIX: Thumbnail scroll window position no longer affected by menu
+  position. [Arthur Nishimoto]
+- FIX: Scaled thumbnail window wrapping. [Arthur Nishimoto]
+- Merge remote-tracking branch 'remotes/origin/master' into TouchUI.
+  [Arthur Nishimoto]
+- FIX: Thumbnail window scaling (no scrolling) [Arthur Nishimoto]
+- CHANGE: Thumbnail scroll window origin and borders. [Arthur Nishimoto]
+- FIX: Thumbnail browser scrolling without redraw (WIP) [Arthur
+  Nishimoto]
+- Fixing scroll in 'zoom' app, double click, and drag events. [Luc
+  Renambot]
+- Adding scripts for VROOM space at UCSD. [Luc Renambot]
+- Master now only loads in list of images to view. [Andy J]
+- Merge branch 'master' of https://bitbucket.org/sage2/sage2. [Andy J]
+- Merge branch 'master' of https://bitbucket.org/sage2/sage2. [Luc
+  Renambot]
+- Adding Hawaii addresses in configs. [Luc Renambot]
+- Updated to master only grabbing data. [Andy J]
+- Converted over to master only getting data. [Andy J]
+- Updated version for use of master. [Andy J]
+- Sticky note added. [krishnaBharadwaj]
+- Merge branch 'master' into widgets. [krishnaBharadwaj]
+- Now using master to fetch data. [Andy J]
+- Fixed watermark offset with tiled background. [Thomas Marrinan]
+- Working on stereo mage viewer, anaglyph works for now ... [Luc
+  Renambot]
+- Fix for CAVE2 tracking. [Luc Renambot]
+- Converted 'snap' app to cluster mode (isMaster and broadcast) [Luc
+  Renambot]
+- Reverted tmarrinan cfg. [Thomas Marrinan]
+- Fixed logo and version position on clusters. [Thomas Marrinan]
+- New demo application based on SnapSVG. [Luc Renambot]
+- Adding the definition of the Arimo fonts on the display side CSS. [Luc
+  Renambot]
+- Fix luc's workstation configuration. [Luc Renambot]
+- Fixed bug in background image tiling. [Luc Renambot]
+- Merge branch 'master' of bitbucket.org:sage2/sage2. [Thomas Marrinan]
+- Removed debug printout. [Luc Renambot]
+- Updated asset thumbnail generation - one resolution at a time. [Thomas
+  Marrinan]
+- Generate image thumbnails in order. [Luc Renambot]
+- Cleaned up thumbnail generation. [Thomas Marrinan]
+- Fix photoshop assets - now listed. [Thomas Marrinan]
+- Fix - allow photoshop files to generate proper thumbnails. [Thomas
+  Marrinan]
+- Fix luc's workstation config file. [Luc Renambot]
+- Fix conflict in preeka-cfg file. [Luc Renambot]
+- Merge branch 'master' of https://bitbucket.org/sage2/sage2. [Luc
+  Renambot]
+- Merge branch 'master' of https://bitbucket.org/sage2/sage2. [Arthur
+  Nishimoto]
+- Google maps no longer needs API key. [Thomas Marrinan]
+- Jshint on radial menu. [Arthur Nishimoto]
+- Updated move windows to use css transform. [Thomas Marrinan]
+- Fixed === vs = error. [Thomas Marrinan]
+- Added mozTransform and transform to ui_builder - more cross-browser
+  friendly. [Thomas Marrinan]
+- Slight jshint edit. [Luc Renambot]
+- Jshint the client side code! [Luc Renambot]
+- Run 'jshint' on server code. [Luc Renambot]
+- Fixed and activated new tiling function: stable and keep a window into
+  its closest cell. [Luc Renambot]
+- Add command 'hideui' to the REPL loop: use it as a flip switch or pass
+  a integer to set the auto_hide delay. [Luc Renambot]
+- Updated preeka config. [Luc Renambot]
+- File read/write for apps. [krishnaBharadwaj]
+- Widget picking now works only inside the widget itself instead of the
+  whole bounding box. [krishnaBharadwaj]
+- Forgot to add this file before. [Andy J]
+- Updated upload limits to 20GBs. fixes #29 issue. [Luc Renambot]
+- Updated makefiles to build installers. [Luc Renambot]
+- Update to doc. [Luc Renambot]
+- Adding register/unregister to track connections. [Luc Renambot]
+- Updated SAGE2 Pointer help svg. [Thomas Marrinan]
+- Day/night now determined for exact evl location. [Andy J]
+- Automatically makke one browser go fullscreen. [Andy J]
+- Map switch button now has a textual name. [Andy J]
+- Widget buttons now show textual album names from data file. [Andy J]
+- Widget buttons now show textual location names from data file. [Andy
+  J]
+- Re-add sorting funtions for media and apps. [Thomas Marrinan]
+- Merge branch 'widgets' [krishnaBharadwaj]
+- Added alternative way to specify button type info in addButton.
+  [krishnaBharadwaj]
+- Added scrapbook names to data file. [Andy J]
+- Added location names to data file. [Andy J]
+- Widget buttons now have text. [Andy J]
+- Merge branch 'master' of https://bitbucket.org/sage2/sage2. [Andy J]
+- Merge branch 'widgets' [krishnaBharadwaj]
+- Added audio manager. [Andy J]
+- Edited documentation. [Luc Renambot]
+- Autoplay and loop videos. [Thomas Marrinan]
+- FIX: Radial menu allows 'grabbed' apps/widgets to pass through it.
+  [Arthur Nishimoto]
+- Update the doc based on the wiki --> working document
+  'SAGE2_edited.docx' [Luc Renambot]
+- Check for null on widget controls before move. [Thomas Marrinan]
+- Merge branch 'master' into widgets. [krishnaBharadwaj]
+- Added config for using 3 browsers on midori. [Thomas Marrinan]
+- Added favicon. [Thomas Marrinan]
+- Updated twitter api to handle errors. [Thomas Marrinan]
+- Reapply commits after rollback. [Thomas Marrinan]
+- FIX: 'Ghost' radial menu blocking events when opening widgets. [Arthur
+  Nishimoto]
+- Fixing windows build. [Luc Renambot]
+- Fix installer for windows. [Luc Renambot]
+- FIX: Initial radial menu scaled size. [Arthur Nishimoto]
+- Build scripts for WIndows. [Luc Renambot]
+- Rolled back to commit 4fdf34b. [Thomas Marrinan]
+- Committing widget modifications after rollback. [krishnaBharadwaj]
+- GO-windows.bat edited online with Bitbucket. [Luc Renambot]
+- DefaultWin-cfg.json edited online with Bitbucket. [Luc Renambot]
+- Finished fixing merge conflicts with configs. [Thomas Marrinan]
+- Fixing merge conflicts. [Thomas Marrinan]
+- Checked out the wiki and updated the doc folder. [Luc Renambot]
+- New linux script to install dependencies. [Luc Renambot]
+- Build scripts for Linux (opensuse 13.2 64bit) [Luc Renambot]
+- Merge branch 'master' of https://bitbucket.org/sage2/sage2. [Luc
+  Renambot]
+- Merge branch 'master' of https://bitbucket.org/sage2/sage2. [Arthur
+  Nishimoto]
+- FIX: Radial menu blocks scroll and double-click events from passing
+  through it. [Arthur Nishimoto]
+- FIX: Radial menu event blocking on cluster. [Arthur Nishimoto]
+- FIX: Thumbnail window interaction right bound. [Arthur Nishimoto]
+- FIX: Radial menu thumbnail window now also blocks events to apps under
+  it CHANGE: Radial thumbnail window resets scroll position when
+  changing content types. [Arthur Nishimoto]
+- FIX: Radial menu's server-side state updated on menu close. [Arthur
+  Nishimoto]
+- FIX: Radial menu (thumbnail window WIP) prevents apps under it from
+  receiving events. [Arthur Nishimoto]
+- Merge branch 'master' into TouchUI. [Arthur Nishimoto]
+- FIX: Radial menu prevents events from going 'through' it. [Arthur
+  Nishimoto]
+- FIX: jshint fixes. [Arthur Nishimoto]
+- CHANGE: Radial menu variable names. [Arthur Nishimoto]
+- Merge branch 'master' into TouchUI. [Arthur Nishimoto]
+- FIX: Radial menu save session. [Arthur Nishimoto]
+- Update for build scripts. [Luc Renambot]
+- Update to build scripts (Mac version done: make -f Makefile.mac) [Luc
+  Renambot]
+- Only one password for key-generation on Mac (only for localhost, the
+  other dont work) [Luc Renambot]
+- Updated default configuration files and added a template one
+  (template-cfg.json) [Luc Renambot]
+- Cleanup init_webserver.cmd. [Luc Renambot]
+- Fix version retrieval from GIT. [Luc Renambot]
+- Added the defaultMacOSX-cfg.json file for Mac. [Luc Renambot]
+- Updated config spec. [Thomas Marrinan]
+- Merge branch 'master' of bitbucket.org:sage2/sage2. [Thomas Marrinan]
+- Merge branch 'master' of https://bitbucket.org/sage2/sage2. [Luc
+  Renambot]
+- Merge branch 'master' of bitbucket.org:sage2/sage2. [Luc Renambot]
+- Update build scripts. [Luc Renambot]
+- Added a new layout function, but not activated it yet (bug) [Luc
+  Renambot]
+- Remove 'sageUI.html' URL from QR code generation. [Luc Renambot]
+- Updated version/branch discovery method. [Thomas Marrinan]
+- Updated to v 0.3.0 - prep for first release. [Thomas Marrinan]
+- FIX: Thumbnail scrolling and radial menu icon scaling. [Arthur
+  Nishimoto]
+- Merge branch 'master' of https://bitbucket.org/sage2/sage2. [Arthur
+  Nishimoto]
+- Updated app moved event. [Thomas Marrinan]
+- Radial menu uses unified icons. [Thomas Marrinan]
+- Unifying icons for ui and radial menu. [Thomas Marrinan]
+- FIX: Thumbnail window redraw independent of radial menu/metadata
+  window redraw. [Arthur Nishimoto]
+- Merge branch 'master' of https://bitbucket.org/sage2/sage2. [Arthur
+  Nishimoto]
+- Fix iphone picture orientations (and should work through sessions)
+  [Luc Renambot]
+- Running 'jshint' [Luc Renambot]
+- Updated menu resize. [Thomas Marrinan]
+- Update sage2 UI for menu icons to scale with device pixelRatio.
+  [Thomas Marrinan]
+- Tweaked text colors. [Andy J]
+- First pass at making build scripts (not yet functional) [Luc Renambot]
+- Added new pics in the image folder. [Luc Renambot]
+- Removed old documentation PDF and added collaborate_com2014 paper.
+  [Luc Renambot]
+- Removed old video and added SAGE2 trailer (720p) [Luc Renambot]
+- Deleted large pano image from background set. [Luc Renambot]
+- Added an admin command to regenerate all the asset info (thumbnail,
+  exif...). [Luc Renambot]
+- Removed the web browser button for now. [Luc Renambot]
+- Fix auto-hide shifting by 1pix -> transparent box. [Luc Renambot]
+- Fix auto-hide mechanism. [Luc Renambot]
+- Merge branch 'master' of https://bitbucket.org/sage2/sage2. [Luc
+  Renambot]
+- Remove the app border (1px) when UI is hidden, so non-rectangular apps
+  look nice. [Luc Renambot]
+- Added a new 'beautiful' clock in SVG. [Luc Renambot]
+- NEW: Touch menu gesture over application opens widget control. [Arthur
+  Nishimoto]
+- FIX: Thumbnail window title bar scaling. [Arthur Nishimoto]
+- Added pinch-zoom for mobile SAGE2 Pointer. [Thomas Marrinan]
+- Added double-tap for mobile SAGE2 Pointer. [Thomas Marrinan]
+- Added delete (touch and hold ledt-button) for mobile SAGE2 Pointer.
+  [Thomas Marrinan]
+- Mobile SAGE2 Pointer - first working edition (left-click, right-click,
+  move) [Thomas Marrinan]
+- Updated tweetcloud app - shows query used to generate cloud in upper-
+  left corner. [Thomas Marrinan]
+- Added drawing routine for media_streams in SAGE2 UI. [Thomas Marrinan]
+- Fix console.log for logging to file. [Luc Renambot]
+- Added longer timeout for getting the version from git. [Luc Renambot]
+- Updated Windows setup for SC14. [Luc Renambot]
+- Merge branch 'master' of bitbucket.org:sage2/sage2. [Thomas Marrinan]
+- Updated Andy's right office screen. [Andy J]
+- Updated Andy's left office screen. [Andy J]
+- Mac script to start 2 sagesessions on two local screens. [Andy J]
+- Config for right side of Andy's wall. [Andy J]
+- Config for left side of Andy's wall. [Andy J]
+- Tweetcloud app now uses twitter data. [Thomas Marrinan]
+- Apps can grab data from twitter - must have advanced.twitter in config
+  (search api only for now) [Thomas Marrinan]
+- Updated tweetcloud app - handles resize better. [Thomas Marrinan]
+- Added tweetcloud app (doesn't use twitter data yet) [Thomas Marrinan]
+- Updated app script loading - load one at a time in order. [Thomas
+  Marrinan]
+- Updated app script loading - load one at a time in order. [Thomas
+  Marrinan]
+- Merge branch 'master' of https://bitbucket.org/sage2/sage2. [Arthur
+  Nishimoto]
+- SC14 config file. [Luc Renambot]
+- FIX: Radial menu now uses widget configuration scaling FIX: Thumbnail
+  window lines. [Arthur Nishimoto]
+- Merge branch 'master' of https://bitbucket.org/sage2/sage2. [Arthur
+  Nishimoto]
+- Merge branch 'master' of https://bitbucket.org/sage2/sage2.
+  [tmarrinan]
+- Merge branch 'master' of bitbucket.org:sage2/sage2. [Thomas Marrinan]
+- Evl photos now only on sage server. [Andy J]
+- Add broadcast. fixes issue #22. [Thomas Marrinan]
+- Fix Windows launch script for Dante (EVL) [tmarrinan]
+- Added widgets to zoom in and out of map. [Andy J]
+- Merge branch 'master' of https://bitbucket.org/sage2/sage2. [Andy J]
+- Added Master Display Client. Apps can call isMaster to check if it is
+  the master display client. Still need broadcast. [Thomas Marrinan]
+- Moved data to external file. [Andy J]
+- New logo for CAVE2 monitor app. [Luc Renambot]
+- Updated to new widnet code. [Andy J]
+- Merge branch 'master' of https://bitbucket.org/sage2/sage2. [Andy J]
+- Updated UIC_crime_with_leaflet/leaflet.js widget buttons.
+  [krishnaBharadwaj]
+- Merge branch 'master' of https://bitbucket.org/sage2/sage2. [Andy J]
+- Merge branch 'master' into widgets. [krishnaBharadwaj]
+- Fix command line options 'quiet' and 'logging' [Luc Renambot]
+- New command line options: [Luc Renambot]
+- Fix CSS for UI. [Luc Renambot]
+- Fix UI for Windows IE and HTML cleanup for UI. [Luc Renambot]
+- Absolute positioning of buttons based on sequence numbers, Demo app
+  updated to show custom button covers. [krishnaBharadwaj]
+- Merge branch 'master' of https://bitbucket.org/sage2/sage2. [Andy J]
+- Merge branch 'master' of https://bitbucket.org/sage2/sage2. [Luc
+  Renambot]
+- Updated icon fro widget_demo. [Luc Renambot]
+- Updated evl_photos icon. [Luc Renambot]
+- Replacing an image. [Andy J]
+- Added simple ediget menu. [Andy J]
+- Moved widget code to correct location. [Andy J]
+- Fix typo in instruction.json for evl_photos. [Luc Renambot]
+- Merge branch 'master' of https://bitbucket.org/sage2/sage2. [Andy J]
+- Added script for 'preeka' system (column) [Luc Renambot]
+- Merge branch 'master' of https://bitbucket.org/sage2/sage2. [Luc
+  Renambot]
+- Styling the buttons for image upload. [Luc Renambot]
+- Added pdf.js settings (no change in behavior) [Luc Renambot]
+- Added simple widget controller. [Andy J]
+- Added simple widget menu. [Andy J]
+- Moved photo scrapbook list to external file. [Andy J]
+- Moved radar stations into external js file. [Andy J]
+- New external list of sites to view. [Andy J]
+- Merge branch 'master' of https://bitbucket.org/sage2/sage2. [Luc
+  Renambot]
+- Merge branch 'master' of https://bitbucket.org/sage2/sage2. [Andy J]
+- Trying sage server for https requests. [Andy J]
+- Merge branch 'master' of https://bitbucket.org/sage2/sage2. [Andy J]
+- Not sure what this change was. [Andy J]
+- Added 'upload' button: meant for mobile device to upload documents -
+  only photo implemented for now. [Luc Renambot]
+- If file uploaded already exists, add date at the end of filename. [Luc
+  Renambot]
+- Rotate iphone vertical picture. [Luc Renambot]
+- Merge branch 'master' into widgets. [krishnaBharadwaj]
+- Merge branch 'master' of https://bitbucket.org/sage2/sage2.
+  [krishnaBharadwaj]
+- Fixed more jshint warnings. [Thomas Marrinan]
+- Updated sagePointer.html to better handle when popups are or are not
+  allowed. [Thomas Marrinan]
+- Undo change to http index - used it for debugging. [Thomas Marrinan]
+- Fixed jshint warnings and updated global browser/os search using user
+  agent. [Thomas Marrinan]
+- Fix resize for movies reloading from a session (but I think there's a
+  race condition somewhere with the audio) [Luc Renambot]
+- PDF viewer should restore from session with the correct size. [Luc
+  Renambot]
+- Updated script for luc's display. [Luc Renambot]
+- Updated browser icon in sage UI - fixes image stretch in some
+  browsers/devices. [Thomas Marrinan]
+- Updated pdf_viewer.js - revoke url of old image shown (fix memory
+  leak) [Thomas Marrinan]
+- Removed unnecessary docId references from pdf.worker.js. [Thomas
+  Marrinan]
+- Fixed pdf.js race condition when loading multiple documents
+  simultaneously. [Thomas Marrinan]
+- Updated pdf.js to v 1.0.712. [Thomas Marrinan]
+- Fixes for 'iridium' scripts. [Luc Renambot]
+- Forgot the index.html file in public_HTTP. [Luc Renambot]
+- Merge branch 'master' of https://bitbucket.org/sage2/sage2. [Luc
+  Renambot]
+- Device detection based on UserAgent. [Luc Renambot]
+- Code cleaning and jsDoc comments for widgets.js, Demo app for widgets.
+  [krishnaBharadwaj]
+- Widgets.js revised names. [krishnaBharadwaj]
+- Merge branch 'master' into widgets. [krishnaBharadwaj]
+- Updated help page. [Luc Renambot]
+- Running jshint. [Luc Renambot]
+- Reorganization of the HTML pages. [Luc Renambot]
+- Updated extension to work with new URL. [Luc Renambot]
+- Resolved conflict with radial menu, slider text resizes appropriately.
+  [krishnaBharadwaj]
+- Merge branch 'master' of https://bitbucket.org/sage2/sage2. [Arthur
+  Nishimoto]
+- Fix 'moved' callback values. [Luc Renambot]
+- Added a 'moved' callback for app to know when they are moved: [Luc
+  Renambot]
+- Added systemd sage2 service. [SAGE]
+- Merge branch 'master' of https://bitbucket.org/sage2/sage2.
+  [krishnaBharadwaj]
+- Add polyfill for 'bind' : make it work on old iOS safari mobile. [Luc
+  Renambot]
+- Merge branch 'widgets' [krishnaBharadwaj]
+- Modifications to hiding and showing controls. Widget now reappears
+  with the pointer at the button disk center. [krishnaBharadwaj]
+- Merge branch 'master' of https://bitbucket.org/sage2/sage2.
+  [krishnaBharadwaj]
+- Pdf control bug fix. [krishnaBharadwaj]
+- FIX: Radial no longer sends metadata with loadFileFromServer message.
+  [Arthur Nishimoto]
+- FIX: Radial menu thumbnail window wrap for all content. [Arthur
+  Nishimoto]
+- Merge branch 'master' of https://bitbucket.org/sage2/sage2. [Arthur
+  Nishimoto]
+- Merge branch 'master' of https://bitbucket.org/sage2/sage2. [Luc
+  Renambot]
+- About to merge into master. [krishnaBharadwaj]
+- Merge branch 'master' into widgets. [krishnaBharadwaj]
+- New design for widgets. [krishnaBharadwaj]
+- Merge branch 'master' into widgets. [krishnaBharadwaj]
+- New layout for widgets. [krishnaBharadwaj]
+- Adding button on web UI to open the web browser. [Luc Renambot]
+- CHANGE: Radial menu content/app opening disabled while scrolling FIX:
+  Radial menu app metadata error FIX: Radial menu thumbnail window
+  scrolling limits. [Arthur Nishimoto]
+- Merge branch 'master' of https://bitbucket.org/sage2/sage2. [Luc
+  Renambot]
+- Reverse scrolling direction in map apps. [Luc Renambot]
+- FIX: Touch acclerated dragging reflected on visible pointer and no
+  longer flickers CHANGE: Accelerated drag adjusted in iridium config
+  FIX: Node-omicron sends done message only if oinputserver style
+  connection was enabled. [Arthur Nishimoto]
+- Merge branch 'master' of https://bitbucket.org/sage2/sage2.
+  [tmarrinan]
+- Replaced city of chicago webcam with new chicago cam. [Andy J]
+- Updated Dante Windows config. [tmarrinan]
+- Updagte iridium config. [Luc Renambot]
+- Added icons for all applications. [Luc Renambot]
+- Merge branch 'master' of https://bitbucket.org/sage2/sage2. [Luc
+  Renambot]
+- Fix bug for display with no clientID. [Thomas Marrinan]
+- Generates a QR code PNG file for the UI page URL. Run 'npm install'
+  [Luc Renambot]
+- Fix bug for display with no clientID. [Thomas Marrinan]
+- Added firefox dialog to choose sharing screen vs window. [Thomas
+  Marrinan]
+- SAGE2 Pointer (launched from sageUI.html) scroll same direction as
+  when using the UI. [Thomas Marrinan]
+- Changed app icon background color function (was average, now primary
+  weighting for high saturation and value) [Thomas Marrinan]
+- Added screen sharing support for Firefox (version 33) [Thomas
+  Marrinan]
+- Merge branch 'master' of bitbucket.org:sage2/sage2. [Thomas Marrinan]
+- Merge branch 'master' of https://bitbucket.org/sage2/sage2. [Arthur
+  Nishimoto]
+- FIX: Radial menu no longer opens when pointer is over an app. [Arthur
+  Nishimoto]
+- Bigger buttons on dialog boxes - helps for mobile touch accuracy.
+  [Thomas Marrinan]
+- Merge branch 'master' of bitbucket.org:sage2/sage2. [Thomas Marrinan]
+- Move some 'refresh' calls. [Luc Renambot]
+- Remove printout. [Luc Renambot]
+- Adding mouse and keys controls (space to auto-rotate) [Luc Renambot]
+- Added higher resolution cubemap. [Luc Renambot]
+- Fix pinch zoom interaction - sageUI. [Thomas Marrinan]
+- Fix mouse wheel interaction - sageUI. [Thomas Marrinan]
+- Touch double tap opens files and apps. [Thomas Marrinan]
+- Fix formatting. [Thomas Marrinan]
+- Updated event handlers (improves cross-browser support)- 'wheel'
+  replaces 'mousewheel', add touch timer for detecting presence of
+  actual mouse. [Thomas Marrinan]
+- Added new threejs app: openCTM model loader of a camaro. Needs a but
+  of clean up still. [Luc Renambot]
+- Adding logos to the image folder. [Luc Renambot]
+- Three.js shader (2D) demo. [Luc Renambot]
+- Solved touch vs. mouse for Android. [Thomas Marrinan]
+- Solved touch vs. mouse for iOS. [Thomas Marrinan]
+- Fix touch vs click for iOS. [Thomas Marrinan]
+- Fix for ffmpeg on windows. [Thomas Marrinan]
+- Debugging ffmpeg for windows. [Thomas Marrinan]
+- Server detects OS and chooses default config based on Windows vs.
+  Mac/Linux. [Thomas Marrinan]
+- FIX: Radial menu save session. [Arthur Nishimoto]
+- Merge remote-tracking branch 'remotes/origin/master' into TouchUI.
+  [Arthur Nishimoto]
+- Adding the flag --allow-running-insecure-content for Chrome V38 to
+  allow mixed content (http and https) [Luc Renambot]
+- Merge branch 'master' of bitbucket.org:sage2/sage2. [Thomas Marrinan]
+- Merge branch 'master' of https://bitbucket.org/sage2/sage2. [Andy J]
+- New radar icon. [Andy J]
+- Added more space to right of menu icons - allows for scrollbar without
+  pushing menu below display UI. [Thomas Marrinan]
+- Fix 'showInterface' issue. [Thomas Marrinan]
+- Debugging 'showInterface' issue. [Thomas Marrinan]
+- Press 'esc' to exit any dialog in SAGE UI. [Thomas Marrinan]
+- Added save session to arrangement dialog. [Thomas Marrinan]
+- Fixed drag and drop to upload new apps (as zip) [Thomas Marrinan]
+- Delte file from ui working again. icons for new documents show once
+  loaded. [Thomas Marrinan]
+- Fixed exit SAGE2 Pointer bug. [Thomas Marrinan]
+- FIX: Radial menu no longer blocks animated apps. [Arthur Nishimoto]
+- FIX: Radial menu application loading. [Arthur Nishimoto]
+- NEW: App radial menu icons are larger than file icons. [Arthur
+  Nishimoto]
+- NEW: Apps with metadata added to radial menu FIX: Sessions list.
+  [Arthur Nishimoto]
+- FIX: Thumbnail layout and scrolling. [Arthur Nishimoto]
+- NEW: Radial menu updated for v0.2.0 NEW: HostIP config option for
+  Omicron listener. [Arthur Nishimoto]
+- Merge remote-tracking branch 'remotes/origin/master' into TouchUI.
+  [Arthur Nishimoto]
+- Update to version 0.2.0. [Thomas Marrinan]
+- Removed asset directory from repository (created on sever launch)
+  [Thomas Marrinan]
+- Svg pointer font has backups if verdana not installed. [Thomas
+  Marrinan]
+- Fixed asset imagemagick generation error, and drag and drop on
+  location. [Thomas Marrinan]
+- Fixed uibuilder conflict. [Thomas Marrinan]
+- Solves pointer showing in 'auto_hide' mode. Fixes issue #21. [Luc
+  Renambot]
+- Ignore drop position with sagePointerApp (revert to default location)
+  [Luc Renambot]
+- Open content where dropped. [Luc Renambot]
+- Added trackpad (visual only) for mobile device SAGE2 Pointer. [Thomas
+  Marrinan]
+- Added check in server for assets - app directory and unknownapp
+  images. create if they don't exist. [Thomas Marrinan]
+- Display UI requests thumbnail every 1 sec if it is not yet generated
+  (until success) [Thomas Marrinan]
+- File / url drag and drop working. [Thomas Marrinan]
+- Remove file browser metadata thumbnail and text when closing dialog.
+  [Thomas Marrinan]
+- Testing for pointer (there were some errors in console). Might be
+  solved by master merge anyway. [Luc Renambot]
+- Testing for displayUI object before resize call. [Luc Renambot]
+- Updated media browser dir open and close icons. [Thomas Marrinan]
+- Updated app and media browser. [Thomas Marrinan]
+- Added clock and whiteboard icons. [Thomas Marrinan]
+- Tests if icon file exists. [Luc Renambot]
+- Merge branch 'uiredesign' of https://bitbucket.org/sage2/sage2 into
+  uiredesign. [Luc Renambot]
+- Moved old sageUI to 'sageUI-OLD.html and new to 'sageUI.html'. added
+  screen shaing support. [Thomas Marrinan]
+- Updated scroll icon in sage2 pointer help. [Thomas Marrinan]
+- Added settings dialog content and store pointer name and color in
+  local storage. [Thomas Marrinan]
+- Clear and tile now functional. [Thomas Marrinan]
+- Added dialog content for arrangement - clear and tile. [Thomas
+  Marrinan]
+- Added metadata image and filename. [Thomas Marrinan]
+- Changed OK buttons to Open. [Thomas Marrinan]
+- Updated test for whether or not client has mouse. [Thomas Marrinan]
+- Updated pointer icons. [Thomas Marrinan]
+- Merge branch 'uiredesign' of https://bitbucket.org/sage2/sage2 into
+  uiredesign. [Luc Renambot]
+- Updated SAGE2 Pointer icons. [Thomas Marrinan]
+- Added updated app icons to repo. [Thomas Marrinan]
+- Merge branch 'uiredesign' of https://bitbucket.org/sage2/sage2 into
+  uiredesign. [Luc Renambot]
+- Detect whether devices has mouse or not (rather than generic mobile vs
+  desktop) - to be used for SAGE2 Pointer interface. [Thomas Marrinan]
+- Touch press and hold for 1.5 seconds to delete app. [Thomas Marrinan]
+- Touch double tap in display ui to full screen. [Thomas Marrinan]
+- Display 6 apps per row in app launcher. [Thomas Marrinan]
+- Updated display ui draw. [Thomas Marrinan]
+- Generate 256 512 and 1024 sized icons for images and pdfs. [Thomas
+  Marrinan]
+- Display ui uses new thumbnails. [Thomas Marrinan]
+- Generate 256 512 and 1024 sized icons for videos. [Thomas Marrinan]
+- Generate 256 512 and 1024 sized icons for apps. [Thomas Marrinan]
+- Updated app icons to have transparent backgrounds and be square.
+  [Thomas Marrinan]
+- Merge branch 'uiredesign' of https://bitbucket.org/sage2/sage2 into
+  uiredesign. [Luc Renambot]
+- Added double-click full screen for display UI. [Thomas Marrinan]
+- Fixed loading app order. [Thomas Marrinan]
+- Added basic touch support for new sageui. [Thomas Marrinan]
+- Merge branch 'uiredesign' of https://bitbucket.org/sage2/sage2 into
+  uiredesign. [Luc Renambot]
+- SAGE2 UI display fully functional. [Thomas Marrinan]
+- Merge branch 'uiredesign' of https://bitbucket.org/sage2/sage2 into
+  uiredesign. [Luc Renambot]
+- Added keyboard support to new sageui. [Thomas Marrinan]
+- Merge branch 'uiredesign' of https://bitbucket.org/sage2/sage2 into
+  uiredesign. [Luc Renambot]
+- New sageui updates apps position, size, and order in display ui.
+  [Thomas Marrinan]
+- New sageui draws apps in display ui. [Thomas Marrinan]
+- Fixed images directory (not open by default) [Thomas Marrinan]
+- Media browser list correctly sized. [Thomas Marrinan]
+- SageUI-New now loads applications and files. [Thomas Marrinan]
+- Merged with master. [Thomas Marrinan]
+- Updated file list. [Thomas Marrinan]
+- Merge branch 'uiredesign' of https://bitbucket.org/sage2/sage2 into
+  uiredesign. [Luc Renambot]
+- Added media browser file list selection. [Thomas Marrinan]
+- App selection highlighted on click. [Thomas Marrinan]
+- Adapp laucher browser click event. [Thomas Marrinan]
+- Added app launcher browser. [Thomas Marrinan]
+- Merge branch 'uiredesign' of https://bitbucket.org/sage2/sage2 into
+  uiredesign. [Luc Renambot]
+- Added unknown app icon (for apps that do not define their own icon)
+  [Thomas Marrinan]
+- Added app icon generation - as an asset. [Thomas Marrinan]
+- Test for generating standardized app icons. [Thomas Marrinan]
+- Updated PDF thumbnail generation - no more transparent background.
+  [Thomas Marrinan]
+- Updated SAGE2 Pointer - different main pointer icons for modes.
+  [Thomas Marrinan]
+- Updated SAGE2 Pointer. [Thomas Marrinan]
+- Updated default pointer size. [Thomas Marrinan]
+- Pointer mode switch toggles icons as well as color. [Thomas Marrinan]
+- Updated SAGE2 Pointer to Snap SVG drawing - can now easily substitute
+  icons. [Thomas Marrinan]
+- Dialog update. [Thomas Marrinan]
+- Added dialogs for arrangement and settings (in progress) [Thomas
+  Marrinan]
+- Added dialog for SAGE2 Pointer help. [Thomas Marrinan]
+- Merge branch 'uiredesign' of https://bitbucket.org/sage2/sage2 into
+  uiredesign. [Luc Renambot]
+- Added style_ui.css. [Thomas Marrinan]
+- Merge branch 'uiredesign' of https://bitbucket.org/sage2/sage2 into
+  uiredesign. [Luc Renambot]
+- Added media browser file dialog. [Thomas Marrinan]
+- Updated fileDrop. [Thomas Marrinan]
+- Added fileDrop area to display canvas. [Thomas Marrinan]
+- Redesign SAGE2 Pointer, Share Screen, and File Drop area. [Thomas
+  Marrinan]
+- Added SAGE2 Pointer functionality. [Thomas Marrinan]
+- Merge branch 'uiredesign' of https://bitbucket.org/sage2/sage2 into
+  uiredesign. [Luc Renambot]
+- Addded filedrop and progress bar. [Thomas Marrinan]
+- Merge branch 'uiredesign' of https://bitbucket.org/sage2/sage2 into
+  uiredesign. [Luc Renambot]
+- Added mediabrowser icon and styled bottom buttons. [Thomas Marrinan]
+- Drawing display layout. [Thomas Marrinan]
+- Added canvas for new sageUI. [Thomas Marrinan]
+- Added event handler. [Thomas Marrinan]
+- Initial commit for UI Redesign. [Thomas Marrinan]
+- FIX: Multi-menu interaction NEW: Radial menu scaling CHANGE: Helper
+  function for radial button creation. [Arthur Nishimoto]
+- FIX: Radial menu now accepts input from other pointers (not just
+  creator). CHANGE: Thumbnail window now has a 'hard' limit on number of
+  rows (based on thumbnail and window size). Expands additional columns
+  if needed. NEW: node-omicron now sends pointerMove events to server.
+  [Arthur Nishimoto]
+- FIX: Thumbnail window tiling. [Arthur Nishimoto]
+- Merge remote-tracking branch 'remotes/origin/master' into TouchUI.
+  [Arthur Nishimoto]
+- New square logo. [Andy J]
+- Updated square logo. [Andy J]
+- Updated config for cave2. [Alessandro Febretti]
+- If app prefers 'free' resize, then pointer can resize with any
+  proportion. [Luc Renambot]
+- Changed to two-button title bar: maximize and close. Resize mode can
+  be set in app's intructions.json to: "resize": "free" [Luc Renambot]
+- Running jshint: missing ";" and such... [Luc Renambot]
+- Tweaks to the tilling algorithm (less padding) [Luc Renambot]
+- Changed permissions on css files (no need to be executable) [Luc
+  Renambot]
+- Fix fullsize function. [Luc Renambot]
+- Window now has background when resized non-proportionally. [Andy J]
+- Improved low temperature icons. [Andy J]
+- Updated config ui elements. custom colors for menubar (background,
+  text, remoteConnected, remoteDisconnected) [Thomas Marrinan]
+- If configuration specify "noDropShadow", it's also removed from web
+  UI. [Luc Renambot]
+- To center the clock/name/version labels vertically inside the menubar.
+  [Luc Renambot]
+- Updated thor and iridium logos/watermarks. [Thomas Marrinan]
+- Updated logo. configurable watermark. [Thomas Marrinan]
+- Added config option for EVL-LAVA logo to either be 'watermark' or
+  'icon' [Thomas Marrinan]
+- Added logos to SAGE2 title bar (upper-right) [Thomas Marrinan]
+- Upped max screen share resolution to 3840x2160. [Thomas Marrinan]
+- Modified screen sharing resolutions. can now share at full resolution
+  even for ultra high-resolution screens/windows. [Thomas Marrinan]
+- Merge branch 'master' of https://bitbucket.org/sage2/sage2. [Luc
+  Renambot]
+- Merge branch 'master' of https://bitbucket.org/sage2/sage2. [Luc
+  Renambot]
+- Configuration for 'mesaverde' @ EVL. [Luc Renambot]
+- Changed the hostname label only when reverse proxy is enabled. [Luc
+  Renambot]
+- Merge with TouchUI fixes. [Arthur Nishimoto]
+- Apply new SAGE2 official font to the index page: 'Arimo' [Luc
+  Renambot]
+- NEW: Thumbnail window frame. [Arthur Nishimoto]
+- NEW: Glow lines and framework for animations. [Arthur Nishimoto]
+- NEW: Glow lines. [Arthur Nishimoto]
+- CHANGE: Radial drag size. [Arthur Nishimoto]
+- NEW: Tile and clear display added to radial menu. [Arthur Nishimoto]
+- NEW: SVG exit button and drag ring. [Arthur Nishimoto]
+- NEW: Radial lit button state. [Arthur Nishimoto]
+- CHANGE: Thumbnail window now separate scrolling canvas FIX: Input
+  aligned with thumbnail scroll offset. [Arthur Nishimoto]
+- CHANGE: Thumbnail window now a separate context NEW: ButtonWidget
+  drawTintImage() [Arthur Nishimoto]
+- FIX: Radial menu no longer uses a constant 'draw loop' (except for
+  thumbnail dragging - WIP) [Arthur Nishimoto]
+- NEW: Circular radial button NEW: Button widget tint CHANGE: Existing
+  SVG icons recolored white. [Arthur Nishimoto]
+- NEW: Circular hitbox. [Arthur Nishimoto]
+- NEW: Radial menu open file content FIX: Radial menu only accepts input
+  when visible. [Arthur Nishimoto]
+- FIX: Radial menu position re-positions after re-openning FIX:
+  Thumbnail window scroll direction flipped. [Arthur Nishimoto]
+- FIX: Radial menu on multiple clients (display and input) [Arthur
+  Nishimoto]
+- NEW: Scrolling thumbnail window. [Arthur Nishimoto]
+- NEW: Thumbnail window restored FIX: Menu will not drag if over a
+  menu/thumbnail button. [Arthur Nishimoto]
+- NEW: Radial menu centered when opened. [Arthur Nishimoto]
+- NEW: Menu draggable when not on menu button. [Arthur Nishimoto]
+- NEW: Radial menu movable, toggles between window and interaction mode.
+  [Arthur Nishimoto]
+- NEW: Radial menu displays, receives events. [Arthur Nishimoto]
+- UPDATE: New RadialMenu IP - assets and initial conversions. [Arthur
+  Nishimoto]
+- Merge remote-tracking branch 'remotes/origin/master' into TouchUI.
+  [Arthur Nishimoto]
+- Desktop-cfg.json edited online with Bitbucket. [Krishna Bharadwaj]
+- Updated 'iridium' configuration. [Luc Renambot]
+- Update default config file. [Luc Renambot]
+- Added min/max windowWidth and min/max windowHeight in the
+  configuration. By default min is 8% of the corresponding wall
+  dimension and max is 120% of the dimension. [Luc Renambot]
+- Fix fullscreen maximize function. [Luc Renambot]
+- Merge branch 'master' of https://bitbucket.org/sage2/sage2. [Luc
+  Renambot]
+- Updated 'preeka' settings. [Luc Renambot]
+- Updated instructions.json for all apps. [Luc Renambot]
+- Adding metadata to apps. "resources" field changed to "dependencies"
+  [Luc Renambot]
+- Fix license information in package.json. [Luc Renambot]
+- Option to remove drop shadows on display clients: ui: { noDropShadow:
+  true } [Luc Renambot]
+- Layout functions follows better the auto-hide function. Change in
+  config syntax with 'ui' section. If you have custom cfg files, please
+  update. [Luc Renambot]
+- Forcing conversion to int from some mesages (because of C++ websocket
+  lib) [Luc Renambot]
+- NEW: Starting RadialMenu overhaul. [Arthur Nishimoto]
+- FIX: Touch zoom when scaled drag enabled. [Arthur Nishimoto]
+- FIX: Thumbnail buttons triggering open content events. [Arthur
+  Nishimoto]
+- Merge branch 'master' of https://bitbucket.org/sage2/sage2. [Arthur
+  Nishimoto]
+- Updated help for SAGE2 extension. [Luc Renambot]
+- Moved extension and misc files. [Luc Renambot]
+- Updated paths in SAGE2 extension. [Luc Renambot]
+- Improved detection of connection losses in cave2. [Andy J]
+- Added net monitoring from original app. [Andy J]
+- General tweaks. [Andy J]
+- Sage2 version of andys cave 2 monitor. [Andy J]
+- Added files for desktopCapture extension. [Thomas Marrinan]
+- New version of the screen capture extension. [Luc Renambot]
+- Merge branch 'master' of bitbucket.org:sage2/sage2. [Thomas Marrinan]
+- Edit in help page. [Luc Renambot]
+- Support for SAGE2_desktopCapture extension. [Luc Renambot]
+- Merge branch 'master' of https://bitbucket.org/sage2/sage2. [Luc
+  Renambot]
+- Deleting the dialog polyfill (not needed for Chrome v37) [Luc
+  Renambot]
+- Fixed new desktopCapture issues. [Thomas Marrinan]
+- Fixed #19. Now must install SAGE2 Screen Capture chrome extension.
+  [Thomas Marrinan]
+- Middle button switches interaction mode. [Luc Renambot]
+- Ignore right click in the SAGE UI page. [Luc Renambot]
+- NEW: Added new Omicron flag for handling gesture states CHANGE: Radial
+  menu icons. [Arthur Nishimoto]
+- NEW: Additional radial menu icons. [Arthur Nishimoto]
+- NEW: Touch accelerated drag. [Arthur Nishimoto]
+- FIX: node-omicron user flags updated to match server (omicron commit:
+  a43e87d886fa8c33867883d1dbf22f9769e78cca) NEW: node-omicron sends
+  disconnect signal to oinputserver. [Arthur Nishimoto]
+- FIX: Omicron oinputserver disconnect error handling. [Arthur
+  Nishimoto]
+- NEW: Touch zoom scale added to config UPDATE: Additional Omicron
+  fields for iridium-cfg.json NEW: Additional touch data for gestures.
+  [Arthur Nishimoto]
+- FIX: createRadialMenu. [Arthur Nishimoto]
+- FIX: Radial menu scalable CHANGE: Thumbnails open content on touch
+  release (not press) [Arthur Nishimoto]
+- Added a help section in the index page (desktop sharing, pointer,
+  media files, ...) [Luc Renambot]
+- FIX: Touch zoom gesture NEW: Touch three-finger gesture opens radial
+  menu. [Arthur Nishimoto]
+- Merge branch 'master' of bitbucket.org:sage2/sage2. [Victor
+  Mateevitsi]
+- Merge branch 'TouchUI' [Arthur Nishimoto]
+- NEW: Radial menu re-sizes itself. [Arthur Nishimoto]
+- CHANGE: Radial menu layout NEW: Radial menu level 2 (for over app
+  menu) [Arthur Nishimoto]
+- FIX: Multiple radial menus on cluster. [Arthur Nishimoto]
+- FIX: Radial menu close button functional. [Arthur Nishimoto]
+- NEW: Radial menu save session FIX: Multi-mediabrowser support. [Arthur
+  Nishimoto]
+- FIX: iridium config has corrected touch port FIX: Radial menu left
+  aligned thumbnail buttons. [Arthur Nishimoto]
+- NEW: Functional radial menu / thumbnail window. [Arthur Nishimoto]
+- NEW: Menu buttons can have custom hitbox size NEW: Menu buttons
+  receive events. [Arthur Nishimoto]
+- NEW: Radial menu images. [Arthur Nishimoto]
+- Merge branch 'master' into TouchUI. [Arthur Nishimoto]
+- NEW: Radial menu button layout. [Arthur Nishimoto]
+- NEW: Mediabrowser open on right click on empty space NEW: Mediabrowser
+  states (radial menu, thumbnail window, etc.) [Arthur Nishimoto]
+- Fix keyboard command to change maps. [Andy J]
+- Added background color for fullscreen mode. [Andy J]
+- Wide images now align to top rather than center of window. [Andy J]
+- Added background color for fullscreen mode. [Andy J]
+- Fixing list session function. [Luc Renambot]
+- CHANGE: Thumbnail buttons respond only to left click FIX: Cleanup of
+  debug messages. [Arthur Nishimoto]
+- HostOrigin in server.js is set to empty when rproxy_port is defined in
+  config to facilite reverse proxing. [Daisuke Shirai]
+- Merge branch 'reverseProxySupport' [Luc Renambot]
+- Fixed and modified for reverse proxy support  * Fixed "meta charset"
+  of all html files  * Changed URL generation in public_HTTP/index.html
+  which sees if the server config file has "rproxy_index_port" and
+  "rproxy_port" values  * Changed some root-relative links to relative
+  links. [Daisuke]
+- Merge remote-tracking branch 'remotes/origin/master' into TouchUI.
+  [Arthur Nishimoto]
+- Initial version of Histology Viewer. [Victor Mateevitsi]
+- Merge remote-tracking branch 'remotes/origin/master' into TouchUI.
+  [Arthur Nishimoto]
+- Enable/disable the delete button as needed on the UI page. [Luc
+  Renambot]
+- Implemented session delete function. [Luc Renambot]
+- Fixing pinchin/pinchout gestures for mobile devices. [Luc Renambot]
+- Merge branch 'master' of bitbucket.org:sage2/sage2. [Thomas Marrinan]
+- Updated default configuration. [Luc Renambot]
+- Merge branch 'master' of https://bitbucket.org/sage2/sage2. [Luc
+  Renambot]
+- Add an option to show/hide UI elements on the wall automatically after
+  a delay:         auto_hide_ui: true/false         auto_hide_delay:
+  delay time in seconds. [Luc Renambot]
+- Fixed sageUI scroll resize. [Thomas Marrinan]
+- Fixed resize scaling issue. center remains fixed (was caused by
+  rounding errors). [Thomas Marrinan]
+- Updated scroll event: wheelDelta. Modified image_view, googlemaps, and
+  modest. [Thomas Marrinan]
+- Changed the title bar buttons: now from left to right   fullscreen
+  maintaining aspect ratio   fullscreen to aspect ratio of the wall
+  close. [Luc Renambot]
+- New chicago webcam as part of the mix. [Andy J]
+- Fixed non-proportional scaling bug. [Andy J]
+- Better support for webcam style images, added 2 sample webcam sources.
+  [Andy J]
+- Updated random number generation some more. [Andy J]
+- Tweaked random number generator. [Andy J]
+- Works better with multiple instances of the app running. [Andy J]
+- Cleanup. [Luc Renambot]
+- Fixing asset management for Windows (now using full paths, with
+  path.resolve) [Luc Renambot]
+- Merge branch 'master' of https://bitbucket.org/sage2/sage2. [Luc
+  Renambot]
+- App now more URL friendly. [Andy J]
+- Slight edit in the version number if git not installed (windows) [Luc
+  Renambot]
+- Simple photo album app. [Andy J]
+- Drawing update. [Luc Renambot]
+- Updates fro drawing app: supports multiple pages. [Luc Renambot]
+- Added grid image for background. [Luc Renambot]
+- Updated preeka config for pointerSize. [Thomas Marrinan]
+- Updated sagePointer: only user define 'size' (a width smaller than
+  4*height could result in names being cut off); also updated pointer
+  color saved as hex instead of rgb array. [Thomas Marrinan]
+- Letting user specify titleBarHeight, titleTextSize, pointerWidth,
+  pointerHeight in pixels. Configuration for machine 'preeka'. [Luc
+  Renambot]
+- Detect name and color pointer changes right away, instead of waiting
+  for activation. [Luc Renambot]
+- Running jshint. [Luc Renambot]
+- Update form upload parsing to 'formidable' package (need to run 'npm
+  install'). It removes the file size limit for uploads (set to 2GB for
+  now). [Luc Renambot]
+- Fix excluding not wanted files from upload folder. [Luc Renambot]
+- Enable WebGL in pdfjs library. [Luc Renambot]
+- Cleanup of pdf viewer updates. [Thomas Marrinan]
+- Fixed PDF bug: modified pdf.js to correctly allow for multiple
+  documents, and added multiple back buffers so 2 pages don't render
+  into same canvas. [Thomas Marrinan]
+- Merge branch 'master' of https://bitbucket.org/sage2/sage2. [Luc
+  Renambot]
+- Improved PDF interaction performance. [Thomas Marrinan]
+- Fixed PDF rendering issue (hack - reloads PDF for every redraw)
+  [Thomas Marrinan]
+- Basic data types added for inter-application communications. [Luc
+  Renambot]
+- Updated pdfjs to version 1.0.227. [Thomas Marrinan]
+- Removed older versions of apps. [Andy J]
+- Renamed app and new icon. [Andy J]
+- And now the whiteboard app ;-) [Luc Renambot]
+- First pass at a whiteboard application. [Luc Renambot]
+- Fixes for drawing. [Luc Renambot]
+- Setting up a drawing application. [Luc Renambot]
+- Merge branch 'master' of https://bitbucket.org/sage2/sage2. [Luc
+  Renambot]
+- FIX: Omicron events updated to new format CHANGE: Added time delay to
+  pointerCloseGesture. [Arthur Nishimoto]
+- Adding hammer.min.map file. [Luc Renambot]
+- Modification in URL generation to facilitate reverse proxying. [Luc
+  Renambot]
+- Added the layer functionality to the SAGE2 apps (see imageviewer) [Luc
+  Renambot]
+- EXIF data is passed to the image viewer - data can be shown by
+  pressing 'i' [Luc Renambot]
+- Put back traditional mouse event handling. Touch code only enabled on
+  touch devices. [Luc Renambot]
+- NEW: Thumbnail browser preview window (Thumbnail and metadata for
+  images and video) FIX: ThumbnailBrowser event pass through. [Arthur
+  Nishimoto]
+- Merge remote-tracking branch 'remotes/origin/master' into TouchUI.
+  [Arthur Nishimoto]
+- Added drop shadow under title-bar Experiment in UI for apps   * added
+  buttons in title-bar: just one picture   * maximize fullscreen or 4
+  different zones   * restore position needs a little bit of work. [Luc
+  Renambot]
+- Adding basic touch events for UI (the odd one is 'keep press for 1sec
+  to close an app') Events handled through hammer.js library Rename
+  folders in client code (matching the server side):   * 'src' contains
+  our code   * 'lib' contains dependencies. [Luc Renambot]
+- Fix the list of files sent to the UI:   * lists only directories for
+  apps   * sessions are now a similar exif object   * all lists sorted
+  independently of case. [Luc Renambot]
+- Pass application icon to the UI and display it. [Luc Renambot]
+- Fixed 'notepad' app. [Luc Renambot]
+- Update apps for new events. [Luc Renambot]
+- Updated 'modest' for new events. [Luc Renambot]
+- Updated 'tank' for new event method. [Luc Renambot]
+- Fix events for Zoom application. [Luc Renambot]
+- Update events for GoogleMaps. [Luc Renambot]
+- FIX: Apps updated to use exif-like data structure. [Arthur Nishimoto]
+- FIX: Updated for event API changes. [Arthur Nishimoto]
+- Merge branch 'master' into TouchUI. [Arthur Nishimoto]
+- Updated event callback. [Andy J]
+- Fix touch events for UI. [Luc Renambot]
+- Fix index page: "li" layout. [Luc Renambot]
+- Fix scaling interaction (messages had changed) in sagePointer and
+  sageUI. [Luc Renambot]
+- Added functions in the interactive mode (REPL)  apps: list running
+  applications (replace the 'list' command)    clients: list connected
+  clients         streams: list media streams. [Luc Renambot]
+- Added more debug code for lost media stream. [Thomas Marrinan]
+- Fixed widget bug with new event scheme. [Thomas Marrinan]
+- Fixed #13. Events now passed in uniform manner. IMPORTANT: custom apps
+  must be updated! [Thomas Marrinan]
+- Added blank.png. [Thomas Marrinan]
+- Updated sageUI file list. [Thomas Marrinan]
+- Re-enable webbrowser client based on whether or not its connected.
+  [Thomas Marrinan]
+- SageUI style updates. [Thomas Marrinan]
+- Reduced pixel density for pdf thumbnail. [Thomas Marrinan]
+- Updated thumbnail generation for image,pdf,video: full image in
+  256x256 image with transparent background. [Thomas Marrinan]
+- Cleaned debug info from sageUI. [Thomas Marrinan]
+- SageUI elements all dynamically fit on page. [Thomas Marrinan]
+- Merge branch 'master' into widgets. [krishnaBharadwaj]
+- Scaling thumbnail down a little in the sageUI. [Luc Renambot]
+- Update sageUI with thumbnail for images, pdfs, and videos New button
+  to delete images, pdfs, and videos (not apps and sessions yet) Double-
+  click in the file browser starts the application. [Luc Renambot]
+- Pdf-viewer widget bar bug fix, app cloning through 'buttons' added.
+  [krishnaBharadwaj]
+- Resolved conflicts in node-assets.js. [krishnaBharadwaj]
+- About to merge into master. [krishnaBharadwaj]
+- Changes to widgets. [krishnaBharadwaj]
+- Merge branch 'master' into widgets. [krishnaBharadwaj]
+- About to merge with master. [krishnaBharadwaj]
+- Merge branch 'master' into widgets. [krishnaBharadwaj]
+- About to merge with master. [krishnaBharadwaj]
+- Merge remote-tracking branch 'remotes/origin/master' into TouchUI.
+  [Arthur Nishimoto]
+- Changing path of thumbnails, correct for HTTPS server. [Luc Renambot]
+- Ignoring media stream application for now (ie desktop sharing) from
+  sessions. Not sure how to restore them yet. [Luc Renambot]
+- FIX: Thumbnail and asset paths. [Arthur Nishimoto]
+- NEW: Thumbnail browser displays asset thumbnails (images, PDF, video)
+  [Arthur Nishimoto]
+- Merge branch 'master' into TouchUI. [Arthur Nishimoto]
+- First try at thumbnails for videos. [Luc Renambot]
+- Adding support m4v video (Apple's version of MP4) [Luc Renambot]
+- Thumbnails for PDF files. [Luc Renambot]
+- Server.js edited online with Bitbucket. [Krishna Bharadwaj]
+- Node-assets.js edited online with Bitbucket. [Krishna Bharadwaj]
+- First step for thumbnail processing * Generate thumbnails for images
+  (using gm) * Stored in asset folder * getSavedFilesList returns a list
+  of exif data structures for video,pdf,images * exif.SAGE2thumbnail
+  contians path to thumbnail file. [Luc Renambot]
+- Trick to fix viewport in full-resolution mode of display client id -1.
+  [Luc Renambot]
+- Fixed path to CSS file. [Luc Renambot]
+- Making background of UI elements solid (instead of transparent) [Luc
+  Renambot]
+- Cleaning up. [Luc Renambot]
+- Fixing my mess with dialog (using google polyfill) Moved CSS files
+  into a sub-folder. [Luc Renambot]
+- Merge branch 'master' of bitbucket.org:sage2/sage2. [Thomas Marrinan]
+- Merge branch 'master' of https://bitbucket.org/sage2/sage2. [Andy J]
+- Animation now set to true. [Andy J]
+- Attempt to switch to chrome.desktopCapture API for screen sharing.
+  commented out for now - still using getUserMedia. [Thomas Marrinan]
+- Fixed #14. content coffset properly with tiled background image.
+  [Thomas Marrinan]
+- Changed popups to the new 'dialog' HTML tag. Simplifies the CSS a bit.
+  Hopefully makes it easier to press 'ok' in file browser sometimes.
+  Concerns: dialog in sagepointer lock, and file browser. [Luc Renambot]
+- Changed error throw to printout and return, deosnt crash the server in
+  image processing in case of error. [Luc Renambot]
+- Removed duplicate event pointer lock. [Luc Renambot]
+- Update to PDF viewer to support various page aspect ratios within a
+  single document (sends a resize command is change in the ratio is
+  detected) [Luc Renambot]
+- Added icon for the 'prime' application. [Luc Renambot]
+- New application showing how to use a 'Web Worker' in order to spin off
+  some computation to another thread in the browswer. State is saved in
+  sessions and synchronized between display nodes. Display with a simple
+  canvas text drawing. [Luc Renambot]
+- Command line option to load a session:    > node server.js -s [session
+  name]    if session name omitted, loads "default" Works best with -i
+  interactive mode:    > node server.js -i      > bye    > node
+  server.js -i -s      restore the last state. [Luc Renambot]
+- Adding icon to leaflet app. [Luc Renambot]
+- Updated tank barrier generation. [Thomas Marrinan]
+- Updated tank game - synchronize displays. [Thomas Marrinan]
+- Fixed error handler for reading git version. [Thomas Marrinan]
+- FIX: Thumbnail browsers wraps buttons on initialization. [Arthur
+  Nishimoto]
+- NEW: Global thumbnail size and spacing variable. [Arthur Nishimoto]
+- NEW: Thumbnail browser icons now wrap horizontally when window is re-
+  sized. [Arthur Nishimoto]
+- Merge branch 'master' into TouchUI. [Arthur Nishimoto]
+- Tidying up and preparing for documentation. [Luc Renambot]
+- Fixed shift+tab losing SAGE Pointer focus issue. [Thomas Marrinan]
+- Modified sage-utils (only requires one process to grab all git version
+  data) [Thomas Marrinan]
+- Fixed sageUI file browsers and SAGE Pointer help windows. [tmarrinan]
+- Merge branch 'master' of https://bitbucket.org/sage2/sage2. [Andy J]
+- Updated version - display on index and ui pages. [Luc Renambot]
+- Time now synchronized across multiple nodes. [Andy J]
+- Updated USweather resources. [tmarrinan]
+- Showing version on iridium. [tmarrinan]
+- Ignore list of files. [Luc Renambot]
+- Merge branch 'master' of https://bitbucket.org/sage2/sage2 into luc.
+  [Luc Renambot]
+- Added pop-up box on sageUI with how to use SAGE Pointer. [Thomas
+  Marrinan]
+- Added version number and date to upper bar of displays: use
+  show_version: true in config file. [Thomas Marrinan]
+- Adding tank game from Dylan. [Luc Renambot]
+- Merge branch 'master' of https://bitbucket.org/sage2/sage2 into luc.
+  [Luc Renambot]
+- Now loading all weather icons at startup. [Andy J]
+- Inital zoom factor now closer to ERF. [Andy J]
+- Added in alaska and hawaii, night switchover now done on a per
+  location basis. [Andy J]
+- Adding pointer information to events (from Dylan) [Luc Renambot]
+- Merge branch 'master' of https://bitbucket.org/sage2/sage2 into luc.
+  [Luc Renambot]
+- Added more beats, tweaked the colours. [Andy J]
+- Running jshint. [Luc Renambot]
+- Removed synchronous versions for metadata parsing (too much hassle,
+  wait v12) [Luc Renambot]
+- New file: node-util added version functions. [Luc Renambot]
+- Cleanup in sageUI. [Luc Renambot]
+- Removed old code. [Luc Renambot]
+- Added webm upload and playback. [Luc Renambot]
+- Resize video player based on its own size. [Luc Renambot]
+- Fix the clientID=-1 with the new background. [Luc Renambot]
+- Merge branch 'master' of https://bitbucket.org/sage2/sage2 into luc.
+  [Luc Renambot]
+- Crimes in previous month have text description. [Andy J]
+- Added multiple maps (m key) and highlighted recent crimes. [Andy J]
+- Removed ffprobe. [Luc Renambot]
+- Adding configuration file for luc's machine. [Luc Renambot]
+- Adding WebM support for video. [Luc Renambot]
+- Removed pdfinfo module. [Luc Renambot]
+- Metadata work. [Luc Renambot]
+- Added debugging for mediastream freezing. [Thomas Marrinan]
+- CHANGE: Only thumbnail browser receives app interaction events
+  regardless of pointer state FIX: Custom app animations. [Arthur
+  Nishimoto]
+- CHANGE: server.js getSavedFilesList() now returns { filename,
+  thumbnail } NEW: server.js getSavedFilesList() sends custom app icon
+  path as thumbnail NEW: Thumbnail browser now displays custom app icons
+  FIX: Thumbnail browser websockets. [Arthur Nishimoto]
+- MAJOR CHANGE: Applications now have an interaction mode flag
+  (WINDOW_MANAGEMENT by default) MAJOR CHANGE: Apps always receive
+  pointerPressed, pointerMove, pointerReleased events NEW: Thumbnail
+  browser controls it's own interaction mode (app interaction when over
+  buttons, window management otherwise) [Arthur Nishimoto]
+- NEW: Placeholder SVG icons for all file types NEW: Displays filename
+  on button over FIX: Removed Thumbs.db from thumbnail viewer. [Arthur
+  Nishimoto]
+- NEW: Additional mediabrowser file type support (pdf, video, apps, and
+  sessions) [Arthur Nishimoto]
+- FIX: MediaBrowser websocket no longer breaks other apps. [Arthur
+  Nishimoto]
+- CHANGE: Server now tracks clientType 'mediaBrowser' as a special case
+  where only one application instance will send 'open file' messages
+  back to the server. FIX: Mediabrowsers only opens file at a time.
+  [Arthur Nishimoto]
+- NEW: Thumbnail button opens image files (may open duplicates) [Arthur
+  Nishimoto]
+- NEW: Generates thumbnailButtons from image list (does not redraw
+  immediately) [Arthur Nishimoto]
+- Merge remote-tracking branch 'remotes/origin/master' into TouchUI.
+  [Arthur Nishimoto]
+- Merge branch 'master' of bitbucket.org:sage2/sage2. [Thomas Marrinan]
+- Leaflet + D3 map example showing crime around UIC. [Andy J]
+- Merging. [Andy J]
+- Clicking updates entire map to different data view. [Andy J]
+- Fixed bug for background with color only. [Thomas Marrinan]
+- Fixed multiple resource loading bug. [Thomas Marrinan]
+- README.md edited online with Bitbucket. [Tommy Marrinan]
+- README.md edited online with Bitbucket. [Luc Renambot]
+- Adding README.md in `zoom` application. [Luc Renambot]
+- Updated youtube download package. [krishnaBharadwaj]
+- App showing weather data across continental US using GEOjson. [Andy J]
+- Tiled background done is CSS. [Thomas Marrinan]
+- Fixing clock: reverting to older version. [Luc Renambot]
+- Updating style of index page. [Luc Renambot]
+- WallMenuUI.js deleted online with Bitbucket. [Luc Renambot]
+- Instructions.json deleted online with Bitbucket. [Luc Renambot]
+- Added icon to spiff app. [Andy J]
+- Added icon to weather app. [Andy J]
+- Added icon to radar app. [Andy J]
+- Updated icon. [Luc Renambot]
+- More icons. [Luc Renambot]
+- Added yuidoc configuration file (in doc)   generated doc goes to
+  doc/api. [Luc Renambot]
+- Update for documentation generation. [Luc Renambot]
+- Fixed quit event for apps. [Luc Renambot]
+- Adding icon for thunderstorms. [Andy J]
+- Application can provide an icon in the instruction.json file Used in
+  the sageUI for now Example for modestmap and googlemaps: using webp
+  format since it's compressed and can be transparent (other web
+  compatible formats are allowed). [Luc Renambot]
+- Merge branch 'master' of https://bitbucket.org/sage2/sage2. [Luc
+  Renambot]
+- Merge branch 'master' of https://bitbucket.org/sage2/sage2. [Andy J]
+- Better night/day calculation. [Andy J]
+- Cleanup after an application is close    (it should remove the
+  animation loops) Added a 'quit' method to applications. [Luc Renambot]
+- Fix for sagePointer. [Luc Renambot]
+- Added a progress bar in the UI during upload. The whole canvas of the
+  UI is now a drop zone too. [Luc Renambot]
+- Merge branch 'master' into widgets. [krishnaBharadwaj]
+- README.md edited online with Bitbucket. [Luc Renambot]
+- Color tweaks. [Andy J]
+- Fixed svg / viewbox scaling. [Andy J]
+- Fixes svg / viewbox scaling. [Andy J]
+- Added night time icons. [Andy J]
+- Fixing lastest modifications. [Luc Renambot]
+- New jshint command. [Luc Renambot]
+- Added a client jshint command:     npm run hint     npm run
+  hint_client. [Luc Renambot]
+- JSHINT JSHINT JSHINT. Fixing lots of typos. [Luc Renambot]
+- Making sure dimensions are integer values and not floating point (
+  parseInt(myval, 10) ) [Luc Renambot]
+- Missing licensing information. [Luc Renambot]
+- Fixed licensing info (old or missing) [Luc Renambot]
+- Adding a global variable __SAGE2__ in the runtime. Application can
+  test against its presence to detect if running in SAGE2 or standalone.
+  [Luc Renambot]
+- Better use of local svg icons. [Andy J]
+- Local svg icon set. [Andy J]
+- Weather icons are now svg for better scalability. [Andy J]
+- Added better error checking to image load. [Andy J]
+- Merge branch 'master' of https://bitbucket.org/sage2/sage2. [Thomas
+  Marrinan]
+- Ca.crt deleted online with Bitbucket. [Krishna Bharadwaj]
+- Merge branch 'master' of https://bitbucket.org/sage2/sage2. [Andy J]
+- Deleting *~ crap files. [Luc Renambot]
+- Added more error checking to image load. [Andy J]
+- Fixed url bug. [Thomas Marrinan]
+- Bug fix. [krishnaBharadwaj]
+- Modified the widget bar appearance. [krishnaBharadwaj]
+- Widgets modified. [krishnaBharadwaj]
+- Merge branch 'master' into widgets. [krishnaBharadwaj]
+- FIX: KeyPress. [Arthur Nishimoto]
+- Label added. [krishnaBharadwaj]
+- Merged with updates from master. [Krishna Bharadwaj]
+- Removed debug messages. [krishnaBharadwaj]
+- Slider, Text Input, and Buttons ready. [krishnaBharadwaj]
+- Slider debug. [kbharadwaj]
+- Merged with master. [kbharadwaj]
+- Abto merge with master for latest updates. [kbharadwaj]
+- Text Input. [kbharadwaj]
+- First commit of widgets: Buttons created. [kbharadwaj]
+- NEW: ThumbnailBrowser connects to server and gets file list CHANGE:
+  thumbnailBrowser opened on startup. [Arthur Nishimoto]
+- UPDATE: wallUI prototype updated to current SAGE2_App format. [Arthur
+  Nishimoto]
+- NEW: Node-Omicron wand controls (PDF prev/next and video play)
+  [anishi2]
+- Merge remote-tracking branch 'remotes/origin/master' into TouchUI.
+  [Arthur Nishimoto]
+- Merge branch 'master' of https://bitbucket.org/sage2/sage2. [Luc
+  Renambot]
+- Format tweaking. [Andy J]
+- Better error handling. [Andy J]
+- Added itsF variable to state so it remembers the unit when saving
+  sessions. [Luc Renambot]
+- Added 'readFile' error handling. [Thomas Marrinan]
+- Added 'readFile' parsers for CSV and JSON. [Thomas Marrinan]
+- Added 'readFile' to SAGE2_runtime and used it in texture_cube app.
+  [Thomas Marrinan]
+- Fix issue #12 where server crashing if web browser module not enabled.
+  [Luc Renambot]
+- Merge branch 'master' of https://bitbucket.org/sage2/sage2. [Andy J]
+- Edited doc. [Luc Renambot]
+- Merge branch 'master' of https://bitbucket.org/sage2/sage2. [Luc
+  Renambot]
+- Added a doc folder and took the wiki document. Generated a PDF and
+  DOCX from them (see Makefile) [Luc Renambot]
+- Can now see recent comics as well as todays comic. [Andy J]
+- Daily calin and hobbes fix. [Andy J]
+- Tweaked window size to match new weather aspect ratio. [Andy J]
+- Weather now uses svg's built in scaling better and current condition
+  text added. [Andy J]
+- README.md edited online with Bitbucket. [Tommy Marrinan]
+- Merge branch 'master' of https://bitbucket.org/sage2/sage2. [Luc
+  Renambot]
+- Made weather class-based and followed jshint hints to fix warnings.
+  [Andy J]
+- Followed jshint hints to fix warnings. [Andy J]
+- Fixed window size. [Andy J]
+- Add a transparent background when tilling the background image. It
+  lets the specified background color show. [Luc Renambot]
+- Removed requirement for clients to have their own certificate  (it was
+  blocking some external apps) [Luc Renambot]
+- Can now have multiple simultaeous radars on sage. [Andy J]
+- Evl weather updating at a more reasonable rate. [Andy J]
+- Fixed tiled layout with padding. [Luc Renambot]
+- Click to move between  different stations for radar imagery. [Andy J]
+- Merge branch 'master' of https://bitbucket.org/sage2/sage2. [Andy J]
+- Changed the GoogleMaps API key to an EVL account. [Luc Renambot]
+- Easier to code different stations for radar imagery. [aej]
+- Simple app to grab chicago radar imagery. [aej]
+- Made weather continuous refresh - fixed tile mode. [aej]
+- Cleaned up weather app. [aej]
+- Weather.js edited online with Bitbucket. [Andrew Johnson]
+- Fixed #11. SAGE UI resizes to fit all content on the page. [Thomas
+  Marrinan]
+- Weather.js edited online with Bitbucket. [Andrew Johnson]
+- Added tiling and clear functions (in the UI and in the REPL command
+  line)    code translated from Ratko's DIM in SAGE. [Luc Renambot]
+- New license headers. [Luc Renambot]
+- New SAGE2 license from UIC-UH. [Luc Renambot]
+- Weather.js edited online with Bitbucket. [Andrew Johnson]
+- README.md edited online with Bitbucket. [Tommy Marrinan]
+- Added Andy's weather app Initial commit Can run only one instance of
+  the app because of scope pollution: to be fixed. [Luc Renambot]
+- Frame rate control in apps: set maxFPS variable integrated into
+  SAGE2_App base class Messages from master still going at 60fps (good
+  ot bab?) Remove timer based code in existing apps. [Luc Renambot]
+- README.md edited online with Bitbucket. [Muxuan Wang]
+- Added fps counter on texture_cube. [Thomas Marrinan]
+- Split the code for the display side (new file "ui-builder.js") which
+  builds most of the UI elements visible on the wall (except apps which
+  remains in index.html) [Luc Renambot]
+- Quick fix: disable background image in the overview display (id -1)
+  also: google maps seems to be creating a problem. [Luc Renambot]
+- Added a new display client (-1): shows the whole display   press 'f'
+  to cyle between fit view and native view   in fit mode, adjust to the
+  browser window size.
+  Added a 'clear' command in the server REPL (read–eval–print loop)
+  [Luc Renambot]
+- Bringing sessions to the UI (save and load) [Luc Renambot]
+- Added basic session support, saved into JSON files into 'sessions'
+  folder:   start server in interactive mode:  -i   commands:
+  sessions    -> list available saved sessions       save [name] -> save
+  a running session (no name specified goes to 'default')       load
+  [name] -> load a saved session (no name specified goes to 'default')
+  [Luc Renambot]
+- NEW: Node-Omicron wand controls. [anishi2]
+- Merge remote-tracking branch 'remotes/origin/master' into TouchUI.
+  [Arthur Nishimoto]
+- Implemented crude dependency cache on the client side:    if an app
+  dependency has already been loaded, then it is not loaded again It
+  makes possible to load two or more instances of the same app without
+  too much conflict at load time (there might still be scope pollution
+  and nasty side-effects). [SAGE]
+- Added fps control (30fps) [SAGE]
+- Added demo from https://playcanvas.com Seems it wants to be unity3d
+  all in browser. [Luc Renambot]
+- README.md edited online with Bitbucket. [Tommy Marrinan]
+- Updated PDF library. [Luc Renambot]
+- Fixing certificate business. [Luc Renambot]
+- Added certificate authority https option (only needed for self-signed)
+  [Thomas Marrinan]
+- Convert url hostnames to page origin if host is an alias. [Thomas
+  Marrinan]
+- Added support for wildcard certificates:   for instance, theses files
+  would cover any machines at EVL      _.evl.uic.edu.crt
+  _.evl.uic.edu.key Added comments in scripts to generate keys. [Luc
+  Renambot]
+- Added --disable-session-crashed-bubble flag to start chrome Remove
+  question when reloading after a crash. [Luc Renambot]
+- Fixed GO scripts. [tmarrinan]
+- Fixed GO scripts. [Tommy Marrinan]
+- Updated GO scripts. [tmarrinan]
+- Updated lyra scripts. [Tommy Marrinan]
+- Added lyra background image, and tweaked lyra config. [Tommy Marrinan]
+- Added an optional public_host name in the configuration file Used in
+  the index pages Useful to setup multi-hosted machines (multiple
+  networks) There might be an issue with the audio manager. [Luc
+  Renambot]
+- Create a temp folder (used by upload and convert)      needs to be on
+  the same filsystem on some machines. [Luc Renambot]
+- Configuration for CAVE2. [Luc Renambot]
+- Fixed imagemagick bug. [tmarrinan]
+- Fixed imagemagick path bug. [Thomas Marrinan]
+- Imagemagick workaround for windows. [tmarrinan]
+- Merge branch 'master' of https://bitbucket.org/sage2/sage2. [Luc
+  Renambot]
+- Merge branch 'master' of bitbucket.org:sage2/sage2. [Thomas Marrinan]
+- Fixed media stream memory leak. still needs more testing to verify.
+  [Thomas Marrinan]
+- Added option from command line to specify a configuration file  -f
+  path_to_file Fix omicron connecting in case of error Fix omicron
+  configuration file. [Luc Renambot]
+- Merge branch 'master' of https://bitbucket.org/sage2/sage2. [Luc
+  Renambot]
+- Fix GO iridium script. [SAGE]
+- Default back to standard rendering styles in googlemaps. [Luc
+  Renambot]
+- Removed reference to watch.min.js. [Thomas Marrinan]
+- Added a clip option in the background section    if true, the display
+  is clipped to size       { background: { clip: true } } [Luc Renambot]
+- NEW: CAVE2 coordinate calculator NEW: Omicron Wand position and
+  orientation support CHANGE: Additional configuration to allow
+  oinputserver connection. [Arthur Nishimoto]
+- FIX: Omicron can be enabled/disabled via config file. [Arthur
+  Nishimoto]
+- Merge remote-tracking branch 'remotes/origin/master' into TouchUI.
+  [Arthur Nishimoto]
+- Just sending app.state (not stringifying/parsing. [Thomas Marrinan]
+- Fixed state management for googlemap. [Luc Renambot]
+- Removed background color on main div - it covered up any background
+  images / colors specified in config. [Thomas Marrinan]
+- Fixing commit conflict. [Luc Renambot]
+- Merge branch 'master' of https://bitbucket.org/sage2/sage2. [Luc
+  Renambot]
+- README.md edited online with Bitbucket. [Tommy Marrinan]
+- Switch from graphicsmagick to imagemagick - solves memory allocation
+  errors for larger/multi-layered files. [Thomas Marrinan]
+- Working on API: now call refresh when need a redraw Inheritance work.
+  [Luc Renambot]
+- Better log funtion Working on state management. [Luc Renambot]
+- State synced with server - pdf implemented. [Thomas Marrinan]
+- Observing application state for changes. [Thomas Marrinan]
+- Add kill and list commands to the command-line interface. [Luc
+  Renambot]
+- Added command line parsing: current options    --help or -h for help
+  (builtin)    --version or -V for version (builtin)    --interactive or
+  -i for interactive command loop Added a command input loop to the
+  server Added exit commands: exit,quit,bye. [Luc Renambot]
+- Updated README.md. [Thomas Marrinan]
+- SHIFT + dblclick maximizes item at native resolution. [Thomas
+  Marrinan]
+- Adding the file SAGE2_runtime.js. [Luc Renambot]
+- Added the file SAGE2_runtime for global client-side functions Added
+  'log' method in application for message logging sent to server Fix
+  layer issue with resize corner element. [Luc Renambot]
+- Resize with corner drag while holding SHIFT gives free-resize (does
+  not constrain aspect) [Thomas Marrinan]
+- Merge branch 'master' of https://bitbucket.org/sage2/sage2. [Thomas
+  Marrinan]
+- Starting to handle webgl context lost. [Thomas Marrinan]
+- Updated random number generator - synced across multiple nodes.
+  [Thomas Marrinan]
+- Fixed #7 - resize webgl based on drawBuffer size. [Thomas Marrinan]
+- Seeded random generator (issue: created for every app) [Luc Renambot]
+- New applications. [Luc Renambot]
+- Added licence on clock application. [Luc Renambot]
+- Add trace to processor error. [Luc Renambot]
+- README.md edited online with Bitbucket. [Tommy Marrinan]
+- Added bmp image support. [Thomas Marrinan]
+- Fixed multi-layer image conversion issue. now images flattened to one
+  layer. [Thomas Marrinan]
+- Added preliminary support for psd images - layers appear not to work.
+  [Thomas Marrinan]
+- Updated dante config. [tmarrinan]
+- Updated iridium config. [tmarrinan]
+- Fixed #2 - tiff images now convert to png on the fly for rendering.
+  more formats coming soon. [Thomas Marrinan]
+- Drag and drop unknown file types no longer crashes server. [Thomas
+  Marrinan]
+- Merge branch 'master' of https://bitbucket.org/sage2/sage2. [Thomas
+  Marrinan]
+- Update port and index_port values if missing from configuration files.
+  This and the documentation update fixes issue #1. [Luc Renambot]
+- Query file list each time its requested. [Thomas Marrinan]
+- Catching initial network errors:   Should fix issue #3. [Luc Renambot]
+- Ignore missing alternate host keys (main key is still required).
+  Should close the issue #4. [Luc Renambot]
+- Fix SAGE2_App size when requesting a DIV element. [Luc Renambot]
+- Index.html deleted online with Bitbucket. [Luc Renambot]
+- Index.html created online with Bitbucket. [Luc Renambot]
+- NEW: Touch zoom, double click, and 5-finger close FIX: Touch
+  resolution for cluster layouts. [Arthur Nishimoto]
+- NEW: Basic Omicron touch application window dragging. [Arthur
+  Nishimoto]
+- NEW: Omicron module now cleanly handles input server disconnect.
+  [Arthur Nishimoto]
+- Merge branch 'TouchUI' of https://bitbucket.org/sage2/sage2 into
+  TouchUI. [Arthur Nishimoto]
+- README.md edited online with Bitbucket. [tmarrinan]
+- Pass to jshint. [Luc Renambot]
+- README.md edited online with Bitbucket. [tmarrinan]
+- Updated dante (windows) [tmarrinan]
+- Added windows config and GO script. [tmarrinan]
+- README.md edited online with Bitbucket. [tmarrinan]
+- Fixed package.json typo. [Thomas Marrinan]
+- README.md edited online with Bitbucket. [tmarrinan]
+- Merged with master. [Thomas Marrinan]
+- Update README.md. [Luc Renambot]
+- Added license notice in CSS files. [Luc Renambot]
+- Added license information in .js files. [Luc Renambot]
+- Added license information in HTML files. [Luc Renambot]
+- Fix versions to latest in package.json. [Luc Renambot]
+- Update. [Luc Renambot]
+- Merge branch 'clean' of https://github.com/uic-evl/SAGE2 into clean.
+  [Luc Renambot]
+- Updated some versions to "lastest" [Luc Renambot]
+- License and Authors files. [Luc Renambot]
+- Merge branch 'TouchUI' of https://bitbucket.org/sage2/sage2 into
+  TouchUI. [Arthur Nishimoto]
+- Merge remote-tracking branch 'remotes/origin/master' into TouchUI.
+  [Arthur Nishimoto]
+- NEW: Starting wall UI menu NEW: Additional icewall configs. [Arthur
+  Nishimoto]
+- CHANGE: Server uses node-omicron module CHANGE: node-omicron listens
+  for connection rather than connecting to a server. [Arthur Nishimoto]
+- Merge branch 'master' of https://github.com/uic-evl/SAGE2. [Arthur
+  Nishimoto]
+- Update README.md. [tmarrinan]
+- Update README.md. [Luc Renambot]
+- Update README.md. [tmarrinan]
+- FIX: Windows HTTPS keys script now runs multiple lines. [Arthur
+  Nishimoto]
+- Update README.md. [tmarrinan]
+- Fixed icewall config - default ports. [Thomas Marrinan]
+- Updated icewall GO scripts. [Thomas Marrinan]
+- Updated Readme.md. [Thomas Marrinan]
+- Updated package.json. [Thomas Marrinan]
+- Merged package.json. [Thomas Marrinan]
+- Fixed icewall GO script (xdotool update) [Thomas Marrinan]
+- Fixed GO scripts for icewall. [Thomas Marrinan]
+- Fixed app resource bug. [Thomas Marrinan]
+- Add cross-origin support for apps. [Thomas Marrinan]
+- New apps size capped at display width and height. [Thomas Marrinan]
+- Fixed pushing media stream to remote site. [Thomas Marrinan]
+- Working on pushing media stream to remote site. [Thomas Marrinan]
+- Fixed screen sharing. [Thomas Marrinan]
+- Cleaned out commented out code. [Thomas Marrinan]
+- Pushing apps to remote sites complete. [Thomas Marrinan]
+- Push app to remote server. [Thomas Marrinan]
+- Condense app creating. [Thomas Marrinan]
+- Initial remote interaction as apps. [Thomas Marrinan]
+- Update interaction and SAGE UI for Apps. [Thomas Marrinan]
+- Merge branch 'clean' of github.com:tmarrinan/WebSAGE into clean.
+  [Thomas Marrinan]
+- Added try/catch for key loading and appropriate error printout. [Luc
+  Renambot]
+- Add apps through drag-and-drop url and file browser on server. [Thomas
+  Marrinan]
+- Added media stream app. [Thomas Marrinan]
+- Image, video, and pdf applications working. [Thomas Marrinan]
+- Initial step where everything is an application. [Thomas Marrinan]
+- Webbrowser support from external app. [Thomas Marrinan]
+- Added event for pointer scroll. [Thomas Marrinan]
+- Cleaned up message types. [Thomas Marrinan]
+- WsStopMediaStream defined twice. [Luc Renambot]
+- Node-*.js files pass jshint test. [Luc Renambot]
+- Lots of tiny editing changes: passes 'jshint' without warnings. [Luc
+  Renambot]
+- Added jslint and jshint as dependencies for better code development
+  Added "hint" and "lint" as npm script:   npm run-script hint   npm
+  run-script lint. [Luc Renambot]
+- Fix. [Luc Renambot]
+- Reload display page after server crashes. [Luc Renambot]
+- Improved media stream chunks and video sync. [Thomas Marrinan]
+- Started clean of sagePointer and sageUI. [Thomas Marrinan]
+- Fixed youtube - avoids 3d mp4. [Thomas Marrinan]
+- Added streaming in chunks - allows smooth pointer actions. [Thomas
+  Marrinan]
+- Added streaming in chunks - allows smooth pointer actions. [Thomas
+  Marrinan]
+- Added streaming in chunks - allows smooth pointer actions. [Thomas
+  Marrinan]
+- Cleaned comments. [Thomas Marrinan]
+- Cleaned remote site pushing. [Thomas Marrinan]
+- Fixed remote server. [Thomas Marrinan]
+- Merge branch 'clean' of github.com:tmarrinan/WebSAGE into clean.
+  [Thomas Marrinan]
+- Merged with master. [Thomas Marrinan]
+- About to merger. [Thomas Marrinan]
+- Basic functionality cleaned. [Thomas Marrinan]
+- Update broadcast protocol. [Thomas Marrinan]
+- Basic cleanup for audio. [Thomas Marrinan]
+- Ported sagePointer functionality to sagePointer.js - used by both
+  sageUI and sagePointerApp. [Thomas Marrinan]
+- Ported sagePointer functionality to sagePointer.js - used by both
+  sageUI and sagePointerApp. [Thomas Marrinan]
+- Ported sagePointer functionality to sagePointer.js - used by both
+  sageUI and sagePointerApp. [Thomas Marrinan]
+- Clean -basic functionality for sageUI. [Thomas Marrinan]
+- Clean -basic functionality for display and sagePointer. [Thomas
+  Marrinan]
+- Continued clean up. [Thomas Marrinan]
+- Merge branch 'master' into clean. [Thomas Marrinan]
+- Initial commit. [Thomas Marrinan]
+- Switched back to awesomium. [Victor Mateevitsi]
+- Switched to working version of awesomium. [Victor Mateevitsi]
+- Update README.md. [renambot]
+- Using javascript 'strict' mode in server fixed a few variable
+  definitions. [Luc Renambot]
+- Using JSON5 for configuration file, just a little less strict. Still
+  produces valid JSON when stringified, I believe.
+  https://github.com/aseemk/json5. [Luc Renambot]
+- Merged with remoteSharing. [Thomas Marrinan]
+- Merged with master. [Thomas Marrinan]
+- Added comments. [Thomas Marrinan]
+- Added a configuration for experimental features. First one is web-
+  browser. [Luc Renambot]
+- Added HOSTNAME in key generation Updated email address in
+  package.json. [Luc Renambot]
+- Adding comments. [Thomas Marrinan]
+- Merged with master. [Thomas Marrinan]
+- Comment out webbrowser - not working on Mac OSX. [Thomas Marrinan]
+- Fixed node 100% cpu utilization when using webBrowser. [Victor
+  Mateevitsi]
+- Added openmpi instructions. [Victor Mateevitsi]
+- Removed spidey from key generator. [Victor Mateevitsi]
+- Removed old webBrowser directory. [Victor Mateevitsi]
+- Merged WebBrowser. [Victor Mateevitsi]
+- Small modifications. [Victor Mateevitsi]
+- Added node-awesomium dependency. [Victor Mateevitsi]
+- Initial version of awesomium node.js module. Not tested with mac.
+  [Victor Mateevitsi]
+- Removed some log messages. [Victor Mateevitsi]
+- First version of nodejs awesomium module. [Victor Mateevitsi]
+- Added FindAwesomium script. [Victor Mateevitsi]
+- Fixed resolution issue wih webBrowser. Switched to internal 10GB
+  network. [Victor Mateevitsi]
+- Merged with master. [Victor Mateevitsi]
+- Fixed small bugs so it can run on iridium. [Victor Mateevitsi]
+- Added documentation for Mac OSX and Linux. [Victor Mateevitsi]
+- Documentation for webBrowser installation. [Victor Mateevitsi]
+- Initial version of webBrowser. [Victor Mateevitsi]
+- Added more background options - fit, stretch, and tile. [Thomas
+  Marrinan]
+- Added more background options - fit, stretch, and tile. [Thomas
+  Marrinan]
+- Added more background options - fit, stretch, and tile. [Thomas
+  Marrinan]
+- Adding support for remote apps. [Thomas Marrinan]
+- Merged with master. [Thomas Marrinan]
+- Allows for tiled background. [Thomas Marrinan]
+- Remote site connection based on address and port. [Thomas Marrinan]
+- Fixed audio bugs for video playback. [Thomas Marrinan]
+- Merged with remoteSahring. [Thomas Marrinan]
+- About to merge with master. [Thomas Marrinan]
+- Edit GO-scripts. [Thomas Marrinan]
+- Updated iridium config. [tmarrinan]
+- Added small dealy in mac GO script. [Thomas Marrinan]
+- Fixed screen share removal for remote sites. [Thomas Marrinan]
+- Fixed screen share with joining/leaving display client issues. [Thomas
+  Marrinan]
+- Fixed screen share with joining/leaving display client issues. [Thomas
+  Marrinan]
+- Added secure websocket on same port as server. [Thomas Marrinan]
+- Fix style and clock. [Thomas Marrinan]
+- Merge branch 'remoteSharing' of github.com:tmarrinan/WebSAGE into
+  remoteSharing. [Thomas Marrinan]
+- Fix for key gen. on Mac. [Luc Renambot]
+- Continue trying to connect to remote sites. [Thomas Marrinan]
+- Add mac launch script. [Thomas Marrinan]
+- Initial support for remote screen sharing. [Thomas Marrinan]
+- Fixed default port crash error. [Thomas Marrinan]
+- Merge branch 'remoteSharing' of github.com:tmarrinan/WebSAGE into
+  remoteSharing. [Thomas Marrinan]
+- New configuration file (luc) and new backgrounds. Scale the bacjground
+  image to size of the display Tweak to URL displayed in title bar. [Luc
+  Renambot]
+- Fixed http server. [Thomas Marrinan]
+- Removed websocket from http. [Thomas Marrinan]
+- Added http index page that links all pages. [Thomas Marrinan]
+- Changed http server to have public folder. [Thomas Marrinan]
+- Updated master. [Thomas Marrinan]
+- Update desktop-cfg.json. [tmarrinan]
+- Update README.md. [tmarrinan]
+- Merged with remoteSharing. [Thomas Marrinan]
+- Ready to merge into master. [Thomas Marrinan]
+- Modified remote sharing. [Thomas Marrinan]
+- Single connection for server to server. [Thomas Marrinan]
+- Fixed thor scripts. [Thomas Marrinan]
+- Check for background color or image. [Thomas Marrinan]
+- Merged with master. [Thomas Marrinan]
+- Modified GO scripts. [Thomas Marrinan]
+- Comment in key gen GO scripts. [Thomas Marrinan]
+- Fixed init_webserver.sh on linux. [Luc Renambot]
+- Added key generation script for Mac. [Luc Renambot]
+- Delete .DS_Store file. [Luc Renambot]
+- Rename GO scripts. [Luc Renambot]
+- Updated server list for keys. [Luc Renambot]
+- Delete localhost keys. [Luc Renambot]
+- Scripts for windows to genrate keys. [unknown]
+- Update README.md. [tmarrinan]
+- Pre merge with master. [Thomas Marrinan]
+- Fixed images on thor. [Thomas Marrinan]
+- Added background customization. [Thomas Marrinan]
+- Fixed double-click. [Thomas Marrinan]
+- Fixed interaction bug. [Thomas Marrinan]
+- Remote screen capture delete and stop synced. [Thomas Marrinan]
+- Pushing content to remote site complete. [Thomas Marrinan]
+- Init push with hardcoded document. [Thomas Marrinan]
+- Remote pushing init commit. [Thomas Marrinan]
+- Drag item to remote icon. [Thomas Marrinan]
+- Two-way connection when servers are running. [Thomas Marrinan]
+- Show connected and disconnected remote servers. [Thomas Marrinan]
+- Display remote sites. [Thomas Marrinan]
+- Receive message from remote site. [Thomas Marrinan]
+- Connect to remote sites. [Thomas Marrinan]
+- Added remote sites to config. [Thomas Marrinan]
+- Initial remote pushing test. [Thomas Marrinan]
+- Loop movies. [Thomas Marrinan]
+- Initial update for mobile devices for sageUI:   only move windows Luc.
+  [Luc Renambot]
+- Some keys... [Luc Renambot]
+- Added localhost in the keys. [Luc Renambot]
+- Support for multi-homed machines Added field in config file:
+  "alternate_hosts": [ "iridium.evl.optiputer.net" ], The field "host"
+  is used as primary interface ./GO script in keys folder to generate a
+  list of keys at once. [Luc Renambot]
+- Fixed launch scripts for icewall. [Thomas Marrinan]
+- Fixed key generation. [tmarrinan]
+- Tested interaction on wall. [Thomas Marrinan]
+- Finished drag corner resize. [Thomas Marrinan]
+- Hover over corner t to drag - graphics finished. [Thomas Marrinan]
+- Added drag corner (display only, not functional yet. [Thomas Marrinan]
+- Merged with master. [Thomas Marrinan]
+- Merge branch 'master' into extraInteraction. [Thomas Marrinan]
+- Fixed google KEY. [Luc Renambot]
+- Zoom / retore functions. [Luc Renambot]
+- Basic double-click to maximize / restore size. Luc. [Luc Renambot]
+- Added clock and server name to top of tiled display. [Thomas Marrinan]
+- Added search for configuration file based on hostname - default to
+  basic configuration file if not found or specified Luc. [Luc Renambot]
+- Fixed shell path - luc. [Luc Renambot]
+- Added googlemaps sample application, using Luc's dev key. [Luc
+  Renambot]
+- Fixed reverse scroll. [Thomas Marrinan]
+- Update README.md. [tmarrinan]
+- Adding a html application type. [Luc Renambot]
+- Finalized sagePointer app. [Thomas Marrinan]
+- Merge branch 'master' into sagePointer. [Thomas Marrinan]
+- Update README.md. [tmarrinan]
+- Remove pdfutils from package.json. [Thomas Marrinan]
+- Merged with master. [Thomas Marrinan]
+- Merge branch 'master' into pdfinfo. [Thomas Marrinan]
+- Latest updates. [Thomas Marrinan]
+- Added more error handling debug statements. [tmarrinan]
+- Fixed pdf loading for upload and url. [Thomas Marrinan]
+- Created pdf metadata info module. [Thomas Marrinan]
+- CHANGE: audioManager.html title renamed to 'Audio Manager' instead of
+  'Node Test' NEW: GO-icewall scripts now launch an audio manager and
+  hides that window. [Arthur Nishimoto]
+- Added error handling for crashes. [Thomas Marrinan]
+- Modified init_webserver.sh to run without questions. [Luc Renambot]
+- Merged with master and added pointer and screen share functions.
+  [Thomas Marrinan]
+- Merge branch 'master' into sagePointer. [Thomas Marrinan]
+- FIX: Zip drag and drop from Windows clients. [Arthur Nishimoto]
+- CHANGE: deleteElement moved to internal server function. [Arthur
+  Nishimoto]
+- Merge remote-tracking branch 'remotes/origin/master' into TouchUI.
+  [Arthur Nishimoto]
+- Added individual configs for thor. [Thomas Marrinan]
+- Fixed sageUI pointer mode change. [Thomas Marrinan]
+- Finalized no-express. [Thomas Marrinan]
+- Fixed large file serving (videos) [tmarrinan]
+- Fixed a few coding bugs. [tmarrinan]
+- Decode url to string for proper filenames. [tmarrinan]
+- Fixed video streaming. [Thomas Marrinan]
+- Add httpserver module. [Thomas Marrinan]
+- Uploaded multiple files as they complete (rather than wait for all to
+  transfer) [Thomas Marrinan]
+- Merge branch 'master' into no-express. [Thomas Marrinan]
+- Update to no-express. [Thomas Marrinan]
+- Initial upload of nodejs without express. [Thomas Marrinan]
+- NEW: Move item to back (in progress) [Arthur Nishimoto]
+- FIX: Undefined error fixes for iridium. [Arthur Nishimoto]
+- NEW: Omicron touch press, drag, move, scale, and close element working
+  CHANGE: SagePointer functions separated from socket functions. [Arthur
+  Nishimoto]
+- NEW: Omicron config FIX: Touch pointer down, drag, release, and
+  5-finger remove element. [Arthur Nishimoto]
+- NEW: Omicron module. [Arthur Nishimoto]
+- Merge branch 'master' of https://github.com/tmarrinan/WebSAGE into
+  TouchUI. [Arthur Nishimoto]
+- Merge remote-tracking branch 'remotes/origin/master' into TouchUI.
+  [Arthur Nishimoto]
+- NEW: Zoom, 3-finger, click, double click Omicron event parsing.
+  [Arthur Nishimoto]
+- Merge branch 'master' into TouchUI. [Arthur Nishimoto]
+- NEW: Five-finger remove content gesture FIX: Single touch
+  down/drag/release (mostly server-side) [Arthur Nishimoto]
+- NEW: Touch click/drag working (release not) [Arthur Nishimoto]
+- NEW: Single touch point down/move/up. [Arthur Nishimoto]
+- Disabled PDFutils for Windows development. Added Omicron socket
+  connection. [Arthur Nishimoto]
+- Add opening websocket for communication. [Thomas Marrinan]
+- Visually immitate SagePointer App. [Thomas Marrinan]
+- Initial commit of sagePointer branch. [Thomas Marrinan]
+- Cleaned up the code. [Jillian Aurisano]
+- Keypress events should work. changed window title to include hostname
+  and SageUI. [Jillian Aurisano]
+- Keyboard events should be working. [Jillian Aurisano]
+- Merge with master. [Jillian Aurisano]
+- Bug fixes. [tmarrinan]
+- Fixing bugs in interactions. [Jillian Aurisano]
+- Update sageUI style. [Thomas Marrinan]
+- Fixed sageUI. [Thomas Marrinan]
+- WindowManager to sageUI. [Thomas Marrinan]
+- Moved version 2 to default. [Thomas Marrinan]
+- Moved index2 to index. [Thomas Marrinan]
+- Ctrl+tab toggle. [Thomas Marrinan]
+- Keycode interaction. [Thomas Marrinan]
+- Merged interactions. [Thomas Marrinan]
+- Events transmitted to canvas applications. [Jillian Aurisano]
+- Key release added. [Thomas Marrinan]
+- Fixed some late joiner issues. [tmarrinan]
+- Screen sharing for revamped version '2' [Thomas Marrinan]
+- Revamp using custom websocket libraries, and modularizing server -
+  files appended with 2. [Thomas Marrinan]
+- Drag and drop https sites works.  http does not.  need to discuss.
+  [Jillian Aurisano]
+- Fixed multiple screen share bug. [tmarrinan]
+- Broadcast.js for screen sharing. [Thomas Marrinan]
+- Improved WebRTC screen sharing - one way broadcast. [Thomas Marrinan]
+- Update server. [Thomas Marrinan]
+- Remove tmp folder. [Thomas Marrinan]
+- Update README.md. [tmarrinan]
+- Load files from server and sort alphabetically. [tmarrinan]
+- Load files from server complete. [tmarrinan]
+- Added server file browser for windowManager. [tmarrinan]
+- Merge branch 'master' of https://github.com/tmarrinan/WebSAGE.
+  [tmarrinan]
+- Tweaking screen sharing. [tmarrinan]
+- Server file loading. [tmarrinan]
+- Merged. [tmarrinan]
+- Upload folders. [tmarrinan]
+- Initial screen sharing - must have internet. [tmarrinan]
+- Improved screen sharing. [tmarrinan]
+- Added upload folders. [tmarrinan]
+- Initial screen sharing. [tmarrinan]
+- Drag and drop remote PDF and MP4 (url) [tmarrinan]
+- Server reads all previously uploaded files. [tmarrinan]
+- Pointer click, move, and scale. [tmarrinan]
+- Added pointer sensitivity based on resolution difference. [tmarrinan]
+- Pointer click no longer resets position. [tmarrinan]
+- Fix SAGE pointer label/color updating. [tmarrinan]
+- WindowManager SAGE pointer label and color support. [tmarrinan]
+- Added SAGE pointer support using WindowManager. [tmarrinan]
+- Added pointer lock and SAGE pointer. [tmarrinan]
+- Replaced node_modules with packages.json. [tmarrinan]
+- Update README.md. [tmarrinan]
+- Tweaked audio sync. [tmarrinan]
+- Added initial audio sync for videos. [tmarrinan]
+- Added pdf img. [tmarrinan]
+- Added pdf resolution handeler to accomodate different page sizes.
+  [tmarrinan]
+- Added pdf support. [tmarrinan]
+- Integrated drop shadow into index and windowManager. [tmarrinan]
+- Added config for xinerama. [tmarrinan]
+- Stream image pixel data from server. [tmarrinan]
+- Added config for lyra. [tmarrinan]
+- Fixed kineticJS resize. [tmarrinan]
+- Merge branch 'master' of https://github.com/tmarrinan/WebSAGE.
+  [tmarrinan]
+- Hide mouse pointer. [tmarrinan]
+- Youtube link update. [tmarrinan]
+- Added xdotool mouse move to activate hidden cursor. [tmarrinan]
+- Add file upload progress indicator. [tmarrinan]
+- Fixed youtube video poster. [tmarrinan]
+- Added ability to remove content. [tmarrinan]
+- Fix drag and drop image web url. [tmarrinan]
+- Added video play/pause. [tmarrinan]
+- Initial add of video controls. [tmarrinan]
+- Add glMatrix script for webgl. [tmarrinan]
+- Add kinetic and three scripts. [tmarrinan]
+- Added support for three.js apps. [tmarrinan]
+- Updated support for kinetic.js apps. [tmarrinan]
+- Improved kinetic support. [tmarrinan]
+- Added kinetic.jsjs canvas support. [tmarrinan]
+- Add basic support for processing.js. [tmarrinan]
+- Changed unzip protocol to more robust module. [tmarrinan]
+- Fix unzip multiple instance of same file. [tmarrinan]
+- Wihandle window manager resize and multiple youtube formats.
+  [tmarrinan]
+- Z-indexing and window titles. [tmarrinan]
+- Added Firefox support for windowManager. [tmarrinan]
+- Live streaming of youtube through video tag. [tmarrinan]
+- Changed youtube protocol to download video. [tmarrinan]
+- Imporved canvas support - includes image resources. [tmarrinan]
+- Added URL drag and drop for images and youtube. [tmarrinan]
+- Improved zip drag and drop. [tmarrinan]
+- Upload zip files with instruction text file. [tmarrinan]
+- Improved pointer canvas element. [tmarrinan]
+- Canvas timer syncronization. [tmarrinan]
+- Added canvas user parameters. [tmarrinan]
+- Add drag and drop for canvas elements. [tmarrinan]
+- Improvements to canvas2d. [tmarrinan]
+- Initial test of canvas2d. [tmarrinan]
+- Fixed multi-item load. [tmarrinan]
+- Dynamic adding of images. [tmarrinan]
+- WindowManager drag and drop file upload. [tmarrinan]
+- WindowManager scroll resize. [tmarrinan]
+- Fixed tab spacing. [tmarrinan]
+- Updated windowManager: window positioning. [tmarrinan]
+- Upload initial code. [Thomas Marrinan]
+

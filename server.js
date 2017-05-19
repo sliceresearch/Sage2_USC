@@ -120,7 +120,7 @@ var interactMgr        = new InteractableManager();
 var mediaBlockSize     = 512;
 var startTime          = Date.now();
 var drawingManager;
-var pressingAlt        = true;
+var pressingCTRL       = true;
 var fileBufferManager  = new FileBufferManager();
 
 // Array containing the remote sites informations (toolbar on top of wall)
@@ -4911,38 +4911,44 @@ function initalizeRemoteSites() {
 	if (config.remote_sites) {
 		remoteSites = new Array(config.remote_sites.length);
 		config.remote_sites.forEach(function(element, index, array) {
-			var protocol = (element.secure === true) ? "wss" : "ws";
-			var wsURL = protocol + "://" + element.host + ":" + element.port.toString();
+			// if we have a valid definition of a remote site (host, port and name)
+			if (element.host && element.port && element.name) {
+				var protocol = (element.secure === true) ? "wss" : "ws";
+				var wsURL = protocol + "://" + element.host + ":" + element.port.toString();
 
-			var rGeom = {};
-			rGeom.w = Math.min((0.5 * config.totalWidth) / remoteSites.length, config.ui.titleBarHeight * 6)
-				- (0.16 * config.ui.titleBarHeight);
-			rGeom.h = 0.84 * config.ui.titleBarHeight;
-			rGeom.x = (0.5 * config.totalWidth) + ((rGeom.w + (0.16 * config.ui.titleBarHeight))
-				* (index - (remoteSites.length / 2))) + (0.08 * config.ui.titleBarHeight);
-			rGeom.y = 0.08 * config.ui.titleBarHeight;
+				var rGeom = {};
+				rGeom.w = Math.min((0.5 * config.totalWidth) / remoteSites.length, config.ui.titleBarHeight * 6)
+					- (0.16 * config.ui.titleBarHeight);
+				rGeom.h = 0.84 * config.ui.titleBarHeight;
+				rGeom.x = (0.5 * config.totalWidth) + ((rGeom.w + (0.16 * config.ui.titleBarHeight))
+					* (index - (remoteSites.length / 2))) + (0.08 * config.ui.titleBarHeight);
+				rGeom.y = 0.08 * config.ui.titleBarHeight;
 
-			// Build the object
-			remoteSites[index] = {
-				name: element.name,
-				wsio: null,
-				connected: "off",
-				geometry: rGeom,
-				index: index
-			};
-			// Create a websocket connection to the site
-			remoteSites[index].wsio = createRemoteConnection(wsURL, element, index);
+				// Build the object
+				remoteSites[index] = {
+					name: element.name,
+					wsio: null,
+					connected: "off",
+					geometry: rGeom,
+					index: index
+				};
+				// Create a websocket connection to the site
+				remoteSites[index].wsio = createRemoteConnection(wsURL, element, index);
 
-			// Add the gemeotry for the button
-			interactMgr.addGeometry("remote_" + index, "staticUI", "rectangle", rGeom,  true, index, remoteSites[index]);
+				// Add the gemeotry for the button
+				interactMgr.addGeometry("remote_" + index, "staticUI", "rectangle", rGeom,  true, index, remoteSites[index]);
 
-			// attempt to connect every 15 seconds, if connection failed
-			setInterval(function() {
-				if (remoteSites[index].connected !== "on") {
-					var rem = createRemoteConnection(wsURL, element, index);
-					remoteSites[index].wsio = rem;
-				}
-			}, 15000);
+				// attempt to connect every 15 seconds, if connection failed
+				setInterval(function() {
+					if (remoteSites[index].connected !== "on") {
+						var rem = createRemoteConnection(wsURL, element, index);
+						remoteSites[index].wsio = rem;
+					}
+				}, 15000);
+			} else {
+				// not a valid site definition, we ignore it
+				console.log(sageutils.header("Remote") + chalk.bold.red('invalid host definition (ignored) ') + element.name);
+			}
 		});
 	}
 }
@@ -6494,15 +6500,15 @@ function pointerMove(uniqueID, pointerX, pointerY, data) {
 			uniqueID, pointerX, pointerY, 10, 10);
 	}
 
-	// Trick: press ALT key while moving switches interaction mode
-	if (sagePointers[uniqueID] && remoteInteraction[uniqueID].ALT && pressingAlt) {
+	// Trick: press CTRL key while moving switches interaction mode
+	if (sagePointers[uniqueID] && remoteInteraction[uniqueID].CTRL && pressingCTRL) {
 		remoteInteraction[uniqueID].toggleModes();
 		broadcast('changeSagePointerMode', {id: sagePointers[uniqueID].id, mode: remoteInteraction[uniqueID].interactionMode});
-		pressingAlt = false;
-	} else if (sagePointers[uniqueID] && !remoteInteraction[uniqueID].ALT && !pressingAlt) {
+		pressingCTRL = false;
+	} else if (sagePointers[uniqueID] && !remoteInteraction[uniqueID].CTRL && !pressingCTRL) {
 		remoteInteraction[uniqueID].toggleModes();
 		broadcast('changeSagePointerMode', {id: sagePointers[uniqueID].id, mode: remoteInteraction[uniqueID].interactionMode});
-		pressingAlt = true;
+		pressingCTRL = true;
 	}
 
 	sagePointers[uniqueID].updatePointerPosition(data, config.totalWidth, config.totalHeight);
