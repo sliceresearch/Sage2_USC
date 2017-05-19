@@ -60,7 +60,6 @@
 		"rbush": ">=2",
 		"request": "latest",
 		"sprint": "^0.3.1",
-		"twit": "latest",
 		"mv": "latest",
 		"semver": "latest",
 		"fsmonitor": "latest",

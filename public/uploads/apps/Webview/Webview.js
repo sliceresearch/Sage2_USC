@@ -7,7 +7,7 @@
 
 "use strict";
 
-/* global  require*/
+/* global  require */
 
 var Webview = SAGE2_App.extend({
 	init: function(data) {
@@ -202,16 +202,23 @@ var Webview = SAGE2_App.extend({
 	 * @method     addPreloadFile
 	 */
 	addPreloadFile: function() {
+		// if it's not running inside Electron, do not bother
 		if (!this.isElectron) {
 			return;
 		}
+		// load the nodejs path module
 		var path = require("path");
+		// access the remote electron process
 		var app = require("electron").remote.app;
+		// get the application path
 		var appPath = app.getAppPath();
+		// split the path at node_modules
 		var subPath = appPath.split("node_modules");
+		// take the first element which contains the current folder of the application
 		var rootPath = subPath[0];
+		// add the relative path to the webview folder
 		var preloadPath = path.join(rootPath, 'public/uploads/apps/Webview', 'SAGE2_script_supplement.js');
-		console.log(preloadPath);
+		// finally make it a local URL and pass it to the webview element
 		this.element.preload = "file://" + preloadPath;
 	},
 

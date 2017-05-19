@@ -21,8 +21,17 @@ install:
   - cd %APPVEYOR_BUILD_FOLDER%
   - cd client
   - npm install --production --msvs_version=2013
-  - npm run update
-  - npm run build_win
+  - copy /Y ..\electron.js  electron.js
+  - dir
+  - mkdir public
+  - mkdir public\uploads
+  - mkdir public\uploads\apps
+  - mkdir public\uploads\apps\Webview
+  - copy /Y ..\public\uploads\apps\Webview\SAGE2_script_supplement.js public\uploads\apps\Webview\SAGE2_script_supplement.js
+  - .\node_modules\.bin\electron-packager . --platform=win32 --arch=x64 --icon=sage2.ico --overwrite
+  - copy /Y README.win      SAGE2_client-win32-x64\README
+  - copy /Y View.win        SAGE2_client-win32-x64\Display0.bat
+  - copy /Y Fullscreen.win  SAGE2_client-win32-x64\Fullscreen.bat
   - 7z a -sfx7z.sfx SAGE2_client-win64.exe SAGE2_client-win32-x64 > nul
   - move SAGE2_client-win64.exe ..
 
