@@ -1273,7 +1273,7 @@ function handleClick(element) {
 			id: "browser_form",
 			position: "center",
 			modal: true,
-			zIndex: 9999,
+			zIndex: 1999,
 			head: "Open a browser window",
 			width: 400,
 			body: {
@@ -1572,7 +1572,7 @@ function handleClick(element) {
 			id: "session_form",
 			position: "center",
 			modal: true,
-			zIndex: 9999,
+			zIndex: 1999,
 			head: "Save session",
 			width: 400,
 			body: {
@@ -2718,16 +2718,16 @@ function sendCsdMakeNote() {
 	data.type		= "launchAppWithValues";
 	data.appName	= "quickNote";
 	// data.func		= "setMessage";
-	data.csdInitValues		= {};
-	data.csdInitValues.clientName = document.getElementById('sage2PointerLabel').value;
-	data.csdInitValues.clientInput = workingDiv.value;
+	data.params		= {};
+	data.params.clientName = document.getElementById('sage2PointerLabel').value;
+	data.params.clientInput = workingDiv.value;
 	if (document.getElementById("uiNoteMakerCheckAnonymous").checked) {
-		data.csdInitValues.clientName = "Anonymous";
+		data.params.clientName = "Anonymous";
 	}
-	data.csdInitValues.colorChoice = "lightyellow";
+	data.params.colorChoice = "lightyellow";
 	for (var i = 1; i <= 6; i++) {
 		if (document.getElementById("uinmColorPick" + i).colorWasPicked) {
-			data.csdInitValues.colorChoice = document.getElementById("uinmColorPick" + i).style.background;
+			data.params.colorChoice = document.getElementById("uinmColorPick" + i).style.background;
 		}
 	}
 	wsio.emit('csdMessage', data);

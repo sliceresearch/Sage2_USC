@@ -120,7 +120,7 @@ var interactMgr        = new InteractableManager();
 var mediaBlockSize     = 512;
 var startTime          = Date.now();
 var drawingManager;
-var pressingAlt        = true;
+var pressingCTRL       = true;
 var fileBufferManager  = new FileBufferManager();
 
 // Array containing the remote sites informations (toolbar on top of wall)
@@ -4911,38 +4911,44 @@ function initalizeRemoteSites() {
 	if (config.remote_sites) {
 		remoteSites = new Array(config.remote_sites.length);
 		config.remote_sites.forEach(function(element, index, array) {
-			var protocol = (element.secure === true) ? "wss" : "ws";
-			var wsURL = protocol + "://" + element.host + ":" + element.port.toString();
+			// if we have a valid definition of a remote site (host, port and name)
+			if (element.host && element.port && element.name) {
+				var protocol = (element.secure === true) ? "wss" : "ws";
+				var wsURL = protocol + "://" + element.host + ":" + element.port.toString();
 
-			var rGeom = {};
-			rGeom.w = Math.min((0.5 * config.totalWidth) / remoteSites.length, config.ui.titleBarHeight * 6)
-				- (0.16 * config.ui.titleBarHeight);
-			rGeom.h = 0.84 * config.ui.titleBarHeight;
-			rGeom.x = (0.5 * config.totalWidth) + ((rGeom.w + (0.16 * config.ui.titleBarHeight))
-				* (index - (remoteSites.length / 2))) + (0.08 * config.ui.titleBarHeight);
-			rGeom.y = 0.08 * config.ui.titleBarHeight;
+				var rGeom = {};
+				rGeom.w = Math.min((0.5 * config.totalWidth) / remoteSites.length, config.ui.titleBarHeight * 6)
+					- (0.16 * config.ui.titleBarHeight);
+				rGeom.h = 0.84 * config.ui.titleBarHeight;
+				rGeom.x = (0.5 * config.totalWidth) + ((rGeom.w + (0.16 * config.ui.titleBarHeight))
+					* (index - (remoteSites.length / 2))) + (0.08 * config.ui.titleBarHeight);
+				rGeom.y = 0.08 * config.ui.titleBarHeight;
 
-			// Build the object
-			remoteSites[index] = {
-				name: element.name,
-				wsio: null,
-				connected: "off",
-				geometry: rGeom,
-				index: index
-			};
-			// Create a websocket connection to the site
-			remoteSites[index].wsio = createRemoteConnection(wsURL, element, index);
+				// Build the object
+				remoteSites[index] = {
+					name: element.name,
+					wsio: null,
+					connected: "off",
+					geometry: rGeom,
+					index: index
+				};
+				// Create a websocket connection to the site
+				remoteSites[index].wsio = createRemoteConnection(wsURL, element, index);
 
-			// Add the gemeotry for the button
-			interactMgr.addGeometry("remote_" + index, "staticUI", "rectangle", rGeom,  true, index, remoteSites[index]);
+				// Add the gemeotry for the button
+				interactMgr.addGeometry("remote_" + index, "staticUI", "rectangle", rGeom,  true, index, remoteSites[index]);
 
-			// attempt to connect every 15 seconds, if connection failed
-			setInterval(function() {
-				if (remoteSites[index].connected !== "on") {
-					var rem = createRemoteConnection(wsURL, element, index);
-					remoteSites[index].wsio = rem;
-				}
-			}, 15000);
+				// attempt to connect every 15 seconds, if connection failed
+				setInterval(function() {
+					if (remoteSites[index].connected !== "on") {
+						var rem = createRemoteConnection(wsURL, element, index);
+						remoteSites[index].wsio = rem;
+					}
+				}, 15000);
+			} else {
+				// not a valid site definition, we ignore it
+				console.log(sageutils.header("Remote") + chalk.bold.red('invalid host definition (ignored) ') + element.name);
+			}
 		});
 	}
 }
@@ -6494,15 +6500,15 @@ function pointerMove(uniqueID, pointerX, pointerY, data) {
 			uniqueID, pointerX, pointerY, 10, 10);
 	}
 
-	// Trick: press ALT key while moving switches interaction mode
-	if (sagePointers[uniqueID] && remoteInteraction[uniqueID].ALT && pressingAlt) {
+	// Trick: press CTRL key while moving switches interaction mode
+	if (sagePointers[uniqueID] && remoteInteraction[uniqueID].CTRL && pressingCTRL) {
 		remoteInteraction[uniqueID].toggleModes();
 		broadcast('changeSagePointerMode', {id: sagePointers[uniqueID].id, mode: remoteInteraction[uniqueID].interactionMode});
-		pressingAlt = false;
-	} else if (sagePointers[uniqueID] && !remoteInteraction[uniqueID].ALT && !pressingAlt) {
+		pressingCTRL = false;
+	} else if (sagePointers[uniqueID] && !remoteInteraction[uniqueID].CTRL && !pressingCTRL) {
 		remoteInteraction[uniqueID].toggleModes();
 		broadcast('changeSagePointerMode', {id: sagePointers[uniqueID].id, mode: remoteInteraction[uniqueID].interactionMode});
-		pressingAlt = true;
+		pressingCTRL = true;
 	}
 
 	sagePointers[uniqueID].updatePointerPosition(data, config.totalWidth, config.totalHeight);
@@ -9433,8 +9439,10 @@ function csdGetPathOfApp(appName) {
  * 		data.appName 	x location to check.
  *
  * csd options:
- * 		data.func 		if defined will attempt to call this func on the app
- * 		data.params 	assumed to be defined if data.func is. Will send these params to func.
+ *		data.app			id of the app that called the launch
+ *		data.csdInitValues	object passed into data will be available within app's init function.
+ * 		data.func			if defined will attempt to call this func on the app
+ * 		data.params			assumed to be defined if data.func is. Will send these params to func.
  *
  */
 function csdLaunchAppWithValues(wsio, data) {
@@ -9454,8 +9462,12 @@ function csdLaunchAppWithValues(wsio, data) {
 	appLoadData.user = wsio.id; // needed for the wsLoadApplication function
 	appLoadData.wasCsdPositionStated = false;
 	appLoadData.csdLaunch = true;
-	if (data.csdInitValues) {
-		appLoadData.csdInitValues = data.csdInitValues;
+	if (data.params) {
+		appLoadData.csdInitValues = data.params;
+		appLoadData.csdInitValues.parent = data.app;
+		appLoadData.csdInitValues.csdFunctionCallback = data.func;
+	} else {
+		appLoadData.csdInitValues = { parent: data.app};
 	}
 	// If the launch location is defined, use it, otherwise use the stagger position.
 	if (data.xLaunch !== null && data.xLaunch !== undefined) {
@@ -9467,35 +9479,37 @@ function csdLaunchAppWithValues(wsio, data) {
 	// call the previously made wsLoadApplication funciton and give it the required data.
 	wsLoadApplication(wsio, appLoadData);
 
-	// if a data.func is defined make a delayed call to it on the app. Otherwise, its just an app launch.
-	if (data.func !== undefined) {
-		setTimeout(
-			function() {
-				var app = SAGE2Items.applications.list[ whatTheNewAppIdShouldBe ];
-				// if the app doesn't exist, exit. Because it should and dunno what happened to it (potentially crash).
-				if (app === null || app === undefined) {
-					console.log(sageutils.header("csdLaunchAppWithValues") + "App " + data.appName +
-						" launched, but now it doesn't exist.");
-				} else {
-					// else try send it data
-					// add potentially missing params
-					data.params.serverDate = Date.now();
-					data.params.clientId   = wsio.id;
-					// load the data object for the new app
-					var dataForDisplay  = {};
-					dataForDisplay.app  = app.id;
-					dataForDisplay.func = data.func;
-					dataForDisplay.data = data.params;
-					// send to all display clients(since they all need to update)
-					for (var i = 0; i < clients.length; i++) {
-						if (clients[i].clientType === "display") {
-							clients[i].emit('broadcast', dataForDisplay);
-						}
-					}
-				}
-			}
-		, 400); // milliseconds how low can this value be to ensure it works?
-	} // end if data.func !== undefined
+	broadcast('broadcast', {app: data.app, func: "csdAddToAppsLaunchedList", data: whatTheNewAppIdShouldBe});
+
+	// // if a data.func is defined make a delayed call to it on the app. Otherwise, its just an app launch.
+	// if (data.func !== undefined) {
+	// 	setTimeout(
+	// 		function() {
+	// 			var app = SAGE2Items.applications.list[ whatTheNewAppIdShouldBe ];
+	// 			// if the app doesn't exist, exit. Because it should and dunno what happened to it (potentially crash).
+	// 			if (app === null || app === undefined) {
+	// 				console.log(sageutils.header("csdLaunchAppWithValues") + "App " + data.appName +
+	// 					" launched, but now it doesn't exist.");
+	// 			} else {
+	// 				// else try send it data
+	// 				// add potentially missing params
+	// 				data.params.serverDate = Date.now();
+	// 				data.params.clientId   = wsio.id;
+	// 				// load the data object for the new app
+	// 				var dataForDisplay  = {};
+	// 				dataForDisplay.app  = app.id;
+	// 				dataForDisplay.func = data.func;
+	// 				dataForDisplay.data = data.params;
+	// 				// send to all display clients(since they all need to update)
+	// 				for (var i = 0; i < clients.length; i++) {
+	// 					if (clients[i].clientType === "display") {
+	// 						clients[i].emit('broadcast', dataForDisplay);
+	// 					}
+	// 				}
+	// 			}
+	// 		}
+	// 	, 400); // milliseconds how low can this value be to ensure it works?
+	// } // end if data.func !== undefined
 } // end csdLaunchAppWithValues
 
 
@@ -9584,6 +9598,8 @@ csdDataStructure.appLaunch.widthLast = -1;
 csdDataStructure.appLaunch.heightLast = -1;
 csdDataStructure.appLaunch.tallestInRow = -1;
 csdDataStructure.appLaunch.padding = 20;
+csdDataStructure.appsThatLaunched = {};
+csdDataStructure.appsThatWereLaunched = {};
 
 /**
 Will set the named value.
@@ -9641,11 +9657,12 @@ function csdSetValue(wsio, data) {
 			dataForApp.app  = csdDataStructure.newValueWatchers[i].app;
 			dataForApp.func = csdDataStructure.newValueWatchers[i].func;
 			// send to all display clients(since they all need to update)
-			for (let j = 0; j < clients.length; j++) {
-				if (clients[j].clientType === "display") {
-					clients[j].emit('broadcast', dataForApp);
-				}
-			}
+			// for (let j = 0; j < clients.length; j++) {
+			// 	if (clients[j].clientType === "display") {
+			// 		clients[j].emit('broadcast', dataForApp);
+			// 	}
+			// }
+			broadcast('broadcast', dataForApp);
 		}
 	}
 
@@ -9656,11 +9673,12 @@ function csdSetValue(wsio, data) {
 		dataForApp.app  = csdDataStructure.allValues["" + data.nameOfValue].subscribers[i].app;
 		dataForApp.func = csdDataStructure.allValues["" + data.nameOfValue].subscribers[i].func;
 		// send to all display clients(since they all need to update)
-		for (let j = 0; j < clients.length; j++) {
-			if (clients[j].clientType === "display") {
-				clients[j].emit('broadcast', dataForApp);
-			}
-		}
+		// for (let j = 0; j < clients.length; j++) {
+		// 	if (clients[j].clientType === "display") {
+		// 		clients[j].emit('broadcast', dataForApp);
+		// 	}
+		// }
+		broadcast('broadcast', dataForApp);
 	}
 }
 
@@ -9749,21 +9767,21 @@ optional:
 */
 function csdSubscribeToNewValueNotification(wsio, data) {
 	// create the element
-    var appWatcher = {
-        app: data.app,
-        func: data.func
-    }
+	var appWatcher = {
+		app: data.app,
+		func: data.func
+	};
 	// make sure it wasn't already added
-    for (let i = 0; i < csdDataStructure.newValueWatchers.length; i++) {
-        if (csdDataStructure.newValueWatchers[i].app === appWatcher.app
-        && csdDataStructure.newValueWatchers[i].func === appWatcher.func) {
+	for (let i = 0; i < csdDataStructure.newValueWatchers.length; i++) {
+		if (csdDataStructure.newValueWatchers[i].app === appWatcher.app
+		&& csdDataStructure.newValueWatchers[i].func === appWatcher.func) {
 			if (data.unsubscribe) {
 				csdDataStructure.newValueWatchers.splice(i, 1);
 			}
-            return; // they are already subscribed, or this was an unsubscribe
-        }
-    }
-    csdDataStructure.newValueWatchers.push(appWatcher);
+			return; // they are already subscribed, or this was an unsubscribe
+		}
+	}
+	csdDataStructure.newValueWatchers.push(appWatcher);
 }
 
 

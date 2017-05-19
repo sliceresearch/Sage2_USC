@@ -1,0 +1,61 @@
+From 'april2017' tag to 'HEAD'
+------------------------------
+
+New
+~~~
+- Adding ChangeLog files, from begining to v1, from v1 to v2, and v2 to
+  april2017 (made usinggitchangelog) [Luc Renambot]
+
+Changes
+~~~~~~~
+- Replaced CAVE2 by sage2server.evl.uic.edu as example of remote sites
+  in default sabi.js configuration for SAGE2 server (we get a lot of
+  requests to CAVE2) [Luc Renambot]
+- Add the code documentation to the preload function. [Luc Renambot]
+- Moved older ChangeLog files into 'doc' folder. [Luc Renambot]
+
+Fix
+~~~
+- Check if we have a valid remote site definition before adding it. [Luc
+  Renambot]
+- Fixing the build script for display client for windows. [Luc Renambot]
+- Tweak the display client build process with appveyor. [Luc Renambot]
+- Add the SAGE2 runtime for webview into the build process. [Luc
+  Renambot]
+- Delete old ChangeLog files. [Luc Renambot]
+- Cleanup changelogs. [Luc Renambot]
+
+Other
+~~~~~
+- Merge branch 'clientWindows' [Luc Renambot]
+- Adding a appveyor file to build Windows display clients. [Luc
+  Renambot]
+- Disable security in webview: it seems to be a problem with some sites,
+  especially on Windows. Not sure why. [Luc Renambot]
+- Allow ALT-click to follow into a new webview. Not tested on Windows
+  (maybe it's CTRL-click on Windows). [Luc Renambot]
+- Changing from ALT to CTRL to move windows without changing pointer
+  mode: while pressing CTRL, pointer changes to window manipulation
+  mode. [Luc Renambot]
+- Add tooltips to the menus. [Luc Renambot]
+- Change zIndex of some popups. [Luc Renambot]
+- Change the zIndex of UI canvas to 10000 to 1000 (webix tooltips are at
+  10000) [Luc Renambot]
+- Updating client with electron.js. [Luc Renambot]
+- Deleting old electron client folder. [Luc Renambot]
+- New menu and callback system, easier to create and move items. Added
+  the functionalities of the 'arrangement' button. [Luc Renambot]
+- Remove the 'arrangement' button. [Luc Renambot]
+- Pdf remote site updates without setTimeout. [D K]
+- Server wall screenshot code reverted. Assisted config will now set
+  display 0 to have width and height equal to layout width and height.
+  Sabi will not modify config before launching any more. [D K]
+- Updating sabijs config writes. [D K]
+- Changed moveItemWithAnimation function to use vanilla js selectors and
+  style property assignment as opposed to d3. [Andrew Burks]
+- Update the webix widget library. [Luc Renambot]
+- Trying a smaller dockerfile. [Luc Renambot]
+- Apparently ws has no more binary dependencies (for a while). So
+  updating the install process. [Luc Renambot]
+
+
