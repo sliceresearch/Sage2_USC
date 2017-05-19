@@ -142,7 +142,7 @@ var SAGE2CsdAppExtend = {
 		* Part of the launch process will include calling back to this app and stating the id of the newly launched app.
 		*
 		* @method csdLaunchAppWithValues
-		* @param appName {String} name of app to launch. Has to correctly match .
+		* @param appName {String} name of app to launch. Has to correctly match.
 		* @param params {Object} optional. What to pass the launched app. Appears within init() as csdInitValues.
 		* @param funcToPassParams {String} optional. app which called this function. Could be a function and will convert to string.
 		* @param x {Integer} optional. X coordinate to start the app at.
@@ -164,11 +164,26 @@ var SAGE2CsdAppExtend = {
 		};
 
 		/**
+		* Sends data to children.
+		*
+		* @method csdSendDataToChildren
+		* @param func {String} name of function to activate. Has to correctly match
+		* @param data {Object} data to send. doens't have to be an object.
+		*/
+		app.csdSendDataToChildren = function(func, data) {
+			for (let i = 0; i < this.childrenAppIds.length; i++) {
+				if (applications[this.childrenAppIds[i]]) {
+					applications[this.childrenAppIds[i]][func](data);
+				}
+			}
+		};
+
+		/**
 		* Asks server to launch app with values. On the server this will add additional associations like which app launched which.
 		* Part of the launch process will include calling back to this app and stating the id of the newly launched app.
 		*
 		* @method csdListOfAppsLaunched
-		* @param appName {String} name of app to launch. Has to correctly match .
+		* @param appName {String} name of app to launch. Has to correctly match.
 		*/
 		app.csdAddToAppsLaunchedList = function(appId) {
 			this.childrenAppIds.push(appId);
