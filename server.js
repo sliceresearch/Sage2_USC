@@ -9433,8 +9433,10 @@ function csdGetPathOfApp(appName) {
  * 		data.appName 	x location to check.
  *
  * csd options:
- * 		data.func 		if defined will attempt to call this func on the app
- * 		data.params 	assumed to be defined if data.func is. Will send these params to func.
+ *		data.app			id of the app that called the launch
+ *		data.csdInitValues	object passed into data will be available within app's init function.
+ * 		data.func			if defined will attempt to call this func on the app
+ * 		data.params			assumed to be defined if data.func is. Will send these params to func.
  *
  */
 function csdLaunchAppWithValues(wsio, data) {
@@ -9454,8 +9456,12 @@ function csdLaunchAppWithValues(wsio, data) {
 	appLoadData.user = wsio.id; // needed for the wsLoadApplication function
 	appLoadData.wasCsdPositionStated = false;
 	appLoadData.csdLaunch = true;
-	if (data.csdInitValues) {
-		appLoadData.csdInitValues = data.csdInitValues;
+	if (data.params) {
+		appLoadData.csdInitValues = data.params;
+		appLoadData.csdInitValues.parent = data.app;
+		appLoadData.csdInitValues.csdFunctionCallback = data.func;
+	} else {
+		appLoadData.csdInitValues = { parent: data.app};
 	}
 	// If the launch location is defined, use it, otherwise use the stagger position.
 	if (data.xLaunch !== null && data.xLaunch !== undefined) {
@@ -9467,35 +9473,37 @@ function csdLaunchAppWithValues(wsio, data) {
 	// call the previously made wsLoadApplication funciton and give it the required data.
 	wsLoadApplication(wsio, appLoadData);
 
-	// if a data.func is defined make a delayed call to it on the app. Otherwise, its just an app launch.
-	if (data.func !== undefined) {
-		setTimeout(
-			function() {
-				var app = SAGE2Items.applications.list[ whatTheNewAppIdShouldBe ];
-				// if the app doesn't exist, exit. Because it should and dunno what happened to it (potentially crash).
-				if (app === null || app === undefined) {
-					console.log(sageutils.header("csdLaunchAppWithValues") + "App " + data.appName +
-						" launched, but now it doesn't exist.");
-				} else {
-					// else try send it data
-					// add potentially missing params
-					data.params.serverDate = Date.now();
-					data.params.clientId   = wsio.id;
-					// load the data object for the new app
-					var dataForDisplay  = {};
-					dataForDisplay.app  = app.id;
-					dataForDisplay.func = data.func;
-					dataForDisplay.data = data.params;
-					// send to all display clients(since they all need to update)
-					for (var i = 0; i < clients.length; i++) {
-						if (clients[i].clientType === "display") {
-							clients[i].emit('broadcast', dataForDisplay);
-						}
-					}
-				}
-			}
-		, 400); // milliseconds how low can this value be to ensure it works?
-	} // end if data.func !== undefined
+	broadcast('broadcast', {app: data.app, func: "csdAddToAppsLaunchedList", data: whatTheNewAppIdShouldBe});
+
+	// // if a data.func is defined make a delayed call to it on the app. Otherwise, its just an app launch.
+	// if (data.func !== undefined) {
+	// 	setTimeout(
+	// 		function() {
+	// 			var app = SAGE2Items.applications.list[ whatTheNewAppIdShouldBe ];
+	// 			// if the app doesn't exist, exit. Because it should and dunno what happened to it (potentially crash).
+	// 			if (app === null || app === undefined) {
+	// 				console.log(sageutils.header("csdLaunchAppWithValues") + "App " + data.appName +
+	// 					" launched, but now it doesn't exist.");
+	// 			} else {
+	// 				// else try send it data
+	// 				// add potentially missing params
+	// 				data.params.serverDate = Date.now();
+	// 				data.params.clientId   = wsio.id;
+	// 				// load the data object for the new app
+	// 				var dataForDisplay  = {};
+	// 				dataForDisplay.app  = app.id;
+	// 				dataForDisplay.func = data.func;
+	// 				dataForDisplay.data = data.params;
+	// 				// send to all display clients(since they all need to update)
+	// 				for (var i = 0; i < clients.length; i++) {
+	// 					if (clients[i].clientType === "display") {
+	// 						clients[i].emit('broadcast', dataForDisplay);
+	// 					}
+	// 				}
+	// 			}
+	// 		}
+	// 	, 400); // milliseconds how low can this value be to ensure it works?
+	// } // end if data.func !== undefined
 } // end csdLaunchAppWithValues
 
 
@@ -9584,6 +9592,8 @@ csdDataStructure.appLaunch.widthLast = -1;
 csdDataStructure.appLaunch.heightLast = -1;
 csdDataStructure.appLaunch.tallestInRow = -1;
 csdDataStructure.appLaunch.padding = 20;
+csdDataStructure.appsThatLaunched = {};
+csdDataStructure.appsThatWereLaunched = {};
 
 /**
 Will set the named value.
@@ -9751,21 +9761,21 @@ optional:
 */
 function csdSubscribeToNewValueNotification(wsio, data) {
 	// create the element
-    var appWatcher = {
-        app: data.app,
-        func: data.func
-    }
+	var appWatcher = {
+		app: data.app,
+		func: data.func
+	};
 	// make sure it wasn't already added
-    for (let i = 0; i < csdDataStructure.newValueWatchers.length; i++) {
-        if (csdDataStructure.newValueWatchers[i].app === appWatcher.app
-        && csdDataStructure.newValueWatchers[i].func === appWatcher.func) {
+	for (let i = 0; i < csdDataStructure.newValueWatchers.length; i++) {
+		if (csdDataStructure.newValueWatchers[i].app === appWatcher.app
+		&& csdDataStructure.newValueWatchers[i].func === appWatcher.func) {
 			if (data.unsubscribe) {
 				csdDataStructure.newValueWatchers.splice(i, 1);
 			}
-            return; // they are already subscribed, or this was an unsubscribe
-        }
-    }
-    csdDataStructure.newValueWatchers.push(appWatcher);
+			return; // they are already subscribed, or this was an unsubscribe
+		}
+	}
+	csdDataStructure.newValueWatchers.push(appWatcher);
 }
 
 
