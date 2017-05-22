@@ -861,20 +861,37 @@ drawSkeletonLines: function(){
 	 const translatedY = adjustedY + head.kinectY;
 
 	 //Mapping from physical coordinates to screen coordinates
-	 const mappedX = this.map(translatedX, spaceMinX, spaceMaxX, 0, this.element.width);
-	 const mappedY = this.map(-translatedY, spaceMinY, spaceMaxY, 0, this.element.height);
+	 //   *** CHANGE: put in fixed dimensions, so now will do it to the screen size, not the app size
+	 const mappedX = this.map(translatedX, spaceMinX, spaceMaxX, 0, 5464);//this.element.width);
+	 const mappedY = this.map(-translatedY, spaceMinY, spaceMaxY, 0, 2304);//this.element.height);
 
 	 //const x = (head.z * (rightFingerTip.kinectX - head.kinectX))/(head.z - rightFingerTip.z) + head.kinectX;
 	 //const y = (head.z * (rightFingerTip.kinectY - head.kinectY))/(head.z - rightFingerTip.z) + head.kinectY;
 
 	 this.fillCircle(mappedX, mappedY, 20);
 
+
+	 //moved this!
+	 //  now will call not only when they are talking
+	 //  talking status sent, so will use that
+	 //console.log(this.mostRecentSkeleton);
+
+	 wsio.emit("pointingGesturePosition", {x: mappedX, y:mappedY, id: "kinect_" + this.mostRecentSkeleton.id, color: this.mostRecentSkeleton.color, recognitionStatus: (this.recognitionStatus == 'true')});
+
+
+
+	 //no longer need this- always sends, but only looks for apps when it needs to
 	 //if the server needs to capture pointing --> send pointing position
-	 if(this.recognitionStatus == 'true'){
-	   //sending the pointing position to the server
-	   wsio.emit("pointingGesturePosition", {x: mappedX, y:mappedY});
-	 }
+ //  if(this.recognitionStatus == 'true'){
+ //    //sending the pointing position to the server
+ // 	//  console.log("emit the point");
+ //    wsio.emit("pointingGesturePosition", {x: mappedX, y:mappedY, id: "kinect"});
+ //  }
+ } else {
+	 //stop pointer
+	//  wsio.emit("stopPointingGesturePosition", {id: "kinect_" + this.mostRecentSkeleton.id });
  }
+
     //Old virtual screen by Rayan
 		// const {rightShoulder, rightFingerTip} = this.mostRecentSkeleton;
 		//
@@ -1020,10 +1037,14 @@ drawSkeletonLines: function(){
 
 			this.skeletons[skeletonID].lastUpdate = date.getTime();
 			this.mostRecentSkeleton = this.skeletons[skeletonID];
+			this.mostRecentSkeleton.id = skeletonID;
 			//console.log(this.mostRecentSkeleton.head);
 
 			if (this.inProximity()) {
 				this.recognizePoint();
+			} else {
+				//stop pointer
+				// wsio.emit("stopPointingGesturePosition", {id: "kinect_" + this.mostRecentSkeleton.id });
 			}
 
 			this.refresh(date);

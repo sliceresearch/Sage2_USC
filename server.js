@@ -623,7 +623,10 @@ var stickyAppHandler     = new StickyItems();
 //
 process.on('uncaughtException', function(err) {
 	// handle the error safely
+	//COMMENTED OUT FOR KINECT
+	//NEED BETTER SOLUTION...
 	console.trace("SAGE2>	", err);
+
 });
 
 
@@ -1037,6 +1040,7 @@ function setupListeners(wsio) {
 	wsio.on('gestureRecognitionStatus',             wsGestureRecognitionStatus);
 	//pointing gesture position from kinect App
   wsio.on('pointingGesturePosition',              wsPointingGesturePosition);
+	wsio.on('stopPointingGesturePosition',          wsStopPointingGesturePosition);
 
 	// application file saving message
 	wsio.on('appFileSaveRequest',                   appFileSaveRequest);
@@ -2616,32 +2620,74 @@ function validParentChildPair(parentId, childId) {
 // ************** Goolge web-speech inputs to articulate *****
 
 // this could use some work, but works ok for prototype
+//THIS IS THE OLD ONE that abeer worked on
+//saving to make sure we can go back to it easily
+// function wsGoogleVoiceSpeechInput(wsio, data){
+// 	//console.log(data);
+//
+// 	//find articulate app (just articulate app for now)
+// 	var app = SAGE2Items.applications.getFirstItemWithTitle("articulate_ui");
+// 	//console.log(app);
+//
+// 	if( app != null ){
+// 		console.log("arraylength2 " + pointedToApps.length);
+// 		var targetAppID = mostOccurrenceItem(pointedToApps);
+// 		console.log("targetAppID in server " + targetAppID);
+// 		var data = {id: app.id, data: data.text, targetAppID:   targetAppID, date: Date.now()};
+// 		broadcast('textInputEvent', data);
+// 	}
+// 	else{
+// 		//launch articulate app ...?
+// 		//for now assume it is launched
+// 	}
+// }
+
+
+/// Vijay and Joe
 function wsGoogleVoiceSpeechInput(wsio, data){
-	//console.log(data);
+	console.log("###########################################################")
+	console.log(data); //this will print a message to the console to show you what the object 'data'
+
+	if(  data.text.toUpperCase().includes( "close this window".toUpperCase() ) ){
+		console.log("close window command!");
+
+		// find the window pointed to
+		console.log("arraylength " + pointedToApps.length);
+		var targetInfo = mostOccurrenceItem(pointedToApps);
+		var appId = targetInfo.appId;
+		var pointerId = targetInfo.pointerId;
+		console.log("targetAppID in server " + appId);
+		//var data = {id: app.id, data: data.text, targetAppID:   targetAppID, date: Date.now()};
+
+		// close it
+		deleteApplication(appId);
+
+	}
+	if( data.text.toUpperCase().includes("maximize this window".toUpperCase() )){
+		console.log("maximize window command");
+		var targetInfo = mostOccurrenceItem(pointedToApps);
+		var appId = targetInfo.appId;
+		var pointerId = targetInfo.pointerId;
+		console.log("**********Testing app lookup***********")
+		console.log(SAGE2Items.applications.list[appId])
+		var app =  SAGE2Items.applications.list[appId];
+
+		toggleApplicationFullscreen(pointerId, app, true);
+	}
+	//write a few more....
+
 
 	//find articulate app (just articulate app for now)
-	var app = SAGE2Items.applications.getFirstItemWithTitle("articulate_ui");
+	// var app = SAGE2Items.applications.getFirstItemWithTitle("articulate_ui");
 	//console.log(app);
-
-	if( app != null ){
-		console.log("arraylength2 " + pointedToApps.length);
-		var targetAppID = mostOccurrenceItem(pointedToApps);
-		console.log("targetAppID in server " + targetAppID);
-		var data = {id: app.id, data: data.text, targetAppID: targetAppID, date: Date.now()};
-		broadcast('textInputEvent', data);
-	}
-	else{
-		//launch articulate app ...?
-		//for now assume it is launched
-	}
 }
 
 //find kinect app to start gesture recognition
 function wsGestureRecognitionStatus(wsio, data){
 	console.log("status " + data.text);
-	if(data.text == 'true'){
-		//pointedToApps = [];
-	}
+	// if(data.text == 'true'){
+	// 	//pointedToApps = [];
+	// }
 	var app = SAGE2Items.applications.getFirstItemWithTitle("machineLearning");
 	if( app != null ){
 		var data = {id: app.id, data: data.text, date: Date.now()};
@@ -2652,16 +2698,32 @@ function wsGestureRecognitionStatus(wsio, data){
 
 //receiving pointing positions and finding pointed to apps
 function wsPointingGesturePosition(wsio, data){
-	for (var key in SAGE2Items.applications.list) {
-		var app = SAGE2Items.applications.list[key];
-		if(app.title != "machineLearning" && app.title != "articulate_ui" && app.title != "background"){
-			if(data.x >= app.left && data.x <= (app.left + app.width) && data.y >= app.top && data.y <= (app.top + app.height)){
-				pointedToApps[pointedToApps.length]= app.id;
+	//make a pointer on screen
+	//  see if kinect pointer exists (for now just one)
+	if (sagePointers[data.id] === undefined) {
+		console.log("making the kinect pointer");
+		createSagePointer(data.id);
+		showPointer(data.id, {label: data.id, color: data.color, sourceType: "kinect"});
+
+	}
+	// showPointer(data.id, {label: data.id, color: data.color, sourceType: "kinect"});
+
+	//show sage pointer
+	//    data.label, data.color, data.sourceType
+	pointerPosition(data.id, {pointerX: data.x, pointerY: data.y} );
+	// console.log("position " + data.x + " " + data.y);
+
+	if( data.recognitionStatus ){ //only check for the apps they point to when recognition status is on
+		for (var key in SAGE2Items.applications.list) {
+			var app = SAGE2Items.applications.list[key];
+			if(app.title != "machineLearning" && app.title != "articulate_ui" && app.title != "background"){
+				if(data.x >= app.left && data.x <= (app.left + app.width) && data.y >= app.top && data.y <= (app.top + app.height)){
+					pointedToApps[pointedToApps.length]= {appId: app.id, pointerId: data.id};
+				}
 			}
 		}
+		//console.log("arraylength1 " + pointedToApps.length);
 	}
-	console.log("arraylength1 " + pointedToApps.length);
-	//console.log("x " + data.x + "y " + data.y);
 }
 function mostOccurrenceItem(array){
 	if(array.length == 0){
@@ -2682,6 +2744,11 @@ function mostOccurrenceItem(array){
 		}
 	}
 	return maxEl;
+}
+
+function wsStopPointingGesturePosition(wsio, data){
+	//hide pointer
+	hidePointer(data.id);
 }
 
 // **************  Information Functions *****************
