@@ -2663,8 +2663,101 @@ function wsGoogleVoiceSpeechInput(wsio, data){
 		deleteApplication(appId);
 
 	}
-	if( data.text.toUpperCase().includes("maximize this window".toUpperCase() )){
-		console.log("maximize window command");
+
+	if(  data.text.toUpperCase().includes( "move this window".toUpperCase() ) ){
+		//console.log("move this window to the side command!");
+
+		// find the window pointed to
+		var targetInfo = mostOccurrenceItem(pointedToApps);
+		var appId = targetInfo.appId;
+		var pointerId = targetInfo.pointerId;
+		console.log("targetAppID in server " + appId);
+
+		// Move window
+		var app =  SAGE2Items.applications.list[appId];
+
+		var updateItem = {
+			elemId: app.id,
+			elemLeft: app.left,
+			elemTop: app.top,
+			elemWidth: app.width,
+			elemHeight: app.height,
+			force: true,
+			date: Date.now()
+		};
+
+		console.log(updateItem);
+		if(  data.text.toUpperCase().includes( "top".toUpperCase() ) ){
+			//console.log(updateItem);
+				updateItem.elemTop = 0.0;
+		}
+		else
+		{
+			if (data.text.toUpperCase().includes( "bottom".toUpperCase() )) {
+				updateItem.elemTop = config.totalHeight- updateItem.elemHeight;
+			}
+		}
+
+		if(  data.text.toUpperCase().includes( "left".toUpperCase() ) ){
+				updateItem.elemLeft = 0.0;
+		}
+		else
+		{
+				if (data.text.toUpperCase().includes( "right".toUpperCase() )) {
+					updateItem.elemLeft = config.totalWidth - updateItem.elemWidth;
+					console.log("right has been triggered");
+				}
+		}
+
+		moveAndResizeApplicationWindow(updateItem);
+	}
+
+
+	if(  data.text.toUpperCase().includes( "Center this window".toUpperCase() ) ){
+		//console.log("move this window to the side command!");
+
+		// find the window pointed to
+		var targetInfo = mostOccurrenceItem(pointedToApps);
+		var appId = targetInfo.appId;
+		var pointerId = targetInfo.pointerId;
+		console.log("targetAppID in server " + appId);
+
+		// Center it
+		var app =  SAGE2Items.applications.list[appId];
+
+		var updateItem = {
+			elemId: app.id,
+			elemLeft: (config.totalWidth - app.width)/2,
+			elemTop: (config.totalHeight - app.height)/2,
+			elemWidth: app.width,
+			elemHeight: app.height,
+			force: true,
+			date: Date.now()
+		};
+			moveAndResizeApplicationWindow(updateItem);
+	}
+
+	if( data.text.toUpperCase().includes("maximize this window".toUpperCase() )  ){
+		//console.log("maximize window command");
+		var targetInfo = mostOccurrenceItem(pointedToApps);
+		var appId = targetInfo.appId;
+		var pointerId = targetInfo.pointerId;
+		//console.log("**********Testing app lookup***********")
+		//console.log(SAGE2Items.applications.list[appId])
+		var app =  SAGE2Items.applications.list[appId];
+
+
+		if (app.maximized !== true) {
+			toggleApplicationFullscreen(pointerId, app, true);
+		}
+			// else {
+			// 		console.log("Window is already maxed.")
+			// }
+	}
+
+
+	if(data.text.toUpperCase().includes("restore this window".toUpperCase() ) ){
+		//console.log("restore window command");
 		var targetInfo = mostOccurrenceItem(pointedToApps);
 		var appId = targetInfo.appId;
 		var pointerId = targetInfo.pointerId;
@@ -2672,10 +2765,16 @@ function wsGoogleVoiceSpeechInput(wsio, data){
 		console.log(SAGE2Items.applications.list[appId])
 		var app =  SAGE2Items.applications.list[appId];
 
-		toggleApplicationFullscreen(pointerId, app, true);
-	}
-	//write a few more....
 
+		if (app.maximized == true) {
+			toggleApplicationFullscreen(pointerId, app, true);
+		}
+		// else {
+		// 	console.log("Window is not Max, Cannot restore.");
+		// }
+	}
+
+	//write a few more....
 
 	//find articulate app (just articulate app for now)
 	// var app = SAGE2Items.applications.getFirstItemWithTitle("articulate_ui");
