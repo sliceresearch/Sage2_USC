@@ -494,12 +494,14 @@ function SAGE2_interaction(wsio) {
 	* @param data {Object} data
 	*/
 	this.captureDesktop = function(data) {
-		console.log("captureDesktop");
+		console.log("captureDesktop",JSON.stringify(data));
 		if (__SAGE2__.browser.isChrome === true) {
 			console.log("supported constraints",navigator.mediaDevices.getSupportedConstraints());
 			var constraints = {
 				chromeMediaSource: 'desktop',
 				chromeMediaSourceId: data,
+				// paper cut "LgHjpMLZHTKHebUi7qoIqQ=="
+				//chromeMediaSourceId: "OW7fr1XVAKgkqHSko4KCkQ==",
 				maxWidth: 1920, maxHeight: 1080,
 				maxFrameRate: 24,
 				minFrameRate: 3

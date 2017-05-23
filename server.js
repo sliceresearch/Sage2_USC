@@ -76,6 +76,29 @@ var PartitionList				= require('./src/node-partitionlist');		// list of SAGE2 Pa
 // Globals
 //
 
+// FIXME: HACK: global method
+var sageToOmicronEventStatic = function(uniqueID, pointerX, pointerY, data, type, color) {
+        var e = {};
+        e.timestamp = Date.now();
+        e.sourceId = uniqueID;
+        e.serviceType = 0; // 0 = pointer
+        e.type = type;
+        e.flags = 0;
+        e.posx = pointerX;
+        e.posy = pointerY;
+        e.posz = 0;
+        e.orw = 0;
+        e.orx = 0;
+        e.ory = 0;
+        e.orz = 0;
+        e.extraDataType = 0;
+        e.extraDataItems = 0;
+        e.extraDataMask = 0;
+        e.extraDataSize = 0;
+        e.extraDataString = color;
+        return e; 
+};
+
 // Global variable for all media folders
 global.mediaFolders = {};
 // System folder, defined within SAGE2 installation
@@ -6171,7 +6194,7 @@ function pointerPress(uniqueID, pointerX, pointerY, data) {
 	}
 	if (drawingManager.drawingMode) {
 		drawingManager.pointerEvent(
-			omicronManager.sageToOmicronEvent(uniqueID, pointerX, pointerY, data, 5, color),
+			sageToOmicronEventStatic(uniqueID, pointerX, pointerY, data, 5, color),
 			uniqueID, pointerX, pointerY, 10, 10);
 	}
 
@@ -6905,7 +6928,7 @@ function pointerMove(uniqueID, pointerX, pointerY, data) {
 	if (drawingManager.drawingMode) {
 		var color = sagePointers[uniqueID] ? sagePointers[uniqueID].color : null;
 		drawingManager.pointerEvent(
-			omicronManager.sageToOmicronEvent(uniqueID, pointerX, pointerY, data, 4, color),
+			sageToOmicronEventStatic(uniqueID, pointerX, pointerY, data, 4, color),
 			uniqueID, pointerX, pointerY, 10, 10);
 	}
 
@@ -7559,7 +7582,7 @@ function pointerRelease(uniqueID, pointerX, pointerY, data) {
 	if (drawingManager.drawingMode) {
 		var color = sagePointers[uniqueID] ? sagePointers[uniqueID].color : null;
 		drawingManager.pointerEvent(
-			omicronManager.sageToOmicronEvent(uniqueID, pointerX, pointerY, data, 6, color),
+			sageToOmicronEventStatic(uniqueID, pointerX, pointerY, data, 6, color),
 			uniqueID, pointerX, pointerY, 10, 10);
 	}
 
@@ -8684,6 +8707,7 @@ function toggleApplicationFullscreen(uniqueID, app, dblClick) {
 }
 
 function deleteApplication(appId, portalId) {
+	console.log("deleteApplication");
 	if (!SAGE2Items.applications.list.hasOwnProperty(appId)) {
 		return;
 	}
@@ -8969,8 +8993,10 @@ function findApplicationPortal(app) {
 
 // **************  Omicron section *****************
 var omicronRunning = false;
-var omicronManager = new Omicron(config);
-omicronManager.linkDrawingManager(drawingManager);
+if (masterServer===null && masterServer===undefined) {
+  var omicronManager = new Omicron(config);
+  omicronManager.linkDrawingManager(drawingManager);
+}
 
 if (config.experimental && config.experimental.omicron &&
 	(config.experimental.omicron.enable === true || config.experimental.omicron.useSageInputServer === true)) {
