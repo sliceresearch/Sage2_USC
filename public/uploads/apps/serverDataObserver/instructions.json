@@ -1,0 +1,16 @@
+{
+	"main_script": "serverDataObserver.js",
+	"width": 300,
+	"height": 600,
+	"resize": "free",
+	"dependencies": [
+	],
+	"load": {
+	},
+	"title": "Server Data Observer",
+	"version": "1.0.0",
+	"description": "data passing test",
+	"keywords": [  ],
+	"author": "Dylan Kobayashi <dylank@hawaii.edu>",
+	"license": "SAGE2-Software-License"
+}

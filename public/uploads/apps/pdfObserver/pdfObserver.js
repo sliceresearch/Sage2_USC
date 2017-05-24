@@ -10,7 +10,7 @@
 
 "use strict";
 
-var appObserver = SAGE2_App.extend({
+var pdfObserver = SAGE2_App.extend({
 	init: function(data) {
 		this.SAGE2Init("div", data);
 

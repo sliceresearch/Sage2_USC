@@ -1,5 +1,5 @@
 {
-	"main_script": "appObserver.js",
+	"main_script": "pdfObserver.js",
 	"width": 300,
 	"height": 600,
 	"animation": true,
@@ -8,7 +8,7 @@
 	],
 	"load": {
 	},
-	"title": "App Observer",
+	"title": "Pdf Observer",
 	"version": "1.0.0",
 	"description": "data passing test",
 	"keywords": [  ],
