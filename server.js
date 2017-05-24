@@ -9125,12 +9125,24 @@ function toggleStickyPin(appId) {
 
 function showStickyPin(app) {
 	SAGE2Items.applications.editButtonVisibilityOnItem(app.id, "pinButton", true);
-	broadcast('showStickyPin', app);
+
+	// only send required fields (sending full app can throw error from circular JSON
+	// if it is in a Partition -- I assume it could happen in other cases as well)
+	broadcast('showStickyPin', {
+		id: app.id,
+		sticky: app.sticky
+	});
 }
 
 function hideStickyPin(app) {
 	SAGE2Items.applications.editButtonVisibilityOnItem(app.id, "pinButton", false);
-	broadcast('hideStickyPin', app);
+
+	// only send required fields (sending full app can throw error from circular JSON
+	// if it is in a Partition -- I assume it could happen in other cases as well)
+	broadcast('hideStickyPin', {
+		id: app.id,
+		sticky: app.sticky
+	});
 }
 
 
