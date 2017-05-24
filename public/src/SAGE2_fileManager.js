@@ -477,11 +477,14 @@ function FileManager(wsio, mydiv, uniqueID) {
 		]
 	};
 
+	// On mobile, menu opens with a click, otherwise hovers
+	var clickOrNoClick = __SAGE2__.browser.isMobile ? "click" : null;
+
 	var topmenu = {
 		id: "topmenu",
 		view: "menu",
-		// click to open
-		// openAction: "click",
+		// click or not to open
+		openAction: clickOrNoClick,
 		data: topmenu_data,
 		tooltip: false,
 		submenuConfig: {
