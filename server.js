@@ -2648,82 +2648,93 @@ function wsGoogleVoiceSpeechInput(wsio, data){
 	console.log("###########################################################")
 	console.log(data); //this will print a message to the console to show you what the object 'data'
 
-	if(  data.text.toUpperCase().includes( "close this window".toUpperCase() ) ){
-		console.log("close window command!");
+	var targetInfo = mostOccurrenceItem(pointedToApps);
+	if( !targetInfo)
+	{
+		return;
+	}
+	var appId = targetInfo.appId;
+	var pointerId = targetInfo.pointerId;
+	var app =  SAGE2Items.applications.list[appId];
 
-		// find the window pointed to
-		console.log("arraylength " + pointedToApps.length);
-		var targetInfo = mostOccurrenceItem(pointedToApps);
-		var appId = targetInfo.appId;
-		var pointerId = targetInfo.pointerId;
-		console.log("targetAppID in server " + appId);
-		//var data = {id: app.id, data: data.text, targetAppID:   targetAppID, date: Date.now()};
-
-		// close it
+	if( data.text.toUpperCase().includes( "CLOSE THIS WINDOW") ){
 		deleteApplication(appId);
-
 	}
 
-	if(  data.text.toUpperCase().includes( "move this window".toUpperCase() ) ){
-		//console.log("move this window to the side command!");
+	if( data.text.toUpperCase().includes( "MOVE THIS WINDOW") ){
 
-		// find the window pointed to
-		var targetInfo = mostOccurrenceItem(pointedToApps);
-		var appId = targetInfo.appId;
-		var pointerId = targetInfo.pointerId;
-		console.log("targetAppID in server " + appId);
 
-		// Move window
-		var app =  SAGE2Items.applications.list[appId];
+			var updateItem = {
+				elemId: app.id,
+				elemLeft: app.left,
+				elemTop: app.top,
+				elemWidth: app.width,
+				elemHeight: app.height,
+				force: true,
+				date: Date.now()
+			};
+			var rightMost = config.totalWidth - updateItem.elemWidth;
+			var bottomMost = config.totalHeight- updateItem.elemHeight;
 
-		var updateItem = {
-			elemId: app.id,
-			elemLeft: app.left,
-			elemTop: app.top,
-			elemWidth: app.width,
-			elemHeight: app.height,
-			force: true,
-			date: Date.now()
-		};
-
-		console.log(updateItem);
-		if(  data.text.toUpperCase().includes( "top".toUpperCase() ) ){
-			//console.log(updateItem);
-				updateItem.elemTop = 0.0;
-		}
-		else
-		{
-			if (data.text.toUpperCase().includes( "bottom".toUpperCase() )) {
-				updateItem.elemTop = config.totalHeight- updateItem.elemHeight;
-			}
-		}
-
-		if(  data.text.toUpperCase().includes( "left".toUpperCase() ) ){
-				updateItem.elemLeft = 0.0;
-		}
-		else
-		{
-				if (data.text.toUpperCase().includes( "right".toUpperCase() )) {
-					updateItem.elemLeft = config.totalWidth - updateItem.elemWidth;
-					console.log("right has been triggered");
+			console.log("before processing" + JSON.stringify(updateItem));
+			if(data.text.toUpperCase().includes("SIDE") || data.text.toUpperCase().includes("CORNER") || data.text.toUpperCase().includes("EDGE"))
+			{
+				if( data.text.toUpperCase().includes("TOP") ){
+						updateItem.elemTop = 0.0;
 				}
-		}
+				else
+				{
+					if (data.text.toUpperCase().includes( "BOTTOM" )) {
+						updateItem.elemTop = bottomMost;
+					}
+				}
 
-		moveAndResizeApplicationWindow(updateItem);
+				if(  data.text.toUpperCase().includes( "LEFT" ) ){
+						updateItem.elemLeft = 0.0;
+				}
+				else
+				{
+						if (data.text.toUpperCase().includes( "RIGHT" )) {
+							updateItem.elemLeft = rightMost;
+						}
+				}
+			}
+			else {
+				if(  data.text.toUpperCase().includes( "LEFT" ) ){
+						updateItem.elemLeft -= updateItem.elemWidth;
+						if ( updateItem.elemLeft < 0 )
+						{
+							updateItem.elemLeft = 0;
+						}
+				}
+				else if (data.text.toUpperCase().includes( "RIGHT" )) {
+							updateItem.elemLeft += updateItem.elemWidth;
+							if ( updateItem.elemLeft > rightMost)
+							{
+								updateItem.elemLeft = rightMost;
+							}
+				}
+				if(  data.text.toUpperCase().includes( "UP" ) ){
+						updateItem.elemTop -= updateItem.elemHeight;
+						if ( updateItem.elemTop < 0 )
+						{
+							updateItem.elemTop = 0;
+						}
+				}
+				else if (data.text.toUpperCase().includes( "DOWN" )) {
+							updateItem.elemTop += updateItem.elemHeight;
+							if ( updateItem.elemTop > bottomMost)
+							{
+								updateItem.elemLeft = bottomMost;
+							}
+				}
+			}
+			console.log("after processing" + JSON.stringify(updateItem));
+			moveAndResizeApplicationWindow(updateItem);
 	}
 
 
-	if(  data.text.toUpperCase().includes( "Center this window".toUpperCase() ) ){
-		//console.log("move this window to the side command!");
-
-		// find the window pointed to
-		var targetInfo = mostOccurrenceItem(pointedToApps);
-		var appId = targetInfo.appId;
-		var pointerId = targetInfo.pointerId;
-		console.log("targetAppID in server " + appId);
-
-		// Center it
-		var app =  SAGE2Items.applications.list[appId];
+	if( data.text.toUpperCase().includes( "Center this window".toUpperCase()) ){
 
 		var updateItem = {
 			elemId: app.id,
@@ -2737,45 +2748,19 @@ function wsGoogleVoiceSpeechInput(wsio, data){
 			moveAndResizeApplicationWindow(updateItem);
 	}
 
-	if( data.text.toUpperCase().includes("maximize this window".toUpperCase() )  ){
-		//console.log("maximize window command");
-		var targetInfo = mostOccurrenceItem(pointedToApps);
-		var appId = targetInfo.appId;
-		var pointerId = targetInfo.pointerId;
-		//console.log("**********Testing app lookup***********")
-		//console.log(SAGE2Items.applications.list[appId])
-		var app =  SAGE2Items.applications.list[appId];
-
-
+	if( data.text.toUpperCase().includes("MAXIMIZE THIS WINDOW")){
 		if (app.maximized !== true) {
 			toggleApplicationFullscreen(pointerId, app, true);
 		}
-			// else {
-			// 		console.log("Window is already maxed.")
-			// }
 	}
 
-
-	if(data.text.toUpperCase().includes("restore this window".toUpperCase() ) ){
-		//console.log("restore window command");
-		var targetInfo = mostOccurrenceItem(pointedToApps);
-		var appId = targetInfo.appId;
-		var pointerId = targetInfo.pointerId;
-		console.log("**********Testing app lookup***********")
-		console.log(SAGE2Items.applications.list[appId])
-		var app =  SAGE2Items.applications.list[appId];
-
-
+	if(data.text.toUpperCase().includes("RESTORE THIS WINDOW")){
 		if (app.maximized == true) {
 			toggleApplicationFullscreen(pointerId, app, true);
 		}
-		// else {
-		// 	console.log("Window is not Max, Cannot restore.");
-		// }
 	}
 
 	//write a few more....
-
 	//find articulate app (just articulate app for now)
 	// var app = SAGE2Items.applications.getFirstItemWithTitle("articulate_ui");
 	//console.log(app);
