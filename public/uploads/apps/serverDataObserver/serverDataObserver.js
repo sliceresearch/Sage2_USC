@@ -28,26 +28,23 @@ var serverDataObserver = SAGE2_App.extend({
 		this.appSpecificSetup();
 	},
 
+	/**
+	 * On app start, these do not generally interact with already existing app variables.
+	 * Need to subscribe to new variables, then get all existing variables.
+	 *
+	 * @method	appSpecificSetup
+	 */
 	appSpecificSetup: function() {
 		// tracking variables
 		this.varsKnown = []; // array of app objects
 		this.clientEditors = []; // array of string ids
+		this.lineContainer = {};
 
-		if (isMaster) {
-			// subscribe to variables
-			wsio.emit("csdMessage", {
-				type: "subscribeToNewValueNotification",
-				app: this.id,
-				func: handleNewVariableNotifications
-			});
+		// this function has internal check if master.
+		this.csdSubscribeToNewValueNotification("handleNewServerVariableNotifications", false);
 
-			// get current set of variables
-			wsio.emit("csdMessage", {
-				type: "getAllTrackedDescriptions",
-				app: this.id,
-				func: handleCurrentVars
-			});
-		}
+		// get current vars after subscription. better to get dupes than miss one.
+		this.csdGetAllTrackedDescriptions("handleCurrentServerVariables");
 	},
 
 	/**
@@ -58,6 +55,12 @@ var serverDataObserver = SAGE2_App.extend({
 	 */
 	handleCurrentServerVariables: function(serverResponse) {
 		this.varsKnown = this.varsKnown.concat(serverResponse);
+		for (let i = 0; i < this.varsKnown.length; i++) {
+			this.addLineToDisplay("--Desc: " + this.varsKnown[i].description);
+			this.addLineToDisplay("New var " + this.varsKnown[i].nameOfValue);
+
+			this.varsKnown[i].links = [];
+		}
 	},
 
 	/**
@@ -68,20 +71,152 @@ var serverDataObserver = SAGE2_App.extend({
 	 */
 	handleNewServerVariableNotifications: function(serverResponse) {
 		this.varsKnown.push(serverResponse);
-		this.addLineToDisplay("New var " + serverResponse.nameOfValue + ":" + serverResponse.description);
+		serverResponse.links = []; // add an array for links. currently stored in sources.
+		this.addLineToDisplay("--Desc: " + serverResponse.description);
+		this.addLineToDisplay("New var " + serverResponse.nameOfValue);
 		this.updateClients();
 	},
 
 	/**
-	 * Activated when client goes to editor page.
+	 * Activated after a new variable notification is received. Control pages need to be aware of new variable.
+	 * Only master should sent updates to prevent spamming.
 	 *
-	 * @method	addClientToEditors
-	 * @param	serverResponse	{Object}	Handled like context menu object
+	 * @method	updateClients
 	 */
-	addClientToEditors: function(responseObject) {
-		this.clientEditors.push(responseObject.clientId);
+	updateClients: function() {
+		if(isMaster) {
+			var dataForClient = {};
+			dataForClient.clientDest = "null";
+			dataForClient.params     = {
+				varsKnown: this.varsKnown
+			};
+			dataForClient.func       = 'currentListing';
+			dataForClient.appId      = this.id;
+			dataForClient.type       = 'sendDataToClient';
+			for (var i = 0; i < this.clientEditors.length; i++) {
+				dataForClient.clientDest = this.clientEditors[i];
+				wsio.emit('csdMessage', dataForClient);
+			}
+		}
 	},
 
+	/**
+	 * Will activate through ui page. Should create a source > destination flow.
+	 *
+	 * @method	dataLink
+	 * @param	responseObject	{Object}	Data from control page should have: sourceName, destinationName, pointerColor
+	 */
+	dataLink: function(responseObject) {
+		if(isMaster) {
+			console.log("erase me, dataLink");
+			for (let i = 0; i < this.varsKnown.length; i++) {
+				// if the name of the var matches and it doesn't already have the link
+				if (this.varsKnown[i].nameOfValue === responseObject.sourceName
+				&& this.varsKnown[i].links.indexOf(responseObject.destinationName) === -1) {
+					console.log("erase me, match");
+					this.varsKnown[i].links.push(responseObject.destinationName);
+					this.createLinkSubscriptionAndFunction(responseObject.sourceName, responseObject.destinationName);
+					break;
+				}
+			}
+			this.updateClients();
+		}
+		// lines show show on all displays
+		this.createLinkLine(responseObject.sourceName, responseObject.destinationName, responseObject.pointerColor);
+	},
+
+	/**
+	 * Make the function to receive data (if it doesn't exist) and subscribe.
+	 *
+	 * @method	createLinkSubscriptionAndFunction
+	 * @param	sourceName	{String}	Name of the source variable
+	 * @param	destinationName	{String}	Name of the destination variable
+	 */
+	createLinkSubscriptionAndFunction: function(sourceName, destinationName) {
+		if(isMaster) {
+			if (!this["dataTo" + destinationName]) {
+				console.log("erase me, making function:" + "dataTo" + destinationName);
+				this["dataTo" + destinationName] = function(responseObject) {
+					console.log("erase me, Routing");
+					console.dir(responseObject);
+					this.csdSetValue(destinationName, responseObject);
+				}
+			}
+			console.log("erase me, subscribing");
+			this.csdSubscribeToValue(sourceName, ("dataTo" + destinationName), false);
+			// should the initial link also get the data?
+			this.csdGetValue(sourceName, ("dataTo" + destinationName));
+		}
+	},
+
+	/**
+	 * Creates a line to show the link.
+	 *
+	 * @method	createLinkLine
+	 * @param	sourceName	{String}	Name of the source variable
+	 * @param	destinationName	{String}	Name of the destination variable
+	 * @param	pointerColor	{String}	Color to make the line
+	 */
+	createLinkLine: function(sourceName, destinationName, pointerColor) {
+		// only create line if there isn't one.
+		if (!this.lineContainer["lineFrom" + sourceName + "To" + destinationName]) {
+			var svgLine = svgForegroundForWidgetConnectors.line(0, 0, 0, 0);
+			svgLine.attr({
+				id: this.id + "lineFrom" + sourceName + "To" + destinationName,
+				strokeWidth: ui.widgetControlSize * 0.18,
+				stroke:  "rgba(250,250,250,1.0)"
+			});
+			this.lineContainer["lineFrom" + sourceName + "To" + destinationName] = svgLine;
+
+			var a1, a2;
+			a1 = sourceName.split(":")[0];
+			a2 = destinationName.split(":")[0];
+			a1 = applications[a1];
+			a2 = applications[a2];
+			svgLine.attr({
+				x1: (a1.sage2_x + a1.sage2_width),
+				y1: (a1.sage2_y + a1.sage2_height / 2),
+				x2: (a2.sage2_x),
+				y2: (a2.sage2_y + a2.sage2_height / 2)
+			});
+		}
+	},
+
+	/**
+	 * Will activate through ui page. Should remove a source > destination flow.
+	 *
+	 * @method	dataUnLink
+	 * @param	responseObject	{Object}	Data from control page should have: sourceName, destinationName, pointerColor
+	 */
+	dataUnLink: function(responseObject) {
+		if(isMaster) {
+			console.log("erase me, dataUnLink");
+			for (let i = 0; i < this.varsKnown.length; i++) {
+				// if the name of the var matches and it has the link
+				if (this.varsKnown[i].nameOfValue === responseObject.sourceName
+				&& this.varsKnown[i].links.indexOf(responseObject.destinationName) !== -1) {
+					console.log("erase me, match");
+					this.varsKnown[i].links.splice(this.varsKnown[i].links.indexOf(responseObject.destinationName), 1);
+					this.csdSubscribeToValue(responseObject.sourceName, ("dataTo" + responseObject.destinationName), true);
+					break;
+				}
+			}
+			this.updateClients();
+		}
+		this.removeLinkLine(responseObject.sourceName, responseObject.destinationName);
+	},
+
+	/**
+	 * Removes a link line
+	 *
+	 * @method	removeLinkLine
+	 * @param	sourceName	{String}	Name of the source variable
+	 * @param	destinationName	{String}	Name of the destination variable
+	 */
+	removeLinkLine: function(sourceName, destinationName) {
+		this.lineContainer["lineFrom" + sourceName + "To" + destinationName].remove();
+		this.lineContainer["lineFrom" + sourceName + "To" + destinationName] = undefined;
+	},
 
 
 	load: function(date) {
@@ -119,15 +254,28 @@ var serverDataObserver = SAGE2_App.extend({
 		var entry;
 
 
-		// entry = {};
-		// entry.description = "Edit";
-		// entry.callback    = "SAGE2_openPage";
-		// entry.parameters  = {
-		// 	url: this.resrcPath + "saControls.html"
-		// };
-		// entries.push(entry);
+		entry = {};
+		entry.description = "Edit";
+		entry.callback    = "SAGE2_openPage";
+		entry.parameters  = {
+			url: this.resrcPath + "controls.html"
+		};
+		entries.push(entry);
 
 		return entries;
+	},
+
+	/**
+	 * Activated when client goes to watcher page.
+	 *
+	 * @method	addClientToEditors
+	 * @param	serverResponse	{Object}	Handled like context menu object
+	 */
+	addClientToEditors: function(responseObject) {
+		if (isMaster) {
+			this.clientEditors.push(responseObject.clientId);
+			this.updateClients(); // maybe could be a more specific update than everyone
+		}
 	},
 
 	event: function(eventType, position, user_id, data, date) {

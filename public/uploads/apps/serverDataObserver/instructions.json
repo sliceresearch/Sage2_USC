@@ -1,7 +1,7 @@
 {
 	"main_script": "serverDataObserver.js",
-	"width": 300,
-	"height": 600,
+	"width": 600,
+	"height": 300,
 	"resize": "free",
 	"dependencies": [
 	],

@@ -22,8 +22,7 @@
 <script src="SAGE2_script_supplement-connectBack.js"></script>
 
 <!-- Put your custom code in this file -->
-<script src="watcherMain.js"></script>
-
+<script src="controls.js"></script>
 
 <style type="text/css">
 * {
@@ -37,14 +36,31 @@
 <!-- Design the body as you like -->
 
 <body>
-	
-
-	<button id="stn">Subscribe to new</button>
 
 
-	<p> </p>
-	<p> </p>
-	<p> </p>
+	<div id="tableControlDiv">
+		<table id="tableOfVariables">
+			<tr>
+				<th>First name</th>
+				<th>Last name</th>
+			</tr>
+			<tr>
+				<td>John</td>
+				<td>Doe</td>
+			</tr>
+			<tr>
+				<td>Jane</td>
+				<td>Doe</td>
+			</tr>
+		</table>
+	</div>	
+
+	<h3>Sources:</h3>
+	<div id="tmpSourcesDiv">
+	</div>	
+	<h3>Destinations:</h3>
+	<div id="tmpDestinationsDiv">
+	</div>	
 
 	<h3>Output:</h3>
 	<div id="outputArea">

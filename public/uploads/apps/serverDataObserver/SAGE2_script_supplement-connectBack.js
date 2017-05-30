@@ -8,6 +8,16 @@
 //
 // Copyright (c) 2014-17
 
+
+/**
+ * When the page loads, start communcation setup
+ *
+ */
+window.addEventListener("load", function(event) {
+	SAGE2Connection.initS2Connection();
+});
+
+
 /*
 	SAGE2Connection to allow external webpages to communicate with SAGE2.
 
@@ -19,8 +29,9 @@ var SAGE2Connection = {
 	wsio: null,
 	appId: null,
 	uniqueID: null,
+	pointerName: null,
+	pointerColor: null,
 	debug: true,
-	isMaster: false,
 	afterSAGE2Connection: null,
 	hostname: null,
 
@@ -30,20 +41,18 @@ var SAGE2Connection = {
 		It will be passed the hostname of the server. Each site is different.
 		Name passed will be based on the displayed name in topleft of display.
 	*/
-	initS2Connection: function(s2Hostname, session, isMasterDisplayOrUniqueWebpage, appIdOfWebview) {
+	initS2Connection: function() {
+		this.getUrlParameters(); // necessary to figure out which app to control.
 		var _this = this;
-		this.appId = appIdOfWebview;
-		this.hostname = s2Hostname;
-		this.isMaster = isMasterDisplayOrUniqueWebpage ? isMasterDisplayOrUniqueWebpage : false; // undefined == false
+		// same detection as in Websocket
+		this.hostname = (window.location.protocol === "https:" ? "wss" : "ws") + "://" + window.location.host +
+						"/" + window.location.pathname.split("/")[1];
 		// Create a connection to the SAGE2 server
-		// error here, the WebsocketIO may need to change
-		this.wsio = new this.WebsocketIO(s2Hostname); // uses ../../../src/websocket.io.js
+		this.wsio = new this.WebsocketIO(this.hostname);
 		this.wsio.open(function() {
-			if (_this.debug) {
-				console.log("Websocket opened");
-			}
+			console.log("Websocket opened to " + this.hostname);
 			_this.setupListeners();
-			// var session = getCookie("session"); // if meetingID, _this need to be solved later somehow
+			var session = _this.getCookie("session"); // if meetingID, _this need to be solved later somehow
 			var clientDescription = {
 				clientType: "sageUI", // maybe add additional client type?
 				requests: {
@@ -98,13 +107,13 @@ var SAGE2Connection = {
 		});
 		/*
 		**Important**
-		This is how the webpage in the Webview will get non-standard data.
-		Note the function has to exist on the window level.
-		Maybe change this to SAGE2Connection?
+		This is being removed for app specific control pages.
+		Communication should be done through csdSendDataToClient
 		*/
-		this.wsio.on("broadcast", function(data) {
-			window[data.func](data.data);
-		});
+		// this.wsio.on("broadcast", function(data) {
+		// 	console.log(data.func);
+		// 	window[data.func](data.data);
+		// });
 	},
 
 
@@ -112,6 +121,48 @@ var SAGE2Connection = {
 	// ------------------------------------------------------------------------------------------------------------------
 	// ------------------------------------------------------------------------------------------------------------------
 	// ------------------------------------------------------------------------------------------------------------------
+	// ------------------------------------------------------------------------------------------------------------------
+	/**
+	 * Detect if the url had values in it: appId, pointerName, pointerColor
+	 *
+	 * @method getUrlParameters
+	 */
+	getUrlParameters: function() {
+		var address = window.location.search;
+		if (address.indexOf("?") == -1 ) {
+			return;
+		}
+		var pairs, onePair;
+		address = address.substring(address.indexOf("?") + 1);
+		// if there is only one url param, put it into an array by itself.
+		if (address.indexOf("&") == -1) {
+			pairs = [address];
+		} else { // otherwise split on each param
+			pairs = address.split("&");
+		}
+		for (var i = 0; i < pairs.length; i++) {
+			onePair = pairs[i].split("=");
+			if (onePair[0] == "appId") {
+				this.appId = onePair[1];
+			} else if (onePair[0] == "pointerName") {
+				this.pointerName = onePair[1];
+			} else if (onePair[0] == "pointerColor") {
+				this.pointerColor = onePair[1];
+			}
+		}
+		// Pointer name / color might actually be in localStorage
+		if (localStorage.SAGE2_ptrName) {
+			this.pointerName = localStorage.SAGE2_ptrName;
+		}
+		if (localStorage.SAGE2_ptrColor) {
+			this.pointerColor = localStorage.SAGE2_ptrColor;
+		}
+		console.log(this.appId + " control for " + this.pointerName + "(" + this.pointerColor + ") starting");
+		if (!this.appId || !this.pointerName || !this.pointerColor) {
+			throw "Error url didn't contain necessary values";
+			// TODO add more description and probably close the window
+		}
+	},
 	/**
 	 * Detect the current browser
 	 *
@@ -144,6 +195,22 @@ var SAGE2Connection = {
 		browser.userAgent  = userAgent;
 		// Copy into the global object
 		return browser;
+	},
+
+	/**
+	 * Return a cookie value for given key
+	 *
+	 * @method getCookie
+	 * @param sKey {String} key
+	 * @return {String} value found or null
+	 */
+	getCookie: function(sKey) {
+		if (!sKey) {
+			return null;
+		}
+		return decodeURIComponent(document.cookie.replace(new RegExp("(?:(?:^|.*;)\\s*" +
+					encodeURIComponent(sKey).replace(/[\-\.\+\*]/g, "\\$&") + "\\s*\\=\\s*([^;]*).*$)|^.*$"), "$1"))
+			|| null;
 	},
 
 	/*

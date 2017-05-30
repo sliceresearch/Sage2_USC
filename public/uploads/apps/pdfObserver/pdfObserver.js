@@ -197,6 +197,7 @@ var pdfObserver = SAGE2_App.extend({
 				url: currentApp.state.doc_url,
 				pageCount: currentApp.solver.numPages,
 				pageText:  Array(currentApp.solver.numPages).fill(""),
+				pageLines: [[], [], [], [], [], []],
 				fullText: ""
 			};
 
@@ -212,6 +213,7 @@ var pdfObserver = SAGE2_App.extend({
 					return ptc.then(function(textContent) {
 						for (let i = 0; i < textContent.items.length; i++) {
 							pdfEntry.pageText[p] += textContent.items[i].str;
+							pdfEntry.pageLines[p].push(textContent.items[i].str);
 						}
 						_this.addLineToDisplay("Got text content");
 						return true;

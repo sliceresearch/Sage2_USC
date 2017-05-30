@@ -405,6 +405,7 @@ var googlemaps = SAGE2_App.extend({
 				var res = results[0].geometry.location;
 				// Update the map with the result
 				this.map.setCenter(res);
+				this.updateCenter();
 				// Update the state variable
 				this.state.center = {lat: res.lat(), lng: res.lng()};
 				// Need to sync since it's an async function
@@ -821,17 +822,18 @@ var googlemaps = SAGE2_App.extend({
 		wsio.emit("csdMessage", dataForServer);
 
 		// 1 second later it will subscribe to the values, because it takes those values
+		var _this = this;
 		setTimeout(function() {
 			// subscribe to its data feed
 			dataForServer = {
 				type: "subscribeToValue",
-				nameOfValue: this.id + ":destination:geoLocation:markerPlot",
-				app: this.id,
+				nameOfValue: _this.id + ":destination:geoLocation:markerPlot",
+				app: _this.id,
 				func: "geoDataFromServer"
 			};
 			wsio.emit("csdMessage", dataForServer);
 			// subscribe to its data feed
-			dataForServer.nameOfValue = this.id + ":destination:geoLocation:viewCenter";
+			dataForServer.nameOfValue = _this.id + ":destination:geoLocation:viewCenter";
 			dataForServer.func = "setView";
 			wsio.emit("csdMessage", dataForServer);
 		}, 1000);
@@ -845,9 +847,9 @@ var googlemaps = SAGE2_App.extend({
 		+ " has description: " + addedVar.description);
 		// if this should plot any new geo data source
 		if (this.plotAnyNewGeoSource
-			&& addedVar.description.indexOf("geolocation") !== -1
-			&& addedVar.description.indexOf("source") !== -1
-			&& addedVar.description.indexOf("image") !== -1) {
+			&& addedVar.nameOfValue.indexOf("geolocation") !== -1
+			&& addedVar.nameOfValue.indexOf("source") !== -1
+			&& addedVar.nameOfValue.indexOf("image") !== -1) {
 			console.log("erase me, has also detected that new var is a geo location");
 			var dataForServer = {
 				type: "getValue",
