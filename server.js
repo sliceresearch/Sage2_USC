@@ -2648,20 +2648,68 @@ function wsGoogleVoiceSpeechInput(wsio, data){
 	console.log("###########################################################")
 	console.log(data); //this will print a message to the console to show you what the object 'data'
 
+	var commandText = data.text.toUpperCase();
+	console.log("Command text!   \n" + commandText);
+
 	var targetInfo = mostOccurrenceItem(pointedToApps);
+	var orderedItems = mostItems(pointedToApps);
 	if( !targetInfo)
 	{
 		return;
 	}
+
 	var appId = targetInfo.appId;
 	var pointerId = targetInfo.pointerId;
 	var app =  SAGE2Items.applications.list[appId];
 
-	if( data.text.toUpperCase().includes( "CLOSE THIS WINDOW") ){
+	if( commandText.includes( "CLOSE THIS WINDOW") ){
 		deleteApplication(appId);
+
 	}
 
-	if( data.text.toUpperCase().includes( "MOVE THIS WINDOW") ){
+	else if( commandText.includes("CLOSE THESE") ){
+		var numToClose = 0;
+		if( commandText.includes("TWO") || commandText.includes("2") )
+		{
+		numToClose = 2;
+		}else if( commandText.includes("THREE") || commandText.includes("3"))
+		{
+			numToClose = 3;
+		}else if( commandText.includes("FOUR") || commandText.includes("4"))
+		{
+			numToClose = 4;
+		}else if( commandText.includes("FIVE") || commandText.includes("5"))
+		{
+			numToClose = 5;
+		}
+
+		if(numToClose == 0) {
+			var cutoff = 300;
+			for( var key in orderedItems)
+			{
+				if (orderedItems[key].count > cutoff )
+				{
+					deleteApplication(orderedItems[key].name)
+				}
+			}
+		}
+		else {
+				var i = 0;
+				for( var key in orderedItems)
+				{
+					if (i <numToClose )
+					{
+						console.log("i " + i + " key  " + key + " orderedItems[key].name: " + orderedItems[key].name);
+						deleteApplication(orderedItems[key].name)
+						i++;
+					}
+				}
+		}
+	//	console.log(orderedItems);
+	}
+
+
+	else if( commandText.includes( "MOVE THIS WINDOW") ){
 
 
 			var updateItem = {
@@ -2677,51 +2725,51 @@ function wsGoogleVoiceSpeechInput(wsio, data){
 			var bottomMost = config.totalHeight- updateItem.elemHeight;
 
 			console.log("before processing" + JSON.stringify(updateItem));
-			if(data.text.toUpperCase().includes("SIDE") || data.text.toUpperCase().includes("CORNER") || data.text.toUpperCase().includes("EDGE"))
+			if(commandText.includes("SIDE") || commandText.includes("CORNER") || commandText.includes("EDGE"))
 			{
-				if( data.text.toUpperCase().includes("TOP") ){
+				if( commandText.includes("TOP") ){
 						updateItem.elemTop = 0.0;
 				}
 				else
 				{
-					if (data.text.toUpperCase().includes( "BOTTOM" )) {
+					if (commandText.includes( "BOTTOM" )) {
 						updateItem.elemTop = bottomMost;
 					}
 				}
 
-				if(  data.text.toUpperCase().includes( "LEFT" ) ){
+				if(  commandText.includes( "LEFT" ) ){
 						updateItem.elemLeft = 0.0;
 				}
 				else
 				{
-						if (data.text.toUpperCase().includes( "RIGHT" )) {
+						if (commandText.includes( "RIGHT" )) {
 							updateItem.elemLeft = rightMost;
 						}
 				}
 			}
 			else {
-				if(  data.text.toUpperCase().includes( "LEFT" ) ){
+				if(  commandText.includes( "LEFT" ) ){
 						updateItem.elemLeft -= updateItem.elemWidth;
 						if ( updateItem.elemLeft < 0 )
 						{
 							updateItem.elemLeft = 0;
 						}
 				}
-				else if (data.text.toUpperCase().includes( "RIGHT" )) {
+				else if (commandText.includes( "RIGHT" )) {
 							updateItem.elemLeft += updateItem.elemWidth;
 							if ( updateItem.elemLeft > rightMost)
 							{
 								updateItem.elemLeft = rightMost;
 							}
 				}
-				if(  data.text.toUpperCase().includes( "UP" ) ){
+				if(  commandText.includes( "UP" ) ){
 						updateItem.elemTop -= updateItem.elemHeight;
 						if ( updateItem.elemTop < 0 )
 						{
 							updateItem.elemTop = 0;
 						}
 				}
-				else if (data.text.toUpperCase().includes( "DOWN" )) {
+				else if (commandText.includes( "DOWN" )) {
 							updateItem.elemTop += updateItem.elemHeight;
 							if ( updateItem.elemTop > bottomMost)
 							{
@@ -2734,7 +2782,7 @@ function wsGoogleVoiceSpeechInput(wsio, data){
 	}
 
 
-	if( data.text.toUpperCase().includes( "Center this window".toUpperCase()) ){
+	else if( commandText.includes( "CENTER THIS WINDOW") ){
 
 		var updateItem = {
 			elemId: app.id,
@@ -2748,13 +2796,27 @@ function wsGoogleVoiceSpeechInput(wsio, data){
 			moveAndResizeApplicationWindow(updateItem);
 	}
 
-	if( data.text.toUpperCase().includes("MAXIMIZE THIS WINDOW")){
+	else if( commandText.includes( "DOUBLE THIS WINDOW") ){
+
+		var updateItem = {
+			elemId: app.id,
+			elemLeft: app.left,
+			elemTop: app.top,
+			elemWidth: app.width*2,
+			elemHeight: app.height*2,
+			force: true,
+			date: Date.now()
+		};
+			moveAndResizeApplicationWindow(updateItem);
+	}
+
+	else if( commandText.includes("MAXIMIZE THIS WINDOW")){
 		if (app.maximized !== true) {
 			toggleApplicationFullscreen(pointerId, app, true);
 		}
 	}
 
-	if(data.text.toUpperCase().includes("RESTORE THIS WINDOW")){
+	else if(commandText.includes("RESTORE THIS WINDOW")){
 		if (app.maximized == true) {
 			toggleApplicationFullscreen(pointerId, app, true);
 		}
@@ -2817,6 +2879,7 @@ function mostOccurrenceItem(array){
 	var maxEl = array[0], maxCount = 1;
 	for(var i = 0; i < array.length; i++){
 		var el = array[i];
+
     if(modeMap[el] == null){
 			modeMap[el] = 1;
 		}else{
@@ -2828,6 +2891,44 @@ function mostOccurrenceItem(array){
 		}
 	}
 	return maxEl;
+}
+
+// Vijay and joe did this to get information on multiple windows
+function mostItems(array){
+
+
+	if(array.length == 0){
+		return null;
+	}
+	var modeMap = {};
+	var maxEl = array[0], maxCount = 1;
+	for(var i = 0; i < array.length; i++){
+		var el = array[i];
+		var appId = el.appId;
+    if(modeMap[appId] == null){
+			modeMap[appId] = 1;
+		}else{
+			modeMap[appId]++;
+		}
+		if(modeMap[appId] > maxCount){
+			maxEl = appId;
+      maxCount = modeMap[appId];
+		}
+	}
+	var sortedArr = [];
+	for(var key in modeMap)
+	{
+		sortedArr.push({
+			name: key,
+			count: modeMap[key]
+		});
+	}
+	sortedArr.sort(function(a,b){
+			return b.count - a.count;
+	});
+
+//	console.log(sortedArr);
+	return sortedArr;
 }
 
 function wsStopPointingGesturePosition(wsio, data){
