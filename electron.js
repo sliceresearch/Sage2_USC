@@ -38,6 +38,7 @@ if (args.length === 1) {
 	args = args[0];
 }
 
+// Generate the command line handler
 commander
 	.version(version)
 	.option('-s, --server <s>',    'Server URL (string)', 'http://localhost:9292')
@@ -58,7 +59,7 @@ commander
 	.option('--console',           'Open the devtools console', false)
 	.parse(args);
 
-
+// Load the flash plugin if asked
 if (commander.plugins) {
 	// Flash loader
 	const flashLoader = require('flash-player-loader');
@@ -70,6 +71,9 @@ if (commander.plugins) {
 	flashLoader.addSource('@system');
 	flashLoader.load();
 }
+
+// Reset the desktop scaling
+app.commandLine.appendSwitch("force-device-scale-factor", "1");
 
 /**
  * Keep a global reference of the window object, if you don't, the window will
