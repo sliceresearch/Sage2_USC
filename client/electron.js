@@ -73,7 +73,10 @@ if (commander.plugins) {
 }
 
 // Reset the desktop scaling
-app.commandLine.appendSwitch("force-device-scale-factor", "1");
+const os = require('os');
+if (os.platform() === "win32") {
+	app.commandLine.appendSwitch("force-device-scale-factor", "1");
+}
 
 /**
  * Keep a global reference of the window object, if you don't, the window will
@@ -238,9 +241,7 @@ function createWindow() {
 
 	// Emitted when the window is closed.
 	mainWindow.on('closed', function() {
-		// Dereference the window object, usually you would store windows
-		// in an array if your app supports multi windows, this is the time
-		// when you should delete the corresponding element.
+		// Dereference the window object
 		mainWindow = null;
 	});
 
@@ -251,7 +252,7 @@ function createWindow() {
 
 /**
  * This method will be called when Electron has finished
- * initialization and is ready to create browser windows.
+ * initialization and is ready to create a browser window.
  */
 app.on('ready', createWindow);
 
@@ -269,7 +270,7 @@ app.on('window-all-closed', function() {
 /**
  * activate callback
  * On OS X it's common to re-create a window in the app when the
- * dock icon is clicked and there are no other windows open.
+ * dock icon is clicked and there are no other window open.
  */
 app.on('activate', function() {
 	if (mainWindow === null) {
