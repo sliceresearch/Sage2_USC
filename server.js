@@ -2005,7 +2005,19 @@ function wsStartNewMediaBlockStream(wsio, data) {
                 appInstance.id = data.id;
                 console.log("createMediaBlockStream "+JSON.stringify(data));
                 //var pos = data.pos || [0.0,0.0];
+                //var pos = data.pos || [0.0,0.0];
                 var pos = [5805,18];
+		var dwidth = 1.96/7;
+		var dheight = undefined;
+		if (data.x !== null && data.x !== undefined) {
+			console.log("data.x,y ", data.x, data.y);
+			pos = [data.x,data.y];
+		}
+		if (data.dwidth !== null && data.dwidth !== undefined) {
+			console.log("data.dwidth,dheight ",data.dwidth,data.dheight);
+			dwidth = data.dwidth;
+			dheight = data.dheight;
+		}
                 var resize = true;
                 //if (data.title==="laptop1") {
                 //        console.log("laptop1");
@@ -2023,10 +2035,16 @@ function wsStartNewMediaBlockStream(wsio, data) {
                 //        resize = true;
                 //}
                 console.log("pos "+pos);
+                console.log("dwidth "+dwidth);
                 setAppPosition(appInstance, pos);
                 handleNewApplication(appInstance, null);
                 if (resize) {
-                        wsAppResize(null, {id: data.id, width: 1.96/7, keepRatio: true});
+			// FIXME: for some resize wsAppRsize  causes massive corruption here if you don't use keepRatio: true
+			// if (dheight!==undefined || dheight!== null) {
+			//	wsAppResize(null, {id: data.id, width: dwidth, height: dheight});
+			//} else {
+				wsAppResize(null, {id: data.id, width: dwidth, keepRatio: true});
+			//}
                 }
                 calculateValidBlocks(appInstance, mediaBlockSize, SAGE2Items.renderSync[appInstance.id]);
         });
@@ -2242,7 +2260,7 @@ function stackTrace() {
 // Got a resize call for an application itself
 //
 function wsAppResize(wsio, data) {
-	console.log("wsAppResize "+JSON.stringify(data)+" "+JSON.stringify(stackTrace()));
+	console.log("wsAppResize "+JSON.stringify(data));
 	if (SAGE2Items.applications.list.hasOwnProperty(data.id)) {
 		var app = SAGE2Items.applications.list[data.id];
 
