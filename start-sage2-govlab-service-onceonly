@@ -72,12 +72,12 @@ function doExit() {
 	  echo `date` SAGE2 process $1 exited - kill all >> $SAGE2/slave${i}.log
   done
   kill $MASTER &
-  #kill $SLAVE1 &
-  #kill $SLAVE2 &
-  #kill $SLAVE3 &
-  #kill $SLAVE4 &
-  #kill $SLAVE5 &
-  #kill $SLAVE6 &
+  kill $SLAVE1 &
+  kill $SLAVE2 &
+  kill $SLAVE3 &
+  kill $SLAVE4 &
+  kill $SLAVE5 &
+  kill $SLAVE6 &
   wait $MASTER $SLAVE1 $SLAVE2 $SLAVE3 $SLAVE4 $SLAVE5 $SLAVE6
   echo `date` all SAGE2 processes killed
   exit
