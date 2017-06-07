@@ -1,0 +1,17 @@
+{
+	"main_script": "dataFileHandler.js",
+	"width": 600,
+	"height": 600,
+	"animation": false,
+	"resize": "free",
+	"load": {
+	},
+	"title": "Data Loader",
+	"version": "1.0.0",
+	"description": "Data file handler",
+	"fileTypes": [ "json" ],
+	"directory": "json",
+	"keywords": [ "json" ],
+	"author": "Dylan Kobayashi <dylank@hawaii.edu>",
+	"license": "SAGE2-Software-License"
+}

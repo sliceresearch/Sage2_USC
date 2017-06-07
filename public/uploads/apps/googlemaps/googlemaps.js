@@ -428,7 +428,15 @@ var googlemaps = SAGE2_App.extend({
 	 */
 	addMarkerToMap: function(markerLocation) {
 		var _this = this;
+		if (typeof markerLocation === "string") {
+			var latlng = markerLocation.split(",");
+			markerLocation = {
+				lat: parseFloat(latlng[0].trim()),
+				lng: parseFloat(latlng[1].trim())
+			};
+		}
 		if (typeof markerLocation.lat === "string") {
+			// there are at least two different string types
 			markerLocation.lat = this.convertDegMinSecDirToSignedDegree(markerLocation.lat);
 			markerLocation.lng = this.convertDegMinSecDirToSignedDegree(markerLocation.lng);
 		}

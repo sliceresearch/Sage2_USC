@@ -1,0 +1,9 @@
+ [
+    {"age": "<5", "population": 73},
+    {"age": "5-13", "population": 66},
+    {"age": "14-17", "population": 80},
+    {"age": "18-24", "population": 62},
+    {"age": "25-44", "population": 86},
+    {"age": "45-64", "population": 12},
+    {"age": "≥65", "population": 40}
+]

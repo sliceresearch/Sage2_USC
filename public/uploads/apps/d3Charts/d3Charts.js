@@ -25,23 +25,61 @@ var d3Charts = SAGE2_App.extend({
 		this.element.style.fontSize = ui.titleTextSize;
 		this.element.style.color = "green";
 
-		this.appSpecific();
+		this.debug = true;
+		this.appSpecific(data);
 	},
 
-	appSpecific: function(date) {
+	dbprint: function(string) {
+		if (this.debug){
+			console.log(string);
+		}
+	},
+
+	/**
+	* Pieces not created by init().
+	* Will start with loading message, if given a state file, will load.
+	* After load will attempt to add to this object.
+	*
+	* @method appSpecific
+	* @param data {Object} given to app init
+	*/
+	appSpecific: function(data) {
 		this.container = document.createElement("div");
 		this.container.id = this.id + "Container";
 		this.container.style.width = "100%";
 		this.container.style.height = "100%";
 		this.element.appendChild(this.container);
-		this.barChartData = this.barChartDataSet1;
-		this.generateBarGraph();
+
+		if (data.csdInitValues) {
+			this.dbprint(this.id + " has csdInitValues");
+			var chartValues = data.csdInitValues.chartValues;
+			if (chartValues.chartType === "bar") {
+
+			} else if (chartValues.chartType === "line") {
+				this.state.chartValues = chartValues;
+				this.lineData = this.lineData1;
+				this.generateLine(chartValues);
+			} else if (chartValues.chartType === "pie") {
+
+			} else if (chartValues.chartType === "scatter") {
+				this.state.chartValues = chartValues;
+				this.scatterData = this.scatterData1;
+				this.generateScatter(chartValues);
+			} else {
+				This.element.textContent = "Unsupported chart type:" + chartValues.chartType;
+			}
+		} else {
+			// no init values, maybe should first be a state check if there are children?
+		}
 	},
 
 	// --------------------------------------------------------------------------------------------------------------------------------------- BAR
 	// ---------------------------------------------------------------------------------------------------------------------------------------
 	// ---------------------------------------------------------------------------------------------------------------------------------------
-	generateBarGraph: function() {
+	generateBarGraph: function(chartValues) {
+		this.chartPrep(chartValues);
+
+
 		this.container.innerHTML = "";
 		var margin = { // space for the chart, note: char axis may go in this area.
 			top: this.sage2_height * 0.08,
@@ -64,6 +102,34 @@ var d3Charts = SAGE2_App.extend({
 
 		var g = this.svg.append("g")
 			.attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+
+
+
+
+
+
+		this.chartPrep(chartValues);
+
+		// this counts number of unique values
+		// var m = d3.map(objects, function(d) { return d.foo; }).size();
+
+		// 
+		x.domain(this.barChartData.map(function(d) { return d.letter; }));
+		y.domain([0, d3v4.max(this.barChartData, function(d) { return d.frequency; })]);
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 		x.domain(this.barChartData.map(function(d) { return d.letter; }));
 		y.domain([0, d3v4.max(this.barChartData, function(d) { return d.frequency; })]);
@@ -92,33 +158,11 @@ var d3Charts = SAGE2_App.extend({
 			.attr("width", x.bandwidth())
 			.attr("height", function(d) { return height - y(d.frequency); })
 			.attr("fill", "steelblue")
-				.on('mouseover', this.overEffect)
-				.on('mouseout', this.outEffect)
-				.on('mousedown', this.downEffect);
+			.on('mouseover', this.overEffect)
+			.on('mouseout', this.outEffect)
+			.on('mousedown', this.downEffect);
 
-		console.log("end of generate");
-	},
-	overEffect: function () {
-		if (!this.downEffect) {
-			if (!this.startingColor) {
-				this.startingColor = this.style.fill;
-			}
-			this.style.fill = "red";
-		}
-	},
-	outEffect: function () {
-		if (!this.downEffect) {
-			this.style.fill = this.startingColor;
-		}
-	},
-	downEffect: function () {
-		if (!this.downEffect) {
-			this.downEffect = true;
-			this.style.fill = "green";
-		} else {
-			this.downEffect = false;
-			this.style.fill = this.startingColor;
-		}
+		this.dbprint("end of generate");
 	},
 
 
@@ -163,7 +207,6 @@ var d3Charts = SAGE2_App.extend({
 			.outerRadius(radius - 40)
 			.innerRadius(radius - 40);
 
-
 		var arc = g.selectAll(".arc")
 			.data(pie(this.pieData))
 			.enter().append("g")
@@ -182,157 +225,234 @@ var d3Charts = SAGE2_App.extend({
 			.text(function(d) { return d.data.age; });
 
 
-		console.log("end of pie generate");
+		this.dbprint("end of pie generate");
 	},
 
 	// --------------------------------------------------------------------------------------------------------------------------------------- LINE
 	// ---------------------------------------------------------------------------------------------------------------------------------------
 	// ---------------------------------------------------------------------------------------------------------------------------------------
-	generateLine: function() {
-		this.container.innerHTML = "";
-		var margin = { // space for the chart, note: char axis may go in this area.
-			top: this.sage2_height * 0.08,
-			right: this.sage2_width * 0.08,
-			bottom: this.sage2_height * 0.08,
-			left: this.sage2_width * 0.08
-		};
-		var width = this.sage2_width - margin.left - margin.right;
-    	var height = this.sage2_height - margin.top - margin.bottom;
 
+	/**
+	* Generate a line chart based on given chartValues.
+	*
+	* @method generateLine
+	* @param chartValues {Object} Values set from other app's launch.
+	*/
+	generateLine: function(chartValues) {
+		this.chartPrep(chartValues);
+		// included in chartPrep was d3v4.timeParse("%d-%b-%y");
 
-		var x = d3v4.scaleTime().rangeRound([0, width]);
-		var y = d3v4.scaleLinear().rangeRound([height, 0]);
-
-
-		this.svg = d3v4.select("#" + this.container.id).append("svg");
-		// this.svg.attr("width", this.sage2_width).attr("height", this.sage2_height);
-		this.svg.attr("width", "100%").attr("height", "100%");
-		this.svg.attr("preserveAspectRatio", "none");
-		this.svg.attr("viewBox", " 0 0 " + this.sage2_width + " " + this.sage2_height);
-
-		var g = this.svg.append("g").attr("transform", "translate(" + margin.left + "," + margin.top + ")");
-
-		var parseTime = d3v4.timeParse("%d-%b-%y"); // necessary?
-		this.lineData = this.lineData.map(function(d) {
-			if (typeof d.date !== "object") {
-				d.date = parseTime(d.date);
-			}
-			d.close = +d.close;
-			return d;
-		});
-
-
-		x.domain(d3v4.extent(this.lineData, function(d) { return d.date; }));
-		y.domain(d3v4.extent(this.lineData, function(d) { return d.close; }));
+		// domain sets the input possibilies. What min to max values can be given and how it maps to the range (set above).
+		// why extent? -because possible to have negative
+		chartValues.xAxis.domain(d3v4.extent(chartValues.data, function(d) { return d[chartValues.xAxisAttribute]; }));
+		chartValues.yAxis.domain(d3v4.extent(chartValues.data, function(d) { return d[chartValues.yAxisAttribute]; }));
 
 		var line = d3v4.line()
-			.x(function(d) { return x(d.date); })
-			.y(function(d) { return y(d.close); });
+			.x(function(d) { return chartValues.xAxis(d[chartValues.xAxisAttribute]); })
+			.y(function(d) { return chartValues.yAxis(d[chartValues.yAxisAttribute]); });
 
-		g.append("g")
-			.attr("transform", "translate(0," + height + ")")
-			.call(d3v4.axisBottom(x))
+		chartValues.g.append("g")
+			.attr("transform", "translate(0," + chartValues.height + ")")
+			.call(d3v4.axisBottom(chartValues.xAxis))
 			.select(".domain");
 
-		g.append("g")
-			.call(d3v4.axisLeft(y))
+		chartValues.g.append("g")
+			.call(d3v4.axisLeft(chartValues.yAxis))
 			.append("text")
 			.attr("fill", "#000")
 			.attr("transform", "rotate(-90)")
 			.attr("y", 6)
 			.attr("dy", "0.71em")
 			.attr("text-anchor", "end")
-			.text("Price ($)");
+			.text(chartValues.yAxisAttribute);
 
-		g.append("path")
-			.datum(this.lineData)
+		chartValues.g.append("path")
+			.datum(chartValues.data)
 			.attr("fill", "none")
 			.attr("stroke", "steelblue")
 			.attr("stroke-linejoin", "round")
 			.attr("stroke-linecap", "round")
 			.attr("stroke-width", 1.5)
 			.attr("d", line)
-			// interaction test?
-			.on("mouseover", this.overEffect)
-			.on("mouseout", this.outEffect)
-			.on("mousedown", this.downEffect);
+			// interaction test? seems not to work the same on lines
+			// .on("mouseover", this.overEffect)
+			// .on("mouseout", this.outEffect)
+			// .on("mousedown", this.downEffect);
 
 
-		console.log("end of line generate");
+		this.dbprint("end of line generate");
 	},
 
 	// --------------------------------------------------------------------------------------------------------------------------------------- scatter
 	// ---------------------------------------------------------------------------------------------------------------------------------------
 	// ---------------------------------------------------------------------------------------------------------------------------------------
-	generateScatter: function() {
-		this.container.innerHTML = "";
-		var margin = { // space for the chart, note: char axis may go in this area.
-			top: this.sage2_height * 0.08,
-			right: this.sage2_width * 0.08,
-			bottom: this.sage2_height * 0.08,
-			left: this.sage2_width * 0.08
-		};
-		var width = this.sage2_width - margin.left - margin.right;
-    	var height = this.sage2_height - margin.top - margin.bottom;
-
-		this.svg = d3v4.select("#" + this.container.id).append("svg");
-		// this.svg.attr("width", this.sage2_width).attr("height", this.sage2_height);
-		this.svg.attr("width", "100%").attr("height", "100%");
-		this.svg.attr("preserveAspectRatio", "none");
-		this.svg.attr("viewBox", " 0 0 " + this.sage2_width + " " + this.sage2_height);
-
-		var g = this.svg.append("g").attr("transform", "translate(" + margin.left + "," + margin.top + ")");
-
-
-		var x = d3v4.scaleLinear().range([0, width]);
-		var y = d3v4.scaleLinear().rangeRound([height, 0]);
+	generateScatter: function(chartValues) {
+		// adds to chartValues: margin, width, height, xAxis, yAxis. Adds "svg" to this app.
+		this.chartPrep(chartValues);
 
 		var color = d3v4.scaleOrdinal(d3v4.schemeCategory10);
 
-		x.domain(d3v4.extent(this.scatterData, function(d) { return d.sepalWidth; })).nice();
-		y.domain(d3v4.extent(this.scatterData, function(d) { return d.sepalLength; })).nice();
+		chartValues.xAxis.domain(d3v4.extent(chartValues.data, function(d) { return d[chartValues.xAxisAttribute]; })).nice();
+		chartValues.yAxis.domain(d3v4.extent(chartValues.data, function(d) { return d[chartValues.yAxisAttribute]; })).nice();
 
-
-		g.append("g")
+		chartValues.g.append("g")
 			.attr("class", "x axis")
-			.attr("transform", "translate(0," + height + ")")
-			// .call(xAxis)
-			.call(d3v4.axisBottom(x))
+			.attr("transform", "translate(0," + chartValues.height + ")")
+			.call(d3v4.axisBottom(chartValues.xAxis))
 			.append("text")
 			.attr("class", "label")
-			.attr("x", width)
+			.attr("x", chartValues.width)
 			.attr("y", -6)
+			.attr("fill", "black")
 			.style("text-anchor", "end")
-			.text("Sepal Width (cm)");
+			// .text("Sepal Width (cm)");
+			.text(chartValues.xAxisAttribute);
 
-		g.append("g")
+		chartValues.g.append("g")
 			.attr("class", "y axis")
-			.call(d3v4.axisLeft(y))
-			//.call(yAxis)
+			.call(d3v4.axisLeft(chartValues.yAxis))
+			.attr("font-size", ui.titleTextSize + "px")
 			.append("text")
 			.attr("class", "label")
 			.attr("transform", "rotate(-90)")
 			.attr("y", 6)
 			.attr("dy", ".71em")
+			.attr("fill", "black")
+			.attr("font-size", ui.titleTextSize + "px")
 			.style("text-anchor", "end")
-			.text("Sepal Length (cm)")
+			// .text("Sepal Length (cm)")
+			.text(chartValues.yAxisAttribute)
 
-		g.selectAll(".dot")
-			.data(this.scatterData)
+		var once = true;
+		chartValues.g.selectAll(".dot")
+			.data(chartValues.data)
 			.enter().append("circle")
 			.attr("class", "dot")
-			.attr("r", 3.5)
-			.attr("cx", function(d) { return x(d.sepalWidth); })
-			.attr("cy", function(d) { return y(d.sepalLength); })
-			.style("fill", function(d) { return color(d.species); })
-			.on("mouseover", overEffect)
-			.on("mouseout", outEffect)
-			.on("mousedown", downEffect);
+			.attr("r", ui.titleTextSize / 2)
+			.attr("cx", function(d) { return chartValues.xAxis(d[chartValues.xAxisAttribute]); })
+			.attr("cy", function(d) { return chartValues.yAxis(d[chartValues.yAxisAttribute]); })
+			// .style("fill", function(d) { return color(d.species); })
+			.style("stroke", "black")
+			.style("stroke-width", "1px")
+			.on("mouseover", this.overEffect)
+			.on("mouseout", this.outEffect)
+			.on("mousedown", this.downEffect);
 
 
 
 
-		console.log("end of line generate");
+		this.dbprint("end of scatter generate");
+	},
+
+	chartPrep: function(chartValues) {
+		// clear container, set margins, width, height.
+		// then make svg and a group to put stuff in
+		this.container.innerHTML = "";
+		chartValues.margin = { // space for the chart, note: char axis may go in this area.
+			top: this.sage2_height * 0.08,
+			right: this.sage2_width * 0.08,
+			bottom: this.sage2_height * 0.08,
+			left: this.sage2_width * 0.08
+		};
+		chartValues.width = this.sage2_width - chartValues.margin.left - chartValues.margin.right;
+    	chartValues.height = this.sage2_height - chartValues.margin.top - chartValues.margin.bottom;
+		this.svg = d3v4.select("#" + this.container.id).append("svg");
+
+		// always occupy full app size
+		this.svg.attr("width", "100%").attr("height", "100%");
+		this.svg.attr("preserveAspectRatio", "none");
+		this.svg.attr("viewBox", " 0 0 " + this.sage2_width + " " + this.sage2_height);
+		chartValues.g = this.svg.append("g").attr("transform", "translate(" + chartValues.margin.left + "," + chartValues.margin.top + ")");
+
+		// axis settings, if not set use linear by default
+		if (!chartValues.xAxisScale) {
+			chartValues.xAxisScale = "scaleLinear";
+		}
+		chartValues.xAxis = d3v4[chartValues.xAxisScale]().rangeRound([0, chartValues.width]);
+		// same for y axis, default is linear
+		if (!chartValues.yAxisScale) {
+			chartValues.yAxisScale = "scaleLinear";
+		}
+		chartValues.yAxis = d3v4[chartValues.yAxisScale]().rangeRound([chartValues.height, 0]);
+
+		// time convert always?
+		this.timeConvertData(chartValues);
+	},
+
+	timeConvertData: function(chartValues) {
+		var xConvert = (chartValues.xAxisScale == "scaleTime") ? true : false;
+		var yConvert = (chartValues.yAxisScale == "scaleTime") ? true : false;
+
+		// parse out the time from a string
+		// this needs to be expanded out
+		// this may be different per file format
+
+		var parseTime;
+		parseTime = this.detectParsePattern(chartValues);
+		this.dbprint("Detected time pattern:" + parseTime);
+		// parseTime = d3v4.timeParse("%d-%b-%y"); // %d day w/ 0 prefix, %b abreviated month name, %y year without century
+		// using two different time matchers
+		parseTime = d3v4.timeParse(parseTime);
+
+		chartValues.data = chartValues.data.map(function(d) {
+			if (xConvert && typeof d[chartValues.xAxisAttribute] !== "object") {
+				d[chartValues.xAxisAttribute] = parseTime(d[chartValues.xAxisAttribute]);
+			}
+			if (yConvert && typeof d[chartValues.xAxisAttribute] !== "object") {
+				d[chartValues.yAxisAttribute] = parseTime(d[chartValues.yAxisAttribute]);
+			}
+			// d[chartValues.yAxisAttribute] = +d[chartValues.yAxisAttribute];
+			return d;
+		});
+	},
+
+	detectParsePattern: function(chartValues) {
+		var elem1 = chartValues.data[0];
+		var xConvert = (chartValues.xAxisScale == "scaleTime") ? true : false;
+		var yConvert = (chartValues.yAxisScale == "scaleTime") ? true : false;
+		var pattern = "";
+		var timeEntry;
+		if (xConvert) {
+			timeEntry = elem1[chartValues.xAxisAttribute];
+		} else if (yConvert) {
+			timeEntry = elem1[chartValues.yAxisAttribute];
+		} else {
+			console.log("error in " + this.id + " no time attribute, but was given scaleTime?");
+		}
+
+		if (timeEntry.indexOf("!") !== -1) {
+			pattern = "%Y!%m!%d";
+		} else if (timeEntry.indexOf("-") !== -1) {
+			pattern = "%d-%b-%y";
+		}
+
+		return pattern;
+	},
+
+	overEffect: function () {
+		if (!this.downEffect) {
+			if (!this.startingColor) {
+				this.startingColor = this.style.fill;
+			}
+			this.style.fill = "red";
+			this.style.strokeWidth = "4px";
+		}
+	},
+	outEffect: function () {
+		if (!this.downEffect) {
+			this.style.fill = this.startingColor;
+			this.style.strokeWidth = "1px";
+		}
+	},
+	downEffect: function () {
+		if (!this.downEffect) {
+			this.downEffect = true;
+			this.style.fill = "green";
+			this.style.strokeWidth = "4px";
+		} else {
+			this.downEffect = false;
+			this.style.fill = this.startingColor;
+		}
 	},
 
 	load: function(date) {
