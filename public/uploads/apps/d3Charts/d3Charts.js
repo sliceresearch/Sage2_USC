@@ -52,21 +52,14 @@ var d3Charts = SAGE2_App.extend({
 
 		if (data.csdInitValues) {
 			this.dbprint(this.id + " has csdInitValues");
-			var chartValues = data.csdInitValues.chartValues;
-			if (chartValues.chartType === "bar") {
+			var chartValues = data.csdInitValues.chartValues; // easier to work with
+			this.state.chartValues = chartValues; // save in the state (future work to recover / share)
 
-			} else if (chartValues.chartType === "line") {
-				this.state.chartValues = chartValues;
-				this.lineData = this.lineData1;
-				this.generateLine(chartValues);
-			} else if (chartValues.chartType === "pie") {
 
-			} else if (chartValues.chartType === "scatter") {
-				this.state.chartValues = chartValues;
-				this.scatterData = this.scatterData1;
-				this.generateScatter(chartValues);
+			if (this["generate" + chartValues.chartType]) {
+				this["generate" + chartValues.chartType](chartValues);
 			} else {
-				This.element.textContent = "Unsupported chart type:" + chartValues.chartType;
+				this.element.textContent = "ERROR: Unsupported chart type:" + chartValues.chartType;
 			}
 		} else {
 			// no init values, maybe should first be a state check if there are children?
@@ -76,87 +69,56 @@ var d3Charts = SAGE2_App.extend({
 	// --------------------------------------------------------------------------------------------------------------------------------------- BAR
 	// ---------------------------------------------------------------------------------------------------------------------------------------
 	// ---------------------------------------------------------------------------------------------------------------------------------------
-	generateBarGraph: function(chartValues) {
+	generateBar: function(chartValues) {
 		this.chartPrep(chartValues);
 
-
-		this.container.innerHTML = "";
-		var margin = { // space for the chart, note: char axis may go in this area.
-			top: this.sage2_height * 0.08,
-			right: this.sage2_width * 0.08,
-			bottom: this.sage2_height * 0.08,
-			left: this.sage2_width * 0.08
-		};
-		var width = this.sage2_width - margin.left - margin.right;
-    	var height = this.sage2_height - margin.top - margin.bottom;
-
-		var x = d3v4.scaleBand().rangeRound([0, width]).padding(0.1);
-		var y = d3v4.scaleLinear().rangeRound([height, 0]);
-
-
-		this.svg = d3v4.select("#" + this.container.id).append("svg");
-		// this.svg.attr("width", this.sage2_width).attr("height", this.sage2_height);
-		this.svg.attr("width", "100%").attr("height", "100%");
-		this.svg.attr("preserveAspectRatio", "none");
-		this.svg.attr("viewBox", " 0 0 " + this.sage2_width + " " + this.sage2_height);
-
-		var g = this.svg.append("g")
-			.attr("transform", "translate(" + margin.left + "," + margin.top + ")");
-
-
-
-
-
-
-
-		this.chartPrep(chartValues);
+		// redo the x axis always. redo y axis since it's scale is determined by x axis
+		chartValues.xAxis = d3v4.scaleBand().rangeRound([0, chartValues.width]).padding(0.1);
+		chartValues.yAxis = d3v4.scaleLinear().rangeRound([chartValues.height, 0]);
 
 		// this counts number of unique values
 		// var m = d3.map(objects, function(d) { return d.foo; }).size();
 
-		// 
-		x.domain(this.barChartData.map(function(d) { return d.letter; }));
-		y.domain([0, d3v4.max(this.barChartData, function(d) { return d.frequency; })]);
+		// given an attribute (for x axis), count the number of unique values for the x axis
+		// var numUniqueValues = d3.map(chartValues.data, function(d) { return d[chartValues.xAxisAttribute]; }).size();
+
+		// domain is the different xAxis values map is 1:1 but ok, because each x axis attribute occupies a spot
+		chartValues.xAxis.domain(chartValues.data.map(function(d) {return d[chartValues.xAxisAttribute];}));
 
 
+		var groupedByXaxis = d3.nest() // apply a nest (group by)
+			.key(function(d) { return d[chartValues.xAxisAttribute]; }) // first group by the attribute
+			.entries(chartValues.data); // do nest on the data
+
+		// groupedByXaxis is an array [{key: "1931", values: [...], {key: "1932", values: [ ...
+		chartValues.yAxis.domain([0, d3v4.max(groupedByXaxis, function(d) { return d.values.length; })]);
 
 
+		var yAxisSuffix = ""; // used for ticks.
 
-
-
-
-
-
-
-
-
-
-		x.domain(this.barChartData.map(function(d) { return d.letter; }));
-		y.domain([0, d3v4.max(this.barChartData, function(d) { return d.frequency; })]);
-
-		g.append("g")
+		chartValues.g.append("g")
 			.attr("class", "axis axis--x")
-			.attr("transform", "translate(0," + height + ")")
-			.call(d3v4.axisBottom(x));
+			.attr("transform", "translate(0," + chartValues.height + ")")
+			.call(d3v4.axisBottom(chartValues.xAxis));
 
-		g.append("g")
+		chartValues.g.append("g")
 			.attr("class", "axis axis--y")
-			.call(d3v4.axisLeft(y).ticks(10, "%"))
+			.call(d3v4.axisLeft(chartValues.yAxis).ticks(10, yAxisSuffix))
 			.append("text")
 			.attr("transform", "rotate(-90)")
 			.attr("y", 6)
 			.attr("dy", "0.71em")
 			.attr("text-anchor", "end")
-			.text("Frequency");
+			.text("Count");
 
-		g.selectAll(".bar")
-			.data(this.barChartData)
+		chartValues.g.selectAll(".bar")
+			.data(groupedByXaxis) // not actually the original data set, since needed the groupings
 			.enter().append("rect")
 			.attr("class", "bar")
-			.attr("x", function(d) { return x(d.letter); })
-			.attr("y", function(d) { return y(d.frequency); })
-			.attr("width", x.bandwidth())
-			.attr("height", function(d) { return height - y(d.frequency); })
+			.attr("x", function(d) { return chartValues.xAxis(d.key); }) // use the key of the grouping
+			.attr("y", function(d) { return chartValues.yAxis(d.values.length); }) // the count for the key
+			.attr("width", chartValues.xAxis.bandwidth()) // auto calc by the scaleBand
+			.attr("height", function(d) { return chartValues.height - chartValues.yAxis(d.values.length); }) // one bar, not pieces. Or...?
 			.attr("fill", "steelblue")
 			.on('mouseover', this.overEffect)
 			.on('mouseout', this.outEffect)
@@ -244,8 +206,14 @@ var d3Charts = SAGE2_App.extend({
 
 		// domain sets the input possibilies. What min to max values can be given and how it maps to the range (set above).
 		// why extent? -because possible to have negative
-		chartValues.xAxis.domain(d3v4.extent(chartValues.data, function(d) { return d[chartValues.xAxisAttribute]; }));
-		chartValues.yAxis.domain(d3v4.extent(chartValues.data, function(d) { return d[chartValues.yAxisAttribute]; }));
+
+		// original
+		// chartValues.xAxis.domain(d3v4.extent(chartValues.data, function(d) { return d[chartValues.xAxisAttribute]; }));
+		// chartValues.yAxis.domain(d3v4.extent(chartValues.data, function(d) { return d[chartValues.yAxisAttribute]; }));
+		// from bar		chartValues.xAxis.domain(chartValues.data.map(function(d) {return d[chartValues.xAxisAttribute];}));
+		chartValues.xAxis.domain(chartValues.data.map(function(d) { return d[chartValues.xAxisAttribute]; }));
+		chartValues.yAxis.domain(chartValues.data.map(function(d) { return d[chartValues.yAxisAttribute]; }));
+
 
 		var line = d3v4.line()
 			.x(function(d) { return chartValues.xAxis(d[chartValues.xAxisAttribute]); })
@@ -292,8 +260,11 @@ var d3Charts = SAGE2_App.extend({
 
 		var color = d3v4.scaleOrdinal(d3v4.schemeCategory10);
 
-		chartValues.xAxis.domain(d3v4.extent(chartValues.data, function(d) { return d[chartValues.xAxisAttribute]; })).nice();
-		chartValues.yAxis.domain(d3v4.extent(chartValues.data, function(d) { return d[chartValues.yAxisAttribute]; })).nice();
+		// original
+		// chartValues.xAxis.domain(d3v4.extent(chartValues.data, function(d) { return d[chartValues.xAxisAttribute]; })).nice();
+		// chartValues.yAxis.domain(d3v4.extent(chartValues.data, function(d) { return d[chartValues.yAxisAttribute]; })).nice();
+		chartValues.xAxis.domain(chartValues.data.map(function(d) { return d[chartValues.xAxisAttribute]; }));
+		chartValues.yAxis.domain(chartValues.data.map(function(d) { return d[chartValues.yAxisAttribute]; }));
 
 		chartValues.g.append("g")
 			.attr("class", "x axis")
@@ -365,12 +336,17 @@ var d3Charts = SAGE2_App.extend({
 		chartValues.g = this.svg.append("g").attr("transform", "translate(" + chartValues.margin.left + "," + chartValues.margin.top + ")");
 
 		// axis settings, if not set use linear by default
-		if (!chartValues.xAxisScale) {
+		if (typeof chartValues.data[0][chartValues.xAxisAttribute] === "string") {
+			chartValues.xAxisScale = "scaleBand";
+		} else if (!chartValues.xAxisScale) {
 			chartValues.xAxisScale = "scaleLinear";
 		}
 		chartValues.xAxis = d3v4[chartValues.xAxisScale]().rangeRound([0, chartValues.width]);
+
 		// same for y axis, default is linear
-		if (!chartValues.yAxisScale) {
+		if (typeof chartValues.data[0][chartValues.yAxisAttribute] === "string") {
+			chartValues.yAxisScale = "scaleBand";
+		} else if (!chartValues.yAxisScale) {
 			chartValues.yAxisScale = "scaleLinear";
 		}
 		chartValues.yAxis = d3v4[chartValues.yAxisScale]().rangeRound([chartValues.height, 0]);
@@ -420,10 +396,13 @@ var d3Charts = SAGE2_App.extend({
 			console.log("error in " + this.id + " no time attribute, but was given scaleTime?");
 		}
 
-		if (timeEntry.indexOf("!") !== -1) {
-			pattern = "%Y!%m!%d";
-		} else if (timeEntry.indexOf("-") !== -1) {
-			pattern = "%d-%b-%y";
+		// only if there was a time entry
+		if (timeEntry) {
+			if (timeEntry.indexOf("!") !== -1) {
+				pattern = "%Y!%m!%d";
+			} else if (timeEntry.indexOf("-") !== -1) {
+				pattern = "%d-%b-%y";
+			}
 		}
 
 		return pattern;
@@ -541,7 +520,7 @@ var d3Charts = SAGE2_App.extend({
 		} else if (responseObject.dataset === 2) {
 			this.barChartData = this.barChartDataSet2;
 		}
-		this.generateBarGraph();
+		this.generateBar();
 	},
 
 	loadPie: function(responseObject) {
@@ -579,6 +558,36 @@ var d3Charts = SAGE2_App.extend({
 		// no additional calls needed.
 	},
 
+	/**
+	* This will check based on variable name, what it is.
+	*
+	* @method dataTypeLookup
+	* @param {String} name - string of the field name.
+	* @param {*} value - could be anything
+	*/
+	dataTypeLookup: function(name, value) {
+		var dataDescription = {
+			type: "",
+			format: ""
+		};
+		var keys = Object.keys(this.dataTypes);
+
+		for (var k = 0; k < keys.length; k++) {
+			if (this.dataTypes[k].names.contains(name)) {
+				dataDescription.type = k;
+				dataDescription.format = "";
+			}
+		}
+
+		return type;
+	},
+
+	dataTypes: {
+		time: {
+			names: ["time", "date"],
+			format: ""
+		}
+	},
 
 
 

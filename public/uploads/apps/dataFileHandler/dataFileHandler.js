@@ -155,20 +155,35 @@ var dataFileHandler = SAGE2_App.extend({
 			// function(appName, params, funcToPassParams, x, y)
 			var chartValues = {
 				data: this.dataFromFile,
-				chartType: "line",
+				chartType: "Line",
 				xAxisAttribute: xAxisAttribute,
 				xAxisScale: "scaleTime",
 				yAxisAttribute: yAxisAttribute,
 				yAxisScale: "scaleLinear"
 			};
+
+
+			// line 
 			this.csdLaunchAppWithValues("d3Charts", { chartValues: chartValues },
 				undefined, // no post launch function activation
 				this.sage2_x + 30, this.sage2_y + 30);
-			chartValues.chartType = "scatter";
+
+
+			chartValues.chartType = "Scatter";
 			// chartValues.xAxisScale = "scaleLinear";
 			this.csdLaunchAppWithValues("d3Charts", { chartValues: chartValues },
 				undefined, // no post launch function activation
 				this.sage2_x + 60, this.sage2_y + 60);
+
+
+			chartValues.chartType = "Bar"; // bar charts only want counts, right?
+			chartValues.xAxisAttribute = chartValues.yAxisAttribute;
+			chartValues.xAxisScale = chartValues.yAxisScale;
+			this.csdLaunchAppWithValues("d3Charts", { chartValues: chartValues },
+				undefined, // no post launch function activation
+				this.sage2_x + 90, this.sage2_y + 90);
+
+
 		} else {
 			this.dbprint("Unsure what kind of chart to use, has to be manual");
 		}
