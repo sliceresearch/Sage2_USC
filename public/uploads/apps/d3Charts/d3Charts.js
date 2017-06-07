@@ -31,7 +31,7 @@ var d3Charts = SAGE2_App.extend({
 
 	dbprint: function(string) {
 		if (this.debug){
-			console.log(string);
+			console.log("Debug>" + string);
 		}
 	},
 
@@ -52,17 +52,31 @@ var d3Charts = SAGE2_App.extend({
 
 		if (data.csdInitValues) {
 			this.dbprint(this.id + " has csdInitValues");
-			var chartValues = data.csdInitValues.chartValues; // easier to work with
-			this.state.chartValues = chartValues; // save in the state (future work to recover / share)
+			this.state.chartValues = data.csdInitValues.chartValues; // save in the state (future work to recover / share)
 
-
-			if (this["generate" + chartValues.chartType]) {
-				this["generate" + chartValues.chartType](chartValues);
-			} else {
-				this.element.textContent = "ERROR: Unsupported chart type:" + chartValues.chartType;
-			}
+			this.generateChartIfCan();
 		} else {
 			// no init values, maybe should first be a state check if there are children?
+		}
+	},
+
+	/**
+	* Generates the chart. Assumes this.state.chartValues exists.
+	*
+	* @method generateChartIfCan
+	*/
+	generateChartIfCan: function() {
+		var chartValues = this.state.chartValues;
+
+		if (this["generate" + chartValues.chartType]) {
+			if (chartValues.chartType !== "Bar") {
+				this.updateTitle(chartValues.chartType + " (" + chartValues.xAxisAttribute + " x " + chartValues.yAxisAttribute + ")");
+			} else {
+				this.updateTitle(chartValues.chartType + " (" + chartValues.xAxisAttribute + " totals)");
+			}
+			this["generate" + chartValues.chartType](chartValues);
+		} else {
+			this.element.textContent = "ERROR: Unsupported chart type:" + chartValues.chartType;
 		}
 	},
 
@@ -205,15 +219,19 @@ var d3Charts = SAGE2_App.extend({
 		// included in chartPrep was d3v4.timeParse("%d-%b-%y");
 
 		// domain sets the input possibilies. What min to max values can be given and how it maps to the range (set above).
-		// why extent? -because possible to have negative
+		// why extent? -> because possible to have negative
 
-		// original
-		// chartValues.xAxis.domain(d3v4.extent(chartValues.data, function(d) { return d[chartValues.xAxisAttribute]; }));
-		// chartValues.yAxis.domain(d3v4.extent(chartValues.data, function(d) { return d[chartValues.yAxisAttribute]; }));
-		// from bar		chartValues.xAxis.domain(chartValues.data.map(function(d) {return d[chartValues.xAxisAttribute];}));
-		chartValues.xAxis.domain(chartValues.data.map(function(d) { return d[chartValues.xAxisAttribute]; }));
-		chartValues.yAxis.domain(chartValues.data.map(function(d) { return d[chartValues.yAxisAttribute]; }));
-
+		// need a special check for scaleBand vs other. scaleBand has a different way to calculation position it seems.
+		if (chartValues.xAxisScale === "scaleBand") {
+			chartValues.xAxis.domain(chartValues.data.map(function(d) { return d[chartValues.xAxisAttribute]; }));
+		} else {
+			chartValues.xAxis.domain(d3v4.extent(chartValues.data, function(d) { return d[chartValues.xAxisAttribute]; }));
+		}
+		if (chartValues.yAxisScale === "scaleBand") {
+			chartValues.yAxis.domain(chartValues.data.map(function(d) { return d[chartValues.yAxisAttribute]; }));
+		} else {
+			chartValues.yAxis.domain(d3v4.extent(chartValues.data, function(d) { return d[chartValues.yAxisAttribute]; }));
+		}
 
 		var line = d3v4.line()
 			.x(function(d) { return chartValues.xAxis(d[chartValues.xAxisAttribute]); })
@@ -260,11 +278,17 @@ var d3Charts = SAGE2_App.extend({
 
 		var color = d3v4.scaleOrdinal(d3v4.schemeCategory10);
 
-		// original
-		// chartValues.xAxis.domain(d3v4.extent(chartValues.data, function(d) { return d[chartValues.xAxisAttribute]; })).nice();
-		// chartValues.yAxis.domain(d3v4.extent(chartValues.data, function(d) { return d[chartValues.yAxisAttribute]; })).nice();
-		chartValues.xAxis.domain(chartValues.data.map(function(d) { return d[chartValues.xAxisAttribute]; }));
-		chartValues.yAxis.domain(chartValues.data.map(function(d) { return d[chartValues.yAxisAttribute]; }));
+		// need a special check for scaleBand vs other. scaleBand has a different way to calculation position it seems.
+		if (chartValues.xAxisScale === "scaleBand") {
+			chartValues.xAxis.domain(chartValues.data.map(function(d) { return d[chartValues.xAxisAttribute]; }));
+		} else {
+			chartValues.xAxis.domain(d3v4.extent(chartValues.data, function(d) { return d[chartValues.xAxisAttribute]; }));
+		}
+		if (chartValues.yAxisScale === "scaleBand") {
+			chartValues.yAxis.domain(chartValues.data.map(function(d) { return d[chartValues.yAxisAttribute]; }));
+		} else {
+			chartValues.yAxis.domain(d3v4.extent(chartValues.data, function(d) { return d[chartValues.yAxisAttribute]; }));
+		}
 
 		chartValues.g.append("g")
 			.attr("class", "x axis")
@@ -335,51 +359,60 @@ var d3Charts = SAGE2_App.extend({
 		this.svg.attr("viewBox", " 0 0 " + this.sage2_width + " " + this.sage2_height);
 		chartValues.g = this.svg.append("g").attr("transform", "translate(" + chartValues.margin.left + "," + chartValues.margin.top + ")");
 
+		// time convert always, convert time before checking if an element is a string
+		this.timeConvertData(chartValues);
+
 		// axis settings, if not set use linear by default
 		if (typeof chartValues.data[0][chartValues.xAxisAttribute] === "string") {
+			this.dbprint("Changing xAxis to scaleBand, detected a string attribute");
 			chartValues.xAxisScale = "scaleBand";
 		} else if (!chartValues.xAxisScale) {
+			this.dbprint("No xAxis scale detected, making scaleLinear");
 			chartValues.xAxisScale = "scaleLinear";
 		}
 		chartValues.xAxis = d3v4[chartValues.xAxisScale]().rangeRound([0, chartValues.width]);
 
 		// same for y axis, default is linear
 		if (typeof chartValues.data[0][chartValues.yAxisAttribute] === "string") {
+			this.dbprint("Changing yAxis to scaleBand, detected a string attribute");
 			chartValues.yAxisScale = "scaleBand";
 		} else if (!chartValues.yAxisScale) {
+			this.dbprint("No yAxis scale detected, making scaleLinear");
 			chartValues.yAxisScale = "scaleLinear";
 		}
 		chartValues.yAxis = d3v4[chartValues.yAxisScale]().rangeRound([chartValues.height, 0]);
 
-		// time convert always?
-		this.timeConvertData(chartValues);
 	},
 
 	timeConvertData: function(chartValues) {
 		var xConvert = (chartValues.xAxisScale == "scaleTime") ? true : false;
+		xConvert = (xConvert && typeof chartValues.data[0][chartValues.xAxisAttribute] === "string") ? true : false;
 		var yConvert = (chartValues.yAxisScale == "scaleTime") ? true : false;
+		yConvert = (yConvert && typeof chartValues.data[0][chartValues.yAxisAttribute] === "string") ? true : false;
 
-		// parse out the time from a string
-		// this needs to be expanded out
-		// this may be different per file format
+		if (xConvert || yConvert) {
+			// parse out the time from a string
+			// this needs to be expanded out
+			// this may be different per file format
 
-		var parseTime;
-		parseTime = this.detectParsePattern(chartValues);
-		this.dbprint("Detected time pattern:" + parseTime);
-		// parseTime = d3v4.timeParse("%d-%b-%y"); // %d day w/ 0 prefix, %b abreviated month name, %y year without century
-		// using two different time matchers
-		parseTime = d3v4.timeParse(parseTime);
+			var parseTime;
+			parseTime = this.detectParsePattern(chartValues);
+			this.dbprint("Detected time pattern:" + parseTime);
+			// parseTime = d3v4.timeParse("%d-%b-%y"); // %d day w/ 0 prefix, %b abreviated month name, %y year without century
+			// using two different time matchers
+			parseTime = d3v4.timeParse(parseTime);
 
-		chartValues.data = chartValues.data.map(function(d) {
-			if (xConvert && typeof d[chartValues.xAxisAttribute] !== "object") {
-				d[chartValues.xAxisAttribute] = parseTime(d[chartValues.xAxisAttribute]);
-			}
-			if (yConvert && typeof d[chartValues.xAxisAttribute] !== "object") {
-				d[chartValues.yAxisAttribute] = parseTime(d[chartValues.yAxisAttribute]);
-			}
-			// d[chartValues.yAxisAttribute] = +d[chartValues.yAxisAttribute];
-			return d;
-		});
+			chartValues.data = chartValues.data.map(function(d) {
+				if (xConvert) {
+					d[chartValues.xAxisAttribute] = parseTime(d[chartValues.xAxisAttribute]);
+				}
+				if (yConvert) {
+					d[chartValues.yAxisAttribute] = parseTime(d[chartValues.yAxisAttribute]);
+				}
+				// d[chartValues.yAxisAttribute] = +d[chartValues.yAxisAttribute];
+				return d;
+			});
+		}
 	},
 
 	detectParsePattern: function(chartValues) {
@@ -464,90 +497,73 @@ var d3Charts = SAGE2_App.extend({
 		var entry;
 
 		entry = {};
-		entry.description = "Bar chart data set 1";
-		entry.callback    = "loadBarChartData";
-		entry.parameters  = { dataset: 1 };
+		entry.description = "Reload (resize)";
+		entry.callback    = "reloadChart";
+		entry.parameters  = { };
 		entries.push(entry);
 
-		entry = {};
-		entry.description = "Bar chart data set 2";
-		entry.callback    = "loadBarChartData";
-		entry.parameters  = { dataset: 2 };
+		entries.push({description: "separator"});
+
+		var entry   = {};
+		entry.description = "Set xAxis attribute:";
+		entry.callback = "setAxisAttribute";
+		entry.parameters     = { axis: "x" };
+		entry.inputField     = true;
+		entry.inputFieldSize = 20;
 		entries.push(entry);
 
-		entry = {};
-		entry.description = "Pie 1";
-		entry.callback    = "loadPie";
-		entry.parameters  = { dataset: 1 };
-		entries.push(entry);
-
-		entry = {};
-		entry.description = "Pie 2";
-		entry.callback    = "loadPie";
-		entry.parameters  = { dataset: 2 };
-		entries.push(entry);
-
-		entry = {};
-		entry.description = "Line 1";
-		entry.callback    = "loadLine";
-		entry.parameters  = { dataset: 1 };
-		entries.push(entry);
-
-		entry = {};
-		entry.description = "Line 2";
-		entry.callback    = "loadLine";
-		entry.parameters  = { dataset: 2 };
-		entries.push(entry);
-
-		entry = {};
-		entry.description = "Scatter 1";
-		entry.callback    = "loadScatter";
-		entry.parameters  = { dataset: 1 };
-		entries.push(entry);
-
-		entry = {};
-		entry.description = "Scatter 2";
-		entry.callback    = "loadScatter";
-		entry.parameters  = { dataset: 2 };
+		var entry   = {};
+		entry.description = "Set yAxis attribute:";
+		entry.callback = "setAxisAttribute";
+		entry.parameters     = { axis: "y" };
+		entry.inputField     = true;
+		entry.inputFieldSize = 20;
 		entries.push(entry);
 
 		return entries;
 	},
 
-	loadBarChartData: function(responseObject) {
-		if (responseObject.dataset === 1) {
-			this.barChartData = this.barChartDataSet1;
-		} else if (responseObject.dataset === 2) {
-			this.barChartData = this.barChartDataSet2;
-		}
-		this.generateBar();
+	/**
+	* Reloads the chart based on current values. Other actions?
+	*
+	* @method reloadChart
+	*/
+	reloadChart: function() {
+		this.generateChartIfCan();
 	},
 
-	loadPie: function(responseObject) {
-		if (responseObject.dataset === 1) {
-			this.pieData = this.pieData1;
-		} else if (responseObject.dataset === 2) {
-			this.pieData = this.pieData2;
+	/**
+	* Sets the axis attribute.
+	*
+	* @method setAxisAttribute
+	*/
+	setAxisAttribute: function(msgParams) {
+		var attribute = msgParams.clientInput.trim();
+		var chartValues = this.state.chartValues;
+		// if the attribute exists in the first data element
+		if (chartValues.data[0][attribute]) {
+			if (msgParams.axis === "x") {
+				chartValues.xAxisAttribute = attribute;
+				if (this.dataTypeLookup(attribute).type === "time") {
+					this.dbprint("New axis(" + attribute + ") using scaleTime");
+					chartValues.xAxisScale = "scaleTime";
+				} else {
+					this.dbprint("New axis(" + attribute + ") using scaleLinear");
+					chartValues.xAxisScale = "scaleLinear";
+				}
+			} else if (msgParams.axis === "y") {
+				// Bar charts are the sums of unique values? Is there another case? Skip if bar
+				if (chartValues.chartType !== "Bar") { // Cap 1st letter
+					chartValues.yAxisAttribute = attribute;
+					if (this.dataTypeLookup(attribute).type === "time") {
+						chartValues.yAxisScale = "scaleTime";
+					} else {
+						chartValues.yAxisScale = "scaleLinear";
+					}
+				}
+			}
+			this.generateChartIfCan();
 		}
-		this.generatePie();
-	},
-
-	loadLine: function(responseObject) {
-		if (responseObject.dataset === 1) {
-			this.lineData = this.lineData1;
-		} else if (responseObject.dataset === 2) {
-			this.lineData = this.lineData2;
-		}
-		this.generateLine();
-	},
-
-	loadScatter: function(responseObject) {
-		if (responseObject.dataset === 1) {
-			this.scatterData = this.scatterData1;
-		} else if (responseObject.dataset === 2) {
-			this.scatterData = this.scatterData2;
-		}
-		this.generateScatter();
 	},
 
 	event: function(eventType, position, user_id, data, date) {
@@ -564,22 +580,25 @@ var d3Charts = SAGE2_App.extend({
 	* @method dataTypeLookup
 	* @param {String} name - string of the field name.
 	* @param {*} value - could be anything
+	* @returns {Object} dataDescription - Describes what is known
+	* @returns {String} dataDescription.type - String of what type is it (time)
+	* @returns {String} dataDescription.format - Potentially the format of expectation (unsure...)
 	*/
 	dataTypeLookup: function(name, value) {
-		var dataDescription = {
+		var dataDescription = { // object to return (template)
 			type: "",
 			format: ""
 		};
-		var keys = Object.keys(this.dataTypes);
-
-		for (var k = 0; k < keys.length; k++) {
-			if (this.dataTypes[k].names.contains(name)) {
+		var keys = Object.keys(this.dataTypes); // list of types known
+		// for each time, check if name match
+		for (var k in this.dataTypes) {
+			if (this.dataTypes[k].names.includes(name)) { // set values if match
 				dataDescription.type = k;
 				dataDescription.format = "";
+				break;
 			}
 		}
-
-		return type;
+		return dataDescription;
 	},
 
 	dataTypes: {

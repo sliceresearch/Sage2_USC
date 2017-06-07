@@ -33,7 +33,7 @@ var dataFileHandler = SAGE2_App.extend({
 
 	dbprint: function(string) {
 		if (this.debug){
-			console.log(string);
+			console.log("Debug>" + string);
 		}
 	},
 
@@ -137,11 +137,6 @@ var dataFileHandler = SAGE2_App.extend({
 		// set a random y axis property to plot against
 		var justInCase = 0;
 		do {
-			this.dbprint(this.getRandomInt(0, keys.length));
-			this.dbprint(this.getRandomInt(0, keys.length));
-			this.dbprint(this.getRandomInt(0, keys.length));
-			this.dbprint(this.getRandomInt(0, keys.length));
-			this.dbprint(this.getRandomInt(0, keys.length));
 			yAxisAttribute = keys[this.getRandomInt(0, keys.length)];
 			this.dbprint("chosen y attribute:" + yAxisAttribute + " from possible " + keys.length);
 			justInCase++;
@@ -162,16 +157,18 @@ var dataFileHandler = SAGE2_App.extend({
 				yAxisScale: "scaleLinear"
 			};
 
+			if (this.debug) {
+				chartValues.yAxisAttribute = "rain";
+			}
 
-			// line 
-			this.csdLaunchAppWithValues("d3Charts", { chartValues: chartValues },
+			this.csdLaunchAppWithValues("d3Charts", { chartValues: chartValues }, // line
 				undefined, // no post launch function activation
 				this.sage2_x + 30, this.sage2_y + 30);
 
 
 			chartValues.chartType = "Scatter";
 			// chartValues.xAxisScale = "scaleLinear";
-			this.csdLaunchAppWithValues("d3Charts", { chartValues: chartValues },
+			this.csdLaunchAppWithValues("d3Charts", { chartValues: chartValues }, // scatter
 				undefined, // no post launch function activation
 				this.sage2_x + 60, this.sage2_y + 60);
 
@@ -179,7 +176,7 @@ var dataFileHandler = SAGE2_App.extend({
 			chartValues.chartType = "Bar"; // bar charts only want counts, right?
 			chartValues.xAxisAttribute = chartValues.yAxisAttribute;
 			chartValues.xAxisScale = chartValues.yAxisScale;
-			this.csdLaunchAppWithValues("d3Charts", { chartValues: chartValues },
+			this.csdLaunchAppWithValues("d3Charts", { chartValues: chartValues }, // bar
 				undefined, // no post launch function activation
 				this.sage2_x + 90, this.sage2_y + 90);
 
