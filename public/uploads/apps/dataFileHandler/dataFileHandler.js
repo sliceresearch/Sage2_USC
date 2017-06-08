@@ -161,13 +161,12 @@ var dataFileHandler = SAGE2_App.extend({
 				chartValues.yAxisAttribute = "rain";
 			}
 
-			this.csdLaunchAppWithValues("d3Charts", { chartValues: chartValues }, // line
-				undefined, // no post launch function activation
-				this.sage2_x + 30, this.sage2_y + 30);
-
+			// chartValues.chartType = "Line";
+			// this.csdLaunchAppWithValues("d3Charts", { chartValues: chartValues }, // line
+			// 	undefined, // no post launch function activation
+			// 	this.sage2_x + 30, this.sage2_y + 30);
 
 			chartValues.chartType = "Scatter";
-			// chartValues.xAxisScale = "scaleLinear";
 			this.csdLaunchAppWithValues("d3Charts", { chartValues: chartValues }, // scatter
 				undefined, // no post launch function activation
 				this.sage2_x + 60, this.sage2_y + 60);
@@ -180,7 +179,12 @@ var dataFileHandler = SAGE2_App.extend({
 				undefined, // no post launch function activation
 				this.sage2_x + 90, this.sage2_y + 90);
 
-
+			chartValues.chartType = "Pie";
+			chartValues.xAxisAttribute = chartValues.yAxisAttribute;
+			chartValues.xAxisScale = chartValues.yAxisScale;
+			this.csdLaunchAppWithValues("d3Charts", { chartValues: chartValues }, // pie
+				undefined, // no post launch function activation
+				this.sage2_x + 120, this.sage2_y + 120);
 		} else {
 			this.dbprint("Unsure what kind of chart to use, has to be manual");
 		}

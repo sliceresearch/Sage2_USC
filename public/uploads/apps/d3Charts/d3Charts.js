@@ -50,6 +50,9 @@ var d3Charts = SAGE2_App.extend({
 		this.container.style.height = "100%";
 		this.element.appendChild(this.container);
 
+		this.selectedElements = []; // full data pieces
+		this.selectedValues = []; // this is more about axis value of selection
+
 		if (data.csdInitValues) {
 			this.dbprint(this.id + " has csdInitValues");
 			this.state.chartValues = data.csdInitValues.chartValues; // save in the state (future work to recover / share)
@@ -69,7 +72,7 @@ var d3Charts = SAGE2_App.extend({
 		var chartValues = this.state.chartValues;
 
 		if (this["generate" + chartValues.chartType]) {
-			if (chartValues.chartType !== "Bar") {
+			if (chartValues.chartType !== "Bar" && chartValues.chartType !== "Pie") {
 				this.updateTitle(chartValues.chartType + " (" + chartValues.xAxisAttribute + " x " + chartValues.yAxisAttribute + ")");
 			} else {
 				this.updateTitle(chartValues.chartType + " (" + chartValues.xAxisAttribute + " totals)");
@@ -81,52 +84,42 @@ var d3Charts = SAGE2_App.extend({
 	},
 
 	// --------------------------------------------------------------------------------------------------------------------------------------- BAR
-	// ---------------------------------------------------------------------------------------------------------------------------------------
-	// ---------------------------------------------------------------------------------------------------------------------------------------
+
+	/**
+	* Generate a bar graph
+	*
+	* @method generateBar
+	* @param {Object} chartValues - assumed to contain all necessary data to build
+	*/
 	generateBar: function(chartValues) {
 		this.chartPrep(chartValues);
-
-		// redo the x axis always. redo y axis since it's scale is determined by x axis
-		chartValues.xAxis = d3v4.scaleBand().rangeRound([0, chartValues.width]).padding(0.1);
-		chartValues.yAxis = d3v4.scaleLinear().rangeRound([chartValues.height, 0]);
-
-		// this counts number of unique values
-		// var m = d3.map(objects, function(d) { return d.foo; }).size();
-
-		// given an attribute (for x axis), count the number of unique values for the x axis
-		// var numUniqueValues = d3.map(chartValues.data, function(d) { return d[chartValues.xAxisAttribute]; }).size();
-
-		// domain is the different xAxis values map is 1:1 but ok, because each x axis attribute occupies a spot
-		chartValues.xAxis.domain(chartValues.data.map(function(d) {return d[chartValues.xAxisAttribute];}));
-
-
-		var groupedByXaxis = d3.nest() // apply a nest (group by)
-			.key(function(d) { return d[chartValues.xAxisAttribute]; }) // first group by the attribute
-			.entries(chartValues.data); // do nest on the data
-
-		// groupedByXaxis is an array [{key: "1931", values: [...], {key: "1932", values: [ ...
-		chartValues.yAxis.domain([0, d3v4.max(groupedByXaxis, function(d) { return d.values.length; })]);
-
-
-		var yAxisSuffix = ""; // used for ticks.
+		this.setDomainsBarOrPie(chartValues);
+		chartValues.yAxisSuffix = ""; // used for ticks, but has to be data accurate...
 
 		chartValues.g.append("g")
 			.attr("class", "axis axis--x")
 			.attr("transform", "translate(0," + chartValues.height + ")")
-			.call(d3v4.axisBottom(chartValues.xAxis));
+			.call(d3v4.axisBottom(chartValues.xAxis))
+			.append("text")
+			.attr("x", chartValues.width / 2)
+			.attr("y", chartValues.margin.bottom / 2)
+			.attr("dy", "0.71em")
+			.attr("fill", "black")
+			.text(chartValues.xAxisAttribute);
 
 		chartValues.g.append("g")
 			.attr("class", "axis axis--y")
-			.call(d3v4.axisLeft(chartValues.yAxis).ticks(10, yAxisSuffix))
+			.call(d3v4.axisLeft(chartValues.yAxis).ticks(10, chartValues.yAxisSuffix))
 			.append("text")
-			.attr("transform", "rotate(-90)")
-			.attr("y", 6)
+			// .attr("transform", "rotate(-90)")
+			.attr("y", chartValues.margin.left / -2)
 			.attr("dy", "0.71em")
 			.attr("text-anchor", "end")
+			.attr("fill", "black")
 			.text("Count");
 
 		chartValues.g.selectAll(".bar")
-			.data(groupedByXaxis) // not actually the original data set, since needed the groupings
+			.data(chartValues.groupedByXAxis) // not actually the original data set, since needed the groupings
 			.enter().append("rect")
 			.attr("class", "bar")
 			.attr("x", function(d) { return chartValues.xAxis(d.key); }) // use the key of the grouping
@@ -134,6 +127,7 @@ var d3Charts = SAGE2_App.extend({
 			.attr("width", chartValues.xAxis.bandwidth()) // auto calc by the scaleBand
 			.attr("height", function(d) { return chartValues.height - chartValues.yAxis(d.values.length); }) // one bar, not pieces. Or...?
 			.attr("fill", "steelblue")
+			.attr("s2appOrigin", this.id)
 			.on('mouseover', this.overEffect)
 			.on('mouseout', this.outEffect)
 			.on('mousedown', this.downEffect);
@@ -141,39 +135,74 @@ var d3Charts = SAGE2_App.extend({
 		this.dbprint("end of generate");
 	},
 
+	/**
+	* Sets the domain for Bar or Pie.
+	* Current assumption is that bar / pie will always be counts of the attributes.
+	*
+	* @method setDomainsBarOrPie
+	* @param {Object} chartValues - assumed to contain all necessary data to build
+	*/
+	setDomainsBarOrPie: function(chartValues) {
+		// redo the x axis always. redo y axis since it's scale is determined by x axis
+		chartValues.xAxis = d3v4.scaleBand().rangeRound([0, chartValues.width]).padding(0.1);
+		chartValues.yAxis = d3v4.scaleLinear().rangeRound([chartValues.height, 0]);
+		// domain is the different xAxis values map is 1:1 but ok, because each x axis attribute occupies a spot
+		if (typeof chartValues.data[0][chartValues.xAxisAttribute] === "number") {
+			chartValues.xAxis.domain(
+				chartValues.data.map(function(d) {return d[chartValues.xAxisAttribute];}).sort(function(a, b) {
+					if (a < b) {
+						return -1;
+					} else if (b < a) {
+						return 1;
+					}
+					return 0;
+				})
+			);
+		} else {
+			chartValues.xAxis.domain(chartValues.data.map(function(d) {return d[chartValues.xAxisAttribute];}).sort());
+		}
+		this.setGroupedByXAxis(chartValues);
+	},
+
+	/**
+	* Sets the setGroupedByXAxis property for bar or pie.
+	* Current assumption is that bar / pie will always be counts of the attributes.
+	*
+	* @method setGroupedByXAxis
+	* @param {Object} chartValues - assumed to contain all necessary data to build
+	*/
+	setGroupedByXAxis: function(chartValues) {
+		// need to nest(group by) in order to get a count
+		// groupedByXAxis is an array [{key: "1931", values: [...], {key: "1932", values: [ ...
+		chartValues.groupedByXAxis = d3.nest() // apply a nest (group by)
+			.key(function(d) { return d[chartValues.xAxisAttribute]; }) // first group by the attribute
+			.entries(chartValues.data); // do nest on the data
+		// set domain
+		chartValues.yAxis.domain([0, d3v4.max(chartValues.groupedByXAxis, function(d) { return d.values.length; })]);
+	},
 
 	// --------------------------------------------------------------------------------------------------------------------------------------- PIE
-	// ---------------------------------------------------------------------------------------------------------------------------------------
-	// ---------------------------------------------------------------------------------------------------------------------------------------
-	generatePie: function() {
-		this.container.innerHTML = "";
-		var margin = { // space for the chart, note: char axis may go in this area.
-			top: this.sage2_height * 0.08,
-			right: this.sage2_width * 0.08,
-			bottom: this.sage2_height * 0.08,
-			left: this.sage2_width * 0.08
-		};
-		var width = this.sage2_width - margin.left - margin.right;
-    	var height = this.sage2_height - margin.top - margin.bottom;
 
-    	var radius = Math.min(width, height) / 2;
-
-		var x = d3v4.scaleBand().rangeRound([0, width]).padding(0.1);
-		var y = d3v4.scaleLinear().rangeRound([height, 0]);
-
-
-		this.svg = d3v4.select("#" + this.container.id).append("svg");
-		// this.svg.attr("width", this.sage2_width).attr("height", this.sage2_height);
-		this.svg.attr("width", "100%").attr("height", "100%");
-		this.svg.attr("preserveAspectRatio", "none");
-		this.svg.attr("viewBox", " 0 0 " + this.sage2_width + " " + this.sage2_height);
-
-		var color = d3v4.scaleOrdinal(["#98abc5", "#8a89a6", "#7b6888", "#6b486b", "#a05d56", "#d0743c", "#ff8c00"]);
-		var g = this.svg.append("g").attr("transform", "translate(" + width / 2 + "," + height / 2 + ")");
+	/**
+	* Generate a pie graph
+	*
+	* @method generatePie
+	* @param {Object} chartValues - assumed to contain all necessary data to build
+	*/
+	generatePie: function(chartValues) {
+		this.chartPrep(chartValues);
+		// set to center, as opposed to others that use the margin
+		chartValues.g.attr("transform",
+			"translate(" + (chartValues.width / 2 + chartValues.margin.left)
+			+ "," + (chartValues.height / 2 + chartValues.margin.top) + ")");
+		var color = d3v4.scaleOrdinal(d3v4.schemeCategory10);
+    	var radius = Math.min(chartValues.width, chartValues.height) / 2;
+		// need to nest(group by) in order to get a count
+		this.setGroupedByXAxis(chartValues); // above this method
 
 		var pie = d3v4.pie()
 			.sort(null)
-			.value(function(d) { return d.population; });
+			.value(function(d) { return d.values.length; });
 
 		var path = d3v4.arc()
 			.outerRadius(radius - 10)
@@ -183,14 +212,15 @@ var d3Charts = SAGE2_App.extend({
 			.outerRadius(radius - 40)
 			.innerRadius(radius - 40);
 
-		var arc = g.selectAll(".arc")
-			.data(pie(this.pieData))
+		var arc = chartValues.g.selectAll(".arc")
+			.data(pie(chartValues.groupedByXAxis))
 			.enter().append("g")
 			.attr("class", "arc");
 
 		arc.append("path")
 			.attr("d", path)
-			.attr("fill", function(d) { return color(d.data.age); })
+			.attr("fill", function(d) { return color(d.data.key); })
+			.attr("s2appOrigin", this.id)
 			.on('mouseover', this.overEffect)
 			.on('mouseout', this.outEffect)
 			.on('mousedown', this.downEffect);
@@ -198,8 +228,7 @@ var d3Charts = SAGE2_App.extend({
 		arc.append("text")
 			.attr("transform", function(d) { return "translate(" + label.centroid(d) + ")"; })
 			.attr("dy", "0.35em")
-			.text(function(d) { return d.data.age; });
-
+			.text(function(d) { return d.data.key + "(" + d.data.values.length + ")"; });
 
 		this.dbprint("end of pie generate");
 	},
@@ -261,10 +290,10 @@ var d3Charts = SAGE2_App.extend({
 			.attr("stroke-width", 1.5)
 			.attr("d", line)
 			// interaction test? seems not to work the same on lines
+			// .attr("s2appOrigin", this.id)
 			// .on("mouseover", this.overEffect)
 			// .on("mouseout", this.outEffect)
 			// .on("mousedown", this.downEffect);
-
 
 		this.dbprint("end of line generate");
 	},
@@ -296,8 +325,8 @@ var d3Charts = SAGE2_App.extend({
 			.call(d3v4.axisBottom(chartValues.xAxis))
 			.append("text")
 			.attr("class", "label")
-			.attr("x", chartValues.width)
-			.attr("y", -6)
+			.attr("x", chartValues.width / 2)
+			.attr("y", chartValues.margin.bottom / 2)
 			.attr("fill", "black")
 			.style("text-anchor", "end")
 			// .text("Sepal Width (cm)");
@@ -309,8 +338,8 @@ var d3Charts = SAGE2_App.extend({
 			.attr("font-size", ui.titleTextSize + "px")
 			.append("text")
 			.attr("class", "label")
-			.attr("transform", "rotate(-90)")
-			.attr("y", 6)
+			// .attr("transform", "rotate(-90)")
+			.attr("y", chartValues.margin.left / -2)
 			.attr("dy", ".71em")
 			.attr("fill", "black")
 			.attr("font-size", ui.titleTextSize + "px")
@@ -329,11 +358,10 @@ var d3Charts = SAGE2_App.extend({
 			// .style("fill", function(d) { return color(d.species); })
 			.style("stroke", "black")
 			.style("stroke-width", "1px")
+			.attr("s2appOrigin", this.id)
 			.on("mouseover", this.overEffect)
 			.on("mouseout", this.outEffect)
 			.on("mousedown", this.downEffect);
-
-
 
 
 		this.dbprint("end of scatter generate");
@@ -441,30 +469,105 @@ var d3Charts = SAGE2_App.extend({
 		return pattern;
 	},
 
-	overEffect: function () {
-		if (!this.downEffect) {
-			if (!this.startingColor) {
-				this.startingColor = this.style.fill;
+	overEffect: function (d) {
+		var s = d3.select(this);
+		if (!s.attr("downEffect")) {
+			if (!s.attr("startingColor")) {
+				s.attr("startingColor", s.attr("fill"));
+				s.attr("startingStrokeWidth", s.attr("stroke-width"));
+				s.attr("startingStroke", s.attr("stroke"));
 			}
-			this.style.fill = "red";
-			this.style.strokeWidth = "4px";
+			s.attr("fill", "red");
+			s.attr("stroke", "red");
+			s.attr("stroke-width", "4px");
 		}
 	},
-	outEffect: function () {
-		if (!this.downEffect) {
-			this.style.fill = this.startingColor;
-			this.style.strokeWidth = "1px";
+	outEffect: function (d) {
+		var s = d3.select(this);
+		if (!s.attr("downEffect")) {
+			s.attr("fill", s.attr("startingColor"));
+			s.attr("stroke", s.attr("startingStroke"));
+			s.attr("stroke-width", s.attr("startingStrokeWidth"));
 		}
 	},
-	downEffect: function () {
-		if (!this.downEffect) {
-			this.downEffect = true;
-			this.style.fill = "green";
-			this.style.strokeWidth = "4px";
+	downEffect: function (d) {
+		var s = d3.select(this);
+		if (!s.attr("downEffect")) {
+			s.attr("downEffect", true);
+			s.attr("fill", "green");
+			s.attr("stroke", "black");
+			s.attr("stroke-width", "4px");
+			// find the data and add to selection
+			var s2app = applications[s.attr("s2appOrigin")];
+			s2app.dataSelectionChange(s2app.findDataPieces(s.data()), "add");
 		} else {
-			this.downEffect = false;
-			this.style.fill = this.startingColor;
+			s.attr("downEffect", false);
+			s.attr("fill", s.attr("startingColor"));
+			s.attr("stroke", s.attr("startingStroke"));
+			s.attr("stroke-width", s.attr("startingStrokeWidth"));
+			// find the data and set the selection
+			var s2app = applications[s.attr("s2appOrigin")];
+			s2app.dataSelectionChange(s2app.findDataPieces(s.data()), "remove");
 		}
+	},
+
+	/**
+	* Looks for data piece based on the d3.data() given an element.
+	*
+	* @method findDataPieces
+	* @param {Array} d3DataReturn - what d3 returns after d3.data() on an element
+	* @returns {Array} matches - Data pieces that match the selection
+	*/
+	findDataPieces: function(d3DataReturn) {
+		var chartValues = this.state.chartValues;
+		var matches = [];
+		// d3DataReturn should be an array of one because something was clicked
+		if (Array.isArray(d3DataReturn)) {
+			d3DataReturn = d3DataReturn[0];
+		}
+		// some graphs have two levels... unsure why
+		if (d3DataReturn.data && typeof d3DataReturn.data === "object") {
+			d3DataReturn = d3DataReturn.data; // may need better check later
+		}
+		// switch... bar / pie uses sums, scatter uses original data
+		if (d3DataReturn.key && d3DataReturn.values) {
+			this.dbprint("This probably came from bar/pie, app thinks:" + chartValues.chartType);
+			for (let i = 0; i < chartValues.data.length; i++) { // can it be assumed as xAxisAttribute?
+				if (d3DataReturn.key == chartValues.data[i][chartValues.xAxisAttribute]) {
+					matches.push(chartValues.data[i]);
+				}
+			}
+		} else {
+			this.dbprint("This probably came from scatter, app thinks:" + chartValues.chartType);
+			console.dir(d3DataReturn);
+			matches.push(d3DataReturn);
+		}
+		return matches;
+	},
+
+	/**
+	* Looks for data piece based on the d3.data() given an element.
+	*
+	* @method dataSelectionChange
+	* @param {Array} matches - data elements that match
+	* @param {String} modification - should it be "add" or "remove"
+	*/
+	dataSelectionChange: function(matches, modification) {
+		this.dbprint("Matches are to be " + modification);
+		console.dir(matches);
+		this.dbprint("Current selection size:" + this.selectedElements.length);
+		if (modification === "add") {
+			this.dbprint("add");
+			this.selectedElements = this.selectedElements.concat(matches);
+		} else if (modification === "remove") {
+			this.dbprint("remove");
+			for (let i = 0; i < matches.length; i++) { // find then remove
+				this.selectedElements.splice(this.selectedElements.indexOf(matches[i]), 1);
+			}
+		} else {
+			console.log("ERROR: improper usage of dataSelectionChange");
+		}
+		this.dbprint("New selection size:" + this.selectedElements.length);
 	},
 
 	load: function(date) {
@@ -504,7 +607,7 @@ var d3Charts = SAGE2_App.extend({
 
 		entries.push({description: "separator"});
 
-		var entry   = {};
+		entry = {};
 		entry.description = "Set xAxis attribute:";
 		entry.callback = "setAxisAttribute";
 		entry.parameters     = { axis: "x" };
@@ -512,12 +615,32 @@ var d3Charts = SAGE2_App.extend({
 		entry.inputFieldSize = 20;
 		entries.push(entry);
 
-		var entry   = {};
+		entry = {};
 		entry.description = "Set yAxis attribute:";
 		entry.callback = "setAxisAttribute";
 		entry.parameters     = { axis: "y" };
 		entry.inputField     = true;
 		entry.inputFieldSize = 20;
+		entries.push(entry);
+
+		entries.push({description: "separator"});
+
+		entry = {};
+		entry.description = "Switch to Bar";
+		entry.callback = "switchChartType";
+		entry.parameters     = {chartType: "Bar" };
+		entries.push(entry);
+
+		entry = {};
+		entry.description = "Switch to Pie";
+		entry.callback = "switchChartType";
+		entry.parameters     = { chartType: "Pie" };
+		entries.push(entry);
+
+		entry = {};
+		entry.description = "Switch to Scatter";
+		entry.callback = "switchChartType";
+		entry.parameters     = { chartType: "Scatter" };
 		entries.push(entry);
 
 		return entries;
@@ -553,7 +676,7 @@ var d3Charts = SAGE2_App.extend({
 				}
 			} else if (msgParams.axis === "y") {
 				// Bar charts are the sums of unique values? Is there another case? Skip if bar
-				if (chartValues.chartType !== "Bar") { // Cap 1st letter
+				if (chartValues.chartType !== "Bar" && chartValues.chartType !== "Pie") { // Cap 1st letter
 					chartValues.yAxisAttribute = attribute;
 					if (this.dataTypeLookup(attribute).type === "time") {
 						chartValues.yAxisScale = "scaleTime";
@@ -562,6 +685,18 @@ var d3Charts = SAGE2_App.extend({
 					}
 				}
 			}
+			this.generateChartIfCan();
+		}
+	},
+
+	/**
+	* Changes chartType
+	*
+	* @method switchChartType
+	*/
+	switchChartType: function(msgParams) {
+		if(this.state.chartValues) {
+			this.state.chartValues.chartType = msgParams.chartType;
 			this.generateChartIfCan();
 		}
 	},
@@ -598,7 +733,7 @@ var d3Charts = SAGE2_App.extend({
 				break;
 			}
 		}
-		return dataDescription;
+		// return dataDescription;
 	},
 
 	dataTypes: {
