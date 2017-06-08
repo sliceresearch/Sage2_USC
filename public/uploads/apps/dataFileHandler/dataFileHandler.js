@@ -46,6 +46,12 @@ var dataFileHandler = SAGE2_App.extend({
 	*/
 	appSpecific: function() {
 		this.element.style.fontSize = "100px";
+		this.element.style.whiteSpace = "pre";
+		// File path trim to just file name
+		this.fileName = this.state.file;
+		while (this.fileName.indexOf("/") !== -1) {
+			this.fileName = this.fileName.substring(this.fileName.indexOf("/") + 1);
+		}
 
 		// This should be activated based off of the dragged and dropped file
 		if (this.state.file) {
@@ -53,10 +59,10 @@ var dataFileHandler = SAGE2_App.extend({
 			this.element.textContent = "Loading ";
 			var _this = this;
 			if (this.state.file.indexOf(".json")) {
-				this.element.textContent += " json:" + this.state.file;
+				this.element.textContent += "\r\njson file:"
 				d3.json(this.state.file, function(error, jsObject) {
 					if (error) {
-						this.element.textContent = "Unable to load " + this.state.file;
+						_this.showMessageErrorLoad();
 					}
 					_this.d3Loaded(jsObject);
 				});
@@ -66,9 +72,15 @@ var dataFileHandler = SAGE2_App.extend({
 			} else {
 				this.element.textContent = "Unable to load " + this.state.file;
 			}
+			this.element.textContent += "\r\n" + this.state.file;
 		} else {
 			this.element.textContent = "No file given...";
 		}
+	},
+
+	showMessageErrorLoad: function() {
+		this.updateTitle("Unable to load " + this.state.file);
+		this.element.textContent = "Unable to load " + this.state.file;
 	},
 
 	/**
@@ -83,7 +95,7 @@ var dataFileHandler = SAGE2_App.extend({
 		// if it isn't an object, can't do anything.
 		if (typeof jsObject !== "object") {
 			this.dbprint("Did not get an object from file");
-			this.element.textContent = "Unable to load " + this.state.file;
+			this.showMessageErrorLoad();
 			return;
 		}
 		// Put in an array if not already in one.
@@ -92,28 +104,42 @@ var dataFileHandler = SAGE2_App.extend({
 		} else {
 			this.dataFromFile = [jsObject]; // put in array even if only 1 element
 		}
-		// Use the first element as the reference object
-		jsObject = this.dataFromFile[0];
-		// Display information about contents
-		this.element.style.fontSize = ui.titleTextSize + "px";
-		// Title trim
-		this.fileName = this.state.file;
-		while (this.fileName.indexOf("/") !== -1) {
-			this.fileName = this.fileName.substring(this.fileName.indexOf("/") + 1);
-		}
-		this.updateTitle(this.fileName + " (" + this.dataFromFile.length + " elements)");
-		var content = "<div style='margin-left:" + ui.titleTextSize + "px'>";
-		content += "<h3>Attributes:</h3>";
-		content += "<p>";
-		var keys = Object.keys(jsObject);
-		for (let i = 0; i < keys.length; i++) {
-			content += "<div>" + keys[i] + "</div>";
-		}
-		content += "</p><br>";
-		content += "<p><div>Raw Data:</div><div>" + JSON.stringify(this.dataFromFile) + "</div></p></div>";
-		this.element.innerHTML = content;
+		// if there is more than one element.
+		if (this.dataFromFile.length > 1) {
+			// Use the first element as the reference object
+			jsObject = this.dataFromFile[0];
+			// Display information about contents
+			this.element.style.fontSize = ui.titleTextSize + "px";
+			this.updateTitle(this.fileName + " (" + this.dataFromFile.length + " elements)");
+			var content = "<div style='margin-left:" + ui.titleTextSize + "px'>";
+			content += "<h3>Attributes:</h3>";
+			content += "<p>";
+			var keys = Object.keys(jsObject);
+			for (let i = 0; i < keys.length; i++) {
+				content += "<div>" + keys[i] + "</div>";
+			}
+			content += "</p><br>";
+			content += "<p><div>Raw Data:</div><div>" + JSON.stringify(this.dataFromFile) + "</div></p></div>";
+			this.element.innerHTML = content;
 
-		this.analyseAndOpenChart();
+			this.broadcastData(); // broadcast before opening charts
+			this.analyseAndOpenChart();
+		} else { // it was empty?
+			this.updateTitle(this.fileName + " (" + this.dataFromFile.length + " elements)");
+			var content = "<div style='margin-left:" + ui.titleTextSize + "px'>";
+			content += "<h3>Attributes:</h3>";
+			content += "<p>";
+		}
+	},
+
+	/**
+	* Broadcast data
+	*
+	* @method broadcastData
+	*/
+	broadcastData: function() {
+		// function(nameOfValue, value, description) {
+		this.csdSetValue(this.id + ":source:" + "datasetSource", this.dataFromFile, "json data loaded from file:" + this.fileName);
 	},
 
 	/**
@@ -126,7 +152,7 @@ var dataFileHandler = SAGE2_App.extend({
 		var element1 = this.dataFromFile[0];
 		var keys = Object.keys(element1);
 
-		var hasTime = null, xAxisAttribute = null, yAxisAttribute;
+		var hasTime = null, xAxisAttribute = null, yAxisAttribute = null;
 		for (let i = 0; i < keys.length; i++) {
 			if (keys[i] === "time" || keys[i] === "date") {
 				hasTime = keys[i];
@@ -134,19 +160,22 @@ var dataFileHandler = SAGE2_App.extend({
 			}
 		}
 
-		// set a random y axis property to plot against
-		var justInCase = 0;
-		do {
-			yAxisAttribute = keys[this.getRandomInt(0, keys.length)];
-			this.dbprint("chosen y attribute:" + yAxisAttribute + " from possible " + keys.length);
-			justInCase++;
-			if (justInCase > 100) {
-				break;
-			}
-		} while(yAxisAttribute == xAxisAttribute);
+		// set a random y axis property to plot against, if there is more than one
+		if (keys.length > 1) {
+			// set a random y axis property to plot against
+			var justInCase = 0;
+			do {
+				yAxisAttribute = keys[this.getRandomInt(0, keys.length)];
+				this.dbprint("chosen y attribute:" + yAxisAttribute + " from possible " + keys.length);
+				justInCase++;
+				if (justInCase > 100) {
+					break;
+				}
+			} while(yAxisAttribute == xAxisAttribute);
+		}
 
 		// if has time can open a chart...
-		if (hasTime) {
+		if (hasTime && yAxisAttribute) {
 			// function(appName, params, funcToPassParams, x, y)
 			var chartValues = {
 				data: this.dataFromFile,
@@ -157,36 +186,23 @@ var dataFileHandler = SAGE2_App.extend({
 				yAxisScale: "scaleLinear"
 			};
 
-			if (this.debug) {
-				chartValues.yAxisAttribute = "rain";
-			}
-
 			// chartValues.chartType = "Line";
-			// this.csdLaunchAppWithValues("d3Charts", { chartValues: chartValues }, // line
-			// 	undefined, // no post launch function activation
-			// 	this.sage2_x + 30, this.sage2_y + 30);
+			// this.makeChart(chartValues, 60);
 
 			chartValues.chartType = "Scatter";
-			this.csdLaunchAppWithValues("d3Charts", { chartValues: chartValues }, // scatter
-				undefined, // no post launch function activation
-				this.sage2_x + 60, this.sage2_y + 60);
-
+			this.makeChart(chartValues, 60);
 
 			chartValues.chartType = "Bar"; // bar charts only want counts, right?
 			chartValues.xAxisAttribute = chartValues.yAxisAttribute;
 			chartValues.xAxisScale = chartValues.yAxisScale;
-			this.csdLaunchAppWithValues("d3Charts", { chartValues: chartValues }, // bar
-				undefined, // no post launch function activation
-				this.sage2_x + 90, this.sage2_y + 90);
+			this.makeChart(chartValues, 90);
 
 			chartValues.chartType = "Pie";
 			chartValues.xAxisAttribute = chartValues.yAxisAttribute;
 			chartValues.xAxisScale = chartValues.yAxisScale;
-			this.csdLaunchAppWithValues("d3Charts", { chartValues: chartValues }, // pie
-				undefined, // no post launch function activation
-				this.sage2_x + 120, this.sage2_y + 120);
+			this.makeChart(chartValues, 120);
 		} else {
-			this.dbprint("Unsure what kind of chart to use, has to be manual");
+			console.log("Chart must be build manually");
 		}
 	},
 
@@ -232,13 +248,62 @@ var dataFileHandler = SAGE2_App.extend({
 		var entries = [];
 		var entry;
 
-		// entry = {};
-		// entry.description = "Bar chart data set 1";
-		// entry.callback    = "loadBarChartData";
-		// entry.parameters  = { dataset: 1 };
-		// entries.push(entry);
+		entry = {};
+		entry.description = "Make Bar";
+		entry.callback    = "makeChart";
+		entry.parameters  = { type: "Bar" };
+		entries.push(entry);
+
+		entry = {};
+		entry.description = "Make Pie";
+		entry.callback    = "makeChart";
+		entry.parameters  = { type: "Pie" };
+		entries.push(entry);
+
+		entry = {};
+		entry.description = "Make Line";
+		entry.callback    = "makeChart";
+		entry.parameters  = { type: "Line" };
+		entries.push(entry);
 
 		return entries;
+	},
+
+	/**
+	* Makes a chart based on given parameters.
+	* Activated by two locations: context and after file load.
+	* Context needs to have additional assignment, after fileload should give all needed parts.
+	*
+	* @method makeChart
+	* @param {Object} params - what d3 returns after d3.data() on an element
+	* @returns {Integer} posOffset - how far away to make the chart, x and y
+	*/
+	makeChart: function(params, posOffset) {
+		if (this.dataFromFile.length < 1) {
+			return; // cannot do anything with no elements.
+		}
+		var chartValues;
+		// check if it came from context menu activation, (clientId is always given)
+		if (params.clientId) {
+			// for now use first two keys if available
+			var keys = Object.keys(this.dataFromFile[0]);
+			chartValues = {
+				data: this.dataFromFile,
+				chartType: params.type,
+			};
+			if (keys.length > 1) {
+				chartValues.xAxisAttribute = keys[0];
+				chartValues.yAxisAttribute = keys[1];
+			} else {
+				chartValues.xAxisAttribute = keys[0];
+				chartValues.yAxisAttribute = keys[0];
+			}
+		} else { // if activated after file, this will be given necessary data
+			chartValues = params;
+		}
+		this.csdLaunchAppWithValues("d3Charts", { chartValues: chartValues },
+			undefined, // no post launch function activation
+			this.sage2_x + posOffset, this.sage2_y + posOffset);
 	},
 
 	event: function(eventType, position, user_id, data, date) {
@@ -248,8 +313,6 @@ var dataFileHandler = SAGE2_App.extend({
 	quit: function() {
 		// no additional calls needed.
 	},
-
-
 
 	blankString: "" // just a place holder
 
