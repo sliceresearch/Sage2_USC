@@ -1,0 +1,18 @@
+{
+	"main_script": "dataLinker.js",
+	"width": 600,
+	"height": 400,
+	"resize": "free",
+	"animation": true,
+	"dependencies": [
+		"appCss.css"
+	],
+	"load": {
+	},
+	"title": "Creates Data Links",
+	"version": "1.0.0",
+	"description": "Data Link Test",
+	"keywords": [  ],
+	"author": "Dylan Kobayashi <dylank@hawaii.edu>",
+	"license": "SAGE2-Software-License"
+}

@@ -261,9 +261,9 @@ var dataFileHandler = SAGE2_App.extend({
 		entries.push(entry);
 
 		entry = {};
-		entry.description = "Make Line";
+		entry.description = "Make Scatter";
 		entry.callback    = "makeChart";
-		entry.parameters  = { type: "Line" };
+		entry.parameters  = { type: "Scatter" };
 		entries.push(entry);
 
 		return entries;

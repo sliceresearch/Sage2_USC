@@ -52,16 +52,131 @@ var d3Charts = SAGE2_App.extend({
 
 		this.selectedElements = []; // full data pieces
 		this.selectedValues = []; // this is more about axis value of selection
+		this.hoveredElements = []; // because there could be multiple pointers (was this coded in?)
 
 		if (data.csdInitValues) {
 			this.dbprint(this.id + " has csdInitValues");
 			this.state.chartValues = data.csdInitValues.chartValues; // save in the state (future work to recover / share)
+			this.state.chartValues.originalData = this.state.chartValues.data; // keep an original copy
 
 			this.generateChartIfCan();
 		} else {
 			// no init values, maybe should first be a state check if there are children?
+			// for sake of other pieces, start with a basic set
+			this.state.chartValues = {
+				data: []
+			};
+
+		}
+		this.broadcastInitialValues();
+	},
+
+	// ---------------------------------------------------------------------------------------------------------------- Data send / receive
+
+	/**
+	* State this apps' source destination variables.
+	*
+	* @method broadcastInitialValues
+	*/
+	broadcastInitialValues: function() {
+		// csdSetValue = function(nameOfValue, value, description) {
+		this.csdSetValue(this.id + ":source:dataset", this.state.chartValues.data);
+		this.csdSetValue(this.id + ":source:dataSelected", []); // none at beginning
+		this.csdSetValue(this.id + ":source:dataHovered", []); // none at beginning
+
+		// create destination variables for this app
+		this.csdSetValue(this.id + ":destination:dataset", []);
+		this.csdSetValue(this.id + ":destination:dataSelected", []);
+		this.csdSetValue(this.id + ":destination:dataHovered", []);
+		// app.csdSubscribeToValue = function(nameOfValue, callback, unsubscribe) {
+		this.csdSubscribeToValue(this.id + ":destination:dataset", "dataDestinationFullDataSetReplacement");
+		this.csdSubscribeToValue(this.id + ":destination:dataSelected", "dataDestinationSelected"); // none at beginning
+		this.csdSubscribeToValue(this.id + ":destination:dataHovered", "dataDestinationHovered"); // none at beginning
+	},
+
+	/**
+	* Handler for receiving data set replacement. Currently full replacement.
+	*
+	* @method broadcastInitialValues
+	* @param {Array} dataset - for usage as replacement
+	*/
+	dataDestinationFullDataSetReplacement: function(dataset) {
+		if (Array.isArray(dataset)) {
+			if (dataset.length > 0) {
+				this.dbprint("Sanity check: this should be an array of data to display:" + Array.isArray(dataset));
+				this.state.chartValues.data = dataset;
+				// also update the broadcast data set
+				this.csdSetValue(this.id + ":source:dataset", this.state.chartValues.data);
+				this.generateChartIfCan();
+			} else {
+				// discard, unable to use blank set for the sake of some of the checks
+			}
 		}
 	},
+
+	/**
+	* Handler for receiving selection effect.
+	*
+	* @method dataDestinationSelected
+	* @param {Array} dataset - for usage as selection
+	*/
+	dataDestinationSelected: function(dataset) {
+		var chartValues = this.state.chartValues;
+		// need data in array
+		if (Array.isArray(dataset)) {
+			if (dataset.length > 0) {
+				if (chartValues.chartType === "Bar" || chartValues.chartType === "Pie") {
+					this.dataDestinationFullDataSetReplacement(dataset);
+				} else if (chartValues.chartType === "Scatter") {
+					
+				} else { // always else?
+
+				}
+			} else if (this.state.chartValues.data !== this.state.chartValues.originalData) {
+				// with a length of 0, if the current data is not original, reset to original
+				this.dataDestinationFullDataSetReplacement(this.state.chartValues.originalData);
+			}
+		}
+	},
+
+	/**
+	* Handler for receiving hover effect.
+	*
+	* @method dataDestinationHovered
+	* @param {Array} dataset - for usage as hover
+	*/
+	dataDestinationHovered: function(dataset) {
+		var _this = this;
+		// need data in array
+		if (Array.isArray(dataset) && dataset.length > 0) {
+			var chartValues = this.state.chartValues;
+			if (chartValues.chartType === "Bar" || chartValues.chartType === "Pie") {
+				// don't react on bar pie?
+			} else if (chartValues.chartType === "Scatter") {
+				console.log("erase me, checking the select all of .dot on scatter");
+				console.dir(chartValues.g.selectAll(".dot"));
+				console.log("erase me, also this was given a dataset");
+				console.dir(dataset);
+
+				// This is a quick fix based around id because its quick and should work
+				var datasetIdList = dataset.map(function(d) { return d.id;});
+
+				// turn off selection
+				this.applyOutEffectVisual(chartValues.g.selectAll(".dot"));
+
+				chartValues.g.selectAll(".dot").attr("hasHoverStatus", function(d){
+					if (datasetIdList.includes(d.id)) {
+						_this.applyOverEffectVisual(d3.select(this));
+					}
+				})
+			} else { // always else?
+
+			}
+		}
+	},
+
+	// ---------------------------------------------------------------------------------------------------------------- Chart creation
+
 
 	/**
 	* Generates the chart. Assumes this.state.chartValues exists.
@@ -469,25 +584,71 @@ var d3Charts = SAGE2_App.extend({
 		return pattern;
 	},
 
+	/**
+	 * While this function is defined in the app, it is attached to a d3 element.
+	 * Keyword "this" refers to that element, not the app.
+	 * @method overEffect
+	 * @param {Object} d - 
+	 */
 	overEffect: function (d) {
 		var s = d3.select(this);
 		if (!s.attr("downEffect")) {
-			if (!s.attr("startingColor")) {
-				s.attr("startingColor", s.attr("fill"));
-				s.attr("startingStrokeWidth", s.attr("stroke-width"));
-				s.attr("startingStroke", s.attr("stroke"));
-			}
-			s.attr("fill", "red");
-			s.attr("stroke", "red");
-			s.attr("stroke-width", "4px");
+			// if (!s.attr("startingColor")) {
+			// 	s.attr("startingColor", s.attr("fill"));
+			// 	s.attr("startingStrokeWidth", s.attr("stroke-width"));
+			// 	s.attr("startingStroke", s.attr("stroke"));
+			// }
+			// s.attr("fill", "red");
+			// s.attr("stroke", "red");
+			// s.attr("stroke-width", "4px");
+			// find the data and add to hover
+			var s2app = applications[s.attr("s2appOrigin")];
+			s2app.applyOverEffectVisual(s);
+			s2app.dataHoverChange(s2app.findDataPieces(s.data()), "add");
 		}
 	},
+
+	/**
+	 * Handler for visual over effect, in order to make it work with message selection.
+	 * @method applyOverEffectVisual
+	 * @param {Object} d3Selection - from events is one element, but from message could be multiple
+	 */
+	applyOverEffectVisual: function (d3Selection) {
+		if (!d3Selection.attr("downEffect")) {
+			if (!d3Selection.attr("startingColor")) {
+				d3Selection.attr("startingColor", d3Selection.attr("fill"));
+				d3Selection.attr("startingStrokeWidth", d3Selection.attr("stroke-width"));
+				d3Selection.attr("startingStroke", d3Selection.attr("stroke"));
+			}
+			d3Selection.attr("fill", "red");
+			d3Selection.attr("stroke", "red");
+			d3Selection.attr("stroke-width", "4px");
+		}
+	},
+
 	outEffect: function (d) {
 		var s = d3.select(this);
 		if (!s.attr("downEffect")) {
-			s.attr("fill", s.attr("startingColor"));
-			s.attr("stroke", s.attr("startingStroke"));
-			s.attr("stroke-width", s.attr("startingStrokeWidth"));
+			// s.attr("fill", s.attr("startingColor"));
+			// s.attr("stroke", s.attr("startingStroke"));
+			// s.attr("stroke-width", s.attr("startingStrokeWidth"));
+			// find the data and add to hover
+			var s2app = applications[s.attr("s2appOrigin")];
+			s2app.applyOutEffectVisual(s);
+			s2app.dataHoverChange(s2app.findDataPieces(s.data()), "remove");
+		}
+	},
+
+	/**
+	 * Handler for visual out effect, in order to make it work with message selection.
+	 * @method applyOutEffectVisual
+	 * @param {Object} d3Selection - from events is one element, but from message could be multiple
+	 */
+	applyOutEffectVisual: function (d3Selection) {
+		if (!d3Selection.attr("downEffect")) {
+			d3Selection.attr("fill", d3Selection.attr("startingColor"));
+			d3Selection.attr("stroke", d3Selection.attr("startingStroke"));
+			d3Selection.attr("stroke-width", d3Selection.attr("startingStrokeWidth"));
 		}
 	},
 	downEffect: function (d) {
@@ -568,6 +729,35 @@ var d3Charts = SAGE2_App.extend({
 			console.log("ERROR: improper usage of dataSelectionChange");
 		}
 		this.dbprint("New selection size:" + this.selectedElements.length);
+		// update this apps broadcast value
+		this.csdSetValue(this.id + ":source:dataSelected", this.selectedElements);
+	},
+
+	/**
+	* Looks for data piece based on the d3.data() given an element.
+	*
+	* @method dataHoverChange
+	* @param {Array} matches - data elements that match
+	* @param {String} modification - should it be "add" or "remove"
+	*/
+	dataHoverChange: function(matches, modification) {
+		this.dbprint("Matches are to be " + modification);
+		console.dir(matches);
+		this.dbprint("Current hover size:" + this.hoveredElements.length);
+		if (modification === "add") {
+			this.dbprint("add");
+			this.hoveredElements = this.hoveredElements.concat(matches);
+		} else if (modification === "remove") {
+			this.dbprint("remove");
+			for (let i = 0; i < matches.length; i++) { // find then remove
+				this.hoveredElements.splice(this.hoveredElements.indexOf(matches[i]), 1);
+			}
+		} else {
+			console.log("ERROR: improper usage of dataHoverChange");
+		}
+		this.dbprint("New hover size:" + this.hoveredElements.length);
+		// update this apps broadcast value
+		this.csdSetValue(this.id + ":source:dataHovered", this.hoveredElements);
 	},
 
 	load: function(date) {
@@ -733,7 +923,7 @@ var d3Charts = SAGE2_App.extend({
 				break;
 			}
 		}
-		// return dataDescription;
+		return dataDescription;
 	},
 
 	dataTypes: {

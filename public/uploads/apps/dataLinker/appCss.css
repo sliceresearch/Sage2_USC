@@ -1,0 +1,15 @@
+/* required styles */
+
+.s2_borderBottom {
+	border-bottom: 1px solid black;
+}
+.s2_marginBottom2p {
+	margin-bottom: 2%;
+}
+.s2_marginLeftIndent {
+	margin-left: 20px;
+}
+.s2_msrc_list_play {
+	white-space: nowrap;
+	text-align: center;
+}

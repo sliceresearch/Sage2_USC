@@ -791,8 +791,7 @@ var googlemaps = SAGE2_App.extend({
 			app: this.id,
 			func: "csdHandlerForNewVariableNotification"
 		};
-		// erase me
-		console.log("erase me, maps subscribing to new variables");
+		// ask server for new variables
 		console.dir(dataForServer);
 		wsio.emit("csdMessage", dataForServer);
 
@@ -800,14 +799,14 @@ var googlemaps = SAGE2_App.extend({
 		dataForServer = {
 			type: "setValue",
 			nameOfValue: this.id + ":source:geoLocation",
-			description: "the map's center geolocation value",
+			description: "the map's center geoLocation value",
 			value: {}
 		};
 		dataForServer.value.source = this.id;
 		dataForServer.value.location = this.state.center;
 		wsio.emit("csdMessage", dataForServer);
 
-		// tell server it will accept geolocation for plotting
+		// tell server it will accept geoLocation for plotting
 		dataForServer = {
 			type: "setValue",
 			nameOfValue: this.id + ":destination:geoLocation:markerPlot",
@@ -818,7 +817,7 @@ var googlemaps = SAGE2_App.extend({
 		dataForServer.value.location = this.state.center;
 		wsio.emit("csdMessage", dataForServer);
 
-		// tell server it will accept geolocation for plotting
+		// tell server it will accept geoLocation for plotting
 		dataForServer = {
 			type: "setValue",
 			nameOfValue: this.id + ":destination:geoLocation:viewCenter",
@@ -855,9 +854,9 @@ var googlemaps = SAGE2_App.extend({
 		+ " has description: " + addedVar.description);
 		// if this should plot any new geo data source
 		if (this.plotAnyNewGeoSource
-			&& addedVar.nameOfValue.indexOf("geolocation") !== -1
+			&& addedVar.nameOfValue.indexOf("geoLocation") !== -1
 			&& addedVar.nameOfValue.indexOf("source") !== -1
-			&& addedVar.nameOfValue.indexOf("image") !== -1) {
+			&& addedVar.description.indexOf("image") !== -1) {
 			console.log("erase me, has also detected that new var is a geo location");
 			var dataForServer = {
 				type: "getValue",
@@ -873,7 +872,7 @@ var googlemaps = SAGE2_App.extend({
 
 	geoDataFromServer: function(value) {
 		// all display clients need this to sync correctly
-		console.log("erase me, got geo data, plotting it");
+		console.log("erase me, got geo data, plotting it(" + value.location.lat + "," + value.location.lng + ")");
 		this.addMarkerToMap({
 			lat: value.location.lat,
 			lng: value.location.lng,
@@ -884,6 +883,7 @@ var googlemaps = SAGE2_App.extend({
 
 	toggleAutomaticPlot: function(responseObject) {
 		this.plotAnyNewGeoSource = responseObject.plot;
+		this.getFullContextMenuAndUpdate();
 	},
 
 	setView: function(serverVar) {
