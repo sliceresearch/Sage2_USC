@@ -910,40 +910,40 @@ var SAGE2_App = Class.extend({
 	getFullContextMenuAndUpdate: function() {
 		// Send one update to the server
 		if (isMaster) {
-			var rmbData = {};
-			rmbData.app = this.id;
+			var appContextMenu = {};
+			appContextMenu.app = this.id;
 			// If the application defines a menu function, use it
 			if (typeof this.getContextEntries === "function") {
-				rmbData.entries = this.getContextEntries();
-				rmbData.entries.push({
+				appContextMenu.entries = this.getContextEntries();
+				appContextMenu.entries.push({
 					description: "separator"
 				});
-				rmbData.entries.push({
+				appContextMenu.entries.push({
 					description: "Send to back",
 					callback: "SAGE2SendToBack",
 					parameters: {}
 				});
-				rmbData.entries.push({
+				appContextMenu.entries.push({
 					description: "Maximize",
 					callback: "SAGE2Maximize",
 					parameters: {}
 				});
-				rmbData.entries.push({
+				appContextMenu.entries.push({
 					description: "separator"
 				});
-				rmbData.entries.push({
+				appContextMenu.entries.push({
 					description: "Close " + (this.title || "application"),
 					callback: "SAGE2DeleteElement",
 					parameters: {}
 				});
 			} else {
-				rmbData.entries = [{
+				appContextMenu.entries = [{
 					description: "Close application",
 					callback: "SAGE2DeleteElement",
 					parameters: {}
 				}];
 			}
-			wsio.emit("dtuRmbContextMenuContents", rmbData);
+			wsio.emit("appContextMenuContents", appContextMenu);
 		}
 	},
 

@@ -1033,12 +1033,10 @@ function setupListeners(wsio) {
 	wsio.on('startJupyterSharing',					wsStartJupyterSharing);
 	wsio.on('updateJupyterSharing',					wsUpdateJupyterSharing);
 
-	// message passing between ui to display (utd)
-	wsio.on('utdWhatAppIsAt',						wsUtdWhatAppIsAt);
-	wsio.on('utdRequestRmbContextMenu',				wsUtdRequestRmbContextMenu);
-	wsio.on('utdCallFunctionOnApp',					wsUtdCallFunctionOnApp);
-	// display to ui (dtu)
-	wsio.on('dtuRmbContextMenuContents',			wsDtuRmbContextMenuContents);
+	// message passing between clients
+	wsio.on('requestAppContextMenu',				wsRequestAppContextMenu);
+	wsio.on('callFunctionOnApp',					wsCallFunctionOnApp);
+	wsio.on('appContextMenuContents',				wsAppContextMenuContents);
 	// generic message passing for data requests or for specific communications.
 	// might eventually break this up into individual ws functions
 	wsio.on('csdMessage',							wsCsdMessage);
@@ -9171,43 +9169,35 @@ function showOrHideWidgetLinks(data) {
 }
 
 /**
- * Asks what app is at given x,y coordinate.
+ * Asks server for the context menu of an app. Server will send the current known menu.
+ * Menus must be sumitted by app, or the default "Not yet loaded" will be displayed.
+ * To use context menu an app MUST have been loaded on a master display.
+ *
+ * @method wsRequestAppContextMenu
+ * @param  {Object} wsio - The websocket of sender.
+ * @param  {Object} data - The object needed to get menu, properties described below.
+ * @param  {Integer} data.x - Pointer x, corresponds to on entire wall.
+ * @param  {Integer} data.y - Pointer y, corresponds to on entire wall.
+ * @param  {Integer} data.xClick - Where client clicked on their screen, because this is async.
+ * @param  {Integer} data.yClick - Where client clicked on their screen, because this is async.
  */
-function wsUtdWhatAppIsAt(wsio, data) {
+function wsRequestAppContextMenu(wsio, data) {
+	// first find if there is an app at location, top most element.
 	var obj = interactMgr.searchGeometry({x: data.x, y: data.y});
-
-	data.message = "utdWhatAppIsAt>Received query from:" + wsio.id + " ";
-	if (obj === null) {
-		data.message += "no app at location";
-	} else {
-		data.message += obj.data.id;
-	}
-	wsio.emit('utdConsoleMessage', data);
-}
-
-/**
- * Asks for rmb context menu from app under x,y coordinate.
- */
-function wsUtdRequestRmbContextMenu(wsio, data) {
-	var obj = interactMgr.searchGeometry({x: data.x, y: data.y});
-
 	if (obj !== null) {
-		// check type of item under click
+		// check if it was an application
 		if (SAGE2Items.applications.list.hasOwnProperty(obj.data.id)) {
-			// if an app was under the rmb click
+			// if an app was under the right-click
 			if (SAGE2Items.applications.list[obj.data.id].contextMenu) {
-
 				// If we already have the menu info, send it
-				wsio.emit('dtuRmbContextMenuContents', {
+				wsio.emit('appContextMenuContents', {
 					x: data.xClick,
 					y: data.yClick,
 					app: obj.data.id,
 					entries: SAGE2Items.applications.list[obj.data.id].contextMenu
 				});
-
-			} else {
-				// Default response
-				wsio.emit('dtuRmbContextMenuContents', {
+			} else { // Else, app did not submit menu, give default (not loaded). 
+				wsio.emit('appContextMenuContents', {
 					x: data.xClick,
 					y: data.yClick,
 					app: obj.data.id,
@@ -9215,11 +9205,10 @@ function wsUtdRequestRmbContextMenu(wsio, data) {
 						description: "App not yet loaded on display client yet."
 					}]
 				});
-
-			}
+			} // otherwise if it was a partition
 		} else if (partitions.list.hasOwnProperty(obj.data.id)) {
-			// if a partition was under the rmb click
-			wsio.emit('dtuRmbContextMenuContents', {
+			// if a partition was under the right-click
+			wsio.emit('appContextMenuContents', {
 				x: data.xClick,
 				y: data.yClick,
 				app: obj.data.id,
@@ -9231,14 +9220,27 @@ function wsUtdRequestRmbContextMenu(wsio, data) {
 }
 
 /**
- * Asks for rmb context menu from app under x,y coordinate.
+ * Will call a function on each display client's app that matches id. Expected usage with context menu.
+ * But can be used in other cases. 
+ * There are some special functionality cases like:
+ *   SAGE2DeleteElement, SAGE2SendToBack, SAGE2Maximize
+ *   These do not send message to app.
+ *
+ * @method wsCallFunctionOnApp
+ * @param  {Object} wsio - The websocket of sender.
+ * @param  {Object} data - The object properties described below.
+ * @param  {Integer} data.x - Pointer x, corresponds to on entire wall.
+ * @param  {Integer} data.y - Pointer y, corresponds to on entire wall.
+ * @param  {String} data.app - App id, which function should be activated.
+ * @param  {String} data.func - Name of function to activate
+ * @param  {Object} data.parameters - Object to send to the app as parameter.
  */
-function wsUtdCallFunctionOnApp(wsio, data) {
+function wsCallFunctionOnApp(wsio, data) {
 	// check if the id is an applications or partition
 	if (SAGE2Items.applications.list.hasOwnProperty(data.app)) {
+		// check for special cases, no message sent to app.
 		if (data.func === "SAGE2DeleteElement") {
 			deleteApplication(data.app);
-			// closing of applications are handled by the called function.
 			return;
 		} else if (data.func === "SAGE2SendToBack") {
 			// data.app should contain the id.
@@ -9320,9 +9322,15 @@ function wsUtdCallFunctionOnApp(wsio, data) {
 }
 
 /**
- * Passes the received values from app to the specified client.
+ * Received from a display client, apps will send their context menu after completing their initialization.
+ *
+ * @method wsAppContextMenuContents
+ * @param  {Object} wsio - The websocket of sender.
+ * @param  {Object} data - The object properties described below.
+ * @param  {String} data.app - App id that this menu is for.
+ * @param  {Array} data.entries - Array of objects describing the entries.
  */
-function wsDtuRmbContextMenuContents(wsio, data) {
+function wsAppContextMenuContents(wsio, data) {
 	SAGE2Items.applications.list[data.app].contextMenu = data.entries;
 }
 
