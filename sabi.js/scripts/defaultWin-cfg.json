@@ -37,8 +37,8 @@
 	],
 	remote_sites: [
                 {
-                        name: "CAVE2",
-                        host: "lyra.evl.uic.edu",
+                        name: "EVL Test",
+                        host: "sage2server.evl.uic.edu",
                         port: 443,
                         secure: true
                 }

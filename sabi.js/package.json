@@ -20,12 +20,12 @@
 		"http-auth": "latest",
 		"json5": "latest",
 		"mime": "latest",
-		"socket.io": "latest",
+		"socket.io": "^1",
 		"sprint": "latest",
 		"serialport": "latest",
 		"forever": "latest",
 		"optimist": "latest",
-		"socket.io-client": "latest"
+		"socket.io-client": "^1"
 	},
 	"devDependencies": {
 		"jshint": "latest",

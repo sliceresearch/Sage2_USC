@@ -1,0 +1,494 @@
+April2017 tag
+------------
+
+Fix
+~~~
+- Added missing UI pin icons. [krishnaBharadwaj]
+
+Other
+~~~~~
+- Merge branch 'mediabrowser' [Luc Renambot]
+- Merge branch 'master' into mediabrowser. [Luc Renambot]
+- A few utility functions to build the menus for the toolbar and
+  mediabrowser: menu item definition and callback in one datai
+  structure. [Luc Renambot]
+- Merge branch 'master' into mediabrowser. [Luc Renambot]
+- Move advanced menu to the right. [Luc Renambot]
+- Add 'save session' in menu. [Luc Renambot]
+- Tweak the top bar colors and look. [Luc Renambot]
+- Change colors in top menubar. [Luc Renambot]
+- Rename some menu items and move screenshot to 'view' [Luc Renambot]
+- Removed 'settings' and 'info' buttons for menubar (placed inside top
+  menubar) [Luc Renambot]
+- Edit menu hass same functionalities as context menu in media browser.
+  [Luc Renambot]
+- Removed comma. [Luc Renambot]
+- Add menubar in viewonly mode. [Luc Renambot]
+- Merge branch 'master' into mediabrowser. [Luc Renambot]
+- Working on the top menubar. [Luc Renambot]
+- Merge branch 'master' into mediabrowser. [Luc Renambot]
+- Update menu labels. [Luc Renambot]
+- Merge branch 'master' into mediabrowser. [Luc Renambot]
+- Experiment in putting a menu bar above the web UI: took functions from
+  the media browser menu and placed on top. Hopefully a faster access to
+  important functionalities. [Luc Renambot]
+- Appveyor.yml. [Luc Renambot]
+- Another tweak for issue #80. [Luc Renambot]
+- Fix issue #90 with fullscreen request from webviews. [Luc Renambot]
+- Dockerfile. [Luc Renambot]
+- Merge branch 'master' of bitbucket.org:sage2/sage2. [Luc Renambot]
+- Merge branch 'master' of https://bitbucket.org/sage2/sage2. [D K]
+- Update _this vs this. [D K]
+- Dockerfile. [Luc Renambot]
+- Trying Docker without sudo and using latest ubuntu. [Luc Renambot]
+- Going back to 14.04 ;-( [Luc Renambot]
+- Trying to update docker image to ubuntu 16.04. [Luc Renambot]
+- Updated Docker file to Nodejs v7. [Luc Renambot]
+- Better font fallbacks. [D K]
+- Screenshot capability detection now correctly accounts for site with
+  single displays that span multiple tiles. Multiple display client
+  connection will no longer create multiple entries. [D K]
+- Webview will now preload js file. [D K]
+- Updated pdfjs lib to 1.8.170. [Luc Renambot]
+- Build client for Windows. [Arthur Nishimoto]
+- Added a '-m' option to start electron on a specific monitor (tested on
+  Mac) [Luc Renambot]
+- Adding Windows scripts to build client (not functional yet) [Luc
+  Renambot]
+- Make electron script work in binary build. [Luc Renambot]
+- Updating build for standalone client. [Luc Renambot]
+- Merge. [D K]
+- Fix to note size and removal of automatic webview connection back to
+  server. [D K]
+- Webview pages connect to the server through websocket. Possible to
+  transfer data between using the csd server variables. [D K]
+- Initial copy over from working external connection. Webview's page
+  will be considered an external connection, but should be associated
+  with the local Webview connection. [D K]
+- Pdf viewer updated to update remote site page rather than needing user
+  to interact with it to update page. See comments in load for more
+  details. This isn't fully fixed yet. [D K]
+- Csd launching now capable of adding variables to the init data object.
+  This is used to prevent race conditions where the data doesn't get
+  there correctly due to an unexpected load delay. Also fixed quick note
+  display case where having a single long line of text can push text out
+  of view. [D K]
+- Testing auto position generator. should be more fitted now. [D K]
+- Adjustments to quicknote. Now the ui editor will generally match what
+  is displayed with regards to word position. One fringe cases is the
+  '-' which allows word break. [D K]
+- Added shift+enter as a way to enter lines rather than send data.
+  Remote sites should now updates PDF view immediately rather than wait
+  for movement / resize to update. [D K]
+- Note creation with ENTER will not have a new line on next note. Also
+  allowed ? in notes. [D K]
+- Merge branch 'master' into csdBugFix. [D K]
+- Deleted weird sage2 folder. [Luc Renambot]
+- Merge branch 'master' into stickyitems. [krishnaBharadwaj]
+- Updating binary dependencies. [Luc Renambot]
+- Upping quality of screenshot to 90% (mosaic adds another jpeg
+  compression) [Luc Renambot]
+- Merge branch 'master' into wallScreenCap. [Luc Renambot]
+- Merge branch 'PartitionDocumentation' [Andrew Burks]
+- Updated the documentation of the Partiton and PartitionList node
+  modules. [Andrew Burks]
+- Injecting some CSS into webview to disable text selection (which can
+  cause locking problems sometimes) [Luc Renambot]
+- Added comment in code. [Luc Renambot]
+- Quick fix for double down/up events. [Arthur Nishimoto]
+- Merge PartitionSnapping into master - Andrew Burks. [Andrew Burks]
+- Merge branch 'master' into wallScreenCap. [Luc Renambot]
+- Change screenShot to screenshot in var and func. [Luc Renambot]
+- Delete temp file after the screenshot. [Luc Renambot]
+- Add the package rimraf as dependency, to delete files with glob. [Luc
+  Renambot]
+- Add to the runtime a function to delete files with a glob pattern.
+  [Luc Renambot]
+- Simplify screenshot, added to asset management, automatically opened,
+  and added 'screenshot' command in the server. [Luc Renambot]
+- Make sure the screenshot is the right size, in case of retina/scaling
+  situation. [Luc Renambot]
+- Merge resolved. [Luc Renambot]
+- Merge branch 'master' into wallScreenCap. [Luc Renambot]
+- Merge. [D K]
+- Merge to keep new functions. [D K]
+- Simplify a little the screenshot ability detection (using browser
+  info) and changed to JPEG. Todo next: checking image generation. [Luc
+  Renambot]
+- Cleaning up screenshoot a bit, same functionality so far (except jpeg)
+  [Luc Renambot]
+- Merge branch 'master' into wallScreenCap. [Luc Renambot]
+- UI will automatically create button on connection to server if a
+  server display reported it was possible. Button will go to: Media
+  Browser > menu bar > services > take screenshot of wall. [D K]
+- Added message after initiating a screenshot to notify user why the
+  wall froze. [D K]
+- Merge branch 'master' into wallScreenCap. [D K]
+- Brief explanation of actions taken. [D K]
+- Adding check on connection of display to see if can take a screenshot
+  (is electron) [D K]
+- Changing write location to tmp seems to remove file detection errors
+  and properly generates thumbnails now. [D K]
+- Bug fixes. [D K]
+- Need output. [D K]
+- Incorrect reference. [D K]
+- Using the commit as a diff detector. [D K]
+- Kinda works. Tile stitching works, but there seems to be a problem
+  with thumbnail generation if the file is generated through gm. [D K]
+- Forgot to reset the var preventing additional screenshot requests
+  before first completion. without reset only allows 1 shot. [D K]
+- Ready to test tiling again. this time added catch for non-electron and
+  prevent multi screenshot before completion of first command. [D K]
+- Fixed date usage. [D K]
+- Buffer needs to be base64. [D K]
+- Fixes to incorrect electron references and write usage. [D K]
+- First pass read to test. Client UI has to manually send packet. [D K]
+- Merge branch 'master' into stickyitems. [krishnaBharadwaj]
+- Fixes: Items stick to backgroung items upon creation. Pin shown in
+  webUI. [krishnaBharadwaj]
+- Updating data passing functions. mulitple subscription calls will only
+  add if the app and function is different to avoid multiple calls.
+  possible to subscribe to a value not yet created. [D K]
+- Apart from movie sync app, the rest of this branch contains bug
+  fixes(mouse event passing and sabi) and config files. [D K]
+- Merge branch 'master' into videoSync. [D K]
+- Merged in samw10/sage2/samw10/thiselementid-doesnt-exist-thisid-
+  contai-1490860190918 (pull request #8) [samw10]
+- This.element.id doesn't exist. this.id contains the data it needs.
+  [samw10]
+- Change message colors in browser console to make it readdable. [Luc
+  Renambot]
+- Merge branch 'master' of https://bitbucket.org/sage2/sage2 into
+  videoSync. [D K]
+- Remember sorting setting in filemanager after deletion. [Luc Renambot]
+- Updated webix library. [Luc Renambot]
+- Enable downloading multiple items at once from the filemanager (multi-
+  select). [Luc Renambot]
+- Turned off nodejs integration in Webview for now. [Luc Renambot]
+- Tweak the 'shared test' when saving a session. [Luc Renambot]
+- Tweak color ouput in remote server messages. [Luc Renambot]
+- Remove creating a reverse connection when a remote site connects, if
+  seems to create a race condition. It seems to work without, after the
+  server retries in 15sec. [Luc Renambot]
+- Fix application icon check when saving a session (remote applications
+  do not have icons) [Luc Renambot]
+- Do not save shared applications in sessions (app coming from another
+  server) [Luc Renambot]
+- Remove log in service worker generation. [Luc Renambot]
+- Enforced frame sync on play / pause. If somehow videos lose sync as
+  playing, will reset to master time. [D K]
+- Changed icon. [D K]
+- Moved css to separate file. [D K]
+- Removed movie_player context option to send / receive commands. Issues
+  solved with sync remote. Fixed a sabijs 1st time launch crash case.
+  Linted while at it. [D K]
+- Merge branch 'master' into videoSync. [D K]
+- Appveryor fix for curl path, and updating to node v7.x. [Luc Renambot]
+- Trying to fix race condition in initialization of remote sites. [Luc
+  Renambot]
+- Do not try to load aSVG for watermark if none specified. [Luc
+  Renambot]
+- Added new contributors. [Luc Renambot]
+- Merge branch 'master' of bitbucket.org:sage2/sage2. [Luc Renambot]
+- Trying to fix again issue #85. [Luc Renambot]
+- Do not open remote site window when click through the web UI (only
+  with pointer on the wall). [Luc Renambot]
+- Resolved some errors with looping. [D K]
+- Restructured and cleaned interface. Sync is now based on master which
+  is index 0 of associated. [D K]
+- Error with step sync when interacting with movie player. Removed
+  warning from sabi helper script, was causing unecessary confusion.
+  Added Pele config. [D K]
+- Fixed couple bug involving visuals, and command relay. [D K]
+- Fixed visual elements, time jump to added, step added, links added. [D
+  K]
+- Ready for testing: detection of movie player under app, command
+  activation on each player, html read from file and use in app, updated
+  mouse events. [D K]
+- Merge branch 'master' of bitbucket.org:sage2/sage2. [Luc Renambot]
+- Bug fix. [krishnaBharadwaj]
+- Merge branch 'master' into stickyitems. [krishnaBharadwaj]
+- Bug fixes, background item delete corner case handled.
+  [krishnaBharadwaj]
+- Merge branch 'master' into stickyitems. [krishnaBharadwaj]
+- Pin updates only on move stop, Items stick at any point and not just
+  left-top. [krishnaBharadwaj]
+- Added pin images. [krishnaBharadwaj]
+- Debug. [krishnaBharadwaj]
+- Merged master into stickyitems. [krishnaBharadwaj]
+- Added pins to sticky items. [krishnaBharadwaj]
+- Sticky items chain implemented. [krishnaBharadwaj]
+- Changed color schemes. [krishnaBharadwaj]
+- Merge branch 'master' into editor. [krishnaBharadwaj]
+- Initial commit - Notepad updated. [krishnaBharadwaj]
+- Updated PDF icons when using the right-click menu. [Luc Renambot]
+- Adding a change from the articulate2 branch. [Abeer-Alsaiari]
+- Fixing arrows' functions in the web UI of PDF viewer. [Abeer-Alsaiari]
+- Fixinf state of button in PDF app (Abeer's fix). [Luc Renambot]
+- Fix issue #85 where an app using a plugin is dropped and opened the
+  first time. [Luc Renambot]
+- Merge branch 'master' into pdfupdate. [Luc Renambot]
+- Appveyor.yml. [Luc Renambot]
+- Updating pdf.js lib. [Luc Renambot]
+- Merge branch 'master' of bitbucket.org:sage2/sage2. [Luc Renambot]
+- Updating various dependencies (binary packages) [Luc Renambot]
+- New icons fr PDF, by Abeer. [Luc Renambot]
+- Updated PDF icons on screens (code by Abeer + linting) [Luc Renambot]
+- Merge branch 'master' of https://bitbucket.org/sage2/sage2. [D K]
+- Fix quickNote title: wrong month! [Luc Renambot]
+- Slow down a little the deleting of items. [Luc Renambot]
+- Removed nodeintegration ipc testing. Code will move to a different
+  branch for further testing. [D K]
+- Testing various actions show that preload does not seem to work. Also
+  tested nodeintegration to enable <webview> talk back to app. changed
+  this.element.nodeintegration = 1. 0 actually meant disabled. [D K]
+- Forgot to swap order. testing multiple things, require in the webview
+  doesn't seem to work even with the nodeintegration attribute present.
+  [D K]
+- Preload doesn't work. Will add to comment after pushing testing
+  results. [D K]
+- Ready to test preload on webview to avoid horrendous formatting in
+  Webview.js. [D K]
+- Fix to sabi remote site override on password / session hash. [D K]
+- Changed arrow function to plain funtion, in order to fix ugligy error.
+  [Luc Renambot]
+- Tweaking color output: easier to read on dark terminal, still ok on
+  white teminal. [Luc Renambot]
+- Removed a few underlines for text. [Andrew Burks]
+- Merge branch 'master' into ColorizedConsole. [Andrew Burks]
+- Remove a printout from service-worker generation. [Luc Renambot]
+- Trying to format console output a bit more. [Andrew Burks]
+- Messing with the chalk package to colorize console output, maybe
+  focusing on specific parts and making general output more useful?
+  [Andrew Burks]
+- Enable right click to webviews, with modifiers (shift, ctrl, ...) [Luc
+  Renambot]
+- Add accelerator labels to image, movie, pdf and webview apps. [Luc
+  Renambot]
+- Add optional 'accelerator' field to context menu entries: add a right-
+  aligned label to specify a shortcut (it's just a label) [Luc Renambot]
+- Do not ask for notification permission in view-only mode. [Luc
+  Renambot]
+- Do not ask pointer name in view-only mode in web UI. [Luc Renambot]
+- Pass hash or password to the URL when opening the remote webview UI.
+  [Luc Renambot]
+- Update to chemViewer app: load '.cif' and '.mol' files. Add caffeine
+  and another molecule as shortcuts (rmb) [Luc Renambot]
+- Re-enable old-school media browser on tablets, since still issues to
+  scroll in the media browser. [Luc Renambot]
+- Fix bug about updatePartitionBorders after deleting an app. [Luc
+  Renambot]
+- Disable downloading files in Electron (would break if click on a
+  download) and display a message on the wall. [Luc Renambot]
+- Fix aspect ratio and position of webview for remote ui. [Luc Renambot]
+- Enable the corner resize handle in webview when in WindowManagement
+  mode (much easier) [Luc Renambot]
+- Add server name or hostname to the page of the UI. [Luc Renambot]
+- When clicking on a 'green' remote site button, open a webview to their
+  UI. [Luc Renambot]
+- Viewonly mode. [Luc Renambot]
+- Add a 'viewonly' parameter to web UI URL:
+  http:/..../index.hmtl?viewonly=true Just display the applications, no
+  menubar (still running event handlers though) [Luc Renambot]
+- Add 'parseBool' funciton into client-side runtime: parse a boolean
+  value from string or number. [Luc Renambot]
+- Allow the UI page to be embbedable into an iframe/webview. [Luc
+  Renambot]
+- Limit the number of audio sprites played at once to 8. Helps when
+  loading or deleting a lots of apps. [Luc Renambot]
+- Updated icewall scripts. [Arthur Nishimoto]
+- Merge branch 'master' of https://bitbucket.org/sage2/sage2. [D K]
+- Sync status of wall UI and web UI for movie player (again!) [Luc
+  Renambot]
+- Electron launching now works off of defaultWin-cfg rather than making
+  a new one by adding the width and height variables to display 0
+  (assumes electron only needs 1). Cfg is read before launch to get
+  resolution and layout to pass params to bat file. File is also written
+  adjusting display 0's height and width to specified layout values on
+  Electron launch, or 1,1 for chrome to prevent scroll bars. For later
+  consideration: removal of unnecessary code if it is assumed that
+  Chrome is no longer used. [D K]
+- Fix checking for outdated modules (npm now returns an error code when
+  outdated packages are found). [Luc Renambot]
+- Add 'Maximize' in app menu. [Luc Renambot]
+- Tweaks in the file manager: do not show apps in the overall list, and
+  rename "Uploaded" to "My files" [Luc Renambot]
+- Fix bug in movie status menu (play/pause/stop...) and add movie
+  duration in titleBar. [Luc Renambot]
+- Update zip file containing Chrome extension. [Luc Renambot]
+- Merge branch 'master' of bitbucket.org:sage2/sage2. [Luc Renambot]
+- Merge branch 'master' of bitbucket.org:sage2/sage2. [Arthur Nishimoto]
+- Touch up events properly sent to SAGE when switching Whiteboard mode.
+  [Arthur Nishimoto]
+- Receive 'openlink' command from the Chrome extension (v1.6) [Luc
+  Renambot]
+- Add option to open links from the SAGE2 Chrome extension. [Luc
+  Renambot]
+- Small fix when using 'tiling' mode in background image. [Luc Renambot]
+- Merge branch 'master' of https://bitbucket.org/sage2/sage2. [Arthur
+  Nishimoto]
+- Merge branch 'master' of bitbucket.org:sage2/sage2. [Luc Renambot]
+- Capture the 'favicon' of web pages in webvew and store it in the state
+  variable. To be used in the UI. [Luc Renambot]
+- Use the app state variable to update the icon of webview on the UI
+  (using favicon if available). Probably need to add URL there too. [Luc
+  Renambot]
+- Send message to UI when an app state is modified. Allows the UI to be
+  more app aware. [Luc Renambot]
+- Update debug info. [Luc Renambot]
+- Updated default inferno config to enable app touch. [Arthur Nishimoto]
+- Merge branch 'master' of https://bitbucket.org/sage2/sage2.
+  [AndrewTBurks]
+- Add 'copy content to clipboard' to quickNote app. [Luc Renambot]
+- Add 'copy url' to WebView. [Luc Renambot]
+- Updating basic apps (pdf, movie, image) to support 'Copy URL' in
+  right-click menu. [Luc Renambot]
+- Adding support for SAGE2_copyToClipboard in the right-click menu. [Luc
+  Renambot]
+- Move copyToClipboard function to the SAGE2 runtime file:
+  SAGE2_copyToClipboard. [Luc Renambot]
+- Omicron reconnect cycle re-initializes if remote server resets.
+  [Arthur Nishimoto]
+- Automatically assign applications to a partition when the application
+  is created. [AndrewTBurks]
+- Add a 'copy URL' menu entry, next to 'Download', to copy the URL of an
+  asset into the clipboard. [Luc Renambot]
+- Merge branch 'master' of bitbucket.org:sage2/sage2. [Luc Renambot]
+- Changed Partition close button icon to be the same as applications.
+  [AndrewTBurks]
+- Update three.js to v84. [Luc Renambot]
+- Updating moment.js library. [Luc Renambot]
+- Update to webix 4.1. [Luc Renambot]
+- Only disable contextmenu for apps: so it works for other input boxes.
+  [Luc Renambot]
+- Seems Luc already did the work for it. Keeping his stuff instead. the
+  defaultValue is more efficient than value. For some reason value
+  wasn't sticking but defaultValue was. [D K]
+- Passing the current URL of webview into the menu entries (keeps the
+  value up to date during navigation) [Luc Renambot]
+- Webview UI context menu now shows what site it is currently at.
+  Doesn't copy to clipboard yet, but fairly straight forward from here.
+  Just a matter of determining structure format. [D K]
+- Another try at parsing youtube video URL in webview. [Luc Renambot]
+- Merge branch 'master' of https://bitbucket.org/sage2/sage2. [D K]
+- Merge branch 'master' of https://bitbucket.org/sage2/sage2.
+  [AndrewTBurks]
+- More bugfixes to partitions. [AndrewTBurks]
+- Changed youtu check to allow for the short form youtu.be should still
+  be ok since the 2nd check is for watch?v= [D K]
+- Key events should be passing to non input divs. For example spacebar
+  will play and pause yt videos now. However requires a double check,
+  only tested on yt videos. Currently unable to aquire the forced event
+  association as seen on google main search page. [D K]
+- Prevents Webview from crashing on start if url contains 'youtu'
+  without actually being a youtube video link. For example was crashing
+  on youtube.com or google seach with youtube. [D K]
+- Merge branch 'master' of https://bitbucket.org/sage2/sage2. [D K]
+- Bitbucket-pipelines.yml edited online with Bitbucket. [Victor
+  Mateevitsi]
+- Calvin site was updated: new method to retrieve the image inside the
+  page. [Luc Renambot]
+- Quick fix to prevent new apps from spawning underneath everything
+  else. Partitions seems to have reserved the first 20 on the server,
+  but this change was not reflected in display or UI. Unsure if there
+  are other issues caused elsewhere. [Dylan Kobayashi]
+- Fixed a problem in WebUI where partition highlight wasnt updated
+  correctly due to a change in structure of the function in server.js.
+  [AndrewTBurks]
+- Adding appstore links in the UI. [Luc Renambot]
+- Fix reload of webview with videos. [Luc Renambot]
+- Fixed partitions not correctly updating content layout when cut.
+  [AndrewTBurks]
+- Merge branch 'master' into Partition-Cutting. [AndrewTBurks]
+- Webview defaut size to HD apsect ratio. Youtube/Vimeo are now using
+  embeded code, and not auto-playing. [Luc Renambot]
+- Added right click behavior while dragging to create a partition or
+  cutting a partition to cancel the action. [AndrewTBurks]
+- Fixed (hopefully) error when finishing cut where the new partitions
+  don't exist. [AndrewTBurks]
+- Merge branch 'master' into Partition-Cutting. [AndrewTBurks]
+- Merge branch 'TouchUI' [Arthur Nishimoto]
+- Merge branch 'TouchUI' of bitbucket.org:sage2/sage2 into TouchUI.
+  [Arthur Nishimoto]
+- Updated Inferno touch config. [Arthur Nishimoto]
+- Run tracker is now only called once. Added structure for eventual
+  gesture update. [Arthur Nishimoto]
+- Default touch mode (App/Window) can be specified in config. [Arthur
+  Nishimoto]
+- Merge remote-tracking branch 'remotes/origin/master' into TouchUI.
+  [Arthur Nishimoto]
+- Simplified and cleaned up omicron touch configuration Disabled
+  whiteboard due to conflict with new touch system. [Arthur Nishimoto]
+- Touch now app interaction mode by default Cleaned up basic touch
+  interaction. [Arthur Nishimoto]
+- Fixed issue where node-omicron would not get SAGEPointer functions.
+  [Arthur Nishimoto]
+- CHANGE: node-omicron attempts to reconnect to oinputserver every 15
+  seconds after connection failed. [Arthur Nishimoto]
+- Merge branch 'TouchUI' of bitbucket.org:sage2/sage2 into TouchUI.
+  [Arthur Nishimoto]
+- Whiteboard ignores SAGEPointer move events that are not currently
+  being dragged (fix undefined id in ui_builder) [Arthur Nishimoto]
+- Merge branch 'master' of bitbucket.org:sage2/sage2. [Arthur Nishimoto]
+- Fixed a few bugs, changed threshold for distance to cut.
+  [AndrewTBurks]
+- Added a partition creation option for 1 Full Screen partition. Added a
+  behavior to control-drag within a partition to split it into 2 pieces
+  depending on the orientation and position of the drag. [AndrewTBurks]
+- Revert the manual resize of Webview (didnt work properly) [Luc
+  Renambot]
+- Issue with loading webview recently: relaxed security in Electron.
+  [Luc Renambot]
+- Control the webview sizing 'by hand' [Luc Renambot]
+- Link Youtube URL to webview. [Luc Renambot]
+- Prevent changing fullscreen state after the fact. [Luc Renambot]
+- Increase zoom rate in Webview (used to be 25% for each increment, now
+  50%). [Luc Renambot]
+- Application maximize in-place now default behavior. [Andrew Burks]
+- Added circle controls in Arrangement menu for Partitions (consistent
+  behavior with Media Browser menu) [AndrewTBurks]
+- Fix domain calculation for cookies (no more special case). [Luc
+  Renambot]
+- Add header to partition printouts. [Luc Renambot]
+- Enforce minimum size for creating partitions, as well as attempt to
+  filter out accidentally created partitions (under 25px in either
+  dimension). [AndrewTBurks]
+- Added flag to allow webcon startup of sabi.js to work regardless of
+  drive. [d-k-k]
+- Handle password/meetingID case for tw. [d-k-k]
+- Fixed password/meetingID denial when accessing SAGE2 through IP
+  address. [d-k-k]
+- Adding linux build command to electron client. [Luc Renambot]
+- Remove corner resize handle for webview, but still active in the
+  webui. [Luc Renambot]
+- Disable moving the widget bar in the PDF app (was confusing) [Luc
+  Renambot]
+- Adding Linux build script. [Luc Renambot]
+- Add 'client' folder to build standalone Electron-based clients. [Luc
+  Renambot]
+- Merge branch 'master' of https://bitbucket.org/sage2/sage2. [d-k-k]
+- Embedded thumbnails into SVG session previews. Fixed problem with
+  thumbnails for .svg files not being displayed correctly. Sending more
+  information to thumb update function in file manager. [AndrewTBurks]
+- Merge branch 'master' into Andrew-Branch. [AndrewTBurks]
+- Added aspect calculation to partition on drag creation, removed
+  console statement in display. [AndrewTBurks]
+- Changed app color in thumbnail preview, removed another console
+  statement. [AndrewTBurks]
+- Added SVG preview for sessions: when a session is saved, it creates a
+  SVG preview of the session, showing the layout and the placement of
+  apps. Also, fixed problem when saving session, partition data
+  structure would get destroyed from shallow copy of objects.
+  [AndrewTBurks]
+- Session names begin with \'LAYOUT - \' when they only have partitions
+  in them. Also, hopefully fixed maximization bug (sometimes after
+  maximizing, when moving the window it gets stuck somewhere on the
+  screen other than next to the edges. [AndrewTBurks]
+- Auto populate config display id if not present in file. [d-k-k]
+- Added rmb context 'Send to back' on all apps. [d-k-k]
+- Movie player with loop enabled will activate a seek action on restart.
+  This is intended to keep resync command receivers at least on restart.
+  [d-k-k]
+- Added .DS_Store to gitignore. Mac seems to continously generate the
+  file after the Sierra update whenever a file is edited. [d-k-k]
+

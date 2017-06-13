@@ -257,10 +257,13 @@ function updateWithGIT(branch, callback) {
  * @return {String} cleanup string
  */
 function sanitizedURL(aURL) {
+	// replace several consecutive forward slashes into one
+	var cleaner = aURL.replace(/\/+/g, "/");
+	// var cleaner = aURL;
 	// convert HTML encoded content
 	// Node doc: It will try to use decodeURIComponent in the first place, but if that fails it falls back
 	// to a safer equivalent that doesn't throw on malformed URLs.
-	var decode = querystring.unescape(aURL);
+	var decode = querystring.unescape(cleaner);
 	// Then, remove the bad parts
 	return sanitizer.sanitize(decode);
 }
