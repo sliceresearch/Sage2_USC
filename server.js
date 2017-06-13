@@ -73,7 +73,8 @@ var Sagepointer         = require('./src/node-sagepointer');      // handles sag
 var StickyItems         = require('./src/node-stickyitems');
 var registry            = require('./src/node-registry');         // Registry Manager
 var FileBufferManager	= require('./src/node-filebuffer');
-var PartitionList	= require('./src/node-partitionlist');    // list of SAGE2 Partitions
+var PartitionList	= require('./src/node-partitionlist');        // list of SAGE2 Partitions
+var SharedDataManager	= require('./src/node-sharedserverdata'); // manager for shared data
 
 //
 // Globals
@@ -129,6 +130,18 @@ var remoteSites = [];
 var partitions        = new PartitionList(config);
 var draggingPartition = {};
 var cuttingPartition  = {};
+
+// Create structure to handle automated placement of apps
+var appLaunchPositioning = {
+	xStart: 10,
+	yStart: 50,
+	xLast: -1,
+	yLast: -1,
+	widthLast: -1,
+	heightLast: -1,
+	tallestInRow: -1,
+	padding: 20
+}
 
 // Add extra folders defined in the configuration file
 if (config.folders) {
@@ -615,6 +628,9 @@ var remoteSharingSessions      = {};
 
 // Sticky items and window position for new clones
 var stickyAppHandler     = new StickyItems();
+
+// create manager for shared data
+var sharedServerData = new SharedDataManager(clients);
 
 
 //
@@ -2949,35 +2965,35 @@ function wsLoadApplication(wsio, data) {
 		if (data.wasLaunchedThroughMessage && !data.wasPositionGivenInMessage) {
 			let xApp, yApp;
 			// if this is the first app.
-			if (csdDataStructure.appLaunch.xLast === -1) {
-				xApp = csdDataStructure.appLaunch.xStart;
-				yApp = csdDataStructure.appLaunch.yStart;
+			if (appLaunchPositioning.xLast === -1) {
+				xApp = appLaunchPositioning.xStart;
+				yApp = appLaunchPositioning.yStart;
 			} else {
 				// if not the first app, check that this app fits in the current row
 				let fit = false;
-				if (csdDataStructure.appLaunch.xLast + csdDataStructure.appLaunch.widthLast
-				+ csdDataStructure.appLaunch.padding + appInstance.width < config.totalWidth) {
-					if (csdDataStructure.appLaunch.yLast + appInstance.height < config.totalHeight) {
+				if (appLaunchPositioning.xLast + appLaunchPositioning.widthLast
+				+ appLaunchPositioning.padding + appInstance.width < config.totalWidth) {
+					if (appLaunchPositioning.yLast + appInstance.height < config.totalHeight) {
 						fit = true;
 					}
 				}
 				// if the app fits, then let use the modified position
 				if (fit) {
-					xApp = csdDataStructure.appLaunch.xLast + csdDataStructure.appLaunch.widthLast
-					+ csdDataStructure.appLaunch.padding;
-					yApp = csdDataStructure.appLaunch.yLast;
+					xApp = appLaunchPositioning.xLast + appLaunchPositioning.widthLast
+					+ appLaunchPositioning.padding;
+					yApp = appLaunchPositioning.yLast;
 				} else { // need to see if fits on next row or restart.
 					// either way changing row, set this app's height as tallest in row.
-					csdDataStructure.appLaunch.tallestInRow = appInstance.height;
+					appLaunchPositioning.tallestInRow = appInstance.height;
 					// if fits on next row, put it there
-					if (csdDataStructure.appLaunch.yLast + csdDataStructure.appLaunch.tallestInRow
-					+ csdDataStructure.appLaunch.padding + appInstance.height < config.totalHeight) {
-						xApp = csdDataStructure.appLaunch.xStart;
-						yApp = csdDataStructure.appLaunch.yLast + csdDataStructure.appLaunch.tallestInRow
-						+ csdDataStructure.appLaunch.padding;
+					if (appLaunchPositioning.yLast + appLaunchPositioning.tallestInRow
+					+ appLaunchPositioning.padding + appInstance.height < config.totalHeight) {
+						xApp = appLaunchPositioning.xStart;
+						yApp = appLaunchPositioning.yLast + appLaunchPositioning.tallestInRow
+						+ appLaunchPositioning.padding;
 					} else { // doesn't fit, restart
-						xApp = csdDataStructure.appLaunch.xStart;
-						yApp = csdDataStructure.appLaunch.yStart;
+						xApp = appLaunchPositioning.xStart;
+						yApp = appLaunchPositioning.yStart;
 					}
 				}
 			}
@@ -2985,12 +3001,12 @@ function wsLoadApplication(wsio, data) {
 			appInstance.left = xApp;
 			appInstance.top = yApp;
 			// track the values to position adjust next app
-			csdDataStructure.appLaunch.xLast = appInstance.left;
-			csdDataStructure.appLaunch.yLast = appInstance.top;
-			csdDataStructure.appLaunch.widthLast = appInstance.width;
-			csdDataStructure.appLaunch.heightLast = appInstance.height;
-			if (appInstance.height > csdDataStructure.appLaunch.tallestInRow) {
-				csdDataStructure.appLaunch.tallestInRow = appInstance.height;
+			appLaunchPositioning.xLast = appInstance.left;
+			appLaunchPositioning.yLast = appInstance.top;
+			appLaunchPositioning.widthLast = appInstance.width;
+			appLaunchPositioning.heightLast = appInstance.height;
+			if (appInstance.height > appLaunchPositioning.tallestInRow) {
+				appLaunchPositioning.tallestInRow = appInstance.height;
 			}
 		}
 		// if the csd action supplied more values to init with
@@ -9521,49 +9537,9 @@ function wsSaveDataOnServer(wsio, data) {
  * @method wsServerDataSetValue
  * @param  {Object} wsio - The websocket of sender.
  * @param  {Object} data - The object properties described below.
- * @param  {String} data.nameOfValue - Name of value to set.
- * @param  {*} data.value - Value to store.
- * @param  {*} data.description - Currently a string to plain text describe the variable.
  */
 function wsServerDataSetValue(wsio, data) {
-	// don't do anything if this isn't filled out.
-	if (data.nameOfValue === undefined || data.nameOfValue === null) {
-		return;
-	}
-	// check if there is no entry for that value
-	if (csdDataStructure.allValues["" + data.nameOfValue] === undefined) {
-		// need to make an entry for this value
-		var newCsdValue = {};
-		newCsdValue.name			= data.nameOfValue;
-		newCsdValue.value			= data.value;
-		newCsdValue.description		= data.description;
-		newCsdValue.subscribers		= [];
-		// add it and update tracking vars.
-		csdDataStructure.allValues["" + data.nameOfValue] = newCsdValue;
-		csdDataStructure.numberOfValues++;
-		csdDataStructure.allNamesOfValues.push("" + data.nameOfValue);
-	} else {
-		// value exists, just update it.
-		csdDataStructure.allValues["" + data.nameOfValue].value = data.value;
-		// potentially the new value isn't the same and a description can be useful
-		if (data.description) {
-			csdDataStructure.allValues["" + data.nameOfValue].description = data.description;
-		}
-	}
-	// send to each of the subscribers.
-	var dataForApp = {};
-	for (var i = 0; i < csdDataStructure.allValues["" + data.nameOfValue].subscribers.length; i++) {
-		// fill the data object for the app, using display's broadcast packet
-		dataForApp.app  = csdDataStructure.allValues["" + data.nameOfValue].subscribers[i].app;
-		dataForApp.func = csdDataStructure.allValues["" + data.nameOfValue].subscribers[i].func;
-		dataForApp.data = csdDataStructure.allValues["" + data.nameOfValue].value;
-		// send to all display clients(since they all need to update)
-		for (var j = 0; j < clients.length; j++) {
-			if (clients[j].clientType === "display") {
-				clients[j].emit('broadcast', dataForApp);
-			}
-		}
-	}
+	sharedServerData.setValue(wsio, data);
 }
 
 /**
@@ -9573,25 +9549,9 @@ function wsServerDataSetValue(wsio, data) {
  * @method wsServerDataGetValue
  * @param  {Object} wsio - The websocket of sender.
  * @param  {Object} data - The object properties described below.
- * @param  {String} data.nameOfValue - Name of value to get.
- * @param  {String} data.app - App that requested.
- * @param  {String} data.func - Name of the function on the app to give value to.
  */
 function wsServerDataGetValue(wsio, data) {
-	// don't do anything if this isn't filled out.
-	if (data.nameOfValue === undefined || data.nameOfValue === null) {
-		return;
-	}
-	// also don't do anything if the value doesn't exist
-	if (csdDataStructure.allValues["" + data.nameOfValue] === undefined) {
-		return;
-	}
-	// make the data for the app, using display's broadcast packet
-	var dataForApp = {};
-	dataForApp.app  = data.app;
-	dataForApp.func = data.func;
-	dataForApp.data = csdDataStructure.allValues[ "" + data.nameOfValue ].value;
-	wsio.emit('broadcast', dataForApp);
+	sharedServerData.getValue(wsio, data);
 }
 
 /**
@@ -9606,34 +9566,7 @@ function wsServerDataGetValue(wsio, data) {
  * @param  {String} data.func - Name of the function on the app to give value to.
  */
 function wsServerDataSubscribeToValue(wsio, data) {
-	// Need to have a name. Without a name, nothing can be done.
-	if (data.nameOfValue === undefined || data.nameOfValue === null) {
-		return;
-	}
-	// also don't do anything if the value doesn't exist
-	if (csdDataStructure.allValues["" + data.nameOfValue] === undefined) {
-		data.value = null; // nothing, it'll be replace later if at all
-		csdSetValue(wsio, data);
-	}
-
-	let foundSubscriber = false;
-	for (let i = 0; i < csdDataStructure.allValues[ "" + data.nameOfValue ].subscribers.length; i++) {
-		// do not double add if the app and function are the same this permits same app diff function
-		if (csdDataStructure.allValues[ "" + data.nameOfValue ].subscribers[i].app == data.app
-			&& csdDataStructure.allValues[ "" + data.nameOfValue ].subscribers[i].func == data.func) {
-			foundSubscriber = true;
-			break;
-		}
-	}
-	// if app is not already subscribing
-	if (!foundSubscriber) {
-		// make the new subscriber entry
-		var newCsdSubscriber  = {};
-		newCsdSubscriber.app  = data.app;
-		newCsdSubscriber.func = data.func;
-		// add it to that value
-		csdDataStructure.allValues[ "" + data.nameOfValue ].subscribers.push(newCsdSubscriber);
-	}
+	sharedServerData.subscribeToValue(wsio, data);
 }
 
 /**
@@ -9648,17 +9581,7 @@ function wsServerDataSubscribeToValue(wsio, data) {
  * @param  {String} data.func - Name of the function on the app to give value to.
  */
 function wsServerDataGetAllTrackedValues(wsio, data) {
-	var dataForApp = {};
-	dataForApp.data = [];
-	dataForApp.app  = data.app;
-	dataForApp.func = data.func;
-	for (var i = 0; i < csdDataStructure.allNamesOfValues.length; i++) {
-		dataForApp.data.push(
-			{	nameOfValue: csdDataStructure.allNamesOfValues[i],
-				value: csdDataStructure.allValues[ csdDataStructure.allNamesOfValues[i] ]
-			});
-	}
-	wsio.emit('broadcast', dataForApp);
+	sharedServerData.getAllTrackedValues(wsio, data);
 }
 
 /*
@@ -9696,15 +9619,6 @@ var csdDataStructure = {};
 csdDataStructure.allValues = {};
 csdDataStructure.numberOfValues = 0;
 csdDataStructure.allNamesOfValues = [];
-csdDataStructure.appLaunch = {};
-csdDataStructure.appLaunch.xStart = 10;
-csdDataStructure.appLaunch.yStart = 50;
-csdDataStructure.appLaunch.xLast = -1;
-csdDataStructure.appLaunch.yLast = -1;
-csdDataStructure.appLaunch.widthLast = -1;
-csdDataStructure.appLaunch.heightLast = -1;
-csdDataStructure.appLaunch.tallestInRow = -1;
-csdDataStructure.appLaunch.padding = 20;
 
 /**
  * Calculate if we have enough screenshot-capable display clients
