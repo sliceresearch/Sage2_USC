@@ -1040,6 +1040,11 @@ function setupListeners(wsio) {
 	// generic message passing for data requests or for specific communications.
 	// might eventually break this up into individual ws functions
 	wsio.on('csdMessage',							wsCsdMessage);
+	// csd message standalone
+	wsio.on('launchAppWithValues',					wsLaunchAppWithValues);
+	wsio.on('sendDataToClient',						wsSendDataToClient);
+	wsio.on('saveDataOnServer',						wsSaveDataOnServer);
+	wsio.on('serverDataSetValue',					wsServerDataSetValue);
 
 	// Screenshot messages
 	wsio.on('startWallScreenshot',                  wsStartWallScreenshot);
@@ -2940,7 +2945,7 @@ function wsLoadApplication(wsio, data) {
 				if fit, add to next row
 				if no fit, then restart
 		*/
-		if (data.csdLaunch && !data.wasCsdPositionStated) {
+		if (data.wasLaunchedThroughMessage && !data.wasPositionGivenInMessage) {
 			let xApp, yApp;
 			// if this is the first app.
 			if (csdDataStructure.appLaunch.xLast === -1) {
@@ -2988,11 +2993,14 @@ function wsLoadApplication(wsio, data) {
 			}
 		}
 		// if the csd action supplied more values to init with
-		if (data.csdLaunch && data.csdInitValues) {
-			appInstance.csdInitValues = data.csdInitValues;
+		if (data.wasLaunchedThroughMessage && data.customLaunchParams) {
+			appInstance.customLaunchParams = data.customLaunchParams;
 		}
 
 		handleNewApplication(appInstance, null);
+
+		// If not deleted it will be given on display client refresh/connect, or is that a good thing?
+		delete appInstance.customLaunchParams;
 
 		addEventToUserLog(data.user, {type: "openApplication", data:
 			{application: {id: appInstance.id, type: appInstance.application}}, time: Date.now()});
@@ -9322,6 +9330,229 @@ function wsCallFunctionOnApp(wsio, data) {
 }
 
 /**
+ * Will launch app with specified name and call the given function after.
+ * The function doesn't need to be called to give the parameters.
+ *
+ * @method wsLaunchAppWithValues
+ * @param  {Object} wsio - The websocket of sender.
+ * @param  {Object} data - The object properties described below.
+ * @param  {String} data.appName - Folder name to check for the app. 
+ * @param  {Object} data.params - Will be passed to the app. Function too, it is specified.
+ * @param  {String}  data.func - Optional, if specified, will also call this funciton and pass parameters.
+ */
+function wsLaunchAppWithValues(wsio, data) {
+	// first try see if the app is registered with apps exif.
+	var fullpath = appLaunchHelperGetPathOfApp(data.appName);
+	// null means not found, try check if folder path exists.
+	if (fullpath === null) {
+		fullpath = path.join(mediaFolders.system.path, "apps", data.appName);
+		try {
+			fs.accessSync(fullpath);
+		} catch (err) {
+			console.log(sageutils.header("wsLaunchAppWithValues") + "Cannot launch " + data.appName + ", doesn't exist.");
+			return;
+		}
+	}
+	// Prep the data needed to launch an application.
+	var appLoadData = { };
+	appLoadData.application = fullpath;
+	appLoadData.user = wsio.id; // needed for the wsLoadApplication function
+	appLoadData.wasPositionGivenInMessage = false;
+	appLoadData.wasLaunchedThroughMessage = true;
+	if (data.customLaunchParams) {
+		appLoadData.customLaunchParams = data.customLaunchParams;
+		appLoadData.customLaunchParams.serverDate = Date.now();
+		appLoadData.customLaunchParams.clientId   = wsio.id;
+	}
+	// If the launch location is defined, use it, otherwise use the stagger position.
+	if (data.xLaunch !== null && data.xLaunch !== undefined) {
+		appLoadData.position = [data.xLaunch, data.yLaunch];
+		appLoadData.wasPositionGivenInMessage = true;
+	}
+	// get this before the app is created. id start from 0. count is the next one
+	var whatTheNewAppIdShouldBe = "app_" + getUniqueAppId.count;
+	// call the previously made wsLoadApplication funciton and give it the required data.
+	wsLoadApplication(wsio, appLoadData);
+} // end wsLaunchAppWithValues
+
+/**
+ * Used to get the full path of an app starting with appName in the FileName.
+ *
+ * @method appLaunchHelperGetPathOfApp
+ * @param  {Object} appName - Folder name to check for the app.
+ * @return {String|null} 
+ */
+function appLaunchHelperGetPathOfApp(appName) {
+	var apps = assets.listApps();
+	// for each of the apps known to SAGE2, usually everything in public/uploads/apps
+	for (var i = 0; i < apps.length; i++) {
+		if (// if the name contains appName
+			apps[i].exif.FileName.indexOf(appName) === 0
+			|| apps[i].id.indexOf(appName) !== -1
+		) {
+			return apps[i].id; // this is the path.
+		} // end if this app contains the specified name
+	} // end for each application available.
+	return null;
+}
+
+/**
+ * Sends data to a specific client or set.
+ *
+ * @method wsSendDataToClient
+ * @param  {Object} wsio - The websocket of sender.
+ * @param  {Object} data - The object properties described below.
+ * @param  {Integer} data.x   - Pointer x, corresponds to on entire wall.
+ * @param  {Integer} data.y   - Pointer y, corresponds to on entire wall.
+ * @param  {String} data.app  - App id, which function should be activated.
+ * @param  {String} data.func - Name of function to activate
+ * @param  {Object} data.parameters - Object to send to the app as parameter.
+ */
+function wsSendDataToClient(wsio, data) {
+	var i;
+	if (data.clientDest === "allDisplays") {
+		for (i = 0; i < clients.length; i++) {
+			if (clients[i].clientType === "display") {
+				clients[i].emit('broadcast', data);
+			}
+		}
+	} else if (data.clientDest === "masterDisplay") {
+		// only send if a master display is connected
+		if (masterDisplay) {
+			masterDisplay.emit('broadcast', data); // only send to one display to prevent multiple responses.
+		}
+	} else {
+		for (i = 0; i < clients.length; i++) {
+			// !!!! the clients[i].id  and clientDest need auto convert to evaluate as equivalent.
+			// update: condition is because console.log auto converts in a specific way
+			if (clients[i].id == data.clientDest) {
+				clients[i].emit('sendDataToClient', data);
+			}
+		}
+	}
+}
+
+/**
+ * Used to write files into the media folders.
+ * Writes to a joined location of mainFolder.path(~/Documents/SAGE2_media)
+ *
+ * @method wsSaveDataOnServer
+ * @param  {Object} wsio - The websocket of sender.
+ * @param  {Object} data - The object properties described below.
+ * @param  {String} data.fileName    - Name of the file.
+ * @param  {String} data.fileType    - Extension of the file.
+ * @param  {String} data.fileContent - To be written in the file.
+ */
+function wsSaveDataOnServer(wsio, data) {
+	// First check if all necessary fields have been provided.
+	if (data.fileType == null || data.fileType == undefined
+		|| data.fileName == null || data.fileName == undefined
+		|| data.fileContent == null || data.fileContent == undefined
+	) {
+		console.log(sageutils.header("wsSaveDataOnServer") + "ERROR> not saving data, a required field is null or undefined");
+	}
+	// Remove any path changing by chopping off the / andor \ in the filename.
+	while (data.fileName.indexOf("/") >= 0) {
+		data.fileName = data.fileName.substring(data.fileName.indexOf("/") + 1);
+	}
+	while (data.fileName.indexOf("\\") >= 0) {
+		data.fileName = data.fileName.substring(data.fileName.indexOf("\\") + 1);
+	}
+
+	// Create the notes folder as needed
+	var notesFolder = path.join(mainFolder.path, "notes");
+	if (!sageutils.folderExists(notesFolder)) {
+		sageutils.mkdirParent(notesFolder);
+	}
+
+	var fullpath;
+	// Specific checks for each file type (extension)
+	if (data.fileType === "note") {
+		// Just in case, save
+		fullpath = path.join(notesFolder, "lastNote.note");
+		fs.writeFileSync(fullpath, data.fileContent);
+		fullpath = path.join(notesFolder, data.fileName);
+		fs.writeFileSync(fullpath, data.fileContent);
+	} else if (data.fileType === "doodle") {
+		// Just in case, save
+		fullpath = path.join(notesFolder, "lastDoodle.doodle");
+		// Remove the header but keep uri
+		var regex = /^data:.+\/(.+);base64,(.*)$/;
+		var matches = data.fileContent.match(regex);
+		// Convert to base64 encoding
+		var buffer = new Buffer(matches[2], 'base64');
+		fs.writeFileSync(fullpath, buffer);
+		fullpath = path.join(notesFolder, data.fileName);
+		fs.writeFileSync(fullpath, buffer);
+	}  else if (data.fileType === "png") {
+		fullpath = path.join(mainFolder.path, "images", data.fileName);
+		var pngBuffer = new Buffer(data.fileContent, "base64");
+		fs.writeFileSync(fullpath, pngBuffer);
+	}  else if (data.fileType === "jpg") {
+		fullpath = path.join(mainFolder.path, "images", data.fileName);
+		var jpgBuffer = new Buffer(data.fileContent);
+		fs.writeFileSync(fullpath, jpgBuffer);
+	}  else if (data.fileType === "tmp") {
+		fullpath = path.join(mainFolder.path, "tmp", data.fileName);
+		var aBuffer = new Buffer(data.fileContent);
+		fs.writeFileSync(fullpath, aBuffer);
+	} else {
+		console.log(sageutils.header("wsSaveDataOnServer") + "ERROR> unable to save data on server for fileType " + data.fileType);
+	}
+}
+
+/**
+ * Sets the value of specified server data. If it doesn't exist, will create it.
+ *
+ * @method wsServerDataSetValue
+ * @param  {Object} wsio - The websocket of sender.
+ * @param  {Object} data - The object properties described below.
+ * @param  {String} data.nameOfValue - Name of value to set.
+ * @param  {*} data.value - Value to store.
+ * @param  {*} data.description - Currently a string to plain text describe the variable.
+ */
+function wsServerDataSetValue(wsio, data) {
+	// don't do anything if this isn't filled out.
+	if (data.nameOfValue === undefined || data.nameOfValue === null) {
+		return;
+	}
+	// check if there is no entry for that value
+	if (csdDataStructure.allValues["" + data.nameOfValue] === undefined) {
+		// need to make an entry for this value
+		var newCsdValue = {};
+		newCsdValue.name			= data.nameOfValue;
+		newCsdValue.value			= data.value;
+		newCsdValue.description		= data.description;
+		newCsdValue.subscribers		= [];
+		// add it and update tracking vars.
+		csdDataStructure.allValues["" + data.nameOfValue] = newCsdValue;
+		csdDataStructure.numberOfValues++;
+		csdDataStructure.allNamesOfValues.push("" + data.nameOfValue);
+	} else {
+		// value exists, just update it.
+		csdDataStructure.allValues["" + data.nameOfValue].value = data.value;
+		// potentially the new value isn't the same and a description can be useful
+		if (data.description) {
+			csdDataStructure.allValues["" + data.nameOfValue].description = data.description;
+		}
+	}
+	// send to each of the subscribers.
+	var dataForApp = {};
+	for (var i = 0; i < csdDataStructure.allValues["" + data.nameOfValue].subscribers.length; i++) {
+		// fill the data object for the app, using display's broadcast packet
+		dataForApp.app  = csdDataStructure.allValues["" + data.nameOfValue].subscribers[i].app;
+		dataForApp.func = csdDataStructure.allValues["" + data.nameOfValue].subscribers[i].func;
+		dataForApp.data = csdDataStructure.allValues["" + data.nameOfValue].value;
+		// send to all display clients(since they all need to update)
+		for (var j = 0; j < clients.length; j++) {
+			if (clients[j].clientType === "display") {
+				clients[j].emit('broadcast', dataForApp);
+			}
+		}
+	}
+}
+
+/**
  * Received from a display client, apps will send their context menu after completing their initialization.
  *
  * @method wsAppContextMenuContents
@@ -9348,27 +9579,15 @@ function wsCsdMessage(wsio, data) {
 	}
 
 	switch (data.type) {
-		case "consolePrint":
-			// used for debugging
-			csdConsolePrint(wsio, data);
-			break;
-		case "whatAppIsAt":
-			// used for testing
-			csdWhatAppIsAt(wsio, data);
-			break;
-		case "getPathOfApp":
-			// currently just used for testing
-			console.log("csd getPathOfApp " + data.appName + ":" + csdGetPathOfApp(data.appName));
-			break;
-		case "launchAppWithValues":
-			csdLaunchAppWithValues(wsio, data);
-			break;
-		case "sendDataToClient":
-			csdSendDataToClient(wsio, data);
-			break;
-		case "setValue":
-			csdSetValue(wsio, data);
-			break;
+		// case "launchAppWithValues":
+		// 	csdLaunchAppWithValues(wsio, data);
+		// 	break;
+		// case "sendDataToClient":
+		// 	csdSendDataToClient(wsio, data);
+		// 	break;
+		// case "setValue":
+		// 	csdSetValue(wsio, data);
+		// 	break;
 		case "getValue":
 			csdGetValue(wsio, data);
 			break;
@@ -9378,186 +9597,12 @@ function wsCsdMessage(wsio, data) {
 		case "getAllTrackedValues":
 			csdGetAllTrackedValues(wsio, data);
 			break;
-		case "saveDataOnServer":
-			csdSaveDataOnServer(wsio, data);
-			break;
+		// case "saveDataOnServer":
+		// 	csdSaveDataOnServer(wsio, data);
+		// 	break;
 		default:
 			console.log("csd ERROR, unknown message type " + data.type);
 			break;
-	}
-}
-
-/**
- * Prints a console message on the server.
- * csd requirement:
- * 		data.message 		what will be printed.
- */
-function csdConsolePrint(wsio, data) {
-	if (data.message === undefined) {
-		console.log(sageutils.header("csdConsolePrint") + "Error: Undefined message");
-		return;
-	}
-	console.log(sageutils.header("csdConsolePrint") + data.message);
-}
-
-/**
- * Will find app at location x,y.
- *
- * csd requirement:
- * 		data.x 		x location to check.
- * 		data.y 		y location to check.
- *
- * csd options:
- * 		data.serverPrint 	true = print to console on server.
- * 		data.replyPrint 	true = print to console on server.
- *
- */
-function csdWhatAppIsAt(wsio, data) {
-	var obj = interactMgr.searchGeometry({x: data.x, y: data.y});
-
-	if (data.serverPrint === true) {
-		console.log(sageutils.header("csdWhatAppIsAt") + obj.data.id);
-	}
-
-	if (data.replyPrint === true) {
-		// send back to the source the print command
-		var csdData = {};
-		csdData.type	= "consolePrint";
-		csdData.message = obj.data.id;
-		wsio.emit('csdMessage', csdData);
-	}
-}
-
-/**
- * Used to get the full path of an app starting with appName in the FileName.
- *
- * Note: under conditions it might be possible to generate false positives.
-*/
-function csdGetPathOfApp(appName) {
-	var apps = assets.listApps();
-	// for each of the apps known to SAGE2, usually everything in public/uploads/apps
-	for (var i = 0; i < apps.length; i++) {
-		if (// if the name contains appName
-			apps[i].exif.FileName.indexOf(appName) === 0
-			|| apps[i].id.indexOf(appName) !== -1
-		) {
-			return apps[i].id; // this is the path.
-		} // end if this app contains the specified name
-	} // end for each application available.
-	return null;
-}
-
-
-/**
- * Will launch app with specified name and call the given function after.
- *
- * csd requirement:
- * 		data.appName 	x location to check.
- *
- * csd options:
- * 		data.func 		if defined will attempt to call this func on the app
- * 		data.params 	assumed to be defined if data.func is. Will send these params to func.
- *
- */
-function csdLaunchAppWithValues(wsio, data) {
-	var fullpath = csdGetPathOfApp(data.appName);
-	if (fullpath === null) {
-		fullpath = path.join(mediaFolders.system.path, "apps", data.appName);
-		try {
-			fs.accessSync(fullpath);
-		} catch (err) {
-			console.log(sageutils.header("csdLaunchAppWithValues") + "Cannot launch " + data.appName + ", doesn't exist.");
-			return;
-		}
-	}
-	// Prep the data needed to launch an application.
-	var appLoadData = { };
-	appLoadData.application = fullpath;
-	appLoadData.user = wsio.id; // needed for the wsLoadApplication function
-	appLoadData.wasCsdPositionStated = false;
-	appLoadData.csdLaunch = true;
-	if (data.csdInitValues) {
-		appLoadData.csdInitValues = data.csdInitValues;
-	}
-	// If the launch location is defined, use it, otherwise use the stagger position.
-	if (data.xLaunch !== null && data.xLaunch !== undefined) {
-		appLoadData.position = [data.xLaunch, data.yLaunch];
-		appLoadData.wasCsdPositionStated = true;
-	}
-	// get this before the app is created. id start from 0. count is the next one
-	var whatTheNewAppIdShouldBe = "app_" + getUniqueAppId.count;
-	// call the previously made wsLoadApplication funciton and give it the required data.
-	wsLoadApplication(wsio, appLoadData);
-
-	// if a data.func is defined make a delayed call to it on the app. Otherwise, its just an app launch.
-	if (data.func !== undefined) {
-		setTimeout(
-			function() {
-				var app = SAGE2Items.applications.list[ whatTheNewAppIdShouldBe ];
-				// if the app doesn't exist, exit. Because it should and dunno what happened to it (potentially crash).
-				if (app === null || app === undefined) {
-					console.log(sageutils.header("csdLaunchAppWithValues") + "App " + data.appName +
-						" launched, but now it doesn't exist.");
-				} else {
-					// else try send it data
-					// add potentially missing params
-					data.params.serverDate = Date.now();
-					data.params.clientId   = wsio.id;
-					// load the data object for the new app
-					var dataForDisplay  = {};
-					dataForDisplay.app  = app.id;
-					dataForDisplay.func = data.func;
-					dataForDisplay.data = data.params;
-					// send to all display clients(since they all need to update)
-					for (var i = 0; i < clients.length; i++) {
-						if (clients[i].clientType === "display") {
-							clients[i].emit('broadcast', dataForDisplay);
-						}
-					}
-				}
-			}
-		, 400); // milliseconds how low can this value be to ensure it works?
-	} // end if data.func !== undefined
-} // end csdLaunchAppWithValues
-
-
-/**
- * Will send data to a client by means of function.
- *
- * csd requirement:
- * 		data.clientDest 	Which clients to send data to.
- * 							allDisplays 	sends to any client with clientType === "display"
- * 							masterDisplay 	sends only to masterDisplay.
- * 							allClients  	sends to all connected clients. (Not implemented)
- * 							<wsio.id>		sends only to the specified id
- *
- * csd options:
- * 		data.func 		displays need func defined
- * 		data.app 	 	displays need app defined
- * 		data.data 	 	displays need data defined (acts a param to function)
- *
- */
-function csdSendDataToClient(wsio, data) {
-	var i;
-	if (data.clientDest === "allDisplays") {
-		for (i = 0; i < clients.length; i++) {
-			if (clients[i].clientType === "display") {
-				clients[i].emit('broadcast', data);
-			}
-		}
-	} else if (data.clientDest === "masterDisplay") {
-		// only send if a master display is connected
-		if (masterDisplay) {
-			masterDisplay.emit('broadcast', data); // only send to one display to prevent multiple responses.
-		}
-	} else {
-		for (i = 0; i < clients.length; i++) {
-			// !!!! the clients[i].id  and clientDest need auto convert to evaluate as equivalent.
-			// update: condition is because console.log auto converts in a specific way
-			if (clients[i].id == data.clientDest) {
-				clients[i].emit('csdSendDataToClient', data);
-			}
-		}
 	}
 }
 
@@ -9606,54 +9651,6 @@ csdDataStructure.appLaunch.heightLast = -1;
 csdDataStructure.appLaunch.tallestInRow = -1;
 csdDataStructure.appLaunch.padding = 20;
 
-/**
-Will set the named value.
-
-Needs
-	data.nameOfValue
-	data.value
-	data.description (for later)
-*/
-function csdSetValue(wsio, data) {
-	// don't do anything if this isn't filled out.
-	if (data.nameOfValue === undefined || data.nameOfValue === null) {
-		return;
-	}
-	// check if there is no entry for that value
-	if (csdDataStructure.allValues["" + data.nameOfValue] === undefined) {
-		// need to make an entry for this value
-		var newCsdValue = {};
-		newCsdValue.name			= data.nameOfValue;
-		newCsdValue.value			= data.value;
-		newCsdValue.description		= data.description;
-		newCsdValue.subscribers		= [];
-		// add it and update tracking vars.
-		csdDataStructure.allValues["" + data.nameOfValue] = newCsdValue;
-		csdDataStructure.numberOfValues++;
-		csdDataStructure.allNamesOfValues.push("" + data.nameOfValue);
-	} else {
-		// value exists, just update it.
-		csdDataStructure.allValues[ "" + data.nameOfValue ].value = data.value;
-		// potentially the new value isn't the same and a description can be useful
-		if (data.description) {
-			csdDataStructure.allValues[ "" + data.nameOfValue ].description = data.description;
-		}
-	}
-	// send to each of the subscribers.
-	var dataForApp = {};
-	for (var i = 0; i < csdDataStructure.allValues[ "" + data.nameOfValue ].subscribers.length; i++) {
-		// fill the data object for the app, using display's broadcast packet
-		dataForApp.app  = csdDataStructure.allValues["" + data.nameOfValue].subscribers[i].app;
-		dataForApp.func = csdDataStructure.allValues["" + data.nameOfValue].subscribers[i].func;
-		dataForApp.data = csdDataStructure.allValues["" + data.nameOfValue].value;
-		// send to all display clients(since they all need to update)
-		for (var j = 0; j < clients.length; j++) {
-			if (clients[j].clientType === "display") {
-				clients[j].emit('broadcast', dataForApp);
-			}
-		}
-	}
-}
 
 /**
 Will send back the named value if it exists.
@@ -9745,78 +9742,6 @@ function csdGetAllTrackedValues(wsio, data) {
 			});
 	}
 	wsio.emit('broadcast', dataForApp);
-}
-
-
-
-
-/**
-Currently used to save files in server media folders.
-Writes to mainFolder.path, which should place it into ~/Documents/SAGE2_Media
-
-Needs
-	data.fileName
-	data.fileType
-		note
-	data.fileContent
-
-*/
-function csdSaveDataOnServer(wsio, data) {
-	// First check if all necessary fields have been provided.
-	if (data.fileType == null || data.fileType == undefined
-		|| data.fileName == null || data.fileName == undefined
-		|| data.fileContent == null || data.fileContent == undefined
-	) {
-		console.log("ERROR:csdSaveDataOnServer: not saving data, a required field is null or undefined");
-	}
-	// Remove weird path changing by chopping of the / andor \ in the filename.
-	while (data.fileName.indexOf("/") >= 0) {
-		data.fileName = data.fileName.substring(data.fileName.indexOf("/") + 1);
-	}
-	while (data.fileName.indexOf("\\") >= 0) {
-		data.fileName = data.fileName.substring(data.fileName.indexOf("\\") + 1);
-	}
-
-	// Create the notes folder as needed
-	var notesFolder = path.join(mainFolder.path, "notes");
-	if (!sageutils.folderExists(notesFolder)) {
-		sageutils.mkdirParent(notesFolder);
-	}
-
-	var fullpath;
-	// Special case for the extension saving.
-	if (data.fileType === "note") {
-		// Just in case, save
-		fullpath = path.join(notesFolder, "lastNote.note");
-		fs.writeFileSync(fullpath, data.fileContent);
-		fullpath = path.join(notesFolder, data.fileName);
-		fs.writeFileSync(fullpath, data.fileContent);
-	} else if (data.fileType === "doodle") {
-		// Just in case, save
-		fullpath = path.join(notesFolder, "lastDoodle.doodle");
-		// Remove the header but keep uri
-		var regex = /^data:.+\/(.+);base64,(.*)$/;
-		var matches = data.fileContent.match(regex);
-		// Convert to base64 encoding
-		var buffer = new Buffer(matches[2], 'base64');
-		fs.writeFileSync(fullpath, buffer);
-		fullpath = path.join(notesFolder, data.fileName);
-		fs.writeFileSync(fullpath, buffer);
-	}  else if (data.fileType === "png") {
-		fullpath = path.join(mainFolder.path, "images", data.fileName);
-		var pngBuffer = new Buffer(data.fileContent, "base64");
-		fs.writeFileSync(fullpath, pngBuffer);
-	}  else if (data.fileType === "jpg") {
-		fullpath = path.join(mainFolder.path, "images", data.fileName);
-		var jpgBuffer = new Buffer(data.fileContent);
-		fs.writeFileSync(fullpath, jpgBuffer);
-	}  else if (data.fileType === "tmp") {
-		fullpath = path.join(mainFolder.path, "tmp", data.fileName);
-		var aBuffer = new Buffer(data.fileContent);
-		fs.writeFileSync(fullpath, aBuffer);
-	} else {
-		console.log("ERROR:csdSaveDataOnServer: unable to save data on server for fileType " + data.fileType);
-	}
 }
 
 /**
@@ -9935,7 +9860,7 @@ function wsWallScreenshotFromDisplay(wsio, data) {
 	fileSaveObject.fileType = "tmp";
 	fileSaveObject.fileContent = data.imageData;
 	// Create the current tile piece and tile pieces individually saved
-	csdSaveDataOnServer(wsio, fileSaveObject);
+	wsSaveDataOnServer(wsio, fileSaveObject);
 
 	// Set the tracking variables for the tile piece
 	// Mark itself as having submitted a screenshot
@@ -10064,7 +9989,7 @@ function wsWallScreenshotFromDisplay(wsio, data) {
 	} else {
 		// Just change the name
 		fileSaveObject.fileName = "screenshot-" + dateSuffix + ".jpg";
-		csdSaveDataOnServer(wsio, fileSaveObject);
+		wsSaveDataOnServer(wsio, fileSaveObject);
 		// Add the image into the asset management and open with a width 1/4 of the wall
 		manageUploadedFiles([{
 			// output folder

@@ -685,14 +685,14 @@ function setupListeners() {
 		setAppContextMenuEntries(data);
 	});
 
-	wsio.on('csdSendDataToClient', function(data) {
+	wsio.on('sendDataToClient', function(data) {
 		// Depending on the specified func does different things
 		if (data.func === 'uiDrawSetCurrentStateAndShow') {
 			uiDrawSetCurrentStateAndShow(data);
 		} else if (data.func === 'uiDrawMakeLine') {
 			uiDrawMakeLine(data);
 		} else {
-			console.log("Error, csd data packet for client contained invalid function:" + data.func);
+			console.log("Error, data for client contained invalid function:" + data.func);
 		}
 	});
 
@@ -707,7 +707,6 @@ function setupListeners() {
 		}
 	});
 }
-
 
 /**
  * Handler resizes
@@ -1413,14 +1412,13 @@ function handleClick(element) {
 		// clear drawzone
 		uiDrawCanvasBackgroundFlush('white');
 		var data = {};
-		data.type		= "launchAppWithValues";
 		data.appName	= "doodle";
-		data.func		= "addClientIdAsEditor";
-		data.params		= {
+		data.customLaunchParams = {
+			func: "addClientIdAsEditor",
 			clientId: interactor.uniqueID,
 			clientName: document.getElementById('sage2PointerLabel').value
 		};
-		wsio.emit('csdMessage', data);
+		wsio.emit('launchAppWithValues', data);
 
 		/*
 		Dialog will not be shown here.
@@ -2194,7 +2192,7 @@ function noBackspace(event) {
 		// shift + enter adds a line
 	} else if (event.keyCode === 13 && event.target.id === "uiNoteMakerInputField") {
 		// if a user hits enter within an appContextMenuEntry, it will cause the effect to happen
-		sendCsdMakeNote();
+		sendMessageMakeNote();
 		event.preventDefault(); // prevent new line on next note
 	} else if (event.keyCode === 191 && event.shiftKey && event.target.id === "uiNoteMakerInputField") {
 		// allow "?" within note creation
@@ -2660,7 +2658,7 @@ function setupUiNoteMaker() {
 	var sendButton = document.getElementById('uiNoteMakerSendButton');
 	// click effect to make a note on the display (app launch)
 	sendButton.addEventListener('click', function() {
-		sendCsdMakeNote();
+		sendMessageMakeNote();
 	});
 	var closeButton = document.getElementById('uiNoteMakerCloseButton');
 	// click effect to cancel making a note
@@ -2706,31 +2704,30 @@ function setUiNoteColorSelect(colorNumber) {
 }
 
 /**
-This function is activated in 2 ways.
-	User click the send button.
-	User hits enter when making a note. This check is done in the noBackspace funciton.
-When activated will make the packet to launch app
-	the params is a size 1 array containing the pointer name.
-*/
-function sendCsdMakeNote() {
+ * This function is activated in 2 ways.
+ * 1) User click the send button.
+ * 2) User hits enter when making a note. This check is done in the noBackspace funciton.
+ * When activated will make the packet to launch app. Collects values from tags on page.
+ *
+ * @method sendMessageMakeNote
+ */
+function sendMessageMakeNote() {
 	var workingDiv = document.getElementById('uiNoteMakerInputField');
 	var data = {};
-	data.type		= "launchAppWithValues";
 	data.appName	= "quickNote";
-	// data.func		= "setMessage";
-	data.csdInitValues		= {};
-	data.csdInitValues.clientName = document.getElementById('sage2PointerLabel').value;
-	data.csdInitValues.clientInput = workingDiv.value;
+	data.customLaunchParams		= {};
+	data.customLaunchParams.clientName = document.getElementById('sage2PointerLabel').value;
+	data.customLaunchParams.clientInput = workingDiv.value;
 	if (document.getElementById("uiNoteMakerCheckAnonymous").checked) {
-		data.csdInitValues.clientName = "Anonymous";
+		data.customLaunchParams.clientName = "Anonymous";
 	}
-	data.csdInitValues.colorChoice = "lightyellow";
+	data.customLaunchParams.colorChoice = "lightyellow";
 	for (var i = 1; i <= 6; i++) {
 		if (document.getElementById("uinmColorPick" + i).colorWasPicked) {
-			data.csdInitValues.colorChoice = document.getElementById("uinmColorPick" + i).style.background;
+			data.customLaunchParams.colorChoice = document.getElementById("uinmColorPick" + i).style.background;
 		}
 	}
-	wsio.emit('csdMessage', data);
+	wsio.emit('launchAppWithValues', data);
 	workingDiv.value = ""; // clear out the input field.
 }
 
@@ -2804,14 +2801,13 @@ function setupUiDrawCanvas() {
 		function() {
 			uiDrawZoneRemoveSelfAsClient();
 			var data = {};
-			data.type		= "launchAppWithValues";
-			data.appName	= "doodle";
-			data.func		= "addClientIdAsEditor";
-			data.params		= {
+			data.appName = "doodle";
+			data.customLaunchParams = {
+				func: "addClientIdAsEditor", // send this data to function after app starts
 				clientId: interactor.uniqueID,
 				clientName: document.getElementById('sage2PointerLabel').value
 			};
-			wsio.emit('csdMessage', data);
+			wsio.emit('launchAppWithValues', data);
 		}
 	);
 	// get the line adjustment working for the thickness buttons.
@@ -3014,12 +3010,17 @@ function uiDrawGetTouchId(id) {
 }
 
 /**
-When a user tries to draw on the doodle canavs, the events are converted to locations of where to place
-	the line data. Previous location to current location.
-
-The client doesn't actually cause their canvas to update. The app sends a confirmation back which
-	causes the canvas to update.
-*/
+ * When a user tries to draw on the doodle canavs, the events are converted to locations of where to place
+ * the line data. Previous location to current location.
+ * The client doesn't actually cause their canvas to update. The app sends a confirmation back which
+ * causes the canvas to update.
+ *
+ * @method uiDrawSendLineCommand
+ * @param {Number} xDest - location on canvas for next point.
+ * @param {Number} yDest - location on canvas for next point.
+ * @param {Number} xPrev - previous location on canvas.
+ * @param {Number} yPrev - previous location on canvas.
+ */
 function uiDrawSendLineCommand(xDest, yDest, xPrev, yPrev) {
 	var workingDiv	= document.getElementById('uiDrawZoneCanvas');
 	var lineWidth	= parseInt(workingDiv.lineWidth);
@@ -3037,9 +3038,8 @@ function uiDrawSendLineCommand(xDest, yDest, xPrev, yPrev) {
 		fillStyle, strokeStyle,
 		workingDiv.clientDest
 	];
-	dataForApp.type       = "sendDataToClient";
 	dataForApp.clientDest = "allDisplays";
-	wsio.emit("csdMessage", dataForApp);
+	wsio.emit("sendDataToClient", dataForApp);
 }
 
 /**
@@ -3083,16 +3083,21 @@ function uiDrawMakeLine(data) {
 	ctx.stroke();
 }
 
-
 /**
-This will be called from a wsio packet "csdSendDataToClient" with type "doodleAppCurrentState".
-Must clear out canvas, set state, show dialog.
-
-Generally this happens when a user chooses to edit an existing doodle. Their canvas needs to be set
-	to the current state of the doodle before edits should be made.
-
-But, doodles can be made from images which have varying sizes. They must also be contained within view correctly.
-*/
+ * This will be called from a wsio packet "sendDataToClient".
+ * Must clear out canvas, set state, show dialog.
+ * Should happen when a user chooses to edit an existing doodle. Their canvas needs to be set
+ * to the current state of the doodle before edits should be made.
+ * But, doodles can be made from images which have varying sizes. They must also be contained within view correctly.
+ *
+ * @method uiDrawSetCurrentStateAndShow
+ * @param {Object} data - object with properties below.
+ * @param {Object} data.imageWidth  - image resolution.
+ * @param {Object} data.imageHeight - image resolution.
+ * @param {Object} data.canvasImage - image as toDataURL().
+ * @param {Object} data.clientDest  - should be this client.
+ * @param {Object} data.appId       - app id this is for.
+ */
 function uiDrawSetCurrentStateAndShow(data) {
 	// clear out canvas
 	uiDrawCanvasBackgroundFlush("white");
@@ -3117,29 +3122,39 @@ function uiDrawSetCurrentStateAndShow(data) {
 	workingDiv.style.width     = imageResolutionToBe.w + "px";
 	workingDiv.style.height    = imageResolutionToBe.h + "px";
 	workingDiv.imageToDraw.src = data.canvasImage;
-	var ctx = workingDiv.getContext('2d');
-	ctx.drawImage(workingDiv.imageToDraw, 0, 0);
 	// set variables to correctly send updates and allow removal as editor.
 	workingDiv.clientDest  = data.clientDest;
 	workingDiv.appId       = data.appId;
 	workingDiv.resizeCount = resizeCount;
-	// show dialog
-	showDialog('uiDrawZone');
+	// delayed drawing until after load completes
+	workingDiv.imageToDraw.parentCtx = workingDiv.getContext('2d');
+	workingDiv.imageToDraw.onload    = function() {
+		this.parentCtx.drawImage(this, 0, 0);
+		// show dialog
+		showDialog('uiDrawZone');
+	}
 }
 
 /**
-Called when the user creates a new doodle, or closes the doodle dialog.
-This is necessary because the doodle canvas space is a shared draw space,
-	if they do not remove themselves, then the app will continue to send updates
-	even if they are not currently editing the app.
-*/
+ * Called when the user creates a new doodle, or closes the doodle dialog.
+ * This is necessary because the doodle canvas space is a shared draw space,
+ * if they do not remove themselves the app will continue to send updates
+ * even if they are not currently editing the app.
+ *
+ * @method uiDrawZoneRemoveSelfAsClient
+ * @param {Object} data - object with properties below.
+ * @param {Object} data.imageWidth  - image resolution.
+ * @param {Object} data.imageHeight - image resolution.
+ * @param {Object} data.canvasImage - image as toDataURL().
+ * @param {Object} data.clientDest  - should be this client.
+ * @param {Object} data.appId       - app id this is for.
+ */
 function uiDrawZoneRemoveSelfAsClient() {
 	var workingDiv  = document.getElementById('uiDrawZoneCanvas');
 	var dataForApp  = {};
 	dataForApp.app  = workingDiv.appId;
 	dataForApp.func = "removeClientIdAsEditor";
 	dataForApp.data = [workingDiv.clientDest];
-	dataForApp.type = "sendDataToClient";
 	dataForApp.clientDest = "allDisplays";
-	wsio.emit("csdMessage", dataForApp);
+	wsio.emit("sendDataToClient", dataForApp);
 }

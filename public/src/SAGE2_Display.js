@@ -1565,9 +1565,9 @@ function createAppWindow(data, parentId, titleBarHeight, titleTextSize, offsetX,
 			title: data.title,
 			application: data.application
 		};
-		// extra data that may be passed from csd app launch.
-		if (data.csdInitValues) {
-			init.csdInitValues = data.csdInitValues;
+		// extra data that may be passed from launchAppWithValues
+		if (data.customLaunchParams) {
+			init.customLaunchParams = data.customLaunchParams;
 		}
 
 		// load new app
@@ -1580,6 +1580,11 @@ function createAppWindow(data, parentId, titleBarHeight, titleTextSize, offsetX,
 				var newapp = new window[data.application]();
 				newapp.init(init);
 				newapp.refresh(date);
+
+				// custom launch
+				if (data.customLaunchParams && data.customLaunchParams.func) {
+					newapp[data.customLaunchParams.func](data.customLaunchParams);
+				}
 
 				// Sending the context menu info to the server
 				if (isMaster) {
@@ -1619,6 +1624,10 @@ function createAppWindow(data, parentId, titleBarHeight, titleTextSize, offsetX,
 				setTimeout(function() {
 					wsio.emit('requestVideoFrame', {id: data.id});
 				}, 500);
+			}
+			// custom launch
+			if (data.customLaunchParams && data.customLaunchParams.func) {
+				app[data.customLaunchParams.func](data.customLaunchParams);
 			}
 		}
 	}
