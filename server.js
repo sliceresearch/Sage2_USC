@@ -1035,16 +1035,17 @@ function setupListeners(wsio) {
 
 	// message passing between clients
 	wsio.on('requestAppContextMenu',				wsRequestAppContextMenu);
-	wsio.on('callFunctionOnApp',					wsCallFunctionOnApp);
 	wsio.on('appContextMenuContents',				wsAppContextMenuContents);
+	wsio.on('callFunctionOnApp',					wsCallFunctionOnApp);
 	// generic message passing for data requests or for specific communications.
-	// might eventually break this up into individual ws functions
-	wsio.on('csdMessage',							wsCsdMessage);
 	// csd message standalone
 	wsio.on('launchAppWithValues',					wsLaunchAppWithValues);
 	wsio.on('sendDataToClient',						wsSendDataToClient);
 	wsio.on('saveDataOnServer',						wsSaveDataOnServer);
 	wsio.on('serverDataSetValue',					wsServerDataSetValue);
+	wsio.on('serverDataGetValue',					wsServerDataGetValue);
+	wsio.on('serverDataSubscribeToValue',			wsServerDataSubscribeToValue);
+	wsio.on('serverDataGetAllTrackedValues',		wsServerDataGetAllTrackedValues);
 
 	// Screenshot messages
 	wsio.on('startWallScreenshot',                  wsStartWallScreenshot);
@@ -9228,6 +9229,19 @@ function wsRequestAppContextMenu(wsio, data) {
 }
 
 /**
+ * Received from a display client, apps will send their context menu after completing their initialization.
+ *
+ * @method wsAppContextMenuContents
+ * @param  {Object} wsio - The websocket of sender.
+ * @param  {Object} data - The object properties described below.
+ * @param  {String} data.app - App id that this menu is for.
+ * @param  {Array} data.entries - Array of objects describing the entries.
+ */
+function wsAppContextMenuContents(wsio, data) {
+	SAGE2Items.applications.list[data.app].contextMenu = data.entries;
+}
+
+/**
  * Will call a function on each display client's app that matches id. Expected usage with context menu.
  * But can be used in other cases. 
  * There are some special functionality cases like:
@@ -9553,57 +9567,98 @@ function wsServerDataSetValue(wsio, data) {
 }
 
 /**
- * Received from a display client, apps will send their context menu after completing their initialization.
+ * Checks if there is a value, and if so will send the value.
+ * If the value doesn't exist, it will not return anything.
  *
- * @method wsAppContextMenuContents
+ * @method wsServerDataGetValue
  * @param  {Object} wsio - The websocket of sender.
  * @param  {Object} data - The object properties described below.
- * @param  {String} data.app - App id that this menu is for.
- * @param  {Array} data.entries - Array of objects describing the entries.
+ * @param  {String} data.nameOfValue - Name of value to get.
+ * @param  {String} data.app - App that requested.
+ * @param  {String} data.func - Name of the function on the app to give value to.
  */
-function wsAppContextMenuContents(wsio, data) {
-	SAGE2Items.applications.list[data.app].contextMenu = data.entries;
-}
-
-
-/**
-This is the function that handles all 'csdMessage' packets.
-Required for processing is data.type.
-Further requirements based upon the type.
-*/
-function wsCsdMessage(wsio, data) {
-	// if the type is not defined,
-	if (data.type === undefined) {
-		console.log(sageutils.header("csdMessage") + "Error: Undefined csdMessage");
+function wsServerDataGetValue(wsio, data) {
+	// don't do anything if this isn't filled out.
+	if (data.nameOfValue === undefined || data.nameOfValue === null) {
 		return;
 	}
-
-	switch (data.type) {
-		// case "launchAppWithValues":
-		// 	csdLaunchAppWithValues(wsio, data);
-		// 	break;
-		// case "sendDataToClient":
-		// 	csdSendDataToClient(wsio, data);
-		// 	break;
-		// case "setValue":
-		// 	csdSetValue(wsio, data);
-		// 	break;
-		case "getValue":
-			csdGetValue(wsio, data);
-			break;
-		case "subscribeToValue":
-			csdSubscribeToValue(wsio, data);
-			break;
-		case "getAllTrackedValues":
-			csdGetAllTrackedValues(wsio, data);
-			break;
-		// case "saveDataOnServer":
-		// 	csdSaveDataOnServer(wsio, data);
-		// 	break;
-		default:
-			console.log("csd ERROR, unknown message type " + data.type);
-			break;
+	// also don't do anything if the value doesn't exist
+	if (csdDataStructure.allValues["" + data.nameOfValue] === undefined) {
+		return;
 	}
+	// make the data for the app, using display's broadcast packet
+	var dataForApp = {};
+	dataForApp.app  = data.app;
+	dataForApp.func = data.func;
+	dataForApp.data = csdDataStructure.allValues[ "" + data.nameOfValue ].value;
+	wsio.emit('broadcast', dataForApp);
+}
+
+/**
+ * Add the app to the named values a subscriber.
+ * If the value doesn't exist, it will create a "blank" value and subscribe to it.
+ *
+ * @method wsServerDataSubscribeToValue
+ * @param  {Object} wsio - The websocket of sender.
+ * @param  {Object} data - The object properties described below.
+ * @param  {String} data.nameOfValue - Name of value to subscribe to.
+ * @param  {String} data.app - App that requested.
+ * @param  {String} data.func - Name of the function on the app to give value to.
+ */
+function wsServerDataSubscribeToValue(wsio, data) {
+	// Need to have a name. Without a name, nothing can be done.
+	if (data.nameOfValue === undefined || data.nameOfValue === null) {
+		return;
+	}
+	// also don't do anything if the value doesn't exist
+	if (csdDataStructure.allValues["" + data.nameOfValue] === undefined) {
+		data.value = null; // nothing, it'll be replace later if at all
+		csdSetValue(wsio, data);
+	}
+
+	let foundSubscriber = false;
+	for (let i = 0; i < csdDataStructure.allValues[ "" + data.nameOfValue ].subscribers.length; i++) {
+		// do not double add if the app and function are the same this permits same app diff function
+		if (csdDataStructure.allValues[ "" + data.nameOfValue ].subscribers[i].app == data.app
+			&& csdDataStructure.allValues[ "" + data.nameOfValue ].subscribers[i].func == data.func) {
+			foundSubscriber = true;
+			break;
+		}
+	}
+	// if app is not already subscribing
+	if (!foundSubscriber) {
+		// make the new subscriber entry
+		var newCsdSubscriber  = {};
+		newCsdSubscriber.app  = data.app;
+		newCsdSubscriber.func = data.func;
+		// add it to that value
+		csdDataStructure.allValues[ "" + data.nameOfValue ].subscribers.push(newCsdSubscriber);
+	}
+}
+
+/**
+ * Will respond back once to the app giving the func an array of tracked values.
+ * They will be in an array of objects with properties nameOfValue and value.
+ * NOTE: this could be a huge array.
+ *
+ * @method wsServerDataGetAllTrackedValues
+ * @param  {Object} wsio - The websocket of sender.
+ * @param  {Object} data - The object properties described below.
+ * @param  {String} data.app - App that requested.
+ * @param  {String} data.func - Name of the function on the app to give value to.
+ */
+function wsServerDataGetAllTrackedValues(wsio, data) {
+	var dataForApp = {};
+	dataForApp.data = [];
+	dataForApp.app  = data.app;
+	dataForApp.func = data.func;
+	for (var i = 0; i < csdDataStructure.allNamesOfValues.length; i++) {
+		dataForApp.data.push(
+			{	nameOfValue: csdDataStructure.allNamesOfValues[i],
+				value: csdDataStructure.allValues[ csdDataStructure.allNamesOfValues[i] ]
+			});
+	}
+	wsio.emit('broadcast', dataForApp);
 }
 
 /*
@@ -9650,99 +9705,6 @@ csdDataStructure.appLaunch.widthLast = -1;
 csdDataStructure.appLaunch.heightLast = -1;
 csdDataStructure.appLaunch.tallestInRow = -1;
 csdDataStructure.appLaunch.padding = 20;
-
-
-/**
-Will send back the named value if it exists.
-Should it send back null if the value doesn't exist?
-The current behavior is do nothing. Maybe sending null isn't bad.
-
-Needs
-	data.nameOfValue
-	data.app
-	data.func
-*/
-function csdGetValue(wsio, data) {
-	// don't do anything if this isn't filled out.
-	if (data.nameOfValue === undefined || data.nameOfValue === null) {
-		return;
-	}
-	// also don't do anything if the value doesn't exist
-	if (csdDataStructure.allValues["" + data.nameOfValue] === undefined) {
-		return;
-	}
-	// make the data for the app, using display's broadcast packet
-	var dataForApp = {};
-	dataForApp.app  = data.app;
-	dataForApp.func = data.func;
-	dataForApp.data = csdDataStructure.allValues[ "" + data.nameOfValue ].value;
-	wsio.emit('broadcast', dataForApp);
-}
-
-/**
-Adds the app to the named value as a subscriber.
-Changed from previous behavior. If the value doesn't exist, it will create a "blank" value and subscribe to it.
-
-Needs
-	data.nameOfValue
-	data.app
-	data.func
-*/
-function csdSubscribeToValue(wsio, data) {
-	// Need to have a name. Without a name, nothing can be done.
-	if (data.nameOfValue === undefined || data.nameOfValue === null) {
-		return;
-	}
-	// also don't do anything if the value doesn't exist
-	if (csdDataStructure.allValues["" + data.nameOfValue] === undefined) {
-		data.value = null; // nothing, it'll be replace later if at all
-		csdSetValue(wsio, data);
-	}
-
-	let foundSubscriber = false;
-	for (let i = 0; i < csdDataStructure.allValues[ "" + data.nameOfValue ].subscribers.length; i++) {
-		// do not double add if the app and function are the same this permits same app diff function
-		if (csdDataStructure.allValues[ "" + data.nameOfValue ].subscribers[i].app == data.app
-			&& csdDataStructure.allValues[ "" + data.nameOfValue ].subscribers[i].func == data.func) {
-			foundSubscriber = true;
-			break;
-		}
-	}
-	// if app is not already subscribing
-	if (!foundSubscriber) {
-		// make the new subscriber entry
-		var newCsdSubscriber  = {};
-		newCsdSubscriber.app  = data.app;
-		newCsdSubscriber.func = data.func;
-		// add it to that value
-		csdDataStructure.allValues[ "" + data.nameOfValue ].subscribers.push(newCsdSubscriber);
-	}
-}
-
-
-
-/**
-Adds the app to the named value as a subscriber. However the named value must exist.
-This will NOT automatically add a subscriber if the values doesn't exist but is added later.
-
-Needs
-	data.nameOfValue
-	data.app
-	data.func
-*/
-function csdGetAllTrackedValues(wsio, data) {
-	var dataForApp = {};
-	dataForApp.data = [];
-	dataForApp.app  = data.app;
-	dataForApp.func = data.func;
-	for (var i = 0; i < csdDataStructure.allNamesOfValues.length; i++) {
-		dataForApp.data.push(
-			{	name: csdDataStructure.allNamesOfValues[i],
-				value: csdDataStructure.allValues[ csdDataStructure.allNamesOfValues[i] ]
-			});
-	}
-	wsio.emit('broadcast', dataForApp);
-}
 
 /**
  * Calculate if we have enough screenshot-capable display clients
