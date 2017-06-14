@@ -1581,11 +1581,6 @@ function createAppWindow(data, parentId, titleBarHeight, titleTextSize, offsetX,
 				newapp.init(init);
 				newapp.refresh(date);
 
-				// custom launch
-				if (data.customLaunchParams && data.customLaunchParams.func) {
-					newapp[data.customLaunchParams.func](data.customLaunchParams);
-				}
-
 				// Sending the context menu info to the server
 				if (isMaster) {
 					newapp.getFullContextMenuAndUpdate();
@@ -1596,6 +1591,11 @@ function createAppWindow(data, parentId, titleBarHeight, titleTextSize, offsetX,
 
 				if (data.animation === true) {
 					wsio.emit('finishedRenderingAppFrame', {id: data.id});
+				}
+
+				// custom launch
+				if (data.customLaunchParams && data.customLaunchParams.functionToCallAfterInit) {
+					newapp[data.customLaunchParams.functionToCallAfterInit](data.customLaunchParams);
 				}
 			}, false);
 			js.type  = "text/javascript";
@@ -1625,9 +1625,9 @@ function createAppWindow(data, parentId, titleBarHeight, titleTextSize, offsetX,
 					wsio.emit('requestVideoFrame', {id: data.id});
 				}, 500);
 			}
-			// custom launch
-			if (data.customLaunchParams && data.customLaunchParams.func) {
-				app[data.customLaunchParams.func](data.customLaunchParams);
+			// custom launch 2, for app that has already been loaded
+			if (data.customLaunchParams && data.customLaunchParams.functionToCallAfterInit) {
+				app[data.customLaunchParams.functionToCallAfterInit](data.customLaunchParams);
 			}
 		}
 	}

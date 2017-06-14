@@ -52,10 +52,6 @@ var doodle = SAGE2_App.extend({
 			this.changeTitleToOriginalCreatorAndTime({creationTime: data.state.fileName});
 			this.setInitialCanvas(data.state.contentsOfDoodleFile);
 		}
-
-		// if (data.customLaunchParams) {
-		// 	this.addClientIdAsEditor(data.customLaunchParams);
-		// }
 	},
 
 	/**

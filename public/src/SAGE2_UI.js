@@ -1412,9 +1412,9 @@ function handleClick(element) {
 		// clear drawzone
 		uiDrawCanvasBackgroundFlush('white');
 		var data = {};
-		data.appName	= "doodle";
+		data.appName = "doodle";
+		data.func = "addClientIdAsEditor";
 		data.customLaunchParams = {
-			func: "addClientIdAsEditor",
 			clientId: interactor.uniqueID,
 			clientName: document.getElementById('sage2PointerLabel').value
 		};
@@ -2802,8 +2802,8 @@ function setupUiDrawCanvas() {
 			uiDrawZoneRemoveSelfAsClient();
 			var data = {};
 			data.appName = "doodle";
+			data.func = "addClientIdAsEditor"; // send this data to function after app starts
 			data.customLaunchParams = {
-				func: "addClientIdAsEditor", // send this data to function after app starts
 				clientId: interactor.uniqueID,
 				clientName: document.getElementById('sage2PointerLabel').value
 			};

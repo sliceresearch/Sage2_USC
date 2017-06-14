@@ -55,6 +55,7 @@ var quickNote = SAGE2_App.extend({
 			this.parseDataFromServer(this.state.contentsOfNoteFile);
 		} else if (data.customLaunchParams) { // if it was passed additional init values
 			data.customLaunchParams.serverDate = new Date(Date.now());
+			console.log("customlaunch?");
 			_this.setMessage(data.customLaunchParams);
 			setTimeout(function() {
 				//_this.setMessage(data.customLaunchParams);

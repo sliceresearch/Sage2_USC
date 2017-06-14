@@ -44,13 +44,15 @@
  * @constructor
  * @param  {Array} clients - A reference to the client list.
  */
-function SharedServerDataManager(clients) {
+function SharedServerDataManager(clients, broadcast) {
 	this.dataStructure = {
 		allValues: {},
 		numberOfValues: 0,
-		allNamesOfValues: []
+		allNamesOfValues: [],
+		newValueWatchers: []
 	};
 	this.clients = clients;
+	this.broadcast = broadcast;
 }
 
 /**
@@ -66,22 +68,32 @@ function SharedServerDataManager(clients) {
  */
 SharedServerDataManager.prototype.setValue = function(wsio, data) {
 	// don't do anything if not given nameOfValue
-	if (data.nameOfValue === undefined || data.nameOfValue === null) {
+	if (data.nameOfValue === undefined || data.nameOfValue === null || data.value === undefined) {
 		return;
 	}
+	var addedNewValue = false;
 	// check if there is no entry for that value
 	if (this.dataStructure.allValues["" + data.nameOfValue] === undefined) {
 		// need to make an entry for this value
 		var newValue = {};
-		newValue.name			= data.nameOfValue;
-		newValue.value			= data.value;
+		newValue.nameOfValue        = data.nameOfValue;
+		newValue.value              = data.value;
 		newValue.description		= data.description;
 		newValue.subscribers		= [];
+		// placeholder for subscription ahead of time
+		if (data.subscribePlaceholder) {
+			newValue.value = undefined; // this should be the only way a value is undefined
+		}
 		// add it and update tracking vars.
 		this.dataStructure.allValues["" + data.nameOfValue] = newValue;
 		this.dataStructure.numberOfValues++;
 		this.dataStructure.allNamesOfValues.push("" + data.nameOfValue);
+		addedNewValue = true;
 	} else {
+		// undefined should only possible through subscription placeholder
+		if (undefined === this.dataStructure.allValues[ "" + data.nameOfValue ].value) {
+			addedNewValue = true;
+		}
 		// value exists, just update it.
 		this.dataStructure.allValues["" + data.nameOfValue].value = data.value;
 		// potentially the new value isn't the same and a description can be useful
@@ -89,19 +101,28 @@ SharedServerDataManager.prototype.setValue = function(wsio, data) {
 			this.dataStructure.allValues["" + data.nameOfValue].description = data.description;
 		}
 	}
-	// send to each of the subscribers.
 	var dataForApp = {};
-	for (var i = 0; i < this.dataStructure.allValues["" + data.nameOfValue].subscribers.length; i++) {
-		// fill the data object for the app, using display's broadcast packet
+	dataForApp.data = { // this data piece is only for new value watchers
+		nameOfValue: data.nameOfValue,
+		description: data.description
+	};
+	// if a new value send to each of the new value watchers, currently only works with displays clients
+	if (addedNewValue) {
+		for (let i = 0; i < this.dataStructure.newValueWatchers.length; i++) {
+			// alter data based on subscriber id and their specified function
+			dataForApp.app  = this.dataStructure.newValueWatchers[i].app;
+			dataForApp.func = this.dataStructure.newValueWatchers[i].func;
+			// notify to all clients
+			this.broadcast('broadcast', dataForApp);
+		}
+	}
+	// now send to each of the subscribers the new value
+	dataForApp.data = this.dataStructure.allValues["" + data.nameOfValue].value;
+	for (let i = 0; i < this.dataStructure.allValues[ "" + data.nameOfValue ].subscribers.length; i++) {
+		// alter data based on subscriber id and their specified function
 		dataForApp.app  = this.dataStructure.allValues["" + data.nameOfValue].subscribers[i].app;
 		dataForApp.func = this.dataStructure.allValues["" + data.nameOfValue].subscribers[i].func;
-		dataForApp.data = this.dataStructure.allValues["" + data.nameOfValue].value;
-		// send to all displays (since they all need to update)
-		for (var j = 0; j < this.clients.length; j++) {
-			if (this.clients[j].clientType === "display") {
-				this.clients[j].emit('broadcast', dataForApp);
-			}
-		}
+		this.broadcast('broadcast', dataForApp);
 	}
 };
 
@@ -130,7 +151,8 @@ SharedServerDataManager.prototype.getValue = function(wsio, data) {
 	dataForApp.app  = data.app;
 	dataForApp.func = data.func;
 	dataForApp.data = this.dataStructure.allValues[ "" + data.nameOfValue ].value;
-	wsio.emit('broadcast', dataForApp);
+	// send only to the client that requestd it. Q: does it matter it multiple display clients?
+	this.broadcast('broadcast', dataForApp);
 };
 
 /**
@@ -143,6 +165,7 @@ SharedServerDataManager.prototype.getValue = function(wsio, data) {
  * @param  {String} data.nameOfValue - Name of value to subscribe to.
  * @param  {String} data.app - App that requested.
  * @param  {String} data.func - Name of the function on the app to give value to.
+ * @param  {String|undefined} data.unsubscribe - If exists and true, then will remove user from subscribe list.
  */
 SharedServerDataManager.prototype.subscribeToValue = function(wsio, data) {
 	// Need to have a name. Without a name, nothing can be done.
@@ -152,7 +175,8 @@ SharedServerDataManager.prototype.subscribeToValue = function(wsio, data) {
 	// if value doesn't exist make it, when changed later the subscription will work
 	if (this.dataStructure.allValues["" + data.nameOfValue] === undefined) {
 		data.value = null; // nothing, it'll be replace later if at all
-		this.setValue(wsio, data, []); // TODO change this later
+		data.subscribePlaceholder = true;
+		this.setValue(wsio, data);
 	}
 
 	var foundSubscriber = false;
@@ -161,11 +185,14 @@ SharedServerDataManager.prototype.subscribeToValue = function(wsio, data) {
 		if (this.dataStructure.allValues[ "" + data.nameOfValue ].subscribers[i].app == data.app
 			&& this.dataStructure.allValues[ "" + data.nameOfValue ].subscribers[i].func == data.func) {
 			foundSubscriber = true;
+			if (data.unsubscribe) {
+				this.dataStructure.allValues[ "" + data.nameOfValue ].subscribers.splice(i, 1);
+			}
 			break;
 		}
 	}
 	// if app is not already subscribing
-	if (!foundSubscriber) {
+	if (!foundSubscriber && !data.unsubscribe) {
 		// make the new subscriber entry
 		var newSubscriber  = {};
 		newSubscriber.app  = data.app;
@@ -197,7 +224,62 @@ SharedServerDataManager.prototype.getAllTrackedValues = function(wsio, data) {
 				value: this.dataStructure.allValues[ this.dataStructure.allNamesOfValues[i] ]
 			});
 	}
-	wsio.emit('broadcast', dataForApp);
+	this.broadcast('broadcast', dataForApp); // send to all clients, they want it.
+};
+
+/**
+ * Gets all tracked value names and descriptions, gives to requesting app.
+ *
+ * @method getAllTrackedValues
+ * @param  {Object} wsio - The websocket of sender.
+ * @param  {Object} data - The object properties described below.
+ * @param  {String} data.app - App that requested.
+ * @param  {String} data.func - Name of the function on the app to give value to.
+ */
+SharedServerDataManager.prototype.getAllTrackedDescriptions = function(wsio, data) {
+	var dataForApp = {};
+	dataForApp.data = [];
+	dataForApp.app  = data.app;
+	dataForApp.func = data.func;
+	for (var i = 0; i < this.dataStructure.allNamesOfValues.length; i++) {
+		dataForApp.data.push(
+			{	nameOfValue: this.dataStructure.allNamesOfValues[i],
+				description: this.dataStructure.allValues[this.dataStructure.allNamesOfValues[i]].description
+			});
+	}
+	this.broadcast('broadcast', dataForApp);
+};
+
+/**
+ * Will send a notification to app when a new value gets created.
+ * App will get the value's name and description.
+ *
+ * NOTE: this could be a huge array.
+ *
+ * @method subscribeToNewValueNotification
+ * @param  {Object} wsio - The websocket of sender.
+ * @param  {Object} data - The object properties described below.
+ * @param  {String} data.app - App that requested.
+ * @param  {String} data.func - Name of the function on the app to give notification.
+ * @param  {Boolean|undefined} data.unsubscribe - if exists and true, will remove from new value watcher list.
+ */
+SharedServerDataManager.prototype.subscribeToNewValueNotification = function(wsio, data) {
+	// create the element
+	var appWatcher = {
+		app: data.app,
+		func: data.func
+	};
+	// make sure it wasn't already added
+	for (let i = 0; i < this.dataStructure.newValueWatchers.length; i++) {
+		if (this.dataStructure.newValueWatchers[i].app === appWatcher.app
+		&& this.dataStructure.newValueWatchers[i].func === appWatcher.func) {
+			if (data.unsubscribe) {
+				this.dataStructure.newValueWatchers.splice(i, 1);
+			}
+			return; // they are already subscribed, or this was an unsubscribe
+		}
+	}
+	this.dataStructure.newValueWatchers.push(appWatcher);
 };
 
 module.exports = SharedServerDataManager;

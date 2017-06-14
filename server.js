@@ -9392,7 +9392,11 @@ function wsLaunchAppWithValues(wsio, data) {
 	if (data.customLaunchParams) {
 		appLoadData.customLaunchParams = data.customLaunchParams;
 		appLoadData.customLaunchParams.serverDate = Date.now();
-		appLoadData.customLaunchParams.clientId   = wsio.id;
+		appLoadData.customLaunchParams.clientId = wsio.id;
+		appLoadData.customLaunchParams.parent = data.app;
+		appLoadData.customLaunchParams.functionToCallAfterInit = data.func;
+	} else {
+		appLoadData.customLaunchParams = {parent: data.app};
 	}
 	// If the launch location is defined, use it, otherwise use the stagger position.
 	if (data.xLaunch !== null && data.xLaunch !== undefined) {
@@ -9400,9 +9404,11 @@ function wsLaunchAppWithValues(wsio, data) {
 		appLoadData.wasPositionGivenInMessage = true;
 	}
 	// get this before the app is created. id start from 0. count is the next one
-	// var whatTheNewAppIdShouldBe = "app_" + getUniqueAppId.count;
+	var whatTheNewAppIdShouldBe = "app_" + getUniqueAppId.count;
 	// call the previously made wsLoadApplication funciton and give it the required data.
 	wsLoadApplication(wsio, appLoadData);
+	// notify the creating app(if any) child's id, if undefined, then the display doesn't do anything with it
+	broadcast('broadcast', {app: data.app, func: "addToAppsLaunchedList", data: whatTheNewAppIdShouldBe});
 } // end wsLaunchAppWithValues
 
 /**
