@@ -15,9 +15,8 @@
 
 /**
  * SharedServerDataManager container object.
- * 
  * The dataStructure is:
- * this.dataStructure = {
+ * this.dataStructure is an object with:
  *    this.dataStructure.allValues = {};
  *       object to hold all tracked values
  *       example this.dataStructure.allValues['nameOfvalue'] = <entryObject>
@@ -26,7 +25,6 @@
  *    this.dataStructure.allNamesOfValues = [];
  *       strings to denote the names used for values
  *       order is based on when it was first set (not alphabetical)
- * 
  * The allValues is comprised of entry objects
  * {
  *    name: name of value
@@ -193,10 +191,10 @@ SharedServerDataManager.prototype.getAllTrackedValues = function(wsio, data) {
 	dataForApp.data = [];
 	dataForApp.app  = data.app;
 	dataForApp.func = data.func;
-	for (var i = 0; i < csdDataStructure.allNamesOfValues.length; i++) {
+	for (var i = 0; i < this.dataStructure.allNamesOfValues.length; i++) {
 		dataForApp.data.push(
-			{	nameOfValue: csdDataStructure.allNamesOfValues[i],
-				value: csdDataStructure.allValues[ csdDataStructure.allNamesOfValues[i] ]
+			{	nameOfValue: this.dataStructure.allNamesOfValues[i],
+				value: this.dataStructure.allValues[ this.dataStructure.allNamesOfValues[i] ]
 			});
 	}
 	wsio.emit('broadcast', dataForApp);

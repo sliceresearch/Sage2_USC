@@ -2467,7 +2467,7 @@ function clearContextMenu() {
  * Called on initial right click with empty array for entriesToAdd
  *  	Called again when appContextMenuContents packet is received.
  *  	The call is given data.entries, data.app
- * 
+ *
  * Entries created will store their information within the div.
  *
  * @method hideAppContextMenuDiv
@@ -3132,7 +3132,7 @@ function uiDrawSetCurrentStateAndShow(data) {
 		this.parentCtx.drawImage(this, 0, 0);
 		// show dialog
 		showDialog('uiDrawZone');
-	}
+	};
 }
 
 /**

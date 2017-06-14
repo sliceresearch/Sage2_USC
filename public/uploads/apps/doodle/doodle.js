@@ -121,7 +121,7 @@ var doodle = SAGE2_App.extend({
 	/**
 	 * Adds a clientId as an editer. Activates after launch or context menu edit.
 	 * Everyone in the array should be able to update this app correctly and receive each other's updates.
-	 * 
+	 *
 	 * @method addClientIdAsEditor
 	 * @param {Object} responseObject - Should contain the following.
 	 * @param {Object} responseObject.clientId - Unique id of client given by server.

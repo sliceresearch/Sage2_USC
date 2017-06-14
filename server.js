@@ -141,7 +141,7 @@ var appLaunchPositioning = {
 	heightLast: -1,
 	tallestInRow: -1,
 	padding: 20
-}
+};
 
 // Add extra folders defined in the configuration file
 if (config.folders) {
@@ -9221,7 +9221,7 @@ function wsRequestAppContextMenu(wsio, data) {
 					app: obj.data.id,
 					entries: SAGE2Items.applications.list[obj.data.id].contextMenu
 				});
-			} else { // Else, app did not submit menu, give default (not loaded). 
+			} else { // Else, app did not submit menu, give default (not loaded).
 				wsio.emit('appContextMenuContents', {
 					x: data.xClick,
 					y: data.yClick,
@@ -9259,7 +9259,7 @@ function wsAppContextMenuContents(wsio, data) {
 
 /**
  * Will call a function on each display client's app that matches id. Expected usage with context menu.
- * But can be used in other cases. 
+ * But can be used in other cases.
  * There are some special functionality cases like:
  *   SAGE2DeleteElement, SAGE2SendToBack, SAGE2Maximize
  *   These do not send message to app.
@@ -9366,7 +9366,7 @@ function wsCallFunctionOnApp(wsio, data) {
  * @method wsLaunchAppWithValues
  * @param  {Object} wsio - The websocket of sender.
  * @param  {Object} data - The object properties described below.
- * @param  {String} data.appName - Folder name to check for the app. 
+ * @param  {String} data.appName - Folder name to check for the app.
  * @param  {Object} data.params - Will be passed to the app. Function too, it is specified.
  * @param  {String}  data.func - Optional, if specified, will also call this funciton and pass parameters.
  */
@@ -9400,7 +9400,7 @@ function wsLaunchAppWithValues(wsio, data) {
 		appLoadData.wasPositionGivenInMessage = true;
 	}
 	// get this before the app is created. id start from 0. count is the next one
-	var whatTheNewAppIdShouldBe = "app_" + getUniqueAppId.count;
+	// var whatTheNewAppIdShouldBe = "app_" + getUniqueAppId.count;
 	// call the previously made wsLoadApplication funciton and give it the required data.
 	wsLoadApplication(wsio, appLoadData);
 } // end wsLaunchAppWithValues
@@ -9410,7 +9410,7 @@ function wsLaunchAppWithValues(wsio, data) {
  *
  * @method appLaunchHelperGetPathOfApp
  * @param  {Object} appName - Folder name to check for the app.
- * @return {String|null} 
+ * @return {String|null} Either it gets the full path or null to indicate not available.
  */
 function appLaunchHelperGetPathOfApp(appName) {
 	var apps = assets.listApps();
@@ -9527,7 +9527,7 @@ function wsSaveDataOnServer(wsio, data) {
 		var aBuffer = new Buffer(data.fileContent);
 		fs.writeFileSync(fullpath, aBuffer);
 	} else {
-		console.log(sageutils.header("wsSaveDataOnServer") + "ERROR> unable to save data on server for fileType " + data.fileType);
+		console.log(sageutils.header("wsSaveDataOnServer") + "ERROR> unable to save fileType " + data.fileType);
 	}
 }
 
