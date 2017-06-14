@@ -630,7 +630,7 @@ var remoteSharingSessions      = {};
 var stickyAppHandler     = new StickyItems();
 
 // create manager for shared data
-var sharedServerData = new SharedDataManager(clients);
+var sharedServerData = new SharedDataManager(clients, broadcast);
 
 
 //
