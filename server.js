@@ -2088,8 +2088,9 @@ function wsSaveSesion(wsio, data) {
 		// Otherwise use the date in the name
 		var ad    = new Date();
 		sname = sprint("session_%4d_%02d_%02d_%02d_%02d_%02s",
-							ad.getFullYear(), ad.getMonth() + 1, ad.getDate(),
-							ad.getHours(), ad.getMinutes(), ad.getSeconds());
+			ad.getFullYear(), ad.getMonth() + 1, ad.getDate(),
+			ad.getHours(), ad.getMinutes(), ad.getSeconds()
+		);
 	}
 	saveSession(sname);
 }
@@ -2119,8 +2120,9 @@ function listSessions() {
 				// use its change time (creation, update, ...)
 				var ad = new Date(stat.mtime);
 				var strdate = sprint("%4d/%02d/%02d %02d:%02d:%02s",
-										ad.getFullYear(), ad.getMonth() + 1, ad.getDate(),
-										ad.getHours(), ad.getMinutes(), ad.getSeconds());
+					ad.getFullYear(), ad.getMonth() + 1, ad.getDate(),
+					ad.getHours(), ad.getMinutes(), ad.getSeconds()
+				);
 				// create path to thumbnail
 				var thumbPath = path.join(path.join(path.join("", "user"), "sessions"), ".previews");
 				// replace .json with .svg in filename
@@ -3761,7 +3763,7 @@ function wsRecordInnerGeometryForWidget(wsio, data) {
 		var radioOptions = radioButtons[i];
 		for (var j = 0; j < radioOptions.length; j++) {
 			SAGE2Items.widgets.addButtonToItem(data.instanceID, radioOptions[j].id, "circle",
-			{x: radioOptions[j].x, y: radioOptions[j].y, r: radioOptions[j].r}, 0);
+				{x: radioOptions[j].x, y: radioOptions[j].y, r: radioOptions[j].r}, 0);
 		}
 	}
 }
@@ -4608,13 +4610,13 @@ function sliceBackgroundImage(fileName, outputBaseName) {
 		var output_base = path.basename(outputBaseName, input_ext);
 		var output = path.join(output_dir, output_base + "_" + i.toString() + output_ext);
 		imageMagick(fileName).crop(
-				config.resolution.width * config.displays[i].width,
-				config.resolution.height * config.displays[i].height, x, y)
-			.write(output, function(err) {
-				if (err) {
-					console.log("error slicing image", err); // throw err;
-				}
-			});
+			config.resolution.width * config.displays[i].width,
+			config.resolution.height * config.displays[i].height, x, y
+		).write(output, function(err) {
+			if (err) {
+				console.log("error slicing image", err); // throw err;
+			}
+		});
 	}
 }
 
@@ -5202,7 +5204,7 @@ function processInputCommand(line) {
 		}
 		case 'version': {
 			console.log(sageutils.header("Version") + 'base:', SAGE2_version.base, ' branch:', SAGE2_version.branch,
-					' commit:', SAGE2_version.commit, SAGE2_version.date);
+				' commit:', SAGE2_version.commit, SAGE2_version.date);
 			break;
 		}
 		case 'update': {
