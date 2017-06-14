@@ -6548,19 +6548,19 @@ function updatePointerPosition(uniqueID, pointerX, pointerY, data) {
 	if (draggingPartition[uniqueID]) {
 		draggingPartition[uniqueID].ptn.left =
 			pointerX < draggingPartition[uniqueID].start.x ?
-			pointerX : draggingPartition[uniqueID].start.x;
+				pointerX : draggingPartition[uniqueID].start.x;
 
 		draggingPartition[uniqueID].ptn.top =
 			pointerY < draggingPartition[uniqueID].start.y ?
-			pointerY : draggingPartition[uniqueID].start.y;
+				pointerY : draggingPartition[uniqueID].start.y;
 
 		draggingPartition[uniqueID].ptn.width =
 			pointerX < draggingPartition[uniqueID].start.x ?
-			draggingPartition[uniqueID].start.x - pointerX : pointerX - draggingPartition[uniqueID].start.x;
+				draggingPartition[uniqueID].start.x - pointerX : pointerX - draggingPartition[uniqueID].start.x;
 
 		draggingPartition[uniqueID].ptn.height =
 			pointerY < draggingPartition[uniqueID].start.y ?
-			draggingPartition[uniqueID].start.y - pointerY : pointerY - draggingPartition[uniqueID].start.y;
+				draggingPartition[uniqueID].start.y - pointerY : pointerY - draggingPartition[uniqueID].start.y;
 
 		partitions.updatePartitionGeometries(draggingPartition[uniqueID].ptn.id, interactMgr);
 		broadcast('partitionMoveAndResizeFinished', draggingPartition[uniqueID].ptn.getDisplayInfo());
@@ -7156,7 +7156,7 @@ function moveAndResizeApplicationWindow(resizeApp, portalId) {
 	var im = findInteractableManager(resizeApp.elemId);
 	drawingManager.applicationMoved(resizeApp.elemId, resizeApp.elemLeft, resizeApp.elemTop);
 	drawingManager.applicationResized(resizeApp.elemId, resizeApp.elemWidth, resizeApp.elemHeight + titleBarHeight,
-										{x: resizeApp.elemLeft, y: resizeApp.elemTop});
+		{x: resizeApp.elemLeft, y: resizeApp.elemTop});
 	im.editGeometry(resizeApp.elemId, "applications", "rectangle",
 		{x: resizeApp.elemLeft, y: resizeApp.elemTop, w: resizeApp.elemWidth, h: resizeApp.elemHeight + titleBarHeight});
 	handleApplicationResize(resizeApp.elemId);
@@ -7329,19 +7329,19 @@ function pointerRelease(uniqueID, pointerX, pointerY, data) {
 
 		draggingPartition[uniqueID].ptn.left =
 			pointerX < draggingPartition[uniqueID].start.x ?
-			pointerX : draggingPartition[uniqueID].start.x;
+				pointerX : draggingPartition[uniqueID].start.x;
 
 		draggingPartition[uniqueID].ptn.top =
 			pointerY < draggingPartition[uniqueID].start.y ?
-			pointerY : draggingPartition[uniqueID].start.y;
+				pointerY : draggingPartition[uniqueID].start.y;
 
 		draggingPartition[uniqueID].ptn.width =
 			pointerX < draggingPartition[uniqueID].start.x ?
-			draggingPartition[uniqueID].start.x - pointerX : pointerX - draggingPartition[uniqueID].start.x;
+				draggingPartition[uniqueID].start.x - pointerX : pointerX - draggingPartition[uniqueID].start.x;
 
 		draggingPartition[uniqueID].ptn.height =
 			pointerY < draggingPartition[uniqueID].start.y ?
-			draggingPartition[uniqueID].start.y - pointerY : pointerY - draggingPartition[uniqueID].start.y;
+				draggingPartition[uniqueID].start.y - pointerY : pointerY - draggingPartition[uniqueID].start.y;
 
 		// if the partition is much too small (most likely created by mistake)
 		if (draggingPartition[uniqueID].ptn.width < 25 || draggingPartition[uniqueID].ptn.height < 25) {
@@ -8652,7 +8652,7 @@ function handleNewApplication(appInstance, videohandle) {
 	interactMgr.addGeometry(appInstance.id, "applications", "rectangle", {
 		x: appInstance.left, y: appInstance.top,
 		w: appInstance.width, h: appInstance.height + config.ui.titleBarHeight},
-		true, zIndex, appInstance);
+	true, zIndex, appInstance);
 
 	var cornerSize   = 0.2 * Math.min(appInstance.width, appInstance.height);
 	var oneButton    = Math.round(config.ui.titleBarHeight) * (300 / 235);
@@ -8863,26 +8863,25 @@ function omi_pointerChangeMode(uniqueID) {
 
 // Set callback functions so Omicron can generate SAGEPointer events
 omicronManager.setCallbacks(
-		sagePointers,
-		createSagePointer,
-		showPointer,
-		pointerPress,
-		pointerMove,
-		pointerPosition,
-		hidePointer,
-		pointerRelease,
-		pointerScrollStart,
-		pointerScroll,
-		pointerScrollEnd,
-		pointerDblClick,
-		pointerCloseGesture,
-		keyDown,
-		keyUp,
-		keyPress,
-		createRadialMenu,
-		omi_pointerChangeMode,
-		remoteInteraction
-	);
+	sagePointers,
+	createSagePointer,
+	showPointer,
+	pointerPress,
+	pointerMove,
+	pointerPosition,
+	hidePointer,
+	pointerRelease,
+	pointerScrollStart,
+	pointerScroll,
+	pointerScrollEnd,
+	pointerDblClick,
+	pointerCloseGesture,
+	keyDown,
+	keyUp,
+	keyPress,
+	createRadialMenu,
+	omi_pointerChangeMode,
+	remoteInteraction);
 omicronManager.linkDrawingManager(drawingManager);
 
 /* ****** Radial Menu section ************************************************************** */
@@ -8958,7 +8957,7 @@ function setRadialMenuPosition(uniqueID, pointerX, pointerY) {
 
 	// Update the interactable geometry
 	interactMgr.editGeometry(uniqueID + "_menu_radial", "radialMenus", "circle",
-			{x: existingRadialMenu.left, y: existingRadialMenu.top, r: existingRadialMenu.radialMenuSize.y / 2});
+		{x: existingRadialMenu.left, y: existingRadialMenu.top, r: existingRadialMenu.radialMenuSize.y / 2});
 	showRadialMenu(uniqueID);
 	// Send the updated radial menu state to the display clients (and set menu visible)
 	broadcast('updateRadialMenuPosition', existingRadialMenu.getInfo());
@@ -9008,8 +9007,8 @@ function radialMenuEvent(data) {
 		if (data.menuState.action !== undefined && data.menuState.action.type === "saveSession") {
 			var ad    = new Date();
 			var sname = sprint("session_%4d_%02d_%02d_%02d_%02d_%02s",
-							ad.getFullYear(), ad.getMonth() + 1, ad.getDate(),
-							ad.getHours(), ad.getMinutes(), ad.getSeconds());
+				ad.getFullYear(), ad.getMonth() + 1, ad.getDate(),
+				ad.getHours(), ad.getMinutes(), ad.getSeconds());
 			saveSession(sname);
 		} else if (data.menuState.action !== undefined && data.menuState.action.type === "tileContent") {
 			tileApplications();
@@ -9509,8 +9508,7 @@ function csdLaunchAppWithValues(wsio, data) {
 						}
 					}
 				}
-			}
-		, 400); // milliseconds how low can this value be to ensure it works?
+			}, 400); // milliseconds how low can this value be to ensure it works?
 	} // end if data.func !== undefined
 } // end csdLaunchAppWithValues
 
@@ -10045,12 +10043,11 @@ function wsWallScreenshotFromDisplay(wsio, data) {
 					// filename
 					name: fname}],
 					// position and size
-					[0, 0, config.totalWidth / 4],
-					// username and color
-					"screenshot", "#B4B4B4",
-					// to be opened afterward
-					true
-				);
+				[0, 0, config.totalWidth / 4],
+				// username and color
+				"screenshot", "#B4B4B4",
+				// to be opened afterward
+				true);
 				// Delete the temporary files
 				sageutils.deleteFiles(path.join(mainFolder.path, "tmp", "wallScreenshot_*"));
 			}
@@ -10065,13 +10062,12 @@ function wsWallScreenshotFromDisplay(wsio, data) {
 			path: path.join(mainFolder.path, "tmp", fileSaveObject.fileName),
 			// file name
 			name: fileSaveObject.fileName}],
-			// position and size
-			[0, 0, config.totalWidth / 4],
-			// username and color
-			"screenshot", "#B4B4B4",
-			// to be opened afterward
-			true
-		);
+		// position and size
+		[0, 0, config.totalWidth / 4],
+		// username and color
+		"screenshot", "#B4B4B4",
+		// to be opened afterward
+		true);
 		// Delete the temporary files
 		sageutils.deleteFiles(path.join(mainFolder.path, "tmp", "wallScreenshot_*"));
 	}
