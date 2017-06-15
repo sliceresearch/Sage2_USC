@@ -1061,6 +1061,8 @@ function setupListeners(wsio) {
 	wsio.on('serverDataGetValue',					wsServerDataGetValue);
 	wsio.on('serverDataSubscribeToValue',			wsServerDataSubscribeToValue);
 	wsio.on('serverDataGetAllTrackedValues',		wsServerDataGetAllTrackedValues);
+	wsio.on('serverDataGetAllTrackedDescriptions',	wsServerDataGetAllTrackedDescriptions);
+	wsio.on('serverDataSubscribeToNewValueNotification',	wsServerDataSubscribeToNewValueNotification);
 
 	// Screenshot messages
 	wsio.on('startWallScreenshot',                  wsStartWallScreenshot);
@@ -9577,7 +9579,7 @@ function wsServerDataSubscribeToValue(wsio, data) {
 /**
  * Will respond back once to the app giving the func an array of tracked values.
  * They will be in an array of objects with properties nameOfValue and value.
- * NOTE: this could be a huge array.
+ * NOTE: the values in the array could be huge.
  *
  * @method wsServerDataGetAllTrackedValues
  * @param  {Object} wsio - The websocket of sender.
@@ -9587,6 +9589,34 @@ function wsServerDataSubscribeToValue(wsio, data) {
  */
 function wsServerDataGetAllTrackedValues(wsio, data) {
 	sharedServerData.getAllTrackedValues(wsio, data);
+}
+
+/**
+ * Will respond back once to the app giving the func an array of tracked descriptions.
+ * They will be in an array of objects with properties nameOfValue and description.
+ *
+ * @method wsServerDataGetAllTrackedDescriptions
+ * @param  {Object} wsio - The websocket of sender.
+ * @param  {Object} data - The object properties described below.
+ * @param  {String} data.app - App that requested.
+ * @param  {String} data.func - Name of the function on the app to give value to.
+ */
+function wsServerDataGetAllTrackedDescriptions(wsio, data) {
+	sharedServerData.getAllTrackedDescriptions(wsio, data);
+}
+
+/**
+ * Will add the websocket to subscriber list of new value notifications.
+ * The subscriber will get an object with nameOfValue and description.
+ *
+ * @method wsServerDataSubscribeToNewValueNotification
+ * @param  {Object} wsio - The websocket of sender.
+ * @param  {Object} data - The object properties described below.
+ * @param  {String} data.app - App that requested.
+ * @param  {String} data.func - Name of the function on the app to give value to.
+ */
+function wsServerDataSubscribeToNewValueNotification(wsio, data) {
+	sharedServerData.subscribeToNewValueNotification(wsio, data);
 }
 
 /**
