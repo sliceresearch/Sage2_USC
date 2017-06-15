@@ -507,7 +507,6 @@ HttpServer.prototype.onreq = function(req, res) {
 			return;
 		}
 	} else if (req.method === "POST") {
-		// var postName = decodeURIComponent(url.parse(req.url).pathname);
 		var postName = sageutils.sanitizedURL(url.parse(req.url).pathname);
 		if (postName in this.postFuncs) {
 			this.postFuncs[postName](req, res);
@@ -516,7 +515,6 @@ HttpServer.prototype.onreq = function(req, res) {
 	} else if (req.method === "PUT") {
 		// Need some authentication / security here
 
-		// var putName = decodeURIComponent(url.parse(req.url).pathname);
 		var putName = sageutils.sanitizedURL(url.parse(req.url).pathname);
 		// Remove the first / if there
 		if (putName[0] === '/') {
