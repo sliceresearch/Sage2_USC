@@ -8,7 +8,7 @@
 //
 // Copyright (c) 2014-2015
 
-/* global ignoreFields, SAGE2WidgetControl, SAGE2MEP, SAGE2CsdAppExtend */
+/* global ignoreFields, SAGE2WidgetControl, SAGE2MEP, SAGE2SharedServerData */
 /* global addStoredFileListEventHandler, removeStoredFileListEventHandler */
 
 /**
@@ -152,8 +152,8 @@ var SAGE2_App = Class.extend({
 		this.SAGE2CopyState(data.state);
 		this.SAGE2InitializeAppOptionsFromState();
 
-		// add csd functions
-		SAGE2CsdAppExtend.addCsdFunctions(this, data);
+		// add serverData functions
+		SAGE2SharedServerData.addSharedServerDataFunctions(this, data);
 	},
 
 	SAGE2Load: function(state, date) {
@@ -913,40 +913,40 @@ var SAGE2_App = Class.extend({
 	getFullContextMenuAndUpdate: function() {
 		// Send one update to the server
 		if (isMaster) {
-			var rmbData = {};
-			rmbData.app = this.id;
+			var appContextMenu = {};
+			appContextMenu.app = this.id;
 			// If the application defines a menu function, use it
 			if (typeof this.getContextEntries === "function") {
-				rmbData.entries = this.getContextEntries();
-				rmbData.entries.push({
+				appContextMenu.entries = this.getContextEntries();
+				appContextMenu.entries.push({
 					description: "separator"
 				});
-				rmbData.entries.push({
+				appContextMenu.entries.push({
 					description: "Send to back",
 					callback: "SAGE2SendToBack",
 					parameters: {}
 				});
-				rmbData.entries.push({
+				appContextMenu.entries.push({
 					description: "Maximize",
 					callback: "SAGE2Maximize",
 					parameters: {}
 				});
-				rmbData.entries.push({
+				appContextMenu.entries.push({
 					description: "separator"
 				});
-				rmbData.entries.push({
+				appContextMenu.entries.push({
 					description: "Close " + (this.title || "application"),
 					callback: "SAGE2DeleteElement",
 					parameters: {}
 				});
 			} else {
-				rmbData.entries = [{
+				appContextMenu.entries = [{
 					description: "Close application",
 					callback: "SAGE2DeleteElement",
 					parameters: {}
 				}];
 			}
-			wsio.emit("dtuRmbContextMenuContents", rmbData);
+			wsio.emit("appContextMenuContents", appContextMenu);
 		}
 	},
 

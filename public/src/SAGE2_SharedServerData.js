@@ -10,17 +10,17 @@
 
 // Create a global that will act as a namespace
 
-var SAGE2CsdAppExtend = {
+var SAGE2SharedServerData = {
 
 	/**
-	* After apps are initialized, they will have additional csdFunctions added.
+	* After apps are initialized, they will have additional serverDataFunctions added.
 	* Done this way to try keep things clearly separated.
 	*
-	* @method addCsdFunctions
+	* @method addServerDataFunctions
 	* @param app {Object} app which called this function
 	* @param data {Object} data passed as init params
 	*/
-	addCsdFunctions: function(app, data) {
+	addSharedServerDataFunctions: function(app, data) {
 		app.childrenAppIds = [];
 		app.parentOfThisApp = null;
 
@@ -29,18 +29,17 @@ var SAGE2CsdAppExtend = {
 		* The given callback will be activated with that variable's value.
 		* Current setup will not activate callback if there is no variable.
 		*
-		* @method csdGetValue
+		* @method serverDataGetValue
 		* @param nameOfValue {String} app which called this function
 		* @param callback {String} app which called this function. Could be a function and will convert to string.
 		*/
-		app.csdGetValue = function(nameOfValue, callback) {
+		app.serverDataGetValue = function(nameOfValue, callback) {
 			if (isMaster) {
-				var callbackName = SAGE2CsdAppExtend.getCallbackName(callback);
+				var callbackName = SAGE2SharedServerData.getCallbackName(callback);
 				if (callbackName === undefined) {
-					throw "Missing callback for csdGetValue";
+					throw "Missing callback for serverDataGetValue";
 				}
-				wsio.emit("csdMessage", {
-					type: "getValue",
+				wsio.emit("serverDataGetValue", {
 					nameOfValue: nameOfValue,
 					app: this.id,
 					func: callbackName
@@ -51,15 +50,14 @@ var SAGE2CsdAppExtend = {
 		/**
 		* Given the name of the variable, set value of variable on server.
 		*
-		* @method csdSetValue
+		* @method serverDataSetValue
 		* @param nameOfValue {String} app which called this function
 		* @param value {Object} the value to store for this variable
 		* @param description {Object} description object
 		*/
-		app.csdSetValue = function(nameOfValue, value, description) {
+		app.serverDataSetValue = function(nameOfValue, value, description) {
 			if (isMaster) {
-				wsio.emit("csdMessage", {
-					type: "setValue",
+				wsio.emit("serverDataSetValue", {
 					nameOfValue: nameOfValue,
 					value: value,
 					description: description
@@ -71,20 +69,19 @@ var SAGE2CsdAppExtend = {
 		* Given the name of the variable, will ask server to send value each time it is assigned.
 		* Notifications will be sent to callback.
 		*
-		* @method csdSubscribeToValue
+		* @method serverDataSubscribeToValue
 		* @param nameOfValue {String} app which called this function
 		* @param callback {String} app which called this function. Could be a function and will convert to string.
 		* @param unsubscribe {Boolean} optional. If true, will stop receiving updates for that variable.
 		*/
-		app.csdSubscribeToValue = function(nameOfValue, callback, unsubscribe) {
+		app.serverDataSubscribeToValue = function(nameOfValue, callback, unsubscribe) {
 			if (isMaster) {
-				var callbackName = SAGE2CsdAppExtend.getCallbackName(callback);
+				var callbackName = SAGE2SharedServerData.getCallbackName(callback);
 				if (callbackName === undefined) {
-					throw "Missing callback for csdSubscribeToValue";
+					throw "Missing callback for serverDataSubscribeToValue";
 				}
 				unsubscribe = unsubscribe ? unsubscribe : false; // if there is a value for unsubscribe, keep otherwise false
-				wsio.emit("csdMessage", {
-					type: "subscribeToValue",
+				wsio.emit("serverDataSubscribeToValue", {
 					nameOfValue: nameOfValue,
 					app: this.id,
 					func: callbackName,
@@ -96,19 +93,18 @@ var SAGE2CsdAppExtend = {
 		/**
 		* Asks server for notifications of any new variables that are added to server.
 		*
-		* @method csdSubscribeToNewValueNotification
+		* @method serverDataSubscribeToNewValueNotification
 		* @param callback {String} app which called this function. Could be a function and will convert to string.
 		* @param unsubscribe {Boolean} optional. If true, will stop receiving notificaitons.
 		*/
-		app.csdSubscribeToNewValueNotification = function(callback, unsubscribe) {
+		app.serverDataSubscribeToNewValueNotification = function(callback, unsubscribe) {
 			if (isMaster) {
-				var callbackName = SAGE2CsdAppExtend.getCallbackName(callback);
+				var callbackName = SAGE2SharedServerData.getCallbackName(callback);
 				if (callbackName === undefined) {
-					throw "Missing callback for csdSubscribeToNewValueNotification";
+					throw "Missing callback for serverDataSubscribeToNewValueNotification";
 				}
 				unsubscribe = unsubscribe ? unsubscribe : false; // if there is a value for unsubscribe, keep otherwise false
-				wsio.emit("csdMessage", {
-					type: "subscribeToNewValueNotification",
+				wsio.emit("serverDataSubscribeToNewValueNotification", {
 					app: this.id,
 					func: callbackName,
 					unsubscribe: unsubscribe
@@ -119,18 +115,17 @@ var SAGE2CsdAppExtend = {
 		/**
 		* Asks server for all variable names and their descriptions. Goes to callback.
 		*
-		* @method csdGetAllTrackedDescriptions
+		* @method serverDataGetAllTrackedDescriptions
 		* @param callback {String} app which called this function. Could be a function and will convert to string.
 		* @param unsubscribe {Boolean} optional. If true, will stop receiving updates for that variable.
 		*/
-		app.csdGetAllTrackedDescriptions = function(callback) {
+		app.serverDataGetAllTrackedDescriptions = function(callback) {
 			if (isMaster) {
-				var callbackName = SAGE2CsdAppExtend.getCallbackName(callback);
+				var callbackName = SAGE2SharedServerData.getCallbackName(callback);
 				if (callbackName === undefined) {
-					throw "Missing callback for csdGetAllTrackedDescriptions";
+					throw "Missing callback for serverDataGetAllTrackedDescriptions";
 				}
-				wsio.emit("csdMessage", {
-					type: "getAllTrackedDescriptions",
+				wsio.emit("serverDataGetAllTrackedDescriptions", {
 					app: this.id,
 					func: callbackName
 				});
@@ -141,18 +136,17 @@ var SAGE2CsdAppExtend = {
 		* Asks server to launch app with values. On the server this will add additional associations like which app launched which.
 		* Part of the launch process will include calling back to this app and stating the id of the newly launched app.
 		*
-		* @method csdLaunchAppWithValues
+		* @method serverDataLaunchAppWithValues
 		* @param appName {String} name of app to launch. Has to correctly match.
-		* @param params {Object} optional. What to pass the launched app. Appears within init() as csdInitValues.
+		* @param params {Object} optional. What to pass the launched app. Appears within init() as serverDataInitValues.
 		* @param funcToPassParams {String} optional. app which called this function. Could be a function and will convert to string.
 		* @param x {Integer} optional. X coordinate to start the app at.
 		* @param y {Integer} optional. Y coordinate to start the app at.
 		*/
-		app.csdLaunchAppWithValues = function(appName, params, funcToPassParams, x, y) {
+		app.serverDataLaunchAppWithValues = function(appName, params, funcToPassParams, x, y) {
 			if (isMaster) {
-				var callbackName = SAGE2CsdAppExtend.getCallbackName(funcToPassParams);
-				wsio.emit("csdMessage", {
-					type: "launchAppWithValues",
+				var callbackName = SAGE2SharedServerData.getCallbackName(funcToPassParams);
+				wsio.emit("launchAppWithValues", {
 					appName: appName,
 					app: this.id,
 					func: callbackName,
@@ -164,13 +158,13 @@ var SAGE2CsdAppExtend = {
 		};
 
 		/**
-		* Sends data to children.
+		* Sends data to children. This doesn't go through server.
 		*
-		* @method csdSendDataToChildren
+		* @method sendDataToChildren
 		* @param func {String} name of function to activate. Has to correctly match
 		* @param data {Object} data to send. doens't have to be an object.
 		*/
-		app.csdSendDataToChildren = function(func, data) {
+		app.sendDataToChildren = function(func, data) {
 			for (let i = 0; i < this.childrenAppIds.length; i++) {
 				if (applications[this.childrenAppIds[i]]) {
 					applications[this.childrenAppIds[i]][func](data);
@@ -182,21 +176,21 @@ var SAGE2CsdAppExtend = {
 		* Asks server to launch app with values. On the server this will add additional associations like which app launched which.
 		* Part of the launch process will include calling back to this app and stating the id of the newly launched app.
 		*
-		* @method csdListOfAppsLaunched
+		* @method addToAppsLaunchedList
 		* @param appName {String} name of app to launch. Has to correctly match.
 		*/
-		app.csdAddToAppsLaunchedList = function(appId) {
+		app.addToAppsLaunchedList = function(appId) {
 			this.childrenAppIds.push(appId);
 		};
 		// handle initvalues
-		if (data.csdInitValues) {
-			if (data.csdInitValues.parent != null) {
-				app.parentOfThisApp = data.csdInitValues.parent;
+		if (data.customLaunchParams) {
+			if (data.customLaunchParams.parent) {
+				app.parentOfThisApp = data.customLaunchParams.parent;
 			}
 			// if the function call should be made, do so on the next frame because app needs to fully initialize first.
-			if (data.csdInitValues.csdFunctionCallback) {
+			if (data.customLaunchParams.functionToCallAfterInit) {
 				window.requestAnimationFrame(function() {
-					app[data.csdInitValues.csdFunctionCallback](data.csdInitValues);
+					app[data.customLaunchParams.functionToCallAfterInit](data.customLaunchParams);
 				});
 			}
 		}
@@ -205,7 +199,7 @@ var SAGE2CsdAppExtend = {
 	/**
 	 * Uses WebSocket to send a request to the server get value of a variable stored on server.
 	 *
-	 * @method     csdGetValue
+	 * @method     getCallbackName
 	 * @param      {String}  filename		The name for the file being saved
 	 * @param      {String}  ext			The file's extension
 	 */

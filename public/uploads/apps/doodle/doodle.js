@@ -115,8 +115,13 @@ var doodle = SAGE2_App.extend({
 	},
 
 	/**
-	Adds a clientId as a editer.
-	Everyone in the array should be able to update this app correctly and receive each other's updates.
+	 * Adds a clientId as an editer. Activates after launch or context menu edit.
+	 * Everyone in the array should be able to update this app correctly and receive each other's updates.
+	 *
+	 * @method addClientIdAsEditor
+	 * @param {Object} responseObject - Should contain the following.
+	 * @param {Object} responseObject.clientId - Unique id of client given by server.
+	 * @param {Object} responseObject.clientName - User input name of pointer.
 	*/
 	addClientIdAsEditor: function(responseObject) {
 		// prevent multiple sends if there are more than 1 display.
@@ -132,10 +137,9 @@ var doodle = SAGE2_App.extend({
 			dataForClient.canvasImage = imageString;
 			dataForClient.func        = 'uiDrawSetCurrentStateAndShow';
 			dataForClient.appId       = this.id;
-			dataForClient.type        = 'sendDataToClient';
 			dataForClient.imageWidth  = this.drawCanvas.width;
 			dataForClient.imageHeight = this.drawCanvas.height;
-			wsio.emit('csdMessage', dataForClient);
+			wsio.emit('sendDataToClient', dataForClient);
 		}
 		this.changeTitleToOriginalCreatorAndTime(responseObject);
 	},
@@ -191,10 +195,9 @@ var doodle = SAGE2_App.extend({
 			dataForClient.params     = lineData;
 			dataForClient.func       = 'uiDrawMakeLine';
 			dataForClient.appId      = this.id;
-			dataForClient.type       = 'sendDataToClient';
 			for (var i = 0; i < this.arrayOfEditors.length; i++) {
 				dataForClient.clientDest = this.arrayOfEditors[i];
-				wsio.emit('csdMessage', dataForClient);
+				wsio.emit('sendDataToClient', dataForClient);
 			}
 		}
 	},
@@ -207,12 +210,11 @@ var doodle = SAGE2_App.extend({
 		// Tell server to save the file
 		if (isMaster && this.state.creationTime !== null && this.state.creationTime !== undefined) {
 			var fileData = {};
-			fileData.type = "saveDataOnServer";
 			fileData.fileType = "doodle"; // Extension
 			fileData.fileName = this.state.creationTime + ".doodle"; // Full name w/ extension
 			// What to save in the file
 			fileData.fileContent = this.state.imageSnapshot;
-			wsio.emit("csdMessage", fileData);
+			wsio.emit("saveDataOnServer", fileData);
 		}
 	},
 
@@ -323,15 +325,15 @@ var doodle = SAGE2_App.extend({
 	duplicate: function (responseObject) {
 		if (isMaster) {
 			var data = {};
-			data.type    = "launchAppWithValues";
 			data.appName = "doodle";
 			data.func    = "initializationThroughDuplicate";
 			data.xLaunch = this.sage2_x + 100;
 			data.yLaunch = this.sage2_y;
-			data.params  =  {};
-			data.params.clientName    = responseObject.clientName;
-			data.params.imageSnapshot = this.getCanvasAsImage();
-			wsio.emit("csdMessage", data);
+			data.customLaunchParams  =  {};
+			data.customLaunchParams.func = "initializationThroughDuplicate";
+			data.customLaunchParams.clientName    = responseObject.clientName;
+			data.customLaunchParams.imageSnapshot = this.getCanvasAsImage();
+			wsio.emit("launchAppWithValues", data);
 		}
 	},
 

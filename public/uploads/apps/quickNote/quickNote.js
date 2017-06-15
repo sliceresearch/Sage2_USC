@@ -46,20 +46,21 @@ var quickNote = SAGE2_App.extend({
 		// If loaded from session, this.state will have meaningful values.
 		this.setMessage(this.state);
 
+
+		var _this = this;
 		// If it got file contents from the sever, then extract.
 		if (data.state.contentsOfNoteFile) {
 			this.parseDataFromServer(data.state.contentsOfNoteFile);
-		}
-
-		var _this = this;
-		// if it was passed additional init values
-		if (data.csdInitValues) {
-			data.csdInitValues.serverDate = new Date(Date.now());
-			_this.setMessage(data.csdInitValues);
+		} else if (this.state.contentsOfNoteFile) {
+			this.parseDataFromServer(this.state.contentsOfNoteFile);
+		} else if (data.customLaunchParams) { // if it was passed additional init values
+			data.customLaunchParams.serverDate = new Date(Date.now());
+			console.log("customlaunch?");
+			_this.setMessage(data.customLaunchParams);
 			setTimeout(function() {
-				//_this.setMessage(data.csdInitValues);
+				//_this.setMessage(data.customLaunchParams);
 				_this.updateTitle(_this.noteTitle);
-			}, 200);
+			}, 0);
 		}
 	},
 
@@ -253,7 +254,6 @@ var quickNote = SAGE2_App.extend({
 		this.resize();
 		// Tell server to save the file.
 		var fileData = {};
-		fileData.type = "saveDataOnServer";
 		fileData.fileType = "note"; // Extension
 		fileData.fileName = this.state.creationTime + ".note"; // Fullname with extension
 		// What to save in the file
@@ -262,7 +262,9 @@ var quickNote = SAGE2_App.extend({
 			+ this.state.colorChoice
 			+ "\n"
 			+ this.state.clientInput;
-		wsio.emit("csdMessage", fileData);
+		wsio.emit("saveDataOnServer", fileData);
+		// save the state value
+		this.state.contentsOfNoteFile = fileData.fileContent;
 
 		// update the context menu with the current content
 		this.getFullContextMenuAndUpdate();
@@ -283,13 +285,17 @@ var quickNote = SAGE2_App.extend({
 	},
 
 	duplicate: function(responseObject) {
-		// appName, params, funcToPassParams, x, y
-		var params = {
-			clientName: responseObject.clientName,
-			clientInput: this.state.clientInput,
-			colorChoice: this.state.clientInput
-		};
-		this.csdLaunchAppWithValues("quickNote", params, "setMessage", this.sage2_x + 100, this.sage2_y);
+		if (isMaster) {
+			var data = {};
+			data.appName    = "quickNote";
+			data.xLaunch    = this.sage2_x + 100;
+			data.yLaunch    = this.sage2_y;
+			data.customLaunchParams = {};
+			data.customLaunchParams.clientName  = responseObject.clientName;
+			data.customLaunchParams.clientInput = this.state.clientInput;
+			data.customLaunchParams.colorChoice = this.state.colorChoice;
+			wsio.emit("launchAppWithValues", data);
+		}
 	},
 
 	/**
