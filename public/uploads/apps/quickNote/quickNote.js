@@ -281,15 +281,13 @@ var quickNote = SAGE2_App.extend({
 
 	duplicate: function(responseObject) {
 		if (isMaster) {
-			var data = {};
-			data.appName    = "quickNote";
-			data.xLaunch    = this.sage2_x + 100;
-			data.yLaunch    = this.sage2_y;
-			data.customLaunchParams = {};
-			data.customLaunchParams.clientName  = responseObject.clientName;
-			data.customLaunchParams.clientInput = this.state.clientInput;
-			data.customLaunchParams.colorChoice = this.state.colorChoice;
-			wsio.emit("launchAppWithValues", data);
+			// function(appName, x, y, params, funcToPassParams) {
+			this.launchAppWithValues("quickNote", {
+				clientName: responseObject.clientName,
+				clientInput: this.state.clientInput,
+				colorChoice: this.state.colorChoice
+			},
+			this.sage2_x + 100, this.sage2_y);
 		}
 	},
 

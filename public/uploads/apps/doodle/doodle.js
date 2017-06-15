@@ -324,16 +324,11 @@ var doodle = SAGE2_App.extend({
 
 	duplicate: function (responseObject) {
 		if (isMaster) {
-			var data = {};
-			data.appName = "doodle";
-			data.func    = "initializationThroughDuplicate";
-			data.xLaunch = this.sage2_x + 100;
-			data.yLaunch = this.sage2_y;
-			data.customLaunchParams  =  {};
-			data.customLaunchParams.func = "initializationThroughDuplicate";
-			data.customLaunchParams.clientName    = responseObject.clientName;
-			data.customLaunchParams.imageSnapshot = this.getCanvasAsImage();
-			wsio.emit("launchAppWithValues", data);
+			// function(appName, x, y, params, funcToPassParams) {
+			this.launchAppWithValues("doodle", {
+				clientName: responseObject.clientName,
+				imageSnapshot: this.getCanvasAsImage()
+			}, this.sage2_x + 100, this.sage2_y, "initializationThroughDuplicate");
 		}
 	},
 
