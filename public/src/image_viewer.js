@@ -49,7 +49,7 @@ var image_viewer = SAGE2_App.extend({
 
 		this.updateAppFromState();
 		this.addWidgetControlsToImageViewer();
-		this.csdBroadcast();
+		this.broadcastData();
 	},
 
 	/**
@@ -182,7 +182,7 @@ var image_viewer = SAGE2_App.extend({
 			&& this.state.exif.GPSLongitude) {
 			return true;
 		}
-		// console.log("No gps data");
+
 		return false;
 	},
 
@@ -210,17 +210,12 @@ var image_viewer = SAGE2_App.extend({
 
 	plotOnNewGoogleMap: function() {
 		if (isMaster) {
-			var data = {};
-			data.type    = "launchAppWithValues";
-			data.appName = "googlemap";
-			data.func    = "addMarkerToMap";
-			data.xLaunch = this.sage2_x + 100;
-			data.yLaunch = this.sage2_y;
-			data.params  =  {};
-			data.params.lat = this.state.exif.GPSLatitude;
-			data.params.lng = this.state.exif.GPSLongitude;
-			data.params.shouldFocusViewOnNewMarker = true;
-			wsio.emit("csdMessage", data);
+			// function(appName, params, x, y, funcToPassParams) {
+			this.launchAppWithValues("googlemap", {
+				lat: this.state.exif.GPSLatitude,
+				lng: this.state.exif.GPSLongitude,
+				shouldFocusViewOnNewMarker: true
+			}, this.sage2_x + 100, this.sage2_y, "addMarkerToMap");
 		}
 	},
 
@@ -367,26 +362,19 @@ var image_viewer = SAGE2_App.extend({
 		this.controls.finishedAddingControls();
 	},
 
-	csdBroadcast: function() {
+	broadcastData: function() {
 		if (!isMaster) {
 			return; // try to prevent spamming
 		}
 		if (this.checkIfHasGpsData()) {
-			var dataForServer = {
-				type: "setValue",
-				nameOfValue: this.id + ":source:geoLocation",
-				description: "an image geolocation",
-				value: {}
-			};
-			dataForServer.value.source = this.id;
-			dataForServer.value.location = {
-				lat: this.state.exif.GPSLatitude,
-				lng: this.state.exif.GPSLongitude
-			};
-			//erase me
-			console.log("new image on wall is giving server data");
-			console.dir(dataForServer);
-			wsio.emit("csdMessage", dataForServer);
+			// function(nameOfValue, value, description) {
+			this.serverDataSetValue(this.id + ":source:geoLocation", {
+				source: this.id,
+				location: {
+					lat: this.state.exif.GPSLatitude,
+					lng: this.state.exif.GPSLongitude
+				}
+			}, "an image geolocation",);
 		}
 	}
 

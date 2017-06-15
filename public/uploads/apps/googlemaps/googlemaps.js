@@ -48,7 +48,7 @@ var googlemaps = SAGE2_App.extend({
 		this.passSAGE2PointerAsMouseEvents = true;
 
 		// testing broadcast capabilities
-		this.csdBroadcast();
+		this.broadcastData();
 		this.lastViewSetTime = Date.now();
 		this.plotAnyNewGeoSource = false;
 	},
@@ -182,14 +182,11 @@ var googlemaps = SAGE2_App.extend({
 		this.state.center = {lat: c.lat(), lng: c.lng()};
 
 		if (isMaster) {
-			var dataForServer = {
-				type: "setValue",
-				nameOfValue: this.id + ":source:geoLocation",
-				value: {}
-			};
-			dataForServer.value.source = this.id;
-			dataForServer.value.location = this.state.center;
-			wsio.emit("csdMessage", dataForServer);
+			// function(nameOfValue, value, description)
+			this.serverDataSetValue(this.id + ":source:geoLocation", {
+				source: this.id,
+				location: this.state.center
+			});
 		}
 	},
 
@@ -782,71 +779,51 @@ var googlemaps = SAGE2_App.extend({
 		});
 	},
 
-	csdBroadcast: function() {
+	/**
+	 * Function to setup the data handling.
+	 *
+	 * @method     broadcastData
+	 */
+	broadcastData: function() {
 		if (!isMaster) {
 			return; // try to prevent spamming
 		}
-		var dataForServer = {
-			type: "subscribeToNewValueNotification",
-			app: this.id,
-			func: "csdHandlerForNewVariableNotification"
-		};
-		// ask server for new variables
-		console.dir(dataForServer);
-		wsio.emit("csdMessage", dataForServer);
+		// ask for any new variables that are given to the server
+		// function(callback, unsubscribe)
+		this.serverDataSubscribeToNewValueNotification("handlerForNewVariableNotification");
+		// function(nameOfValue, value, description)
+		// give its own center view to server
+		this.serverDataSetValue(this.id + ":source:geoLocation", {
+			source: this.id,
+			location: this.state.center
+		}, "the map's center geoLocation value");
 
-		// send the center of this
-		dataForServer = {
-			type: "setValue",
-			nameOfValue: this.id + ":source:geoLocation",
-			description: "the map's center geoLocation value",
-			value: {}
-		};
-		dataForServer.value.source = this.id;
-		dataForServer.value.location = this.state.center;
-		wsio.emit("csdMessage", dataForServer);
+		// create a variable on server for what it can take as data, this one is to make markers on map
+		this.serverDataSetValue(this.id + ":destination:geoLocation:markerPlot", [], "plots geo marker on this map");
+		// this is one is to control view
+		this.serverDataSetValue(this.id + ":destination:geoLocation:viewCenter", [], "this will set the maps center view");
 
-		// tell server it will accept geoLocation for plotting
-		dataForServer = {
-			type: "setValue",
-			nameOfValue: this.id + ":destination:geoLocation:markerPlot",
-			description: "plots geo marker on this map",
-			value: {}
-		};
-		dataForServer.value.source = this.id;
-		dataForServer.value.location = this.state.center;
-		wsio.emit("csdMessage", dataForServer);
-
-		// tell server it will accept geoLocation for plotting
-		dataForServer = {
-			type: "setValue",
-			nameOfValue: this.id + ":destination:geoLocation:viewCenter",
-			description: "this will set the maps center view",
-			value: {}
-		};
-		dataForServer.value.source = this.id;
-		dataForServer.value.location = this.state.center;
-		wsio.emit("csdMessage", dataForServer);
-
-		// 1 second later it will subscribe to the values, because it takes those values
+		// 1 second later subscribe to its own destination values
 		var _this = this;
 		setTimeout(function() {
-			// subscribe to its data feed
-			dataForServer = {
-				type: "subscribeToValue",
-				nameOfValue: _this.id + ":destination:geoLocation:markerPlot",
-				app: _this.id,
-				func: "geoDataFromServer"
-			};
-			wsio.emit("csdMessage", dataForServer);
-			// subscribe to its data feed
-			dataForServer.nameOfValue = _this.id + ":destination:geoLocation:viewCenter";
-			dataForServer.func = "setView";
-			wsio.emit("csdMessage", dataForServer);
+			// first is the marker maker
+			// serverDataSubscribeToValue: function(nameOfValue, callback, unsubscribe) 
+			_this.serverDataSubscribeToValue(_this.id + ":destination:geoLocation:markerPlot", "makeMarkerGivenImageGeoLocation");
+			// next is the view center
+			_this.serverDataSubscribeToValue(_this.id + ":destination:geoLocation:viewCenter", "setView");
 		}, 1000);
 	},
 
-	csdHandlerForNewVariableNotification: function(addedVar) {
+	/**
+	 * This function will receive notifications of new variables.
+	 * If enabled, will grab image data to plot markers.
+	 *
+	 * @method handlerForNewVariableNotification
+	 * @param {Object} addedVar - An object with properties as described below.
+	 * @param {Object} addedVar.nameOfValue - Name of the value on server, needed for requesting.
+	 * @param {Object} addedVar.description - User defined description.
+	 */
+	handlerForNewVariableNotification: function(addedVar) {
 		if (!isMaster) {
 			return; // prevent spam
 		}
@@ -857,20 +834,24 @@ var googlemaps = SAGE2_App.extend({
 			&& addedVar.nameOfValue.indexOf("geoLocation") !== -1
 			&& addedVar.nameOfValue.indexOf("source") !== -1
 			&& addedVar.description.indexOf("image") !== -1) {
-			console.log("erase me, has also detected that new var is a geo location");
-			var dataForServer = {
-				type: "getValue",
-				nameOfValue: addedVar.nameOfValue,
-				app: this.id,
-				func: "geoDataFromServer"
-			};
-			//erase me
-			console.log("erase me, map asking for the geo data");
-			wsio.emit("csdMessage", dataForServer);
+			console.log("erase me, also met conditions to automatically grab the data");
+			// serverDataGetValue: function(nameOfValue, callback)
+			this.serverDataGetValue(addedVar.nameOfValue, "makeMarkerGivenImageGeoLocation");
 		}
 	},
 
-	geoDataFromServer: function(value) {
+	/**
+	 * Requires the image to send data in a particular way.
+	 *
+	 * @method makeMarkerGivenImageGeoLocation
+	 * @param {Object} value - An object with properties as described below.
+	 * @param {Object} addedVar.nameOfValue - Name of the value on server, needed for requesting.
+	 * @param {Object} addedVar.description - User defined description.
+	 */
+	makeMarkerGivenImageGeoLocation: function(value) {
+		if (Array.isArray(value) && value.length < 1) {
+			return; // don't use empty arrays
+		}
 		// all display clients need this to sync correctly
 		console.log("erase me, got geo data, plotting it(" + value.location.lat + "," + value.location.lng + ")");
 		this.addMarkerToMap({
