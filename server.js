@@ -1054,7 +1054,6 @@ function setupListeners(wsio) {
 	wsio.on('appContextMenuContents',				wsAppContextMenuContents);
 	wsio.on('callFunctionOnApp',					wsCallFunctionOnApp);
 	// generic message passing for data requests or for specific communications.
-	// csd message standalone
 	wsio.on('launchAppWithValues',					wsLaunchAppWithValues);
 	wsio.on('sendDataToClient',						wsSendDataToClient);
 	wsio.on('saveDataOnServer',						wsSaveDataOnServer);
@@ -2954,7 +2953,7 @@ function wsLoadApplication(wsio, data) {
 		}
 
 		/*
-		If this app is launched from csd command and the position isn't specified, then need to calculate
+		If this app is launched from launchAppWithValues command and the position isn't specified, then need to calculate
 		First check if it is the first app, they all start from the same place
 		If not the first, then check if the position of (last x + last width + padding + this width < wall width)
 			if fits, add to this row
@@ -3009,7 +3008,7 @@ function wsLoadApplication(wsio, data) {
 				appLaunchPositioning.tallestInRow = appInstance.height;
 			}
 		}
-		// if the csd action supplied more values to init with
+		// if supplied more values to init with
 		if (data.wasLaunchedThroughMessage && data.customLaunchParams) {
 			appInstance.customLaunchParams = data.customLaunchParams;
 		}
@@ -9589,42 +9588,6 @@ function wsServerDataSubscribeToValue(wsio, data) {
 function wsServerDataGetAllTrackedValues(wsio, data) {
 	sharedServerData.getAllTrackedValues(wsio, data);
 }
-
-/*
-Data structure for the csd value passing.
-
-var csdDataStructure = {};
-	csdDataStructure.allValues = {};
-		object to hold all tracked values
-		example csdDataStructure.allValues['nameOfvalue'] = <entryObject>
-	csdDataStructure.numberOfValues = 0;
-		will increment as new values are added
-	csdDataStructure.allNamesOfValues = [];
-		strings to denote the names used for values
-		order is based on when it was first set (not alphabetical)
-
-	The allValues is comprised of entry objects
-	{
-		name: 	name of value
-		value: 	actual value which could be an object of more values
-		desc: 	used for later
-		subscribers: 	[]
-	}
-
-	Each entry in subscribers is also an object.
-	Current assumption is that all subscribers are apps on a display.
-	{
-		app: 	identifies the app which is subscribing to the value.
-			NOTE: need to find a way to unsubscribe esp if the app is removed, or apps are reset.
-
-		func: 	name of the function to call in order to pass the information.
-			NOTE: broadcast currently only supports 1 parameter.
-	}
-*/
-var csdDataStructure = {};
-csdDataStructure.allValues = {};
-csdDataStructure.numberOfValues = 0;
-csdDataStructure.allNamesOfValues = [];
 
 /**
  * Calculate if we have enough screenshot-capable display clients
