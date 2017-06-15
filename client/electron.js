@@ -38,6 +38,7 @@ if (args.length === 1) {
 	args = args[0];
 }
 
+// Generate the command line handler
 commander
 	.version(version)
 	.option('-s, --server <s>',    'Server URL (string)', 'http://localhost:9292')
@@ -58,7 +59,7 @@ commander
 	.option('--console',           'Open the devtools console', false)
 	.parse(args);
 
-
+// Load the flash plugin if asked
 if (commander.plugins) {
 	// Flash loader
 	const flashLoader = require('flash-player-loader');
@@ -69,6 +70,12 @@ if (commander.plugins) {
 	}
 	flashLoader.addSource('@system');
 	flashLoader.load();
+}
+
+// Reset the desktop scaling
+const os = require('os');
+if (os.platform() === "win32") {
+	app.commandLine.appendSwitch("force-device-scale-factor", "1");
 }
 
 /**
@@ -139,13 +146,16 @@ function openWindow() {
 	}
 	mainWindow.loadURL(location);
 
-	mainWindow.on('show', function() {
-		if (commander.monitor !== null) {
+	if (commander.monitor !== null) {
+		mainWindow.on('show', function() {
 			mainWindow.setFullScreen(true);
-		}
+			// Once all done, prevent changing the fullscreen state
+			mainWindow.setFullScreenable(false);
+		});
+	} else {
 		// Once all done, prevent changing the fullscreen state
 		mainWindow.setFullScreenable(false);
-	});
+	}
 }
 
 /**
@@ -231,9 +241,7 @@ function createWindow() {
 
 	// Emitted when the window is closed.
 	mainWindow.on('closed', function() {
-		// Dereference the window object, usually you would store windows
-		// in an array if your app supports multi windows, this is the time
-		// when you should delete the corresponding element.
+		// Dereference the window object
 		mainWindow = null;
 	});
 
@@ -244,7 +252,7 @@ function createWindow() {
 
 /**
  * This method will be called when Electron has finished
- * initialization and is ready to create browser windows.
+ * initialization and is ready to create a browser window.
  */
 app.on('ready', createWindow);
 
@@ -262,7 +270,7 @@ app.on('window-all-closed', function() {
 /**
  * activate callback
  * On OS X it's common to re-create a window in the app when the
- * dock icon is clicked and there are no other windows open.
+ * dock icon is clicked and there are no other window open.
  */
 app.on('activate', function() {
 	if (mainWindow === null) {

@@ -1346,26 +1346,10 @@ function socketOnRequestConfigAndTips(socket) {
 function socketOnAssistedConfigSend(socket, sentCfg) {
 	var cfg           = JSON5.parse(fs.readFileSync(pathToWinDefaultConfig));
 	var electronCfg   = JSON5.parse(fs.readFileSync(pathToElectronConfig));
-	var totalMonitors = sentCfg.layout.columns * sentCfg.layout.rows;
 
 	// copy over layout
 	cfg.layout = sentCfg.layout;
-	// double check the displays
-	if (sentCfg.displays.length != totalMonitors) { // if display values don't match, make them
-		var tdisp;
-		cfg.displays = [];
-
-		for (var height = 0; height < cfg.layout.rows; height++) {
-			for (var width = 0; width < cfg.layout.columns; width++) {
-				tdisp = {};
-				tdisp.row = height;
-				tdisp.column = width;
-				cfg.displays.push(tdisp);
-			}
-		}
-	} else { // else it should be correct from UI
-		cfg.displays = sentCfg.displays;
-	}
+	cfg.displays = sentCfg.displays;
 	// copy over all other relevent data.
 	cfg.host = sentCfg.host;
 	cfg.port = sentCfg.port;
@@ -1411,25 +1395,22 @@ function socketOnAssistedConfigSend(socket, sentCfg) {
 	rem %6 row count
 	rem %7 col count
 
-	this only works with windows, actually probably everything only works with windows.
+	This only works with windows, actually probably everything only works with windows.
+	Using a custom launch file, will require writer to fill out the values themselves.
+	Launching custom will still end up giving that bat file these parameters.
+	But the only usable one is probably meetingID.
 */
 
 function getLaunchParameters(isElectron) {
 	var cfg;
 	var dataReturn = [];
 
-	// if launching electron, need to ensure that the defaultWin-cfg.json file has the correct width, height on display 0
+	// grab the correct config file
 	if (isElectron != undefined && isElectron == "electron") {
 		cfg = JSON5.parse(fs.readFileSync(pathToElectronConfig));
-		cfg.displays[0].width = cfg.layout.columns;
-		cfg.displays[0].height = cfg.layout.rows;
 	} else {
 		cfg = JSON5.parse(fs.readFileSync(pathToWinDefaultConfig));
-		cfg.displays[0].width = 1;
-		cfg.displays[0].height = 1;
 	}
-
-
 
 	dataReturn.push(pathToElectronConfig);
 	dataReturn.push(cfg.index_port);
@@ -1444,16 +1425,7 @@ function getLaunchParameters(isElectron) {
 	}
 
 	dataReturn.push(getMeetingIDFromPasswd());
-	dataReturn.push(cfg.layout.rows);
-	dataReturn.push(cfg.layout.columns);
-
-
-	// now write the file with its adjustments
-	if (isElectron != undefined && isElectron == "electron") {
-		fs.writeFileSync(pathToElectronConfig, JSON5.stringify(cfg, null, 4));
-	} else {
-		fs.writeFileSync(pathToWinDefaultConfig, JSON5.stringify(cfg, null, 4));
-	}
+	dataReturn.push(cfg.host);
 
 	return dataReturn;
 }

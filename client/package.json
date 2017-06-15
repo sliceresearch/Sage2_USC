@@ -3,12 +3,14 @@
   "version": "2.0.0",
   "description": "Electron-based SAGE2 client",
   "main": "electron.js",
-  "devDependencies": {
-    "electron": "latest",
-    "electron-packager": "latest"
-  },
+	"repository": {
+		"type": "git",
+		"url": "https://bitbucket.org/sage2/sage2/"
+	},
   "dependencies": {
-        "commander": "latest"
+    "electron": "latest",
+    "electron-packager": "latest",
+    "commander": "latest"
   },
   "scripts": {
      "electron": "electron electron.js -s https://localhost:9090 -d -1",

@@ -189,8 +189,8 @@
 		{ entry: "HTTP port", id:"http", placeholder:"80", description:"Non-secure port for your server used by display clients. Default is usually 80."},
 		{ entry: "HTTPS port", id:"https", placeholder:"443", description:"Secure port for your server used by UI clients. Default is usually 443."},
 		{ entry: "spacer"},
-		{ entry: "Monitor Resolution Width", id:"mrWidth", placeholder:"1920", description:"Hostname of your server (fully qualified domain name)."},
-		{ entry: "Monitor Resolution Height", id:"mrHeight", placeholder:"1080", description:"Hostname of your server (fully qualified domain name)."},
+		{ entry: "Monitor Resolution Width", id:"mrWidth", placeholder:"1920"},
+		{ entry: "Monitor Resolution Height", id:"mrHeight", placeholder:"1080"},
 		{ entry: "spacer"},
 		{ entry: "Layout Width", id:"layoutWidth", placeholder:"1", description:"If you have more than one monitor, this is the number of monitors that make up your tiled display's width."},
 		{ entry: "Layout Height", id:"layoutHeight", placeholder:"1", description:"Your tiled display's height."},
@@ -501,14 +501,14 @@
 		descriptionForlayoutWidth.innerHTML  += "<br> Your detected layout width is " + cfg.tips.layoutWidth;
 		descriptionForlayoutHeight.innerHTML += "<br> Your detected layout height is " + cfg.tips.layoutHeight;
 		if (cfg.tips.resolutionWidth != "unknown") {
-			descriptionFormrWidth.innerHTML += "<br> Your detected monitor resolution width is " + cfg.tips.resolutionWidth;
+			descriptionFormrWidth.innerHTML = "Your detected monitor resolution width is " + cfg.tips.resolutionWidth;
 		} else {
-			descriptionFormrWidth.innerHTML += "<br> Your monitor resolution width could not be detected.";
+			descriptionFormrWidth.innerHTML = "Your monitor resolution width could not be detected.";
 		}
 		if (cfg.tips.resolutionHeight != "unknown") {
-			descriptionFormrHeight.innerHTML += "<br> Your detected monitor resolution height is " + cfg.tips.resolutionHeight;
+			descriptionFormrHeight.innerHTML = "Your detected monitor resolution height is " + cfg.tips.resolutionHeight;
 		} else {
-			descriptionFormrHeight.innerHTML += "<br> Your monitor resolution height could not be detected.";
+			descriptionFormrHeight.innerHTML = "Your monitor resolution height could not be detected.";
 		}
 
 		// seed the values
@@ -669,13 +669,13 @@
 		}
 		serverGivenCfgCopy.remote_sites = tempList;
 
-		// fill the displays layout
-		tempList = [];
-		for (var rows = 0; rows < serverGivenCfgCopy.layout.rows; rows++) {
-			for (var cols = 0; cols < serverGivenCfgCopy.layout.columns; cols++) {
-				tempList.push({row: rows, column: cols});
-			}
-		}
+		// only keep display 0
+		tempList = [{
+			row: 0,
+			column: 0,
+			width: serverGivenCfgCopy.layout.columns,
+			height: serverGivenCfgCopy.layout.rows
+		}];
 		serverGivenCfgCopy.displays = tempList;
 
 		// print

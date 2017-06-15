@@ -62,33 +62,38 @@ var nums = target.split('.').map(function(n) {
 
 // Node v0.10.40 and above
 if (nums[0] === 0 && nums[1] === 10 && nums[2] >= 40) {
-	console.log("Node version " + process.versions.node + ". Using binaries for 0.10.44+.");
-	target = "0.10.44";
+	console.log("Node version " + process.versions.node + ". Using binaries for 0.10.48+.");
+	target = "0.10.48";
 }
 // Node v0.12.7 and above
 if (nums[0] === 0 && nums[1] === 12 && nums[2] >=  7) {
-	console.log("Node version " + process.versions.node + ". Using binaries for 0.12.13+.");
-	target = "0.12.13";
+	console.log("Node version " + process.versions.node + ". Using binaries for 0.12.18+.");
+	target = "0.12.18";
 }
 // Node v4.2.3 and above
 if (nums[0] === 4 && ((nums[1] === 2 && nums[2] >=  3) || (nums[1] > 2))) {
-	console.log("Node version " + process.versions.node + ". Using binaries for 4.4.2+.");
-	target = "4.4.2";
+	console.log("Node version " + process.versions.node + ". Using binaries for 4.8.3+.");
+	target = "4.8.3";
 }
 // Node v5.1.0 and above
 if (nums[0] === 5 && ((nums[1] === 1 && nums[2] >=  0) || (nums[1] > 1))) {
-	console.log("Node version " + process.versions.node + ". Using binaries for 5.10.1+.");
-	target = "5.10.1";
+	console.log("Node version " + process.versions.node + ". Using binaries for 5.12.0+.");
+	target = "5.12.0";
 }
 // Node v6.0.0 and above
 if (nums[0] === 6 && nums[1] >= 0 && nums[2] >= 0) {
-	console.log("Node version " + process.versions.node + ". Using binaries for 6.0.0+.");
-	target = "6.0.0";
+	console.log("Node version " + process.versions.node + ". Using binaries for 6.9.5+.");
+	target = "6.9.5";
 }
 // Node v7.0.0 and above
 if (nums[0] === 7 && nums[1] >= 0 && nums[2] >= 0) {
-	console.log("Node version " + process.versions.node + ". Using binaries for 7.0.0+.");
-	target = "7.0.0";
+	console.log("Node version " + process.versions.node + ". Using binaries for 7.9.0+.");
+	target = "7.9.0";
+}
+// Node v8.0.0 and above
+if (nums[0] === 8 && nums[1] >= 0 && nums[2] >= 0) {
+	console.log("Node version " + process.versions.node + ". Using binaries for 8.1.0+.");
+	target = "8.1.0";
 }
 
 
@@ -106,8 +111,8 @@ var suffix = "_" + platform + "_" + target + ".tar.gz";
 var packages = [
 	// {name: "node-demux",  url: "https://bitbucket.org/tmarrinan/binary-modules/downloads"},
 	// {name: "websocketio", url: "https://bitbucket.org/tmarrinan/binary-modules/downloads"}
-	{name: "node-demux",  url: "https://bitbucket.org/sage2/binaries/downloads"},
-	{name: "websocketio", url: "https://bitbucket.org/sage2/binaries/downloads"}
+	// {name: "websocketio", url: "https://bitbucket.org/sage2/binaries/downloads"}
+	{name: "node-demux",  url: "https://bitbucket.org/sage2/binaries/downloads"}
 ];
 
 var downloaded = {};
@@ -189,7 +194,6 @@ function unzipModules() {
 	if (isEmpty(downloaded)) {
 		process.stdout.write("\n");
 		console.log("INSTALL FINISHED!");
-		// install();
 	} else {
 		var key;
 		for (key in downloaded) {
@@ -202,7 +206,6 @@ function unzipModules() {
 
 function unzipModule(keys, idx) {
 	if (idx >= keys.length) {
-		// install();
 		return;
 	}
 

@@ -120,7 +120,7 @@ var interactMgr        = new InteractableManager();
 var mediaBlockSize     = 512;
 var startTime          = Date.now();
 var drawingManager;
-var pressingAlt        = true;
+var pressingCTRL       = true;
 var fileBufferManager  = new FileBufferManager();
 
 // Array containing the remote sites informations (toolbar on top of wall)
@@ -2088,8 +2088,9 @@ function wsSaveSesion(wsio, data) {
 		// Otherwise use the date in the name
 		var ad    = new Date();
 		sname = sprint("session_%4d_%02d_%02d_%02d_%02d_%02s",
-							ad.getFullYear(), ad.getMonth() + 1, ad.getDate(),
-							ad.getHours(), ad.getMinutes(), ad.getSeconds());
+			ad.getFullYear(), ad.getMonth() + 1, ad.getDate(),
+			ad.getHours(), ad.getMinutes(), ad.getSeconds()
+		);
 	}
 	saveSession(sname);
 }
@@ -2119,8 +2120,9 @@ function listSessions() {
 				// use its change time (creation, update, ...)
 				var ad = new Date(stat.mtime);
 				var strdate = sprint("%4d/%02d/%02d %02d:%02d:%02s",
-										ad.getFullYear(), ad.getMonth() + 1, ad.getDate(),
-										ad.getHours(), ad.getMinutes(), ad.getSeconds());
+					ad.getFullYear(), ad.getMonth() + 1, ad.getDate(),
+					ad.getHours(), ad.getMinutes(), ad.getSeconds()
+				);
 				// create path to thumbnail
 				var thumbPath = path.join(path.join(path.join("", "user"), "sessions"), ".previews");
 				// replace .json with .svg in filename
@@ -3761,7 +3763,7 @@ function wsRecordInnerGeometryForWidget(wsio, data) {
 		var radioOptions = radioButtons[i];
 		for (var j = 0; j < radioOptions.length; j++) {
 			SAGE2Items.widgets.addButtonToItem(data.instanceID, radioOptions[j].id, "circle",
-			{x: radioOptions[j].x, y: radioOptions[j].y, r: radioOptions[j].r}, 0);
+				{x: radioOptions[j].x, y: radioOptions[j].y, r: radioOptions[j].r}, 0);
 		}
 	}
 }
@@ -4608,13 +4610,13 @@ function sliceBackgroundImage(fileName, outputBaseName) {
 		var output_base = path.basename(outputBaseName, input_ext);
 		var output = path.join(output_dir, output_base + "_" + i.toString() + output_ext);
 		imageMagick(fileName).crop(
-				config.resolution.width * config.displays[i].width,
-				config.resolution.height * config.displays[i].height, x, y)
-			.write(output, function(err) {
-				if (err) {
-					console.log("error slicing image", err); // throw err;
-				}
-			});
+			config.resolution.width * config.displays[i].width,
+			config.resolution.height * config.displays[i].height, x, y
+		).write(output, function(err) {
+			if (err) {
+				console.log("error slicing image", err); // throw err;
+			}
+		});
 	}
 }
 
@@ -4737,10 +4739,12 @@ function sendConfig(req, res) {
 	// Set type
 	header["Content-Type"] = "application/json";
 	// Allow CORS on the /config route
-	header['Access-Control-Allow-Origin' ]     = req.headers.origin;
-	header['Access-Control-Allow-Methods']     = "GET";
-	header['Access-Control-Allow-Headers']     = "X-Requested-With, X-HTTP-Method-Override, Content-Type, Accept";
-	header['Access-Control-Allow-Credentials'] = true;
+	if (req.headers.origin !== undefined) {
+		header['Access-Control-Allow-Origin' ] = req.headers.origin;
+		header['Access-Control-Allow-Methods'] = "GET";
+		header['Access-Control-Allow-Headers'] = "X-Requested-With, X-HTTP-Method-Override, Content-Type, Accept";
+		header['Access-Control-Allow-Credentials'] = true;
+	}
 	res.writeHead(200, header);
 	// Adding the calculated version into the data structure
 	config.version = SAGE2_version;
@@ -4911,38 +4915,44 @@ function initalizeRemoteSites() {
 	if (config.remote_sites) {
 		remoteSites = new Array(config.remote_sites.length);
 		config.remote_sites.forEach(function(element, index, array) {
-			var protocol = (element.secure === true) ? "wss" : "ws";
-			var wsURL = protocol + "://" + element.host + ":" + element.port.toString();
+			// if we have a valid definition of a remote site (host, port and name)
+			if (element.host && element.port && element.name) {
+				var protocol = (element.secure === true) ? "wss" : "ws";
+				var wsURL = protocol + "://" + element.host + ":" + element.port.toString();
 
-			var rGeom = {};
-			rGeom.w = Math.min((0.5 * config.totalWidth) / remoteSites.length, config.ui.titleBarHeight * 6)
-				- (0.16 * config.ui.titleBarHeight);
-			rGeom.h = 0.84 * config.ui.titleBarHeight;
-			rGeom.x = (0.5 * config.totalWidth) + ((rGeom.w + (0.16 * config.ui.titleBarHeight))
-				* (index - (remoteSites.length / 2))) + (0.08 * config.ui.titleBarHeight);
-			rGeom.y = 0.08 * config.ui.titleBarHeight;
+				var rGeom = {};
+				rGeom.w = Math.min((0.5 * config.totalWidth) / remoteSites.length, config.ui.titleBarHeight * 6)
+					- (0.16 * config.ui.titleBarHeight);
+				rGeom.h = 0.84 * config.ui.titleBarHeight;
+				rGeom.x = (0.5 * config.totalWidth) + ((rGeom.w + (0.16 * config.ui.titleBarHeight))
+					* (index - (remoteSites.length / 2))) + (0.08 * config.ui.titleBarHeight);
+				rGeom.y = 0.08 * config.ui.titleBarHeight;
 
-			// Build the object
-			remoteSites[index] = {
-				name: element.name,
-				wsio: null,
-				connected: "off",
-				geometry: rGeom,
-				index: index
-			};
-			// Create a websocket connection to the site
-			remoteSites[index].wsio = createRemoteConnection(wsURL, element, index);
+				// Build the object
+				remoteSites[index] = {
+					name: element.name,
+					wsio: null,
+					connected: "off",
+					geometry: rGeom,
+					index: index
+				};
+				// Create a websocket connection to the site
+				remoteSites[index].wsio = createRemoteConnection(wsURL, element, index);
 
-			// Add the gemeotry for the button
-			interactMgr.addGeometry("remote_" + index, "staticUI", "rectangle", rGeom,  true, index, remoteSites[index]);
+				// Add the gemeotry for the button
+				interactMgr.addGeometry("remote_" + index, "staticUI", "rectangle", rGeom,  true, index, remoteSites[index]);
 
-			// attempt to connect every 15 seconds, if connection failed
-			setInterval(function() {
-				if (remoteSites[index].connected !== "on") {
-					var rem = createRemoteConnection(wsURL, element, index);
-					remoteSites[index].wsio = rem;
-				}
-			}, 15000);
+				// attempt to connect every 15 seconds, if connection failed
+				setInterval(function() {
+					if (remoteSites[index].connected !== "on") {
+						var rem = createRemoteConnection(wsURL, element, index);
+						remoteSites[index].wsio = rem;
+					}
+				}, 15000);
+			} else {
+				// not a valid site definition, we ignore it
+				console.log(sageutils.header("Remote") + chalk.bold.red('invalid host definition (ignored) ') + element.name);
+			}
 		});
 	}
 }
@@ -5194,7 +5204,7 @@ function processInputCommand(line) {
 		}
 		case 'version': {
 			console.log(sageutils.header("Version") + 'base:', SAGE2_version.base, ' branch:', SAGE2_version.branch,
-					' commit:', SAGE2_version.commit, SAGE2_version.date);
+				' commit:', SAGE2_version.commit, SAGE2_version.date);
 			break;
 		}
 		case 'update': {
@@ -6494,15 +6504,15 @@ function pointerMove(uniqueID, pointerX, pointerY, data) {
 			uniqueID, pointerX, pointerY, 10, 10);
 	}
 
-	// Trick: press ALT key while moving switches interaction mode
-	if (sagePointers[uniqueID] && remoteInteraction[uniqueID].ALT && pressingAlt) {
+	// Trick: press CTRL key while moving switches interaction mode
+	if (sagePointers[uniqueID] && remoteInteraction[uniqueID].CTRL && pressingCTRL) {
 		remoteInteraction[uniqueID].toggleModes();
 		broadcast('changeSagePointerMode', {id: sagePointers[uniqueID].id, mode: remoteInteraction[uniqueID].interactionMode});
-		pressingAlt = false;
-	} else if (sagePointers[uniqueID] && !remoteInteraction[uniqueID].ALT && !pressingAlt) {
+		pressingCTRL = false;
+	} else if (sagePointers[uniqueID] && !remoteInteraction[uniqueID].CTRL && !pressingCTRL) {
 		remoteInteraction[uniqueID].toggleModes();
 		broadcast('changeSagePointerMode', {id: sagePointers[uniqueID].id, mode: remoteInteraction[uniqueID].interactionMode});
-		pressingAlt = true;
+		pressingCTRL = true;
 	}
 
 	sagePointers[uniqueID].updatePointerPosition(data, config.totalWidth, config.totalHeight);
@@ -6538,19 +6548,19 @@ function updatePointerPosition(uniqueID, pointerX, pointerY, data) {
 	if (draggingPartition[uniqueID]) {
 		draggingPartition[uniqueID].ptn.left =
 			pointerX < draggingPartition[uniqueID].start.x ?
-			pointerX : draggingPartition[uniqueID].start.x;
+				pointerX : draggingPartition[uniqueID].start.x;
 
 		draggingPartition[uniqueID].ptn.top =
 			pointerY < draggingPartition[uniqueID].start.y ?
-			pointerY : draggingPartition[uniqueID].start.y;
+				pointerY : draggingPartition[uniqueID].start.y;
 
 		draggingPartition[uniqueID].ptn.width =
 			pointerX < draggingPartition[uniqueID].start.x ?
-			draggingPartition[uniqueID].start.x - pointerX : pointerX - draggingPartition[uniqueID].start.x;
+				draggingPartition[uniqueID].start.x - pointerX : pointerX - draggingPartition[uniqueID].start.x;
 
 		draggingPartition[uniqueID].ptn.height =
 			pointerY < draggingPartition[uniqueID].start.y ?
-			draggingPartition[uniqueID].start.y - pointerY : pointerY - draggingPartition[uniqueID].start.y;
+				draggingPartition[uniqueID].start.y - pointerY : pointerY - draggingPartition[uniqueID].start.y;
 
 		partitions.updatePartitionGeometries(draggingPartition[uniqueID].ptn.id, interactMgr);
 		broadcast('partitionMoveAndResizeFinished', draggingPartition[uniqueID].ptn.getDisplayInfo());
@@ -7146,7 +7156,7 @@ function moveAndResizeApplicationWindow(resizeApp, portalId) {
 	var im = findInteractableManager(resizeApp.elemId);
 	drawingManager.applicationMoved(resizeApp.elemId, resizeApp.elemLeft, resizeApp.elemTop);
 	drawingManager.applicationResized(resizeApp.elemId, resizeApp.elemWidth, resizeApp.elemHeight + titleBarHeight,
-										{x: resizeApp.elemLeft, y: resizeApp.elemTop});
+		{x: resizeApp.elemLeft, y: resizeApp.elemTop});
 	im.editGeometry(resizeApp.elemId, "applications", "rectangle",
 		{x: resizeApp.elemLeft, y: resizeApp.elemTop, w: resizeApp.elemWidth, h: resizeApp.elemHeight + titleBarHeight});
 	handleApplicationResize(resizeApp.elemId);
@@ -7319,19 +7329,19 @@ function pointerRelease(uniqueID, pointerX, pointerY, data) {
 
 		draggingPartition[uniqueID].ptn.left =
 			pointerX < draggingPartition[uniqueID].start.x ?
-			pointerX : draggingPartition[uniqueID].start.x;
+				pointerX : draggingPartition[uniqueID].start.x;
 
 		draggingPartition[uniqueID].ptn.top =
 			pointerY < draggingPartition[uniqueID].start.y ?
-			pointerY : draggingPartition[uniqueID].start.y;
+				pointerY : draggingPartition[uniqueID].start.y;
 
 		draggingPartition[uniqueID].ptn.width =
 			pointerX < draggingPartition[uniqueID].start.x ?
-			draggingPartition[uniqueID].start.x - pointerX : pointerX - draggingPartition[uniqueID].start.x;
+				draggingPartition[uniqueID].start.x - pointerX : pointerX - draggingPartition[uniqueID].start.x;
 
 		draggingPartition[uniqueID].ptn.height =
 			pointerY < draggingPartition[uniqueID].start.y ?
-			draggingPartition[uniqueID].start.y - pointerY : pointerY - draggingPartition[uniqueID].start.y;
+				draggingPartition[uniqueID].start.y - pointerY : pointerY - draggingPartition[uniqueID].start.y;
 
 		// if the partition is much too small (most likely created by mistake)
 		if (draggingPartition[uniqueID].ptn.width < 25 || draggingPartition[uniqueID].ptn.height < 25) {
@@ -8642,7 +8652,7 @@ function handleNewApplication(appInstance, videohandle) {
 	interactMgr.addGeometry(appInstance.id, "applications", "rectangle", {
 		x: appInstance.left, y: appInstance.top,
 		w: appInstance.width, h: appInstance.height + config.ui.titleBarHeight},
-		true, zIndex, appInstance);
+	true, zIndex, appInstance);
 
 	var cornerSize   = 0.2 * Math.min(appInstance.width, appInstance.height);
 	var oneButton    = Math.round(config.ui.titleBarHeight) * (300 / 235);
@@ -8853,27 +8863,26 @@ function omi_pointerChangeMode(uniqueID) {
 
 // Set callback functions so Omicron can generate SAGEPointer events
 omicronManager.setCallbacks(
-		sagePointers,
-		createSagePointer,
-		showPointer,
-		pointerPress,
-		pointerMove,
-		pointerPosition,
-		hidePointer,
-		pointerRelease,
-		pointerScrollStart,
-		pointerScroll,
-		pointerScrollEnd,
-		pointerDblClick,
-		pointerCloseGesture,
-		keyDown,
-		keyUp,
-		keyPress,
-		createRadialMenu,
-		omi_pointerChangeMode,
-		undefined, // sendKinectInput
-		remoteInteraction
-	);
+	sagePointers,
+	createSagePointer,
+	showPointer,
+	pointerPress,
+	pointerMove,
+	pointerPosition,
+	hidePointer,
+	pointerRelease,
+	pointerScrollStart,
+	pointerScroll,
+	pointerScrollEnd,
+	pointerDblClick,
+	pointerCloseGesture,
+	keyDown,
+	keyUp,
+	keyPress,
+	createRadialMenu,
+	omi_pointerChangeMode,
+	undefined, // sendKinectInput
+	remoteInteraction);
 omicronManager.linkDrawingManager(drawingManager);
 
 /* ****** Radial Menu section ************************************************************** */
@@ -8949,7 +8958,7 @@ function setRadialMenuPosition(uniqueID, pointerX, pointerY) {
 
 	// Update the interactable geometry
 	interactMgr.editGeometry(uniqueID + "_menu_radial", "radialMenus", "circle",
-			{x: existingRadialMenu.left, y: existingRadialMenu.top, r: existingRadialMenu.radialMenuSize.y / 2});
+		{x: existingRadialMenu.left, y: existingRadialMenu.top, r: existingRadialMenu.radialMenuSize.y / 2});
 	showRadialMenu(uniqueID);
 	// Send the updated radial menu state to the display clients (and set menu visible)
 	broadcast('updateRadialMenuPosition', existingRadialMenu.getInfo());
@@ -8999,8 +9008,8 @@ function radialMenuEvent(data) {
 		if (data.menuState.action !== undefined && data.menuState.action.type === "saveSession") {
 			var ad    = new Date();
 			var sname = sprint("session_%4d_%02d_%02d_%02d_%02d_%02s",
-							ad.getFullYear(), ad.getMonth() + 1, ad.getDate(),
-							ad.getHours(), ad.getMinutes(), ad.getSeconds());
+				ad.getFullYear(), ad.getMonth() + 1, ad.getDate(),
+				ad.getHours(), ad.getMinutes(), ad.getSeconds());
 			saveSession(sname);
 		} else if (data.menuState.action !== undefined && data.menuState.action.type === "tileContent") {
 			tileApplications();
@@ -9120,12 +9129,24 @@ function toggleStickyPin(appId) {
 
 function showStickyPin(app) {
 	SAGE2Items.applications.editButtonVisibilityOnItem(app.id, "pinButton", true);
-	broadcast('showStickyPin', app);
+
+	// only send required fields (sending full app can throw error from circular JSON
+	// if it is in a Partition -- I assume it could happen in other cases as well)
+	broadcast('showStickyPin', {
+		id: app.id,
+		sticky: app.sticky
+	});
 }
 
 function hideStickyPin(app) {
 	SAGE2Items.applications.editButtonVisibilityOnItem(app.id, "pinButton", false);
-	broadcast('hideStickyPin', app);
+
+	// only send required fields (sending full app can throw error from circular JSON
+	// if it is in a Partition -- I assume it could happen in other cases as well)
+	broadcast('hideStickyPin', {
+		id: app.id,
+		sticky: app.sticky
+	});
 }
 
 
@@ -9488,8 +9509,7 @@ function csdLaunchAppWithValues(wsio, data) {
 						}
 					}
 				}
-			}
-		, 400); // milliseconds how low can this value be to ensure it works?
+			}, 400); // milliseconds how low can this value be to ensure it works?
 	} // end if data.func !== undefined
 } // end csdLaunchAppWithValues
 
@@ -9799,44 +9819,17 @@ function csdSaveDataOnServer(wsio, data) {
  * @method     ReportIfCanWallScreenshot
  */
 function reportIfCanWallScreenshot() {
-	// tile check since it is possible that one display extends beyond one tile
-	var layout = [];
-	var idx;
-	for (let x = 0; x < config.layout.columns; x++) {
-		for (let y = 0; y < config.layout.rows; y++) {
-			idx = y * config.layout.columns + x;
-			// Set to false
-			layout[idx] = false;
-		}
-	}
-	// check if entire wall's tiles can take a screenshot, some displays cover more than one tile
-	var entry, xDisplay, yDisplay;
+	var numOfDisplayClients = config.displays.length;
+	var canWallScreenshot = 0;
+	// check if all display clients can take a screenshot
 	for (let i = 0; i < clients.length; i++) {
 		if (clients[i].clientType === "display" && clients[i].capableOfScreenshot === true) {
-			entry = config.displays[clients[i].clientID];
-			idx = entry.row * config.layout.columns + entry.column;
-			layout[idx] = true;
-			// ok to do because       0 < > == undefined      is false
-			for (let x = 0; x < entry.width; x++) {
-				for (let y = 0; y < entry.height; y++) {
-					xDisplay = entry.column + x;
-					yDisplay = entry.row + y;
-					idx = yDisplay * config.layout.columns + xDisplay;
-					layout[idx] = true;
-				}
-			}
+			canWallScreenshot++;
 		}
 	}
-	// if all tiles are able to screenshot then the wall can screenshot
-	var canWallScreenshot = true;
-	for (let i = 0; i < layout.length; i++) {
-		if (!layout[i]) {
-			canWallScreenshot = false;
-			break;
-		}
-	}
+	// Send the news to the UI clients
 	broadcast("reportIfCanWallScreenshot", {
-		capableOfScreenshot: canWallScreenshot
+		capableOfScreenshot: (canWallScreenshot === numOfDisplayClients)
 	});
 }
 
@@ -10051,12 +10044,11 @@ function wsWallScreenshotFromDisplay(wsio, data) {
 					// filename
 					name: fname}],
 					// position and size
-					[0, 0, config.totalWidth / 4],
-					// username and color
-					"screenshot", "#B4B4B4",
-					// to be opened afterward
-					true
-				);
+				[0, 0, config.totalWidth / 4],
+				// username and color
+				"screenshot", "#B4B4B4",
+				// to be opened afterward
+				true);
 				// Delete the temporary files
 				sageutils.deleteFiles(path.join(mainFolder.path, "tmp", "wallScreenshot_*"));
 			}
@@ -10071,13 +10063,12 @@ function wsWallScreenshotFromDisplay(wsio, data) {
 			path: path.join(mainFolder.path, "tmp", fileSaveObject.fileName),
 			// file name
 			name: fileSaveObject.fileName}],
-			// position and size
-			[0, 0, config.totalWidth / 4],
-			// username and color
-			"screenshot", "#B4B4B4",
-			// to be opened afterward
-			true
-		);
+		// position and size
+		[0, 0, config.totalWidth / 4],
+		// username and color
+		"screenshot", "#B4B4B4",
+		// to be opened afterward
+		true);
 		// Delete the temporary files
 		sageutils.deleteFiles(path.join(mainFolder.path, "tmp", "wallScreenshot_*"));
 	}

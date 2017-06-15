@@ -7,7 +7,7 @@
 
 "use strict";
 
-/* global  require*/
+/* global  require */
 
 var Webview = SAGE2_App.extend({
 	init: function(data) {
@@ -54,8 +54,8 @@ var Webview = SAGE2_App.extend({
 		this.element.fullscreen = false;
 		// add the preload clause
 		this.addPreloadFile();
-		// security or not
-		// this.element.disablewebsecurity = true;
+		// security or not: this seems to be an issue often on Windows
+		this.element.disablewebsecurity = true;
 
 		this.element.minwidth  = data.width;
 		this.element.minheight = data.height;
@@ -81,7 +81,7 @@ var Webview = SAGE2_App.extend({
 			view_url = 'https://www.youtube.com/embed/' + video_id + '?autoplay=0';
 		} else if (view_url.indexOf('vimeo') >= 0 && view_url.indexOf('player') === -1) {
 			// Search for the Vimeo ID
-			var m = view_url.match(/^.+vimeo.com\/(.*\/)?([^#\?]*)/);
+			var m = view_url.match(/^.+vimeo.com\/(.*\/)?([^#?]*)/);
 			var vimeo_id =  m ? m[2] || m[1] : null;
 			if (vimeo_id) {
 				view_url = 'https://player.vimeo.com/video/' + vimeo_id;
@@ -151,8 +151,8 @@ var Webview = SAGE2_App.extend({
 
 		// Emitted when page receives favicon urls
 		this.element.addEventListener("page-favicon-updated", function(event) {
-			console.log('Webview>	page-favicon-updated', event.favicons, event.favicons[0]);
 			if (event.favicons && event.favicons[0]) {
+				console.log('Webview>	page-favicon-updated', event.favicons, event.favicons[0]);
 				_this.state.favicon = event.favicons[0];
 				// sync the state object
 				_this.SAGE2Sync(false);
@@ -166,13 +166,21 @@ var Webview = SAGE2_App.extend({
 			_this.pre.innerHTML += 'Webview> ' + event.message + '\n';
 		});
 
-		// When the webview tries to open a new window
+		// When the webview tries to open a new window, for insance with ALT-click
 		this.element.addEventListener("new-window", function(event) {
 			// only accept http protocols
 			if (event.url.startsWith('http:') || event.url.startsWith('https:')) {
-				_this.changeURL(event.url, false);
+				// Do not open a new view, just navigate to the new URL
+				// _this.changeURL(event.url, false);
+				// Request a new webview application
+				wsio.emit('openNewWebpage', {
+					// should be uniqueID, but no interactor object here
+					id: this.id,
+					// send the new URL
+					url: event.url
+				});
 			} else {
-				console.log('Webview>	Not http URL, not opening', event.url);
+				console.log('Webview>	Not a HTTP URL, not opening [', event.url, ']', event);
 			}
 		});
 	},
@@ -194,16 +202,23 @@ var Webview = SAGE2_App.extend({
 	 * @method     addPreloadFile
 	 */
 	addPreloadFile: function() {
+		// if it's not running inside Electron, do not bother
 		if (!this.isElectron) {
 			return;
 		}
+		// load the nodejs path module
 		var path = require("path");
+		// access the remote electron process
 		var app = require("electron").remote.app;
+		// get the application path
 		var appPath = app.getAppPath();
+		// split the path at node_modules
 		var subPath = appPath.split("node_modules");
+		// take the first element which contains the current folder of the application
 		var rootPath = subPath[0];
+		// add the relative path to the webview folder
 		var preloadPath = path.join(rootPath, 'public/uploads/apps/Webview', 'SAGE2_script_supplement.js');
-		console.log(preloadPath);
+		// finally make it a local URL and pass it to the webview element
 		this.element.preload = "file://" + preloadPath;
 	},
 

@@ -129,7 +129,7 @@ var WhiteboardPalette = SAGE2_App.extend({
 					cSpan: 1, rSpan: 5},
 				{name: "ColorPointer", action: this.pointerColorMode ? this.disablePointerColorMode :
 					this.enablePointerColorMode, parent: this, icon: this.pointerColorMode ? path + "/pointer_active.png" :
-					path + "/pointer.png", r: 12, c: 2, cSpan: 1, rSpan: 5},
+						path + "/pointer.png", r: 12, c: 2, cSpan: 1, rSpan: 5},
 				{name: "ColorPicker", action: this.colorPicker, parent: this, icon: path + "/color-picker.png", r: 12, c: 3,
 					cSpan: 1.5, rSpan: 10},
 				{name: "Eraser", action: this.eraserMode ? this.disableEraserMode : this.enableEraserMode, parent: this,
@@ -305,17 +305,17 @@ var WhiteboardPalette = SAGE2_App.extend({
 			}
 			if (butt.text) {
 				this.palette.append("text")
-							.attr("x", x + butt.w / 2)
-							.attr("y", y + butt.h / 2)
-							.style("dominant-baseline", "middle")
-							.style("text-anchor", "middle")
-							.text(butt.text);
+					.attr("x", x + butt.w / 2)
+					.attr("y", y + butt.h / 2)
+					.style("dominant-baseline", "middle")
+					.style("text-anchor", "middle")
+					.text(butt.text);
 			}
 			if (butt.selected) {
 				var selectedStroke = "white";
 				toGoToFront.push(this.palette.append("rect").attr("fill", "none").attr("x", x - colW).attr("y", y - colW)
-							.attr("width", buttW + 2 * colW).attr("height", buttH + 2 * colW).style("stroke", selectedStroke)
-							.style("stroke-width", colW));
+					.attr("width", buttW + 2 * colW).attr("height", buttH + 2 * colW).style("stroke", selectedStroke)
+					.style("stroke-width", colW));
 			}
 		}
 

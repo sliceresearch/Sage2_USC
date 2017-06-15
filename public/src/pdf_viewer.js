@@ -325,9 +325,9 @@ var pdf_viewer = SAGE2_App.extend({
 
 		this.translateGroup(this.imageVisualizer, this.state.horizontalOffset, 0, scale);
 		this.translateGroup(this.thumbnailsVisualizer, this.state.thumbnailHorizontalPosition,
-							this.baseHeightPage * r, r, this.clickedThumbnail);
+			this.baseHeightPage * r, r, this.clickedThumbnail);
 		this.translateGroup(this.commandBarG, null, (this.baseHeightPage + this.state.thumbnailHeight) * r,
-							r, this.clickedThumbnail);
+			r, this.clickedThumbnail);
 
 		if (this.clickedThumbnail) {
 			this.clickedThumbnail = false;
@@ -545,9 +545,11 @@ var pdf_viewer = SAGE2_App.extend({
 		// var center = (this.baseWidthPage / 2) * (this.state.numberOfPageToShow - 1);
 		// var dx = center - (this.baseWidthPage + this.displacement) * (page - 1);
 		var dx = -1 * (this.baseWidthPage + this.displacement) * (page - 1);
-		this.modifyState("horizontalOffset", dx);
+		this.state.horizontalOffset = dx;
 		this.generateMissingPages();
-		this.modifyState("currentPage", page);
+		if (this.state.currentPage !== page) {
+			this.modifyState("currentPage", page);
+		}
 		this.translateGroup(this.imageVisualizer, this.state.horizontalOffset, 0);
 		return dx;
 	},
@@ -706,24 +708,7 @@ var pdf_viewer = SAGE2_App.extend({
 	},
 
 	load: function(date) {
-
-		/*
-		There has to be a better way than this.
-		There is currently a bug(?) where this load will double proc on remote site interaction.
-		The first proc will be the current page, then the second proc will be the changed page state.
-		This is a problem because the first proc sends BACK or originator, changing their state to what it was.
-		Then their load function gets activated and causes a loop.
-		Also, there might be a cleaner function to use than resize.
-		This odd behavir might have to do with the goToPage having two modifyState() call.
-		The modifyState() performs a sync, but goToPage calls it twice, the 2nd is the page change.
-		This might be causing the rapid swap. One early packet for dx (and old page #) then 2nd packet that has new page#
-		But receiving site gets old page # first, then part of the code sends a sync, then it gets 2nd packet with real page#.
-		Unsure atm, ran out of time to test with remote site.
-		*/
-		var _this = this;
-		setTimeout(function() {
-			_this.resize(date);
-		}, 200);
+		this.goToPage(this.state.currentPage);
 	},
 
 	draw: function(date) {

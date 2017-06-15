@@ -60,7 +60,6 @@
 		"rbush": ">=2",
 		"request": "latest",
 		"sprint": "^0.3.1",
-		"twit": "latest",
 		"mv": "latest",
 		"semver": "latest",
 		"fsmonitor": "latest",
@@ -71,12 +70,12 @@
 		"sw-precache": "latest",
 		"debug": "latest",
 		"ytdl-core": "latest",
+		"websocketio": "latest",
 		"rimraf": "latest",
 		"electron": "latest"
 	},
 	"optionalDependencies": {
-		"websocketio": "latest",
-		"node-demux" : "latest"
+		"node-demux": "latest"
 	},
 	"devDependencies": {
 		"grunt": "latest",
@@ -97,18 +96,18 @@
 		"node": ">=0.10.x"
 	},
 	"scripts": {
-		"start":   "node server.js -l",
-		"sw":      "node generate-service-worker.js",
+		"start": "node server.js -l",
+		"sw": "node generate-service-worker.js",
 		"monitor": "nodemon -e json,js,html -I -L -i public/uploads -i public/service-worker.js server.js -l",
-		"lint":    "grunt eslint",
-		"doc":     "grunt yuidoc",
-		"mini":    "grunt uglify --verbose",
-		"newapp":  "grunt newapp",
-		"test":    "grunt all",
-		"in":      "node ./install_dependencies.js",
-		"inprod":  "node ./install_dependencies.js --prod",
-		"indev":   "node ./install_dependencies.js --dev",
-		"electron":"electron electron.js -s http://localhost:9292 -d 0"
+		"lint": "grunt eslint",
+		"doc": "grunt yuidoc",
+		"mini": "grunt uglify --verbose",
+		"newapp": "grunt newapp",
+		"test": "grunt all",
+		"in": "node ./install_dependencies.js",
+		"inprod": "node ./install_dependencies.js --prod",
+		"indev": "node ./install_dependencies.js --dev",
+		"electron": "electron electron.js -s http://localhost:9292 -d 0"
 	},
 	"license": "SEE LICENSE IN LICENSE.txt"
 }

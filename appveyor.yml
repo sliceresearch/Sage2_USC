@@ -3,6 +3,7 @@ version: 2.0.{build}
 branches:
   only:
   - master
+  - perdis17
 
 shallow_clone: true
 
@@ -26,8 +27,8 @@ init:
   - dir C:\Dev\ffmpeg-win64-dev\lib
 
 install:
-  - ps: Get-NodeJsLatestBuild 7.8
-  - ps: Install-Product node 7.8.0 x64
+  - ps: Get-NodeJsLatestBuild 8.1
+  - ps: Install-Product node 8.1.0 x64
   - dir C:\avvm\node
   - node -v
   - cd %APPVEYOR_BUILD_FOLDER%
@@ -67,8 +68,8 @@ install:
   - del /Q *.7z
   - del /Q *.zip
   - cd bin
-  - curl -LsSO https://nodejs.org/dist/latest-v7.x/win-x64/node.exe
-  - curl -LsSO https://nodejs.org/dist/latest-v7.x/win-x64/node.lib
+  - curl -LsSO https://nodejs.org/dist/latest-v8.x/win-x64/node.exe
+  - curl -LsSO https://nodejs.org/dist/latest-v8.x/win-x64/node.lib
   - cd ..
   - cd sabi.js
   - npm install --production --msvs_version=2013
