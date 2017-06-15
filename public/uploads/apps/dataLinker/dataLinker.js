@@ -123,10 +123,10 @@ var dataLinker = SAGE2_App.extend({
 	 */
 	dataHandlingSetup: function() {
 		// this function has internal check if master.
-		this.csdSubscribeToNewValueNotification("handleNewServerVariableNotifications", false);
+		this.serverDataSubscribeToNewValueNotification("handleNewServerVariableNotifications", false);
 
 		// get current vars after subscription. better to get dupes than miss one.
-		this.csdGetAllTrackedDescriptions("handleCurrentServerVariables");
+		this.serverDataGetAllTrackedDescriptions("handleCurrentServerVariables");
 	},
 
 	/**
@@ -198,14 +198,14 @@ var dataLinker = SAGE2_App.extend({
 				this["dataTo" + destinationName] = function(responseObject) {
 					console.log("erase me, Routing");
 					console.dir(responseObject);
-					this.csdSetValue(destinationName, responseObject); // sets the value of destination variable
+					this.serverDataSetValue(destinationName, responseObject); // sets the value of destination variable
 				}
 			}
 			console.log("erase me, subscribing");
 			// after function creation check, create this app's subscription and give it this name.
-			this.csdSubscribeToValue(sourceName, ("dataTo" + destinationName), false);
+			this.serverDataSubscribeToValue(sourceName, ("dataTo" + destinationName), false);
 			// perform initial grab
-			this.csdGetValue(sourceName, ("dataTo" + destinationName));
+			this.serverDataGetValue(sourceName, ("dataTo" + destinationName));
 		}
 	},
 
@@ -262,7 +262,7 @@ var dataLinker = SAGE2_App.extend({
 				&& this.varsKnown[i].links.indexOf(responseObject.destinationName) !== -1) {
 					console.log("erase me, match");
 					this.varsKnown[i].links.splice(this.varsKnown[i].links.indexOf(responseObject.destinationName), 1);
-					this.csdSubscribeToValue(responseObject.sourceName, ("dataTo" + responseObject.destinationName), true);
+					this.serverDataSubscribeToValue(responseObject.sourceName, ("dataTo" + responseObject.destinationName), true);
 					break;
 				}
 			}

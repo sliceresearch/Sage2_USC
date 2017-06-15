@@ -2511,15 +2511,14 @@ function setAppContextMenuEntries(data) {
 						}
 					}
 				} else if (this.callback === "SAGE2_openPage") {
+					// special case: open another tab with the given address.
 					var appUrl;
 					if (this.parameters.url !== undefined && this.parameters.url !== null) {
 						appUrl = this.parameters.url + "?appId=" + this.app;
 						appUrl += "&pointerName=" + document.getElementById('sage2PointerLabel').value;
 						appUrl += "&pointerColor='" + document.getElementById('sage2PointerColor').value + "'";
-					} else {
-						appUrl = "appControl.html?appId=" + this.app;
+						open(appUrl, "App Control Panel");
 					}
-					open(appUrl, "App Control Panel");
 				} else if (this.callback === "SAGE2_copyURL") {
 					// special case: want to copy the URL of the file to clipboard
 					var dlurl = this.parameters.url;

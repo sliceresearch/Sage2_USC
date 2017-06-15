@@ -62,7 +62,7 @@ var dataFileHandler = SAGE2_App.extend({
 				this.element.textContent += "\r\njson file:"
 				d3.json(this.state.file, function(error, jsObject) {
 					if (error) {
-						_this.showMessageErrorLoad();
+						_this.showMessageErrorLoad(error);
 					}
 					_this.d3Loaded(jsObject);
 				});
@@ -78,9 +78,10 @@ var dataFileHandler = SAGE2_App.extend({
 		}
 	},
 
-	showMessageErrorLoad: function() {
+	showMessageErrorLoad: function(error) {
 		this.updateTitle("Unable to load " + this.state.file);
 		this.element.textContent = "Unable to load " + this.state.file;
+		console.log(error);
 	},
 
 	/**
@@ -139,7 +140,7 @@ var dataFileHandler = SAGE2_App.extend({
 	*/
 	broadcastData: function() {
 		// function(nameOfValue, value, description) {
-		this.csdSetValue(this.id + ":source:" + "datasetSource", this.dataFromFile, "json data loaded from file:" + this.fileName);
+		this.serverDataSetValue(this.id + ":source:" + "datasetSource", this.dataFromFile, "json data loaded from file:" + this.fileName);
 	},
 
 	/**
@@ -301,9 +302,7 @@ var dataFileHandler = SAGE2_App.extend({
 		} else { // if activated after file, this will be given necessary data
 			chartValues = params;
 		}
-		this.csdLaunchAppWithValues("d3Charts", { chartValues: chartValues },
-			undefined, // no post launch function activation
-			this.sage2_x + posOffset, this.sage2_y + posOffset);
+		this.launchAppWithValues("d3Charts", { chartValues: chartValues }, this.sage2_x + posOffset, this.sage2_y + posOffset);
 	},
 
 	event: function(eventType, position, user_id, data, date) {

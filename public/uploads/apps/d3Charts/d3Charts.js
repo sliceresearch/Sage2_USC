@@ -54,9 +54,9 @@ var d3Charts = SAGE2_App.extend({
 		this.selectedValues = []; // this is more about axis value of selection
 		this.hoveredElements = []; // because there could be multiple pointers (was this coded in?)
 
-		if (data.csdInitValues) {
-			this.dbprint(this.id + " has csdInitValues");
-			this.state.chartValues = data.csdInitValues.chartValues; // save in the state (future work to recover / share)
+		if (data.customLaunchParams) {
+			this.dbprint(this.id + " has customLaunchParams");
+			this.state.chartValues = data.customLaunchParams.chartValues; // save in the state (future work to recover / share)
 			this.state.chartValues.originalData = this.state.chartValues.data; // keep an original copy
 
 			this.generateChartIfCan();
@@ -79,19 +79,19 @@ var d3Charts = SAGE2_App.extend({
 	* @method broadcastInitialValues
 	*/
 	broadcastInitialValues: function() {
-		// csdSetValue = function(nameOfValue, value, description) {
-		this.csdSetValue(this.id + ":source:dataset", this.state.chartValues.data);
-		this.csdSetValue(this.id + ":source:dataSelected", []); // none at beginning
-		this.csdSetValue(this.id + ":source:dataHovered", []); // none at beginning
+		// serverDataSetValue = function(nameOfValue, value, description) {
+		this.serverDataSetValue(this.id + ":source:dataset", this.state.chartValues.data);
+		this.serverDataSetValue(this.id + ":source:dataSelected", []); // none at beginning
+		this.serverDataSetValue(this.id + ":source:dataHovered", []); // none at beginning
 
 		// create destination variables for this app
-		this.csdSetValue(this.id + ":destination:dataset", []);
-		this.csdSetValue(this.id + ":destination:dataSelected", []);
-		this.csdSetValue(this.id + ":destination:dataHovered", []);
-		// app.csdSubscribeToValue = function(nameOfValue, callback, unsubscribe) {
-		this.csdSubscribeToValue(this.id + ":destination:dataset", "dataDestinationFullDataSetReplacement");
-		this.csdSubscribeToValue(this.id + ":destination:dataSelected", "dataDestinationSelected"); // none at beginning
-		this.csdSubscribeToValue(this.id + ":destination:dataHovered", "dataDestinationHovered"); // none at beginning
+		this.serverDataSetValue(this.id + ":destination:dataset", []);
+		this.serverDataSetValue(this.id + ":destination:dataSelected", []);
+		this.serverDataSetValue(this.id + ":destination:dataHovered", []);
+		// app.serverDataSubscribeToValue = function(nameOfValue, callback, unsubscribe) {
+		this.serverDataSubscribeToValue(this.id + ":destination:dataset", "dataDestinationFullDataSetReplacement");
+		this.serverDataSubscribeToValue(this.id + ":destination:dataSelected", "dataDestinationSelected"); // none at beginning
+		this.serverDataSubscribeToValue(this.id + ":destination:dataHovered", "dataDestinationHovered"); // none at beginning
 	},
 
 	/**
@@ -106,7 +106,7 @@ var d3Charts = SAGE2_App.extend({
 				this.dbprint("Sanity check: this should be an array of data to display:" + Array.isArray(dataset));
 				this.state.chartValues.data = dataset;
 				// also update the broadcast data set
-				this.csdSetValue(this.id + ":source:dataset", this.state.chartValues.data);
+				this.serverDataSetValue(this.id + ":source:dataset", this.state.chartValues.data);
 				this.generateChartIfCan();
 			} else {
 				// discard, unable to use blank set for the sake of some of the checks
@@ -730,7 +730,7 @@ var d3Charts = SAGE2_App.extend({
 		}
 		this.dbprint("New selection size:" + this.selectedElements.length);
 		// update this apps broadcast value
-		this.csdSetValue(this.id + ":source:dataSelected", this.selectedElements);
+		this.serverDataSetValue(this.id + ":source:dataSelected", this.selectedElements);
 	},
 
 	/**
@@ -757,7 +757,7 @@ var d3Charts = SAGE2_App.extend({
 		}
 		this.dbprint("New hover size:" + this.hoveredElements.length);
 		// update this apps broadcast value
-		this.csdSetValue(this.id + ":source:dataHovered", this.hoveredElements);
+		this.serverDataSetValue(this.id + ":source:dataHovered", this.hoveredElements);
 	},
 
 	load: function(date) {
@@ -854,7 +854,7 @@ var d3Charts = SAGE2_App.extend({
 		var attribute = msgParams.clientInput.trim();
 		var chartValues = this.state.chartValues;
 		// if the attribute exists in the first data element
-		if (chartValues.data[0][attribute]) {
+		if (chartValues.data[0][attribute] !== null && chartValues.data[0][attribute] !== undefined) {
 			if (msgParams.axis === "x") {
 				chartValues.xAxisAttribute = attribute;
 				if (this.dataTypeLookup(attribute).type === "time") {
@@ -876,6 +876,8 @@ var d3Charts = SAGE2_App.extend({
 				}
 			}
 			this.generateChartIfCan();
+		} else {
+			console.log("Error: unable to switch axis " + msgParams.axis + " to " + attribute + ". Doesn't exist in element 1?");
 		}
 	},
 
