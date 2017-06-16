@@ -3843,11 +3843,13 @@ function wsPauseVideo(wsio, data) {
 }
 
 function wsStopVideo(wsio, data) {
+	console.log("wsStopVideo ",appId);
 	if (SAGE2Items.renderSync[data.id] === undefined || SAGE2Items.renderSync[data.id] === null) {
 		return;
 	}
 
 	SAGE2Items.renderSync[data.id].decoder.stop(function() {
+		console.log("decoder.stop",appId);
 		broadcast('videoPaused', {id: data.id});
 		broadcast('updateVideoItemTime', {id: data.id, timestamp: 0.0, play: false});
 		broadcast('updateFrameIndex', {id: data.id, frameIdx: 0});
@@ -5888,6 +5890,12 @@ function playVideo(appId) {
 function pauseVideo(appId) {
 	var wsio = null; // ignored by wsPauseVideo
 	wsPauseVideo(wsio, {id: appId});
+}
+
+function stopVideo(appId) {
+	console.log("stopVideo ",appId);
+	var wsio = null; // ignored by wsPauseVideo
+	wsStopVideo(wsio, {id: appId});
 }
 
 // Command loop: reading input commands - SHOULD MOVE LATER: INSIDE CALLBACK AFTER SERVER IS LISTENING
@@ -8741,7 +8749,12 @@ function deleteApplication(appId, portalId) {
 	}
 
 	var application = app.application;
+	if (application === "movie_player") {
+		console.log("delete movieplayer...", appId);
+		pauseVideo(appId);
+	}
 	if (application === "media_stream" || application === "media_block_stream") {
+		console.log("delete media[block]stream...", appId);
 		var i;
 		var mediaStreamData = appId.split("|");
 		var sender = {wsio: null, clientId: mediaStreamData[0], streamId: parseInt(mediaStreamData[1], 10)};
