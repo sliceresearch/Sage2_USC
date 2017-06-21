@@ -397,12 +397,15 @@ function checkPackages(inDevelopement) {
 			var key;
 			var output = stdout ? JSON.parse(stdout) : {};
 			for (key in output) {
-				// if not a valid version number
-				if (!semver.valid(output[key].current)) {
-					packages.missing.push(key);
-				} else if (semver.lt(output[key].current, output[key].wanted)) {
-					// if the version is strictly lower than requested
-					packages.outdated.push(key);
+				// if it is not a git repository
+				if (output[key].wanted != "git") {
+					// if not a valid version number
+					if (!semver.valid(output[key].current)) {
+						packages.missing.push(key);
+					} else if (semver.lt(output[key].current, output[key].wanted)) {
+						// if the version is strictly lower than requested
+						packages.outdated.push(key);
+					}
 				}
 			}
 
@@ -439,11 +442,10 @@ function registerSAGE2(config) {
 		// url: 'https://131.193.183.150/register',
 		form: config,
 		method: "POST"},
-		function(err, response, body) {
-			console.log(header("SAGE2") + "Registration with EVL site:",
-				(err === null) ? chalk.green.bold("success") : chalk.red.bold(err.code));
-		}
-	);
+	function(err, response, body) {
+		console.log(header("SAGE2") + "Registration with EVL site:",
+			(err === null) ? chalk.green.bold("success") : chalk.red.bold(err.code));
+	});
 }
 
 /**
@@ -460,14 +462,13 @@ function deregisterSAGE2(config, callback) {
 		// url: 'https://131.193.183.150/unregister',
 		form: config,
 		method: "POST"},
-		function(err, response, body) {
-			console.log(header("SAGE2") + "Deregistration with EVL site:",
-				(err === null) ? chalk.green.bold("success") : chalk.red.bold(err.code));
-			if (callback) {
-				callback();
-			}
+	function(err, response, body) {
+		console.log(header("SAGE2") + "Deregistration with EVL site:",
+			(err === null) ? chalk.green.bold("success") : chalk.red.bold(err.code));
+		if (callback) {
+			callback();
 		}
-	);
+	});
 }
 
 /**
@@ -478,9 +479,9 @@ function deregisterSAGE2(config, callback) {
  * @return {String} cleanup version of the URL
  */
 function encodeReservedURL(aUrl) {
-	return encodeURI(aUrl).replace(/\$/g, "%24").replace(/\&/g, "%26").replace(/\+/g, "%2B")
-		.replace(/\,/g, "%2C").replace(/\:/g, "%3A").replace(/\;/g, "%3B").replace(/\=/g, "%3D")
-		.replace(/\?/g, "%3F").replace(/\@/g, "%40");
+	return encodeURI(aUrl).replace(/\$/g, "%24").replace(/&/g, "%26").replace(/\+/g, "%2B")
+		.replace(/,/g, "%2C").replace(/:/g, "%3A").replace(/;/g, "%3B").replace(/=/g, "%3D")
+		.replace(/\?/g, "%3F").replace(/@/g, "%40");
 }
 
 /**

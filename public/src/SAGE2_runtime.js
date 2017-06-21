@@ -58,9 +58,9 @@ function SAGE2_initialize(data_seed) {
 function SAGE2_browser() {
 	var browser = {};
 	var userAgent = window.navigator.userAgent.toLowerCase();
-    // Internet Explorer 6-11
+	// Internet Explorer 6-11
 	browser.isIE       = /*@cc_on!@*/false || !!document.documentMode;
-    // Edge 20+
+	// Edge 20+
 	browser.isEdge     = !browser.isIE && !!window.StyleMedia;
 	browser.isOpera    = userAgent.indexOf("opr") >= 0;
 	browser.isChrome   = !browser.isIE && userAgent.indexOf("chrome") >= 0;
@@ -85,11 +85,11 @@ function SAGE2_browser() {
 	// Store a string for the type of browser
 	var browserType = browser.isElectron ? "Electron" :
 		browser.isIE ? "Explorer" :
-		browser.isEdge ? "Edge" :
-		browser.isFirefox ? "Firefox" :
-		browser.isSafari ? "Safari" :
-		browser.isOpera ? "Opera" :
-		browser.isChrome ? "Chrome" : "---";
+			browser.isEdge ? "Edge" :
+				browser.isFirefox ? "Firefox" :
+					browser.isSafari ? "Safari" :
+						browser.isOpera ? "Opera" :
+							browser.isChrome ? "Chrome" : "---";
 	browser.browserType  = browserType;
 
 	// Detecting version
@@ -106,8 +106,8 @@ function SAGE2_browser() {
 	for (var x in _browser) {
 		if (_browser[x]) {
 			match = ua.match(
-				new RegExp("(" + (x === "msie" ? "msie|edge" : x === "safari" ? "version" : x) + ")( |\/)([0-9.]+)")
-				);
+				new RegExp("(" + (x === "msie" ? "msie|edge" : x === "safari" ? "version" : x) + ")( |/)([0-9.]+)")
+			);
 			if (match) {
 				_browser.version = match[3];
 			} else {
@@ -603,7 +603,7 @@ function allTrueDict(dict) {
  * @return {String} null or the value found
  */
 function getParameterByName(name) {
-	name = name.replace(/[\[]/, "\\\[").replace(/[\]]/, "\\\]"); // jshint ignore:line
+	name = name.replace(/[\[]/, "\\\[").replace(/[\]]/, "\\\]"); // eslint-disable-line
 	var regex = new RegExp("[\\?&]" + name + "=([^&#]*)");
 	var results = regex.exec(location.search);
 	return results === null ? "" : decodeURIComponent(results[1].replace(/\+/g, " "));
@@ -910,7 +910,7 @@ function getCookie(sKey) {
 		return null;
 	}
 	return decodeURIComponent(document.cookie.replace(new RegExp("(?:(?:^|.*;)\\s*" +
-				encodeURIComponent(sKey).replace(/[\-\.\+\*]/g, "\\$&") + "\\s*\\=\\s*([^;]*).*$)|^.*$"), "$1"))
+		encodeURIComponent(sKey).replace(/[-.+*]/g, "\\$&") + "\\s*\\=\\s*([^;]*).*$)|^.*$"), "$1"))
 		|| null;
 }
 

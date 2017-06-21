@@ -1120,14 +1120,14 @@ function UIBuilder(json_cfg, clientID) {
 			radialMenuContentWindowDiv.style.zIndex   = 9000;
 
 			var menuElem1 = createDrawingElement(data.id + "_menu", "pointerItem",
-								data.x  - this.offsetX, data.y - this.offsetY,
-								data.radialMenuSize.x, data.radialMenuSize.y, 9000);
+				data.x  - this.offsetX, data.y - this.offsetY,
+				data.radialMenuSize.x, data.radialMenuSize.y, 9000);
 			var menuElem2 = createDrawingElement(data.id + "_menuWindow", "pointerItem",
-								0, 0,
-								data.radialMenuSize.x, data.radialMenuSize.y, 9001);
+				0, 0,
+				data.radialMenuSize.x, data.radialMenuSize.y, 9001);
 			var menuElem3 = createDrawingElement(data.id + "_menuWindow2", "pointerItem",
-								data.x  - this.offsetX, data.y - this.offsetY,
-								data.radialMenuSize.x, data.radialMenuSize.y, 9002);
+				data.x  - this.offsetX, data.y - this.offsetY,
+				data.radialMenuSize.x, data.radialMenuSize.y, 9002);
 
 			this.main.appendChild(menuElem1);
 			this.main.appendChild(radialMenuContentWindowDiv);

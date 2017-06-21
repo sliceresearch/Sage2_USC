@@ -180,7 +180,7 @@ var chronicles_of_spaceman_spiff = SAGE2_App.extend({
 		this.canvasHeight = this.canvasWidth / newratio;
 		// ask for a resize
 		this.sendResize(this.sage2_width,
-						this.sage2_width / (this.image1.width / (this.image1.height + 20)));
+			this.sage2_width / (this.image1.width / (this.image1.height + 20)));
 		// and draw
 		this.drawEverything(1);
 	},

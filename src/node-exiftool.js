@@ -74,7 +74,7 @@ function fileSpawn(filename, done) {
  * @param done {Function} executed when done, done(error, metadata)
  */
 function file(filename, done) {
-	ChildProcess.exec('exiftool -m -json -filesize# -all \"' + filename + '\"', function(error, stdout, stderr) {
+	ChildProcess.exec('exiftool -m -json -filesize# -all "' + filename + '"', function(error, stdout, stderr) {
 		var metadata;
 		if (error !== null) {
 			if (stdout && stderr.length === 0) {
@@ -136,8 +136,8 @@ function fileSync(filename) {
  */
 function bufferSync(source) {
 	var result = spawnSync('exiftool',
-							['-json', '-m', '-filesize#', '-all', '-'],
-							{input: source, encoding: null});
+		['-json', '-m', '-filesize#', '-all', '-'],
+		{input: source, encoding: null});
 
 	// Note, status code will always equal 0 if using busy waiting fallback
 	if (result.statusCode && result.statusCode !== 0) {

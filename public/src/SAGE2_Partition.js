@@ -59,11 +59,11 @@ var SAGE2_Partition = function(data) {
 	partitionArea.style.height = this.height + "px";
 	// sharingArea.style.borderWidth = (4 / this.scaleX) + "px";
 	partitionArea.style.webkitTransform = "translate(" + data.left + "px," +
-			(data.top + ui.titleBarHeight) + "px)";
+		(data.top + ui.titleBarHeight) + "px)";
 	partitionArea.style.mozTransform    = "translate(" + data.left + "px," +
-			(data.top + ui.titleBarHeight) + "px)";
+		(data.top + ui.titleBarHeight) + "px)";
 	partitionArea.style.transform       = "translate(" + data.left + "px," +
-			(data.top + ui.titleBarHeight) + "px)";
+		(data.top + ui.titleBarHeight) + "px)";
 	partitionArea.style.backgroundColor = "rgba(" + this.color.r + "," + this.color.g + "," + this.color.b + ", 0.25)";
 	// partitionArea.style.border = "4px solid " + data.color;
 	partitionArea.style.border = "4px solid #a5a5a5";
@@ -146,8 +146,7 @@ var SAGE2_Partition = function(data) {
 			r: parseInt(result[1], 16),
 			g: parseInt(result[2], 16),
 			b: parseInt(result[3], 16)
-		} :
-		{
+		} : {
 			r: 200,
 			g: 200,
 			b: 200
