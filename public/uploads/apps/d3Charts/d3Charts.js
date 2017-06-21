@@ -136,6 +136,8 @@ var d3Charts = SAGE2_App.extend({
 				// with a length of 0, if the current data is not original, reset to original
 				this.dataDestinationFullDataSetReplacement(this.state.chartValues.originalData);
 			}
+		} else {
+			console.log("Error: Given dataset was not in an array, cannot use, discarding.");
 		}
 	},
 
@@ -592,7 +594,8 @@ var d3Charts = SAGE2_App.extend({
 	 */
 	overEffect: function (d) {
 		var s = d3.select(this);
-		if (!s.attr("downEffect")) {
+		var de = s.attr("downEffect"); // returns a string, or null if doesn't exist.
+		if (!de || de === "false") {
 			// if (!s.attr("startingColor")) {
 			// 	s.attr("startingColor", s.attr("fill"));
 			// 	s.attr("startingStrokeWidth", s.attr("stroke-width"));
@@ -628,7 +631,8 @@ var d3Charts = SAGE2_App.extend({
 
 	outEffect: function (d) {
 		var s = d3.select(this);
-		if (!s.attr("downEffect")) {
+		var de = s.attr("downEffect"); // returns a string, or null if doesn't exist.
+		if (!de || de === "false") {
 			// s.attr("fill", s.attr("startingColor"));
 			// s.attr("stroke", s.attr("startingStroke"));
 			// s.attr("stroke-width", s.attr("startingStrokeWidth"));
@@ -653,7 +657,8 @@ var d3Charts = SAGE2_App.extend({
 	},
 	downEffect: function (d) {
 		var s = d3.select(this);
-		if (!s.attr("downEffect")) {
+		var de = s.attr("downEffect"); // returns a string, or null if doesn't exist.
+		if (!de || de === "false") {
 			s.attr("downEffect", true);
 			s.attr("fill", "green");
 			s.attr("stroke", "black");
