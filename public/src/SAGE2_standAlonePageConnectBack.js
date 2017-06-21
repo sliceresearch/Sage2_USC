@@ -10,40 +10,54 @@
 
 /*
 	SAGE2Connection to allow external webpages to communicate with SAGE2.
-
 */
 
-
+/**
+* Global object to connect back to SAGE2.
+*
+* @class SAGE2Connection
+*/
 var SAGE2Connection = {
-	// Will be filled out after Webview script activation
+	// Will be filled out through initS2Connection or detectConnectionInformationFromBrowser
 	wsio: null,
 	appId: null,
+	pointerName: null,
+	pointerColor: null,
 	uniqueID: null,
 	debug: true,
 	isMaster: false,
 	afterSAGE2Connection: null,
 	hostname: null,
 
-
-	/*
-		This function is activated by the secondary script injection of Webview.
-		It will be passed the hostname of the server. Each site is different.
-		Name passed will be based on the displayed name in topleft of display.
+	/**
+	* Attempts to connect to server.
+	* Apps connecting back should not need to fill this out since the information should be in the browser.
+	*
+	* @method initS2Connection
+	* @param {String} s2Hostname - Expected to contains the below properties.
+	* @param {String} session - password hash.
+	* @param {Boolean} isMasterDisplayOrUniqueWebpage - Check for later usage in webview.
+	* @param {String} appIdOfWebview - Check for later usage in webview.
 	*/
-	initS2Connection: function(s2Hostname, session, isMasterDisplayOrUniqueWebpage, appIdOfWebview) {
+	initS2Connection: function(s2Hostname = null, session = null, isMasterDisplayOrUniqueWebpage = true, appIdOfWebview = null) {
+		// if not given a hostname, probably this is an app page connecting back.
+		if (s2Hostname === null) {
+			// first check if url was given parameters
+			this.detectConnectionInformationFromBrowser();
+			session = this.getCookie("session");
+		} else {
+			this.appId = appIdOfWebview;
+			this.hostname = s2Hostname;
+			this.isMaster = isMasterDisplayOrUniqueWebpage ? isMasterDisplayOrUniqueWebpage : false; // undefined == false
+		}
 		var _this = this;
-		this.appId = appIdOfWebview;
-		this.hostname = s2Hostname;
-		this.isMaster = isMasterDisplayOrUniqueWebpage ? isMasterDisplayOrUniqueWebpage : false; // undefined == false
 		// Create a connection to the SAGE2 server
-		// error here, the WebsocketIO may need to change
-		this.wsio = new this.WebsocketIO(s2Hostname); // uses ../../../src/websocket.io.js
+		this.wsio = new this.WebsocketIO(s2Hostname);
 		this.wsio.open(function() {
 			if (_this.debug) {
 				console.log("Websocket opened");
 			}
 			_this.setupListeners();
-			// var session = getCookie("session"); // if meetingID, _this need to be solved later somehow
 			var clientDescription = {
 				clientType: "sageUI", // maybe add additional client type?
 				requests: {
@@ -73,26 +87,11 @@ var SAGE2Connection = {
 		this.wsio.on("initialize", function(data) {
 			console.log("Webpage connected to server and received uniqueID:" + data.UID);
 			_this.uniqueID = data.UID;
-			if (_this.debug) {
-				var dataToSend = {
-					type: "consolePrint",
-					message: "This is from webpage " + _this.appId
-						+ " and has been given unique id " + _this.uniqueID
-						+ " viewing page:" + window.location
-				};
-				SAGE2Connection.wsio.emit("csdMessage", dataToSend);
-			}
 			if (_this.afterSAGE2Connection) {
 				_this.afterSAGE2Connection();
 			}
 		});
-		this.wsio.on("utdConsoleMessage", function(data) {
-			console.log("UTD message:" + data.message);
-		});
-		this.wsio.on("dtuRmbContextMenuContents", function(data) {
-			// TODO remove
-		});
-		this.wsio.on("csdSendDataToClient", function(data) {
+		this.wsio.on("sendDataToClient", function(data) {
 			// unsure if this function is reachable
 			window[data.func](data);
 		});
@@ -107,11 +106,36 @@ var SAGE2Connection = {
 		});
 	},
 
+	// ------------------------------------------------------------------------------------------------------------------
+	// ------------------------------------------------------------------------------------------------------------------
+	// ------------------------------------------------------------------------------------------------------------------
+	// Helper functions that may help users with server communication 
+
+	/**
+	* Attempts to activate function on app giving specified parameter object.
+	* Will add additional values to the parameter object before sending.
+	*
+	* @method callFunctionOnApp
+	* @param {String} functionName - Expected to contains the below properties.
+	* @param {Object} parameterObject - Object to give to app function as parameter.
+	*/
+	callFunctionOnApp: function(functionName, parameterObject) {
+		var data = {};
+		data.app = this.appId;
+		data.func = functionName;
+		data.parameters = parameterObject;
+		data.parameters.clientName = this.pointerName;
+		data.parameters.clientColor = this.pointerColor;
+		data.parameters.clientId   = this.uniqueID;
+
+		this.wsio.emit('callFunctionOnApp', data);
+	},
 
 
 	// ------------------------------------------------------------------------------------------------------------------
 	// ------------------------------------------------------------------------------------------------------------------
 	// ------------------------------------------------------------------------------------------------------------------
+	// Connection functions
 	/**
 	 * Detect the current browser
 	 *
@@ -145,19 +169,75 @@ var SAGE2Connection = {
 		// Copy into the global object
 		return browser;
 	},
+	// ------------------------------------------------------------------------------------------------------------------
+	detectConnectionInformationFromBrowser: function() {
+		var address = window.location.search;
+		if (address.indexOf("?") == -1 ) {
+			return;
+		}
+		var pairs, onePair;
+		address = address.substring(address.indexOf("?") + 1);
+		// if there is only one url param, put it into an array by itself.
+		if (address.indexOf("&") == -1) {
+			pairs = [address];
+		} else { // otherwise split on each param
+			pairs = address.split("&");
+		}
+		for (var i = 0; i < pairs.length; i++) {
+			onePair = pairs[i].split("=");
+			if (onePair[0] == "appId") {
+				this.appId = onePair[1];
+			} else if (onePair[0] == "pointerName") {
+				this.pointerName = onePair[1];
+			} else if (onePair[0] == "pointerColor") {
+				this.pointerColor = onePair[1];
+			}
+		}
+		// Pointer name / color might actually be in localStorage
+		if (localStorage.SAGE2_ptrName) {
+			this.pointerName = localStorage.SAGE2_ptrName;
+		}
+		if (localStorage.SAGE2_ptrColor) {
+			this.pointerColor = localStorage.SAGE2_ptrColor;
+		}
+		console.log(this.appId + " control for " + this.pointerName + "(" + this.pointerColor + ") starting");
+		if (!this.appId || !this.pointerName || !this.pointerColor) {
+			throw "Error url didn't contain necessary values";
+			// TODO add more description and probably close the window
+		}
+	},
+	// ------------------------------------------------------------------------------------------------------------------
+	/**
+	 * Return a cookie value for given key
+	 *
+	 * @method getCookie
+	 * @param sKey {String} key
+	 * @return {String} value found or null
+	 */
+	getCookie: function(sKey) {
+		if (!sKey) {
+			return null;
+		}
+		return decodeURIComponent(document.cookie.replace(new RegExp("(?:(?:^|.*;)\\s*" +
+					encodeURIComponent(sKey).replace(/[\-\.\+\*]/g, "\\$&") + "\\s*\\=\\s*([^;]*).*$)|^.*$"), "$1"))
+			|| null;
+	},
 
+	// ------------------------------------------------------------------------------------------------------------------
+	// ------------------------------------------------------------------------------------------------------------------
+	// ------------------------------------------------------------------------------------------------------------------
 	/*
 	Modified from public/src/websocket.io.js
 	*/
 	WebsocketIO: function(url) {
 		if (url !== undefined && url !== null) {
 			this.url = url;
+			if (this.url.indexOf("ws") === -1) { // needs to be a websocket connection
+				this.url = "ws://" + url;
+			}
 		} else {
 			this.url = (window.location.protocol === "https:" ? "wss" : "ws") + "://" + window.location.host +
 						"/" + window.location.pathname.split("/")[1];
-		}
-		if (url.indexOf("ws") === -1) {
-			this.url = "ws://" + url;
 		}
 
 		/**
@@ -331,8 +411,4 @@ var SAGE2Connection = {
 			this.ws.close();
 		};
 	} // end WebsocketIO
-
-
-
 }; // end SAGE2Connection
-

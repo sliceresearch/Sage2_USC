@@ -196,20 +196,22 @@ var quickNote = SAGE2_App.extend({
 			this.needTextZoneHeight * this.startingFontHeight * this.sizeModification);
 
 		this.saveNote(msgParams.creationTime);
+		this.updateEditors(msgParams.clientId);
+	},
 
+	updateEditors: function(excludeClientId) {
 		var dataForClient = {
-			type:       'sendDataToClient',
 			appId:      this.id,
-			clientDest: msgParams.uniqueID,
+			clientDest: null, // will be filled in loop
 			func:       'currentQuickNoteContent',
 			content:    this.element.innerHTML,
 			color:      this.backgroundChoice
 		};
 
 		for (var i = 0; i < this.saEditorIds.length; i++) {
-			if (this.saEditorIds[i] !== msgParams.uniqueID) {
+			if (this.saEditorIds[i] !== excludeClientId) {
 				dataForClient.clientDest = this.saEditorIds[i];
-				wsio.emit('csdMessage', dataForClient);
+				wsio.emit('sendDataToClient', dataForClient);
 			}
 		}
 	},
@@ -219,6 +221,7 @@ var quickNote = SAGE2_App.extend({
 		this.state.colorChoice        = this.backgroundChoice;
 		this.element.style.background = responseObject.color;
 		this.saveNote(responseObject.creationTime);
+		this.updateEditors();
 	},
 
 	formatAndSetTitle: function(wholeName) {
@@ -333,7 +336,7 @@ var quickNote = SAGE2_App.extend({
 		entry.description = "Edit";
 		entry.callback    = "SAGE2_openPage";
 		entry.parameters  = {
-			url: this.resrcPath + "saControls.html"
+			url: this.resrcPath + "quickNoteControls.html"
 		};
 		entries.push(entry);
 
@@ -410,82 +413,25 @@ var quickNote = SAGE2_App.extend({
 	},
 
 	requestCurrentContent: function(obj) {
-		// pointerName: pointerName,
-		// pointerColor: pointerColor,
-		// uniqueID: uniqueID
-
 		var dataForClient = {
-			type:       'sendDataToClient',
 			appId:      this.id,
-			clientDest: obj.uniqueID,
+			clientDest: obj.clientId,
 			func:       'currentQuickNoteContent',
 			content:    this.element.innerHTML,
 			color:      this.backgroundChoice
 		};
 
-		if (!this.saEditorIds.includes(obj.uniqueID)) {
-			this.saEditorIds.push(obj.uniqueID);
+		if (!this.saEditorIds.includes(obj.clientId)) {
+			this.saEditorIds.push(obj.clientId);
 		}
-		wsio.emit('csdMessage', dataForClient);
+		wsio.emit('sendDataToClient', dataForClient);
 	},
 
 	removeSaEditor: function(obj) {
-		let index = this.saEditorIds.indexOf(obj.uniqueID);
+		let index = this.saEditorIds.indexOf(obj.clientId);
 		if (index !== -1) {
 			this.saEditorIds.splice(index, 1);
 		}
-	},
-
-	requestControlPanelLayout: function(obj) {
-		// pointerName: pointerName,
-		// pointerColor: pointerColor,
-		// uniqueID: uniqueID
-
-
-		var dataForClient = {};
-		dataForClient.type       = 'sendDataToClient';
-		dataForClient.appId      = this.id;
-		dataForClient.clientDest = obj.uniqueID;
-		dataForClient.func       = 'controlPanelLayout';
-		// layout needs to be an array of objects that describe usage.
-		// array to ensure all elements are read. obj to follow a format.
-		dataForClient.layout     = [
-			{
-				type:  "button",
-				entryColor: "lightpink",
-				callback: "setColor",
-				parameters: { color: "lightpink" }
-			},
-			{
-				type:  "button",
-				entryColor: "white",
-				callback: "setColor",
-				parameters: { color: "white" }
-			},
-			{
-				type:  "button",
-				entryColor: "Blue",
-				callback: "setColor",
-				parameters: { color: "lightblue" }
-			},
-			{
-				type:  "button",
-				entryColor: "Green",
-				callback: "setColor",
-				parameters: { color: "lightgreen" }
-			},
-			{
-				type: "textarea",
-				rows: 5,
-				cols: 22,
-				callback: "setMessage",
-				parameters: {}
-
-			}
-		];
-		wsio.emit('csdMessage', dataForClient);
-
-
 	},
 
 	quit: function() {

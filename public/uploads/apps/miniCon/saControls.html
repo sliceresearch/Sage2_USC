@@ -18,15 +18,13 @@
 	// Copyright (c) 2016
 </script>
 
-<!-- Websocket connection code located at /sage2/public/src -->
-<script async src="../../../src/websocket.io.js"></script>
-
-<!-- This file has automated actions -->
-<script async src="SAGE2_standAlone.js"></script>
+<!-- File to connect to SAGE2 -->
+<script async src="../../../src/SAGE2_standAlonePageConnectBack.js"></script>
 <!-- Put your custom code in this file -->
 <script async src="sa_main.js"></script>
 
 
+<!-- Design the style as you like, also possible to reference css files -->
 <style type="text/css">
 * {
 	font-family: Arial;
@@ -40,10 +38,13 @@
 
 <body>
 	<button id="SAGE2_returnToUi" style="font-size: 20px;">Return to UI</button>
-	
 	<br>
+
+	<div id="outputFromApp" style="width:98%;overflow:scroll">
+
+	</div>
 	<br>
-	<textarea id="codeInput" rows="5" cols="20" style="display:block; margin:auto; width:100%; font-size: 20px; overflow: scroll; resize:none"></textarea>
+	<textarea id="codeInput" style="width:100%; font-size: 20px; overflow: scroll; resize:none"></textarea>
 	<br>
 	<button id="sendCode" style="font-size: 20px;">Send Code</button>
 

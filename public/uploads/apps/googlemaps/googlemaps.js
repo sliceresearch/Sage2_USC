@@ -827,14 +827,11 @@ var googlemaps = SAGE2_App.extend({
 		if (!isMaster) {
 			return; // prevent spam
 		}
-		console.log("erase me, maps notified of new variable named " + addedVar.nameOfValue
-		+ " has description: " + addedVar.description);
 		// if this should plot any new geo data source
 		if (this.plotAnyNewGeoSource
 			&& addedVar.nameOfValue.indexOf("geoLocation") !== -1
 			&& addedVar.nameOfValue.indexOf("source") !== -1
 			&& addedVar.description.indexOf("image") !== -1) {
-			console.log("erase me, also met conditions to automatically grab the data");
 			// serverDataGetValue: function(nameOfValue, callback)
 			this.serverDataGetValue(addedVar.nameOfValue, "makeMarkerGivenImageGeoLocation");
 		}
@@ -853,7 +850,6 @@ var googlemaps = SAGE2_App.extend({
 			return; // don't use empty arrays
 		}
 		// all display clients need this to sync correctly
-		console.log("erase me, got geo data, plotting it(" + value.location.lat + "," + value.location.lng + ")");
 		this.addMarkerToMap({
 			lat: value.location.lat,
 			lng: value.location.lng,

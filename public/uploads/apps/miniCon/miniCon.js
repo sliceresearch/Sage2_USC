@@ -23,11 +23,14 @@ var miniCon = SAGE2_App.extend({
 		this.element.style.background = "black";
 		this.element.style.fontSize = ui.titleTextSize + "px";
 		this.element.style.color = "green";
+		this.element.style.overflow = "scroll";
 
-
-		this.listOfCsdVariables = [];
-
-		this.csdBroadcast();
+		// app specific
+		this.listOfServerVariables = [];
+		this.setupDataRequest();
+		this.shouldPrintNewVariableNotification = true;
+		// editors
+		this.consoleWatchers = [];
 	},
 
 	load: function(date) {
@@ -40,13 +43,20 @@ var miniCon = SAGE2_App.extend({
 	resize: function(date) {
 	},
 
+	/**
+	* Will be given by single page interaction.
+	*
+	* @method executeCode
+	* @param {Object} obj - Expected to contains the below properties.
+	* @param {String} obj.code - String to attempt conversion to code.
+	*/
 	executeCode: function(obj) {
 		var _this = this;
 		if (console.logOriginal === undefined) {
 			console.logOriginal = console.log;
 		}
 		console.log = function(s) {
-			_this.logOverride(s);
+			_this.addToLog(s);
 		};
 		try {
 			eval(obj.code);
@@ -56,8 +66,36 @@ var miniCon = SAGE2_App.extend({
 		console.log = console.logOriginal;
 	},
 
-	logOverride: function(string) {
-		this.element.innerHTML = string + "\n<br>\n" + this.element.innerHTML;
+	/**
+	* Adds to the log. If there are log watches, will send to them too.
+	*
+	* @method addClientAsLogWatcher
+	* @param {Object} client - contains information about sender.
+	*/
+	addClientAsLogWatcher: function(client) {
+		this.consoleWatchers.push(client.clientId);
+	},
+
+	/**
+	* Adds to the log. If there are log watches, will send to them too.
+	*
+	* @method addToLog
+	* @param {String} line - What to add to the log.
+	*/
+	addToLog: function(line) {
+		if (!line) {
+			line = "";
+		}
+		line = "\n<br>\n" + line;
+		this.element.innerHTML += line;
+		this.element.scrollTop = this.element.scrollHeight;
+		var dataToSend = {};
+		dataToSend.content = line;
+		dataToSend.func = "consoleLine";
+		for (let i = 0; i < this.consoleWatchers.length; i++) {
+			dataToSend.clientDest = this.consoleWatchers[i];
+			wsio.emit("sendDataToClient", dataToSend);
+		}
 	},
 
 	/**
@@ -78,7 +116,6 @@ var miniCon = SAGE2_App.extend({
 		var entries = [];
 		var entry;
 
-
 		entry = {};
 		entry.description = "Edit";
 		entry.callback    = "SAGE2_openPage";
@@ -89,6 +126,26 @@ var miniCon = SAGE2_App.extend({
 
 		entry = {};
 		entry.description = "separator";
+		entries.push(entry);
+
+		if (this.shouldPrintNewVariableNotification) {
+			entry = {};
+			entry.description = "Stop printing new var notifications";
+			entry.callback    = "toggleNewVarNotification";
+			entry.parameters  = { print: false };
+			entries.push(entry);
+		} else {
+			entry = {};
+			entry.description = "Print new var notifications";
+			entry.callback    = "toggleNewVarNotification";
+			entry.parameters  = { print: true };
+			entries.push(entry);
+		}
+
+		entry = {};
+		entry.description = "Print available server variables";
+		entry.callback    = "printAvailableVariables";
+		entry.parameters  = {};
 		entries.push(entry);
 
 		entry = {};
@@ -112,54 +169,42 @@ var miniCon = SAGE2_App.extend({
 		// no additional calls needed.
 	},
 
-	csdBroadcast: function() {
+	setupDataRequest: function() {
 		if (!isMaster) {
 			return; // try to prevent spamming
 		}
-		var dataForServer = {
-			type: "getAllTrackedDescriptions",
-			app: this.id,
-			func: "csdHandlerInitialVariableList"
-		};
-		// erase me
-		console.log("erase me, miniCon asking for existing variables");
-		console.dir(dataForServer);
-		wsio.emit("csdMessage", dataForServer);
-
-		dataForServer = {
-			type: "subscribeToNewValueNotification",
-			app: this.id,
-			func: "csdHandlerForNewVariableNotification"
-		};
-		// erase me
-		console.log("erase me, miniCon subscribing to new variables");
-		console.dir(dataForServer);
-		wsio.emit("csdMessage", dataForServer);
-		
+		this.serverDataGetAllTrackedDescriptions(this.handleTrackedDescriptions);
+		this.serverDataSubscribeToNewValueNotification(this.handleNewVariableNotification);
 	},
 
-	csdHandlerInitialVariableList: function(serverVariables) {
-		this.listOfCsdVariables = this.listOfCsdVariables.concat(serverVariables);
+	handleTrackedDescriptions: function(serverVariables) {
+		this.listOfServerVariables = this.listOfServerVariables.concat(serverVariables);
 	},
 
-	csdHandlerForNewVariableNotification: function(addedVar) {
+	handleNewVariableNotification: function(addedVar) {
 		if (!isMaster) {
 			return; // prevent spam
 		}
-		console.log("erase me, miniCon notified of new variable named " + addedVar.nameOfValue
-		+ " has description: " + addedVar.description);
-		this.listOfCsdVariables.push(addedVar);
+		this.listOfServerVariables.push(addedVar);
+		if (this.shouldPrintNewVariableNotification) {
+			this.addToLog();
+			this.addToLog("New variable named " + addedVar.nameOfValue);
+			this.addToLog("--Description " + addedVar.description);
+		}
+	},
+
+	toggleNewVarNotification: function(response) {
+		this.shouldPrintNewVariableNotification = response.print;
+		this.getFullContextMenuAndUpdate();
 	},
 
 	printAvailableVariables: function() {
-		this.logOverride("");
-		for (let i = 0; i < this.listOfCsdVariables.length; i++) {
-			this.logOverride("&nbsp&nbsp" + this.listOfCsdVariables[i].description);
-			this.logOverride("" + this.listOfCsdVariables[i].nameOfValue);
+		this.addToLog("");
+		this.addToLog("---Variables on server: " + this.listOfServerVariables.length + "---");
+		for (let i = 0; i < this.listOfServerVariables.length; i++) {
+			this.addToLog("" + this.listOfServerVariables[i].nameOfValue);
+			this.addToLog("&nbsp&nbsp" + this.listOfServerVariables[i].description);
 		}
-		this.logOverride("---Variables on server: " + this.listOfCsdVariables.length + "---");
-
-
 	}
 
 

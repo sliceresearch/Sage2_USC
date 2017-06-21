@@ -155,11 +155,6 @@ var d3Charts = SAGE2_App.extend({
 			if (chartValues.chartType === "Bar" || chartValues.chartType === "Pie") {
 				// don't react on bar pie?
 			} else if (chartValues.chartType === "Scatter") {
-				console.log("erase me, checking the select all of .dot on scatter");
-				console.dir(chartValues.g.selectAll(".dot"));
-				console.log("erase me, also this was given a dataset");
-				console.dir(dataset);
-
 				// This is a quick fix based around id because its quick and should work
 				var datasetIdList = dataset.map(function(d) { return d.id;});
 
@@ -168,7 +163,7 @@ var d3Charts = SAGE2_App.extend({
 
 				chartValues.g.selectAll(".dot").attr("hasHoverStatus", function(d){
 					if (datasetIdList.includes(d.id)) {
-						_this.applyOverEffectVisual(d3.select(this));
+						_this.applyOverEffectVisual(d3v4.select(this));
 					}
 				})
 			} else { // always else?
@@ -291,7 +286,7 @@ var d3Charts = SAGE2_App.extend({
 	setGroupedByXAxis: function(chartValues) {
 		// need to nest(group by) in order to get a count
 		// groupedByXAxis is an array [{key: "1931", values: [...], {key: "1932", values: [ ...
-		chartValues.groupedByXAxis = d3.nest() // apply a nest (group by)
+		chartValues.groupedByXAxis = d3v4.nest() // apply a nest (group by)
 			.key(function(d) { return d[chartValues.xAxisAttribute]; }) // first group by the attribute
 			.entries(chartValues.data); // do nest on the data
 		// set domain
@@ -593,7 +588,7 @@ var d3Charts = SAGE2_App.extend({
 	 * @param {Object} d - 
 	 */
 	overEffect: function (d) {
-		var s = d3.select(this);
+		var s = d3v4.select(this);
 		var de = s.attr("downEffect"); // returns a string, or null if doesn't exist.
 		if (!de || de === "false") {
 			// if (!s.attr("startingColor")) {
@@ -630,7 +625,7 @@ var d3Charts = SAGE2_App.extend({
 	},
 
 	outEffect: function (d) {
-		var s = d3.select(this);
+		var s = d3v4.select(this);
 		var de = s.attr("downEffect"); // returns a string, or null if doesn't exist.
 		if (!de || de === "false") {
 			// s.attr("fill", s.attr("startingColor"));
@@ -656,7 +651,7 @@ var d3Charts = SAGE2_App.extend({
 		}
 	},
 	downEffect: function (d) {
-		var s = d3.select(this);
+		var s = d3v4.select(this);
 		var de = s.attr("downEffect"); // returns a string, or null if doesn't exist.
 		if (!de || de === "false") {
 			s.attr("downEffect", true);
@@ -678,10 +673,10 @@ var d3Charts = SAGE2_App.extend({
 	},
 
 	/**
-	* Looks for data piece based on the d3.data() given an element.
+	* Looks for data piece based on the d3v4.data() given an element.
 	*
 	* @method findDataPieces
-	* @param {Array} d3DataReturn - what d3 returns after d3.data() on an element
+	* @param {Array} d3DataReturn - what d3 returns after d3v4.data() on an element
 	* @returns {Array} matches - Data pieces that match the selection
 	*/
 	findDataPieces: function(d3DataReturn) {
@@ -712,7 +707,7 @@ var d3Charts = SAGE2_App.extend({
 	},
 
 	/**
-	* Looks for data piece based on the d3.data() given an element.
+	* Looks for data piece based on the d3v4.data() given an element.
 	*
 	* @method dataSelectionChange
 	* @param {Array} matches - data elements that match
@@ -739,7 +734,7 @@ var d3Charts = SAGE2_App.extend({
 	},
 
 	/**
-	* Looks for data piece based on the d3.data() given an element.
+	* Looks for data piece based on the d3v4.data() given an element.
 	*
 	* @method dataHoverChange
 	* @param {Array} matches - data elements that match

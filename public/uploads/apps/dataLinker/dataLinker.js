@@ -165,12 +165,10 @@ var dataLinker = SAGE2_App.extend({
 	 */
 	dataLink: function(responseObject) {
 		if(isMaster) {
-			console.log("erase me, dataLink");
 			for (let i = 0; i < this.varsKnown.length; i++) {
 				// if the name of the var matches and it doesn't already have the link
 				if (this.varsKnown[i].nameOfValue === responseObject.sourceName
 				&& this.varsKnown[i].links.indexOf(responseObject.destinationName) === -1) {
-					console.log("erase me, match");
 					this.varsKnown[i].links.push(responseObject.destinationName);
 					this.createLinkSubscriptionAndFunction(responseObject.sourceName, responseObject.destinationName);
 					break;
@@ -194,14 +192,11 @@ var dataLinker = SAGE2_App.extend({
 		if(isMaster) {
 			// if the function doesn't exist, create it
 			if (!this["dataTo" + destinationName]) {
-				console.log("erase me, making function:" + "dataTo" + destinationName);
 				this["dataTo" + destinationName] = function(responseObject) {
-					console.log("erase me, Routing");
 					console.dir(responseObject);
 					this.serverDataSetValue(destinationName, responseObject); // sets the value of destination variable
 				}
 			}
-			console.log("erase me, subscribing");
 			// after function creation check, create this app's subscription and give it this name.
 			this.serverDataSubscribeToValue(sourceName, ("dataTo" + destinationName), false);
 			// perform initial grab
@@ -255,12 +250,10 @@ var dataLinker = SAGE2_App.extend({
 	 */
 	dataUnLink: function(responseObject) {
 		if(isMaster) {
-			console.log("erase me, dataUnLink");
 			for (let i = 0; i < this.varsKnown.length; i++) {
 				// if the name of the var matches and it has the link
 				if (this.varsKnown[i].nameOfValue === responseObject.sourceName
 				&& this.varsKnown[i].links.indexOf(responseObject.destinationName) !== -1) {
-					console.log("erase me, match");
 					this.varsKnown[i].links.splice(this.varsKnown[i].links.indexOf(responseObject.destinationName), 1);
 					this.serverDataSubscribeToValue(responseObject.sourceName, ("dataTo" + responseObject.destinationName), true);
 					break;
