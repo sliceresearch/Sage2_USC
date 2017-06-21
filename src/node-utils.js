@@ -397,12 +397,15 @@ function checkPackages(inDevelopement) {
 			var key;
 			var output = stdout ? JSON.parse(stdout) : {};
 			for (key in output) {
-				// if not a valid version number
-				if (!semver.valid(output[key].current)) {
-					packages.missing.push(key);
-				} else if (semver.lt(output[key].current, output[key].wanted)) {
-					// if the version is strictly lower than requested
-					packages.outdated.push(key);
+				// if it is not a git repository
+				if (output[key].wanted != "git") {
+					// if not a valid version number
+					if (!semver.valid(output[key].current)) {
+						packages.missing.push(key);
+					} else if (semver.lt(output[key].current, output[key].wanted)) {
+						// if the version is strictly lower than requested
+						packages.outdated.push(key);
+					}
 				}
 			}
 
