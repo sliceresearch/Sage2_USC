@@ -398,7 +398,7 @@ function showWidgetToAppConnectors(data) {
 	if (!selectedAppTitle) {
 		return;
 	}
-	re = /\.|\:/g;
+	re = /\.|:/g;
 	styleCaption = data.user_id.split(re).join("");
 	selectedAppTitle.className = dynamicStyleSheets[styleCaption] ? "title" + styleCaption : "windowTitle";
 	for (var item in controlItems) {
