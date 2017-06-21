@@ -325,9 +325,9 @@ var pdf_viewer = SAGE2_App.extend({
 
 		this.translateGroup(this.imageVisualizer, this.state.horizontalOffset, 0, scale);
 		this.translateGroup(this.thumbnailsVisualizer, this.state.thumbnailHorizontalPosition,
-							this.baseHeightPage * r, r, this.clickedThumbnail);
+			this.baseHeightPage * r, r, this.clickedThumbnail);
 		this.translateGroup(this.commandBarG, null, (this.baseHeightPage + this.state.thumbnailHeight) * r,
-							r, this.clickedThumbnail);
+			r, this.clickedThumbnail);
 
 		if (this.clickedThumbnail) {
 			this.clickedThumbnail = false;

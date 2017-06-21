@@ -31,7 +31,7 @@
  */
 function fileSizeIEC(a, b, c, d, e) {
 	return (b = Math, c = b.log, d = 1024, e = c(a) / c(d) | 0,
-			a / b.pow(d, e)).toFixed(1) + ' ' + (e ? 'KMGTPEZY'[--e] : 'B');
+	a / b.pow(d, e)).toFixed(1) + ' ' + (e ? 'KMGTPEZY'[--e] : 'B');
 }
 
 /**
@@ -382,6 +382,12 @@ function FileManager(wsio, mydiv, uniqueID) {
 				window.open("help/index.html", '_blank');
 			}
 		},
+		forum_menu: {value: "User Forum",
+			tooltip: "User forum on Google Groups",
+			callback: function (evt) {
+				window.open("https://groups.google.com/forum/#!forum/sage2", '_blank');
+			}
+		},
 		info_menu: {value: "Information",
 			tooltip: "Shows references and links about SAGE2",
 			callback: function (evt) {
@@ -395,7 +401,7 @@ function FileManager(wsio, mydiv, uniqueID) {
 				// Open the popup
 				webix.alert({
 					type: "alert-warning",
-					title: "SAGE2\™",
+					title: "SAGE2™",
 					width: "420px",
 					ok: "OK",
 					text: versionText
@@ -477,11 +483,14 @@ function FileManager(wsio, mydiv, uniqueID) {
 		]
 	};
 
+	// On mobile, menu opens with a click, otherwise hovers
+	var clickOrNoClick = __SAGE2__.browser.isMobile ? "click" : null;
+
 	var topmenu = {
 		id: "topmenu",
 		view: "menu",
-		// click to open
-		// openAction: "click",
+		// click or not to open
+		openAction: clickOrNoClick,
 		data: topmenu_data,
 		tooltip: false,
 		submenuConfig: {
@@ -914,7 +923,7 @@ function FileManager(wsio, mydiv, uniqueID) {
 			context.html = "<div style='padding:8px;background:#d3e3ef'>";
 			if (context.source.length === 1) {
 				elt = _this.allFiles[context.start];
-				context.html += '<img width=96 src=\"' + elt.exif.SAGE2thumbnail + '_256.jpg\" />';
+				context.html += '<img width=96 src="' + elt.exif.SAGE2thumbnail + '_256.jpg" />';
 				context.html += '<br>' + elt.exif.FileName;
 			} else {
 				for (var i = 0; i < Math.min(context.source.length, 35); i++) {
@@ -1776,8 +1785,7 @@ function FileManager(wsio, mydiv, uniqueID) {
 				(id.indexOf('Note:/') >= 0) ||
 				(id.indexOf('App:/') >= 0) ||
 				(id.indexOf('Mine:/') >= 0) ||
-				(id.indexOf('Session:/') >= 0)
-				) {
+				(id.indexOf('Session:/') >= 0)) {
 				tmenu.hideItem('New folder');
 			} else {
 				tmenu.showItem('New folder');

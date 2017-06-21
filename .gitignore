@@ -45,6 +45,7 @@ public/images/background/*_[0-9]*.*
 public/images/background/tmp_*
 
 yarn.lock
+package-lock.json
 
 # Users Environment Variables
 .lock-wscript

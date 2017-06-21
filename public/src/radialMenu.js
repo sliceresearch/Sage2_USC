@@ -132,19 +132,19 @@ function RadialMenu() {
 
 		if (radialLevel === 0) {
 			button = this.createRadialButton(radialButtonIcon, false, dim.buttonSize, dim.hitboxSize,
-					alignment, dim.shape, radialAnglePos, 0);
+				alignment, dim.shape, radialAnglePos, 0);
 			button.setOverlayImage(icon, iconScale);
 			button.isLit = true; // Button will stay lit regardless of hover-over
 			this.level0Buttons.push(button);
 		} else if (radialLevel === 1) {
 			button = this.createRadialButton(radialButtonIcon, false, dim.buttonSize, dim.hitboxSize,
-					alignment, dim.shape, radialAnglePos, menuRadius);
+				alignment, dim.shape, radialAnglePos, menuRadius);
 			button.setOverlayImage(icon, iconScale);
 			button.isLit = true; // Button will stay lit regardless of hover-over
 			this.level1Buttons.push(button);
 		} else if (radialLevel === 2) {
 			button = this.createRadialButton(radialButtonIcon, false, dim.buttonSize, dim.hitboxSize,
-					alignment, dim.shape, radialAnglePos, menuRadius * 1.6);
+				alignment, dim.shape, radialAnglePos, menuRadius * 1.6);
 			button.setOverlayImage(icon, iconScale);
 			button.isLit = true; // Button will stay lit regardless of hover-over
 			this.level2Buttons.push(button);
@@ -245,18 +245,18 @@ function RadialMenu() {
 		// Create buttons
 		// icon, useBackgroundColor, buttonSize, hitboxSize, alignment, hitboxType, radialAnglePos, radialDistance
 		this.radialDragButton = this.createRadialButton(radialDragIcon, false, 500,
-				this.imageThumbSize, "centered", "circle", 0, 0);
+			this.imageThumbSize, "centered", "circle", 0, 0);
 
 		this.radialCenterButton = this.createRadialButton(radialButtonIcon, false, menuButtonSize,
-				menuButtonHitboxSize, "centered", "circle", 0, 0);
+			menuButtonHitboxSize, "centered", "circle", 0, 0);
 
 		// Generate the radial menu buttons as specified by the server
 		for (var buttonName in data.layout) {
 			var buttonInfo = data.layout[buttonName];
 
 			this.addRadialMenuButton(buttonName, radialMenuIcons[buttonInfo.icon], overlayIconScale,
-					{buttonSize: menuButtonSize, hitboxSize: menuButtonHitboxSize, shape: "circle"},
-					"centered", buttonInfo.radialPosition, buttonInfo.radialLevel);
+				{buttonSize: menuButtonSize, hitboxSize: menuButtonHitboxSize, shape: "circle"},
+				"centered", buttonInfo.radialPosition, buttonInfo.radialLevel);
 		}
 	};
 
@@ -290,7 +290,7 @@ function RadialMenu() {
 	 * @return {ButtonWidget} the ButtonWidget object created
 	 */
 	this.createRadialButton = function(idleIcon, useBackgroundColor, buttonSize, hitboxSize, alignment,
-			hitboxShape, radialPos, buttonRadius) {
+		hitboxShape, radialPos, buttonRadius) {
 		var button = new ButtonWidget();
 		button.init(0, this.ctx, null);
 		button.setButtonImage(idleIcon);
@@ -305,7 +305,7 @@ function RadialMenu() {
 
 		angle = (initAngle + angleSeparation * radialPos) * (Math.PI / 180);
 		button.setPosition(this.radialMenuCenter.x - buttonRadius * this.radialMenuScale * Math.cos(angle),
-				this.radialMenuCenter.y - buttonRadius * this.radialMenuScale * Math.sin(angle));
+			this.radialMenuCenter.y - buttonRadius * this.radialMenuScale * Math.sin(angle));
 		button.setRotation(angle - Math.PI / 2);
 
 		return button;
@@ -394,12 +394,12 @@ function RadialMenu() {
 				// We are adding -Math.PI/2 since angle also accounts for the initial orientation of the button image
 				this.ctx.moveTo(this.radialMenuCenter.x + (menuButtonSize / 4 * this.radialMenuScale) *
 					Math.cos(this.level1Buttons[i].angle - Math.PI / 2),
-					this.radialMenuCenter.y + (menuButtonSize / 4 * this.radialMenuScale) *
+				this.radialMenuCenter.y + (menuButtonSize / 4 * this.radialMenuScale) *
 					Math.sin(this.level1Buttons[i].angle - Math.PI / 2));
 
 				this.ctx.lineTo(this.level1Buttons[i].posX + (menuButtonSize / 4 * this.radialMenuScale) *
 					Math.cos(this.level1Buttons[i].angle + Math.PI / 2),
-					this.level1Buttons[i].posY + (menuButtonSize / 4 * this.radialMenuScale) *
+				this.level1Buttons[i].posY + (menuButtonSize / 4 * this.radialMenuScale) *
 					Math.sin(this.level1Buttons[i].angle + Math.PI / 2));
 
 				this.ctx.strokeStyle = "#ffffff";
@@ -540,9 +540,9 @@ function RadialMenu() {
 			// Thumbnail window - Vert line
 			this.ctx.beginPath();
 			this.ctx.moveTo(this.thumbnailWindowPosition.x - 18 * this.radialMenuScale - this.borderLineThickness / 2,
-					this.thumbnailWindowPosition.y + this.textHeaderHeight);
+				this.thumbnailWindowPosition.y + this.textHeaderHeight);
 			this.ctx.lineTo(this.thumbnailWindowPosition.x - 18 * this.radialMenuScale - this.borderLineThickness / 2,
-					this.thumbnailWindowSize.y);
+				this.thumbnailWindowSize.y);
 			this.ctx.strokeStyle = "#ffffff";
 			this.ctx.lineWidth = 5 * this.radialMenuScale;
 			this.ctx.stroke();
@@ -550,9 +550,9 @@ function RadialMenu() {
 			// Thumbnail window - Horz line across preview window
 			this.ctx.beginPath();
 			this.ctx.moveTo(previewImageX - 10 - 5 * this.radialMenuScale, this.thumbnailWindowPosition.y +
-					this.textHeaderHeight - this.borderLineThickness / 2);
+				this.textHeaderHeight - this.borderLineThickness / 2);
 			this.ctx.lineTo(previewImageX - 10 + previewImageSize + 20, this.thumbnailWindowPosition.y +
-					this.textHeaderHeight - this.borderLineThickness / 2);
+				this.textHeaderHeight - this.borderLineThickness / 2);
 			this.ctx.strokeStyle = "#ffffff";
 			this.ctx.lineWidth = 5 * this.radialMenuScale;
 			this.ctx.stroke();
@@ -561,7 +561,7 @@ function RadialMenu() {
 			this.ctx.font = parseInt(this.textHeaderHeight) + "px sans-serif";
 			this.ctx.fillStyle = "rgba(250, 250, 250, 1.0)";
 			this.ctx.fillText(this.hoverOverText, this.thumbnailWindowPosition.x,
-					this.thumbnailWindowPosition.y + this.textHeaderHeight / 1.8);
+				this.thumbnailWindowPosition.y + this.textHeaderHeight / 1.8);
 
 			if (this.hoverOverThumbnail) {
 				this.ctx.drawImage(this.hoverOverThumbnail, previewImageX, previewImageY,

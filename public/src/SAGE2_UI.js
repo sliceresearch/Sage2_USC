@@ -2187,8 +2187,7 @@ function noBackspace(event) {
 	} else if (
 		event.keyCode === 13
 		&& event.target.id.indexOf("rmbContextMenuEntry") !== -1
-		&& event.target.id.indexOf("Input") !== -1
-		) {
+		&& event.target.id.indexOf("Input") !== -1) {
 		// if a user hits enter within an rmbContextMenuEntry, it will cause the effect to happen
 		event.target.parentNode["buttonEffect" + event.target.id]();
 	} else if (event.ctrlKey && event.keyCode === 13 && event.target.id === "uiNoteMakerInputField") {
