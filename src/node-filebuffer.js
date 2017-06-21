@@ -21,9 +21,7 @@ var sageutils = require('../src/node-utils');    // provides utility functions
 /* global  */
 if (!String.prototype.splice) {
 
-    /**
-     * {JSDoc}
-     *
+	/**
      * The splice() method changes the content of a string by removing a range of
      * characters and/or adding new characters.
      *
