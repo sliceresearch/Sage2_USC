@@ -152,7 +152,7 @@ var SAGE2_App = Class.extend({
 		this.SAGE2CopyState(data.state);
 		this.SAGE2InitializeAppOptionsFromState();
 
-		// add serverData functions
+		// add serverData functions, or update later to have that file .extend() the function into SAGE2_App.
 		SAGE2SharedServerData.addSharedServerDataFunctions(this, data);
 	},
 
@@ -741,6 +741,8 @@ var SAGE2_App = Class.extend({
 		if (isMaster && this.hasFileBuffer === true) {
 			wsio.emit('closeFileBuffer', {id: this.div.id});
 		}
+		// remove values placed on server
+		this.serverDataRemoveAllValuesGivenToServer();
 	},
 
 	/**
