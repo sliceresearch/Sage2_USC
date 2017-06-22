@@ -20,8 +20,6 @@
  *    this.dataStructure.allValues = {};
  *       object to hold all tracked values
  *       example this.dataStructure.allValues['nameOfvalue'] = <entryObject>
- *    this.dataStructure.numberOfValues = 0;
- *       will increment as new values are added
  *    this.dataStructure.allNamesOfValues = [];
  *       strings to denote the names used for values
  *       order is based on when it was first set (not alphabetical)
@@ -47,7 +45,6 @@
 function SharedServerDataManager(clients, broadcast) {
 	this.dataStructure = {
 		allValues: {},
-		numberOfValues: 0,
 		allNamesOfValues: [],
 		newValueWatchers: []
 	};
@@ -86,7 +83,6 @@ SharedServerDataManager.prototype.setValue = function(wsio, data) {
 		}
 		// add it and update tracking vars.
 		this.dataStructure.allValues["" + data.nameOfValue] = newValue;
-		this.dataStructure.numberOfValues++;
 		this.dataStructure.allNamesOfValues.push("" + data.nameOfValue);
 		addedNewValue = true;
 	} else {
@@ -104,10 +100,11 @@ SharedServerDataManager.prototype.setValue = function(wsio, data) {
 	var dataForApp = {};
 	dataForApp.data = { // this data piece is only for new value watchers
 		nameOfValue: data.nameOfValue,
-		description: data.description
+		description: data.description,
+		status: "add"
 	};
 	// if a new value send to each of the new value watchers, currently only works with displays clients
-	if (addedNewValue) {
+	if (addedNewValue && !data.subscribePlaceholder) {
 		for (let i = 0; i < this.dataStructure.newValueWatchers.length; i++) {
 			// alter data based on subscriber id and their specified function
 			dataForApp.app  = this.dataStructure.newValueWatchers[i].app;
@@ -153,6 +150,50 @@ SharedServerDataManager.prototype.getValue = function(wsio, data) {
 	dataForApp.data = this.dataStructure.allValues[ "" + data.nameOfValue ].value;
 	// send only to the client that requestd it. Q: does it matter it multiple display clients?
 	this.broadcast('broadcast', dataForApp);
+};
+
+/**
+ * Checks if there is a value, and if so will send the value.
+ * If the value doesn't exist, it will not do anything.
+ *
+ * @method removeValue
+ * @param  {Object} wsio - The websocket of sender.
+ * @param  {Object} data - The object properties described below.
+ * @param  {Array} data.namesOfValuesToRemove - Names of values to remove.
+ */
+SharedServerDataManager.prototype.removeValue = function(wsio, data) {
+	// don't do anything if this isn't filled out.
+	if (data.namesOfValuesToRemove === undefined || data.namesOfValuesToRemove === null) {
+		return;
+	}
+	var nameToRemove;
+	for (let i = 0; i < data.namesOfValuesToRemove.length; i++) {
+		nameToRemove = data.namesOfValuesToRemove[i];
+		// also don't do anything if the value doesn't exist
+		if (this.dataStructure.allValues["" + nameToRemove] === undefined) {
+			continue; // doesn't exist, move to next one
+		} else {
+			// remove from names of values
+			this.dataStructure.allNamesOfValues.splice(this.dataStructure.allNamesOfValues.indexOf(nameToRemove), 1);
+			// remove from dataStructure
+			delete this.dataStructure.allValues[nameToRemove];
+
+			// necessary to tell new value watchers that this value was removed?
+			var dataForApp = {};
+			dataForApp.data = {
+				nameOfValue: nameToRemove,
+				description: "",
+				status: "remove"
+			};
+			for (let i = 0; i < this.dataStructure.newValueWatchers.length; i++) {
+				// alter data based on subscriber id and their specified function
+				dataForApp.app  = this.dataStructure.newValueWatchers[i].app;
+				dataForApp.func = this.dataStructure.newValueWatchers[i].func;
+				// notify to all clients
+				this.broadcast('broadcast', dataForApp);
+			}
+		}
+	}
 };
 
 /**

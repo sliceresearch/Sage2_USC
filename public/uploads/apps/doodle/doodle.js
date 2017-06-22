@@ -133,13 +133,11 @@ var doodle = SAGE2_App.extend({
 
 			// send back to client the OK to start editing.
 			var dataForClient = {};
-			dataForClient.clientDest  = responseObject.clientId;
 			dataForClient.canvasImage = imageString;
-			dataForClient.func        = 'uiDrawSetCurrentStateAndShow';
-			dataForClient.appId       = this.id;
 			dataForClient.imageWidth  = this.drawCanvas.width;
 			dataForClient.imageHeight = this.drawCanvas.height;
-			wsio.emit('sendDataToClient', dataForClient);
+			// sendDataToClient: function(clientDest, func, paramObj) appId is automatically added to param object
+			this.sendDataToClient(responseObject.clientId, "uiDrawSetCurrentStateAndShow", dataForClient);
 		}
 		this.changeTitleToOriginalCreatorAndTime(responseObject);
 	},
@@ -193,11 +191,10 @@ var doodle = SAGE2_App.extend({
 			var dataForClient = {};
 			dataForClient.clientDest = lineData[7];
 			dataForClient.params     = lineData;
-			dataForClient.func       = 'uiDrawMakeLine';
-			dataForClient.appId      = this.id;
 			for (var i = 0; i < this.arrayOfEditors.length; i++) {
 				dataForClient.clientDest = this.arrayOfEditors[i];
-				wsio.emit('sendDataToClient', dataForClient);
+				// clientDest, function, param object for function. appId is automatically added.
+				this.sendDataToClient(this.arrayOfEditors[i], "uiDrawMakeLine", dataForClient);
 			}
 		}
 	},
