@@ -1059,6 +1059,7 @@ function setupListeners(wsio) {
 	wsio.on('saveDataOnServer',						wsSaveDataOnServer);
 	wsio.on('serverDataSetValue',					wsServerDataSetValue);
 	wsio.on('serverDataGetValue',					wsServerDataGetValue);
+	wsio.on('serverDataRemoveValue',				wsServerDataRemoveValue);
 	wsio.on('serverDataSubscribeToValue',			wsServerDataSubscribeToValue);
 	wsio.on('serverDataGetAllTrackedValues',		wsServerDataGetAllTrackedValues);
 	wsio.on('serverDataGetAllTrackedDescriptions',	wsServerDataGetAllTrackedDescriptions);
@@ -9440,11 +9441,7 @@ function appLaunchHelperGetPathOfApp(appName) {
  * @method wsSendDataToClient
  * @param  {Object} wsio - The websocket of sender.
  * @param  {Object} data - The object properties described below.
- * @param  {Integer} data.x   - Pointer x, corresponds to on entire wall.
- * @param  {Integer} data.y   - Pointer y, corresponds to on entire wall.
- * @param  {String} data.app  - App id, which function should be activated.
- * @param  {String} data.func - Name of function to activate
- * @param  {Object} data.parameters - Object to send to the app as parameter.
+ * @param  {String} data.clientDest - Unique identifier of client
  */
 function wsSendDataToClient(wsio, data) {
 	var i;
@@ -9560,6 +9557,18 @@ function wsServerDataSetValue(wsio, data) {
  */
 function wsServerDataGetValue(wsio, data) {
 	sharedServerData.getValue(wsio, data);
+}
+
+/**
+ * Removes variable from server. Expected usage is this is called when an app closes.
+ * Made for the sake of cleanup as apps open and close.
+ *
+ * @method wsServerDataRemoveValue
+ * @param  {Object} wsio - The websocket of sender.
+ * @param  {Object} data - The object properties described below.
+ */
+function wsServerDataRemoveValue(wsio, data) {
+	sharedServerData.removeValue(wsio, data);
 }
 
 /**
