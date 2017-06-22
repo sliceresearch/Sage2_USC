@@ -185,12 +185,20 @@ var miniCon = SAGE2_App.extend({
 		if (!isMaster) {
 			return; // prevent spam
 		}
-		this.listOfServerVariables.push(addedVar);
-		if (this.shouldPrintNewVariableNotification) {
-			this.addToLog();
-			this.addToLog("New variable named " + addedVar.nameOfValue);
-			this.addToLog("--Description " + addedVar.description);
-		}
+		if (addedVar.status === "add") {
+			this.listOfServerVariables.push(addedVar);
+			if (this.shouldPrintNewVariableNotification) {
+				this.addToLog();
+				this.addToLog("New variable named " + addedVar.nameOfValue);
+				this.addToLog("--Description " + addedVar.description);
+			}
+		} else if (addedVar.status === "remove") {
+			this.listOfServerVariables.splice(this.listOfServerVariables.indexOf(addedVar), 1);
+			if (this.shouldPrintNewVariableNotification) {
+				this.addToLog();
+				this.addToLog("Variable deleted from server: " + addedVar.nameOfValue);
+			}
+		} 
 	},
 
 	toggleNewVarNotification: function(response) {

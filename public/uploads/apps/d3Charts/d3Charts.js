@@ -79,19 +79,15 @@ var d3Charts = SAGE2_App.extend({
 	* @method broadcastInitialValues
 	*/
 	broadcastInitialValues: function() {
-		// serverDataSetValue = function(nameOfValue, value, description) {
-		this.serverDataSetValue(this.id + ":source:dataset", this.state.chartValues.data);
-		this.serverDataSetValue(this.id + ":source:dataSelected", []); // none at beginning
-		this.serverDataSetValue(this.id + ":source:dataHovered", []); // none at beginning
+		// serverDataBroadcastSource: function(nameOfValue, value, description)
+		this.serverDataBroadcastSource("dataset", this.state.chartValues.data, "Current data set of chart");
+		this.serverDataBroadcastSource("dataSelected", [], "Current selected data");
+		this.serverDataBroadcastSource("dataHovered", [], "Current hovered");
 
-		// create destination variables for this app
-		this.serverDataSetValue(this.id + ":destination:dataset", []);
-		this.serverDataSetValue(this.id + ":destination:dataSelected", []);
-		this.serverDataSetValue(this.id + ":destination:dataHovered", []);
-		// app.serverDataSubscribeToValue = function(nameOfValue, callback, unsubscribe) {
-		this.serverDataSubscribeToValue(this.id + ":destination:dataset", "dataDestinationFullDataSetReplacement");
-		this.serverDataSubscribeToValue(this.id + ":destination:dataSelected", "dataDestinationSelected"); // none at beginning
-		this.serverDataSubscribeToValue(this.id + ":destination:dataHovered", "dataDestinationHovered"); // none at beginning
+		// serverDataBroadcastDestination: function(nameOfValue, value, description, callback)
+		this.serverDataBroadcastDestination("dataset", [], "Replaces dataset of chart", "dataDestinationFullDataSetReplacement");
+		this.serverDataBroadcastDestination("dataSelected", [], "Sets selection", "dataDestinationSelected");
+		this.serverDataBroadcastDestination("dataHovered", [], "Sets hover", "dataDestinationHovered");
 	},
 
 	/**

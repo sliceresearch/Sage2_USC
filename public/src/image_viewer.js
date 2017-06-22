@@ -367,14 +367,14 @@ var image_viewer = SAGE2_App.extend({
 			return; // try to prevent spamming
 		}
 		if (this.checkIfHasGpsData()) {
-			// function(nameOfValue, value, description) {
-			this.serverDataSetValue(this.id + ":source:geoLocation", {
+			// serverDataBroadcastSource: function(nameOfValue, value, description)
+			this.serverDataBroadcastSource("geoLocation", {
 				source: this.id,
 				location: {
 					lat: this.state.exif.GPSLatitude,
 					lng: this.state.exif.GPSLongitude
 				}
-			}, "an image geolocation",);
+			}, "an image geolocation");
 		}
 	}
 

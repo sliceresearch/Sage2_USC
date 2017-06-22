@@ -139,8 +139,8 @@ var dataFileHandler = SAGE2_App.extend({
 	* @method broadcastData
 	*/
 	broadcastData: function() {
-		// function(nameOfValue, value, description) {
-		this.serverDataSetValue(this.id + ":source:" + "datasetSource", this.dataFromFile, "json data loaded from file:" + this.fileName);
+		// serverDataBroadcastSource: function(nameOfValue, value, description)
+		this.serverDataBroadcastSource("datasetSource", this.dataFromFile, "json data loaded from file:" + this.fileName);
 	},
 
 	/**

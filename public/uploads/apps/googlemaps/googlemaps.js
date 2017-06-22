@@ -791,27 +791,19 @@ var googlemaps = SAGE2_App.extend({
 		// ask for any new variables that are given to the server
 		// function(callback, unsubscribe)
 		this.serverDataSubscribeToNewValueNotification("handlerForNewVariableNotification");
-		// function(nameOfValue, value, description)
 		// give its own center view to server
-		this.serverDataSetValue(this.id + ":source:geoLocation", {
+		// serverDataBroadcastSource: function(suffix, value, description)
+		this.serverDataBroadcastSource("geoLocation", {
 			source: this.id,
 			location: this.state.center
 		}, "the map's center geoLocation value");
 
-		// create a variable on server for what it can take as data, this one is to make markers on map
-		this.serverDataSetValue(this.id + ":destination:geoLocation:markerPlot", [], "plots geo marker on this map");
-		// this is one is to control view
-		this.serverDataSetValue(this.id + ":destination:geoLocation:viewCenter", [], "this will set the maps center view");
-
-		// 1 second later subscribe to its own destination values
-		var _this = this;
-		setTimeout(function() {
-			// first is the marker maker
-			// serverDataSubscribeToValue: function(nameOfValue, callback, unsubscribe) 
-			_this.serverDataSubscribeToValue(_this.id + ":destination:geoLocation:markerPlot", "makeMarkerGivenImageGeoLocation");
-			// next is the view center
-			_this.serverDataSubscribeToValue(_this.id + ":destination:geoLocation:viewCenter", "setView");
-		}, 1000);
+		// creates destination variables
+		// serverDataBroadcastDestination: function(suffix, value, description, callback)
+		this.serverDataBroadcastDestination(
+			"geoLocation:markerPlot", [], "plots geo marker on this map", "makeMarkerGivenImageGeoLocation");
+		this.serverDataBroadcastDestination(
+			"geoLocation:viewCenter", [], "this will set the maps center view", "setView");
 	},
 
 	/**
