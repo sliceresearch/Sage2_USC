@@ -382,6 +382,12 @@ function FileManager(wsio, mydiv, uniqueID) {
 				window.open("help/index.html", '_blank');
 			}
 		},
+		forum_menu: {value: "User Forum",
+			tooltip: "User forum on Google Groups",
+			callback: function (evt) {
+				window.open("https://groups.google.com/forum/#!forum/sage2", '_blank');
+			}
+		},
 		info_menu: {value: "Information",
 			tooltip: "Shows references and links about SAGE2",
 			callback: function (evt) {
