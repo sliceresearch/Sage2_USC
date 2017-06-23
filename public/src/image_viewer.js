@@ -46,6 +46,7 @@ var image_viewer = SAGE2_App.extend({
 		this.old_img_url = "";
 
 		this.title  = data.title;
+		this.apiKey = "";
 
 		this.updateAppFromState();
 		this.addWidgetControlsToImageViewer();
@@ -120,6 +121,243 @@ var image_viewer = SAGE2_App.extend({
 		*/
 	},
 
+	// gotAPIKey
+	gotAPIKey: function(msgParams) {
+		// receive an object from the web ui
+		// .clientInput for what they typed
+		this.apiKey = msgParams.clientInput;
+	},
+
+	// analyzeLabels
+	analyzeLabels: function(msgParams) {
+		var _this = this;
+		console.log('analyzeLabels', msgParams.url, this.apiKey);
+		if (isMaster) {
+			var xmlhttp = new XMLHttpRequest();
+			xmlhttp.open("POST", "https://vision.googleapis.com/v1/images:annotate?key=" + this.apiKey);
+			xmlhttp.setRequestHeader("Content-Type", "application/json");
+			var requestData = {
+				requests: [{
+					image: { source: { imageUri: _this.state.img_url } },
+					features: [{type: "LABEL_DETECTION"}]
+				}]
+			};
+			xmlhttp.addEventListener("progress", function() {
+				console.log('progress');
+			});
+			xmlhttp.addEventListener("load", function() {
+				console.log('load');
+			});
+			xmlhttp.addEventListener("error", function() {
+				console.log('error');
+			});
+			xmlhttp.addEventListener("abort", function() {
+				console.log('abort');
+			});
+			xmlhttp.onreadystatechange = function() {
+				// Call a function when the state changes.
+				if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
+					console.log('Response', typeof xmlhttp.responseText);
+					_this.makeNoteFromLabels(xmlhttp.responseText);
+				}
+			};
+			console.log('Sending request');
+			xmlhttp.send(JSON.stringify(requestData));
+		}
+	},
+
+	// analyzeWeb
+	analyzeWeb: function(msgParams) {
+		var _this = this;
+		console.log('analyzeWeb', msgParams.url, this.apiKey);
+		if (isMaster) {
+			var xmlhttp = new XMLHttpRequest();
+			xmlhttp.open("POST", "https://vision.googleapis.com/v1/images:annotate?key=" + this.apiKey);
+			xmlhttp.setRequestHeader("Content-Type", "application/json");
+			var requestData = {
+				requests: [{
+					image: { source: { imageUri: _this.state.img_url } },
+					features: [{type: "WEB_DETECTION"}]
+				}]
+			};
+			xmlhttp.addEventListener("progress", function() {
+				console.log('progress');
+			});
+			xmlhttp.addEventListener("load", function() {
+				console.log('load');
+			});
+			xmlhttp.addEventListener("error", function() {
+				console.log('error');
+			});
+			xmlhttp.addEventListener("abort", function() {
+				console.log('abort');
+			});
+			xmlhttp.onreadystatechange = function() {
+				// Call a function when the state changes.
+				if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
+					console.log('Response', typeof xmlhttp.responseText);
+					_this.makeNoteFromWeb(xmlhttp.responseText);
+				}
+			};
+			console.log('Sending request');
+			xmlhttp.send(JSON.stringify(requestData));
+		}
+	},
+
+
+	// analyzeLocation
+	analyzeLocation: function(msgParams) {
+		var _this = this;
+		console.log('analyzeLocation', msgParams.url, this.apiKey);
+		if (isMaster) {
+			var xmlhttp = new XMLHttpRequest();
+			xmlhttp.open("POST", "https://vision.googleapis.com/v1/images:annotate?key=" + this.apiKey);
+			xmlhttp.setRequestHeader("Content-Type", "application/json");
+			var requestData = {
+				requests: [{
+					image: { source: { imageUri: _this.state.img_url } },
+					features: [{type: "LANDMARK_DETECTION"}]
+				}]
+			};
+			xmlhttp.addEventListener("progress", function() {
+				console.log('progress');
+			});
+			xmlhttp.addEventListener("load", function() {
+				console.log('load');
+			});
+			xmlhttp.addEventListener("error", function() {
+				console.log('error');
+			});
+			xmlhttp.addEventListener("abort", function() {
+				console.log('abort');
+			});
+			xmlhttp.onreadystatechange = function() {
+				// Call a function when the state changes.
+				if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
+					console.log('Response', typeof xmlhttp.responseText);
+					_this.makeNoteFromLocation(xmlhttp.responseText);
+				}
+			};
+			console.log('Sending request');
+			xmlhttp.send(JSON.stringify(requestData));
+		}
+	},
+
+	makeNoteFromLabels: function(someText) {
+		var response = JSON.parse(someText);
+		var obj = response.responses[0];
+		if (obj.labelAnnotations) {
+			var annotations = obj.labelAnnotations;
+			var noteText = "";
+			annotations.forEach(function(element) {
+				noteText += element.description + ": " + element.score + "\n";
+			}, this);
+			var noteData = {
+				type: "launchAppWithValues",
+				appName: "quickNote",
+				csdInitValues: {
+					clientName: this.title,
+					clientInput: noteText,
+					colorChoice: "lightyellow"
+				}
+			};
+			wsio.emit('csdMessage', noteData);
+		}
+	},
+
+	makeNoteFromWeb: function(someText) {
+		var response = JSON.parse(someText);
+		var obj = response.responses[0];
+		if (obj.webDetection) {
+			var annotations = obj.webDetection;
+			var noteText = "";
+			annotations.webEntities.forEach(function(element) {
+				noteText += element.description + ": " + element.score + "\n";
+			}, this);
+			var link = "";
+			var pos = [this.sage2_x + this.sage2_width + 5, this.sage2_y];
+			annotations.partialMatchingImages.forEach(function(element) {
+				if (element.url) {
+					noteText += "Link: " + element.url + "\n";
+					if (!link) {
+						link = element.url;
+					}
+				}
+			}, this);
+			if (link) {
+				wsio.emit('openNewWebpage', {
+					id: this.id,
+					url: link,
+					position: pos,
+					dimensions: [600, 337]
+				});
+				pos[0] = pos[0] + 600 + 5;
+			}
+			link = "";
+			annotations.pagesWithMatchingImages.forEach(function(element) {
+				if (element.url) {
+					noteText += "Link: " + element.url + "\n";
+					if (!link) {
+						link = element.url;
+					}
+				}
+			}, this);
+			if (link) {
+				wsio.emit('openNewWebpage', {
+					id: this.id,
+					url: link,
+					position: pos,
+					dimensions: [600, 337]
+				});
+			}
+			var noteData = {
+				type: "launchAppWithValues",
+				appName: "quickNote",
+				csdInitValues: {
+					clientName: this.title,
+					clientInput: noteText,
+					colorChoice: "lightpink"
+				}
+			};
+			wsio.emit('csdMessage', noteData);
+		}
+	},
+
+	makeNoteFromLocation: function(someText) {
+		var response = JSON.parse(someText);
+		var obj = response.responses[0];
+		if (obj.landmarkAnnotations) {
+			var annotations = obj.landmarkAnnotations;
+			var noteText = "";
+			var latLng = ""
+			annotations.forEach(function(element) {
+				noteText += element.description + ": " + element.score + "\n";
+				element.locations.forEach(function(loc) {
+					latLng = loc.latLng.latitude + "," + loc.latLng.longitude;
+					noteText += "location: " + latLng + "\n";
+				}, this);
+			}, this);
+			var noteData = {
+				type: "launchAppWithValues",
+				appName: "quickNote",
+				csdInitValues: {
+					clientName: this.title,
+					clientInput: noteText,
+					colorChoice: "lightblue"
+				}
+			};
+			wsio.emit('csdMessage', noteData);
+			if (latLng) {
+				wsio.emit('openNewWebpage', {
+					id: this.id,
+					url: "https://www.google.com/maps/@" + latLng + ",16z",
+					position: [this.sage2_x + this.sage2_width + 5, this.sage2_y],
+					dimensions: [600, 337]
+				});
+			}
+		}
+	},
+
 	/**
 	* To enable right click context menu support this function needs to be present with this format.
 	*/
@@ -148,6 +386,34 @@ var image_viewer = SAGE2_App.extend({
 			parameters: {
 				url: cleanURL(this.state.src || this.state.img_url)
 			}
+		});
+
+		// separator
+		entries.push({description: "separator"});
+
+		// Entry for API key
+		entries.push({
+			description: "Enter API key:",
+			callback: "gotAPIKey",
+			parameters: {},
+			inputField: true,
+			inputFieldSize: 20
+		});
+
+		entries.push({
+			description: "Analyze picture: labels",
+			callback: "analyzeLabels",
+			parameters: {}
+		});
+		entries.push({
+			description: "Analyze picture: location",
+			callback: "analyzeLocation",
+			parameters: {}
+		});
+		entries.push({
+			description: "Analyze picture: web presence",
+			callback: "analyzeWeb",
+			parameters: {}
 		});
 
 		// Special callback: convert to a doodle.
