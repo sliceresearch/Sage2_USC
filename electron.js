@@ -29,6 +29,11 @@ const BrowserWindow = electron.BrowserWindow;
 var commander  = require('commander');
 var version    = require('./package.json').version;
 
+// Enable geolocation API
+// Set our own API key since Electron's own key is over used
+// Key from SAGE2public Google project
+process.env.GOOGLE_API_KEY = "AIzaSyANE6rJqcfc7jH-bDOwhXQZK_oYq9BWRDY";
+
 /**
  * Setup the command line argument parsing (commander module)
  */
