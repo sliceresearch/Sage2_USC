@@ -3400,7 +3400,8 @@ function wsOpenNewWebpage(wsio, data) {
 		user: wsio.id,
 		// pass the url in the data object
 		data: data,
-		position: [0, 0]
+		position: data.position ? data.position : [0, 0],
+		dimensions: data.dimensions ? data.dimensions : [1280, 720]
 	});
 
 	// Check if the web-browser is connected
