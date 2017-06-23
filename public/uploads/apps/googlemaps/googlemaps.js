@@ -183,7 +183,7 @@ var googlemaps = SAGE2_App.extend({
 
 		if (isMaster) {
 			// function(nameOfValue, value, description)
-			this.serverDataSetValue(this.id + ":source:geoLocation", {
+			this.serverDataSetSourceValue("geoLocation", {
 				source: this.id,
 				location: this.state.center
 			});
@@ -419,8 +419,7 @@ var googlemaps = SAGE2_App.extend({
 	 * This function assumes the data is correctly formatted to have
 	 * {
 	 *  lat: float,
-	 *  lng: float,
-	 *  shouldFocusViewOnNewMarker: bool
+	 *  lng: float
 	 * }
 	 */
 	addMarkerToMap: function(markerLocation) {
@@ -680,6 +679,8 @@ var googlemaps = SAGE2_App.extend({
 		entry.parameters = {};
 		entries.push(entry);
 
+		entries.push({description: "separator"});
+
 		// if always plotting, then toggle off
 		if (this.plotAnyNewGeoSource) {
 			entry = {};
@@ -803,6 +804,8 @@ var googlemaps = SAGE2_App.extend({
 		this.serverDataBroadcastDestination(
 			"geoLocation:markerPlot", [], "plots geo marker on this map", "makeMarkerGivenImageGeoLocation");
 		this.serverDataBroadcastDestination(
+			"geoLocation:replaceMarkerPlots", [], "clears out current markers and places given", "replaceMarkerPlots");
+		this.serverDataBroadcastDestination(
 			"geoLocation:viewCenter", [], "this will set the maps center view", "setView");
 	},
 
@@ -845,10 +848,111 @@ var googlemaps = SAGE2_App.extend({
 		this.addMarkerToMap({
 			lat: value.location.lat,
 			lng: value.location.lng,
-			sourceAppId: value.source,
-			shouldFocusViewOnNewMarker: true
+			sourceAppId: value.source
 		});
 	},
+
+	/**
+	 * Given an array of geolocations will clear out current markers and plot new ones.
+	 *
+	 * @method replaceMarkerPlots
+	 * @param {Array} value - An array containing locations to plot on map.
+	 */
+	replaceMarkerPlots: function(value) {
+		// clear out all marker plots
+		this.removeAllMarkersFromMap();
+		// plot the new ones.
+		if (!Array.isArray(value)) {
+			value = [value]; // put in array for now
+		}
+		// if cleaning is successful
+		if (this.replaceMarkerPlotsHelperFunctionMoveGpsToTop(value)){
+			// add to map
+			for (let i = 0; i < value.length; i++) {
+				this.addMarkerToMap(value[i]);
+			}
+		}
+	},
+
+	/**
+	 * This will move values to top level on the array based on prior knowledge of what it is.
+	 * Assumes array since it made past the check.
+	 *
+	 * @method replaceMarkerPlots
+	 * @param {Array} value - An array containing locations to plot on map.
+	 */
+	replaceMarkerPlotsHelperFunctionMoveGpsToTop: function(value){
+		var e1 = value[0];
+		var unableToPlot = false
+		// if it is an object, cannot guarante usage
+		if (typeof e1 === "object") {
+			var e1keys = Object.keys(value[0]);
+			if (e1keys.includes("gps")) {
+				if (typeof e1["gps"] === "object") {
+					// place gps checks
+					if (e1["gps"]["lat"]) {
+						// move obj to top level
+						for (let i = 0; i < value.length; i++) {
+							value[i] = value[i]["gps"];
+						}
+					} else if (e1["gps"]["latitude"]) {
+						// move obj to top level and rename
+						for (let i = 0; i < value.length; i++) {
+							value[i] = value[i]["gps"];
+							value[i].lat = value[i]["gps"]["latitude"];
+							value[i].lng = value[i]["gps"]["longitude"]
+						}
+					} else {
+						unableToPlot = true;
+					}
+				} else if (typeof e1["gps"] === "string"){
+					// move string to top level
+					for (let i = 0; i < value.length; i++) {
+						value[i] = value[i].gps
+					}
+				} else {
+					unableToPlot = true;
+				}
+			} else if (e1keys.includes("location")) {
+				if (typeof e1["location"] === "object") {
+					// place gps checks
+					if (e1["gps"]["lat"]) {
+						// move obj to top level
+						for (let i = 0; i < value.length; i++) {
+							value[i] = value[i]["gps"];
+						}
+					} else if (e1["gps"]["latitude"]) {
+						// move obj to top level and rename
+						for (let i = 0; i < value.length; i++) {
+							value[i] = value[i]["gps"];
+							value[i].lat = value[i]["gps"]["latitude"];
+							value[i].lng = value[i]["gps"]["longitude"]
+						}
+					} else {
+						unableToPlot = true;
+					}
+				} else if (typeof e1["location"] === "string"){
+					// move string to top level
+					for (let i = 0; i < value.length; i++) {
+						value[i] = value[i].location
+					}
+				} else {
+					unableToPlot = true;
+				}
+			}
+		} else if (typeof e1 === "string") {
+			// this would be a check to see if it is a float, float
+		} else {
+			unableToPlot = true;
+		}
+		// state unabel to plot
+		if (unableToPlot) {
+			console.log("googlemaps> Unable to plot " + e1);
+			return false;
+		}
+		return true;
+	},
+	
 
 	toggleAutomaticPlot: function(responseObject) {
 		this.plotAnyNewGeoSource = responseObject.plot;

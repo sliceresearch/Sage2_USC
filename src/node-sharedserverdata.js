@@ -104,7 +104,7 @@ SharedServerDataManager.prototype.setValue = function(wsio, data) {
 		status: "add"
 	};
 	// if a new value send to each of the new value watchers, currently only works with displays clients
-	if (addedNewValue) {
+	if (addedNewValue && !data.subscribePlaceholder) {
 		for (let i = 0; i < this.dataStructure.newValueWatchers.length; i++) {
 			// alter data based on subscriber id and their specified function
 			dataForApp.app  = this.dataStructure.newValueWatchers[i].app;

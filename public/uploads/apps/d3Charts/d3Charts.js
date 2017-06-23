@@ -102,7 +102,7 @@ var d3Charts = SAGE2_App.extend({
 				this.dbprint("Sanity check: this should be an array of data to display:" + Array.isArray(dataset));
 				this.state.chartValues.data = dataset;
 				// also update the broadcast data set
-				this.serverDataSetValue(this.id + ":source:dataset", this.state.chartValues.data);
+				this.serverDataSetSourceValue("dataset", this.state.chartValues.data);
 				this.generateChartIfCan();
 			} else {
 				// discard, unable to use blank set for the sake of some of the checks
@@ -726,7 +726,7 @@ var d3Charts = SAGE2_App.extend({
 		}
 		this.dbprint("New selection size:" + this.selectedElements.length);
 		// update this apps broadcast value
-		this.serverDataSetValue(this.id + ":source:dataSelected", this.selectedElements);
+		this.serverDataSetSourceValue("dataSelected", this.selectedElements);
 	},
 
 	/**
@@ -753,7 +753,7 @@ var d3Charts = SAGE2_App.extend({
 		}
 		this.dbprint("New hover size:" + this.hoveredElements.length);
 		// update this apps broadcast value
-		this.serverDataSetValue(this.id + ":source:dataHovered", this.hoveredElements);
+		this.serverDataSetSourceValue("dataHovered", this.hoveredElements);
 	},
 
 	load: function(date) {

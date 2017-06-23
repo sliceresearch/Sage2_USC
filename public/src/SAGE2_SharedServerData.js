@@ -40,6 +40,7 @@ var SAGE2SharedServerData = {
 		// section shared data related
 		app.serverDataGetValue = this.serverDataGetValue;
 		app.serverDataSetValue = this.serverDataSetValue;
+		app.serverDataSetSourceValue = this.serverDataSetSourceValue;
 		app.serverDataBroadcastSource = this.serverDataBroadcastSource;
 		app.serverDataBroadcastDestination = this.serverDataBroadcastDestination;
 		// subscription
@@ -201,24 +202,51 @@ var SAGE2SharedServerData = {
 	},
 
 	/**
+	* Helper function, given the variable name suffix, set value of variable on server.
+	* Checks in place to ensure value exists.
+	*
+	* @method serverDataSetSourceValue
+	* @param {String} nameSuffix - name of value on server to set
+	* @param {Object} value - the value to store for this variable
+	* @param {Object} description - description object
+	* @param {Boolean} shouldRemoveValueFromServerWhenAppCloses - Optional. If true, app quit will remove value from server.
+	*/
+	serverDataSetSourceValue: function(nameSuffix, value) {
+		if (isMaster) {
+			var nameOfValue = this.id + ":source:" + nameSuffix;
+			if (!this.dataSourcesBeingBroadcast.includes(nameOfValue)) {
+				throw new "Cannot update source value that hasn't been created yet:" + nameOfValue;
+			}
+			wsio.emit("serverDataSetValue", {
+				nameOfValue: nameOfValue,
+				value: value
+			});
+		}
+	},
+
+	/**
 	* Helper function to tell server about a source. This will add additional markers to the variable.
 	* Name will be of format:
 	*	app_id:source:givenName
 	*
 	* @method serverDataBroadcastSource
-	* @param {String} nameOfValue - name suffix
+	* @param {String} nameSuffix - name suffix
 	* @param {Object} value - the value to store for this variable
 	* @param {Object} description - description object
 	*/
-	serverDataBroadcastSource: function(nameOfValue, value, description) {
+	serverDataBroadcastSource: function(nameSuffix, value, description) {
 		if (isMaster) {
-			nameOfValue = this.id + ":source:" + nameOfValue;
+			var nameOfValue = this.id + ":source:" + nameSuffix;
 			this.serverDataSetValue(nameOfValue, value, description, true);
 			if (!this.dataSourcesBeingBroadcast.includes(nameOfValue)) {
 				this.dataSourcesBeingBroadcast.push(nameOfValue);
 			}
 		}
 	},
+
+	// -------------------------------------------------------------------------------------------------------------------------------------------------
+	// -------------------------------------------------------------------------------------------------------------------------------------------------
+
 
 	/**
 	* Helper function to tell server about a destination. This will add additional markers to the variable.
@@ -227,18 +255,18 @@ var SAGE2SharedServerData = {
 	*	app_id:destination:givenName
 	*
 	* @method serverDataBroadcastDestination
-	* @param {String} nameOfValue - name suffix
-	* @param {Object} value - the value to store for this variable
+	* @param {String} nameSuffix - name suffix
+	* @param {Object} value - the initial value. Probably is blank.
 	* @param {Object} description - description object
 	* @param {String} callback - what function will handle values given to the source
 	*/
-	serverDataBroadcastDestination: function(nameOfValue, value, description, callback) {
+	serverDataBroadcastDestination: function(nameSuffix, value, description, callback) {
 		if (isMaster) {
-			nameOfValue = this.id + ":destination:" + nameOfValue;
+			var nameOfValue = this.id + ":destination:" + nameSuffix;
 			// serverDataSubscribeToValue: function(nameOfValue, callback, unsubscribe = false)
 			var callbackName = SAGE2SharedServerData.getCallbackName(callback);
+			this.serverDataSetValue(nameOfValue, value, description, true); // set value first, then subscribe
 			this.serverDataSubscribeToValue(nameOfValue, callbackName);
-			this.serverDataSetValue(nameOfValue, value, description, true);
 			if (!this.dataDestinationsBeingBroadcast.includes(nameOfValue)) {
 				this.dataDestinationsBeingBroadcast.push(nameOfValue);
 			}
