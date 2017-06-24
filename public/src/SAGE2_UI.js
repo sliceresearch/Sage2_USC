@@ -95,6 +95,8 @@ var note;
 
 var viewOnlyMode;
 
+var locationInfo;
+
 /**
  * Reload the page if a application cache update is available
  *
@@ -295,6 +297,29 @@ function SAGE2_init() {
 		});
 	}
 	setupFocusHandlers();
+
+	// Test for geolocation ability
+	if ("geolocation" in navigator) {
+		console.log('Location services available');
+		navigator.geolocation.getCurrentPosition(function(position) {
+			locationInfo = {
+				location: {
+					lat: position.coords.latitude,
+					lng: position.coords.longitude
+				},
+				date:  new Date(position.timestamp)
+			};
+			console.log('User location', locationInfo);
+		}, function (err) {
+			console.warn('User geolocation error:', err.message, err.code);
+		}, {
+			enableHighAccuracy: true, // high-precision
+			timeout: 5000,  // 5 sec. maximum
+			maximumAge: 0   // get a fresh value
+		});
+	} else {
+		console.log('Location services NOT available');
+	}
 
 	// Deal with the warning label in the UI if Chrome or not Chrome
 	if (!__SAGE2__.browser.isMobile) {
