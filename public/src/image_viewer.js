@@ -329,7 +329,7 @@ var image_viewer = SAGE2_App.extend({
 		if (obj.landmarkAnnotations) {
 			var annotations = obj.landmarkAnnotations;
 			var noteText = "";
-			var latLng = ""
+			var latLng = "";
 			annotations.forEach(function(element) {
 				noteText += element.description + ": " + element.score + "\n";
 				element.locations.forEach(function(loc) {
