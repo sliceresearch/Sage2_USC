@@ -75,7 +75,7 @@
 		"electron": "latest"
 	},
 	"optionalDependencies": {
-		"node-demux": "latest"
+		"node-demux": "https://github.com/renambot-uic/node-demux.git"
 	},
 	"devDependencies": {
 		"grunt": "latest",
