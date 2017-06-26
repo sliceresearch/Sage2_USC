@@ -193,6 +193,8 @@ function createWindow() {
 		fullscreenable: commander.fullscreen,
 		alwaysOnTop: commander.fullscreen,
 		kiosk: commander.fullscreen,
+		// a default color while loading
+		backgroundColor: "#565656",
 		// resizable: !commander.fullscreen,
 		webPreferences: {
 			nodeIntegration: true,
@@ -248,6 +250,14 @@ function createWindow() {
 	mainWindow.on('closed', function() {
 		// Dereference the window object
 		mainWindow = null;
+	});
+
+	// If the window opens before the server is ready,
+	// wait 2 sec. and try again
+	mainWindow.webContents.on('did-fail-load', function(ev) {
+		setTimeout(function() {
+			mainWindow.reload();
+		}, 2000);
 	});
 
 	mainWindow.webContents.on('will-navigate', function(ev) {
