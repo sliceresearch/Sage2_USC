@@ -1,0 +1,1627 @@
+V2.0.0
+------------
+- Up version to 2.0. [Luc Renambot]
+- Modified upper/lower bounds on auto UI scaling Added mesaverde config
+  with auto scaling. [Arthur Nishimoto]
+- Merge branch 'master' of https://bitbucket.org/sage2/sage2.
+  [AndrewTBurks]
+- Initialize pointer color with hex value (instead of array) [Luc
+  Renambot]
+- Update pointer color and name into server when UI connects. [Luc
+  Renambot]
+- Added possibility for multiple users to create partitions at the same
+  time (previously only 1 user could concurrently drag a partition,
+  error from only testing with 1 user). Also, instead of parse error
+  creating color on display, if hex string is invalid, default to
+  (200,200,200). [AndrewTBurks]
+- Check when click in background UI that app exists. [Luc Renambot]
+- Merge branch 'master' of https://bitbucket.org/sage2/sage2. [d-k-k]
+- Merge branch 'master' of https://bitbucket.org/sage2/sage2.
+  [AndrewTBurks]
+- Appveyor.yml. [Luc Renambot]
+- Fixed scaling of apps which are not resizeMode: free when partitions
+  are resized. [AndrewTBurks]
+- Removing image doodle converter until edit speed is improved. [d-k-k]
+- Movie player sync with play, pause, stop, seek. Only the commands set
+  the sync time. Currently an observed that they still not not change at
+  exactly the same time. Stop is due to frame being processed while stop
+  command is sent. Added step by framerate. [d-k-k]
+- Changing menu order in file manager ui. [Luc Renambot]
+- Making sure partition field exists when loading sessions. [Luc
+  Renambot]
+- Appveyor.yml. [Luc Renambot]
+- Merge branch 'master' into Andrew-Branch. [Luc Renambot]
+- Appveyor.yml. [Luc Renambot]
+- Get ffmpeg binaries from our local bitbucket mirror. [Luc Renambot]
+- Fixed comments in code from previous commit. [AndrewTBurks]
+- Integrated partitions into auto_hide behavior, completely hiding the
+  partition structure on the wall. Also, fixed app shifting when inside
+  partitions, keeping them within the original boundary, as opposed to
+  shifting/scaling up and ignoring title bars. [AndrewTBurks]
+- Merge branch 'master' into Andrew-Branch. [AndrewTBurks]
+- Merge branch 'master' of bitbucket.org:sage2/sage2. [Luc Renambot]
+- Forgot to replace mouse event file with changes. [d-k-k]
+- Merge branch 'master' of https://bitbucket.org/sage2/sage2. [d-k-k]
+- Fixed webcam fading and window resizing. [Andrew Johnson]
+- Merge branch 'master' of https://bitbucket.org/sage2/sage2. [Luc
+  Renambot]
+- Optimizing photo slideshow. [Luc Renambot]
+- Putting error handler in readStream. [Luc Renambot]
+- Added sound manager for 'traoumad' [Luc Renambot]
+- After sabi retrives config file, removes info div about fetching. Also
+  saving no longer automatically generates keys. Another button made.
+  Reason: auto making keys causes problems with machines using a CA
+  given cert. [d-k-k]
+- Updates to mouse event passing. Changed the way events were generated
+  to get around the read only attributes and autofill nature of certain
+  properties that become incorrect due to SAGE2 app location. [d-k-k]
+- Appveyor.yml. [Luc Renambot]
+- Small fix (hopefully fixed) to maximization behavior of app in
+  partition. Added Delete All Partitions and Assign Content To
+  Partitions buttons in Partition menu in File Manager. [AndrewTBurks]
+- Added partition area indicators to webUI. The representation may want
+  to be scaled down so it stands out less, not sure right now.
+  [AndrewTBurks]
+- Fixed display-side title bar calculation (wasn't correctly using
+  ui.titleBarHeight). Also, made colors for preset partition layouts
+  less random (now using a colorbrewer set of 12 colors). [AndrewTBurks]
+- Merge branch 'master' into Andrew-Branch. [AndrewTBurks]
+- Forgot to switch out sage2_on file. [d-k-k]
+- Merge branch 'master' of https://bitbucket.org/sage2/sage2. [d-k-k]
+- Finally have sabi working better. Might still be bugs, but all major
+  ones are found. Code was mainly additive. Cleanup will be done later.
+  [d-k-k]
+- When a static layout of partitions is loaded, the partitions get
+  random colors in order to better distingush different areas.
+  [AndrewTBurks]
+- Revamped object structure for defining a partition layout. Draws from
+  bootstrap.js ideas (12 units of space to allocate for each row and
+  column). Allows for much more customizable layouts, and possibly even
+  a layout wizard to make layouts? [AndrewTBurks]
+- Added corner-dragging functionality for partitions. Also, drag corner
+  changes visibility when hovered. [AndrewTBurks]
+- Fixed problem with maximization toggle of applications in tiled
+  partition, now maximizes and tiles in the correct order.
+  [AndrewTBurks]
+- Partitions loading and grabbing existing apps as well as apps in
+  session correctly. Some layout problems if partition needs to re-
+  layout apps because of an existing app. [AndrewTBurks]
+- Partitions are saved into session, and loaded on session load. Having
+  problems reassociating apps with partitions at the moment.
+  [AndrewTBurks]
+- Fixing session saving with partitions. [AndrewTBurks]
+- Trying to merge still.. [AndrewTBurks]
+- Tweak the size of audio manager. [Luc Renambot]
+- Added 'chicago' style startup sound. [Luc Renambot]
+- Quick fix to flickering slideshow. [Andy J]
+- A fix in webview: do not follow redirect on error ? [Luc Renambot]
+- Merge branch 'master' into widgets. [krishnaBharadwaj]
+- Change keyboard event from 'keyDown' to 'char' and seems to work
+  better for WebView. [Luc Renambot]
+- Update package versions. [Luc Renambot]
+- Created radio button state to enable setting value from within app,
+  added radio button to googlemaps app for controlling maptype.
+  [krishnaBharadwaj]
+- Cleaning up debug messages. [krishnaBharadwaj]
+- Merge branch 'master' into widgets. [krishnaBharadwaj]
+- Send key events to app from the UI without being in pointer mode. [Luc
+  Renambot]
+- Update list of excluded folders. [Luc Renambot]
+- Update automatically the file manager when files are added using the
+  underlying OS. [Luc Renambot]
+- Removed dependency on Object.observe in UI (deprecated API). [Luc
+  Renambot]
+- Support for node v7 modules. [Luc Renambot]
+- Multiple sliders and textinputs enabled, Initial commit of radio
+  buttons. [krishnaBharadwaj]
+- Merge branch 'master' into widgets. [krishnaBharadwaj]
+- Appveyor.yml. [Luc Renambot]
+- Changed implementation of Object.Observe. Remove CPU load on Electron.
+  [Luc Renambot]
+- Renamed electron binary package. [Luc Renambot]
+- Gitignore. [Luc Renambot]
+- Typo in title of zoom app. [Luc Renambot]
+- Merge branch 'master' of bitbucket.org:sage2/sage2. [Luc Renambot]
+- Use the VERSION.json file built at build time and update the version
+  number. Binaries should now include the build number in the version.
+  [Luc Renambot]
+- Appveyor.yml. [Luc Renambot]
+- Replaced Object.observe code with getter and setter methods.
+  [krishnaBharadwaj]
+- Merge master into Andrew-Branch. [AndrewTBurks]
+- Merge branch 'master' into Andrew-Branch. [AndrewTBurks]
+- Zoom app: fix loading from session, tweaks for zoom, and basic menu
+  (rmb) [Luc Renambot]
+- Merge branch 'master' into Andrew-Branch. [AndrewTBurks]
+- Update to the 'zoom' app: title, icon, ... [Luc Renambot]
+- Added menu item to access image processing portal. [Luc Renambot]
+- 3 Preset partition configurations created, improved maximization
+  behaviors for apps within partititons and moved the behavior into the
+  node-partition.js file. Partitions can have a innerMaximization state
+  now, along with the innerTiling state. More explanations and image in
+  comment of commit. [AndrewTBurks]
+- When apps are moved into, out of, or within a tiled partition, the
+  tiling of that partition will be updated. Also, partitions are now re-
+  created on display client refresh. [AndrewTBurks]
+- Merge branch 'master' into Andrew-Branch. [AndrewTBurks]
+- Appveyor.yml. [Luc Renambot]
+- PDF lib update. [Luc Renambot]
+- Update webix lib. [Luc Renambot]
+- Tiling functionality working in partitions. The partition tiling does
+  not yet update when an app is added or removed from a partition where
+  innerTiling is true. [AndrewTBurks]
+- Apps snap into partition when pointer is released. Also, changed so
+  apps maximized within a partition can still move freely (instead of
+  being locked in one dimension in partition. [AndrewTBurks]
+- While app is being moved, partition that it will be placed into is
+  highlighted. [AndrewTBurks]
+- Merge branch 'master' into Andrew-Branch. [AndrewTBurks]
+- Let the 'zoom' app load '.dzi' files. [Luc Renambot]
+- Update apps needing the Shift key detected. [Luc Renambot]
+- Send status of the special keys (Alt, Shift, ...) to press events.
+  [Luc Renambot]
+- Partition Clear/Tile controls moved to left corner, title moved to
+  center. Color of partition depends on mouse pointer, title of
+  partition shows information (item count, is tiled, etc.)
+  [AndrewTBurks]
+- Merge branch 'master' into Andrew-Branch. [AndrewTBurks]
+- Maximization Changes: On Double-Click applications will maximize in
+  center, using SAGE2 Pointer applications will maximize in place.
+  [AndrewTBurks]
+- Moved broadcast calls to after wsioServer init to avoid crash. [d-k-k]
+- Merge branch 'master' of bitbucket.org:sage2/sage2. [Luc Renambot]
+- Merge branch 'master' of https://bitbucket.org/sage2/sage2. [d-k-k]
+- Sabi button edit to electron ready to test. [d-k-k]
+- Making application right-click menu more consistent. [Luc Renambot]
+- Fix delete item with a callback to update the file manager. [Luc
+  Renambot]
+- Make sure the apps are processed before any other assets. And process
+  apps at every start (should make it easier for app developers) [Luc
+  Renambot]
+- When assets finished processed, send a file list to the UI. [Luc
+  Renambot]
+- Imagemagick. [Luc Renambot]
+- Fix filename issue in file manager (fix from Matej Jan) [Luc Renambot]
+- Tweaks to item maximization within a partition. [AndrewTBurks]
+- Merge branch 'master' into Andrew-Branch. [AndrewTBurks]
+- Inserted titleBar offset values into the vertical maximization
+  behavior to keep item within screen. [AndrewTBurks]
+- Some fixes to the vertical maximization behavior. [AndrewTBurks]
+- Merge branch 'master' into Andrew-Branch. [AndrewTBurks]
+- Added to new maximization behavior to make windows maximize close to
+  their position vertically in addition to horizontally. [AndrewTBurks]
+- Move behavior fixed for partitions, now the partition doesn't stick to
+  the mouse. Updated the Display of the partition to include close/tile
+  applications buttons, updated the interaction geometries to include
+  these 2 buttons within node-partitionlist.js. [AndrewTBurks]
+- Merge branch 'master' into Andrew-Branch. [AndrewTBurks]
+- Tweak in browser detection. [Luc Renambot]
+- Tweak in UI info panel. [Luc Renambot]
+- Disply browser type in the SAGE2 wall title bar. Display browser type
+  and version in UI info panel. [Luc Renambot]
+- Updated browser detection: added electron and browser version. [Luc
+  Renambot]
+- Children move with parent partition when parent is moved. CTRL and
+  drag with left mouse to create a new partition (still buggy). Movement
+  of partiton added but disabled (moving the partition causes it to get
+  stuck to the cursor, not detecting release when moving the partition.
+  [AndrewTBurks]
+- Merge branch 'master' into Andrew-Branch. [AndrewTBurks]
+- Fix parsing width and heigh of SVG files (some have a unit specified)
+  [Luc Renambot]
+- Bumping SAGE2 version to 1.5. [Luc Renambot]
+- Default partition can be added to SAGE2 using Media Browser > Admin.
+  Partition can be maximized, cleared, and closed using SAGE2 Pointer.
+  next TODO: Scale apps within the partiton on maximization of
+  partition, mouse movement of partiton (moving apps as well), drag-
+  corner scaling of partiton (scaling apps as well). [AndrewTBurks]
+- Linting, progress with parent partition-child app interaction. App can
+  maximize within a partition which it is in. [AndrewTBurks]
+- Merge branch 'master' into Andrew-Branch. [AndrewTBurks]
+- Removed style. [Luc Renambot]
+- Phasing out jscs style checker (project merged with eslint) [Luc Renambot]
+- Update the Grunt file. [Luc Renambot]
+- Handle errors and state better in Webview. [Luc Renambot]
+- Moved aMepTest and ParaSAGE to sage2_apps repo. [Luc Renambot]
+- Update googleMap to showcase the 'loadSavedData' function: save a
+  location and reaload it. [Luc Renambot]
+- Add a function to SAGE2_App:   loadSavedData  to reload a saved JSON
+  (from the saveFile call) [Luc Renambot]
+- Support for saving files and assets from applications. [Luc Renambot]
+- Fix app title when loading SVG file. [Luc Renambot]
+- Add functions to application base class: saveFile and saveAsset. [Luc
+  Renambot]
+- Merge commit '9068043' into maximize. [Luc Renambot]
+- Changed parameter to update partition position and size for display.
+  [AndrewTBurks]
+- More progress with integrating Partition code with server/display.
+  Also fixed some documentation. [AndrewTBurks]
+- Adding and removing of partition id from items, calculating whether an
+  app falls within a partition, accounting for if the app already is
+  within a partiton. [AndrewTBurks]
+- Fixed improper function declarations, some linting. [AndrewTBurks]
+- Merge branch 'master' into Andrew-Branch. [AndrewTBurks]
+- Bitbucket-pipelines.yml edited online with Bitbucket. [Luc Renambot]
+- Appveyor. [d-k-k]
+- Support for keys on numbers. [d-k-k]
+- Added auto-refresh option to webview (for 5 min.) [Luc Renambot]
+- Trying to fix the bug where the SAGE2 watermark shows through the
+  windows sometimes (on reload). Seems to be fixed. [Luc Renambot]
+- Add a console layer to webviews (right-click menu to show/hide) [Luc
+  Renambot]
+- Beginnings of partition structure. Not connected to display or
+  server.js yet. [AndrewTBurks]
+- Merge branch 'master' into Andrew-Branch. [Luc Renambot]
+- Update URL string pattern: also if starts with '/' (local URL) [Luc
+  Renambot]
+- Merge branch 'master' into Andrew-Branch. [AndrewTBurks]
+- Detecting is client is Electron for Webview, display a warning now.
+  [Luc Renambot]
+- Added more maximize/restore functionality. If window aspect ratio is
+  wider than screen, window locks to sides and can only translate
+  vertically. SHIFT + Maximize on resizeMode = 'free' window will
+  maximize the window to fill the whole screen. SHIFT + Restore will
+  restore window to native height/width. [AndrewTBurks]
+- Modified maximize item and move item functionality so windows become
+  maximized in the same area of the screen as they start in, as opposed
+  to in the center. To make moving these maximized windows through the
+  screen easier, maximized windows stay aligned relative to top of
+  screen. Also, when restoring a maximized window which has moved, it
+  restores relative to the new center of mass of the window.
+  [AndrewTBurks]
+- Merge branch 'master' of https://bitbucket.org/sage2/sage2 into
+  Andrew-Branch. [AndrewTBurks]
+- Updating the key generation for macos Sierra. [Luc Renambot]
+- Merge branch 'master' of https://bitbucket.org/sage2/sage2 into
+  Andrew-Branch. [AndrewTBurks]
+- Just take image width and height instead of viewBox for SVG, seems
+  more reliable. [Luc Renambot]
+- File saving functionality allowing SAGE2_Apps to save a file to SAGE2
+  media folder. [AndrewTBurks]
+- Case insensitive search for EXIF tag (helps when searching svg
+  viewbox) [Luc Renambot]
+- Fixing mistake in zoom app. [Luc Renambot]
+- Fix title bug in doodle, when loading 'lastDoodle' [Luc Renambot]
+- Merge branch 'master' of bitbucket.org:sage2/sage2. [Luc Renambot]
+- Bitbucket-pipelines.yml edited online with Bitbucket. [Luc Renambot]
+- Fix bug in tile size calulation in server (was messing up borders
+  calulation) [Luc Renambot]
+- Save the application type inside the app instance (this.application)
+  [Luc Renambot]
+- In SAGE2_App, refresh call can be made without parameter and it will
+  use the previous date (should be ok for non-animation application)
+  [Luc Renambot]
+- Add svg to list of valid images. [Luc Renambot]
+- Deal with loading SVG files without viewbox. [Luc Renambot]
+- Merge branch 'master' of bitbucket.org:sage2/sage2. [Luc Renambot]
+- Bitbucket-pipelines.yml edited online with Bitbucket. [Luc Renambot]
+- Bitbucket-pipelines.yml created online with Bitbucket. [Luc Renambot]
+- Remove name in GO-mac keygen. [Luc Renambot]
+- Nicer browser dialog box (using webix). Accepts partial URL
+  (nytimes.com vs http:///nytimes.com). [Luc Renambot]
+- Adding a browser button. [Luc Renambot]
+- Merge branch 'master' of https://bitbucket.org/sage2/sage2. [d-k-k]
+- Starting a webview when drag-dropping a URL. [Luc Renambot]
+- Cleanup. [Luc Renambot]
+- Udpate scripts for CAVE2. [Luc Renambot]
+- Keypress transfer working for alphanumeric on text area and input.
+  Delete and backspace are faulty. Symbols unimplemented. Auto append
+  http:// for context menu url without :// [d-k-k]
+- Prelim testing of keypass to webview. [d-k-k]
+- More descriptive context menu error. Position fixed on error. Also
+  added example in public/src/movie_player.js on how to update context
+  menu during app runtime. [d-k-k]
+- Removed last browser native element: save session, replace by webix
+  dialog. [Luc Renambot]
+- Add jupyter support. [Luc Renambot]
+- Adding jupyter support. [Luc Renambot]
+- Delete old file. [Luc Renambot]
+- Moving electron files. [Luc Renambot]
+- Appveyor. [Luc Renambot]
+- Disable popups and fullscreen in webview. [Luc Renambot]
+- Update to electron: plugins, ui, audio, ... [Luc Renambot]
+- Cleanup in audiomanager. [Luc Renambot]
+- Update webix library. [Luc Renambot]
+- Merge branch 'master' of bitbucket.org:sage2/sage2. [Arthur Nishimoto]
+- Merge branch 'master' into electron. [Luc Renambot]
+- Appveyor for ImageMagic. [Luc Renambot]
+- Merge branch 'master' of https://bitbucket.org/sage2/sage2. [Luc
+  Renambot]
+- Updating zoom app to register .dzi and updating openseadragon library.
+  [Luc Renambot]
+- Fix position of logo and version if some client span across multiple
+  tiles. [Luc Renambot]
+- Taking into account width/height of clients using multiple tiles. [Luc
+  Renambot]
+- Add sage2 icons (for electron) and command in package.json: npm run
+  electron. [Luc Renambot]
+- Preparing electron. [Luc Renambot]
+- Fixed mouse event passing bug in Firefox. [d-k-k]
+- Updated electron simple UI app. [Luc Renambot]
+- Fixed doodle timing issue when made from image. [d-k-k]
+- Merge branch 'master' of https://bitbucket.org/sage2/sage2. [d-k-k]
+- Fixed icon. [d-k-k]
+- Added Whiteboard pointer color icons. [Arthur Nishimoto]
+- Whiteboard ignores SAGEPointer move events that are not currently
+  being dragged (fixes undefined id in ui_builder) [Arthur Nishimoto]
+- Merge branch 'TouchUI' [Arthur Nishimoto]
+- Added PointerColor option to WhiteboardPalette (default) Fixed
+  multiple pointers for WhiteboardPalette. [Arthur Nishimoto]
+- Added aspect_ratio to UI scaling config Added Windows Electron GO-
+  script example. [Arthur Nishimoto]
+- New configuration files for CAVE2. [Luc Renambot]
+- Add eslint and package.json when starting a new app from scratch. [Luc
+  Renambot]
+- Application built with 'npm run newapp' now go to the user's folder.
+  [Luc Renambot]
+- Adding '.txt' file type to 'notepad' and making 'notepad' to work.
+  [Luc Renambot]
+- Add GeoJSON support for Google Maps: drag-drop .geojson files. [Luc
+  Renambot]
+- Added default webview content. [Luc Renambot]
+- Removed printouts. [Luc Renambot]
+- Igore 'web' folder for assets. [Luc Renambot]
+- Added a 'web' folder to put local content. [Luc Renambot]
+- Updated default webview page. [Luc Renambot]
+- WhiteboardPalette no longer sets its initial position based on
+  hardcoded y position. [Arthur Nishimoto]
+- Fixed check for omicron/experimental if completely absent from
+  configuration file. [Arthur Nishimoto]
+- Added tile_diagonal_inches dimension config for simplified auto
+  scaling ui (requires diagonal or width/height, resolution, and user
+  distance) Whiteboard fixes. [Arthur Nishimoto]
+- Fixed WhiteboardPalette geometry position update. [Arthur Nishimoto]
+- Added eraser to WhiteBoardPalette. [Arthur Nishimoto]
+- Merge remote-tracking branch 'remotes/origin/master' into TouchUI.
+  [Arthur Nishimoto]
+- Support for the password option in electron. [Luc Renambot]
+- Omicron no longer needs to be enabled in config for WhiteboardPallet
+  app to function. [Arthur Nishimoto]
+- SAGEPointer now works with Whiteboard app. [Arthur Nishimoto]
+- SAGEPointer events sent to Whiteboard app (WIP) [Arthur Nishimoto]
+- Appveyor. [Luc Renambot]
+- Delete old soundjs lib. [Luc Renambot]
+- Update soundjs library for audioManager. [Luc Renambot]
+- Request list of assets later (helps on slow machines) [Luc Renambot]
+- Adding license info in package.json. [Luc Renambot]
+- Merge branch 'master' of bitbucket.org:sage2/sage2. [Luc Renambot]
+- Merge branch 'master' into msgPass. [d-k-k]
+- Adding 'mesaverde' script and fixing examples for electron commands.
+  [Luc Renambot]
+- Propagates wheel event as it should now. [d-k-k]
+- Merge branch 'master' into msgPass. [d-k-k]
+- Updated some comments in ParaSAGE. [d-k-k]
+- Bug fixes, commenting of ParaSAGE, npm lint, style. [d-k-k]
+- Adds low res limiter to animation caching. [d-k-k]
+- Working high res background cache in ParaSAGE on laptop. [d-k-k]
+- Initial implementation of video caching for ParaSAGE animations.
+  [d-k-k]
+- Testing image request and load fixes. [d-k-k]
+- Resolution and quality changes on interaction to improve interaction
+  speed. [d-k-k]
+- Merge with master. [d-k-k]
+- Bug fix and testing alternative way to speed up interaction. [d-k-k]
+- Bug fix interaction. Added toggles for server only render request,
+  binary conversion before distribution. [d-k-k]
+- Added flag to ParaSAGE to enable / disable 1 client render request
+  then distribute image through SAGE2 server. [d-k-k]
+- Reduced load calls to pvw. [d-k-k]
+- Adding ParaSAGE app prototype. [d-k-k]
+- Somehow MEP got erased, put it back. [d-k-k]
+- Fixes to MEP button release detection. [d-k-k]
+- Fixed rmb context error due to var name. [d-k-k]
+- Merge with master. [d-k-k]
+- Moved css from index and ui to style_ui. [d-k-k]
+- Fixes to doodle to handle oversized images in editor. [d-k-k]
+- MEP now translates pointerScroll action into javascript event, wheel.
+  [d-k-k]
+- Right click for pointer now gets sent to app. Also adjusted mouse
+  event passing to convert right click. [d-k-k]
+- Doodle editer now has cancel / close button. [d-k-k]
+- Note maker now has a close button. [d-k-k]
+- Doodle sizing based upon image bounds. Updated mouse events to master
+  and added a couple comments. [d-k-k]
+- Bug fix for context menu and doodle. [d-k-k]
+- Merge with master. Server kept app creation position for
+  csdLaunchAppWithValues. src/node-assets.js used the master version
+  which doesn't specify folder creation for notes. [d-k-k]
+- Quick note: anon notes omit 'author@', context menu edits no longer
+  revert to yellow. Doodle: name formatting matches quick note (easier
+  to read). Context menu for all apps should show 'Close <appname>'.
+  [d-k-k]
+- Able to doodle any image. Very slow transfer rate when editing, unsure
+  why. [D K]
+- Context menu closes on left click into open space and rmb on open
+  space. Duplication of quickNote and doodle now does a slight offset
+  from source of duplication. Server code adjusted to support actions.
+  [D K]
+- Fixes for some previous errors with right click close. Started
+  implementing note line breaks. Currently uses most messaging
+  conditions of ctrl+enter to make a new line rather than submit. [D K]
+- Need a commit checkpoint to refernce file changes. [D K]
+- Turned out to be a simple fix by calling correct function. [D K]
+- Rmb context menu support for entry color. quickNote rmb updated to
+  include color changes. Started right click to close, however currently
+  erroring. [D K]
+- Check and fix errors. [D K]
+- App title format change to: author @  MMM Do, hh:mm A. Does not alter
+  filename save. [D K]
+- Updating package.json file for electron. [Luc Renambot]
+- Merge branch 'master' into electron. [Luc Renambot]
+- Added a default 'SAGE2' key to Googlemaps, shared for all (it might
+  run out) but at least should get you started. [Luc Renambot]
+- Updated luc's config file. [Luc Renambot]
+- Media folders defined twice. [Luc Renambot]
+- Added features and UI to WebView app. Mostly functional now. [Luc
+  Renambot]
+- Added 'data' object to application launch to pass parameters. [Luc
+  Renambot]
+- Added mergeObjects function to sageutils. [Luc Renambot]
+- Move 'mergeObjects' to sageutils and pass url for webview. [Luc
+  Renambot]
+- Removing opening another view for web browser. [Luc Renambot]
+- Swapped back the port numbers in default config. [Luc Renambot]
+- Merge branch 'master' into electron. [Luc Renambot]
+- Format debug information. [Luc Renambot]
+- Fix password issue: you only had one try before, now disabling caching
+  should let you try multiple times. [Luc Renambot]
+- Appveyor. [Luc Renambot]
+- Adding API key for google maps. [Luc Renambot]
+- Added back the wall widgets for PDF. [Luc Renambot]
+- Updated the mediastream API (webrtc), with callback on a track and not
+  the stream. [Luc Renambot]
+- Updated the cheat-sheet help in UI (? shortcut) [Luc Renambot]
+- Updated pdf controls: left/right arrow for page next/previous, shift
+  arrows to scroll. [Luc Renambot]
+- Update pdf cheat sheet for app keys (updated pdf) [Luc Renambot]
+- Added debug capability for HTTP requests:  env DEBUG=sage2http node
+  server.js. [Luc Renambot]
+- Adding new sound for the event 'new application' (shorter, lower) [Luc
+  Renambot]
+- Appveyor. [Luc Renambot]
+- Merge branch 'master' of https://bitbucket.org/sage2/sage2. [Luc
+  Renambot]
+- Fix PDF icon generation: some version of GS outputs warning, messing
+  up the buffer API, so using a temp file now. [Luc Renambot]
+- Tweaks to PDF and removed the gap between pages for now (causes issues
+  with scaling) [Luc Renambot]
+- Tweak luc's config. [Luc Renambot]
+- Additional tweaks to WallUI button detection lint on SAGEBoard.
+  [Arthur Nishimoto]
+- Fixed radial menu button clicks on smaller widget scale. [Arthur
+  Nishimoto]
+- WallUI menu checks for undefined SAGE2thumbnail. [Arthur Nishimoto]
+- Style fixes. [Arthur Nishimoto]
+- Merge remote-tracking branch 'remotes/origin/master' into TouchUI.
+  [Arthur Nishimoto]
+- Update the 'monitor' npm command. [Luc Renambot]
+- Updated pdf for cheat-sheet.pdf (issue on Mac) [Luc Renambot]
+- Update PDF arrow keys and basic keys (1/f for first page, 0/l for
+  last, spacebar for next) [Luc Renambot]
+- ImageMagick. [Luc Renambot]
+- Updated luc's config. [Luc Renambot]
+- Update Gruntfile. [Luc Renambot]
+- Big update to chemViewer app. [Luc Renambot]
+- Added a special menu entry (right click) called 'separator' [Luc
+  Renambot]
+- Added 'removeFromLauncher' flag in 'instructions.json' to keep loader
+  app in launcher. [Luc Renambot]
+- Added chemviewer as a "loader" [Luc Renambot]
+- Introduced a bug in sabi (json output). Fixed. [Luc Renambot]
+- Removed unused variable. [Luc Renambot]
+- Removed unused code. [Luc Renambot]
+- Updated grunt syntax. [Luc Renambot]
+- Deleted unused file. [Luc Renambot]
+- Adding a few more function doc. [Luc Renambot]
+- Added generate-service-worker.js to the Windows build (forgot it) to
+  generate the caching service worker. [Luc Renambot]
+- Breaking change in 'rbush' package (now using objects instead of
+  array) [Luc Renambot]
+- Ignore 'extras' folder in doc. [Luc Renambot]
+- Update docker file. [Luc Renambot]
+- Imagemagick. [Luc Renambot]
+- Prettier JSON output from sabi. [Luc Renambot]
+- Merge branch 'TouchUI' of bitbucket.org:sage2/sage2 into TouchUI.
+  [Arthur Nishimoto]
+- Updated/tested new auto_acale_ui on inferno-touch.cfg. [Arthur
+  Nishimoto]
+- Updated/tested new auto_scale_ui on inferno-touch.cfg Updated
+  icewallRight.cfg. [Arthur Nishimoto]
+- Added visual acuity calculation to widgetControlSize. [Arthur
+  Nishimoto]
+- Restored basic touch drag interaction. [Arthur Nishimoto]
+- Updated node-omicron to accept priority events through message port
+  (Requires omicron TouchUI branch 187aa93) [Arthur Nishimoto]
+- Merge remote-tracking branch 'remotes/origin/master' into TouchUI.
+  [Arthur Nishimoto]
+- Node-omicron event/gesture debug config flag added. [Arthur Nishimoto]
+- Fixed node-omicron check for raw touch vs gesture events. [Arthur
+  Nishimoto]
+- Merge remote-tracking branch 'remotes/origin/Whiteboard' into TouchUI.
+  [Arthur Nishimoto]
+- Fixed too long line. [Filippo]
+- Merge branch 'Whiteboard' of https://bitbucket.org/sage2/sage2 into
+  Whiteboard. [Filippo]
+- Update palette icon: higher rez. [Luc Renambot]
+- Update images (little smaller) [Luc Renambot]
+- Remove old api keys in config. [Luc Renambot]
+- Update build files. [Luc Renambot]
+- Delete odd files. [Luc Renambot]
+- Delete log files. [Luc Renambot]
+- Minor change in configuration and ipad framework constant. [Filippo]
+- Merge with master. [Filippo]
+- .dsStore deleted and ignored. [Filippo]
+- Updated gitignore. [Filippo]
+- Merge with master. [Filippo]
+- Refactor and improvements. [Filippo]
+- Modes switched. [VanBronckhorst]
+- New icons. [VanBronckhorst]
+- Merge. [VanBronckhorst]
+- Disable from palette. [VanBronckhorst]
+- Bugfix. [VanBronckhorst]
+- [Whiteboard] Typo and bug fix. [Davide Tantillo]
+- [Whiteboard] Resolved bug when erasing and creating selection. [Davide
+  Tantillo]
+- Bugfix. [VanBronckhorst]
+- Stability & linting. [VanBronckhorst]
+- New tutorial & stability. [VanBronckhorst]
+- Draggable color picker and disabled default drawing. [VanBronckhorst]
+- Merge remote-tracking branch 'origin/Whiteboard' into Whiteboard.
+  [Davide Tantillo]
+- Multiple sessions. [VanBronckhorst]
+- [Whiteboard] Do not allow drawing too close on the finger that is
+  currently drawing. [Davide Tantillo]
+- [Whiteboard] Tutorial. [Davide Tantillo]
+- [Whiteboard] Undo and Redo tolerate selection resizing now. [Davide
+  Tantillo]
+- Merge remote-tracking branch 'origin/Whiteboard' into Whiteboard.
+  [Davide Tantillo]
+- Pressing button feedback stable. [VanBronckhorst]
+- Pressing button feedback. [VanBronckhorst]
+- Lines connected to application functioning. [VanBronckhorst]
+- Lines connected to application resizecorrected. [VanBronckhorst]
+- Merge branch 'Whiteboard' of https://bitbucket.org/sage2/sage2 into
+  Whiteboard. [VanBronckhorst]
+- Lines connected to application resize. [VanBronckhorst]
+- [Whiteboard] Selection move is now tolerated by Undo and Redo. [Davide
+  Tantillo]
+- [Whiteboard] Type in erasing fix. [Davide Tantillo]
+- [Whiteboard] FIxed bad behavior with erase undo. [Davide Tantillo]
+- Merge remote-tracking branch 'origin/Whiteboard' into Whiteboard.
+  [Davide Tantillo]
+- Linking all lines to applications corrected. [VanBronckhorst]
+- Linking all lines to applications. [VanBronckhorst]
+- Merge. [VanBronckhorst]
+- Drawings linked to applications alpha. [VanBronckhorst]
+- [Whiteboard] Clear all is tolerated by undo. [Davide Tantillo]
+- [Whiteboard] Now undo work perfectly for drawing object. [Davide
+  Tantillo]
+- [Whiteboard] Fix bug on undo. [Davide Tantillo]
+- Merge remote-tracking branch 'origin/Whiteboard' into Whiteboard.
+  [Davide Tantillo]
+- Better color picker. [VanBronckhorst]
+- [Whiteboard] Undo of entire drawing line. [Davide Tantillo]
+- Merge remote-tracking branch 'origin/Whiteboard' into Whiteboard.
+  [Davide Tantillo]
+- Merge branch 'Whiteboard' of https://bitbucket.org/sage2/sage2 into
+  Whiteboard. [VanBronckhorst]
+- Breakage of lines for better interpolation+ improved palette.
+  [VanBronckhorst]
+- [Whiteboard] Specialization of Undo. [Davide Tantillo]
+- [Whiteboard] Testing the elimination of the last five points of a
+  drawing. [Davide Tantillo]
+- [Whiteboard] Remove crash due to deregistration of not display
+  clients. [Davide Tantillo]
+- [Whiteboard] Possibility to connect more user, deregister them to the
+  drawing manager and see the update on clientID -1. [Davide Tantillo]
+- Merge branch 'Whiteboard' of https://bitbucket.org/sage2/sage2 into
+  Whiteboard. [VanBronckhorst]
+- [Whiteboard] Small strokes can become erases. [Davide Tantillo]
+- [Whiteboard] Erasing of not deleted object on client. [Davide
+  Tantillo]
+- Merge remote-tracking branch 'origin/Whiteboard' into Whiteboard.
+  [Davide Tantillo]
+- [Whiteboard] Now erasing does not block the drawing. [Davide Tantillo]
+- Moving palette fixed. [VanBronckhorst]
+- Merge branch 'Whiteboard' of https://bitbucket.org/sage2/sage2 into
+  Whiteboard Merge. [VanBronckhorst]
+- Merge remote-tracking branch 'origin/Whiteboard' into Whiteboard.
+  [Davide Tantillo]
+- [Whiteboard] Eraser now does not block anymore others drawing. [Davide
+  Tantillo]
+- Touch near bottom for moving  palette. [VanBronckhorst]
+- Merge branch 'Whiteboard' of https://bitbucket.org/sage2/sage2 into
+  Whiteboard merge. [VanBronckhorst]
+- [Whiteboard] Fixed abnormal behavior on selection. [Davide Tantillo]
+- Fixes. [VanBronckhorst]
+- Merge branch 'Whiteboard' of https://bitbucket.org/sage2/sage2 into
+  Whiteboard. [VanBronckhorst]
+- [Whiteboard] Remove callback corrected. [Davide Tantillo]
+- [Whiteboard] Eliminated addition of ID in dictionaryId so that fake
+  object are createrd. [Davide Tantillo]
+- [Whiteboard] Now the delete function is done on group of objects and
+  not on single object. It results in less call on the client. [Davide
+  Tantillo]
+- Bug fixes. [VanBronckhorst]
+- Eraser improved. [VanBronckhorst]
+- Eraser alpha. [VanBronckhorst]
+- Moving palette fix. [VanBronckhorst]
+- [Whiteboard] Image update. [Davide Tantillo]
+- Selection in every way. [VanBronckhorst]
+- Merge branch 'Whiteboard' of https://bitbucket.org/sage2/sage2 into
+  Whiteboard. [VanBronckhorst]
+- [Whiteboard] Selection movement and resizing. [Davide Tantillo]
+- [Whiteboard] Start to manage update of multiple object rather than an
+  init all. [Davide Tantillo]
+- Fixes. [VanBronckhorst]
+- Selection fixes. [VanBronckhorst]
+- Merge. [VanBronckhorst]
+- [Whiteboard] Some corrections of scaling of selection. [Davide
+  Tantillo]
+- New scale function. [VanBronckhorst]
+- Zooming enabled. [VanBronckhorst]
+- [Whiteboard] Allow movement of selection box. [Davide Tantillo]
+- [Whiteboard] Updated system of selection. [Davide Tantillo]
+- Merge remote-tracking branch 'origin/Whiteboard' into Whiteboard.
+  [Davide Tantillo]
+- Selection draw. [VanBronckhorst]
+- [Whiteboard] Managing of visualization of selection. [Davide Tantillo]
+- Merging. [VanBronckhorst]
+- [Whiteboard] Added 'points' feature in selection. [Davide Tantillo]
+- [Whiteboard] Start of implementation of selection. [Davide Tantillo]
+- Back and forth from painting mode. [VanBronckhorst]
+- Color picker. [VanBronckhorst]
+- [Whiteboard] Moving palette release allowed only to who is moving the
+  palette. [Davide Tantillo]
+- [Whiteboard] Fix abnormal palette movement. [Davide Tantillo]
+- [Whiteboard] Fix bug when not client is connected. [Davide Tantillo]
+- [Whiteboard] Davide schedule (for HCI course) [Davide Tantillo]
+- Merge branch 'Whiteboard' of https://bitbucket.org/sage2/sage2 into
+  Whiteboard. [VanBronckhorst]
+- [Whiteboard] Fix load id. [Davide Tantillo]
+- [Whiteboard] Correction on load of id. [Davide Tantillo]
+- [Whiteboard] Correction of inconsistency in the new id management.
+  [Davide Tantillo]
+- [Whiteboard] Changed id management. Now every distinct touch has a
+  drawingId independent from the touch eventId. [Davide Tantillo]
+- Screenshot functionality. [VanBronckhorst]
+- ScreenShot alpha. [VanBronckhorst]
+- Stroke size of the object alpha. [VanBronckhorst]
+- Saving and loading enabled. [VanBronckhorst]
+- Merge branch 'Whiteboard' of https://bitbucket.org/sage2/sage2 into
+  Whiteboard. [Davide Tantillo]
+- Save & load icons and buttons. [VanBronckhorst]
+- Implementation of load functionality. [Davide Tantillo]
+- Save state. [VanBronckhorst]
+- Merge branch 'Whiteboard' of https://bitbucket.org/sage2/sage2 into
+  Whiteboard. [VanBronckhorst]
+- Whiteboard: correction of y axis synchronization. [Davide Tantillo]
+- Whiteboard: updated state of palette position after touch movement.
+  [Davide Tantillo]
+- Drawing of one point and line simplification. [VanBronckhorst]
+- Moving palette working with offset. [VanBronckhorst]
+- Movable palette with touch for real. [VanBronckhorst]
+- Movable palette with touch. [VanBronckhorst]
+- Removing offset from palette. [Davide Tantillo]
+- Palette touch integration. [Davide Tantillo]
+- Merge remote-tracking branch 'origin/Whiteboard' into Whiteboard.
+  [Davide Tantillo]
+- Handling of palette touches. [VanBronckhorst]
+- Whiteboard: update coordinate of whiteboard app method. Now it is done
+  from the server. [Davide Tantillo]
+- Whiteboard: managed the state of position of the palette on server and
+  avoided writing if touching the palette. [Davide Tantillo]
+- Functioning prototype. [VanBronckhorst]
+- Merge remote-tracking branch 'origin/Whiteboard' into Whiteboard.
+  [Davide Tantillo]
+- Added one point draw. [VanBronckhorst]
+- Drawing: insert return statement, if the touch event is a release.
+  [Davide Tantillo]
+- Update of drawing only in the corresponding client. [Davide Tantillo]
+- DrawingManager: added method to unregister a socket from the
+  drawingManager. [Davide Tantillo]
+- Style correction. [VanBronckhorst]
+- Palette and undo/redo/clear functionalities. [VanBronckhorst]
+- Bug fix. [Davide Tantillo]
+- Merge remote-tracking branch 'origin/Whiteboard' into Whiteboard.
+  [Davide Tantillo]
+- Drawing prototype in ui_builder. [VanBronckhorst]
+- Added update of drawing object. [Davide Tantillo]
+- Merge branch 'Whiteboard' of https://bitbucket.org/sage2/sage2 into
+  Whiteboard. [Davide Tantillo]
+- UiBuilder now draws the saved server state at the init.
+  [VanBronckhorst]
+- Added update of the drawing state only on specific client. [Davide
+  Tantillo]
+- Drawing object defined. [VanBronckhorst]
+- Svg over every tile. [VanBronckhorst]
+- Merge branch 'master' of https://bitbucket.org/sage2/sage2 into
+  Whiteboard. [VanBronckhorst]
+- Merge branch 'master' of https://bitbucket.org/sage2/sage2 into
+  Whiteboard. [VanBronckhorst]
+- Svg over every tile, style compliant. [VanBronckhorst]
+- DrawingManager variable moved in omicron. [VanBronckhorst]
+- DrawingManager variable moved. [VanBronckhorst]
+- Gitignore changed. [VanBronckhorst]
+- Linked drawing manager. [VanBronckhorst]
+- Config file changed. [VanBronckhorst]
+- Config file added. [VanBronckhorst]
+- Node-drawing created. [VanBronckhorst]
+- Merge remote-tracking branch 'remotes/origin/master' into TouchUI.
+  [Arthur Nishimoto]
+- Added missing files from master. [Arthur Nishimoto]
+- WallUI MediaBrowser now displays default icons if thumbnail URL is
+  bad. [Arthur Nishimoto]
+- Merge branch 'TouchUI' of bitbucket.org:sage2/sage2 into TouchUI.
+  [Arthur Nishimoto]
+- Updated icewall Arthur configs. [Arthur Nishimoto]
+- Merge branch 'master' into TouchUI. [Arthur Nishimoto]
+- Updated Arthur configs. [Arthur Nishimoto]
+- Merge remote-tracking branch 'remotes/origin/master' into TouchUI.
+  [Arthur Nishimoto]
+- Merge branch 'master' into TouchUI. [Arthur Nishimoto]
+- Merge branch 'master' of bitbucket.org:sage2/sage2. [Arthur Nishimoto]
+- Updated Arthur's icewall configs. [Arthur Nishimoto]
+- Merge remote-tracking branch 'remotes/origin/master' into TouchUI.
+  [Arthur Nishimoto]
+- Reverted default config. [Arthur Nishimoto]
+- Auto_scale_ui must be enabled to override default/user config
+  widgetControlSize. [Arthur Nishimoto]
+- Added max size for automated widget control size Mediabrowser now uses
+  server scaling. [Arthur Nishimoto]
+- Revised auto-scaling UI calculation (Widgets only) [Arthur Nishimoto]
+- Merge remote-tracking branch 'remotes/origin/master' into TouchUI.
+  [Arthur Nishimoto]
+- Touch gesture enable/disable flags added to config. [Arthur Nishimoto]
+- Merge branch 'master' into TouchUI. [Arthur Nishimoto]
+- Touch zoom gesture (two-finger) can become a window drag gesture if
+  move far enough away from initial position Requires Omicron server
+  commit 4309886 (2015-11-30) or later. [Arthur Nishimoto]
+- Cleaned up WallUI client side messages. [Arthur Nishimoto]
+- Cleaned up Omicron console messages. [Arthur Nishimoto]
+- Updated GO script for CAVE2. [Luc Renambot]
+- Updated configuration for CAVE2. [Luc Renambot]
+- Fix timezone app: prefix clock by appid. [Luc Renambot]
+- Restore the existing apps for new AudioManager. [Luc Renambot]
+- Set initial volume for apps in audiomanager. [Luc Renambot]
+- Scaled fonts and markers with zoom level. [Andy J]
+- Fix background image croping (the new tile width/height broke it) [Luc
+  Renambot]
+- Updated text to be a bit more readable. [Andy J]
+- Send right-click event to apps. [Luc Renambot]
+- Allow CORS on /config route, to enable tools to use the info. [Luc
+  Renambot]
+- Use the date in package.json. [Luc Renambot]
+- Add a date field to pakcage.json for release date. [Luc Renambot]
+- Fix typo in code: passwordProtected vs passordProtected. [Luc
+  Renambot]
+- Remove PDF buttons if there's only one page. [Luc Renambot]
+- Fix navigation offset in PDF and add webui menu back. [Luc Renambot]
+- Updated gitignore file. [Luc Renambot]
+- Update to PDF app: title, smaller icons, colors. [Luc Renambot]
+- Fix app icon resize in web ui. [Luc Renambot]
+- Update install_dependencies. [Luc Renambot]
+- Added colorspace option to force video into yuv420p (new node-demux
+  option) [Luc Renambot]
+- Appveyor. [Luc Renambot]
+- Merged in monash-sage2-dev/sage2/upstream-bugfix-backgroundimage (pull
+  request #6) [Luc Renambot]
+  Issue #73 bugfix: backgroundimages were cropped and displayed wrong, with new display width/height feature
+- Bugfix: backgroundimages were cropped and displayed wrong, with new
+  display width/height feature. [Matthias Klapperstueck]
+- Electron script for 'preeka' machine. [Luc Renambot]
+- Merge branch 'electron' of https://bitbucket.org/sage2/sage2 into
+  electron. [Luc Renambot]
+- Add stop script. [Luc Renambot]
+- Add script for cave2 electron. [Luc Renambot]
+- Implement zoom inside webview. [Luc Renambot]
+- Disable audio on display side. [Luc Renambot]
+- Adding icon files. [Luc Renambot]
+- Add a bunch of command line options to open the electron display
+  client. [Luc Renambot]
+- Install binary modules for node v6 and up. [Luc Renambot]
+- Updated gitignore. [Luc Renambot]
+- Adding first iteration of a Electron-based display client. [Luc
+  Renambot]
+- Update of electron based display: now mouse events work. Working on
+  keyboard events. [Luc Renambot]
+- Adding a menu to open a web page and sending message to server. No
+  backend yet. [Luc Renambot]
+- Track the callbacks from the server to enable state monitoring. [Luc
+  Renambot]
+- Made it easier to add in new webcams directly in the photo_scrapbooks
+  file. [Andy J]
+- Added support for WebUI menu. [Andy J]
+- Added in support for WebUI menu and arrow keys. [Andy J]
+- Fixed conflicts. [Andy J]
+- Update Imagemagick. [Luc Renambot]
+- Added in more comics. [Andy J]
+- App should now pull the most recent comic by default better. [Andy J]
+- Fix the 'next' button in the Photos app. [Luc Renambot]
+- Fix loading dependencies: not all dependencies ends in .js. Fix for
+  GoogleMaps. [Luc Renambot]
+- ImageMagick. [Luc Renambot]
+- Add overlapping area in configuration for edge blending:
+  dimensions.tile_overlap: {horizontal: 30, vertical; 0} [Luc Renambot]
+- Cleaning CSS files (using stylelint) [Luc Renambot]
+- Simplify SVG loading file by using Snap (no test for IE needed
+  anymore) [Luc Renambot]
+- Updating pdf and webix js libraries. [Luc Renambot]
+- Remove CSS loading code from apps, now added as dependencies. [Luc
+  Renambot]
+- Add CSS file as valid dependencies for applications. [Luc Renambot]
+- Apply a quick fade out when window is deleted. [Luc Renambot]
+- Fix bug in event to DOM: search for app_ in app name. [Luc Renambot]
+- Reduced gap between pdf pages and increased quality setting. [Luc
+  Renambot]
+- Adding the new pdf multi-page viewer. Needs testing. [Luc Renambot]
+- Optmizing pointer motion. [Luc Renambot]
+- Optimize the size of the SVG element containing a pointer on the wall.
+  [Luc Renambot]
+- Added sw-precache to dependencies (service worker from google) [Luc
+  Renambot]
+- Removed appcache (going deprecated) and replaced with swevice worker
+  precache. [Luc Renambot]
+- Updating luc's wall config. [Luc Renambot]
+- ImageMagick. [Luc Renambot]
+- New linting rules for server side code. [Luc Renambot]
+- New linting rules for apps code. [Luc Renambot]
+- New rules for linting client side. [Luc Renambot]
+- Preparing for the merge of eslint and jscs: merging rules into eslint
+  configuration. [Luc Renambot]
+- Add an option not to open file after upload (inside the POST form
+  data) [Luc Renambot]
+- Display server time (with remote timezone) on the top status bar. [Luc
+  Renambot]
+- Imagemagick update again. [Luc Renambot]
+- Fix bug: deadlock when new client arrives for animation applications
+  (broadcast a draw call to everyone when app is restored) [Luc
+  Renambot]
+- Map center and type now saved. [Andy J]
+- Merge branch 'master' of https://bitbucket.org/sage2/sage2. [Andy J]
+- ImageMagick. [Luc Renambot]
+- Trying to optimize a bit the block drawing. [Luc Renambot]
+- Put app draw call into a RequestAnimationFrame. [Luc Renambot]
+- Moved initial view parameters into state variables. [Andy J]
+- Tweaks for display code for block streaming. [Luc Renambot]
+- Merge branch 'master' of https://bitbucket.org/sage2/sage2 into
+  secure. [Luc Renambot]
+- Add a new slideshow in 'photos' app: takes the images from 'slideshow'
+  folder in user folder. [Luc Renambot]
+- Send a file file on delete and move assets. [Luc Renambot]
+- Typo. [Luc Renambot]
+- Apps can register a callbck to get list of files (assets) on the
+  server: registerFileListHandler and unregisterFileListHandler. [Luc
+  Renambot]
+- Display client maintains a litle of assets from server (for apps) [Luc
+  Renambot]
+- Add an extra 'decodeURI' for file names in file manager. [Luc
+  Renambot]
+- Cleanup a little more the filenames after upload. [Luc Renambot]
+- Pass double-click events to apps: googlemaps dbl-click to zoom in,
+  shift-dbl-click to zoom out. [Luc Renambot]
+- Handle password for remote server: configuration of remote servers can
+  contain session hash or password fields. [Luc Renambot]
+- Update audio manager to new connection message. [Luc Renambot]
+- Style. [Luc Renambot]
+- Update to latest version of electron. [Luc Renambot]
+- Reverse order of module installation in 'npm run in' (to make it work
+  for npm v3.x) [Luc Renambot]
+- Take latest version of websocketio package (from Tommy) [Luc Renambot]
+- Updating versions for gs, imagemagick and exiftool. [Luc Renambot]
+- Adding install_dependencies.js to linting. [Luc Renambot]
+- Linting and switching to sage bitbucket for binary downloads. [Luc
+  Renambot]
+- Merge branch 'master' of https://bitbucket.org/sage2/sage2. [Luc
+  Renambot]
+- Revert to websocketio 1.0.1 for now. [Luc Renambot]
+- Merge branch 'master' of https://bitbucket.org/sage2/sage2. [Luc
+  Renambot]
+- Undo test commit. [Luc Renambot]
+- Test commit from cloud9. [Luc Renambot]
+- Added a 'File / Quit' menu to close the file manager. [Luc Renambot]
+- Making sure the doodle file exists before loading it. [Luc Renambot]
+- Better handling of assets in server. [Luc Renambot]
+- Better handling of 'mime' type in item-loader. [Luc Renambot]
+- Adding a sage2Type field in the assets, redone the listing of all
+  assets (added 'other' category) [Luc Renambot]
+- Handling unknow files in exiftool. [Luc Renambot]
+- Adding a mime lookup function in the registry. [Luc Renambot]
+- Styling code in quickNote. [Luc Renambot]
+- Update file manager to support doodle and notes. [Luc Renambot]
+- IRemoving old schoold folder for notes. [Luc Renambot]
+- REmoving old school folder for notes. [Luc Renambot]
+- Remove redundant sageMouseEventPass file. [Luc Renambot]
+- Update imagemagick for security. [Luc Renambot]
+- Removed my previous comments to fix tile layout. It should be OK. [Luc
+  Renambot]
+- Fix UI menu bar with now 9 buttons. [Luc Renambot]
+- Simplify a little quickNote app (no change in functionality) [Luc
+  Renambot]
+- Simplify a little doodle app (no change in functionality) [Luc
+  Renambot]
+- Adding doodle and note into check processes. [Luc Renambot]
+- Fix display of version in UI. [Luc Renambot]
+- Fix visibility for irregular tiles. [Luc Renambot]
+- Merged in retronator/sage2-display-span/pull-request (pull request #5)
+  [Luc Renambot]
+- Compatibility with ordinary config files. [Matej Jan]
+- Support for displays spanning multiple screens. [Matej Jan]
+- Remove comments and git stuff from appveyor. [Luc Renambot]
+- Appveyor. [Luc Renambot]
+- Appveyor updating imagemagick. [D K]
+- Merge branch 'master' of https://bitbucket.org/sage2/sage2. [D K]
+- Appveyor. [Luc Renambot]
+- Adding a bgr shader. [Luc Renambot]
+- Adding RGB and BGR formats for pixel streaming. [Luc Renambot]
+- Merge branch 'master' of https://bitbucket.org/sage2/sage2. [D K]
+- Appveyor. [Luc Renambot]
+- Removing applications used to test implemented functionality. Will
+  move them into sage2_apps. [D K]
+- Merge branch 'master' into sabiUpdater. [D K]
+- Credential issue. [d-k-k]
+- Weird issue with binary repo push. [d-k-k]
+- Merge branch 'msgPass' into sabiUpdater. [d-k-k]
+- Merge branch 'master' into msgPass. [d-k-k]
+- Merge branch 'master' into msgPass. [D K]
+- Console log cleanup. [D K]
+- Doodle file save working. UI recognizes and places in Image folder.
+  Drag and drop works. Fixed duplicate error with QuickNote and Doodle.
+  [D K]
+- Finally have note saving working and restoring. [D K]
+- All files changed in this commit are necessary to get a custom type to
+  show up in the UI and correctly launch the associated app. NOTE: Will
+  not be correctly initialized. [D K]
+- Dragging a dropping a .note file into UI will launch QuickNote. Just
+  launches, doens't correctly initialize with correct data. [D K]
+- Fixed duplication, adjusted color. [D K]
+- Added right click duplicate. [D K]
+- Added color functionality to note. Anonymous option. Updated session
+  save state. [D K]
+- Merge with master and resolved conflicts. [D K]
+- Adding 'download' context menu option ifn pdf, movie, and image
+  applications. [Luc Renambot]
+- Pushing menuContext info from app to server after application creation
+  (only from isMaster) [Luc Renambot]
+- Move function 'removeAllChildren' to SAGE2_runtime: remove children of
+  DOM element. [Luc Renambot]
+- Fix for menu UI: date should be converted to 'new Date(data...)' when
+  receiving date info from server. [Luc Renambot]
+- Unique title ap-name-time for doodle and quicknote. [D K]
+- Think state is preserved when saving sessions for QuickNote and
+  Doodle. Gotta test again when not tired. [D K]
+- Context menu now returns as an object. Certain fields are
+  automatically added. [D K]
+- Style fixes made, reports are fully compliant. [d-k-k]
+- Style fix on server.js. [d-k-k]
+- Merge branch 'master' into msgPass. [D K]
+- Added comments to code to enable context menu and message packets. [D
+  K]
+- Interaction improvement and visual scale for quickNote. [D K]
+- Tested working shared drawing space. Needs cleanup, has old code in
+  case things broke. [D K]
+- Adding right-click menu for googlemaps. [Luc Renambot]
+- Modified files to allow pointer event passing through boolean value
+  change. [D K]
+- Fixes to the rmb input interaction entry and send. [D K]
+- Fixes to drawing formatting. [D K]
+- Formatting fixes for the note and draw. [D K]
+- Temporary added p key to play from UI for video player. [D K]
+- Name change. [D K]
+- Name, formatting, and a couple mechanical fixes. [D K]
+- Cleanup on app display will need to check again. color thick added. [D
+  K]
+- Confirmed data pass set, get, subscription. [D K]
+- Further testing and refinement with message passing. Image test. [D K]
+- Testing input box for rmb and ui data passing. For the moment note app
+  launch. [D K]
+- Confirmed working input field to application from context menu. [D K]
+- Merge branch 'master' into msgPass. [D K]
+- Removed debug msg. [D K]
+- Testing working video and pdf right mouse button context menu. [D K]
+- Save for transfer. [D K]
+- Confirmed app source and rmb differentiation. [D K]
+- Communication between using movieplayer. However function name is
+  being lost. [D K]
+- Right click context menu replacement and start of UI to Display
+  messaging. [D K]
+- Merge branch 'master' into sabiUpdater. [D K]
+- Merge with master. [D K]
+- Merge and appveyor changed to use imagemagick 6.9.3-5. [d-k-k]
+- Merge conflict resole on ImageMagick filename. [d-k-k]
+- Forgot the 7z entry name change. [D K]
+- Updated appveyor file to imagemagic 7.0.0-0. [D K]
+- Merge branch 'master' into sabiUpdater. [D K]
+- Modified appveyor file. [D K]
+- Merge branch 'master' into sabiUpdater. [d-k-k]
+- Removed plain text password from files that will end up in the
+  depoloyment. [D K]
+- Whitespace change to retrigger appveyor. [d-k-k]
+- Fixed error with line break for updating. [d-k-k]
+- Merge branch 'master' into dkbin. [d-k-k]
+- Trivial change to restart appveyor. It failed due to gs dl timeout. [D
+  K]
+- Edits to the sabi server to support a fully installed git pull using
+  lavalab credentials. [d-k-k]
+- Remove git curl from appveyor. Seems to need full install. [d-k-k]
+- Modified script to add markers for the auto replacement by sabi.
+  [d-k-k]
+- Merge branch 'master' into dkbin. [d-k-k]
+- Update appveyor imagemagic curl. [d-k-k]
+- Fixed some issues with launcher rewrite to account for port and
+  meetingID. [d-k-k]
+- Moved git exec unpacking until after git push to prevent file
+  overwrite while in usage. [D K]
+- Wrong flag. [D K]
+- Forgot to add the restart command. [D K]
+- Appveyor edited to include git, added update button to sabi. [D K]
+- Back to testing .git-credentials method. [D K]
+- Changed from email to username in git remote address. [D K]
+- Changed username to match account. [D K]
+- Changed git credential location. [D K]
+- Removed echo comands to see if appveyor reacts now. [D K]
+- Added some echo commands to appveyor.yml to view directory
+  information. [D K]
+- Appveyor.yml commands to look around to fix the home folder issue. [D
+  K]
+- Changed home to ~ [D K]
+- Changed reference homepath to home in appveyor.yml. [D K]
+- Added appveyor commands to push binary contents to a bitbucket repo.
+  [D K]
+- Fixes to scripts outside the sabi folder and edit to the on script
+  rewrite. [D K]
+- Merge with master. [d-k-k]
+- Moved sabi scripts and windows cert generator to SAGE2_media on first
+  start to avoid edits in structure. [D K]
+- Merge branch 'master' into dkbin. [D K]
+- Testing if appveyor will build this. [D K]
+- Testing sabi script auto detect monitors and layout for config edits.
+  [DK]
+- Appveyor. [Luc Renambot]
+- Updated template for default app (used with newapp command) [Luc
+  Renambot]
+- No need for ./node_modules/.bin/ path in package.json (automatically
+  added) and more portable. [Luc Renambot]
+- Merge branch 'master' of https://bitbucket.org/sage2/sage2. [Luc
+  Renambot]
+- Adding audio feedback when sending an app to remote site. [Luc
+  Renambot]
+- Added audio feedback for remote site coming up and down. [Luc
+  Renambot]
+- Changed the 'delete app' sound and add an event for 'server down' [Luc
+  Renambot]
+- Hide browser in electron. [Luc Renambot]
+- Added images and libs for electron. [Luc Renambot]
+- Progress on a electron-based UI. [Luc Renambot]
+- Fix filemanager on mobile device. [Luc Renambot]
+- Add session hash in admin editor. [Luc Renambot]
+- Adding the session hash to the console. [Luc Renambot]
+- Undo last commit. [Luc Renambot]
+- Addind option to Gruntfile. [Luc Renambot]
+- Updating webix library. [Luc Renambot]
+- Center the help image on the wall. [Luc Renambot]
+- Appveyor. [Luc Renambot]
+- Adding packager. [Luc Renambot]
+- Adding electron-sage2 for desktop UI using Electron (first commit)
+  [Luc Renambot]
+- Deleting... [Luc Renambot]
+- Experiement in using Electron for a simplified desktop UI. [Luc
+  Renambot]
+- Quick fix to enable remote site share. Need further investigation to
+  cause. [D K]
+- Make sure that Notification is supported (fix mobile clients) [Luc
+  Renambot]
+- Revert "Fix media_stream sharing (desktop sharing): using port instead
+  of secure port in id calculation" [Luc Renambot]
+- Simple fix to add the site session with addClient for remote sites.
+  Requires the config to be edited to add a session entry for each
+  remote site. [D K]
+- Put a check in mouse event passing to remove error
+  (point.currentElement null) [Luc Renambot]
+- Set black background in PDF viewer (in the base div) instead of
+  transparent (doesnt look broken while doing first render) [Luc
+  Renambot]
+- Fix view of EXIF data in image viewer (was gone for some reason) [Luc
+  Renambot]
+- Fix size of overlay layer of SAGE2_App. [Luc Renambot]
+- Tweaking the info panel. [Luc Renambot]
+- Adding notification if web UI hidden during screen sharing. [Luc
+  Renambot]
+- Adding gain and panner node (WebAudio API) in the audio manager based
+  on old code from Michelle Daniels. [Luc Renambot]
+- Layout of the audioManager. [Luc Renambot]
+- Styling the audio manager. [Luc Renambot]
+- Removed a printout. [Luc Renambot]
+- Update design of audioManager (with video icons, color, ...) [Luc
+  Renambot]
+- Added the SoundJS library in AudioManager: loads the startup sound,
+  and plays a 'blip' on new apps and a 'blop' on deleted apps. [Luc
+  Renambot]
+- Adding runtime to drawing app. [Luc Renambot]
+- SAGE2 clients now need to provide password/hash when connectiong to
+  SAGE2 (using same data from HTTP cookie) [Luc Renambot]
+- Clients need to provide password/hash for websocket connections. [Luc
+  Renambot]
+- Adding password/hash options to standalong commands (bin/*.js) [Luc
+  Renambot]
+- Adding bin/*.js into the lint/style checks. [Luc Renambot]
+- Fix and modify timezone: sync, add time AMPM, free resize. [Luc
+  Renambot]
+- Fix bug in googlemap: geocoder function is async, so need to call
+  SAGE2Sync to synchronize the state variable. [Luc Renambot]
+- Revert "timezone app bug fixed" [Luc Renambot]
+- Timezone app bug fixed. [andreino7]
+- Adding Dylan's event processing functions. [Luc Renambot]
+- Fixing authors file. [Luc Renambot]
+- Update from Davide. [Luc Renambot]
+- Removed 'onload' in session.html (forbidden inline js). Was forgotten
+  from previous cleanup. [Luc Renambot]
+- Fixing the registry: register new extensions for apps. [Luc Renambot]
+- Fixing loading non-web images (convert to png) [Luc Renambot]
+- Removing timeout to close popup messages. [Luc Renambot]
+- Remove default timeout for closing popup messages. [Luc Renambot]
+- Adding GIF as image type. [Luc Renambot]
+- Tweak clock app icon. [Luc Renambot]
+- Fix url to filename conversion in http requests. [Luc Renambot]
+- Tweak countdown icon. [Luc Renambot]
+- Update package.json. [Luc Renambot]
+- Clean up URL requests. [Luc Renambot]
+- Tweaking content-type of http requests. [Luc Renambot]
+- Updating exiftool and ffmpeg build dependencies. [Luc Renambot]
+- Updating the windows config file for ImageMagick. [Luc Renambot]
+- Fixed typos. [Luc Renambot]
+- Delete timerApp (rename countdown) [Luc Renambot]
+- Updated/Added timezone and countdown (timer) apps. [Luc Renambot]
+- Avoiding sending event to app from web UI, from the titlebar button
+  (close, maximize) [Luc Renambot]
+- Delete key removes app only in window management mode. [Luc Renambot]
+- Fixing loading app (bug introduced yesterday) [Luc Renambot]
+- Adding chemical viewer app (chemViewer) [Luc Renambot]
+- Add a sanitize function to cleanup filenames after a drop (remove
+  illegal charaters) [Luc Renambot]
+- Remove comment. [Luc Renambot]
+- Add blob: as secure image source (CSP) [Luc Renambot]
+- No default mime type for content upload, trying to filter out unknown
+  content. [Luc Renambot]
+- Fix call to showSAGE2Message (instead of showMessage) [Luc Renambot]
+- Update eslint definitions. [Luc Renambot]
+- Update d3 version. [Luc Renambot]
+- Add an example configuration enabling extra security features. [Luc
+  Renambot]
+- Put some security features behind flags: enableHPKP, enableCSP,
+  enableHSTS. [Luc Renambot]
+- Fix clock app for security. [Luc Renambot]
+- Updating imagemagick version. [Luc Renambot]
+- Merge branch 'master' into secure. [Luc Renambot]
+- Updated/added Icewall configs and GO-scripts. [Arthur Nishimoto]
+- Update eslint definitions. [Luc Renambot]
+- Updating for HPKP security. [Luc Renambot]
+- Testing with HPKP key pinning security. [Luc Renambot]
+- Removed [ ] in SVG filenames for UI elements. [Luc Renambot]
+- Appveyor. [Luc Renambot]
+- Merge branch 'master' into secure. [Luc Renambot]
+- Tries to re-use websocket from remote side (deals with firewall) [Luc
+  Renambot]
+- Updated eslint configuration file. [Luc Renambot]
+- Updated EVL mesaverde configuration. [Luc Renambot]
+- Added EVL configuration files. [Luc Renambot]
+- Adding 'secure' branch to build process, for testing. [Luc Renambot]
+- Fixing HTTP request bugs: only return files within reason, builds
+  better HTTP header, ... [Luc Renambot]
+- Put a test in interactable instead of crashing. [Luc Renambot]
+- Fixing date value for text input - server side. [Luc Renambot]
+- Fixing many bugs in sticky note app. In particular horrible bug on
+  extending builtin array object. [Luc Renambot]
+- Putting the blinker class external, on notepad app. [Luc Renambot]
+- Fix date on text input widget. [Luc Renambot]
+- Disable app.cache on the display client (deprecated on HTTP, only
+  HTTPS in future) [Luc Renambot]
+- Add test server in configuration. [Luc Renambot]
+- Merge branch 'master' into secure. [Luc Renambot]
+- Appveyor. [Luc Renambot]
+- Fix media_stream sharing (desktop sharing): using port instead of
+  secure port in id calculation. [Luc Renambot]
+- Change 'embedding' rule to SAMEORIGIN (instead of DENY) [Luc Renambot]
+- Replace inline statup scripts with event handlers (onload) [Luc
+  Renambot]
+- Changed the tag containing the license to another script type, in
+  order to remove inline scripts. [Luc Renambot]
+- New version of snapsvg. [Luc Renambot]
+- Restrict embed to 'sameorigin' instead of 'deny' (allows SAGE2 to
+  embed its own content) [Luc Renambot]
+- Merge branch 'master' into secure. [Luc Renambot]
+- Trying not to break desktop sharing messages. [Luc Renambot]
+- Extension. [Luc Renambot]
+- Update UI and Chrome extension to only register valid SAGE2 sites
+  (other sites were sending messages to the extension). [Luc Renambot]
+- Tweaked the chicago camera locations. [Andy J]
+- Add TLS session caching if needed (most browsers do) [Luc Renambot]
+- Added config file for sage2server.evl.uic.edu. [Luc Renambot]
+- Add an option to select and limit the HTTPS connection method: default
+  to TLSv1 but can be restricted to TLSv1.2 for more security. Might
+  disable older browsers. Option: security.secureProtocol, example value
+  "TLSv1_2_method" [Luc Renambot]
+- Typo. [Luc Renambot]
+- Add a function buildHeader in HTTP module to setup correct options for
+  security. [Luc Renambot]
+- Add a sanitizedURL in the utils module to clean up URLs. [Luc
+  Renambot]
+- Add 'sanitizer' module to clean up mal-formed URL (XSS) [Luc Renambot]
+- Appveyor. [Luc Renambot]
+- Merge branch 'master' into secure. [Luc Renambot]
+- CAVE2 config. [Luc Renambot]
+- Merge branch 'secure' of https://bitbucket.org/sage2/sage2 into
+  secure. [Luc Renambot]
+- Duplicate. [Luc Renambot]
+- Fix duplicate in eslint configuration file. [Luc Renambot]
+- Update on the pointer benchmark. [Luc Renambot]
+- Put a error handler in the write stream for HTTP PUT commands. [Luc
+  Renambot]
+- Add a few more headers in request replies. [Luc Renambot]
+- Add a handler for all uncaught exceptions. [Luc Renambot]
+- Added new HTTP headers: Strict-Transport-Security to enforce https,
+  and X-Frame-Options to deny iframe embedding. [Luc Renambot]
+- Add header to some http responses. [Luc Renambot]
+- Display clientType only if known. [Luc Renambot]
+- Instead of showing URL, redirect to '/', to limit XSS attempts. [Luc
+  Renambot]
+- Merge branch 'master' of https://bitbucket.org/sage2/sage2. [Luc
+  Renambot]
+- Do not crash if do not find the app for a given media type. [Luc
+  Renambot]
+- Added a small warning at the bottom of the web ui if not using Chrome.
+  [Luc Renambot]
+- Updated D3, Moment and Three.js lib versions. [Luc Renambot]
+- Remove commented code in index.html. [Luc Renambot]
+- Replace some browser native dialogs by webix (in browser) dialog,
+  mostly about desktop sharing and pointer capabilities. [Luc Renambot]
+- Update to node 5.5. [Luc Renambot]
+- Updated style checking to match Airbnb style (with a few
+  modifications) [Luc Renambot]
+- Merge branch 'master' into owner. [Luc Renambot]
+- Commit. [Luc Renambot]
+- Fix situation where old upload bar would stay on. [Luc Renambot]
+- Add user info (name, color) to POST form before file upload. [Luc
+  Renambot]
+- Add "file" field to applcation instance, to remember the source
+  filename. Also fix loading a PDF from a URL (download, store and
+  launch). [Luc Renambot]
+- Add the addTag function to assets: used to add user information. [Luc
+  Renambot]
+- Save user information (name, color) after a file drop. [Luc Renambot]
+- Lyra configuration. [Luc Renambot]
+- Appveyor. [Luc Renambot]
+- Update Chrome extension to v1.5 (should support multiple tabs to same
+  server now) [Luc Renambot]
+- Update upload printout. [Luc Renambot]
+- Fix #68 issue: loading assets from user folder (replaced a url
+  function by a path function) [Luc Renambot]
+- Update to the Chrome extension: v1.4.1. Supports multiple walls.
+  That's it for now. [Luc Renambot]
+- Appveyor. [Luc Renambot]
+- Updating configuration file with default value for audio:
+  audio.initialVolume. [Luc Renambot]
+- Indent. [Luc Renambot]
+- Merge branch 'master' into remoteVolumeSync. [Luc Renambot]
+- Tweaks in help and admin pages. [Luc Renambot]
+- Updated Chrome extension to support screenshot (v 1.3) [Luc Renambot]
+- Support screenshot funtion from the Chrome extension. [Luc Renambot]
+- Add 'loadImageFromBuffer' message to server to load a base64 image
+  (for screenshot) [Luc Renambot]
+- Updated loadImageFromDataBuffer to take a base64 buffer. [Luc
+  Renambot]
+- Ask before opening another desktop sharing window (from the same tab)
+  [Luc Renambot]
+- Close desktop-sharing when browser windows is closed (and asking) [Luc
+  Renambot]
+- Changing default desktop sharing quality to high/high. [Luc Renambot]
+- Fix pointer on mobile device. [Luc Renambot]
+- UI tweaks. [Luc Renambot]
+- Highlight the topmost/active application under the cursor in the
+  webui. [Luc Renambot]
+- Updating version of nodejs and ffmpeg in windows build. [Luc Renambot]
+- Fixed 'drag/drop' of zip file containing an app. [Luc Renambot]
+- Try to enforce users to input a name the first time (valid for one
+  domain) [Luc Renambot]
+- Tries to add a cookie to remember pointer name: only accross a single
+  domain (like .uic.edu) [Luc Renambot]
+- Tweaking the web ui: labels always on, and layout of the settings
+  dialog. [Luc Renambot]
+- Appveyor. [Luc Renambot]
+- Updated PDF lib. [Luc Renambot]
+- Tweaks to desktop sharing. [Luc Renambot]
+- Appveyor. [Luc Renambot]
+- Allow application to change their title (this.changeTitle). Used now
+  in pdf and movie player. [Luc Renambot]
+- Added a error handler in asset processing. [Luc Renambot]
+- Putting back linear interpolation for streaming textures. [Luc
+  Renambot]
+- Increase block size to 512 (from 128), it helps a lot for 4K videos
+  (goes from 500 textures to 30). Might generate a bit extra traffic.
+  [Luc Renambot]
+- Remove printouts. [Luc Renambot]
+- Only compress 'text-based' files (html, css, js, ...) on http
+  requests. [Luc Renambot]
+- Fix port numbers in filemanager and ui builder. [Luc Renambot]
+- Fix port numbers in admin page. [Luc Renambot]
+- Updated rproxy port names ot match http port names. [Tommy Marrinan]
+- Updated config port naming convention - http: port, https: secure_port
+  (legacy support, won't break old configs) [Tommy Marrinan]
+- Initial app audio volume configurable via config.json option
+  initialAppVolume. [Ian Peake]
+- Keep visual slider updated with changed volume. [Ian Peake]
+- Merge remote-tracking branch 'origin/master' into remoteVolumeSync.
+  [Ian Peake]
+- Appveyor. [Luc Renambot]
+- Fix admin html page. [Luc Renambot]
+- Appveyor. [Luc Renambot]
+- Change upload UI to a popup window, showing filename and can be
+  cancelled. [Luc Renambot]
+- Make popup window wider for confirm deletes. [Luc Renambot]
+- Fix #66 interuption in upload. [Luc Renambot]
+- Hack fix for crash bug (see forum post); default volumes set low to
+  make less intrusive. [Ian Peake]
+- Initial experimental support for synchronising volume slider settings
+  across all AudioManager clients; this enables the room mix to come
+  from a fixed machine with decent audio output yet be controlled from
+  any AudioManager client. [Ian Peake]
+- Return yuv2rgb shader to matrix form (using new coefficients) [Tommy
+  Marrinan]
+- Fix yuv2rgb shaders - more accurate color. [Tommy Marrinan]
+- Updating for new jscs rule: 'requireEarlyReturn' no else after a
+  return. [Luc Renambot]
+- Updating for new jscs rule: 'requireEarlyReturn' no else after a
+  return. [Luc Renambot]
+- Updating for new jscs rule: 'requireEarlyReturn' no else after a
+  return. [Luc Renambot]
+- Tweak in console ouput for sage_command.js. [Luc Renambot]
+- New startup sound for v1. [Luc Renambot]
+- Missing closing ) [Luc Renambot]
+- Updated install_dependencies to account for latest minimum version
+  standards. [Tommy Marrinan]
+- Updated install_dependencies to account for latest minimum version
+  standards. [Tommy Marrinan]
+- Updated install_dependencies to account for latest minimum version
+  standards. [Tommy Marrinan]
+- Updating dependencies installation (for node v5 and npm v3) [Luc
+  Renambot]
+- Fixing typo in cheat-sheet (thanks Arthur) [Luc Renambot]
+- Appveyor. [Luc Renambot]
+- Fix detecting ? key in the UI. [Luc Renambot]
+- Added '?' to display help on wall and web UI. [Luc Renambot]
+- Added a function buildImageBox to display image and restructured the
+  displayMessage function. [Luc Renambot]
+- Add message to show help panel. [Luc Renambot]
+- Add '?' in web UI to show help on the wall. [Luc Renambot]
+- Add license file for webix. [Luc Renambot]
+- Add cheat-sheet in images. [Luc Renambot]
+- Update webix library. [Luc Renambot]
+- Appveyor. [Luc Renambot]
+- Add position and size optional parameters to the sage_upload.js
+  command line tool. [Luc Renambot]
+- Appveyor. [Luc Renambot]
+- Reset the internal app_id counter when clearing the screen of all apps
+  (reset to 0). [Luc Renambot]
+- Rounding the position (x,y) of window position to integer values.
+  Should fix some issues with the stereo image viewer (floating point
+  values mess up the pixel alignment) [Luc Renambot]
+- Tweaks in cave2 config. [Luc Renambot]
+- Tweak resize command. [Luc Renambot]
+- Try to fix the update problem in calvin&hobbes, but not sure... [Luc
+  Renambot]
+- Updating traffic layer in GoogleMaps: url for the traffic tiles
+  changed. [Luc Renambot]
+- Appveyor. [Luc Renambot]
+- Updated car_threejs app for API changes in Three.js. [Luc Renambot]
+- Added public/sage2.appcache in gitignore. [Luc Renambot]
+- Updated lib three.js r73. [Luc Renambot]
+- Fix bug when loading animation app from registry. [Luc Renambot]
+- If dependency name starts with / it's a local URL (help referencing
+  local libraries like /lib/three.min.js) [Luc Renambot]
+- Pdf.js was finally fixed to load multiple documents (after Tommy's bug
+  report). [Luc Renambot]
+- Appveyor. [Luc Renambot]
+- Merge tag 'v1.0.0-Koolau' [Luc Renambot]
+- Cheat sheet. [Luc Renambot]
+- Put back the close icon in the titlebar. [Luc Renambot]
+- Fix corner and right-click (again) [Luc Renambot]
+- Styling. [Luc Renambot]
+- Exclude the password file from the assets. [Luc Renambot]
+- Merge branch 'dwsabi' into withsabi. [Luc Renambot]
+- If config host or alternate host is modified will edit keys\GO-
+  windows.bat and generate new certs. Also did another case handler for
+  startup. [D K]
+- Fixed merge conflicts. [D K]
+- Added variable to denote whether or not the sage-on file needed to be
+  remade to reduce file write and start time. [D K]
+- Window sage-on script will be edited just before starting to ensure
+  proper port and meetingID reference. [D K]
+- Fix typo. [Luc Renambot]
+- Fix path to node in startWebCon.bat. [Luc Renambot]
+- Appveyor. [Luc Renambot]
+- Added functionality to reset the laucher password. [Luc Renambot]
+- Tweaks in launcher page. [Luc Renambot]
+- Added inputText and inputPassword in sabi input form. [Luc Renambot]
+- Update package.json. [Luc Renambot]
+- Fixed crashing caused by path error, adjusted auto start to correctly
+  reference sabi directory. [d-k-k]
+- Windows only will write startup script if not there. [d-k-k]
+- Added fullscreen flag to bat file for display0, removed debug line
+  from server. [d-k-k]
+- Meeting ID can be set through sabi, md5 converted client side, then
+  sent to server which writes the passwd.json. [d-k-k]
+- Disable 'x' key to quit googlemaps. [Luc Renambot]
+- Disabled 'x' key to close builtin apps. [Luc Renambot]
+- Change printouts. [Luc Renambot]
+- Loading the right picture from state in Welcome app. [Luc Renambot]
+- Adding missing fields when sharing app with RPC (it might still need
+  the app to be installed locally) [Luc Renambot]
+- Cleaning up the div ID for D3, when using a shared app (misc.
+  characters not allowed) [Luc Renambot]
+- Put warning if cannot edit geometry, instead of crashing. [Luc
+  Renambot]
+- Merge branch 'withsabi' of https://bitbucket.org/sage2/sage2 into
+  withsabi. [Luc Renambot]
+- Fix url in image_viewer loading from state. [Luc Renambot]
+- Fix in widget. [Luc Renambot]
+- Put back windows.json. [Luc Renambot]
+- Delete extra files. [Luc Renambot]
+- Changed default sabi.js configuration. [Luc Renambot]
+- Removed printout. [Luc Renambot]
+- Adding backend support for admin password. [Luc Renambot]
+- Removed builtin git for now. [Luc Renambot]
+- Appveyor. [Luc Renambot]
+- Registration hostname changed (again) [Luc Renambot]
+- Added sage2_off script for Windows. [Luc Renambot]
+- Appveyor. [Luc Renambot]
+- Testing self-extract zip. [Luc Renambot]
+- Tweak win scripts. [Luc Renambot]
+- Win. [Luc Renambot]
+- Tweak scripts. [Luc Renambot]
+- Appveyor. [Luc Renambot]
+- Launch scripta. [Luc Renambot]
+- Appveyor. [Luc Renambot]
+- Change IP for registration. [Luc Renambot]
+- Finally check for config file inside source tree. [Luc Renambot]
+- Adding help in form. [Luc Renambot]
+- Cleanup. [Luc Renambot]
+- Merge branch 'TouchUI' into withsabi. [Luc Renambot]
+- Added configuration option to clear WallUI menus instead of redrawing
+  them on display client refresh (Default: false) When enabled, WallUI
+  is cleared on the server and existing display clients. [Arthur
+  Nishimoto]
+- Merge branch 'TouchUI' into v1.0.0-kona. [Arthur Nishimoto]
+- Fixed WallUI thumbnail refresh when 'jump moving' a radial menu (i.e.
+  right clicking on an open space when menu already exists for that
+  pointer) [Arthur Nishimoto]
+- Fixed WallUI Content Window state is now restored on display client
+  refresh. [Arthur Nishimoto]
+- Fixed thumbnail window redrawing on existing display clients if
+  another display client connects/reconnects. [Arthur Nishimoto]
+- Fixed WallUI thumbnail window geometry is correctly restored from
+  server state (visuals WIP) [Arthur Nishimoto]
+- WallUI radial menu state restored on display client reconnect
+  (Thumbnail window WIP) [Arthur Nishimoto]
+- Fixes to admin panel pathing saves on windows. [D K]
+- Edits to webcon description. [D K]
+- Fixes to bat launch errors. [D K]
+- WallUI arrangement submenu buttons hidden by default. [Arthur
+  Nishimoto]
+- Trying to cleanup wc-* [Luc Renambot]
+- Wc* files. [Luc Renambot]
+- Fixing loading app from the registry. [Luc Renambot]
+- Merge webStarter into Kona. [D K]
+- Edited wording. [D K]
+- Added chrome launch to bit bucket page if available and bit more
+  information on the initial bat message. [D K]
+- Path bind for startup launch needed. [D K]
+- Merge branch 'master' into webStarter. [D K]
+- Fix file structure references. [D K]
+- Removed file that appveyor cant find. [d-k-k]
+- Fixed error in appveyor move order. [d-k-k]
+- Fixed server location search for SAGE_UI key and moved zip files into
+  a sysfiles folder. [d-k-k]
+- One more fix. [d-k-k]
+- Fixed file mismatch in appveyor. [d-k-k]
+- Reverting some of the appveyor files to figure out why a new zip wasnt
+  generated. [D K]
+- Edits for appveyor to move sage files 1 folder down. [DK]
+- Weird required merge. [DK]
+- Merge branch 'master' into webStarter. [D K]
+- Fix to start bat and adjusted appveyor inclusion. [D K]
+- Fixes to the startup bat to work with webcon. [D K]
+- Fixes to the layout and display error. [D K]
+- Merge branch 'webStarter' of https://bitbucket.org/sage2/sage2 into
+  webStarter. [D K]
+- Merge branch 'master' into webStarter. [Luc Renambot]
+- Edits to appveyor file deployment. [D K]
+- Updated version of ImageMagick. [Luc Renambot]
+- Added branch name in zip file. [Luc Renambot]
+- Massive linting / cleaning. [Luc Renambot]
+- Fix for port detection, port saving, remote sites, path launch, [D K]
+- Edits to make the references dynamic. [D K]
+- Commit for computer transfer. [D K]
+- Updates to use user document directory. [d-k-k]
+- Merge branch 'master' into webStarter. [d-k-k]
+- Fixed issues with save confirm, alternate hosts, background options.
+  [d-k-k]
+- Fixed formatting and some ws functionality. [d-k-k]
+- Reverted some bad file changes. [DK]
+- Starting background change support. [d-k-k]
+- Basic config page retrieving, sending, and saving config file. [d-k-k]
+- Merge branch 'master' into webStarter. [d-k-k]
+- Fixes to admin panel placement and appearance. [d-k-k]
+- Working config retrieval and password setting with 1st time run.
+  [d-k-k]
+- Visual mockup complete ready for packet structure. [d-k-k]
+- Inital file prep for wc admin page. [d-k-k]
+- Script and visual fixes. [d-k-k]
+- Initial transfer of webcontroller files. [d-k-k]
+- Appveyor. [Luc Renambot]
+- Fix scaling of pointer label box in overview client. [Luc Renambot]
+- 16:9 aspect ratio for zoom image viewer. [Luc Renambot]
+- Fixing zoom operation in 'zoom' app. [Luc Renambot]
+- Updating to v1.0.0. [Luc Renambot]
+- Updating google maps. [Luc Renambot]
+- WallUI radial menu state restored on display client reconnect
+  (Thumbnail window WIP) [Arthur Nishimoto]
+- WallUI arrangement submenu buttons hidden by default. [Arthur
+  Nishimoto]
+- Updated sabi. [Luc Renambot]
+- Sabi. [Luc Renambot]
+- Fixed redirection to session page for "server output" page. [Luc
+  Renambot]
+- Fixed font issue in Welcome app. [Luc Renambot]
+- Removing links to old pages in admin. [Luc Renambot]
+- Update settings in default config files. [Luc Renambot]
+- Appveyor. [Luc Renambot]
+- Sabi.js for windows fix. [Luc Renambot]
+- Appveyor. [Luc Renambot]
+- Adding sabi script. [Luc Renambot]
+- Ignoring config folder. [Luc Renambot]
+- Fixing loading app from the registry. [Luc Renambot]
+- Appveyor. [Luc Renambot]
+- Fix scaling of pointer label box in overview client. [Luc Renambot]
+- 16:9 aspect ratio for zoom image viewer. [Luc Renambot]
+- Fixing zoom operation in 'zoom' app. [Luc Renambot]
+- Updating to v1.0.0. [Luc Renambot]
+- Updating google maps. [Luc Renambot]
+- Merging with data-sync: linting and conflicts. [Luc Renambot]
+- Merge branch 'data-sync' into withsabi. [Luc Renambot]
+- Added alternate window close icon. [Tommy Marrinan]
+- Changed 'advanced sync options' to basic 'toggle full/no sync' [Tommy
+  Marrinan]
+- Looking at title gradient. [Tommy Marrinan]
+- Added unsync svg. [Tommy Marrinan]
+- Bring back icons when synced. [Tommy Marrinan]
+- Merged master into data-sync. [Tommy Marrinan]
+- Fix bg obj when moving app. [Tommy Marrinan]
+- Merged with master - fixed conflicts. [Tommy Marrinan]
+- Add dante to tmarrinan config. [Tommy Marrinan]
+- Fix for sync image_viewer. [Tommy Marrinan]
+- Partial sync complete. [Tommy Marrinan]
+- Apps partially synced! (only one-way for now. need to pass the sync
+  options between sites) [Tommy Marrinan]
+- Show / hide state options overlay. [Tommy Marrinan]
+- Shared app updates title bar color and shows sync icon. [Tommy
+  Marrinan]
+- Added icon for sync to title bar. [Tommy Marrinan]
+- Set max string length on state values. [Tommy Marrinan]
+- Remove debug comment. [Tommy Marrinan]
+- State sync options now scrollable. [Tommy Marrinan]
+- Small fixes. [Tommy Marrinan]
+- User can select state options to sync/unsync. [Tommy Marrinan]
+- Merge branch 'data-sync' of bitbucket.org:sage2/sage2 into data-sync.
+  [Tommy Marrinan]
+- Fixed remote sharing. [Thomas Marrinan]
+- Added state options layer over each app (to be shown on demand when
+  app is shared) [Tommy Marrinan]
+- Merged with master. [Tommy Marrinan]
+- Apps synced with remote site. [Tommy Marrinan]
+- Merge branch 'master' into data-sync. [Tommy Marrinan]
+- Message when clicking share app button. [Tommy Marrinan]
+- Generate thumbnails for remote sites. [Tommy Marrinan]
+- Merge branch 'master' into data-sync. [Tommy Marrinan]
+- Added default widget button for share with remote site. [Tommy
+  Marrinan]
+

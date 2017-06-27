@@ -28,7 +28,7 @@
  * @type {Object}
  */
 var __SAGE2__ = {};
-__SAGE2__.version = "1.5.0";
+__SAGE2__.version = "2.0.0";
 
 
 /**
@@ -58,9 +58,9 @@ function SAGE2_initialize(data_seed) {
 function SAGE2_browser() {
 	var browser = {};
 	var userAgent = window.navigator.userAgent.toLowerCase();
-    // Internet Explorer 6-11
+	// Internet Explorer 6-11
 	browser.isIE       = /*@cc_on!@*/false || !!document.documentMode;
-    // Edge 20+
+	// Edge 20+
 	browser.isEdge     = !browser.isIE && !!window.StyleMedia;
 	browser.isOpera    = userAgent.indexOf("opr") >= 0;
 	browser.isChrome   = !browser.isIE && userAgent.indexOf("chrome") >= 0;
@@ -85,11 +85,11 @@ function SAGE2_browser() {
 	// Store a string for the type of browser
 	var browserType = browser.isElectron ? "Electron" :
 		browser.isIE ? "Explorer" :
-		browser.isEdge ? "Edge" :
-		browser.isFirefox ? "Firefox" :
-		browser.isSafari ? "Safari" :
-		browser.isOpera ? "Opera" :
-		browser.isChrome ? "Chrome" : "---";
+			browser.isEdge ? "Edge" :
+				browser.isFirefox ? "Firefox" :
+					browser.isSafari ? "Safari" :
+						browser.isOpera ? "Opera" :
+							browser.isChrome ? "Chrome" : "---";
 	browser.browserType  = browserType;
 
 	// Detecting version
@@ -106,8 +106,8 @@ function SAGE2_browser() {
 	for (var x in _browser) {
 		if (_browser[x]) {
 			match = ua.match(
-				new RegExp("(" + (x === "msie" ? "msie|edge" : x === "safari" ? "version" : x) + ")( |\/)([0-9.]+)")
-				);
+				new RegExp("(" + (x === "msie" ? "msie|edge" : x === "safari" ? "version" : x) + ")( |/)([0-9.]+)")
+			);
 			if (match) {
 				_browser.version = match[3];
 			} else {
@@ -321,8 +321,8 @@ function _typeOf(value) {
  */
 function sage2Log(msgObject) {
 	// Local console print
-	console.log("%c[%s] %c%s", "color: blue;", msgObject.app,
-		"color: black;", JSON.stringify(msgObject.message));
+	console.log("%c[%s] %c%s", "color: cyan;", msgObject.app,
+		"color: grey;", JSON.stringify(msgObject.message));
 
 	// Add the display node ID to the message
 	msgObject.node = clientID;
@@ -699,7 +699,7 @@ function allTrueDict(dict) {
  * @return {String} null or the value found
  */
 function getParameterByName(name) {
-	name = name.replace(/[\[]/, "\\\[").replace(/[\]]/, "\\\]"); // jshint ignore:line
+	name = name.replace(/[\[]/, "\\\[").replace(/[\]]/, "\\\]"); // eslint-disable-line
 	var regex = new RegExp("[\\?&]" + name + "=([^&#]*)");
 	var results = regex.exec(location.search);
 	return results === null ? "" : decodeURIComponent(results[1].replace(/\+/g, " "));
@@ -805,6 +805,32 @@ function ignoreFields(obj, fields) {
 		return undefined;
 	}
 	return result;
+}
+
+/**
+ * Utility function to test if a string or number represents a true value.
+ * Used for parsing JSON values
+ *
+ * @method parseBool
+ * @param value {Object} value to test
+ */
+function parseBool(value) {
+	if (typeof value === 'string') {
+		value = value.toLowerCase();
+	}
+	switch (value) {
+		case true:
+		case "true":
+		case 1:
+		case "1":
+		case "on":
+		case "yes": {
+			return true;
+		}
+		default: {
+			return false;
+		}
+	}
 }
 
 /**
@@ -934,8 +960,33 @@ function addCookie(sKey, sValue) {
 	if (window.location.hostname === "127.0.0.1") {
 		domain = "127.0.0.1";
 	} else {
-		domain = window.location.hostname.split('.').slice(-2).join(".");
+		var domainPieces = window.location.hostname.split('.');
+		var maybeInt = parseInt(domainPieces[domainPieces.length - 1]);
+		var numberOfPiecesFromEndTokeep;
+
+		// if (maybeInt) { // this is a number, so must be last part of an ip address, need 4 parts
+		// 	numberOfPiecesFromEndTokeep = 4;
+		// } else if (domainPieces[domainPieces.length - 1] == "tw") {
+		// 	numberOfPiecesFromEndTokeep = 3;
+		// } else { // was a hostname extension
+		// 	numberOfPiecesFromEndTokeep = 2;
+		// }
+
+		// NaN triggers false on a test
+		if (maybeInt) {
+			// this is a number, so must be last part of an ip address
+			// use the whole hostname
+			numberOfPiecesFromEndTokeep = domainPieces.length;
+		} else {
+			// was a hostname extension
+			// to get domain, remove hostname
+			numberOfPiecesFromEndTokeep = domainPieces.length - 1;
+		}
+
+		// calculate the domain from the spliced hostname
+		domain = domainPieces.slice(-1 * numberOfPiecesFromEndTokeep).join(".");
 	}
+
 	document.cookie = encodeURIComponent(sKey) + "=" + encodeURIComponent(sValue) +
 		"; expires=Fri, 31 Dec 9999 23:59:59 GMT" +
 		"; domain=" + domain +
@@ -955,7 +1006,7 @@ function getCookie(sKey) {
 		return null;
 	}
 	return decodeURIComponent(document.cookie.replace(new RegExp("(?:(?:^|.*;)\\s*" +
-				encodeURIComponent(sKey).replace(/[\-\.\+\*]/g, "\\$&") + "\\s*\\=\\s*([^;]*).*$)|^.*$"), "$1"))
+		encodeURIComponent(sKey).replace(/[-.+*]/g, "\\$&") + "\\s*\\=\\s*([^;]*).*$)|^.*$"), "$1"))
 		|| null;
 }
 
@@ -989,4 +1040,42 @@ function getTransform(elem) {
 		}
 	}
 	return {translate: translate, scale: scale};
+}
+
+
+/**
+ * From stackoverflow:
+ * Copies a string to the clipboard. Must be called from within an
+ * event handler such as click. May return false if it failed, but
+ * this is not always possible. Browser support for Chrome 43+,
+ * Firefox 42+, Safari 10+, Edge and IE 10+.
+ * IE: The clipboard feature may be disabled by an administrator. By
+ * default a prompt is shown the first time the clipboard is
+ * used (per session)
+ *
+ * @method     copyToClipboard
+ * @param      {String}   text    The text to be copied
+ * @return     {Boolean}  A Boolean that is false if the command is not supported or enabled
+ */
+function SAGE2_copyToClipboard(text) {
+	if (window.clipboardData && window.clipboardData.setData) {
+		// IE specific code path to prevent textarea being shown while dialog is visible.
+		return window.clipboardData.setData("Text", text);
+	} else if (document.queryCommandSupported && document.queryCommandSupported("copy")) {
+		var textarea = document.createElement("textarea");
+		textarea.textContent = text;
+		// Prevent scrolling to bottom of page in MS Edge
+		textarea.style.position = "fixed";
+		document.body.appendChild(textarea);
+		textarea.select();
+		try {
+			// Security exception may be thrown by some browsers
+			return document.execCommand("copy");
+		} catch (ex) {
+			console.warn("Copy to clipboard failed.", ex);
+			return false;
+		} finally {
+			document.body.removeChild(textarea);
+		}
+	}
 }

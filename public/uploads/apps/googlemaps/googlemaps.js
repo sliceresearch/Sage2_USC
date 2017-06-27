@@ -42,8 +42,7 @@ var googlemaps = SAGE2_App.extend({
 	},
 
 	initializeWidgets: function() {
-		this.controls.addButton({label: "Map", position: 4, identifier: "Map"});
-		this.controls.addButton({type: "traffic", position: 3, identifier: "Traffic"});
+		this.controls.addButton({type: "traffic", position: 4, identifier: "Traffic"});
 		this.controls.addButton({type: "zoom-in", position: 12, identifier: "ZoomIn"});
 		this.controls.addButton({type: "zoom-out", position: 11, identifier: "ZoomOut"});
 		this.controls.addTextInput({value: "", label: "Addr", identifier: "Address"});
@@ -59,7 +58,11 @@ var googlemaps = SAGE2_App.extend({
 				return ((value < 10) ? "0" : "") + value + "/" + end;
 			}
 		});
-
+		this.mapTypeRadioButton = this.controls.addRadioButton({identifier: "MapType",
+			label: "Map",
+			options: ["Turf", "Roads", "Arial", "Mix"],
+			default: "Mix"
+		});
 		this.controls.finishedAddingControls();
 	},
 
@@ -246,9 +249,6 @@ var googlemaps = SAGE2_App.extend({
 			this.refresh(date);
 		} else if (eventType === "widgetEvent") {
 			switch (data.identifier) {
-				case "Map":
-					this.changeMapType();
-					break;
 				case "Traffic":
 					this.toggleTraffic();
 					break;
@@ -278,6 +278,9 @@ var googlemaps = SAGE2_App.extend({
 					// Setting the zoom
 					this.map.setZoom(15);
 					this.state.zoomLevel = 15;
+					break;
+				case "MapType":
+					this.changeMapType(data.value);
 					break;
 				default:
 					console.log("No handler for:", data.identifier);
@@ -322,17 +325,27 @@ var googlemaps = SAGE2_App.extend({
 		}
 	},
 
-	changeMapType: function() {
-		if (this.state.mapType === google.maps.MapTypeId.TERRAIN) {
-			this.state.mapType = google.maps.MapTypeId.ROADMAP;
-		} else if (this.state.mapType === google.maps.MapTypeId.ROADMAP) {
-			this.state.mapType = google.maps.MapTypeId.SATELLITE;
-		} else if (this.state.mapType === google.maps.MapTypeId.SATELLITE) {
-			this.state.mapType = google.maps.MapTypeId.HYBRID;
-		} else if (this.state.mapType === google.maps.MapTypeId.HYBRID) {
-			this.state.mapType = google.maps.MapTypeId.TERRAIN;
+	changeMapType: function(value) {
+		var options = [google.maps.MapTypeId.TERRAIN, google.maps.MapTypeId.ROADMAP,
+			google.maps.MapTypeId.SATELLITE, google.maps.MapTypeId.HYBRID];
+		var i;
+		if (value !== null && value !== undefined) {
+			// Change due to radio button
+			for (i = 0; i < options.length; i++) {
+				if (this.mapTypeRadioButton.options[i] === value) {
+					this.state.mapType = options[i];
+					break;
+				}
+			}
 		} else {
-			this.state.mapType = google.maps.MapTypeId.HYBRID;
+			// Change due to key board
+			for (i = 0; i < options.length; i++) {
+				if (this.mapTypeRadioButton.options[i] === this.mapTypeRadioButton.value) {
+					this.mapTypeRadioButton.value = this.mapTypeRadioButton.options[(i + 1) % options.length];
+					this.state.mapType = options[(i + 1) % options.length];
+					break;
+				}
+			}
 		}
 		this.map.setMapTypeId(this.state.mapType);
 	},

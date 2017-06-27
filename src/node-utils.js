@@ -14,13 +14,18 @@
  * @class node-utils
  * @module server
  * @submodule node-utils
- * @requires package.json, request, semver
+ * @requires package.json, request, semver, chalk
  */
 
 // require variables to be declared
 "use strict";
 
 var SAGE2_version = require('../package.json');
+try {
+	var SAGE2_buildVersion = require('../VERSION.json');
+} catch (e) {
+	// nothing yet
+}
 
 var crypto  = require('crypto');              // https encryption
 var exec    = require('child_process').exec;  // execute external application
@@ -35,7 +40,8 @@ var request   = require('request');           // http requests
 var semver    = require('semver');            // parse version numbers
 var fsmonitor = require('fsmonitor');         // file system monitoring
 var sanitizer = require('sanitizer');         // Caja's HTML Sanitizer as a Node.js module
-
+var chalk     = require('chalk');             // colorize console output
+var rimraf    = require('rimraf');            // command rm -rf for node
 
 /**
  * Parse and store NodeJS version number: detect version 0.10.x or newer
@@ -158,6 +164,10 @@ function loadCABundle(filename) {
  * @return {String} version number as x.x.x
  */
 function getShortVersion() {
+	// try to get the version from the VERSION.json file
+	if (SAGE2_buildVersion && SAGE2_buildVersion.version) {
+		SAGE2_version.version = SAGE2_buildVersion.version;
+	}
 	return SAGE2_version.version;
 }
 
@@ -247,10 +257,13 @@ function updateWithGIT(branch, callback) {
  * @return {String} cleanup string
  */
 function sanitizedURL(aURL) {
+	// replace several consecutive forward slashes into one
+	var cleaner = aURL.replace(/\/+/g, "/");
+	// var cleaner = aURL;
 	// convert HTML encoded content
 	// Node doc: It will try to use decodeURIComponent in the first place, but if that fails it falls back
 	// to a safer equivalent that doesn't throw on malformed URLs.
-	var decode = querystring.unescape(aURL);
+	var decode = querystring.unescape(cleaner);
 	// Then, remove the bad parts
 	return sanitizer.sanitize(decode);
 }
@@ -264,9 +277,9 @@ function sanitizedURL(aURL) {
  */
 function header(h) {
 	if (h.length <= 6) {
-		return h + ">\t\t";
+		return chalk.green.bold.dim(h + ">\t\t");
 	}
-	return h + ">\t";
+	return chalk.green.bold.dim(h + ">\t");
 }
 
 
@@ -372,38 +385,44 @@ function checkPackages(inDevelopement) {
 	if (indevel) {
 		command = "npm outdated --depth 0 --json";
 	}
-	exec(command, {cwd: path.normalize(path.join(__dirname, ".."))},
+	exec(command, {cwd: path.normalize(path.join(__dirname, "..")), timeout: 30000},
 		function(error, stdout, stderr) {
-			if (error) {
-				console.log("NPM>	Error running update");
+			// returns error code 1 if found outdated packages
+			if (error && error.code !== 1) {
+				console.log(header("Packages") + "Warning, error running update [ " + error.cmd + '] ',
+					'code: ' + error.code + ' signal: ' + error.signal);
 				return;
 			}
 
 			var key;
 			var output = stdout ? JSON.parse(stdout) : {};
 			for (key in output) {
-				// if not a valid version number
-				if (!semver.valid(output[key].current)) {
-					packages.missing.push(key);
-				} else if (semver.lt(output[key].current, output[key].wanted)) {
-					// if the version is strictly lower than requested
-					packages.outdated.push(key);
+				// if it is not a git repository
+				if (output[key].wanted != "git") {
+					// if not a valid version number
+					if (!semver.valid(output[key].current)) {
+						packages.missing.push(key);
+					} else if (semver.lt(output[key].current, output[key].wanted)) {
+						// if the version is strictly lower than requested
+						packages.outdated.push(key);
+					}
 				}
 			}
 
 			if (packages.missing.length > 0 || packages.outdated.length > 0) {
-				console.log("");
-				console.log(header("Packages") + "Warning - Packages not up to date");
+				console.log(header("Packages") + chalk.yellow.bold("Warning") +
+					" - Packages not up to date");
 				if (packages.missing.length  > 0) {
-					console.log(header("Packages") + "  Missing:",  packages.missing);
+					console.log(header("Packages") + "  " + chalk.red.bold("Missing:"),
+						chalk.red.bold(packages.missing));
 				}
 				if (packages.outdated.length > 0) {
-					console.log(header("Packages") + "  Outdated:", packages.outdated);
+					console.log(header("Packages") + "  " + chalk.yellow.bold("Outdated:"),
+						chalk.yellow.bold(packages.outdated));
 				}
-				console.log(header("Packages") + "To update, execute: npm run in");
-				console.log("");
+				console.log(header("Packages") + "To update, execute: " + chalk.yellow.bold("npm run in"));
 			} else {
-				console.log(header("Packages") + "All packages up to date");
+				console.log(header("Packages") + chalk.green.bold("All packages up to date"));
 			}
 		}
 	);
@@ -423,10 +442,10 @@ function registerSAGE2(config) {
 		// url: 'https://131.193.183.150/register',
 		form: config,
 		method: "POST"},
-		function(err, response, body) {
-			console.log(header("SAGE2") + "Registration with EVL site:", (err === null) ? "success" : err.code);
-		}
-	);
+	function(err, response, body) {
+		console.log(header("SAGE2") + "Registration with EVL site:",
+			(err === null) ? chalk.green.bold("success") : chalk.red.bold(err.code));
+	});
 }
 
 /**
@@ -443,13 +462,13 @@ function deregisterSAGE2(config, callback) {
 		// url: 'https://131.193.183.150/unregister',
 		form: config,
 		method: "POST"},
-		function(err, response, body) {
-			console.log(header("SAGE2") + "Deregistration with EVL site:", (err === null) ? "success" : err.code);
-			if (callback) {
-				callback();
-			}
+	function(err, response, body) {
+		console.log(header("SAGE2") + "Deregistration with EVL site:",
+			(err === null) ? chalk.green.bold("success") : chalk.red.bold(err.code));
+		if (callback) {
+			callback();
 		}
-	);
+	});
 }
 
 /**
@@ -460,9 +479,9 @@ function deregisterSAGE2(config, callback) {
  * @return {String} cleanup version of the URL
  */
 function encodeReservedURL(aUrl) {
-	return encodeURI(aUrl).replace(/\$/g, "%24").replace(/\&/g, "%26").replace(/\+/g, "%2B")
-		.replace(/\,/g, "%2C").replace(/\:/g, "%3A").replace(/\;/g, "%3B").replace(/\=/g, "%3D")
-		.replace(/\?/g, "%3F").replace(/\@/g, "%40");
+	return encodeURI(aUrl).replace(/\$/g, "%24").replace(/&/g, "%26").replace(/\+/g, "%2B")
+		.replace(/,/g, "%2C").replace(/:/g, "%3A").replace(/;/g, "%3B").replace(/=/g, "%3D")
+		.replace(/\?/g, "%3F").replace(/@/g, "%40");
 }
 
 /**
@@ -528,18 +547,20 @@ function mkdirParent(dirPath) {
 
 
 /**
- * Place a callback on a list of folders to monitor.
+ * Place a callback on a list of folders to monitor
  *  callback triggered when a change is detected:
  *    this.root contains the monitored folder
  *  parameter contains the following list:
  *    addedFiles, modifiedFiles, removedFiles,
  *    addedFolders, modifiedFolders, removedFolders
  *
- * @method deregisterSAGE2
- * @param folders {Array} list of folders
- * @param callback {Function} to be called when a change is detected
+ * @method     monitorFolders
+ * @param      {Array}    folders          list of folders to monitor
+ * @param      {Array}    excludesFiles    The excludes files
+ * @param      {Array}    excludesFolders  The excludes folders
+ * @param      {Function}  callback         to be called when a change is detected
  */
-function monitorFolders(folders, excludes, callback) {
+function monitorFolders(folders, excludesFiles, excludesFolders, callback) {
 	// for each folder
 	for (var folder in folders) {
 		// get a full path
@@ -548,16 +569,21 @@ function monitorFolders(folders, excludes, callback) {
 		var stat       = fs.lstatSync(folderpath);
 		// making sure it is a folder
 		if (stat.isDirectory()) {
-			console.log(header("Monitor") + "watching folder " + folderpath);
+			console.log(header("Monitor") + "watching folder " + chalk.yellow.bold(folderpath));
 			var monitor = fsmonitor.watch(folderpath, {
-				// only matching: all true for now
+				// excludes non-valid filenames
 				matches:  function(relpath) {
-					return true;
+					var condition = excludesFiles.every(function(e, i, a) {
+						return !relpath.endsWith(e);
+					});
+					return condition;
 				},
-				// and excluding: nothing for now
+				// and ignores folders
 				excludes: function(relpath) {
-					return (excludes.indexOf(relpath) !== -1);
-					// return false;
+					var condition = excludesFolders.every(function(e, i, a) {
+						return !relpath.startsWith(e);
+					});
+					return !condition;
 				}
 			});
 			// place the callback the change event
@@ -610,6 +636,25 @@ function mergeObjects(a, b, ignore) {
 	return modified;
 }
 
+/**
+ * Delete files, with glob, and a callback when done
+ *
+ * @method     deleteFiles
+ * @param      {String}    pattern  string
+ * @param      {Function}  cb       callback when done
+ */
+function deleteFiles(pattern, cb) {
+	// use the rimraf module
+	if (cb) {
+		rimraf(pattern, {glob: true}, cb);
+	} else {
+		rimraf(pattern, {glob: true}, function(err) {
+			if (err) {
+				console.log(header('Files') + 'error deleting files ' + pattern);
+			}
+		});
+	}
+}
 
 
 module.exports.nodeVersion       = _NODE_VERSION;
@@ -632,9 +677,9 @@ module.exports.loadCABundle      = loadCABundle;
 module.exports.monitorFolders    = monitorFolders;
 module.exports.getHomeDirectory  = getHomeDirectory;
 module.exports.mkdirParent       = mkdirParent;
+module.exports.deleteFiles       = deleteFiles;
 module.exports.sanitizedURL      = sanitizedURL;
 module.exports.mergeObjects      = mergeObjects;
 
 module.exports.encodeReservedURL  = encodeReservedURL;
 module.exports.encodeReservedPath = encodeReservedPath;
-

@@ -56,7 +56,7 @@ h2 {
 #displayUIDiv {
 	position: relative;
 	float: left;
-	margin: 10px 10px 0;
+	margin: 5px 10px 0 0;
 	cursor: pointer;
 }
 
@@ -67,13 +67,21 @@ h2 {
 	margin: 2px 0 0 2px;
 }
 
+#partitionsDiv {
+	position: absolute;
+	overflow: hidden;
+	background-color: #B4B4B4;
+	margin: 2px 0 0 2px;
+}
+
+
 #sage2UICanvas {
 	position: absolute;
 	border: solid 2px #565656;
 	-webkit-box-sizing: border-box;
 	-moz-box-sizing: border-box;
 	box-sizing: border-box;
-	z-index: 9999;
+	z-index: 999;
 }
 
 #menuContainer {
@@ -199,6 +207,37 @@ h2 {
 	clear: both;
 }
 
+.ptnWindow {
+	display: block;
+	position: absolute;
+	border: solid 1px #6C6C6C;
+}
+
+.ptnWindowTitle {
+	position: absolute;
+	border: solid 1px #6C6C6C;
+	-webkit-box-sizing: border-box;
+	-moz-box-sizing: border-box;
+	box-sizing: border-box;
+}
+
+.ptnWindowTitleHover {
+	position: absolute;
+	border: solid 1px #6C6C6C;
+	background-color: #3694B7;
+	-webkit-box-sizing: border-box;
+	-moz-box-sizing: border-box;
+	box-sizing: border-box;
+}
+
+.ptnWindowArea {
+	position: absolute;
+	border: solid 1px #6C6C6C;
+	-webkit-box-sizing: border-box;
+	-moz-box-sizing: border-box;
+	box-sizing: border-box;
+}
+
 /***** Light Box    *****/
 #sage2pointerDialog {
 	top: 50%;
@@ -231,6 +270,12 @@ h2 {
 
 #appList p {
 	color: #FFFFFF;
+}
+
+#appStoreBtn {
+	position: absolute;
+	left: 10px;
+	bottom: 10px;
 }
 
 #appOpenBtn {
@@ -330,6 +375,11 @@ h2 {
 }
 
 #arrangementItems {
+	margin: 10px 10px 20px;
+	overflow: auto;
+}
+
+#arrangementItems2 {
 	margin: 10px 10px 66px;
 	overflow: auto;
 }
@@ -352,9 +402,53 @@ h2 {
 	text-align: center;
 }
 
+#createpartitionsContainer {
+	width: 100px;
+	float: left;
+	text-align: center;
+}
+
+#deletepartitionsContainer {
+	width: 100px;
+	float: left;
+	text-align: center;
+}
+
+#deleteApplicationsContainer {
+	width: 100px;
+	float: left;
+	text-align: center;
+}
+
 #arrangementCloseBtn {
 	position: absolute;
 	right: 10px;
+	bottom: 10px;
+}
+
+#createpartitionsDialog {
+	top: 50%;
+	left: 50%;
+	-webkit-transform: translate(-50%, -50%);
+	-moz-transform: translate(-50%, -50%);
+	-ms-transform: translate(-50%, -50%);
+	transform: translate(-50%, -50%);
+}
+
+#createpartitionsItems {
+	margin: 10px 10px 66px;
+	overflow: auto;
+}
+
+#createpartitionsCreateBtn {
+	position: absolute;
+	right: 10px;
+	bottom: 10px;
+}
+
+#createpartitionsCloseBtn {
+	position: absolute;
+	right: 75px;
 	bottom: 10px;
 }
 
@@ -578,7 +672,7 @@ h2 {
 	width: 100%;
 	height: 100%;
 	background-color: #000000;
-	z-index: 10001;
+	z-index: 1001;
 	opacity: 0.65;
 	cursor: default;
 }
@@ -591,7 +685,7 @@ h2 {
 	width: 100%;
 	height: 100%;
 	background-color: #464646;
-	z-index: 10001;
+	z-index: 1001;
 	cursor: default;
 }
 
@@ -699,14 +793,14 @@ h2 {
 
 /*
 The z-index is very important.
-9999 is 1 layer below dialog, but one above UI canvas.
+999 is 1 layer below dialog, but one above UI canvas.
 */
 #rmbContextMenu {
 	position:  absolute;
 	visibility: hidden;
 	border:     1px solid black;
 	background: white;
-	z-index:    9999;
+	z-index:    1999;
 }
 
 #uiNoteMaker {
@@ -723,11 +817,17 @@ The z-index is very important.
 #uiNoteMakerInputField {
 	resize: none;
 	font-size: 20px;
+	font-family: Lucidia Console, Monaco, monospace;
+}
+
+.uinmColorPickColumn {
+	height: 71px;
+	width: 	101px;
 }
 
 .uinmColorPickBlock {
-	width: 	65px;
-	height: 45px;
+	width: 	95px;
+	height: 65px;
 	border: 1px solid black;
 }
 
@@ -768,12 +868,13 @@ The z-index is very important.
 
 #uiDrawZoneEraseReference {
 	position:       absolute;
+	display:        none;
 	top:            -100;
 	left:           -100;
 	width:          1;
 	border:         1px solid black;
 	border-radius:  50%;
-	z-index:        10003;
+	z-index:        1003;
 	pointer-events: none;
 }
 
@@ -806,6 +907,11 @@ The z-index is very important.
 	cursor: default;
 }
 
+.textDialog {
+	text-align:  left;
+	padding-left: 10px;
+}
+
 .button {
 	padding: 10px 12px;
 	border-radius: 12px;
@@ -827,7 +933,7 @@ The z-index is very important.
 	border: 4px solid #787878;
 	border-radius: 12px;
 	background-color: #FFFFFF;
-	z-index: 10002;
+	z-index: 1002;
 	overflow: hidden;
 	cursor: default;
 }
@@ -885,6 +991,23 @@ The z-index is very important.
 .css-treeview input:checked ~ ul {
 	display: block;
 }
+
+/* Styling top menu bar */
+.my_style .webix_layout_toolbar.webix_toolbar{
+	background: #787878;
+	border: none;
+}
+
+.my_style a.webix_list_item{
+	background: #787878;
+}
+.my_style a.webix_list_item:focus{
+	background: #787878;
+}
+.my_style a.webix_list_item:hover{
+	background: #666666;
+}
+
 
 /******** Text - Width Test ********/
 #textWidthTest {

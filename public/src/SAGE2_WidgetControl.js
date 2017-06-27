@@ -9,7 +9,7 @@
 // Copyright (c) 2014
 
 /* global SAGE2WidgetButtonTypes */
-
+/* global polarToCartesian */
 "use strict";
 
 /**
@@ -58,6 +58,14 @@ function SAGE2WidgetControl(id) {
 		this.width  = null;
 		this.appProperty = null;
 	};
+	this.RadioButton = function() {
+		this.id 	= null;
+		this.appId	= null;
+		this.data = {
+			options: [],
+			value: null
+		};
+	};
 	this.ColorPaletteClass = function() {
 		this.id = null;
 		this.appId = null;
@@ -68,8 +76,7 @@ function SAGE2WidgetControl(id) {
 	this.instanceID = "";
 	this.specReady = false;
 	this.itemCount = 0;
-	this.hasSlider = false;
-	this.hasTextInput = false;
+	this.sideBarElements = [];
 	this.buttonSequence = {};
 	this.separatorList = [];
 	this.buttonType = SAGE2WidgetButtonTypes;
@@ -237,8 +244,7 @@ SAGE2WidgetControl.prototype.addSeparatorAfterButtons = function(firstSeparator,
 *	}
 */
 SAGE2WidgetControl.prototype.addTextInput = function(data) {
-	if (this.hasTextInput === false && this.itemCount <= 30) {
-		this.hasTextInput = true;
+	if (this.sideBarElements.length < 5) {
 		var textInput = new this.TextInputClass();
 		if (data.identifier !== undefined && data.identifier !== null) {
 			textInput.id = "textInput" + data.identifier;
@@ -249,8 +255,10 @@ SAGE2WidgetControl.prototype.addTextInput = function(data) {
 		textInput.label = data.label || null;
 		textInput.width = 13.0 * ui.widgetControlSize;
 		textInput.value = data.value || "";
-		this.textInput = textInput;
+		this.sideBarElements[this.sideBarElements.length] = textInput;
 		this.itemCount++;
+	} else {
+		console.log("Can't create widget " + data.identifier + ", no space on widget bar!");
 	}
 };
 
@@ -268,7 +276,7 @@ SAGE2WidgetControl.prototype.addTextInput = function(data) {
 */
 SAGE2WidgetControl.prototype.addSlider = function(data) {
 	// begin,parts,end,action, property, appHandle
-	if (this.hasSlider === false && this.itemCount <= 30) {
+	if (this.sideBarElements.length < 5) {
 		var slider = new this.SliderClass();
 		if (data.identifier !== undefined && data.identifier !== null) {
 			slider.id = "slider" + data.identifier;
@@ -293,10 +301,10 @@ SAGE2WidgetControl.prototype.addSlider = function(data) {
 		if (slider.steps < 1) {
 			return;
 		}
-
-		this.hasSlider = true;
-		this.slider = slider;
+		this.sideBarElements[this.sideBarElements.length] = slider;
 		this.itemCount++;
+	} else {
+		console.log("Can't create widget " + data.identifier + ", no space on widget bar!");
 	}
 };
 
@@ -344,18 +352,20 @@ SAGE2WidgetControl.prototype.computeSize = function() {
 
 	size.height = dimensions.outerR * 2.4; // 10% extra on all sides
 	size.width = size.height;
-	size.barHeight = dimensions.buttonRadius * 4;
 	size.hasSideBar = false;
-
-	if (this.hasSlider === true) {
-		size.width = size.width  + this.slider.width + dimensions.buttonRadius;
+	if (this.sideBarElements.length > 0) {
 		size.hasSideBar = true;
-	} else if (this.hasTextInput === true) {
-		size.width = size.width  + this.textInput.width + dimensions.buttonRadius;
-		size.hasSideBar = true;
-	} else if (this.hasColorPalette === true) {
-		size.width = size.width  + this.colorPalette.width + dimensions.buttonRadius;
-		size.hasSideBar = true;
+		var elementWidth = Math.max.apply(null, this.sideBarElements.map(function(d) {
+			return d.width;
+		}));
+		size.width = size.width  + elementWidth + dimensions.buttonRadius;
+		var center = {x: size.height / 2.0, y: size.height / 2.0};
+		var sideBarHeightInAngles = 16;
+		var theta = sideBarHeightInAngles * this.sideBarElements.length;
+		var start = 360 - theta / 2;
+		var point1 = polarToCartesian(dimensions.outerR, start, center);
+		var point2 = polarToCartesian(dimensions.outerR, start + theta, center);
+		size.barHeight = Math.abs(point2.y - point1.y);
 	}
 	this.controlDimensions = dimensions;
 	return size;
@@ -369,22 +379,34 @@ SAGE2WidgetControl.prototype.addDefaultButtons = function(data) {
 	this.addButton({type: "closeBar", identifier: "CloseWidget", position: data.sequence.closeBar});
 };
 
-
-/*
-*	Creates a color palette
-*/
-/*SAGE2WidgetControl.prototype.createColorPalette = function(x, y, outline){
-	var uiElementSize = ui.widgetControlSize;
-	var colorPaletteAreaHeight = 1.3 * uiElementSize;
-	//var fontSize = 0.045 * ui.widgetControlSize;
-
-	var colorPaletteOutline = this.controlSVG.path(outline);
-	colorPaletteOutline.attr("class","widgetBackground");
-	var colorPaletteBarWidth = colorPaletteOutline.getBBox().w;
-	x = x + colorPaletteBarWidth*0.075;
-	//for(var i=0;i<this. )
-}
-*/
-
-
+SAGE2WidgetControl.prototype.addRadioButton = function(data) {
+	if (this.sideBarElements.length < 5) {
+		data.options = data.options || [];
+		if (data.options.length < 2) {
+			console.log("Radio button should have more than one option!");
+			return;
+		}
+		var radioButton = new this.RadioButton();
+		if (data.identifier !== undefined && data.identifier !== null) {
+			radioButton.id = "button_radio" + data.identifier;
+		} else {
+			radioButton.id = "button_radio" + ((this.itemCount < 10) ? "0" : "") + this.itemCount;
+		}
+		radioButton.appId = this.id;
+		radioButton.label = data.label || null;
+		radioButton.data.value = data.options[0];
+		for (var i = 0; i < data.options.length; i++) {
+			radioButton.data.options[i] = data.options[i];
+			if (data.default === data.options[i]) {
+				radioButton.data.value = data.default;
+			}
+		}
+		radioButton.width = 13.0 * ui.widgetControlSize;
+		this.sideBarElements[this.sideBarElements.length] = radioButton;
+		this.itemCount++;
+	} else {
+		console.log("Can't create widget " + data.identifier + ", no space on widget bar!");
+	}
+	return radioButton.data;
+};
 

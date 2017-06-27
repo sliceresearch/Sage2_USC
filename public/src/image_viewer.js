@@ -126,7 +126,15 @@ var image_viewer = SAGE2_App.extend({
 	getContextEntries: function() {
 		var entries = [];
 
-		// Special callback: dowload the file
+		// Show overlay with EXIF data
+		entries.push({
+			description: "Show EXIF",
+			accelerator: "i",
+			callback: "showEXIF",
+			parameters: {}
+		});
+
+		// Special callback: download the file
 		entries.push({
 			description: "Download image",
 			callback: "SAGE2_download",
@@ -134,12 +142,20 @@ var image_viewer = SAGE2_App.extend({
 				url: cleanURL(this.state.src || this.state.img_url)
 			}
 		});
-		// Special callback: convert to a doodle.
 		entries.push({
-			description: "Make Doodle",
-			callback: "makeDoodle",
-			parameters: {}
+			description: "Copy URL",
+			callback: "SAGE2_copyURL",
+			parameters: {
+				url: cleanURL(this.state.src || this.state.img_url)
+			}
 		});
+
+		// Special callback: convert to a doodle.
+		// entries.push({
+		// 	description: "Make Doodle",
+		// 	callback: "makeDoodle",
+		// 	parameters: {}
+		// });
 
 		return entries;
 	},
@@ -209,7 +225,7 @@ var image_viewer = SAGE2_App.extend({
 		json = json.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
 		/* eslint-disable max-len */
-		return json.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g,
+		return json.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+-]?\d+)?)/g,
 			function(match) {
 				var cls = 'color: darkorange;';
 				if (/^"/.test(match)) {
@@ -230,6 +246,24 @@ var image_viewer = SAGE2_App.extend({
 	},
 
 	/**
+	* Show / Hide EXIF overlay.
+	*
+	* @method showEXIF
+	* @param responseObject {Object} contains response from entry selection
+	*/
+	showEXIF: function(responseObject) {
+		if (this.isLayerHidden()) {
+			this.state.top = 0;
+			this.state.showExif = true;
+			this.showLayer();
+		} else {
+			this.state.showExif = false;
+			this.hideLayer();
+		}
+		this.refresh();
+	},
+
+	/**
 	* Handles event processing for the app
 	*
 	* @method event
@@ -243,22 +277,8 @@ var image_viewer = SAGE2_App.extend({
 		// Press 'i' to display EXIF information
 		if ((eventType === "keyboard" && data.character === "i") ||
 			(eventType === "widgetEvent" && data.identifier === "Info")) {
-			if (this.isLayerHidden()) {
-				this.state.top = 0;
-				this.state.showExif = true;
-				this.showLayer();
-			} else {
-				this.state.showExif = false;
-				this.hideLayer();
-			}
-
-			this.refresh(date);
+			this.showEXIF();
 		}
-
-		// Press 'x' to close itself
-		// if ((eventType === "keyboard") && data.character === 'x') {
-		// 	this.close();
-		// }
 
 		// Scroll events for panning the info pannel
 		if (eventType === "pointerScroll") {

@@ -245,22 +245,26 @@ function Pointer() {
 					this.pointerIcon.attr({display: "none"});
 				}
 				if (this.winModeIconLoaded) {
-					this.winModeIcon.attr({display: "none"});
+					this.winModeIcon.attr({display: ""});
 				}
 				if (this.appModeIconLoaded) {
-					this.appModeIcon.attr({display: ""});
+					this.appModeIcon.attr({display: "none"});
 				}
-
 				this.labelText.attr({display: "none"});
 				this.labelBG.attr({display: "none"});
 			} else if (this.mode === 1) {
 				// application interaction
+				if (this.pointerIconLoaded) {
+					this.pointerIcon.attr({display: "none"});
+				}
 				if (this.winModeIconLoaded) {
 					this.winModeIcon.attr({display: "none"});
 				}
 				if (this.appModeIconLoaded) {
 					this.appModeIcon.attr({display: ""});
 				}
+				this.labelText.attr({display: "none"});
+				this.labelBG.attr({display: "none"});
 			}
 		} else {
 			if (this.pointerIconLoaded) {

@@ -23,7 +23,7 @@
         maxWindowWidth: 8192,
         maxWindowHeight: 8192,
         noDropShadow: true,
-        auto_hide_ui: true,
+        auto_hide_ui: false,
         auto_hide_delay: 5
 	},
 	dimensions:{

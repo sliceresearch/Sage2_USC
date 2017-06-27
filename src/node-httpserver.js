@@ -355,8 +355,13 @@ HttpServer.prototype.onreq = function(req, res) {
 			var header = this.buildHeader();
 
 			if (path.extname(pathname) === ".html") {
-				// Do not allow iframe
-				header['X-Frame-Options'] = 'DENY';
+				if (pathname.endsWith("public/index.html")) {
+					// Allow embedding the UI page
+					delete header['X-Frame-Options'];
+				} else {
+					// Do not allow iframe
+					header['X-Frame-Options'] = 'DENY';
+				}
 			}
 
 			header['Access-Control-Allow-Headers']  = 'Range';
@@ -421,20 +426,40 @@ HttpServer.prototype.onreq = function(req, res) {
 
 				// Write the HTTP header, 206 Partial Content
 				res.writeHead(206, header);
+
 				// Read part of the file
-				var rstream = fs.createReadStream(pathname, {start: start, end: end});
-				// Pass it to the HTTP response
-				rstream.pipe(res);
+				// This line opens the file as a readable stream
+				let readStream = fs.createReadStream(pathname, {start: start, end: end});
+				// This will wait until we know the readable stream is actually valid before piping
+				readStream.on('open', function () {
+					// This just pipes the read stream to the response object
+					readStream.pipe(res);
+				});
+				// This catches any errors that happen while creating the readable stream
+				readStream.on('error', function(err) {
+					res.end(err);
+				});
+
+
 			} else {
 				// Open the file as a stream
-				var stream = fs.createReadStream(pathname);
+				let readStream = fs.createReadStream(pathname);
 				// array of allowed compression file types
 				var compressExtensions = ['.html', '.json', '.js', '.css', '.txt', '.svg', '.xml', '.md'];
 				if (compressExtensions.indexOf(path.extname(pathname)) === -1) {
 					// Do not compress, just set file size
 					header["Content-Length"] = total;
 					res.writeHead(200, header);
-					stream.pipe(res);
+					readStream.on('open', function () {
+						readStream.pipe(res);
+					});
+					readStream.on('end', function() {
+					});
+					readStream.on('close', function() {
+					});
+					readStream.on('error', function(err) {
+						res.end(err);
+					});
 				} else {
 					// Check for allowed compression
 					var acceptEncoding = req.headers['accept-encoding'] || '';
@@ -444,17 +469,32 @@ HttpServer.prototype.onreq = function(req, res) {
 						// Write the HTTP response header
 						res.writeHead(200, header);
 						// Pipe the file input onto the HTTP response
-						stream.pipe(zlib.createGzip()).pipe(res);
+						readStream.on('open', function () {
+							readStream.pipe(zlib.createGzip()).pipe(res);
+						});
+						readStream.on('error', function(err) {
+							res.end(err);
+						});
 					} else if (acceptEncoding.match(/deflate/)) {
 						// Set the encoding to deflate
 						header["Content-Encoding"] = 'deflate';
 						res.writeHead(200, header);
-						stream.pipe(zlib.createDeflate()).pipe(res);
+						readStream.on('open', function () {
+							readStream.pipe(zlib.createDeflate()).pipe(res);
+						});
+						readStream.on('error', function(err) {
+							res.end(err);
+						});
 					} else {
 						// No HTTP compression, just set file size
 						header["Content-Length"] = total;
 						res.writeHead(200, header);
-						stream.pipe(res);
+						readStream.on('open', function () {
+							readStream.pipe(res);
+						});
+						readStream.on('error', function(err) {
+							res.end(err);
+						});
 					}
 				}
 			}
@@ -467,7 +507,6 @@ HttpServer.prototype.onreq = function(req, res) {
 			return;
 		}
 	} else if (req.method === "POST") {
-		// var postName = decodeURIComponent(url.parse(req.url).pathname);
 		var postName = sageutils.sanitizedURL(url.parse(req.url).pathname);
 		if (postName in this.postFuncs) {
 			this.postFuncs[postName](req, res);
@@ -476,7 +515,6 @@ HttpServer.prototype.onreq = function(req, res) {
 	} else if (req.method === "PUT") {
 		// Need some authentication / security here
 
-		// var putName = decodeURIComponent(url.parse(req.url).pathname);
 		var putName = sageutils.sanitizedURL(url.parse(req.url).pathname);
 		// Remove the first / if there
 		if (putName[0] === '/') {

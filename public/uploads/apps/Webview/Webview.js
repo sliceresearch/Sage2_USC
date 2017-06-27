@@ -7,7 +7,7 @@
 
 "use strict";
 
-/* global  */
+/* global  require */
 
 var Webview = SAGE2_App.extend({
 	init: function(data) {
@@ -37,6 +37,7 @@ var Webview = SAGE2_App.extend({
 
 		// move and resize callbacks
 		this.resizeEvents = "continuous";
+		this.modifiers    = [];
 
 		// not sure
 		this.element.style.display = "inline-flex";
@@ -46,14 +47,47 @@ var Webview = SAGE2_App.extend({
 		this.element.plugins   = "on";
 		this.element.allowpopups = false;
 		this.element.allowfullscreen = false;
+		// turn off nodejs intergration for now
 		this.element.nodeintegration = 0;
-		// this.element.disablewebsecurity = true;
+		// disable fullscreen
+		this.element.fullscreenable = false;
+		this.element.fullscreen = false;
+		// add the preload clause
+		this.addPreloadFile();
+		// security or not: this seems to be an issue often on Windows
+		this.element.disablewebsecurity = true;
 
 		this.element.minwidth  = data.width;
 		this.element.minheight = data.height;
 
 		// Get the URL from parameter or session
-		this.element.src = data.params || this.state.url;
+		var view_url = data.params || this.state.url;
+		var video_id, ampersandPosition;
+
+		// A youtube URL with a 'watch' video
+		if (view_url.startsWith('https://www.youtube.com') &&
+				view_url.indexOf('embed') === -1 &&
+				view_url.indexOf("watch?v=") >= 0) {
+			// Search for the Youtube ID
+			video_id = view_url.split('v=')[1];
+			ampersandPosition = video_id.indexOf('&');
+			if (ampersandPosition != -1) {
+				video_id = video_id.substring(0, ampersandPosition);
+			}
+			view_url = 'https://www.youtube.com/embed/' + video_id + '?autoplay=0';
+		} else if (view_url.startsWith('https://youtu.be')) {
+			// youtube short URL (used in sharing)
+			video_id = view_url.split('/').pop();
+			view_url = 'https://www.youtube.com/embed/' + video_id + '?autoplay=0';
+		} else if (view_url.indexOf('vimeo') >= 0 && view_url.indexOf('player') === -1) {
+			// Search for the Vimeo ID
+			var m = view_url.match(/^.+vimeo.com\/(.*\/)?([^#?]*)/);
+			var vimeo_id =  m ? m[2] || m[1] : null;
+			if (vimeo_id) {
+				view_url = 'https://player.vimeo.com/video/' + vimeo_id;
+			}
+		}
+		this.element.src = view_url;
 
 		// Store the zoom level, when in desktop emulation
 		this.zoomFactor = 1;
@@ -77,7 +111,10 @@ var Webview = SAGE2_App.extend({
 			_this.element.setZoomFactor(_this.state.zoom);
 			// sync the state object
 			_this.SAGE2Sync(false);
+			// code injection to support key translation
 			_this.codeInject();
+			// update the context menu with the current URL
+			_this.getFullContextMenuAndUpdate();
 		});
 
 		// done loading
@@ -86,7 +123,8 @@ var Webview = SAGE2_App.extend({
 				event.errorCode === -501 ||
 				event.errorDescription === "OK") {
 				// it's a redirect
-				_this.changeURL(event.validatedURL, false);
+				// _this.changeURL(event.validatedURL, false);
+				// nope
 			} else {
 				// real error
 				_this.element.src = 'data:text/html;charset=utf-8,<h1>Invalid URL</h1>';
@@ -111,22 +149,40 @@ var Webview = SAGE2_App.extend({
 			event.preventDefault();
 		});
 
+		// Emitted when page receives favicon urls
+		this.element.addEventListener("page-favicon-updated", function(event) {
+			if (event.favicons && event.favicons[0]) {
+				console.log('Webview>	page-favicon-updated', event.favicons, event.favicons[0]);
+				_this.state.favicon = event.favicons[0];
+				// sync the state object
+				_this.SAGE2Sync(false);
+			}
+		});
+
+		// Console message from the embedded page
 		this.element.addEventListener('console-message', function(event) {
 			console.log('Webview>	console:', event.message);
 			// Add the message to the console layer
 			_this.pre.innerHTML += 'Webview> ' + event.message + '\n';
 		});
 
-		// When the webview tries to open a new window
+		// When the webview tries to open a new window, for insance with ALT-click
 		this.element.addEventListener("new-window", function(event) {
 			// only accept http protocols
 			if (event.url.startsWith('http:') || event.url.startsWith('https:')) {
-				_this.changeURL(event.url, false);
+				// Do not open a new view, just navigate to the new URL
+				// _this.changeURL(event.url, false);
+				// Request a new webview application
+				wsio.emit('openNewWebpage', {
+					// should be uniqueID, but no interactor object here
+					id: this.id,
+					// send the new URL
+					url: event.url
+				});
 			} else {
-				console.log('Webview>	Not http URL, not opening', event.url);
+				console.log('Webview>	Not a HTTP URL, not opening [', event.url, ']', event);
 			}
 		});
-
 	},
 
 	/**
@@ -137,6 +193,33 @@ var Webview = SAGE2_App.extend({
 	 */
 	isElectron: function() {
 		return (typeof window !== 'undefined' && window.process && window.process.type === "renderer");
+	},
+
+	/**
+	 * Loads the components to do a file preload on a webpage.
+	 * Needs to be within an Electron browser to work.
+	 *
+	 * @method     addPreloadFile
+	 */
+	addPreloadFile: function() {
+		// if it's not running inside Electron, do not bother
+		if (!this.isElectron) {
+			return;
+		}
+		// load the nodejs path module
+		var path = require("path");
+		// access the remote electron process
+		var app = require("electron").remote.app;
+		// get the application path
+		var appPath = app.getAppPath();
+		// split the path at node_modules
+		var subPath = appPath.split("node_modules");
+		// take the first element which contains the current folder of the application
+		var rootPath = subPath[0];
+		// add the relative path to the webview folder
+		var preloadPath = path.join(rootPath, 'public/uploads/apps/Webview', 'SAGE2_script_supplement.js');
+		// finally make it a local URL and pass it to the webview element
+		this.element.preload = "file://" + preloadPath;
 	},
 
 	load: function(date) {
@@ -184,9 +267,13 @@ var Webview = SAGE2_App.extend({
 		// Called when window is resized
 		this.element.style.width  = this.sage2_width  + "px";
 		this.element.style.height = this.sage2_height + "px";
+
 		// resize the console layer
-		this.layer.style.width  = this.element.style.width;
-		this.layer.style.height = this.element.style.height;
+		if (this.layer) {
+			// make sure the layer exist first
+			this.layer.style.width  = this.element.style.width;
+			this.layer.style.height = this.element.style.height;
+		}
 		this.refresh(date);
 	},
 
@@ -207,89 +294,22 @@ var Webview = SAGE2_App.extend({
 		);
 	},
 
-	/**
-	Initial testing reveals:
-		the page is for most intents and purposes fully visible.
-			the exception is if there is a scroll bar.
-		javascript operates in the given browser.
-		different displays will still have the same coordinate system
-			exception: random content can alter coordinate locations
-
-		sendInputEvent
-			accelerator events have names http://electron.atom.io/docs/api/accelerator/
-			SAGE2 buttons can't pass symbols
-
-
-	Things to look out for:
-		Most errors are silent
-			might be possible to use console-message event: http://electron.atom.io/docs/api/web-view-tag/#event-console-message
-		alert effects still produce another window on display host
-			AND pause the page
-
+	/*
+		Called after each page load, currentl prevents the lock from input focus.
 	*/
 	codeInject: function() {
-		/* eslint-disable */
-		this.element.executeJavaScript(
-			'\
-			var s2InjectForKeys = {};\
-			\
-			document.addEventListener("click", function(e) {\
-				s2InjectForKeys.lastClickedElement = document.elementFromPoint(e.clientX, e.clientY);\
-			});\
-			\
-			document.addEventListener("keydown", function(e) {\
-				/* Shift */\
-				if (e.keyCode == 16) {\
-					s2InjectForKeys.shift = true;\
-					return;\
-				}\
-				/* Backspace */\
-				if (e.keyCode == 8) {\
-					s2InjectForKeys.lastClickedElement.value = s2InjectForKeys.lastClickedElement.value.substring(0, s2InjectForKeys.lastClickedElement.value.length - 1);\
-					return;\
-				}\
-				/* Dont set keypress value if there was no clicked div */\
-				if (s2InjectForKeys.lastClickedElement.value == undefined) {\
-					return; \
-				}\
-				/* By default, characters are capitalized, if shift is not down, lower case them. */\
-				var sendChar = String.fromCharCode(e.keyCode);\
-				if (!s2InjectForKeys.shift) {\
-					sendChar = sendChar.toLowerCase();\
-				} else if(e.keyCode == 49) { /* 1 */\
-					sendChar =  "!";\
-				} else if(e.keyCode == 50) { /* 2 */\
-					sendChar =  "@";\
-				} else if(e.keyCode == 51) { /* 3 */\
-					sendChar =  "#";\
-				} else if(e.keyCode == 52) { /* 4 */\
-					sendChar =  "$";\
-				} else if(e.keyCode == 53) { /* 5 */\
-					sendChar =  "%";\
-				} else if(e.keyCode == 54) { /* 6 */\
-					sendChar =  "^";\
-				} else if(e.keyCode == 55) { /* 7 */\
-					sendChar =  "&";\
-				} else if(e.keyCode == 56) { /* 8 */\
-					sendChar =  "*";\
-				} else if(e.keyCode == 57) { /* 9 */\
-					sendChar =  "(";\
-				} else if(e.keyCode == 48) { /* 0 */\
-					sendChar =  ")";\
-				}\
-				s2InjectForKeys.lastClickedElement.value += sendChar;\
-			});\
-			document.addEventListener("keyup", function(e) {\
-				if (e.keyCode == 0x10) {\
-					s2InjectForKeys.shift = false;\
-				}\
-				if (e.keyCode == 8) {\
-					s2InjectForKeys.lastClickedElement.value = s2InjectForKeys.lastClickedElement.value.substring(0, s2InjectForKeys.lastClickedElement.value.length - 1);\
-				}\
-			});\
-			'
-		);
-		/* eslint-enable */
+		// Disabling text selection in page because it blocks the view sometimes
+		// done by injecting some CSS code
+		this.element.insertCSS(":not(input):not(textarea), " +
+			":not(input):not(textarea)::after, " +
+			":not(input):not(textarea)::before { " +
+				"-webkit-user-select: none; " +
+				"user-select: none; " +
+				"cursor: default; " +
+			"} " +
+			"input, button, textarea, :focus { " +
+				"outline: none; " +
+			"}");
 	},
 
 	getContextEntries: function() {
@@ -298,6 +318,7 @@ var Webview = SAGE2_App.extend({
 
 		entry = {};
 		entry.description = "Back";
+		entry.accelerator = "Alt \u2190";     // ALT <-
 		entry.callback = "navigation";
 		entry.parameters = {};
 		entry.parameters.action = "back";
@@ -305,6 +326,7 @@ var Webview = SAGE2_App.extend({
 
 		entry = {};
 		entry.description = "Forward";
+		entry.accelerator = "Alt \u2192";     // ALT ->
 		entry.callback = "navigation";
 		entry.parameters = {};
 		entry.parameters.action = "forward";
@@ -312,6 +334,7 @@ var Webview = SAGE2_App.extend({
 
 		entry = {};
 		entry.description = "Reload";
+		entry.accelerator = "Alt R";         // ALT r
 		entry.callback = "reloadPage";
 		entry.parameters = {};
 		entries.push(entry);
@@ -348,6 +371,7 @@ var Webview = SAGE2_App.extend({
 
 		entry = {};
 		entry.description = "Zoom in";
+		entry.accelerator = "Alt \u2191";     // ALT up-arrow
 		entry.callback = "zoomPage";
 		entry.parameters = {};
 		entry.parameters.dir = "zoomin";
@@ -355,6 +379,7 @@ var Webview = SAGE2_App.extend({
 
 		entry = {};
 		entry.description = "Zoom out";
+		entry.accelerator = "Alt \u2193";     // ALT down-arrow
 		entry.callback = "zoomPage";
 		entry.parameters = {};
 		entry.parameters.dir = "zoomout";
@@ -368,8 +393,11 @@ var Webview = SAGE2_App.extend({
 		// callback
 		entry.callback = "navigation";
 		// input setting
-		entry.inputField     = true;
+		entry.inputField = true;
+		// set the value to the current URL
+		entry.value = this.element.src;
 		entry.inputFieldSize = 20;
+		entry.inputDefault   = this.state.url;
 		// parameters of the callback function
 		entry.parameters = {};
 		entry.parameters.action = "address";
@@ -388,7 +416,15 @@ var Webview = SAGE2_App.extend({
 		entry.parameters.action = "search";
 		entries.push(entry);
 
-		entries.push({description: "separator"});
+		entries.push({
+			description: "Copy URL to clipboard",
+			callback: "SAGE2_copyURL",
+			parameters: {
+				url: this.state.url
+			}
+		});
+
+		// entries.push({description: "separator"});
 
 		return entries;
 	},
@@ -458,13 +494,13 @@ var Webview = SAGE2_App.extend({
 
 			// zoomin
 			if (dir === "zoomin") {
-				this.state.zoom *= 1.25;
+				this.state.zoom *= 1.50;
 				this.element.setZoomFactor(this.state.zoom);
 			}
 
 			// zoomout
 			if (dir === "zoomout") {
-				this.state.zoom /= 1.25;
+				this.state.zoom /= 1.50;
 				this.element.setZoomFactor(this.state.zoom);
 			}
 
@@ -487,25 +523,29 @@ var Webview = SAGE2_App.extend({
 			var y = Math.round(position.y);
 			var _this = this;
 
-			if (eventType === "pointerPress" && (data.button === "left")) {
+			if (eventType === "pointerPress") {
 				// click
 				this.element.sendInputEvent({
 					type: "mouseDown",
 					x: x, y: y,
-					button: "left",
+					button: data.button,
+					modifiers: this.modifiers,
 					clickCount: 1
 				});
 			} else if (eventType === "pointerMove") {
 				// move
 				this.element.sendInputEvent({
-					type: "mouseMove", x: x, y: y
+					type: "mouseMove",
+					modifiers: this.modifiers,
+					x: x, y: y
 				});
-			} else if (eventType === "pointerRelease" && (data.button === "left")) {
+			} else if (eventType === "pointerRelease") {
 				// click release
 				this.element.sendInputEvent({
 					type: "mouseUp",
 					x: x, y: y,
-					button: "left",
+					button: data.button,
+					modifiers: this.modifiers,
 					clickCount: 1
 				});
 			} else if (eventType === "pointerScroll") {
@@ -514,13 +554,16 @@ var Webview = SAGE2_App.extend({
 					type: "mouseWheel",
 					deltaX: 0, deltaY: -1 * data.wheelDelta,
 					x: 0, y: 0,
+					modifiers: this.modifiers,
 					canScroll: true
 				});
 			} else if (eventType === "widgetEvent") {
 				// widget events
 			} else if (eventType === "keyboard") {
 				this.element.sendInputEvent({
-					type: "keyDown",
+					// type: "keyDown",
+					// Not sure why we need 'char' but it works ! -- Luc
+					type: "char",
 					keyCode: data.character
 				});
 				setTimeout(function() {
@@ -530,6 +573,25 @@ var Webview = SAGE2_App.extend({
 					});
 				}, 0);
 			} else if (eventType === "specialKey") {
+				// clear the array
+				this.modifiers = [];
+				// store the modifiers values
+				if (data.status && data.status.SHIFT) {
+					this.modifiers.push("shift");
+				}
+				if (data.status && data.status.CTRL) {
+					this.modifiers.push("control");
+				}
+				if (data.status && data.status.ALT) {
+					this.modifiers.push("alt");
+				}
+				if (data.status && data.status.CMD) {
+					this.modifiers.push("meta");
+				}
+				if (data.status && data.status.CAPS) {
+					this.modifiers.push("capsLock");
+				}
+
 				// SHIFT key
 				if (data.code === 16) {
 					if (data.state === "down") {
@@ -576,6 +638,13 @@ var Webview = SAGE2_App.extend({
 							x: 0, y: 0,
 							canScroll: true
 						});
+					}
+					this.refresh(date);
+				} else if (data.code === 82 && data.state === "down") {
+					// r key
+					if (data.status.ALT) {
+						// ALT-r reloads
+						this.reloadPage({});
 					}
 					this.refresh(date);
 				} else if (data.code === 39 && data.state === "down") {

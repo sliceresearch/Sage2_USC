@@ -1,0 +1,104 @@
+{
+    name: "Pele",
+    host: "pele.manoa.hawaii.edu",
+    port: 443,
+    index_port: 80,
+    background: {
+        color: "#333333",
+        image: {
+            url: "images/background/banner151008.png",
+            style: "tile"
+        },
+        clip: true
+    },
+    ui: {
+        clock: 12,
+        show_version: false,
+        show_url: true,
+        maxWindowWidth: 8192,
+        maxWindowHeight: 8192,
+        noDropShadow: true
+    },
+    resolution: {
+        width: 4080,
+        height: 768
+    },
+    layout: {
+        rows: 3,
+        columns: 2
+    },
+    displays: [
+        {
+            row: 0,
+            column: 0,
+            width: 2,
+            height: 3
+        },
+        {
+            row: 0,
+            column: 1
+        },
+        {
+            row: 1,
+            column: 0
+        },
+        {
+            row: 1,
+            column: 1
+        },
+        {
+            row: 2,
+            column: 0
+        },
+        {
+            row: 2,
+            column: 1
+        }
+    ],
+    alternate_hosts: [
+        "128.171.47.10"
+    ],
+    remote_sites: [
+        {
+            name: "Mokulua",
+            host: "mokulua.manoa.hawaii.edu",
+            port: 443,
+            secure: true
+        },
+        {
+            name: "Taurus",
+            host: "taurus.evl.uic.edu",
+            port: 443,
+            secure: true,
+            password: "evl123"
+        },
+        {
+            name: "Imiloa",
+            host: "kolu.uhh.hawaii.edu",
+            port: 443,
+            secure: true
+        },
+        {
+            name: "UHWO",
+            host: "canoemother.uhwo.hawaii.edu",
+            port: 443,
+            secure: true
+        },
+        {
+            name: "Kamehameha",
+            host: "cybercanoe.ksbe.edu/",
+            port: 443,
+            secure: true
+        },
+        {
+            name: "cse-dataviz",
+            host: "cse-dataviz.uhh.hawaii.edu",
+            port: 443,
+            secure: true
+        }
+    ],
+    dependencies: {
+        ImageMagick: "bin/",
+        FFMpeg: "bin/"
+    }
+}

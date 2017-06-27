@@ -30,6 +30,7 @@ var ffmpeg    = require('fluent-ffmpeg');     // ffmpeg
 var gm        = require('gm');                // imagesmagick
 var json5     = require('json5');
 var mv        = require('mv');
+var chalk     = require('chalk');
 
 var exiftool  = require('../src/node-exiftool'); // gets exif tags for images
 var sageutils = require('../src/node-utils');    // provides utility functions
@@ -217,8 +218,7 @@ var generateImageThumbnails = function(infile, outfile, sizes, index, callback) 
 			}
 			// recursive call to generate the next size
 			generateImageThumbnails(infile, outfile, sizes, index + 1, callback);
-		}
-	);
+		});
 };
 
 var generatePdfThumbnailsHelper = function(intermediate, infile, outfile, sizes, index, callback) {
@@ -243,8 +243,7 @@ var generatePdfThumbnailsHelper = function(intermediate, infile, outfile, sizes,
 			}
 			// recursive call to generate the next size
 			generatePdfThumbnailsHelper(intermediate, infile, outfile, sizes, index + 1, callback);
-		}
-	);
+		});
 };
 
 var generatePdfThumbnails = function(infile, outfile, width, height, sizes, index, callback) {
@@ -301,8 +300,7 @@ var generateVideoThumbnails = function(infile, outfile, width, height, sizes, in
 					});
 					// recursive call to generate the next size
 					generateVideoThumbnails(infile, outfile, width, height, sizes, index + 1, callback);
-				}
-			);
+				});
 		})
 		.screenshots({
 			timestamps: ["10%"],
@@ -339,8 +337,7 @@ var generateAppThumbnails = function(infile, outfile, acolor, sizes, index, call
 			}
 			// recursive call to generate the next size
 			generateAppThumbnails(infile, outfile, acolor, sizes, index + 1, callback);
-		}
-	);
+		});
 };
 
 var generateRemoteSiteThumbnails = function(infile, outfile, sizes, index, callback) {
@@ -382,8 +379,7 @@ var generateRemoteSiteThumbnails = function(infile, outfile, sizes, index, callb
 				// recursive call to generate the next size
 				generateRemoteSiteThumbnails(infile, outfile, sizes, index + 1, callback);
 			}
-		}
-	);
+		});
 	imageMagick(sizes[index], sizes[index], disconnected).fill("#FFFFFF").font(font, fontSize).
 		drawText(0, 0, infile, "Center").write(outfile + '_disconnected_' + sizes[index] + '.jpg', function(err) {
 			if (err) {
@@ -396,8 +392,7 @@ var generateRemoteSiteThumbnails = function(infile, outfile, sizes, index, callb
 				// recursive call to generate the next size
 				generateRemoteSiteThumbnails(infile, outfile, sizes, index + 1, callback);
 			}
-		}
-	);
+		});
 };
 
 var addFile = function(filename, exif, callback) {
@@ -550,8 +545,10 @@ var addURL = function(aUrl, exif) {
 var getDimensions = function(id) {
 	id = path.resolve(id);
 	if (id in AllAssets.list) {
-		return {width:  AllAssets.list[id].exif.ImageWidth,
-				height: AllAssets.list[id].exif.ImageHeight };
+		return {
+			width:  AllAssets.list[id].exif.ImageWidth,
+			height: AllAssets.list[id].exif.ImageHeight
+		};
 	}
 	return null;
 };
@@ -630,7 +627,7 @@ var exifAsync = function(cmds, cb) {
 				appIcon = path.join(file, instructions.icon);
 			}
 			var app = path.basename(file);
-			console.log(sageutils.header("EXIF") + "Adding " + app + " (App)");
+			console.log(sageutils.header("EXIF") + "Adding " + chalk.cyan.bold(app) + chalk.dim(" (App)"));
 
 			var metadata = {};
 			if (instructions.title !== undefined && instructions.title !== null && instructions.title !== "") {
@@ -743,8 +740,10 @@ var listAssets = function() {
 	videos.sort(sageutils.compareFilename);
 	pdfs.sort(sageutils.compareFilename);
 	apps.sort(sageutils.compareFilename);
-	return {images: images, videos: videos, pdfs: pdfs,
-			applications: apps, others: others};
+	return {
+		images: images, videos: videos, pdfs: pdfs,
+		applications: apps, others: others
+	};
 };
 
 var listPDFs = function() {
@@ -872,9 +871,9 @@ var refreshApps = function(root, callback) {
 
 		exifAsync(thelist, function(err) {
 			if (err) {
-				console.log(sageutils.header("EXIF") + "Error:", err);
+				console.log(sageutils.header("EXIF") + chalk.red.bold("Error:", err));
 			} else {
-				console.log(sageutils.header("EXIF") + "Processing finished for " + root);
+				console.log(sageutils.header("EXIF") + chalk.green.bold("Processing finished for " + root));
 				if (callback) {
 					callback(thelist.length);
 				}
@@ -934,7 +933,7 @@ var initialize = function(mainFolder, mediaFolders, whenDone) {
 		var root = mainFolder.path;
 		var relativePath = mainFolder.url;
 
-		console.log(sageutils.header("Assets") + 'Main asset folder: ' + root);
+		console.log(sageutils.header("Assets") + 'Main asset folder: ' + chalk.yellow.bold(root));
 
 		// Make sure the asset folder exists
 		var assetFolder = path.join(root, 'assets');
@@ -1029,7 +1028,7 @@ var initialize = function(mainFolder, mediaFolders, whenDone) {
 };
 
 var addAssetFolder = function(root, whenDone) {
-	console.log(sageutils.header("Assets") + 'Adding asset folder: ' + root);
+	console.log(sageutils.header("Assets") + 'Adding asset folder: ' + chalk.yellow.bold(root));
 	// Make sure the asset folder exists
 	var assetFolder = path.join(root, 'assets');
 	if (!sageutils.folderExists(assetFolder)) {

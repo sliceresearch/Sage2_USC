@@ -60,7 +60,7 @@ var zoom = SAGE2_App.extend({
 		var _this = this;
 		this.viewer.addHandler('open', function(event) {
 			var info = _this.viewer.source.width.toLocaleString() + " x "
-				+ _this.viewer.source.width.toLocaleString() + " pixels";
+				+ _this.viewer.source.height.toLocaleString() + " pixels";
 			var parts = dataset.split('/');
 			var newTitle  = _this.title + ": " + parts[parts.length - 1] + " " + info;
 			_this.updateTitle(newTitle);

@@ -2879,29 +2879,29 @@ function validParentChildPair(parentId, childId) {
 // this could use some work, but works ok for prototype
 //THIS IS THE OLD ONE that abeer worked on
 //saving to make sure we can go back to it easily
-// function wsGoogleVoiceSpeechInput(wsio, data){
-// 	//console.log(data);
-//
-// 	//find articulate app (just articulate app for now)
-// 	var app = SAGE2Items.applications.getFirstItemWithTitle("articulate_ui");
-// 	//console.log(app);
-//
-// 	if( app != null ){
-// 		console.log("arraylength2 " + pointedToApps.length);
-// 		var targetAppID = mostOccurrenceItem(pointedToApps);
-// 		console.log("targetAppID in server " + targetAppID);
-// 		var data = {id: app.id, data: data.text, targetAppID:   targetAppID, date: Date.now()};
-// 		broadcast('textInputEvent', data);
-// 	}
-// 	else{
-// 		//launch articulate app ...?
-// 		//for now assume it is launched
-// 	}
-// }
+function wsGoogleVoiceSpeechInput(wsio, data){
+	//console.log(data);
+
+	//find articulate app (just articulate app for now)
+	var app = SAGE2Items.applications.getFirstItemWithTitle("articulate_ui");
+	//console.log(app);
+
+	if( app != null ){
+		console.log("arraylength2 " + pointedToApps.length);
+		var targetAppID = mostOccurrenceItem(pointedToApps);
+		console.log("targetAppID in server " + targetAppID);
+		var data = {id: app.id, data: data.text, targetAppID:   targetAppID, date: Date.now()};
+		broadcast('textInputEvent', data);
+	}
+	else{
+		//launch articulate app ...?
+		//for now assume it is launched
+	}
+}
 
 
 /// Vijay and Joe
-function wsGoogleVoiceSpeechInput(wsio, data){
+function wsGoogleVoiceSpeechInput2(wsio, data){
 	console.log("###########################################################")
 	console.log(data); //this will print a message to the console to show you what the object 'data'
 
@@ -3129,7 +3129,7 @@ function wsPointingGesturePosition(wsio, data){
 	if( data.recognitionStatus ){ //only check for the apps they point to when recognition status is on
 
 		var obj = interactMgr.searchGeometry({x: data.x, y: data.y}); //object on top pointed at given an x and y coordinate HERE!
-		console.log("obj: " + JSON.stringify(obj) );
+		// console.log("obj: " + JSON.stringify(obj) );
 
 		for (var key in SAGE2Items.applications.list) {
 			var app = SAGE2Items.applications.list[key];
