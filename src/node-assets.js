@@ -329,7 +329,8 @@ var generateAppThumbnails = function(infile, outfile, acolor, sizes, index, call
 	imageMagick(sizes[index], sizes[index], "rgb(71,71,71)").command("convert")
 		.in("-fill", "rgb(" + acolor.r + "," + acolor.g + "," + acolor.b + ")")
 		.in("-draw", "circle " + circle).in("-draw", "image src-over " + img + " '" + infile + "'")
-		.out("-quality", "70").write(outfile + '_' + sizes[index] + '.jpg', function(err) {
+		.out("-quality", "70").out("-strip").out("-interlace", "Plane")
+		.write(outfile + '_' + sizes[index] + '.jpg', function(err) {
 			if (err) {
 				console.log(sageutils.header("Assets") + "cannot generate " + sizes[index] + "x" +
 					sizes[index] + " thumbnail for:", infile);
