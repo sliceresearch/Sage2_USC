@@ -174,14 +174,14 @@ var Webview = SAGE2_App.extend({
 			// only accept http protocols
 			if (event.url.startsWith('http:') || event.url.startsWith('https:')) {
 				// Do not open a new view, just navigate to the new URL
-				// _this.changeURL(event.url, false);
+				_this.changeURL(event.url, false);
 				// Request a new webview application
-				wsio.emit('openNewWebpage', {
-					// should be uniqueID, but no interactor object here
-					id: this.id,
-					// send the new URL
-					url: event.url
-				});
+				// wsio.emit('openNewWebpage', {
+				// 	// should be uniqueID, but no interactor object here
+				// 	id: this.id,
+				// 	// send the new URL
+				// 	url: event.url
+				// });
 			} else {
 				console.log('Webview>	Not a HTTP URL, not opening [', event.url, ']', event);
 			}
