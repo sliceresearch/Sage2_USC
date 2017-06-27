@@ -2879,7 +2879,7 @@ function validParentChildPair(parentId, childId) {
 // this could use some work, but works ok for prototype
 //THIS IS THE OLD ONE that abeer worked on
 //saving to make sure we can go back to it easily
-function wsGoogleVoiceSpeechInput(wsio, data){
+function wsGoogleVoiceSpeechInput2(wsio, data){
 	//console.log(data);
 
 	//find articulate app (just articulate app for now)
@@ -2901,7 +2901,7 @@ function wsGoogleVoiceSpeechInput(wsio, data){
 
 
 /// Vijay and Joe
-function wsGoogleVoiceSpeechInput2(wsio, data){
+function wsGoogleVoiceSpeechInput(wsio, data){
 	console.log("###########################################################")
 	console.log(data); //this will print a message to the console to show you what the object 'data'
 
