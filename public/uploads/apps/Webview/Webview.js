@@ -57,6 +57,9 @@ var Webview = SAGE2_App.extend({
 		// security or not: this seems to be an issue often on Windows
 		this.element.disablewebsecurity = true;
 
+		// Set a session per webview, so not zoom sharing per origin
+		this.element.partition = data.id;
+
 		this.element.minwidth  = data.width;
 		this.element.minheight = data.height;
 
