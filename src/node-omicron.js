@@ -513,13 +513,14 @@ OmicronManager.prototype.processIncomingEvent = function(msg, rinfo) {
 
 		// Kinect v2.0 data has 29 extra data fields
 		if (this.kinectInput != undefined && e.extraDataItems == 29) {
-			if (omicronManager.eventDebug ) {
-				console.log(sageutils.header('Omicron') + "Kinect body " + sourceID + " head Pos: ("+e.posx+", "+e.posy+","+e.posz+")" );
+			if (omicronManager.eventDebug) {
+				console.log(sageutils.header('Omicron') + "Kinect body " + sourceID +
+					" head Pos: (" + e.posx + ", " + e.posy + "," + e.posz + ")");
 			}
-		
+
 			var extraData = [];
 
-			while(offset < msg.length) {
+			while (offset < msg.length) {
 				extraData.push(msg.readFloatLE(offset));
 				offset += 4;
 			}
@@ -559,23 +560,24 @@ OmicronManager.prototype.processIncomingEvent = function(msg, rinfo) {
 			var bodyPartIndex = 0;
 			var posIndex = 0;
 			var skeletonData = {};
-			while(bodyPartIndex < bodyParts.length) {
+			while (bodyPartIndex < bodyParts.length) {
 				const bodyPart = bodyParts[bodyPartIndex++];
 				skeletonData[bodyPart] = {
-					"x": extraData[posIndex++],
-					"y": extraData[posIndex++],
-					"z": extraData[posIndex++]
+					x: extraData[posIndex++],
+					y: extraData[posIndex++],
+					z: extraData[posIndex++]
 				};
 			}
 
-			skeletonData["skeletonID"] = sourceID;
-			skeletonData["type"] = "kinectInput";
+			skeletonData.skeletonID = sourceID;
+			skeletonData.type = "kinectInput";
 
 			this.kinectInput(sourceID, skeletonData);
 		} else {
 			// Treat as single marker mocap
-			if (omicronManager.eventDebug ) {
-				console.log(sageutils.header('Omicron') + "MocapID " + sourceID + " ("+e.posx+", "+e.posy+","+e.posz+")" );
+			if (omicronManager.eventDebug) {
+				console.log(sageutils.header('Omicron') + "MocapID " + sourceID +
+					" (" + e.posx + ", " + e.posy + "," + e.posz + ")");
 			}
 		}
 	} else if (serviceType === 7) {
