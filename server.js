@@ -2652,7 +2652,12 @@ function wsGoogleVoiceSpeechInput(wsio, data){
 	console.log("Command text!   \n" + commandText);
 
 	var targetInfo = mostOccurrenceItem(pointedToApps);
-	var orderedItems = mostItems(pointedToApps);
+	var orderedItems = mostItems(pointedToApps); // Gesture array is deleted in this function, always call orderitems after most
+
+	console.log("targetInfo: " + JSON.stringify(targetInfo));
+
+	console.log("orderedItems: " + JSON.stringify(orderedItems));
+
 	if( !targetInfo)
 	{
 		return;
@@ -2684,12 +2689,15 @@ function wsGoogleVoiceSpeechInput(wsio, data){
 		}
 
 		if(numToClose == 0) {
-			var cutoff = 300;
+			var cutoff = 200;
 			for( var key in orderedItems)
 			{
 				if (orderedItems[key].count > cutoff )
 				{
 					deleteApplication(orderedItems[key].name)
+				}
+				else {
+					break;
 				}
 			}
 		}
@@ -2709,7 +2717,7 @@ function wsGoogleVoiceSpeechInput(wsio, data){
 	}
 
 
-	else if( commandText.includes( "MOVE THIS WINDOW") ){
+	else if( commandText.includes( "MOVE THIS" )){  //WINDOW") ){
 
 
 			var updateItem = {
@@ -2831,9 +2839,11 @@ function wsGoogleVoiceSpeechInput(wsio, data){
 //find kinect app to start gesture recognition
 function wsGestureRecognitionStatus(wsio, data){
 	console.log("status " + data.text);
-	// if(data.text == 'true'){
-	// 	//pointedToApps = [];
-	// }
+	 if(data.text == 'true'){
+	 	pointedToApps = [];
+	 }
+	 // vijay look here to clear - joe
+	 //	var obj = interactMgr.searchGeometry({x: pointerX, y: pointerY}); //object on top pointed at given an x and y coordinate HERE!
 	var app = SAGE2Items.applications.getFirstItemWithTitle("machineLearning");
 	if( app != null ){
 		var data = {id: app.id, data: data.text, date: Date.now()};
@@ -2860,10 +2870,15 @@ function wsPointingGesturePosition(wsio, data){
 	// console.log("position " + data.x + " " + data.y);
 
 	if( data.recognitionStatus ){ //only check for the apps they point to when recognition status is on
+
+		var obj = interactMgr.searchGeometry({x: data.x, y: data.y}); //object on top pointed at given an x and y coordinate HERE!
+		console.log("obj: " + JSON.stringify(obj) );
+
 		for (var key in SAGE2Items.applications.list) {
 			var app = SAGE2Items.applications.list[key];
 			if(app.title != "machineLearning" && app.title != "articulate_ui" && app.title != "background"){
-				if(data.x >= app.left && data.x <= (app.left + app.width) && data.y >= app.top && data.y <= (app.top + app.height)){
+				if(data.x >= app.left && data.x <= (app.left + app.width) && data.y >= app.top && data.y <= (app.top + app.height)){//*****
+
 					pointedToApps[pointedToApps.length]= {appId: app.id, pointerId: data.id};
 				}
 			}
@@ -2927,7 +2942,8 @@ function mostItems(array){
 			return b.count - a.count;
 	});
 
-//	console.log(sortedArr);
+	console.log("sorted Array: " + JSON.stringify(sortedArr));
+	//array = [];
 	return sortedArr;
 }
 

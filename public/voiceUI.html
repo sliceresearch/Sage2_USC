@@ -450,7 +450,7 @@ function init(){
 function setupListeners() {
   wsio.on('initialize', function(data) {
     //interactor.setInteractionId(data.UID);
-
+    // console.log("Data is = ", JSON.stringify(data));
   });
 
   // Open a popup on message sent from server
