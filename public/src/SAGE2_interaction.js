@@ -59,56 +59,6 @@ function SAGE2_interaction(wsio) {
 	// Timeout for when scrolling ends
 	this.scrollTimeId = null;
 
-	// Check if a domain cookie exists for the name
-	var cookieName = getCookie('SAGE2_ptrName');
-	if (cookieName) {
-		localStorage.SAGE2_ptrName = cookieName;
-	}
-	// Check if a domain cookie exists for the color
-	var cookieColor = getCookie('SAGE2_ptrColor');
-	if (cookieColor) {
-		localStorage.SAGE2_ptrColor = cookieColor;
-	}
-
-	if (!cookieName && !localStorage.SAGE2_ptrColor) {
-		if (!viewOnlyMode) {
-			// only show dialog in full UI mode
-			showDialog('settingsDialog2');
-		}
-	}
-
-	// Post message to the Chrome extension to register the UI
-	if (__SAGE2__.browser.isChrome === true) {
-		window.postMessage('SAGE2_registerUI', '*');
-	}
-
-	// Deals with the name and color of the pointer
-	if (localStorage.SAGE2_ptrName  === undefined ||
-		localStorage.SAGE2_ptrName  === null ||
-		localStorage.SAGE2_ptrName  === "Default") {
-		if (hasMouse) {
-			localStorage.SAGE2_ptrName  = "SAGE2_user";
-		} else {
-			localStorage.SAGE2_ptrName  = "SAGE2_mobile";
-
-		}
-	}
-	if (localStorage.SAGE2_ptrColor === undefined ||
-		localStorage.SAGE2_ptrColor === null) {
-		localStorage.SAGE2_ptrColor = "#B4B4B4";
-	}
-
-	addCookie('SAGE2_ptrName',  localStorage.SAGE2_ptrName);
-	addCookie('SAGE2_ptrColor', localStorage.SAGE2_ptrColor);
-
-	document.getElementById('sage2PointerLabel').value = localStorage.SAGE2_ptrName;
-	document.getElementById('sage2PointerColor').value = localStorage.SAGE2_ptrColor;
-
-	this.wsio.emit('registerInteractionClient', {
-		name: document.getElementById('sage2PointerLabel').value,
-		color: document.getElementById('sage2PointerColor').value
-	});
-
 	/**
 	* Set a unique ID
 	*
@@ -951,6 +901,83 @@ function SAGE2_interaction(wsio) {
 		this.mediaQuality = parseInt(event.target.value, 10);
 	};
 
+	/**
+	* Open Dialog asking for pointer name and color (using webix)
+	*
+	* @method userDialog
+	*/
+	this.userDialog = function() {
+		webix.ui({
+			view: "window",
+			id: "username_form",
+			position: "center",
+			modal: true,
+			zIndex: 9999,
+			head: "Set your pointer name and color",
+			body: {
+				view: "form",
+				width: 400,
+				borderless: false,
+				elements: [
+					{
+						view: "text", id: "user_name", label: "User name", name: "username"
+					},
+					{
+						view: "label", label: "User color"
+					},
+					{
+						view: "colorboard", id: "user_color", label: "Color", name: "usercolor",
+						cols: 7, rows: 7,
+						minLightness: 0.3, maxLightness: 1,
+						width: 100, height: 180
+					},
+					{
+						margin: 5, cols: [
+							{
+								view: "button", id: "user_button", value: "Ok", type: "form", disabled: true
+							}
+						]
+					}
+				],
+				elementsConfig: {
+					// labelPosition: "top"
+				}
+			}
+		}).show();
+		// Attach event handlers
+		$$("user_color").attachEvent("onSelect", function(val) {
+			// When color selected and name not empty, enable OK button
+			if ($$("user_name").getValue()) {
+				$$("user_button").enable();
+			}
+		});
+		$$("user_name").attachEvent("onTimedKeyPress", function() {
+			// When get a name and a color, enable OK button
+			if (this.getValue() && $$("user_color").getValue()) {
+				$$("user_button").enable();
+			} else {
+				$$("user_button").disable();
+			}
+		});
+		$$("user_button").attachEvent("onItemClick", function(val) {
+			// When OK button pressed
+
+			var uname  = $$("user_name").getValue();
+			var ucolor = $$("user_color").getValue();
+
+			// Set the values into localStorage of browser
+			localStorage.SAGE2_ptrName = uname;
+			addCookie('SAGE2_ptrName', localStorage.SAGE2_ptrName);
+			localStorage.SAGE2_ptrColor = ucolor;
+			addCookie('SAGE2_ptrColor', localStorage.SAGE2_ptrColor);
+
+			// Close the UI
+			this.getTopParentView().hide();
+		});
+		// Focus the text box
+		$$('user_name').focus();
+	};
+
 	this.streamSuccess               = this.streamSuccessMethod.bind(this);
 	this.streamFail                  = this.streamFailMethod.bind(this);
 	this.streamEnded                 = this.streamEndedMethod.bind(this);
@@ -973,6 +1000,57 @@ function SAGE2_interaction(wsio) {
 	this.changeScreenShareQuality    = this.changeScreenShareQualityMethod.bind(this);
 	this.step                        = this.stepMethod.bind(this);
 
+	// Check if a domain cookie exists for the name
+	var cookieName = getCookie('SAGE2_ptrName');
+	if (cookieName) {
+		localStorage.SAGE2_ptrName = cookieName;
+	}
+	// Check if a domain cookie exists for the color
+	var cookieColor = getCookie('SAGE2_ptrColor');
+	if (cookieColor) {
+		localStorage.SAGE2_ptrColor = cookieColor;
+	}
+
+	// First time a user connects
+	if (!cookieName && !localStorage.SAGE2_ptrColor) {
+		if (!viewOnlyMode) {
+			// only show dialog in full UI mode
+			this.userDialog();
+		}
+	}
+
+	// Post message to the Chrome extension to register the UI
+	if (__SAGE2__.browser.isChrome === true) {
+		window.postMessage('SAGE2_registerUI', '*');
+	}
+
+	// Deals with the name and color of the pointer
+	if (localStorage.SAGE2_ptrName  === undefined ||
+		localStorage.SAGE2_ptrName  === null ||
+		localStorage.SAGE2_ptrName  === "Default") {
+		if (hasMouse) {
+			localStorage.SAGE2_ptrName  = "SAGE2_user";
+		} else {
+			localStorage.SAGE2_ptrName  = "SAGE2_mobile";
+
+		}
+	}
+	if (localStorage.SAGE2_ptrColor === undefined ||
+		localStorage.SAGE2_ptrColor === null) {
+		localStorage.SAGE2_ptrColor = "#B4B4B4";
+	}
+
+	addCookie('SAGE2_ptrName',  localStorage.SAGE2_ptrName);
+	addCookie('SAGE2_ptrColor', localStorage.SAGE2_ptrColor);
+
+	document.getElementById('sage2PointerLabel').value = localStorage.SAGE2_ptrName;
+	document.getElementById('sage2PointerColor').value = localStorage.SAGE2_ptrColor;
+
+	this.wsio.emit('registerInteractionClient', {
+		name: document.getElementById('sage2PointerLabel').value,
+		color: document.getElementById('sage2PointerColor').value
+	});
+
 	document.addEventListener('pointerlockerror',        this.pointerLockError,  false);
 	document.addEventListener('mozpointerlockerror',     this.pointerLockError,  false);
 	document.addEventListener('pointerlockchange',       this.pointerLockChange, false);
@@ -980,11 +1058,12 @@ function SAGE2_interaction(wsio) {
 
 	document.getElementById('sage2PointerLabel').addEventListener('input',      this.changeSage2PointerLabel,     false);
 	document.getElementById('sage2PointerColor').addEventListener('input',      this.changeSage2PointerColor,     false);
-	document.getElementById('sage2PointerLabelInit').addEventListener('input',  this.changeSage2PointerLabel,     false);
-	document.getElementById('sage2PointerColorInit').addEventListener('input',  this.changeSage2PointerColor,     false);
 	document.getElementById('screenShareResolution').addEventListener('change', this.changeScreenShareResolution, false);
 	document.getElementById('screenShareQuality').addEventListener('input',     this.changeScreenShareQuality,    false);
 	document.getElementById('mediaVideo').addEventListener('canplay',           this.streamCanPlay,               false);
+
+	// document.getElementById('sage2PointerLabelInit').addEventListener('input',  this.changeSage2PointerLabel,     false);
+	// document.getElementById('sage2PointerColorInit').addEventListener('input',  this.changeSage2PointerColor,     false);
 
 
 	// -----------

@@ -1547,9 +1547,8 @@ function handleClick(element) {
 	} else if (element.id === "settingsCloseBtn") {
 		// Settings Dialog
 		hideDialog('settingsDialog');
-	} else if (element.id === "settingsCloseBtn2") {
-		// Init Settings Dialog
-		hideDialog('settingsDialog2');
+	// } else if (element.id === "settingsCloseBtn2") {
+	// 	hideDialog('settingsDialog2');
 	} else if (element.id.length > 14 && element.id.substring(0, 14) === "available_app_") {
 		// Application Selected
 		var application_selected = element.getAttribute("application");
