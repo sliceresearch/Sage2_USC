@@ -1064,6 +1064,10 @@ function setupListeners(wsio) {
 	wsio.on('serverDataGetAllTrackedValues',		wsServerDataGetAllTrackedValues);
 	wsio.on('serverDataGetAllTrackedDescriptions',	wsServerDataGetAllTrackedDescriptions);
 	wsio.on('serverDataSubscribeToNewValueNotification',	wsServerDataSubscribeToNewValueNotification);
+	// experimental detection of data types
+	wsio.on('serverDataLinkerSubmit',				wsServerDataGetAllTrackedValues);
+	wsio.on('serverDataLinkerRequest',			wsServerDataGetAllTrackedValues);
+
 
 	// Screenshot messages
 	wsio.on('startWallScreenshot',                  wsStartWallScreenshot);

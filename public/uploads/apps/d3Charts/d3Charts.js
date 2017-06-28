@@ -80,14 +80,44 @@ var d3Charts = SAGE2_App.extend({
 	*/
 	broadcastInitialValues: function() {
 		// serverDataBroadcastSource: function(nameOfValue, value, description)
-		this.serverDataBroadcastSource("dataset", this.state.chartValues.data, "Current data set of chart");
-		this.serverDataBroadcastSource("dataSelected", [], "Current selected data");
-		this.serverDataBroadcastSource("dataHovered", [], "Current hovered");
+		this.serverDataBroadcastSource("dataset", this.state.chartValues.data, { // "Current data set of chart");
+			app: this.id,
+			linkAs: "source",
+			linkType: "dataset",
+			format: "json"
+		});
+		this.serverDataBroadcastSource("dataSelected", [], { // "Current selected data");
+			app: this.id,
+			linkAs: "source",
+			linkType: "selection",
+			format: "json"
+		});
+		this.serverDataBroadcastSource("dataHovered", [], { // "Current hovered");
+			app: this.id,
+			linkAs: "source",
+			linkType: "hover",
+			format: "json"
+		});
 
 		// serverDataBroadcastDestination: function(nameOfValue, value, description, callback)
-		this.serverDataBroadcastDestination("dataset", [], "Replaces dataset of chart", "dataDestinationFullDataSetReplacement");
-		this.serverDataBroadcastDestination("dataSelected", [], "Sets selection", "dataDestinationSelected");
-		this.serverDataBroadcastDestination("dataHovered", [], "Sets hover", "dataDestinationHovered");
+		this.serverDataBroadcastDestination("dataset", [], {
+			app: this.id,
+			linkAs: "destination",
+			linkType: "dataset",
+			format: "json"
+		}, "dataDestinationFullDataSetReplacement");
+		this.serverDataBroadcastDestination("dataSelected", [], {
+			app: this.id,
+			linkAs: "destination",
+			linkType: "selection",
+			format: "json"
+		}, "dataDestinationSelected",);
+		this.serverDataBroadcastDestination("dataHovered", [], {
+			app: this.id,
+			linkAs: "destination",
+			linkType: "hover",
+			format: "json"
+		}, "dataDestinationHovered", );
 	},
 
 	/**

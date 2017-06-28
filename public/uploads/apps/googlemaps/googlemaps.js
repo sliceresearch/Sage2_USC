@@ -807,6 +807,7 @@ var googlemaps = SAGE2_App.extend({
 			"geoLocation:replaceMarkerPlots", [], "clears out current markers and places given", "replaceMarkerPlots");
 		this.serverDataBroadcastDestination(
 			"geoLocation:viewCenter", [], "this will set the maps center view", "setView");
+
 	},
 
 	/**
@@ -871,6 +872,25 @@ var googlemaps = SAGE2_App.extend({
 			for (let i = 0; i < value.length; i++) {
 				this.addMarkerToMap(value[i]);
 			}
+		}
+	},
+
+	/**
+	 * Should get an array of objects [{lat:, lng:}, ..]
+	 * To test next is strings "latitudeValue, longitudeValue"
+	 *
+	 * @method replaceMarkerPlotsConvertedByS2
+	 * @param {Array} value - An array containing locations to plot on map.
+	 */
+	replaceMarkerPlotsConvertedByS2: function(value) {
+		// clear out all marker plots
+		this.removeAllMarkersFromMap();
+		// plot the new ones.
+		if (!Array.isArray(value)) {
+			value = [value]; // put in array for now
+		}
+		for (let i = 0; i < value.length; i++) {
+			this.addMarkerToMap(value[i]);
 		}
 	},
 
