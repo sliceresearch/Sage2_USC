@@ -55,7 +55,7 @@ var Webview = SAGE2_App.extend({
 		// add the preload clause
 		this.addPreloadFile();
 		// security or not: this seems to be an issue often on Windows
-		this.element.disablewebsecurity = true;
+		this.element.disablewebsecurity = false;
 
 		this.element.minwidth  = data.width;
 		this.element.minheight = data.height;
@@ -87,7 +87,6 @@ var Webview = SAGE2_App.extend({
 				view_url = 'https://player.vimeo.com/video/' + vimeo_id;
 			}
 		}
-		this.element.src = view_url;
 
 		// Store the zoom level, when in desktop emulation
 		this.zoomFactor = 1;
@@ -183,6 +182,9 @@ var Webview = SAGE2_App.extend({
 				console.log('Webview>	Not a HTTP URL, not opening [', event.url, ']', event);
 			}
 		});
+
+		// Set the URL and starts loading
+		this.element.src = view_url;
 	},
 
 	/**
