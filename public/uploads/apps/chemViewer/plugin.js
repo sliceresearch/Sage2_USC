@@ -25,15 +25,12 @@ function processRequest(wsio, data, config) {
 			var errorMsg = null;
 			if (mol.startsWith("HEADER")) {
 				console.log("PDB>		valid PDB file found", molName);
-			} 
-			else if (mol.startsWith("<!")) {
+			} else if (mol.startsWith("<!")) {
 				console.log("PDB>		PDB file not found", molName);
 				errorMsg = "Molecule not found";
-			}
-			else if (mol.match(/.+/)) {
+			} else if (mol.match(/.+/)) {
 				console.log("MOL>		MOL file found", molName);
-			}
-			else {
+			} else {
 				console.log("MOL>		MOL file not found", molName);
 				errorMsg = "Molecule not found";
 			}

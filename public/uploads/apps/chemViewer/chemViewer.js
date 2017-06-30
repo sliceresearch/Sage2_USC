@@ -162,7 +162,7 @@ var chemViewer = SAGE2_App.extend({
 			this.updateTitle(newTitle);
 		}
 	},
-	
+
 	/**
 	 * Loads a molecule formatted as a mol file from a data string
 	 *
@@ -177,11 +177,11 @@ var chemViewer = SAGE2_App.extend({
 			var data  = response.data;
 			var title = response.name + '.mol';
 			console.log('Got back', title);
-			
+
 			var mol = ChemDoodle.readMOL(data, 1);
 
 			this.cartoonTransformer.specs.set3DRepresentation('Ball and Stick');
-			
+
 			this.cartoonTransformer.loadMolecule(mol);
 			this.ready = true;
 			// Update the title bar
@@ -335,7 +335,7 @@ var chemViewer = SAGE2_App.extend({
 			inputField: true,
 			inputFieldSize: 20
 		});
-		
+
 		entries.push({
 			description: "Enter MOL ID:",
 			callback: "searchMOL",
@@ -432,7 +432,7 @@ var chemViewer = SAGE2_App.extend({
 			this.applicationRPC({url: queryURL, name: molName}, "loadMoleculeFromString", true);
 		}
 	},
-	
+
 	/**
 	 * search online for a MOL file
 	 *
@@ -448,7 +448,6 @@ var chemViewer = SAGE2_App.extend({
 			this.applicationRPC({url: queryURL, name: molName}, "loadMolFromString", true);
 		}
 	},
-	
 
 	/**
 	 * Change the drawing style
