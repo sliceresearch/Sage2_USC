@@ -666,16 +666,40 @@ var SAGE2MEP = {
 		py += appBoundingRect.top;
 
 		// then go through each child, and its children...etc
-		this.traverseChildNodesForCandidates(appStart, candidate, px, py);
+		this.traverseChildNodesForCandidates(appStart, candidate, px, py, appBoundingRect, true);
 		return candidate.element;
 	},
 
-	traverseChildNodesForCandidates: function(element, candidate, px, py) {
+	traverseChildNodesForCandidates: function(element, candidate, px, py, boundOfPrevious, firstIgnore = false) {
 		// track data for debug
 		candidate.traversalCount++;
 		var computedZ;
+
+		// first apply bounding box adjustments for the current element.
+		var boundingRectForCurrentElement = {
+			left: element.offsetLeft + boundOfPrevious.left,
+			top: element.offsetTop + boundOfPrevious.top,
+			width: element.clientWidth,
+			height: element.clientHeight
+		};
+		// first time ignore from app
+		if (firstIgnore) {
+			boundingRectForCurrentElement.left = boundOfPrevious.left;
+			boundingRectForCurrentElement.top = boundOfPrevious.top;
+			// if (boundingRectForCurrentElement.width !== boundOfPrevious.width) {
+			// 	console.log("Errors with mouse conversion the width isn't going to work due to differences:"
+			// 	+ boundingRectForCurrentElement.width + "," + boundOfPrevious.width);
+			// }
+			// if (boundingRectForCurrentElement.height !== boundOfPrevious.height) {
+			// 	console.log("Errors with mouse conversion the height isn't going to work due to differences:"
+			// 	+ boundingRectForCurrentElement.height + "," + boundOfPrevious.height);
+			// }
+			boundingRectForCurrentElement.width = boundOfPrevious.width;
+			boundingRectForCurrentElement.height = boundOfPrevious.height;
+		}
+
 		// first check this node, because later declared notes are visually on top of previous
-		if (this.checkIfPointerInElementBoundingBox(px, py, element)) {
+		if (this.checkIfPointerInElementBoundingBox(px, py, boundingRectForCurrentElement)) {
 			computedZ = this.computeZIndex(element);
 			if (computedZ >= candidate.zIndex) {
 				candidate.element = element;
@@ -688,14 +712,15 @@ var SAGE2MEP = {
 			if (children[i].id === candidate.stateSkipId) {
 				continue;
 			}
-			this.traverseChildNodesForCandidates(children[i], candidate, px, py);
+			this.traverseChildNodesForCandidates(children[i], candidate, px, py, boundingRectForCurrentElement);
 		}
 	},
 
-	checkIfPointerInElementBoundingBox: function(px, py, element) {
+	checkIfPointerInElementBoundingBox: function(px, py, elementBounds) { //, element) {
 		var bb;
 		try {
-			bb = element.getBoundingClientRect();
+			// bb = element.getBoundingClientRect();
+			bb = elementBounds;
 			// check if the point is outside of the box
 			if (px < bb.left
 			|| px > bb.left + bb.width
