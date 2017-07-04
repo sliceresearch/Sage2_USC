@@ -84,8 +84,34 @@ var SAGE2MEP = {
 
 		// gets the element under the pointer coordinate. Some assumptions are made.
 		// point.currentElement = this.getElementUnderPointer(xLocationOfPointerOnScreen, yLocationOfPointerOnScreen, appId);
-		point.currentElement = this.getElementUnderPointerBoundRectVersion(point.xCurrent, point.yCurrent, appId);
+		
 
+		if (!__SAGE2__.browser.isElectron && !this.shownElectronNotification) {
+			console.log("Unable to convert events using electron method");
+			this.shownElectronNotification = true;
+		} else if (__SAGE2__.browser.isElectron) {
+			if (!this.webContent) {
+				console.log("SAGE2MEP> Electron event conversion started");
+				this.webContent = require('electron').remote.getCurrentWebContents();
+				// debug purposes only
+				// document.addEventListener("mousemove", function (e) {
+				// 	console.dir(e);	
+				// });
+			}
+			this.webContent.sendInputEvent({
+				type: "mouseMove",
+				modifiers: [],
+				x: xLocationOfPointerOnScreen,
+				y: yLocationOfPointerOnScreen,
+				button: "left"
+			});
+			return;
+		}
+
+
+		// revised version to reduce lag. instead of getElementFromPoint(),
+		// detect if over element based on getBoundingClientRect() and zIndex
+		point.currentElement = this.getElementUnderPointerBoundRectVersion(point.xCurrent, point.yCurrent, appId);
 
 		/* The type of SAGE action will determine the event generated.
 		pointerMove:
