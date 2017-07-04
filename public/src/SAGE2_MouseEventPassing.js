@@ -83,8 +83,8 @@ var SAGE2MEP = {
 		var yLocationOfPointerOnScreen = this.getYOfWebkitTranslate(tempTransform);
 
 		// gets the element under the pointer coordinate. Some assumptions are made.
-		point.currentElement = this.getElementUnderPointer(xLocationOfPointerOnScreen, yLocationOfPointerOnScreen, appId);
-
+		// point.currentElement = this.getElementUnderPointer(xLocationOfPointerOnScreen, yLocationOfPointerOnScreen, appId);
+		point.currentElement = this.getElementUnderPointerBoundRectVersion(point.xCurrent, point.yCurrent, appId);
 
 
 		/* The type of SAGE action will determine the event generated.
@@ -123,6 +123,13 @@ var SAGE2MEP = {
 			// console.log("offset " + offsetValues.x + "," + offsetValues.y);
 		}
 
+		// get app reference to correctly place the event reference. this may be negative.
+		var appRef = applications[appId];
+		var appDivElement = document.getElementById(appId);
+		var appLeftOffset = parseInt(appDivElement.style.left);
+		var appTopOffset = parseInt(appDivElement.style.top);
+		var titleOffset = parseInt(document.getElementById(appId + "_title").style.height);
+
 		// Mouse events need to be made within their cases because the creation does extra stuff that doesn't allow easily modified return objects.
 
 		switch (type) {
@@ -131,10 +138,10 @@ var SAGE2MEP = {
 				// if the current and previous element match, then only need to worry about sending mouse move event
 				if (point.currentElement == point.previousElement) {
 					mouseEventToPass = new CustomEvent("mousemove", {bubbles: true});
-					mouseEventToPass.clientX = point.xCurrent;
-					mouseEventToPass.clientY = point.yCurrent;
-					mouseEventToPass.screenX = point.xCurrent;
-					mouseEventToPass.screenY = point.yCurrent;
+					mouseEventToPass.clientX = point.xCurrent + appRef.sage2_x + appLeftOffset;
+					mouseEventToPass.clientY = point.yCurrent + appRef.sage2_y + appTopOffset - titleOffset;
+					mouseEventToPass.screenX = point.xCurrent + appRef.sage2_x + appLeftOffset;
+					mouseEventToPass.screenY = point.yCurrent + appRef.sage2_y + appTopOffset - titleOffset;
 					mouseEventToPass.offsetX = offsetValues.x;
 					mouseEventToPass.offsetY = offsetValues.y;
 					mouseEventToPass.movementX = (point.xCurrent - point.xPrevious);
@@ -150,10 +157,10 @@ var SAGE2MEP = {
 
 					// event order is : (first) over, enter, out, leave (last)
 					mouseEventToPass = new CustomEvent("mouseover", {bubbles: true});
-					mouseEventToPass.clientX = point.xCurrent;
-					mouseEventToPass.clientY = point.yCurrent;
-					mouseEventToPass.screenX = point.xCurrent;
-					mouseEventToPass.screenY = point.yCurrent;
+					mouseEventToPass.clientX = point.xCurrent + appRef.sage2_x + appLeftOffset;
+					mouseEventToPass.clientY = point.yCurrent + appRef.sage2_y + appTopOffset - titleOffset;
+					mouseEventToPass.screenX = point.xCurrent + appRef.sage2_x + appLeftOffset;
+					mouseEventToPass.screenY = point.yCurrent + appRef.sage2_y + appTopOffset - titleOffset;
 					mouseEventToPass.offsetX = offsetValues.x;
 					mouseEventToPass.offsetY = offsetValues.y;
 					mouseEventToPass.target = point.currentElement;
@@ -161,15 +168,15 @@ var SAGE2MEP = {
 
 					point.currentElement.dispatchEvent(mouseEventToPass);
 
-					this.determineAndSendEnterEvents(point, offsetValues);
+					this.determineAndSendEnterEvents(point, offsetValues, appId);
 
 					// depending on timing, previous element may be null.
 					if (point.previousElement != null) {
 						mouseEventToPass = new CustomEvent("mouseout", {bubbles: true});
-						mouseEventToPass.clientX = point.xCurrent;
-						mouseEventToPass.clientY = point.yCurrent;
-						mouseEventToPass.screenX = point.xCurrent;
-						mouseEventToPass.screenY = point.yCurrent;
+						mouseEventToPass.clientX = point.xCurrent + appRef.sage2_x + appLeftOffset;
+						mouseEventToPass.clientY = point.yCurrent + appRef.sage2_y + appTopOffset - titleOffset;
+						mouseEventToPass.screenX = point.xCurrent + appRef.sage2_x + appLeftOffset;
+						mouseEventToPass.screenY = point.yCurrent + appRef.sage2_y + appTopOffset - titleOffset;
 						mouseEventToPass.offsetX = offsetValues.x;
 						mouseEventToPass.offsetY = offsetValues.y;
 						mouseEventToPass.target = point.previousElement;
@@ -179,7 +186,7 @@ var SAGE2MEP = {
 					} // end passing mouse out if there was a previous element.
 
 
-					this.determineAndSendLeaveEvents(point, offsetValues);
+					this.determineAndSendLeaveEvents(point, offsetValues, appId);
 
 				} // end else the current element is different from the previous
 
@@ -201,10 +208,10 @@ var SAGE2MEP = {
 				}
 
 				mouseEventToPass = new CustomEvent("mousedown", {bubbles: true});
-				mouseEventToPass.clientX = point.xCurrent;
-				mouseEventToPass.clientY = point.yCurrent;
-				mouseEventToPass.screenX = point.xCurrent;
-				mouseEventToPass.screenY = point.yCurrent;
+				mouseEventToPass.clientX = point.xCurrent + appRef.sage2_x + appLeftOffset;
+				mouseEventToPass.clientY = point.yCurrent + appRef.sage2_y + appTopOffset - titleOffset;
+				mouseEventToPass.screenX = point.xCurrent + appRef.sage2_x + appLeftOffset;
+				mouseEventToPass.screenY = point.yCurrent + appRef.sage2_y + appTopOffset - titleOffset;
 				mouseEventToPass.offsetX = offsetValues.x;
 				mouseEventToPass.offsetY = offsetValues.y;
 				mouseEventToPass.button = buttonValue;
@@ -229,10 +236,10 @@ var SAGE2MEP = {
 				}
 
 				mouseEventToPass = new CustomEvent("mouseup", {bubbles: true});
-				mouseEventToPass.clientX = point.xCurrent;
-				mouseEventToPass.clientY = point.yCurrent;
-				mouseEventToPass.screenX = point.xCurrent;
-				mouseEventToPass.screenY = point.yCurrent;
+				mouseEventToPass.clientX = point.xCurrent + appRef.sage2_x + appLeftOffset;
+				mouseEventToPass.clientY = point.yCurrent + appRef.sage2_y + appTopOffset - titleOffset;
+				mouseEventToPass.screenX = point.xCurrent + appRef.sage2_x + appLeftOffset;
+				mouseEventToPass.screenY = point.yCurrent + appRef.sage2_y + appTopOffset - titleOffset;
 				mouseEventToPass.offsetX = offsetValues.x;
 				mouseEventToPass.offsetY = offsetValues.y;
 				mouseEventToPass.button = buttonValue;
@@ -244,10 +251,10 @@ var SAGE2MEP = {
 				if (point.elementPressed == point.currentElement) {
 					mouseEventToPass = new CustomEvent("click", {bubbles: true});
 					// mouseEventToPass.bubbles = true,
-					mouseEventToPass.clientX = point.xCurrent;
-					mouseEventToPass.clientY = point.yCurrent;
-					mouseEventToPass.screenX = point.xCurrent;
-					mouseEventToPass.screenY = point.yCurrent;
+					mouseEventToPass.clientX = point.xCurrent + appRef.sage2_x + appLeftOffset;
+					mouseEventToPass.clientY = point.yCurrent + appRef.sage2_y + appTopOffset - titleOffset;
+					mouseEventToPass.screenX = point.xCurrent + appRef.sage2_x + appLeftOffset;
+					mouseEventToPass.screenY = point.yCurrent + appRef.sage2_y + appTopOffset - titleOffset;
 					mouseEventToPass.offsetX = offsetValues.x;
 					mouseEventToPass.offsetY = offsetValues.y;
 					mouseEventToPass.button = buttonValue;
@@ -490,7 +497,7 @@ var SAGE2MEP = {
 		3. If NOT, first find the common ancestor.
 		4. Once the common ancestor has been found, send enter events from the top until it reaches the common ancestor.
 	*/
-	determineAndSendEnterEvents: function(point, offsetValues) {
+	determineAndSendEnterEvents: function(point, offsetValues, appId) {
 		if (point.previousElement == point.currentElement) {
 			// just in case
 			return;
@@ -500,6 +507,12 @@ var SAGE2MEP = {
 		var pElem = point.previousElement;
 		var mouseEventToPass;
 		point.mouseLeaveEventsToSend = []; // clear out the mouse leave events.
+		// get app reference to correctly place the event reference. this may be negative.
+		var appRef = applications[appId];
+		var appDivElement = document.getElementById(appId);
+		var appLeftOffset = parseInt(appDivElement.style.left);
+		var appTopOffset = parseInt(appDivElement.style.top);
+		var titleOffset = parseInt(document.getElementById(appId + "_title").style.height);
 
 		// 1. check if the previous element is an ancestor
 		while (cElem.nodeName != "HTML") {
@@ -516,10 +529,10 @@ var SAGE2MEP = {
 
 			while (cElem != pElem) {
 				mouseEventToPass = new CustomEvent("mouseenter", {bubbles: true});
-				mouseEventToPass.clientX = point.xCurrent;
-				mouseEventToPass.clientY = point.yCurrent;
-				mouseEventToPass.screenX = point.xCurrent;
-				mouseEventToPass.screenY = point.yCurrent;
+				mouseEventToPass.clientX = point.xCurrent + appRef.sage2_x + appLeftOffset;
+				mouseEventToPass.clientY = point.yCurrent + appRef.sage2_y + appTopOffset - titleOffset;
+				mouseEventToPass.screenX = point.xCurrent + appRef.sage2_x + appLeftOffset;
+				mouseEventToPass.screenY = point.yCurrent + appRef.sage2_y + appTopOffset - titleOffset;
 				mouseEventToPass.offsetX = offsetValues.x;
 				mouseEventToPass.offsetY = offsetValues.y;
 				mouseEventToPass.target = cElem;
@@ -573,10 +586,10 @@ var SAGE2MEP = {
 			cElem = point.currentElement;
 			while (cElem != pElem) {
 				mouseEventToPass = new CustomEvent("mouseenter", {bubbles: true});
-				mouseEventToPass.clientX = point.xCurrent;
-				mouseEventToPass.clientY = point.yCurrent;
-				mouseEventToPass.screenX = point.xCurrent;
-				mouseEventToPass.screenY = point.yCurrent;
+				mouseEventToPass.clientX = point.xCurrent + appRef.sage2_x + appLeftOffset;
+				mouseEventToPass.clientY = point.yCurrent + appRef.sage2_y + appTopOffset - titleOffset;
+				mouseEventToPass.screenX = point.xCurrent + appRef.sage2_x + appLeftOffset;
+				mouseEventToPass.screenY = point.yCurrent + appRef.sage2_y + appTopOffset - titleOffset;
 				mouseEventToPass.offsetX = offsetValues.x;
 				mouseEventToPass.offsetY = offsetValues.y;
 				mouseEventToPass.target = cElem;
@@ -597,14 +610,20 @@ var SAGE2MEP = {
 		Events generated will be based off of the stored values from the checks in determineAndSendEnterEvents.
 		Note, this doesn't care if a common ancestor was found, only if there are elements in the mouseLeaveEventsToSend property.
 	*/
-	determineAndSendLeaveEvents: function(point, offsetValues) {
+	determineAndSendLeaveEvents: function(point, offsetValues, appId) {
+		// get app reference to correctly place the event reference. this may be negative.
+		var appRef = applications[appId];
+		var appDivElement = document.getElementById(appId);
+		var appLeftOffset = parseInt(appDivElement.style.left);
+		var appTopOffset = parseInt(appDivElement.style.top);
+		var titleOffset = parseInt(document.getElementById(appId + "_title").style.height);
 		var mouseEventToPass;
 		for (var i = 0; i < point.mouseLeaveEventsToSend.length; i++) {
 			mouseEventToPass = new CustomEvent("mouseleave", {bubbles: true});
-			mouseEventToPass.clientX = point.xCurrent;
-			mouseEventToPass.clientY = point.yCurrent;
-			mouseEventToPass.screenX = point.xCurrent;
-			mouseEventToPass.screenY = point.yCurrent;
+			mouseEventToPass.clientX = point.xCurrent + appRef.sage2_x + appLeftOffset;
+			mouseEventToPass.clientY = point.yCurrent + appRef.sage2_y + appTopOffset - titleOffset;
+			mouseEventToPass.screenX = point.xCurrent + appRef.sage2_x + appLeftOffset;
+			mouseEventToPass.screenY = point.yCurrent + appRef.sage2_y + appTopOffset - titleOffset;
 			mouseEventToPass.offsetX = offsetValues.x;
 			mouseEventToPass.offsetY = offsetValues.y;
 			mouseEventToPass.target = point.mouseLeaveEventsToSend[i];
@@ -617,6 +636,92 @@ var SAGE2MEP = {
 
 	}, // end determineAndSendLeaveEvents
 
+
+
+
+	/*
+	px and py should be the location within the app.
+	the app will have a bounds location though.
+
+
+	*/
+	getElementUnderPointerBoundRectVersion: function(px, py, appDivId) {
+		// setup candidate data
+		var candidate = {
+			element: null,
+			zIndex: -1,
+			traversalCount: 0,
+			stateSkipId: appDivId + "_state",
+			originalPx: px,
+			originalPy: py
+		};
+		// starting at the top of the app, mark it as the candidate
+		var appStart = document.getElementById(appDivId);
+		candidate.element = appStart;
+		candidate.zIndex = this.computeZIndex(appStart);
+
+		// px and py represent location within the app, their position is based off of original app container bounds.
+		var appBoundingRect = appStart.getBoundingClientRect();
+		px += appBoundingRect.left;
+		py += appBoundingRect.top;
+
+		// then go through each child, and its children...etc
+		this.traverseChildNodesForCandidates(appStart, candidate, px, py);
+		return candidate.element;
+	},
+
+	traverseChildNodesForCandidates: function(element, candidate, px, py) {
+		// track data for debug
+		candidate.traversalCount++;
+		var computedZ;
+		// first check this node, because later declared notes are visually on top of previous
+		if (this.checkIfPointerInElementBoundingBox(px, py, element)) {
+			computedZ = this.computeZIndex(element);
+			if (computedZ >= candidate.zIndex) {
+				candidate.element = element;
+				candidate.zIndex = computedZ;
+			}
+		}
+		// then go through children, since they will be on top unless zindex is altered.
+		var children = element.childNodes;
+		for (let i = 0; i < children.length; i++) {
+			if (children[i].id === candidate.stateSkipId) {
+				continue;
+			}
+			this.traverseChildNodesForCandidates(children[i], candidate, px, py);
+		}
+	},
+
+	checkIfPointerInElementBoundingBox: function(px, py, element) {
+		var bb;
+		try {
+			bb = element.getBoundingClientRect();
+			// check if the point is outside of the box
+			if (px < bb.left
+			|| px > bb.left + bb.width
+			|| py < bb.top
+			|| py > bb.top + bb.height) {
+				return false; // outside, return fales
+			}
+		} catch (e) {
+			return false;
+		}
+		return true;
+	},
+
+	computeZIndex: function(element) {
+		try {
+			var zIndex = window.getComputedStyle(element, null).getPropertyValue("z-index");
+			if (isNaN(zIndex)) {
+				return this.computeZIndex(element.parentNode);
+			} else {
+				return zIndex;
+			}
+		} catch (e) {
+			// skipping computation check...
+		}
+		return -1000; // TODO acceptable? error means dont include, so low value.
+	},
 
 	/*
 	TODO check on the substring issues. May be able to remove them.
