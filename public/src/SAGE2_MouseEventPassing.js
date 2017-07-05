@@ -13,6 +13,8 @@
 //
 // Greate a global that will act as a namespace
 
+/* global require */
+
 var SAGE2MEP = {
 
 	/* debug on(true) or off(false)
@@ -84,7 +86,7 @@ var SAGE2MEP = {
 
 		// gets the element under the pointer coordinate. Some assumptions are made.
 		// point.currentElement = this.getElementUnderPointer(xLocationOfPointerOnScreen, yLocationOfPointerOnScreen, appId);
-		
+
 
 		if (!__SAGE2__.browser.isElectron && !this.shownElectronNotification) {
 			console.log("Unable to convert events using electron method");
@@ -98,13 +100,10 @@ var SAGE2MEP = {
 				// 	console.dir(e);	
 				// });
 			}
-			this.webContent.sendInputEvent({
-				type: "mouseMove",
-				modifiers: [],
-				x: xLocationOfPointerOnScreen,
-				y: yLocationOfPointerOnScreen,
-				button: "left"
-			});
+			this.handleElectronConversion({ appId, type, position, user, data, date,
+				xOnWall: xLocationOfPointerOnScreen,
+				yOnWall: yLocationOfPointerOnScreen
+			}, point);
 			return;
 		}
 
@@ -395,6 +394,53 @@ var SAGE2MEP = {
 		} // end switch of sage event type
 
 	}, // end processAndPassEvents
+
+	/*
+	This will return the index the app is being tracked at.
+	If the app is not being tracked, creates an entry and returns the index.
+	*/
+	handleElectronConversion: function(pointerInfo, point) {
+		// first convert location of wall to screen, app style contains display offset
+		var appElem = document.getElementById(pointerInfo.appId);
+		var appOffset = {
+			x: parseInt(appElem.style.left),
+			y: parseInt(appElem.style.top)
+		};
+		pointerInfo.xOnScreen = pointerInfo.xOnWall + appOffset.x;
+		pointerInfo.yOnScreen = pointerInfo.yOnWall + appOffset.y;
+
+		var eventData = {
+			modifiers: [],
+			x: pointerInfo.xOnScreen,
+			y: pointerInfo.yOnScreen,
+			userId: pointerInfo.user.id,
+			userLabel: pointerInfo.user.label,
+			userColor: pointerInfo.user.color
+		};
+		var retval;
+		if (pointerInfo.type === "pointerMove") {
+			eventData.type =  "mouseMove";
+			eventData.button = pointerInfo.data.button;
+		} else if (pointerInfo.type === "pointerPress") {
+			eventData.type =  "mouseDown";
+			eventData.button = pointerInfo.data.button;
+			eventData.clickCount = 1;
+		} else if (pointerInfo.type === "pointerRelease") {
+			eventData.type =  "mouseUp";
+			eventData.button = pointerInfo.data.button;
+			eventData.clickCount = 1;
+		} else {
+			console.log("Cannot convert unknown event: " + pointerInfo.type);
+			return;
+		}
+
+		// how can it know what element got the event?
+		retval = this.webContent.sendInputEvent(eventData);
+		if (retval && this.debug) {
+			console.log("sendInputEvent returned the following");
+			console.dir(retval);
+		}
+	},
 
 	/*
 	This will return the index the app is being tracked at.
