@@ -34,7 +34,8 @@ var exiftool     = require('../src/node-exiftool');        // gets exif tags for
 var assets       = require('../src/node-assets');          // asset management
 var sageutils    = require('../src/node-utils');           // provides utility functions
 var registry     = require('../src/node-registry');        // Registry Manager
-var jsonfile     = require('jsonfile')
+var jsonfile     = require('jsonfile');
+var cheerio     = require('cheerio');
 
 var imageMagick;
 
@@ -624,9 +625,9 @@ AppLoader.prototype.loadZipAppFromFile = function(file, mime_type, aUrl, externa
 		var isUnityApp = fs.existsSync(unityLoader);
 		var isUnityDevApp = fs.existsSync(unityDevLoader);
 
-		if( isUnityApp || isUnityDevApp) {
+		if (isUnityApp || isUnityDevApp) {
 
-			if( isUnityDevApp ) {
+			if (isUnityDevApp) {
 				unityLoader = unityDevLoader;
 			}
 
@@ -638,8 +639,8 @@ AppLoader.prototype.loadZipAppFromFile = function(file, mime_type, aUrl, externa
 				// Dummy DOM element
 				//var indexHtml = document.createElement( 'html' );
 				//indexHtml.innerHTML = html_str;
-				//var indexHtml = cheerio.load(html_str);
-				//console.log(indexHtml);
+				var indexHtml = cheerio.load(html_str);
+				console.log(indexHtml('title'));
 			});
 
 			// If does not have instructions.json, generate
@@ -659,16 +660,16 @@ AppLoader.prototype.loadZipAppFromFile = function(file, mime_type, aUrl, externa
 				title: "Unity WebGL Application",
 				version: "1.0.0",
 				description: "Loads a Unity3D webgl output into a webview",
-				keywords: [ "sage2", "unity3d", "webview" ],
+				keywords: ["sage2", "unity3d", "webview"],
 				author: "",
 				license: "SAGE2-Software-License"
-				}
-				
+			};
+
 			var hasInstructionsFile = fs.existsSync(instuctionsFile);
-			if( hasInstructionsFile == false ) {
+			if (hasInstructionsFile == false) {
 				jsonfile.writeFile(instuctionsFile, obj, function (err) {
-					console.error(err)
-				})
+					console.error(err);
+				});
 			}
 
 			fs.readFile(unityLoader, 'utf8', function(err1, json_str) {
@@ -689,10 +690,8 @@ AppLoader.prototype.loadZipAppFromFile = function(file, mime_type, aUrl, externa
 					callback(appInstance);
 				});
 			});
-		
+
 		} else {
-			
-			var instuctionsFile = path.join(zipFolder, "instructions.json");
 			fs.readFile(instuctionsFile, 'utf8', function(err1, json_str) {
 				if (err1) {
 					throw err1;
@@ -1260,7 +1259,7 @@ AppLoader.prototype.processUnityApp = function(json_str, file, mime_type, extern
 	mime_type = "application/custom";
 	var webpath = getSAGE2Path('/uploads/apps/Webview');
 	external_url = this.hostOrigin + '/uploads/apps/Webview';
-	
+
 	// Load from the SAGE2 web server itself
 	instructions.load = {
 		url: this.hostOrigin + assets.getURL(file) + "/index.html",
@@ -1272,7 +1271,7 @@ AppLoader.prototype.processUnityApp = function(json_str, file, mime_type, extern
 
 	file = webpath;
 	s2url = '/uploads/apps/Webview';
-	
+
 	var result = {
 		id: null,
 		title: "Unity Application", //exif.metadata.title,
