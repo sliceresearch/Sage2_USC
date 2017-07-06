@@ -34,6 +34,7 @@ var exiftool     = require('../src/node-exiftool');        // gets exif tags for
 var assets       = require('../src/node-assets');          // asset management
 var sageutils    = require('../src/node-utils');           // provides utility functions
 var registry     = require('../src/node-registry');        // Registry Manager
+var jsonfile     = require('jsonfile')
 
 var imageMagick;
 
@@ -616,25 +617,100 @@ AppLoader.prototype.loadZipAppFromFile = function(file, mime_type, aUrl, externa
 
 	var unzipper = new Unzip(file);
 	unzipper.on('extract', function(log) {
-		// read instructions for how to handle
-		var instuctionsFile = path.join(zipFolder, "instructions.json");
-		fs.readFile(instuctionsFile, 'utf8', function(err1, json_str) {
-			if (err1) {
-				throw err1;
+
+		// check if zip contains UnityLoader
+		var unityLoader = path.join(zipFolder, "Release/UnityLoader.js");
+		var unityDevLoader = path.join(zipFolder, "Development/UnityLoader.js");
+		var isUnityApp = fs.existsSync(unityLoader);
+		var isUnityDevApp = fs.existsSync(unityDevLoader);
+
+		if( isUnityApp || isUnityDevApp) {
+
+			if( isUnityDevApp ) {
+				unityLoader = unityDevLoader;
 			}
 
-			assets.exifAsync([zipFolder], function(err2) {
-				if (err2) {
-					throw err2;
+			var unityIndexHtml = path.join(zipFolder, "index.html");
+			fs.readFile(unityIndexHtml, 'utf8', function(err1, html_str) {
+				if (err1) {
+					throw err1;
+				}
+				// Dummy DOM element
+				//var indexHtml = document.createElement( 'html' );
+				//indexHtml.innerHTML = html_str;
+				//var indexHtml = cheerio.load(html_str);
+				//console.log(indexHtml);
+			});
+
+			// If does not have instructions.json, generate
+			var instuctionsFile = path.join(zipFolder, "instructions.json");
+
+			var obj = {
+				main_script: "UnityLoader.js",
+				icon: "",
+				width: 1280,
+				height: 720,
+				resize: "free",
+				animation: true,
+				dependencies: [
+				],
+				load: {
+				},
+				title: "Unity WebGL Application",
+				version: "1.0.0",
+				description: "Loads a Unity3D webgl output into a webview",
+				keywords: [ "sage2", "unity3d", "webview" ],
+				author: "",
+				license: "SAGE2-Software-License"
+				}
+				
+			var hasInstructionsFile = fs.existsSync(instuctionsFile);
+			if( hasInstructionsFile == false ) {
+				jsonfile.writeFile(instuctionsFile, obj, function (err) {
+					console.error(err)
+				})
+			}
+
+			fs.readFile(unityLoader, 'utf8', function(err1, json_str) {
+				if (err1) {
+					throw err1;
 				}
 
-				var appInstance = _this.readInstructionsFile(json_str, zipFolder, mime_type, external_url);
-				_this.scaleAppToFitDisplay(appInstance);
-				// Seems to cause issues, when drag-drop, the first time the app is opened.
-				// appInstance.file = file;
-				callback(appInstance);
+				assets.exifAsync([zipFolder], function(err2) {
+					if (err2) {
+						throw err2;
+					}
+					console.log(sageutils.header("Loader") + " found unity file " + unityLoader);
+
+					var appInstance = _this.processUnityApp(json_str, zipFolder, mime_type, external_url);
+					_this.scaleAppToFitDisplay(appInstance);
+					// Seems to cause issues, when drag-drop, the first time the app is opened.
+					// appInstance.file = file;
+					callback(appInstance);
+				});
 			});
-		});
+		
+		} else {
+			
+			var instuctionsFile = path.join(zipFolder, "instructions.json");
+			fs.readFile(instuctionsFile, 'utf8', function(err1, json_str) {
+				if (err1) {
+					throw err1;
+				}
+
+				assets.exifAsync([zipFolder], function(err2) {
+					if (err2) {
+						throw err2;
+					}
+
+					var appInstance = _this.readInstructionsFile(json_str, zipFolder, mime_type, external_url);
+					_this.scaleAppToFitDisplay(appInstance);
+					// Seems to cause issues, when drag-drop, the first time the app is opened.
+					// appInstance.file = file;
+					callback(appInstance);
+				});
+			});
+		}
 
 		// delete original zip file
 		fs.unlink(file, function(err) {
@@ -662,6 +738,9 @@ AppLoader.prototype.loadZipAppFromFile = function(file, mime_type, aUrl, externa
 			return true;
 		}
 	});
+};
+
+AppLoader.prototype.checkZipAppType = function(file, mime_type, aUrl, external_url, name, callback) {
 };
 
 AppLoader.prototype.createMediaStream = function(source, type, encoding, name, color, width, height, callback) {
@@ -1115,7 +1194,7 @@ AppLoader.prototype.readInstructionsFile = function(json_str, file, mime_type, e
 	if (appName == "UnityLoader") {
 		// Set type as WebView
 		appName = "Webview";
-		mime_type = "applicaion/custom";
+		mime_type = "application/custom";
 		var webpath = getSAGE2Path('/uploads/apps/Webview');
 		external_url = this.hostOrigin + '/uploads/apps/Webview';
 
@@ -1127,7 +1206,6 @@ AppLoader.prototype.readInstructionsFile = function(json_str, file, mime_type, e
 			mode: "mobile",
 			favicon: ""
 		};
-
 		file = webpath;
 		s2url = '/uploads/apps/Webview';
 	}
@@ -1165,5 +1243,67 @@ AppLoader.prototype.readInstructionsFile = function(json_str, file, mime_type, e
 	return result;
 };
 
+AppLoader.prototype.processUnityApp = function(json_str, file, mime_type, external_url) {
+	//var instructions = JSON.parse(json_str);
+	var instructions = {load: null, width: 960, height: 600}; // 960, 600 unity default WebGL resolution
+	//var appName = instructions.main_script.substring(0, instructions.main_script.lastIndexOf('.'));
+	var aspectRatio = instructions.width / instructions.height;
+
+	var resizeMode = "proportional";
+	//if (instructions.resize !== undefined && instructions.resize !== null && instructions.resize !== "") {
+	//	resizeMode = instructions.resize;
+	//}
+	var exif  = assets.getExifData(file);
+	var s2url = assets.getURL(file);
+
+	var appName = "Webview";
+	mime_type = "application/custom";
+	var webpath = getSAGE2Path('/uploads/apps/Webview');
+	external_url = this.hostOrigin + '/uploads/apps/Webview';
+	
+	// Load from the SAGE2 web server itself
+	instructions.load = {
+		url: this.hostOrigin + assets.getURL(file) + "/index.html",
+		// set webview arguments
+		zoom: 1,
+		mode: "mobile",
+		favicon: ""
+	};
+
+	file = webpath;
+	s2url = '/uploads/apps/Webview';
+	
+	var result = {
+		id: null,
+		title: "Unity Application", //exif.metadata.title,
+		application: appName,
+		icon: exif ? exif.SAGE2thumbnail : null,
+		type: mime_type,
+		url: external_url,
+		data: instructions.load,
+		resrc: null,
+		left: this.titleBarHeight,
+		top: 1.5 * this.titleBarHeight,
+		width: instructions.width,
+		height: instructions.height,
+		native_width: instructions.width,
+		native_height: instructions.height,
+		previous_left: null,
+		previous_top: null,
+		previous_width: null,
+		previous_height: null,
+		maximized: false,
+		aspect: aspectRatio,
+		animation: instructions.animation,
+		metadata: null,
+		resizeMode: resizeMode,
+		sticky: null,
+		plugin: null,
+		file: file,
+		sage2URL: s2url,
+		date: new Date()
+	};
+	return result;
+};
 
 module.exports = AppLoader;
