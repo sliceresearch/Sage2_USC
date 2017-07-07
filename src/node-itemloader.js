@@ -625,6 +625,9 @@ AppLoader.prototype.loadZipAppFromFile = function(file, mime_type, aUrl, externa
 		var isUnityApp = fs.existsSync(unityLoader);
 		var isUnityDevApp = fs.existsSync(unityDevLoader);
 
+		var instuctionsFile = path.join(zipFolder, "instructions.json");
+		var hasInstructionsFile = fs.existsSync(instuctionsFile);
+
 		if (isUnityApp || isUnityDevApp) {
 
 			if (isUnityDevApp) {
@@ -632,62 +635,78 @@ AppLoader.prototype.loadZipAppFromFile = function(file, mime_type, aUrl, externa
 			}
 
 			var unityIndexHtml = path.join(zipFolder, "index.html");
+
 			fs.readFile(unityIndexHtml, 'utf8', function(err1, html_str) {
 				if (err1) {
 					throw err1;
 				}
-				// Dummy DOM element
-				//var indexHtml = document.createElement( 'html' );
-				//indexHtml.innerHTML = html_str;
+
+				// Read index.html
 				var indexHtml = cheerio.load(html_str);
-				console.log(indexHtml('title'));
-			});
 
-			// If does not have instructions.json, generate
-			var instuctionsFile = path.join(zipFolder, "instructions.json");
+				// Grab html info
+				var htmlTitle = indexHtml("title").text();
+				var htmlCanvasHeight = indexHtml("canvas").attr("height");
+				var htmlCanvasWidth = indexHtml("canvas").attr("width");
 
-			var obj = {
-				main_script: "UnityLoader.js",
-				icon: "",
-				width: 1280,
-				height: 720,
-				resize: "free",
-				animation: true,
-				dependencies: [
-				],
-				load: {
-				},
-				title: "Unity WebGL Application",
-				version: "1.0.0",
-				description: "Loads a Unity3D webgl output into a webview",
-				keywords: ["sage2", "unity3d", "webview"],
-				author: "",
-				license: "SAGE2-Software-License"
-			};
+				// Title is in the form 'Unity WebGL Player | [Product Name]'
+				// Get just the Product Name
+				htmlTitle = htmlTitle.split("|")[1].trim();
 
-			var hasInstructionsFile = fs.existsSync(instuctionsFile);
-			if (hasInstructionsFile == false) {
-				jsonfile.writeFile(instuctionsFile, obj, function (err) {
-					console.error(err);
+				// Set the html <title> the new parsed name
+				indexHtml("title").text(htmlTitle);
+
+				// Get the canvas width/height, parsing out "px"
+				htmlCanvasHeight = parseInt(htmlCanvasHeight.slice(0, htmlCanvasHeight.indexOf("p")));
+				htmlCanvasWidth = parseInt(htmlCanvasWidth.slice(0, htmlCanvasWidth.indexOf("p")));
+
+				// Update index.html
+				fs.writeFile(unityIndexHtml, indexHtml.html(), function(err) {
+					if (err) {
+						return console.log(err);
+					}
 				});
-			}
 
-			fs.readFile(unityLoader, 'utf8', function(err1, json_str) {
-				if (err1) {
-					throw err1;
+				if (hasInstructionsFile == false) {
+					var obj = {
+						main_script: "UnityLoader.js",
+						icon: "",
+						width: htmlCanvasWidth,
+						height: htmlCanvasHeight,
+						resize: "free",
+						animation: true,
+						dependencies: [
+						],
+						load: {
+						},
+						title: htmlTitle,
+						version: "1.0.0",
+						description: "Loads a Unity3D webgl output into a webview",
+						keywords: ["sage2", "unity3d", "webview"],
+						author: "",
+						license: "SAGE2-Software-License"
+					};
+
+					jsonfile.writeFileSync(instuctionsFile, obj);
 				}
 
-				assets.exifAsync([zipFolder], function(err2) {
-					if (err2) {
-						throw err2;
+				fs.readFile(instuctionsFile, 'utf8', function(err1, json_str) {
+					if (err1) {
+						throw err1;
 					}
-					console.log(sageutils.header("Loader") + " found unity file " + unityLoader);
 
-					var appInstance = _this.processUnityApp(json_str, zipFolder, mime_type, external_url);
-					_this.scaleAppToFitDisplay(appInstance);
-					// Seems to cause issues, when drag-drop, the first time the app is opened.
-					// appInstance.file = file;
-					callback(appInstance);
+					assets.exifAsync([zipFolder], function(err2) {
+						if (err2) {
+							throw err2;
+						}
+						console.log(sageutils.header("Loader") + " found unity file " + unityLoader);
+						var appInstance = _this.readInstructionsFile(json_str, zipFolder, mime_type, external_url);
+						//var appInstance = _this.processUnityApp(json_str, zipFolder, mime_type, external_url);
+						_this.scaleAppToFitDisplay(appInstance);
+						// Seems to cause issues, when drag-drop, the first time the app is opened.
+						// appInstance.file = file;
+						callback(appInstance);
+					});
 				});
 			});
 
