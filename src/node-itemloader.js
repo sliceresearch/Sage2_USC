@@ -660,6 +660,11 @@ AppLoader.prototype.loadZipAppFromFile = function(file, mime_type, aUrl, externa
 				htmlCanvasHeight = parseInt(htmlCanvasHeight.slice(0, htmlCanvasHeight.indexOf("p")));
 				htmlCanvasWidth = parseInt(htmlCanvasWidth.slice(0, htmlCanvasWidth.indexOf("p")));
 
+				// Sets style flag for proper SAGE2 scaling
+				var htmlStyle = "* {margin: 0; padding: 0;}html, body {width: 100vw;height: 100vh;}";
+				htmlStyle += "canvas {height: 100vh;width: 100vw;display: block;}";
+				indexHtml("style").text(htmlStyle);
+
 				// Update index.html
 				fs.writeFile(unityIndexHtml, indexHtml.html(), function(err) {
 					if (err) {
