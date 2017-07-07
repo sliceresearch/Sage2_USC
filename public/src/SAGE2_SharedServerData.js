@@ -286,17 +286,21 @@ var SAGE2SharedServerData = {
 	* @param {String} callback - app which called this function. Could be a function and will convert to string.
 	* @param {Boolean} unsubscribe - optional. If true, will stop receiving updates for that variable.
 	*/
-	serverDataSubscribeToValue: function(nameOfValue, callback, unsubscribe = false) {
+	serverDataSubscribeToValue: function(nameOfValue, callback, unsubscribe = false, dataLink = false) {
 		if (isMaster) {
 			var callbackName = SAGE2SharedServerData.getCallbackName(callback);
 			if (callbackName === undefined) {
 				throw "Missing callback for serverDataSubscribeToValue";
 			}
+			if (dataLink && !dataLink.unLink) { // default is don't unlink.
+				dataLink.unLink = false;
+			}
 			wsio.emit("serverDataSubscribeToValue", {
 				nameOfValue: nameOfValue,
 				app: this.id,
 				func: callbackName,
-				unsubscribe: unsubscribe
+				unsubscribe: unsubscribe,
+				dataLink: dataLink
 			});
 		}
 	},

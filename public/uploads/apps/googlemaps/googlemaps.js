@@ -808,6 +808,41 @@ var googlemaps = SAGE2_App.extend({
 		this.serverDataBroadcastDestination(
 			"geoLocation:viewCenter", [], "this will set the maps center view", "setView");
 
+
+
+
+
+		// broadcast a different destination to test server handled conversion
+		// name suffix , value, description
+		this.serverDataBroadcastSource("testS2Converted:geoLocationCenter", [{
+			source: this.id,
+			location: this.state.center
+		}], {
+			app: this.id,
+			interpretAs: "set",
+			dataTypes: ["gps"], // gives these datatypes, example: geojson can have more, but may only have points.
+			dataFormat: "s2GeoLocation"
+		});
+		// broadcast a different destination to test server handled conversion
+		this.serverDataBroadcastSource("testS2Converted:geoLocationBounds", [{
+				source: this.id,
+				location: this.state.center
+			}, {
+				source: this.id,
+				location: this.state.center
+		}], {
+			app: this.id,
+			interpretAs: "range",
+			dataTypes: ["gps"], // gives these datatypes, example: geojson can have more, but may only have points.
+			dataFormat: "s2GeoLocation"
+		});
+		// name suffix, value, description, callback
+		this.serverDataBroadcastDestination("testS2Converted:markerPlotReplace", [], {
+			app: this.id,
+			interpretAs: "set",
+			dataTypes: ["gps"], // wants these datatypes
+			dataFormat: "s2GeoLocation" // should this also describe what is acceptable?
+		}, "replaceMarkerPlotsConvertedByS2");
 	},
 
 	/**

@@ -82,42 +82,37 @@ var d3Charts = SAGE2_App.extend({
 		// serverDataBroadcastSource: function(nameOfValue, value, description)
 		this.serverDataBroadcastSource("dataset", this.state.chartValues.data, { // "Current data set of chart");
 			app: this.id,
-			linkAs: "source",
-			linkType: "dataset",
-			format: "json"
+			interpretAs: "set",
+			// dataTypes: ["gps", "time", "*"], // can it auto detect?
+			dataFormat: "json"
 		});
 		this.serverDataBroadcastSource("dataSelected", [], { // "Current selected data");
 			app: this.id,
-			linkAs: "source",
-			linkType: "selection",
-			format: "json"
+			interpretAs: "set", // or range?
+			dataFormat: "json"
 		});
 		this.serverDataBroadcastSource("dataHovered", [], { // "Current hovered");
 			app: this.id,
-			linkAs: "source",
-			linkType: "hover",
-			format: "json"
+			interpretAs: "set",
+			dataFormat: "json"
 		});
 
 		// serverDataBroadcastDestination: function(nameOfValue, value, description, callback)
 		this.serverDataBroadcastDestination("dataset", [], {
 			app: this.id,
-			linkAs: "destination",
-			linkType: "dataset",
-			format: "json"
+			interpretAs: "set",
+			dataFormat: "json"
 		}, "dataDestinationFullDataSetReplacement");
 		this.serverDataBroadcastDestination("dataSelected", [], {
 			app: this.id,
-			linkAs: "destination",
-			linkType: "selection",
-			format: "json"
-		}, "dataDestinationSelected",);
+			interpretAs: "set",
+			dataFormat: "json"
+		}, "dataDestinationSelected");
 		this.serverDataBroadcastDestination("dataHovered", [], {
 			app: this.id,
-			linkAs: "destination",
-			linkType: "hover",
-			format: "json"
-		}, "dataDestinationHovered", );
+			interpretAs: "set",
+			dataFormat: "json"
+		}, "dataDestinationHovered");
 	},
 
 	/**

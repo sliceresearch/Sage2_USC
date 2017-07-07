@@ -12,6 +12,7 @@
 // require variables to be declared
 "use strict";
 
+var dataTypeRegistry  = require('../src/node-shareddataregistry'); // contains data type information
 
 /**
  * SharedServerDataManager container object.
@@ -56,8 +57,11 @@ function SharedServerDataManager(clients, broadcast) {
 	this.linkerStructure = [];
 	// array of entries of known data types.
 	this.dataTypeRegistry = [];
-	
-	this.loadDataTypeRegistry(); // load
+
+	this.debug = true;
+
+	// this.loadDataTypeRegistry(); // load
+	dataTypeRegistry.loadDataTypes();
 }
 
 /**
@@ -122,11 +126,22 @@ SharedServerDataManager.prototype.setValue = function(wsio, data) {
 	}
 	// now send to each of the subscribers the new value
 	dataForApp.data = this.dataStructure.allValues["" + data.nameOfValue].value;
-	for (let i = 0; i < this.dataStructure.allValues[ "" + data.nameOfValue ].subscribers.length; i++) {
-		// alter data based on subscriber id and their specified function
-		dataForApp.app  = this.dataStructure.allValues["" + data.nameOfValue].subscribers[i].app;
-		dataForApp.func = this.dataStructure.allValues["" + data.nameOfValue].subscribers[i].func;
-		this.broadcast('broadcast', dataForApp);
+	var currentSubscriber, destinationValueOfLink;
+	for (let i = 0; i < this.dataStructure.allValues["" + data.nameOfValue].subscribers.length; i++) {
+		currentSubscriber = this.dataStructure.allValues["" + data.nameOfValue].subscribers[i];
+		// if this is a data link, the data must be updated and the app/function altered based on destination value information
+		if (currentSubscriber.destinationValueName) {
+			console.log("erase me, detected need to data link update> " + data.nameOfValue + " to " + currentSubscriber.destinationValueName);
+			// first get destination value object
+			destinationValueObject = this.dataStructure.allValues["" + currentSubscriber.destinationValueName];
+			this.handleLinkUpdateConversion(this.dataStructure.allValues["" + data.nameOfValue], destinationValueObject);
+			// handleLinkUpdateConversion will set the value and that will trigger subscriber to receive data. 
+		} else {
+			// alter data based on subscriber id and their specified function
+			dataForApp.app  = currentSubscriber.app;
+			dataForApp.func = currentSubscriber.func;
+			this.broadcast('broadcast', dataForApp);
+		}
 	}
 };
 
@@ -218,6 +233,10 @@ SharedServerDataManager.prototype.removeValue = function(wsio, data) {
 SharedServerDataManager.prototype.subscribeToValue = function(wsio, data) {
 	// Need to have a name. Without a name, nothing can be done.
 	if (data.nameOfValue === undefined || data.nameOfValue === null) {
+		return;
+	}
+	if (data.dataLink) { // if this should be a smart link don't do normal subscribe actions
+		this.createDataLink(wsio, data);
 		return;
 	}
 	// if value doesn't exist make it, when changed later the subscription will work
@@ -334,6 +353,285 @@ SharedServerDataManager.prototype.subscribeToNewValueNotification = function(wsi
 // ---------------------------------------------------------------------------------------------------------------------------------------------------
 // ---------------------------------------------------------------------------------------------------------------------------------------------------
 // experimental
+/**
+ * Creates a data link if doesn't exist already, or removes if the unLink value is true.
+ *
+ * @method createDataLink
+ * @param  {Object} wsio - The websocket of sender.
+ * @param  {Object} data - The object properties described below.
+ * @param  {Object} data.dataLink - Main descriptor for link creation.
+ * @param  {String} data.dataLink.source - Any time this value changes.
+ * @param  {String} data.dataLink.destination - Update this value.
+ * @param  {Boolean} data.dataLink.unLink - If true, remove the link.
+ */
+SharedServerDataManager.prototype.createDataLink = function(wsio, data) {
+	var sourceName = data.dataLink.source;
+	var destinationName = data.dataLink.destination;
+	var sourceValueObject, destinationValueObject;
+	// need sourceName and destination
+	if (!sourceName || !destinationName) {
+		return;
+	}
+	// look for sourceName
+	if (!this.dataStructure.allValues[ "" + sourceName]) {
+		console.log("Unable to link, sourceName " + sourceName + " doesn't exist");
+		return;
+	}
+	sourceValueObject = this.dataStructure.allValues[ "" + sourceName];
+	// look for destinationName
+	if (!this.dataStructure.allValues[ "" + destinationName]) {
+		console.log("Unable to link, destinationName " + destinationName + " doesn't exist");
+		return;
+	}
+	destinationValueObject = this.dataStructure.allValues[ "" + destinationName];
+	// at this point, both variable exist. make sure the link doesn't already exist.
+	var foundLink = false;
+	var shouldUnLink = data.dataLink.unLink ? true : false;
+	var currentSubscriber;
+	for (let i = 0; i < sourceValueObject.subscribers.length; i++) {
+		currentSubscriber = sourceValueObject.subscribers[i];
+		// this is a special case, if it has a destination value, then it must be a linked value, see if it matches this requested link.
+		if (currentSubscriber.destinationValueName && currentSubscriber.destinationValueName == destinationName) {
+			foundLink = true;
+			if (shouldUnLink) { // unlink by removing the entry from subscribers.
+				sourceValueObject.subscribers.splice(i, 1);
+			}
+			break;
+		}
+	}
+	// if not already linked
+	if (!foundLink && !shouldUnLink) {
+		// make the new subscriber entry for linking the variables
+		var newSubscriber  = {};
+		newSubscriber.destinationValueName  = destinationName;
+		// add it to that value
+		this.dataStructure.allValues[ "" + data.nameOfValue ].subscribers.push(newSubscriber);
+	}
+}
+
+/**
+ * Handles the data link when a "source" value updates.
+ *
+ * @method handleLinkUpdateConversion
+ * @param  {Object} sourceName - Value that got updated and needs to push values to destination.
+ * @param  {Object} destinationName - Value name that needs to be updated.
+ */
+SharedServerDataManager.prototype.handleLinkUpdateConversion = function(sourceObject, destinationObject) {
+	// newValue.nameOfValue			= data.nameOfValue;
+	// newValue.value				= data.value;
+	// newValue.description			= data.description;
+	// newValue.description.app
+	// newValue.description.interpretAs
+	// newValue.description.dataTypes
+	// newValue.description.dataFormat
+	// newValue.subscribers			= [];
+
+
+	var shouldJustPassValue = false;
+	var sourceFormat, destinationFormat;
+	var sourceDataTypeInfo, destinationDataTypeInfo;
+	var sourceInterpretAs, destinationInterpretAs; // set or range
+	var valueToGiveToDestination;
+
+	// if there are no descriptions on either object unable to convert. The descriptions contain convert information
+	if (!sourceObject.description || !destinationObject.description
+		|| !sourceObject.description.dataType || !destinationObject.description.dataType) {
+		console.log("erase me, sorry unable to convert the values one of"
+			+ sourceObject.nameOfValue + " and " + destinationObject.nameOfValue
+			+ " do not have datatype descriptions, just passsing the value");
+		// just pass the value
+		shouldJustPassValue = true;
+	} else {
+		// otherwise, get the formats
+		sourceFormat = sourceObject.description.dataFormat;
+		sourceInterpretAs = sourceObject.description.interpretAs;
+		destinationFormat = destinationObject.description.dataFormat;
+		destinationInterpretAs = destinationObject.description.interpretAs;
+
+		if (!sourceInterpretAs) {
+			sourceInterpretAs = "set";
+			console.log("sourceInterpretAs not specified using set");
+		}
+		if (!destinationInterpretAs) {
+			destinationInterpretAs = "set";
+			console.log("destinationInterpretAs not specified using set");
+		}
+
+		// if there is no information for the given data types, for if the formats match just pass the values
+		if ((sourceFormat === destinationFormat) && (sourceInterpretAs === destinationInterpretAs)){
+			shouldJustPassValue = true;
+		}
+		if (!sourceFormat || !destinationFormat) {
+			console.log("Error no format given for " + (sourceFormat ? "sourceFormat" : "")
+			+ " " + (destinationFormat ? "destinationFormat" : ""));
+		}
+	}
+	// reset indentation
+	// dont just pass the value if formats are different or interpretation is different.
+	if (!shouldJustPassValue) { // but there is information for the given data type
+
+		/*
+			given a data type, what can I get out of it?
+
+
+
+		*/
+
+		// first detect all datatypes
+		var dataTypesInSource = dataTypeRegistry.findDataTypesInValue(sourceObject);
+		var dataTypesInDestination =  dataTypeRegistry.findDataTypesInValue(destinationObject);
+
+		// ordered by assumed complexity
+
+		// no conversion necessary because dataType matches
+		// this function checks if all necessary data types are available in source
+		var canConvert = dataTypeRegistry.canSourceConvertToDestination(sourceObject, dataTypesInSource, destinationObject, dataTypesInDestination);
+
+		// if conversion is possible, then in theory this should be 1:1 or super to sub.
+		if (canConvert){
+
+			// if the formats are the same, then the interpretation is probably different
+			if (sourceFormat === destinationFormat) {
+				if (sourceInterpretAs !== destinationInterpretAs) {
+					if (sourceInterpretAs === "set" && destinationInterpretAs === "range") { // format match,  set to range
+						// conver the set to a range.
+						valueToGiveToDestination = dataTypeRegistry.convertKeepFormatSetToRange(
+							sourceObject, dataTypesInSource,
+							destinationObject, dataTypesInDestination);
+					} else if (sourceInterpretAs === "range" && destinationInterpretAs === "set") { // format match,  range to set
+
+
+
+
+
+
+
+
+						throw "not implemented, set to range with different formatting"
+
+
+
+
+
+
+
+					} else {
+						console.log("Unknown interpretation:" + sourceInterpretAs);
+					}
+				} else {
+					console.log("Unsure how this was triggered, formats and interpretation matches..");
+				}
+			} else { // the formats do not match
+				// if interpretation matches
+				if (sourceInterpretAs === destinationInterpretAs) {
+					if (sourceInterpretAs === "set") {
+						// format diff, but interpret as set
+						valueToGiveToDestination = dataTypeRegistry.convertFormatSetToSet( // format mismatch,  set to set
+							sourceObject, dataTypesInSource,
+							destinationObject, dataTypesInDestination);
+					} else if (sourceInterpretAs === "range") {
+						valueToGiveToDestination = dataTypeRegistry.convertFormatRangeToRange( // format mismatch, range to range
+							sourceObject, dataTypesInSource,
+							destinationObject, dataTypesInDestination);
+					} else {
+						console.log("Unknown interpretation:" + sourceInterpretAs);
+					}
+
+				} else { // interpretation does not match
+					
+					// if source is a set and 
+					if (sourceInterpretAs === "set" && destinationInterpretAs === "range") { // format mismatch,  set to range
+						// conver the set to a range.
+						valueToGiveToDestination = dataTypeRegistry.convertKeepFormatSetToRange(
+							sourceObject, dataTypesInSource,
+							destinationObject, dataTypesInDestination);
+					} else if (sourceInterpretAs === "range" && destinationInterpretAs === "set") { // format mismatch, range to set
+
+
+
+
+
+
+
+
+						throw "not implemented, set to range with different formatting"
+
+
+
+
+
+
+
+
+					} else {
+						console.log("Unknown interpretation:" + sourceInterpretAs);
+					}
+
+				}
+			}
+		} else { // getting here means that the destination needs more than source offers
+			
+			// find the datatypes in source
+
+			throw "error here because it wasn't filled out, this a case of source subset destination"
+
+			// find original destination data set
+
+			// attempt to reduce original set based on availability in source.
+		}
+
+		// super set to sub range :  json set to time start/end to specify axis change.
+
+		// range to set : given gps bounds, find points within gps bounds, but where are the points from?
+		// does this mean ranges needs original sets to work off of?
+
+
+		// range to range : if a graph stated its selection on element property, say temp. and gave to graph that wanted just wind range.
+
+
+		/*
+		what if the data types are not convertible? can this be detected
+		detect if can conver
+
+		*/
+	} else {
+		valueToGiveToDestination = sourceObject.value;
+	}
+
+	this.setValue(null, {
+		nameOfValue: destinationObject.nameOfValue,
+		value: valueToGiveToDestination
+	});
+}
+
+
+
+// is the following incorrect?
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 /**
  * App can submit data to affect linking. Based on what it updated, will inform requesters of data.
@@ -798,7 +1096,7 @@ SharedServerDataManager.prototype.linkerRequestForData = function(wsio, data) {
 
 	// don't allow double submissions for the sake of app spam and confusion.
 	var requester = this.linkerAddRequesterIfNecessary(data);
-	
+
 };
 
 /**
@@ -841,60 +1139,6 @@ SharedServerDataManager.prototype.linkerAddRequesterIfNecessary = function(data)
 	}
 	return requester;
 };
-
-// ---------------------------------------------------------------------------------------------------------------------------------------------------
-// ---------------------------------------------------------------------------------------------------------------------------------------------------
-// ---------------------------------------------------------------------------------------------------------------------------------------------------
-// experimental - data type registry
-
-/**
- * Loads data types in to the registry.
- *
- * @method loadDataTypeRegistry
- */
-SharedServerDataManager.prototype.loadDataTypeRegistry = function() {
-	// this.dataTypeRegistry
-
-	// TODO convert to some kind of file reader or something with generic attributes
-
-	// currently gps
-	var dataTypeGps = {
-		names: ["gps", "coordinate", "coordinates", "position", "location"],
-		subTypes: ["latitude", "longitude"],
-		stringFormat: "alwaysTrue"
-	};
-	var dataTypeLatitude = {
-		names: ["latitude", "lat"],
-		subTypes: [],
-		stringFormat: "alwaysTrue"
-	};
-	var dataTypeLongitude = {
-		names: ["longitude", "lng"],
-		subTypes: [],
-		stringFormat: "alwaysTrue"
-	};
-
-	this.dataTypeRegistry.push(dataTypeGps);
-	this.dataTypeRegistry.push(dataTypeLatitude);
-	this.dataTypeRegistry.push(dataTypeLongitude);
-};
-
-/**
- * This will search through the data type registry for a match on the named data type.
- *
- * @method linkerGetDataTypeInformation
- * @param {String} requestedDataType - What data type was requested.
- * @return {Object|null} match - matching object that describes requestedDataTypedata 
- */
-SharedServerDataManager.prototype.linkerGetDataTypeInformation = function(requestedDataTypedata) {
-	for(let i = 0; i < this.dataTypeRegistry.length; i++) {
-		if (this.dataTypeRegistry[i].names.includes(requestedDataTypedata)) {
-			return this.dataTypeRegistry[i];
-		}
-	}
-	return null;
-};
-
 
 
 
