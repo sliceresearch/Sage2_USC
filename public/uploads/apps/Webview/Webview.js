@@ -305,12 +305,16 @@ var Webview = SAGE2_App.extend({
 	codeInject: function() {
 		// Disabling text selection in page because it blocks the view sometimes
 		// done by injecting some CSS code
+		// Also disabling grab and drag events
 		this.element.insertCSS(":not(input):not(textarea), " +
 			":not(input):not(textarea)::after, " +
 			":not(input):not(textarea)::before { " +
 				"-webkit-user-select: none; " +
 				"user-select: none; " +
 				"cursor: default; " +
+				"-webkit-user-drag: none;" +
+				"-moz-user-drag: none;" +
+				"user-drag: none;" +
 			"} " +
 			"input, button, textarea, :focus { " +
 				"outline: none; " +
