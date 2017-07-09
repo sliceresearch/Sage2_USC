@@ -54,8 +54,9 @@ function getDescription() {
 			} // there might be other ways to parse the data, for example "lat: 123, lng:123"
 			return true;
 		},
-		toString: function() {
-			return this.dataTypeLatitude.toString() + ", " + this.dataTypeLatitude.toString();
+		// odd name to avoid overriding default object toString()
+		makeIntoString: function() {
+			return this.dataTypeLatitude.makeIntoString() + ", " + this.dataTypeLatitude.makeIntoString();
 		},
 		getValue: function() {
 			return {latitude: this.dataTypeLatitude.getValue(), longitude: this.dataTypeLongitude.getValue()};
@@ -103,7 +104,7 @@ function getDescription() {
 				dataTypeRegistryName: "dataTypeGps",
 				dataTypeLatitude: null,
 				dataTypeLongitude: null,
-				toString: this.toString,
+				makeIntoString: this.makeIntoString,
 				getValue: this.getValue
 			};
 		},

@@ -13,6 +13,9 @@
 "use strict";
 
 
+var dataTypeRegistry = require('../node-shareddataregistry'); // contains data type information
+
+
 /**
  * Adds this reader to the registry.
  *
@@ -22,9 +25,27 @@
 function addReader(registryReaders) {
 	registryReaders.json = {
 
+		// basically json is unknown
+		availableDataTypes: [],
+		requiredDataTypes: [],
 
-	availableDataTypes: [], // basically json is unknown
-	requiredDataTypes: [],
+		debug: {
+			any: true,
+			recursion: true,
+			foundDt: true
+		},
+
+		debugPrint: function(line, type = "any") {
+			if (this.debug[type]) {
+				console.log("dbug>jsonReader>" + line);
+			}
+		},
+
+		debugDir: function(obj, type = "any") {
+			if (this.debug[type]) {
+				console.dir(obj);
+			}
+		},
 // ---------------------------------------------------------------------------------------------------------------------------------------------------
 
 		/**
@@ -67,7 +88,7 @@ function addReader(registryReaders) {
 		getFromElement: function(dataTypeNameToFind, element, descriptionArray, registryArray, registryMap) {
 			// make sure the requested type exists
 			if (!registryMap[dataTypeNameToFind]) {
-				console.log("ERROR: dataTypeNameToFind " + dataTypeNameToFind + " isn't registered unable to extract from element");
+				console.log("ERROR>readJson>: dataTypeNameToFind " + dataTypeNameToFind + " isn't registered unable to extract from element");
 			}
 			// create container for the data
 			var dataTypeContainer = registryMap[dataTypeNameToFind].createContainer();
@@ -224,6 +245,8 @@ function addReader(registryReaders) {
 			}
 			// map will be returned, then need to know what goes in it
 			var registryStatus = Array(registryArray.length).fill("unchecked"); // this will change to an object path?
+			this.debugPrint("Array of unchecked?", "recursion");
+			this.debugDir(registryStatus, "recursion");
 			// var hasGoneThroughKey = [];
 
 			// for each of the data types search for them in the element's structure
@@ -255,20 +278,37 @@ function addReader(registryReaders) {
 			// need a container for the current info.
 			var currentDataTypeInfo = regArr[index].createContainer();
 			var indexOfSubType;
+
 			// perform all sub type checks first
+			this.debugPrint(currentDataTypeInfo.dataTypeRegistryName + " has " +
+			regArr[index].subTypes.length + " subTypes", "recursion");
 			for (let i = 0; i < regArr[index].subTypes.length; i++) {
 				indexOfSubType = regArr[index].subTypes[i]; // get the name of subtype
-				indexOfSubType = regMap[indexOfSubType]; // get the object of subtype
-				indexOfSubType = regArr.indexOf(indexOfSubType); // get index of the subtype object in the registry
+				indexOfSubType = dataTypeRegistry.getDataTypeIndexGivenName(indexOfSubType);
+				this.debugPrint("  " + regArr[index].subTypes[i] + " index in registry: " + indexOfSubType
+				+ ", status:" + statArr[indexOfSubType], "recursion");
+				
+				// It doesn't
+				// this.debugPrint("Sanity check, when toString() is removed from entry, does it correctly detect?", "recursion");
+				// this.debugPrint("   typeof " + typeof regMap[indexOfSubType], "recursion");
+				// this.debugPrint("   exact: " + regMap[indexOfSubType], "recursion");
+				// this.debugPrint("   index in regArr: " + regArr.indexOf(regMap[indexOfSubType]), "recursion");
+				// this.debugPrint("", "recursion");
+				// this.debugPrint("", "recursion");
+				// this.debugPrint("", "recursion");
 
 				// if wasn't found (already done if it was the subtype of something else), look for it
 				if (statArr[indexOfSubType] === "unchecked") {
+					this.debugPrint("Attempting subTypes search for " +
+					regArr[indexOfSubType].dataTypeRegistryName, "recursion");
 					this.checkForDataType(structure, indexOfSubType, statArr, regArr, regMap);
 				}
 				// the checkForDataType will either make the status false, or an object.
 				if (statArr[indexOfSubType] !== "false") {
 					// set the assignment to the object.
 					currentDataTypeInfo[regArr[index].subTypes[i]] = statArr[indexOfSubType];
+				} else {
+					this.debugPrint("    No entry for sub type: " + regArr[index].subTypes[i], "recursion");
 				}
 			}
 
@@ -277,27 +317,55 @@ function addReader(registryReaders) {
 			// go through the current data type info, if any pieces are missing need to try search for string conversion
 			// base types should have null on value
 			for (let i = 0; i < dataTypeKeys.length; i++) {
-				if (currentDataTypeInfo[dataTypeKeys] === null) {
+				if (currentDataTypeInfo[dataTypeKeys[i]] === null) {
+					this.debugPrint("Current datatype (" + currentDataTypeInfo.dataTypeRegistryName
+					+ ") is missing attribute named: " + dataTypeKeys[i], "recursion");
 					haveAllProperties = false;
 				}
 			}
 
 			// if it doesn't have all properties, traverse object and try to find name match to get value
 			if (!haveAllProperties) {
+				this.debugPrint("  Will try find in the structure", "recursion");
 				this.findThisDataTypeInStructure(structure, currentDataTypeInfo, regArr[index], regMap);
+			} else {
+					this.debugPrint("Current datatype (" + currentDataTypeInfo.dataTypeRegistryName
+					+ ") detected as having all values, no need to search structure", "recursion");
 			}
 			// go through the current data type info, if any pieces are missing cannot say the data type was found.
 			for (let i = 0; i < dataTypeKeys.length; i++) {
-				if (currentDataTypeInfo[dataTypeKeys] === null) {
+				if (currentDataTypeInfo[dataTypeKeys[i]] === null) {
 					statArr[index] = "false"; // not found.
+					this.debugPrint("    Unable to find " + currentDataTypeInfo.dataTypeRegistryName
+					+ " in this data structure", "recursion");
 					return false; // did not find this datatype
 				}
 			}
-			// making it here means currentDataTypeInfo is fully filled out and should also have a path
-			if(!currentDataTypeInfo.pathToGetData) {
-				console.log("Error> somehow currentDataTypeInfo has all properties but no path?");
+			// making it here means currentDataTypeInfo is fully filled out
+			if(!currentDataTypeInfo.pathToGetData) { // if no path
+				let comprisedOfSubtypes = false;
+				// then the subtypes should be filled out
+				for (let i = 0; i < currentDataTypeInfo.subTypes.length; i++) {
+					subTypeIndex = currentDataTypeInfo.subTypes[i]; // name
+					subTypeIndex = dataTypeRegistry.getDataTypeIndexGivenName(subTypeIndex); // now index
+					if (subTypeIndex !== -1) {
+						comprisedOfSubtypes = true;
+						break;
+					}
+				}
+				// should not be possible to be filled out, have not path and have no subtypes.
+				if (!comprisedOfSubtypes) {
+					console.log();
+					console.log();
+					console.dir(currentDataTypeInfo);
+					console.log("Error> somehow currentDataTypeInfo has all properties but no path?");
+					console.log();
+				}
 			}
 			statArr[index] = currentDataTypeInfo;
+			this.debugPrint("Found " + currentDataTypeInfo.dataTypeRegistryName, "foundDt");
+			this.debugPrint("  Path length: " + currentDataTypeInfo.pathToGetData.length, "foundDt");
+			this.debugPrint("  Path: " + currentDataTypeInfo.pathToGetData, "foundDt");
 			return true; // passing the check means the datatype was found
 		},
 
@@ -357,8 +425,9 @@ function addReader(registryReaders) {
 							// for each data type key
 							for (let s = 0; s < keyValuesOfCurrentDataType.length; s++) {
 								// BUT need to match against subtype alternative names
-								subTypePossibleNames = keyValuesOfCurrentDataType[s]; // name of subtype
-								subTypePossibleNames = registryMap[subTypePossibleNames]; // subtype object
+								subTypePossibleNames = keyValuesOfCurrentDataType[s]; // name of potential subtype, could be a value or function name
+								subTypePossibleNames = dataTypeRegistry.getDataTypeEntryGivenName(subTypePossibleNames);
+								// subTypePossibleNames = registryMap[subTypePossibleNames]; // subtype object
 								// if the subtype exists in the registry
 								if (subTypePossibleNames) {
 									// then get its possible names
@@ -403,8 +472,8 @@ function addReader(registryReaders) {
 					}
 					// if all values have been accounted for, then use this path
 					foundAllAttributes = true;
-					for (let i = 0; i < keyValuesOfCurrentDataType.length; i++) {
-						if (currentDataTypeInfo[keyValuesOfCurrentDataType[s]] === null) {
+					for (let keyIndex = 0; keyIndex < keyValuesOfCurrentDataType.length; keyIndex++) {
+						if (currentDataTypeInfo[keyValuesOfCurrentDataType[keyIndex]] === null) {
 							foundAllAttributes = false;
 							continue;
 						}

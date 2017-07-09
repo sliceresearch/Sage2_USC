@@ -52,6 +52,8 @@ var dataLinker = SAGE2_App.extend({
 		this.hasLoadedHtml = false;
 		this.selectedSourceLinkLine = null;
 
+		this.attemptToDataLinkOnServer = true;
+
 		// used for quick checking bounds
 		this.rectangleHelper = {
 			x: 0,
@@ -193,7 +195,7 @@ var dataLinker = SAGE2_App.extend({
 			// if the function doesn't exist, create it
 			if (!this["dataTo" + destinationName]) {
 				this["dataTo" + destinationName] = function(responseObject) {
-					console.dir(responseObject);
+					// console.dir(responseObject);
 					this.serverDataSetValue(destinationName, responseObject); // sets the value of destination variable
 				}
 			}
@@ -561,8 +563,20 @@ var dataLinker = SAGE2_App.extend({
 		}
 		this.dbprint("Attempting to associate " + sourceName + "(source) to " + destinationName + "(destination)");
 
-		// link creation
-		this.dataLink({sourceName: sourceName, destinationName: destinationName});
+
+
+		if (this.attemptToDataLinkOnServer) {
+			SAGE2SharedServerData.createDataLinkOnServer(sourceName, destinationName);
+			// lines should show on all displays
+			this.createLinkLine(sourceName, destinationName);
+		} else {
+			// this might also contain link information
+			// link creation
+			this.dataLink({sourceName: sourceName, destinationName: destinationName});
+		}
+
+
+
 
 		// create button to remove the link
 		this.createRemoveDataLinkButton(sourceName, destinationName);
@@ -625,9 +639,15 @@ var dataLinker = SAGE2_App.extend({
 				this.createRemoveDataLinkButton(sourceName, destinationName);
 			}
 		}
-		// remove data link
-		this.dbprint("TODO REMOVE DATA LINK");
-		this.dataUnLink({sourceName: sourceName, destinationName: destinationName});
+
+		if (this.attemptToDataLinkOnServer) {
+			SAGE2SharedServerData.createDataLinkOnServer(sourceName, destinationName, true); // true to kill link
+			// lines should show on all displays
+		} else {
+			// remove data link
+			this.dbprint("TODO REMOVE DATA LINK");
+			this.dataUnLink({sourceName: sourceName, destinationName: destinationName});
+		}
 
 		// update context menu
 		this.getFullContextMenuAndUpdate();
@@ -743,6 +763,24 @@ var dataLinker = SAGE2_App.extend({
 			entries.push(entry);
 		}
 
+		entries.push({description: "separator"});
+
+		if (this.attemptToDataLinkOnServer) {
+			entry = {};
+			entry.description = "Stop trying to link on server";
+			entry.callback    = "toggleDataLinkOnServer";
+			entry.parameters  = { status: false }; 
+			entry.entryColor  = "lightsalmon"; // color for selection
+			entries.push(entry);
+		} else {
+			entry = {};
+			entry.description = "Try to link on server";
+			entry.callback    = "toggleDataLinkOnServer";
+			entry.parameters  = { status: true }; 
+			entry.entryColor  = "lightgreen"; // color for selection
+			entries.push(entry);
+		}
+
 		return entries;
 	},
 
@@ -757,6 +795,13 @@ var dataLinker = SAGE2_App.extend({
 			console.log("ERROR: unknown type given to data linker");
 		}
 	},
+
+	toggleDataLinkOnServer: function(msgParams) {
+		this.attemptToDataLinkOnServer = msgParams.status;
+		this.getFullContextMenuAndUpdate();
+	},
+
+
 
 	event: function(eventType, position, user_id, data, date) {
 		// left intentionally blank

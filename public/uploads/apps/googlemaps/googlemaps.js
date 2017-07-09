@@ -187,6 +187,7 @@ var googlemaps = SAGE2_App.extend({
 				source: this.id,
 				location: this.state.center
 			});
+			this.serverDataSetSourceValue("testS2Converted:geoLocationCenter", this.state.center);
 		}
 	},
 
@@ -806,7 +807,12 @@ var googlemaps = SAGE2_App.extend({
 		this.serverDataBroadcastDestination(
 			"geoLocation:replaceMarkerPlots", [], "clears out current markers and places given", "replaceMarkerPlots");
 		this.serverDataBroadcastDestination(
-			"geoLocation:viewCenter", [], "this will set the maps center view", "setView");
+			"geoLocation:viewCenter", [], {
+			app: this.id,
+			interpretAs: "set",
+			dataTypes: ["gps"], // wants these datatypes
+			dataFormat: "s2GeoLocation" // should this also describe what is acceptable?
+		}, "setView");
 
 
 
@@ -814,10 +820,8 @@ var googlemaps = SAGE2_App.extend({
 
 		// broadcast a different destination to test server handled conversion
 		// name suffix , value, description
-		this.serverDataBroadcastSource("testS2Converted:geoLocationCenter", [{
-			source: this.id,
-			location: this.state.center
-		}], {
+		this.serverDataBroadcastSource("testS2Converted:geoLocationCenter",
+			[this.state.center], {
 			app: this.id,
 			interpretAs: "set",
 			dataTypes: ["gps"], // gives these datatypes, example: geojson can have more, but may only have points.
@@ -843,6 +847,13 @@ var googlemaps = SAGE2_App.extend({
 			dataTypes: ["gps"], // wants these datatypes
 			dataFormat: "s2GeoLocation" // should this also describe what is acceptable?
 		}, "replaceMarkerPlotsConvertedByS2");
+		// name suffix, value, description, callback
+		this.serverDataBroadcastDestination("testS2Converted:viewCenter", [], {
+			app: this.id,
+			interpretAs: "set",
+			dataTypes: ["gps"], // wants these datatypes
+			dataFormat: "s2GeoLocation" // should this also describe what is acceptable?
+		}, "setViewUsingS2GeoLocation");
 	},
 
 	/**
@@ -1015,8 +1026,22 @@ var googlemaps = SAGE2_App.extend({
 	},
 
 	setView: function(serverVar) {
+		if (Array.isArray(serverVar)){
+			serverVar = serverVar[0];
+		}
 		if (this.lastViewSetTime + 1000 < Date.now()) {
 			this.map.setCenter(serverVar.location);
+			this.updateCenter();
+			this.lastViewSetTime = Date.now();
+		}
+	},
+
+	setViewUsingS2GeoLocation: function(serverVar) {
+		if (Array.isArray(serverVar)){
+			serverVar = serverVar[0];
+		}
+		if (this.lastViewSetTime + 1000 < Date.now()) {
+			this.map.setCenter(serverVar);
 			this.updateCenter();
 			this.lastViewSetTime = Date.now();
 		}

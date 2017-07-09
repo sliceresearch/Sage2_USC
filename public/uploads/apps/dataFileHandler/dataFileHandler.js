@@ -49,6 +49,9 @@ var dataFileHandler = SAGE2_App.extend({
 		this.element.style.whiteSpace = "pre";
 		// File path trim to just file name
 		this.fileName = this.state.file;
+		if (!this.state.file) {
+			return;
+		}
 		while (this.fileName.indexOf("/") !== -1) {
 			this.fileName = this.fileName.substring(this.fileName.indexOf("/") + 1);
 		}
@@ -76,6 +79,7 @@ var dataFileHandler = SAGE2_App.extend({
 		} else {
 			this.element.textContent = "No file given...";
 		}
+		this.SAGE2Sync(true);
 	},
 
 	showMessageErrorLoad: function(error) {
@@ -221,6 +225,8 @@ var dataFileHandler = SAGE2_App.extend({
 	},
 
 	load: function(date) {
+		// load the file
+		this.appSpecific();
 	},
 
 	draw: function(date) {

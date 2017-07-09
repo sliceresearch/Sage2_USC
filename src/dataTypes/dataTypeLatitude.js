@@ -36,7 +36,7 @@ function getDescription() {
 			containerToFill.value = +stringToParse;
 			return true;
 		},
-		toString: function() {
+		makeIntoString: function() {
 			return this.value;
 		},
 		getValue: function() {
@@ -94,7 +94,7 @@ function getDescription() {
 			return {
 				dataTypeRegistryName: "dataTypeLatitude",
 				value: null,
-				toString: this.toString,
+				makeIntoString: this.makeIntoString,
 				getValue: this.getValue
 			}; // latitues should only have one value
 		},

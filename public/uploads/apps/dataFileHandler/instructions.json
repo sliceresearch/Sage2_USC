@@ -5,6 +5,7 @@
 	"animation": false,
 	"resize": "free",
 	"load": {
+		"file": ""
 	},
 	"title": "Data Loader",
 	"version": "1.0.0",

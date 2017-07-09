@@ -38,6 +38,24 @@ function addReader(registryReaders) {
 			"dataTypeGps"
 		],
 
+		debug: {
+			any: true,
+			recursion: true,
+			foundDt: true
+		},
+
+		debugPrint: function(line, type = "any") {
+			if (this.debug[type]) {
+				console.log("dbug>s2geoLoc>" + line);
+			}
+		},
+
+		debugDir: function(obj, type = "any") {
+			if (this.debug[type]) {
+				console.dir(obj);
+			}
+		},
+
 // ---------------------------------------------------------------------------------------------------------------------------------------------------
 
 		/**
@@ -164,7 +182,12 @@ function addReader(registryReaders) {
 				element1 = valueObject; // the descriptor was s2GeoLocation, so this better be a s2GeoLocation object.
 			}
 			if (typeof element1 !== "object") {
-				throw new "Specified format was s2GeoLocation, but did not get a s2GeoLocation object";
+				console.log();
+				console.log();
+				console.log();
+				console.log();
+				console.log("Specified format was s2GeoLocation, but did not get a s2GeoLocation object");
+				console.dir(valueObject);
 			}
 			// map will be returned, then need to know what goes in it
 			var registryStatus = Array(registryArray.length).fill("unchecked"); // this will change to an object path?

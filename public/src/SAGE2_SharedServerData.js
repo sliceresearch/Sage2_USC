@@ -350,6 +350,37 @@ var SAGE2SharedServerData = {
 	// -------------------------------------------------------------------------------------------------------------------------------------------------
 	// -------------------------------------------------------------------------------------------------------------------------------------------------
 
+	/**
+	* Intended as a means to directly data link values.
+	* Either through external app, function, detection, etc.
+	* Making a data link doesn't need to have an app associated as initiator.
+	*
+	* @method createDataLinkOnServer
+	* @param {String} nameOfSourceValue - app which called this function
+	* @param {String} nameOfDestinationValue - app which called this function
+	* @param {Boolean} unLink - optional. If true, will stop receiving updates for that variable.
+	*/
+	createDataLinkOnServer: function(nameOfSourceValue, nameOfDestinationValue, unLink = false, customData) {
+		if (isMaster) {
+			var dataLink = {
+				source: nameOfSourceValue,
+				destination: nameOfDestinationValue,
+				unLink: unLink
+			}
+			if (customData && typeof customData === "object") {
+				Object.assign(dataLink, customData);
+			}
+			wsio.emit("serverDataSubscribeToValue", {
+				nameOfValue: nameOfSourceValue,
+				dataLink: dataLink
+			});
+		}
+	},
+
+
+	// -------------------------------------------------------------------------------------------------------------------------------------------------
+	// -------------------------------------------------------------------------------------------------------------------------------------------------
+
 
 	/**
 	* Given the name of the variable, remove variable from server.
