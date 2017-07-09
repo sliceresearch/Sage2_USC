@@ -366,7 +366,7 @@ var SAGE2SharedServerData = {
 				source: nameOfSourceValue,
 				destination: nameOfDestinationValue,
 				unLink: unLink
-			}
+			};
 			if (customData && typeof customData === "object") {
 				Object.assign(dataLink, customData);
 			}

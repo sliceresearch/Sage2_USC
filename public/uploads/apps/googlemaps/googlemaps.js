@@ -808,11 +808,11 @@ var googlemaps = SAGE2_App.extend({
 			"geoLocation:replaceMarkerPlots", [], "clears out current markers and places given", "replaceMarkerPlots");
 		this.serverDataBroadcastDestination(
 			"geoLocation:viewCenter", [], {
-			app: this.id,
-			interpretAs: "set",
-			dataTypes: ["gps"], // wants these datatypes
-			dataFormat: "s2GeoLocation" // should this also describe what is acceptable?
-		}, "setView");
+				app: this.id,
+				interpretAs: "set",
+				dataTypes: ["gps"], // wants these datatypes
+				dataFormat: "s2GeoLocation" // should this also describe what is acceptable?
+			}, "setView");
 
 
 
@@ -822,18 +822,18 @@ var googlemaps = SAGE2_App.extend({
 		// name suffix , value, description
 		this.serverDataBroadcastSource("testS2Converted:geoLocationCenter",
 			[this.state.center], {
-			app: this.id,
-			interpretAs: "set",
-			dataTypes: ["gps"], // gives these datatypes, example: geojson can have more, but may only have points.
-			dataFormat: "s2GeoLocation"
-		});
+				app: this.id,
+				interpretAs: "set",
+				dataTypes: ["gps"], // gives these datatypes, example: geojson can have more, but may only have points.
+				dataFormat: "s2GeoLocation"
+			});
 		// broadcast a different destination to test server handled conversion
 		this.serverDataBroadcastSource("testS2Converted:geoLocationBounds", [{
-				source: this.id,
-				location: this.state.center
-			}, {
-				source: this.id,
-				location: this.state.center
+			source: this.id,
+			location: this.state.center
+		}, {
+			source: this.id,
+			location: this.state.center
 		}], {
 			app: this.id,
 			interpretAs: "range",
@@ -913,7 +913,7 @@ var googlemaps = SAGE2_App.extend({
 			value = [value]; // put in array for now
 		}
 		// if cleaning is successful
-		if (this.replaceMarkerPlotsHelperFunctionMoveGpsToTop(value)){
+		if (this.replaceMarkerPlotsHelperFunctionMoveGpsToTop(value)) {
 			// add to map
 			for (let i = 0; i < value.length; i++) {
 				this.addMarkerToMap(value[i]);
@@ -947,60 +947,60 @@ var googlemaps = SAGE2_App.extend({
 	 * @method replaceMarkerPlots
 	 * @param {Array} value - An array containing locations to plot on map.
 	 */
-	replaceMarkerPlotsHelperFunctionMoveGpsToTop: function(value){
+	replaceMarkerPlotsHelperFunctionMoveGpsToTop: function(value) {
 		var e1 = value[0];
-		var unableToPlot = false
+		var unableToPlot = false;
 		// if it is an object, cannot guarante usage
 		if (typeof e1 === "object") {
 			var e1keys = Object.keys(value[0]);
 			if (e1keys.includes("gps")) {
-				if (typeof e1["gps"] === "object") {
+				if (typeof e1.gps === "object") {
 					// place gps checks
-					if (e1["gps"]["lat"]) {
+					if (e1.gps.lat) {
 						// move obj to top level
 						for (let i = 0; i < value.length; i++) {
-							value[i] = value[i]["gps"];
+							value[i] = value[i].gps;
 						}
-					} else if (e1["gps"]["latitude"]) {
+					} else if (e1.gps.latitude) {
 						// move obj to top level and rename
 						for (let i = 0; i < value.length; i++) {
-							value[i] = value[i]["gps"];
-							value[i].lat = value[i]["gps"]["latitude"];
-							value[i].lng = value[i]["gps"]["longitude"]
+							value[i] = value[i].gps;
+							value[i].lat = value[i].gps.latitude;
+							value[i].lng = value[i].gps.longitude;
 						}
 					} else {
 						unableToPlot = true;
 					}
-				} else if (typeof e1["gps"] === "string"){
+				} else if (typeof e1.gps === "string") {
 					// move string to top level
 					for (let i = 0; i < value.length; i++) {
-						value[i] = value[i].gps
+						value[i] = value[i].gps;
 					}
 				} else {
 					unableToPlot = true;
 				}
 			} else if (e1keys.includes("location")) {
-				if (typeof e1["location"] === "object") {
+				if (typeof e1.location === "object") {
 					// place gps checks
-					if (e1["gps"]["lat"]) {
+					if (e1.gps.lat) {
 						// move obj to top level
 						for (let i = 0; i < value.length; i++) {
-							value[i] = value[i]["gps"];
+							value[i] = value[i].gps;
 						}
-					} else if (e1["gps"]["latitude"]) {
+					} else if (e1.gps.latitude) {
 						// move obj to top level and rename
 						for (let i = 0; i < value.length; i++) {
-							value[i] = value[i]["gps"];
-							value[i].lat = value[i]["gps"]["latitude"];
-							value[i].lng = value[i]["gps"]["longitude"]
+							value[i] = value[i].gps;
+							value[i].lat = value[i].gps.latitude;
+							value[i].lng = value[i].gps.longitude;
 						}
 					} else {
 						unableToPlot = true;
 					}
-				} else if (typeof e1["location"] === "string"){
+				} else if (typeof e1.location === "string") {
 					// move string to top level
 					for (let i = 0; i < value.length; i++) {
-						value[i] = value[i].location
+						value[i] = value[i].location;
 					}
 				} else {
 					unableToPlot = true;
@@ -1018,7 +1018,6 @@ var googlemaps = SAGE2_App.extend({
 		}
 		return true;
 	},
-	
 
 	toggleAutomaticPlot: function(responseObject) {
 		this.plotAnyNewGeoSource = responseObject.plot;
@@ -1026,7 +1025,7 @@ var googlemaps = SAGE2_App.extend({
 	},
 
 	setView: function(serverVar) {
-		if (Array.isArray(serverVar)){
+		if (Array.isArray(serverVar)) {
 			serverVar = serverVar[0];
 		}
 		if (this.lastViewSetTime + 1000 < Date.now()) {
@@ -1037,7 +1036,7 @@ var googlemaps = SAGE2_App.extend({
 	},
 
 	setViewUsingS2GeoLocation: function(serverVar) {
-		if (Array.isArray(serverVar)){
+		if (Array.isArray(serverVar)) {
 			serverVar = serverVar[0];
 		}
 		if (this.lastViewSetTime + 1000 < Date.now()) {

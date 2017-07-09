@@ -95,6 +95,7 @@ var SAGE2Connection = {
 			// unsure if this function is reachable
 			window[data.func](data);
 		});
+
 		/*
 		**Important**
 		This is how the webpage in the Webview will get non-standard data.
@@ -109,7 +110,7 @@ var SAGE2Connection = {
 	// ------------------------------------------------------------------------------------------------------------------
 	// ------------------------------------------------------------------------------------------------------------------
 	// ------------------------------------------------------------------------------------------------------------------
-	// Helper functions that may help users with server communication 
+	// Helper functions that may help users with server communication
 
 	/**
 	* Attempts to activate function on app giving specified parameter object.
@@ -172,7 +173,7 @@ var SAGE2Connection = {
 	// ------------------------------------------------------------------------------------------------------------------
 	detectConnectionInformationFromBrowser: function() {
 		var address = window.location.search;
-		if (address.indexOf("?") == -1 ) {
+		if (address.indexOf("?") == -1) {
 			return;
 		}
 		var pairs, onePair;
@@ -218,9 +219,11 @@ var SAGE2Connection = {
 		if (!sKey) {
 			return null;
 		}
+		/*eslint-disable */
 		return decodeURIComponent(document.cookie.replace(new RegExp("(?:(?:^|.*;)\\s*" +
 					encodeURIComponent(sKey).replace(/[\-\.\+\*]/g, "\\$&") + "\\s*\\=\\s*([^;]*).*$)|^.*$"), "$1"))
 			|| null;
+		/*eslint-enable */
 	},
 
 	// ------------------------------------------------------------------------------------------------------------------

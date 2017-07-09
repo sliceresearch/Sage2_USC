@@ -39,9 +39,13 @@ var debug = {
 	convertFormatRangeToRange: true,
 	convertFormatSetToSet: true
 };
-function debugPrint(line, type = "any") {
+function debugPrint(line, type = "any", dir = false) {
 	if (debug[type]) {
-		console.log("dbug>n-sdr>" + type + ">" + line);
+		if (dir) {
+			debugDir(line, type);
+		} else {
+			console.log("dbug>n-sdr>" + type + ">" + line);
+		}
 	}
 }
 function debugDir(obj, type) {
@@ -56,7 +60,7 @@ function debugDir(obj, type) {
 // ---------------------------------------------------------------------------------------------------------------------------------------------------
 
 function loadDataTypes() {
-	if(hasBeenLoaded) {
+	if (hasBeenLoaded) {
 		return;
 	} else {
 		console.log(sageutils.header('DataRegistry') + "Intializing..");
@@ -77,7 +81,7 @@ function loadDataTypes() {
 
 /**
  * Loads format readers into the registry.
- * 
+ *
  * TODO: is this really the best way to do this, the readability is strange.
  *
  * @method loadFormatReaders
@@ -98,7 +102,7 @@ function loadDataTypeRegistry() {
 	registerDataType(dataTypeLatitude.getDescription());
 	registerDataType(dataTypeLongitude.getDescription());
 
-};
+}
 
 // adds references to the data types
 function registerDataType(objDescription) {
@@ -119,17 +123,17 @@ function registerDataType(objDescription) {
  *
  * @method getDataTypeInformation
  * @param {String} requestedDataType - What data type was requested. This could be one of the generic names or offical name.
- * @return {Object|null} match - matching object that describes requestedDataTypedata 
+ * @return {Object|null} match - matching object that describes requestedDataTypedata
  */
 function getDataTypeInformation(requestedDataTypeStringName) {
-	for(let i = 0; i < dataTypeRegistry.length; i++) {
+	for (let i = 0; i < dataTypeRegistry.length; i++) {
 		if (dataTypeRegistry[i].names.includes(requestedDataTypeStringName)
 		|| dataTypeRegistry[i].dataTypeRegistryName === requestedDataTypeStringName) {
 			return dataTypeRegistry[i];
 		}
 	}
 	return null;
-};
+}
 
 // /**
 //  * This will search through the given array to determine the largest value.
@@ -137,7 +141,7 @@ function getDataTypeInformation(requestedDataTypeStringName) {
 //  * @method findIndexOfLargestValue
 //  * @param {String} dataTypeName - What data type was requested.
 //  * @param {Array} elementArray - Array representing element mapped values. Each element is an object with properties of registry names.
-//  * @return {Object|null} match - matching object that describes requestedDataTypedata 
+//  * @return {Object|null} match - matching object that describes requestedDataTypedata
 //  */
 // function findIndexOfLargestValue(dataTypeName, elementArray) {
 // 	var currentLargestIndex = 0;
@@ -192,7 +196,7 @@ function findDataTypesInValue(valueObject) {
 	// no path should mean that the subtypes were found, and those have paths.
 
 	return dataTypesInValue;
-};
+}
 
 
 
@@ -251,40 +255,6 @@ function getRequiredDataTypes(destinationObject) {
 
 	return requiredDataTypes;
 }
-
-
-
-/**
- * Given a dataType, will try to fill out and return a container.
- *
- * @method getDataTypeFromElement
- * @param {String} dataTypeName - Name of data type to search for.
- * @param {*} element - Search this for requested dataType.
- * @param {*} element - Search this for requested dataType.
- * @return {Object} dataTypeMap - all detected data types and their values.
- */
-function getDataTypeFromElement(dataTypeName, element, descriptionArray) {
-	var formatReader = formatReaders[valueObject.description.dataFormat];
-
-	if (!formatReader) {
-		throw new "Unknown format: " + valueObject.description.dataFormat;
-	}
-
-	var dataTypeRegistryName;
-	if (dataTypeRegistryMap[dataTypeName]) {
-		dataTypeRegistryName = dataTypeName;
-	} else {
-		dataTypeRegistryName = this.getDataTypeInformation(dataTypeName).dataTypeRegistryName;
-	}
-	if (!dataTypeRegistryName) {
-		throw new "Unknown dataType: " + valueObject.description.dataFormat;
-	}
-
-	// attempt to extract data type from one element
-	var dataTypeContainer = formatReader.getDataTypesFromValue(dataTypeRegistryName, element, descriptionArray, dataTypeRegistry, dataTypeRegistryMap);
-
-	return dataTypeContainer;
-};
 
 // ---------------------------------------------------------------------------------------------------------------------------------------------------
 // ---------------------------------------------------------------------------------------------------------------------------------------------------
@@ -346,7 +316,7 @@ function canSourceConvertToDestination(sourceObject, dataTypesInSource, destinat
 	}
 
 	return true;
-};
+}
 
 // ---------------------------------------------------------------------------------------------------------------------------------------------------
 // ---------------------------------------------------------------------------------------------------------------------------------------------------
@@ -404,14 +374,14 @@ function convertFormatSetToSet(sourceObject, dataTypesInSource, destinationObjec
 		valuesToMakeDestinationElementOutOf = {};
 		for (let r = 0; r < destRequired.length; r++) {
 			// fetch the value from the structure
-			valuesToMakeDestinationElementOutOf[destRequired[r]] = 
+			valuesToMakeDestinationElementOutOf[destRequired[r]] =
 				// function(dataTypeNameToFind, element, descriptionArray, regArr, regMap)
 				sourceFormat.getFromElement(
 					destRequired[r],
 					currentSourceElement,
 					dataTypesInSource,
 					dataTypeRegistry, dataTypeRegistryMap
-			);
+				);
 		}
 		// after getting all required values create an element from it
 		createdDestinationElement = destFormat.makeElementFromValues(valuesToMakeDestinationElementOutOf);
@@ -457,8 +427,6 @@ function convertFormatRangeToRange(sourceObject, dataTypesInSource, destinationO
 	var sourceValues;
 	var sourceValuesThatWillDetermineRange = [];
 	var currentSourceElement;
-	var valuesToMakeDestinationElementOutOf;
-	var createdDestinationElement;
 	if (!Array.isArray(sourceObject.value)) {
 		sourceValues = [sourceObject.value]; // set to set is fine, should be
 	}
@@ -471,14 +439,14 @@ function convertFormatRangeToRange(sourceObject, dataTypesInSource, destinationO
 		for (let r = 0; r < destRequired.length; r++) {
 			// fetch the value from the structure
 			// its an array, put on the element, a map entry for the required data type
-			sourceValuesThatWillDetermineRange[e][destRequired[r].dataTypeRegistryName] = 
+			sourceValuesThatWillDetermineRange[e][destRequired[r].dataTypeRegistryName] =
 				// function(dataTypeNameToFind, element, descriptionArray, regArr, regMap)
 				sourceFormat.getFromElement(
 					destRequired[r].dataTypeRegistryName,
 					currentSourceElement,
 					dataTypesInSource,
 					dataTypeRegistry, dataTypeRegistryMap
-			);
+				);
 		}
 	}
 	// now sourceValuesThatWillDetermineRange will contain all source values
@@ -507,8 +475,11 @@ function convertFormatRangeToRange(sourceObject, dataTypesInSource, destinationO
  * @return {Object} dataTypeMap - all detected data types and their values.
  */
 function convertKeepFormatSetToRange(sourceObject, dataTypesInSource, destinationObject, dataTypesInDestination) {
-	debugPrint("Currently convertKeepFormatSetToRange uses same logic as convertFormatRangeToRange", "convertKeepFormatSetToRange");
-	return this.convertFormatRangeToRange(sourceObject, dataTypesInSource, destinationObject, dataTypesInDestination);
+	debugPrint("Currently convertKeepFormatSetToRange uses same logic as convertFormatRangeToRange",
+		"convertKeepFormatSetToRange");
+	return this.convertFormatRangeToRange(
+		sourceObject, dataTypesInSource,
+		destinationObject, dataTypesInDestination);
 }
 
 
