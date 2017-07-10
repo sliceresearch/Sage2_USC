@@ -61,6 +61,22 @@ function getDescription() {
 		getValue: function() {
 			return {latitude: this.dataTypeLatitude.getValue(), longitude: this.dataTypeLongitude.getValue()};
 		},
+		// returns -1 if a has lower... value
+		compareTwoForOrder: function (a, b) {
+			// this process is currently skewed. currently, a is less than b only if both values are less
+			// coordinate comparison doesn't really work.
+			var aVal = a.getValue();
+			var bVal = b.getValue();
+			var retval;
+			if (aVal.latitude < bVal.latitude && aVal.longitude < bVal.longitude) {
+				retval =  -1;
+			} else if (aVal.latitude > bVal.latitude && aVal.longitude > bVal.longitude) {
+				retval =  1;
+			} else {
+				retval =  0;
+			}
+			return retval;
+		},
 		getRangeInformation: function(arrayOfThisDataType, treatAsElementArrayWithDataTypes = true) {
 			var retval = {
 				smallestLatitude: null,
@@ -97,7 +113,20 @@ function getDescription() {
 					}
 				}
 			}
-			return retval;
+			// This should return an array of two objects, the first is the smallest, value, second is the largest value.
+			console.log("erase me, this might error");
+			var smallest = this.createContainer();
+			smallest.dataTypeLatitude = this.refToRegistryMap.dataTypeLatitude.createContainer();
+			smallest.dataTypeLatitude.value = retval.smallestLatitude;
+			smallest.dataTypeLongitude = this.refToRegistryMap.dataTypeLongitude.createContainer();
+			smallest.dataTypeLongitude.value = retval.smallestLongitude;
+			var largest = this.createContainer();
+			largest.dataTypeLatitude = this.refToRegistryMap.dataTypeLatitude.createContainer();
+			largest.dataTypeLatitude.value = retval.largestLatitude;
+			largest.dataTypeLongitude = this.refToRegistryMap.dataTypeLongitude.createContainer();
+			largest.dataTypeLongitude.value = retval.largestLongitude;
+
+			return [smallest, largest];
 		},
 		createContainer: function() {
 			return {

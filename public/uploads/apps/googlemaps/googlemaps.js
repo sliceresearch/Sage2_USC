@@ -10,7 +10,7 @@
 
 "use strict";
 
-/* global google svgForegroundForWidgetConnectors */
+/* global google */
 
 //
 // The instruction.json file contains a default key to access the Google Maps API.
@@ -39,18 +39,6 @@ var googlemaps = SAGE2_App.extend({
 
 		this.initializeWidgets();
 		this.initializeOnceMapsLoaded();
-
-		// Markers for map
-		this.mapMarkers = [];
-		this.markerCycleIndex = 0;
-
-		// temporarily testing how well mouse conversion works
-		this.passSAGE2PointerAsMouseEvents = true;
-
-		// testing broadcast capabilities
-		this.broadcastData();
-		this.lastViewSetTime = Date.now();
-		this.plotAnyNewGeoSource = false;
 	},
 
 	initializeWidgets: function() {
@@ -169,7 +157,6 @@ var googlemaps = SAGE2_App.extend({
 	},
 
 	draw: function(date) {
-		this.updateLinesToSource();
 	},
 
 	resize: function(date) {
@@ -180,15 +167,6 @@ var googlemaps = SAGE2_App.extend({
 	updateCenter: function() {
 		var c = this.map.getCenter();
 		this.state.center = {lat: c.lat(), lng: c.lng()};
-
-		if (isMaster) {
-			// function(nameOfValue, value, description)
-			this.serverDataSetSourceValue("geoLocation", {
-				source: this.id,
-				location: this.state.center
-			});
-			this.serverDataSetSourceValue("testS2Converted:geoLocationCenter", this.state.center);
-		}
 	},
 
 	updateLayers: function() {
@@ -215,7 +193,6 @@ var googlemaps = SAGE2_App.extend({
 		if (this.trafficTimer) {
 			clearInterval(this.trafficTimer);
 		}
-		this.removeAllLinkLines();
 	},
 
 	event: function(eventType, position, user_id, data, date) {
@@ -238,8 +215,6 @@ var googlemaps = SAGE2_App.extend({
 			this.dragging = false;
 			this.position.x = position.x;
 			this.position.y = position.y;
-			// check if there is a marker under the cursor
-			this.showMarkerInfoIfReleasedOver({x: position.x, y: position.y});
 
 			this.refresh(date);
 		} else if (eventType === "pointerDblClick") {
@@ -403,7 +378,6 @@ var googlemaps = SAGE2_App.extend({
 				var res = results[0].geometry.location;
 				// Update the map with the result
 				this.map.setCenter(res);
-				this.updateCenter();
 				// Update the state variable
 				this.state.center = {lat: res.lat(), lng: res.lng()};
 				// Need to sync since it's an async function
@@ -412,232 +386,6 @@ var googlemaps = SAGE2_App.extend({
 				console.log('Geocode was not successful for the following reason: ' + status);
 			}
 		}.bind(this));
-	},
-
-	/**
-	 * Adding a Markers
-	 *
-	 * This function assumes the data is correctly formatted to have
-	 * {
-	 *  lat: float,
-	 *  lng: float
-	 * }
-	 */
-	addMarkerToMap: function(markerLocation) {
-		var _this = this;
-		if (typeof markerLocation === "string") {
-			var latlng = markerLocation.split(",");
-			markerLocation = {
-				lat: parseFloat(latlng[0].trim()),
-				lng: parseFloat(latlng[1].trim())
-			};
-		}
-		if (typeof markerLocation.lat === "string") {
-			// there are at least two different string types
-			markerLocation.lat = this.convertDegMinSecDirToSignedDegree(markerLocation.lat);
-			markerLocation.lng = this.convertDegMinSecDirToSignedDegree(markerLocation.lng);
-		}
-		// add marker to map at location
-		let markToAdd = new google.maps.Marker({
-			position: markerLocation,
-			map: this.map
-		});
-		// add to tracking array to allow removal later
-		this.mapMarkers.push(markToAdd);
-		markToAdd.markerLocation = markerLocation;
-		// always center view on new marker
-		this.map.setCenter(markerLocation);
-		this.updateCenter();
-		// add info window if it doesn't exist
-		if (this.gmapInfoWindow === undefined || this.gmapInfoWindow === null) {
-			this.gmapInfoWindow = new google.maps.InfoWindow();
-			google.maps.event.addListener(this.gmapInfoWindow, 'closeclick', function() {
-				_this.removeAllLinkLines();
-			});
-		}
-		// add overlay for this map if doesn't exist
-		if (this.gmapOverlay === undefined || this.gmapOverlay === null) {
-			this.gmapOverlay = new google.maps.OverlayView();
-			this.gmapOverlay.draw = function() {}; // required?
-			this.gmapOverlay.setMap(this.map);
-		}
-		// add a click effect to marker. not working?
-		google.maps.event.addListener(markToAdd, 'click', function(e) {
-			_this.gmapInfoWindow.setContent("Latitude: " + this.markerLocation.lat
-											+ "<br>\nLongitude:" + this.markerLocation.lng);
-			_this.gmapInfoWindow.open(_this.map, this); // this is the marker
-		});
-		this.getFullContextMenuAndUpdate();
-	},
-
-	/**
-	 * Converts string with degree, minute, second, direction. To signed degree.
-	 * To avoid being token specific, checks for numbers rather than symbols.
-	 * Example coordinates from some images:
-	 *
-{
-	lat: "21 deg 41' 33.14\" N",
-	lng: "157 deg 50' 55.48\" W"
-}
-{
-	lat: "19 deg 48' 59.66\" N ",
-	lng:"156 deg 10' 45.01\" W "
-}
-{
-	lat:"21 deg 52' 26.86\" N "
-	lng:"159 deg 27' 22.96\" W "
-}
-	 */
-	convertDegMinSecDirToSignedDegree: function (input) {
-		var index = 0, partIndex = -1; // find the number first, might be prefix fluff
-		var findingNextNumber = true;
-		var parts = ["", "", "", ""]; // deg, min, sec, dir
-		// for each of the characters
-		while (index < input.length) {
-			// if finding next number
-			if (findingNextNumber) {
-				// if finding next number, but have gone through first 3, want direction
-				if (partIndex == 2) {
-					if (input.charAt(index) === "N"
-						|| input.charAt(index) === "S"
-						|| input.charAt(index) === "E"
-						|| input.charAt(index) === "W") {
-						parts[3] += input.charAt(index);
-					}
-				} else if (!isNaN(input.charAt(index))) {
-					// else if this char is a number moveup part index and stop looking
-					partIndex++;
-					findingNextNumber = false;
-				}
-			} // if at the next number, add to the part
-			if (!findingNextNumber) {
-				// if it is a number or a decimal, add it.
-				if (!isNaN(input.charAt(index))
-					|| input.charAt(index) === ".") {
-					parts[partIndex] += input.charAt(index);
-				} else {
-					// hitting a non-number or . means in between numbers
-					findingNextNumber = true;
-				}
-			} // always increase the index
-			index++;
-		}
-		// for all but the direction, convert to floats
-		for (let i = 0; i < parts.length - 1; i++) {
-			parts[i] = parseFloat(parts[i]);
-		}
-		var justDegrees = parts[0];
-		justDegrees += parts[1] / 60;
-		justDegrees += parts[2] / (60 * 60);
-
-		// flip the sign depending on which direction the count was in
-		if (parts[3] == "S" || parts[3] == "W") {
-			justDegrees = justDegrees * -1;
-		}
-		return justDegrees;
-	},
-
-	removeAllMarkersFromMap: function() {
-		// if any of the maps have active lines, remove them
-		this.removeAllLinkLines();
-		for (let i = 0; i < this.mapMarkers.length; i++) {
-			this.mapMarkers[i].setMap(null);
-		}
-		this.mapMarkers = [];
-		this.getFullContextMenuAndUpdate();
-	},
-
-	focusOnMarkerIndex: function(responseObject) {
-		// if there are no markers, cannot focus on it
-		if (this.mapMarkers.length <= 0) {
-			return;
-		}
-		if (responseObject.cycle === "next") {
-			this.markerCycleIndex++;
-			if (this.markerCycleIndex >= this.mapMarkers.length) {
-				this.markerCycleIndex = 0;
-			}
-		} else {
-			this.markerCycleIndex--;
-			if (this.markerCycleIndex < 0) {
-				this.markerCycleIndex = this.mapMarkers.length - 1;
-			}
-		}
-		this.map.setCenter(this.mapMarkers[this.markerCycleIndex].markerLocation);
-		this.updateCenter();
-		this.showMarkerInfoIfReleasedOver({blank: "would have been coordinates"}, this.markerCycleIndex);
-
-		this.refresh(new Date());
-	},
-
-	// will check each marker to see if under the pointer
-	showMarkerInfoIfReleasedOver: function(releasePoint, indexMatcher) {
-		var mpos;
-		for (let i = 0; i < this.mapMarkers.length; i++) {
-			// this will get the position relative to app top left corner
-			mpos = this.gmapOverlay.getProjection().fromLatLngToContainerPixel(this.mapMarkers[i].position);
-			// if clicking by the marker
-			if ((indexMatcher !== undefined && indexMatcher === i) || ((releasePoint.x > mpos.x - 15)
-				&& (releasePoint.x < mpos.x + 15)
-				&& (releasePoint.y > mpos.y - 45)
-				&& (releasePoint.y < mpos.x + 5))) {
-				// show the pop up google info window
-				google.maps.event.trigger(this.mapMarkers[i], 'click');
-				this.removeAllLinkLines();
-				// create a line to source app
-				let said = this.mapMarkers[i].markerLocation.sourceAppId;
-				let svgLine = svgForegroundForWidgetConnectors.line(0, 0, 0, 0);
-				this.mapMarkers[i].s2lineLink = svgLine;
-				svgLine.attr({
-					id: this.id + "syncLineFor" + said,
-					strokeWidth: ui.widgetControlSize * 0.18,
-					stroke:  "rgba(250,250,250,1.0)"
-				});
-			}
-		}
-	},
-
-	// redraw the line.
-	updateLinesToSource: function() {
-		var mpos, borderToleranceForMarkerRemoval = 15;
-		// for each marker
-		for (let i = 0; i < this.mapMarkers.length; i++) {
-			// if there is a line
-			if (this.mapMarkers[i].s2lineLink !== null && this.mapMarkers[i].s2lineLink !== undefined) {
-				// check if the app still exists
-				if (applications[this.mapMarkers[i].markerLocation.sourceAppId] === undefined) {
-					// if not, remove the line and move to the next marker
-					this.mapMarkers[i].s2lineLink.remove();
-					continue;
-				}
-				mpos = this.gmapOverlay.getProjection().fromLatLngToContainerPixel(this.mapMarkers[i].position);
-				// if the marker is too close or off the view, remove it
-				if (mpos.x < borderToleranceForMarkerRemoval
-					|| mpos.x > this.sage2_width - borderToleranceForMarkerRemoval
-					|| mpos.y < borderToleranceForMarkerRemoval
-					|| mpos.y > this.sage2_height - borderToleranceForMarkerRemoval) {
-					this.mapMarkers[i].s2lineLink.remove();
-					continue;
-				}
-				// if the line and app exist, then redraw
-				this.mapMarkers[i].s2lineLink.attr({
-					x1: (this.sage2_x + mpos.x),
-					y1: (this.sage2_y + mpos.y),
-					x2: (applications[this.mapMarkers[i].markerLocation.sourceAppId].sage2_x + 10),
-					y2: (applications[this.mapMarkers[i].markerLocation.sourceAppId].sage2_y
-						- ui.titleBarHeight + 10)
-				});
-			}
-		}
-	}, //applications[this.mapMarkers[i].markerLocation.sourceAppId].sage2_height / 2)
-
-	// if a marker has a link line, remove it from the svg space
-	removeAllLinkLines: function() {
-		for (var i = 0; i < this.mapMarkers.length; i++) {
-			if (this.mapMarkers[i].s2lineLink !== null && this.mapMarkers[i].s2lineLink !== undefined) {
-				this.mapMarkers[i].s2lineLink.remove();
-			}
-		}
 	},
 
 	/**
@@ -681,54 +429,6 @@ var googlemaps = SAGE2_App.extend({
 		entries.push(entry);
 
 		entries.push({description: "separator"});
-
-		// if always plotting, then toggle off
-		if (this.plotAnyNewGeoSource) {
-			entry = {};
-			entry.description = "Stop automatic plotting";
-			entry.callback = "toggleAutomaticPlot";
-			entry.parameters = {
-				plot: false
-			};
-			entries.push(entry);
-		} else {
-			entry = {};
-			entry.description = "Plot any app that gives geo data";
-			entry.callback = "toggleAutomaticPlot";
-			entry.parameters = {
-				plot: true
-			};
-			entries.push(entry);
-		}
-
-		if (this.mapMarkers.length > 0) {
-			entries.push({description: "separator"});
-
-			entry = {};
-			entry.description = "Remove all markers from map";
-			entry.callback = "removeAllMarkersFromMap";
-			entry.parameters = {};
-			entries.push(entry);
-
-			if (this.mapMarkers.length > 1) {
-				entry = {};
-				entry.description = "Go to next marker";
-				entry.callback = "focusOnMarkerIndex";
-				entry.parameters = {
-					cycle: "next"
-				};
-				entries.push(entry);
-
-				entry = {};
-				entry.description = "Go to prevous marker";
-				entry.callback = "focusOnMarkerIndex";
-				entry.parameters = {
-					cycle: "previous"
-				};
-				entries.push(entry);
-			}
-
-		}
 
 		return entries;
 	},
@@ -779,271 +479,6 @@ var googlemaps = SAGE2_App.extend({
 			// Need to sync since it's an async function
 			_this.SAGE2Sync(true);
 		});
-	},
-
-	/**
-	 * Function to setup the data handling.
-	 *
-	 * @method     broadcastData
-	 */
-	broadcastData: function() {
-		if (!isMaster) {
-			return; // try to prevent spamming
-		}
-		// ask for any new variables that are given to the server
-		// function(callback, unsubscribe)
-		this.serverDataSubscribeToNewValueNotification("handlerForNewVariableNotification");
-		// give its own center view to server
-		// serverDataBroadcastSource: function(suffix, value, description)
-		this.serverDataBroadcastSource("geoLocation", {
-			source: this.id,
-			location: this.state.center
-		}, "the map's center geoLocation value");
-
-		// creates destination variables
-		// serverDataBroadcastDestination: function(suffix, value, description, callback)
-		this.serverDataBroadcastDestination(
-			"geoLocation:markerPlot", [], "plots geo marker on this map", "makeMarkerGivenImageGeoLocation");
-		this.serverDataBroadcastDestination(
-			"geoLocation:replaceMarkerPlots", [], "clears out current markers and places given", "replaceMarkerPlots");
-		this.serverDataBroadcastDestination(
-			"geoLocation:viewCenter", [], {
-				app: this.id,
-				interpretAs: "set",
-				dataTypes: ["gps"], // wants these datatypes
-				dataFormat: "s2GeoLocation" // should this also describe what is acceptable?
-			}, "setView");
-
-
-
-
-
-		// broadcast a different destination to test server handled conversion
-		// name suffix , value, description
-		this.serverDataBroadcastSource("testS2Converted:geoLocationCenter",
-			[this.state.center], {
-				app: this.id,
-				interpretAs: "set",
-				dataTypes: ["gps"], // gives these datatypes, example: geojson can have more, but may only have points.
-				dataFormat: "s2GeoLocation"
-			});
-		// broadcast a different destination to test server handled conversion
-		this.serverDataBroadcastSource("testS2Converted:geoLocationBounds", [{
-			source: this.id,
-			location: this.state.center
-		}, {
-			source: this.id,
-			location: this.state.center
-		}], {
-			app: this.id,
-			interpretAs: "range",
-			dataTypes: ["gps"], // gives these datatypes, example: geojson can have more, but may only have points.
-			dataFormat: "s2GeoLocation"
-		});
-		// name suffix, value, description, callback
-		this.serverDataBroadcastDestination("testS2Converted:markerPlotReplace", [], {
-			app: this.id,
-			interpretAs: "set",
-			dataTypes: ["gps"], // wants these datatypes
-			dataFormat: "s2GeoLocation" // should this also describe what is acceptable?
-		}, "replaceMarkerPlotsConvertedByS2");
-		// name suffix, value, description, callback
-		this.serverDataBroadcastDestination("testS2Converted:viewCenter", [], {
-			app: this.id,
-			interpretAs: "set",
-			dataTypes: ["gps"], // wants these datatypes
-			dataFormat: "s2GeoLocation" // should this also describe what is acceptable?
-		}, "setViewUsingS2GeoLocation");
-	},
-
-	/**
-	 * This function will receive notifications of new variables.
-	 * If enabled, will grab image data to plot markers.
-	 *
-	 * @method handlerForNewVariableNotification
-	 * @param {Object} addedVar - An object with properties as described below.
-	 * @param {Object} addedVar.nameOfValue - Name of the value on server, needed for requesting.
-	 * @param {Object} addedVar.description - User defined description.
-	 */
-	handlerForNewVariableNotification: function(addedVar) {
-		if (!isMaster) {
-			return; // prevent spam
-		}
-		// if this should plot any new geo data source
-		if (this.plotAnyNewGeoSource
-			&& addedVar.nameOfValue.indexOf("geoLocation") !== -1
-			&& addedVar.nameOfValue.indexOf("source") !== -1
-			&& addedVar.description.indexOf("image") !== -1) {
-			// serverDataGetValue: function(nameOfValue, callback)
-			this.serverDataGetValue(addedVar.nameOfValue, "makeMarkerGivenImageGeoLocation");
-		}
-	},
-
-	/**
-	 * Requires the image to send data in a particular way.
-	 *
-	 * @method makeMarkerGivenImageGeoLocation
-	 * @param {Object} value - An object with properties as described below.
-	 * @param {Object} addedVar.nameOfValue - Name of the value on server, needed for requesting.
-	 * @param {Object} addedVar.description - User defined description.
-	 */
-	makeMarkerGivenImageGeoLocation: function(value) {
-		if (Array.isArray(value) && value.length < 1) {
-			return; // don't use empty arrays
-		}
-		// all display clients need this to sync correctly
-		this.addMarkerToMap({
-			lat: value.location.lat,
-			lng: value.location.lng,
-			sourceAppId: value.source
-		});
-	},
-
-	/**
-	 * Given an array of geolocations will clear out current markers and plot new ones.
-	 *
-	 * @method replaceMarkerPlots
-	 * @param {Array} value - An array containing locations to plot on map.
-	 */
-	replaceMarkerPlots: function(value) {
-		// clear out all marker plots
-		this.removeAllMarkersFromMap();
-		// plot the new ones.
-		if (!Array.isArray(value)) {
-			value = [value]; // put in array for now
-		}
-		// if cleaning is successful
-		if (this.replaceMarkerPlotsHelperFunctionMoveGpsToTop(value)) {
-			// add to map
-			for (let i = 0; i < value.length; i++) {
-				this.addMarkerToMap(value[i]);
-			}
-		}
-	},
-
-	/**
-	 * Should get an array of objects [{lat:, lng:}, ..]
-	 * To test next is strings "latitudeValue, longitudeValue"
-	 *
-	 * @method replaceMarkerPlotsConvertedByS2
-	 * @param {Array} value - An array containing locations to plot on map.
-	 */
-	replaceMarkerPlotsConvertedByS2: function(value) {
-		// clear out all marker plots
-		this.removeAllMarkersFromMap();
-		// plot the new ones.
-		if (!Array.isArray(value)) {
-			value = [value]; // put in array for now
-		}
-		for (let i = 0; i < value.length; i++) {
-			this.addMarkerToMap(value[i]);
-		}
-	},
-
-	/**
-	 * This will move values to top level on the array based on prior knowledge of what it is.
-	 * Assumes array since it made past the check.
-	 *
-	 * @method replaceMarkerPlots
-	 * @param {Array} value - An array containing locations to plot on map.
-	 */
-	replaceMarkerPlotsHelperFunctionMoveGpsToTop: function(value) {
-		var e1 = value[0];
-		var unableToPlot = false;
-		// if it is an object, cannot guarante usage
-		if (typeof e1 === "object") {
-			var e1keys = Object.keys(value[0]);
-			if (e1keys.includes("gps")) {
-				if (typeof e1.gps === "object") {
-					// place gps checks
-					if (e1.gps.lat) {
-						// move obj to top level
-						for (let i = 0; i < value.length; i++) {
-							value[i] = value[i].gps;
-						}
-					} else if (e1.gps.latitude) {
-						// move obj to top level and rename
-						for (let i = 0; i < value.length; i++) {
-							value[i] = value[i].gps;
-							value[i].lat = value[i].gps.latitude;
-							value[i].lng = value[i].gps.longitude;
-						}
-					} else {
-						unableToPlot = true;
-					}
-				} else if (typeof e1.gps === "string") {
-					// move string to top level
-					for (let i = 0; i < value.length; i++) {
-						value[i] = value[i].gps;
-					}
-				} else {
-					unableToPlot = true;
-				}
-			} else if (e1keys.includes("location")) {
-				if (typeof e1.location === "object") {
-					// place gps checks
-					if (e1.gps.lat) {
-						// move obj to top level
-						for (let i = 0; i < value.length; i++) {
-							value[i] = value[i].gps;
-						}
-					} else if (e1.gps.latitude) {
-						// move obj to top level and rename
-						for (let i = 0; i < value.length; i++) {
-							value[i] = value[i].gps;
-							value[i].lat = value[i].gps.latitude;
-							value[i].lng = value[i].gps.longitude;
-						}
-					} else {
-						unableToPlot = true;
-					}
-				} else if (typeof e1.location === "string") {
-					// move string to top level
-					for (let i = 0; i < value.length; i++) {
-						value[i] = value[i].location;
-					}
-				} else {
-					unableToPlot = true;
-				}
-			}
-		} else if (typeof e1 === "string") {
-			// this would be a check to see if it is a float, float
-		} else {
-			unableToPlot = true;
-		}
-		// state unabel to plot
-		if (unableToPlot) {
-			console.log("googlemaps> Unable to plot " + e1);
-			return false;
-		}
-		return true;
-	},
-
-	toggleAutomaticPlot: function(responseObject) {
-		this.plotAnyNewGeoSource = responseObject.plot;
-		this.getFullContextMenuAndUpdate();
-	},
-
-	setView: function(serverVar) {
-		if (Array.isArray(serverVar)) {
-			serverVar = serverVar[0];
-		}
-		if (this.lastViewSetTime + 1000 < Date.now()) {
-			this.map.setCenter(serverVar.location);
-			this.updateCenter();
-			this.lastViewSetTime = Date.now();
-		}
-	},
-
-	setViewUsingS2GeoLocation: function(serverVar) {
-		if (Array.isArray(serverVar)) {
-			serverVar = serverVar[0];
-		}
-		if (this.lastViewSetTime + 1000 < Date.now()) {
-			this.map.setCenter(serverVar);
-			this.updateCenter();
-			this.lastViewSetTime = Date.now();
-		}
 	}
 
 });

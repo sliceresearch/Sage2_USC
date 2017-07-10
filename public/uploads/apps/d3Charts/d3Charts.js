@@ -80,6 +80,12 @@ var d3Charts = SAGE2_App.extend({
 	*/
 	broadcastInitialValues: function() {
 		// serverDataBroadcastSource: function(nameOfValue, value, description)
+		this.serverDataBroadcastSource("originalData", this.state.chartValues.data, { // few changes will occur.
+			app: this.id,
+			interpretAs: "set",
+			// dataTypes: ["gps", "time", "*"], // can it auto detect?
+			dataFormat: "json"
+		});
 		this.serverDataBroadcastSource("dataset", this.state.chartValues.data, { // "Current data set of chart");
 			app: this.id,
 			interpretAs: "set",

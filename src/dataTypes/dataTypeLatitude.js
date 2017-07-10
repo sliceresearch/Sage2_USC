@@ -31,7 +31,7 @@ function getDescription() {
 		stringFormat: "alwaysTrue",
 		stringParser: function(containerToFill, stringToParse) {
 			if (isNaN(+stringToParse)) {
-				return false
+				return false;
 			}
 			containerToFill.value = +stringToParse;
 			return true;
@@ -41,6 +41,18 @@ function getDescription() {
 		},
 		getValue: function() {
 			return this.value;
+		},
+		// returns -1 if a has lower value, 1 if a has larger value, 0 if equal
+		compareTwoForOrder: function (a, b) {
+			var aVal = a.getValue();
+			var bVal = b.getValue();
+			if (aVal < bVal) {
+				return -1;
+			}
+			if (aVal > bVal) {
+				return 1;
+			}
+			return 0;
 		},
 		getRangeInformation: function(arrayOfThisDataType, treatAsElementArrayWithDataTypes = true) {
 			var retval = {

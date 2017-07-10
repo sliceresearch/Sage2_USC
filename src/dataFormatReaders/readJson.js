@@ -86,6 +86,7 @@ function addReader(registryReaders) {
 		 * @return {Object} dataTypeContainer - A filled out data type container for the requested type.
 		 */
 		getFromElement: function(dataTypeNameToFind, element, descriptionArray, registryArray, registryMap) {
+			this.debugPrint("Trying to get " + dataTypeNameToFind + " from element", "recursion");
 			// make sure the requested type exists
 			if (!registryMap[dataTypeNameToFind]) {
 				console.log("ERROR>readJson>: dataTypeNameToFind " + dataTypeNameToFind + " isn't registered unable to extract from element");
@@ -109,7 +110,7 @@ function addReader(registryReaders) {
 		/**
 		 * Will attempt to extract datatype information from a specific element.
 		 *
-		 * @method getFromElement
+		 * @method recursiveDataGrabOnElement
 		 * @param {Object} dataTypeContainer - Which registered datatype to get from element.
 		 * @param {Object} element - Json object to search for values within.
 		 * @param {Integer} descriptionIndex - Json object to search for values within.

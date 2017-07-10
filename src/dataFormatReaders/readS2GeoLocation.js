@@ -60,6 +60,9 @@ function addReader(registryReaders) {
 
 		/**
 		 * Create two object showing lower and upper bound ranges.
+		 * It will be given an object that has properties named dataTypeRegistryName.
+		 * In that value will have an array of two values.
+		 * 
 		 *
 		 * @method generateRangeValuesFromData
 		 * @param {Object} smallLargeInfo - Objects containing information about the smallest and largest.
@@ -68,14 +71,15 @@ function addReader(registryReaders) {
 		generateRangeValuesFromData: function(smallLargeInfo) {
 			//geo location needs gps.
 
+			var smallValuesFound = smallLargeInfo.dataTypeGps[0].getValue(); // 0 should be small
+			var largeValuesFound = smallLargeInfo.dataTypeGps[1].getValue(); // dataTypeGps return {latitude, longitude}
 			var small = {
-				lat: smallLargeInfo.dataTypeGps.smallestLatitude,
-				lng: smallLargeInfo.dataTypeGps.smallestLongitude
+				lat: smallValuesFound.latitude,
+				lng: smallValuesFound.longitude
 			};
-
 			var large = {
-				lat: smallLargeInfo.dataTypeGps.largestLatitude,
-				lng: smallLargeInfo.dataTypeGps.largestLongitude
+				lat: largeValuesFound.latitude,
+				lng: largeValuesFound.longitude
 			}
 
 			if (!small.lat || !small.lng || !large.lat || !large.lng) {
@@ -85,7 +89,7 @@ function addReader(registryReaders) {
 				console.dir(smallLargeInfo);
 			}
 
-			return [small, large];
+			return [large, small];
 		},
 
 		/**
@@ -153,6 +157,9 @@ function addReader(registryReaders) {
 				dataTypeContainer.value = +element.lat;
 			} else if (dataTypeNameToFind === "dataTypeLongitude") {
 				dataTypeContainer.value = +element.lng;
+			} else {
+				console.log("ERROR: s2GeoLocation doesn't contain " + dataTypeNameToFind);
+				return false;
 			}
 
 			return dataTypeContainer;
@@ -190,7 +197,7 @@ function addReader(registryReaders) {
 				console.dir(valueObject);
 			}
 			// map will be returned, then need to know what goes in it
-			var registryStatus = Array(registryArray.length).fill("unchecked"); // this will change to an object path?
+			var registryStatus = Array(registryArray.length).fill("false"); // this will change to an object path?
 			// var hasGoneThroughKey = [];
 
 			// for each of the data types search for them in the element's structure

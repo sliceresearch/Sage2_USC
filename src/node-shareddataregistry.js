@@ -37,6 +37,7 @@ var debug = {
 	getRequiredDataTypes: true,
 	convertKeepFormatSetToRange: true,
 	convertFormatRangeToRange: true,
+	convertFormatRangeToSet: true,
 	convertFormatSetToSet: true
 };
 function debugPrint(line, type = "any", dir = false) {
@@ -177,7 +178,7 @@ function getDataTypeInformation(requestedDataTypeStringName) {
  * @param {Object} valueObject.description.interpretAs - .
  * @param {Object} valueObject.description.dataTypes - .
  * @param {Object} valueObject.description.dataFormat - .
- * @return {Object} dataTypeMap - all detected data types and their values.
+ * @return {Array} dataTypesInValue - An array with element for each data type that specifies Object or "false".
  */
 function findDataTypesInValue(valueObject) {
 	debugPrint("Trying to find datatypes in " + valueObject, "findDataTypesInValue");
@@ -201,11 +202,11 @@ function findDataTypesInValue(valueObject) {
 
 
 /**
- * This assumes a destination value object.
+ * This assumes a destination value object. Will return an array of the dataTypeRegistryName.
  *
  * @method getRequiredDataTypes
  * @param  {Object} destinationObject - Value that wants update. Checking for source dataset if available.
- * @return {null | Array} requiredDataTypes - null if not found. Array of data type names if found.
+ * @return {null | Array} requiredDataTypes - null if not found. Array of dataTypeRegistryName strings if found.
  */
 function getRequiredDataTypes(destinationObject) {
 	// newValue.nameOfValue			= data.nameOfValue;
@@ -243,7 +244,7 @@ function getRequiredDataTypes(destinationObject) {
 			}
 		}
 
-		// first check if a registered data type, then convert to proper name.
+		// first check if already known. if not add it. Only possible if format contains optional values.
 		for (let i = 0; i < userSpecified.length; i++) {
 			if (!requiredDataTypes.includes(userSpecified[i])) {
 				requiredDataTypes.push(userSpecified[i]);
@@ -350,7 +351,7 @@ function convertFormatSetToSet(sourceObject, dataTypesInSource, destinationObjec
 
 	// get all required datatypes of destination
 	var destFormat = formatReaders[destinationObject.description.dataFormat];
-	var destRequired = getRequiredDataTypes(destinationObject); // names of datatypes
+	var destRequiredVars = getRequiredDataTypes(destinationObject); // names of datatypes
 	//
 	var sourceFormat = formatReaders[sourceObject.description.dataFormat];
 
@@ -372,12 +373,12 @@ function convertFormatSetToSet(sourceObject, dataTypesInSource, destinationObjec
 		currentSourceElement = sourceValues[e];
 		// get from that element each of the required values, put into the valuesToMakeDestinationElementOutOf map
 		valuesToMakeDestinationElementOutOf = {};
-		for (let r = 0; r < destRequired.length; r++) {
+		for (let r = 0; r < destRequiredVars.length; r++) {
 			// fetch the value from the structure
-			valuesToMakeDestinationElementOutOf[destRequired[r]] =
+			valuesToMakeDestinationElementOutOf[destRequiredVars[r]] =
 				// function(dataTypeNameToFind, element, descriptionArray, regArr, regMap)
 				sourceFormat.getFromElement(
-					destRequired[r],
+					destRequiredVars[r],
 					currentSourceElement,
 					dataTypesInSource,
 					dataTypeRegistry, dataTypeRegistryMap
@@ -412,13 +413,13 @@ function convertFormatRangeToRange(sourceObject, dataTypesInSource, destinationO
 	// newValue.description.dataFormat
 	// newValue.subscribers			= [];
 
-	this.debugPrint("Activating convertFormatRangeToRange", "convertFormatRangeToRange");
+	debugPrint("Activating convertFormatRangeToRange", "convertFormatRangeToRange");
 
 	// this activating means conversion was possible source is a superset of destination.
 
 	// get all required datatypes of destination
 	var destFormat = formatReaders[destinationObject.description.dataFormat];
-	var destRequired = destFormat.requiredDataTypes;
+	var destRequiredVars = getRequiredDataTypes(destinationObject); // returns dataTypeRegistryName (string) array
 	//
 	var sourceFormat = formatReaders[sourceObject.description.dataFormat];
 
@@ -429,6 +430,8 @@ function convertFormatRangeToRange(sourceObject, dataTypesInSource, destinationO
 	var currentSourceElement;
 	if (!Array.isArray(sourceObject.value)) {
 		sourceValues = [sourceObject.value]; // set to set is fine, should be
+	} else {
+		sourceValues = sourceObject.value;
 	}
 
 	// for each element in the source values, get required values out of source.
@@ -436,26 +439,29 @@ function convertFormatRangeToRange(sourceObject, dataTypesInSource, destinationO
 		currentSourceElement = sourceValues[e];
 		// push an object for each element that will be a map
 		sourceValuesThatWillDetermineRange.push({});
-		for (let r = 0; r < destRequired.length; r++) {
+		for (let r = 0; r < destRequiredVars.length; r++) {
 			// fetch the value from the structure
 			// its an array, put on the element, a map entry for the required data type
-			sourceValuesThatWillDetermineRange[e][destRequired[r].dataTypeRegistryName] =
+			sourceValuesThatWillDetermineRange[e][destRequiredVars[r]] =
 				// function(dataTypeNameToFind, element, descriptionArray, regArr, regMap)
 				sourceFormat.getFromElement(
-					destRequired[r].dataTypeRegistryName,
+					destRequiredVars[r],
 					currentSourceElement,
 					dataTypesInSource,
 					dataTypeRegistry, dataTypeRegistryMap
 				);
 		}
 	}
-	// now sourceValuesThatWillDetermineRange will contain all source values
+
+	debugPrint("  Collected datatypes in source", "convertFormatRangeToRange");
+	// now sourceValuesThatWillDetermineRange is an array with object for each element containing its detected data type value
 	var valueSmallLarge = {};
 	var registryEntry;
 	// go through each of the required datatypes and set their values.
-	for (let i = 0; i < destRequired.length; i++) {
-		registryEntry = dataTypeRegistryMap[destRequired[i]];
-		valueSmallLarge[destRequired[i]] = registryEntry.getRangeInformation(sourceValuesThatWillDetermineRange);
+	for (let i = 0; i < destRequiredVars.length; i++) {
+		debugPrint("    Attempting to get small large of " + destRequiredVars[i], "convertFormatRangeToRange");
+		registryEntry = dataTypeRegistryMap[destRequiredVars[i]];
+		valueSmallLarge[destRequiredVars[i]] = registryEntry.getRangeInformation(sourceValuesThatWillDetermineRange);
 	}
 
 	// with the smallest and largest of values, create two elements of destination formatReaders
@@ -477,10 +483,160 @@ function convertFormatRangeToRange(sourceObject, dataTypesInSource, destinationO
 function convertKeepFormatSetToRange(sourceObject, dataTypesInSource, destinationObject, dataTypesInDestination) {
 	debugPrint("Currently convertKeepFormatSetToRange uses same logic as convertFormatRangeToRange",
 		"convertKeepFormatSetToRange");
-	return this.convertFormatRangeToRange(
+	return convertFormatRangeToRange(
 		sourceObject, dataTypesInSource,
 		destinationObject, dataTypesInDestination);
 }
+
+/**
+ * Perform conversion, same format, range to set.
+ * Range values should be given as part of parameters.
+ * Will have to be based on original set of elements for trim down. Way to avoid this?
+ *
+ * @method convertFormatRangeToSet
+ * @param {Object} sourceObject - Entry in the value data structure.
+ * @param {Array} dataTypesInSource - Types detected with a "false" / object entries.
+ * @param {Object} destinationObject - Entry in the value data structure
+ * @param {Array} dataTypesInDestination - Types detected with a "false" / object entries.
+ * @param {Array} destinationOriginalDatasetSourceValueObject - Entry for destination's original data set to reduce.
+ * @return {Object} dataTypeMap - all detected data types and their values.
+ */
+function convertFormatRangeToSet(sourceObject, dataTypesInSource,
+	destinationObject, dataTypesInDestination, destinationOriginalDatasetSourceValueObject) {
+	debugPrint("Triggered convertFormatRangeToSet", "convertFormatRangeToSet");
+
+	// data types in destination relate to what was found in the original data source elements
+	if (!dataTypesInDestination) {
+		// no "original" data means the range cannot be used to reduce/restrict the destination elements shown
+		debugPrint("  No value in dataTypesInDestination, unable to apply range restriction", "convertFormatRangeToSet");
+		return false;
+	}
+
+	var sourceFormat = formatReaders[sourceObject.description.dataFormat];
+	var destinationFormat = formatReaders[destinationObject.description.dataFormat];
+	var sourceValuesThatWillDetermineRange = [];
+	var currentSourceElement, currentDestinationElement;
+	var sourceValues = sourceObject.value;
+	// these destination values will be reduce later
+	var destinationValuesToGetCulled = destinationOriginalDatasetSourceValueObject.value;
+	if (!Array.isArray(destinationValuesToGetCulled)) {
+		destinationValuesToGetCulled = [destinationValuesToGetCulled];
+	}
+
+	debugPrint("  collecting data for each element", "convertFormatRangeToSet");
+	if (debug.convertFormatRangeToSet) {
+		var listOfDtS = [];
+		for (let i = 0; i < dataTypesInSource.length; i++) {
+			listOfDtS.push(dataTypesInSource[i].dataTypeRegistryName);
+		}
+		debugPrint("    source contains:" + listOfDtS, "convertFormatRangeToSet");
+		var listOfDtD = [];
+		for (let i = 0; i < dataTypesInDestination.length; i++) {
+			listOfDtD.push(dataTypesInDestination[i].dataTypeRegistryName);
+		}
+		debugPrint("    dest contains:" + listOfDtD, "convertFormatRangeToSet");
+	}
+
+	// using the data types in source, get each element's value and find small large
+	// for each element in the source values, get required values out of source.
+	for (let e = 0; e < sourceValues.length; e++) {
+		currentSourceElement = sourceValues[e];
+		// push an object for each element that will be a map
+		sourceValuesThatWillDetermineRange.push({});
+
+		// for each of the data types in source
+		for (let r = 0; r < dataTypesInSource.length; r++) {
+			// if it was not found, it cannot be extracted
+			if (dataTypesInSource[r] === "false") {
+				continue; // source did not have this particular data type, move to next
+			}
+			// if it is not in destination, it cannot be used to reduce destination
+			if (dataTypesInDestination[r] === "false") {
+				continue;
+			}
+
+			// NOTE: the dataTypesInSource is ["false", or {dataTypeRegistryName, path, value, ...}]
+
+			// fetch the value from the structure
+			// its an array, put on the element, a map entry for the required data type
+			sourceValuesThatWillDetermineRange[e][dataTypesInSource[r].dataTypeRegistryName] =
+				// function(dataTypeNameToFind, element, descriptionArray, regArr, regMap)
+				sourceFormat.getFromElement(
+					dataTypesInSource[r].dataTypeRegistryName,
+					currentSourceElement,
+					dataTypesInSource, // not sure if necessary
+					dataTypeRegistry, dataTypeRegistryMap // mainly map is used...
+				);
+		}
+	}
+
+	// should now be an array of two elements with properties equal to found data types
+	// get the small large values.
+	var dataTypesToUseForRange = Object.keys(sourceValuesThatWillDetermineRange[0]);
+	debugPrint("  Collected data in source on each object value:" + dataTypesToUseForRange, "convertFormatRangeToSet");
+	// now sourceValuesThatWillDetermineRange is an array with object for each element containing its detected data type value
+	var valueSmallLarge = {};
+	var registryEntry;
+	// go through each of the source data types to get small large values.
+	for (let i = 0; i < dataTypesToUseForRange.length; i++) {
+		debugPrint("    Attempting to get small large of " + dataTypesToUseForRange[i], "convertFormatRangeToSet");
+		registryEntry = dataTypeRegistryMap[dataTypesToUseForRange[i]];
+		valueSmallLarge[dataTypesToUseForRange[i]] = registryEntry.getRangeInformation(sourceValuesThatWillDetermineRange);
+	}
+
+	debugPrint("  Starting review of destination original element to see if they fit in range", "convertFormatRangeToSet");
+	// keysOfSmallLarge will contain names of type found in source and destination
+	var keysOfSmallLarge = Object.keys(valueSmallLarge);
+	var destElementValue, withinRange;
+	var valuesForDest = [];
+	// using the data types in source, get each element's value and find small large
+	// for each element in original destination
+
+	debugDir(dataTypesInDestination, "convertFormatRangeToSet");
+
+	for (let e = 0; e < destinationValuesToGetCulled.length; e++) {
+		currentDestinationElement = destinationValuesToGetCulled[e];
+		withinRange = true;
+		// go through each of the data types in small large, it should only contain what was in source and destination
+		for (let smKeyIndex = 0; smKeyIndex < keysOfSmallLarge.length; smKeyIndex++) {
+			// get the value of the destination element for this data type
+			// destElementValue will be a container for the data type
+
+			destElementValue = destinationFormat.getFromElement(
+				keysOfSmallLarge[smKeyIndex],
+				currentDestinationElement,
+				dataTypesInDestination, // not sure if necessary
+				dataTypeRegistry, dataTypeRegistryMap // mainly map is used...
+			);
+			// need the registry entry to perform comparison
+			registryEntry = dataTypeRegistryMap[keysOfSmallLarge[smKeyIndex]];
+
+			// if destElementValue smaller than allowed, don't pass.
+			if (registryEntry.compareTwoForOrder(valueSmallLarge[keysOfSmallLarge[smKeyIndex]][0], destElementValue) > 0) {
+				// compareTwoForOrder returns -1 if 1st element is smaller, 1 if larger
+				withinRange = false;
+				break;
+			} // if destElementValue bigger than allowed, dont' pass
+			if (registryEntry.compareTwoForOrder(valueSmallLarge[keysOfSmallLarge[smKeyIndex]][1], destElementValue) < 0) {
+				withinRange = false;
+				break;
+			}
+		}
+		if (withinRange) {
+			valuesForDest.push(currentDestinationElement);
+		}
+	}
+	debugPrint("  Element survival:" + valuesForDest.length + " / "
+		+ destinationValuesToGetCulled.length, "convertFormatRangeToSet");
+	return valuesForDest;
+}
+
+
+// ---------------------------------------------------------------------------------------------------------------------------------------------------
+// ---------------------------------------------------------------------------------------------------------------------------------------------------
+// ---------------------------------------------------------------------------------------------------------------------------------------------------
+
+
 
 
 function getDataTypeEntryGivenName(nameOfDataType, getIndexInstead = false) {
@@ -512,6 +668,7 @@ module.exports.canSourceConvertToDestination = canSourceConvertToDestination;
 module.exports.convertKeepFormatSetToRange = convertKeepFormatSetToRange;
 module.exports.convertFormatSetToSet = convertFormatSetToSet;
 module.exports.convertFormatRangeToRange = convertFormatRangeToRange;
+module.exports.convertFormatRangeToSet = convertFormatRangeToSet;
 
 // retrieval
 module.exports.getDataTypeEntryGivenName = getDataTypeEntryGivenName;

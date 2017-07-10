@@ -1,0 +1,27 @@
+{
+	"main_script": "gmapMod.js",
+	"icon": "gmapMod.png",
+	"width":  800,
+	"height": 600,
+	"resize": "free",
+	"dependencies": [
+		"googlemapsInit.js",
+		"https://maps.googleapis.com/maps/api/js?key=AIzaSyANE6rJqcfc7jH-bDOwhXQZK_oYq9BWRDY&callback=googleMapsForSAGE2Init"
+	],
+	"load": {
+		"mapType":   "hybrid",
+		"zoomLevel": 8,
+		"center":    {"lat": 41.850033, "lng": -87.6500523},
+		"layer":     {"t": false}
+	},
+	"fileTypes": [ "geojson" ],
+	"directory": "geojson",
+	"title": "Google Maps",
+	"version": "1.1.0",
+	"description": "Map visualization using Google Maps Javascript API V3",
+	"keywords": [ "maps", "google", "geo" ],
+	"author": "Luc Renambot <renambot@gmail.com>",
+	"license": "SAGE2-Software-License"
+}
+
+

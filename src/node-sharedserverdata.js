@@ -16,6 +16,13 @@ var sageutils        = require('../src/node-utils');               // for print 
 
 var dataTypeRegistry = require('../src/node-shareddataregistry'); // contains data type information
 
+
+
+// !!! marker for original dataset
+var originalDatasetMarker = "originalData";
+
+
+
 /**
  * SharedServerDataManager container object.
  * The dataStructure is:
@@ -57,9 +64,7 @@ function SharedServerDataManager(clients, broadcast) {
 
 	// linker structure is an array, because each array entry represents groups of links
 	// see linkerAddGroupIfNecessary for specifics on group properties.
-	this.linkerStructure = [];
-	// array of entries of known data types.
-	this.dataTypeRegistry = [];
+	this.trackerForServerSideDataLinks = [];
 
 	this.debug = {
 		any: true,
@@ -77,7 +82,7 @@ SharedServerDataManager.prototype.debugPrint = function(line, type = "any") {
 		console.log("dbug>n-ssd>" + type + ">" + line);
 	}
 };
-SharedServerDataManager.prototype.debugDir = function(obj, type) {
+SharedServerDataManager.prototype.debugDir = function(obj, type = "any") {
 	if (this.debug[type]) {
 		console.log("dbug>n-ssd>" + type + ">console.dir");
 		console.dir(obj);
@@ -401,8 +406,9 @@ SharedServerDataManager.prototype.createDataLink = function(wsio, data) {
 	var sourceName = data.dataLink.source;
 	var destinationName = data.dataLink.destination;
 	var sourceValueObject;
+	var linkString = sourceName + "$=>@" + destinationName; // weird string combo to find separation between source and destination.
 
-	this.debugPrint("Triggered", "createDataLink");
+	this.debugPrint("Triggered for source to destination:" + linkString, "createDataLink");
 
 	if (data.dataLink.printValues) {
 		this.debugPrint("Listing available values of type:" + data.dataLink.printValues, "createDataLink");
@@ -446,6 +452,7 @@ SharedServerDataManager.prototype.createDataLink = function(wsio, data) {
 	var foundLink = false;
 	var shouldUnLink = data.dataLink.unLink ? true : false; // might be undefined
 	var currentSubscriber;
+
 	for (let i = 0; i < sourceValueObject.subscribers.length; i++) {
 		currentSubscriber = sourceValueObject.subscribers[i];
 		// this is a special case, if it has a destination value, then it must be a linked value, see if it matches this requested link.
@@ -455,6 +462,10 @@ SharedServerDataManager.prototype.createDataLink = function(wsio, data) {
 			if (shouldUnLink) { // unlink by removing the entry from subscribers.
 				this.debugPrint("Removing link", "createDataLink");
 				sourceValueObject.subscribers.splice(i, 1);
+				// remove the server side tracker, its really basic and probably needs to be updated.
+				this.trackerForServerSideDataLinks.splice(
+					this.trackerForServerSideDataLinks.indexOf(linkString)
+					, 1);
 			}
 			break;
 		}
@@ -466,7 +477,8 @@ SharedServerDataManager.prototype.createDataLink = function(wsio, data) {
 		var newSubscriber  = {};
 		newSubscriber.destinationValueName  = destinationName;
 		// add it to that value
-		this.dataStructure.allValues[ "" + data.nameOfValue ].subscribers.push(newSubscriber);
+		this.dataStructure.allValues[ "" + sourceName ].subscribers.push(newSubscriber);
+		this.trackerForServerSideDataLinks.push(linkString);
 	}
 };
 
@@ -547,16 +559,16 @@ SharedServerDataManager.prototype.handleLinkUpdateConversion = function(sourceOb
 		this.debugPrint("collected datatypes in source", "handleLinkUpdateConversion");
 
 		// unable to rely on destination value becaue the initial value is always blank.
-		var dataTypesInDestination;
+		var dataTypesInDestination = null;
 		// dataTypesInDestination =  dataTypeRegistry.findDataTypesInValue(destinationObject);
 
 		// check if destination has a source dataset.
-		var destinationDatasetObject = null;
-		destinationDatasetObject = this.findDestinationDataSetSourceIfAvailable(destinationObject);
-		if (destinationDatasetObject !== null) {
-			this.debugPrint("Detected:" + destinationDatasetObject.nameOfValue
+		var destinationOriginalDatasetObject = null;
+		destinationOriginalDatasetObject = this.findDestinationOriginalDataSetSourceIfAvailable(destinationObject);
+		if (destinationOriginalDatasetObject !== null) {
+			this.debugPrint("Detected:" + destinationOriginalDatasetObject.nameOfValue
 			+ " to be used as destination dataset reference", "handleLinkUpdateConversion");
-			dataTypesInDestination = dataTypeRegistry.findDataTypesInValue(destinationDatasetObject);
+			dataTypesInDestination = dataTypeRegistry.findDataTypesInValue(destinationOriginalDatasetObject);
 			this.debugPrint("collected datatypes in destination dataset", "handleLinkUpdateConversion");
 		} else {
 			this.debugPrint("No dataset detected for destination", "handleLinkUpdateConversion");
@@ -590,7 +602,7 @@ SharedServerDataManager.prototype.handleLinkUpdateConversion = function(sourceOb
 
 
 
-						throw "not implemented, set to range with different formatting";
+						throw "not implemented, range to set with same formatting";
 
 
 
@@ -628,23 +640,12 @@ SharedServerDataManager.prototype.handleLinkUpdateConversion = function(sourceOb
 							sourceObject, dataTypesInSource,
 							destinationObject, dataTypesInDestination);
 					} else if (sourceInterpretAs === "range" && destinationInterpretAs === "set") { // format mismatch, range to set
-
-
-
-
-
-
-
-
-						throw "not implemented, set to range with different formatting";
-
-
-
-
-
-
-
-
+						// this.debugDir(dataTypesInDestination);
+						valueToGiveToDestination = dataTypeRegistry.convertFormatRangeToSet(
+							sourceObject, dataTypesInSource,
+							destinationObject, dataTypesInDestination,
+							// destinationOriginalDatasetObject value entry in structure, not just plain value
+							destinationOriginalDatasetObject);
 					} else {
 						console.log("Unknown interpretation:" + sourceInterpretAs);
 					}
@@ -693,12 +694,12 @@ SharedServerDataManager.prototype.handleLinkUpdateConversion = function(sourceOb
  * Checks the data structure to see if there was a destination source marked as a dataset.
  * Maybe this should be "original".
  *
- * @method findDestinationDataSetSourceIfAvailable
+ * @method findDestinationOriginalDataSetSourceIfAvailable
  * @param  {Object} destinationObject - Value that wants update. Checking for source dataset if available.
- * @return {null | Object} destinationDatasetObject - null if not found. Object is the entry found.
+ * @return {null | Object} destinationOriginalDatasetObject - null if not found. Object is the entry found.
  */
-SharedServerDataManager.prototype.findDestinationDataSetSourceIfAvailable = function(destinationObject) {
-	var destinationDatasetObject = null;
+SharedServerDataManager.prototype.findDestinationOriginalDataSetSourceIfAvailable = function(destinationObject) {
+	var destinationOriginalDatasetObject = null;
 	var destName;
 	// get the name to parse out the app
 	destName = destinationObject.nameOfValue;
@@ -708,14 +709,14 @@ SharedServerDataManager.prototype.findDestinationDataSetSourceIfAvailable = func
 			for (let i = 0; i < this.dataStructure.allNamesOfValues.length; i++) {
 				if (this.dataStructure.allNamesOfValues[i].includes(destName)
 				&& this.dataStructure.allNamesOfValues[i].includes(":source:")
-				&& this.dataStructure.allNamesOfValues[i].includes("dataset")) {
-					destinationDatasetObject = this.dataStructure.allValues[this.dataStructure.allNamesOfValues[i]];
+				&& this.dataStructure.allNamesOfValues[i].includes(originalDatasetMarker)) {
+					destinationOriginalDatasetObject = this.dataStructure.allValues[this.dataStructure.allNamesOfValues[i]];
 					break;
 				}
 			}
 		}
 	}
-	return destinationDatasetObject;
+	return destinationOriginalDatasetObject;
 };
 
 module.exports = SharedServerDataManager;
