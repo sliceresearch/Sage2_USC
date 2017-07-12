@@ -3,17 +3,20 @@
   "version": "2.0.0",
   "description": "Electron-based SAGE2 client",
   "main": "electron.js",
-  "devDependencies": {
-    "electron-prebuilt": "latest",
-    "electron-packager": "latest"
-  },
+	"repository": {
+		"type": "git",
+		"url": "https://bitbucket.org/sage2/sage2/"
+	},
   "dependencies": {
-        "commander": "latest"
+    "electron": "latest",
+    "electron-packager": "latest",
+    "commander": "latest"
   },
   "scripts": {
      "electron": "electron electron.js -s https://localhost:9090 -d -1",
      "update": "cp ../electron.js electron.js",
      "build_mac": "build_mac",
+     "build_win": "build_win.bat",
      "build_lnx": "build_lnx"
   },
   "author": "Luc Renambot <renambot@gmail.com>",

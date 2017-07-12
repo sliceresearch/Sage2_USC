@@ -20,21 +20,25 @@ var quickNote = SAGE2_App.extend({
 		this.element.style.background = "lightyellow";
 		this.element.style.fontSize   = ui.titleTextSize + "px";
 		// Using SAGE2 default font
-		this.element.style.fontFamily = "Arimo, Helvetica, sans-serif";
+		this.element.style.fontFamily = "Courier New, Consolas, Menlo, monospace";
 		// Default starting attributes
 		this.backgroundChoice = "lightyellow";
-		this.startingFontSize = ui.titleTextSize;
-		this.startingWidth    = 300; // Hardcode necessary to keep scale on resize/restart/reload
-		// textarea setup
-		this.txtArea = document.createElement("textarea");
-		this.txtArea.rows = 5;
-		this.txtArea.cols = 22;
-		this.txtArea.style.resize = 'none';
-		// this.txtArea.style.width = "100%";
-		// this.txtArea.style.height = "100%";
-		this.txtArea.style.fontFamily = "Arimo, Helvetica, sans-serif";
-		this.txtArea.style.fontSize = '30px';
-		this.element.appendChild(this.txtArea);
+
+		/*
+		basing text size on title size is throwing off the sizing based on site location.
+		need to have a base size and then scale.
+		starting with size 20 and scaling up provides 25 characters of space
+		at 300px wide, this is 15px per character.
+		each character is roughly 26.8px tall
+		*/
+		this.startingFontSize       = 19.9;
+		this.startingAppWidth       = 300; // Hardcode necessary(?) to keep scale on resize/restart/reload
+		this.startingAppHeight      = 134; // 5 lines is 26.8 * 5 = 134;
+		this.startingFontHeight     = 26.8;
+		this.startingTextZoneWidth  = 25;
+		this.startingTextZoneHeight = 5;
+		this.needTextZoneHeight     = 5;
+		this.sizeModification       = 1; // 1 is normal <1 is small >1 is larger
 
 		// Keep a copy of the title
 		this.noteTitle = "";
@@ -45,6 +49,17 @@ var quickNote = SAGE2_App.extend({
 		// If it got file contents from the sever, then extract.
 		if (data.state.contentsOfNoteFile) {
 			this.parseDataFromServer(data.state.contentsOfNoteFile);
+		}
+
+		var _this = this;
+		// if it was passed additional init values
+		if (data.csdInitValues) {
+			data.csdInitValues.serverDate = new Date(Date.now());
+			_this.setMessage(data.csdInitValues);
+			setTimeout(function() {
+				//_this.setMessage(data.csdInitValues);
+				_this.updateTitle(_this.noteTitle);
+			}, 200);
 		}
 	},
 
@@ -70,15 +85,45 @@ var quickNote = SAGE2_App.extend({
 	msgParams.clientInput	What they typed for the note.
 	*/
 	setMessage: function(msgParams) {
-		// First remove potential new lines from input
+		// First clean the input, if there is i nput
 		if (msgParams.clientInput) {
+			this.state.clientInput = msgParams.clientInput; // keep original
+			let words = msgParams.clientInput.split(" "); // separate out words
+			let hasModifiedWord = false;
+			// determine the number of lines needed
+			let lines = msgParams.clientInput.split("\n");
+			this.needTextZoneHeight = lines.length + 1; // have extra line to show no missing text
+			for (let i = 0; i < lines.length; i++) {
+				if (lines[i].length > this.startingTextZoneWidth) {
+					this.needTextZoneHeight += parseInt(lines[i].length / this.startingTextZoneWidth);
+				}
+			}
+
+			for (let i = 0; i < words.length; i++) {
+				// if a word is larget than the zone width
+				if (words[i].length > this.startingTextZoneWidth) {
+					hasModifiedWord = true;
+					let pieces = "";
+					// split it into pieces that will fit within one line
+					while (words[i].length > this.startingTextZoneWidth) {
+						pieces += words[i].substring(0, this.startingTextZoneWidth);
+						pieces += " ";
+						words[i] = words[i].substring(this.startingTextZoneWidth);
+						this.needTextZoneHeight++; // inflates lines usage by 1
+					}
+					pieces += words[i];
+					words[i] = pieces; // put back into location
+				}
+			} // if there was word modification to shrink into view, then need to rejoin
+			if (hasModifiedWord) {
+				msgParams.clientInput = words.join(" ");
+			}
 			msgParams.clientInput = msgParams.clientInput.replace(/\n/g, "<br>");
 		}
 		// If defined by a file, use those values
 		if (msgParams.fileDefined === true) {
 			this.backgroundChoice   = msgParams.colorChoice;
 			this.state.colorChoice  = this.backgroundChoice;
-			this.state.clientInput  = msgParams.clientInput;
 			this.state.creationTime = msgParams.clientName;
 			this.element.style.background = msgParams.colorChoice;
 			this.element.innerHTML        = msgParams.clientInput;
@@ -97,10 +142,10 @@ var quickNote = SAGE2_App.extend({
 			this.element.style.background = msgParams.colorChoice;
 		}
 
+		// set the text, currently innerHTML matters to render <br> and allow for html tags
 		this.element.innerHTML = msgParams.clientInput;
-
+		// client input state set as part of the clean
 		this.state.clientName  = msgParams.clientName;
-		this.state.clientInput = msgParams.clientInput;
 		this.state.colorChoice = this.backgroundChoice;
 
 		// if the creationTime has not been set, then fill it out.
@@ -145,6 +190,12 @@ var quickNote = SAGE2_App.extend({
 		if (msgParams.creationTime !== undefined && msgParams.creationTime !== null) {
 			this.formatAndSetTitle(msgParams.creationTime);
 		}
+
+		// adjust height to show all text. minimum 5 lines enforce(?)
+		this.needTextZoneHeight = (this.needTextZoneHeight < 5) ? 5 : this.needTextZoneHeight;
+		this.sendResize(this.sage2_width,
+			this.needTextZoneHeight * this.startingFontHeight * this.sizeModification);
+
 		this.saveNote(msgParams.creationTime);
 	},
 
@@ -223,8 +274,8 @@ var quickNote = SAGE2_App.extend({
 
 	resize: function(date) {
 		this.element.style.background = this.backgroundChoice;
-		var percentChange = parseInt(this.element.clientWidth) / this.startingWidth;
-		this.element.style.fontSize = (this.startingFontSize * percentChange) + "px";
+		this.sizeModification = parseInt(this.element.clientWidth) / this.startingAppWidth;
+		this.element.style.fontSize = (this.startingFontSize * this.sizeModification) + "px";
 	},
 
 	event: function(eventType, position, user_id, data, date) {

@@ -101,31 +101,30 @@ AppLoader.prototype.loadImageFromURL = function(aUrl, mime_type, name, strictSSL
 		strictSSL: strictSSL,
 		agentOptions: {rejectUnauthorized: false, requestCert: false},
 		headers: {'User-Agent': 'node'}},
-		function(err1, response, body) {
-			if (err1) {
-				console.log("request error", err1);
-				throw err1;
+	function(err1, response, body) {
+		if (err1) {
+			console.log("request error", err1);
+			throw err1;
+		}
+		var localPath = path.join(_this.publicDir, "images", name);
+		fs.writeFile(localPath, body, function(err2) {
+			if (err2) {
+				console.log("Error saving image:", aUrl, localPath);
 			}
-			var localPath = path.join(_this.publicDir, "images", name);
-			fs.writeFile(localPath, body, function(err2) {
-				if (err2) {
-					console.log("Error saving image:", aUrl, localPath);
+
+			assets.exifAsync([localPath], function(err3) {
+				if (!err3) {
+					_this.loadImageFromFile(localPath, mime_type, aUrl, aUrl, name, function(appInstance) {
+						_this.scaleAppToFitDisplay(appInstance);
+						appInstance.file = localPath;
+						callback(appInstance);
+					});
 				}
-
-				assets.exifAsync([localPath], function(err3) {
-					if (!err3) {
-						_this.loadImageFromFile(localPath, mime_type, aUrl, aUrl, name, function(appInstance) {
-							_this.scaleAppToFitDisplay(appInstance);
-							appInstance.file = localPath;
-							callback(appInstance);
-						});
-					}
-				});
-
 			});
 
-		}
-	);
+		});
+
+	});
 };
 
 AppLoader.prototype.loadPdfFromURL = function(aUrl, mime_type, name, strictSSL, callback) {
@@ -182,8 +181,7 @@ AppLoader.prototype.loadYoutubeFromURL = function(aUrl, callback) {
 				var bitrate = info.formats[i].audioBitrate || 0;
 				if ((audio.type === type && bitrate > audio.bitrate) ||
 					(audio.type !== "audio/webm" && type === "audio/webm") ||
-					(audio.type === "")
-					) {
+					(audio.type === "")) {
 					audio.index = i;
 					audio.bitrate = bitrate;
 					audio.type = type;
@@ -896,9 +894,9 @@ AppLoader.prototype.loadFileFromLocalStorage = function(file, callback) {
 
 AppLoader.prototype.manageAndLoadUploadedFile = function(file, callback) {
 	// sanitize filename by remove odd charaters
-	var cleanFilename = sanitize(file.name);
+	var cleanFilename = sanitize(file.name, "_");
 	// Clean up further the file names
-	cleanFilename = cleanFilename.replace(/[\$\%\^\&\(\)]/g, '_');
+	cleanFilename = cleanFilename.replace(/[$%^&()'`\\/]/g, '_');
 
 	// Check if there is a matching application
 	var app = registry.getDefaultApp(cleanFilename);
@@ -982,34 +980,29 @@ AppLoader.prototype.loadApplication = function(appData, callback) {
 		app = registry.getDefaultAppFromMime(appData.type);
 		if (app === "image_viewer") {
 			this.loadImageFromFile(appData.path, appData.type, appData.url, appData.external_url, appData.name,
-					function(appInstance) {
-						callback(appInstance, null);
-					}
-			);
+				function(appInstance) {
+					callback(appInstance, null);
+				});
 		} else if (app === "movie_player") {
 			this.loadVideoFromFile(appData.path, appData.type, appData.url, appData.external_url, appData.name,
-					function(appInstance, handle) {
-						callback(appInstance, handle);
-					}
-			);
+				function(appInstance, handle) {
+					callback(appInstance, handle);
+				});
 		} else if (app === "pdf_viewer") {
 			this.loadPdfFromFile(appData.path, appData.type, appData.url, appData.external_url, appData.name,
-					function(appInstance) {
-						callback(appInstance, null);
-					}
-			);
+				function(appInstance) {
+					callback(appInstance, null);
+				});
 		} else if (app.indexOf("apps") >= 0 && app.indexOf("quickNote") >= 0) {
 			this.loadNoteFromFile(appData.path, appData.type, appData.url, appData.external_url, appData.name,
-					function(appInstance) {
-						callback(appInstance, null);
-					}
-			);
+				function(appInstance) {
+					callback(appInstance, null);
+				});
 		} else if (app.indexOf("apps") >= 0 && app.indexOf("doodle") >= 0) {
 			this.loadDoodleFromFile(appData.path, appData.type, appData.url, appData.external_url, appData.name,
-					function(appInstance) {
-						callback(appInstance, null);
-					}
-			);
+				function(appInstance) {
+					callback(appInstance, null);
+				});
 		} else if (app === "custom_app") {
 			if (appData.compressed === true) {
 				var name = path.basename(appData.name, path.extname(appData.name));
@@ -1020,23 +1013,20 @@ AppLoader.prototype.loadApplication = function(appData, callback) {
 				var external_url = this.hostOrigin + sageutils.encodeReservedURL(aUrl);
 
 				this.loadZipAppFromFile(appData.path, appData.type, aUrl, external_url, name,
-						function(appInstance) {
-							callback(appInstance, null);
-						}
-				);
+					function(appInstance) {
+						callback(appInstance, null);
+					});
 			} else {
 				this.loadAppFromFile(appData.path, appData.type, appData.url, appData.external_url, appData.name, appData.data,
-						function(appInstance) {
-							callback(appInstance, null);
-						}
-				);
+					function(appInstance) {
+						callback(appInstance, null);
+					});
 			}
 		} else {
 			this.loadAppFromFileFromRegistry(appData.path, appData.type, appData.url, appData.external_url, appData.name,
-					function(appInstance) {
-						callback(appInstance);
-					}
-			);
+				function(appInstance) {
+					callback(appInstance);
+				});
 		}
 	} else if (appData.location === "url") {
 		app = registry.getDefaultAppFromMime(appData.type);
@@ -1069,10 +1059,9 @@ AppLoader.prototype.loadApplication = function(appData, callback) {
 			appData.url  = webpath;
 			// Load the webview
 			this.loadAppFromFile(webpath, appData.type, appData.url, appData.url, "", appData.data,
-					function(appInstance) {
-						callback(appInstance, null);
-					}
-			);
+				function(appInstance) {
+					callback(appInstance, null);
+				});
 		}
 	} else if (appData.location === "remote") {
 		if (appData.application.application === "movie_player") {
@@ -1080,7 +1069,7 @@ AppLoader.prototype.loadApplication = function(appData, callback) {
 				this.loadYoutubeFromURL(appData.application.url, callback);
 			} else {
 				this.loadVideoFromURL(appData.application.url, appData.application.type,
-						appData.application.url, appData.application.title, callback);
+					appData.application.url, appData.application.title, callback);
 			}
 		} else {
 			var anInstance = {
@@ -1134,7 +1123,28 @@ AppLoader.prototype.readInstructionsFile = function(json_str, file, mime_type, e
 	var exif  = assets.getExifData(file);
 	var s2url = assets.getURL(file);
 
-	return {
+	// Override custom app if a UnityLoader
+	if (appName == "UnityLoader") {
+		// Set type as WebView
+		appName = "Webview";
+		mime_type = "applicaion/custom";
+		var webpath = getSAGE2Path('/uploads/apps/Webview');
+		external_url = this.hostOrigin + '/uploads/apps/Webview';
+
+		// Load from the SAGE2 web server itself
+		instructions.load = {
+			url: this.hostOrigin + assets.getURL(file) + "/index.html",
+			// set webview arguments
+			zoom: 1,
+			mode: "mobile",
+			favicon: ""
+		};
+
+		file = webpath;
+		s2url = '/uploads/apps/Webview';
+	}
+
+	var result = {
 		id: null,
 		title: exif.metadata.title,
 		application: appName,
@@ -1164,6 +1174,7 @@ AppLoader.prototype.readInstructionsFile = function(json_str, file, mime_type, e
 		sage2URL: s2url,
 		date: new Date()
 	};
+	return result;
 };
 
 AppLoader.prototype.unpackPortableSession = function(sessionInfo) {

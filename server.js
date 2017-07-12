@@ -120,7 +120,7 @@ var interactMgr        = new InteractableManager();
 var mediaBlockSize     = 512;
 var startTime          = Date.now();
 var drawingManager;
-var pressingAlt        = true;
+var pressingCTRL       = true;
 var fileBufferManager  = new FileBufferManager();
 
 // Array containing the remote sites informations (toolbar on top of wall)
@@ -2090,8 +2090,9 @@ function wsSaveSession(wsio, data) {
 		// Otherwise use the date in the name
 		var ad    = new Date();
 		sname = sprint("session_%4d_%02d_%02d_%02d_%02d_%02s",
-							ad.getFullYear(), ad.getMonth() + 1, ad.getDate(),
-							ad.getHours(), ad.getMinutes(), ad.getSeconds());
+			ad.getFullYear(), ad.getMonth() + 1, ad.getDate(),
+			ad.getHours(), ad.getMinutes(), ad.getSeconds()
+		);
 	}
 	saveSession(sname);
 }
@@ -2306,8 +2307,9 @@ function listSessions() {
 				// use its change time (creation, update, ...)
 				var ad = new Date(stat.mtime);
 				var strdate = sprint("%4d/%02d/%02d %02d:%02d:%02s",
-										ad.getFullYear(), ad.getMonth() + 1, ad.getDate(),
-										ad.getHours(), ad.getMinutes(), ad.getSeconds());
+					ad.getFullYear(), ad.getMonth() + 1, ad.getDate(),
+					ad.getHours(), ad.getMinutes(), ad.getSeconds()
+				);
 				// create path to thumbnail
 				var thumbPath = path.join(path.join(path.join("", "user"), "sessions"), ".previews");
 				// replace .json with .svg in filename
@@ -3152,6 +3154,10 @@ function wsLoadApplication(wsio, data) {
 
 		// Get the drop position and convert it to wall coordinates
 		var position = data.position || [0, 0];
+
+
+
+
 		if (position[0] > 1) {
 			// value in pixels, used as origin
 			appInstance.left = position[0];
@@ -3183,6 +3189,67 @@ function wsLoadApplication(wsio, data) {
 			appInstance.width  = initialSize[0];
 			appInstance.height = initialSize[1];
 			appInstance.aspect = initialSize[0] / initialSize[1];
+		}
+
+		/*
+		If this app is launched from csd command and the position isn't specified, then need to calculate
+		First check if it is the first app, they all start from the same place
+		If not the first, then check if the position of (last x + last width + padding + this width < wall width)
+			if fits, add to this row
+			if not fit, then check if fits on next row (last y + last tallest + padding + this height < wall height)
+				if fit, add to next row
+				if no fit, then restart
+		*/
+		if (data.csdLaunch && !data.wasCsdPositionStated) {
+			let xApp, yApp;
+			// if this is the first app.
+			if (csdDataStructure.appLaunch.xLast === -1) {
+				xApp = csdDataStructure.appLaunch.xStart;
+				yApp = csdDataStructure.appLaunch.yStart;
+			} else {
+				// if not the first app, check that this app fits in the current row
+				let fit = false;
+				if (csdDataStructure.appLaunch.xLast + csdDataStructure.appLaunch.widthLast
+				+ csdDataStructure.appLaunch.padding + appInstance.width < config.totalWidth) {
+					if (csdDataStructure.appLaunch.yLast + appInstance.height < config.totalHeight) {
+						fit = true;
+					}
+				}
+				// if the app fits, then let use the modified position
+				if (fit) {
+					xApp = csdDataStructure.appLaunch.xLast + csdDataStructure.appLaunch.widthLast
+					+ csdDataStructure.appLaunch.padding;
+					yApp = csdDataStructure.appLaunch.yLast;
+				} else { // need to see if fits on next row or restart.
+					// either way changing row, set this app's height as tallest in row.
+					csdDataStructure.appLaunch.tallestInRow = appInstance.height;
+					// if fits on next row, put it there
+					if (csdDataStructure.appLaunch.yLast + csdDataStructure.appLaunch.tallestInRow
+					+ csdDataStructure.appLaunch.padding + appInstance.height < config.totalHeight) {
+						xApp = csdDataStructure.appLaunch.xStart;
+						yApp = csdDataStructure.appLaunch.yLast + csdDataStructure.appLaunch.tallestInRow
+						+ csdDataStructure.appLaunch.padding;
+					} else { // doesn't fit, restart
+						xApp = csdDataStructure.appLaunch.xStart;
+						yApp = csdDataStructure.appLaunch.yStart;
+					}
+				}
+			}
+			// set the app values
+			appInstance.left = xApp;
+			appInstance.top = yApp;
+			// track the values to position adjust next app
+			csdDataStructure.appLaunch.xLast = appInstance.left;
+			csdDataStructure.appLaunch.yLast = appInstance.top;
+			csdDataStructure.appLaunch.widthLast = appInstance.width;
+			csdDataStructure.appLaunch.heightLast = appInstance.height;
+			if (appInstance.height > csdDataStructure.appLaunch.tallestInRow) {
+				csdDataStructure.appLaunch.tallestInRow = appInstance.height;
+			}
+		}
+		// if the csd action supplied more values to init with
+		if (data.csdLaunch && data.csdInitValues) {
+			appInstance.csdInitValues = data.csdInitValues;
 		}
 
 		handleNewApplication(appInstance, null);
@@ -3952,7 +4019,7 @@ function wsRecordInnerGeometryForWidget(wsio, data) {
 		var radioOptions = radioButtons[i];
 		for (var j = 0; j < radioOptions.length; j++) {
 			SAGE2Items.widgets.addButtonToItem(data.instanceID, radioOptions[j].id, "circle",
-			{x: radioOptions[j].x, y: radioOptions[j].y, r: radioOptions[j].r}, 0);
+				{x: radioOptions[j].x, y: radioOptions[j].y, r: radioOptions[j].r}, 0);
 		}
 	}
 }
@@ -4799,13 +4866,13 @@ function sliceBackgroundImage(fileName, outputBaseName) {
 		var output_base = path.basename(outputBaseName, input_ext);
 		var output = path.join(output_dir, output_base + "_" + i.toString() + output_ext);
 		imageMagick(fileName).crop(
-				config.resolution.width * config.displays[i].width,
-				config.resolution.height * config.displays[i].height, x, y)
-			.write(output, function(err) {
-				if (err) {
-					console.log("error slicing image", err); // throw err;
-				}
-			});
+			config.resolution.width * config.displays[i].width,
+			config.resolution.height * config.displays[i].height, x, y
+		).write(output, function(err) {
+			if (err) {
+				console.log("error slicing image", err); // throw err;
+			}
+		});
 	}
 }
 
@@ -4928,10 +4995,12 @@ function sendConfig(req, res) {
 	// Set type
 	header["Content-Type"] = "application/json";
 	// Allow CORS on the /config route
-	header['Access-Control-Allow-Origin' ]     = req.headers.origin;
-	header['Access-Control-Allow-Methods']     = "GET";
-	header['Access-Control-Allow-Headers']     = "X-Requested-With, X-HTTP-Method-Override, Content-Type, Accept";
-	header['Access-Control-Allow-Credentials'] = true;
+	if (req.headers.origin !== undefined) {
+		header['Access-Control-Allow-Origin' ] = req.headers.origin;
+		header['Access-Control-Allow-Methods'] = "GET";
+		header['Access-Control-Allow-Headers'] = "X-Requested-With, X-HTTP-Method-Override, Content-Type, Accept";
+		header['Access-Control-Allow-Credentials'] = true;
+	}
 	res.writeHead(200, header);
 	// Adding the calculated version into the data structure
 	config.version = SAGE2_version;
@@ -5105,38 +5174,44 @@ function initalizeRemoteSites() {
 	if (config.remote_sites) {
 		remoteSites = new Array(config.remote_sites.length);
 		config.remote_sites.forEach(function(element, index, array) {
-			var protocol = (element.secure === true) ? "wss" : "ws";
-			var wsURL = protocol + "://" + element.host + ":" + element.port.toString();
+			// if we have a valid definition of a remote site (host, port and name)
+			if (element.host && element.port && element.name) {
+				var protocol = (element.secure === true) ? "wss" : "ws";
+				var wsURL = protocol + "://" + element.host + ":" + element.port.toString();
 
-			var rGeom = {};
-			rGeom.w = Math.min((0.5 * config.totalWidth) / remoteSites.length, config.ui.titleBarHeight * 6)
-				- (0.16 * config.ui.titleBarHeight);
-			rGeom.h = 0.84 * config.ui.titleBarHeight;
-			rGeom.x = (0.5 * config.totalWidth) + ((rGeom.w + (0.16 * config.ui.titleBarHeight))
-				* (index - (remoteSites.length / 2))) + (0.08 * config.ui.titleBarHeight);
-			rGeom.y = 0.08 * config.ui.titleBarHeight;
+				var rGeom = {};
+				rGeom.w = Math.min((0.5 * config.totalWidth) / remoteSites.length, config.ui.titleBarHeight * 6)
+					- (0.16 * config.ui.titleBarHeight);
+				rGeom.h = 0.84 * config.ui.titleBarHeight;
+				rGeom.x = (0.5 * config.totalWidth) + ((rGeom.w + (0.16 * config.ui.titleBarHeight))
+					* (index - (remoteSites.length / 2))) + (0.08 * config.ui.titleBarHeight);
+				rGeom.y = 0.08 * config.ui.titleBarHeight;
 
-			// Build the object
-			remoteSites[index] = {
-				name: element.name,
-				wsio: null,
-				connected: "off",
-				geometry: rGeom,
-				index: index
-			};
-			// Create a websocket connection to the site
-			remoteSites[index].wsio = createRemoteConnection(wsURL, element, index);
+				// Build the object
+				remoteSites[index] = {
+					name: element.name,
+					wsio: null,
+					connected: "off",
+					geometry: rGeom,
+					index: index
+				};
+				// Create a websocket connection to the site
+				remoteSites[index].wsio = createRemoteConnection(wsURL, element, index);
 
-			// Add the gemeotry for the button
-			interactMgr.addGeometry("remote_" + index, "staticUI", "rectangle", rGeom,  true, index, remoteSites[index]);
+				// Add the gemeotry for the button
+				interactMgr.addGeometry("remote_" + index, "staticUI", "rectangle", rGeom,  true, index, remoteSites[index]);
 
-			// attempt to connect every 15 seconds, if connection failed
-			setInterval(function() {
-				if (remoteSites[index].connected !== "on") {
-					var rem = createRemoteConnection(wsURL, element, index);
-					remoteSites[index].wsio = rem;
-				}
-			}, 15000);
+				// attempt to connect every 15 seconds, if connection failed
+				setInterval(function() {
+					if (remoteSites[index].connected !== "on") {
+						var rem = createRemoteConnection(wsURL, element, index);
+						remoteSites[index].wsio = rem;
+					}
+				}, 15000);
+			} else {
+				// not a valid site definition, we ignore it
+				console.log(sageutils.header("Remote") + chalk.bold.red('invalid host definition (ignored) ') + element.name);
+			}
 		});
 	}
 }
@@ -5388,7 +5463,7 @@ function processInputCommand(line) {
 		}
 		case 'version': {
 			console.log(sageutils.header("Version") + 'base:', SAGE2_version.base, ' branch:', SAGE2_version.branch,
-					' commit:', SAGE2_version.commit, SAGE2_version.date);
+				' commit:', SAGE2_version.commit, SAGE2_version.date);
 			break;
 		}
 		case 'update': {
@@ -6687,15 +6762,15 @@ function pointerMove(uniqueID, pointerX, pointerY, data) {
 			uniqueID, pointerX, pointerY, 10, 10);
 	}
 
-	// Trick: press ALT key while moving switches interaction mode
-	if (sagePointers[uniqueID] && remoteInteraction[uniqueID].ALT && pressingAlt) {
+	// Trick: press CTRL key while moving switches interaction mode
+	if (sagePointers[uniqueID] && remoteInteraction[uniqueID].CTRL && pressingCTRL) {
 		remoteInteraction[uniqueID].toggleModes();
 		broadcast('changeSagePointerMode', {id: sagePointers[uniqueID].id, mode: remoteInteraction[uniqueID].interactionMode});
-		pressingAlt = false;
-	} else if (sagePointers[uniqueID] && !remoteInteraction[uniqueID].ALT && !pressingAlt) {
+		pressingCTRL = false;
+	} else if (sagePointers[uniqueID] && !remoteInteraction[uniqueID].CTRL && !pressingCTRL) {
 		remoteInteraction[uniqueID].toggleModes();
 		broadcast('changeSagePointerMode', {id: sagePointers[uniqueID].id, mode: remoteInteraction[uniqueID].interactionMode});
-		pressingAlt = true;
+		pressingCTRL = true;
 	}
 
 	sagePointers[uniqueID].updatePointerPosition(data, config.totalWidth, config.totalHeight);
@@ -6731,19 +6806,19 @@ function updatePointerPosition(uniqueID, pointerX, pointerY, data) {
 	if (draggingPartition[uniqueID]) {
 		draggingPartition[uniqueID].ptn.left =
 			pointerX < draggingPartition[uniqueID].start.x ?
-			pointerX : draggingPartition[uniqueID].start.x;
+				pointerX : draggingPartition[uniqueID].start.x;
 
 		draggingPartition[uniqueID].ptn.top =
 			pointerY < draggingPartition[uniqueID].start.y ?
-			pointerY : draggingPartition[uniqueID].start.y;
+				pointerY : draggingPartition[uniqueID].start.y;
 
 		draggingPartition[uniqueID].ptn.width =
 			pointerX < draggingPartition[uniqueID].start.x ?
-			draggingPartition[uniqueID].start.x - pointerX : pointerX - draggingPartition[uniqueID].start.x;
+				draggingPartition[uniqueID].start.x - pointerX : pointerX - draggingPartition[uniqueID].start.x;
 
 		draggingPartition[uniqueID].ptn.height =
 			pointerY < draggingPartition[uniqueID].start.y ?
-			draggingPartition[uniqueID].start.y - pointerY : pointerY - draggingPartition[uniqueID].start.y;
+				draggingPartition[uniqueID].start.y - pointerY : pointerY - draggingPartition[uniqueID].start.y;
 
 		partitions.updatePartitionGeometries(draggingPartition[uniqueID].ptn.id, interactMgr);
 		broadcast('partitionMoveAndResizeFinished', draggingPartition[uniqueID].ptn.getDisplayInfo());
@@ -7339,7 +7414,7 @@ function moveAndResizeApplicationWindow(resizeApp, portalId) {
 	var im = findInteractableManager(resizeApp.elemId);
 	drawingManager.applicationMoved(resizeApp.elemId, resizeApp.elemLeft, resizeApp.elemTop);
 	drawingManager.applicationResized(resizeApp.elemId, resizeApp.elemWidth, resizeApp.elemHeight + titleBarHeight,
-										{x: resizeApp.elemLeft, y: resizeApp.elemTop});
+		{x: resizeApp.elemLeft, y: resizeApp.elemTop});
 	im.editGeometry(resizeApp.elemId, "applications", "rectangle",
 		{x: resizeApp.elemLeft, y: resizeApp.elemTop, w: resizeApp.elemWidth, h: resizeApp.elemHeight + titleBarHeight});
 	handleApplicationResize(resizeApp.elemId);
@@ -7512,19 +7587,19 @@ function pointerRelease(uniqueID, pointerX, pointerY, data) {
 
 		draggingPartition[uniqueID].ptn.left =
 			pointerX < draggingPartition[uniqueID].start.x ?
-			pointerX : draggingPartition[uniqueID].start.x;
+				pointerX : draggingPartition[uniqueID].start.x;
 
 		draggingPartition[uniqueID].ptn.top =
 			pointerY < draggingPartition[uniqueID].start.y ?
-			pointerY : draggingPartition[uniqueID].start.y;
+				pointerY : draggingPartition[uniqueID].start.y;
 
 		draggingPartition[uniqueID].ptn.width =
 			pointerX < draggingPartition[uniqueID].start.x ?
-			draggingPartition[uniqueID].start.x - pointerX : pointerX - draggingPartition[uniqueID].start.x;
+				draggingPartition[uniqueID].start.x - pointerX : pointerX - draggingPartition[uniqueID].start.x;
 
 		draggingPartition[uniqueID].ptn.height =
 			pointerY < draggingPartition[uniqueID].start.y ?
-			draggingPartition[uniqueID].start.y - pointerY : pointerY - draggingPartition[uniqueID].start.y;
+				draggingPartition[uniqueID].start.y - pointerY : pointerY - draggingPartition[uniqueID].start.y;
 
 		// if the partition is much too small (most likely created by mistake)
 		if (draggingPartition[uniqueID].ptn.width < 25 || draggingPartition[uniqueID].ptn.height < 25) {
@@ -8830,7 +8905,7 @@ function handleNewApplication(appInstance, videohandle) {
 	interactMgr.addGeometry(appInstance.id, "applications", "rectangle", {
 		x: appInstance.left, y: appInstance.top,
 		w: appInstance.width, h: appInstance.height + config.ui.titleBarHeight},
-		true, zIndex, appInstance);
+	true, zIndex, appInstance);
 
 	var cornerSize   = 0.2 * Math.min(appInstance.width, appInstance.height);
 	var oneButton    = Math.round(config.ui.titleBarHeight) * (300 / 235);
@@ -9055,26 +9130,26 @@ function omi_pointerChangeMode(uniqueID) {
 
 // Set callback functions so Omicron can generate SAGEPointer events
 omicronManager.setCallbacks(
-		sagePointers,
-		createSagePointer,
-		showPointer,
-		pointerPress,
-		pointerMove,
-		pointerPosition,
-		hidePointer,
-		pointerRelease,
-		pointerScrollStart,
-		pointerScroll,
-		pointerScrollEnd,
-		pointerDblClick,
-		pointerCloseGesture,
-		keyDown,
-		keyUp,
-		keyPress,
-		createRadialMenu,
-		omi_pointerChangeMode,
-		remoteInteraction
-	);
+	sagePointers,
+	createSagePointer,
+	showPointer,
+	pointerPress,
+	pointerMove,
+	pointerPosition,
+	hidePointer,
+	pointerRelease,
+	pointerScrollStart,
+	pointerScroll,
+	pointerScrollEnd,
+	pointerDblClick,
+	pointerCloseGesture,
+	keyDown,
+	keyUp,
+	keyPress,
+	createRadialMenu,
+	omi_pointerChangeMode,
+	undefined, // sendKinectInput
+	remoteInteraction);
 omicronManager.linkDrawingManager(drawingManager);
 
 /* ****** Radial Menu section ************************************************************** */
@@ -9150,7 +9225,7 @@ function setRadialMenuPosition(uniqueID, pointerX, pointerY) {
 
 	// Update the interactable geometry
 	interactMgr.editGeometry(uniqueID + "_menu_radial", "radialMenus", "circle",
-			{x: existingRadialMenu.left, y: existingRadialMenu.top, r: existingRadialMenu.radialMenuSize.y / 2});
+		{x: existingRadialMenu.left, y: existingRadialMenu.top, r: existingRadialMenu.radialMenuSize.y / 2});
 	showRadialMenu(uniqueID);
 	// Send the updated radial menu state to the display clients (and set menu visible)
 	broadcast('updateRadialMenuPosition', existingRadialMenu.getInfo());
@@ -9200,8 +9275,8 @@ function radialMenuEvent(data) {
 		if (data.menuState.action !== undefined && data.menuState.action.type === "saveSession") {
 			var ad    = new Date();
 			var sname = sprint("session_%4d_%02d_%02d_%02d_%02d_%02s",
-							ad.getFullYear(), ad.getMonth() + 1, ad.getDate(),
-							ad.getHours(), ad.getMinutes(), ad.getSeconds());
+				ad.getFullYear(), ad.getMonth() + 1, ad.getDate(),
+				ad.getHours(), ad.getMinutes(), ad.getSeconds());
 			saveSession(sname);
 		} else if (data.menuState.action !== undefined && data.menuState.action.type === "tileContent") {
 			tileApplications();
@@ -9321,12 +9396,24 @@ function toggleStickyPin(appId) {
 
 function showStickyPin(app) {
 	SAGE2Items.applications.editButtonVisibilityOnItem(app.id, "pinButton", true);
-	broadcast('showStickyPin', app);
+
+	// only send required fields (sending full app can throw error from circular JSON
+	// if it is in a Partition -- I assume it could happen in other cases as well)
+	broadcast('showStickyPin', {
+		id: app.id,
+		sticky: app.sticky
+	});
 }
 
 function hideStickyPin(app) {
 	SAGE2Items.applications.editButtonVisibilityOnItem(app.id, "pinButton", false);
-	broadcast('hideStickyPin', app);
+
+	// only send required fields (sending full app can throw error from circular JSON
+	// if it is in a Partition -- I assume it could happen in other cases as well)
+	broadcast('hideStickyPin', {
+		id: app.id,
+		sticky: app.sticky
+	});
 }
 
 
@@ -9648,29 +9735,21 @@ function csdLaunchAppWithValues(wsio, data) {
 	var appLoadData = { };
 	appLoadData.application = fullpath;
 	appLoadData.user = wsio.id; // needed for the wsLoadApplication function
-	var whatTheNewAppIdShouldBe = "app_" + getUniqueAppId.count;
-
+	appLoadData.wasCsdPositionStated = false;
+	appLoadData.csdLaunch = true;
+	if (data.csdInitValues) {
+		appLoadData.csdInitValues = data.csdInitValues;
+	}
 	// If the launch location is defined, use it, otherwise use the stagger position.
 	if (data.xLaunch !== null && data.xLaunch !== undefined) {
 		appLoadData.position = [data.xLaunch, data.yLaunch];
-	} else {
-		// stagger the start location to prevent them from stacking on top of each other.
-		// this is just a temporary solution.
-		// percents
-		appLoadData.position = [csdDataStructure.xAppLaunchCoordinate, csdDataStructure.yAppLaunchCoordinate];
-		// after launch reset position
-		csdDataStructure.xAppLaunchCoordinate += 600;
-		if (csdDataStructure.xAppLaunchCoordinate >= config.totalWidth - 500) {
-			csdDataStructure.yAppLaunchCoordinate += 600;
-			csdDataStructure.xAppLaunchCoordinate = 10;
-			if (csdDataStructure.yAppLaunchCoordinate >= config.totalHeight - 500) {
-				csdDataStructure.yAppLaunchCoordinate = 100;
-			}
-		}
+		appLoadData.wasCsdPositionStated = true;
 	}
-
+	// get this before the app is created. id start from 0. count is the next one
+	var whatTheNewAppIdShouldBe = "app_" + getUniqueAppId.count;
 	// call the previously made wsLoadApplication funciton and give it the required data.
 	wsLoadApplication(wsio, appLoadData);
+
 	// if a data.func is defined make a delayed call to it on the app. Otherwise, its just an app launch.
 	if (data.func !== undefined) {
 		setTimeout(
@@ -9697,8 +9776,7 @@ function csdLaunchAppWithValues(wsio, data) {
 						}
 					}
 				}
-			}
-		, 400); // milliseconds how low can this value be to ensure it works?
+			}, 400); // milliseconds how low can this value be to ensure it works?
 	} // end if data.func !== undefined
 } // end csdLaunchAppWithValues
 
@@ -9755,10 +9833,6 @@ var csdDataStructure = {};
 	csdDataStructure.allNamesOfValues = [];
 		strings to denote the names used for values
 		order is based on when it was first set (not alphabetical)
-	csdDataStructure.xAppLaunchCoordinate = 0.05;
-		for the csdLaunchAppWithValues positioning
-	csdDataStructure.yAppLaunchCoordinate = 0.05;
-		for the csdLaunchAppWithValues positioning
 
 	The allValues is comprised of entry objects
 	{
@@ -9782,8 +9856,15 @@ var csdDataStructure = {};
 csdDataStructure.allValues = {};
 csdDataStructure.numberOfValues = 0;
 csdDataStructure.allNamesOfValues = [];
-csdDataStructure.xAppLaunchCoordinate = 10;
-csdDataStructure.yAppLaunchCoordinate = 100;
+csdDataStructure.appLaunch = {};
+csdDataStructure.appLaunch.xStart = 10;
+csdDataStructure.appLaunch.yStart = 50;
+csdDataStructure.appLaunch.xLast = -1;
+csdDataStructure.appLaunch.yLast = -1;
+csdDataStructure.appLaunch.widthLast = -1;
+csdDataStructure.appLaunch.heightLast = -1;
+csdDataStructure.appLaunch.tallestInRow = -1;
+csdDataStructure.appLaunch.padding = 20;
 
 /**
 Will set the named value.
@@ -9813,6 +9894,10 @@ function csdSetValue(wsio, data) {
 	} else {
 		// value exists, just update it.
 		csdDataStructure.allValues[ "" + data.nameOfValue ].value = data.value;
+		// potentially the new value isn't the same and a description can be useful
+		if (data.description) {
+			csdDataStructure.allValues[ "" + data.nameOfValue ].description = data.description;
+		}
 	}
 	// send to each of the subscribers.
 	var dataForApp = {};
@@ -9832,6 +9917,8 @@ function csdSetValue(wsio, data) {
 
 /**
 Will send back the named value if it exists.
+Should it send back null if the value doesn't exist?
+The current behavior is do nothing. Maybe sending null isn't bad.
 
 Needs
 	data.nameOfValue
@@ -9856,8 +9943,8 @@ function csdGetValue(wsio, data) {
 }
 
 /**
-Adds the app to the named value as a subscriber. However the named value must exist.
-This will NOT automatically add a subscriber if the values doesn't exist but is added later.
+Adds the app to the named value as a subscriber.
+Changed from previous behavior. If the value doesn't exist, it will create a "blank" value and subscribe to it.
 
 Needs
 	data.nameOfValue
@@ -9865,20 +9952,34 @@ Needs
 	data.func
 */
 function csdSubscribeToValue(wsio, data) {
-	// don't do anything if this isn't filled out.
+	// Need to have a name. Without a name, nothing can be done.
 	if (data.nameOfValue === undefined || data.nameOfValue === null) {
 		return;
 	}
 	// also don't do anything if the value doesn't exist
 	if (csdDataStructure.allValues["" + data.nameOfValue] === undefined) {
-		return;
+		data.value = null; // nothing, it'll be replace later if at all
+		csdSetValue(wsio, data);
 	}
-	// make the new subscriber entry
-	var newCsdSubscriber  = {};
-	newCsdSubscriber.app  = data.app;
-	newCsdSubscriber.func = data.func;
-	// add it to that value
-	csdDataStructure.allValues[ "" + data.nameOfValue ].subscribers.push(newCsdSubscriber);
+
+	let foundSubscriber = false;
+	for (let i = 0; i < csdDataStructure.allValues[ "" + data.nameOfValue ].subscribers.length; i++) {
+		// do not double add if the app and function are the same this permits same app diff function
+		if (csdDataStructure.allValues[ "" + data.nameOfValue ].subscribers[i].app == data.app
+			&& csdDataStructure.allValues[ "" + data.nameOfValue ].subscribers[i].func == data.func) {
+			foundSubscriber = true;
+			break;
+		}
+	}
+	// if app is not already subscribing
+	if (!foundSubscriber) {
+		// make the new subscriber entry
+		var newCsdSubscriber  = {};
+		newCsdSubscriber.app  = data.app;
+		newCsdSubscriber.func = data.func;
+		// add it to that value
+		csdDataStructure.allValues[ "" + data.nameOfValue ].subscribers.push(newCsdSubscriber);
+	}
 }
 
 
@@ -9988,7 +10089,7 @@ function reportIfCanWallScreenshot() {
 	var numOfDisplayClients = config.displays.length;
 	var canWallScreenshot = 0;
 	// check if all display clients can take a screenshot
-	for (var i = 0; i < clients.length; i++) {
+	for (let i = 0; i < clients.length; i++) {
 		if (clients[i].clientType === "display" && clients[i].capableOfScreenshot === true) {
 			canWallScreenshot++;
 		}
@@ -10210,12 +10311,11 @@ function wsWallScreenshotFromDisplay(wsio, data) {
 					// filename
 					name: fname}],
 					// position and size
-					[0, 0, config.totalWidth / 4],
-					// username and color
-					"screenshot", "#B4B4B4",
-					// to be opened afterward
-					true
-				);
+				[0, 0, config.totalWidth / 4],
+				// username and color
+				"screenshot", "#B4B4B4",
+				// to be opened afterward
+				true);
 				// Delete the temporary files
 				sageutils.deleteFiles(path.join(mainFolder.path, "tmp", "wallScreenshot_*"));
 			}
@@ -10230,13 +10330,12 @@ function wsWallScreenshotFromDisplay(wsio, data) {
 			path: path.join(mainFolder.path, "tmp", fileSaveObject.fileName),
 			// file name
 			name: fileSaveObject.fileName}],
-			// position and size
-			[0, 0, config.totalWidth / 4],
-			// username and color
-			"screenshot", "#B4B4B4",
-			// to be opened afterward
-			true
-		);
+		// position and size
+		[0, 0, config.totalWidth / 4],
+		// username and color
+		"screenshot", "#B4B4B4",
+		// to be opened afterward
+		true);
 		// Delete the temporary files
 		sageutils.deleteFiles(path.join(mainFolder.path, "tmp", "wallScreenshot_*"));
 	}

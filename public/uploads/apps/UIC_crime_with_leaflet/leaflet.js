@@ -201,7 +201,7 @@ var leaflet = SAGE2_App.extend({
 		var collection = data.collection;
 		// var today = data.today;
 
-		var parseDate = d3.time.format("%Y-%m-%dT%H:%M:%S").parse;
+		var parseDate = d3.timeFormat("%Y-%m-%dT%H:%M:%S");
 
 		// the today that comes along through the function is not in the same format
 		// this one will be today in javascript date format

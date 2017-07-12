@@ -1,0 +1,136 @@
+From 'april2017' to 'HEAD'
+--------------------------
+
+New
+~~~
+- Special case to load unity webgl output into a webview: call your app
+  'UnityLoader'. See example in the appstore as 'Unity Test' [Luc
+  Renambot]
+- Zip files with UnityLoader.js in instruction file are extracted like
+  custom apps, but loaded as local Webviews lint: lint. [Arthur
+  Nishimoto]
+- Added node-omicron Kinect parsing. [Arthur Nishimoto]
+- Reset (to 1) the desktop window scaling inside electron. It should
+  help especially for Windows users with scaling over 100%. [Luc
+  Renambot]
+- Adding ChangeLog files, from begining to v1, from v1 to v2, and v2 to
+  april2017 (made usinggitchangelog) [Luc Renambot]
+
+Changes
+~~~~~~~
+- Switching to luc's node-demux version that handles binary package
+  install (not yet tested on all platforms) [Luc Renambot]
+- Udpated docker file to use Nodejs V8.x. [Luc Renambot]
+- Updated node versions for binary node modules (node-demux) [Luc
+  Renambot]
+- Updating to node v8.x for Windows build. [Luc Renambot]
+- Adding user forum link in the help menu and the links page. [Luc
+  Renambot]
+- Added package-lock.json in the .gitignore file. [Luc Renambot]
+- Update pdf library to pdfjs-1.7.225. [Luc Renambot]
+- Added an option to build ChangeLog into the 'doc' folder. [Luc
+  Renambot]
+- Replaced CAVE2 by sage2server.evl.uic.edu as example of remote sites
+  in default sabi.js configuration for SAGE2 server (we get a lot of
+  requests to CAVE2) [Luc Renambot]
+- Add the code documentation to the preload function. [Luc Renambot]
+- Moved older ChangeLog files into 'doc' folder. [Luc Renambot]
+
+Fix
+~~~
+- Fix exif parsing of large files, like geojson. [Luc Renambot]
+- Set webview url at the end of init function just to be sure. [Luc
+  Renambot]
+- Make sure that local urls work. [Luc Renambot]
+- Changing some settings in electron main window. [Luc Renambot]
+- Navigation remains in the webview even if new window requested. That
+  fixes issues with login (for hangouts for instance) [Luc Renambot]
+- Set a partition (session) per webview app, so zoom is not shared
+  between views from the same origin. Fixes issue #98 but might cause
+  other issues (like login and such). [Luc Renambot]
+- Electron clients (display and audio) will try to connect to server
+  every 2 seconds. Should fix #97. [Luc Renambot]
+- Ignore git repositories when checking if a package is up to date. [Luc
+  Renambot]
+- Updated sabi to socket.io v2.x. [Luc Renambot]
+- Better handle malformed URLs to access files outside the SAGE2
+  folders. [Luc Renambot]
+- Fixes issue #96 by having sabi launch using the host in the config
+  file. This will require a recopy of the launch script. Easiest way to
+  do this is delete the SAGE2_Media\sabiConfig folder and relaunch sabi
+  to have it copy the files over automatically. The bat file was
+  additive, so it will not break previous installations if they upgrade.
+  But the image download error will remain until the bat file gets
+  replaced. [D K]
+- Sabi visual adjustments and the incorrect update button. [D K]
+- Reset desktop window scaling only on Windows (macos does the right
+  thing) [Luc Renambot]
+- Update client electron file from the master. [Luc Renambot]
+- New npm v5 doesnt like the indentation in package.json. [Luc Renambot]
+- Fix undefined Access-Control-Allow-Origin in the server (exposed by
+  node v8.0) [Luc Renambot]
+- Small fix to an outgoing WS message from sticky note code to prevent
+  circular JSON (addresses #94) [Andrew Burks]
+- On mobile, set 'click' to open menus in media browser. [Luc Renambot]
+- Add a few more reserved characters to sanitize filenames. Should fix
+  #91 hopefully. [Luc Renambot]
+- Fixes issue #92 by staying in version 1 of socket.io. [Luc Renambot]
+- Removed 'twit' package as dependency. [Luc Renambot]
+- Check if we have a valid remote site definition before adding it. [Luc
+  Renambot]
+- Fixing building process of display client for Windows. [Luc Renambot]
+- Fixing building process of display client for Windows. [Luc Renambot]
+- Fixing building process of display client for Windows. [Luc Renambot]
+- Fixing the build script for display client for windows. [Luc Renambot]
+- Tweak the display client build process with appveyor. [Luc Renambot]
+- Add the SAGE2 runtime for webview into the build process. [Luc
+  Renambot]
+- Delete old ChangeLog files. [Luc Renambot]
+- Cleanup changelogs. [Luc Renambot]
+
+Other
+~~~~~
+- Merge branch 'UnityWebview' [Luc Renambot]
+- Lint: linting webview. [Luc Renambot]
+- Doc: updated ChangeLog file up to June 15, 2017. [Luc Renambot]
+- Lint: linting. [Luc Renambot]
+- Lint: update the bitbucket docker image to node:latest. [Luc Renambot]
+- Lint: some new linting. [Luc Renambot]
+- Appveyor.yml edited online with Bitbucket. [Luc Renambot]
+- Merge branch 'clientWindows' [Luc Renambot]
+- Appveyor.yml. [Luc Renambot]
+- Package.json. [Luc Renambot]
+- Adding a appveyor file to build Windows display clients. [Luc
+  Renambot]
+- Disable security in webview: it seems to be a problem with some sites,
+  especially on Windows. Not sure why. [Luc Renambot]
+- Allow ALT-click to follow into a new webview. Not tested on Windows
+  (maybe it's CTRL-click on Windows). [Luc Renambot]
+- Changing from ALT to CTRL to move windows without changing pointer
+  mode: while pressing CTRL, pointer changes to window manipulation
+  mode. [Luc Renambot]
+- Add tooltips to the menus. [Luc Renambot]
+- Change zIndex of some popups. [Luc Renambot]
+- Change the zIndex of UI canvas to 10000 to 1000 (webix tooltips are at
+  10000) [Luc Renambot]
+- Updating client with electron.js. [Luc Renambot]
+- Deleting old electron client folder. [Luc Renambot]
+- New menu and callback system, easier to create and move items. Added
+  the functionalities of the 'arrangement' button. [Luc Renambot]
+- Cleaning. [Luc Renambot]
+- Remove the 'arrangement' button. [Luc Renambot]
+- Pdf remote site updates without setTimeout. [D K]
+- Server wall screenshot code reverted. Assisted config will now set
+  display 0 to have width and height equal to layout width and height.
+  Sabi will not modify config before launching any more. [D K]
+- Updating sabijs config writes. [D K]
+- Linting. [Andrew Burks]
+- Changed moveItemWithAnimation function to use vanilla js selectors and
+  style property assignment as opposed to d3. [Andrew Burks]
+- Update the webix widget library. [Luc Renambot]
+- Dockerfile. [Luc Renambot]
+- Trying a smaller dockerfile. [Luc Renambot]
+- Apparently ws has no more binary dependencies (for a while). So
+  updating the install process. [Luc Renambot]
+
+

@@ -412,9 +412,11 @@ PartitionList.prototype.createPartitionGeometries = function(newID, iMgr) {
 	// TODO: change ui title bar height
 	var zIndex = this.count;
 	iMgr.addGeometry(newID, "partitions", "rectangle", {
-		x: newPtn.left, y: newPtn.top,
-		w: newPtn.width, h: newPtn.height + titleBarHeight},
-		true, zIndex, newPtn);
+		x: newPtn.left,
+		y: newPtn.top,
+		w: newPtn.width,
+		h: newPtn.height + titleBarHeight
+	}, true, zIndex, newPtn);
 
 	// Add geometries to this interactable
 	this.interactable.addLayer(newID, 0);
