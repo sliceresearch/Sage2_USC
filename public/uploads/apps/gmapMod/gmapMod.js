@@ -664,6 +664,20 @@ var gmapMod = SAGE2_App.extend({
 		var entries = [];
 
 		var entry   = {};
+
+		entry = {};
+		entry.description = "Zoom in";
+		entry.callback = "contextMenuZoom";
+		entry.parameters = {value: 1};
+		entries.push(entry);
+
+		entry = {};
+		entry.description = "Zoom out";
+		entry.callback = "contextMenuZoom";
+		entry.parameters = {value: -1};
+		entries.push(entry);
+
+		entry = {};
 		// label of them menu
 		entry.description = "Type a location:";
 		// callback
@@ -737,6 +751,10 @@ var gmapMod = SAGE2_App.extend({
 		}
 
 		return entries;
+	},
+
+	contextMenuZoom: function(responseObject) {
+		this.relativeZoom(responseObject.value);
 	},
 
 	/**

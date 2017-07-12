@@ -1,0 +1,27 @@
+{
+	"main_script": "frameToTimeApp.js",
+	"width": 300,
+	"height": 500,
+	"animation": false,
+	"resize": "free",
+	"dependencies": [
+	],
+	"load": {
+		"startTimeValue": {
+			"year": -1,
+			"month": -1,
+			"day": -1
+		},
+		"endTimeValue": {
+			"year": -1,
+			"month": -1,
+			"day": -1
+		}
+	},
+	"title": "Video Frame To Time",
+	"version": "1.0.0",
+	"description": "Testing data passing with frame conversion to time",
+	"keywords": [  ],
+	"author": "Dylan Kobayashi <dylank@hawaii.edu>",
+	"license": "SAGE2-Software-License"
+}

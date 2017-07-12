@@ -31,7 +31,7 @@ function addReader(registryReaders) {
 
 		debug: {
 			any: true,
-			recursion: true,
+			recursion: false,
 			foundDt: true
 		},
 

@@ -17,11 +17,15 @@ var sageutils        = require('../src/node-utils');               // for print 
 // readers
 var jsonReader  = require('../src/dataFormatReaders/readJson'); // contains data format information
 var s2GeoLocationReader  = require('../src/dataFormatReaders/readS2GeoLocation');
+var S2MovieFrameReader  = require('../src/dataFormatReaders/readS2MovieFrame');
+var S2DateReader  = require('../src/dataFormatReaders/readS2Date');
 
 // data types
 var dataTypeGps = require('../src/dataTypes/dataTypeGps');
 var dataTypeLatitude = require('../src/dataTypes/dataTypeLatitude');
 var dataTypeLongitude = require('../src/dataTypes/dataTypeLongitude');
+var dataTypeVideoFrame = require('../src/dataTypes/dataTypeVideoFrame');
+var dataTypeDate = require('../src/dataTypes/dataTypeDate');
 
 var hasBeenLoaded = false;
 var dataTypeRegistry = [];
@@ -68,10 +72,19 @@ function loadDataTypes() {
 		hasBeenLoaded = true;
 		console.log(sageutils.header('DataRegistry') + "Loading Types..");
 		loadDataTypeRegistry();
-		console.log(sageutils.header('DataRegistry') + ".. loaded " + dataTypeRegistry.length);
+		var names = "";
+		for (let i = 0; i < dataTypeRegistry.length; i++) {
+			names += dataTypeRegistry[i].dataTypeRegistryName + ", ";
+		}
+		console.log(sageutils.header('DataRegistry') + ".. loaded " + dataTypeRegistry.length + ":" + names);
 		console.log(sageutils.header('DataRegistry') + "Loading Format Reader..");
 		loadFormatReaders();
-		console.log(sageutils.header('DataRegistry') + ".. loaded " + Object.keys(formatReaders).length);
+		var keys = Object.keys(formatReaders);
+		names = "";
+		for (let i = 0; i < keys.length; i++) {
+			names += keys[i] + ", ";
+		}
+		console.log(sageutils.header('DataRegistry') + ".. loaded " + keys.length + ":" + names);
 	}
 } // loadDataTypes
 
@@ -91,6 +104,8 @@ function loadFormatReaders() {
 	// add format readers
 	jsonReader.addReader(formatReaders);
 	s2GeoLocationReader.addReader(formatReaders);
+	S2MovieFrameReader.addReader(formatReaders);
+	S2DateReader.addReader(formatReaders);
 }
 
 /**
@@ -102,6 +117,8 @@ function loadDataTypeRegistry() {
 	registerDataType(dataTypeGps.getDescription());
 	registerDataType(dataTypeLatitude.getDescription());
 	registerDataType(dataTypeLongitude.getDescription());
+	registerDataType(dataTypeVideoFrame.getDescription());
+	registerDataType(dataTypeDate.getDescription());
 
 }
 
@@ -585,6 +602,7 @@ function convertFormatRangeToSet(sourceObject, dataTypesInSource,
 	}
 
 	debugPrint("  Starting review of destination original element to see if they fit in range", "convertFormatRangeToSet");
+	debugDir(valueSmallLarge, "convertFormatRangeToSet");
 	// keysOfSmallLarge will contain names of type found in source and destination
 	var keysOfSmallLarge = Object.keys(valueSmallLarge);
 	var destElementValue, withinRange;

@@ -16,26 +16,25 @@
 /**
  * Adds this reader to the registry.
  * 
- * The s2GeoLocation format is a json object that looks like the following:
+ * The s2MovieFrame format is a json object that looks like the following:
  * {
- *   lat: float,
- *   lng: float
+ *   frame: int,
+ *   maxFrame: int,
+ *   fps: float // unsure how there could be partial frames per second.
  * }
  * 
  * @method addReader
  * @param {Object} registryReaders - Object to put the reader onto.
  */
 function addReader(registryReaders) {
-	registryReaders.s2GeoLocation = {
+	registryReaders.s2MovieFrame = {
 
 		// this particular format only contains the following data types.
 		availableDataTypes: [
-			"dataTypeGps",
-			"dataTypeLatitude",
-			"dataTypeLongitude"
+			"dataTypeVideoFrame"
 		],
 		requiredDataTypes: [
-			"dataTypeGps"
+			"dataTypeVideoFrame"
 		],
 
 		debug: {
@@ -46,7 +45,7 @@ function addReader(registryReaders) {
 
 		debugPrint: function(line, type = "any") {
 			if (this.debug[type]) {
-				console.log("dbug>s2geoLoc>" + line);
+				console.log("dbug>reader>s2MovieFrame>" + line);
 			}
 		},
 
@@ -71,47 +70,50 @@ function addReader(registryReaders) {
 		generateRangeValuesFromData: function(smallLargeInfo) {
 			//geo location needs gps.
 
-			var smallValuesFound = smallLargeInfo.dataTypeGps[0].getValue(); // 0 should be small
-			var largeValuesFound = smallLargeInfo.dataTypeGps[1].getValue(); // dataTypeGps return {latitude, longitude}
+			var smallValuesFound = smallLargeInfo.dataTypeVideoFrame[0].getValue(); // 0 should be small
+			var largeValuesFound = smallLargeInfo.dataTypeVideoFrame[1].getValue(); //
 			var small = {
-				lat: smallValuesFound.latitude,
-				lng: smallValuesFound.longitude
+				frame: smallValuesFound.value,
+				maxFrame: smallValuesFound.maxFrame,
+				fps: smallValuesFound.fps,
 			};
 			var large = {
-				lat: largeValuesFound.latitude,
-				lng: largeValuesFound.longitude
+				frame: largeValuesFound.value,
+				maxFrame: largeValuesFound.maxFrame,
+				fps: largeValuesFound.fps,
 			}
 
-			if (!small.lat || !small.lng || !large.lat || !large.lng) {
-				console.log("Error>s2GeoLocation> generateRangeValuesFromData received an incomplete object");
+			if (!small.frame || !small.maxFrame || !small.fps
+				|| !large.frame || !large.maxFrame  || !large.fps) {
+				console.log("Error>s2MovieFrame>generateRangeValuesFromData received an incomplete object");
 				console.dir(small);
 				console.dir(large);
 				console.dir(smallLargeInfo);
 			}
-			// the reason for large small order has to do with the bound formatting of maps objects, they seem to want NE, SW order
-			// NE has larger values than SW
-			return [large, small];
+
+			return [small, large];
 		},
 
 		/**
-		 * Will attempt to extract datatype information from a specific element.
+		 * Will attempt to extract datatype information to make an element.
 		 *
 		 * @method makeElementFromValues
-		 * @param {Object} valueMap - all values needed to make one of this.
-		 * @return {Object} dataTypeContainer - A filled out data type container for the requested type.
+		 * @param {Object} valueMap - all values needed to make one of this. Object with mapped data type containers.
+		 * @return {Object} element - A filled out element.
 		 */
 		makeElementFromValues: function(valueMap) {
 			// check all required values exist:
-			if (!valueMap.dataTypeGps) {
-				console.log("Unable to create s2GeoLocation from given values");
+			if (!valueMap.dataTypeVideoFrame) {
+				console.log("Unable to create s2MovieFrame from given values");
 				console.dir(valueMap);
 			}
 			// get the sage converted structure
-			var sageConvertedGpsValue = valueMap.dataTypeGps.getValue();
+			var sageConvertedValue = valueMap.dataTypeVideoFrame.getValue();
 			// create element to pass back
 			var element = {
-				lat: sageConvertedGpsValue.latitude,
-				lng: sageConvertedGpsValue.longitude
+				frame: sageConvertedValue.value,
+				maxFrame: sageConvertedValue.maxFrame,
+				fps: sageConvertedValue.fps,
 			}
 			return element;
 		},
@@ -143,23 +145,20 @@ function addReader(registryReaders) {
 
 			// this format can only give back 
 			if (!this.availableDataTypes.includes(dataTypeNameToFind)) {
-				console.log("ERROR: s2GeoLocation doesn't contain " + dataTypeNameToFind);
+				console.log("ERROR>s2MovieFrame> doesn't contain " + dataTypeNameToFind);
 			} else {
 				registryEntry = registryMap[dataTypeNameToFind];
 				dataTypeContainer = registryEntry.createContainer();
 			}
 
 			// some hard coding since there are really only three data types
-			if (dataTypeNameToFind === "dataTypeGps") {
+			if (dataTypeNameToFind === "dataTypeVideoFrame") {
 				// its still recursive. is there a point?
-				dataTypeContainer.dataTypeLatitude = this.getFromElement("dataTypeLatitude", element, descriptionArray, registryArray, registryMap);
-				dataTypeContainer.dataTypeLongitude = this.getFromElement("dataTypeLongitude", element, descriptionArray, registryArray, registryMap);
-			} else if (dataTypeNameToFind === "dataTypeLatitude") {
-				dataTypeContainer.value = +element.lat;
-			} else if (dataTypeNameToFind === "dataTypeLongitude") {
-				dataTypeContainer.value = +element.lng;
+				dataTypeContainer.value = +element.frame;
+				dataTypeContainer.maxFrame = +element.maxFrame;
+				dataTypeContainer.fps = +element.fps;
 			} else {
-				console.log("ERROR: s2GeoLocation doesn't contain " + dataTypeNameToFind);
+				console.log("ERROR: s2MovieFrame doesn't contain " + dataTypeNameToFind);
 				return false;
 			}
 
@@ -187,14 +186,14 @@ function addReader(registryReaders) {
 			if (Array.isArray(valueObject.value)) {
 				element1 = valueObject.value[0];
 			} else {
-				element1 = valueObject; // the descriptor was s2GeoLocation, so this better be a s2GeoLocation object.
+				element1 = valueObject; // the descriptor was s2MovieFrame, so this better be a s2MovieFrame object.
 			}
 			if (typeof element1 !== "object") {
 				console.log();
 				console.log();
 				console.log();
 				console.log();
-				console.log("Specified format was s2GeoLocation, but did not get a s2GeoLocation object");
+				console.log("Specified format was s2MovieFrame, but did not get object");
 				console.dir(valueObject);
 			}
 			// map will be returned, then need to know what goes in it
@@ -202,34 +201,24 @@ function addReader(registryReaders) {
 			// var hasGoneThroughKey = [];
 
 			// for each of the data types search for them in the element's structure
-			var indexOfGps = -1;
-			var indexOfLatitude = -1;
-			var indexOfLongitude = -1;
+			var indexOfVideoFrame = -1;
 			for (let i = 0; i < registryStatus.length; i++) {
-				if (registryArray[i].dataTypeRegistryName === "dataTypeGps") {
-					indexOfGps = i;
-				} else if (registryArray[i].dataTypeRegistryName === "dataTypeLatitude") {
-					registryStatus[i] = registryArray[i].createContainer();
-					registryStatus[i].value = element1.lat;
-					if (registryStatus[i].value)
-					registryStatus[i].pathToGetData = ["lat"];
-					indexOfLatitude = i;
-				} else if (registryArray[i].dataTypeRegistryName === "dataTypeLongitude") {
-					registryStatus[i] = registryArray[i].createContainer();
-					registryStatus[i].value = element1.lat;
-					registryStatus[i].pathToGetData = ["lng"];
-					indexOfLongitude = i;
+				if (registryArray[i].dataTypeRegistryName === "dataTypeVideoFrame") {
+					indexOfVideoFrame = i;
 				}
 			}
-			if (indexOfGps === -1 || indexOfLatitude === -1 || indexOfLongitude === -1) {
-				console.log("Error: s2GeoLocation needs an datatype that isn't registered");
-				console.log("dataTypeGps:" + (indexOfGps === -1 ? "unavailable" : "Found"));
-				console.log("dataTypeLatitude:" + (indexOfLatitude === -1 ? "unavailable" : "Found"));
-				console.log("dataTypeLongitude:" + (indexOfLongitude === -1 ? "unavailable" : "Found"));
+			if (indexOfVideoFrame === -1) {
+				console.log("Error: s2MovieFrame needs an datatype that isn't registered");
+				console.log("indexOfVideoFrame:" + (indexOfVideoFrame === -1 ? "unavailable" : "Found"));
 			} else {
-				registryStatus[indexOfGps] = registryArray[indexOfGps].createContainer();
-				registryStatus[indexOfGps].dataTypeLatitude = registryStatus[indexOfLatitude];
-				registryStatus[indexOfGps].dataTypeLongitude = registryStatus[indexOfLongitude];
+				registryStatus[indexOfVideoFrame] = registryArray[indexOfVideoFrame].createContainer();
+				// honestly, this is just used for the path information
+				// the reason it was present in json was to ensure all values could be filled out ot validate data type exists.
+				// probably the values aren't needed. (value fps maxFrame)
+				registryStatus[indexOfVideoFrame].value = element1.frame;
+				registryStatus[indexOfVideoFrame].fps = element1.fps;
+				registryStatus[indexOfVideoFrame].maxFrame = element1.maxFrame;
+				registryStatus[indexOfVideoFrame].pathToGetData = [""]; // top level of element
 			}
 			return registryStatus;
 		},

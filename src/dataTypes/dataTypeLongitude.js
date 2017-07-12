@@ -100,7 +100,11 @@ function getDescription() {
 					}
 				}
 			}
-			return retval;
+			var smallest = this.createContainer();
+			smallest.value = retval.smallestValue;
+			var largest = this.createContainer();
+			largest.value = retval.largestValue;
+			return [smallest, largest];
 		},
 		createContainer: function() {
 			return {

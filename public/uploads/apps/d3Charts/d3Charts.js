@@ -137,6 +137,8 @@ var d3Charts = SAGE2_App.extend({
 				this.generateChartIfCan();
 			} else {
 				// discard, unable to use blank set for the sake of some of the checks
+				// actually useful to blank the chart;
+				this.container.innerHTML = "";
 			}
 		}
 	},

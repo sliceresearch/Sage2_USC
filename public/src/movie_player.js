@@ -40,6 +40,7 @@ var movie_player = SAGE2_BlockStreamingApp.extend({
 		// command variables
 		this.shouldSendCommands = false;
 		this.shouldReceiveCommands = false;
+		this.setupBroadcastValues();
 	},
 
 	/**
@@ -99,6 +100,21 @@ var movie_player = SAGE2_BlockStreamingApp.extend({
 	},
 
 	/**
+	* Broadcasts to server the current frame being showno on movie player.
+	*
+	* @method setVideoFrame
+	*/
+	setupBroadcastValues: function() {
+		this.serverDataBroadcastSource("currentFrame",
+			[this.state.center], {
+				app: this.id,
+				interpretAs: "set",
+				dataTypes: ["frame"], // gives these datatypes, example: geojson can have more, but may only have points.
+				dataFormat: "s2MovieFrame"
+			});
+	},
+
+	/**
 	* Set to movie player to a given frame
 	*
 	* @method setVideoFrame
@@ -107,6 +123,11 @@ var movie_player = SAGE2_BlockStreamingApp.extend({
 	setVideoFrame: function(frameIdx) {
 		this.state.frame = frameIdx;
 		this.SAGE2Sync(false);
+		this.serverDataSetSourceValue("currentFrame", {
+			frame: this.state.frame,
+			maxFrame: this.state.numframes - 1,
+			fps:  this.state.framerate
+		});
 	},
 
 	/**
