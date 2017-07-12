@@ -9623,6 +9623,14 @@ function wsUtdCallFunctionOnApp(wsio, data) {
 			console.log(dropPartitionId);
 
 			broadcast('updateDropPartition', {id: dropPartitionId});
+
+			//set tile to true in this drop partition 
+			partitions.list[data.app].toggleInnerTiling();
+			updatePartitionInnerLayout(partitions.list[data.app], true);
+
+			//change color of the drop partition
+			partitions.list[data.app].setColor("#555555");
+			broadcast('partitionColorChange', partitions.list[data.app].getDisplayInfo());
 		}
 		else {
 			// invoke the other callback

@@ -205,6 +205,11 @@ SAGE2_Partition.prototype.updatePositionAndSize = function(data) {
 
 };
 
+SAGE2_Partition.prototype.updateColor = function(data) {
+	this.updatePositionAndSize(data);
+};
+
+
 /**
 	* Update position and size of the partition based on the partition within the server
 	*

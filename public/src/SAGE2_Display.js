@@ -605,6 +605,9 @@ function setupListeners() {
 	wsio.on('partitionMoveAndResizeFinished', function(data) {
 		partitions[data.id].updatePositionAndSize(data);
 	});
+	wsio.on('partitionColorChange', function(data) {
+		partitions[data.id].updateColor(data);
+	});
 	wsio.on('partitionWindowTitleUpdate', function(data) {
 		partitions[data.id].updateTitle(data.title);
 	});

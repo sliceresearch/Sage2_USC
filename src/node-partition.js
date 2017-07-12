@@ -1014,6 +1014,11 @@ Partition.prototype.getContextMenu = function() {
 		callback: "SAGE2DeleteElement",
 		parameters: {}
 	});
+
+	contextMenu.push({
+		description: "separator"
+	});
+
 	contextMenu.push({
 		description: "Make Drop Partition",
 		callback: "setDropPartition",
@@ -1021,6 +1026,11 @@ Partition.prototype.getContextMenu = function() {
 	}); 
 
 	return contextMenu;
+};
+
+
+Partition.prototype.setColor = function(color) {
+	console.log(this.color);
 };
 
 
