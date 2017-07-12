@@ -55,7 +55,7 @@ var Webview = SAGE2_App.extend({
 		// add the preload clause
 		this.addPreloadFile();
 		// security or not: this seems to be an issue often on Windows
-		this.element.disablewebsecurity = true;
+		this.element.disablewebsecurity = false;
 
 		// Set a session per webview, so not zoom sharing per origin
 		this.element.partition = data.id;
@@ -90,7 +90,6 @@ var Webview = SAGE2_App.extend({
 				view_url = 'https://player.vimeo.com/video/' + vimeo_id;
 			}
 		}
-		this.element.src = view_url;
 
 		// Store the zoom level, when in desktop emulation
 		this.zoomFactor = 1;
@@ -186,6 +185,9 @@ var Webview = SAGE2_App.extend({
 				console.log('Webview>	Not a HTTP URL, not opening [', event.url, ']', event);
 			}
 		});
+
+		// Set the URL and starts loading
+		this.element.src = view_url;
 	},
 
 	/**
@@ -303,12 +305,16 @@ var Webview = SAGE2_App.extend({
 	codeInject: function() {
 		// Disabling text selection in page because it blocks the view sometimes
 		// done by injecting some CSS code
+		// Also disabling grab and drag events
 		this.element.insertCSS(":not(input):not(textarea), " +
 			":not(input):not(textarea)::after, " +
 			":not(input):not(textarea)::before { " +
 				"-webkit-user-select: none; " +
 				"user-select: none; " +
 				"cursor: default; " +
+				"-webkit-user-drag: none;" +
+				"-moz-user-drag: none;" +
+				"user-drag: none;" +
 			"} " +
 			"input, button, textarea, :focus { " +
 				"outline: none; " +

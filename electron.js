@@ -198,12 +198,12 @@ function createWindow() {
 		// resizable: !commander.fullscreen,
 		webPreferences: {
 			nodeIntegration: true,
-			webSecurity: true,
+			webSecurity: false, // seems to be an issue on Windows
 			backgroundThrottling: false,
 			plugins: commander.plugins,
-			// allow this for now, problem loading webview recently
-			allowDisplayingInsecureContent: true,
-			allowRunningInsecureContent: true
+			// allow this for or not
+			allowDisplayingInsecureContent: false,
+			allowRunningInsecureContent: false
 		}
 	};
 
