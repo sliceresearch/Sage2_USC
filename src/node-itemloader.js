@@ -1111,7 +1111,28 @@ AppLoader.prototype.readInstructionsFile = function(json_str, file, mime_type, e
 	var exif  = assets.getExifData(file);
 	var s2url = assets.getURL(file);
 
-	return {
+	// Override custom app if a UnityLoader
+	if (appName == "UnityLoader") {
+		// Set type as WebView
+		appName = "Webview";
+		mime_type = "applicaion/custom";
+		var webpath = getSAGE2Path('/uploads/apps/Webview');
+		external_url = this.hostOrigin + '/uploads/apps/Webview';
+
+		// Load from the SAGE2 web server itself
+		instructions.load = {
+			url: this.hostOrigin + assets.getURL(file) + "/index.html",
+			// set webview arguments
+			zoom: 1,
+			mode: "mobile",
+			favicon: ""
+		};
+
+		file = webpath;
+		s2url = '/uploads/apps/Webview';
+	}
+
+	var result = {
 		id: null,
 		title: exif.metadata.title,
 		application: appName,
@@ -1141,6 +1162,7 @@ AppLoader.prototype.readInstructionsFile = function(json_str, file, mime_type, e
 		sage2URL: s2url,
 		date: new Date()
 	};
+	return result;
 };
 
 

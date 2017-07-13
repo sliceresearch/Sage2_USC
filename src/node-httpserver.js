@@ -362,6 +362,10 @@ HttpServer.prototype.onreq = function(req, res) {
 					// Do not allow iframe
 					header['X-Frame-Options'] = 'DENY';
 				}
+			} else {
+				// not needed for images and such
+				delete header["X-XSS-Protection"];
+				delete header['X-Frame-Options'];
 			}
 
 			header['Access-Control-Allow-Headers']  = 'Range';
@@ -404,7 +408,16 @@ HttpServer.prototype.onreq = function(req, res) {
 			//
 
 			// Set the mime type
-			header["Content-Type"] = mime.lookup(pathname);
+			var fileMime = mime.lookup(pathname);
+			var charFile = mime.charsets.lookup(fileMime);
+			if (fileMime === "image/svg+xml" || fileMime === "application/manifest+json") {
+				charFile = "UTF-8";
+			}
+			if (charFile) {
+				header["Content-Type"] =  fileMime + "; charset=" + charFile;
+			} else {
+				header["Content-Type"] =  fileMime;
+			}
 
 			// Get the file size from the 'stat' system call
 			var total = stats.size;
