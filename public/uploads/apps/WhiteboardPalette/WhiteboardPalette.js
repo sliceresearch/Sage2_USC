@@ -129,7 +129,7 @@ var WhiteboardPalette = SAGE2_App.extend({
 					cSpan: 1, rSpan: 5},
 				{name: "ColorPointer", action: this.pointerColorMode ? this.disablePointerColorMode :
 					this.enablePointerColorMode, parent: this, icon: this.pointerColorMode ? path + "/pointer_active.png" :
-					path + "/pointer.png", r: 12, c: 2, cSpan: 1, rSpan: 5},
+						path + "/pointer.png", r: 12, c: 2, cSpan: 1, rSpan: 5},
 				{name: "ColorPicker", action: this.colorPicker, parent: this, icon: path + "/color-picker.png", r: 12, c: 3,
 					cSpan: 1.5, rSpan: 10},
 				{name: "Eraser", action: this.eraserMode ? this.disableEraserMode : this.enableEraserMode, parent: this,
