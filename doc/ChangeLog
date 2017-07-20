@@ -3,6 +3,13 @@ From 'april2017' to 'HEAD'
 
 New
 ~~~
+- Special case to load unity webgl output into a webview: call your app
+  'UnityLoader'. See example in the appstore as 'Unity Test' [Luc
+  Renambot]
+- Zip files with UnityLoader.js in instruction file are extracted like
+  custom apps, but loaded as local Webviews lint: lint. [Arthur
+  Nishimoto]
+- Added node-omicron Kinect parsing. [Arthur Nishimoto]
 - Reset (to 1) the desktop window scaling inside electron. It should
   help especially for Windows users with scaling over 100%. [Luc
   Renambot]
@@ -11,11 +18,15 @@ New
 
 Changes
 ~~~~~~~
+- Switching to luc's node-demux version that handles binary package
+  install (not yet tested on all platforms) [Luc Renambot]
+- Udpated docker file to use Nodejs V8.x. [Luc Renambot]
 - Updated node versions for binary node modules (node-demux) [Luc
   Renambot]
 - Updating to node v8.x for Windows build. [Luc Renambot]
 - Adding user forum link in the help menu and the links page. [Luc
   Renambot]
+- Added package-lock.json in the .gitignore file. [Luc Renambot]
 - Update pdf library to pdfjs-1.7.225. [Luc Renambot]
 - Added an option to build ChangeLog into the 'doc' folder. [Luc
   Renambot]
@@ -27,6 +38,21 @@ Changes
 
 Fix
 ~~~
+- Fix exif parsing of large files, like geojson. [Luc Renambot]
+- Set webview url at the end of init function just to be sure. [Luc
+  Renambot]
+- Make sure that local urls work. [Luc Renambot]
+- Changing some settings in electron main window. [Luc Renambot]
+- Navigation remains in the webview even if new window requested. That
+  fixes issues with login (for hangouts for instance) [Luc Renambot]
+- Set a partition (session) per webview app, so zoom is not shared
+  between views from the same origin. Fixes issue #98 but might cause
+  other issues (like login and such). [Luc Renambot]
+- Electron clients (display and audio) will try to connect to server
+  every 2 seconds. Should fix #97. [Luc Renambot]
+- Ignore git repositories when checking if a package is up to date. [Luc
+  Renambot]
+- Updated sabi to socket.io v2.x. [Luc Renambot]
 - Better handle malformed URLs to access files outside the SAGE2
   folders. [Luc Renambot]
 - Fixes issue #96 by having sabi launch using the host in the config
@@ -53,6 +79,9 @@ Fix
 - Check if we have a valid remote site definition before adding it. [Luc
   Renambot]
 - Fixing building process of display client for Windows. [Luc Renambot]
+- Fixing building process of display client for Windows. [Luc Renambot]
+- Fixing building process of display client for Windows. [Luc Renambot]
+- Fixing the build script for display client for windows. [Luc Renambot]
 - Tweak the display client build process with appveyor. [Luc Renambot]
 - Add the SAGE2 runtime for webview into the build process. [Luc
   Renambot]
@@ -61,9 +90,16 @@ Fix
 
 Other
 ~~~~~
+- Merge branch 'UnityWebview' [Luc Renambot]
+- Lint: linting webview. [Luc Renambot]
+- Doc: updated ChangeLog file up to June 15, 2017. [Luc Renambot]
 - Lint: linting. [Luc Renambot]
 - Lint: update the bitbucket docker image to node:latest. [Luc Renambot]
+- Lint: some new linting. [Luc Renambot]
+- Appveyor.yml edited online with Bitbucket. [Luc Renambot]
+- Merge branch 'clientWindows' [Luc Renambot]
 - Appveyor.yml. [Luc Renambot]
+- Package.json. [Luc Renambot]
 - Adding a appveyor file to build Windows display clients. [Luc
   Renambot]
 - Disable security in webview: it seems to be a problem with some sites,
@@ -83,10 +119,6 @@ Other
   the functionalities of the 'arrangement' button. [Luc Renambot]
 - Cleaning. [Luc Renambot]
 - Remove the 'arrangement' button. [Luc Renambot]
-- Merge branch 'master' of bitbucket.org:sage2/sage2. [Luc Renambot]
-- Merge branch 'master' of https://bitbucket.org/sage2/sage2. [Andrew
-  Burks]
-- Merge branch 'master' of https://bitbucket.org/sage2/sage2. [D K]
 - Pdf remote site updates without setTimeout. [D K]
 - Server wall screenshot code reverted. Assisted config will now set
   display 0 to have width and height equal to layout width and height.
@@ -100,3 +132,5 @@ Other
 - Trying a smaller dockerfile. [Luc Renambot]
 - Apparently ws has no more binary dependencies (for a while). So
   updating the install process. [Luc Renambot]
+
+

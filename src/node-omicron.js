@@ -310,6 +310,7 @@ OmicronManager.prototype.setCallbacks = function(
 	keyPressCB,
 	createRadialMenuCB,
 	omi_pointerChangeModeCB,
+	kinectInputCB,
 	remoteInteractionCB) {
 	this.sagePointers        = sagePointerList;
 	this.createSagePointer   = createSagePointerCB;
@@ -328,6 +329,7 @@ OmicronManager.prototype.setCallbacks = function(
 	this.keyUp               = keyUpCB;
 	this.keyPress            = keyPressCB;
 	this.createRadialMenu    = createRadialMenuCB;
+	this.kinectInput 				 = kinectInputCB;
 	this.pointerChangeMode = omi_pointerChangeModeCB;
 	this.remoteInteraction = remoteInteractionCB;
 
@@ -507,6 +509,77 @@ OmicronManager.prototype.processIncomingEvent = function(msg, rinfo) {
 	//
 	if (serviceType === 0) {
 		omicronManager.processPointerEvent(e, sourceID, posX, posY, msg, offset, address, emit, dstart);
+	} else if (serviceType === 1) {
+
+		// Kinect v2.0 data has 29 extra data fields
+		if (this.kinectInput != undefined && e.extraDataItems == 29) {
+			if (omicronManager.eventDebug) {
+				console.log(sageutils.header('Omicron') + "Kinect body " + sourceID +
+					" head Pos: (" + e.posx + ", " + e.posy + "," + e.posz + ")");
+			}
+
+			var extraData = [];
+
+			while (offset < msg.length) {
+				extraData.push(msg.readFloatLE(offset));
+				offset += 4;
+			}
+
+			var bodyParts = [
+				"OMICRON_SKEL_HIP_CENTER",
+				"OMICRON_SKEL_HEAD",
+				"Junk",
+				"Junk",
+				"Junk",
+				"Junk",
+				"OMICRON_SKEL_LEFT_SHOULDER",
+				"OMICRON_SKEL_LEFT_ELBOW",
+				"OMICRON_SKEL_LEFT_WRIST",
+				"OMICRON_SKEL_LEFT_HAND",
+				"OMICRON_SKEL_LEFT_FINGERTIP",
+				"OMICRON_SKEL_LEFT_HIP",
+				"OMICRON_SKEL_LEFT_KNEE",
+				"OMICRON_SKEL_LEFT_ANKLE",
+				"OMICRON_SKEL_LEFT_FOOT",
+				"Junk",
+				"OMICRON_SKEL_RIGHT_SHOULDER",
+				"OMICRON_SKEL_RIGHT_ELBOW",
+				"OMICRON_SKEL_RIGHT_WRIST",
+				"OMICRON_SKEL_RIGHT_HAND",
+				"OMICRON_SKEL_RIGHT_FINGERTIP",
+				"OMICRON_SKEL_RIGHT_HIP",
+				"OMICRON_SKEL_RIGHT_KNEE",
+				"OMICRON_SKEL_RIGHT_ANKLE",
+				"OMICRON_SKEL_RIGHT_FOOT",
+				"OMICRON_SKEL_SPINE",
+				"OMICRON_SKEL_SHOULDER_CENTER",
+				"OMICRON_SKEL_LEFT_THUMB",
+				"OMICRON_SKEL_RIGHT_THUMB"
+			];
+
+			var bodyPartIndex = 0;
+			var posIndex = 0;
+			var skeletonData = {};
+			while (bodyPartIndex < bodyParts.length) {
+				const bodyPart = bodyParts[bodyPartIndex++];
+				skeletonData[bodyPart] = {
+					x: extraData[posIndex++],
+					y: extraData[posIndex++],
+					z: extraData[posIndex++]
+				};
+			}
+
+			skeletonData.skeletonID = sourceID;
+			skeletonData.type = "kinectInput";
+
+			this.kinectInput(sourceID, skeletonData);
+		} else {
+			// Treat as single marker mocap
+			if (omicronManager.eventDebug) {
+				console.log(sageutils.header('Omicron') + "MocapID " + sourceID +
+					" (" + e.posx + ", " + e.posy + "," + e.posz + ")");
+			}
+		}
 	} else if (serviceType === 7) {
 		// ServiceTypeWand
 		//

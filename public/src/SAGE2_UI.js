@@ -1288,7 +1288,8 @@ function handleClick(element) {
 							// if it was a URL entry
 							if (values.browser_url) {
 								// check if it looks like a URL
-								if (values.browser_url.indexOf("://") === -1) {
+								if ((values.browser_url.indexOf("://") === -1) &&
+									!values.browser_url.startsWith("/")) {
 									url = 'http://' + values.browser_url;
 								} else {
 									url = values.browser_url;
@@ -1329,7 +1330,8 @@ function handleClick(element) {
 				// if it was a URL entry
 				if (values.browser_url) {
 					// check if it looks like a URL
-					if (values.browser_url.indexOf("://") === -1) {
+					if ((values.browser_url.indexOf("://") === -1) &&
+						!values.browser_url.startsWith("/")) {
 						url = 'http://' + values.browser_url;
 					} else {
 						url = values.browser_url;
