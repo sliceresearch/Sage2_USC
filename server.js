@@ -8906,6 +8906,7 @@ omicronManager.setCallbacks(
 	keyPress,
 	createRadialMenu,
 	omi_pointerChangeMode,
+	undefined, // sendKinectInput
 	remoteInteraction);
 omicronManager.linkDrawingManager(drawingManager);
 

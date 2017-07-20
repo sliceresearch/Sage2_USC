@@ -188,15 +188,17 @@ function createWindow() {
 		fullscreenable: commander.fullscreen,
 		alwaysOnTop: commander.fullscreen,
 		kiosk: commander.fullscreen,
+		// a default color while loading
+		backgroundColor: "#565656",
 		// resizable: !commander.fullscreen,
 		webPreferences: {
 			nodeIntegration: true,
-			webSecurity: true,
+			webSecurity: false, // seems to be an issue on Windows
 			backgroundThrottling: false,
 			plugins: commander.plugins,
-			// allow this for now, problem loading webview recently
-			allowDisplayingInsecureContent: true,
-			allowRunningInsecureContent: true
+			// allow this for or not
+			allowDisplayingInsecureContent: false,
+			allowRunningInsecureContent: false
 		}
 	};
 
@@ -243,6 +245,14 @@ function createWindow() {
 	mainWindow.on('closed', function() {
 		// Dereference the window object
 		mainWindow = null;
+	});
+
+	// If the window opens before the server is ready,
+	// wait 2 sec. and try again
+	mainWindow.webContents.on('did-fail-load', function(ev) {
+		setTimeout(function() {
+			mainWindow.reload();
+		}, 2000);
 	});
 
 	mainWindow.webContents.on('will-navigate', function(ev) {
