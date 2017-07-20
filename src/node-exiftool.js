@@ -105,9 +105,13 @@ function file(filename, done) {
 						// if there was an error because unknown file type, delete it
 						delete metadata[0].Error;
 					}
-					// Add a dummy type
-					metadata[0].MIMEType = 'text/plain';
-					metadata[0].FileType = 'text/plain';
+					// Add a dummy type if needed
+					if (!metadata[0].MIMEType) {
+						metadata[0].MIMEType = 'text/plain';
+					}
+					if (!metadata[0].FileType) {
+						metadata[0].FileType = 'text/plain';
+					}
 					done(null, metadata[0]);
 				} else {
 					// unknown data
