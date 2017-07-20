@@ -347,9 +347,10 @@ var pdf_viewer = SAGE2_App.extend({
 	},
 
 	translateGroup: function(g, dx, dy, s, animated) {
-		dx = (dx == null) ? parseFloat(d3.transform(g.attr("transform")).translate[0]) : dx;
-		dy = (dy == null) ? parseFloat(d3.transform(g.attr("transform")).translate[1]) : dy;
-		s  = (s  == null) ? parseFloat(d3.transform(g.attr("transform")).scale[0])     : s;
+		var transf = parse_transform(g.attr("transform"));
+		dx = (dx == null) ? transf.translate[0] : dx;
+		dy = (dy == null) ? transf.translate[1] : dy;
+		s  = (s  == null) ? transf.scale[0]     : s;
 		var tDuration = animated ? 200 : 0;
 		g.transition().attr("transform",
 			"translate(" + dx * this.state.resizeValue + ", " + dy +
@@ -473,8 +474,9 @@ var pdf_viewer = SAGE2_App.extend({
 
 		var f = this.activeTouch[id];
 		if (f && this.state.showingThumbnails && f.item.thumbnail) {
-			var sx = d3.transform(f.item.container.attr("transform")).scale[0];
-			var translate = d3.transform(f.item.container.attr("transform")).translate;
+			var transf = parse_transform(f.item.container.attr("transform"));
+			var sx = transf.scale[0];
+			var translate = transf.translate;
 			var newX = translate[0] + x - f.lastMousePosition.x;
 			var newY = translate[1];
 			newX /= sx;
@@ -969,9 +971,19 @@ function deleteClick(item) {
 	item.clickReceived = null;
 }
 
+function parse_transform(a) {
+	var b = {};
+	for (var i in a = a.match(/(\w+)\(([^,)]+),?([^)]+)?\)/gi)) {
+		var c = a[i].match(/[\w.-]+/g);
+		b[c.shift()] = parseFloat(c);
+	}
+	return b;
+}
+
 function within(element, x, y) {
-	var translate = d3.transform(element.container.attr("transform")).translate;
-	var s = d3.transform(element.container.attr("transform")).scale[0];
+	var transf = parse_transform(element.container.attr("transform"));
+	var translate = transf.translate;
+	var s = transf.scale[0];
 
 	var mX = (x - translate[0]);
 	var mY = (y - translate[1]);
