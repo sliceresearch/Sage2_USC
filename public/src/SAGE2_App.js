@@ -8,7 +8,7 @@
 //
 // Copyright (c) 2014-2015
 
-/* global ignoreFields, SAGE2WidgetControl, SAGE2MEP */
+/* global ignoreFields, SAGE2WidgetControl, SAGE2PointerToNativeMouseEvent */
 /* global addStoredFileListEventHandler, removeStoredFileListEventHandler */
 
 /**
@@ -297,7 +297,7 @@ var SAGE2_App = Class.extend({
 			this.event(eventType, position, user_id, data, date);
 
 			if (this.passSAGE2PointerAsMouseEvents) {
-				SAGE2MEP.processAndPassEvents(this.id, eventType, position,
+				SAGE2PointerToNativeMouseEvent.processAndPassEvents(this.id, eventType, position,
 					user_id, data, date);
 			}
 			this.SAGE2UserModification = false;

@@ -8,7 +8,7 @@
 //
 // Copyright (c) 2014-2015
 
-/* global ignoreFields, SAGE2WidgetControl, SAGE2MEP */
+/* global ignoreFields, SAGE2WidgetControl, SAGE2PointerToNativeMouseEvent */
 /* global addStoredFileListEventHandler, removeStoredFileListEventHandler */
 
 /**

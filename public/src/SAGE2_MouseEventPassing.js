@@ -15,7 +15,7 @@
 
 /* global require */
 
-var SAGE2MEP = {
+var SAGE2PointerToNativeMouseEvent = {
 
 	/* debug on(true) or off(false)
 	if(this.debug) {
@@ -93,7 +93,7 @@ var SAGE2MEP = {
 			this.shownElectronNotification = true;
 		} else if (__SAGE2__.browser.isElectron) {
 			if (!this.webContent) {
-				console.log("SAGE2MEP> Electron event conversion started");
+				console.log("SAGE2PointerToNativeMouseEvent> Electron event conversion started");
 				this.webContent = require('electron').remote.getCurrentWebContents();
 				// debug purposes only
 				// document.addEventListener("mousemove", function (e) {
@@ -353,7 +353,7 @@ var SAGE2MEP = {
 			case "pointerDoubleClick":
 
 				if (this.debug) {
-					console.log("SAGE2MEP> double click"); //does sage send double clicks?
+					console.log("SAGE2PointerToNativeMouseEvent> double click"); //does sage send double clicks?
 				}
 
 				break;
@@ -361,7 +361,7 @@ var SAGE2MEP = {
 				// Currently not implemented.
 
 				if (this.debug) {
-					console.log("SAGE2MEP> Keystroke:" + data.character + "(" + data.code + ")");
+					console.log("SAGE2PointerToNativeMouseEvent> Keystroke:" + data.character + "(" + data.code + ")");
 				}
 
 				var elemToSendKeyValuesTo;
@@ -381,14 +381,14 @@ var SAGE2MEP = {
 				// Currently not implemented.
 
 				if (this.debug) {
-					console.log("SAGE2MEP> specialkey:" + data.character + "(" + data.code + ")");
+					console.log("SAGE2PointerToNativeMouseEvent> specialkey:" + data.character + "(" + data.code + ")");
 				}
 
 				break;
 
 			default:
 				if (this.debug) {
-					console.log("SAGE2MEP> ERROR Unknown SAGE2 type:" + type);
+					console.log("SAGE2PointerToNativeMouseEvent> ERROR Unknown SAGE2 type:" + type);
 				}
 				break;
 		} // end switch of sage event type
@@ -626,7 +626,8 @@ var SAGE2MEP = {
 				while (!foundCommonAncestor) {
 					failSafeOnInf++;
 					if (this.debug && failSafeOnInf > 500) {
-						console.log("SAGE2MEP> ERROR: failsafe break out of finding a common ancestor for event triggers.");
+						console.log("SAGE2PointerToNativeMouseEvent> ERROR:"
+						+ " failsafe break out of finding a common ancestor for event triggers.");
 						break;
 					}
 					point.mouseLeaveEventsToSend.push(pElem); // this element wasn't it, so it needs a leave event.
@@ -648,7 +649,7 @@ var SAGE2MEP = {
 
 			if (!foundCommonAncestor) {
 				if (this.debug) {
-					console.log("SAGE2MEP> ERROR: unable to find common ancestor.");
+					console.log("SAGE2PointerToNativeMouseEvent> ERROR: unable to find common ancestor.");
 				}
 				return;
 			}
