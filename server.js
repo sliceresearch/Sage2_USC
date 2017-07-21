@@ -75,6 +75,7 @@ var registry            = require('./src/node-registry');         // Registry Ma
 var FileBufferManager	= require('./src/node-filebuffer');
 var PartitionList	= require('./src/node-partitionlist');        // list of SAGE2 Partitions
 var SharedDataManager	= require('./src/node-sharedserverdata'); // manager for shared data
+var VoiceActionManager	= require('./src/node-voiceToAction'); // manager for shared data
 
 //
 // Globals
@@ -632,6 +633,24 @@ var stickyAppHandler     = new StickyItems();
 // create manager for shared data
 var sharedServerData = new SharedDataManager(clients, broadcast);
 
+// create manager for voice actions, major functions are given on creation
+// each of these needs to be memory references
+var variablesUsedInVoiceHandler = {
+	sagePointers,
+	interactMgr,
+	SAGE2Items,
+	assets,
+	listSessions,
+	sharedServerData,
+	wsCallFunctionOnApp,
+	wsLaunchAppWithValues,
+	wsLoadFileFromServer,
+	wsSaveSesion,
+	tileApplications,
+	deleteAllApplications,
+	broadcast,
+}
+var voiceHandler = new VoiceActionManager(variablesUsedInVoiceHandler);
 
 //
 // Catch the uncaught errors that weren't wrapped in a domain or try catch statement
@@ -1061,6 +1080,9 @@ function setupListeners(wsio) {
 	wsio.on('serverDataGetValue',					wsServerDataGetValue);
 	wsio.on('serverDataSubscribeToValue',			wsServerDataSubscribeToValue);
 	wsio.on('serverDataGetAllTrackedValues',		wsServerDataGetAllTrackedValues);
+
+	// voice to sage2 actions
+	wsio.on('voiceToAction',                      wsVoiceToAction);
 
 	// Screenshot messages
 	wsio.on('startWallScreenshot',                  wsStartWallScreenshot);
@@ -10215,4 +10237,15 @@ function deletePartition(id) {
 	broadcast('deletePartitionWindow', ptn.getDisplayInfo());
 	partitions.removePartition(ptn.id);
 	interactMgr.removeGeometry(ptn.id, "partitions");
+}
+
+/**
+ * Will attempt to take a transcript and use best case to activate a context menu item.
+ * 
+ * @method wsVoiceToAction
+ * @param {Object} wsio - ws to originator.
+ * @param {Object} data - should contain words.
+ */
+function wsVoiceToAction(wsio, data) {
+	voiceHandler.process(wsio, data);
 }

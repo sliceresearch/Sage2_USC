@@ -3159,3 +3159,90 @@ function uiDrawZoneRemoveSelfAsClient() {
 	dataForApp.clientDest = "allDisplays";
 	wsio.emit("sendDataToClient", dataForApp);
 }
+
+
+// ----------------------------------------------------------------------------------
+// ----------------------------------------------------------------------------------
+// ----------------------------------------------------------------------------------
+
+var s2SpeechRecognition = {};
+s2SpeechRecognition.hasInit            = false;
+s2SpeechRecognition.webkitSR           = null;
+s2SpeechRecognition.recognizing        = false;
+s2SpeechRecognition.final_transcript   = false;
+s2SpeechRecognition.interim_transcript = false;
+
+s2SpeechRecognition.init = function() {
+	if (!("webkitSpeechRecognition" in window)) {
+		alert("Sorry your browser doesn't support webkitSpeechRecognition. You will need an updated chrome");
+	}
+	else {
+		console.log("webkitSpeechRecognition exists beginning setup");
+		this.webkitSR = new webkitSpeechRecognition();
+		this.webkitSR.continuous = true;
+		this.webkitSR.interimResults = true;
+
+		this.webkitSR.onstart = function() {
+			console.log("s2SpeechRecognition started");
+			this.recognizing = true;
+		}
+
+		/*
+			After getting a result, but this also includes pieces that aren't detected as full sentences.
+		*/
+		this.webkitSR.onresult = function(event) {
+			this.interim_transcript = " ";
+			for (var i = event.resultIndex; i < event.results.length; ++i) {
+				if (event.results[i].isFinal) {
+					this.final_transcript = event.results[i][0].transcript;
+					console.log("final_transcript(" + typeof this.final_transcript + "):" + this.final_transcript);
+
+					// show
+					wsio.emit("serverDataSetValue", {
+						nameOfValue: "voiceToActionInterimTranscript",
+						value: "Submitted phrase:" + this.final_transcript
+					});
+					// do something with it now.
+					wsio.emit('voiceToAction', {words: this.final_transcript});
+
+					// for some reason it works better after stopping, maybe this has improved.
+					setTimeout(function(){
+						console.log("restarting");
+						s2SpeechRecognition.webkitSR.stop();
+					}, 10);
+				} else {
+					this.interim_transcript += event.results[i][0].transcript;
+					console.log("interim_transcript:" + this.interim_transcript);
+					wsio.emit("serverDataSetValue", {
+						nameOfValue: "voiceToActionInterimTranscript",
+						value: "Detected Words:" + this.interim_transcript
+					});
+				}
+			}
+		} //end onresult
+
+		this.webkitSR.onerror = function(e) {
+			console.log("webkitSpeechRecognition error:" + e);
+			console.dir(e);
+		}
+
+		// after ending restart
+		this.webkitSR.onend = function() {
+			this.recognizing = false;
+			console.log("voice ended, attempting to restart");
+			s2SpeechRecognition.webkitSR.start();
+		}
+		this.toggleS2SpeechRecognition();
+	} //end else there is webkit
+}
+s2SpeechRecognition.toggleS2SpeechRecognition = function() {
+	if (this.recognizing) {
+		this.webkitSR.stop();
+		return;
+	}
+	this.final_transcript = " ";
+	this.webkitSR.lang = "en-US";
+	this.webkitSR.start();
+}
+console.log("s2SpeechRecognition init()");
+s2SpeechRecognition.init();
