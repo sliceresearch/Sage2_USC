@@ -969,7 +969,9 @@ function deleteClick(item) {
 function parse_transform(a) {
 	var b = {};
 	for (var i in a = a.match(/(\w+)\(([^,)]+),?([^)]+)?\)/gi)) {
+		/* eslint-disable */
 		var c = a[i].match(/[\w\.\-]+/g);
+		/* eslint-enable */
 		b[c.shift()] = c;
 	}
 	return b;
