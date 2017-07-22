@@ -17,6 +17,10 @@
 // require variables to be declared
 "use strict";
 
+
+var StickyItems         = require('./node-stickyitems');
+var stickyAppHandler     = new StickyItems();
+
 /**
   * @class Partition
   * @constructor
@@ -108,7 +112,13 @@ Partition.prototype.addChild = function(item) {
 	if (this.innerTiling && this.currentMaximizedChild) {
 		this.maximizeChild(item.id);
 	}
-
+	
+	var stickingItems = stickyAppHandler.getStickingItems(item);
+	//var tempArr;
+	for (var s in stickingItems) {
+		this.addChild(stickingItems[s]);
+		//changedPartitions.push.apply(changedPartitions, tempArr);
+	}
 	return changedPartitions;
 };
 
@@ -122,6 +132,10 @@ Partition.prototype.updateChild = function(id) {
 		item.relative_top = (item.top - this.top - titleBarHeight) / this.height;
 		item.relative_width = item.width / this.width;
 		item.relative_height = item.height / this.height;
+		var movedItems = stickyAppHandler.moveItemsStickingToUpdatedItem(item);
+		for (var mI in movedItems) {
+			this.updateChild(movedItems[mI].elemId);
+		}
 	}
 
 	return [this.id];
@@ -218,7 +232,12 @@ Partition.prototype.tilePartition = function() {
 	var i, c, r, key;
 	var numCols, numRows, numCells;
 
-	var numWindows = this.numChildren - (this.currentMaximizedChild ? 1 : 0);
+	var backgroundAndForegroundItems = stickyAppHandler.getListOfBackgroundAndForegroundItems(this.children);
+	var appsWithoutBackground = backgroundAndForegroundItems.backgroundItems;
+	var numAppsWithoutBackground = appsWithoutBackground.length;
+
+	// Don't use sticking items to compute number of windows.
+	var numWindows = numAppsWithoutBackground - (this.currentMaximizedChild ? 1 : 0);
 
 
 	// determine the bounds of the tiling area
@@ -234,13 +253,9 @@ Partition.prototype.tilePartition = function() {
 		height: this.height
 	};
 
-	// get set of children to run tiling on
-	var children = Object.assign({}, this.children);
+	var maxChildCopy = null; 
 
 	if (this.currentMaximizedChild) {
-
-		// if a child is maximized, remove from set to tile
-		delete children[this.currentMaximizedChild];
 
 		let maxChild = this.children[this.currentMaximizedChild];
 
@@ -278,6 +293,7 @@ Partition.prototype.tilePartition = function() {
 		maxChild.top = this.top + titleBar + 4;
 		maxChild.left = this.left + 4;
 
+		maxChildCopy = Object.assign({}, maxChild);
 		this.updateChild(this.currentMaximizedChild);
 	}
 
@@ -340,8 +356,8 @@ Partition.prototype.tilePartition = function() {
 	// Caculate apps centers
 	// use a subset of children excluding maximizedChild
 
-	for (key in children) {
-		app = children[key];
+	for (key in appsWithoutBackground) {
+		app = appsWithoutBackground[key];
 		centroidsApps[key] = {x: app.left + app.width / 2.0, y: app.top + app.height / 2.0};
 	}
 	// Caculate tiles centers
@@ -361,13 +377,14 @@ Partition.prototype.tilePartition = function() {
 		}
 	}
 
-	for (key in children) {
+	for (key in appsWithoutBackground) {
 		// get the application
-		app = children[key];
+		app = appsWithoutBackground[key];
+		
 		// pick a cell
 		var cellid = findMinimum(distances[key]);
 		// put infinite value to disable the chosen cell
-		for (i in children) {
+		for (i in appsWithoutBackground) {
 			distances[i][cellid] = Number.MAX_VALUE;
 		}
 
@@ -396,9 +413,18 @@ Partition.prototype.tilePartition = function() {
 		// broadcast('startResize', {id: updateItem.elemId, date: updateItem.date});
 
 		this.updateChild(app.id);
-
 		// broadcast('finishedMove', {id: updateItem.elemId, date: updateItem.date});
 		// broadcast('finishedResize', {id: updateItem.elemId, date: updateItem.date});
+	}
+
+	//Restore maximized app's dimensions and position
+	if (this.currentMaximizedChild) {
+		let maxChild = this.children[this.currentMaximizedChild];
+		maxChild.left = maxChildCopy.left;
+		maxChild.top = maxChildCopy.top;
+		maxChild.width = maxChildCopy.width;
+		maxChild.height = maxChildCopy.height;
+		this.updateChild(this.currentMaximizedChild);
 	}
 
 	function averageWindowAspectRatio() {
@@ -410,8 +436,8 @@ Partition.prototype.tilePartition = function() {
 
 		var totAr = 0.0;
 		var key;
-		for (key in children) {
-			totAr += (children[key].width / children[key].height);
+		for (key in _this.children) {
+			totAr += (_this.children[key].width / _this.children[key].height);
 		}
 		return (totAr / num);
 	}

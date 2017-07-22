@@ -26,8 +26,6 @@
  * @return {Object} an object representing....
  */
 function StickyItems() {
-	this.stickyItemParent = {};
-	this.stickyItemOffsetInfo = {};
 	this.notPinnedAppsList = [];
 }
 
@@ -40,18 +38,18 @@ StickyItems.prototype.attachStickyItem = function(backgroundItem, stickyItem) {
 	if (backgroundItem.id === stickyItem.id) {
 		return;
 	}
-	if (this.stickyItemParent[backgroundItem.id]) {
-		if (this.stickyItemParent[backgroundItem.id].indexOf(stickyItem) < 0) {
-			this.stickyItemParent[backgroundItem.id].push(stickyItem);
+	if (backgroundItem.foregroundItems !== null && backgroundItem.foregroundItems !== undefined) {
+		if (backgroundItem.foregroundItems.indexOf(stickyItem) < 0) {
+			backgroundItem.foregroundItems.push(stickyItem);
 		}
 	} else {
-		this.stickyItemParent[backgroundItem.id] = [];
-		this.stickyItemParent[backgroundItem.id].push(stickyItem);
+		backgroundItem.foregroundItems = [];
+		backgroundItem.foregroundItems.push(stickyItem);
 	}
-	this.stickyItemOffsetInfo[stickyItem.id] = {
-		offsetX: 100.0 * (stickyItem.left - backgroundItem.left) / backgroundItem.width,
-		offsetY: 100.0 * (stickyItem.top - backgroundItem.top) / backgroundItem.height
-	};
+	
+	stickyItem.backgroundOffsetX = stickyItem.left - backgroundItem.left;
+	stickyItem.backgroundOffsetY = stickyItem.top - backgroundItem.top;
+	stickyItem.backgroundItem = backgroundItem;
 };
 
 /**
@@ -60,19 +58,19 @@ StickyItems.prototype.attachStickyItem = function(backgroundItem, stickyItem) {
 * @method detachStickyItem
 */
 StickyItems.prototype.detachStickyItem = function(stickyItem) {
-	for (var key in this.stickyItemParent) {
-		if (this.stickyItemParent.hasOwnProperty(key)) {
-			var idx = this.stickyItemParent[key].indexOf(stickyItem);
-			if (idx > -1) {
-				this.stickyItemParent[key].splice(idx, 1);
-				if (this.stickyItemParent[key].length < 1) {
-					delete this.stickyItemParent[key];
-				}
-				delete this.stickyItemOffsetInfo[stickyItem.id];
-				break;
-			}
-		}
+	var backgroundItem = stickyItem.backgroundItem;
+	if (backgroundItem !== null && backgroundItem !== undefined) {
+		var foregroundItems = backgroundItem.foregroundItems;
+		if (foregroundItems !== null && foregroundItems !== undefined) {
+			var stickyItemIdx = foregroundItems.indexOf(stickyItem);
+			if (stickyItemIdx > -1) {
+				foregroundItems.splice(stickyItemIdx, 1);
+			}	
+		}	
 	}
+	stickyItem.backgroundOffsetX = 0;
+	stickyItem.backgroundOffsetY = 0;
+	stickyItem.backgroundItem = null;	
 };
 
 /**
@@ -81,10 +79,14 @@ StickyItems.prototype.detachStickyItem = function(stickyItem) {
 * @method removeElement
 */
 StickyItems.prototype.removeElement = function(elem) {
-	this.detachStickyItem(elem);
-	if (elem.id in this.stickyItemParent) {
-		delete this.stickyItemParent[elem.id];
+	var foregroundItems = elem.foregroundItems;
+	if (foregroundItems !== null && foregroundItems !== undefined) {
+		for (var f = 0; f < foregroundItems.length; f ++) {
+			var foregroundItem = foregroundItems[f];
+			foregroundItem.backgroundItem = null;
+		}
 	}
+	this.detachStickyItem(elem);
 };
 
 /**
@@ -93,39 +95,63 @@ StickyItems.prototype.removeElement = function(elem) {
 * @method moveItemsStickingToUpdatedItem
 */
 StickyItems.prototype.moveItemsStickingToUpdatedItem = function (updatedItem) {
+	var foregroundItems = updatedItem.foregroundItems;
 	var moveItems = [];
-	if (this.stickyItemParent[updatedItem.elemId] !== null && this.stickyItemParent[updatedItem.elemId] !== undefined) {
-		var list = this.stickyItemParent[updatedItem.elemId];
-		for (var l in list) {
-			list[l].left = updatedItem.elemLeft + this.stickyItemOffsetInfo[list[l].id].offsetX / 100.0 * updatedItem.elemWidth;
-			list[l].top  = updatedItem.elemTop + this.stickyItemOffsetInfo[list[l].id].offsetY / 100.0 * updatedItem.elemHeight;
+	if (foregroundItems !== null && foregroundItems !== undefined) {
+		for (var f = 0; f < foregroundItems.length; f ++) {
+			var foregroundItem = foregroundItems[f];
+			foregroundItem.left = updatedItem.left + foregroundItem.backgroundOffsetX;
+			foregroundItem.top = updatedItem.top + foregroundItem.backgroundOffsetY;
 			var item     = {
-				elemId: list[l].id, elemLeft: list[l].left, elemTop: list[l].top,
-				elemWidth: list[l].width, elemHeight: list[l].height, date: new Date()
+				elemId: foregroundItem.id, elemLeft: foregroundItem.left, elemTop: foregroundItem.top,
+				elemWidth: foregroundItem.width, elemHeight: foregroundItem.height, date: new Date()
 			};
 			moveItems.push(item);
-			var oneDeepItems = this.moveItemsStickingToUpdatedItem(item);
-			Array.prototype.push.apply(moveItems, oneDeepItems);
+			var oneDeepItems = this.moveItemsStickingToUpdatedItem(foregroundItem);
+			moveItems.push.apply(moveItems, oneDeepItems);
 		}
 	}
 	return moveItems;
 };
+
+
+StickyItems.prototype.moveAndResizeItemsStickingToUpdatedItem = function (updatedItem) {
+	var foregroundItems = updatedItem.foregroundItems;
+	var moveItems = [];
+	if (foregroundItems !== null && foregroundItems !== undefined) {
+		for (var f = 0; f < foregroundItems.length; f ++) {
+			var foregroundItem = foregroundItems[f];
+			foregroundItem.left = updatedItem.left + foregroundItem.backgroundOffsetX;
+			foregroundItem.top = updatedItem.top + foregroundItem.backgroundOffsetY;
+			foregroundItem.width = updatedItem.width;
+			foregroundItem.height = updatedItem.height;
+			var item     = {
+				elemId: foregroundItem.id, elemLeft: foregroundItem.left, elemTop: foregroundItem.top,
+				elemWidth: foregroundItem.width, elemHeight: foregroundItem.height, date: new Date()
+			};
+			moveItems.push(item);
+			var oneDeepItems = this.moveItemsStickingToUpdatedItem(foregroundItem);
+			moveItems.push.apply(moveItems, oneDeepItems);
+		}
+	}
+	return moveItems;
+};
+
 
 /**
 *
 *
 * @method getStickingItems
 */
-StickyItems.prototype.getStickingItems = function(elemId) {
+StickyItems.prototype.getStickingItems = function(app) {
+	var foregroundItems = app.foregroundItems;
 	var stickingItems = [];
-	if (this.stickyItemParent[elemId] !== null && this.stickyItemParent[elemId] !== undefined) {
-		var list = this.stickyItemParent[elemId];
-		for (var i in list) {
-			stickingItems.push(list[i]);
-			var oneDeepItems = this.getStickingItems(list[i].id);
-			if (oneDeepItems.length > 0) {
-				Array.prototype.push.apply(stickingItems, oneDeepItems);
-			}
+	if (foregroundItems !== null && foregroundItems !== undefined) {
+		for (var f = 0; f < foregroundItems.length; f ++) {
+			var foregroundItem = foregroundItems[f];
+			stickingItems.push(foregroundItem);
+			var oneDeepItems = this.getStickingItems(foregroundItem);
+			stickingItems.push.apply(stickingItems, oneDeepItems);
 		}
 	}
 	return stickingItems;
@@ -137,9 +163,9 @@ StickyItems.prototype.getStickingItems = function(elemId) {
 *
 * @method getFirstLevelStickingItems
 */
-StickyItems.prototype.getFirstLevelStickingItems = function(elemId) {
-	if (this.stickyItemParent[elemId] !== null && this.stickyItemParent[elemId] !== undefined) {
-		return this.stickyItemParent[elemId];
+StickyItems.prototype.getFirstLevelStickingItems = function(app) {
+	if (app.foregroundItems !== null && app.foregroundItems !== undefined) {
+		return app.foregroundItems;
 	}
 	return [];
 };
@@ -176,5 +202,27 @@ StickyItems.prototype.getNotPinnedAppList = function() {
 StickyItems.prototype.refreshNotPinnedAppList = function(appList) {
 	this.notPinnedAppsList = appList;
 };
+
+StickyItems.prototype.getListOfBackgroundAndForegroundItems = function(appList) {
+	var temp = appList;
+	var backgroundAndForegroundItems = {
+		backgroundItems: [],
+		foregroundItems: []
+	};
+	if (appList !== null && typeof appList === 'object') {
+		temp = Object.keys(appList).map(function (key) { return appList[key]; });
+	} else if (Object.prototype.toString.call( appList ) !== '[object Array]') {
+		return backgroundAndForegroundItems;
+	}
+	appList = temp;
+	appList.forEach((app) => {
+		if (app.backgroundItem === null || app.backgroundItem === undefined) {
+			backgroundAndForegroundItems.backgroundItems.push(app);
+		} else {
+			backgroundAndForegroundItems.foregroundItems.push(app);
+		}
+	});
+	return backgroundAndForegroundItems;
+}
 
 module.exports = StickyItems;
