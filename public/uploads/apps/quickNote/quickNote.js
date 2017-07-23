@@ -192,6 +192,7 @@ var quickNote = SAGE2_App.extend({
 
 		// adjust height to show all text. minimum 5 lines enforce(?)
 		this.needTextZoneHeight = (this.needTextZoneHeight < 5) ? 5 : this.needTextZoneHeight;
+		this.sizeModification = parseInt(this.element.clientWidth) / this.startingAppWidth;
 		this.sendResize(this.sage2_width,
 			this.needTextZoneHeight * this.startingFontHeight * this.sizeModification);
 
