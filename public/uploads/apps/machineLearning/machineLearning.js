@@ -696,7 +696,7 @@ drawSkeletonLines: function(){
 	//---------------------------------------//
 	draw: function(date) {
 		if(this.skeletons){
-			//josh - remove kinect pointers from inactive skeletons
+			//josh and joe - remove kinect pointers from inactive skeletons
 			let curIDs = Object.keys(this.skeletons);
 			if(curIDs.length !== previousIDs.length){
 				for(let p of previousIDs){

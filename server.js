@@ -628,7 +628,7 @@ var remoteSharingSessions      = {};
 // Sticky items and window position for new clones
 var stickyAppHandler     = new StickyItems();
 
-//josh
+//josh and joe
 // setInterval(()=> {
 // 	// console.log("checking pointers");
 // 	let curTime = new Date();
@@ -917,7 +917,7 @@ function setupListeners(wsio) {
 	wsio.on('startSagePointer',                     wsStartSagePointer);
 	wsio.on('stopSagePointer',                      wsStopSagePointer);
 
-	wsio.on('checkKinectPointers',									wsCheckKinectPointers); //josh
+	wsio.on('checkKinectPointers',									wsCheckKinectPointers);
 	wsio.on('removeKinectPointer',									wsRemoveKinectPointer);
 
 	wsio.on('pointerPress',                         wsPointerPress);
@@ -1466,8 +1466,9 @@ function wsRemoveKinectPointer(wsio,data) {
 	}
 }
 
-//josh
+//josh and joe
 function wsCheckKinectPointers(wsio,data){
+	//function to delete pointers which have not moved in 10 seconds
 	let curTime = new Date();
 	for(let id in sagePointers){
 		if(curTime - sagePointers[id].lastUsed > 1000){
@@ -6442,7 +6443,7 @@ function createSagePointer(uniqueID, portal) {
 	broadcast('createSagePointer', sagePointers[uniqueID]);
 }
 
-//josh
+//josh and joe
 function stopSageKinectPointer(uniqueID){
 	// broadcast('stopSagePointer',sagePointers[uniqueID]);
 	// delete sagePointers[uniqueID];
