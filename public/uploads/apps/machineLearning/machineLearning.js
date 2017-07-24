@@ -5,6 +5,7 @@
 // Copyright (c) 2015
 //
 
+let previousIDs = [];
 const bodyParts = {
 	"OMICRON_SKEL_HEAD": {
 		"partName": "head",
@@ -428,6 +429,7 @@ var machineLearning = SAGE2_App.extend( {
 	// 	this.ctx.stroke();
 	// },
 drawSkeletonLines: function(){
+
 	for (const skeletonID in this.skeletons) {
 		const skeleton = this.skeletons[skeletonID];
 
@@ -693,7 +695,18 @@ drawSkeletonLines: function(){
 	//---------- DRAWING FUNCTIONS ----------//
 	//---------------------------------------//
 	draw: function(date) {
-
+		if(this.skeletons){
+			//josh - remove kinect pointers from inactive skeletons
+			let curIDs = Object.keys(this.skeletons);
+			if(curIDs.length !== previousIDs.length){
+				for(let p of previousIDs){
+					if(curIDs.indexOf(p) === -1){
+						wsio.emit('removeKinectPointer', {id: `kinect_${p}`});
+					}
+				}
+				previousIDs = curIDs;
+			}
+		}
 		this.calibratedTrialModeDraw(date);
 	},
 
@@ -1054,36 +1067,43 @@ drawSkeletonLines: function(){
 			const phrase = data.phrase;
 			if (data.confidence < 0.5) return;
 
-			const {x, y} = this.mostRecentSkeleton.leftFingerTip;
+			// const {x, y} = this.mostRecentSkeleton.leftFingerTip;
 			const {upperLeft, lowerLeft, upperRight, lowerRight} = this.calibrations;
+			if (phrase === "alexa") {
 
-			if (!this.trialRunning && phrase === "start") {
-				// this.beginTrial();
-			} else if (this.trialRunning && phrase === "stop") {
-				// this.endTrial();
-			} else if (phrase === "calibrate" && upperLeft && lowerLeft && upperRight && lowerRight) {
-				this.calibrations.calibrated = true;
-				this.calibrations.xMin = (upperLeft.x + lowerLeft.x) / 2;
-				this.calibrations.xMax = (upperRight.x + lowerRight.x) / 2;
-				this.calibrations.yMin = (upperLeft.y + upperRight.y) / 2;
-				this.calibrations.yMax = (lowerLeft.y + lowerRight.y) / 2;
-			} else if (phrase === "upper left") {
-				this.calibrations.upperLeft = {};
-				this.calibrations.upperLeft.x = x;
-				this.calibrations.upperLeft.y = y;
-			} else if (phrase === "lower left") {
-				this.calibrations.lowerLeft = {};
-				this.calibrations.lowerLeft.x = x;
-				this.calibrations.lowerLeft.y = y;
-			} else if (phrase === "upper right") {
-				this.calibrations.upperRight = {};
-				this.calibrations.upperRight.x = x;
-				this.calibrations.upperRight.y = y;
-			} else if (phrase === "lower right") {
-				this.calibrations.lowerRight = {};
-				this.calibrations.lowerRight.x = x;
-				this.calibrations.lowerRight.y = y;
+				// start anitmation visual queue
+				console.log("I heard alexa!.");
+
 			}
+
+
+			// if (!this.trialRunning && phrase === "start") {
+			// 	// this.beginTrial();
+			// } else if (this.trialRunning && phrase === "stop") {
+			// 	// this.endTrial();
+			// } else if (phrase === "calibrate" && upperLeft && lowerLeft && upperRight && lowerRight) {
+			// 	this.calibrations.calibrated = true;
+			// 	this.calibrations.xMin = (upperLeft.x + lowerLeft.x) / 2;
+			// 	this.calibrations.xMax = (upperRight.x + lowerRight.x) / 2;
+			// 	this.calibrations.yMin = (upperLeft.y + upperRight.y) / 2;
+			// 	this.calibrations.yMax = (lowerLeft.y + lowerRight.y) / 2;
+			// } else if (phrase === "upper left") {
+			// 	this.calibrations.upperLeft = {};
+			// 	this.calibrations.upperLeft.x = x;
+			// 	this.calibrations.upperLeft.y = y;
+			// } else if (phrase === "lower left") {
+			// 	this.calibrations.lowerLeft = {};
+			// 	this.calibrations.lowerLeft.x = x;
+			// 	this.calibrations.lowerLeft.y = y;
+			// } else if (phrase === "upper right") {
+			// 	this.calibrations.upperRight = {};
+			// 	this.calibrations.upperRight.x = x;
+			// 	this.calibrations.upperRight.y = y;
+			// } else if (phrase === "lower right") {
+			// 	this.calibrations.lowerRight = {};
+			// 	this.calibrations.lowerRight.x = x;
+			// 	this.calibrations.lowerRight.y = y;
+			// }
 		}
 		else if (eventType === "dictationInput") {
 			// const phrase = data.phrase;

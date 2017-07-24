@@ -31,6 +31,13 @@
 
 // require variables to be declared
 'use strict';
+// Test for Alexa. Sorry for the terrible code!
+
+
+
+
+// End of alexa stuff. Sorry again!! ---------------------------------------------------------------------------------------------------------
+
 
 // node: built-in
 var fs            = require('fs');               // filesystem access
@@ -621,6 +628,18 @@ var remoteSharingSessions      = {};
 // Sticky items and window position for new clones
 var stickyAppHandler     = new StickyItems();
 
+//josh
+// setInterval(()=> {
+// 	// console.log("checking pointers");
+// 	let curTime = new Date();
+// 	for(let id in sagePointers){
+// 		if(curTime - sagePointers[id].lastUsed > 10000){
+// 			console.log("deleting pointer",id);
+// 			stopSageKinectPointer(id);
+// 		}
+// 	}
+// 	// console.log("finished checking pointers");
+// }, 5000)
 
 //
 // Catch the uncaught errors that weren't wrapped in a domain or try catch statement
@@ -628,7 +647,7 @@ var stickyAppHandler     = new StickyItems();
 process.on('uncaughtException', function(err) {
 	// handle the error safely
 	//kinect comment out is better
-	console.trace("SAGE2>	", err);
+	//console.trace("SAGE2>	", err); //TURN BACK ON VIJAY AND JOE
 });
 
 
@@ -897,6 +916,9 @@ function setupListeners(wsio) {
 
 	wsio.on('startSagePointer',                     wsStartSagePointer);
 	wsio.on('stopSagePointer',                      wsStopSagePointer);
+
+	wsio.on('checkKinectPointers',									wsCheckKinectPointers); //josh
+	wsio.on('removeKinectPointer',									wsRemoveKinectPointer);
 
 	wsio.on('pointerPress',                         wsPointerPress);
 	wsio.on('pointerRelease',                       wsPointerRelease);
@@ -1434,6 +1456,25 @@ function wsStopSagePointer(wsio, data) {
 	}
 
 	addEventToUserLog(wsio.id, {type: "SAGE2PointerEnd", data: null, time: Date.now()});
+}
+
+//josh and joe
+function wsRemoveKinectPointer(wsio,data) {
+	//delete if pointer exists
+	if(sagePointers[data.id]){
+		stopSageKinectPointer(data.id);
+	}
+}
+
+//josh
+function wsCheckKinectPointers(wsio,data){
+	let curTime = new Date();
+	for(let id in sagePointers){
+		if(curTime - sagePointers[id].lastUsed > 1000){
+			// console.log("deleting pointer",id);
+			stopSageKinectPointer(id);
+		}
+	}
 }
 
 function wsPointerPress(wsio, data) {
@@ -2915,7 +2956,12 @@ function wsGoogleVoiceSpeechInput(wsio, data){
 
 	console.log("orderedItems: " + JSON.stringify(orderedItems));
 
-	if( !targetInfo)
+	if( commandText.includes("TILE THESE"))
+	{
+		console.log("Tiling windows");
+		tileApplications();
+		return;
+	}else	if( !targetInfo)
 	{
 		return;
 	}
@@ -2946,7 +2992,7 @@ function wsGoogleVoiceSpeechInput(wsio, data){
 		}
 
 		if(numToClose == 0) {
-			var cutoff = 200;
+			var cutoff = 150;
 			for( var key in orderedItems)
 			{
 				if (orderedItems[key].count > cutoff )
@@ -2977,102 +3023,173 @@ function wsGoogleVoiceSpeechInput(wsio, data){
 	else if( commandText.includes( "MOVE THIS" )){  //WINDOW") ){
 
 
-			var updateItem = {
-				elemId: app.id,
-				elemLeft: app.left,
-				elemTop: app.top,
-				elemWidth: app.width,
-				elemHeight: app.height,
-				force: true,
-				date: Date.now()
-			};
-			var rightMost = config.totalWidth - updateItem.elemWidth;
-			var bottomMost = config.totalHeight- updateItem.elemHeight;
+			// var updateItem = {
+			// 	elemId: app.id,
+			// 	elemLeft: app.left,
+			// 	elemTop: app.top,
+			// 	elemWidth: app.width,
+			// 	elemHeight: app.height,
+			// 	force: true,
+			// 	date: Date.now()
+			// };
+			var rightMost = config.totalWidth - app.width;
+			var bottomMost = config.totalHeight- app.height;
+			// let tempdx = 0;
+			// let tempdy = 0;
+			let nextXPosition = app.left;
+			let nextYPosition = app.top;
+			console.log("rightMost:", rightMost, " bottomMost", bottomMost);
 
-			console.log("before processing" + JSON.stringify(updateItem));
+		//	console.log("before processing" + JSON.stringify(updateItem));
 			if(commandText.includes("SIDE") || commandText.includes("CORNER") || commandText.includes("EDGE"))
 			{
 				if( commandText.includes("TOP") ){
-						updateItem.elemTop = 0.0;
+						// updateItem.elemTop = 0.0;
+						nextYPosition = 0.0;
 				}
 				else
 				{
 					if (commandText.includes( "BOTTOM" )) {
-						updateItem.elemTop = bottomMost;
+						// updateItem.elemTop = bottomMost;
+						nextYPosition = bottomMost;
 					}
 				}
 
 				if(  commandText.includes( "LEFT" ) ){
-						updateItem.elemLeft = 0.0;
+						// updateItem.elemLeft = 0.0;
+						nextXPosition = 0.0;
 				}
 				else
 				{
 						if (commandText.includes( "RIGHT" )) {
-							updateItem.elemLeft = rightMost;
+							// updateItem.elemLeft = rightMost;
+							nextYPosition = rightMost;
 						}
 				}
+				// moveAndResizeApplicationWindow(updateItem);
+				wsAppMoveTo(null, {id: targetInfo.appId, x: nextXPosition, y: nextYPosition});
 			}
 			else {
 				if(  commandText.includes( "LEFT" ) ){
-						updateItem.elemLeft -= updateItem.elemWidth;
-						if ( updateItem.elemLeft < 0 )
+						// updateItem.elemLeft -= updateItem.elemWidth;
+						// if ( updateItem.elemLeft < 0 )
+						// {
+						// 	updateItem.elemLeft = 0;
+						// }
+						// tempdx = -app.width;
+						nextXPosition -= app.width;
+						if (nextXPosition < 0)
 						{
-							updateItem.elemLeft = 0;
+							nextXPosition = 0;
 						}
 				}
 				else if (commandText.includes( "RIGHT" )) {
-							updateItem.elemLeft += updateItem.elemWidth;
-							if ( updateItem.elemLeft > rightMost)
+							// updateItem.elemLeft += updateItem.elemWidth;
+							// if ( updateItem.elemLeft > rightMost)
+							// {
+							// 	updateItem.elemLeft = rightMost;
+							// }
+							// tempdx = app.width;
+							nextXPosition += app.width;
+							if (nextXPosition > rightMost)
 							{
-								updateItem.elemLeft = rightMost;
+								nextXPosition = rightMost;
 							}
 				}
 				if(  commandText.includes( "UP" ) ){
-						updateItem.elemTop -= updateItem.elemHeight;
-						if ( updateItem.elemTop < 0 )
+						// updateItem.elemTop -= updateItem.elemHeight;
+						// if ( updateItem.elemTop < 0 )
+						// {
+						// 	updateItem.elemTop = 0;
+						// }
+						// tempdy = -app.height;
+						nextYPosition -= app.height;
+						if(nextYPosition < 0)
 						{
-							updateItem.elemTop = 0;
+							nextYPosition = 0.0;
 						}
 				}
 				else if (commandText.includes( "DOWN" )) {
-							updateItem.elemTop += updateItem.elemHeight;
-							if ( updateItem.elemTop > bottomMost)
+							// updateItem.elemTop += updateItem.elemHeight;
+							// if ( updateItem.elemTop > bottomMost)
+							// {
+							// 	updateItem.elemLeft = bottomMost;
+							// }
+							// tempdy = app.height;
+							nextYPosition += app.height;
+							if(nextYPosition > bottomMost)
 							{
-								updateItem.elemLeft = bottomMost;
+								nextYPosition = bottomMost
 							}
 				}
+
+				if (commandText.includes( "HERE" ))
+				{
+					let curPointer = sagePointers[targetInfo.pointerId];
+					let curX = curPointer.left;
+					let curY = curPointer.top;
+					console.log("curPointer",curX,curY);
+					wsAppMoveTo(null, {id: targetInfo.appId, x: curX, y: curY});
+				}else{
+					// console.log("tempdx:", tempdx, "tempdy:", tempdy);
+					// wsAppMoveBy(null, {id: app.id, dx: tempdx, dy: tempdy});
+					wsAppMoveTo(null, {id: targetInfo.appId, x: nextXPosition, y: nextYPosition});
+				}
+
 			}
-			console.log("after processing" + JSON.stringify(updateItem));
-			moveAndResizeApplicationWindow(updateItem);
+		//	console.log("after processing" + JSON.stringify(updateItem));
+			// moveAndResizeApplicationWindow(updateItem
+
+
 	}
 
 
 	else if( commandText.includes( "CENTER THIS WINDOW") ){
 
-		var updateItem = {
-			elemId: app.id,
-			elemLeft: (config.totalWidth - app.width)/2,
-			elemTop: (config.totalHeight - app.height)/2,
-			elemWidth: app.width,
-			elemHeight: app.height,
-			force: true,
-			date: Date.now()
-		};
-			moveAndResizeApplicationWindow(updateItem);
+		// var updateItem = {
+		// 	elemId: app.id,
+		// 	elemLeft: (config.totalWidth - app.width)/2,
+		// 	elemTop: (config.totalHeight - app.height)/2,
+		// 	elemWidth: app.width,
+		// 	elemHeight: app.height,
+		// 	force: true,
+		// 	date: Date.now()
+		// };
+		// 	moveAndResizeApplicationWindow(updateItem);
+		let nextXPosition = (config.totalWidth - app.width)/2;
+		let nextYPosition = (config.totalHeight - app.height)/2;
+		wsAppMoveTo(null, {id: targetInfo.appId, x: nextXPosition, y: nextYPosition});
 	}
 
 	else if( commandText.includes( "DOUBLE THIS WINDOW") ){
-
-		var updateItem = {
-			elemId: app.id,
-			elemLeft: app.left,
-			elemTop: app.top,
-			elemWidth: app.width*2,
-			elemHeight: app.height*2,
-			force: true,
-			date: Date.now()
-		};
+		if (SAGE2Items.applications.list.hasOwnProperty(data.id)) {
+			var updateItem = {
+				elemId: app.id,
+				elemLeft: app.left,
+				elemTop: app.top,
+				elemWidth: app.width*2,
+				elemHeight: app.height*2,
+				force: true,
+				date: Date.now()
+			};
 			moveAndResizeApplicationWindow(updateItem);
+		}
+			//TODO: switch to the normal resize window.
+	}
+	else if( commandText.includes("SHRINK THIS WINDOW"))
+	{
+		if (SAGE2Items.applications.list.hasOwnProperty(data.id)) {
+			var updateItem = {
+				elemId: app.id,
+				elemLeft: app.left,
+				elemTop: app.top,
+				elemWidth: app.width/2,
+				elemHeight: app.height/2,
+				force: true,
+				date: Date.now()
+			};
+			moveAndResizeApplicationWindow(updateItem);
+		}
 	}
 
 	else if( commandText.includes("MAXIMIZE THIS WINDOW")){
@@ -3087,7 +3204,8 @@ function wsGoogleVoiceSpeechInput(wsio, data){
 		}
 	}
 
-	//write a few more....
+	pointedToApps = [];
+
 	//find articulate app (just articulate app for now)
 	// var app = SAGE2Items.applications.getFirstItemWithTitle("articulate_ui");
 	//console.log(app);
@@ -3095,10 +3213,10 @@ function wsGoogleVoiceSpeechInput(wsio, data){
 
 //find kinect app to start gesture recognition
 function wsGestureRecognitionStatus(wsio, data){
-	console.log("status " + data.text);
-	 if(data.text == 'true'){
-	 	pointedToApps = [];
-	 }
+	console.log("entering wsGestureRecognitionStatus " + JSON.stringify(data));
+	//  if(data.text == 'true'){
+	//  	pointedToApps = [];
+	//  }
 	 // vijay look here to clear - joe
 	 //	var obj = interactMgr.searchGeometry({x: pointerX, y: pointerY}); //object on top pointed at given an x and y coordinate HERE!
 	var app = SAGE2Items.applications.getFirstItemWithTitle("machineLearning");
@@ -3106,19 +3224,23 @@ function wsGestureRecognitionStatus(wsio, data){
 		var data = {id: app.id, data: data.text, date: Date.now()};
 		broadcast('startGestureRecognition', data);
 }
-	//console.log(app);
+	// console.log(app);
 }
 
 //receiving pointing positions and finding pointed to apps
+let cur_app_id;
 function wsPointingGesturePosition(wsio, data){
 	//make a pointer on screen
 	//  see if kinect pointer exists (for now just one)
 	if (sagePointers[data.id] === undefined) {
-		console.log("making the kinect pointer");
+		// console.log("making the kinect pointer");
 		createSagePointer(data.id);
 		showPointer(data.id, {label: data.id, color: data.color, sourceType: "kinect"});
 
 	}
+
+	sagePointers[data.id].lastUsed = new Date();
+	sagePointers[data.id].isKinect = true;
 	// showPointer(data.id, {label: data.id, color: data.color, sourceType: "kinect"});
 
 	//show sage pointer
@@ -3136,7 +3258,13 @@ function wsPointingGesturePosition(wsio, data){
 			if(app.title != "machineLearning" && app.title != "articulate_ui" && app.title != "background"){
 				if(data.x >= app.left && data.x <= (app.left + app.width) && data.y >= app.top && data.y <= (app.top + app.height)){//*****
 
-					pointedToApps[pointedToApps.length]= {appId: app.id, pointerId: data.id};
+					// pointedToApps[pointedToApps.length]= {appId: app.id, pointerId: data.id};
+					pointedToApps.push({appId: app.id, pointerId: data.id});
+
+					if(app.id !== cur_app_id){
+						cur_app_id = app.id;
+						console.log("Current App:",cur_app_id);
+					}
 				}
 			}
 		}
@@ -3167,8 +3295,6 @@ function mostOccurrenceItem(array){
 
 // Vijay and joe did this to get information on multiple windows
 function mostItems(array){
-
-
 	if(array.length == 0){
 		return null;
 	}
@@ -6316,6 +6442,29 @@ function createSagePointer(uniqueID, portal) {
 	broadcast('createSagePointer', sagePointers[uniqueID]);
 }
 
+//josh
+function stopSageKinectPointer(uniqueID){
+	// broadcast('stopSagePointer',sagePointers[uniqueID]);
+	// delete sagePointers[uniqueID];
+
+	if(!sagePointers[uniqueID].isKinect){
+		return;
+	}
+
+	hidePointer(uniqueID);
+
+	// return to window interaction mode after stopping pointer
+	remoteInteraction[uniqueID].saveMode();
+	if (remoteInteraction[uniqueID].appInteractionMode()) {
+		remoteInteraction[uniqueID].toggleModes();
+		broadcast('changeSagePointerMode', {id: sagePointers[uniqueID].id, mode: remoteInteraction[uniqueID].interactionMode});
+	}
+
+	addEventToUserLog(uniqueID, {type: "SAGE2PointerEnd", data: null, time: Date.now()});
+
+	delete sagePointers[uniqueID];
+}
+
 function showPointer(uniqueID, data) {
 	if (sagePointers[uniqueID] === undefined) {
 		return;
@@ -6570,6 +6719,14 @@ function sendKinectInput(id, data) {	// From addClient type == sageUI
 	//later:from skeleton to window
 
 	broadcast('eventInItem', event);
+
+	//Vijay and Joe
+	//Here is where you can turn on logging if it is 'alexa'
+	if(data.type == "grammarInput" && data.phrase == "alexa"){
+		 console.log(data);
+		 console.log("I HEARD YOU SAID ALEXA!!!");
+		//start logging
+	}
 
 	//	var obj = interactMgr.searchGeometry({x: pointerX, y: pointerY});
 	// id  app_0

@@ -49,6 +49,16 @@
           <item>lower right</item>
         </one-of>
       </item>
+
+      <item>
+        <tag>alexa</tag>
+        <one-of>
+          <item> alexa </item>
+          <item> ask articulate </item>
+          <item> articulate </item>
+        </one-of>
+      </item>
+
     </one-of>
   </rule>
 </grammar>
