@@ -183,10 +183,6 @@ var gmapMod = SAGE2_App.extend({
 
 		if (isMaster) {
 			// function(nameOfValue, value, description)
-			this.serverDataSetSourceValue("geoLocation", {
-				source: this.id,
-				location: this.state.center
-			});
 			this.serverDataSetSourceValue("testConvert:geoLocationCenter", this.state.center);
 			var boundArray = [];
 			var ne = this.map.getBounds().getNorthEast();
@@ -194,6 +190,22 @@ var gmapMod = SAGE2_App.extend({
 			boundArray.push({lat: ne.lat(), lng: ne.lng()});
 			boundArray.push({lat: sw.lat(), lng: sw.lng()});
 			this.serverDataSetSourceValue("testConvert:geoLocationBounds", boundArray);
+
+			/* might be useful later, but with the current test case (Japan) the characters do not work well.
+			this.geocoder.geocode({'location': this.state.center}, function(results, status) {
+				if (status === 'OK') {
+					if (results[1]) {
+						var town = results[5].formatted_address.trim().split(',')[0];
+						console.log("Geo coder things the map is looking at: " + town);
+						this.serverDataSetSourceValue("currentTown", town);
+					} else {
+						console.log('No results found from geocoder');
+					}
+				} else {
+					console.log('Geocoder failed due to: ' + status);
+				}
+			});
+			*/
 		}
 	},
 
@@ -766,6 +778,7 @@ var gmapMod = SAGE2_App.extend({
 		// receive an object from the web ui
 		// .clientInput for what they typed
 		this.codeAddress(msgParams.clientInput);
+		this.serverDataSetSourceValue("currentTown", msgParams.clientInput); // may not be a town
 	},
 
 	/**
@@ -819,13 +832,6 @@ var gmapMod = SAGE2_App.extend({
 		// ask for any new variables that are given to the server
 		// function(callback, unsubscribe)
 		this.serverDataSubscribeToNewValueNotification("handlerForNewVariableNotification");
-		// give its own center view to server
-		// serverDataBroadcastSource: function(suffix, value, description)
-		this.serverDataBroadcastSource("geoLocation", {
-			source: this.id,
-			location: this.state.center
-		}, "the map's center geoLocation value");
-
 		// creates destination variables
 		// serverDataBroadcastDestination: function(suffix, value, description, callback)
 		this.serverDataBroadcastDestination(
@@ -866,6 +872,7 @@ var gmapMod = SAGE2_App.extend({
 			dataTypes: ["gps"], // gives these datatypes, example: geojson can have more, but may only have points.
 			dataFormat: "s2GeoLocation"
 		});
+		this.serverDataBroadcastSource("currentTown", "" , "");
 		// name suffix, value, description, callback
 		this.serverDataBroadcastDestination("testConvert:markerReplaceNoViewChange", [], {
 			app: this.id,
