@@ -401,19 +401,22 @@ var SAGE2PointerToNativeMouseEvent = {
 	*/
 	handleElectronConversion: function(pointerInfo, point) {
 		// first convert location of wall to screen, app style contains display offset
-		var appElem = document.getElementById(pointerInfo.appId);
+		// var appElem = document.getElementById(pointerInfo.appId);
 		var appOffset = {
-			x: parseInt(appElem.style.left),
-			y: parseInt(appElem.style.top)
+			x: 0, // parseInt(appElem.style.left),
+			y: 0 // parseInt(appElem.style.top)
 		};
+
+
 		pointerInfo.xOnScreen = pointerInfo.xOnWall + appOffset.x;
 		pointerInfo.yOnScreen = pointerInfo.yOnWall + appOffset.y;
 
+
 		var eventData = {
-			modifiers: [],
+			modifiers: point.modifiers,
 			x: pointerInfo.xOnScreen,
 			y: pointerInfo.yOnScreen,
-			userId: pointerInfo.user.id,
+			userId: pointerInfo.user.id, // do these make it to the receiving element?
 			userLabel: pointerInfo.user.label,
 			userColor: pointerInfo.user.color
 		};
@@ -429,13 +432,77 @@ var SAGE2PointerToNativeMouseEvent = {
 			eventData.type =  "mouseUp";
 			eventData.button = pointerInfo.data.button;
 			eventData.clickCount = 1;
+		} else if (pointerInfo.type === "pointerScroll") {
+			eventData.type =  "mouseWheel";
+			eventData.x = 0;
+			eventData.y = 0;
+			eventData.deltaX = 0;
+			eventData.deltaY = -1 * pointerInfo.data.wheelDelta;
+			eventData.canScroll = true;
+		} else if (pointerInfo.type === "keyboard") {
+			// eventData.type =  "char";
+			// eventData.keyCode = pointerInfo.data.character;
+			this.webContent.sendInputEvent({
+				type: "char",
+				keyCode: pointerInfo.data.character
+			});
+			setTimeout(() => {
+				// eventData.type = "keyUp";
+				// this.webContent.sendInputEvent(eventData);
+				this.webContent.sendInputEvent({
+					type: "keyUp",
+					keyCode: pointerInfo.data.character
+				});
+			}, 0);
+			return;
+		} else if (pointerInfo.type === "specialKey") {
+			// clear the array
+			point.modifiers = [];
+			// store the modifiers values
+			if (pointerInfo.data.status && pointerInfo.data.status.SHIFT) {
+				point.modifiers.push("shift");
+			}
+			if (pointerInfo.data.status && pointerInfo.data.status.CTRL) {
+				point.modifiers.push("control");
+			}
+			if (pointerInfo.data.status && pointerInfo.data.status.ALT) {
+				point.modifiers.push("alt");
+			}
+			if (pointerInfo.data.status && pointerInfo.data.status.CMD) {
+				point.modifiers.push("meta");
+			}
+			if (pointerInfo.data.status && pointerInfo.data.status.CAPS) {
+				point.modifiers.push("capsLock");
+			}
+
+			// SHIFT key
+			if (pointerInfo.data.code === 16) {
+				if (pointerInfo.data.state === "down") {
+					eventData.type =  "keyDown";
+					eventData.keyCode = "Shift";
+				} else {
+					eventData.type =  "keyUp";
+					eventData.keyCode = "Shift";
+				}
+			}
+			// backspace key
+			if (pointerInfo.data.code === 8 || pointerInfo.data.code === 46) {
+				if (pointerInfo.data.state === "down") {
+					// The delete is too quick potentially.
+					// Currently only allow on keyup have finer control
+				} else {
+					eventData.type =  "keyUp";
+					eventData.keyCode = "Backspace";
+				}
+			}
 		} else {
 			console.log("Cannot convert unknown event: " + pointerInfo.type);
 			return;
 		}
-
-		// how can it know what element got the event?
-		retval = this.webContent.sendInputEvent(eventData);
+		// only send if a type was defined. no type means unknown case, or special key modifier was set.
+		if (eventData.type) {
+			retval = this.webContent.sendInputEvent(eventData);
+		}
 		if (retval && this.debug) {
 			console.log("sendInputEvent returned the following");
 			console.dir(retval);
@@ -985,3 +1052,4 @@ var SAGE2PointerToNativeMouseEvent = {
 	}, //end initialize
 
 */
+
