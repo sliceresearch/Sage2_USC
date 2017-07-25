@@ -429,7 +429,7 @@ var gmapMod = SAGE2_App.extend({
 	 *  lng: float
 	 * }
 	 */
-	addMarkerToMap: function(markerLocation) {
+	addMarkerToMap: function(markerLocation, preventViewChange) {
 		var _this = this;
 		if (typeof markerLocation === "string") {
 			var latlng = markerLocation.split(",");
@@ -452,8 +452,10 @@ var gmapMod = SAGE2_App.extend({
 		this.mapMarkers.push(markToAdd);
 		markToAdd.markerLocation = markerLocation;
 		// always center view on new marker
-		this.map.setCenter(markerLocation);
-		this.updateCenter();
+		if (!preventViewChange) {
+			this.map.setCenter(markerLocation);
+			this.updateCenter();
+		}
 		// add info window if it doesn't exist
 		if (this.gmapInfoWindow === undefined || this.gmapInfoWindow === null) {
 			this.gmapInfoWindow = new google.maps.InfoWindow();
@@ -865,6 +867,13 @@ var gmapMod = SAGE2_App.extend({
 			dataFormat: "s2GeoLocation"
 		});
 		// name suffix, value, description, callback
+		this.serverDataBroadcastDestination("testConvert:markerReplaceNoViewChange", [], {
+			app: this.id,
+			interpretAs: "set",
+			dataTypes: ["gps"], // wants these datatypes
+			dataFormat: "s2GeoLocation" // should this also describe what is acceptable?
+		}, "replaceMarkerPlotsConvertedByS2NoViewChange");
+		// name suffix, value, description, callback
 		this.serverDataBroadcastDestination("testConvert:markerPlotReplace", [], {
 			app: this.id,
 			interpretAs: "set",
@@ -953,13 +962,23 @@ var gmapMod = SAGE2_App.extend({
 	},
 
 	/**
+	 * Activates replaceMarkerPlotsConvertedByS2, but passes param to prevent view change.
+	 *
+	 * @method replaceMarkerPlotsConvertedByS2NoViewChange
+	 * @param {Array} value - An array containing locations to plot on map.
+	 */
+	replaceMarkerPlotsConvertedByS2NoViewChange: function(value) {
+		this.replaceMarkerPlotsConvertedByS2(value, true);
+	},
+
+	/**
 	 * Should get an array of objects [{lat:, lng:}, ..]
 	 * To test next is strings "latitudeValue, longitudeValue"
 	 *
 	 * @method replaceMarkerPlotsConvertedByS2
 	 * @param {Array} value - An array containing locations to plot on map.
 	 */
-	replaceMarkerPlotsConvertedByS2: function(value) {
+	replaceMarkerPlotsConvertedByS2: function(value, preventViewChange) {
 		// clear out all marker plots
 		this.removeAllMarkersFromMap();
 		// plot the new ones.
@@ -970,7 +989,7 @@ var gmapMod = SAGE2_App.extend({
 		var viewBound = new google.maps.LatLngBounds();
 		var markerPos;
 		for (let i = 0; i < value.length; i++) {
-			this.addMarkerToMap(value[i]);
+			this.addMarkerToMap(value[i], preventViewChange);
 			markerPos = new google.maps.LatLng(value[i].lat, value[i].lng);
 			viewBound.extend(markerPos);
 			// if (value[i].lat < sLat || sLat === null) {
@@ -984,7 +1003,7 @@ var gmapMod = SAGE2_App.extend({
 			// 	bLng = value[i].lng;
 			// }
 		}
-		if (value.length > 1) {
+		if (value.length > 1 && !preventViewChange) {
 			// TODO maybe modify if need to control zoom level
 			this.map.fitBounds(viewBound);
 		}
