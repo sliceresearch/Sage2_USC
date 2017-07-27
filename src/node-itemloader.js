@@ -618,7 +618,6 @@ AppLoader.prototype.loadZipAppFromFile = function(file, mime_type, aUrl, externa
 
 	var unzipper = new Unzip(file);
 	unzipper.on('extract', function(log) {
-
 		// check if zip contains UnityLoader
 		var unityLoader = path.join(zipFolder, "Release/UnityLoader.js");
 		var unityDevLoader = path.join(zipFolder, "Development/UnityLoader.js");
@@ -629,92 +628,19 @@ AppLoader.prototype.loadZipAppFromFile = function(file, mime_type, aUrl, externa
 		var hasInstructionsFile = fs.existsSync(instuctionsFile);
 
 		if (isUnityApp || isUnityDevApp) {
-
 			if (isUnityDevApp) {
 				unityLoader = unityDevLoader;
 			}
 
-			var unityIndexHtml = path.join(zipFolder, "index.html");
+			var instructionInfo = {
+				instuctionsFile: instuctionsFile,
+				instructionsExists: hasInstructionsFile,
+				mime_type: mime_type,
+				external_url: external_url
+			};
 
-			fs.readFile(unityIndexHtml, 'utf8', function(err1, html_str) {
-				if (err1) {
-					throw err1;
-				}
-
-				// Read index.html
-				var indexHtml = cheerio.load(html_str);
-
-				// Grab html info
-				var htmlTitle = indexHtml("title").text();
-				var htmlCanvasHeight = indexHtml("canvas").attr("height");
-				var htmlCanvasWidth = indexHtml("canvas").attr("width");
-
-				// Title is in the form 'Unity WebGL Player | [Product Name]'
-				// Get just the Product Name
-				htmlTitle = htmlTitle.split("|")[1].trim();
-
-				// Set the html <title> the new parsed name
-				indexHtml("title").text(htmlTitle);
-
-				// Get the canvas width/height, parsing out "px"
-				htmlCanvasHeight = parseInt(htmlCanvasHeight.slice(0, htmlCanvasHeight.indexOf("p")));
-				htmlCanvasWidth = parseInt(htmlCanvasWidth.slice(0, htmlCanvasWidth.indexOf("p")));
-
-				// Sets style flag for proper SAGE2 scaling
-				var htmlStyle = "* {margin: 0; padding: 0;}html, body {width: 100vw;height: 100vh;}";
-				htmlStyle += "canvas {height: 100vh;width: 100vw;display: block;}";
-				indexHtml("style").text(htmlStyle);
-
-				// Update index.html
-				fs.writeFile(unityIndexHtml, indexHtml.html(), function(err) {
-					if (err) {
-						return console.log(err);
-					}
-				});
-
-				if (hasInstructionsFile == false) {
-					var obj = {
-						main_script: "UnityLoader.js",
-						icon: "",
-						width: htmlCanvasWidth,
-						height: htmlCanvasHeight,
-						resize: "free",
-						animation: true,
-						dependencies: [
-						],
-						load: {
-						},
-						title: htmlTitle,
-						version: "1.0.0",
-						description: "Loads a Unity3D webgl output into a webview",
-						keywords: ["sage2", "unity3d", "webview"],
-						author: "",
-						license: "SAGE2-Software-License"
-					};
-
-					jsonfile.writeFileSync(instuctionsFile, obj);
-				}
-
-				fs.readFile(instuctionsFile, 'utf8', function(err1, json_str) {
-					if (err1) {
-						throw err1;
-					}
-
-					assets.exifAsync([zipFolder], function(err2) {
-						if (err2) {
-							throw err2;
-						}
-						console.log(sageutils.header("Loader") + " found unity file " + unityLoader);
-						var appInstance = _this.readInstructionsFile(json_str, zipFolder, mime_type, external_url);
-						//var appInstance = _this.processUnityApp(json_str, zipFolder, mime_type, external_url);
-						_this.scaleAppToFitDisplay(appInstance);
-						// Seems to cause issues, when drag-drop, the first time the app is opened.
-						// appInstance.file = file;
-						callback(appInstance);
-					});
-				});
-			});
-
+			console.log(sageutils.header('AppLoader') + " Found Unity app " + unityLoader);
+			_this.loadUnityAppFromZip(_this, unityLoader, zipFolder, instructionInfo, callback);
 		} else {
 			fs.readFile(instuctionsFile, 'utf8', function(err1, json_str) {
 				if (err1) {
@@ -763,7 +689,88 @@ AppLoader.prototype.loadZipAppFromFile = function(file, mime_type, aUrl, externa
 	});
 };
 
-AppLoader.prototype.checkZipAppType = function(file, mime_type, aUrl, external_url, name, callback) {
+AppLoader.prototype.loadUnityAppFromZip = function(appLoader, unityLoader, zipFolder, data, callback) {
+	var unityIndexHtml = path.join(zipFolder, "index.html");
+
+	console.log(sageutils.header('AppLoader') + unityIndexHtml);
+	fs.readFile(unityIndexHtml, 'utf8', function(err1, html_str) {
+		if (err1) {
+			throw err1;
+		}
+
+		// Read index.html
+		var indexHtml = cheerio.load(html_str);
+
+		// Grab html info
+		var htmlTitle = indexHtml("title").text();
+		var htmlCanvasHeight = indexHtml("canvas").attr("height");
+		var htmlCanvasWidth = indexHtml("canvas").attr("width");
+
+		// Title is in the form 'Unity WebGL Player | [Product Name]'
+		// Get just the Product Name
+		htmlTitle = htmlTitle.split("|")[1].trim();
+
+		// Set the html <title> the new parsed name
+		indexHtml("title").text(htmlTitle);
+
+		// Get the canvas width/height, parsing out "px"
+		htmlCanvasHeight = parseInt(htmlCanvasHeight.slice(0, htmlCanvasHeight.indexOf("p")));
+		htmlCanvasWidth = parseInt(htmlCanvasWidth.slice(0, htmlCanvasWidth.indexOf("p")));
+
+		// Sets style flag for proper SAGE2 scaling
+		var htmlStyle = "* {margin: 0; padding: 0;}html, body {width: 100vw;height: 100vh;}";
+		htmlStyle += "canvas {height: 100vh;width: 100vw;display: block;}";
+		indexHtml("style").text(htmlStyle);
+
+		// Update index.html
+		fs.writeFile(unityIndexHtml, indexHtml.html(), function(err) {
+			if (err) {
+				return console.log(err);
+			}
+		});
+
+		if (data.instructionsExists == false) {
+			var obj = {
+				main_script: "UnityLoader.js",
+				icon: "",
+				width: htmlCanvasWidth,
+				height: htmlCanvasHeight,
+				resize: "free",
+				animation: true,
+				dependencies: [
+				],
+				load: {
+				},
+				title: htmlTitle,
+				version: "1.0.0",
+				description: "Loads a Unity3D webgl output into a webview",
+				keywords: ["sage2", "unity3d", "webview"],
+				author: "",
+				license: "SAGE2-Software-License"
+			};
+
+			jsonfile.writeFileSync(data.instuctionsFile, obj);
+		}
+
+		fs.readFile(data.instuctionsFile, 'utf8', function(err1, json_str) {
+			if (err1) {
+				throw err1;
+			}
+
+			assets.exifAsync([zipFolder], function(err2) {
+				if (err2) {
+					throw err2;
+				}
+				console.log(sageutils.header("Loader") + " found unity file " + unityLoader);
+				var appInstance = appLoader.readInstructionsFile(json_str, zipFolder, data.mime_type, data.external_url);
+				//var appInstance = _this.processUnityApp(json_str, zipFolder, mime_type, external_url);
+				appLoader.scaleAppToFitDisplay(appInstance);
+				// Seems to cause issues, when drag-drop, the first time the app is opened.
+				// appInstance.file = file;
+				callback(appInstance);
+			});
+		});
+	});
 };
 
 AppLoader.prototype.createMediaStream = function(source, type, encoding, name, color, width, height, callback) {
