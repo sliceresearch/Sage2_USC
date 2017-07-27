@@ -101,7 +101,7 @@ var photos = SAGE2_App.extend({
 			return;
 		}
 
-		this.bigList = d3.csv.parse(localData);
+		this.bigList = d3.csvParse(localData);
 		console.log(this.appName + "loaded in list of " + this.bigList.length + " images");
 
 		this.updateTitle("Slideshow: " + this.photoAlbums[this.state.imageSet].longName);

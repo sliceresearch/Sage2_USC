@@ -1293,7 +1293,8 @@ function handleClick(element) {
 							// if it was a URL entry
 							if (values.browser_url) {
 								// check if it looks like a URL
-								if (values.browser_url.indexOf("://") === -1) {
+								if ((values.browser_url.indexOf("://") === -1) &&
+									!values.browser_url.startsWith("/")) {
 									url = 'http://' + values.browser_url;
 								} else {
 									url = values.browser_url;
@@ -1334,7 +1335,8 @@ function handleClick(element) {
 				// if it was a URL entry
 				if (values.browser_url) {
 					// check if it looks like a URL
-					if (values.browser_url.indexOf("://") === -1) {
+					if ((values.browser_url.indexOf("://") === -1) &&
+						!values.browser_url.startsWith("/")) {
 						url = 'http://' + values.browser_url;
 					} else {
 						url = values.browser_url;
@@ -2187,8 +2189,7 @@ function noBackspace(event) {
 	} else if (
 		event.keyCode === 13
 		&& event.target.id.indexOf("rmbContextMenuEntry") !== -1
-		&& event.target.id.indexOf("Input") !== -1
-		) {
+		&& event.target.id.indexOf("Input") !== -1) {
 		// if a user hits enter within an rmbContextMenuEntry, it will cause the effect to happen
 		event.target.parentNode["buttonEffect" + event.target.id]();
 	} else if (event.ctrlKey && event.keyCode === 13 && event.target.id === "uiNoteMakerInputField") {

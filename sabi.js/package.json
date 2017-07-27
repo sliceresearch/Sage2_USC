@@ -4,7 +4,13 @@
 	"private": true,
 	"description": "control your devices through a HTML5/Node/Javascript framework",
 	"keywords": [
-	"sabi", "node", "control", "web", "device", "network", "commands"
+		"sabi",
+		"node",
+		"control",
+		"web",
+		"device",
+		"network",
+		"commands"
 	],
 	"preferGlobal": false,
 	"homepage": "http://renambot.lakephoto.org/software/sabi-js/",
@@ -12,7 +18,7 @@
 	"repository": {
 		"type": "git",
 		"url": "https://renambot@bitbucket.org/renambot/sabi.js.git"
-		},
+	},
 	"bugs": {
 		"email": "renambot@gmail.com"
 	},
@@ -20,7 +26,7 @@
 		"http-auth": "latest",
 		"json5": "latest",
 		"mime": "latest",
-		"socket.io": "^1",
+		"socket.io": "^2",
 		"sprint": "latest",
 		"serialport": "latest",
 		"forever": "latest",

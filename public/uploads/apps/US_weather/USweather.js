@@ -93,7 +93,7 @@ var USweather = SAGE2_App.extend({
 		var rad = 15;
 
 		// Define path generator
-		var path = d3.geo.path().projection(this.gwin.projection);
+		var path = d3.geoPath().projection(this.gwin.projection);
 
 		// Bind data and create one path per GeoJSON feature
 		this.gwin.sampleSVG.selectAll("path")
@@ -578,7 +578,7 @@ var USweather = SAGE2_App.extend({
 		this.makeCallbackFunc = this.makeCallback.bind(this);
 		this.jsonCallbackFunc = this.jsonCallback.bind(this);
 
-		this.gwin.projection = d3.geo.albersUsa()
+		this.gwin.projection = d3.geoAlbersUsa()
 			.translate([this.gwin.canvasWidth / 2, this.gwin.canvasHeight / 2])
 			.scale([1500]);// default 1000
 

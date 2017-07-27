@@ -217,7 +217,7 @@ var pdf_viewer = SAGE2_App.extend({
 				that.createMenuBar();
 
 				var dx = (-1) * that.baseWidthPage * (that.state.currentPage - 1);
-				that.imageVisualizer.attr("transform", "translate(" + dx + ", 0)");
+				that.imageVisualizer.attr("transform", "translate(" + dx + ",0)");
 
 				that.scaleThumbnailBar();
 
@@ -325,9 +325,9 @@ var pdf_viewer = SAGE2_App.extend({
 
 		this.translateGroup(this.imageVisualizer, this.state.horizontalOffset, 0, scale);
 		this.translateGroup(this.thumbnailsVisualizer, this.state.thumbnailHorizontalPosition,
-							this.baseHeightPage * r, r, this.clickedThumbnail);
+			this.baseHeightPage * r, r, this.clickedThumbnail);
 		this.translateGroup(this.commandBarG, null, (this.baseHeightPage + this.state.thumbnailHeight) * r,
-							r, this.clickedThumbnail);
+			r, this.clickedThumbnail);
 
 		if (this.clickedThumbnail) {
 			this.clickedThumbnail = false;
@@ -347,12 +347,14 @@ var pdf_viewer = SAGE2_App.extend({
 	},
 
 	translateGroup: function(g, dx, dy, s, animated) {
-		dx = (dx == null) ? parseFloat(d3.transform(g.attr("transform")).translate[0]) : dx;
-		dy = (dy == null) ? parseFloat(d3.transform(g.attr("transform")).translate[1]) : dy;
-		s  = (s  == null) ? parseFloat(d3.transform(g.attr("transform")).scale[0])     : s;
+		var transf = parse_transform(g.attr("transform"));
+		var scale  = transf.scale ? parseFloat(transf.scale[0]) : 1;
+		dx = (dx == null) ? parseFloat(transf.translate[0]) : dx;
+		dy = (dy == null) ? parseFloat(transf.translate[1]) : dy;
+		s  = (s  == null) ? scale : s;
 		var tDuration = animated ? 200 : 0;
 		g.transition().attr("transform",
-			"translate(" + dx * this.state.resizeValue + ", " + dy +
+			"translate(" + dx * this.state.resizeValue + "," + dy +
 			"), scale(" + s + ")").duration(tDuration);
 	},
 
@@ -473,10 +475,11 @@ var pdf_viewer = SAGE2_App.extend({
 
 		var f = this.activeTouch[id];
 		if (f && this.state.showingThumbnails && f.item.thumbnail) {
-			var sx = d3.transform(f.item.container.attr("transform")).scale[0];
-			var translate = d3.transform(f.item.container.attr("transform")).translate;
-			var newX = translate[0] + x - f.lastMousePosition.x;
-			var newY = translate[1];
+			var transf = parse_transform(f.item.container.attr("transform"));
+			var sx = parseFloat(transf.scale[0]);
+			var translate = transf.translate;
+			var newX = parseFloat(translate[0]) + x - f.lastMousePosition.x;
+			var newY = parseFloat(translate[1]);
 			newX /= sx;
 			newY /= sx;
 			f.lastMousePosition = {x: x, y: y};
@@ -538,7 +541,7 @@ var pdf_viewer = SAGE2_App.extend({
 	scaleThumbnailBar: function() {
 		var ty = this.baseHeightPage / this.state.resizeValue;
 		this.thumbnailsVisualizer.attr("transform", "scale(" + this.state.resizeValue +
-			"), translate(" + this.state.thumbnailHorizontalPosition + ", " + ty + ")");
+			"), translate(" + this.state.thumbnailHorizontalPosition + "," + ty + ")");
 	},
 
 	goToPage: function(page) {
@@ -963,12 +966,24 @@ function deleteClick(item) {
 	item.clickReceived = null;
 }
 
-function within(element, x, y) {
-	var translate = d3.transform(element.container.attr("transform")).translate;
-	var s = d3.transform(element.container.attr("transform")).scale[0];
+function parse_transform(a) {
+	var b = {};
+	for (var i in a = a.match(/(\w+)\(([^,)]+),?([^)]+)?\)/gi)) {
+		/* eslint-disable */
+		var c = a[i].match(/[\w\.\-]+/g);
+		/* eslint-enable */
+		b[c.shift()] = c;
+	}
+	return b;
+}
 
-	var mX = (x - translate[0]);
-	var mY = (y - translate[1]);
+function within(element, x, y) {
+	var transf = parse_transform(element.container.attr("transform"));
+	var translate = transf.translate;
+	var s = transf.scale ? parseFloat(transf.scale[0]) : 1;
+
+	var mX = (x - parseFloat(translate[0]));
+	var mY = (y - parseFloat(translate[1]));
 
 	mX /= s;
 	mY /= s;

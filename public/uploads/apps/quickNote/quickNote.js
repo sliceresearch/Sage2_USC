@@ -129,74 +129,77 @@ var quickNote = SAGE2_App.extend({
 			this.element.innerHTML        = msgParams.clientInput;
 			this.formatAndSetTitle(this.state.creationTime);
 			this.saveNote(msgParams.creationTime);
-			return;
-		}
+		} else { // else defined by load or user input
+			// Otherwise set the values using probably user input.
+			if (msgParams.clientName === undefined || msgParams.clientName === null || msgParams.clientName == "") {
+				msgParams.clientName = "";
+			}
+			// If the color choice was defined, use the given color. RMB choices do not provide a color (currently)
+			if (msgParams.colorChoice !== undefined && msgParams.colorChoice !== null && msgParams.colorChoice !== "") {
+				this.backgroundChoice = msgParams.colorChoice;
+				this.element.style.background = msgParams.colorChoice;
+			}
 
-		// Otherwise set the values using probably user input.
-		if (msgParams.clientName === undefined || msgParams.clientName === null || msgParams.clientName == "") {
-			msgParams.clientName = "";
-		}
-		// If the color choice was defined, use the given color. RMB choices do not provide a color (currently)
-		if (msgParams.colorChoice !== undefined && msgParams.colorChoice !== null && msgParams.colorChoice !== "") {
-			this.backgroundChoice = msgParams.colorChoice;
-			this.element.style.background = msgParams.colorChoice;
-		}
+			// set the text, currently innerHTML matters to render <br> and allow for html tags
+			this.element.innerHTML = msgParams.clientInput;
+			// client input state set as part of the clean
+			this.state.clientName  = msgParams.clientName;
+			this.state.colorChoice = this.backgroundChoice;
 
-		// set the text, currently innerHTML matters to render <br> and allow for html tags
-		this.element.innerHTML = msgParams.clientInput;
-		// client input state set as part of the clean
-		this.state.clientName  = msgParams.clientName;
-		this.state.colorChoice = this.backgroundChoice;
-
-		// if the creationTime has not been set, then fill it out.
-		if (this.state.creationTime === null
-			&& msgParams.serverDate !== undefined
-			&& msgParams.serverDate !== null) {
-			this.state.creationTime = new Date(msgParams.serverDate);
-			// build the title string.
-			var titleString = msgParams.clientName + "-QN-" + this.state.creationTime.getFullYear();
-			if (this.state.creationTime.getMonth() < 9) {
-				titleString += "0";
+			// if the creationTime has not been set, then fill it out.
+			if (this.state.creationTime === null
+				&& msgParams.serverDate !== undefined
+				&& msgParams.serverDate !== null) {
+				this.state.creationTime = new Date(msgParams.serverDate);
+				// build the title string.
+				var titleString = msgParams.clientName + "-QN-" + this.state.creationTime.getFullYear();
+				if (this.state.creationTime.getMonth() < 9) {
+					titleString += "0";
+				}
+				titleString += (this.state.creationTime.getMonth() + 1) + ""; // month +1 because starts at 0
+				if (this.state.creationTime.getDate() < 10) {
+					titleString += "0";
+				}
+				titleString += this.state.creationTime.getDate() + "-";
+				if (this.state.creationTime.getHours() < 10) {
+					titleString += "0";
+				}
+				titleString += this.state.creationTime.getHours();
+				if (this.state.creationTime.getMinutes() < 10) {
+					titleString += "0";
+				}
+				titleString += this.state.creationTime.getMinutes();
+				if (this.state.creationTime.getSeconds() < 10) {
+					titleString += "0";
+				}
+				titleString += this.state.creationTime.getSeconds();
+				if (this.state.creationTime.getMilliseconds() < 10) {
+					titleString += "0";
+				}
+				if (this.state.creationTime.getMilliseconds() < 100) {
+					titleString += "0";
+				}
+				titleString += this.state.creationTime.getMilliseconds();
+				// store it for later and update the tile.
+				this.state.creationTime = titleString;
+				this.formatAndSetTitle(this.state.creationTime);
 			}
-			titleString += (this.state.creationTime.getMonth() + 1) + ""; // month +1 because starts at 0
-			if (this.state.creationTime.getDate() < 10) {
-				titleString += "0";
+			// if loaded will include the creationTime
+			if (msgParams.creationTime !== undefined && msgParams.creationTime !== null) {
+				this.formatAndSetTitle(msgParams.creationTime);
 			}
-			titleString += this.state.creationTime.getDate() + "-";
-			if (this.state.creationTime.getHours() < 10) {
-				titleString += "0";
-			}
-			titleString += this.state.creationTime.getHours();
-			if (this.state.creationTime.getMinutes() < 10) {
-				titleString += "0";
-			}
-			titleString += this.state.creationTime.getMinutes();
-			if (this.state.creationTime.getSeconds() < 10) {
-				titleString += "0";
-			}
-			titleString += this.state.creationTime.getSeconds();
-			if (this.state.creationTime.getMilliseconds() < 10) {
-				titleString += "0";
-			}
-			if (this.state.creationTime.getMilliseconds() < 100) {
-				titleString += "0";
-			}
-			titleString += this.state.creationTime.getMilliseconds();
-			// store it for later and update the tile.
-			this.state.creationTime = titleString;
-			this.formatAndSetTitle(this.state.creationTime);
-		}
-		// if loaded will include the creationTime
-		if (msgParams.creationTime !== undefined && msgParams.creationTime !== null) {
-			this.formatAndSetTitle(msgParams.creationTime);
 		}
 
 		// adjust height to show all text. minimum 5 lines enforce(?)
 		this.needTextZoneHeight = (this.needTextZoneHeight < 5) ? 5 : this.needTextZoneHeight;
+		this.sizeModification = parseInt(this.element.clientWidth) / this.startingAppWidth;
 		this.sendResize(this.sage2_width,
-						this.needTextZoneHeight * this.startingFontHeight * this.sizeModification);
+			this.needTextZoneHeight * this.startingFontHeight * this.sizeModification);
 
-		this.saveNote(msgParams.creationTime);
+		// save if didn't come from file
+		if (msgParams.fileDefined !== true) {
+			this.saveNote(msgParams.creationTime);
+		}
 	},
 
 	setColor: function(responseObject) {

@@ -164,6 +164,34 @@ var chemViewer = SAGE2_App.extend({
 	},
 
 	/**
+	 * Loads a molecule formatted as a mol file from a data string
+	 *
+	 * @method     loadMolFromString
+	 * @param      {String}  data      The data
+	 * @param      {String}  title     The title
+	 */
+	loadMolFromString: function (response) {
+		if (response.err) {
+			console.log('Problem:', response.err);
+		} else {
+			var data  = response.data;
+			var title = response.name + '.mol';
+			console.log('Got back', title);
+
+			var mol = ChemDoodle.readMOL(data, 1);
+
+			this.cartoonTransformer.specs.set3DRepresentation('Ball and Stick');
+
+			this.cartoonTransformer.loadMolecule(mol);
+			this.ready = true;
+			// Update the title bar
+			var newTitle;
+			newTitle = this.title + " - " + title;
+			this.updateTitle(newTitle);
+		}
+	},
+
+	/**
 	 * Draws a molecule.
 	 *
 	 * @method     drawMolecule
@@ -308,6 +336,14 @@ var chemViewer = SAGE2_App.extend({
 			inputFieldSize: 20
 		});
 
+		entries.push({
+			description: "Enter MOL ID:",
+			callback: "searchMOL",
+			parameters: {},
+			inputField: true,
+			inputFieldSize: 20
+		});
+
 		// Special entry for separator, a horizontal line
 		entries.push({
 			description: "separator"
@@ -394,6 +430,22 @@ var chemViewer = SAGE2_App.extend({
 			var baseURL  = "http://www.pdb.org/pdb/download/downloadFile.do?fileFormat=pdb&compression=NO";
 			var queryURL = baseURL + "&structureId=" + molName;
 			this.applicationRPC({url: queryURL, name: molName}, "loadMoleculeFromString", true);
+		}
+	},
+
+	/**
+	 * search online for a MOL file
+	 *
+	 * @method     searchMOL
+	 * @param      {Object}  responseObject  The response object
+	 */
+	searchMOL: function(responseObject) {
+		var molName = responseObject.clientInput;
+		console.log('Search for', molName);
+		if (isMaster && molName) {
+			var baseURL  = "http://www.ebi.ac.uk/chebi/saveStructure.do";
+			var queryURL = baseURL + "?defaultImage=true&chebiId=" + molName;
+			this.applicationRPC({url: queryURL, name: molName}, "loadMolFromString", true);
 		}
 	},
 

@@ -57,6 +57,7 @@ commander
 	.option('--hash <s>',          'Server password hash (string)', null)
 	.option('--cache',             'Clear the cache', false)
 	.option('--console',           'Open the devtools console', false)
+	.option('--show-fps',          'Display the Chrome FPS counter', false)
 	.parse(args);
 
 // Load the flash plugin if asked
@@ -76,6 +77,23 @@ if (commander.plugins) {
 const os = require('os');
 if (os.platform() === "win32") {
 	app.commandLine.appendSwitch("force-device-scale-factor", "1");
+}
+
+// Remove the limit on the number of connections per domain
+//  the usual value is around 6
+const url = require('url');
+var parsedURL = url.parse(commander.server);
+// default domais are local
+var domains   = "localhost,127.0.0.1";
+if (parsedURL.hostname) {
+	// add the hostname
+	domains +=  "," + parsedURL.hostname;
+}
+app.commandLine.appendSwitch("ignore-connections-limit", domains);
+
+// Enable the Chrome builtin FPS display for debug
+if (commander.showFps) {
+	app.commandLine.appendSwitch("show-fps-counter");
 }
 
 /**
@@ -188,15 +206,17 @@ function createWindow() {
 		fullscreenable: commander.fullscreen,
 		alwaysOnTop: commander.fullscreen,
 		kiosk: commander.fullscreen,
+		// a default color while loading
+		backgroundColor: "#565656",
 		// resizable: !commander.fullscreen,
 		webPreferences: {
 			nodeIntegration: true,
-			webSecurity: true,
+			webSecurity: false, // seems to be an issue on Windows
 			backgroundThrottling: false,
 			plugins: commander.plugins,
-			// allow this for now, problem loading webview recently
-			allowDisplayingInsecureContent: true,
-			allowRunningInsecureContent: true
+			// allow this for or not
+			allowDisplayingInsecureContent: false,
+			allowRunningInsecureContent: false
 		}
 	};
 
@@ -243,6 +263,14 @@ function createWindow() {
 	mainWindow.on('closed', function() {
 		// Dereference the window object
 		mainWindow = null;
+	});
+
+	// If the window opens before the server is ready,
+	// wait 2 sec. and try again
+	mainWindow.webContents.on('did-fail-load', function(ev) {
+		setTimeout(function() {
+			mainWindow.reload();
+		}, 2000);
 	});
 
 	mainWindow.webContents.on('will-navigate', function(ev) {
