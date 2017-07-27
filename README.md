@@ -10,4 +10,4 @@ For help on installing and running SAGE2, check our wiki pages:
 [Wiki](https://bitbucket.org/sage2/sage2/wiki/Home)
 
 ##### Notice #####
-SAGE and SAGE2 are trademarks of the University of Illinois Board of Trustees (SAGE™ and SAGE2™) .
+SAGE and SAGE2 are trademarks of the University of Illinois Board of Trustees (SAGEâ„¢ and SAGE2â„¢).
