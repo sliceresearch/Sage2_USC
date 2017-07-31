@@ -31,13 +31,6 @@
 
 // require variables to be declared
 'use strict';
-// Test for Alexa. Sorry for the terrible code!
-
-
-
-
-// End of alexa stuff. Sorry again!! ---------------------------------------------------------------------------------------------------------
-
 
 // node: built-in
 var fs            = require('fs');               // filesystem access
@@ -141,6 +134,9 @@ var cuttingPartition  = {};
 var parentApps         = {}; // store parent-child relationships (one parent, many children), indexed by parentId
 var childApps          = {}; // store child-parent relationships (one parent, many children), indexed by childId
 var pointedToApps      = []; //store list of apps user points to during pointing gesture --> to get most frequent
+
+//for the alexa / kinect gesture start and stop recognition
+var recognizing 			 = 'false';
 
 // Add extra folders defined in the configuration file
 if (config.folders) {
@@ -628,19 +624,6 @@ var remoteSharingSessions      = {};
 // Sticky items and window position for new clones
 var stickyAppHandler     = new StickyItems();
 
-//josh and joe
-// setInterval(()=> {
-// 	// console.log("checking pointers");
-// 	let curTime = new Date();
-// 	for(let id in sagePointers){
-// 		if(curTime - sagePointers[id].lastUsed > 10000){
-// 			console.log("deleting pointer",id);
-// 			stopSageKinectPointer(id);
-// 		}
-// 	}
-// 	// console.log("finished checking pointers");
-// }, 5000)
-
 //
 // Catch the uncaught errors that weren't wrapped in a domain or try catch statement
 //
@@ -1095,12 +1078,13 @@ function setupListeners(wsio) {
 	//articulate input service
 	//voice command from VoiceUI
 	wsio.on('googleVoiceSpeechInput',               wsGoogleVoiceSpeechInput);
+	//Voice command from alexa
+	wsio.on('alexaVoiceSpeechInput',								wsAlexaVoiceSpeechInput);
 	//status of capturing gesture or not (true/false)
 	wsio.on('gestureRecognitionStatus',             wsGestureRecognitionStatus);
 	//pointing gesture position from kinect App
   wsio.on('pointingGesturePosition',              wsPointingGesturePosition);
 	wsio.on('stopPointingGesturePosition',          wsStopPointingGesturePosition);
-
 }
 
 /**
@@ -1458,7 +1442,7 @@ function wsStopSagePointer(wsio, data) {
 	addEventToUserLog(wsio.id, {type: "SAGE2PointerEnd", data: null, time: Date.now()});
 }
 
-//josh and joe
+// Removes a kinect pointer
 function wsRemoveKinectPointer(wsio,data) {
 	//delete if pointer exists
 	if(sagePointers[data.id]){
@@ -1466,13 +1450,11 @@ function wsRemoveKinectPointer(wsio,data) {
 	}
 }
 
-//josh and joe
+//A function used to cleanup all kinect pointers that have been inactive for 10seconds
 function wsCheckKinectPointers(wsio,data){
-	//function to delete pointers which have not moved in 10 seconds
 	let curTime = new Date();
 	for(let id in sagePointers){
 		if(curTime - sagePointers[id].lastUsed > 1000){
-			// console.log("deleting pointer",id);
 			stopSageKinectPointer(id);
 		}
 	}
@@ -1481,7 +1463,6 @@ function wsCheckKinectPointers(wsio,data){
 function wsPointerPress(wsio, data) {
 	var pointerX = sagePointers[wsio.id].left;
 	var pointerY = sagePointers[wsio.id].top;
-
 	pointerPress(wsio.id, pointerX, pointerY, data);
 }
 
@@ -2941,39 +2922,53 @@ function wsGoogleVoiceSpeechInput2(wsio, data){
 	}
 }
 
-
 /// Vijay and Joe
 function wsGoogleVoiceSpeechInput(wsio, data){
-	console.log("###########################################################")
-	console.log(data); //this will print a message to the console to show you what the object 'data'
 
 	var commandText = data.text.toUpperCase();
-	console.log("Command text!   \n" + commandText);
-
+	console.log("Command Text:", commandText);
 	var targetInfo = mostOccurrenceItem(pointedToApps);
-	var orderedItems = mostItems(pointedToApps); // Gesture array is deleted in this function, always call orderitems after most
+	var orderedItems = mostItems(pointedToApps);
 
-	console.log("targetInfo: " + JSON.stringify(targetInfo));
-
-	console.log("orderedItems: " + JSON.stringify(orderedItems));
-
-	if( commandText.includes("TILE THESE"))
+	if(targetInfo)
+	{
+		var appId = targetInfo.appId;
+		var pointerId = targetInfo.pointerId;
+		var app =  SAGE2Items.applications.list[appId];
+	}
+	console.log("Command Text2:", commandText);
+	var appList = SAGE2Items.applications.list;
+	var finalAppList = {};
+	for( var appid in appList)
+	{
+		finalAppList[appid] = appList[appid].title;
+	}
+	console.log("Command Text3:", commandText);
+	var time = new Date();
+	var debugDatagram = 	{ "timestamp":time,
+										"commandText":commandText,
+										"currentApps":finalAppList,
+										"mostOccurant":targetInfo,
+										"mostOccurantItems": orderedItems,
+										"commandProcessed":{},
+										"gesturesDetected":[] };
+	console.log("Command Text:4", commandText);
+	if( commandText.includes("TILE THESE") || commandText.includes("TILE"))
 	{
 		console.log("Tiling windows");
 		tileApplications();
+		debugDatagram.commandProcessed = {'tile these windows':[]};
+		console.log(debugDatagram);
+		broadcast('articulateDebugInfo', debugDatagram);
 		return;
 	}else	if( !targetInfo)
 	{
 		return;
 	}
 
-	var appId = targetInfo.appId;
-	var pointerId = targetInfo.pointerId;
-	var app =  SAGE2Items.applications.list[appId];
-
 	if( commandText.includes( "CLOSE THIS WINDOW") ){
 		deleteApplication(appId);
-
+		debugDatagram.commandProcessed = {'close this window':[appId]};
 	}
 
 	else if( commandText.includes("CLOSE THESE") ){
@@ -2994,11 +2989,14 @@ function wsGoogleVoiceSpeechInput(wsio, data){
 
 		if(numToClose == 0) {
 			var cutoff = 150;
+			debugDatagram.commandProcessed = {'close these windows':[]};
+
 			for( var key in orderedItems)
 			{
 				if (orderedItems[key].count > cutoff )
 				{
-					deleteApplication(orderedItems[key].name)
+					debugDatagram.commandProcessed['close these windows'].push(orderedItems[key].name);
+					deleteApplication(orderedItems[key].name);
 				}
 				else {
 					break;
@@ -3011,32 +3009,18 @@ function wsGoogleVoiceSpeechInput(wsio, data){
 				{
 					if (i <numToClose )
 					{
-						console.log("i " + i + " key  " + key + " orderedItems[key].name: " + orderedItems[key].name);
 						deleteApplication(orderedItems[key].name)
 						i++;
 					}
 				}
 		}
-	//	console.log(orderedItems);
 	}
 
 
 	else if( commandText.includes( "MOVE THIS" )){  //WINDOW") ){
 
-
-			// var updateItem = {
-			// 	elemId: app.id,
-			// 	elemLeft: app.left,
-			// 	elemTop: app.top,
-			// 	elemWidth: app.width,
-			// 	elemHeight: app.height,
-			// 	force: true,
-			// 	date: Date.now()
-			// };
 			var rightMost = config.totalWidth - app.width;
-			var bottomMost = config.totalHeight- app.height;
-			// let tempdx = 0;
-			// let tempdy = 0;
+			var bottomMost = config.totalHeight - app.height;
 			let nextXPosition = app.left;
 			let nextYPosition = app.top;
 			console.log("rightMost:", rightMost, " bottomMost", bottomMost);
@@ -3045,125 +3029,85 @@ function wsGoogleVoiceSpeechInput(wsio, data){
 			if(commandText.includes("SIDE") || commandText.includes("CORNER") || commandText.includes("EDGE"))
 			{
 				if( commandText.includes("TOP") ){
-						// updateItem.elemTop = 0.0;
 						nextYPosition = 0.0;
 				}
 				else
 				{
 					if (commandText.includes( "BOTTOM" )) {
-						// updateItem.elemTop = bottomMost;
 						nextYPosition = bottomMost;
 					}
 				}
 
 				if(  commandText.includes( "LEFT" ) ){
-						// updateItem.elemLeft = 0.0;
 						nextXPosition = 0.0;
 				}
 				else
 				{
 						if (commandText.includes( "RIGHT" )) {
-							// updateItem.elemLeft = rightMost;
-							nextYPosition = rightMost;
+							nextXPosition = rightMost;
 						}
 				}
-				// moveAndResizeApplicationWindow(updateItem);
+				debugDatagram.commandProcessed = {'move this window to the edge':[targetInfo.appId, {x:nextXPosition}, {y:nextYPosition}]};
 				wsAppMoveTo(null, {id: targetInfo.appId, x: nextXPosition, y: nextYPosition});
 			}
 			else {
 				if(  commandText.includes( "LEFT" ) ){
-						// updateItem.elemLeft -= updateItem.elemWidth;
-						// if ( updateItem.elemLeft < 0 )
-						// {
-						// 	updateItem.elemLeft = 0;
-						// }
-						// tempdx = -app.width;
 						nextXPosition -= app.width;
 						if (nextXPosition < 0)
 						{
 							nextXPosition = 0;
 						}
+						debugDatagram.commandProcessed = {'move this window left':[targetInfo.appId]};
 				}
 				else if (commandText.includes( "RIGHT" )) {
-							// updateItem.elemLeft += updateItem.elemWidth;
-							// if ( updateItem.elemLeft > rightMost)
-							// {
-							// 	updateItem.elemLeft = rightMost;
-							// }
-							// tempdx = app.width;
 							nextXPosition += app.width;
 							if (nextXPosition > rightMost)
 							{
 								nextXPosition = rightMost;
 							}
+							debugDatagram.commandProcessed = {'move this window right':[targetInfo.appId]};
 				}
 				if(  commandText.includes( "UP" ) ){
-						// updateItem.elemTop -= updateItem.elemHeight;
-						// if ( updateItem.elemTop < 0 )
-						// {
-						// 	updateItem.elemTop = 0;
-						// }
-						// tempdy = -app.height;
 						nextYPosition -= app.height;
 						if(nextYPosition < 0)
 						{
 							nextYPosition = 0.0;
 						}
+						debugDatagram.commandProcessed = {'move this window up':[targetInfo.appId]};
 				}
 				else if (commandText.includes( "DOWN" )) {
-							// updateItem.elemTop += updateItem.elemHeight;
-							// if ( updateItem.elemTop > bottomMost)
-							// {
-							// 	updateItem.elemLeft = bottomMost;
-							// }
-							// tempdy = app.height;
 							nextYPosition += app.height;
 							if(nextYPosition > bottomMost)
 							{
 								nextYPosition = bottomMost
 							}
+							debugDatagram.commandProcessed = {'move this window down':[targetInfo.appId]};
 				}
 
 				if (commandText.includes( "HERE" ))
 				{
 					let curPointer = sagePointers[targetInfo.pointerId];
-					let curX = curPointer.left;
-					let curY = curPointer.top;
+					let curX = curPointer.left - (app.width/2);
+					let curY = curPointer.top - (app.height/2);
 					console.log("curPointer",curX,curY);
+					debugDatagram.commandProcessed = {'move this window here':[targetInfo.appId,{ x:curX} , {y:curY}  ]};
 					wsAppMoveTo(null, {id: targetInfo.appId, x: curX, y: curY});
 				}else{
-					// console.log("tempdx:", tempdx, "tempdy:", tempdy);
-					// wsAppMoveBy(null, {id: app.id, dx: tempdx, dy: tempdy});
 					wsAppMoveTo(null, {id: targetInfo.appId, x: nextXPosition, y: nextYPosition});
 				}
-
 			}
-		//	console.log("after processing" + JSON.stringify(updateItem));
-			// moveAndResizeApplicationWindow(updateItem
-
-
 	}
 
 
 	else if( commandText.includes( "CENTER THIS WINDOW") ){
-
-		// var updateItem = {
-		// 	elemId: app.id,
-		// 	elemLeft: (config.totalWidth - app.width)/2,
-		// 	elemTop: (config.totalHeight - app.height)/2,
-		// 	elemWidth: app.width,
-		// 	elemHeight: app.height,
-		// 	force: true,
-		// 	date: Date.now()
-		// };
-		// 	moveAndResizeApplicationWindow(updateItem);
 		let nextXPosition = (config.totalWidth - app.width)/2;
 		let nextYPosition = (config.totalHeight - app.height)/2;
 		wsAppMoveTo(null, {id: targetInfo.appId, x: nextXPosition, y: nextYPosition});
+		debugDatagram.commandProcessed = {'center this window':[targetInfo.appId]};
 	}
 
 	else if( commandText.includes( "DOUBLE THIS WINDOW") ){
-		if (SAGE2Items.applications.list.hasOwnProperty(data.id)) {
+		if (SAGE2Items.applications.list.hasOwnProperty(app.id)) {
 			var updateItem = {
 				elemId: app.id,
 				elemLeft: app.left,
@@ -3173,13 +3117,19 @@ function wsGoogleVoiceSpeechInput(wsio, data){
 				force: true,
 				date: Date.now()
 			};
+			broadcast('startMove', {id: updateItem.elemId, date: updateItem.date});
+			broadcast('startResize', {id: updateItem.elemId, date: updateItem.date});
+
 			moveAndResizeApplicationWindow(updateItem);
+
+			broadcast('finishedMove', {id: updateItem.elemId, date: updateItem.date});
+			broadcast('finishedResize', {id: updateItem.elemId, date: updateItem.date});
+			debugDatagram.commandProcessed = {'double this window':[app.id]};
 		}
-			//TODO: switch to the normal resize window.
 	}
 	else if( commandText.includes("SHRINK THIS WINDOW"))
 	{
-		if (SAGE2Items.applications.list.hasOwnProperty(data.id)) {
+		if (SAGE2Items.applications.list.hasOwnProperty(app.id)) {
 			var updateItem = {
 				elemId: app.id,
 				elemLeft: app.left,
@@ -3189,24 +3139,33 @@ function wsGoogleVoiceSpeechInput(wsio, data){
 				force: true,
 				date: Date.now()
 			};
+			broadcast('startMove', {id: updateItem.elemId, date: updateItem.date});
+			broadcast('startResize', {id: updateItem.elemId, date: updateItem.date});
+
 			moveAndResizeApplicationWindow(updateItem);
+
+			broadcast('finishedMove', {id: updateItem.elemId, date: updateItem.date});
+			broadcast('finishedResize', {id: updateItem.elemId, date: updateItem.date});
+			debugDatagram.commandProcessed = {'shrink this window':[app.id]};
 		}
 	}
 
 	else if( commandText.includes("MAXIMIZE THIS WINDOW")){
 		if (app.maximized !== true) {
 			toggleApplicationFullscreen(pointerId, app, true);
+			debugDatagram.commandProcessed = {'maximize this window':[app.id]};
 		}
 	}
 
 	else if(commandText.includes("RESTORE THIS WINDOW")){
 		if (app.maximized == true) {
 			toggleApplicationFullscreen(pointerId, app, true);
+			debugDatagram.commandProcessed = {'restore this window':[app.id]};
 		}
 	}
 
 	pointedToApps = [];
-
+	broadcast('articulateDebugInfo', debugDatagram);
 	//find articulate app (just articulate app for now)
 	// var app = SAGE2Items.applications.getFirstItemWithTitle("articulate_ui");
 	//console.log(app);
@@ -3218,8 +3177,7 @@ function wsGestureRecognitionStatus(wsio, data){
 	//  if(data.text == 'true'){
 	//  	pointedToApps = [];
 	//  }
-	 // vijay look here to clear - joe
-	 //	var obj = interactMgr.searchGeometry({x: pointerX, y: pointerY}); //object on top pointed at given an x and y coordinate HERE!
+	//	var obj = interactMgr.searchGeometry({x: pointerX, y: pointerY}); //object on top pointed at given an x and y coordinate HERE!
 	var app = SAGE2Items.applications.getFirstItemWithTitle("machineLearning");
 	if( app != null ){
 		var data = {id: app.id, data: data.text, date: Date.now()};
@@ -3239,7 +3197,7 @@ function wsPointingGesturePosition(wsio, data){
 		showPointer(data.id, {label: data.id, color: data.color, sourceType: "kinect"});
 
 	}
-
+	broadcast('pointerPosition', data);
 	sagePointers[data.id].lastUsed = new Date();
 	sagePointers[data.id].isKinect = true;
 	// showPointer(data.id, {label: data.id, color: data.color, sourceType: "kinect"});
@@ -3686,9 +3644,6 @@ function wsLoadApplication(wsio, data) {
 
 		// Get the drop position and convert it to wall coordinates
 		var position = data.position || [0, 0];
-
-
-
 
 		if (position[0] > 1) {
 			// value in pixels, used as origin
@@ -6507,7 +6462,6 @@ function globalToLocal(globalX, globalY, type, geometry) {
 		local.x = globalX - geometry.x;
 		local.y = globalY - geometry.y;
 	}
-
 	return local;
 }
 
@@ -6705,9 +6659,28 @@ function pointerPressOnStaticUI(uniqueID, pointerX, pointerY, data, obj, localPt
 	*/
 }
 
+
+function wsAlexaVoiceSpeechInput(wsio, data){
+
+	console.log("#12##########################################################");
+	console.log(data); //this will print a message to the console to show you what the object 'data'
+	console.log('recognizing =1 ' + recognizing);
+	if(recognizing === 'true')
+	{
+	console.log('Stopping gesture recognition1');
+	wsGestureRecognitionStatus(null, {text:"false"});
+	console.log('Stopping gesture recognition2');
+		recognizing = 'false';
+	}
+	else {
+		console.log("I DID NOT STOP GESTURES!");
+	}
+	wsGoogleVoiceSpeechInput(null, data);
+}
 /// KINECT input
 
 //kinect
+
 function sendKinectInput(id, data) {	// From addClient type == sageUI
 	var app = SAGE2Items.applications.getFirstItemWithTitle("machineLearning");
 	var event = {
@@ -6722,11 +6695,17 @@ function sendKinectInput(id, data) {	// From addClient type == sageUI
 	broadcast('eventInItem', event);
 
 	//Vijay and Joe
-	//Here is where you can turn on logging if it is 'alexa'
+	// Using the kinect to detect for the alexa ask articulate keyword to begin gesture recoginition
 	if(data.type == "grammarInput" && data.phrase == "alexa"){
-		 console.log(data);
-		 console.log("I HEARD YOU SAID ALEXA!!!");
-		//start logging
+		console.log('recognizing = ' + recognizing);
+
+		if(recognizing === 'false')
+		{
+			console.log("Starting gesture recognition!!!");
+			wsGestureRecognitionStatus(null, {text:"true"});
+			recognizing = 'true';
+	  }
+		console.log('recognizing = ' + recognizing);
 	}
 
 	//	var obj = interactMgr.searchGeometry({x: pointerX, y: pointerY});

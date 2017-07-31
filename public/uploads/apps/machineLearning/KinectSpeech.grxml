@@ -53,9 +53,10 @@
       <item>
         <tag>alexa</tag>
         <one-of>
-          <item> alexa </item>
-          <item> ask articulate </item>
-          <item> articulate </item>
+          <item>alexa</item>
+          <item>ask articulate</item>
+          <item>articulate</item>
+          <item>allies</item>
         </one-of>
       </item>
 
