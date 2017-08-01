@@ -14,6 +14,7 @@ Supplement to get some additional input functionality.
 
 */
 
+/* global $ */
 
 // ------------------------------------------------------------------------------------------------------------------
 // 1
@@ -30,7 +31,7 @@ Nodes without value should NOT be checking for keypress.
 And checks for keydown will not be normally activated. This has been confirmed Youtube and spacebar for pausing video.
 */
 document.addEventListener("keypress", function(e) {
-	var kue = new CustomEvent("keydown", {bubbles:true});
+	var kue = new CustomEvent("keydown", {bubbles: true});
 	kue.target = e.target;
 	kue.view = e.view;
 	kue.detail = e.detail;
@@ -48,11 +49,11 @@ document.addEventListener("keypress", function(e) {
 	kue.metaKey = e.metaKey;
 	// if a keypress is received and the target isn't an input node
 	if (e.target.value === undefined) {
-			// set the lastClickedElement to the target of event (since it needs to get there)
-			s2InjectForKeys.lastClickedElement = e.target;
-			s2InjectForKeys.lastClickedElement.dispatchEvent(kue);
-			// should this be prevented? what if something check for keypress?
-			e.preventDefault();
+		// set the lastClickedElement to the target of event (since it needs to get there)
+		s2InjectForKeys.lastClickedElement = e.target;
+		s2InjectForKeys.lastClickedElement.dispatchEvent(kue);
+		// should this be prevented? what if something check for keypress?
+		e.preventDefault();
 	}
 });
 
@@ -60,6 +61,7 @@ document.addEventListener("keypress", function(e) {
 document.addEventListener("click", function(e) {
 	s2InjectForKeys.lastClickedElement = document.elementFromPoint(e.clientX, e.clientY);
 });
+
 /*
 Delete from value using keyup.
 Keydown not activated due to squelch in keypress->keydown conversion to prevent double event if value field exists.
@@ -67,9 +69,137 @@ Normal keypress doesn't cause the backspace action either. Is this because backs
 */
 document.addEventListener("keyup", function(e) {
 	if (e.keyCode == 8) {
-		s2InjectForKeys.lastClickedElement.value = s2InjectForKeys.lastClickedElement.value.substring(0, s2InjectForKeys.lastClickedElement.value.length - 1);
+		s2InjectForKeys.lastClickedElement.value =
+			s2InjectForKeys.lastClickedElement.value.substring(0, s2InjectForKeys.lastClickedElement.value.length - 1);
 	}
 });
 
+/**
+ * Loads a css file into the DOM
+ *
+ * @method     loadCSS
+ * @param      {String}  res     The resource
+ */
+function loadCSS(res) {
+	var style = document.createElement("link");
+	style.setAttribute("type", "text/css");
+	style.setAttribute("rel",  "stylesheet");
+	style.setAttribute("href", res);
+	style.onload = style.onreadystatechange = function() {
+		console.log('loadCCS> file loaded: ' + res);
+	};
+	document.body.appendChild(style);
+}
+
+/**
+ * Loads a js file into the DOM
+ *
+ * @method     loadJS
+ * @param      {String}    res     The resource
+ * @param      {Function}  cb      callback to call when done
+ */
+function loadJS(res, cb) {
+	var script = document.createElement("script");
+	script.type  = "text/javascript";
+	script.async = false;
+	script.src = res;
+	script.onload = script.onreadystatechange = function() {
+		console.log('loadJS> file loaded: ' + res);
+		if (cb) {
+			cb();
+		}
+	};
+	document.body.appendChild(script);
+}
+
+/**
+ * Adds the needed JQuery files
+ *
+ * @method     addJQueryScript
+ * @param      {Function}  cb      callback to call when done
+ */
+function addJQueryScript(cb) {
+	// console.log('Loading runtime: ' + window.location);
+
+	// loadCSS("https://localhost:9090/lib/runtime/bootstrap.min.css")
+	// loadCSS("https://localhost:9090/lib/runtime/bootstrap-select.min.css")
+
+	// loadJS("https://localhost:9090/lib/runtime/jquery.min.js")
+
+	// loadJS("https://localhost:9090/lib/runtime/bootstrap.min.js")
+	// loadJS("https://localhost:9090/lib/runtime/bootstrap-select.min.js", cb)
+}
+
+// Start the code
+// --------------
+
+// wait for the page (webview) to load
+var scriptAddInterval = setInterval(function() {
+	if (document.readyState === "complete") {
+		// stop trying
+		clearInterval(scriptAddInterval);
+		// load some runtime files and process hack
+		if (location.hostname.indexOf("appear.in") !== -1) {
+			// apparently JQuery is already loaded in appear.in
+			// addJQueryScript(processAppearIn);
+			// just call the hack
+			processAppearIn();
+		}
+	}
+	// try to load every second till done
+}, 1000);
+
+
+// Specific to appear.in hack
+// --------------------------
+
+function processAppearIn() {
+	// bootstrap stuff, didnt work
+	// $('select.form-control').selectpicker();
+	// $('#list1').selectpicker();
+	// $('select.form-control').removeClass('form-control').css('width', '100%')
+	// $('.form-control').selectpicker({});
+	// $('select[name="cameraInputSelector"]').selectpicker();
+
+	var doneCam  = false;
+	var doneAin  = false;
+	var doneAout = false;
+
+	var scriptSearch = setInterval(function() {
+		var cam = $('[name="cameraInputSelector"]').val();
+		if (cam && !doneCam) {
+			console.log('Appear.in> Found cam: ' + cam);
+			$('[name="cameraInputSelector"]').attr('multiple', true);
+			var hcam = $('[name="cameraInputSelector"]').height();
+			$('[name="cameraInputSelector"]').height(2 * hcam);
+			doneCam = true;
+		}
+		var ain = $('[name="audioInputSelector"]').val();
+		if (ain && !doneAin) {
+			console.log('Appear.in> Found audio input: ' + ain);
+			$('[name="audioInputSelector"]').attr('multiple', true);
+			var hin = $('[name="audioInputSelector"]').height();
+			$('[name="audioInputSelector"]').height(2 * hin);
+			doneAin = true;
+		}
+		var aout = $('[name="audioOutputSelector"]').val();
+		if (aout && !doneAout) {
+			console.log('Appear.in> Found audio output: ' + aout);
+			$('[name="audioOutputSelector"]').attr('multiple', true);
+			var hout = $('[name="audioOutputSelector"]').height();
+			$('[name="audioOutputSelector"]').height(2 * hout);
+			doneAout = true;
+		}
+		if (doneCam && doneAin && doneAout) {
+			// cancel the timer
+			clearInterval(scriptSearch);
+			console.log('Appear.in> All done hacking');
+		} else {
+			console.log('Appear.in> Still trying');
+		}
+		// try every 500ms till done
+	}, 500);
+
+}
 
 
