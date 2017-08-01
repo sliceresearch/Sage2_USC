@@ -54,6 +54,7 @@ module.exports = function(grunt) {
 						"public/uploads/apps/web_earth/web_earth.js",
 						"public/uploads/apps/welcome/welcome.js",
 						"public/uploads/apps/Webview/Webview.js",
+						"public/uploads/apps/Webview/SAGE2_script_supplement.js",
 						"public/uploads/apps/WhiteboardPalette/WhiteboardPalette.js",
 						"public/uploads/apps/zoom/zoom.js"
 					]
