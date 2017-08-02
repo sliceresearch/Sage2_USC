@@ -2696,7 +2696,14 @@ function tileApplications() {
 
 	var displayAr  = config.totalWidth / config.totalHeight;
 	var arDiff     = displayAr / averageWindowAspectRatio();
-	var numWindows = SAGE2Items.applications.numItems;
+
+	var backgroundAndForegroundItems = stickyAppHandler.getListOfBackgroundAndForegroundItems(SAGE2Items.applications.list);
+	var appsWithoutBackground = backgroundAndForegroundItems.backgroundItems;
+	var numAppsWithoutBackground = appsWithoutBackground.length;
+
+	// Don't use sticking items to compute number of windows.
+	var numWindows = numAppsWithoutBackground;
+	//var numWindows = SAGE2Items.applications.numItems;
 
 	// 3 scenarios... windows are on average the same aspect ratio as the display
 	if (arDiff >= 0.7 && arDiff <= 1.3) {
@@ -2752,8 +2759,8 @@ function tileApplications() {
 	var centroidsTiles = [];
 
 	// Caculate apps centers
-	for (key in SAGE2Items.applications.list) {
-		app = SAGE2Items.applications.list[key];
+	for (key in appsWithoutBackground) {
+		app = appsWithoutBackground[key];
 		centroidsApps[key] = {x: app.left + app.width / 2.0, y: app.top + app.height / 2.0};
 	}
 	// Caculate tiles centers
@@ -2772,14 +2779,14 @@ function tileApplications() {
 			distances[key].push(d);
 		}
 	}
-
-	for (key in SAGE2Items.applications.list) {
+	stickyAppHandler.enablePiling = true;
+	for (key in appsWithoutBackground) {
 		// get the application
-		app = SAGE2Items.applications.list[key];
+		app = appsWithoutBackground[key];
 		// pick a cell
 		var cellid = findMinimum(distances[key]);
 		// put infinite value to disable the chosen cell
-		for (i in SAGE2Items.applications.list) {
+		for (i in appsWithoutBackground) {
 			distances[i][cellid] = Number.MAX_VALUE;
 		}
 
@@ -2803,6 +2810,8 @@ function tileApplications() {
 			date: Date.now()
 		};
 
+		stickyAppHandler.pileItemsStickingToUpdatedItem(app);
+
 		broadcast('startMove', {id: updateItem.elemId, date: updateItem.date});
 		broadcast('startResize', {id: updateItem.elemId, date: updateItem.date});
 
@@ -2811,6 +2820,7 @@ function tileApplications() {
 		broadcast('finishedMove', {id: updateItem.elemId, date: updateItem.date});
 		broadcast('finishedResize', {id: updateItem.elemId, date: updateItem.date});
 	}
+	stickyAppHandler.enablePiling = false;
 }
 
 // Remove all apps and partitions

@@ -27,6 +27,7 @@
  */
 function StickyItems() {
 	this.notPinnedAppsList = [];
+	this.enablePiling = false;
 }
 
 /**
@@ -112,6 +113,32 @@ StickyItems.prototype.moveItemsStickingToUpdatedItem = function (updatedItem) {
 		}
 	}
 	return moveItems;
+};
+
+StickyItems.prototype.pileItemsStickingToUpdatedItem = function (updatedItem) {
+	if (this.enablePiling === false) {
+		return;
+	}
+	var foregroundItems = updatedItem.foregroundItems;
+	if (foregroundItems !== null && foregroundItems !== undefined) {
+		for (var f = 0; f < foregroundItems.length; f ++) {
+			var foregroundItem = foregroundItems[f];
+			if (foregroundItem.backgroundOffsetX < 0) {
+				foregroundItem.backgroundOffsetX = 0;
+			} else if (foregroundItem.backgroundOffsetX + foregroundItem.width > updatedItem.width){
+				foregroundItem.backgroundOffsetX = Math.max(updatedItem.width - foregroundItem.width, 0);
+			}
+
+			if (foregroundItem.backgroundOffsetY < 0) {
+				foregroundItem.backgroundOffsetY = 0;
+			} else if (foregroundItem.backgroundOffsetY + foregroundItem.height > updatedItem.height){
+				foregroundItem.backgroundOffsetY = Math.max(updatedItem.height - foregroundItem.height, 0);
+			}
+			foregroundItem.width = Math.min(foregroundItem.width, updatedItem.width);
+			foregroundItem.height = Math.min(foregroundItem.height, updatedItem.height);
+			this.pileItemsStickingToUpdatedItem(foregroundItem);
+		}
+	}
 };
 
 

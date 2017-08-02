@@ -172,6 +172,10 @@ Partition.prototype.releaseChild = function(id) {
 				this.currentMaximizedChild = null;
 			}
 		}
+		var stickingItems = stickyAppHandler.getStickingItems(item);
+		for (var s in stickingItems) {
+			this.releaseChild(stickingItems[s].id);
+		}
 	}
 
 	return [this.id];
@@ -213,6 +217,7 @@ Partition.prototype.toggleInnerTiling = function() {
 	this.innerTiling = !this.innerTiling;
 
 	if (this.innerTiling) {
+		stickyAppHandler.enablePiling = true;
 		this.tilePartition();
 	}
 
@@ -411,12 +416,12 @@ Partition.prototype.tilePartition = function() {
 
 		// broadcast('startMove', {id: updateItem.elemId, date: updateItem.date});
 		// broadcast('startResize', {id: updateItem.elemId, date: updateItem.date});
-
+		stickyAppHandler.pileItemsStickingToUpdatedItem(app);
 		this.updateChild(app.id);
 		// broadcast('finishedMove', {id: updateItem.elemId, date: updateItem.date});
 		// broadcast('finishedResize', {id: updateItem.elemId, date: updateItem.date});
 	}
-
+	stickyAppHandler.enablePiling = false;
 	//Restore maximized app's dimensions and position
 	if (this.currentMaximizedChild) {
 		let maxChild = this.children[this.currentMaximizedChild];
