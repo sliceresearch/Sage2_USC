@@ -38,6 +38,7 @@ if (args.length === 1) {
 	args = args[0];
 }
 
+// Generate the command line handler
 commander
 	.version(version)
 	.option('-s, --server <s>',    'Server URL (string)', 'http://localhost:9292')
@@ -56,9 +57,10 @@ commander
 	.option('--hash <s>',          'Server password hash (string)', null)
 	.option('--cache',             'Clear the cache', false)
 	.option('--console',           'Open the devtools console', false)
+	.option('--show-fps',          'Display the Chrome FPS counter', false)
 	.parse(args);
 
-
+// Load the flash plugin if asked
 if (commander.plugins) {
 	// Flash loader
 	const flashLoader = require('flash-player-loader');
@@ -69,6 +71,29 @@ if (commander.plugins) {
 	}
 	flashLoader.addSource('@system');
 	flashLoader.load();
+}
+
+// Reset the desktop scaling
+const os = require('os');
+if (os.platform() === "win32") {
+	app.commandLine.appendSwitch("force-device-scale-factor", "1");
+}
+
+// Remove the limit on the number of connections per domain
+//  the usual value is around 6
+const url = require('url');
+var parsedURL = url.parse(commander.server);
+// default domais are local
+var domains   = "localhost,127.0.0.1";
+if (parsedURL.hostname) {
+	// add the hostname
+	domains +=  "," + parsedURL.hostname;
+}
+app.commandLine.appendSwitch("ignore-connections-limit", domains);
+
+// Enable the Chrome builtin FPS display for debug
+if (commander.showFps) {
+	app.commandLine.appendSwitch("show-fps-counter");
 }
 
 /**
@@ -181,15 +206,17 @@ function createWindow() {
 		fullscreenable: commander.fullscreen,
 		alwaysOnTop: commander.fullscreen,
 		kiosk: commander.fullscreen,
+		// a default color while loading
+		backgroundColor: "#565656",
 		// resizable: !commander.fullscreen,
 		webPreferences: {
 			nodeIntegration: true,
-			webSecurity: true,
+			webSecurity: false, // seems to be an issue on Windows
 			backgroundThrottling: false,
 			plugins: commander.plugins,
-			// allow this for now, problem loading webview recently
-			allowDisplayingInsecureContent: true,
-			allowRunningInsecureContent: true
+			// allow this for or not
+			allowDisplayingInsecureContent: false,
+			allowRunningInsecureContent: false
 		}
 	};
 
@@ -234,10 +261,16 @@ function createWindow() {
 
 	// Emitted when the window is closed.
 	mainWindow.on('closed', function() {
-		// Dereference the window object, usually you would store windows
-		// in an array if your app supports multi windows, this is the time
-		// when you should delete the corresponding element.
+		// Dereference the window object
 		mainWindow = null;
+	});
+
+	// If the window opens before the server is ready,
+	// wait 2 sec. and try again
+	mainWindow.webContents.on('did-fail-load', function(ev) {
+		setTimeout(function() {
+			mainWindow.reload();
+		}, 2000);
 	});
 
 	mainWindow.webContents.on('will-navigate', function(ev) {
@@ -247,7 +280,7 @@ function createWindow() {
 
 /**
  * This method will be called when Electron has finished
- * initialization and is ready to create browser windows.
+ * initialization and is ready to create a browser window.
  */
 app.on('ready', createWindow);
 
@@ -265,7 +298,7 @@ app.on('window-all-closed', function() {
 /**
  * activate callback
  * On OS X it's common to re-create a window in the app when the
- * dock icon is clicked and there are no other windows open.
+ * dock icon is clicked and there are no other window open.
  */
 app.on('activate', function() {
 	if (mainWindow === null) {

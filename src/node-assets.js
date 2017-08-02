@@ -218,8 +218,7 @@ var generateImageThumbnails = function(infile, outfile, sizes, index, callback) 
 			}
 			// recursive call to generate the next size
 			generateImageThumbnails(infile, outfile, sizes, index + 1, callback);
-		}
-	);
+		});
 };
 
 var generatePdfThumbnailsHelper = function(intermediate, infile, outfile, sizes, index, callback) {
@@ -244,8 +243,7 @@ var generatePdfThumbnailsHelper = function(intermediate, infile, outfile, sizes,
 			}
 			// recursive call to generate the next size
 			generatePdfThumbnailsHelper(intermediate, infile, outfile, sizes, index + 1, callback);
-		}
-	);
+		});
 };
 
 var generatePdfThumbnails = function(infile, outfile, width, height, sizes, index, callback) {
@@ -302,8 +300,7 @@ var generateVideoThumbnails = function(infile, outfile, width, height, sizes, in
 					});
 					// recursive call to generate the next size
 					generateVideoThumbnails(infile, outfile, width, height, sizes, index + 1, callback);
-				}
-			);
+				});
 		})
 		.screenshots({
 			timestamps: ["10%"],
@@ -340,8 +337,7 @@ var generateAppThumbnails = function(infile, outfile, acolor, sizes, index, call
 			}
 			// recursive call to generate the next size
 			generateAppThumbnails(infile, outfile, acolor, sizes, index + 1, callback);
-		}
-	);
+		});
 };
 
 var generateRemoteSiteThumbnails = function(infile, outfile, sizes, index, callback) {
@@ -383,8 +379,7 @@ var generateRemoteSiteThumbnails = function(infile, outfile, sizes, index, callb
 				// recursive call to generate the next size
 				generateRemoteSiteThumbnails(infile, outfile, sizes, index + 1, callback);
 			}
-		}
-	);
+		});
 	imageMagick(sizes[index], sizes[index], disconnected).fill("#FFFFFF").font(font, fontSize).
 		drawText(0, 0, infile, "Center").write(outfile + '_disconnected_' + sizes[index] + '.jpg', function(err) {
 			if (err) {
@@ -397,8 +392,7 @@ var generateRemoteSiteThumbnails = function(infile, outfile, sizes, index, callb
 				// recursive call to generate the next size
 				generateRemoteSiteThumbnails(infile, outfile, sizes, index + 1, callback);
 			}
-		}
-	);
+		});
 };
 
 var addFile = function(filename, exif, callback) {

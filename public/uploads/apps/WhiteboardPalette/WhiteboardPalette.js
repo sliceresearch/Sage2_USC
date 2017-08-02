@@ -305,17 +305,17 @@ var WhiteboardPalette = SAGE2_App.extend({
 			}
 			if (butt.text) {
 				this.palette.append("text")
-							.attr("x", x + butt.w / 2)
-							.attr("y", y + butt.h / 2)
-							.style("dominant-baseline", "middle")
-							.style("text-anchor", "middle")
-							.text(butt.text);
+					.attr("x", x + butt.w / 2)
+					.attr("y", y + butt.h / 2)
+					.style("dominant-baseline", "middle")
+					.style("text-anchor", "middle")
+					.text(butt.text);
 			}
 			if (butt.selected) {
 				var selectedStroke = "white";
 				toGoToFront.push(this.palette.append("rect").attr("fill", "none").attr("x", x - colW).attr("y", y - colW)
-							.attr("width", buttW + 2 * colW).attr("height", buttH + 2 * colW).style("stroke", selectedStroke)
-							.style("stroke-width", colW));
+					.attr("width", buttW + 2 * colW).attr("height", buttH + 2 * colW).style("stroke", selectedStroke)
+					.style("stroke-width", colW));
 			}
 		}
 

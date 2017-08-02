@@ -74,34 +74,56 @@ function fileSpawn(filename, done) {
  * @param done {Function} executed when done, done(error, metadata)
  */
 function file(filename, done) {
-	ChildProcess.exec('exiftool -m -json -filesize# -all \"' + filename + '\"', function(error, stdout, stderr) {
-		var metadata;
-		if (error !== null) {
-			if (stdout && stderr.length === 0) {
-				// There's some output, it might just be an unknown file type
-				metadata = JSON.parse(stdout);
+	// Spawn an exiftool process
+	var exif = ChildProcess.spawn('exiftool', ['-m', '-json', '-filesize#', '-all', filename]);
+
+	// Check for error because of the child process not being found / launched
+	exif.on('error', function(err) {
+		done('Fatal Error: Unable to load exiftool. ' + err);
+	});
+
+	// Read the binary data back
+	var response = '';
+	var errorMessage = '';
+	exif.stdout.on("data", function(data) {
+		response += data;
+	});
+
+	// Read an error response back and deal with it.
+	exif.stderr.on("data", function(data) {
+		errorMessage += data.toString();
+	});
+
+	exif.on("close", function() {
+		if (errorMessage) {
+			done(errorMessage);
+		} else {
+			try {
+				var metadata = JSON.parse(response);
 				if ('SourceFile' in metadata[0]) {
 					if (metadata[0].Error) {
 						// if there was an error because unknown file type, delete it
 						delete metadata[0].Error;
 					}
-					// Add a dummy type
-					metadata[0].MIMEType = 'text/plain';
-					metadata[0].FileType = 'text/plain';
+					// Add a dummy type if needed
+					if (!metadata[0].MIMEType) {
+						metadata[0].MIMEType = 'text/plain';
+					}
+					if (!metadata[0].FileType) {
+						metadata[0].FileType = 'text/plain';
+					}
 					done(null, metadata[0]);
 				} else {
 					// unknown data
-					done(error);
+					done('EXIF: Error parsing JSON for ' + filename);
 				}
-			} else {
-				// No output, it's really an error
-				done(error);
+			} catch (e) {
+				done('EXIF: Error parsing JSON for ' + filename);
 			}
-		} else {
-			metadata = JSON.parse(stdout);
-			done(null, metadata[0]);
 		}
 	});
+
+	return exif;
 }
 
 
@@ -136,8 +158,8 @@ function fileSync(filename) {
  */
 function bufferSync(source) {
 	var result = spawnSync('exiftool',
-							['-json', '-m', '-filesize#', '-all', '-'],
-							{input: source, encoding: null});
+		['-json', '-m', '-filesize#', '-all', '-'],
+		{input: source, encoding: null});
 
 	// Note, status code will always equal 0 if using busy waiting fallback
 	if (result.statusCode && result.statusCode !== 0) {

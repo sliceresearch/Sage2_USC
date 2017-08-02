@@ -1425,8 +1425,7 @@ function getLaunchParameters(isElectron) {
 	}
 
 	dataReturn.push(getMeetingIDFromPasswd());
-	dataReturn.push(cfg.layout.rows);
-	dataReturn.push(cfg.layout.columns);
+	dataReturn.push(cfg.host);
 
 	return dataReturn;
 }

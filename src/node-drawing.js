@@ -861,10 +861,10 @@ DrawingManager.prototype.touchMove = function(e, sourceId, posX, posY, w, h) {
 		var offX = this.offsetFromPaletteXTouch[e.sourceId].x || 0;
 		var offY = this.offsetFromPaletteXTouch[e.sourceId].y || 0;
 		this.movePaletteTo(this.paletteID
-								, posX - offX
-								, posY - offY
-								, this.palettePosition.endX - this.palettePosition.startX
-								, this.palettePosition.endY - this.palettePosition.startY);
+			, posX - offX
+			, posY - offY
+			, this.palettePosition.endX - this.palettePosition.startX
+			, this.palettePosition.endY - this.palettePosition.startY);
 	}
 
 	if (action == "usePalette") {
@@ -874,10 +874,10 @@ DrawingManager.prototype.touchMove = function(e, sourceId, posX, posY, w, h) {
 
 	if (action == "recallingPalette") {
 		this.movePaletteTo(this.paletteID
-								, posX
-								, this.palettePosition.startY - this.TITLE_BAR_HEIGHT
-								, this.palettePosition.endX - this.palettePosition.startX
-								, this.palettePosition.endY - this.palettePosition.startY);
+			, posX
+			, this.palettePosition.startY - this.TITLE_BAR_HEIGHT
+			, this.palettePosition.endX - this.palettePosition.startX
+			, this.palettePosition.endY - this.palettePosition.startY);
 		return;
 	}
 
@@ -1206,18 +1206,17 @@ DrawingManager.prototype.loadOldState = function(data) {
 
 // Get all the callbacks from the server
 DrawingManager.prototype.setCallbacks = function(
-		drawingInitCB,
-		drawingUpdateCB,
-		drawingRemoveCB,
-		sendTouchToPaletteCB,
-		sendDragToPaletteCB,
-		sendStyleToPaletteCB,
-		sendChangeToPaletteCB,
-		movePaletteToCB,
-		saveSessionCB,
-		loadSessionCB,
-		sendSessionListCB
-	) {
+	drawingInitCB,
+	drawingUpdateCB,
+	drawingRemoveCB,
+	sendTouchToPaletteCB,
+	sendDragToPaletteCB,
+	sendStyleToPaletteCB,
+	sendChangeToPaletteCB,
+	movePaletteToCB,
+	saveSessionCB,
+	loadSessionCB,
+	sendSessionListCB) {
 	this.drawingInit = drawingInitCB;
 	this.drawingUpdate = drawingUpdateCB;
 	this.drawingRemove = drawingRemoveCB;

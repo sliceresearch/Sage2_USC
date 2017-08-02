@@ -70,12 +70,13 @@
 		"sw-precache": "latest",
 		"debug": "latest",
 		"ytdl-core": "latest",
-		"websocketio": "latest",
+		"websocketio": "https://github.com/renambot-uic/websocketio.git",
 		"rimraf": "latest",
+		"node-pre-gyp": "latest",
 		"electron": "latest"
 	},
 	"optionalDependencies": {
-		"node-demux": "latest"
+		"node-demux": "https://github.com/renambot-uic/node-demux.git"
 	},
 	"devDependencies": {
 		"grunt": "latest",

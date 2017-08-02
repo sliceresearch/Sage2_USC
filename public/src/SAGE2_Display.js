@@ -426,7 +426,7 @@ function setupListeners() {
 		ui.showSagePointer(pointer_data);
 		resetIdle();
 		var uniqueID = pointer_data.id.slice(0, pointer_data.id.lastIndexOf("_"));
-		var re = /\.|\:/g;
+		var re = /\.|:/g;
 		var stlyeCaption = uniqueID.split(re).join("");
 		addStyleElementForTitleColor(stlyeCaption, pointer_data.color);
 	});
@@ -434,7 +434,7 @@ function setupListeners() {
 	wsio.on('hideSagePointer', function(pointer_data) {
 		ui.hideSagePointer(pointer_data);
 		var uniqueID = pointer_data.id.slice(0, pointer_data.id.lastIndexOf("_"));
-		var re = /\.|\:/g;
+		var re = /\.|:/g;
 		var stlyeCaption = uniqueID.split(re).join("");
 		removeStyleElementForTitleColor(stlyeCaption, pointer_data.color);
 	});
@@ -832,7 +832,7 @@ function setupListeners() {
 
 		if (position_data.elemId.split("_")[0] === "portal") {
 			dataSharingPortals[position_data.elemId].setPositionAndSize(position_data.elemLeft,
-					position_data.elemTop, position_data.elemWidth, position_data.elemHeight);
+				position_data.elemTop, position_data.elemWidth, position_data.elemHeight);
 			return;
 		}
 		var selectedElem = document.getElementById(position_data.elemId);
