@@ -47,7 +47,7 @@ StickyItems.prototype.attachStickyItem = function(backgroundItem, stickyItem) {
 		backgroundItem.foregroundItems = [];
 		backgroundItem.foregroundItems.push(stickyItem);
 	}
-	
+
 	stickyItem.backgroundOffsetX = stickyItem.left - backgroundItem.left;
 	stickyItem.backgroundOffsetY = stickyItem.top - backgroundItem.top;
 	stickyItem.backgroundItem = backgroundItem;
@@ -66,12 +66,12 @@ StickyItems.prototype.detachStickyItem = function(stickyItem) {
 			var stickyItemIdx = foregroundItems.indexOf(stickyItem);
 			if (stickyItemIdx > -1) {
 				foregroundItems.splice(stickyItemIdx, 1);
-			}	
-		}	
+			}
+		}
 	}
 	stickyItem.backgroundOffsetX = 0;
 	stickyItem.backgroundOffsetY = 0;
-	stickyItem.backgroundItem = null;	
+	stickyItem.backgroundItem = null;
 };
 
 /**
@@ -82,7 +82,7 @@ StickyItems.prototype.detachStickyItem = function(stickyItem) {
 StickyItems.prototype.removeElement = function(elem) {
 	var foregroundItems = elem.foregroundItems;
 	if (foregroundItems !== null && foregroundItems !== undefined) {
-		for (var f = 0; f < foregroundItems.length; f ++) {
+		for (var f = 0; f < foregroundItems.length; f++) {
 			var foregroundItem = foregroundItems[f];
 			foregroundItem.backgroundItem = null;
 		}
@@ -99,7 +99,7 @@ StickyItems.prototype.moveItemsStickingToUpdatedItem = function (updatedItem) {
 	var foregroundItems = updatedItem.foregroundItems;
 	var moveItems = [];
 	if (foregroundItems !== null && foregroundItems !== undefined) {
-		for (var f = 0; f < foregroundItems.length; f ++) {
+		for (var f = 0; f < foregroundItems.length; f++) {
 			var foregroundItem = foregroundItems[f];
 			foregroundItem.left = updatedItem.left + foregroundItem.backgroundOffsetX;
 			foregroundItem.top = updatedItem.top + foregroundItem.backgroundOffsetY;
@@ -121,17 +121,17 @@ StickyItems.prototype.pileItemsStickingToUpdatedItem = function (updatedItem) {
 	}
 	var foregroundItems = updatedItem.foregroundItems;
 	if (foregroundItems !== null && foregroundItems !== undefined) {
-		for (var f = 0; f < foregroundItems.length; f ++) {
+		for (var f = 0; f < foregroundItems.length; f++) {
 			var foregroundItem = foregroundItems[f];
 			if (foregroundItem.backgroundOffsetX < 0) {
 				foregroundItem.backgroundOffsetX = 0;
-			} else if (foregroundItem.backgroundOffsetX + foregroundItem.width > updatedItem.width){
+			} else if (foregroundItem.backgroundOffsetX + foregroundItem.width > updatedItem.width) {
 				foregroundItem.backgroundOffsetX = Math.max(updatedItem.width - foregroundItem.width, 0);
 			}
 
 			if (foregroundItem.backgroundOffsetY < 0) {
 				foregroundItem.backgroundOffsetY = 0;
-			} else if (foregroundItem.backgroundOffsetY + foregroundItem.height > updatedItem.height){
+			} else if (foregroundItem.backgroundOffsetY + foregroundItem.height > updatedItem.height) {
 				foregroundItem.backgroundOffsetY = Math.max(updatedItem.height - foregroundItem.height, 0);
 			}
 			foregroundItem.width = Math.min(foregroundItem.width, updatedItem.width);
@@ -146,7 +146,7 @@ StickyItems.prototype.moveAndResizeItemsStickingToUpdatedItem = function (update
 	var foregroundItems = updatedItem.foregroundItems;
 	var moveItems = [];
 	if (foregroundItems !== null && foregroundItems !== undefined) {
-		for (var f = 0; f < foregroundItems.length; f ++) {
+		for (var f = 0; f < foregroundItems.length; f++) {
 			var foregroundItem = foregroundItems[f];
 			foregroundItem.left = updatedItem.left + foregroundItem.backgroundOffsetX;
 			foregroundItem.top = updatedItem.top + foregroundItem.backgroundOffsetY;
@@ -174,7 +174,7 @@ StickyItems.prototype.getStickingItems = function(app) {
 	var foregroundItems = app.foregroundItems;
 	var stickingItems = [];
 	if (foregroundItems !== null && foregroundItems !== undefined) {
-		for (var f = 0; f < foregroundItems.length; f ++) {
+		for (var f = 0; f < foregroundItems.length; f++) {
 			var foregroundItem = foregroundItems[f];
 			stickingItems.push(foregroundItem);
 			var oneDeepItems = this.getStickingItems(foregroundItem);
@@ -237,8 +237,10 @@ StickyItems.prototype.getListOfBackgroundAndForegroundItems = function(appList) 
 		foregroundItems: []
 	};
 	if (appList !== null && typeof appList === 'object') {
-		temp = Object.keys(appList).map(function (key) { return appList[key]; });
-	} else if (Object.prototype.toString.call( appList ) !== '[object Array]') {
+		temp = Object.keys(appList).map(function (key) {
+			return appList[key];
+		});
+	} else if (Object.prototype.toString.call(appList) !== '[object Array]') {
 		return backgroundAndForegroundItems;
 	}
 	appList = temp;
@@ -250,6 +252,6 @@ StickyItems.prototype.getListOfBackgroundAndForegroundItems = function(appList) 
 		}
 	});
 	return backgroundAndForegroundItems;
-}
+};
 
 module.exports = StickyItems;

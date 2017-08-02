@@ -112,7 +112,7 @@ Partition.prototype.addChild = function(item) {
 	if (this.innerTiling && this.currentMaximizedChild) {
 		this.maximizeChild(item.id);
 	}
-	
+
 	var stickingItems = stickyAppHandler.getStickingItems(item);
 	//var tempArr;
 	for (var s in stickingItems) {
@@ -258,7 +258,7 @@ Partition.prototype.tilePartition = function() {
 		height: this.height
 	};
 
-	var maxChildCopy = null; 
+	var maxChildCopy = null;
 
 	if (this.currentMaximizedChild) {
 
@@ -385,7 +385,7 @@ Partition.prototype.tilePartition = function() {
 	for (key in appsWithoutBackground) {
 		// get the application
 		app = appsWithoutBackground[key];
-		
+
 		// pick a cell
 		var cellid = findMinimum(distances[key]);
 		// put infinite value to disable the chosen cell

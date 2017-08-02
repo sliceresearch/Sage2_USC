@@ -7181,12 +7181,12 @@ function moveAndResizeApplicationWindow(resizeApp, portalId) {
 
 	var updatedStickyItems = stickyAppHandler.moveItemsStickingToUpdatedItem(app);
 	for (var idx = 0; idx < updatedStickyItems.length; idx++) {
-	 	var stickyItem = updatedStickyItems[idx];
-	 	im.editGeometry(stickyItem.elemId, "applications", "rectangle", {
-	 		x: stickyItem.elemLeft, y: stickyItem.elemTop,
-	 		w: stickyItem.elemWidth, h: stickyItem.elemHeight + config.ui.titleBarHeight
-	 	});
-	 	broadcast('setItemPosition', updatedStickyItems[idx]);
+		var stickyItem = updatedStickyItems[idx];
+		im.editGeometry(stickyItem.elemId, "applications", "rectangle", {
+			x: stickyItem.elemLeft, y: stickyItem.elemTop,
+			w: stickyItem.elemWidth, h: stickyItem.elemHeight + config.ui.titleBarHeight
+		});
+		broadcast('setItemPosition', updatedStickyItems[idx]);
 	}
 	handleStickyItem(app.id);
 }
