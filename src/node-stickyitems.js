@@ -27,11 +27,10 @@
  */
 function StickyItems() {
 	this.notPinnedAppsList = [];
-	this.enablePiling = false;
 }
 
 /**
-*
+* Attach a sticky item to another to make a chain.
 *
 * @method attachStickyItem
 */
@@ -54,7 +53,7 @@ StickyItems.prototype.attachStickyItem = function(backgroundItem, stickyItem) {
 };
 
 /**
-*
+* Remove an element from the chain, when the element is moved away
 *
 * @method detachStickyItem
 */
@@ -75,7 +74,7 @@ StickyItems.prototype.detachStickyItem = function(stickyItem) {
 };
 
 /**
-*
+* Remove an element from the chain, when the element is deleted.
 *
 * @method removeElement
 */
@@ -91,7 +90,7 @@ StickyItems.prototype.removeElement = function(elem) {
 };
 
 /**
-*
+* Move chains of items sticking to the moved item
 *
 * @method moveItemsStickingToUpdatedItem
 */
@@ -115,10 +114,36 @@ StickyItems.prototype.moveItemsStickingToUpdatedItem = function (updatedItem) {
 	return moveItems;
 };
 
-StickyItems.prototype.pileItemsStickingToUpdatedItem = function (updatedItem) {
-	if (this.enablePiling === false) {
-		return;
+/**
+* Move only the items sticking directly to the moved item
+*
+* @method moveFirstLevelItemsStickingToUpdatedItem
+*/
+StickyItems.prototype.moveFirstLevelItemsStickingToUpdatedItem = function (updatedItem) {
+	var foregroundItems = updatedItem.foregroundItems;
+	var moveItems = [];
+	if (foregroundItems !== null && foregroundItems !== undefined) {
+		for (var f = 0; f < foregroundItems.length; f++) {
+			var foregroundItem = foregroundItems[f];
+			foregroundItem.left = updatedItem.left + foregroundItem.backgroundOffsetX;
+			foregroundItem.top = updatedItem.top + foregroundItem.backgroundOffsetY;
+			var item     = {
+				elemId: foregroundItem.id, elemLeft: foregroundItem.left, elemTop: foregroundItem.top,
+				elemWidth: foregroundItem.width, elemHeight: foregroundItem.height, date: new Date()
+			};
+			moveItems.push(item);
+		}
 	}
+	return moveItems;
+};
+
+/**
+* Pile sticky item chain so that the items are within the boundaries of the background item, 
+* during tiling of partitions, this ensures that the sticky chain of a tile doesn't intrude on another tile
+*
+* @method pileItemsStickingToUpdatedItem
+*/
+StickyItems.prototype.pileItemsStickingToUpdatedItem = function (updatedItem) {
 	var foregroundItems = updatedItem.foregroundItems;
 	if (foregroundItems !== null && foregroundItems !== undefined) {
 		for (var f = 0; f < foregroundItems.length; f++) {
@@ -141,7 +166,11 @@ StickyItems.prototype.pileItemsStickingToUpdatedItem = function (updatedItem) {
 	}
 };
 
-
+/**
+* Move and resize, chains of items sticking to the moved item
+*
+* @method moveAndResizeItemsStickingToUpdatedItem
+*/
 StickyItems.prototype.moveAndResizeItemsStickingToUpdatedItem = function (updatedItem) {
 	var foregroundItems = updatedItem.foregroundItems;
 	var moveItems = [];
@@ -166,7 +195,7 @@ StickyItems.prototype.moveAndResizeItemsStickingToUpdatedItem = function (update
 
 
 /**
-*
+* Get list of items(entire tree rooted at item) sticking to the item
 *
 * @method getStickingItems
 */
@@ -186,7 +215,7 @@ StickyItems.prototype.getStickingItems = function(app) {
 
 
 /**
-*
+* Get items immediately sticking to item
 *
 * @method getFirstLevelStickingItems
 */
@@ -199,8 +228,8 @@ StickyItems.prototype.getFirstLevelStickingItems = function(app) {
 
 
 /**
-*
-*
+* Method to mark item not pinned but having a background item
+* When the item is finally moved away from the background, this itme will have its pin hidden.
 * @method registerNotPinnedApp
 */
 
@@ -211,7 +240,7 @@ StickyItems.prototype.registerNotPinnedApp = function(app) {
 };
 
 /**
-*
+* List of items that are not pinned
 *
 * @method getNotPinnedAppList
 */

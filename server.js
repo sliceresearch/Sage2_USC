@@ -7188,7 +7188,6 @@ function moveAndResizeApplicationWindow(resizeApp, portalId) {
 		});
 		broadcast('setItemPosition', updatedStickyItems[idx]);
 	}
-	handleStickyItem(app.id);
 }
 
 function moveAndResizePartitionWindow(uniqueID, movePartition) {
@@ -7227,6 +7226,10 @@ function updatePartitionInnerLayout(partition, animateAppMovement) {
 	for (let child of updatedChildren) {
 		child.elemAnimate = animateAppMovement;
 		moveAndResizeApplicationWindow(child);
+	}
+
+	for (let child of updatedChildren) {
+		handleStickyItem(child.elemId);
 	}
 }
 

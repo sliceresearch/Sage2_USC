@@ -113,11 +113,9 @@ Partition.prototype.addChild = function(item) {
 		this.maximizeChild(item.id);
 	}
 
-	var stickingItems = stickyAppHandler.getStickingItems(item);
-	//var tempArr;
+	var stickingItems = stickyAppHandler.getFirstLevelStickingItems(item);
 	for (var s in stickingItems) {
 		this.addChild(stickingItems[s]);
-		//changedPartitions.push.apply(changedPartitions, tempArr);
 	}
 	return changedPartitions;
 };
@@ -132,7 +130,7 @@ Partition.prototype.updateChild = function(id) {
 		item.relative_top = (item.top - this.top - titleBarHeight) / this.height;
 		item.relative_width = item.width / this.width;
 		item.relative_height = item.height / this.height;
-		var movedItems = stickyAppHandler.moveItemsStickingToUpdatedItem(item);
+		var movedItems = stickyAppHandler.moveFirstLevelItemsStickingToUpdatedItem(item);
 		for (var mI in movedItems) {
 			this.updateChild(movedItems[mI].elemId);
 		}
@@ -172,7 +170,7 @@ Partition.prototype.releaseChild = function(id) {
 				this.currentMaximizedChild = null;
 			}
 		}
-		var stickingItems = stickyAppHandler.getStickingItems(item);
+		var stickingItems = stickyAppHandler.getFirstLevelStickingItems(item);
 		for (var s in stickingItems) {
 			this.releaseChild(stickingItems[s].id);
 		}
@@ -217,7 +215,6 @@ Partition.prototype.toggleInnerTiling = function() {
 	this.innerTiling = !this.innerTiling;
 
 	if (this.innerTiling) {
-		stickyAppHandler.enablePiling = true;
 		this.tilePartition();
 	}
 
@@ -421,7 +418,6 @@ Partition.prototype.tilePartition = function() {
 		// broadcast('finishedMove', {id: updateItem.elemId, date: updateItem.date});
 		// broadcast('finishedResize', {id: updateItem.elemId, date: updateItem.date});
 	}
-	stickyAppHandler.enablePiling = false;
 	//Restore maximized app's dimensions and position
 	if (this.currentMaximizedChild) {
 		let maxChild = this.children[this.currentMaximizedChild];
@@ -682,12 +678,11 @@ Partition.prototype.updateInnerLayout = function() {
 Partition.prototype.updateChildrenPositions = function() {
 	var updatedChildren = [];
 
-	var childIDs = Object.keys(this.children);
+	var backgroundAndForegroundItems = stickyAppHandler.getListOfBackgroundAndForegroundItems(this.children);
+	var appsWithoutBackground = backgroundAndForegroundItems.backgroundItems;
 	var titleBarHeight = this.partitionList.configuration.ui.titleBarHeight;
 
-	childIDs.forEach((el) => {
-		var item = this.children[el];
-
+	appsWithoutBackground.forEach((item) => {
 		item.left = item.relative_left * this.width + this.left;
 		item.top = item.relative_top * this.height + this.top + titleBarHeight;
 		item.width = item.relative_width * this.width;
