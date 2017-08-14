@@ -5873,6 +5873,7 @@ function processInputCommand(line) {
 function wsSetTitle(wsio,data) {
 	console.log("wsSetTitle "+JSON.stringify(data));
 	//SAGE2Items.applications.list[data.id].title = data.newTitle;
+	SAGE2Items.applications.list[data.id].displaytitle = data.newTitle;
 	broadcast('broadcast', {app:data.id, func:'updateTitle', data:data.newTitle});
 }
 
