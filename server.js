@@ -1169,7 +1169,6 @@ function initializeExistingWallUI(wsio) {
 
 function initializeExistingApps(wsio) {
 	var key;
-
 	for (key in SAGE2Items.applications.list) {
 		// remove partition value from application while sending wsio message (circular structure)
 		// does this cause issues?
@@ -2955,7 +2954,14 @@ function tileApplications() {
 
 	var displayAr  = config.totalWidth / config.totalHeight;
 	var arDiff     = displayAr / averageWindowAspectRatio();
-	var numWindows = SAGE2Items.applications.numItems;
+
+	var backgroundAndForegroundItems = stickyAppHandler.getListOfBackgroundAndForegroundItems(SAGE2Items.applications.list);
+	var appsWithoutBackground = backgroundAndForegroundItems.backgroundItems;
+	var numAppsWithoutBackground = appsWithoutBackground.length;
+
+	// Don't use sticking items to compute number of windows.
+	var numWindows = numAppsWithoutBackground;
+	//var numWindows = SAGE2Items.applications.numItems;
 
 	// 3 scenarios... windows are on average the same aspect ratio as the display
 	if (arDiff >= 0.7 && arDiff <= 1.3) {
@@ -3011,8 +3017,8 @@ function tileApplications() {
 	var centroidsTiles = [];
 
 	// Caculate apps centers
-	for (key in SAGE2Items.applications.list) {
-		app = SAGE2Items.applications.list[key];
+	for (key in appsWithoutBackground) {
+		app = appsWithoutBackground[key];
 		centroidsApps[key] = {x: app.left + app.width / 2.0, y: app.top + app.height / 2.0};
 	}
 	// Caculate tiles centers
@@ -3031,14 +3037,14 @@ function tileApplications() {
 			distances[key].push(d);
 		}
 	}
-
-	for (key in SAGE2Items.applications.list) {
+	stickyAppHandler.enablePiling = true;
+	for (key in appsWithoutBackground) {
 		// get the application
-		app = SAGE2Items.applications.list[key];
+		app = appsWithoutBackground[key];
 		// pick a cell
 		var cellid = findMinimum(distances[key]);
 		// put infinite value to disable the chosen cell
-		for (i in SAGE2Items.applications.list) {
+		for (i in appsWithoutBackground) {
 			distances[i][cellid] = Number.MAX_VALUE;
 		}
 
@@ -3062,6 +3068,8 @@ function tileApplications() {
 			date: Date.now()
 		};
 
+		stickyAppHandler.pileItemsStickingToUpdatedItem(app);
+
 		broadcast('startMove', {id: updateItem.elemId, date: updateItem.date});
 		broadcast('startResize', {id: updateItem.elemId, date: updateItem.date});
 
@@ -3070,6 +3078,7 @@ function tileApplications() {
 		broadcast('finishedMove', {id: updateItem.elemId, date: updateItem.date});
 		broadcast('finishedResize', {id: updateItem.elemId, date: updateItem.date});
 	}
+	stickyAppHandler.enablePiling = false;
 }
 
 // Remove all apps and partitions
@@ -6350,7 +6359,8 @@ function releaseSlider(uniqueID) {
 function pointerPressOnApplication(uniqueID, pointerX, pointerY, data, obj, localPt, portalId) {
 	var im = findInteractableManager(obj.data.id);
 	im.moveObjectToFront(obj.id, "applications", ["portals"]);
-	var stickyList = stickyAppHandler.getStickingItems(obj.id);
+	var app = SAGE2Items.applications.list[obj.id];
+	var stickyList = stickyAppHandler.getStickingItems(app);
 	for (var idx in stickyList) {
 		im.moveObjectToFront(stickyList[idx].id, "applications", ["portals"]);
 	}
@@ -6441,7 +6451,6 @@ function pointerPressOnApplication(uniqueID, pointerX, pointerY, data, obj, loca
 }
 
 function pointerPressOnPartition(uniqueID, pointerX, pointerY, data, obj, localPt, portalId) {
-
 	var btn = partitions.findButtonByPoint(obj.id, localPt);
 
 	// pointer press on ptn window
@@ -6469,7 +6478,6 @@ function pointerPressOnPartition(uniqueID, pointerX, pointerY, data, obj, localP
 		case "tileButton":
 			if (sagePointers[uniqueID].visible) {
 				var changedPartitions = partitions.list[obj.id].toggleInnerTiling();
-
 				updatePartitionInnerLayout(partitions.list[obj.id], true);
 
 				changedPartitions.forEach(el => {
@@ -6507,7 +6515,6 @@ function pointerPressOnPartition(uniqueID, pointerX, pointerY, data, obj, localP
 				// update neighbors if it is snapped
 				if (obj.data.isSnapping) {
 					let updatedNeighbors = obj.data.updateNeighborPtnPositions();
-
 					// update geometries/display/layout of any updated neighbors
 					for (var neigh of updatedNeighbors) {
 						partitions.updatePartitionGeometries(neigh, interactMgr);
@@ -6516,7 +6523,6 @@ function pointerPressOnPartition(uniqueID, pointerX, pointerY, data, obj, localP
 						updatePartitionInnerLayout(partitions.list[neigh], true);
 					}
 				}
-
 				// update child positions within partiton
 				updatePartitionInnerLayout(partitions.list[obj.id], false);
 			}
@@ -7386,8 +7392,7 @@ function moveApplicationWindow(uniqueID, moveApp, portalId) {
 				{appPositionAndSize: moveApp, portalId: portalId, date: ts});
 		}
 
-		var updatedStickyItems = stickyAppHandler.moveItemsStickingToUpdatedItem(moveApp);
-
+		var updatedStickyItems = stickyAppHandler.moveItemsStickingToUpdatedItem(app);
 		for (var idx = 0; idx < updatedStickyItems.length; idx++) {
 			var stickyItem = updatedStickyItems[idx];
 			im.editGeometry(stickyItem.elemId, "applications", "rectangle", {
@@ -7431,6 +7436,16 @@ function moveAndResizeApplicationWindow(resizeApp, portalId) {
 		remoteSharingSessions[portalId].wsio.emit('updateApplicationPositionAndSize',
 			{appPositionAndSize: resizeApp, portalId: portalId, date: ts});
 	}
+
+	var updatedStickyItems = stickyAppHandler.moveItemsStickingToUpdatedItem(app);
+	for (var idx = 0; idx < updatedStickyItems.length; idx++) {
+		var stickyItem = updatedStickyItems[idx];
+		im.editGeometry(stickyItem.elemId, "applications", "rectangle", {
+			x: stickyItem.elemLeft, y: stickyItem.elemTop,
+			w: stickyItem.elemWidth, h: stickyItem.elemHeight + config.ui.titleBarHeight
+		});
+		broadcast('setItemPosition', updatedStickyItems[idx]);
+	}
 }
 
 function moveAndResizePartitionWindow(uniqueID, movePartition) {
@@ -7443,7 +7458,6 @@ function moveAndResizePartitionWindow(uniqueID, movePartition) {
 
 			// then update the neighboring partition positions
 			var updatedNeighbors = movedPtn.updateNeighborPtnPositions();
-
 			// update geometries/display/layout of any updated neighbors
 			for (var neigh of updatedNeighbors) {
 				partitions.updatePartitionGeometries(neigh, interactMgr);
@@ -7456,12 +7470,12 @@ function moveAndResizePartitionWindow(uniqueID, movePartition) {
 
 		partitions.updatePartitionGeometries(movePartition.elemId, interactMgr);
 		broadcast('partitionMoveAndResizeFinished', movedPtn.getDisplayInfo());
-
 		updatePartitionInnerLayout(movedPtn, true);
 	}
 }
 
 function updatePartitionInnerLayout(partition, animateAppMovement) {
+
 	partition.updateInnerLayout();
 
 	// update children of partition
@@ -7470,6 +7484,10 @@ function updatePartitionInnerLayout(partition, animateAppMovement) {
 	for (let child of updatedChildren) {
 		child.elemAnimate = animateAppMovement;
 		moveAndResizeApplicationWindow(child);
+	}
+
+	for (let child of updatedChildren) {
+		handleStickyItem(child.elemId);
 	}
 }
 
@@ -8151,6 +8169,11 @@ function pointerScrollStartOnApplication(uniqueID, pointerX, pointerY, obj, loca
 	var btn = SAGE2Items.applications.findButtonByPoint(obj.id, localPt);
 
 	interactMgr.moveObjectToFront(obj.id, obj.layerId);
+	var app = SAGE2Items.applications.list[obj.id];
+	var stickyList = stickyAppHandler.getStickingItems(app);
+	for (var idx in stickyList) {
+		interactMgr.moveObjectToFront(stickyList[idx].id, "applications", ["portals"]);
+	}
 	var newOrder = interactMgr.getObjectZIndexList("applications", ["portals"]);
 	broadcast('updateItemOrder', newOrder);
 
@@ -8825,7 +8848,7 @@ function deleteApplication(appId, portalId) {
 		}
 	}
 
-	var stickingItems = stickyAppHandler.getFirstLevelStickingItems(app.id);
+	var stickingItems = stickyAppHandler.getFirstLevelStickingItems(app);
 	stickyAppHandler.removeElement(app);
 
 	SAGE2Items.applications.removeItem(appId);
@@ -9338,15 +9361,16 @@ function wsRadialMenuMoved(wsio, data) {
 function handleStickyItem(elemId) {
 	var app = SAGE2Items.applications.list[elemId];
 	var im;
-	if (app !== null && app !== undefined && app.sticky === true) {
+	if (elemId !== null && app !== null && app !== undefined && app.sticky === true) {
 		stickyAppHandler.detachStickyItem(app);
 		im = findInteractableManager(elemId);
 		var backgroundObj = im.getBackgroundObj(app, null);
 		if (backgroundObj === null) {
 			hideStickyPin(app);
 		} else if (SAGE2Items.applications.list.hasOwnProperty(backgroundObj.data.id)) {
+			var backgroundApp = SAGE2Items.applications.list[backgroundObj.data.id];
 			if (app.pinned === true) {
-				stickyAppHandler.attachStickyItem(backgroundObj.data, app);
+				stickyAppHandler.attachStickyItem(backgroundApp, app);
 			} else {
 				stickyAppHandler.registerNotPinnedApp(app);
 			}
@@ -9401,7 +9425,8 @@ function showStickyPin(app) {
 	// if it is in a Partition -- I assume it could happen in other cases as well)
 	broadcast('showStickyPin', {
 		id: app.id,
-		sticky: app.sticky
+		sticky: app.sticky,
+		pinned: app.pinned
 	});
 }
 
@@ -9559,7 +9584,6 @@ function wsUtdCallFunctionOnApp(wsio, data) {
 				// update neighbors if it is snapped
 				if (ptn.isSnapping) {
 					let updatedNeighbors = ptn.updateNeighborPtnPositions();
-
 					// update geometries/display/layout of any updated neighbors
 					for (var neigh of updatedNeighbors) {
 						partitions.updatePartitionGeometries(neigh, interactMgr);
@@ -9568,7 +9592,6 @@ function wsUtdCallFunctionOnApp(wsio, data) {
 						updatePartitionInnerLayout(partitions.list[neigh], true);
 					}
 				}
-
 				// update child positions within partiton
 				updatePartitionInnerLayout(ptn, false);
 			}
@@ -9579,7 +9602,6 @@ function wsUtdCallFunctionOnApp(wsio, data) {
 			// invoke the other callback
 			partitions.list[data.app][data.func]();
 		}
-
 		updatePartitionInnerLayout(partitions.list[data.app], true);
 
 		broadcast('partitionWindowTitleUpdate', partitions.list[data.app].getTitle());

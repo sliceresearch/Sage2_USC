@@ -31,7 +31,7 @@
  */
 function fileSizeIEC(a, b, c, d, e) {
 	return (b = Math, c = b.log, d = 1024, e = c(a) / c(d) | 0,
-	a / b.pow(d, e)).toFixed(1) + ' ' + (e ? 'KMGTPEZY'[--e] : 'B');
+		a / b.pow(d, e)).toFixed(1) + ' ' + (e ? 'KMGTPEZY'[--e] : 'B');
 }
 
 /**

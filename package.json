@@ -72,7 +72,7 @@
 		"ytdl-core": "latest",
 		"fs-extra": "latest",
 		"archiver": "latest",
-		"websocketio": "latest",
+		"websocketio": "https://github.com/renambot-uic/websocketio.git",
 		"rimraf": "latest",
 		"node-pre-gyp": "latest",
 		"electron": "latest"
