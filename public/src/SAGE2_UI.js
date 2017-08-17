@@ -570,6 +570,10 @@ function setupListeners() {
 		displayUI.updateHighlightedPartition(data);
 	});
 
+	wsio.on('updatePartitionColor', function (data) {
+		displayUI.setPartitionColor(data);
+	});
+
 	// Receive a message when an application state is upated
 	wsio.on('applicationState', function(data) {
 		if (data.application === "Webview") {

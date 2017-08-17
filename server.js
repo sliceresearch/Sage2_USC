@@ -7451,6 +7451,22 @@ function pointerRelease(uniqueID, pointerX, pointerY, data) {
 				if (ptnSnapping) {
 					partitions.updateNeighbors(newPtn1.id);
 					partitions.updateNeighbors(newPtn2.id);
+
+					// after calculating neighbors, update display
+					broadcast('updatePartitionSnapping', newPtn1.getDisplayInfo());
+					for (let p of Object.keys(newPtn1.neighbors)) {
+						if (partitions.list[p]) {
+							broadcast('updatePartitionSnapping', partitions.list[p].getDisplayInfo());
+						}
+					}
+
+					// after calculating neighbors, update display
+					broadcast('updatePartitionSnapping', newPtn2.getDisplayInfo());
+					for (let p of Object.keys(newPtn2.neighbors)) {
+						if (partitions.list[p]) {
+							broadcast('updatePartitionSnapping', partitions.list[p].getDisplayInfo());
+						}
+					}
 				}
 
 				// if the old partition was tiled, set the new displays to be tiled
@@ -9331,6 +9347,18 @@ function wsUtdCallFunctionOnApp(wsio, data) {
 		} else if (data.func === "clearPartition") {
 			// invoke clear with delete application method -- messy, should refactor
 			partitions.list[data.app][data.func](deleteApplication);
+		} else if (data.func === "toggleSnapping" || data.func === "updateNeighborPartitionList") {
+			let updatedNeighbors = partitions.list[data.app][data.func]();
+
+			broadcast('updatePartitionSnapping', partitions.list[data.app].getDisplayInfo());
+			for (let p of updatedNeighbors) {
+				if (partitions.list[p]) {
+					broadcast('updatePartitionSnapping', partitions.list[p].getDisplayInfo());
+				}
+			}
+		} else if (data.func === "setColor") {
+			partitions.list[data.app][data.func](data.parameters.clientInput);
+			broadcast('updatePartitionColor', partitions.list[data.app].getDisplayInfo());
 		} else {
 			// invoke the other callback
 			partitions.list[data.app][data.func]();
@@ -10434,6 +10462,13 @@ function createPartition(dims, color) {
 	// on creation, if it is snapping, update the neighbors
 	if (myPtn.isSnapping) {
 		partitions.updateNeighbors(myPtn.id);
+
+		broadcast('updatePartitionSnapping', myPtn.getDisplayInfo());
+		for (let p of Object.keys(myPtn.neighbors)) {
+			if (partitions.list[p]) {
+				broadcast('updatePartitionSnapping', partitions.list[p].getDisplayInfo());
+			}
+		}
 	}
 
 	return myPtn;

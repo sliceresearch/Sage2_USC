@@ -222,6 +222,17 @@ Partition.prototype.toggleInnerTiling = function() {
 };
 
 /**
+  * Toggle partition tiling mode
+  *
+  */
+Partition.prototype.setColor = function (color) {
+	console.log(color);
+	this.color = color;
+};
+
+
+
+/**
   * Re-tile the apps within a partition
 	* Tiling Algorithm taken from server.js
   */
@@ -967,7 +978,7 @@ Partition.prototype.updateNeighborPtnPositions = function() {
 Partition.prototype.toggleSnapping = function() {
 	this.isSnapping = !this.isSnapping;
 
-	this.updateNeighborPartitionList();
+	return this.updateNeighborPartitionList();
 };
 
 /**
@@ -975,7 +986,7 @@ Partition.prototype.toggleSnapping = function() {
 	* Partition
   */
 Partition.prototype.updateNeighborPartitionList = function() {
-	this.partitionList.updateNeighbors(this.id);
+	return this.partitionList.updateNeighbors(this.id);
 };
 
 /**
@@ -989,7 +1000,23 @@ Partition.prototype.getDisplayInfo = function() {
 		left: this.left,
 		top: this.top,
 		width: this.width,
-		height: this.height
+		height: this.height,
+
+		// snapped to other partitions
+		snapping: !this.isSnapping || !this.neighbors ? {left: false, right: false, top: false, bottom: false} : {
+			left: Object.values(this.neighbors).reduce((snapped, neighbor) => snapped || neighbor.left, false),
+			right: Object.values(this.neighbors).reduce((snapped, neighbor) => snapped || neighbor.right, false),
+			top: Object.values(this.neighbors).reduce((snapped, neighbor) => snapped || neighbor.top, false),
+			bottom: Object.values(this.neighbors).reduce((snapped, neighbor) => snapped || neighbor.bottom, false)
+		},
+
+		// anchored to sides of screen
+		anchor: {
+			left: this.snapLeft,
+			right: this.snapRight,
+			top: this.snapTop,
+			bottom: this.snapBottom
+		}
 	};
 };
 
@@ -1022,6 +1049,16 @@ Partition.prototype.getTitle = function() {
   */
 Partition.prototype.getContextMenu = function() {
 	var contextMenu = [];
+
+	contextMenu.push({
+		description: "Set Color:",
+		callback: "setColor",
+		value: this.color,
+		inputField: true,
+		inputFieldSize: 7,
+		inputDefault: this.color,
+		parameters: {}
+	});
 
 	contextMenu.push({
 		description: this.innerTiling ? "Stop Tiling" : "Tile Content",
