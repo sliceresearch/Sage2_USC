@@ -271,7 +271,7 @@ PartitionList.prototype.findNeighbors = function(ptnID) {
 
 		let titleBar = this.configuration.ui.titleBarHeight;
 
-		for (let id of Object.keys(this.list)) {
+		for (let id of Object.keys(this.list).filter(id => id !== ptnID)) {
 			var ptn = this.list[id];
 
 			// only if the other partition is snapping as well
@@ -344,12 +344,13 @@ PartitionList.prototype.findNeighbors = function(ptnID) {
 PartitionList.prototype.updateNeighbors = function(ptnID) {
 	if (this.list.hasOwnProperty(ptnID)) {
 		// update neighbors of selected partition
+
+		// reset snapping flags for sides of screen
+		this.list[ptnID].snapTop = false;
+		this.list[ptnID].snapRight = false;
+		this.list[ptnID].snapBottom = false;
+		this.list[ptnID].snapLeft = false;
 		if (this.list[ptnID].isSnapping) {
-			// reset snapping flags for sides of screen
-			this.list[ptnID].snapTop = false;
-			this.list[ptnID].snapRight = false;
-			this.list[ptnID].snapBottom = false;
-			this.list[ptnID].snapLeft = false;
 
 			// find all neighbors
 			this.list[ptnID].neighbors = this.findNeighbors(ptnID);
@@ -378,9 +379,13 @@ PartitionList.prototype.updateNeighbors = function(ptnID) {
 			if (Math.abs(this.list[ptnID].left) < 25) {
 				this.list[ptnID].snapLeft = true;
 			}
+
+			// return ID of neighbors to update
+			return Object.keys(this.list[ptnID].neighbors);
 		} else {
 			// if it is no longer a snapping partition, remove itself from neighbors' lists
-			for (let nID of Object.keys(this.list[ptnID].neighbors)) {
+			let updatedNeighbors = Object.keys(this.list[ptnID].neighbors);
+			for (let nID of updatedNeighbors) {
 				let neighbor = this.list[nID];
 
 				if (neighbor.neighbors[ptnID]) {
@@ -389,8 +394,10 @@ PartitionList.prototype.updateNeighbors = function(ptnID) {
 			}
 
 			this.list[ptnID].neighbors = null;
-		}
 
+			// return ID of neighbors to update
+			return updatedNeighbors;
+		}
 	}
 };
 
