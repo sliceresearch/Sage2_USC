@@ -906,9 +906,32 @@ AppLoader.prototype.manageAndLoadUploadedFile = function(file, callback) {
 	}
 	var mime_type = registry.getMimeType(cleanFilename);
 	var dir = registry.getDirectory(cleanFilename);
+	var _this = this;
 
 	if (!sageutils.folderExists(path.join(this.publicDir, dir))) {
 		fs.mkdirSync(path.join(this.publicDir, dir));
+	}
+
+	// Check if it is a web-capable image, otherwise convert it to PNG
+	if (mime_type.startsWith("image/")) {
+		if (mime_type != "image/jpeg" && mime_type != "image/png" && mime_type != "image/webp") {
+			console.log(sageutils.header("Loader") + "converting image " + cleanFilename);
+			// setting up a tmp filename
+			var tmpPath = path.join(this.publicDir, "tmp", path.basename(cleanFilename)) + ".png";
+			// converting anything to PNG
+			imageMagick(file.path).noProfile().bitdepth(8).flatten().setFormat("PNG").write(tmpPath, function(err, buffer) {
+				if (err) {
+					console.log(sageutils.header("Loader") + "error processing image file " + tmpPath);
+					return;
+				}
+				// done with the tmp file
+				fs.unlinkSync(file.path);
+				// call same funtion again with the new PNG file
+				return _this.manageAndLoadUploadedFile({name: cleanFilename + ".png", path: tmpPath}, callback);
+			});
+			// done for now
+			return;
+		}
 	}
 
 	// Use the defautl folder plus type as destination:
@@ -924,8 +947,6 @@ AppLoader.prototype.manageAndLoadUploadedFile = function(file, callback) {
 		var newfilename = splits.join('_') + "_" + Date.now() + '.' + extension;
 		localPath  = path.join(this.publicDir, dir, newfilename);
 	}
-
-	var _this = this;
 
 	mv(file.path, localPath, function(err1) {
 		if (err1) {
@@ -949,7 +970,7 @@ AppLoader.prototype.manageAndLoadUploadedFile = function(file, callback) {
 						var aUrl = assets.getURL(data.SourceFile);
 						// calculate a complete URL with hostname
 						var external_url = url.resolve(_this.hostOrigin, aUrl);
-
+						// and load the application
 						_this.loadApplication({
 							location: "file", path: localPath, url: aUrl, external_url: external_url,
 							type: mime_type, name: cleanFilename, compressed: false}, function(appInstance, handle) {
