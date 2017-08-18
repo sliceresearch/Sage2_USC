@@ -2908,9 +2908,6 @@ function wsLoadApplication(wsio, data) {
 		// Get the drop position and convert it to wall coordinates
 		var position = data.position || [0, 0];
 
-
-
-
 		if (position[0] > 1) {
 			// value in pixels, used as origin
 			appInstance.left = position[0];
