@@ -138,7 +138,7 @@ StickyItems.prototype.moveFirstLevelItemsStickingToUpdatedItem = function (updat
 };
 
 /**
-* Pile sticky item chain so that the items are within the boundaries of the background item, 
+* Pile sticky item chain so that the items are within the boundaries of the background item,
 * during tiling of partitions, this ensures that the sticky chain of a tile doesn't intrude on another tile
 *
 * @method pileItemsStickingToUpdatedItem
