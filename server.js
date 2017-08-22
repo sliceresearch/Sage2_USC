@@ -727,8 +727,8 @@ var stickyAppHandler     = new StickyItems();
 //
 process.on('uncaughtException', function(err) {
 	// handle the error safely
-	console.trace("SAGE2>	", err);
-	console.trace("SAGE2>	", err.stack);
+	console.trace("SAGE2>	Uncaught exception: ", err);
+	console.trace("SAGE2>	Stack: ", err.stack);
 });
 
 
@@ -3843,13 +3843,13 @@ function wsPauseVideo(wsio, data) {
 }
 
 function wsStopVideo(wsio, data) {
-	console.log("wsStopVideo ",appId);
+	console.log("wsStopVideo ",data.id,data.appId);
 	if (SAGE2Items.renderSync[data.id] === undefined || SAGE2Items.renderSync[data.id] === null) {
 		return;
 	}
 
 	SAGE2Items.renderSync[data.id].decoder.stop(function() {
-		console.log("decoder.stop",appId);
+		console.log("decoder.stop",data.id,data.appId);
 		broadcast('videoPaused', {id: data.id});
 		broadcast('updateVideoItemTime', {id: data.id, timestamp: 0.0, play: false});
 		broadcast('updateFrameIndex', {id: data.id, frameIdx: 0});
@@ -8752,7 +8752,7 @@ function deleteApplication(appId, portalId) {
 	var application = app.application;
 	if (application === "movie_player") {
 		console.log("delete movieplayer...", appId);
-		pauseVideo(appId);
+		//pauseVideo(appId);
 	}
 	if (application === "media_stream" || application === "media_block_stream") {
 		console.log("delete media[block]stream...", appId);
