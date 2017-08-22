@@ -1,0 +1,22 @@
+# requires node-6 (node 8 breaks with issue complaining about html header / mime types)
+cd ~/node-v6.11.2
+sudo make install
+# also make uninstall later if needed...
+
+
+# requires ffmpeg 2.8.12 or video playback doesn't work :-(      (???)
+(
+cd ~/ffmpeg-2.8.12
+sudo make install
+sudo ldconfig
+# also make uninstall later if needed...
+)
+(
+npm install node-demux
+cd node_modules/node-demux
+node-gyp configure clean ; node-gyp configure build
+)
+
+# requires ws@1 or vnc client doesn't work (investigation required see experimental branch on h7)
+npm install ws@1
+rm -rf node_modules/websocketio/node_modules/ws
