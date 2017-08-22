@@ -1,0 +1,6 @@
+# Service-now: RITM0124090 26 Jun 2017 (note this email does not appear with the ticket in service-now)
+# Can you please generate a new CSR with the following details:
+# OU = ITS O = RMIT University L = Melbourne ST = Victoria C = AU
+# Email = <blank> -> leave this field blank
+
+openssl req -new -key keys/govlab2.vxlab.rmit.edu.au-server.key -out govlab2.vxlab.rmit.edu.au.csr -subj "/C=AU/ST=Victoria/L=Melbourne/O=RMIT University/OU=ITS/CN=govlab2.vxlab.rmit.edu.au"
