@@ -1,14 +1,17 @@
 {
 	"main_script": "Webview.js",
 	"icon": "Webview.png",
-	"width": 720,
-	"height": 900,
+	"width": 1280,
+	"height": 720,
 	"resize": "free",
 	"animation": false,
 	"dependencies": [
 	],
 	"load": {
-		"url": "/uploads/web/index.html"
+		"url": "/uploads/web/index.html",
+		"favicon": "",
+		"zoom": 1,
+		"mode": "desktop"
 	},
 	"title": "Webview",
 	"version": "1.0.0",

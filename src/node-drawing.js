@@ -86,26 +86,22 @@ DrawingManager.prototype.scalePoint = function(point, origin, scaleX, scaleY) {
 
 DrawingManager.prototype.calculateTileDimensions = function(config) {
 
-	// This method crashes if config.displays is less than product of rows and columns
-	// Check if the clientID corresponds to the actual clientID
-	var clients = config.layout.rows * config.layout.columns;
-	var width = config.resolution.width;
-	var height = config.resolution.height;
+	var clients = config.displays.length;
+	var width   = config.resolution.width;
+	var height  = config.resolution.height;
 
 	for (var i = 0; i < clients; i++) {
-
 		var display = config.displays[i];
 
 		var startX = width * display.column;
-		var endX = startX + width - 1;
+		var endX   = startX + (width * display.width) - 1;
 
 		var startY = height * display.row;
-		var endY = startY + height - 1;
+		var endY   = startY + (height * display.height) - 1;
 
 		var position = {startX: startX, endX: endX, startY: startY, endY: endY, clientID: i};
 
 		this.tilesPosition.push(position);
-
 	}
 
 };
@@ -799,8 +795,9 @@ DrawingManager.prototype.touchDown = function(e, sourceId, posX, posY, w, h) {
 
 	if (action == "movingPalette") {
 		// Just save the offset
-		this.offsetFromPaletteXTouch[e.sourceId] = {x: posX - this.palettePosition.startX,
-													y: posY - this.palettePosition.startY + this.TITLE_BAR_HEIGHT};
+		this.offsetFromPaletteXTouch[e.sourceId] = {
+			x: posX - this.palettePosition.startX,
+			y: posY - this.palettePosition.startY + this.TITLE_BAR_HEIGHT};
 		return;
 	}
 
@@ -811,11 +808,12 @@ DrawingManager.prototype.touchDown = function(e, sourceId, posX, posY, w, h) {
 	}
 	// Action Performed at touch down: recall Palette
 	if (action == "recallingPalette") {
-		this.movePaletteTo(this.paletteID
-								, posX
-								, this.palettePosition.startY - this.TITLE_BAR_HEIGHT
-								, this.palettePosition.endX - this.palettePosition.startX
-								, this.palettePosition.endY - this.palettePosition.startY);
+		this.movePaletteTo(
+			this.paletteID, posX,
+			this.palettePosition.startY - this.TITLE_BAR_HEIGHT,
+			this.palettePosition.endX - this.palettePosition.startX,
+			this.palettePosition.endY - this.palettePosition.startY
+		);
 		return;
 	}
 
@@ -863,10 +861,10 @@ DrawingManager.prototype.touchMove = function(e, sourceId, posX, posY, w, h) {
 		var offX = this.offsetFromPaletteXTouch[e.sourceId].x || 0;
 		var offY = this.offsetFromPaletteXTouch[e.sourceId].y || 0;
 		this.movePaletteTo(this.paletteID
-								, posX - offX
-								, posY - offY
-								, this.palettePosition.endX - this.palettePosition.startX
-								, this.palettePosition.endY - this.palettePosition.startY);
+			, posX - offX
+			, posY - offY
+			, this.palettePosition.endX - this.palettePosition.startX
+			, this.palettePosition.endY - this.palettePosition.startY);
 	}
 
 	if (action == "usePalette") {
@@ -876,10 +874,10 @@ DrawingManager.prototype.touchMove = function(e, sourceId, posX, posY, w, h) {
 
 	if (action == "recallingPalette") {
 		this.movePaletteTo(this.paletteID
-								, posX
-								, this.palettePosition.startY - this.TITLE_BAR_HEIGHT
-								, this.palettePosition.endX - this.palettePosition.startX
-								, this.palettePosition.endY - this.palettePosition.startY);
+			, posX
+			, this.palettePosition.startY - this.TITLE_BAR_HEIGHT
+			, this.palettePosition.endX - this.palettePosition.startX
+			, this.palettePosition.endY - this.palettePosition.startY);
 		return;
 	}
 
@@ -1208,18 +1206,17 @@ DrawingManager.prototype.loadOldState = function(data) {
 
 // Get all the callbacks from the server
 DrawingManager.prototype.setCallbacks = function(
-		drawingInitCB,
-		drawingUpdateCB,
-		drawingRemoveCB,
-		sendTouchToPaletteCB,
-		sendDragToPaletteCB,
-		sendStyleToPaletteCB,
-		sendChangeToPaletteCB,
-		movePaletteToCB,
-		saveSessionCB,
-		loadSessionCB,
-		sendSessionListCB
-	) {
+	drawingInitCB,
+	drawingUpdateCB,
+	drawingRemoveCB,
+	sendTouchToPaletteCB,
+	sendDragToPaletteCB,
+	sendStyleToPaletteCB,
+	sendChangeToPaletteCB,
+	movePaletteToCB,
+	saveSessionCB,
+	loadSessionCB,
+	sendSessionListCB) {
 	this.drawingInit = drawingInitCB;
 	this.drawingUpdate = drawingUpdateCB;
 	this.drawingRemove = drawingRemoveCB;

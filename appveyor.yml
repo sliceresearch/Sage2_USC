@@ -1,8 +1,9 @@
-version: 1.0.{build}
+version: 2.0.{build}
 
 branches:
   only:
   - master
+  - perdis17
 
 shallow_clone: true
 
@@ -11,21 +12,23 @@ configuration: Release
 platform: x64
 
 init:
-  - curl -LsSO http://ffmpeg.zeranoe.com/builds/win64/dev/ffmpeg-3.0.1-win64-dev.7z
-  - 7z x ffmpeg-3.0.1-win64-dev.7z -o. > nul
+  - set PATH=C:\Program Files\Git\mingw64\bin;%PATH%
+#  - curl -LsSO http://ffmpeg.zeranoe.com/builds/win64/dev/ffmpeg-3.0.1-win64-dev.7z
+  - curl -LsSO https://bitbucket.org/sage2/binaries/downloads/ffmpeg-3.2.4-win64-dev.zip
+  - 7z x ffmpeg-3.2.4-win64-dev.zip -o. > nul
   - mkdir C:\Dev\
   - mkdir C:\Dev\ffmpeg-win64-dev
-  - move ffmpeg-3.0.1-win64-dev\lib C:\Dev\ffmpeg-win64-dev
-  - move ffmpeg-3.0.1-win64-dev\include C:\Dev\ffmpeg-win64-dev
+  - move ffmpeg-3.2.4-win64-dev\lib C:\Dev\ffmpeg-win64-dev
+  - move ffmpeg-3.2.4-win64-dev\include C:\Dev\ffmpeg-win64-dev
   - del /Q *.7z
-  - rmdir /Q /S ffmpeg-3.0.1-win64-dev
+  - rmdir /Q /S ffmpeg-3.2.4-win64-dev
   - dir C:\Dev
   - dir C:\Dev\ffmpeg-win64-dev\include
   - dir C:\Dev\ffmpeg-win64-dev\lib
 
 install:
-  - ps: Get-NodeJsLatestBuild 6.2
-  - ps: Install-Product node 6.2.2 x64
+  - ps: Get-NodeJsLatestBuild 8.1
+  - ps: Install-Product node 8.1.0 x64
   - dir C:\avvm\node
   - node -v
   - cd %APPVEYOR_BUILD_FOLDER%
@@ -35,34 +38,38 @@ install:
   - npm install npm
   - npm install -g kthxbai
   - kthxbai
-  - curl -LsSO http://ffmpeg.zeranoe.com/builds/win64/shared/ffmpeg-3.0.1-win64-shared.7z
-  - 7z x ffmpeg-3.0.1-win64-shared.7z -o.  > nul
-  - copy ffmpeg-3.0.1-win64-shared\bin\*.dll node_modules\node-demux\build\Release\
-  - copy ffmpeg-3.0.1-win64-shared\bin\*.dll bin\
-  - copy ffmpeg-3.0.1-win64-shared\bin\*.exe bin\
-  - rmdir /Q /S ffmpeg-3.0.1-win64-shared
-  - curl -LsSO http://www.sno.phy.queensu.ca/~phil/exiftool/exiftool-10.25.zip
-  - 7z x exiftool-10.25.zip > nul
+#  - curl -LsSO http://ffmpeg.zeranoe.com/builds/win64/shared/ffmpeg-3.0.1-win64-shared.7z
+  - curl -LsSO https://bitbucket.org/sage2/binaries/downloads/ffmpeg-3.2.4-win64-shared.zip
+  - 7z x ffmpeg-3.2.4-win64-shared.zip -o.  > nul
+  - copy ffmpeg-3.2.4-win64-shared\bin\*.dll node_modules\node-demux\build\Release\
+  - copy ffmpeg-3.2.4-win64-shared\bin\*.dll bin\
+  - copy ffmpeg-3.2.4-win64-shared\bin\*.exe bin\
+  - rmdir /Q /S ffmpeg-3.2.4-win64-shared
+#  - curl -LsSO http://www.sno.phy.queensu.ca/~phil/exiftool/exiftool-10.25.zip
+  - curl -LsSO https://bitbucket.org/sage2/binaries/downloads/exiftool-10.49.zip
+  - 7z x exiftool-10.49.zip > nul
   - move exiftool(-k).exe bin\exiftool.exe
   - move bin\sage2.bat sage2.bat
   - move bin\sabi.bat sabi.bat
   - move /Y config\defaultWinstall-cfg.json config\defaultWin-cfg.json
-  - curl -LsSO https://github.com/ArtifexSoftware/ghostpdl-downloads/releases/download/gs919/gs919w64.exe
-  - 7z x -y gs919w64.exe bin lib -ogs > nul
+#  - curl -LsSO https://github.com/ArtifexSoftware/ghostpdl-downloads/releases/download/gs919/gs919w64.exe
+  - curl -LsSO https://bitbucket.org/sage2/binaries/downloads/gs921w64.exe
+  - 7z x -y gs921w64.exe bin lib -ogs > nul
   - copy gs\bin\* bin\
   - copy bin\gswin64c.exe bin\gswin32c.exe
   - xcopy /S /I /Y /Q gs\lib lib
   - rmdir /Q /S gs
-  - curl -LsSO http://www.imagemagick.org/download/binaries/ImageMagick-6.9.5-7-portable-Q16-x64.zip
-  - 7z x -y ImageMagick-6.9.5-7-portable-Q16-x64.zip -oim > nul
+#  - curl -LsSO http://www.imagemagick.org/download/binaries/ImageMagick-6.9.6-3-portable-Q16-x64.zip
+  - curl -LsSO https://bitbucket.org/sage2/binaries/downloads/ImageMagick-6.9.8-3-portable-Q16-x64.zip
+  - 7z x -y ImageMagick-6.9.8-3-portable-Q16-x64.zip -oim > nul
   - rmdir /Q /S im\www im\images
   - copy im\* bin
   - rmdir /Q /S im
   - del /Q *.7z
   - del /Q *.zip
   - cd bin
-  - curl -LsSO https://nodejs.org/dist/latest/win-x64/node.exe
-  - curl -LsSO https://nodejs.org/dist/latest/win-x64/node.lib
+  - curl -LsSO https://nodejs.org/dist/latest-v8.x/win-x64/node.exe
+  - curl -LsSO https://nodejs.org/dist/latest-v8.x/win-x64/node.lib
   - cd ..
   - cd sabi.js
   - npm install --production --msvs_version=2013
@@ -88,6 +95,7 @@ install:
   - move package.json SAGE2
   - move public SAGE2
   - move server.js SAGE2
+  - move electron.js SAGE2
   - move generate-service-worker.js SAGE2
   - move src SAGE2
   - ren SAGE2 SAGE2-%APPVEYOR_BUILD_VERSION%
@@ -115,7 +123,7 @@ notifications:
   - provider: Slack
     channel: '#appveyor'
     auth_token:
-      secure: zWPzLLrh/2HV3lXJd9q5XB+GlcmsJKMSGZzQjApwSdpPhOwo42miogTgg24z0iGPxiQU4qyykg68v8kErHvIwA==
+      secure: zWPzLLrh/2HV3lXJd9q5XHTy015slI7x1ptyvmOARG2TXpeftHtzKbtzxufzpVBirSHrvr95vgBR+ouSX+KQHceIPeAXEJEBXvA7wHZS7ng=
     on_build_success: true
     on_build_failure: true
     on_build_status_changed: true

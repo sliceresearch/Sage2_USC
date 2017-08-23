@@ -1,0 +1,748 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+
+	<meta name="apple-mobile-web-app-capable" content="yes">
+	<meta name="mobile-web-app-capable" content="yes">
+
+	<title>Configuration</title> 
+	
+	<style>
+	body,html {
+		margin: 0;
+		padding: 0;
+		background: #484848;
+		font-family: sans-serif;
+	}
+
+	.centerContent {
+		position: relative;
+		text-align: center;
+		left: 50%;
+	    -webkit-transform: translate(-50%, 0);
+	}
+
+	.buttonFull {
+		margin: 10px;
+		width: 90%;
+		height: 20px;
+
+		border-radius: 10px;
+		border: solid black 1px;
+
+		color:white;
+		font-weight: bold;
+		padding: 15px;
+		font-size: 20px;
+	}
+	.buttonAdd {
+		margin: 5px;
+		width: 20%;
+
+		border-radius: 10px;
+		border: solid black 1px;
+
+		color:white;
+		padding: 5px;
+		font-size: 15px;
+	}
+
+	table {
+		width:100%;
+	}
+
+	.entryTitle {
+		font-size: 20px;
+		color:white;
+
+		text-align: left;
+		width: 20%;
+	}
+
+	input {
+		color: white;
+		font-size: 20px;
+		background: #222;
+		border: 0;
+		padding: 5px;
+		width: 80%;
+	}
+
+	.entryInput {
+		font-size: 20px;
+		text-align: left;
+	}
+	.entryDescription {
+		font-size: 15px;
+		text-align: left;
+		color:#ccc;
+		padding: 5px;
+		padding-left: 10px;	
+	}
+
+
+	.cgBlue {
+		background: linear-gradient( #5f9cc5 , #396b9e );
+	}
+	.cgDark {
+		background: linear-gradient( #4f4f4f , #2e2e2e );
+	}
+
+	</style>
+
+
+	<script type="text/javascript" src="lib/socket.io.min.js"></script>
+	
+</head>
+
+<body>
+
+<div id="configHeader" style="background: black; text-align: center; color:white; width:100%; padding-top: 20px; padding-bottom: 20px; font-size: 25px; font-weight: bold">
+	Configuration Form
+</div>
+
+<div id="inputFieldsContainer">
+
+		<div id="waitMessage" style="color:white;" class="centerContent">
+			<br><br>
+			<h1>Waiting for Server to fetch config...</h1>
+			<br><br>
+		</div>
+
+	<div style="margin-left: 5%; padding-top: 20px; padding-bottom: 20px" class="centerContent">
+
+
+		<table id="entryTable" style="width:100%">
+			<!-- Tabled filled in by code fillTable() -->
+		</table>
+	</div>
+
+
+</div>
+
+<br><br><br>
+
+<div class="entryDescription" style="text-align: center">
+	Saving will overwrite ~\Documents\SAGE2_Media\config\default-cfg.json
+</div>
+
+<div id="saveButtonContainer">
+	<div id="saveButton" class="centerContent buttonFull cgBlue">
+		<span>Save</span>
+	</div>
+</div>
+<div class="entryDescription" style="text-align: center">
+	Certificates will be made for host and each alternate host specified. Overwriting may occur.<br>
+	If you bought from a CA take caution when using this.
+</div>
+<div id="saveAndMakeCertificatesButtonContainer">
+	<div id="saveAndMakeCertificatesButton" class="centerContent buttonFull cgBlue">
+		<span>Save And Make Certificates</span>
+	</div>
+</div>
+
+<div id="cancelButtonContainer" class="centerContent buttonFull cgDark">
+	<div id="cancelButton">
+		Cancel
+	</div>
+</div>
+
+
+
+
+
+
+
+
+
+
+<script>
+
+
+	// -------------------------------------------------------------------------------------------------
+	// setup connection to sabi 
+	/*
+	Note: potential problem. Unsure how / when the connection is made.
+		Hence why this is done first in the script
+	*/
+	var socket = io();
+
+	socket.on("start", function(msg) {
+		socket.emit('requestConfigAndTips', {});
+	});
+
+	socket.on("requestConfigAndTipsResponse", function(msg) {
+		fillFieldsWithConfigAndTips(msg);
+		waitMessage.style.display = "none";
+	});
+
+
+
+
+	// -------------------------------------------------------------------------------------------------
+	// fill the input fields
+	var inputPieces = [
+		{ entry: "Hostname", id:"hostname", placeholder:"localhost", description:"Hostname of your server (fully qualified domain name)."},
+		{ entry: "spacer"},
+		{ entry: "HTTP port", id:"http", placeholder:"80", description:"Non-secure port for your server used by display clients. Default is usually 80."},
+		{ entry: "HTTPS port", id:"https", placeholder:"443", description:"Secure port for your server used by UI clients. Default is usually 443."},
+		{ entry: "spacer"},
+		{ entry: "Monitor Resolution Width", id:"mrWidth", placeholder:"1920"},
+		{ entry: "Monitor Resolution Height", id:"mrHeight", placeholder:"1080"},
+		{ entry: "spacer"},
+		{ entry: "Layout Width", id:"layoutWidth", placeholder:"1", description:"If you have more than one monitor, this is the number of monitors that make up your tiled display's width."},
+		{ entry: "Layout Height", id:"layoutHeight", placeholder:"1", description:"Your tiled display's height."},
+		{ entry: "spacer"},
+	];
+	var alternateHostEntryTracker = [];
+	var remoteSiteEntryTracker = []; // fundamental difference from alternateHostEntryTracker, see addRemoteSiteEntry() 
+
+	// copy of server given cfg
+	var serverGivenCfgCopy = null;
+	serverGivenCfgCopy = {resolution:{},layout:{}};
+
+	fillTable();
+
+	// add event listeners to Save and Cancel buttons
+	saveButtonContainer.addEventListener("click", sendCfgEditsAndRedirect);
+	saveAndMakeCertificatesButtonContainer.addEventListener("click", function() {
+		sendCfgEditsAndRedirect("makeCerts");
+	});
+	cancelButtonContainer.addEventListener("click", redirectToAdminPanel);
+
+
+
+	// -------------------------------------------------------------------------------------------------
+
+	/*
+		Fills based on inputPieces.
+		Note: special case is needed for alternate hosts and remote sites due to ability to add more than one.
+
+	*/
+
+	function fillTable() {
+		var trHolder, tdHolder1, tdHolder2, inputHolder;
+
+		for (var i = 0; i < inputPieces.length; i++) {
+			if (inputPieces[i].entry === "spacer") {
+				trHolder = document.createElement("tr");
+				tdHolder1 = document.createElement("td");
+
+				tdHolder1.textContent = "\u00A0";
+				trHolder.appendChild(tdHolder1);
+				entryTable.appendChild(trHolder);
+
+			} else {
+				trHolder = document.createElement("tr");
+				tdHolder1 = document.createElement("td");
+				tdHolder2 = document.createElement("td");
+				inputHolder = document.createElement("input");
+
+				tdHolder1.classList.add("entryTitle");
+				tdHolder2.classList.add("entryInput");
+				tdHolder1.textContent = inputPieces[i].entry;
+				inputHolder.type = "text";
+				inputHolder.id = "inputFor" + inputPieces[i].id;
+				inputHolder.placeholder = inputPieces[i].placeholder;
+
+				trHolder.appendChild(tdHolder1);
+				tdHolder2.appendChild(inputHolder);
+				trHolder.appendChild(tdHolder2);
+				entryTable.appendChild(trHolder);
+
+				trHolder = document.createElement("tr");
+				tdHolder1 = document.createElement("td");
+				tdHolder2 = document.createElement("td");
+
+				tdHolder1.classList.add("entryTitle");
+				tdHolder2.classList.add("entryDescription");
+				tdHolder2.id = "descriptionFor" + inputPieces[i].id;
+				tdHolder2.textContent = inputPieces[i].description;
+
+				trHolder.appendChild(tdHolder1);
+				trHolder.appendChild(tdHolder2);
+				entryTable.appendChild(trHolder);
+			}
+		} // end for each table entry
+
+		addSpecialEntriesForAlternateHostsAndRemoteSites();
+	} // end fillTable
+
+
+	/*
+		Alternate Hosts and Remote Sites are unique because of variable amount.
+			Currently add implemented, but not remove.
+
+	*/
+	function addSpecialEntriesForAlternateHostsAndRemoteSites() {
+		var trHolder, tdHolder1, tdHolder2, inputHolder, addButtonDivHolder;
+		// spacer
+		trHolder = document.createElement("tr");
+		tdHolder1 = document.createElement("td");
+		tdHolder1.textContent = "\u00A0";
+		trHolder.appendChild(tdHolder1);
+		entryTable.appendChild(trHolder);
+		// first add title and description.
+		trHolder = document.createElement("tr");
+		tdHolder1 = document.createElement("td");
+		tdHolder2 = document.createElement("td");
+		tdHolder1.classList.add("entryTitle");
+		tdHolder2.classList.add("entryDescription");
+		tdHolder1.textContent = "Alternate Hosts";
+		tdHolder2.textContent = "Any alternate hostname or IP address to access the server.";
+		trHolder.appendChild(tdHolder1);
+		trHolder.appendChild(tdHolder2);
+		entryTable.appendChild(trHolder);
+
+		// add first input (starts at 1)
+		alternateHostEntryTracker.push([trHolder, tdHolder1, tdHolder2]);
+		addAlternateHostEntry();
+
+		// add button
+		trHolder = document.createElement("tr");
+		tdHolder1 = document.createElement("td");
+		tdHolder2 = document.createElement("td");
+		addButtonDivHolder = document.createElement("div");
+		//create button properties
+		tdHolder1.classList.add("entryTitle");
+		addButtonDivHolder.classList.add("buttonAdd");
+		addButtonDivHolder.classList.add("cgBlue");
+		addButtonDivHolder.textContent = "Add Alternate Host";
+		addButtonDivHolder.addEventListener("click", addAlternateHostEntry);
+		//append
+		tdHolder2.appendChild(addButtonDivHolder);
+		trHolder.appendChild(tdHolder1);
+		trHolder.appendChild(tdHolder2);
+		entryTable.appendChild(trHolder);
+
+
+		// spacer
+		trHolder = document.createElement("tr");
+		tdHolder1 = document.createElement("td");
+		tdHolder1.textContent = "\u00A0";
+		trHolder.appendChild(tdHolder1);
+		entryTable.appendChild(trHolder);
+		// spacer
+		trHolder = document.createElement("tr");
+		tdHolder1 = document.createElement("td");
+		tdHolder1.textContent = "\u00A0";
+		trHolder.appendChild(tdHolder1);
+		entryTable.appendChild(trHolder);
+
+		// now for remote sites
+		trHolder = document.createElement("tr");
+		tdHolder1 = document.createElement("td");
+		tdHolder2 = document.createElement("td");
+		tdHolder1.classList.add("entryTitle");
+		tdHolder2.classList.add("entryDescription");
+		tdHolder1.textContent = "Remote Sites";
+		tdHolder2.textContent = "Any remote site which this should connect to.";
+		trHolder.appendChild(tdHolder1);
+		trHolder.appendChild(tdHolder2);
+		entryTable.appendChild(trHolder);
+
+		// track entries
+		remoteSiteEntryTracker.push([trHolder, tdHolder1, tdHolder2]);
+		addRemoteSiteEntry();
+
+		// add button
+		trHolder = document.createElement("tr");
+		tdHolder1 = document.createElement("td");
+		tdHolder2 = document.createElement("td");
+		addButtonDivHolder = document.createElement("div");
+		//create button properties
+		tdHolder1.classList.add("entryTitle");
+		addButtonDivHolder.classList.add("buttonAdd");
+		addButtonDivHolder.classList.add("cgBlue");
+		addButtonDivHolder.textContent = "Add Remote Site";
+		addButtonDivHolder.addEventListener("click", addRemoteSiteEntry);
+		//append
+		tdHolder2.appendChild(addButtonDivHolder);
+		trHolder.appendChild(tdHolder1);
+		trHolder.appendChild(tdHolder2);
+		entryTable.appendChild(trHolder);
+
+	}
+
+	/*
+		Alternate hosts just require an input location.
+
+		ID starts at 1:
+			inputForAlternateHost1
+
+	*/
+	function addAlternateHostEntry() {
+		var trHolder, tdHolder1, tdHolder2, inputHolder;
+		var tempParent, tempPrev;
+		trHolder = document.createElement("tr");
+		tdHolder1 = document.createElement("td");
+		tdHolder2 = document.createElement("td");
+		inputHolder = document.createElement("input");
+
+		tdHolder1.classList.add("entryTitle");
+		tdHolder2.classList.add("entryInput");
+		inputHolder.type = "text";
+		inputHolder.id = "inputForAlternateHost" + alternateHostEntryTracker.length; // starts at 1
+		inputHolder.placeholder = "127.0.0.1";
+
+		tdHolder2.appendChild(inputHolder);
+		trHolder.appendChild(tdHolder1);
+		trHolder.appendChild(tdHolder2);
+		tempPrev = alternateHostEntryTracker[alternateHostEntryTracker.length - 1][0];
+		tempParent = tempPrev.parentNode;
+		tempParent.insertBefore(trHolder, tempPrev.nextSibling);
+
+		alternateHostEntryTracker.push([trHolder, tdHolder1, tdHolder2]);
+	}
+
+	/*
+		Remote sites the following required parts:
+			name	What shows up on the display block
+			host	hostname or IP address
+			port	of the UI usually...? Don't know of anything different.
+			Secure	But it should always be secure?
+			(pass? hash? unsure how this is done)
+
+		ids all start at 1, with three different sets
+			inputForRsName1
+			inputForRsHost1
+			inputForRsPort1
+
+		* there is a spacer between sites. it is added as the first tr.
+
+		* remoteSiteEntryTracker stores only the last input for a remote site.
+			for example, if tempValues has name, id, host, id, port, id. Only port will be in remoteSiteEntryTracker.
+
+	*/
+	function addRemoteSiteEntry() {
+		var trHolder, tdHolder1, tdHolder2, inputHolder;
+		var tempParent, tempPrev, tempValues, tempRowHolder, rsNumber;
+		rsNumber = remoteSiteEntryTracker.length;
+		tempValues = [("Name of Remote Site " + rsNumber), "inputForRsName",
+						("Hostname of Remote Site " + rsNumber), "inputForRsHost",
+						("Port of Remote Site " + rsNumber), "inputForRsPort",
+						("Password of Remote Site " + rsNumber), "inputForRsPassword",
+						("Pwd hash of Remote Site " + rsNumber), "inputForRsHash"];
+		tempRowHolder = [];
+
+
+		trHolder = document.createElement("tr");
+		trHolder.appendChild(document.createElement("hr"));
+		tempRowHolder.push(trHolder);
+
+		for (var i = 0; i < tempValues.length; i++) {
+			// make tags
+			trHolder = document.createElement("tr");
+			tdHolder1 = document.createElement("td");
+			tdHolder2 = document.createElement("td");
+			inputHolder = document.createElement("input");
+			// fill tags
+			tdHolder1.classList.add("entryTitle");
+			tdHolder1.textContent = tempValues[i];
+			i++;
+			tdHolder2.classList.add("entryInput");
+			inputHolder.type = "text";
+			inputHolder.id = tempValues[i] + remoteSiteEntryTracker.length; // starts at 1
+			// add to holder
+			tdHolder2.appendChild(inputHolder);
+			trHolder.appendChild(tdHolder1);
+			trHolder.appendChild(tdHolder2);
+			tempRowHolder.push(trHolder);
+		}
+
+		tempPrev = remoteSiteEntryTracker[remoteSiteEntryTracker.length - 1][0];
+		tempParent = tempPrev.parentNode;
+		for (var i = 0; i < tempRowHolder.length; i++) {
+			tempParent.insertBefore(tempRowHolder[i], tempPrev.nextSibling);
+			tempPrev = tempRowHolder[i];
+		}
+
+		remoteSiteEntryTracker.push([trHolder, tdHolder1, tdHolder2]); // These are the last added of temp values
+	}
+
+
+	/*
+		cfg should have the same structure as the config file with the addition of tips.
+		cfg.tips = {
+			layoutWidth
+			layoutHeight
+			resolutionWidth
+			resolutionHeight
+		}
+
+		tips should be applied to
+			descriptionForlayoutWidth
+			descriptionForlayoutHeight
+			descriptionFormrWidth
+			descriptionFormrHeight
+		
+		needs to fill the input fields value attribute for...
+			inputForhostname
+			inputForhttp
+			inputForhttps
+			inputFormrWidth
+			inputFormrHeight
+			inputForlayoutWidth
+			inputForlayoutHeight
+
+			// The following start at 1 and are progressively increased, but need additions.
+			inputForAlternateHost1
+			inputForRsName1
+			inputForRsHost1
+			inputForRsPort1
+
+	*/
+	function fillFieldsWithConfigAndTips(cfg) {
+		// keep ref
+		serverGivenCfgCopy = cfg;
+		// tips
+		descriptionForlayoutWidth.innerHTML  += "<br> Your detected layout width is " + cfg.tips.layoutWidth;
+		descriptionForlayoutHeight.innerHTML += "<br> Your detected layout height is " + cfg.tips.layoutHeight;
+		if (cfg.tips.resolutionWidth != "unknown") {
+			descriptionFormrWidth.innerHTML = "Your detected monitor resolution width is " + cfg.tips.resolutionWidth;
+		} else {
+			descriptionFormrWidth.innerHTML = "Your monitor resolution width could not be detected.";
+		}
+		if (cfg.tips.resolutionHeight != "unknown") {
+			descriptionFormrHeight.innerHTML = "Your detected monitor resolution height is " + cfg.tips.resolutionHeight;
+		} else {
+			descriptionFormrHeight.innerHTML = "Your monitor resolution height could not be detected.";
+		}
+
+		// seed the values
+		inputForhostname.value     = cfg.host;
+		inputForhttp.value         = cfg.index_port;
+		inputForhttps.value        = cfg.port;
+		inputFormrWidth.value      = cfg.resolution.width;
+		inputFormrHeight.value     = cfg.resolution.height;
+		inputForlayoutWidth.value  = cfg.layout.columns;
+		inputForlayoutHeight.value = cfg.layout.rows;
+
+		// alternate hosts, add if more than 1
+		for (var i = 1; i < cfg.alternate_hosts.length; i++) {
+			addAlternateHostEntry();
+		}
+		// now fill them in
+		var tempAlternateHostHolder;
+		for (var i = 0; i < cfg.alternate_hosts.length; i++) {
+			tempAlternateHostHolder = document.getElementById("inputForAlternateHost" + (i + 1)); // starts at 1
+			tempAlternateHostHolder.value = cfg.alternate_hosts[i];
+		}
+
+		// remote sites, add if more than 1
+		for (var i = 1; i < cfg.remote_sites.length; i++) {
+			addRemoteSiteEntry();
+		}
+		// now fill
+		var tempRemoteSiteHolder;
+		for (var i = 0; i < cfg.remote_sites.length; i++) {
+			tempRemoteSiteHolder = document.getElementById("inputForRsName" + (i + 1)); // starts at 1
+			tempRemoteSiteHolder.value = cfg.remote_sites[i].name;
+			tempRemoteSiteHolder = document.getElementById("inputForRsHost" + (i + 1)); // starts at 1
+			tempRemoteSiteHolder.value = cfg.remote_sites[i].host;
+			tempRemoteSiteHolder = document.getElementById("inputForRsPort" + (i + 1)); // starts at 1
+			tempRemoteSiteHolder.value = cfg.remote_sites[i].port;
+			tempRemoteSiteHolder = document.getElementById("inputForRsPassword" + (i + 1)); // starts at 1
+			if (cfg.remote_sites[i].password !== undefined) {
+				tempRemoteSiteHolder.value = cfg.remote_sites[i].password;
+			}
+			tempRemoteSiteHolder = document.getElementById("inputForRsHash" + (i + 1)); // starts at 1
+			if (cfg.remote_sites[i].session !== undefined) {
+				tempRemoteSiteHolder.value = cfg.remote_sites[i].session;
+			}
+		}
+	}
+
+	/*
+		Gather all input values and stick them in the config copy.
+		needs to fill
+			inputForhostname
+			inputForhttp
+			inputForhttps
+			inputFormrWidth
+			inputFormrHeight
+			inputForlayoutWidth
+			inputForlayoutHeight
+
+			// The following start at 1 and are progressively increased, but need additions.
+			inputForAlternateHost1
+			inputForRsName1
+			inputForRsHost1
+			inputForRsPort1
+	*/
+	function sendCfgEditsAndRedirect(makeCerts) {
+		console.log("Retrieving values");
+
+		// performValueCheckAndMoveToCfg(checkvalue, condition, serverProperty, subProperty) {
+		if (!performValueCheckAndMoveToCfg(inputForhostname.value, "not blank", "host", undefined)) {
+			return;
+		}
+		if (!performValueCheckAndMoveToCfg(inputForhttp.value, "an int", "index_port", undefined)) {
+			return;
+		}
+		if (!performValueCheckAndMoveToCfg(inputForhttps.value, "an int", "port", undefined)) {
+			return;
+		}
+		if (!performValueCheckAndMoveToCfg(inputFormrWidth.value, "an int", "resolution", "width")) {
+			return;
+		}
+		if (!performValueCheckAndMoveToCfg(inputFormrHeight.value, "an int", "resolution", "height")) {
+			return;
+		}
+		if (!performValueCheckAndMoveToCfg(inputForlayoutWidth.value, "an int", "layout", "columns")) {
+			return;
+		}
+		if (!performValueCheckAndMoveToCfg(inputForlayoutHeight.value, "an int", "layout", "rows")) {
+			return;
+		}
+
+		// special checks for alternate_hosts
+		var tempList = [];
+		var tempEntry;
+		for (var i = 1; i < alternateHostEntryTracker.length; i++) { // start at 1 since title
+			tempEntry = document.getElementById("inputForAlternateHost" + i).value.trim();
+			// only keep if there was something typed, but don't error since a host doesn't need an alternate_hosts
+			if (tempEntry.length != 0) {
+				tempEntry = tempEntry;
+				tempList.push(tempEntry);
+				console.log("alternate_hosts " + tempEntry + " also list length:" + tempList.length);
+			}
+		}
+		serverGivenCfgCopy.alternate_hosts = tempList;
+
+		// special checks for remote_sites
+		tempList = [];
+		tempEntry;
+		var tempSite, hasValues;
+		for (var i = 1; i < remoteSiteEntryTracker.length; i++) { // start at 1 since title
+			tempSite = {};
+			hasValues = false;
+			// check name for blank
+			tempEntry = document.getElementById("inputForRsName" + i);
+			if (tempEntry.value.trim().length != 0) {
+				tempSite.name = tempEntry.value.trim();
+				console.log("remote_sites name " + tempSite.name);
+				hasValues = true;
+			}
+			// check host for blank
+			tempEntry = document.getElementById("inputForRsHost" + i);
+			if (tempEntry.value.trim().length != 0) {
+				tempSite.host = tempEntry.value.trim();
+				console.log("remote_sites host " + tempSite.host);
+				hasValues = true;
+			}
+			// check port for int
+			tempEntry = document.getElementById("inputForRsPort" + i);
+			tempSite.port = parseInt(tempEntry.value);
+			if (tempSite.port != NaN && tempSite.port > 0) { // port needs to be positive
+				console.log("remote_sites port " + tempSite.host);
+				hasValues = true;
+			} else {
+				tempSite.port = undefined;
+			}
+
+			// remote sites might have password
+			tempEntry = document.getElementById("inputForRsPassword" + i);
+			if (tempEntry.value.trim().length > 1) {
+				tempSite.password = tempEntry.value.trim();
+			}
+			// remote sites might have hash, note hash and session naming
+			tempEntry = document.getElementById("inputForRsHash" + i);
+			if (tempEntry.value.trim().length > 1) {
+				tempSite.session = tempEntry.value.trim();
+			}
+
+			// if a remote site has invalid pieces notify
+			if (hasValues
+				&& ((tempSite.name == undefined) || (tempSite.host == undefined) || (tempSite.port == undefined))) {
+				alert("Error with remote site " + tempSite.name + " " + tempSite.host + " " + tempSite.port);
+				return;
+			} else if (hasValues && (tempSite.password !== undefined) && (tempSite.session !== undefined)) {
+				alert("Error with remote site " + tempSite.name + " " + tempSite.host + ". Both a password and hash were given. Only one of the two should be used.");
+				return;
+			} else if (hasValues) {
+				tempSite.secure = true;
+				tempList.push(tempSite); // only push if a site is filled and correct
+			}
+		}
+		serverGivenCfgCopy.remote_sites = tempList;
+
+		// only keep display 0
+		tempList = [{
+			row: 0,
+			column: 0,
+			width: serverGivenCfgCopy.layout.columns,
+			height: serverGivenCfgCopy.layout.rows
+		}];
+		serverGivenCfgCopy.displays = tempList;
+
+		// print
+		console.dir(serverGivenCfgCopy);
+
+		// set property to make certs
+		if (makeCerts == "makeCerts") {
+			serverGivenCfgCopy.makeCerts = true;
+		} else {
+			serverGivenCfgCopy.makeCerts = false;
+		}
+
+		// send to server
+		socket.emit("assistedConfigSend", serverGivenCfgCopy);
+
+		redirectToAdminPanel();
+	}
+
+	/*
+		Support for sendCfgEditsAndRedirect() to do entry checking.
+		Mainly makes the code above cleaner.
+	*/
+	function performValueCheckAndMoveToCfg(checkvalue, condition, serverProperty, subProperty) {
+		if (condition == "not blank") {
+			var trimmed = checkvalue.trim();
+			if (trimmed.length != 0) {
+				console.log(trimmed);
+				if (subProperty == undefined) {
+					serverGivenCfgCopy["" + serverProperty] = trimmed;
+				} else {
+					serverGivenCfgCopy["" + serverProperty]["" + subProperty] = trimmed;
+				}
+				return true;
+			} else {
+				alert(serverProperty + " was left blank");
+				return false;
+			}
+		}
+		if (condition == "an int") {
+			var parsed = parseInt(checkvalue);
+			if (parsed != NaN && parsed > 0 ) { // must be a number > -1
+				console.log(parsed);
+				if (subProperty == undefined) {
+					serverGivenCfgCopy["" + serverProperty] = parsed;
+				} else {
+					serverGivenCfgCopy["" + serverProperty]["" + subProperty] = parsed;
+				}
+				return true;
+			} else {
+				alert(serverProperty + " is not a number greater than 0");
+				return false;
+			}
+		}
+	}
+
+	// just initiates a redirect back to admin panel
+	function redirectToAdminPanel() {
+		console.log("redirect");
+
+		window.location = "/#Admin";
+	}
+
+
+</script>
+
+
+
+</body>
+
+</html>

@@ -30,6 +30,7 @@ var photos = SAGE2_App.extend({
 	initApp: function() {
 		this.listFileCallbackFunc        = this.listFileCallback.bind(this);
 		this.imageLoadCallbackFunc       = this.imageLoadCallback.bind(this);
+
 		this.imageLoadFailedCallbackFunc = this.imageLoadFailedCallback.bind(this);
 
 		this.image1.onload  = this.imageLoadCallbackFunc;
@@ -67,12 +68,11 @@ var photos = SAGE2_App.extend({
 	},
 
 	imageLoadCallback: function() {
-		this.imageTemp = this.image2; // hold onto 2
-		this.image2    = this.image1; // image2 is the previous image (needed for fading)
-
-		this.okToDraw = this.fadeCount;
-		this.image1   = this.image3;    // image1 is now the new image
+		this.imageTemp = this.image2; // hold onto the previous image (image2)
+		this.image2    = this.image1; // current image becomes the previous image (needed for fading)
+		this.image1   = this.image3;  // image1 is now the new image (image3)
 		this.image3   = this.imageTemp;
+		this.okToDraw = this.fadeCount;
 	},
 
 	imageLoadFailedCallback: function() {
@@ -101,7 +101,7 @@ var photos = SAGE2_App.extend({
 			return;
 		}
 
-		this.bigList = d3.csv.parse(localData);
+		this.bigList = d3.csvParse(localData);
 		console.log(this.appName + "loaded in list of " + this.bigList.length + " images");
 
 		this.updateTitle("Slideshow: " + this.photoAlbums[this.state.imageSet].longName);
@@ -113,10 +113,15 @@ var photos = SAGE2_App.extend({
 
 	drawEverything: function() {
 		if ((this.okToDraw >= -this.fadeCount) || (this.forceRedraw > 0)) {
-			this.forceRedraw = 0;
+
+			if 	(this.forceRedraw > 0) {
+				this.okToDraw = this.fadeCount;
+			}
 
 			var newWidth  = this.canvasWidth;
 			var newHeight = this.canvasHeight;
+			var newOpacityOld = 1;
+			var newOpacityNew = 1;
 
 			this.svg.select("#baserect")
 				.attr("height", newHeight)
@@ -136,22 +141,27 @@ var photos = SAGE2_App.extend({
 
 				// want wide images to be aligned to top not center
 				if (image2ratio > windowRatio) {
-					image2DrawWidth  =  this.canvasWidth;
+					image2DrawWidth  = this.canvasWidth;
 					image2DrawHeight = this.canvasWidth / image2ratio;
 				}
 
-				if (this.okToDraw > 1) {
-					this.svg.select("#image2")
-						.attr("xlink:href", this.image2.src)
-						.attr("opacity", 1)
-						.attr("width",  image2DrawWidth)
-						.attr("height", image2DrawHeight);
-				} else {
-					this.svg.select("#image2")
-						.attr("xlink:href", this.image2.src)
-						.attr("opacity", Math.max(0.0, Math.min(1.0, (this.okToDraw + 9) / this.fadeCount)))
-						.attr("width",  image2DrawWidth)
-						.attr("height", image2DrawHeight);
+				// okToDraw starts at this.fadeCount and decreases by one each frame
+				//
+				// mid 2016 something changed and I'm not getting the nice blend from before
+				// so diabling the blending for multiple image scrapbooks for now
+				//
+				// different images look ok with a fade to black in between
+				// webcams look better without the fade to black in between
+				///////
+
+				newOpacityOld = Math.max(0.0, Math.min(1.0, (this.okToDraw + 9) / this.fadeCount));
+				newOpacityNew = Math.max(0.0, Math.min(1.0, 1.0 - (this.okToDraw / this.fadeCount)));
+
+				if (this.bigList != null) {
+					if (this.bigList.length > 1) {
+						newOpacityOld = 0.0;
+					}
+					this.svg.select("#image2").attr("opacity", newOpacityOld);
 				}
 			}
 
@@ -167,14 +177,27 @@ var photos = SAGE2_App.extend({
 					image1DrawHeight = this.canvasWidth / image1ratio;
 				}
 
-				this.svg.select("#image1")
-					.attr("xlink:href", this.image1.src)
-					.attr("opacity", Math.max(0.0, Math.min(1.0, 1.0 - (this.okToDraw / this.fadeCount))))
-					.attr("width",  image1DrawWidth)
-					.attr("height", image1DrawHeight);
+				if (this.okToDraw === this.fadeCount) {
+					this.svg.select("#image1")
+						.attr("xlink:href", this.image1.src)
+						.attr("opacity", 0)
+						.attr("width",  image1DrawWidth)
+						.attr("height", image1DrawHeight);
+
+					this.svg.select("#image2")
+						.attr("xlink:href", this.image2.src)
+						//.attr("opacity", newOpacity)
+						.attr("width",  image2DrawWidth)
+						.attr("height", image2DrawHeight);
+
+				} else {
+					this.svg.select("#image1")
+						.attr("opacity", newOpacityNew);
+				}
 			}
 
-			this.okToDraw -= 1.0;
+			this.forceRedraw = 0;
+			this.okToDraw = this.okToDraw - 1;
 		}
 
 

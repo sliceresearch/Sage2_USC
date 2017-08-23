@@ -56,7 +56,7 @@ var WhiteboardPalette = SAGE2_App.extend({
 		this.drawingSVG.style("visibility", "visible");
 		// Tutorial div over me
 		this.tutorial = d3.select("#main").append("div").style("visibility", "hidden");
-		//this.tutorial.style("visibility","hidden");
+		// this.tutorial.style("visibility","hidden");
 		this.tutorialImg = this.tutorial.append("img").style("width", "100%").style("height", "100%");
 		this.updateTutorial();
 
@@ -70,7 +70,11 @@ var WhiteboardPalette = SAGE2_App.extend({
 
 		d3.select(this.div).style("z-index", 5);
 
-		this.palette = this.svg.style("position", "absolute").style("left", 0).attr("id", "Palette").attr("width", this.element.clientWidth).attr("height", this.element.clientHeight);
+		this.palette = this.svg.style("position", "absolute")
+			.style("left", 0)
+			.attr("id", "Palette")
+			.attr("width",  this.element.clientWidth)
+			.attr("height", this.element.clientHeight);
 
 		wsio.emit("enableDrawingMode", {id: this.id});
 		this.updatePalettePosition();
@@ -82,7 +86,7 @@ var WhiteboardPalette = SAGE2_App.extend({
 		this.enableControls = true;
 	},
 
-	updatePalettePosition: function() {		
+	updatePalettePosition: function() {
 		wsio.emit("updatePalettePosition", {x: this.sage2_x, y: this.sage2_y, w: this.sage2_width, h: this.sage2_height});
 	},
 
@@ -108,37 +112,55 @@ var WhiteboardPalette = SAGE2_App.extend({
 			padding = 4;
 
 			this.paletteButtons = [
-				{name: "Clear", action: this.areYouSureScreen, icon: path + "/clear.png", parent: this, r: 0, c: 0, cSpan: 2, rSpan: 10},
+				{name: "Clear", action: this.areYouSureScreen, icon: path + "/clear.png", parent: this, r: 0, c: 0,
+					cSpan: 2, rSpan: 10},
 				{name: "Undo", action: this.undoLast, icon: path + "/undo.png", parent: this, r: 0, c: 2, cSpan: 2, rSpan: 10},
 				{name: "Redo", action: this.redoLast, icon: path + "/redo.png", parent: this, r: 0, c: 4, cSpan: 2, rSpan: 10},
 
-				{name: "Color1", action: this.changeColor, parent: this, backgroundColor: "#77DD77", r: 12, c: 0, cSpan: 1, rSpan: 5},
-				{name: "Color2", action: this.changeColor, parent: this, backgroundColor: "black", r: 17, c: 0, cSpan: 1, rSpan: 5},
-				{name: "Color3", action: this.changeColor, parent: this, backgroundColor: "#779ECB", r: 12, c: 1, cSpan: 1, rSpan: 5},
-				{name: "Color4", action: this.changeColor, parent: this, backgroundColor: "#C23B22", r: 17, c: 1, cSpan: 1, rSpan: 5},
-				{name: "Color5", action: this.changeColor, parent: this, backgroundColor: "white", r: 17, c: 2, cSpan: 1, rSpan: 5},
-				{name: "ColorPointer", action: this.pointerColorMode ? this.disablePointerColorMode : this.enablePointerColorMode, parent: this, icon: this.pointerColorMode ? path + "/pointer_active.png" : path + "/pointer.png", r: 12, c: 2, cSpan: 1, rSpan: 5},
-				{name: "ColorPicker", action: this.colorPicker, parent: this, icon: path + "/color-picker.png", r: 12, c: 3, cSpan: 1.5, rSpan: 10},
-				{name: "Eraser", action: this.eraserMode ? this.disableEraserMode : this.enableEraserMode, parent: this, icon: this.eraserMode ? path + "/eraser_active.png" : path + "/eraser.png", r: 12, c: 4.5, cSpan: 1.5, rSpan: 10},
-				
-				{name: "selectionModeButton", action: this.selectionModeOnOff, parent: this, icon: path + "/selection.png", r: 24, c: 0, cSpan: 2, rSpan:10},
+				{name: "Color1", action: this.changeColor, parent: this, backgroundColor: "#77DD77", r: 12, c: 0,
+					cSpan: 1, rSpan: 5},
+				{name: "Color2", action: this.changeColor, parent: this, backgroundColor: "black", r: 17, c: 0,
+					cSpan: 1, rSpan: 5},
+				{name: "Color3", action: this.changeColor, parent: this, backgroundColor: "#779ECB", r: 12, c: 1,
+					cSpan: 1, rSpan: 5},
+				{name: "Color4", action: this.changeColor, parent: this, backgroundColor: "#C23B22", r: 17, c: 1,
+					cSpan: 1, rSpan: 5},
+				{name: "Color5", action: this.changeColor, parent: this, backgroundColor: "white", r: 17, c: 2,
+					cSpan: 1, rSpan: 5},
+				{name: "ColorPointer", action: this.pointerColorMode ? this.disablePointerColorMode :
+					this.enablePointerColorMode, parent: this, icon: this.pointerColorMode ? path + "/pointer_active.png" :
+					path + "/pointer.png", r: 12, c: 2, cSpan: 1, rSpan: 5},
+				{name: "ColorPicker", action: this.colorPicker, parent: this, icon: path + "/color-picker.png", r: 12, c: 3,
+					cSpan: 1.5, rSpan: 10},
+				{name: "Eraser", action: this.eraserMode ? this.disableEraserMode : this.enableEraserMode, parent: this,
+					icon: this.eraserMode ? path + "/eraser_active.png" : path + "/eraser.png", r: 12, c: 4.5, cSpan: 1.5,
+					rSpan: 10},
+
+				{name: "selectionModeButton", action: this.selectionModeOnOff, parent: this, icon: path + "/selection.png",
+					r: 24, c: 0, cSpan: 2, rSpan: 10},
 				{name: "enablePaint",
-						action: this.paintingMode ? this.disablePaintingMode : this.enablePaintingMode,
-						parent: this, icon: this.paintingMode ? path + "/paintActive.png" : path + "/paintNonActive.png",
-						r: 24, c: 2, cSpan: 2, rSpan: 10},
+					action: this.paintingMode ? this.disablePaintingMode : this.enablePaintingMode,
+					parent: this, icon: this.paintingMode ? path + "/paintActive.png" : path + "/paintNonActive.png",
+					r: 24, c: 2, cSpan: 2, rSpan: 10},
 				{name: "enableDrawing",
-						action: this.drawingMode ? this.disableDrawingMode : this.enableDrawingMode,
-						parent: this, icon: this.drawingMode ? path + "/enabled.png" : path + "/disabled.png",
-						r: 24, c: 4, cSpan: 2, rSpan: 10},
+					action: this.drawingMode ? this.disableDrawingMode : this.enableDrawingMode,
+					parent: this, icon: this.drawingMode ? path + "/enabled.png" : path + "/disabled.png",
+					r: 24, c: 4, cSpan: 2, rSpan: 10},
 
-				{name: "SaveButton", action: this.saveDrawings, parent: this, icon: path + "/save.png", r: 36, c: 0, cSpan: 2, rSpan: 10},
-				{name: "loadButton", action: this.loadDrawings, parent: this, icon: path + "/load.png", r: 36, c: 2, cSpan: 2, rSpan: 10},
-				{name: "screenshot", action: this.takeScreenshot, icon: path + "/screenshot.png", parent: this, r: 36, c: 4, cSpan: 2, rSpan: 10},
+				{name: "SaveButton", action: this.saveDrawings, parent: this, icon: path + "/save.png", r: 36, c: 0,
+					cSpan: 2, rSpan: 10},
+				{name: "loadButton", action: this.loadDrawings, parent: this, icon: path + "/load.png", r: 36, c: 2,
+					cSpan: 2, rSpan: 10},
+				{name: "screenshot", action: this.takeScreenshot, icon: path + "/screenshot.png", parent: this, r: 36, c: 4,
+					cSpan: 2, rSpan: 10},
 
-				{name: "StrokeUp", action: this.changeStroke, increment: 1, parent: this, icon: path + "/plus.png", r: 50, c: 5, cSpan: 1, rSpan:10},
-				this.paintingMode ? {name: "Stroke", action: function() {}, backgroundColor: this.strokeColor, parent: this, icon: path + "/spot1.png", stretch: true, r: 50, c: 1, cSpan: 4, rSpan: 10}
-				: {name: "Stroke", action: function() {}, parent: this, content: "circle", r: 50, c: 1, cSpan: 4, rSpan: 10},
-				{name: "StrokeDown", action: this.changeStroke, increment: -1, parent: this, icon: path + "/minus.png", r: 50, c: 0, cSpan: 1, rSpan:10},
+				{name: "StrokeUp", action: this.changeStroke, increment: 1, parent: this, icon: path + "/plus.png", r: 50, c: 5,
+					cSpan: 1, rSpan: 10},
+				this.paintingMode ? {name: "Stroke", action: function() {}, backgroundColor: this.strokeColor, parent: this,
+					icon: path + "/spot1.png", stretch: true, r: 50, c: 1, cSpan: 4, rSpan: 10}
+					: {name: "Stroke", action: function() {}, parent: this, content: "circle", r: 50, c: 1, cSpan: 4, rSpan: 10},
+				{name: "StrokeDown", action: this.changeStroke, increment: -1, parent: this, icon: path + "/minus.png", r: 50,
+					c: 0, cSpan: 1, rSpan: 10},
 
 				{name: "Tutorial", action: function() {
 					if (_this.tutorial.style("visibility") == "visible") {
@@ -159,35 +181,49 @@ var WhiteboardPalette = SAGE2_App.extend({
 				var hue = 360 / (nCols - 4) * (i - 2);
 				var s = 100 / (nCols - 4) * (i - 2);
 				var v = 100 / (nCols - 4) * (i - 2);
-				this.paletteButtons.push({parent: this, action: this.changeHue, r: 1, c: i, rSpan: 2, hue: hue,
-											backgroundColor: hsvFromValues(hue, this.s, this.v), stroke: "transparent",
-											selected: hue == this.hue ? true : false, dragResponsive:true});
-				this.paletteButtons.push({parent: this, action: this.changeSaturation, r: 4, c: i, rSpan: 2, s: s,
-											backgroundColor: hsvFromValues(this.hue, s, this.v), stroke: "transparent",
-											selected: s == this.s ? true : false, dragResponsive:true});
-				this.paletteButtons.push({parent: this, action: this.changeLuminance, r: 7, c: i, rSpan: 2, v: v,
-											backgroundColor: hsvFromValues(this.hue, this.s, v), stroke: "transparent",
-											selected: v == this.v ? true : false, dragResponsive:true});
+				this.paletteButtons.push({
+					parent: this, action: this.changeHue, r: 1, c: i, rSpan: 2, hue: hue,
+					backgroundColor: hsvFromValues(hue, this.s, this.v), stroke: "transparent",
+					selected: hue == this.hue ? true : false, dragResponsive: true
+				});
+				this.paletteButtons.push({
+					parent: this, action: this.changeSaturation, r: 4, c: i, rSpan: 2, s: s,
+					backgroundColor: hsvFromValues(this.hue, s, this.v), stroke: "transparent",
+					selected: s == this.s ? true : false, dragResponsive: true
+				});
+				this.paletteButtons.push({
+					parent: this, action: this.changeLuminance, r: 7, c: i, rSpan: 2, v: v,
+					backgroundColor: hsvFromValues(this.hue, this.s, v), stroke: "transparent",
+					selected: v == this.v ? true : false, dragResponsive: true
+				});
 			}
 
-			this.paletteButtons.push({parent: this, action: this.cancelPicker, r: 13, c: 10, cSpan: 35, rSpan: 2, v: v,
-											icon: path + "cancel.png", backgroundColor: cancelColor});
-			this.paletteButtons.push({parent: this, action: this.changeColor, r: 10, c: 35, cSpan: 30, rSpan: 2, v: v,
-											backgroundColor: hsvFromValues(this.hue, this.s, this.v),
-											selectedColor: hsvFromValues(this.hue, this.s, this.v)});
-			this.paletteButtons.push({parent: this, action: this.changeColor, r: 13, c: 55, cSpan: 35, rSpan: 2, v: v,
-											icon: path + "select.png", selectedColor: hsvFromValues(this.hue, this.s, this.v),
-											backgroundColor: acceptColor});
+			this.paletteButtons.push({
+				parent: this, action: this.cancelPicker, r: 13, c: 10, cSpan: 35, rSpan: 2, v: v,
+				icon: path + "cancel.png", backgroundColor: cancelColor
+			});
+			this.paletteButtons.push({
+				parent: this, action: this.changeColor, r: 10, c: 35, cSpan: 30, rSpan: 2, v: v,
+				backgroundColor: hsvFromValues(this.hue, this.s, this.v),
+				selectedColor: hsvFromValues(this.hue, this.s, this.v)
+			});
+			this.paletteButtons.push({
+				parent: this, action: this.changeColor, r: 13, c: 55, cSpan: 35, rSpan: 2, v: v,
+				icon: path + "select.png", selectedColor: hsvFromValues(this.hue, this.s, this.v),
+				backgroundColor: acceptColor
+			});
 
 		} else if (this.paletteMode == "sure") {
 			nRows = 100;
 			nCols = 100;
 			padding = 0;
 			this.paletteButtons = [
-				{parent: this, name: "sure", action: function() {}, icon: path + "/areyousure.png", r: 5, c: 5, cSpan: 90, rSpan: 20,
-					backgroundColor:"none", stroke:"transparent"},
-				{parent: this, name: "no", action: this.cancelPicker, icon: path + "/no.png", r: 50, c: 5, cSpan: 40, rSpan: 20, backgroundColor: cancelColor},
-				{parent: this, name: "yes", action: this.clearCanvas, icon: path + "/yes.png", r: 50, c: 55, cSpan: 40, rSpan: 20, backgroundColor: acceptColor}
+				{parent: this, name: "sure", action: function() {}, icon: path + "/areyousure.png", r: 5, c: 5,
+					cSpan: 90, rSpan: 20, backgroundColor: "none", stroke: "transparent"},
+				{parent: this, name: "no", action: this.cancelPicker, icon: path + "/no.png", r: 50, c: 5,
+					cSpan: 40, rSpan: 20, backgroundColor: cancelColor},
+				{parent: this, name: "yes", action: this.clearCanvas, icon: path + "/yes.png", r: 50, c: 55,
+					cSpan: 40, rSpan: 20, backgroundColor: acceptColor}
 			];
 		} else if (this.paletteMode == "sessionsList") {
 			nRows = 100;
@@ -196,9 +232,11 @@ var WhiteboardPalette = SAGE2_App.extend({
 
 			this.paletteButtons = [
 				{parent: this, name: "list", action: function() {}, r: 5, c: 5, cSpan: 90, rSpan: 50,
-					backgroundColor:"white", stroke:"black"},
-				{parent: this, name: "cancel", action: this.cancelPicker, icon: path + "/cancel.png", r: 70, c: 5, cSpan: 40, rSpan: 20, backgroundColor: cancelColor},
-				{parent: this, name: "load", action: this.loadSessionSelected, icon: path + "/select.png", r: 70, c: 55, cSpan: 40, rSpan: 20, backgroundColor: acceptColor}
+					backgroundColor: "white", stroke: "black"},
+				{parent: this, name: "cancel", action: this.cancelPicker, icon: path + "/cancel.png", r: 70, c: 5,
+					cSpan: 40, rSpan: 20, backgroundColor: cancelColor},
+				{parent: this, name: "load", action: this.loadSessionSelected, icon: path + "/select.png", r: 70, c: 55,
+					cSpan: 40, rSpan: 20, backgroundColor: acceptColor}
 			];
 
 			var dataShown = this.sessionsList.slice(0, 10);
@@ -208,7 +246,7 @@ var WhiteboardPalette = SAGE2_App.extend({
 				var selected = (this.sessionSelected == ss);
 				this.paletteButtons.push({
 					parent: this, name: "session", action: this.selectSession, r: 5 + d * 5, c: 5, cSpan: 90, rSpan: 5,
-					backgroundColor:selected ? acceptColor : "white", stroke:"black", text:ss
+					backgroundColor: selected ? acceptColor : "white", stroke: "black", text: ss
 				});
 			}
 		}
@@ -238,13 +276,24 @@ var WhiteboardPalette = SAGE2_App.extend({
 			butt.x = x;
 			butt.w = buttW;
 
-			var rect = this.palette.append("rect").attr("fill", bg)
-						.attr("x", x).attr("y", y).attr("width", buttW).attr("height", buttH).style("stroke", stroke);
+			var rect = this.palette.append("rect")
+				.attr("fill", bg)
+				.attr("x", x)
+				.attr("y", y)
+				.attr("width", buttW)
+				.attr("height", buttH)
+				.style("stroke", stroke);
 			if (butt.name) {
 				rect.attr("id", butt.name);
 			}
 			if (butt.icon) {
-				var img = this.palette.append("image").attr("fill", bg).attr("x", x).attr("y", y).attr("width", buttW).attr("height", buttH).attr("xlink:href", butt.icon);
+				var img = this.palette.append("image")
+					.attr("fill", bg)
+					.attr("x", x)
+					.attr("y", y)
+					.attr("width", buttW)
+					.attr("height", buttH)
+					.attr("xlink:href", butt.icon);
 				if (butt.stretch) {
 					img.attr("preserveAspectRatio", "none");
 				}
@@ -256,17 +305,17 @@ var WhiteboardPalette = SAGE2_App.extend({
 			}
 			if (butt.text) {
 				this.palette.append("text")
-							.attr("x", x + butt.w / 2)
-							.attr("y", y + butt.h / 2)
-							.style("dominant-baseline", "middle")
-							.style("text-anchor", "middle")
-							.text(butt.text);
+					.attr("x", x + butt.w / 2)
+					.attr("y", y + butt.h / 2)
+					.style("dominant-baseline", "middle")
+					.style("text-anchor", "middle")
+					.text(butt.text);
 			}
 			if (butt.selected) {
 				var selectedStroke = "white";
 				toGoToFront.push(this.palette.append("rect").attr("fill", "none").attr("x", x - colW).attr("y", y - colW)
-							.attr("width", buttW + 2 * colW).attr("height", buttH + 2 * colW).style("stroke", selectedStroke)
-							.style("stroke-width", colW));
+					.attr("width", buttW + 2 * colW).attr("height", buttH + 2 * colW).style("stroke", selectedStroke)
+					.style("stroke-width", colW));
 			}
 		}
 

@@ -1,20 +1,21 @@
 <!DOCTYPE html>
-<html>
-<head lang="en">
+<html lang="en">
+<head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no" />
+<link rel="manifest" href="/manifest.webmanifest">
 
-<title>SAGE2 UI - Mobile</title>
+<title>SAGE2</title>
 
 <script type="text/license">
-	// SAGE2 is available for use under the SAGE2 Software License 
-	//      
+	// SAGE2 is available for use under the SAGE2 Software License
+	//
 	// University of Illinois at Chicago's Electronic Visualization Laboratory (EVL)
 	// and University of Hawai'i at Manoa's Laboratory for Advanced Visualization and
 	// Applications (LAVA)
-	//      
+	//
 	// See full text, terms and conditions in the LICENSE.txt included file
-	//      
+	//
 	// Copyright (c) 2014
 </script>
 
@@ -51,7 +52,7 @@
 							// controlling the page. The service worker will not take control until the next
 							// reload or navigation to a page under the registered scope.
 							// It's the perfect time to display a "Content is cached for offline use." message.
-							console.log('ServiceWorker> Content is cached, and will be available for offline use the ' + 'next time the page is loaded.', window.location);
+							console.log('ServiceWorker> Content is cached, and will be available for offline use');
 
 						}
 					break;
@@ -99,7 +100,13 @@
 			<h1 style="margin-top:40px;font-size:32px;text-align:center;text-valign:center;">Loading SAGE2 Interface...</h1>
 		</div>
 
+		<div class="clear"></div>
+		<div id="mainMenuBar" style="margin: 0 0;height:40px;"></div>
+
+		<div class="clear"></div>
+
 		<div id="displayUIDiv" style="display:none;">
+			<div id="partitionsDiv"></div>
 			<div id="applicationsDiv"></div>
 			<canvas id="sage2UICanvas"></canvas>
 		</div>
@@ -124,7 +131,7 @@
 						<img id="mediabrowser" alt="mediabrowser" src="images/ui/graycircle-mediabrowser.svg" width="48" height="48"/>
 						<p id="mediabrowserLabel">Media Browser</p>
 					</td>
-					<td id="arrangementContainer">
+					<!-- <td id="arrangementContainer">
 						<img id="arrangement"  alt="arrangement"  src="images/ui/graycircle-arrangement.svg"  width="48" height="48"/>
 						<p id="arrangementLabel">Arrangement</p>
 					</td>
@@ -135,7 +142,7 @@
 					<td id="infoContainer">
 						<img id="info"         alt="info"         src="images/ui/graycircle-info.svg"         width="48" height="48"/>
 						<p id="infoLabel">Information</p>
-					</td>
+					</td> -->
 					<td id="ezNoteContainer">
 						<img id="ezNote"       alt="ezNote"     src="images/ui/graycircle-ezNote.svg"       width="48" height="48"/>
 						<p id="ezNote">Quick Note</p>
@@ -144,7 +151,10 @@
 						<img id="ezDraw"       alt="ezDraw"     src="images/ui/graycircle-ezDraw.svg"       width="48" height="48"/>
 						<p id="ezDrawLabel">Doodle</p>
 					</td>
-
+					<td id="browserContainer">
+						<img id="browser" alt="browser" src="images/ui/graycircle-webview.svg" width="48" height="48"/>
+						<p id="browserLabel">Browser</p>
+					</td>
 				</tr>
 			</table>
 		</div>
@@ -158,15 +168,15 @@
 	</section>
 
 	<div class="clear"></div>
-	
+
 	<!-- transparent black overlay for all dialogs -->
 	<div id="blackoverlay"></div>
-	
+
 	<!-- dialog for the SAGE2 Pointer Help -->
 	<div id="sage2pointerDialog" class="dialog">
 		<img alt="sage2pointerHelp" id="sage2pointerHelp" src="images/SAGE2Pointer-help.svg"/>
 	</div>
-	
+
 	<!-- dialog for the App Launcher-->
 	<div id="appLauncherDialog" class="dialog">
 		<div id="appListContainer">
@@ -174,11 +184,12 @@
 			</table>
 		</div>
 		<div id="appButtons">
+			<span id="appStoreBtn" class="button">Appstore</span>
 			<span id="appOpenBtn" class="button">Open</span>
 			<span id="appCloseBtn" class="button">Close</span>
 		</div>
 	</div>
-	
+
 	<!-- dialog for the Media Browser -->
 	<div id="mediaBrowserDialog" class="dialog">
 		<div id="fileTreeList" class="css-treeview">
@@ -219,30 +230,9 @@
 		</div>
 	</div>
 
-	<!-- dialog for the Browser -->
-	<div id="browserDialog" class="dialog">
-		<div id="browserItems">
-			<div id="browserItemsContainer">
-				<table>
-					<tr>
-						<td style="padding-right:4px;">
-							<label class="sageLabel">Webpage:</label>
-						</td>
-						<td>
-							<input id="openWebpageUrl" type="text" value="http://www.nytimes.com/">
-						</td>
-					</tr>
-				</table>
-			</div>	
-		</div>
-		<div id="browswerButtons">
-			<span id="browserOpenBtn"  class="button">Open</span>
-			<span id="browserCloseBtn" class="button">Close</span>
-		</div>
-	</div>
-	
 	<!-- dialog for the Arrangement-->
-	<div id="arrangementDialog" class="dialog">
+	<!--
+		<div id="arrangementDialog" class="dialog">
 		<div id="arrangementItems">
 			<div id="clearcontentContainer">
 				<img alt="clearcontent" id="clearcontent" src="images/ui/graycircle-clearcontent.svg" width="64" height="64"/>
@@ -257,8 +247,60 @@
 				<p>Save Session</p>
 			</div>
 		</div>
+
+		<div id="arrangementItems2">
+			<div id="createpartitionsContainer">
+				<img alt="createpartitions" id="createpartitions" src="images/ui/graycircle-createpartitions.svg" width="64" height="64"/>
+				<p>Create Partitions</p>
+			</div>
+			<div id="deletepartitionsContainer">
+				<img alt="deletepartitions" id="deletepartitions" src="images/ui/graycircle-deletepartitions.svg" width="64" height="64"/>
+				<p>Delete Partitions</p>
+			</div>
+			<div id="deleteApplicationsContainer">
+				<img alt="deleteapplications" id="deleteapplications" src="images/ui/graycircle-clearcontent.svg" width="64" height="64"/>
+				<p>Delete Apps</p>
+			</div>
+		</div>
+
 		<div id="arrangementButtons">
 			<span id="arrangementCloseBtn" class="button">Close</span>
+		</div>
+	</div>
+	-->
+
+	<!-- dialog for partition creation -->
+	<div id="createpartitionsDialog" class="dialog" style="width:40%;min-width:280px;">
+
+		<div id="createpartitionsItems">
+
+			<div id="createpartitionsContainer" style="width:100%">
+				<table style="width:100%;border-spacing:0;">
+					<tr>
+						<th colspan="3" style="padding-bottom:5px;font-weight:bold;font-size:1.5em;align:left;">Create Partitions</th>
+					</tr>
+					<tr>
+						<td style="align:left;">
+							<label class="sageLabel">Layout</label>
+						</td>
+						<td style="align:left;">
+							<select id="partitionLayout">
+								<option value="0">Fullscreen</option>
+								<option value="1">2 Columns</option>
+								<option value="2">3 Columns</option>
+								<option value="3" selected="selected">2 Columns, 2 Rows</option>
+								<option value="4">Center Pane, 4 Mini</option>
+								<option value="5">2 Pane, Taskbar</option>
+							</select>
+						</td>
+					</tr>
+				</table>
+			</div>
+		</div>
+
+		<div id="createpartitionsButtons">
+			<span id="createpartitionsCreateBtn" class="button">Create</span>
+			<span id="createpartitionsCloseBtn" class="button">Close</span>
 		</div>
 	</div>
 
@@ -404,7 +446,7 @@
 
 	<div id="uploadDialog" class="dialog">
 		<span id="localFilesBtn" class="button">Picture</span>
-		<span id="dropboxFilesBtn" class="button">Dropbox</span>
+		<!--<span id="dropboxFilesBtn" class="button">Dropbox</span>-->
 		<span id="cancelFilesBtn" class="button">Close</span>
 	</div>
 	<div id="localfileDialog" class="dialog">
@@ -423,7 +465,7 @@
 		<span id="ffShareScreenBtn" class="button">Share Screen</span>
 		<span id="ffShareWindowBtn" class="button">Share Window</span>
 	</div>
-	
+
 	<div id="sage2MobileContainer">
 		<div id="sage2MobileTrackpad">
 			<div style="font-size:xx-large;text-align:center;">Trackpad</div>
@@ -450,15 +492,15 @@
 					</tr>
 					<tr>
 						<td>&nbsp&nbsp</td>
-						<td> <div id="uinmColorPick1" class="uinmColorPickBlock"></div> </td>
-						<td> <div id="uinmColorPick2" class="uinmColorPickBlock"></div> </td>
-						<td> <div id="uinmColorPick3" class="uinmColorPickBlock"></div> </td>
+						<td class="uinmColorPickColumn"> <div id="uinmColorPick1" class="uinmColorPickBlock"></div> </td>
+						<td class="uinmColorPickColumn"> <div id="uinmColorPick2" class="uinmColorPickBlock"></div> </td>
+						<td class="uinmColorPickColumn"> <div id="uinmColorPick3" class="uinmColorPickBlock"></div> </td>
 					</tr>
 					<tr>
 						<td>&nbsp&nbsp</td>
-						<td> <div id="uinmColorPick4" class="uinmColorPickBlock"></div> </td>
-						<td> <div id="uinmColorPick5" class="uinmColorPickBlock"></div> </td>
-						<td> <div id="uinmColorPick6" class="uinmColorPickBlock"></div> </td>
+						<td class="uinmColorPickColumn"> <div id="uinmColorPick4" class="uinmColorPickBlock"></div> </td>
+						<td class="uinmColorPickColumn"> <div id="uinmColorPick5" class="uinmColorPickBlock"></div> </td>
+						<td class="uinmColorPickColumn"> <div id="uinmColorPick6" class="uinmColorPickBlock"></div> </td>
 					</tr>
 				</table>
 			</div>
@@ -507,14 +549,14 @@
 		</div>
 		<br>
 	</div>
+
 	<div id="uiDrawZoneEraseReference">
 	</div>
-	
-	
+
+
 	<!-- invisible text to test rendered width -->
 	<div id="textWidthTest"></div>
 	<canvas id="mediaCanvas" style="display: none;"></canvas>
 	<video id="mediaVideo" style="display: none;"></video>
 </body>
 </html>
-

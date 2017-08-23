@@ -1,21 +1,24 @@
-FROM    ubuntu:14.04
-MAINTAINER	Victor Mateevitsi<mvictoras@gmail.com>
-RUN     sudo apt-get -y update
-RUN     sudo apt-get install -y software-properties-common
-RUN     sudo add-apt-repository -y ppa:mc3man/trusty-media
-RUN     sudo apt-get -y update
-RUN     sudo apt-get -y install libavformat-extra-54 libavformat-dev libavcodec-extra-54 libavcodec-dev ffmpeg libavutil-dev git curl libswscale-dev
-RUN     curl -sL https://deb.nodesource.com/setup_6.x | sudo bash -
-RUN     sudo apt-get -y install wget nodejs ghostscript libwebp-dev bzip2 devscripts libx264-dev yasm libnss3-tools libimage-exiftool-perl libgs-dev imagemagick libwebp5 g++ make libgraphviz-dev libmagickcore-dev libmagickwand-dev  libmagick++-dev
-
-# Forget webp for now
-# RUN     sudo apt-get -y build-dep imagemagick
-# RUN     mkdir imagemagick;cd imagemagick; apt-get source imagemagick; cd imagemagick-*; debuild -uc -us; sudo dpkg -i ../*magick*.deb
+FROM    ubuntu:16.04
+MAINTAINER	EVL avatar <evl.avatar@gmail.com>
+RUN     apt-get update && apt-get install -y \
+		software-properties-common \
+		git \
+		curl \
+		bzip2
+RUN     add-apt-repository -y ppa:jonathonf/ffmpeg-3
+RUN     curl -sL https://deb.nodesource.com/setup_8.x | bash -
+RUN     apt-get update && apt-get install -y \
+		ffmpeg \
+		ghostscript \
+		libnss3-tools \
+		libimage-exiftool-perl \
+		imagemagick \
+		nodejs \
+	&& rm -rf /var/lib/apt/lists/*
 
 COPY    package.json /tmp/package.json
-RUN     cd /tmp; npm install
+RUN     cd /tmp; npm install --production
 RUN     mkdir -p /sage2; cp -a /tmp/node_modules /sage2/
-
 
 COPY    . /sage2
 EXPOSE  80

@@ -1,6 +1,6 @@
 {
 	"name": "SAGE2",
-	"version": "1.0.0",
+	"version": "2.0.0",
 	"date": "2015-11-02",
 	"private": true,
 	"description": "A cluster-based html viewer used for displaying elements across multiple browser windows",
@@ -45,6 +45,7 @@
 		"url": "https://bitbucket.org/sage2/sage2/"
 	},
 	"dependencies": {
+		"chalk": "latest",
 		"color": "latest",
 		"commander": "latest",
 		"decompress-zip": "latest",
@@ -59,7 +60,6 @@
 		"rbush": ">=2",
 		"request": "latest",
 		"sprint": "^0.3.1",
-		"twit": "latest",
 		"mv": "latest",
 		"semver": "latest",
 		"fsmonitor": "latest",
@@ -70,45 +70,46 @@
 		"normalizeurl": "latest",
 		"sw-precache": "latest",
 		"debug": "latest",
-		"ytdl-core": "latest"
+		"ytdl-core": "latest",
+		"websocketio": "https://github.com/renambot-uic/websocketio.git",
+		"rimraf": "latest",
+		"node-pre-gyp": "latest",
+		"electron": "latest"
 	},
 	"optionalDependencies": {
-		"websocketio": "latest",
-		"node-demux" : "latest"
+		"node-demux": "https://github.com/renambot-uic/node-demux.git"
 	},
 	"devDependencies": {
 		"grunt": "latest",
 		"grunt-cli": "latest",
 		"grunt-eslint": "latest",
-		"grunt-jscs": "latest",
 		"grunt-contrib-yuidoc": "latest",
 		"grunt-contrib-uglify": "latest",
 		"grunt-prompt": "latest",
 		"grunt-mocha-cli": "latest",
-		"jscs": "latest",
 		"nodemon": "latest",
 		"kthxbai": "latest",
-		"mocha": "^2.0.1",
-		"mocha-jshint": "^0.0.9",
-		"istanbul": "^0.3.5",
-		"coveralls": "^2.11.2"
+		"mocha": "latest",
+		"mocha-jshint": "latest",
+		"istanbul": "latest",
+		"coveralls": "latest"
 	},
 	"engines": {
 		"node": ">=0.10.x"
 	},
 	"scripts": {
-		"start":   "node server.js -l",
-		"sw":      "node generate-service-worker.js",
+		"start": "node server.js -l",
+		"sw": "node generate-service-worker.js",
 		"monitor": "nodemon -e json,js,html -I -L -i public/uploads -i public/service-worker.js server.js -l",
-		"lint":    "grunt eslint",
-		"style":   "grunt jscs",
-		"doc":     "grunt yuidoc",
-		"mini":    "grunt uglify --verbose",
-		"newapp":  "grunt newapp",
-		"test":    "grunt all",
-		"in":      "node ./install_dependencies.js",
-		"inprod":  "node ./install_dependencies.js --prod",
-		"indev":   "node ./install_dependencies.js --dev"
+		"lint": "grunt eslint",
+		"doc": "grunt yuidoc",
+		"mini": "grunt uglify --verbose",
+		"newapp": "grunt newapp",
+		"test": "grunt all",
+		"in": "node ./install_dependencies.js",
+		"inprod": "node ./install_dependencies.js --prod",
+		"indev": "node ./install_dependencies.js --dev",
+		"electron": "electron electron.js -s http://localhost:9292 -d 0"
 	},
 	"license": "SEE LICENSE IN LICENSE.txt"
 }

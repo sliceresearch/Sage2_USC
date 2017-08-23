@@ -83,33 +83,27 @@
 	],
 	experimental: {
 		omicron: {
-			// Default SAGE2 input connection
-			// SAGE listens for a sageinputserver to stream events
 			enable: true,
-			//host: "131.193.76.121",
+			
+			// Port SAGE will listen for a oinputserver connection
+			msgPort: 28000,
+			
+			// If specified, SAGE will actively attempt to connect to
+			// an oinputserver on the specified IP and data port
+			//inputServerIP: "131.193.183.207", // OMGTracker (Wired)
+			inputServerIP: "131.193.76.94", // OMGTracker (Wireless)
 			dataPort: 30005,
 			
-			debug: false,
+			eventDebug: false,
 			
+			style: "Touch", // Display as "Touch" or "Pointer"
+			interactionMode: "App", // "Window" or "App"
+
 			// Touch gestures
-			enableDoubleClickMaximize: true,
-			enableThreeFingerRightClick: true,
-			enableTwoFingerWindowDrag: false,
-			enableTwoFingerZoom: true,
-			enableFiveFingerCloseApp: false,
-			
-			touchOffset: [ 0, -25 ], // in pixels
-			zoomGestureScale: 5,
-			acceleratedDragScale: 2,
-			
-			// Alternate input connection
-			// Note if the following is enabled the server will attempt
-			// to connect to the specified Omicron oinputserver
-			// (By default the server listens for an Omicron sageinputserver to connect to it)
-			useOinputserver: false,
-			inputServerIP: "131.193.76.94",
-			//inputServerIP: "131.193.183.207",
-			msgPort: 28000
+			touchOffset: [ 12, 5 ], // in pixels
+			zoomGestureScale: 2000,
+			acceleratedDragScale: 3,
+			gestureDebug: false,
 		}
 	},
 	dependencies: {

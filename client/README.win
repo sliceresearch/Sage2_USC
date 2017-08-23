@@ -1,0 +1,39 @@
+How to run:
+-----------
+
+Navigate to the folder 'SAGE2_client-[arch]'
+
+To start a display for client 0 (from the command-line or double-click):
+	./Display0.bat 
+
+To pass extra parameters (from the command-line):
+	./Display0.bat -d -1          # overview client
+	./Display0.bat -d -1 -f       # fullscreen
+	./Display0.bat -s http://localhost:9292 # specify a server URL
+
+Fullscreen.bat is similar but goes fullscreen (same parameters can be added)
+
+Default is opening the client 0 on default port (http://localhost:9292).
+
+
+# Electron SAGE2 arguments
+# -h, --help           output usage information
+# -V, --version        output the version number
+# -s, --server <s>     Server URL (string)
+# -d, --display <n>    Display client ID number (int)
+# -u, --ui             Open the user interface (instead of display)
+# -a, --audio          Open the audio manager (instead of display)
+# -f, --fullscreen     Fullscreen (boolean)
+# -p, --plugins        Enables plugins and flash (boolean)
+# -n, --no_decoration  Remove window decoration (boolean)
+# -x, --xorigin <n>    Window position x (int)
+# -y, --yorigin <n>    Window position y (int)
+# -m, --monitor <n>    Select a monitor (int)
+# --width <n>          Window width (int)
+# --height <n>         Window height (int)
+# --password <s>       Server password (string)
+# --hash <s>           Server password hash (string)
+# --cache              Clear the cache
+# --console            Open the devtools console
+
+

@@ -30,6 +30,7 @@ var ffmpeg    = require('fluent-ffmpeg');     // ffmpeg
 var gm        = require('gm');                // imagesmagick
 var json5     = require('json5');
 var mv        = require('mv');
+var chalk     = require('chalk');
 
 var exiftool  = require('../src/node-exiftool'); // gets exif tags for images
 var sageutils = require('../src/node-utils');    // provides utility functions
@@ -217,8 +218,7 @@ var generateImageThumbnails = function(infile, outfile, sizes, index, callback) 
 			}
 			// recursive call to generate the next size
 			generateImageThumbnails(infile, outfile, sizes, index + 1, callback);
-		}
-	);
+		});
 };
 
 var generatePdfThumbnailsHelper = function(intermediate, infile, outfile, sizes, index, callback) {
@@ -243,8 +243,7 @@ var generatePdfThumbnailsHelper = function(intermediate, infile, outfile, sizes,
 			}
 			// recursive call to generate the next size
 			generatePdfThumbnailsHelper(intermediate, infile, outfile, sizes, index + 1, callback);
-		}
-	);
+		});
 };
 
 var generatePdfThumbnails = function(infile, outfile, width, height, sizes, index, callback) {
@@ -301,8 +300,7 @@ var generateVideoThumbnails = function(infile, outfile, width, height, sizes, in
 					});
 					// recursive call to generate the next size
 					generateVideoThumbnails(infile, outfile, width, height, sizes, index + 1, callback);
-				}
-			);
+				});
 		})
 		.screenshots({
 			timestamps: ["10%"],
@@ -339,8 +337,7 @@ var generateAppThumbnails = function(infile, outfile, acolor, sizes, index, call
 			}
 			// recursive call to generate the next size
 			generateAppThumbnails(infile, outfile, acolor, sizes, index + 1, callback);
-		}
-	);
+		});
 };
 
 var generateRemoteSiteThumbnails = function(infile, outfile, sizes, index, callback) {
@@ -382,8 +379,7 @@ var generateRemoteSiteThumbnails = function(infile, outfile, sizes, index, callb
 				// recursive call to generate the next size
 				generateRemoteSiteThumbnails(infile, outfile, sizes, index + 1, callback);
 			}
-		}
-	);
+		});
 	imageMagick(sizes[index], sizes[index], disconnected).fill("#FFFFFF").font(font, fontSize).
 		drawText(0, 0, infile, "Center").write(outfile + '_disconnected_' + sizes[index] + '.jpg', function(err) {
 			if (err) {
@@ -396,8 +392,7 @@ var generateRemoteSiteThumbnails = function(infile, outfile, sizes, index, callb
 				// recursive call to generate the next size
 				generateRemoteSiteThumbnails(infile, outfile, sizes, index + 1, callback);
 			}
-		}
-	);
+		});
 };
 
 var addFile = function(filename, exif, callback) {
@@ -437,7 +432,8 @@ var addFile = function(filename, exif, callback) {
 			callback();
 		});
 		anAsset.exif.SAGE2thumbnail = rthumb;
-	} else if (exif.MIMEType === 'application/custom') {
+	} else if (exif.MIMEType === 'application/custom' ||
+		exif.MIMEType === 'application/xml') {
 		if (exif.icon === null || !sageutils.fileExists(exif.icon)) {
 			anAsset.exif.SAGE2thumbnail = path.join(AllAssets.rel, 'assets', 'apps', 'unknownapp');
 			callback();
@@ -517,16 +513,22 @@ var addFile = function(filename, exif, callback) {
 };
 
 
-var deleteAsset = function(filename) {
+var deleteAsset = function(filename, cb) {
 	var filepath = path.resolve(filename);
 	fs.unlink(filepath, function(err) {
 		if (err) {
 			console.log(sageutils.header("Assets") + "error removing file: " + filename + err);
+			if (cb) {
+				cb(err);
+			}
 		} else {
 			console.log(sageutils.header("Assets") + "successfully deleted file: " + filename);
 			// Delete the metadata
 			delete AllAssets.list[filepath];
 			saveAssets();
+			if (cb) {
+				cb(null);
+			}
 		}
 	});
 };
@@ -543,19 +545,34 @@ var addURL = function(aUrl, exif) {
 var getDimensions = function(id) {
 	id = path.resolve(id);
 	if (id in AllAssets.list) {
-		return {width:  AllAssets.list[id].exif.ImageWidth,
-				height: AllAssets.list[id].exif.ImageHeight };
+		return {
+			width:  AllAssets.list[id].exif.ImageWidth,
+			height: AllAssets.list[id].exif.ImageHeight
+		};
 	}
 	return null;
 };
 
 // Returns a EXIF data element
 var getTag = function(id, tag) {
+	var result = null;
+	// convert the search tag to lowercase
+	var lowerTag = tag.toLowerCase();
+	// simplify the id
 	id = path.resolve(id);
+	// search for it
 	if (id in AllAssets.list) {
-		return AllAssets.list[id].exif[tag];
+		// Compare the keys in lowercase
+		Object.keys(AllAssets.list[id].exif).forEach(function(element, i) {
+			if (lowerTag === element.toLowerCase()) {
+				// copy the value
+				result = AllAssets.list[id].exif[element];
+				// send it back
+				return result;
+			}
+		});
 	}
-	return null;
+	return result;
 };
 
 // Add an EXIF data element
@@ -610,7 +627,7 @@ var exifAsync = function(cmds, cb) {
 				appIcon = path.join(file, instructions.icon);
 			}
 			var app = path.basename(file);
-			console.log(sageutils.header("EXIF") + "Adding " + app + " (App)");
+			console.log(sageutils.header("EXIF") + "Adding " + chalk.cyan.bold(app) + chalk.dim(" (App)"));
 
 			var metadata = {};
 			if (instructions.title !== undefined && instructions.title !== null && instructions.title !== "") {
@@ -692,23 +709,6 @@ var exifAsync = function(cmds, cb) {
 	}
 };
 
-// exifSync = function(cmds, cb) {
-// 	var execNext = function() {
-// 		var result = exiftool.fileSync(cmds.shift());
-// 		if (result.err) {
-// 			console.log("internal error");
-// 			cb(result.err);
-// 		} else {
-// 			console.log(sageutils.header("EXIF") + "Adding", result.metadata.FileName);
-// 			addFile(result.metadata.SourceFile, result.metadata);
-// 			if (cmds.length) execNext();
-// 			else cb(null);
-// 		}
-// 	};
-// 	if (cmds.length>0) execNext();
-// };
-
-
 var listAssets = function() {
 	var pdfs   = [];
 	var videos = [];
@@ -740,8 +740,10 @@ var listAssets = function() {
 	videos.sort(sageutils.compareFilename);
 	pdfs.sort(sageutils.compareFilename);
 	apps.sort(sageutils.compareFilename);
-	return {images: images, videos: videos, pdfs: pdfs,
-			applications: apps, others: others};
+	return {
+		images: images, videos: videos, pdfs: pdfs,
+		applications: apps, others: others
+	};
 };
 
 var listPDFs = function() {
@@ -807,9 +809,8 @@ var listApps = function() {
 
 var recursiveReaddirSync = function(aPath) {
 	var list     = [];
-	var excludes = ['.DS_Store', 'Thumbs.db', 'tmp',
-		'passwd.json', 'assets', 'sessions', 'config', 'sabiConfig',
-		'web'];
+	var excludes = ['.DS_Store', 'Thumbs.db', 'tmp', 'passwd.json',
+		'assets', 'sessions', 'config', 'sabiConfig', 'web', 'savedFiles', 'apps'];
 	var files, stats;
 
 	files = fs.readdirSync(aPath);
@@ -831,20 +832,38 @@ var recursiveReaddirSync = function(aPath) {
 	return list;
 };
 
-var refresh = function(root, callback) {
-	var uploaded = recursiveReaddirSync(root);
+var searchApplications = function(aPath) {
+	var list     = [];
+	var excludes = ['assets', 'sessions', 'config', 'sabiConfig', 'web', 'savedFiles'];
+	var files, stats;
+
+	files = fs.readdirSync(aPath);
+	if (files.indexOf('instructions.json') >= 0) {
+		// it's an application folder
+		list.push(aPath);
+	} else {
+		files.forEach(function(file) {
+			if (excludes.indexOf(file) === -1) {
+				stats = fs.lstatSync(path.join(aPath, file));
+				if (stats.isDirectory()) {
+					list = list.concat(searchApplications(path.join(aPath, file)));
+				}
+			}
+		});
+	}
+	return list;
+};
+
+var refreshApps = function(root, callback) {
+	var allApps = searchApplications(root);
 
 	var thelist = [];
 	var i;
 	var item;
 
-	for (i = 0; i < uploaded.length; i++) {
-		item = path.resolve(uploaded[i]);
-		if (item in AllAssets.list) {
-			AllAssets.list[item].Valid = true;
-		} else {
-			thelist.push(item);
-		}
+	for (i = 0; i < allApps.length; i++) {
+		item = path.resolve(allApps[i]);
+		thelist.push(item);
 	}
 
 	if (thelist.length > 0) {
@@ -852,9 +871,9 @@ var refresh = function(root, callback) {
 
 		exifAsync(thelist, function(err) {
 			if (err) {
-				console.log(sageutils.header("EXIF") + "Error:", err);
+				console.log(sageutils.header("EXIF") + chalk.red.bold("Error:", err));
 			} else {
-				console.log(sageutils.header("EXIF") + "Done " + root);
+				console.log(sageutils.header("EXIF") + chalk.green.bold("Processing finished for " + root));
 				if (callback) {
 					callback(thelist.length);
 				}
@@ -868,17 +887,53 @@ var refresh = function(root, callback) {
 
 };
 
-var initialize = function(mainFolder, mediaFolders) {
+var refreshAssets = function(root, callback) {
+	var thelist = [];
+	var i;
+	var item;
+
+	// Populate a list for this folder
+	var uploaded = recursiveReaddirSync(root);
+
+	for (i = 0; i < uploaded.length; i++) {
+		item = path.resolve(uploaded[i]);
+		if (item in AllAssets.list) {
+			AllAssets.list[item].valid = true;
+		} else {
+			thelist.push(item);
+		}
+	}
+
+	if (thelist.length > 0) {
+		console.log(sageutils.header("EXIF") + "Starting processing: " + thelist.length + " items");
+
+		exifAsync(thelist, function(err) {
+			if (err) {
+				console.log(sageutils.header("EXIF") + "Error:", err);
+			} else {
+				console.log(sageutils.header("EXIF") + "Processing finished for " + root);
+				if (callback) {
+					callback(thelist.length);
+				}
+			}
+		});
+	} else {
+		if (callback) {
+			callback(0);
+		}
+	}
+
+};
+
+var initialize = function(mainFolder, mediaFolders, whenDone) {
 	if (AllAssets === null) {
 		var i;
 		var thelist = [];
-		// public_HTTPS/uploads/assets/assets.json
-		// list: {}, root: null
 
 		var root = mainFolder.path;
 		var relativePath = mainFolder.url;
 
-		console.log(sageutils.header("Assets") + 'Main asset folder: ' + root);
+		console.log(sageutils.header("Assets") + 'Main asset folder: ' + chalk.yellow.bold(root));
 
 		// Make sure the asset folder exists
 		var assetFolder = path.join(root, 'assets');
@@ -923,7 +978,7 @@ var initialize = function(mainFolder, mediaFolders) {
 			AllAssets.list = oldList.list;
 			// Flag all the assets for checking
 			for (var it in AllAssets.list) {
-				AllAssets.list[it].Valid = false;
+				AllAssets.list[it].valid = false;
 			}
 		} else {
 			AllAssets.list = {};
@@ -931,7 +986,24 @@ var initialize = function(mainFolder, mediaFolders) {
 			AllAssets.rel  = relativePath;
 		}
 
-		refresh(root);
+		refreshApps(root, function() {
+			refreshAssets(root, function() {
+				// Finally, delete the elements which are not there anymore
+				for (var item in AllAssets.list) {
+					if (item.startsWith(root) && AllAssets.list[item].valid === false) {
+						console.log(sageutils.header("Assets") + "Removing old item", item);
+						delete AllAssets.list[item];
+					} else {
+						// Just remove the valid flag
+						delete AllAssets.list[item].valid;
+					}
+				}
+				// callback when done
+				if (whenDone) {
+					whenDone();
+				}
+			});
+		});
 
 		// Extra folders
 		AllAssets.mediaFolders = mediaFolders;
@@ -939,33 +1011,24 @@ var initialize = function(mainFolder, mediaFolders) {
 			var f = mediaFolders[mf];
 			if (root !== f.path) {
 				// Adding all the other folders (except the main one)
-				addAssetFolder(f.path);
-			}
-		}
-		for (i = 0; i < config.remote_sites.length; i++) {
-			if (config.remote_sites[i].name in AllAssets.list) {
-				AllAssets.list[config.remote_sites[i].name].Valid = true;
-			} else {
-				thelist.push(config.remote_sites[i].name);
+				addAssetFolder(f.path, whenDone);
 			}
 		}
 
-		// Finally, delete the elements which not there anymore
-		for (var item in AllAssets.list) {
-			if (AllAssets.list[item].Valid === false) {
-				console.log(sageutils.header("Assets") + "Removing old item", item);
-				delete AllAssets.list[item];
+		// Remote sites in assets ?
+		for (i = 0; i < config.remote_sites.length; i++) {
+			if (config.remote_sites[i].name in AllAssets.list) {
+				AllAssets.list[config.remote_sites[i].name].valid = true;
 			} else {
-				// Just remove the Valid flag
-				delete AllAssets.list[item].Valid;
+				thelist.push(config.remote_sites[i].name);
 			}
 		}
 
 	}
 };
 
-var addAssetFolder = function(root) {
-	console.log(sageutils.header("Assets") + 'Adding asset folder: ' + root);
+var addAssetFolder = function(root, whenDone) {
+	console.log(sageutils.header("Assets") + 'Adding asset folder: ' + chalk.yellow.bold(root));
 	// Make sure the asset folder exists
 	var assetFolder = path.join(root, 'assets');
 	if (!sageutils.folderExists(assetFolder)) {
@@ -990,30 +1053,23 @@ var addAssetFolder = function(root) {
 		fs.createReadStream(unknownapp_512Img).pipe(fs.createWriteStream(unknownapp_512));
 	}
 
-	var uploaded = recursiveReaddirSync(root);
-
-	var thelist = [];
-	var i;
-	var item;
-
-	for (i = 0; i < uploaded.length; i++) {
-		item = path.resolve(uploaded[i]);
-		if (item in AllAssets.list) {
-			AllAssets.list[item].Valid = true;
-		} else {
-			thelist.push(item);
-		}
-	}
-
-	if (thelist.length > 0) {
-		console.log(sageutils.header("EXIF") + "Starting processing: " + thelist.length + " items");
-	}
-	exifAsync(thelist, function(err) {
-		if (err) {
-			console.log(sageutils.header("EXIF") + "Error:", err);
-		} else {
-			console.log(sageutils.header("EXIF") + "Done " + root);
-		}
+	refreshApps(root, function() {
+		refreshAssets(root, function() {
+			// Finally, delete the elements which are not there anymore
+			for (var item in AllAssets.list) {
+				if (item.startsWith(root) && AllAssets.list[item].valid === false) {
+					console.log(sageutils.header("Assets") + "Removing old item", item);
+					delete AllAssets.list[item];
+				} else {
+					// Just remove the valid flag
+					delete AllAssets.list[item].valid;
+				}
+			}
+			// callback when done
+			if (whenDone) {
+				whenDone();
+			}
+		});
 	});
 };
 
@@ -1059,7 +1115,7 @@ var moveAsset = function(source, destination, callback) {
 
 
 exports.initialize     = initialize;
-exports.refresh        = refresh;
+exports.refresh        = refreshAssets;
 exports.addAssetFolder = addAssetFolder;
 
 exports.printAssets = printAssets;

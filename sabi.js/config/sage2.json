@@ -13,9 +13,11 @@
 	},
 	"actions": {
 		"sage2-on":          { "script":  "scripts\\sage2_on.bat" },
+		"sage2-on-electron": { "script":  "scripts\\s2_on_electron.bat" },
 		"sage2-off":         { "script":  "scripts\\sage2_off.bat" },
 		"edit-config":       { "editor":  "~/Documents/SAGE2_Media/config/defaultWin-cfg.json" },
 		"edit-form":         { "openurl": "form.html?action=edit-config" },
+		"edit-assist":       { "openurl": "assistedConfig.html" },
 
 		"submitMA":          { "sendData": "forMA", "dataID": "inputMA", "sendPurpose": "makeNewMeetingID" },
 		"inputMA":           { "ignore" :  "Not sending"},
@@ -41,7 +43,7 @@
 			"description": "Start and stop SAGE2. You can also set a meeting access code to protect access to your meeting.",
 			"image": "images/display.png",
 			"actions": [
-				{"title": "Start", "action": "sage2-on" },
+				{"title": "Start", "action": "sage2-on-electron" },
 				{"title": "Stop",  "action": "sage2-off"}
 			]
 		},
@@ -59,24 +61,17 @@
 	"Admin" : {
 		"title"  : "Admin",
 		"navbar" : "true",
-		"groups" : [ "group2", "update" ],
+		"groups" : [ "group2" ],
 		"group2" : {
 			"title": "Configure SAGE2",
 			"image": "images/settings.png",
 			"description": "Allows to edit your wall configuration. Simple edits can be done using a form in <em>basic</em> mode. You can also edit the file in <em>expert</em> mode. The launcher password can be changed in the form of sage2:sabi:xxxx.",
 			"actions": [
+				{"title": "Wall configuration - <em>assisted</em>", "action": "edit-assist" },
 				{"title": "Wall configuration - <em>basic</em>", "action": "edit-form" },
 				{"title": "Wall configuration -  <em>expert</em>", "action": "edit-config" },
 				{"title": "", "action": "inputLP", "role": "inputPassword", "placeholder":"Enter new launcher password"},
 				{"title": "Reset launcher password", "action": "submitLP", "theme": "b"}
-			]
-		},
-		"update" : {
-			"title": "Update SAGE2",
-			"image": "images/settings.png",
-			"description": "Choosing to update will edit the startup file and then restart the computer.<br> Be sure to save all work before updating.",
-			"actions": [
-				{"title": "Update (will cause the computer to restart)", "action": "updateSage" }
 			]
 		}
 	}

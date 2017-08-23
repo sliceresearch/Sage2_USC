@@ -6,10 +6,6 @@ const app = electron.app;
 // Module to create native browser window.
 const BrowserWindow = electron.BrowserWindow;
 
-const Menu = electron.Menu;
-const Tray = electron.Tray;
- var appIcon = null;
-
 app.commandLine.appendSwitch('enable-usermedia-screen-capturing');
 
 // Keep a global reference of the window object, if you don't, the window will
@@ -20,7 +16,13 @@ function createWindow () {
 	// Create the browser window.
 	mainWindow = new BrowserWindow({
 		width: 1200,
-		height: 600
+		height: 485,
+		webPreferences: {
+			nodeIntegration: true,
+			webSecurity: true,
+			webaudio: true,
+			backgroundThrottling: false
+		}
 	});
 
 	// and load the index.html of the app.
@@ -41,19 +43,8 @@ function createWindow () {
 		console.log('will-navigate')
 		ev.preventDefault();
 	})
-
-  	appIcon = new Tray(__dirname + '/images/S2.png');
-  	var contextMenu = Menu.buildFromTemplate([
-  		{ label: 'Item1', type: 'radio' },
-  		{ label: 'Item2', type: 'radio' },
-  		{ label: 'Item3', type: 'radio', checked: true },
-  		{ label: 'Item4', type: 'radio' }
-  		]);
-	appIcon.setHighlightMode(false);
-  	appIcon.setToolTip('SAGE2');
-  	appIcon.setContextMenu(contextMenu);
-
 }
+
 
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.

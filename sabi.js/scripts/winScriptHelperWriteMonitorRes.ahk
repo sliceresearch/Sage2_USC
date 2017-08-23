@@ -142,10 +142,13 @@ twArray := StrSplit( twArray, "," )
 thArray := StrSplit( thArray, "," )
 temp1	:= twArray.length() * thArray.length()
 
+/*
+Removing this message, it has been causing unnecessary confusion.
 if ( temp1 != monitorArray.length() )
 {
 	MsgBox % "Error: Detected " monitorArray.length() " monitors, but there are " temp1 " unique top left positions. This probably means that your monitors have varying resolutions.`n`nYour display setup must be done manually."	
 }
+*/
 
 output := "{`ntileWidth:" twArray.length() ",`ntileHeight:" thArray.length() ", `ntileCoordinates:`n" A_Tab "["
 

@@ -79,6 +79,9 @@ function UIBuilder(json_cfg, clientID) {
 			this.bg.style.backgroundColor = "#000000";
 		}
 
+		// Set at the bottom of the stack
+		this.bg.style.zIndex = 0;
+
 		// Setup the clipping size
 		if (this.clientID === -1) {
 			// set the resolution to be the whole display wall
@@ -192,8 +195,14 @@ function UIBuilder(json_cfg, clientID) {
 
 						_this.bg.style.top    = top.toString() + "px";
 						_this.bg.style.left   = left.toString() + "px";
-						_this.bg.style.width  = (_this.json_cfg.resolution.width - left).toString() + "px";
-						_this.bg.style.height = (_this.json_cfg.resolution.height - top).toString() + "px";
+						var tileW = _this.json_cfg.resolution.width *
+							(_this.json_cfg.displays[_this.clientID].width || 1);
+						var tileH = _this.json_cfg.resolution.height *
+							(_this.json_cfg.displays[_this.clientID].height || 1);
+						tileW -= left;
+						tileH -= top;
+						_this.bg.style.width  = tileW + "px";
+						_this.bg.style.height = tileH + "px";
 
 						_this.bg.style.backgroundImage    = "url(" + _this.json_cfg.background.image.url + ")";
 						_this.bg.style.backgroundPosition = "top left";
@@ -202,8 +211,10 @@ function UIBuilder(json_cfg, clientID) {
 
 						_this.main.style.top    = (-1 * top).toString()  + "px";
 						_this.main.style.left   = (-1 * left).toString() + "px";
-						_this.main.style.width  = _this.json_cfg.resolution.width  + "px";
-						_this.main.style.height = _this.json_cfg.resolution.height + "px";
+						_this.main.style.width  = _this.json_cfg.resolution.width *
+							(_this.json_cfg.displays[_this.clientID].width || 1)  + "px";
+						_this.main.style.height = _this.json_cfg.resolution.height *
+							(_this.json_cfg.displays[_this.clientID].height || 1) + "px";
 					} else {
 						var bgImgFinal;
 						var ext = _this.json_cfg.background.image.url.lastIndexOf(".");
@@ -259,6 +270,8 @@ function UIBuilder(json_cfg, clientID) {
 		if (this.clientID === -1) {
 			this.offsetX = 0;
 			this.offsetY = 0;
+			this.width   = this.json_cfg.totalWidth;
+			this.height  = this.json_cfg.totalHeight;
 			this.titleBarHeight = this.json_cfg.ui.titleBarHeight;
 			this.titleTextSize  = this.json_cfg.ui.titleTextSize;
 			this.pointerWidth   = this.json_cfg.ui.pointerSize * 3;
@@ -285,8 +298,10 @@ function UIBuilder(json_cfg, clientID) {
 			}
 
 			// Position offsets plus borders offsets
-			this.offsetX = x * this.json_cfg.resolution.width + borderx;
+			this.offsetX = x * this.json_cfg.resolution.width  + borderx;
 			this.offsetY = y * this.json_cfg.resolution.height + bordery;
+			this.width   = this.json_cfg.displays[this.clientID].width  * this.json_cfg.resolution.width;
+			this.height  = this.json_cfg.displays[this.clientID].height * this.json_cfg.resolution.height;
 			this.titleBarHeight = this.json_cfg.ui.titleBarHeight;
 			this.titleTextSize  = this.json_cfg.ui.titleTextSize;
 			this.pointerWidth   = this.json_cfg.ui.pointerSize;
@@ -357,7 +372,8 @@ function UIBuilder(json_cfg, clientID) {
 		machine.style.mozTransform  = "translateY(-50%)";
 		machine.style.transform  = "translateY(-50%)";
 
-		var rightOffset = this.offsetX - (this.json_cfg.resolution.width * (this.json_cfg.layout.columns - 1));
+		var rightOffset = this.offsetX - (this.json_cfg.totalWidth - this.width);
+
 		version.style.position   = "absolute";
 		version.style.whiteSpace = "nowrap";
 		version.style.fontSize   = Math.round(this.titleTextSize) + "px";
@@ -367,10 +383,10 @@ function UIBuilder(json_cfg, clientID) {
 		} else {
 			version.style.right  = ((6 * this.titleBarHeight) + rightOffset).toString() + "px";
 		}
-		version.style.top        = "50%";
-		version.style.webkitTransform  = "translateY(-50%)";
-		version.style.mozTransform  = "translateY(-50%)";
-		version.style.transform  = "translateY(-50%)";
+		version.style.top = "50%";
+		version.style.webkitTransform = "translateY(-50%)";
+		version.style.mozTransform = "translateY(-50%)";
+		version.style.transform = "translateY(-50%)";
 
 		// Load the logo (shown top left corner)
 		var _this = this;
@@ -382,7 +398,8 @@ function UIBuilder(json_cfg, clientID) {
 		});
 
 		// Load the background SVG if specified
-		if (this.json_cfg.background.watermark !== undefined) {
+		if (this.json_cfg.background.watermark !== undefined &&
+			this.json_cfg.background.watermark.svg) {
 			// Use snap to load the SVG
 			Snap.load(this.json_cfg.background.watermark.svg, function(f) {
 				var water = f.select("svg");
@@ -578,9 +595,9 @@ function UIBuilder(json_cfg, clientID) {
 		var newDialogCancel = document.createElement("div");
 		newDialogCancel.id  = id + "_cancel";
 		newDialogCancel.style.position = "absolute";
-		newDialogCancel.style.left   = (6.5 * this.titleBarHeight).toString() + "px";
+		newDialogCancel.style.left   = (1.5 * this.titleBarHeight).toString() + "px";
 		newDialogCancel.style.bottom = (this.titleBarHeight).toString() + "px";
-		newDialogCancel.style.width  = (13 * this.titleBarHeight).toString() + "px";
+		newDialogCancel.style.width  = (23 * this.titleBarHeight).toString() + "px";
 		newDialogCancel.style.height = (3 * this.titleBarHeight).toString() + "px";
 		newDialogCancel.style.webkitBoxSizing = "border-box";
 		newDialogCancel.style.mozBoxSizing    = "border-box";
@@ -712,10 +729,12 @@ function UIBuilder(json_cfg, clientID) {
 		if (this.json_cfg.ui.show_version) {
 			var version = document.getElementById('version');
 			if (data.branch && data.commit && data.date) {
-				version.innerHTML = "<b>v" + data.base + "-" + data.branch + "-" + data.commit + "</b> " + data.date;
+				version.innerHTML = "<b>v" + data.base + "-" + data.branch + "-" + data.commit + "</b> ";
+				version.innerHTML += data.date;
 			} else {
 				version.innerHTML = "<b>v" + data.base + "</b>";
 			}
+			version.innerHTML += " [" + __SAGE2__.browser.browserType + "]";
 		}
 	};
 
@@ -739,7 +758,7 @@ function UIBuilder(json_cfg, clientID) {
 		this.changeSVGColor(logo, "path", null, textColor);
 
 		// Update the size to fit in the titlebar
-		var rightOffset = this.offsetX - (this.json_cfg.resolution.width * (this.json_cfg.layout.columns - 1));
+		var rightOffset = this.offsetX - (this.json_cfg.totalWidth - this.width);
 
 		var bbox = logo.getBBox();
 		width = height * (bbox.width / bbox.height);
@@ -784,12 +803,15 @@ function UIBuilder(json_cfg, clientID) {
 		if (this.clientID !== -1) {
 			watermark.style.cursor = "none";
 		}
-		this.changeSVGColor(watermark, "path", null, this.json_cfg.background.watermark.color);
+		if (this.json_cfg.background.watermark.color) {
+			this.changeSVGColor(watermark, "path", null, this.json_cfg.background.watermark.color);
+		}
 
 		watermark.style.opacity  = 0.4;
 		watermark.style.position = "absolute";
 		watermark.style.left     = ((this.json_cfg.totalWidth  / 2) - (width  / 2) - this.offsetX).toString() + "px";
 		watermark.style.top      = ((this.json_cfg.totalHeight / 2) - (height / 2) - this.offsetY).toString() + "px";
+		watermark.style.zIndex   = -1;
 	};
 
 	/**
@@ -814,7 +836,6 @@ function UIBuilder(json_cfg, clientID) {
 	};
 
 	this.drawingInit = function(data) {
-		console.log("toCreateSVG");
 		if (!this.drawingSvg) {
 			this.drawingSvg = d3.select("#main").append("svg").attr("id", "drawingSVG");
 			this.drawingSvg.attr("height", parseInt(this.main.style.height));
@@ -853,11 +874,11 @@ function UIBuilder(json_cfg, clientID) {
 				for (s in drawingObject.style) {
 					newDraw.style(s, drawingObject.style[s]);
 				}
-				var lineFunction = d3.svg.line().x(function(d) {
+				var lineFunction = d3.line().x(function(d) {
 					return d.x;
 				}).y(function(d) {
 					return d.y;
-				}).interpolate("basis");
+				}).curve(d3.curveBasis);
 				newDraw.attr("d", lineFunction(drawingObject.options.points));
 			}
 
@@ -927,14 +948,14 @@ function UIBuilder(json_cfg, clientID) {
 
 				if (drawingObject.type == "path") {
 
-					var lineFunction = d3.svg.line()
+					var lineFunction = d3.line()
 						.x(function(d) {
 							return d.x;
 						})
 						.y(function(d) {
 							return d.y;
 						})
-						.interpolate("basis");
+						.curve(d3.curveBasis);
 
 					toUpdate.attr("d", lineFunction(drawingObject.options.points));
 				}
@@ -1099,14 +1120,14 @@ function UIBuilder(json_cfg, clientID) {
 			radialMenuContentWindowDiv.style.zIndex   = 9000;
 
 			var menuElem1 = createDrawingElement(data.id + "_menu", "pointerItem",
-								data.x  - this.offsetX, data.y - this.offsetY,
-								data.radialMenuSize.x, data.radialMenuSize.y, 9000);
+				data.x  - this.offsetX, data.y - this.offsetY,
+				data.radialMenuSize.x, data.radialMenuSize.y, 9000);
 			var menuElem2 = createDrawingElement(data.id + "_menuWindow", "pointerItem",
-								0, 0,
-								data.radialMenuSize.x, data.radialMenuSize.y, 9001);
+				0, 0,
+				data.radialMenuSize.x, data.radialMenuSize.y, 9001);
 			var menuElem3 = createDrawingElement(data.id + "_menuWindow2", "pointerItem",
-								data.x  - this.offsetX, data.y - this.offsetY,
-								data.radialMenuSize.x, data.radialMenuSize.y, 9002);
+				data.x  - this.offsetX, data.y - this.offsetY,
+				data.radialMenuSize.x, data.radialMenuSize.y, 9002);
 
 			this.main.appendChild(menuElem1);
 			this.main.appendChild(radialMenuContentWindowDiv);
@@ -1444,6 +1465,16 @@ function UIBuilder(json_cfg, clientID) {
 			for (i = 0; i < itemlist.length; i++) {
 				itemlist[i].classList.toggle("windowItemNoBorder");
 			}
+			// Hide the partitions top bar
+			var ptnlist = document.getElementsByClassName("partitionTitle");
+			for (i = 0; i < ptnlist.length; i++) {
+				ptnlist[i].style.display = 'none';
+			}
+			// Hide the partitions background area
+			var ptntitlelist = document.getElementsByClassName("partitionArea");
+			for (i = 0; i < ptntitlelist.length; i++) {
+				ptntitlelist[i].style.display = 'none';
+			}
 			this.uiHidden = true;
 		}
 	};
@@ -1475,6 +1506,16 @@ function UIBuilder(json_cfg, clientID) {
 			var itemlist = document.getElementsByClassName("windowItem");
 			for (i = 0; i < itemlist.length; i++) {
 				itemlist[i].classList.toggle("windowItemNoBorder");
+			}
+			// Show the partitions top bar
+			var ptnlist = document.getElementsByClassName("partitionTitle");
+			for (i = 0; i < ptnlist.length; i++) {
+				ptnlist[i].style.display = 'block';
+			}
+			// Show the partitions background area
+			var ptntitlelist = document.getElementsByClassName("partitionArea");
+			for (i = 0; i < ptntitlelist.length; i++) {
+				ptntitlelist[i].style.display = 'block';
 			}
 			this.uiHidden = false;
 		}

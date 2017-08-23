@@ -218,11 +218,11 @@ var car_threejs = SAGE2_WebGLApp.extend({
 			this.renderer.setSize(this.canvas.width, this.canvas.height);
 
 			this.camera.setViewOffset(this.sage2_width, this.sage2_height,
-									resizeData.leftViewOffset, resizeData.topViewOffset,
-									resizeData.localWidth, resizeData.localHeight);
+				resizeData.leftViewOffset, resizeData.topViewOffset,
+				resizeData.localWidth, resizeData.localHeight);
 			this.cameraCube.setViewOffset(this.sage2_width, this.sage2_height,
-									resizeData.leftViewOffset, resizeData.topViewOffset,
-									resizeData.localWidth, resizeData.localHeight);
+				resizeData.leftViewOffset, resizeData.topViewOffset,
+				resizeData.localWidth, resizeData.localHeight);
 		}
 	},
 
