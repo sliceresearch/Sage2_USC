@@ -119,9 +119,21 @@ var Webview = SAGE2_App.extend({
 			_this.getFullContextMenuAndUpdate();
 		});
 
-		// done loading
+		// Error loading a page
+		// Source: https://cs.chromium.org/chromium/src/net/base/net_error_list.h
+		//
+		// ABORTED -3
+		// An operation was aborted (due to user action).
+		// BLOCKED_BY_RESPONSE -27
+		// The request failed because the response was delivered along with requirements
+		// which are not met ('X-Frame-Options' and 'Content-Security-Policy' ancestor
+		// checks, for instance).
+		// INSECURE_RESPONSE -501
+		// The server's response was insecure (e.g. there was a cert error).
+
 		this.element.addEventListener("did-fail-load", function(event) {
-			if (event.errorCode === -3 ||
+			if (event.errorCode ===   -3 ||
+				event.errorCode ===  -27 ||
 				event.errorCode === -501 ||
 				event.errorDescription === "OK") {
 				// it's a redirect

@@ -17,6 +17,10 @@
 // require variables to be declared
 "use strict";
 
+
+var StickyItems         = require('./node-stickyitems');
+var stickyAppHandler     = new StickyItems();
+
 /**
   * @class Partition
   * @constructor
@@ -109,6 +113,10 @@ Partition.prototype.addChild = function(item) {
 		this.maximizeChild(item.id);
 	}
 
+	var stickingItems = stickyAppHandler.getFirstLevelStickingItems(item);
+	for (var s in stickingItems) {
+		this.addChild(stickingItems[s]);
+	}
 	return changedPartitions;
 };
 
@@ -122,6 +130,10 @@ Partition.prototype.updateChild = function(id) {
 		item.relative_top = (item.top - this.top - titleBarHeight) / this.height;
 		item.relative_width = item.width / this.width;
 		item.relative_height = item.height / this.height;
+		var movedItems = stickyAppHandler.moveFirstLevelItemsStickingToUpdatedItem(item);
+		for (var mI in movedItems) {
+			this.updateChild(movedItems[mI].elemId);
+		}
 	}
 
 	return [this.id];
@@ -157,6 +169,10 @@ Partition.prototype.releaseChild = function(id) {
 			} else {
 				this.currentMaximizedChild = null;
 			}
+		}
+		var stickingItems = stickyAppHandler.getFirstLevelStickingItems(item);
+		for (var s in stickingItems) {
+			this.releaseChild(stickingItems[s].id);
 		}
 	}
 
@@ -206,6 +222,17 @@ Partition.prototype.toggleInnerTiling = function() {
 };
 
 /**
+  * Toggle partition tiling mode
+  *
+  */
+Partition.prototype.setColor = function (color) {
+	console.log(color);
+	this.color = color;
+};
+
+
+
+/**
   * Re-tile the apps within a partition
 	* Tiling Algorithm taken from server.js
   */
@@ -218,7 +245,12 @@ Partition.prototype.tilePartition = function() {
 	var i, c, r, key;
 	var numCols, numRows, numCells;
 
-	var numWindows = this.numChildren - (this.currentMaximizedChild ? 1 : 0);
+	var backgroundAndForegroundItems = stickyAppHandler.getListOfBackgroundAndForegroundItems(this.children);
+	var appsWithoutBackground = backgroundAndForegroundItems.backgroundItems;
+	var numAppsWithoutBackground = appsWithoutBackground.length;
+
+	// Don't use sticking items to compute number of windows.
+	var numWindows = numAppsWithoutBackground - (this.currentMaximizedChild ? 1 : 0);
 
 
 	// determine the bounds of the tiling area
@@ -234,13 +266,9 @@ Partition.prototype.tilePartition = function() {
 		height: this.height
 	};
 
-	// get set of children to run tiling on
-	var children = Object.assign({}, this.children);
+	var maxChildCopy = null;
 
 	if (this.currentMaximizedChild) {
-
-		// if a child is maximized, remove from set to tile
-		delete children[this.currentMaximizedChild];
 
 		let maxChild = this.children[this.currentMaximizedChild];
 
@@ -278,6 +306,7 @@ Partition.prototype.tilePartition = function() {
 		maxChild.top = this.top + titleBar + 4;
 		maxChild.left = this.left + 4;
 
+		maxChildCopy = Object.assign({}, maxChild);
 		this.updateChild(this.currentMaximizedChild);
 	}
 
@@ -340,8 +369,8 @@ Partition.prototype.tilePartition = function() {
 	// Caculate apps centers
 	// use a subset of children excluding maximizedChild
 
-	for (key in children) {
-		app = children[key];
+	for (key in appsWithoutBackground) {
+		app = appsWithoutBackground[key];
 		centroidsApps[key] = {x: app.left + app.width / 2.0, y: app.top + app.height / 2.0};
 	}
 	// Caculate tiles centers
@@ -361,13 +390,14 @@ Partition.prototype.tilePartition = function() {
 		}
 	}
 
-	for (key in children) {
+	for (key in appsWithoutBackground) {
 		// get the application
-		app = children[key];
+		app = appsWithoutBackground[key];
+
 		// pick a cell
 		var cellid = findMinimum(distances[key]);
 		// put infinite value to disable the chosen cell
-		for (i in children) {
+		for (i in appsWithoutBackground) {
 			distances[i][cellid] = Number.MAX_VALUE;
 		}
 
@@ -394,11 +424,19 @@ Partition.prototype.tilePartition = function() {
 
 		// broadcast('startMove', {id: updateItem.elemId, date: updateItem.date});
 		// broadcast('startResize', {id: updateItem.elemId, date: updateItem.date});
-
+		stickyAppHandler.pileItemsStickingToUpdatedItem(app);
 		this.updateChild(app.id);
-
 		// broadcast('finishedMove', {id: updateItem.elemId, date: updateItem.date});
 		// broadcast('finishedResize', {id: updateItem.elemId, date: updateItem.date});
+	}
+	//Restore maximized app's dimensions and position
+	if (this.currentMaximizedChild) {
+		let maxChild = this.children[this.currentMaximizedChild];
+		maxChild.left = maxChildCopy.left;
+		maxChild.top = maxChildCopy.top;
+		maxChild.width = maxChildCopy.width;
+		maxChild.height = maxChildCopy.height;
+		this.updateChild(this.currentMaximizedChild);
 	}
 
 	function averageWindowAspectRatio() {
@@ -410,8 +448,8 @@ Partition.prototype.tilePartition = function() {
 
 		var totAr = 0.0;
 		var key;
-		for (key in children) {
-			totAr += (children[key].width / children[key].height);
+		for (key in _this.children) {
+			totAr += (_this.children[key].width / _this.children[key].height);
 		}
 		return (totAr / num);
 	}
@@ -651,12 +689,11 @@ Partition.prototype.updateInnerLayout = function() {
 Partition.prototype.updateChildrenPositions = function() {
 	var updatedChildren = [];
 
-	var childIDs = Object.keys(this.children);
+	var backgroundAndForegroundItems = stickyAppHandler.getListOfBackgroundAndForegroundItems(this.children);
+	var appsWithoutBackground = backgroundAndForegroundItems.backgroundItems;
 	var titleBarHeight = this.partitionList.configuration.ui.titleBarHeight;
 
-	childIDs.forEach((el) => {
-		var item = this.children[el];
-
+	appsWithoutBackground.forEach((item) => {
 		item.left = item.relative_left * this.width + this.left;
 		item.top = item.relative_top * this.height + this.top + titleBarHeight;
 		item.width = item.relative_width * this.width;
@@ -941,7 +978,7 @@ Partition.prototype.updateNeighborPtnPositions = function() {
 Partition.prototype.toggleSnapping = function() {
 	this.isSnapping = !this.isSnapping;
 
-	this.updateNeighborPartitionList();
+	return this.updateNeighborPartitionList();
 };
 
 /**
@@ -949,7 +986,7 @@ Partition.prototype.toggleSnapping = function() {
 	* Partition
   */
 Partition.prototype.updateNeighborPartitionList = function() {
-	this.partitionList.updateNeighbors(this.id);
+	return this.partitionList.updateNeighbors(this.id);
 };
 
 /**
@@ -963,7 +1000,23 @@ Partition.prototype.getDisplayInfo = function() {
 		left: this.left,
 		top: this.top,
 		width: this.width,
-		height: this.height
+		height: this.height,
+
+		// snapped to other partitions
+		snapping: !this.isSnapping || !this.neighbors ? {left: false, right: false, top: false, bottom: false} : {
+			left: Object.values(this.neighbors).reduce((snapped, neighbor) => snapped || neighbor.left, false),
+			right: Object.values(this.neighbors).reduce((snapped, neighbor) => snapped || neighbor.right, false),
+			top: Object.values(this.neighbors).reduce((snapped, neighbor) => snapped || neighbor.top, false),
+			bottom: Object.values(this.neighbors).reduce((snapped, neighbor) => snapped || neighbor.bottom, false)
+		},
+
+		// anchored to sides of screen
+		anchor: {
+			left: this.snapLeft,
+			right: this.snapRight,
+			top: this.snapTop,
+			bottom: this.snapBottom
+		}
 	};
 };
 
@@ -996,6 +1049,16 @@ Partition.prototype.getTitle = function() {
   */
 Partition.prototype.getContextMenu = function() {
 	var contextMenu = [];
+
+	contextMenu.push({
+		description: "Set Color:",
+		callback: "setColor",
+		value: this.color,
+		inputField: true,
+		inputFieldSize: 7,
+		inputDefault: this.color,
+		parameters: {}
+	});
 
 	contextMenu.push({
 		description: this.innerTiling ? "Stop Tiling" : "Tile Content",

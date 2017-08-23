@@ -59,7 +59,7 @@
 		"qr-image": "latest",
 		"rbush": ">=2",
 		"request": "latest",
-		"sprint": "^0.3.1",
+		"sprint": "latest",
 		"mv": "latest",
 		"semver": "latest",
 		"fsmonitor": "latest",

@@ -686,6 +686,16 @@ SAGE2DisplayUI.prototype.updateHighlightedPartition = function(data) {
 	}
 };
 
+SAGE2DisplayUI.prototype.setPartitionColor = function (data) {
+	if (data && data.id) {
+		var ptnWindowTitle = document.getElementById(data.id + "_title");
+
+		if (ptnWindowTitle) {
+			ptnWindowTitle.style.backgroundColor = data.color;
+		}
+	}
+};
+
 /**
  * Draw a rounded rectangle
  *
