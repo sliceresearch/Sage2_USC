@@ -875,28 +875,28 @@ var SAGE2_App = Class.extend({
 	* @param data {Object} information regarding the request
 	* @param callback {function} callback for processing response
 	*/
-	sendSNMPRequest: function(request, data, callback){
+	sendSNMPRequest: function(request, data, callback) {
 		//console.log(request);
 		var key;
-		if (this.snmpResponseCallbackList[request] === null || this.snmpResponseCallbackList[request] === undefined){
+		if (this.snmpResponseCallbackList[request] === null || this.snmpResponseCallbackList[request] === undefined) {
 			this.snmpResponseCallbackList[request] = {};
 		}
 		key = Object.keys(this.snmpResponseCallbackList[request]).length;
 		data.requestNumber = key;
 		//console.log(data);
-		wsio.emit('snmpRequest', {request:request, requestNumber:key, data:data,appId:this.id});
+		wsio.emit('snmpRequest', {request: request, requestNumber: key, data: data, appId: this.id});
 		this.snmpResponseCallbackList[request][key] = callback;
 	},
 
-	processSNMPResponse: function(data){
+	processSNMPResponse: function(data) {
 		var callback = this.snmpResponseCallbackList[data.request][data.requestNumber];
-		if (callback !== null && callback !== undefined){
-			callback(data.error,data.data);
+		if (callback !== null && callback !== undefined) {
+			callback(data.error, data.data);
 			delete this.snmpResponseCallbackList[data.request][data.requestNumber];
 		}
 	},
 
-	requestAppMonitoring: function(){
+	requestAppMonitoring: function() {
 		wsio.emit('requestSAGE2AppMonitoring', {appId: this.id});
 	},
 

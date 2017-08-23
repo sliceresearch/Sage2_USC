@@ -72,7 +72,7 @@ var Sage2ItemList       = require('./src/node-sage2itemlist');    // list of SAG
 var Sagepointer         = require('./src/node-sagepointer');      // handles sage pointers (creation, location, etc.)
 var StickyItems         = require('./src/node-stickyitems');
 var registry            = require('./src/node-registry');        // Registry Manager
-var snmpManager			= require('./src/node-snmp');			 // snmp functionality
+var SNMPManager			= require('./src/node-snmp');			 // snmp functionality
 var FileBufferManager	= require('./src/node-filebuffer');
 var PartitionList	= require('./src/node-partitionlist');    // list of SAGE2 Partitions
 
@@ -618,7 +618,7 @@ var remoteSharingSessions      = {};
 var stickyAppHandler     = new StickyItems();
 
 // Handles snmp requests from apps
-var snmp = new snmpManager();
+var snmp = new SNMPManager();
 
 //
 // Catch the uncaught errors that weren't wrapped in a domain or try catch statement
@@ -9205,15 +9205,15 @@ function showOrHideWidgetLinks(data) {
 	}
 }
 
-function wsProcessSNMPRequest(wsio, data){
+function wsProcessSNMPRequest(wsio, data) {
 	//console.log(data);
-	var callback = function(data){
+	var callback = function(data) {
 		broadcast('responseToSNMPRequest', data);
 	};
 	snmp.process(data.request, data.requestNumber, data.appId, data.data, callback);
 }
 
-function wsRequestSAGE2AppMonitoring(wsio, data){
+function wsRequestSAGE2AppMonitoring(wsio, data) {
 	broadcast('enableSAGE2AppMonitoring', data);
 }
 
