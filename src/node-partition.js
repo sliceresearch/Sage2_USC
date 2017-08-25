@@ -222,11 +222,9 @@ Partition.prototype.toggleInnerTiling = function() {
 };
 
 /**
-  * Toggle partition tiling mode
-  *
+  * Set partition background color
   */
 Partition.prototype.setColor = function (color) {
-	console.log(color);
 	this.color = color;
 };
 
@@ -1051,10 +1049,26 @@ Partition.prototype.getContextMenu = function() {
 	var contextMenu = [];
 
 	contextMenu.push({
-		description: "Set Color:",
+		description: "Set Color: ",
 		callback: "setColor",
 		value: this.color,
 		inputField: true,
+		// color input field (special input)
+		inputColor: true,
+		colorChoices: [
+			'#a6cee3',
+			'#1f78b4',
+			'#b2df8a',
+			'#33a02c',
+			'#fb9a99',
+			'#e31a1c',
+			'#fdbf6f',
+			'#ff7f00',
+			'#cab2d6',
+			'#6a3d9a',
+			'#ffff99',
+			'#b15928'
+		],
 		inputFieldSize: 7,
 		inputDefault: this.color,
 		parameters: {}

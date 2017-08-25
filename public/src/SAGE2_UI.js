@@ -2595,6 +2595,27 @@ function setAppContextMenuEntries(data) {
 			inputField.id = workingDiv.id + "Input";
 			// check if the data has a value field
 			inputField.defaultValue = entriesToAdd[i].value || "";
+			// special case to use color input type
+			if (entriesToAdd[i].inputColor) {
+				inputField.type = "color";
+
+				if (entriesToAdd[i].colorChoices) {
+					// inputField.list = entriesToAdd[i].colorChoices;
+					inputField.setAttribute('list', workingDiv.id + "Colors");
+
+					let colorList = document.createElement("datalist");
+					colorList.id = workingDiv.id + "Colors";
+
+					for (let color of entriesToAdd[i].colorChoices) {
+						let opt = document.createElement("option");
+						opt.value = color;
+
+						colorList.appendChild(opt);
+					}
+
+					workingDiv.appendChild(colorList);
+				}
+			}
 			if (entriesToAdd[i].inputFieldSize) {
 				// if specified state input field size
 				inputField.size = entriesToAdd[i].inputFieldSize;

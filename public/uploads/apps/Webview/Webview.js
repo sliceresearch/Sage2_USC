@@ -219,6 +219,9 @@ var Webview = SAGE2_App.extend({
 	 * @method     addPreloadFile
 	 */
 	addPreloadFile: function() {
+		if (!this.isElectron()) {
+			return; // return if not electron.
+		}
 		// if it's not running inside Electron, do not bother
 		if (!this.isElectron) {
 			return;
