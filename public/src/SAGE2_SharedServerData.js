@@ -30,28 +30,7 @@ var SAGE2SharedServerData = {
 		app.dataSourcesBeingBroadcast = [];
 		app.dataDestinationsBeingBroadcast = [];
 
-		// associate functions, app launching realated
-		app.launchAppWithValues = this.launchAppWithValues;
-		app.sendDataToChildrenApps = this.sendDataToChildrenApps;
-		app.sendDataToParentApp = this.sendDataToParentApp;
-		app.addToAppsLaunchedList = this.addToAppsLaunchedList;
-		// app to client
-		app.sendDataToClient = this.sendDataToClient;
-		// section shared data related
-		app.serverDataGetValue = this.serverDataGetValue;
-		app.serverDataSetValue = this.serverDataSetValue;
-		app.serverDataSetSourceValue = this.serverDataSetSourceValue;
-		app.serverDataBroadcastSource = this.serverDataBroadcastSource;
-		app.serverDataBroadcastDestination = this.serverDataBroadcastDestination;
-		// subscription
-		app.serverDataSubscribeToValue = this.serverDataSubscribeToValue;
-		app.serverDataSubscribeToNewValueNotification = this.serverDataSubscribeToNewValueNotification;
-		app.serverDataGetAllTrackedDescriptions = this.serverDataGetAllTrackedDescriptions;
-		// cleanup
-		app.serverDataRemoveValue = this.serverDataRemoveValue;
-		app.serverDataRemoveAllValuesGivenToServer = this.serverDataRemoveAllValuesGivenToServer;
-
-		// handle initvalues
+		// check for customLaunchParams and optionally a function to activate on next frame 
 		if (data.customLaunchParams) {
 			if (data.customLaunchParams.parent) {
 				app.parentIdOfThisApp = data.customLaunchParams.parent;
@@ -128,8 +107,6 @@ var SAGE2SharedServerData = {
 	addToAppsLaunchedList: function(appId) {
 		this.childrenAppIds.push(appId);
 	},
-
-
 
 	// -------------------------------------------------------------------------------------------------------------------------------------------------
 	// -------------------------------------------------------------------------------------------------------------------------------------------------
@@ -272,7 +249,6 @@ var SAGE2SharedServerData = {
 	// -------------------------------------------------------------------------------------------------------------------------------------------------
 	// -------------------------------------------------------------------------------------------------------------------------------------------------
 
-
 	/**
 	* Given the name of the variable, will ask server to send value each time it is assigned.
 	* Notifications will be sent to callback.
@@ -342,7 +318,6 @@ var SAGE2SharedServerData = {
 	// -------------------------------------------------------------------------------------------------------------------------------------------------
 	// -------------------------------------------------------------------------------------------------------------------------------------------------
 
-
 	/**
 	* Given the name of the variable, remove variable from server.
 	* Expectation is this is not called by user (but the option is there) instead as part of cleanup on quit().
@@ -408,5 +383,46 @@ var SAGE2SharedServerData = {
 			}
 		}
 		return callbackName;
+	},
+
+	// -------------------------------------------------------------------------------------------------------------------------------------------------
+	// -------------------------------------------------------------------------------------------------------------------------------------------------
+
+	/**
+	* Adds the shared data functionality to the SAGE2_App class.
+	* Here instead of the SAGE2_App file for easy removal / grouping of functionality.
+	*
+	* @method addToAppClass
+	*/
+	addToAppClass: function() {
+		if (!SAGE2_App) { // add if exists, otherwise wait for next frame
+			window.requestAnimationFrame(SAGE2SharedServerData.addToAppClass);
+			return;
+		}
+		SAGE2_App.prototype.launchAppWithValues = SAGE2SharedServerData.launchAppWithValues;
+		SAGE2_App.prototype.sendDataToChildrenApps = SAGE2SharedServerData.sendDataToChildrenApps;
+		SAGE2_App.prototype.sendDataToParentApp = SAGE2SharedServerData.sendDataToParentApp;
+		SAGE2_App.prototype.addToAppsLaunchedList = SAGE2SharedServerData.addToAppsLaunchedList;
+		// app to client
+		SAGE2_App.prototype.sendDataToClient = SAGE2SharedServerData.sendDataToClient;
+		// section shared data related
+		SAGE2_App.prototype.serverDataGetValue = SAGE2SharedServerData.serverDataGetValue;
+		SAGE2_App.prototype.serverDataSetValue = SAGE2SharedServerData.serverDataSetValue;
+		SAGE2_App.prototype.serverDataSetSourceValue = SAGE2SharedServerData.serverDataSetSourceValue;
+		SAGE2_App.prototype.serverDataBroadcastSource = SAGE2SharedServerData.serverDataBroadcastSource;
+		SAGE2_App.prototype.serverDataBroadcastDestination = SAGE2SharedServerData.serverDataBroadcastDestination;
+		// subscription
+		SAGE2_App.prototype.serverDataSubscribeToValue = SAGE2SharedServerData.serverDataSubscribeToValue;
+		SAGE2_App.prototype.serverDataSubscribeToNewValueNotification =
+			SAGE2SharedServerData.serverDataSubscribeToNewValueNotification;
+		SAGE2_App.prototype.serverDataGetAllTrackedDescriptions = SAGE2SharedServerData.serverDataGetAllTrackedDescriptions;
+		// cleanup
+		SAGE2_App.prototype.serverDataRemoveValue = SAGE2SharedServerData.serverDataRemoveValue;
+		SAGE2_App.prototype.serverDataRemoveAllValuesGivenToServer =
+			SAGE2SharedServerData.serverDataRemoveAllValuesGivenToServer;
 	}
+
 };
+
+// add functions to app prototype
+SAGE2SharedServerData.addToAppClass();
