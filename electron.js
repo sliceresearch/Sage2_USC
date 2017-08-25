@@ -45,7 +45,7 @@ commander
 	.option('-d, --display <n>',         'Display client ID number (int)', parseInt, 0)
 	.option('-f, --fullscreen',          'Fullscreen (boolean)', false)
 	.option('-m, --monitor <n>',         'Select a monitor (int)', myParseInt, null)
-	.option('-n, --no_decoration', 'Remove window decoration (boolean)', false)
+	.option('-n, --no_decoration',       'Remove window decoration (boolean)', false)
 	.option('-p, --plugins',             'Enables plugins and flash (boolean)', false)
 	.option('-s, --server <s>',          'Server URL (string)', 'http://localhost:9292')
 	.option('-u, --ui',                  'Open the user interface (instead of display)', false)
@@ -234,13 +234,9 @@ function createWindow() {
 			allowDisplayingInsecureContent: (commander.allowDisplayingInsecure) ? true : false,
 			allowRunningInsecureContent: (commander.allowRunningInsecure) ? true : false,
 			// note to self: this enables things like the CSS grid. add a commander option up top for enable / disable on start.
-			experimentalFeatures: (commander.experimentalFeatures) ? true : false,
+			experimentalFeatures: (commander.experimentalFeatures) ? true : false
 		}
 	};
-
-	console.log("display insecure:" + options.webPreferences.allowDisplayingInsecureContent);
-	console.log("run insecure:" + options.webPreferences.allowRunningInsecureContent);
-	console.log("experimental:" + options.webPreferences.experimentalFeatures);
 
 	if (process.platform === 'darwin') {
 		// noting for now
