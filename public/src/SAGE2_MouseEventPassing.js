@@ -49,6 +49,8 @@ var SAGE2PointerToNativeMouseEvent = {
 		this.keyInputToFocusOfLastClick = bool;
 	},
 
+	electronInputIdentifier: "electronPointerAdditionForText",
+
 	/*
 	Calls made to this should be placed within the event method, all params are necessary in addition to the app id.
 	Correct appId is necessary to differentiate between pointers over different apps.
@@ -125,6 +127,7 @@ var SAGE2PointerToNativeMouseEvent = {
 
 
 		var mouseEventToPass;
+		var elemToSendKeyValuesTo;
 		var buttonValue;
 		var offsetValues = {}; // NOTE: according to MDN, this is experiemental and shouldn't be used in production.
 		if (type == "pointerMove" || type == "pointerRelease" || type == "pointerPress") {
@@ -158,7 +161,6 @@ var SAGE2PointerToNativeMouseEvent = {
 		// Mouse events need to be made within their cases because the creation does extra stuff that doesn't allow easily modified return objects.
 
 		switch (type) {
-
 			case "pointerMove":
 				// if the current and previous element match, then only need to worry about sending mouse move event
 				if (point.currentElement == point.previousElement) {
@@ -358,34 +360,57 @@ var SAGE2PointerToNativeMouseEvent = {
 
 				break;
 			case "keyboard":
-				// Currently not implemented.
-
 				if (this.debug) {
 					console.log("SAGE2PointerToNativeMouseEvent> Keystroke:" + data.character + "(" + data.code + ")");
 				}
-
-				var elemToSendKeyValuesTo;
+				// send keys to last clicked element.
+				elemToSendKeyValuesTo = null;
 				if (this.keyInputToFocusOfLastClick && point.lastClickedElement != null) {
 					elemToSendKeyValuesTo = point.lastClickedElement;
 				} else {
-					elemToSendKeyValuesTo = document.activeElement;
+					// elemToSendKeyValuesTo = document.activeElement;
+					return; // active element may be in a different app.
 				}
-
-				if (elemToSendKeyValuesTo != null && elemToSendKeyValuesTo.value != null) {
+				// only if there was a clicked element and the value exists.
+				if ((elemToSendKeyValuesTo != null) && (typeof elemToSendKeyValuesTo.value === "string")) {
 					elemToSendKeyValuesTo.value += data.character;
+				} else {
+					// dispatch event changes based on up or down.
+					if (data.state === "down") {
+						mouseEventToPass = new CustomEvent("keydown", {bubbles: true});
+					} else {
+						mouseEventToPass = new CustomEvent("keyup", {bubbles: true});
+					}
+					mouseEventToPass.target = point.currentElement;
+					mouseEventToPass.keyCode = data.code;
+					mouseEventToPass.char = data.character;
 				}
-
-
 				break;
 			case "specialKey":
-				// Currently not implemented.
-
+				// needs to handle at least Delete and Backspace
+				elemToSendKeyValuesTo = null;
+				if (this.keyInputToFocusOfLastClick && point.lastClickedElement != null) {
+					elemToSendKeyValuesTo = point.lastClickedElement;
+				} else {
+					// elemToSendKeyValuesTo = document.activeElement;
+					return; // active element may be in a different app.
+				}
+				// need an element to send and it should have values
+				if (data.state === "up" && ((elemToSendKeyValuesTo != null)
+					&& (typeof elemToSendKeyValuesTo.value === "string"))
+				) {
+					// console.log("special key code:" + data.code);
+					if ((data.code === 8) || (data.code === 46)) {
+						if (typeof elemToSendKeyValuesTo.value === "string") {
+							elemToSendKeyValuesTo.value = elemToSendKeyValuesTo.value.substring(0,
+								elemToSendKeyValuesTo.value.length - 1);
+						}
+					}
+				}
 				if (this.debug) {
 					console.log("SAGE2PointerToNativeMouseEvent> specialkey:" + data.character + "(" + data.code + ")");
 				}
-
 				break;
-
 			default:
 				if (this.debug) {
 					console.log("SAGE2PointerToNativeMouseEvent> ERROR Unknown SAGE2 type:" + type);
@@ -420,7 +445,7 @@ var SAGE2PointerToNativeMouseEvent = {
 			userLabel: pointerInfo.user.label,
 			userColor: pointerInfo.user.color
 		};
-		var retval;
+		// var retval; // was used for testing;
 		if (pointerInfo.type === "pointerMove") {
 			eventData.type =  "mouseMove";
 			eventData.button = pointerInfo.data.button;
@@ -486,14 +511,19 @@ var SAGE2PointerToNativeMouseEvent = {
 				}
 			}
 			// backspace key
-			if (pointerInfo.data.code === 8 || pointerInfo.data.code === 46) {
-				if (pointerInfo.data.state === "down") {
-					// The delete is too quick potentially.
-					// Currently only allow on keyup have finer control
-				} else {
-					eventData.type =  "keyUp";
-					eventData.keyCode = "Backspace";
+			if (pointerInfo.data.state === "up" && ((pointerInfo.data.code === 8) || (pointerInfo.data.code === 46))) {
+				// get the index of the electronInputIdentifier instead of the user's pointer, since cannot associate click to pointer.
+				var indexOfApp = this.getIndexOfApp(pointerInfo.appId);
+				// create a pointer if necessary for electron erase, since unable to forward user information.
+				var indexOfPointer = this.getIndexOfPointer(indexOfApp, this.electronInputIdentifier);
+				point = this.pointerList[indexOfApp][indexOfPointer];
+				console.log("Trying to apply value change to last clicked element.");
+				console.dir(point.lastClickedElement);
+				if (point.lastClickedElement && (typeof point.lastClickedElement.value === "string")) {
+					point.lastClickedElement.value = point.lastClickedElement.value.substring(0,
+						point.lastClickedElement.value.length - 1);
 				}
+				return; // prevent standard key send.
 			}
 		} else {
 			console.log("Cannot convert unknown event: " + pointerInfo.type);
@@ -501,12 +531,14 @@ var SAGE2PointerToNativeMouseEvent = {
 		}
 		// only send if a type was defined. no type means unknown case, or special key modifier was set.
 		if (eventData.type) {
-			retval = this.webContent.sendInputEvent(eventData);
+			// retval = this.webContent.sendInputEvent(eventData);
+			// currently no known way to retrieve results of event of created event object.
+			this.webContent.sendInputEvent(eventData);
 		}
-		if (retval && this.debug) {
-			console.log("sendInputEvent returned the following");
-			console.dir(retval);
-		}
+		// if (retval && this.debug) {
+		// 	console.log("sendInputEvent returned the following");
+		// 	console.dir(retval);
+		// }
 	},
 
 	/*
@@ -1039,8 +1071,46 @@ var SAGE2PointerToNativeMouseEvent = {
 		p.mouseLeaveEventsToSend = [];
 
 		return p;
-	} // end generateNewPointer
+	}, // end generateNewPointer
 
+	/**
+	 * After detecting a click, traverse up the dom tree until getting to an app_x id to determine id.
+	 * This should be a div, that starts with "app_"[x], where [x] is a number. And className includes "windowItem".
+	 */
+	handleClickTarget: function(e) {
+		var appId = false;
+		console.log("Document click x,y:" + e.x + "," + e.y);
+		console.dir(e);
+		var currentElement = e.target;
+		var idWhole, idNumber;
+		while (!appId) {
+			if (currentElement.className.includes("windowItem")) {
+				idWhole = currentElement.id;
+				if (idWhole.indexOf("app_") === 0) {
+					idNumber = idWhole.substring(4); // app_ is 4 chars. starts at 0.
+					idNumber = parseInt(idNumber);
+					if (!isNaN(idNumber)) {
+						appId = idWhole;
+						break;
+					}
+				}
+			}
+			if (!currentElement.parentNode) {
+				break;
+			}
+			currentElement = currentElement.parentNode;
+		}
+		if (!appId) {
+			return; // dont do anything, might have been a native click.
+		}
+
+		var indexOfApp = this.getIndexOfApp(appId);
+		// create a pointer if necessary for electron erase, since unable to forward user information.
+		var indexOfPointer = this.getIndexOfPointer(indexOfApp, this.electronInputIdentifier);
+		var point = this.pointerList[indexOfApp][indexOfPointer];
+		// apply lastClickedElement to this pointer.
+		point.lastClickedElement = e.target;
+	}
 };
 
 /**
@@ -1053,3 +1123,12 @@ var SAGE2PointerToNativeMouseEvent = {
 
 */
 
+
+/**
+	Adds a click listener to track the target of app clicks for the sake of text input.
+
+*/
+
+document.addEventListener("click", (e) => {
+	SAGE2PointerToNativeMouseEvent.handleClickTarget(e);
+});
