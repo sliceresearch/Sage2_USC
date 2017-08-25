@@ -106,6 +106,7 @@ var googlemaps = SAGE2_App.extend({
 			// change default rendering
 			this.map.data.setStyle({
 				fillColor: 'green',
+				icon: this.resrcPath + 'dot.png',
 				strokeWeight: 1
 			});
 			// select raodmap
