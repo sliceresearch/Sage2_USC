@@ -2545,6 +2545,10 @@ function setRmbContextMenuEntries(data) {
 	entriesToAdd.push(closeEntry);
 	// for each entry to add, create the div, app the properties, and effects
 	var workingDiv;
+	
+	// hold pending event listeners to be attached once elements are in the DOM
+	let pendingListeners = [];
+
 	for (i = 0; i < entriesToAdd.length; i++) {
 		workingDiv = document.createElement('div');
 		// unique entry id
@@ -2579,30 +2583,65 @@ function setRmbContextMenuEntries(data) {
 		workingDiv.inputField = false;
 		if (entriesToAdd[i].inputField === true) {
 			workingDiv.inputField = true;
+			// to allow for layout of OK buttons
+			workingDiv.style.position = "relative";
 			var inputField = document.createElement('input');
 			// unique input field
 			inputField.id = workingDiv.id + "Input";
 			// check if the data has a value field
 			inputField.defaultValue = entriesToAdd[i].value || "";
-			// special case to use color input type
-			if (entriesToAdd[i].inputColor) {
-				inputField.type = "color";
+			// special case to use color/range input type
+			if (entriesToAdd[i].inputType) {
 
-				if (entriesToAdd[i].colorChoices) {
-					// inputField.list = entriesToAdd[i].colorChoices;
-					inputField.setAttribute('list', workingDiv.id + "Colors");
+				if (entriesToAdd[i].inputType === "color") {
+					inputField.type = "color";
+					inputField.classList.add("rmbColorInput");
 
-					let colorList = document.createElement("datalist");
-					colorList.id = workingDiv.id + "Colors";
-
-					for (let color of entriesToAdd[i].colorChoices) {
-						let opt = document.createElement("option");
-						opt.value = color;
-
-						colorList.appendChild(opt);
+					workingDiv.style.paddingTop = "2px";
+					workingDiv.style.paddingBottom = "2px";
+	
+					if (entriesToAdd[i].colorChoices) {
+						// inputField.list = entriesToAdd[i].colorChoices;
+						inputField.setAttribute('list', workingDiv.id + "Colors");
+	
+						let colorList = document.createElement("datalist");
+						colorList.id = workingDiv.id + "Colors";
+	
+						for (let color of entriesToAdd[i].colorChoices) {
+							let opt = document.createElement("option");
+							opt.value = color;
+	
+							colorList.appendChild(opt);
+						}
+	
+						workingDiv.appendChild(colorList);
 					}
+				} else if (entriesToAdd[i].inputType === "range") {
+					inputField.type = "range";
+					inputField.classList.add("rmbRangeInput");
 
-					workingDiv.appendChild(colorList);
+					// default range is 100
+					let range = entriesToAdd[i].sliderRange || [0, 100];
+
+					inputField.min = range[0];
+					inputField.max = range[1];					
+
+					workingDiv.style.paddingTop = "2px";
+					workingDiv.style.paddingBottom = "2px";
+
+					let valLabel = document.createElement("label");
+					valLabel.innerHTML = inputField.defaultValue;
+					valLabel.id = workingDiv.id + "Label";
+					valLabel.style.marginRight = "5px";
+					workingDiv.appendChild(valLabel);
+
+					pendingListeners.push({
+						id: inputField.id,
+						event: "input",
+						func: function () {
+							document.getElementById(valLabel.id).innerHTML = this.value;
+						}
+					})
 				}
 			}
 			if (entriesToAdd[i].inputFieldSize) {
@@ -2614,12 +2653,17 @@ function setRmbContextMenuEntries(data) {
 			// add the button effect to the input field to allow enter to send
 			workingDiv["buttonEffect" + inputField.id] =  entriesToAdd[i].buttonEffect;
 			workingDiv.appendChild(inputField);
+
 			workingDiv.innerHTML += "&nbsp&nbsp&nbsp";
 			workingDiv.inputFieldId = inputField.id;
 			// create OK button to send
 			var rmbcmeIob = document.createElement('span');
 			rmbcmeIob.innerHTML = "&nbspOK&nbsp";
+			rmbcmeIob.classList.add("inputOKButton");
 			rmbcmeIob.style.border = "1px solid black";
+			rmbcmeIob.startingBgColor = workingDiv.startingBgColor;
+			rmbcmeIob.style.background = rmbcmeIob.startingBgColor
+			
 			rmbcmeIob.inputField = true;
 			rmbcmeIob.inputFieldId = inputField.id;
 			// click effect
@@ -2660,6 +2704,14 @@ function setRmbContextMenuEntries(data) {
 		// 	rmbDiv.appendChild(document.createElement('hr'));
 		// }
 		rmbDiv.appendChild(workingDiv);
+
+		// add pending event listeners 
+		// (such as for input range, as it can't have listener bound to document.createElement reference)
+		let listener = pendingListeners.pop();
+		while (listener) {
+			document.getElementById(listener.id).addEventListener(listener.event, listener.func);
+			listener = pendingListeners.pop();
+		}
 	} // end for each entry
 } // end setRmbContextMenuEntries
 

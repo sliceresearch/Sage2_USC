@@ -9358,7 +9358,7 @@ function wsUtdCallFunctionOnApp(wsio, data) {
 			broadcast('updatePartitionColor', partitions.list[data.app].getDisplayInfo());
 		} else {
 			// invoke the other callback
-			partitions.list[data.app][data.func]();
+			partitions.list[data.app][data.func](data.parameters);
 		}
 		updatePartitionInnerLayout(partitions.list[data.app], true);
 

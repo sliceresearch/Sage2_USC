@@ -1056,7 +1056,7 @@ Partition.prototype.getContextMenu = function() {
 		value: this.color,
 		inputField: true,
 		// color input field (special input)
-		inputColor: true,
+		inputType: "color",
 		colorChoices: [
 			'#a6cee3',
 			'#1f78b4',
@@ -1073,6 +1073,17 @@ Partition.prototype.getContextMenu = function() {
 		],
 		inputFieldSize: 7,
 		inputDefault: this.color,
+		parameters: {}
+	});
+
+	contextMenu.push({
+		description: "Value: ",
+		callback: "print",
+		value: this.sliderVal || Math.ceil(10*Math.random()),
+		inputField: true,
+		// color input field (special input)
+		inputType: "range",
+		sliderRange: [1, 10],
 		parameters: {}
 	});
 
@@ -1123,6 +1134,11 @@ Partition.prototype.getContextMenu = function() {
 
 	return contextMenu;
 };
+
+Partition.prototype.print = function(data) {
+	this.sliderVal = data.clientInput;
+	console.log(this.sliderVal);
+}
 
 
 module.exports = Partition;
