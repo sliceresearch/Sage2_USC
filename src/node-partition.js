@@ -1084,7 +1084,7 @@ Partition.prototype.getContextMenu = function() {
 		// range input field (special input)
 		inputType: "range",
 		sliderRange: [1, 10],
-		parameters: {"type": 0}
+		parameters: {type: 0}
 	});
 
 	contextMenu.push({
@@ -1096,7 +1096,7 @@ Partition.prototype.getContextMenu = function() {
 		inputType: "range",
 		inputUpdateOnChange: true,
 		sliderRange: [1, 10],
-		parameters: {"type": 1}
+		parameters: {type: 1}
 	});
 
 	contextMenu.push({

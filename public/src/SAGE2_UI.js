@@ -2660,12 +2660,12 @@ function setAppContextMenuEntries(data) {
 					if (entriesToAdd[i].inputUpdateOnChange) {
 						inputField.inputField = true;
 						inputField.inputFieldId = inputField.id;
-	
+
 						// click effect
 						inputField.callback = entriesToAdd[i].callback;
 						inputField.parameters = entriesToAdd[i].parameters;
 						inputField.app = app;
-	
+
 						pendingListeners.push({
 							id: inputField.id,
 							event: "change",
