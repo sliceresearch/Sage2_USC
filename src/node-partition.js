@@ -1079,7 +1079,7 @@ Partition.prototype.getContextMenu = function() {
 	contextMenu.push({
 		description: "Value: ",
 		callback: "print",
-		value: this.sliderVal || Math.ceil(10*Math.random()),
+		value: this.sliderVal || Math.ceil(10 * Math.random()),
 		inputField: true,
 		// color input field (special input)
 		inputType: "range",
@@ -1138,7 +1138,7 @@ Partition.prototype.getContextMenu = function() {
 Partition.prototype.print = function(data) {
 	this.sliderVal = data.clientInput;
 	console.log(this.sliderVal);
-}
+};
 
 
 module.exports = Partition;

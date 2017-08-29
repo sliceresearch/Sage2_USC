@@ -2545,7 +2545,7 @@ function setRmbContextMenuEntries(data) {
 	entriesToAdd.push(closeEntry);
 	// for each entry to add, create the div, app the properties, and effects
 	var workingDiv;
-	
+
 	// hold pending event listeners to be attached once elements are in the DOM
 	let pendingListeners = [];
 
@@ -2599,21 +2599,21 @@ function setRmbContextMenuEntries(data) {
 
 					workingDiv.style.paddingTop = "2px";
 					workingDiv.style.paddingBottom = "2px";
-	
+
 					if (entriesToAdd[i].colorChoices) {
 						// inputField.list = entriesToAdd[i].colorChoices;
 						inputField.setAttribute('list', workingDiv.id + "Colors");
-	
+
 						let colorList = document.createElement("datalist");
 						colorList.id = workingDiv.id + "Colors";
-	
+
 						for (let color of entriesToAdd[i].colorChoices) {
 							let opt = document.createElement("option");
 							opt.value = color;
-	
+
 							colorList.appendChild(opt);
 						}
-	
+
 						workingDiv.appendChild(colorList);
 					}
 				} else if (entriesToAdd[i].inputType === "range") {
@@ -2624,7 +2624,7 @@ function setRmbContextMenuEntries(data) {
 					let range = entriesToAdd[i].sliderRange || [0, 100];
 
 					inputField.min = range[0];
-					inputField.max = range[1];					
+					inputField.max = range[1];
 
 					workingDiv.style.paddingTop = "2px";
 					workingDiv.style.paddingBottom = "2px";
@@ -2641,7 +2641,7 @@ function setRmbContextMenuEntries(data) {
 						func: function () {
 							document.getElementById(valLabel.id).innerHTML = this.value;
 						}
-					})
+					});
 				}
 			}
 			if (entriesToAdd[i].inputFieldSize) {
@@ -2662,8 +2662,8 @@ function setRmbContextMenuEntries(data) {
 			rmbcmeIob.classList.add("inputOKButton");
 			rmbcmeIob.style.border = "1px solid black";
 			rmbcmeIob.startingBgColor = workingDiv.startingBgColor;
-			rmbcmeIob.style.background = rmbcmeIob.startingBgColor
-			
+			rmbcmeIob.style.background = rmbcmeIob.startingBgColor;
+
 			rmbcmeIob.inputField = true;
 			rmbcmeIob.inputFieldId = inputField.id;
 			// click effect
