@@ -216,6 +216,8 @@ Partition.prototype.toggleInnerTiling = function() {
 
 	if (this.innerTiling) {
 		this.tilePartition();
+	} else {
+		this.currentMaximizedChild = null;
 	}
 
 	return [this.id];
