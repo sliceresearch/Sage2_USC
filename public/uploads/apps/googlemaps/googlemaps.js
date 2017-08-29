@@ -418,6 +418,16 @@ var googlemaps = SAGE2_App.extend({
 		entries.push(entry);
 
 		entry = {};
+		entry.description = "Zoom:";
+		entry.callback = "setZoom";
+		entry.value = this.state.zoomLevel.toString();
+		entry.inputField = true;
+		entry.inputType = "range";
+		entry.sliderRange = [0, 20];
+		entry.parameters = {};
+		entries.push(entry);
+
+		entry = {};
 		entry.description = "Save current location";
 		entry.callback = "setDefault";
 		entry.parameters = {};
@@ -435,7 +445,16 @@ var googlemaps = SAGE2_App.extend({
 	},
 
 	/**
-	 * Callback from th web ui menu (right click)
+	 * Callback from the web ui menu (right click) for zoom slider
+	*/
+	setZoom: function(msgParams) {
+		this.state.zoomLevel = parseInt(msgParams.clientInput);
+		this.map.setZoom(this.state.zoomLevel);
+		this.getFullContextMenuAndUpdate();
+	},
+
+	/**
+	 * Callback from the web ui menu (right click)
 	*/
 	setLocation: function(msgParams) {
 		// receive an object from the web ui

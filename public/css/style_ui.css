@@ -1023,7 +1023,6 @@ The z-index is very important.
 
 .rmbRangeInput {
 	margin-top: 2px;
-	margin-right: 20px;
 	-webkit-appearance: none;
 	-moz-appearance: none;
 	background-color: #ccc;
@@ -1065,4 +1064,8 @@ The z-index is very important.
 	right: 5px;
 	top: 50%;
 	transform: translateY(-50%);
+}
+
+#appContextMenu input {
+	margin-right: 20px;
 }
