@@ -423,6 +423,7 @@ var googlemaps = SAGE2_App.extend({
 		entry.value = this.state.zoomLevel.toString();
 		entry.inputField = true;
 		entry.inputType = "range";
+		entry.inputUpdateOnChange = true;
 		entry.sliderRange = [0, 20];
 		entry.parameters = {};
 		entries.push(entry);

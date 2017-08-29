@@ -2644,6 +2644,9 @@ function setAppContextMenuEntries(data) {
 					valLabel.innerHTML = inputField.defaultValue;
 					valLabel.id = workingDiv.id + "Label";
 					valLabel.style.marginRight = "5px";
+					valLabel.style.textAlign = "right";
+					valLabel.style.width = "25px";
+					valLabel.style.display = "inline-block";
 					workingDiv.appendChild(valLabel);
 
 					pendingListeners.push({
@@ -2653,6 +2656,22 @@ function setAppContextMenuEntries(data) {
 							document.getElementById(valLabel.id).innerHTML = this.value;
 						}
 					});
+
+					if (entriesToAdd[i].inputUpdateOnChange) {
+						inputField.inputField = true;
+						inputField.inputFieldId = inputField.id;
+	
+						// click effect
+						inputField.callback = entriesToAdd[i].callback;
+						inputField.parameters = entriesToAdd[i].parameters;
+						inputField.app = app;
+	
+						pendingListeners.push({
+							id: inputField.id,
+							event: "change",
+							func: entriesToAdd[i].buttonEffect.bind(inputField)
+						});
+					}
 				}
 			}
 			if (entriesToAdd[i].inputFieldSize) {

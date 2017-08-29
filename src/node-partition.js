@@ -1077,14 +1077,26 @@ Partition.prototype.getContextMenu = function() {
 	});
 
 	contextMenu.push({
-		description: "Value: ",
+		description: "OnOK: ",
 		callback: "print",
 		value: this.sliderVal || Math.ceil(10 * Math.random()),
 		inputField: true,
-		// color input field (special input)
+		// range input field (special input)
 		inputType: "range",
 		sliderRange: [1, 10],
-		parameters: {}
+		parameters: {"type": 0}
+	});
+
+	contextMenu.push({
+		description: "OnChange: ",
+		callback: "print",
+		value: this.sliderVal || Math.ceil(10 * Math.random()),
+		inputField: true,
+		// range input field (special input)
+		inputType: "range",
+		inputUpdateOnChange: true,
+		sliderRange: [1, 10],
+		parameters: {"type": 1}
 	});
 
 	contextMenu.push({
@@ -1136,6 +1148,8 @@ Partition.prototype.getContextMenu = function() {
 };
 
 Partition.prototype.print = function(data) {
+	console.log(data);
+
 	this.sliderVal = data.clientInput;
 	console.log(this.sliderVal);
 };

@@ -1022,13 +1022,12 @@ The z-index is very important.
 }
 
 .rmbRangeInput {
-	margin-top: 2px;
+	/* margin-top: 2px; */
 	-webkit-appearance: none;
 	-moz-appearance: none;
-	background-color: #ccc;
-	height: 6px;
+	background-color: #fff;
+	height: 3px;
 	width: 100px;
-	border-radius: 5px;
 	border: 1.25px solid rgba(100, 100, 100, 0.5);
 	outline-color: transparent;
 }
@@ -1037,7 +1036,7 @@ The z-index is very important.
 	-webkit-appearance: none;
 	background: #e0e0e0;
 	height: 12px;
-	width: 7px;
+	width: 8px;
 	border: 1px solid rgba(0, 0, 0, 0.5);
 	border-style: solid;
 	border-width: 1px;
@@ -1048,7 +1047,7 @@ The z-index is very important.
 	-webkit-appearance: none;
 	background: #e0e0e0;
 	height: 12px;
-	width: 7px;
+	width: 8px;
 	border: 1px solid rgba(0, 0, 0, 0.5);
 	border-style: solid;
 	border-width: 1px;
