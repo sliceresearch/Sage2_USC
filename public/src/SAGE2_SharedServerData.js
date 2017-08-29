@@ -30,7 +30,7 @@ var SAGE2SharedServerData = {
 		app.dataSourcesBeingBroadcast = [];
 		app.dataDestinationsBeingBroadcast = [];
 
-		// check for customLaunchParams and optionally a function to activate on next frame 
+		// check for customLaunchParams and optionally a function to activate on next frame
 		if (data.customLaunchParams) {
 			if (data.customLaunchParams.parent) {
 				app.parentIdOfThisApp = data.customLaunchParams.parent;

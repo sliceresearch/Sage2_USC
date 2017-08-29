@@ -99,7 +99,7 @@ var SAGE2PointerToNativeMouseEvent = {
 				this.webContent = require('electron').remote.getCurrentWebContents();
 				// debug purposes only
 				// document.addEventListener("mousemove", function (e) {
-				// 	console.dir(e);	
+				// 	console.dir(e);
 				// });
 			}
 			this.handleElectronConversion({ appId, type, position, user, data, date,
