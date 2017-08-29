@@ -87,6 +87,7 @@ body {
 .pointerItem {
 	position: absolute;
 	display: block;
+	pointer-events: none;
 
 	/* try to promote the pointer to a layer for performance */
 	will-change: transform;
