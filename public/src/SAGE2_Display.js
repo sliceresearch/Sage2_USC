@@ -1577,9 +1577,9 @@ function createAppWindow(data, parentId, titleBarHeight, titleTextSize, offsetX,
 			title: data.title,
 			application: data.application
 		};
-		// extra data that may be passed from csd app launch.
-		if (data.csdInitValues) {
-			init.csdInitValues = data.csdInitValues;
+		// extra data that may be passed from launchAppWithValues
+		if (data.customLaunchParams) {
+			init.customLaunchParams = data.customLaunchParams;
 		}
 
 		// load new app

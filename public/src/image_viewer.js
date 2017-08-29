@@ -169,15 +169,15 @@ var image_viewer = SAGE2_App.extend({
 	makeDoodle: function(responseObject) {
 		if (isMaster) {
 			var data = {};
-			data.type    = "launchAppWithValues";
 			data.appName = "doodle";
 			data.func    = "initializationThroughDuplicate";
 			data.xLaunch = this.sage2_x + 100;
 			data.yLaunch = this.sage2_y;
-			data.params  =  {};
-			data.params.clientName    = responseObject.clientName;
-			data.params.imageSnapshot = cleanURL(this.state.src || this.state.img_url);
-			wsio.emit("csdMessage", data);
+			data.customLaunchParams  =  {};
+			data.customLaunchParams.func = "initializationThroughDuplicate";
+			data.customLaunchParams.clientName    = responseObject.clientName;
+			data.customLaunchParams.imageSnapshot = cleanURL(this.state.src || this.state.img_url);
+			wsio.emit("launchAppWithValues", data);
 		}
 	},
 
