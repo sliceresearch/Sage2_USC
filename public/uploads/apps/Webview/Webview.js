@@ -43,6 +43,8 @@ var Webview = SAGE2_App.extend({
 		this.contentType = "web";
 		// Muted audio or not, only on isMaster node
 		this.isMuted = false;
+		// Is the page loading
+		this.isLoading = false;
 
 		// not sure
 		this.element.style.display = "inline-flex";
@@ -65,8 +67,12 @@ var Webview = SAGE2_App.extend({
 		// Set a session per webview, so not zoom sharing per origin
 		this.element.partition = data.id;
 
+		// initial size
 		this.element.minwidth  = data.width;
 		this.element.minheight = data.height;
+
+		// Default title
+		this.title = "Webview";
 
 		// Get the URL from parameter or session
 		var view_url = data.params || this.state.url;
@@ -110,6 +116,8 @@ var Webview = SAGE2_App.extend({
 			_this.pre.innerHTML = "";
 			// update the emulation
 			_this.updateMode();
+			_this.isLoading = true;
+			_this.changeWebviewTitle();
 		});
 
 		// done loading
@@ -124,6 +132,8 @@ var Webview = SAGE2_App.extend({
 			_this.codeInject();
 			// update the context menu with the current URL
 			_this.getFullContextMenuAndUpdate();
+			_this.isLoading = false;
+			_this.changeWebviewTitle();
 		});
 
 		// Error loading a page
@@ -139,23 +149,25 @@ var Webview = SAGE2_App.extend({
 		// The server's response was insecure (e.g. there was a cert error).
 
 		this.element.addEventListener("did-fail-load", function(event) {
+			// not loading anymore
+			_this.isLoading = false;
+			// Check the return code
 			if (event.errorCode ===   -3 ||
 				event.errorCode ===  -27 ||
 				event.errorCode === -501 ||
 				event.errorDescription === "OK") {
-				// it's a redirect
+				// it's a redirect (causes issues)
 				// _this.changeURL(event.validatedURL, false);
-				// nope
 			} else {
 				// real error
 				_this.element.src = 'data:text/html;charset=utf-8,<h1>Invalid URL</h1>';
-				_this.updateTitle('Webview');
+				_this.changeWebviewTitle();
 			}
 		});
 
 		// When the page changes its title
 		this.element.addEventListener("page-title-updated", function(event) {
-			_this.updateTitle('Webview: ' + event.title);
+			_this.changeWebviewTitle(event.title);
 		});
 
 		// When the page request fullscreen
@@ -207,6 +219,32 @@ var Webview = SAGE2_App.extend({
 
 		// Set the URL and starts loading
 		this.element.src = view_url;
+	},
+
+	/**
+	 * Change the title of the window
+	 *
+	 * @method     changeWebviewTitle
+	 * @param newtitle {String} new title
+	 */
+	changeWebviewTitle: function(newtitle) {
+		if (newtitle) {
+			// if parameter passed, we update the title
+			this.title = 'Webview: ' + newtitle;
+		}
+		var newtext = this.title;
+		// if the page has a reload timer
+		if (this.autoRefresh) {
+			// add a timer using a FontAwsome character
+			newtext += ' <i class="fa">\u{f017}</i>';
+		}
+		// if the page is loading
+		if (this.isLoading && this.contentType !== "youtube") {
+			// add a spinner using a FontAwsome character
+			newtext += ' <i class="fa fa-spinner fa-spin"></i>';
+		}
+		// call the base class method
+		this.updateTitle(newtext);
 	},
 
 	/**
@@ -528,9 +566,12 @@ var Webview = SAGE2_App.extend({
 						// send the message to the server to relay
 						_this.broadcast("reloadPage", {});
 					}, interval);
+					// change the title to add the spinner
+					this.changeWebviewTitle();
 				}
 			} else {
 				// Just reload once
+				this.isLoading = true;
 				this.element.reload();
 				this.element.setZoomFactor(this.state.zoom);
 			}
@@ -737,6 +778,7 @@ var Webview = SAGE2_App.extend({
 					// r key
 					if (data.status.ALT) {
 						// ALT-r reloads
+						this.isLoading = true;
 						this.reloadPage({});
 					}
 					this.refresh(date);
