@@ -690,7 +690,8 @@ var SAGE2_App = Class.extend({
 	updateTitle: function(title) {
 		var titleText = document.getElementById(this.id + "_text");
 		if (titleText) {
-			titleText.textContent = title;
+			// titleText.textContent = title;
+			titleText.innerHTML = title;
 		}
 	},
 
