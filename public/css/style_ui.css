@@ -1067,4 +1067,8 @@ The z-index is very important.
 
 #appContextMenu input {
 	margin-right: 20px;
+	/* position: absolute;
+	right: 40px;
+	top: 50%;
+	transform: translateY(-50%); */
 }

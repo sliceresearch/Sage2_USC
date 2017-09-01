@@ -161,7 +161,10 @@ var googlemaps = SAGE2_App.extend({
 	},
 
 	resize: function(date) {
+		this.updateCenter();
 		google.maps.event.trigger(this.map, 'resize');
+		this.map.setCenter(this.state.center);
+
 		this.refresh(date);
 	},
 
@@ -247,6 +250,8 @@ var googlemaps = SAGE2_App.extend({
 				this.scrollAmount += 64;
 			}
 
+			this.getFullContextMenuAndUpdate(); // update context menu (for zoom slider)
+
 			this.refresh(date);
 		} else if (eventType === "widgetEvent") {
 			switch (data.identifier) {
@@ -279,6 +284,8 @@ var googlemaps = SAGE2_App.extend({
 					// Setting the zoom
 					this.map.setZoom(15);
 					this.state.zoomLevel = 15;
+					this.getFullContextMenuAndUpdate(); // update context menu (for zoom slider)
+
 					break;
 				case "MapType":
 					this.changeMapType(data.value);
@@ -370,7 +377,9 @@ var googlemaps = SAGE2_App.extend({
 		delta = (delta > -1) ? 1 : -1;
 		var z = this.map.getZoom();
 		this.map.setZoom(z + delta);
+
 		this.state.zoomLevel = this.map.getZoom();
+		this.getFullContextMenuAndUpdate(); // update context menu (for zoom slider)
 	},
 
 	codeAddress: function(text) {
@@ -485,6 +494,8 @@ var googlemaps = SAGE2_App.extend({
 			// Setting the zoom
 			_this.map.setZoom(data.zoomLevel);
 			_this.state.zoomLevel = data.zoomLevel;
+			_this.getFullContextMenuAndUpdate(); // update context menu (for zoom slider)
+
 			// Set map type
 			_this.map.setMapTypeId(data.mapType);
 			_this.state.mapType = data.mapType;

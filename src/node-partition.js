@@ -1071,33 +1071,34 @@ Partition.prototype.getContextMenu = function() {
 			'#ffff99',
 			'#b15928'
 		],
+		inputUpdateOnChange: true,
 		inputFieldSize: 7,
 		inputDefault: this.color,
 		parameters: {}
 	});
 
-	contextMenu.push({
-		description: "OnOK: ",
-		callback: "print",
-		value: this.sliderVal || Math.ceil(10 * Math.random()),
-		inputField: true,
-		// range input field (special input)
-		inputType: "range",
-		sliderRange: [1, 10],
-		parameters: {type: 0}
-	});
+	// contextMenu.push({
+	// 	description: "OnOK: ",
+	// 	callback: "print",
+	// 	value: this.sliderVal || Math.ceil(10 * Math.random()),
+	// 	inputField: true,
+	// 	// range input field (special input)
+	// 	inputType: "range",
+	// 	sliderRange: [1, 10],
+	// 	parameters: {type: 0}
+	// });
 
-	contextMenu.push({
-		description: "OnChange: ",
-		callback: "print",
-		value: this.sliderVal || Math.ceil(10 * Math.random()),
-		inputField: true,
-		// range input field (special input)
-		inputType: "range",
-		inputUpdateOnChange: true,
-		sliderRange: [1, 10],
-		parameters: {type: 1}
-	});
+	// contextMenu.push({
+	// 	description: "OnChange: ",
+	// 	callback: "print",
+	// 	value: this.sliderVal || Math.ceil(10 * Math.random()),
+	// 	inputField: true,
+	// 	// range input field (special input)
+	// 	inputType: "range",
+	// 	inputUpdateOnChange: true,
+	// 	sliderRange: [1, 10],
+	// 	parameters: {type: 1}
+	// });
 
 	contextMenu.push({
 		description: this.innerTiling ? "Stop Tiling" : "Tile Content",

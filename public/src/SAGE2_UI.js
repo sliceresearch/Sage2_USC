@@ -2618,6 +2618,8 @@ function setAppContextMenuEntries(data) {
 						let colorList = document.createElement("datalist");
 						colorList.id = workingDiv.id + "Colors";
 
+						// TODO: use webix color picker
+
 						for (let color of entriesToAdd[i].colorChoices) {
 							let opt = document.createElement("option");
 							opt.value = color;
@@ -2657,23 +2659,26 @@ function setAppContextMenuEntries(data) {
 						}
 					});
 
-					if (entriesToAdd[i].inputUpdateOnChange) {
-						inputField.inputField = true;
-						inputField.inputFieldId = inputField.id;
+				}
 
-						// click effect
-						inputField.callback = entriesToAdd[i].callback;
-						inputField.parameters = entriesToAdd[i].parameters;
-						inputField.app = app;
+				if (entriesToAdd[i].inputUpdateOnChange) {
+					// bind necessary data for buttonEffect function
+					inputField.inputField = true;
+					inputField.inputFieldId = inputField.id;
 
-						pendingListeners.push({
-							id: inputField.id,
-							event: "change",
-							func: entriesToAdd[i].buttonEffect.bind(inputField)
-						});
-					}
+					// click effect
+					inputField.callback = entriesToAdd[i].callback;
+					inputField.parameters = entriesToAdd[i].parameters;
+					inputField.app = app;
+
+					pendingListeners.push({
+						id: inputField.id,
+						event: "change",
+						func: entriesToAdd[i].buttonEffect.bind(inputField) // necessary to have correct data for "this.___"
+					});
 				}
 			}
+
 			if (entriesToAdd[i].inputFieldSize) {
 				// if specified state input field size
 				inputField.size = entriesToAdd[i].inputFieldSize;
