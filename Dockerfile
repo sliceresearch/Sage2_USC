@@ -17,7 +17,7 @@ RUN     apt-get update && apt-get install -y \
 	&& rm -rf /var/lib/apt/lists/*
 
 COPY    package.json /tmp/package.json
-RUN     cd /tmp; npm install
+RUN     cd /tmp; npm install --production
 RUN     mkdir -p /sage2; cp -a /tmp/node_modules /sage2/
 
 COPY    . /sage2
