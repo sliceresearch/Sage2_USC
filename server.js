@@ -1102,13 +1102,15 @@ function initializeExistingControls(wsio) {
 	var i;
 	var uniqueID;
 	var app;
-	var zIndex;
+	// var zIndex;
 	var data;
 	var controlList = SAGE2Items.widgets.list;
 	for (i in controlList) {
 		if (controlList.hasOwnProperty(i) && SAGE2Items.applications.list.hasOwnProperty(controlList[i].appId)) {
 			data = controlList[i];
 			wsio.emit('createControl', data);
+
+			/*
 			zIndex = SAGE2Items.widgets.numItems;
 			var radialGeometry = {
 				x: data.left + (data.height / 2),
@@ -1137,6 +1139,7 @@ function initializeExistingControls(wsio) {
 				interactMgr.addGeometry(data.id, "widgets", "circle", radialGeometry, true, zIndex, data);
 			}
 			SAGE2Items.widgets.addItem(data);
+			*/
 			uniqueID = data.id.substring(data.appId.length, data.id.lastIndexOf("_"));
 			app = SAGE2Items.applications.list[data.appId];
 			addEventToUserLog(uniqueID, {type: "widgetMenu",
