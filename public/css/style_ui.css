@@ -1053,8 +1053,49 @@ The z-index is very important.
 	border-width: 1px;
 }
 
-.rmbColorInput {
-	margin-right: 20px;
+.rmbColorSwatch {
+	display: inline-block;
+	height: 16px;
+	width: 16px;
+
+	margin-bottom: -5px;
+	margin-right: 3px;
+
+	border: 1px solid gray;
+	cursor: pointer;
+}
+
+.rmbColorSwatch:hover {
+	border: 1px solid black;
+}
+
+.rmbColorPalette {
+	position: absolute;
+	top: 0px;
+	margin-top: -1px;
+	left: 100%;
+	padding: 3px;
+
+	background: inherit;
+	border: 1px solid black;
+
+	width: 100px;
+	text-align: center;
+}
+
+.rmbColorOption {
+	display: inline-block;
+	height: 16px;
+	width: 16px;
+	
+	margin: 3px;
+
+	border: 1px solid gray;
+	cursor: pointer;
+}
+
+.rmbColorOption:hover {
+	border: 1px solid black;
 }
 
 /* Keep OK buttons aligned on right side of contextMenu */

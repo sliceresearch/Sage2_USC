@@ -1051,56 +1051,6 @@ Partition.prototype.getContextMenu = function() {
 	var contextMenu = [];
 
 	contextMenu.push({
-		description: "Set Color: ",
-		callback: "setColor",
-		value: this.color,
-		inputField: true,
-		// color input field (special input)
-		inputType: "color",
-		colorChoices: [
-			'#a6cee3',
-			'#1f78b4',
-			'#b2df8a',
-			'#33a02c',
-			'#fb9a99',
-			'#e31a1c',
-			'#fdbf6f',
-			'#ff7f00',
-			'#cab2d6',
-			'#6a3d9a',
-			'#ffff99',
-			'#b15928'
-		],
-		inputUpdateOnChange: true,
-		inputFieldSize: 7,
-		inputDefault: this.color,
-		parameters: {}
-	});
-
-	// contextMenu.push({
-	// 	description: "OnOK: ",
-	// 	callback: "print",
-	// 	value: this.sliderVal || Math.ceil(10 * Math.random()),
-	// 	inputField: true,
-	// 	// range input field (special input)
-	// 	inputType: "range",
-	// 	sliderRange: [1, 10],
-	// 	parameters: {type: 0}
-	// });
-
-	// contextMenu.push({
-	// 	description: "OnChange: ",
-	// 	callback: "print",
-	// 	value: this.sliderVal || Math.ceil(10 * Math.random()),
-	// 	inputField: true,
-	// 	// range input field (special input)
-	// 	inputType: "range",
-	// 	inputUpdateOnChange: true,
-	// 	sliderRange: [1, 10],
-	// 	parameters: {type: 1}
-	// });
-
-	contextMenu.push({
 		description: this.innerTiling ? "Stop Tiling" : "Tile Content",
 		callback: "toggleInnerTiling",
 		parameters: {}
@@ -1132,6 +1082,33 @@ Partition.prototype.getContextMenu = function() {
 
 	contextMenu.push({
 		description: "separator"
+	});
+
+	contextMenu.push({
+		description: "Set Color: ",
+		callback: "setColor",
+		value: this.color,
+		inputField: true,
+		// color input field (special input)
+		inputType: "color",
+		colorChoices: [
+			'#a6cee3',
+			'#1f78b4',
+			'#b2df8a',
+			'#33a02c',
+			'#fb9a99',
+			'#e31a1c',
+			'#fdbf6f',
+			'#ff7f00',
+			'#cab2d6',
+			'#6a3d9a',
+			'#ffff99',
+			'#b15928'
+		],
+		inputUpdateOnChange: true,
+		inputFieldSize: 7,
+		inputDefault: this.color,
+		parameters: {}
 	});
 
 	contextMenu.push({

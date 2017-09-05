@@ -2605,30 +2605,76 @@ function setAppContextMenuEntries(data) {
 			if (entriesToAdd[i].inputType) {
 
 				if (entriesToAdd[i].inputType === "color") {
-					inputField.type = "color";
+					// inputField.type = "color";
+					inputField.size = 7;
 					inputField.classList.add("rmbColorInput");
 
 					workingDiv.style.paddingTop = "2px";
 					workingDiv.style.paddingBottom = "2px";
 
+					let previewSwatch = document.createElement("div");
+					previewSwatch.classList.add("rmbColorSwatch");
+					previewSwatch.id = workingDiv.id + "Swatch";
+
+					pendingListeners.push({
+						id: inputField.id,
+						event: "input",
+						func: function () {
+							document.getElementById(previewSwatch.id).style.backgroundColor = this.value;
+						}
+					});
+
+					previewSwatch.style.backgroundColor = entriesToAdd[i].value || "#abc123";
+
+					workingDiv.appendChild(previewSwatch);
+
 					if (entriesToAdd[i].colorChoices) {
-						// inputField.list = entriesToAdd[i].colorChoices;
-						inputField.setAttribute('list', workingDiv.id + "Colors");
+						let colorPalette = document.createElement("div");
+						colorPalette.id = workingDiv.id + "Palette";
+						colorPalette.classList.add("rmbColorPalette");
+						colorPalette.style.display = "none";
 
-						let colorList = document.createElement("datalist");
-						colorList.id = workingDiv.id + "Colors";
+						// queue up swatch listener to open color palette
+						pendingListeners.push({
+							id: previewSwatch.id,
+							event: "click",
+							func: function () {
+								let palette = document.getElementById(colorPalette.id);
+								let visible = palette.style.display == "initial";
 
-						// TODO: use webix color picker
+								if (visible) {
+									palette.style.display = "none";
+								} else {
+									palette.style.display = "initial";
+								}
+							}
+						});
 
 						for (let color of entriesToAdd[i].colorChoices) {
-							let opt = document.createElement("option");
-							opt.value = color;
+							let colorOption = document.createElement("div");
+							colorOption.id = workingDiv.id + "Choice_" + color.split(1);
+							colorOption.classList.add("rmbColorOption");
 
-							colorList.appendChild(opt);
+							colorOption.style.background = color;
+							colorOption.value = color;
+
+							pendingListeners.push({
+								id: colorOption.id,
+								event: "click",
+								func: function () {
+									document.getElementById(inputField.id).value = this;
+									document.getElementById(previewSwatch.id).style.background = this;
+
+									document.getElementById(colorPalette.id).style.display = "none";
+								}.bind(color) // bind color to be accessed in handler as (this)
+							});
+
+							colorPalette.appendChild(colorOption);
 						}
 
-						workingDiv.appendChild(colorList);
+						workingDiv.appendChild(colorPalette);
 					}
+
 				} else if (entriesToAdd[i].inputType === "range") {
 					inputField.type = "range";
 					inputField.classList.add("rmbRangeInput");
