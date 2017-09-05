@@ -41,24 +41,27 @@ if (args.length === 1) {
 // Generate the command line handler
 commander
 	.version(version)
-	.option('-a, --audio',         'Open the audio manager (instead of display)', false)
-	.option('-d, --display <n>',   'Display client ID number (int)', parseInt, 0)
-	.option('-f, --fullscreen',    'Fullscreen (boolean)', false)
-	.option('-m, --monitor <n>',   'Select a monitor (int)', myParseInt, null)
-	.option('-n, --no_decoration', 'Remove window decoration (boolean)', false)
-	.option('-p, --plugins',       'Enables plugins and flash (boolean)', false)
-	.option('-s, --server <s>',    'Server URL (string)', 'http://localhost:9292')
-	.option('-u, --ui',            'Open the user interface (instead of display)', false)
-	.option('-x, --xorigin <n>',   'Window position x (int)', myParseInt, 0)
-	.option('-y, --yorigin <n>',   'Window position y (int)', myParseInt, 0)
-	.option('--cache',             'Clear the cache', false)
-	.option('--console',           'Open the devtools console', false)
-	.option('--debug',             'Open the port debug protocol (port number is 9222 + clientID)', false)
-	.option('--hash <s>',          'Server password hash (string)', null)
-	.option('--height <n>',        'Window height (int)', myParseInt, 720)
-	.option('--password <s>',      'Server password (string)', null)
-	.option('--show-fps',          'Display the Chrome FPS counter', false)
-	.option('--width <n>',         'Window width (int)', myParseInt, 1280)
+	.option('-a, --audio',               'Open the audio manager (instead of display)', false)
+	.option('-d, --display <n>',         'Display client ID number (int)', parseInt, 0)
+	.option('-f, --fullscreen',          'Fullscreen (boolean)', false)
+	.option('-m, --monitor <n>',         'Select a monitor (int)', myParseInt, null)
+	.option('-n, --no_decoration',       'Remove window decoration (boolean)', false)
+	.option('-p, --plugins',             'Enables plugins and flash (boolean)', false)
+	.option('-s, --server <s>',          'Server URL (string)', 'http://localhost:9292')
+	.option('-u, --ui',                  'Open the user interface (instead of display)', false)
+	.option('-x, --xorigin <n>',         'Window position x (int)', myParseInt, 0)
+	.option('-y, --yorigin <n>',         'Window position y (int)', myParseInt, 0)
+	.option('--allowDisplayingInsecure', 'Allow displaying of insecure content (http on https)', false)
+	.option('--allowRunningInsecure',    'Allow running insecure content (scripts accessed on http vs https)', false)
+	.option('--cache',                   'Clear the cache', false)
+	.option('--console',                 'Open the devtools console', false)
+	.option('--debug',                   'Open the port debug protocol (port number is 9222 + clientID)', false)
+	.option('--experimentalFeatures',    'Enable experimental features', false)
+	.option('--hash <s>',                'Server password hash (string)', null)
+	.option('--height <n>',              'Window height (int)', myParseInt, 720)
+	.option('--password <s>',            'Server password (string)', null)
+	.option('--show-fps',                'Display the Chrome FPS counter', false)
+	.option('--width <n>',               'Window width (int)', myParseInt, 1280)
 	.parse(args);
 
 // Load the flash plugin if asked
@@ -227,9 +230,11 @@ function createWindow() {
 			webSecurity: false, // seems to be an issue on Windows
 			backgroundThrottling: false,
 			plugins: commander.plugins,
-			// allow this for or not
-			allowDisplayingInsecureContent: false,
-			allowRunningInsecureContent: false
+			// allow this for or not, mixed pages will potentially have holes if disabled.
+			allowDisplayingInsecureContent: (commander.allowDisplayingInsecure) ? true : false,
+			allowRunningInsecureContent: (commander.allowRunningInsecure) ? true : false,
+			// note to self: this enables things like the CSS grid. add a commander option up top for enable / disable on start.
+			experimentalFeatures: (commander.experimentalFeatures) ? true : false
 		}
 	};
 
