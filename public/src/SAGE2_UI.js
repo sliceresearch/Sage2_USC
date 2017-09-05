@@ -2628,52 +2628,67 @@ function setAppContextMenuEntries(data) {
 
 					workingDiv.appendChild(previewSwatch);
 
-					if (entriesToAdd[i].colorChoices) {
-						let colorPalette = document.createElement("div");
-						colorPalette.id = workingDiv.id + "Palette";
-						colorPalette.classList.add("rmbColorPalette");
-						colorPalette.style.display = "none";
+					let defaultColors = [
+						'#a6cee3',
+						'#1f78b4',
+						'#b2df8a',
+						'#33a02c',
+						'#fb9a99',
+						'#e31a1c',
+						'#fdbf6f',
+						'#ff7f00',
+						'#cab2d6',
+						'#6a3d9a',
+						'#ffff99',
+						'#b15928'
+					];
+					let colorChoices = entriesToAdd[i].colorChoices || defaultColors;
 
-						// queue up swatch listener to open color palette
+					let colorPalette = document.createElement("div");
+					colorPalette.id = workingDiv.id + "Palette";
+					colorPalette.classList.add("rmbColorPalette");
+					colorPalette.style.display = "none";
+
+					// queue up swatch listener to open color palette
+					pendingListeners.push({
+						id: previewSwatch.id,
+						event: "click",
+						func: function () {
+							let palette = document.getElementById(colorPalette.id);
+							let visible = palette.style.display == "initial";
+
+							if (visible) {
+								palette.style.display = "none";
+							} else {
+								palette.style.display = "initial";
+							}
+						}
+					});
+
+					for (let color of colorChoices) {
+						let colorOption = document.createElement("div");
+						colorOption.id = workingDiv.id + "Choice_" + color.split(1);
+						colorOption.classList.add("rmbColorOption");
+
+						colorOption.style.background = color;
+						colorOption.value = color;
+
+						// queue up palette color click listener for choosing a color
 						pendingListeners.push({
-							id: previewSwatch.id,
+							id: colorOption.id,
 							event: "click",
 							func: function () {
-								let palette = document.getElementById(colorPalette.id);
-								let visible = palette.style.display == "initial";
+								document.getElementById(inputField.id).value = this;
+								document.getElementById(previewSwatch.id).style.background = this;
 
-								if (visible) {
-									palette.style.display = "none";
-								} else {
-									palette.style.display = "initial";
-								}
-							}
+								document.getElementById(colorPalette.id).style.display = "none";
+							}.bind(color) // bind color to be accessed in handler as (this)
 						});
 
-						for (let color of entriesToAdd[i].colorChoices) {
-							let colorOption = document.createElement("div");
-							colorOption.id = workingDiv.id + "Choice_" + color.split(1);
-							colorOption.classList.add("rmbColorOption");
-
-							colorOption.style.background = color;
-							colorOption.value = color;
-
-							pendingListeners.push({
-								id: colorOption.id,
-								event: "click",
-								func: function () {
-									document.getElementById(inputField.id).value = this;
-									document.getElementById(previewSwatch.id).style.background = this;
-
-									document.getElementById(colorPalette.id).style.display = "none";
-								}.bind(color) // bind color to be accessed in handler as (this)
-							});
-
-							colorPalette.appendChild(colorOption);
-						}
-
-						workingDiv.appendChild(colorPalette);
+						colorPalette.appendChild(colorOption);
 					}
+
+					workingDiv.appendChild(colorPalette);
 
 				} else if (entriesToAdd[i].inputType === "range") {
 					inputField.type = "range";

@@ -1105,7 +1105,6 @@ Partition.prototype.getContextMenu = function() {
 			'#ffff99',
 			'#b15928'
 		],
-		inputUpdateOnChange: true,
 		inputFieldSize: 7,
 		inputDefault: this.color,
 		parameters: {}
