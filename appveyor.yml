@@ -4,6 +4,7 @@ branches:
   only:
   - master
   - perdis17
+  - remotePointer
 
 shallow_clone: true
 
