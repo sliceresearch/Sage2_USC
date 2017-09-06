@@ -8,7 +8,8 @@
 //
 // Copyright (c) 2014-2015
 
-/* global ignoreFields, SAGE2WidgetControl, SAGE2MEP, SAGE2RemoteSitePointer */
+
+/* global ignoreFields, SAGE2WidgetControl, SAGE2PointerToNativeMouseEvent, SAGE2SharedServerData, SAGE2RemoteSitePointer */
 /* global addStoredFileListEventHandler, removeStoredFileListEventHandler */
 
 /**
@@ -151,6 +152,9 @@ var SAGE2_App = Class.extend({
 		this.hasFileBuffer = false;
 		this.SAGE2CopyState(data.state);
 		this.SAGE2InitializeAppOptionsFromState();
+
+		// add serverData functions, or update later to have that file .extend() the function into SAGE2_App.
+		SAGE2SharedServerData.addSharedServerDataFunctions(this, data);
 	},
 
 	SAGE2Load: function(state, date) {
@@ -301,7 +305,7 @@ var SAGE2_App = Class.extend({
 
 			// If the app has specified, convert pointer actions into mouse events.
 			if (this.passSAGE2PointerAsMouseEvents) {
-				SAGE2MEP.processAndPassEvents(this.id, eventType, position,
+				SAGE2PointerToNativeMouseEvent.processAndPassEvents(this.id, eventType, position,
 					user_id, data, date);
 			}
 
@@ -721,7 +725,8 @@ var SAGE2_App = Class.extend({
 	updateTitle: function(title) {
 		var titleText = document.getElementById(this.id + "_text");
 		if (titleText) {
-			titleText.textContent = title;
+			// titleText.textContent = title;
+			titleText.innerHTML = title;
 		}
 	},
 
@@ -775,6 +780,8 @@ var SAGE2_App = Class.extend({
 		}
 		// hide remote pointers if any
 		SAGE2RemoteSitePointer.appQuitHidePointers(this);
+		// remove values placed on server
+		this.serverDataRemoveAllValuesGivenToServer();
 	},
 
 	/**
@@ -947,40 +954,40 @@ var SAGE2_App = Class.extend({
 	getFullContextMenuAndUpdate: function() {
 		// Send one update to the server
 		if (isMaster) {
-			var rmbData = {};
-			rmbData.app = this.id;
+			var appContextMenu = {};
+			appContextMenu.app = this.id;
 			// If the application defines a menu function, use it
 			if (typeof this.getContextEntries === "function") {
-				rmbData.entries = this.getContextEntries();
-				rmbData.entries.push({
+				appContextMenu.entries = this.getContextEntries();
+				appContextMenu.entries.push({
 					description: "separator"
 				});
-				rmbData.entries.push({
+				appContextMenu.entries.push({
 					description: "Send to back",
 					callback: "SAGE2SendToBack",
 					parameters: {}
 				});
-				rmbData.entries.push({
+				appContextMenu.entries.push({
 					description: "Maximize",
 					callback: "SAGE2Maximize",
 					parameters: {}
 				});
-				rmbData.entries.push({
+				appContextMenu.entries.push({
 					description: "separator"
 				});
-				rmbData.entries.push({
+				appContextMenu.entries.push({
 					description: "Close " + (this.title || "application"),
 					callback: "SAGE2DeleteElement",
 					parameters: {}
 				});
 			} else {
-				rmbData.entries = [{
+				appContextMenu.entries = [{
 					description: "Close application",
 					callback: "SAGE2DeleteElement",
 					parameters: {}
 				}];
 			}
-			wsio.emit("dtuRmbContextMenuContents", rmbData);
+			wsio.emit("appContextMenuContents", appContextMenu);
 		}
 	},
 

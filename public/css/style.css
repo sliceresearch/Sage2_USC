@@ -87,6 +87,7 @@ body {
 .pointerItem {
 	position: absolute;
 	display: block;
+	pointer-events: none;
 
 	/* try to promote the pointer to a layer for performance */
 	will-change: transform;
@@ -307,4 +308,26 @@ body {
   50% {
     opacity: 1.0;
   }
+}
+
+/* from FontAwsome */
+.fa {
+  display: inline-block;
+  font: normal normal normal 14px/1 FontAwesome;
+  font-size: inherit;
+  text-rendering: auto;
+}
+.fa-spin {
+  animation: fa-spin 2s infinite linear;
+}
+@keyframes fa-spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(359deg);
+  }
+}
+.fa-spinner:before {
+  content: "\f110";
 }

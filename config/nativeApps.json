@@ -20,6 +20,7 @@
                 "image/webp",
                 "image/png",
                 "image/bmp",
+                "image/x-ms-bmp",
                 "image/gif",
                 "image/tiff",
                 "image/svg",

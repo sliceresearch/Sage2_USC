@@ -626,6 +626,18 @@ function setupListeners() {
 			}
 		}
 	});
+	wsio.on('updatePartitionColor', function(data) {
+		if (data && partitions.hasOwnProperty(data.id)) {
+			partitions[data.id].updateColor(data.color);
+		}
+	});
+	wsio.on('updatePartitionSnapping', function(data) {
+		if (data && partitions.hasOwnProperty(data.id)) {
+			partitions[data.id].setSnappedBorders(data.snapping);
+			partitions[data.id].setAnchoredBorders(data.anchor);
+			partitions[data.id].updateBorders();
+		}
+	});
 
 	wsio.on('createAppWindowInDataSharingPortal', function(data) {
 		var portal = dataSharingPortals[data.portal];
@@ -1570,9 +1582,9 @@ function createAppWindow(data, parentId, titleBarHeight, titleTextSize, offsetX,
 			title: data.title,
 			application: data.application
 		};
-		// extra data that may be passed from csd app launch.
-		if (data.csdInitValues) {
-			init.csdInitValues = data.csdInitValues;
+		// extra data that may be passed from launchAppWithValues
+		if (data.customLaunchParams) {
+			init.customLaunchParams = data.customLaunchParams;
 		}
 
 		// load new app
