@@ -109,22 +109,5 @@ artifacts:
   - path: sage2-win64-$(APPVEYOR_BUILD_VERSION)-$(APPVEYOR_REPO_BRANCH).exe
     name: sage2-win64
 
-deploy:
-  - provider: FTP
-    host: ftp.sagecommons.org
-    protocol: ftp
-    username: upload@sagecommons.org
-    password:
-      secure: L4I4NkKN7mrQww7GgwPLrA==
-    folder: /
-    artifact: sage2-win64
 
-notifications:
-  - provider: Slack
-    channel: '#appveyor'
-    auth_token:
-      secure: zWPzLLrh/2HV3lXJd9q5XHTy015slI7x1ptyvmOARG2TXpeftHtzKbtzxufzpVBirSHrvr95vgBR+ouSX+KQHceIPeAXEJEBXvA7wHZS7ng=
-    on_build_success: true
-    on_build_failure: true
-    on_build_status_changed: true
 
