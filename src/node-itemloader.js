@@ -465,12 +465,7 @@ AppLoader.prototype.loadPdfFromFile = function(file, mime_type, aUrl, external_u
 			doc_url: external_url,
 			currentPage: 1,
 			numberOfPageToShow: 1,
-			resizeValue: 1,
-			previousResizeValue: 1,
-			thumbnailHeight: 0,
-			thumbnailHorizontalPosition: 0,
 			horizontalOffset: 0,
-			marginButton: 5,
 			showingThumbnails: false
 		},
 

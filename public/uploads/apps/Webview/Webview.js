@@ -120,20 +120,44 @@ var Webview = SAGE2_App.extend({
 			_this.changeWebviewTitle();
 		});
 
-		// done loading
-		this.element.addEventListener("did-finish-load", function() {
+		// Intent to navigate: allows quick sync when the webview is shared
+		this.element.addEventListener("will-navigate", function(evt) {
 			// save the url
-			_this.state.url = _this.element.src;
+			_this.state.url = evt.url;
 			// set the zoom value
 			_this.element.setZoomFactor(_this.state.zoom);
 			// sync the state object
-			_this.SAGE2Sync(false);
+			_this.SAGE2Sync(true);
+		});
+
+		// done loading
+		this.element.addEventListener("did-finish-load", function() {
 			// code injection to support key translation
 			_this.codeInject();
 			// update the context menu with the current URL
 			_this.getFullContextMenuAndUpdate();
 			_this.isLoading = false;
 			_this.changeWebviewTitle();
+		});
+
+		// To handle navigation whithin the page (ie. anchors)
+		this.element.addEventListener("did-navigate-in-page", function(evt) {
+			// save the url
+			_this.state.url = evt.url;
+			// set the zoom value
+			_this.element.setZoomFactor(_this.state.zoom);
+			// sync the state object
+			_this.SAGE2Sync(true);
+		});
+
+		// To handle navigation with history: back and forward
+		this.element.addEventListener("did-navigate", function(evt) {
+			// save the url
+			_this.state.url = evt.url;
+			// set the zoom value
+			_this.element.setZoomFactor(_this.state.zoom);
+			// sync the state object
+			_this.SAGE2Sync(true);
 		});
 
 		// Error loading a page
@@ -157,7 +181,7 @@ var Webview = SAGE2_App.extend({
 				event.errorCode === -501 ||
 				event.errorDescription === "OK") {
 				// it's a redirect (causes issues)
-				// _this.changeURL(event.validatedURL, false);
+				// _this.changeURL(event.validatedURL, true);
 			} else {
 				// real error
 				_this.element.src = 'data:text/html;charset=utf-8,<h1>Invalid URL</h1>';
@@ -185,7 +209,6 @@ var Webview = SAGE2_App.extend({
 		// Emitted when page receives favicon urls
 		this.element.addEventListener("page-favicon-updated", function(event) {
 			if (event.favicons && event.favicons[0]) {
-				console.log('Webview>	page-favicon-updated', event.favicons, event.favicons[0]);
 				_this.state.favicon = event.favicons[0];
 				// sync the state object
 				_this.SAGE2Sync(false);
@@ -204,7 +227,7 @@ var Webview = SAGE2_App.extend({
 			// only accept http protocols
 			if (event.url.startsWith('http:') || event.url.startsWith('https:')) {
 				// Do not open a new view, just navigate to the new URL
-				_this.changeURL(event.url, false);
+				_this.changeURL(event.url, true);
 				// Request a new webview application
 				// wsio.emit('openNewWebpage', {
 				// 	// should be uniqueID, but no interactor object here
@@ -287,6 +310,7 @@ var Webview = SAGE2_App.extend({
 		this.element.preload = "file://" + preloadPath;
 	},
 
+	// Sync event when shared
 	load: function(date) {
 		// sync the change
 		this.element.src = this.state.url;

@@ -230,10 +230,9 @@ function createWindow() {
 			webSecurity: false, // seems to be an issue on Windows
 			backgroundThrottling: false,
 			plugins: commander.plugins,
-			// allow this for or not, mixed pages will potentially have holes if disabled.
-			allowDisplayingInsecureContent: (commander.allowDisplayingInsecure) ? true : false,
-			allowRunningInsecureContent: (commander.allowRunningInsecure) ? true : false,
-			// note to self: this enables things like the CSS grid. add a commander option up top for enable / disable on start.
+			allowDisplayingInsecureContent: false,
+			allowRunningInsecureContent: false,
+			// this enables things like the CSS grid. add a commander option up top for enable / disable on start.
 			experimentalFeatures: (commander.experimentalFeatures) ? true : false
 		}
 	};
