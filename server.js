@@ -3029,8 +3029,8 @@ function wsLoadApplication(wsio, data) {
 
 		handleNewApplication(appInstance, null);
 
-		// If not deleted it will be given on display client refresh/connect, or is that a good thing?
-		delete appInstance.customLaunchParams;
+		// By not deleting it will be given whenever display client refreshes/connect
+		// delete appInstance.customLaunchParams;
 
 		addEventToUserLog(data.user, {type: "openApplication", data:
 			{application: {id: appInstance.id, type: appInstance.application}}, time: Date.now()});
