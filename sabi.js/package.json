@@ -25,7 +25,7 @@
 	"dependencies": {
 		"http-auth": "latest",
 		"json5": "latest",
-		"mime": "latest",
+		"mime": "^1",
 		"socket.io": "^2",
 		"sprint": "latest",
 		"serialport": "latest",
