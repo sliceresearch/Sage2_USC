@@ -9,8 +9,11 @@
 // Copyright (c) 2014
 
 /**
+ * Mime type association for files and applications
+ *
  * @module server
  * @submodule registry
+ * @requires json5, node-json-db, mime
  */
 
 // require variables to be declared
@@ -57,20 +60,39 @@ RegistryManager.prototype.initialize = function(assetsFolder) {
 	if (!sageutils.fileExists(this.mimeFile)) {
 		fs.writeFileSync(this.mimeFile, "");
 	}
-	mime.load(path.join(this.mimeFile));
+
+	// Load the SAGE2 applications file association
+	// mime.load(path.join(this.mimeFile));
+
+	// mime version 2 removed the load function
+	var content = fs.readFileSync(path.join(this.mimeFile), 'ascii');
+	// split the file content in lines
+	var lines   = content.split(/[\r\n]+/);
+	lines.forEach(function(line) {
+		// Clean up whitespace/comments, and split into fields
+		var fields = line.replace(/\s*#.*|^\s*|\s*$/g, '').split(/\s+/);
+		// if we get a valid line with two fields
+		if (fields.length === 2) {
+			let obj = {};
+			// create an association object such as {'application/360': ['360']}
+			obj[fields[0]] = [fields[1]];
+			// add the new association, true means can overwrite
+			mime.define(obj, true);
+		}
+	});
 
 	this.scanNativeApps();
 };
 
 RegistryManager.prototype.mimeRegister = function(fileType) {
-	var type = mime.lookup(fileType);
+	var type = mime.getType(fileType);
 
 	if (type === undefined || type === null || type === "" || type === 'application/custom') {
 		var map = {};
 		map['application/' + fileType] = [fileType];
 		mime.define(map);
 		fs.appendFileSync(this.mimeFile, 'application/' + fileType + ' ' + fileType + '\n');
-		type = mime.lookup(fileType);
+		type = mime.getType(fileType);
 	}
 	return type;
 };
@@ -135,12 +157,12 @@ RegistryManager.prototype.push = function(key, value, overwrite) {
 };
 
 RegistryManager.prototype.getMimeType = function(file) {
-	return mime.lookup(file);
+	return mime.getType(file);
 };
 
 RegistryManager.prototype.getDefaultApp = function(file) {
 	var defaultApp = "";
-	var type = '/' + mime.lookup(file);
+	var type = '/' + mime.getType(file);
 	try {
 		defaultApp = this.db.getData(type + '/default');
 	} catch (error) {
@@ -164,7 +186,7 @@ RegistryManager.prototype.getDefaultAppFromMime = function(type) {
 
 RegistryManager.prototype.getDirectory = function(file) {
 	var dir = "";
-	var type = '/' + mime.lookup(file);
+	var type = '/' + mime.getType(file);
 	try {
 		dir = this.db.getData(type + '/directory');
 	} catch (error) {
