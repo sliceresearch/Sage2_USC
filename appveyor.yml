@@ -27,8 +27,8 @@ init:
   - dir C:\Dev\ffmpeg-win64-dev\lib
 
 install:
-  - ps: Get-NodeJsLatestBuild 8.1
-  - ps: Install-Product node 8.1.4 x64
+  - ps: Get-NodeJsLatestBuild 8.4
+  - ps: Install-Product node 8.4.0 x64
   - dir C:\avvm\node
   - node -v
   - cd %APPVEYOR_BUILD_FOLDER%

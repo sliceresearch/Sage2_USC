@@ -54,7 +54,7 @@
 		"gm": "latest",
 		"imageinfo": "latest",
 		"json5": "latest",
-		"mime": "^1",
+		"mime": "latest",
 		"node-json-db": "latest",
 		"qr-image": "latest",
 		"rbush": ">=2",

@@ -408,8 +408,8 @@ HttpServer.prototype.onreq = function(req, res) {
 			//
 
 			// Set the mime type
-			var fileMime = mime.lookup(pathname);
-			var charFile = mime.charsets.lookup(fileMime);
+			var fileMime = mime.getType(pathname);
+			var charFile;
 			if (fileMime === "image/svg+xml" || fileMime === "application/manifest+json") {
 				charFile = "UTF-8";
 			}

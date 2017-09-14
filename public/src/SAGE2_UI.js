@@ -2207,10 +2207,11 @@ function noBackspace(event) {
 		// if keystrokes not captured and pressing  down '?'
 		//    then show help
 		webix.modalbox({
-			title: "Mouse and keyboard operations and shortcuts",
+			title: "Mouse and keyboard operations",
 			buttons: ["Ok"],
 			text: "<img src=/images/cheat-sheet.jpg width=100%>",
-			width: "90%"
+			width: "75%",
+			height: "75%"
 		});
 	}
 	return true;
