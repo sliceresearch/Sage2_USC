@@ -19,7 +19,6 @@ RUN     apt-get update && apt-get install -y \
 	&& rm -rf /var/lib/apt/lists/*
 
 COPY    package.json /tmp/package.json
-COPY    bin/docker_startup.sh /root/.bashrc
 RUN     cd /tmp; npm install --production
 RUN     mkdir -p /sage2; cp -a /tmp/node_modules /sage2/
 
@@ -29,6 +28,9 @@ ENV SET_CONTAINER_TIMEZONE true
 ENV CONTAINER_TIMEZONE America/Chicago
 
 COPY    . /sage2
+
+RUN     /sage2/bin/docker_set_timezone.sh
+
 EXPOSE  9090
 EXPOSE  9292
 WORKDIR /sage2
