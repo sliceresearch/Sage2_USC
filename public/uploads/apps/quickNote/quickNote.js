@@ -313,10 +313,23 @@ var quickNote = SAGE2_App.extend({
 		var entry;
 
 		entry = {};
+		entry.description = "Edit Note";
+		entry.callback    = "SAGE2_editQuickNote";
+		entry.parameters  = {
+			currentContent: this.state.clientInput,
+			currentColorChoice: this.state.colorChoice
+		};
+		entries.push(entry);
+
+		entries.push({description: "separator"});
+
+		entry = {};
 		entry.description = "Duplicate";
 		entry.callback    = "duplicate";
 		entry.parameters  = {};
 		entries.push(entry);
+
+		entries.push({description: "separator"});
 
 		entry = {};
 		entry.description = "Blue";
@@ -359,16 +372,6 @@ var quickNote = SAGE2_App.extend({
 		entry.parameters  = { color: "lightsalmon"};
 		entry.entryColor  = "lightsalmon";
 		entries.push(entry);
-
-		entry = {};
-		entry.description = "Change Note:";
-		entry.callback    = "setMessage";
-		entry.parameters  = {};
-		entry.inputField  = true;
-		entry.inputFieldSize = 20;
-		entries.push(entry);
-
-		entries.push({description: "separator"});
 
 		entries.push({
 			description: "Copy content to clipboard",
