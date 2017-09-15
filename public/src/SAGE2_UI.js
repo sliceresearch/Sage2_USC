@@ -2554,262 +2554,288 @@ function setAppContextMenuEntries(data) {
 		hideAppContextMenuDiv();
 	};
 	entriesToAdd.push(closeEntry);
-	// for each entry to add, create the div, app the properties, and effects
-	var workingDiv;
+
+	// // for each entry to add, create the div, app the properties, and effects
+	// var workingDiv;
 
 	// hold pending event listeners to be attached once elements are in the DOM
-	let pendingListeners = [];
+	let contextMenuDiv = document.getElementById('appContextMenu');
 
 	for (i = 0; i < entriesToAdd.length; i++) {
-		workingDiv = document.createElement('div');
-		// unique entry id
-		workingDiv.id = 'appContextMenuEntry' + i;
-		if (typeof entriesToAdd[i].entryColor === "string") {
-			// use given color if specified
-			workingDiv.startingBgColor = entriesToAdd[i].entryColor;
-		} else {
-			// start as off-white color
-			workingDiv.startingBgColor = "#FFF8E1";
-		}
-		workingDiv.style.background = workingDiv.startingBgColor;
-		// Add a little padding
-		workingDiv.style.padding = "0 5px 0 5px";
-		// Align main text to the left
-		workingDiv.style.textAlign = "left";
-		// special case for a separator (line) entry
-		if (entriesToAdd[i].description === "separator") {
-			workingDiv.innerHTML = "<hr>";
-		} else {
-			if (entriesToAdd[i].accelerator) {
-				// Add description of the keyboard shortcut
-				workingDiv.innerHTML = "<p style='float: left;'>" + entriesToAdd[i].description + "</p>";
-				workingDiv.innerHTML += "<p style='float: right; padding-left: 5px;'> [" + entriesToAdd[i].accelerator + "]</p>";
-				workingDiv.innerHTML += "<div style='clear: both;'></div>";
-			} else {
-				// or just plain text
-				workingDiv.innerHTML = entriesToAdd[i].description;
-			}
-		}
-		// add input field if app says to.
-		workingDiv.inputField = false;
-		if (entriesToAdd[i].inputField === true) {
-			workingDiv.inputField = true;
-			// to allow for layout of OK buttons
-			workingDiv.style.position = "relative";
-			var inputField = document.createElement('input');
-			// unique input field
-			inputField.id = workingDiv.id + "Input";
-			// check if the data has a value field
-			inputField.defaultValue = entriesToAdd[i].value || "";
-			// special case to use color/range input type
-			if (entriesToAdd[i].inputType) {
-
-				if (entriesToAdd[i].inputType === "color") {
-					// inputField.type = "color";
-					inputField.size = 7;
-					inputField.classList.add("rmbColorInput");
-
-					workingDiv.style.paddingTop = "2px";
-					workingDiv.style.paddingBottom = "2px";
-
-					let previewSwatch = document.createElement("div");
-					previewSwatch.classList.add("rmbColorSwatch");
-					previewSwatch.id = workingDiv.id + "Swatch";
-
-					pendingListeners.push({
-						id: inputField.id,
-						event: "input",
-						func: function () {
-							document.getElementById(previewSwatch.id).style.backgroundColor = this.value;
-						}
-					});
-
-					previewSwatch.style.backgroundColor = entriesToAdd[i].value || "#abc123";
-
-					workingDiv.appendChild(previewSwatch);
-
-					let defaultColors = [
-						'#a6cee3',
-						'#1f78b4',
-						'#b2df8a',
-						'#33a02c',
-						'#fb9a99',
-						'#e31a1c',
-						'#fdbf6f',
-						'#ff7f00',
-						'#cab2d6',
-						'#6a3d9a',
-						'#ffff99',
-						'#b15928'
-					];
-					let colorChoices = entriesToAdd[i].colorChoices || defaultColors;
-
-					let colorPalette = document.createElement("div");
-					colorPalette.id = workingDiv.id + "Palette";
-					colorPalette.classList.add("rmbColorPalette");
-					colorPalette.style.display = "none";
-
-					// queue up swatch listener to open color palette
-					pendingListeners.push({
-						id: previewSwatch.id,
-						event: "click",
-						func: function () {
-							let palette = document.getElementById(colorPalette.id);
-							let visible = palette.style.display == "initial";
-
-							if (visible) {
-								palette.style.display = "none";
-							} else {
-								palette.style.display = "initial";
-							}
-						}
-					});
-
-					for (let color of colorChoices) {
-						let colorOption = document.createElement("div");
-						colorOption.id = workingDiv.id + "Choice_" + color.split(1);
-						colorOption.classList.add("rmbColorOption");
-
-						colorOption.style.background = color;
-						colorOption.value = color;
-
-						// queue up palette color click listener for choosing a color
-						pendingListeners.push({
-							id: colorOption.id,
-							event: "click",
-							func: function () {
-								document.getElementById(inputField.id).value = this;
-								document.getElementById(previewSwatch.id).style.background = this;
-
-								document.getElementById(colorPalette.id).style.display = "none";
-							}.bind(color) // bind color to be accessed in handler as (this)
-						});
-
-						colorPalette.appendChild(colorOption);
-					}
-
-					workingDiv.appendChild(colorPalette);
-
-				} else if (entriesToAdd[i].inputType === "range") {
-					inputField.type = "range";
-					inputField.classList.add("rmbRangeInput");
-
-					// default range is 100
-					let range = entriesToAdd[i].sliderRange || [0, 100];
-
-					inputField.min = range[0];
-					inputField.max = range[1];
-
-					workingDiv.style.paddingTop = "2px";
-					workingDiv.style.paddingBottom = "2px";
-
-					let valLabel = document.createElement("label");
-					valLabel.innerHTML = inputField.defaultValue;
-					valLabel.id = workingDiv.id + "Label";
-					valLabel.style.marginRight = "5px";
-					valLabel.style.textAlign = "right";
-					valLabel.style.width = "25px";
-					valLabel.style.display = "inline-block";
-					workingDiv.appendChild(valLabel);
-
-					pendingListeners.push({
-						id: inputField.id,
-						event: "input",
-						func: function () {
-							document.getElementById(valLabel.id).innerHTML = this.value;
-						}
-					});
-
-				}
-
-				if (entriesToAdd[i].inputUpdateOnChange) {
-					// bind necessary data for buttonEffect function
-					inputField.inputField = true;
-					inputField.inputFieldId = inputField.id;
-
-					// click effect
-					inputField.callback = entriesToAdd[i].callback;
-					inputField.parameters = entriesToAdd[i].parameters;
-					inputField.app = app;
-
-					pendingListeners.push({
-						id: inputField.id,
-						event: "change",
-						func: entriesToAdd[i].buttonEffect.bind(inputField) // necessary to have correct data for "this.___"
-					});
-				}
-			}
-
-			if (entriesToAdd[i].inputFieldSize) {
-				// if specified state input field size
-				inputField.size = entriesToAdd[i].inputFieldSize;
-			} else {
-				inputField.size = 5;
-			}
-			// add the button effect to the input field to allow enter to send
-			workingDiv["buttonEffect" + inputField.id] =  entriesToAdd[i].buttonEffect;
-			workingDiv.appendChild(inputField);
-
-			workingDiv.innerHTML += "&nbsp&nbsp&nbsp";
-			workingDiv.inputFieldId = inputField.id;
-			// create OK button to send
-
-			var appEntryOkButton = document.createElement('span');
-			appEntryOkButton.innerHTML = "&nbspOK&nbsp";
-			appEntryOkButton.classList.add("inputOKButton");
-			appEntryOkButton.style.border = "1px solid black";
-			appEntryOkButton.startingBgColor = workingDiv.startingBgColor;
-			appEntryOkButton.style.background = appEntryOkButton.startingBgColor;
-
-			appEntryOkButton.inputField = true;
-			appEntryOkButton.inputFieldId = inputField.id;
-
-			// click effect
-			appEntryOkButton.callback = entriesToAdd[i].callback;
-			appEntryOkButton.parameters = entriesToAdd[i].parameters;
-			appEntryOkButton.app = app;
-			appEntryOkButton.addEventListener('mousedown', entriesToAdd[i].buttonEffect);
-			// highlighting effect on mouseover
-			appEntryOkButton.addEventListener('mouseover', function() {
-				this.style.background = "lightgray";
-			});
-			appEntryOkButton.addEventListener('mouseout', function() {
-				this.style.background = this.startingBgColor;
-			});
-			workingDiv.appendChild(appEntryOkButton);
-			// Add spacing
-			var entrySpacer = document.createElement('span');
-			entrySpacer.innerHTML = "&nbsp&nbsp&nbsp";
-			workingDiv.appendChild(entrySpacer);
-		} else {
-			// if no input field attach button effect to entire div instead of just OK button.
-			workingDiv.addEventListener('mousedown', entriesToAdd[i].buttonEffect);
-			// highlighting effect on mouseover
-			workingDiv.addEventListener('mouseover', function() {
-				this.style.background = "lightgray";
-			});
-			workingDiv.addEventListener('mouseout', function() {
-				this.style.background = this.startingBgColor;
-			});
-		}
-		// click effect
-		workingDiv.callback = entriesToAdd[i].callback;
-		workingDiv.parameters = entriesToAdd[i].parameters;
-		workingDiv.app = app;
-
-		// add to menu
-		var appContextMenuDiv = document.getElementById('appContextMenu');
-		appContextMenuDiv.appendChild(workingDiv);
-
-		// add pending event listeners
-		// (such as for input range, as it can't have listener bound to document.createElement reference)
-		let listener = pendingListeners.pop();
-		while (listener) {
-			document.getElementById(listener.id).addEventListener(listener.event, listener.func);
-			listener = pendingListeners.pop();
-		}
+		addMenuEntry(contextMenuDiv, entriesToAdd[i], "" + i, app);
 	} // end for each entry
 } // end setAppContextMenuEntries
+
+// function to add one menu entry to the overall context menu
+function addMenuEntry(menuDiv, entry, id, app) {
+	let pendingListeners = [];
+
+	let workingDiv = document.createElement('div');
+	workingDiv.classList.add("contextMenuEntry");
+
+	// unique entry id
+	workingDiv.id = 'appContextMenuEntry' + id;
+	if (typeof entry.entryColor === "string") {
+		// use given color if specified
+		workingDiv.startingBgColor = entry.entryColor;
+	} else {
+		// start as off-white color
+		workingDiv.startingBgColor = "#FFF8E1";
+	}
+	workingDiv.style.background = workingDiv.startingBgColor;
+	// Add a little padding
+	workingDiv.style.padding = "0 5px 0 5px";
+	// Align main text to the left
+	workingDiv.style.textAlign = "left";
+	// special case for a separator (line) entry
+	if (entry.description === "separator") {
+		workingDiv.innerHTML = "<hr>";
+	} else {
+		if (entry.accelerator) {
+			// Add description of the keyboard shortcut
+			workingDiv.innerHTML = "<p style='float: left;'>" + entry.description + "</p>";
+			workingDiv.innerHTML += "<p style='float: right; padding-left: 5px;'> [" + entry.accelerator + "]</p>";
+			workingDiv.innerHTML += "<div style='clear: both;'></div>";
+		} else {
+			// or just plain text
+			workingDiv.innerHTML = entry.description;
+		}
+	}
+	// add input field if app says to.
+	workingDiv.inputField = false;
+	if (entry.inputField === true) {
+		workingDiv.inputField = true;
+		// to allow for layout of OK buttons
+		workingDiv.style.position = "relative";
+		var inputField = document.createElement('input');
+		// unique input field
+		inputField.id = workingDiv.id + "Input";
+		// check if the data has a value field
+		inputField.defaultValue = entry.value || "";
+		// special case to use color/range input type
+		if (entry.inputType) {
+
+			if (entry.inputType === "color") {
+				// inputField.type = "color";
+				inputField.size = 7;
+				inputField.classList.add("rmbColorInput");
+
+				workingDiv.style.paddingTop = "2px";
+				workingDiv.style.paddingBottom = "2px";
+
+				let previewSwatch = document.createElement("div");
+				previewSwatch.classList.add("rmbColorSwatch");
+				previewSwatch.id = workingDiv.id + "Swatch";
+
+				pendingListeners.push({
+					id: inputField.id,
+					event: "input",
+					func: function () {
+						document.getElementById(previewSwatch.id).style.backgroundColor = this.value;
+					}
+				});
+
+				previewSwatch.style.backgroundColor = entry.value || "#abc123";
+
+				workingDiv.appendChild(previewSwatch);
+
+				let defaultColors = [
+					'#a6cee3',
+					'#1f78b4',
+					'#b2df8a',
+					'#33a02c',
+					'#fb9a99',
+					'#e31a1c',
+					'#fdbf6f',
+					'#ff7f00',
+					'#cab2d6',
+					'#6a3d9a',
+					'#ffff99',
+					'#b15928'
+				];
+				let colorChoices = entry.colorChoices || defaultColors;
+
+				let colorPalette = document.createElement("div");
+				colorPalette.id = workingDiv.id + "Palette";
+				colorPalette.classList.add("rmbColorPalette");
+				colorPalette.style.display = "none";
+
+				// queue up swatch listener to open color palette
+				pendingListeners.push({
+					id: previewSwatch.id,
+					event: "click",
+					func: function () {
+						let palette = document.getElementById(colorPalette.id);
+						let visible = palette.style.display == "initial";
+
+						if (visible) {
+							palette.style.display = "none";
+						} else {
+							palette.style.display = "initial";
+						}
+					}
+				});
+
+				for (let color of colorChoices) {
+					let colorOption = document.createElement("div");
+					colorOption.id = workingDiv.id + "Choice_" + color.split(1);
+					colorOption.classList.add("rmbColorOption");
+
+					colorOption.style.background = color;
+					colorOption.value = color;
+
+					// queue up palette color click listener for choosing a color
+					pendingListeners.push({
+						id: colorOption.id,
+						event: "click",
+						func: function () {
+							document.getElementById(inputField.id).value = this;
+							document.getElementById(previewSwatch.id).style.background = this;
+
+							document.getElementById(colorPalette.id).style.display = "none";
+						}.bind(color) // bind color to be accessed in handler as (this)
+					});
+
+					colorPalette.appendChild(colorOption);
+				}
+
+				workingDiv.appendChild(colorPalette);
+
+			} else if (entry.inputType === "range") {
+				inputField.type = "range";
+				inputField.classList.add("rmbRangeInput");
+
+				// default range is 100
+				let range = entry.sliderRange || [0, 100];
+
+				inputField.min = range[0];
+				inputField.max = range[1];
+
+				workingDiv.style.paddingTop = "2px";
+				workingDiv.style.paddingBottom = "2px";
+
+				let valLabel = document.createElement("label");
+				valLabel.innerHTML = inputField.defaultValue;
+				valLabel.id = workingDiv.id + "Label";
+				valLabel.style.marginRight = "5px";
+				valLabel.style.textAlign = "right";
+				valLabel.style.width = "25px";
+				valLabel.style.display = "inline-block";
+				workingDiv.appendChild(valLabel);
+
+				pendingListeners.push({
+					id: inputField.id,
+					event: "input",
+					func: function () {
+						document.getElementById(valLabel.id).innerHTML = this.value;
+					}
+				});
+
+			}
+
+			if (entry.inputUpdateOnChange) {
+				// bind necessary data for buttonEffect function
+				inputField.inputField = true;
+				inputField.inputFieldId = inputField.id;
+
+				// click effect
+				inputField.callback = entry.callback;
+				inputField.parameters = entry.parameters;
+				inputField.app = app;
+
+				pendingListeners.push({
+					id: inputField.id,
+					event: "change",
+					func: entry.buttonEffect.bind(inputField) // necessary to have correct data for "this.___"
+				});
+			}
+		}
+
+		if (entry.inputFieldSize) {
+			// if specified state input field size
+			inputField.size = entry.inputFieldSize;
+		} else {
+			inputField.size = 5;
+		}
+		// add the button effect to the input field to allow enter to send
+		workingDiv["buttonEffect" + inputField.id] = entry.buttonEffect;
+		workingDiv.appendChild(inputField);
+
+		workingDiv.innerHTML += "&nbsp&nbsp&nbsp";
+		workingDiv.inputFieldId = inputField.id;
+		// create OK button to send
+
+		var appEntryOkButton = document.createElement('span');
+		appEntryOkButton.innerHTML = "&nbspOK&nbsp";
+		appEntryOkButton.classList.add("inputOKButton");
+		appEntryOkButton.style.border = "1px solid black";
+		appEntryOkButton.startingBgColor = workingDiv.startingBgColor;
+		appEntryOkButton.style.background = appEntryOkButton.startingBgColor;
+
+		appEntryOkButton.inputField = true;
+		appEntryOkButton.inputFieldId = inputField.id;
+
+		// click effect
+		appEntryOkButton.callback = entry.callback;
+		appEntryOkButton.parameters = entry.parameters;
+		appEntryOkButton.app = app;
+		appEntryOkButton.addEventListener('mousedown', entry.buttonEffect);
+		// highlighting effect on mouseover
+		appEntryOkButton.addEventListener('mouseover', function () {
+			this.style.background = "lightgray";
+		});
+		appEntryOkButton.addEventListener('mouseout', function () {
+			this.style.background = this.startingBgColor;
+		});
+		workingDiv.appendChild(appEntryOkButton);
+		// Add spacing
+		var entrySpacer = document.createElement('span');
+		entrySpacer.innerHTML = "&nbsp&nbsp&nbsp";
+		workingDiv.appendChild(entrySpacer);
+	} else {
+		if (entry.children) {
+			workingDiv.classList.add("entryWithSubMenu");
+
+			// for context menu with subentries
+			let submenuDiv = document.createElement("div");
+			submenuDiv.classList.add("contextSubMenu");
+
+			let subentriesToAdd = entry.children;
+
+			for (let j = 0; j < subentriesToAdd.length; j++) {
+				addMenuEntry(submenuDiv, subentriesToAdd[j], id + "_" + j);
+			}
+
+			workingDiv.appendChild(submenuDiv);
+		}
+
+
+		// if no input field attach button effect to entire div instead of just OK button.
+		workingDiv.addEventListener('mousedown', entry.buttonEffect);
+		// highlighting effect on mouseover
+		workingDiv.addEventListener('mouseover', function () {
+			this.style.background = "lightgray";
+		});
+		workingDiv.addEventListener('mouseout', function () {
+			this.style.background = this.startingBgColor;
+		});
+	}
+	// click effect
+	workingDiv.callback = entry.callback;
+	workingDiv.parameters = entry.parameters;
+	workingDiv.app = app;
+
+	// add to menu
+	menuDiv.appendChild(workingDiv);
+
+	// add pending event listeners
+	// (such as for input range, as it can't have listener bound to document.createElement reference)
+	let listener = pendingListeners.pop();
+	while (listener) {
+		document.getElementById(listener.id).addEventListener(listener.event, listener.func);
+		listener = pendingListeners.pop();
+	}
+}
 
 /**
 Called automatically as part of page setup.

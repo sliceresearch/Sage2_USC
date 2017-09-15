@@ -1055,6 +1055,7 @@ Partition.prototype.getContextMenu = function() {
 		callback: "toggleInnerTiling",
 		parameters: {}
 	});
+
 	contextMenu.push({
 		description: "Clear Content",
 		callback: "clearPartition",
@@ -1064,7 +1065,6 @@ Partition.prototype.getContextMenu = function() {
 	contextMenu.push({
 		description: "separator"
 	});
-
 
 	contextMenu.push({
 		description: this.isSnapping ? "Un-Snap Partition" : "Snap Partition",
@@ -1119,6 +1119,26 @@ Partition.prototype.getContextMenu = function() {
 		description: "Close Partition",
 		callback: "SAGE2DeleteElement",
 		parameters: {}
+	});
+
+	contextMenu.push({
+		description: "Submenu",
+		parameters: {},
+		children: [
+			{
+				description: "Clear Content",
+				callback: "clearPartition",
+				parameters: {}
+			},
+			{
+				description: "separator"
+			},
+			{
+				description: this.innerTiling ? "Stop Tiling" : "Tile Content",
+				callback: "toggleInnerTiling",
+				parameters: {}
+			}
+		]
 	});
 
 	return contextMenu;
