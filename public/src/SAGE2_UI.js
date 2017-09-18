@@ -353,7 +353,7 @@ function SAGE2_init() {
 		// Send message to desktop capture Chrome extension
 		window.postMessage('SAGE2_desktop_capture_enabled', "*");
 			
-		// attempt to auto start the pointer on load
+		// SLICE attempt to auto start the pointer on load
 		var element = {id: "sage2pointer"};
 		handleClick(element);
 	});
@@ -2036,7 +2036,7 @@ function touchEnd(event) {
 		if (touchMode === "scale") {
 			touchMode = "";
 		}
-		// added single tap to trigger pointer left click.
+		// SLICE added single tap to trigger pointer left click.
 		if (touchTap === 1) {
 			interactor.pointerPressMethod({button: 0});
 			touchMode = "translate";

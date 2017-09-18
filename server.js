@@ -1384,6 +1384,7 @@ function wsRegisterInteractionClient(wsio, data) {
 
 function wsStartSagePointer(wsio, data) {
 	// Switch interaction from window mode (on web) to app mode (wall)
+	// SLICE hard coded the starting pointer mode to APP_INTERACTION
 	remoteInteraction[wsio.id].interactionMode = 1; // remoteInteraction[wsio.id].getPreviousMode();
 	broadcast('changeSagePointerMode', {id: sagePointers[wsio.id].id, mode: 1}); // remoteInteraction[wsio.id].getPreviousMode()});
 
