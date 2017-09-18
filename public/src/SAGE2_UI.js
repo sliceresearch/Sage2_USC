@@ -2036,6 +2036,18 @@ function touchEnd(event) {
 		if (touchMode === "scale") {
 			touchMode = "";
 		}
+		// added single tap to trigger pointer left click.
+		if (touchTap === 1) {
+			interactor.pointerPressMethod({button: 0});
+			touchMode = "translate";
+			touchHold = setTimeout(function() {
+				interactor.pointerKeyDownMethod({keyCode: 8});
+				interactor.pointerKeyUpMethod({keyCode: 8});
+			}, 1500);
+	
+			event.preventDefault();
+			event.stopPropagation();
+		}
 		event.preventDefault();
 		event.stopPropagation();
 	} else if (event.target.id === "sage2MobileLeftButton") {
