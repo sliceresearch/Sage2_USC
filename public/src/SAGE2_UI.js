@@ -2446,8 +2446,8 @@ function setupAppContextMenuDiv() {
 function showAppContextMenuDiv(x, y) {
 	var workingDiv = document.getElementById('appContextMenu');
 	workingDiv.style.visibility = "visible";
-	workingDiv.style.left		= x + "px";
-	workingDiv.style.top		= y + "px";
+	workingDiv.style.left = x + "px";
+	workingDiv.style.top = y + "px";
 }
 
 /**
@@ -2489,7 +2489,9 @@ function setAppContextMenuEntries(data) {
 	// data.entries, data.app, data.x, data.y
 	var entriesToAdd = data.entries;
 	var app = data.app;
-	showAppContextMenuDiv(data.x, data.y);
+	let side = (data.x > document.getElementById("applicationsDiv").clientWidth / 2) ? "left" : "right";
+
+	showAppContextMenuDiv(data.x, data.y, side);
 	// full removal of current contents
 	removeAllChildren('appContextMenu');
 	// for each entry
@@ -2585,6 +2587,8 @@ function setAppContextMenuEntries(data) {
 
 	// hold pending event listeners to be attached once elements are in the DOM
 	let contextMenuDiv = document.getElementById('appContextMenu');
+	contextMenuDiv.classList.remove("contextMenuRight", "contextMenuLeft");
+	contextMenuDiv.classList.add(side === "left" ? "contextMenuLeft" : "contextMenuRight");
 
 	for (i = 0; i < entriesToAdd.length; i++) {
 		addMenuEntry(contextMenuDiv, entriesToAdd[i], "" + i, app);
@@ -2609,7 +2613,7 @@ function addMenuEntry(menuDiv, entry, id, app) {
 	}
 	workingDiv.style.background = workingDiv.startingBgColor;
 	// Add a little padding
-	workingDiv.style.padding = "0 5px 0 5px";
+	// workingDiv.style.padding = "0 5px 0 5px";
 	// Align main text to the left
 	workingDiv.style.textAlign = "left";
 	// special case for a separator (line) entry
@@ -2820,6 +2824,7 @@ function addMenuEntry(menuDiv, entry, id, app) {
 	} else {
 		if (entry.children) {
 			workingDiv.classList.add("entryWithSubMenu");
+			// workingDiv.style.padding = "0 15px 0 5px";
 
 			// for context menu with subentries
 			let submenuDiv = document.createElement("div");
@@ -2828,7 +2833,83 @@ function addMenuEntry(menuDiv, entry, id, app) {
 			let subentriesToAdd = entry.children;
 
 			for (let j = 0; j < subentriesToAdd.length; j++) {
-				addMenuEntry(submenuDiv, subentriesToAdd[j], id + "_" + j);
+				if (subentriesToAdd[j].callback !== undefined && subentriesToAdd[j].callback !== null) {
+					subentriesToAdd[j].buttonEffect = function () {
+						if (this.callback === "SAGE2_download") {
+							// special case: want to download the file
+							var url = this.parameters.url;
+							console.log('Download>	content', url);
+							if (url) {
+								// Download the file
+								var link = document.createElement('a');
+								link.href = url;
+								if (link.download !== undefined) {
+									// Set HTML5 download attribute. This will prevent file from opening if supported.
+									var fileName = url.substring(url.lastIndexOf('/') + 1, url.length);
+									link.download = fileName;
+								}
+								// Dispatching click event
+								if (document.createEvent) {
+									var me = document.createEvent('MouseEvents');
+									me.initEvent('click', true, true);
+									link.dispatchEvent(me);
+								}
+							}
+						} else if (this.callback === "SAGE2_editQuickNote") {
+							// special case: reopen the QuickNote editor, but with a "save" button instead of "create"
+							var sendButton = document.getElementById('uiNoteMakerSendButton');
+							sendButton.textContent = "Save [Enter]";
+							sendButton.inSaveMode = true;
+							sendButton.app = this.app;
+							sendButton.callback = "setMessage";
+							sendButton.parameters = this.parameters;
+							// put current text into note
+							var inputForNote = document.getElementById('uiNoteMakerInputField');
+							inputForNote.value = this.parameters.currentContent;
+							// select current color
+							switch (this.parameters.currentColorChoice) {
+								case "lightyellow": setUiNoteColorSelect(1); break;
+								case "lightblue": setUiNoteColorSelect(2); break;
+								case "lightpink": setUiNoteColorSelect(3); break;
+								case "lightgreen": setUiNoteColorSelect(4); break;
+								case "lightsalmon": setUiNoteColorSelect(5); break;
+								case "white": setUiNoteColorSelect(6); break;
+								default: setUiNoteColorSelect(1); break; // default is yellow if unknown
+							}
+							showDialog('uiNoteMaker');
+						} else if (this.callback === "SAGE2_copyURL") {
+							// special case: want to copy the URL of the file to clipboard
+							var dlurl = this.parameters.url;
+							if (dlurl) {
+								// defined in SAGE2_runtime
+								SAGE2_copyToClipboard(dlurl);
+							}
+						} else {
+							// if an input field, need to modify the params to pass back before sending.
+							if (this.inputField === true) {
+								var inputField = document.getElementById(this.inputFieldId);
+								// dont do anything if there is nothing in the inputfield
+								if (inputField.value.length <= 0) {
+									return;
+								}
+								// add the field clientInput to the parameters
+								this.parameters.clientInput = inputField.value;
+							}
+							// create data to send, then emit
+							var data = {};
+							data.app = this.app;
+							data.func = this.callback;
+							data.parameters = this.parameters;
+							data.parameters.clientName = document.getElementById('sage2PointerLabel').value;
+							data.parameters.clientId = interactor.uniqueID;
+							wsio.emit('callFunctionOnApp', data);
+						}
+						// hide after use
+						hideAppContextMenuDiv();
+					};
+				} // end if the button should send something
+
+				addMenuEntry(submenuDiv, subentriesToAdd[j], id + "_" + j, app);
 			}
 
 			workingDiv.appendChild(submenuDiv);
@@ -2837,6 +2918,10 @@ function addMenuEntry(menuDiv, entry, id, app) {
 
 		// if no input field attach button effect to entire div instead of just OK button.
 		workingDiv.addEventListener('mousedown', entry.buttonEffect);
+		workingDiv.addEventListener('mousedown', function(e) {
+			e.stopPropagation();
+			console.log("Button Clicked", this.callback, this.parameters, this.app);
+		});
 		// highlighting effect on mouseover
 		workingDiv.addEventListener('mouseover', function () {
 			this.style.background = "lightgray";

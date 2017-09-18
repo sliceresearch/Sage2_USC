@@ -1118,13 +1118,28 @@ The z-index is very important.
 .contextMenuEntry {
 	position: relative;
 	cursor: pointer;
+	white-space:nowrap;
+
+	padding: 0 5px;
 }
 
 .contextMenuEntry:hover {
 	background: lightgray;
 }
 
-.entryWithSubMenu::after {
+.contextMenuLeft {
+	transform: translateX(-100%);
+}
+
+.contextMenuRight .entryWithSubMenu {
+	padding: 0 15px 0 5px;
+}
+
+.contextMenuLeft .entryWithSubMenu {
+	padding: 0 5px 0 15px;
+}
+
+.contextMenuRight .entryWithSubMenu::after {
 	display: block;
 	content: ' ';
 	float: right;
@@ -1132,20 +1147,43 @@ The z-index is very important.
 	height: 0;
 	border-color: transparent;
 	border-style: solid;
-	border-width: 5px 0 5px 5px;
+	border-width: 3px 0 3px 3px;
 	border-left-color: black;
-	margin-top: 2px;
-	/* margin-right: -10px; */
+	margin-top: 3px;
+	margin-right: -10px;
+}
+
+.contextMenuLeft .entryWithSubMenu::before {
+	display: block;
+	content: ' ';
+	float: left;
+	width: 0;
+	height: 0;
+	border-color: transparent;
+	border-style: solid;
+	border-width: 3px 3px 3px 0;
+	border-right-color: black;
+	margin-top: 3px;
+	margin-left: -10px;
 }
 
 .contextSubMenu {
 	border: 1px solid black;
+	min-width: 75px;
 }
 
-.contextMenuEntry>.contextSubMenu {
+.contextMenuRight .contextMenuEntry>.contextSubMenu {
 	display: none;
 	position: absolute;
 	left: 100%;
+	top: -1px;
+}
+
+.contextMenuLeft .contextMenuEntry>.contextSubMenu {
+	display: none;
+	position: absolute;
+	left: 0;
+	transform: translateX(-100%);
 	top: -1px;
 }
 

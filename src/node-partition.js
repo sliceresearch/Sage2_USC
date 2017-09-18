@@ -1051,34 +1051,55 @@ Partition.prototype.getContextMenu = function() {
 	var contextMenu = [];
 
 	contextMenu.push({
-		description: this.innerTiling ? "Stop Tiling" : "Tile Content",
-		callback: "toggleInnerTiling",
-		parameters: {}
+		description: "Content Management",
+		parameters: {},
+		children: [
+			{
+				description: "Clear",
+				callback: "clearPartition",
+				parameters: {}
+			},
+			{
+				description: this.innerTiling ? "Stop Tiling" : "Tile",
+				callback: "toggleInnerTiling",
+				parameters: {}
+			},
+			{
+				description: "Test Multi-Level",
+				children: [
+					{
+						description: "Test Item",
+						parameters: {}
+					}
+				]
+			}
+		]
 	});
 
 	contextMenu.push({
-		description: "Clear Content",
-		callback: "clearPartition",
-		parameters: {}
-	});
-
-	contextMenu.push({
-		description: "separator"
-	});
-
-	contextMenu.push({
-		description: this.isSnapping ? "Un-Snap Partition" : "Snap Partition",
+		description: "Partition Snapping",
 		callback: "toggleSnapping",
-		parameters: {}
+		parameters: {},
+		children: this.isSnapping ?
+			[
+				{
+					description: "Un-Snap",
+					callback: "toggleSnapping",
+					parameters: {}
+				},
+				{
+					description: "Update Neighbors",
+					callback: "updateNeighborPartitionList",
+					parameters: {}
+				}
+			] : [
+				{
+					description: "Snap",
+					callback: "toggleSnapping",
+					parameters: {}
+				}
+			]
 	});
-
-	if (this.isSnapping) {
-		contextMenu.push({
-			description: "Update Snapped Neighbors",
-			callback: "updateNeighborPartitionList",
-			parameters: {}
-		});
-	}
 
 	contextMenu.push({
 		description: "separator"
@@ -1119,26 +1140,6 @@ Partition.prototype.getContextMenu = function() {
 		description: "Close Partition",
 		callback: "SAGE2DeleteElement",
 		parameters: {}
-	});
-
-	contextMenu.push({
-		description: "Submenu",
-		parameters: {},
-		children: [
-			{
-				description: "Clear Content",
-				callback: "clearPartition",
-				parameters: {}
-			},
-			{
-				description: "separator"
-			},
-			{
-				description: this.innerTiling ? "Stop Tiling" : "Tile Content",
-				callback: "toggleInnerTiling",
-				parameters: {}
-			}
-		]
 	});
 
 	return contextMenu;
