@@ -352,6 +352,10 @@ function SAGE2_init() {
 
 		// Send message to desktop capture Chrome extension
 		window.postMessage('SAGE2_desktop_capture_enabled', "*");
+			
+		// attempt to auto start the pointer on load
+		var element = {id: "sage2pointer"};
+		handleClick(element);
 	});
 
 	// socket close event (i.e. server crashed)
