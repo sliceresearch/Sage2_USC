@@ -1384,8 +1384,8 @@ function wsRegisterInteractionClient(wsio, data) {
 
 function wsStartSagePointer(wsio, data) {
 	// Switch interaction from window mode (on web) to app mode (wall)
-	remoteInteraction[wsio.id].interactionMode = remoteInteraction[wsio.id].getPreviousMode();
-	broadcast('changeSagePointerMode', {id: sagePointers[wsio.id].id, mode: remoteInteraction[wsio.id].getPreviousMode()});
+	remoteInteraction[wsio.id].interactionMode = 1; // remoteInteraction[wsio.id].getPreviousMode();
+	broadcast('changeSagePointerMode', {id: sagePointers[wsio.id].id, mode: 1}); // remoteInteraction[wsio.id].getPreviousMode()});
 
 	showPointer(wsio.id, data);
 
