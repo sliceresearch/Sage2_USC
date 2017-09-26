@@ -149,7 +149,7 @@ var hpkpPin2 = (function() {
  */
 HttpServer.prototype.buildHeader = function() {
 	// Get the site configuration, from server.js
-	var cfg = module.parent.exports.config;
+	var cfg = global.config;
 	// Build the header object
 	var header = {};
 
