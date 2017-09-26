@@ -50,15 +50,15 @@ var sprint        = require('sprint');           // pretty formating (sprintf)
 var imageMagick;                                 // derived from graphicsmagick
 
 var WebsocketIO   = require('websocketio');      // creates WebSocket server and clients
-
-var chalk 				= require('chalk');						 // used for colorizing the console output
+var chalk         = require('chalk');            // used for colorizing the console output
+var commander     = require('commander');        // parsing command-line arguments
 
 // custom node modules
+var sageutils           = require('./src/node-utils');            // provides the current version number
 var assets              = require('./src/node-assets');           // manages the list of files
-var commandline         = require('./src/node-sage2commandline'); // handles command line parameters for SAGE2
+// var commandline         = require('./src/node-sage2commandline'); // handles command line parameters for SAGE2
 var exiftool            = require('./src/node-exiftool');         // gets exif tags for images
 var pixelblock          = require('./src/node-pixelblock');       // chops pixels buffers into square chunks
-var sageutils           = require('./src/node-utils');            // provides the current version number
 var md5                 = require('./src/md5');                   // return standard md5 hash of given param
 
 var HttpServer          = require('./src/node-httpserver');       // creates web server
@@ -73,8 +73,9 @@ var Sagepointer         = require('./src/node-sagepointer');      // handles sag
 var StickyItems         = require('./src/node-stickyitems');
 var registry            = require('./src/node-registry');         // Registry Manager
 var FileBufferManager	= require('./src/node-filebuffer');
-var PartitionList	= require('./src/node-partitionlist');        // list of SAGE2 Partitions
+var PartitionList       = require('./src/node-partitionlist');    // list of SAGE2 Partitions
 var SharedDataManager	= require('./src/node-sharedserverdata'); // manager for shared data
+var S2Logger            = require('./src/node-logger');           // SAGE2 logging module
 
 //
 // Globals
@@ -100,16 +101,15 @@ mediaFolders.user =	{
 var mainFolder = mediaFolders.user;
 
 // Session hash for security
-global.__SESSION_ID    = null;
+global.__SESSION_ID = null;
+// SAGE2 logger object
+global.logger = null;
 
 var sage2Server        = null;
 var sage2ServerS       = null;
 var wsioServer         = null;
 var wsioServerS        = null;
-var SAGE2_version      = sageutils.getShortVersion();
 var platform           = os.platform() === "win32" ? "Windows" : os.platform() === "darwin" ? "Mac OS X" : "Linux";
-var program            = commandline.initializeCommandLineParameters(SAGE2_version, emitLog);
-var config             = loadConfiguration();
 var imageMagickOptions = {imageMagick: true};
 var ffmpegOptions      = {};
 var hostOrigin         = "";
@@ -117,19 +117,72 @@ var SAGE2Items         = {};
 var sharedApps         = {};
 var users              = null;
 var appLoader          = null;
-var interactMgr        = new InteractableManager();
 var mediaBlockSize     = 512;
-var startTime          = Date.now();
-var drawingManager;
 var pressingCTRL       = true;
-var fileBufferManager  = new FileBufferManager();
+
+var fileBufferManager;
+var startTime;
+var program;
+var config;
+var SAGE2_version;
+var interactMgr;
+var drawingManager;
+
+// Partition variables
+var partitions;
+var draggingPartition = {};
+var cuttingPartition  = {};
 
 // Array containing the remote sites informations (toolbar on top of wall)
 var remoteSites = [];
 
-var partitions        = new PartitionList(config);
-var draggingPartition = {};
-var cuttingPartition  = {};
+// GO
+startTime = Date.now();
+
+// Get the version from package.json
+SAGE2_version = sageutils.getShortVersion();
+
+// Parse commond line arguments
+program = commander
+	.version(SAGE2_version)
+	.option('-i, --no-interactive',       'Non interactive prompt')
+	.option('-f, --configuration <file>', 'Specify a configuration file')
+	.option('-l, --logfile [file]',       'Specify a log file')
+	.option('-q, --no-output',            'Quiet, no output')
+	.option('-s, --session [name]',       'Load a session file (last session if omitted)')
+	.option('-t, --track-users [file]',   'enable user interaction tracking (specified file indicates users to track)')
+	.option('-p, --password <password>',  'Sets the password to connect to SAGE2 session')
+	.parse(process.argv);
+
+// Logging or not
+if (program.logfile) {
+	// Use default name or one specified on command line
+	var logname    = (program.logfile === true) ? 'sage2.log' : program.logfile;
+	// Create the loggger object
+	global.logger = new S2Logger({name: "server", path: logname});
+
+	// Redirect console.log to a file and still produces an output or not
+	if (program.output === false) {
+		program.interactive = undefined;
+	}
+}
+// Set global variable for the log function
+global.quiet = !commander.output;
+
+// Load the configuration file
+config = loadConfiguration();
+// Export the config variable
+global.config = config;
+
+
+// Create the 'rbush' data structure for interaction calculation
+interactMgr = new InteractableManager();
+
+// Setup the partition data structure
+partitions = new PartitionList(config);
+
+// FileBufferManager, I guess
+fileBufferManager = new FileBufferManager();
 
 // Create structure to handle automated placement of apps
 var appLaunchPositioning = {
@@ -593,12 +646,6 @@ function broadcast(name, data) {
 	wsioServerS.broadcast(name, data);
 }
 
-// Export variables and functions to sub modules
-exports.config    = config;
-exports.broadcast = broadcast;
-exports.dirname   = path.join(__dirname, "node_modules");
-
-
 /**
  * Print a message to all the web consoles
  *
@@ -611,7 +658,8 @@ function emitLog(data) {
 	}
 	broadcast('console', data);
 }
-
+// Make the function global
+global.emitLog = emitLog;
 
 // global variables to manage clients
 var clients           = [];
