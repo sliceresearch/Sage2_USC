@@ -45,7 +45,7 @@ RegistryManager.prototype.initialize = function(assetsFolder) {
 
 	var fullpath = path.join(assetsFolder, this.registryFile);
 
-	console.log(sageutils.header("Registry") + "Initializing registry", fullpath);
+	sageutils.log("Registry", "Initializing registry", fullpath);
 
 	if (!sageutils.fileExists(fullpath)) {
 		fs.writeFileSync(fullpath, "{}");
@@ -152,7 +152,7 @@ RegistryManager.prototype.push = function(key, value, overwrite) {
 	try {
 		this.db.push(key, value, overwrite);
 	} catch (error) {
-		console.error(sageutils.header("Registry") + error);
+		sageutils.log("Registry", error);
 	}
 };
 
@@ -166,7 +166,7 @@ RegistryManager.prototype.getDefaultApp = function(file) {
 	try {
 		defaultApp = this.db.getData(type + '/default');
 	} catch (error) {
-		console.error(sageutils.header("Registry") + "No default app for " + file);
+		sageutils.log("Registry", "No default app for", file);
 	}
 	return defaultApp;
 };
@@ -178,8 +178,9 @@ RegistryManager.prototype.getDefaultAppFromMime = function(type) {
 	} catch (error) {
 		if (type === "text/plain") {
 			return "uploads/apps/quickNote";
-		} // currently lack a better way to associate
-		console.error(sageutils.header("Registry") + "No default app for " + type);
+		}
+		// currently lack a better way to associate
+		sageutils.log("Registry", "No default app for", type);
 	}
 	return defaultApp;
 };
@@ -190,7 +191,7 @@ RegistryManager.prototype.getDirectory = function(file) {
 	try {
 		dir = this.db.getData(type + '/directory');
 	} catch (error) {
-		console.error(sageutils.header("Registry") + "No directory for " + file);
+		sageutils.log("Registry", "No directory for", file);
 	}
 	return dir;
 
