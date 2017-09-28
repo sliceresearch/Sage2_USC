@@ -312,10 +312,13 @@ var Webview = SAGE2_App.extend({
 
 	// Sync event when shared
 	load: function(date) {
-		// sync the change
-		this.element.src = this.state.url;
-		this.updateMode();
-		this.refresh(date);
+		// only update if page changed.
+		if (this.element.src != this.state.url) {
+			// sync the change
+			this.element.src = this.state.url;
+			this.updateMode();
+			this.refresh(date);
+		}
 	},
 
 	draw: function(date) {

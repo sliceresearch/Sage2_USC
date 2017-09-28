@@ -50,15 +50,15 @@ var sprint        = require('sprint');           // pretty formating (sprintf)
 var imageMagick;                                 // derived from graphicsmagick
 
 var WebsocketIO   = require('websocketio');      // creates WebSocket server and clients
-
-var chalk 				= require('chalk');						 // used for colorizing the console output
+var chalk         = require('chalk');            // used for colorizing the console output
+var commander     = require('commander');        // parsing command-line arguments
 
 // custom node modules
+var sageutils           = require('./src/node-utils');            // provides the current version number
 var assets              = require('./src/node-assets');           // manages the list of files
-var commandline         = require('./src/node-sage2commandline'); // handles command line parameters for SAGE2
+// var commandline         = require('./src/node-sage2commandline'); // handles command line parameters for SAGE2
 var exiftool            = require('./src/node-exiftool');         // gets exif tags for images
 var pixelblock          = require('./src/node-pixelblock');       // chops pixels buffers into square chunks
-var sageutils           = require('./src/node-utils');            // provides the current version number
 var md5                 = require('./src/md5');                   // return standard md5 hash of given param
 
 var HttpServer          = require('./src/node-httpserver');       // creates web server
@@ -73,8 +73,9 @@ var Sagepointer         = require('./src/node-sagepointer');      // handles sag
 var StickyItems         = require('./src/node-stickyitems');
 var registry            = require('./src/node-registry');         // Registry Manager
 var FileBufferManager	= require('./src/node-filebuffer');
-var PartitionList	= require('./src/node-partitionlist');        // list of SAGE2 Partitions
+var PartitionList       = require('./src/node-partitionlist');    // list of SAGE2 Partitions
 var SharedDataManager	= require('./src/node-sharedserverdata'); // manager for shared data
+var S2Logger            = require('./src/node-logger');           // SAGE2 logging module
 
 //
 // Globals
@@ -100,16 +101,15 @@ mediaFolders.user =	{
 var mainFolder = mediaFolders.user;
 
 // Session hash for security
-global.__SESSION_ID    = null;
+global.__SESSION_ID = null;
+// SAGE2 logger object
+global.logger = null;
 
 var sage2Server        = null;
 var sage2ServerS       = null;
 var wsioServer         = null;
 var wsioServerS        = null;
-var SAGE2_version      = sageutils.getShortVersion();
 var platform           = os.platform() === "win32" ? "Windows" : os.platform() === "darwin" ? "Mac OS X" : "Linux";
-var program            = commandline.initializeCommandLineParameters(SAGE2_version, emitLog);
-var config             = loadConfiguration();
 var imageMagickOptions = {imageMagick: true};
 var ffmpegOptions      = {};
 var hostOrigin         = "";
@@ -117,19 +117,72 @@ var SAGE2Items         = {};
 var sharedApps         = {};
 var users              = null;
 var appLoader          = null;
-var interactMgr        = new InteractableManager();
 var mediaBlockSize     = 512;
-var startTime          = Date.now();
-var drawingManager;
 var pressingCTRL       = true;
-var fileBufferManager  = new FileBufferManager();
+
+var fileBufferManager;
+var startTime;
+var program;
+var config;
+var SAGE2_version;
+var interactMgr;
+var drawingManager;
+
+// Partition variables
+var partitions;
+var draggingPartition = {};
+var cuttingPartition  = {};
 
 // Array containing the remote sites informations (toolbar on top of wall)
 var remoteSites = [];
 
-var partitions        = new PartitionList(config);
-var draggingPartition = {};
-var cuttingPartition  = {};
+// GO
+startTime = Date.now();
+
+// Get the version from package.json
+SAGE2_version = sageutils.getShortVersion();
+
+// Parse commond line arguments
+program = commander
+	.version(SAGE2_version)
+	.option('-i, --no-interactive',       'Non interactive prompt')
+	.option('-f, --configuration <file>', 'Specify a configuration file')
+	.option('-l, --logfile [file]',       'Specify a log file')
+	.option('-q, --no-output',            'Quiet, no output')
+	.option('-s, --session [name]',       'Load a session file (last session if omitted)')
+	.option('-t, --track-users [file]',   'enable user interaction tracking (specified file indicates users to track)')
+	.option('-p, --password <password>',  'Sets the password to connect to SAGE2 session')
+	.parse(process.argv);
+
+// Logging or not
+if (program.logfile) {
+	// Use default name or one specified on command line
+	var logname    = (program.logfile === true) ? 'sage2.log' : program.logfile;
+	// Create the loggger object
+	global.logger = new S2Logger({name: "server", path: logname});
+
+	// Redirect console.log to a file and still produces an output or not
+	if (program.output === false) {
+		program.interactive = undefined;
+	}
+}
+// Set global variable for the log function
+global.quiet = !commander.output;
+
+// Load the configuration file
+config = loadConfiguration();
+// Export the config variable
+global.config = config;
+
+
+// Create the 'rbush' data structure for interaction calculation
+interactMgr = new InteractableManager();
+
+// Setup the partition data structure
+partitions = new PartitionList(config);
+
+// FileBufferManager, I guess
+fileBufferManager = new FileBufferManager();
 
 // Create structure to handle automated placement of apps
 var appLaunchPositioning = {
@@ -162,7 +215,7 @@ var whiteboardDirectory = sessionDirectory;
 // Validate all the media folders
 for (var folder in mediaFolders) {
 	var f = mediaFolders[folder];
-	console.log(sageutils.header('Folders') + f.name + " " + f.path + " " + f.url);
+	sageutils.log("Folders", f.name, f.path, f.url);
 	if (!sageutils.folderExists(f.path)) {
 		sageutils.mkdirParent(f.path);
 	}
@@ -176,7 +229,7 @@ for (var folder in mediaFolders) {
 		if (!sageutils.folderExists(sessionDirectory)) {
 			sageutils.mkdirParent(sessionDirectory);
 		}
-		console.log(sageutils.header('Folders') + 'upload to ' + chalk.yellow.bold(f.path));
+		sageutils.log("Folders", 'upload to', chalk.yellow.bold(f.path));
 	}
 	var newdirs = ["apps", "assets", "images", "pdfs",
 		"tmp", "videos", "config", "whiteboard", "web"];
@@ -192,11 +245,11 @@ for (var folder in mediaFolders) {
 // Add back all the media folders to the configuration structure
 config.folders = mediaFolders;
 
-console.log(sageutils.header("SAGE2") + chalk.cyan("Node Version:\t\t") +
+sageutils.log("SAGE2", chalk.cyan("Node Version:\t\t"),
 	chalk.green.bold(sageutils.getNodeVersion()));
-console.log(sageutils.header("SAGE2") + chalk.cyan("Detected Server OS as:\t") +
+sageutils.log("SAGE2", chalk.cyan("Detected Server OS as:\t"),
 	chalk.green.bold(platform));
-console.log(sageutils.header("SAGE2") + chalk.cyan("SAGE2 Short Version:\t") +
+sageutils.log("SAGE2", chalk.cyan("SAGE2 Short Version:\t"),
 	chalk.green.bold(SAGE2_version));
 
 // Initialize Server
@@ -271,20 +324,20 @@ function initializeSage2Server() {
 	var qr_png = qrimage.image(hostOrigin, { ec_level: 'M', size: 15, margin: 3, type: 'png' });
 	var qr_out = path.join(uploadsDirectory, "images", "QR.png");
 	qr_png.on('end', function() {
-		console.log(sageutils.header("QR") + "image generated", qr_out);
+		sageutils.log("QR", "image generated", qr_out);
 	});
 	qr_png.pipe(fs.createWriteStream(qr_out));
 
 	// Setup tmp directory for SAGE2 server
 	process.env.TMPDIR = path.join(__dirname, "tmp");
-	console.log(sageutils.header("SAGE2") + "Temp folder: " + chalk.yellow.bold(process.env.TMPDIR));
+	sageutils.log("SAGE2", "Temp folder:", chalk.yellow.bold(process.env.TMPDIR));
 	if (!sageutils.folderExists(process.env.TMPDIR)) {
 		fs.mkdirSync(process.env.TMPDIR);
 	}
 
 	// Setup tmp directory in uploads
 	var uploadTemp = path.join(__dirname, "public", "uploads", "tmp");
-	console.log(sageutils.header("SAGE2") + "Upload temp folder: " + chalk.yellow.bold(uploadTemp));
+	sageutils.log("SAGE2", "Upload temp folder:", chalk.yellow.bold(uploadTemp));
 	if (!sageutils.folderExists(uploadTemp)) {
 		fs.mkdirSync(uploadTemp);
 	}
@@ -303,10 +356,10 @@ function initializeSage2Server() {
 	if (typeof program.password  === "string" && program.password.length > 0) {
 		// Creating a new hash from the password
 		global.__SESSION_ID = md5.getHash(program.password);
-		console.log(sageutils.header("Secure") + "Using " + global.__SESSION_ID + " as the key for this session");
+		sageutils.log("Secure", "Using", global.__SESSION_ID, "as the key for this session");
 		// Saving the hash
 		fs.writeFileSync(passwordFile, JSON.stringify({pwd: global.__SESSION_ID}));
-		console.log(sageutils.header("Secure") + "Saved to file name " + passwordFile);
+		sageutils.log("Secure", "Saved to file name", passwordFile);
 		// the session is protected
 		config.passwordProtected = true;
 	} else if (sageutils.fileExists(passwordFile)) {
@@ -315,11 +368,11 @@ function initializeSage2Server() {
 		var passwordFileJson       = JSON.parse(passwordFileJsonString);
 		if (passwordFileJson.pwd !== null) {
 			global.__SESSION_ID = passwordFileJson.pwd;
-			console.log(sageutils.header("Secure") + "A sessionID was found: " + passwordFileJson.pwd);
+			sageutils.log("Secure", "A sessionID was found:", passwordFileJson.pwd);
 			// the session is protected
 			config.passwordProtected = true;
 		} else {
-			console.log(sageutils.header("Secure") + "Invalid hash file " + passwordFile);
+			sageutils.log("Secure", "Invalid hash file", passwordFile);
 		}
 	}
 
@@ -333,28 +386,28 @@ function initializeSage2Server() {
 	var excludesFolders = ['assets', 'apps', 'config', 'savedFiles', 'sessions', 'tmp', 'web'];
 	sageutils.monitorFolders(listOfFolders, excludesFiles, excludesFolders,
 		function(change) {
-			console.log(sageutils.header("Monitor") + "Changes detected in", this.root);
+			sageutils.log("Monitor", "Changes detected in", this.root);
 			if (change.modifiedFiles.length > 0) {
-				console.log(sageutils.header("Monitor") + "	Modified files: %j",   change.modifiedFiles);
+				sageutils.log("Monitor",  "	Modified files: %j", change.modifiedFiles);
 				// broadcast the new file list
 				assets.refresh(this.root, function(count) {
 					broadcast('storedFileList', getSavedFilesList());
 				});
 			}
 			if (change.addedFiles.length > 0) {
-				// console.log(sageutils.header("Monitor") + "	Added files:    %j",   change.addedFiles);
+				// sageutils.log("Monitor", "	Added files:    %j",   change.addedFiles);
 			}
 			if (change.removedFiles.length > 0) {
-				// console.log(sageutils.header("Monitor") + "	Removed files:  %j",   change.removedFiles);
+				// sageutils.log("Monitor", "	Removed files:  %j",   change.removedFiles);
 			}
 			if (change.addedFolders.length > 0) {
-				// console.log(sageutils.header("Monitor") + "	Added folders:    %j", change.addedFolders);
+				// sageutils.log("Monitor", "	Added folders:    %j", change.addedFolders);
 			}
 			if (change.modifiedFolders.length > 0) {
-				// console.log(sageutils.header("Monitor") + "	Modified folders: %j", change.modifiedFolders);
+				// sageutils.log("Monitor", "	Modified folders: %j", change.modifiedFolders);
 			}
 			if (change.removedFolders.length > 0) {
-				// console.log(sageutils.header("Monitor") + "	Removed folders:  %j", change.removedFolders);
+				// sageutils.log("Monitor", "	Removed folders:  %j", change.removedFolders);
 			}
 		}
 	);
@@ -407,7 +460,7 @@ function initializeSage2Server() {
 	sageutils.getFullVersion(function(version) {
 		// fields: base commit branch date
 		SAGE2_version = version;
-		console.log(sageutils.header("SAGE2") + "Full Version:" + json5.stringify(SAGE2_version));
+		sageutils.log("SAGE2", "Full Version:", json5.stringify(SAGE2_version));
 		broadcast('setupSAGE2Version', SAGE2_version);
 
 		if (users !== null) {
@@ -593,12 +646,6 @@ function broadcast(name, data) {
 	wsioServerS.broadcast(name, data);
 }
 
-// Export variables and functions to sub modules
-exports.config    = config;
-exports.broadcast = broadcast;
-exports.dirname   = path.join(__dirname, "node_modules");
-
-
 /**
  * Print a message to all the web consoles
  *
@@ -611,6 +658,14 @@ function emitLog(data) {
 	}
 	broadcast('console', data);
 }
+// Make the function global
+global.emitLog = emitLog;
+
+// Export variables to sub modules
+// dirname: used by application plugins to load plugin source
+// broadcast: used by plugins to send results back to apps
+exports.dirname = path.join(__dirname, "node_modules");
+exports.broadcast = broadcast;
 
 
 // global variables to manage clients
@@ -663,13 +718,13 @@ function closeWebSocketClient(wsio) {
 	var i;
 	var key;
 	if (wsio.clientType === "display") {
-		console.log(sageutils.header("Disconnect") + chalk.bold.red(wsio.id) +
+		sageutils.log("Disconnect", chalk.bold.red(wsio.id) +
 			" (" + wsio.clientType + " " + wsio.clientID + ")");
 	} else {
 		if (wsio.clientType) {
-			console.log(sageutils.header("Disconnect") + chalk.bold.red(wsio.id) + " (" + wsio.clientType + ")");
+			sageutils.log("Disconnect", chalk.bold.red(wsio.id) + " (" + wsio.clientType + ")");
 		} else {
-			console.log(sageutils.header("Disconnect") + chalk.bold.red(wsio.id) + " (unknown)");
+			sageutils.log("Disconnect", chalk.bold.red(wsio.id) + " (unknown)");
 		}
 	}
 
@@ -678,7 +733,7 @@ function closeWebSocketClient(wsio) {
 	// if client is a remote site, send disconnect message
 	var remote = findRemoteSiteByConnection(wsio);
 	if (remote !== null) {
-		console.log(sageutils.header("Remote") + chalk.cyan(remote.name) + " now offline");
+		sageutils.log("Remote", chalk.cyan(remote.name), "now offline");
 		remote.connected = "off";
 		var site = {name: remote.name, connected: remote.connected};
 		broadcast('connectedToRemoteSite', site);
@@ -742,7 +797,7 @@ function wsAddClient(wsio, data) {
 	// Check for password
 	if (config.passwordProtected) {
 		if (!data.session || data.session !== global.__SESSION_ID) {
-			console.log(sageutils.header("WebsocketIO") + "wrong session hash - closing");
+			sageutils.log("WebsocketIO", "wrong session hash - closing");
 			// Send a message back to server
 			wsio.emit('remoteConnection', {status: "refused", reason: 'wrong session hash'});
 			// If server protected and wrong hash, close the socket and byebye
@@ -783,10 +838,10 @@ function wsAddClient(wsio, data) {
 		if (masterDisplay === null) {
 			masterDisplay = wsio;
 		}
-		console.log(sageutils.header("Connect") + chalk.bold.green(wsio.id) + " (" + wsio.clientType + " " + wsio.clientID + ")");
+		sageutils.log("Connect", chalk.bold.green(wsio.id) + " (" + wsio.clientType + " " + wsio.clientID + ")");
 	} else {
 		wsio.clientID = -1;
-		console.log(sageutils.header("Connect") + chalk.bold.green(wsio.id) + " (" + wsio.clientType + ")");
+		sageutils.log("Connect", chalk.bold.green(wsio.id) + " (" + wsio.clientType + ")");
 		if (wsio.clientType === "remoteServer") {
 			// Remote info
 			// var remoteaddr = wsio.ws.upgradeReq.connection.remoteAddress;
@@ -798,7 +853,7 @@ function wsAddClient(wsio, data) {
 			// 	if (element.host === data.host &&
 			// 		element.port === data.port &&
 			// 		remoteSites[index].connected === "on") {
-			// 		console.log(sageutils.header("Connect") + 'known remote site ' + data.host + ':' + data.port);
+			// 		sageutils.log("Connect", 'known remote site', data.host, ':', data.port);
 			// 		manageRemoteConnection(wsio, element, index);
 			// 	}
 			// });
@@ -1510,7 +1565,7 @@ function wsRadialMenuClick(wsio, data) {
 // **************  Media Stream Functions *****************
 
 function wsStartNewMediaStream(wsio, data) {
-	console.log(sageutils.header("Media stream") + 'new stream: ' + data.id);
+	sageutils.log("Media stream", 'new stream:', data.id);
 
 	var i;
 	SAGE2Items.renderSync[data.id] = {clients: {}, chunks: []};
@@ -1711,7 +1766,7 @@ function wsStartNewMediaBlockStream(wsio, data) {
 	data.width  = parseInt(data.width,  10);
 	data.height = parseInt(data.height, 10);
 
-	console.log(sageutils.header("Block stream") + data.width + 'x' + data.height + ' ' + data.colorspace);
+	sageutils.log("Block stream", data.width + 'x' + data.height, data.colorspace);
 
 	SAGE2Items.renderSync[data.id] = {chunks: [], clients: {}, width: data.width, height: data.height};
 	for (var i = 0; i < clients.length; i++) {
@@ -1823,7 +1878,7 @@ function wsReceivedMediaBlockStreamFrame(wsio, data) {
 
 // Print message from remote applications
 function wsPrintDebugInfo(wsio, data) {
-	console.log(sageutils.header("Client") + "Node " + data.node + " [" + data.app + "] " + data.message);
+	sageutils.log("Client", "Node " + data.node + " [" + data.app + "] " + data.message);
 }
 
 function wsRequestVideoFrame(wsio, data) {
@@ -2090,12 +2145,12 @@ function wsApplicationRPC(wsio, data) {
 		} catch (e) {
 			// If something fails
 			console.log("----------------------------");
-			console.log(sageutils.header('RPC') + 'error in plugin ' + pluginFile);
+			sageutils.log('RPC', 'error in plugin', pluginFile);
 			console.log(e);
 			console.log("----------------------------");
 		}
 	} else {
-		console.log(sageutils.header('RPC') + 'error no plugin found for ' + app.file);
+		sageutils.log('RPC', 'error no plugin found for', app.file);
 	}
 
 }
@@ -2176,10 +2231,10 @@ function deleteSession(filename) {
 		}
 		fs.unlink(fullpath, function(err) {
 			if (err) {
-				console.log(sageutils.header("Session") + "Could not delete session " + filename + err);
+				sageutils.log("Session", "Could not delete session", filename, err);
 				return;
 			}
-			console.log(sageutils.header("Session") + "Successfully deleted session " + filename);
+			sageutils.log("Session", "Successfully deleted session", filename);
 		});
 	}
 }
@@ -2196,9 +2251,9 @@ function saveDrawingSession(data) {
 
 	try {
 		fs.writeFileSync(fullpath, JSON.stringify(data, null, 4));
-		console.log(sageutils.header("Session") + "saved drawing session file to " + fullpath);
+		sageutils.log("Session", "saved drawing session file to", fullpath);
 	} catch (err) {
-		console.log(sageutils.header("Session") + "error saving", err);
+		sageutils.log("Session", "error saving", err);
 	}
 }
 
@@ -2253,9 +2308,9 @@ function saveScreenshot(data) {
 	var buf = new Buffer(img, 'base64');
 	try {
 		fs.writeFile(fullpath, buf);
-		console.log(sageutils.header("Session") + "saved screenshot file to " + fullpath);
+		sageutils.log("Session", "saved screenshot file to", fullpath);
 	} catch (err) {
-		console.log(sageutils.header("Session") + "error saving", err);
+		sageutils.log("Session", "error saving", err);
 	}
 }
 
@@ -2412,17 +2467,17 @@ function saveSession(filename) {
 
 	try {
 		fs.writeFileSync(fullpath, JSON.stringify(states, null, 4));
-		console.log(sageutils.header("Session") + "saved session file to " + chalk.yellow.bold(fullpath));
+		sageutils.log("Session", "saved session file to", chalk.yellow.bold(fullpath));
 	} catch (err) {
-		console.log(sageutils.header("Session") + "error saving " + err);
+		sageutils.log("Session", "error saving", err);
 	}
 
 	// write preview image
 	try {
 		fs.writeFileSync(fullPreviewPath, header + svg);
-		console.log(sageutils.header("Session") + "saved session preview image to " + chalk.yellow.bold(fullPreviewPath));
+		sageutils.log("Session", "saved session preview image to", chalk.yellow.bold(fullPreviewPath));
 	} catch (err) {
-		console.log(sageutils.header("Session") + "error saving " + err);
+		sageutils.log("Session", "error saving", err);
 	}
 }
 
@@ -2443,12 +2498,12 @@ function saveUserLog(filename) {
 		};
 
 		fs.writeFileSync(userLogName, json5.stringify(users, ignoreIP, 4));
-		console.log(sageutils.header("LOG") + "saved log file to " + userLogName);
+		sageutils.log("LOG", "saved log file to", userLogName);
 	}
 }
 
 function createAppFromDescription(app, callback) {
-	console.log(sageutils.header("Session") + "App", app.id);
+	sageutils.log("Session", "App", app.id);
 
 	if (app.application === "media_stream" || app.application === "media_block_stream") {
 		callback(JSON.parse(JSON.stringify(app)), null);
@@ -2506,12 +2561,12 @@ function loadSession(filename) {
 
 	fs.readFile(fullpath, function(err, data) {
 		if (err) {
-			console.log(sageutils.header("SAGE2") + "error reading session", err);
+			sageutils.log("SAGE2", "error reading session", err);
 		} else {
-			console.log(sageutils.header("SAGE2") + "reading session from " + fullpath);
+			sageutils.log("SAGE2", "reading session from " + fullpath);
 
 			var session = JSON.parse(data);
-			console.log(sageutils.header("Session") + "number of applications", session.numapps);
+			sageutils.log("Session", "number of applications", session.numapps);
 
 			// recreate partitions
 			if (session.partitions) {
@@ -3347,7 +3402,7 @@ function wsMoveElementFromStoredFiles(wsio, data) {
 	if (destinationFile) {
 		assets.moveAsset(data.filename, destinationFile, function(err) {
 			if (err) {
-				console.log(sageutils.header('Assets') + 'Error moving ' + data.filename);
+				sageutils.log('Assets', 'Error moving', data.filename);
 			} else {
 				// if all good, send the new list of files
 				// wsRequestStoredFiles(wsio);
@@ -3410,7 +3465,7 @@ function wsCreateFolder(wsio, data) {
 			var toCreate = path.join(f.path, subdir, data.path);
 			if (!sageutils.folderExists(toCreate)) {
 				sageutils.mkdirParent(toCreate);
-				console.log(sageutils.header('Folder') + toCreate + ' created');
+				sageutils.log("Folders", toCreate, 'created');
 			}
 		}
 	}
@@ -3427,7 +3482,7 @@ function wsCommand(wsio, data) {
 // **************  Launching Web Browser *****************
 
 function wsOpenNewWebpage(wsio, data) {
-	console.log(sageutils.header('Webview') + "opening " + data.url);
+	sageutils.log('Webview', "opening", data.url);
 
 	wsLoadApplication(null, {
 		application: "/uploads/apps/Webview",
@@ -3567,14 +3622,14 @@ function wsAddNewSharedElementFromRemoteServer(wsio, data) {
 	var i;
 
 	appLoader.loadApplicationFromRemoteServer(data.application, function(appInstance, videohandle) {
-		console.log(sageutils.header("Remote App") + appInstance.title + " (" + appInstance.application + ")");
+		sageutils.log("Remote App", appInstance.title + " (" + appInstance.application + ")");
 
 		if (appInstance.application === "media_stream" || appInstance.application === "media_block_stream") {
 			appInstance.id = wsio.remoteAddress.address + ":" + wsio.remoteAddress.port + "|" + data.id;
 			SAGE2Items.renderSync[appInstance.id] = {chunks: [], clients: {}};
 			for (i = 0; i < clients.length; i++) {
 				if (clients[i].clientType === "display") {
-					console.log(sageutils.header("Remote App") + "render client: " + clients[i].id);
+					sageutils.log("Remote App", "render client", clients[i].id);
 					SAGE2Items.renderSync[appInstance.id].clients[clients[i].id] = {
 						wsio: clients[i], readyForNextFrame: false, blocklist: []
 					};
@@ -4255,7 +4310,7 @@ function loadConfiguration() {
 
 				if (text !== "") {
 					configFile = text;
-					console.log(sageutils.header("SAGE2") + "Found configuration file: " + configFile);
+					sageutils.log("SAGE2", "Found configuration file:", configFile);
 					break;
 				}
 			}
@@ -4271,7 +4326,7 @@ function loadConfiguration() {
 		}
 		configFile = path.join("config", hn + "-cfg.json");
 		if (sageutils.fileExists(configFile)) {
-			console.log(sageutils.header("SAGE2") + "Found configuration file: " + configFile);
+			sageutils.log("SAGE2", "Found configuration file:", configFile);
 		} else {
 			// Check in ~/Document/SAGE2_Media/config
 			if (platform === "Windows") {
@@ -4287,13 +4342,13 @@ function loadConfiguration() {
 					configFile = path.join("config", "default-cfg.json");
 				}
 			}
-			console.log(sageutils.header("SAGE2") + "Using default configuration file: " + configFile);
+			sageutils.log("SAGE2", "Using default configuration file:", configFile);
 		}
 	}
 
 	if (!sageutils.fileExists(configFile)) {
 		console.log("\n----------");
-		console.log(sageutils.header("SAGE2") + "Cannot find configuration file: " + configFile);
+		console.log("Cannot find configuration file:", configFile);
 		console.log("----------\n\n");
 		process.exit(1);
 	}
@@ -4396,7 +4451,7 @@ function loadConfiguration() {
 		var ratioParsed = aspectRatioConfig.split(":");
 		aspectRatio = (parseFloat(ratioParsed[0]) / parseFloat(ratioParsed[1])) || aspectRatio;
 		userDefinedAspectRatio = true;
-		console.log(sageutils.header("UI") + "User defined aspect ratio: " + aspectRatio);
+		sageutils.log("UI", "User defined aspect ratio:", aspectRatio);
 	}
 
 	var tileHeight = 0.0;
@@ -4413,7 +4468,7 @@ function loadConfiguration() {
 	var pixelsPerMeter = userConfig.resolution.height / tileHeight;
 	if (userDefinedAspectRatio == false) {
 		aspectRatio = userConfig.resolution.width / userConfig.resolution.height;
-		console.log(sageutils.header("UI") + "Resolution defined aspect ratio: " + aspectRatio.toFixed(2));
+		sageutils.log("UI", "Resolution defined aspect ratio:", aspectRatio.toFixed(2));
 	}
 
 	// Check the display border settings
@@ -4453,14 +4508,14 @@ function loadConfiguration() {
 
 		if (calcuatedWidgetControlSize < minimumWidgetControlSize) {
 			calcuatedWidgetControlSize = minimumWidgetControlSize;
-			console.log(sageutils.header("UI") + "widgetControlSize (min): " + calcuatedWidgetControlSize);
+			sageutils.log("UI", "widgetControlSize (min):", calcuatedWidgetControlSize);
 		} else if (calcuatedWidgetControlSize > oldDefaultWidgetScale) {
 			calcuatedWidgetControlSize = oldDefaultWidgetScale * 2;
-			console.log(sageutils.header("UI") + "widgetControlSize (max): " + calcuatedWidgetControlSize);
+			sageutils.log("UI", "widgetControlSize (max):", calcuatedWidgetControlSize);
 		} else {
-			console.log(sageutils.header("UI") + "widgetControlSize: " + calcuatedWidgetControlSize);
+			sageutils.log("UI", "widgetControlSize:", calcuatedWidgetControlSize);
 		}
-		// console.log(sageutils.header("UI") + "pixelsPerMeter: " + pixelsPerMeter);
+		// sageutils.log("UI", "pixelsPerMeter:", pixelsPerMeter);
 		userConfig.ui.widgetControlSize = calcuatedWidgetControlSize;
 	}
 
@@ -4668,7 +4723,7 @@ function setupHttpsOptions() {
 		// first try the filename based on the hostname-server.key
 		if (sageutils.fileExists(path.join("keys", config.host + "-server.key"))) {
 			// Load the certificate files
-			console.log(sageutils.header("Certificate") + "Loading certificate " + config.host + "-server.key");
+			sageutils.log("Certificate", "Loading certificate", config.host + "-server.key");
 			server_key = fs.readFileSync(path.join("keys", config.host + "-server.key"));
 			server_crt = fs.readFileSync(path.join("keys", config.host + "-server.crt"));
 			server_ca  = sageutils.loadCABundle(path.join("keys", config.host + "-ca.crt"));
@@ -4678,7 +4733,7 @@ function setupHttpsOptions() {
 			// remove the hostname from the FQDN and search for wildcard certificate
 			//    syntax: _.rest.com.key or _.rest.bigger.com.key
 			var domain = '_.' + config.host.split('.').slice(1).join('.');
-			console.log(sageutils.header("Certificate") + "Loading domain certificate " + domain + ".key");
+			sageutils.log("Certificate", "Loading domain certificate", domain + ".key");
 			server_key = fs.readFileSync(path.join("keys", domain + ".key"));
 			server_crt = fs.readFileSync(path.join("keys", domain + ".crt"));
 			server_ca  = sageutils.loadCABundle(path.join("keys", domain + "-ca.crt"));
@@ -4725,7 +4780,7 @@ function setupHttpsOptions() {
 			// callback to handle multi-homed machines
 			SNICallback: function(servername) {
 				if (!certs.hasOwnProperty(servername)) {
-					console.log(sageutils.header("SNI") + "Unknown host, cannot find a certificate for ", servername);
+					sageutils.log("SNI", "Unknown host, cannot find a certificate for ", servername);
 					return null;
 				}
 				return certs[servername];
@@ -4746,7 +4801,7 @@ function setupHttpsOptions() {
 				if (certs.hasOwnProperty(servername)) {
 					cb(null, certs[servername]);
 				} else {
-					console.log(sageutils.header("SNI") + "Unknown host, cannot find a certificate for ", servername);
+					sageutils.log("SNI", "Unknown host, cannot find a certificate for ", servername);
 					cb("SNI Unknown host", null);
 				}
 			}
@@ -4760,8 +4815,7 @@ function setupHttpsOptions() {
 			// TLSv1_method, TLSv1_1_method, TLSv1_2_method
 			// DTLS_method,  DTLSv1_method,  DTLSv1_2_method
 			httpsOptions.secureProtocol = config.security.secureProtocol;
-			console.log(sageutils.header("HTTPS") +
-				"securing with protocol: " + httpsOptions.secureProtocol);
+			sageutils.log("HTTPS", "securing with protocol:", httpsOptions.secureProtocol);
 		}
 	}
 
@@ -4803,16 +4857,16 @@ function uploadForm(req, res) {
 	form.multiples     = true;
 
 	form.on('fileBegin', function(name, file) {
-		console.log(sageutils.header("Upload") + file.name + ' ' + file.type);
+		sageutils.log("Upload", file.name, file.type);
 	});
 
 	form.on('error', function(err) {
-		console.log(sageutils.header("Upload") + 'Request aborted');
+		sageutils.log("Upload", 'Request aborted');
 		try {
 			// Removing the temporary file
 			fs.unlinkSync(this.openedFiles[0].path);
 		} catch (err) {
-			console.log(sageutils.header("Upload") + '   error removing the temporary file');
+			sageutils.log("Upload", '   error removing the temporary file');
 		}
 	});
 
@@ -4820,11 +4874,11 @@ function uploadForm(req, res) {
 		// Keep user information
 		if (field === 'SAGE2_ptrName') {
 			ptrName = value;
-			console.log(sageutils.header("Upload") + "by " + ptrName);
+			sageutils.log("Upload", "by", ptrName);
 		}
 		if (field === 'SAGE2_ptrColor') {
 			ptrColor = value;
-			console.log(sageutils.header("Upload") + "color " + ptrColor);
+			sageutils.log("Upload", "color", ptrColor);
 		}
 		// convert value [0 to 1] to wall coordinate from drop location
 		if (field === 'dropX') {
@@ -4887,7 +4941,7 @@ function manageUploadedFiles(files, position, ptrName, ptrColor, openAfter) {
 		appLoader.manageAndLoadUploadedFile(file, function(appInstance, videohandle) {
 
 			if (appInstance === null) {
-				console.log(sageutils.header("Upload") + 'unrecognized file type: ' + file.name + ' ' + file.type);
+				sageutils.log("Upload", 'unrecognized file type:', file.name, file.type);
 				return;
 			}
 
@@ -4985,7 +5039,7 @@ function initalizeRemoteSites() {
 				}, 15000);
 			} else {
 				// not a valid site definition, we ignore it
-				console.log(sageutils.header("Remote") + chalk.bold.red('invalid host definition (ignored) ') + element.name);
+				sageutils.log("Remote", chalk.bold.red('invalid host definition (ignored)'), element.name);
 			}
 		});
 	}
@@ -5018,7 +5072,7 @@ function manageRemoteConnection(remote, site, index) {
 	remote.clientType = "remoteServer";
 
 	remote.onclose(function() {
-		console.log(sageutils.header("Remote") + chalk.cyan(config.remote_sites[index].name) + " offline");
+		sageutils.log("Remote", chalk.cyan(config.remote_sites[index].name), "offline");
 		// it was locked, keep the state locked
 		if (remoteSites[index].connected !== "locked") {
 			remoteSites[index].connected = "off";
@@ -5065,10 +5119,10 @@ function manageRemoteConnection(remote, site, index) {
 
 	remote.on('remoteConnection', function(remotesocket, data) {
 		if (data.status === "refused") {
-			console.log(sageutils.header("Remote") + "Connection refused to " + chalk.cyan(site.name) + ": " + data.reason);
+			sageutils.log("Remote", "Connection refused to", chalk.cyan(site.name), ": " + data.reason);
 			remoteSites[index].connected = "locked";
 		} else {
-			console.log(sageutils.header("Remote") + "Connected to " + chalk.cyan(site.name));
+			sageutils.log("Remote", "Connected to", chalk.cyan(site.name));
 			remoteSites[index].connected = "on";
 		}
 		var update_site = {name: remoteSites[index].name, connected: remoteSites[index].connected};
@@ -5105,25 +5159,25 @@ setTimeout(function() {
 
 sage2ServerS.on('listening', function(e) {
 	// Success
-	console.log(sageutils.header("SAGE2") + chalk.bold("Serving Securely:"));
-	console.log(sageutils.header("SAGE2") + "- Web UI:\t " + chalk.cyan.bold.underline("https://" +
+	sageutils.log("SAGE2", chalk.bold("Serving Securely:"));
+	sageutils.log("SAGE2", "- Web UI:\t " + chalk.cyan.bold.underline("https://" +
 		config.host + ":" + config.secure_port));
-	console.log(sageutils.header("SAGE2") + "- Web console:\t " + chalk.cyan.bold.underline("https://" + config.host +
+	sageutils.log("SAGE2", "- Web console:\t " + chalk.cyan.bold.underline("https://" + config.host +
 		":" + config.secure_port + "/admin/console.html"));
 });
 
 // Place callback for errors in the 'listen' call for HTTP
 sage2Server.on('error', function(e) {
 	if (e.code === 'EACCES') {
-		console.log(sageutils.header("HTTP_Server") + "You are not allowed to use the port: ", config.port);
-		console.log(sageutils.header("HTTP_Server") + "  use a different port or get authorization (sudo, setcap, ...)");
+		sageutils.log("HTTP_Server", "You are not allowed to use the port: ", config.port);
+		sageutils.log("HTTP_Server", "  use a different port or get authorization (sudo, setcap, ...)");
 		process.exit(1);
 	} else if (e.code === 'EADDRINUSE') {
-		console.log(sageutils.header("HTTP_Server") + "The port is already in use by another process:", config.port);
-		console.log(sageutils.header("HTTP_Server") + "  use a different port or stop the offending process");
+		sageutils.log("HTTP_Server", "The port is already in use by another process:", config.port);
+		sageutils.log("HTTP_Server", "  use a different port or stop the offending process");
 		process.exit(1);
 	} else {
-		console.log(sageutils.header("HTTP_Server") + "Error in the listen call: ", e.code);
+		sageutils.log("HTTP_Server", "Error in the listen call: ", e.code);
 		process.exit(1);
 	}
 });
@@ -5145,10 +5199,10 @@ sage2Server.on('listening', function(e) {
 			"/session.html?page=audioManager.html&hash=" + global.__SESSION_ID);
 	}
 
-	console.log(sageutils.header("SAGE2") + chalk.bold("Serving:"));
-	console.log(sageutils.header("SAGE2") + "- Web UI:\t " + ui_url);
-	console.log(sageutils.header("SAGE2") + "- Display 0:\t "      + dp_url);
-	console.log(sageutils.header("SAGE2") + "- Audio manager: "  + am_url);
+	sageutils.log("SAGE2", chalk.bold("Serving:"));
+	sageutils.log("SAGE2", "- Web UI:\t"        + ui_url);
+	sageutils.log("SAGE2", "- Display 0:\t"     + dp_url);
+	sageutils.log("SAGE2", "- Audio mgr:\t" + am_url);
 });
 
 // KILL intercept
@@ -5237,21 +5291,21 @@ function processInputCommand(line) {
 			break;
 		}
 		case 'version': {
-			console.log(sageutils.header("Version") + 'base:', SAGE2_version.base, ' branch:', SAGE2_version.branch,
-				' commit:', SAGE2_version.commit, SAGE2_version.date);
+			sageutils.log("Version", 'base:', SAGE2_version.base, 'branch:', SAGE2_version.branch,
+				'commit:', SAGE2_version.commit, SAGE2_version.date);
 			break;
 		}
 		case 'update': {
 			if (SAGE2_version.branch.length > 0) {
 				sageutils.updateWithGIT(SAGE2_version.branch, function(error, success) {
 					if (error) {
-						console.log(sageutils.header('GIT') + 'Update error - ' + error);
+						sageutils.log('GIT', 'Update error -', error);
 					} else {
-						console.log(sageutils.header('GIT') + 'Update success - ' + success);
+						sageutils.log('Update success -', success);
 					}
 				});
 			} else {
-				console.log(sageutils.header("Update") + "failed: not linked to any repository");
+				sageutils.log("Update", "failed: not linked to any repository");
 			}
 			break;
 		}
@@ -5294,7 +5348,7 @@ function processInputCommand(line) {
 					});
 				}
 			} else {
-				console.log(sageutils.header("Command") + "should be: open /user/file.pdf [0.5 0.5]");
+				sageutils.log("Command", "should be: open /user/file.pdf [0.5 0.5]");
 			}
 			break;
 		}
@@ -5314,7 +5368,7 @@ function processInputCommand(line) {
 				var dy = parseFloat(command[3]);
 				wsAppMoveBy(null, {id: command[1], dx: dx, dy: dy});
 			} else {
-				console.log(sageutils.header("Command") + "should be: moveby app_0 10 10");
+				sageutils.log("Command", "should be: moveby app_0 10 10");
 			}
 			break;
 		}
@@ -5325,7 +5379,7 @@ function processInputCommand(line) {
 				var yy = parseFloat(command[3]);
 				wsAppMoveTo(null, {id: command[1], x: xx, y: yy});
 			} else {
-				console.log(sageutils.header("Command") + "should be: moveto app_0 100 100");
+				sageutils.log("Command", "should be: moveto app_0 100 100");
 			}
 			break;
 		}
@@ -5337,13 +5391,13 @@ function processInputCommand(line) {
 				ww = parseFloat(command[2]);
 				hh = parseFloat(command[3]);
 				wsAppResize(null, {id: command[1], width: ww, height: hh, keepRatio: false});
-				console.log(sageutils.header("Command") + "resizing exactly to " + ww + "x" + hh);
+				sageutils.log("Command", "resizing exactly to", ww + "x" + hh);
 			} else if (command.length === 3) {
 				ww = parseFloat(command[2]);
 				hh = 0;
 				wsAppResize(null, {id: command[1], width: ww, height: hh, keepRatio: true});
 			} else {
-				console.log(sageutils.header("Command") + "should be: resize app_0 800 600");
+				sageutils.log("Command", "should be: resize app_0 800 600");
 			}
 			break;
 		}
@@ -5369,7 +5423,7 @@ function processInputCommand(line) {
 			if (command.length > 1 && typeof command[1] === "string") {
 				wsFullscreen(null, {id: command[1]});
 			} else {
-				console.log(sageutils.header("Command") + "should be: fullscreen app_0");
+				sageutils.log("Command", "should be: fullscreen app_0");
 			}
 			break;
 		}
@@ -5681,7 +5735,7 @@ function showPointer(uniqueID, data) {
 		return;
 	}
 
-	console.log(sageutils.header("Pointer") + chalk.green.bold("starting: ") + chalk.underline.bold(uniqueID));
+	sageutils.log("Pointer", chalk.green.bold("starting:"), chalk.underline.bold(uniqueID));
 
 	if (data.sourceType === undefined) {
 		data.sourceType = "Pointer";
@@ -5696,7 +5750,7 @@ function hidePointer(uniqueID) {
 		return;
 	}
 
-	console.log(sageutils.header("Pointer") + chalk.red.bold("stopping: ") + chalk.underline.bold(uniqueID));
+	sageutils.log("Pointer", chalk.red.bold("stopping:"), chalk.underline.bold(uniqueID));
 
 	sagePointers[uniqueID].stop();
 	var prevInteractionItem = remoteInteraction[uniqueID].getPreviousInteractionItem();
@@ -8708,6 +8762,12 @@ function pointerCloseGesture(uniqueID, pointerX, pointerY, time, gesture) {
 }
 
 function handleNewApplication(appInstance, videohandle) {
+	// Create tracking for all apps by default stacking another state load value.
+	// It must be done here due to how mergeObjects() works as specified in src/node-utils.js
+	if (appInstance.data === null || appInstance.data === undefined) {
+		appInstance.data = {};
+	}
+	appInstance.data.pointersOverApp = [];
 	broadcast('createAppWindow', appInstance);
 	broadcast('createAppWindowPositionSizeOnly', getAppPositionSize(appInstance));
 
@@ -9433,7 +9493,7 @@ function wsLaunchAppWithValues(wsio, data) {
 		try {
 			fs.accessSync(fullpath);
 		} catch (err) {
-			console.log(sageutils.header("wsLaunchAppWithValues") + "Cannot launch " + data.appName + ", doesn't exist.");
+			sageutils.log("wsLaunchAppWithValues", "Cannot launch", data.appName, ", doesn't exist.");
 			return;
 		}
 	}
@@ -9535,7 +9595,7 @@ function wsSaveDataOnServer(wsio, data) {
 		|| data.fileName == null || data.fileName == undefined
 		|| data.fileContent == null || data.fileContent == undefined
 	) {
-		console.log(sageutils.header("wsSaveDataOnServer") + "ERROR> not saving data, a required field is null or undefined");
+		sageutils.log("wsSaveDataOnServer", "ERROR> not saving data, a required field is null or undefined");
 	}
 	// Remove any path changing by chopping off the / andor \ in the filename.
 	while (data.fileName.indexOf("/") >= 0) {
@@ -9583,7 +9643,7 @@ function wsSaveDataOnServer(wsio, data) {
 		var aBuffer = new Buffer(data.fileContent);
 		fs.writeFileSync(fullpath, aBuffer);
 	} else {
-		console.log(sageutils.header("wsSaveDataOnServer") + "ERROR> unable to save fileType " + data.fileType);
+		sageutils.log("wsSaveDataOnServer", "ERROR> unable to save fileType", data.fileType);
 	}
 }
 
@@ -9819,7 +9879,7 @@ function wsWallScreenshotFromDisplay(wsio, data) {
 			}
 		}
 	} else {
-		console.log(sageutils.header('Screenshot') + "Unknown display " + wsio.clientID + " checked in for screenshot");
+		sageutils.log('Screenshot', "Unknown display", wsio.clientID, "checked in for screenshot");
 	}
 
 	//
@@ -9903,7 +9963,7 @@ function wsWallScreenshotFromDisplay(wsio, data) {
 		// Ready for mosaic and write
 		mosaicImage.mosaic().quality(90).write(currentPath, function(error) {
 			if (error) {
-				console.log(sageutils.header('Screenshot') + error);
+				sageutils.log('Screenshot', error);
 			} else {
 				// Add the image into the asset management and open with a width 1/4 of the wall
 				manageUploadedFiles([{
@@ -9952,7 +10012,7 @@ function wsWallScreenshotFromDisplay(wsio, data) {
  * @param      {Object}  data    The data
  */
 function wsStartJupyterSharing(wsio, data) {
-	console.log(sageutils.header('Jupyter') + "received new stream: " + data.id);
+	sageutils.log('Jupyter', "received new stream:", data.id);
 
 	/*var i;
 	SAGE2Items.renderSync[data.id] = {clients: {}, chunks: []};
@@ -9976,7 +10036,7 @@ function wsStartJupyterSharing(wsio, data) {
 }
 
 function wsUpdateJupyterSharing(wsio, data) {
-	console.log(sageutils.header('Jupyter') + "received update from: " + data.id);
+	sageutils.log('Jupyter', "received update from:", data.id);
 	sendJupyterUpdates(data);
 }
 
@@ -10058,7 +10118,7 @@ function appFileSaveRequest(wsio, data) {
 		// and write the file
 		try {
 			fs.writeFileSync(fullpath, data.saveData);
-			console.log(sageutils.header('File') + "saved file to " + fullpath);
+			sageutils.log('File', "saved file to", fullpath);
 			if (data.asset) {
 				var fileObject = {};
 				fileObject[0] = {
@@ -10069,11 +10129,11 @@ function appFileSaveRequest(wsio, data) {
 				manageUploadedFiles(fileObject, [0, 0], data.app, "#B4B4B4", true);
 			}
 		} catch (err) {
-			console.log(sageutils.header('File') + "error while saving to " + fullpath + ":" + err);
+			sageutils.log('File', "error while saving to", fullpath + ":" + err);
 		}
 
 	} else {
-		console.log(sageutils.header('File') + "file directory not specified. File not saved.");
+		sageutils.log('File', "file directory not specified. File not saved.");
 	}
 }
 
@@ -10137,7 +10197,7 @@ function wsRequestNewTitle(wsio, data) {
 	*/
 function wsCreatePartition(wsio, data) {
 	// Create Test partition
-	console.log(sageutils.header('Partition') + "Creating a new partition");
+	sageutils.log('Partition', "Creating a new partition");
 	var newPtn = createPartition(data, "#ffffff");
 
 	// update the title of the new partition
@@ -10151,7 +10211,7 @@ function wsCreatePartition(wsio, data) {
 	* @param {object} data - Contains the layout specificiation with which partitions will be created
 	*/
 function wsPartitionScreen(wsio, data) {
-	console.log(sageutils.header('Partition') + "Dividing SAGE2 into partitions");
+	sageutils.log('Partition', "Dividing SAGE2 into partitions");
 
 	partitions.unusedColors = partitions.defaultColors.slice(0, partitions.defaultColors.length);
 

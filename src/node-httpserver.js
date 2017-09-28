@@ -149,7 +149,7 @@ var hpkpPin2 = (function() {
  */
 HttpServer.prototype.buildHeader = function() {
 	// Get the site configuration, from server.js
-	var cfg = module.parent.exports.config;
+	var cfg = global.config;
 	// Build the header object
 	var header = {};
 
@@ -540,12 +540,11 @@ HttpServer.prototype.onreq = function(req, res) {
 
 		wstream.on('finish', function() {
 			// stream closed
-			console.log(sageutils.header('PUT') + 'File written' + putName +
-				' ' + fileLength + ' bytes');
+			sageutils.log('PUT', 'File written', putName, fileLength, 'bytes');
 		});
 		wstream.on('error', function() {
 			// Error during write
-			console.log(sageutils.header('PUT') + 'Error during write for ' + putName);
+			sageutils.log('PUT', 'Error during write for', putName);
 		});
 		// Getting data
 		req.on('data', function(chunk) {
@@ -556,8 +555,7 @@ HttpServer.prototype.onreq = function(req, res) {
 		// Data no more
 		req.on('end', function() {
 			// No more data
-			console.log(sageutils.header('PUT') + 'Received: ' + filename + ' ' +
-				putName + ' ' + fileLength + ' bytes');
+			sageutils.log('PUT', 'Received:', filename, putName, fileLength, 'bytes');
 			// Close the write stream
 			wstream.end();
 			// empty 200 OK response for now
