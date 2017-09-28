@@ -46,20 +46,16 @@ var quickNote = SAGE2_App.extend({
 		// If loaded from session, this.state will have meaningful values.
 		this.setMessage(this.state);
 
+
+		var _this = this;
 		// If it got file contents from the sever, then extract.
 		if (data.state.contentsOfNoteFile) {
 			this.parseDataFromServer(data.state.contentsOfNoteFile);
-		}
-
-		var _this = this;
-		// if it was passed additional init values
-		if (data.csdInitValues) {
-			data.csdInitValues.serverDate = new Date(Date.now());
-			_this.setMessage(data.csdInitValues);
-			setTimeout(function() {
-				//_this.setMessage(data.csdInitValues);
-				_this.updateTitle(_this.noteTitle);
-			}, 200);
+		} else if (this.state.contentsOfNoteFile) {
+			this.parseDataFromServer(this.state.contentsOfNoteFile);
+		} else if (data.customLaunchParams) { // if it was passed additional init values
+			data.customLaunchParams.serverDate = new Date(Date.now());
+			_this.setMessage(data.customLaunchParams);
 		}
 	},
 
@@ -129,74 +125,77 @@ var quickNote = SAGE2_App.extend({
 			this.element.innerHTML        = msgParams.clientInput;
 			this.formatAndSetTitle(this.state.creationTime);
 			this.saveNote(msgParams.creationTime);
-			return;
-		}
+		} else { // else defined by load or user input
+			// Otherwise set the values using probably user input.
+			if (msgParams.clientName === undefined || msgParams.clientName === null || msgParams.clientName == "") {
+				msgParams.clientName = "";
+			}
+			// If the color choice was defined, use the given color. RMB choices do not provide a color (currently)
+			if (msgParams.colorChoice !== undefined && msgParams.colorChoice !== null && msgParams.colorChoice !== "") {
+				this.backgroundChoice = msgParams.colorChoice;
+				this.element.style.background = msgParams.colorChoice;
+			}
 
-		// Otherwise set the values using probably user input.
-		if (msgParams.clientName === undefined || msgParams.clientName === null || msgParams.clientName == "") {
-			msgParams.clientName = "";
-		}
-		// If the color choice was defined, use the given color. RMB choices do not provide a color (currently)
-		if (msgParams.colorChoice !== undefined && msgParams.colorChoice !== null && msgParams.colorChoice !== "") {
-			this.backgroundChoice = msgParams.colorChoice;
-			this.element.style.background = msgParams.colorChoice;
-		}
+			// set the text, currently innerHTML matters to render <br> and allow for html tags
+			this.element.innerHTML = msgParams.clientInput;
+			// client input state set as part of the clean
+			this.state.clientName  = msgParams.clientName;
+			this.state.colorChoice = this.backgroundChoice;
 
-		// set the text, currently innerHTML matters to render <br> and allow for html tags
-		this.element.innerHTML = msgParams.clientInput;
-		// client input state set as part of the clean
-		this.state.clientName  = msgParams.clientName;
-		this.state.colorChoice = this.backgroundChoice;
-
-		// if the creationTime has not been set, then fill it out.
-		if (this.state.creationTime === null
-			&& msgParams.serverDate !== undefined
-			&& msgParams.serverDate !== null) {
-			this.state.creationTime = new Date(msgParams.serverDate);
-			// build the title string.
-			var titleString = msgParams.clientName + "-QN-" + this.state.creationTime.getFullYear();
-			if (this.state.creationTime.getMonth() < 9) {
-				titleString += "0";
+			// if the creationTime has not been set, then fill it out.
+			if (this.state.creationTime === null
+				&& msgParams.serverDate !== undefined
+				&& msgParams.serverDate !== null) {
+				this.state.creationTime = new Date(msgParams.serverDate);
+				// build the title string.
+				var titleString = msgParams.clientName + "-QN-" + this.state.creationTime.getFullYear();
+				if (this.state.creationTime.getMonth() < 9) {
+					titleString += "0";
+				}
+				titleString += (this.state.creationTime.getMonth() + 1) + ""; // month +1 because starts at 0
+				if (this.state.creationTime.getDate() < 10) {
+					titleString += "0";
+				}
+				titleString += this.state.creationTime.getDate() + "-";
+				if (this.state.creationTime.getHours() < 10) {
+					titleString += "0";
+				}
+				titleString += this.state.creationTime.getHours();
+				if (this.state.creationTime.getMinutes() < 10) {
+					titleString += "0";
+				}
+				titleString += this.state.creationTime.getMinutes();
+				if (this.state.creationTime.getSeconds() < 10) {
+					titleString += "0";
+				}
+				titleString += this.state.creationTime.getSeconds();
+				if (this.state.creationTime.getMilliseconds() < 10) {
+					titleString += "0";
+				}
+				if (this.state.creationTime.getMilliseconds() < 100) {
+					titleString += "0";
+				}
+				titleString += this.state.creationTime.getMilliseconds();
+				// store it for later and update the tile.
+				this.state.creationTime = titleString;
+				this.formatAndSetTitle(this.state.creationTime);
 			}
-			titleString += (this.state.creationTime.getMonth() + 1) + ""; // month +1 because starts at 0
-			if (this.state.creationTime.getDate() < 10) {
-				titleString += "0";
+			// if loaded will include the creationTime
+			if (msgParams.creationTime !== undefined && msgParams.creationTime !== null) {
+				this.formatAndSetTitle(msgParams.creationTime);
 			}
-			titleString += this.state.creationTime.getDate() + "-";
-			if (this.state.creationTime.getHours() < 10) {
-				titleString += "0";
-			}
-			titleString += this.state.creationTime.getHours();
-			if (this.state.creationTime.getMinutes() < 10) {
-				titleString += "0";
-			}
-			titleString += this.state.creationTime.getMinutes();
-			if (this.state.creationTime.getSeconds() < 10) {
-				titleString += "0";
-			}
-			titleString += this.state.creationTime.getSeconds();
-			if (this.state.creationTime.getMilliseconds() < 10) {
-				titleString += "0";
-			}
-			if (this.state.creationTime.getMilliseconds() < 100) {
-				titleString += "0";
-			}
-			titleString += this.state.creationTime.getMilliseconds();
-			// store it for later and update the tile.
-			this.state.creationTime = titleString;
-			this.formatAndSetTitle(this.state.creationTime);
-		}
-		// if loaded will include the creationTime
-		if (msgParams.creationTime !== undefined && msgParams.creationTime !== null) {
-			this.formatAndSetTitle(msgParams.creationTime);
 		}
 
 		// adjust height to show all text. minimum 5 lines enforce(?)
 		this.needTextZoneHeight = (this.needTextZoneHeight < 5) ? 5 : this.needTextZoneHeight;
+		this.sizeModification = parseInt(this.element.clientWidth) / this.startingAppWidth;
 		this.sendResize(this.sage2_width,
 			this.needTextZoneHeight * this.startingFontHeight * this.sizeModification);
 
-		this.saveNote(msgParams.creationTime);
+		// save if didn't come from file
+		if (msgParams.fileDefined !== true) {
+			this.saveNote(msgParams.creationTime);
+		}
 	},
 
 	setColor: function(responseObject) {
@@ -253,7 +252,6 @@ var quickNote = SAGE2_App.extend({
 		this.resize();
 		// Tell server to save the file.
 		var fileData = {};
-		fileData.type = "saveDataOnServer";
 		fileData.fileType = "note"; // Extension
 		fileData.fileName = this.state.creationTime + ".note"; // Fullname with extension
 		// What to save in the file
@@ -262,7 +260,9 @@ var quickNote = SAGE2_App.extend({
 			+ this.state.colorChoice
 			+ "\n"
 			+ this.state.clientInput;
-		wsio.emit("csdMessage", fileData);
+		wsio.emit("saveDataOnServer", fileData);
+		// save the state value
+		this.state.contentsOfNoteFile = fileData.fileContent;
 
 		// update the context menu with the current content
 		this.getFullContextMenuAndUpdate();
@@ -284,17 +284,13 @@ var quickNote = SAGE2_App.extend({
 
 	duplicate: function(responseObject) {
 		if (isMaster) {
-			var data = {};
-			data.type       = "launchAppWithValues";
-			data.appName    = "quickNote";
-			data.func       = "setMessage";
-			data.xLaunch    = this.sage2_x + 100;
-			data.yLaunch    = this.sage2_y;
-			data.params		= {};
-			data.params.clientName  = responseObject.clientName;
-			data.params.clientInput = this.state.clientInput;
-			data.params.colorChoice = this.state.colorChoice;
-			wsio.emit("csdMessage", data);
+			// function(appName, x, y, params, funcToPassParams) {
+			this.launchAppWithValues("quickNote", {
+				clientName: responseObject.clientName,
+				clientInput: this.state.clientInput,
+				colorChoice: this.state.colorChoice
+			},
+			this.sage2_x + 100, this.sage2_y);
 		}
 	},
 
@@ -317,10 +313,23 @@ var quickNote = SAGE2_App.extend({
 		var entry;
 
 		entry = {};
+		entry.description = "Edit Note";
+		entry.callback    = "SAGE2_editQuickNote";
+		entry.parameters  = {
+			currentContent: this.state.clientInput,
+			currentColorChoice: this.state.colorChoice
+		};
+		entries.push(entry);
+
+		entries.push({description: "separator"});
+
+		entry = {};
 		entry.description = "Duplicate";
 		entry.callback    = "duplicate";
 		entry.parameters  = {};
 		entries.push(entry);
+
+		entries.push({description: "separator"});
 
 		entry = {};
 		entry.description = "Blue";
@@ -363,16 +372,6 @@ var quickNote = SAGE2_App.extend({
 		entry.parameters  = { color: "lightsalmon"};
 		entry.entryColor  = "lightsalmon";
 		entries.push(entry);
-
-		entry = {};
-		entry.description = "Change Note:";
-		entry.callback    = "setMessage";
-		entry.parameters  = {};
-		entry.inputField  = true;
-		entry.inputFieldSize = 20;
-		entries.push(entry);
-
-		entries.push({description: "separator"});
 
 		entries.push({
 			description: "Copy content to clipboard",

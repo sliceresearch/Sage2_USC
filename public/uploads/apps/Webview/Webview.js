@@ -39,6 +39,13 @@ var Webview = SAGE2_App.extend({
 		this.resizeEvents = "continuous";
 		this.modifiers    = [];
 
+		// Content type: web, youtube, ..
+		this.contentType = "web";
+		// Muted audio or not, only on isMaster node
+		this.isMuted = false;
+		// Is the page loading
+		this.isLoading = false;
+
 		// not sure
 		this.element.style.display = "inline-flex";
 
@@ -57,8 +64,15 @@ var Webview = SAGE2_App.extend({
 		// security or not: this seems to be an issue often on Windows
 		this.element.disablewebsecurity = false;
 
+		// Set a session per webview, so not zoom sharing per origin
+		this.element.partition = data.id;
+
+		// initial size
 		this.element.minwidth  = data.width;
 		this.element.minheight = data.height;
+
+		// Default title
+		this.title = "Webview";
 
 		// Get the URL from parameter or session
 		var view_url = data.params || this.state.url;
@@ -75,10 +89,12 @@ var Webview = SAGE2_App.extend({
 				video_id = video_id.substring(0, ampersandPosition);
 			}
 			view_url = 'https://www.youtube.com/embed/' + video_id + '?autoplay=0';
+			this.contentType = "youtube";
 		} else if (view_url.startsWith('https://youtu.be')) {
 			// youtube short URL (used in sharing)
 			video_id = view_url.split('/').pop();
 			view_url = 'https://www.youtube.com/embed/' + video_id + '?autoplay=0';
+			this.contentType = "youtube";
 		} else if (view_url.indexOf('vimeo') >= 0 && view_url.indexOf('player') === -1) {
 			// Search for the Vimeo ID
 			var m = view_url.match(/^.+vimeo.com\/(.*\/)?([^#?]*)/);
@@ -100,40 +116,82 @@ var Webview = SAGE2_App.extend({
 			_this.pre.innerHTML = "";
 			// update the emulation
 			_this.updateMode();
+			_this.isLoading = true;
+			_this.changeWebviewTitle();
+		});
+
+		// Intent to navigate: allows quick sync when the webview is shared
+		this.element.addEventListener("will-navigate", function(evt) {
+			// save the url
+			_this.state.url = evt.url;
+			// set the zoom value
+			_this.element.setZoomFactor(_this.state.zoom);
+			// sync the state object
+			_this.SAGE2Sync(true);
 		});
 
 		// done loading
 		this.element.addEventListener("did-finish-load", function() {
-			// save the url
-			_this.state.url = _this.element.src;
-			// set the zoom value
-			_this.element.setZoomFactor(_this.state.zoom);
-			// sync the state object
-			_this.SAGE2Sync(false);
 			// code injection to support key translation
 			_this.codeInject();
 			// update the context menu with the current URL
 			_this.getFullContextMenuAndUpdate();
+			_this.isLoading = false;
+			_this.changeWebviewTitle();
 		});
 
-		// done loading
+		// To handle navigation whithin the page (ie. anchors)
+		this.element.addEventListener("did-navigate-in-page", function(evt) {
+			// save the url
+			_this.state.url = evt.url;
+			// set the zoom value
+			_this.element.setZoomFactor(_this.state.zoom);
+			// sync the state object
+			_this.SAGE2Sync(true);
+		});
+
+		// To handle navigation with history: back and forward
+		this.element.addEventListener("did-navigate", function(evt) {
+			// save the url
+			_this.state.url = evt.url;
+			// set the zoom value
+			_this.element.setZoomFactor(_this.state.zoom);
+			// sync the state object
+			_this.SAGE2Sync(true);
+		});
+
+		// Error loading a page
+		// Source: https://cs.chromium.org/chromium/src/net/base/net_error_list.h
+		//
+		// ABORTED -3
+		// An operation was aborted (due to user action).
+		// BLOCKED_BY_RESPONSE -27
+		// The request failed because the response was delivered along with requirements
+		// which are not met ('X-Frame-Options' and 'Content-Security-Policy' ancestor
+		// checks, for instance).
+		// INSECURE_RESPONSE -501
+		// The server's response was insecure (e.g. there was a cert error).
+
 		this.element.addEventListener("did-fail-load", function(event) {
-			if (event.errorCode === -3 ||
+			// not loading anymore
+			_this.isLoading = false;
+			// Check the return code
+			if (event.errorCode ===   -3 ||
+				event.errorCode ===  -27 ||
 				event.errorCode === -501 ||
 				event.errorDescription === "OK") {
-				// it's a redirect
-				// _this.changeURL(event.validatedURL, false);
-				// nope
+				// it's a redirect (causes issues)
+				// _this.changeURL(event.validatedURL, true);
 			} else {
 				// real error
 				_this.element.src = 'data:text/html;charset=utf-8,<h1>Invalid URL</h1>';
-				_this.updateTitle('Webview');
+				_this.changeWebviewTitle();
 			}
 		});
 
 		// When the page changes its title
 		this.element.addEventListener("page-title-updated", function(event) {
-			_this.updateTitle('Webview: ' + event.title);
+			_this.changeWebviewTitle(event.title);
 		});
 
 		// When the page request fullscreen
@@ -151,7 +209,6 @@ var Webview = SAGE2_App.extend({
 		// Emitted when page receives favicon urls
 		this.element.addEventListener("page-favicon-updated", function(event) {
 			if (event.favicons && event.favicons[0]) {
-				console.log('Webview>	page-favicon-updated', event.favicons, event.favicons[0]);
 				_this.state.favicon = event.favicons[0];
 				// sync the state object
 				_this.SAGE2Sync(false);
@@ -170,14 +227,14 @@ var Webview = SAGE2_App.extend({
 			// only accept http protocols
 			if (event.url.startsWith('http:') || event.url.startsWith('https:')) {
 				// Do not open a new view, just navigate to the new URL
-				// _this.changeURL(event.url, false);
+				_this.changeURL(event.url, true);
 				// Request a new webview application
-				wsio.emit('openNewWebpage', {
-					// should be uniqueID, but no interactor object here
-					id: this.id,
-					// send the new URL
-					url: event.url
-				});
+				// wsio.emit('openNewWebpage', {
+				// 	// should be uniqueID, but no interactor object here
+				// 	id: this.id,
+				// 	// send the new URL
+				// 	url: event.url
+				// });
 			} else {
 				console.log('Webview>	Not a HTTP URL, not opening [', event.url, ']', event);
 			}
@@ -185,6 +242,32 @@ var Webview = SAGE2_App.extend({
 
 		// Set the URL and starts loading
 		this.element.src = view_url;
+	},
+
+	/**
+	 * Change the title of the window
+	 *
+	 * @method     changeWebviewTitle
+	 * @param newtitle {String} new title
+	 */
+	changeWebviewTitle: function(newtitle) {
+		if (newtitle) {
+			// if parameter passed, we update the title
+			this.title = 'Webview: ' + newtitle;
+		}
+		var newtext = this.title;
+		// if the page has a reload timer
+		if (this.autoRefresh) {
+			// add a timer using a FontAwsome character
+			newtext += ' <i class="fa">\u{f017}</i>';
+		}
+		// if the page is loading
+		if (this.isLoading && this.contentType !== "youtube") {
+			// add a spinner using a FontAwsome character
+			newtext += ' <i class="fa fa-spinner fa-spin"></i>';
+		}
+		// call the base class method
+		this.updateTitle(newtext);
 	},
 
 	/**
@@ -204,6 +287,9 @@ var Webview = SAGE2_App.extend({
 	 * @method     addPreloadFile
 	 */
 	addPreloadFile: function() {
+		if (!this.isElectron()) {
+			return; // return if not electron.
+		}
 		// if it's not running inside Electron, do not bother
 		if (!this.isElectron) {
 			return;
@@ -224,6 +310,7 @@ var Webview = SAGE2_App.extend({
 		this.element.preload = "file://" + preloadPath;
 	},
 
+	// Sync event when shared
 	load: function(date) {
 		// sync the change
 		this.element.src = this.state.url;
@@ -302,121 +389,176 @@ var Webview = SAGE2_App.extend({
 	codeInject: function() {
 		// Disabling text selection in page because it blocks the view sometimes
 		// done by injecting some CSS code
+		// Also disabling grab and drag events
 		this.element.insertCSS(":not(input):not(textarea), " +
 			":not(input):not(textarea)::after, " +
 			":not(input):not(textarea)::before { " +
 				"-webkit-user-select: none; " +
 				"user-select: none; " +
 				"cursor: default; " +
+				"-webkit-user-drag: none;" +
+				"-moz-user-drag: none;" +
+				"user-drag: none;" +
 			"} " +
 			"input, button, textarea, :focus { " +
 				"outline: none; " +
 			"}");
 	},
 
+
+	playPause: function(act) {
+		// Simulate a mouse click
+		this.element.sendInputEvent({
+			type: "mouseDown",
+			x: 10, y: 10,
+			button: "left",
+			modifiers: null,
+			clickCount: 1
+		});
+		this.element.sendInputEvent({
+			type: "mouseUp",
+			x: 10, y: 10,
+			button: "left",
+			modifiers: null,
+			clickCount: 1
+		});
+	},
+	muteUnmute: function(act) {
+		if (isMaster) {
+			var content = this.element.getWebContents();
+			if (this.isMuted) {
+				content.setAudioMuted(false);
+				this.isMuted = false;
+			} else {
+				content.setAudioMuted(true);
+				this.isMuted = true;
+			}
+		} else {
+			// Always muted on non-master display client
+			content.setAudioMuted(true);
+		}
+	},
+
 	getContextEntries: function() {
 		var entries = [];
 		var entry;
 
-		entry = {};
-		entry.description = "Back";
-		entry.accelerator = "Alt \u2190";     // ALT <-
-		entry.callback = "navigation";
-		entry.parameters = {};
-		entry.parameters.action = "back";
-		entries.push(entry);
+		if (this.contentType === "youtube") {
+			entry = {};
+			entry.description = "Play/Pause";
+			entry.accelerator = "p";
+			entry.callback = "playPause";
+			entry.parameters = {};
+			entries.push(entry);
 
-		entry = {};
-		entry.description = "Forward";
-		entry.accelerator = "Alt \u2192";     // ALT ->
-		entry.callback = "navigation";
-		entry.parameters = {};
-		entry.parameters.action = "forward";
-		entries.push(entry);
+			entry = {};
+			entry.description = "Mute/Unmute";
+			entry.accelerator = "m";
+			entry.callback = "muteUnmute";
+			entry.parameters = {};
+			entries.push(entry);
 
-		entry = {};
-		entry.description = "Reload";
-		entry.accelerator = "Alt R";         // ALT r
-		entry.callback = "reloadPage";
-		entry.parameters = {};
-		entries.push(entry);
+		} else {
+			entry = {};
+			entry.description = "Back";
+			entry.accelerator = "Alt \u2190";     // ALT <-
+			entry.callback = "navigation";
+			entry.parameters = {};
+			entry.parameters.action = "back";
+			entries.push(entry);
 
-		entry = {};
-		entry.description = "Auto refresh (5min)";
-		entry.callback = "reloadPage";
-		entry.parameters = {time: 5 * 60};
-		entries.push(entry);
+			entry = {};
+			entry.description = "Forward";
+			entry.accelerator = "Alt \u2192";     // ALT ->
+			entry.callback = "navigation";
+			entry.parameters = {};
+			entry.parameters.action = "forward";
+			entries.push(entry);
 
-		entries.push({description: "separator"});
+			entry = {};
+			entry.description = "Reload";
+			entry.accelerator = "Alt R";         // ALT r
+			entry.callback = "reloadPage";
+			entry.parameters = {};
+			entries.push(entry);
 
-		entry = {};
-		entry.description = "Mobile emulation";
-		entry.callback = "changeMode";
-		entry.parameters = {};
-		entry.parameters.mode = "mobile";
-		entries.push(entry);
+			entry = {};
+			entry.description = "Auto refresh (5min)";
+			entry.callback = "reloadPage";
+			entry.parameters = {time: 5 * 60};
+			entries.push(entry);
 
-		entry = {};
-		entry.description = "Desktop emulation";
-		entry.callback = "changeMode";
-		entry.parameters = {};
-		entry.parameters.mode = "desktop";
-		entries.push(entry);
+			entries.push({description: "separator"});
 
-		entry = {};
-		entry.description = "Show/Hide the console";
-		entry.callback = "showConsole";
-		entry.parameters = {};
-		entries.push(entry);
+			entry = {};
+			entry.description = "Mobile emulation";
+			entry.callback = "changeMode";
+			entry.parameters = {};
+			entry.parameters.mode = "mobile";
+			entries.push(entry);
 
-		entries.push({description: "separator"});
+			entry = {};
+			entry.description = "Desktop emulation";
+			entry.callback = "changeMode";
+			entry.parameters = {};
+			entry.parameters.mode = "desktop";
+			entries.push(entry);
 
-		entry = {};
-		entry.description = "Zoom in";
-		entry.accelerator = "Alt \u2191";     // ALT up-arrow
-		entry.callback = "zoomPage";
-		entry.parameters = {};
-		entry.parameters.dir = "zoomin";
-		entries.push(entry);
+			entry = {};
+			entry.description = "Show/Hide the console";
+			entry.callback = "showConsole";
+			entry.parameters = {};
+			entries.push(entry);
 
-		entry = {};
-		entry.description = "Zoom out";
-		entry.accelerator = "Alt \u2193";     // ALT down-arrow
-		entry.callback = "zoomPage";
-		entry.parameters = {};
-		entry.parameters.dir = "zoomout";
-		entries.push(entry);
+			entries.push({description: "separator"});
 
-		entries.push({description: "separator"});
+			entry = {};
+			entry.description = "Zoom in";
+			entry.accelerator = "Alt \u2191";     // ALT up-arrow
+			entry.callback = "zoomPage";
+			entry.parameters = {};
+			entry.parameters.dir = "zoomin";
+			entries.push(entry);
 
-		entry   = {};
-		// label of them menu
-		entry.description = "Type a URL:";
-		// callback
-		entry.callback = "navigation";
-		// input setting
-		entry.inputField = true;
-		// set the value to the current URL
-		entry.value = this.element.src;
-		entry.inputFieldSize = 20;
-		entry.inputDefault   = this.state.url;
-		// parameters of the callback function
-		entry.parameters = {};
-		entry.parameters.action = "address";
-		entries.push(entry);
+			entry = {};
+			entry.description = "Zoom out";
+			entry.accelerator = "Alt \u2193";     // ALT down-arrow
+			entry.callback = "zoomPage";
+			entry.parameters = {};
+			entry.parameters.dir = "zoomout";
+			entries.push(entry);
 
-		entry   = {};
-		// label of them menu
-		entry.description = "Web search:";
-		// callback
-		entry.callback = "navigation";
-		// input setting
-		entry.inputField     = true;
-		entry.inputFieldSize = 20;
-		// parameters of the callback function
-		entry.parameters = {};
-		entry.parameters.action = "search";
-		entries.push(entry);
+			entries.push({description: "separator"});
+
+			entry   = {};
+			// label of them menu
+			entry.description = "Type a URL:";
+			// callback
+			entry.callback = "navigation";
+			// input setting
+			entry.inputField = true;
+			// set the value to the current URL
+			entry.value = this.element.src;
+			entry.inputFieldSize = 20;
+			entry.inputDefault   = this.state.url;
+			// parameters of the callback function
+			entry.parameters = {};
+			entry.parameters.action = "address";
+			entries.push(entry);
+
+			entry   = {};
+			// label of them menu
+			entry.description = "Web search:";
+			// callback
+			entry.callback = "navigation";
+			// input setting
+			entry.inputField     = true;
+			entry.inputFieldSize = 20;
+			// parameters of the callback function
+			entry.parameters = {};
+			entry.parameters.action = "search";
+			entries.push(entry);
+		}
 
 		entries.push({
 			description: "Copy URL to clipboard",
@@ -425,8 +567,6 @@ var Webview = SAGE2_App.extend({
 				url: this.state.url
 			}
 		});
-
-		// entries.push({description: "separator"});
 
 		return entries;
 	},
@@ -450,9 +590,12 @@ var Webview = SAGE2_App.extend({
 						// send the message to the server to relay
 						_this.broadcast("reloadPage", {});
 					}, interval);
+					// change the title to add the spinner
+					this.changeWebviewTitle();
 				}
 			} else {
 				// Just reload once
+				this.isLoading = true;
 				this.element.reload();
 				this.element.setZoomFactor(this.state.zoom);
 			}
@@ -562,6 +705,19 @@ var Webview = SAGE2_App.extend({
 			} else if (eventType === "widgetEvent") {
 				// widget events
 			} else if (eventType === "keyboard") {
+
+				if (this.contentType === "youtube") {
+					if (data.character === "m") {
+						// m mute
+						this.muteUnmute();
+						return;
+					} else if (data.character === "p") {
+						// p play
+						this.playPause();
+						return;
+					}
+				}
+
 				this.element.sendInputEvent({
 					// type: "keyDown",
 					// Not sure why we need 'char' but it works ! -- Luc
@@ -646,6 +802,7 @@ var Webview = SAGE2_App.extend({
 					// r key
 					if (data.status.ALT) {
 						// ALT-r reloads
+						this.isLoading = true;
 						this.reloadPage({});
 					}
 					this.refresh(date);

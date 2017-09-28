@@ -55,16 +55,18 @@ var timezone = SAGE2_App.extend({
 
 	setCaptionSize: function(captionDiv, captionP, captionAMPM) {
 		// Get the DOM element out of the D3 selection
-		var cp = captionDiv[0][0];
+		var cp = captionDiv.node(); // captionDiv[0][0];
 		if (cp === null) {
 			return;
 		}
-		var maxheight = cp.clientHeight; // parseInt(captionDiv.style("height"));
-		var maxwidth  = cp.clientWidth;  // parseInt(captionDiv.style("width"));
+		// var cp = captionDiv;
+		var maxwidth  = cp.clientWidth;
+		var maxheight = cp.clientHeight;
 
 		// Calculate city scaling
 		var fontsize  = maxheight;
 		captionP.style("font-size", fontsize + "px");
+
 		var textwidth  = parseInt(captionP.style("width"));
 		var textheight = parseInt(captionP.style("height"));
 		while ((textwidth > maxwidth || textheight > maxheight) && fontsize >= 3) {
@@ -122,7 +124,7 @@ var timezone = SAGE2_App.extend({
 			.text(clock.name.split(',')[0]);
 		this.setCaptionSize(textdiv, text, textAMPM);
 		this.resizeCaption();
-		this.updateAllCaption();
+		// this.updateAllCaption();
 		this.ready = true;
 	},
 
@@ -131,7 +133,7 @@ var timezone = SAGE2_App.extend({
 		this.ready = false;
 		d3.select(this.element).select("#clocks").append("div").attr("id", clock.id);
 		var _this = this;
-		d3.xml(this.resrcPath + 'clock.svg', "image/svg+xml", function(error, xml) {
+		d3.xml(this.resrcPath + 'clock.svg').mimeType("image/svg+xml").get(function(error, xml) {
 			if (error) {
 				throw error;
 			}
@@ -275,7 +277,7 @@ var timezone = SAGE2_App.extend({
 			var captionP    = captionDiv.select("#" + this.state.clocks[i].id + "Text");
 			var captionAMPM = captionDiv.select("#" + this.state.clocks[i].id + "TextAMPM");
 			this.setCaptionSize(captionDiv, captionP, captionAMPM);
-			this.updateAllCaption();
+			// this.updateAllCaption();
 		}
 	},
 

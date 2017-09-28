@@ -795,7 +795,7 @@ h2 {
 The z-index is very important.
 999 is 1 layer below dialog, but one above UI canvas.
 */
-#rmbContextMenu {
+#appContextMenu {
 	position:  absolute;
 	visibility: hidden;
 	border:     1px solid black;

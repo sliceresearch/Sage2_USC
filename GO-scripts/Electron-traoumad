@@ -5,9 +5,9 @@ pkill -9 electron
 
 server="traoumad.evl.uic.edu"
 
-$PWD/node_modules/.bin/electron $PWD/electron.js -s http://$server -a &
+npx electron $PWD/electron.js -s http://$server -a &
 sleep 1
-$PWD/node_modules/.bin/electron $PWD/electron.js -d 0 -n -x 0 -y 0 --width 3840 --height 1080 -s http://$server &
+npx electron $PWD/electron.js -d 0 -n -x 0 -y 0 --width 3840 --height 1080 -s http://$server &
 
-#$PWD/node_modules/.bin/electron $PWD/electron.js -d 0 -n -x 0 -y 0 --width 1920 --height 1080 -s http://$server &
-#$PWD/node_modules/.bin/electron $PWD/electron.js -d 1 -n -x 1920 -y 0 --width 1920 --height 1080 -s http://$server &
+#npx electron $PWD/electron.js -d 0 -n -x 0 -y 0 --width 1920 --height 1080 -s http://$server &
+#npx electron $PWD/electron.js -d 1 -n -x 1920 -y 0 --width 1920 --height 1080 -s http://$server &

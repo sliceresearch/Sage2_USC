@@ -382,6 +382,20 @@ function FileManager(wsio, mydiv, uniqueID) {
 				window.open("help/index.html", '_blank');
 			}
 		},
+
+		shortcuts_menu: {value: "Shortcuts",
+			tooltip: "Mouse and keyboard operations and shortcuts",
+			callback: function (evt) {
+				webix.modalbox({
+					title: "Mouse and keyboard operations",
+					buttons: ["Ok"],
+					text: "<img src=/images/cheat-sheet.jpg width=100%>",
+					width: "75%",
+					height: "75%"
+				});
+			}
+		},
+
 		forum_menu: {value: "User Forum",
 			tooltip: "User forum on Google Groups",
 			callback: function (evt) {

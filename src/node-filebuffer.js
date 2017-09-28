@@ -248,7 +248,7 @@ FileBuffer.prototype.associateFile = function(data) {
 	var fullPath = path.join(fileDir, fileName);
 
 	this.files[data.appId] = fullPath;
-	console.log(sageutils.header("SAGE2") + "File " + fileName + " attached to buffer of " + data.appName);
+	sageutils.log("SAGE2", "File", fileName, "attached to buffer of", data.appName);
 };
 
 FileBuffer.prototype.writeToFile = function(appId) {
