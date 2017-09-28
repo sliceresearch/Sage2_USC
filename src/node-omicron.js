@@ -44,18 +44,6 @@ function OmicronManager(sysConfig) {
 
 	this.coordCalculator = null;
 
-	this.wandLabel = "wandTracker";
-	this.wandColor = "rgba(250, 5, 5, 1.0)";
-
-	this.touchOffset = [0, 0];
-	this.wandScaleDelta = 250;
-	this.acceleratedDragScale = 0;
-
-	this.touchZoomScale = 520;
-
-	this.wandXFilter = null;
-	this.wandYFilter = null;
-
 	this.oinputserverSocket = null;
 	this.omicronDataPort = 9123;
 
@@ -64,13 +52,33 @@ function OmicronManager(sysConfig) {
 
 	this.pointerOffscreen  = false;
 	this.showPointerToggle = true;
-	this.lastWandFlags     = 0;
 
 	this.lastPosX = 0;
 	this.lastPosY = 0;
 
 	this.totalWidth  = 0;
 	this.totalHeight = 0;
+
+	// Touch
+	this.enableTouch = true;
+	this.touchOffset = [0, 0];
+	this.wandScaleDelta = 250;
+	this.acceleratedDragScale = 0;
+
+	this.touchZoomScale = 520;
+
+	// Mocap
+	this.enableMocap = false;
+
+	// Wand
+	this.enableWand = false;
+	this.wandLabel = "wandTracker";
+	this.wandColor = "rgba(250, 5, 5, 1.0)";
+
+	this.wandXFilter = null;
+	this.wandYFilter = null;
+
+	this.lastWandFlags     = 0;
 
 	// 1 euro filtering
 	var freq = 120;
@@ -123,6 +131,31 @@ function OmicronManager(sysConfig) {
 		return;
 	}
 
+	// Config: Touch
+	this.enableTouch =  this.config.enableTouch;
+	console.log(sageutils.header('Omicron') + 'Touch Enabled: ', this.enableTouch);
+
+	// Config: Mocap
+	this.enableMocap =  this.config.enableMocap;
+	console.log(sageutils.header('Omicron') + 'Mocap Enabled: ', this.enableMocap);
+
+	// Config: Wand
+	this.enableWand =  this.config.enableWand;
+	console.log(sageutils.header('Omicron') + 'Wand Enabled: ', this.enableWand);
+
+	if (this.config.touchOffset) {
+		this.touchOffset =  this.config.touchOffset;
+		console.log(sageutils.header('Omicron') + 'Touch points offset by: ', this.touchOffset);
+	}
+
+	if (this.config.zoomGestureScale) {
+		this.touchZoomScale = this.config.zoomGestureScale;
+	}
+
+	if (this.config.acceleratedDragScale) {
+		this.acceleratedDragScale = this.config.acceleratedDragScale;
+	}
+
 	if (this.config.enableDoubleClickMaximize !== undefined) {
 		this.enableDoubleClickMaximize = this.config.enableDoubleClickMaximize;
 	}
@@ -139,6 +172,7 @@ function OmicronManager(sysConfig) {
 		this.enableFiveFingerCloseApp = this.config.enableFiveFingerCloseApp;
 	}
 
+	// Config: Omicron
 	if (this.config.host === undefined) {
 		console.log(sageutils.header('Omicron') + 'Using web server hostname: ', sysConfig.host);
 	} else {
@@ -151,11 +185,6 @@ function OmicronManager(sysConfig) {
 	} else {
 		this.omicronDataPort =  this.config.dataPort;
 		console.log(sageutils.header('Omicron') + 'Listening for input server on port: ', this.omicronDataPort);
-	}
-
-	if (this.config.touchOffset) {
-		this.touchOffset =  this.config.touchOffset;
-		console.log(sageutils.header('Omicron') + 'Touch points offset by: ', this.touchOffset);
 	}
 
 	if (this.config.eventDebug) {
@@ -184,14 +213,6 @@ function OmicronManager(sysConfig) {
 	} else {
 		this.totalWidth  = 8160;
 		this.totalHeight = 2304;
-	}
-
-	if (this.config.zoomGestureScale) {
-		this.touchZoomScale = this.config.zoomGestureScale;
-	}
-
-	if (this.config.acceleratedDragScale) {
-		this.acceleratedDragScale = this.config.acceleratedDragScale;
 	}
 
 	// For accepting input server connection
@@ -507,9 +528,9 @@ OmicronManager.prototype.processIncomingEvent = function(msg, rinfo) {
 
 	// ServiceTypePointer
 	//
-	if (serviceType === 0) {
+	if (serviceType === 0 && omicronManager.enableTouch) {
 		omicronManager.processPointerEvent(e, sourceID, posX, posY, msg, offset, address, emit, dstart);
-	} else if (serviceType === 1) {
+	} else if (serviceType === 1 && omicronManager.enableMocap) {
 
 		// Kinect v2.0 data has 29 extra data fields
 		if (this.kinectInput != undefined && e.extraDataItems == 29) {
@@ -580,7 +601,7 @@ OmicronManager.prototype.processIncomingEvent = function(msg, rinfo) {
 					" (" + e.posx + ", " + e.posy + "," + e.posz + ")");
 			}
 		}
-	} else if (serviceType === 7) {
+	} else if (serviceType === 7 && omicronManager.enableWand) {
 		// ServiceTypeWand
 		//
 		// Wand Button Flags

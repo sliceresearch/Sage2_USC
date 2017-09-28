@@ -618,20 +618,13 @@ AppLoader.prototype.loadZipAppFromFile = function(file, mime_type, aUrl, externa
 
 	var unzipper = new Unzip(file);
 	unzipper.on('extract', function(log) {
-		// check if zip contains UnityLoader
-		var unityLoader = path.join(zipFolder, "Release/UnityLoader.js");
-		var unityDevLoader = path.join(zipFolder, "Development/UnityLoader.js");
-		var isUnityApp = fs.existsSync(unityLoader);
-		var isUnityDevApp = fs.existsSync(unityDevLoader);
-
 		var instuctionsFile = path.join(zipFolder, "instructions.json");
 		var hasInstructionsFile = fs.existsSync(instuctionsFile);
 
-		if (isUnityApp || isUnityDevApp) {
-			if (isUnityDevApp) {
-				unityLoader = unityDevLoader;
-			}
+		// Check if UnityLoader.js exists in unzipped directory structure
+		var unityLoader = _this.existsInDir(zipFolder, "UnityLoader.js");
 
+		if (unityLoader) {
 			var instructionInfo = {
 				instuctionsFile: instuctionsFile,
 				instructionsExists: hasInstructionsFile,
@@ -706,6 +699,12 @@ AppLoader.prototype.loadUnityAppFromZip = function(appLoader, unityLoader, zipFo
 		var htmlCanvasHeight = indexHtml("canvas").attr("height");
 		var htmlCanvasWidth = indexHtml("canvas").attr("width");
 
+		// Unity 5.6+ no longer stores the width/height in <canvas>
+		if (htmlCanvasHeight == undefined) {
+			htmlCanvasHeight = "600px";
+			htmlCanvasWidth = "960px";
+		}
+
 		// Title is in the form 'Unity WebGL Player | [Product Name]'
 		// Get just the Product Name
 		htmlTitle = htmlTitle.split("|")[1].trim();
@@ -720,7 +719,13 @@ AppLoader.prototype.loadUnityAppFromZip = function(appLoader, unityLoader, zipFo
 		// Sets style flag for proper SAGE2 scaling
 		var htmlStyle = "* {margin: 0; padding: 0;}html, body {width: 100vw;height: 100vh;}";
 		htmlStyle += "canvas {height: 100vh;width: 100vw;display: block;}";
-		indexHtml("style").text(htmlStyle);
+
+		// If <style> tag exists, set it. If not, append it to head (Unity 5.6+)
+		if (indexHtml("style").length == 1) {
+			indexHtml("style").text(htmlStyle);
+		} else {
+			indexHtml('head').append("<style>" + htmlStyle + "</style>");
+		}
 
 		// Update index.html
 		fs.writeFile(unityIndexHtml, indexHtml.html(), function(err) {
@@ -1334,6 +1339,22 @@ AppLoader.prototype.processUnityApp = function(json_str, file, mime_type, extern
 		date: new Date()
 	};
 	return result;
+};
+
+AppLoader.prototype.existsInDir = function(startDir, target) {
+	if (!fs.existsSync(startDir)) {
+		return;
+	}
+	var files = fs.readdirSync(startDir);
+	for (var i = 0; i < files.length; i++) {
+		var filename = path.join(startDir, files[i]);
+		var stat = fs.lstatSync(filename);
+		if (stat.isDirectory()) {
+			return this.existsInDir(filename, target);
+		} else if (filename.indexOf(target) >= 0) {
+			return filename;
+		}
+	}
 };
 
 module.exports = AppLoader;
