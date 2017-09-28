@@ -2248,13 +2248,12 @@ function keyUp(event) {
  * @param event {Event} event data
  */
 function keyPress(event) {
-	// space bar activates the pointer
+	// space bar activates the pointer and stop there
+	// or process the event
 	if (event.keyCode === 32) {
 		interactor.startSAGE2Pointer("sage2pointer");
 		displayUI.pointerMove(pointerX, pointerY);
-	}
-
-	if (displayUI.keyPress(pointerX, pointerY, parseInt(event.charCode, 10))) {
+	} else if (displayUI.keyPress(pointerX, pointerY, parseInt(event.charCode, 10))) {
 		event.preventDefault();
 	}
 }

@@ -103,13 +103,13 @@ AppLoader.prototype.loadImageFromURL = function(aUrl, mime_type, name, strictSSL
 		headers: {'User-Agent': 'node'}},
 	function(err1, response, body) {
 		if (err1) {
-			console.log("request error", err1);
+			sageutils.log("Loader", "request error", err1);
 			throw err1;
 		}
 		var localPath = path.join(_this.publicDir, "images", name);
 		fs.writeFile(localPath, body, function(err2) {
 			if (err2) {
-				console.log("Error saving image:", aUrl, localPath);
+				sageutils.log("Loader", "Error saving image:", aUrl, localPath);
 			}
 
 			assets.exifAsync([localPath], function(err3) {
@@ -323,7 +323,7 @@ AppLoader.prototype.loadImageFromFile = function(file, mime_type, aUrl, external
 					callback(appInstance);
 				});
 		} else {
-			console.log("File not recognized", file, mime_type, aUrl);
+			sageutils.log("Loader", "File not recognized", file, mime_type, aUrl);
 		}
 
 	} else if (mime_type === "image/svg+xml") {
@@ -338,7 +338,7 @@ AppLoader.prototype.loadImageFromFile = function(file, mime_type, aUrl, external
 					callback(appInstance);
 				});
 		} else {
-			console.log("File not recognized:", file, mime_type, aUrl);
+			sageutils.log("Loader", "File not recognized:", file, mime_type, aUrl);
 		}
 	} else {
 		var localPath = path.join(this.publicDir, "tmp", path.basename(name)) + ".png";
@@ -346,7 +346,7 @@ AppLoader.prototype.loadImageFromFile = function(file, mime_type, aUrl, external
 
 		imageMagick(file + "[0]").noProfile().bitdepth(8).flatten().setFormat("PNG").write(localPath, function(err, buffer) {
 			if (err) {
-				console.log("Error> processing image file", file, localPath);
+				sageutils.log("Loader", "Error processing image file", file, localPath);
 				return;
 			}
 
@@ -362,7 +362,7 @@ AppLoader.prototype.loadImageFromFile = function(file, mime_type, aUrl, external
 					}
 				);
 			} else {
-				console.log("File not recognized:", file, mime_type, aUrl);
+				sageutils.log("Loader", "File not recognized:", file, mime_type, aUrl);
 			}
 		});
 
@@ -502,7 +502,7 @@ AppLoader.prototype.loadNoteFromFile = function(file, mime_type, aUrl, external_
 	var _this = this;
 	fs.readFile(instructionsFile, 'utf8', function(err, json_str) {
 		if (err) {
-			console.log(sageutils.header("Loader") + "cannot read application file " + instructionsFile);
+			sageutils.log("Loader", "cannot read application file", instructionsFile);
 			return;
 		}
 		var appUrl = getSAGE2URL(localPath);
@@ -528,7 +528,7 @@ AppLoader.prototype.loadDoodleFromFile = function(file, mime_type, aUrl, externa
 	var _this = this;
 	fs.readFile(instructionsFile, 'utf8', function(err, json_str) {
 		if (err) {
-			console.log(sageutils.header("Loader") + "cannot read application file " + instructionsFile);
+			sageutils.log("Loader", "cannot read application file", instructionsFile);
 			return;
 		}
 		var appUrl = getSAGE2URL(localPath);
@@ -571,7 +571,7 @@ AppLoader.prototype.loadAppFromFileFromRegistry = function(file, mime_type, aUrl
 	var _this = this;
 	fs.readFile(instructionsFile, 'utf8', function(err, json_str) {
 		if (err) {
-			console.log(sageutils.header("Loader") + "cannot read application file " + instructionsFile);
+			sageutils.log("Loader", "cannot read application file", instructionsFile);
 			return;
 		}
 
@@ -875,7 +875,7 @@ AppLoader.prototype.loadFileFromLocalStorage = function(file, callback) {
 		mime_type = assets.getMimeType(localPath);
 	}
 	if (typeof a_url !== "string") {
-		console.log("AppLoader>	Cannot load app for file:", file);
+		sageutils.log("Loader", "Cannot load app for file:", file);
 		return;
 	}
 	var external_url = url.resolve(this.hostOrigin, a_url);
@@ -910,13 +910,13 @@ AppLoader.prototype.manageAndLoadUploadedFile = function(file, callback) {
 	// Check if it is a web-capable image, otherwise convert it to PNG
 	if (mime_type.startsWith("image/")) {
 		if (mime_type != "image/jpeg" && mime_type != "image/png" && mime_type != "image/webp") {
-			console.log(sageutils.header("Loader") + "converting image " + cleanFilename);
+			sageutils.log("Loader", "converting image", cleanFilename);
 			// setting up a tmp filename
 			var tmpPath = path.join(this.publicDir, "tmp", path.basename(cleanFilename)) + ".png";
 			// converting anything to PNG
 			imageMagick(file.path).noProfile().bitdepth(8).flatten().setFormat("PNG").write(tmpPath, function(err, buffer) {
 				if (err) {
-					console.log(sageutils.header("Loader") + "error processing image file " + tmpPath);
+					sageutils.log("Loader", "error processing image file", tmpPath);
 					return;
 				}
 				// done with the tmp file
@@ -958,7 +958,7 @@ AppLoader.prototype.manageAndLoadUploadedFile = function(file, callback) {
 			// try to process all the files with exiftool
 			exiftool.file(localPath, function(err2, data) {
 				if (err2) {
-					console.log("internal error", err2);
+					sageutils.log("Loader", "internal error", err2);
 				} else {
 					assets.addFile(data.SourceFile, data, function() {
 						// get a valid URL for it
