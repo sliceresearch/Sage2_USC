@@ -344,6 +344,15 @@ var SAGE2_App = Class.extend({
 	},
 
 	/**
+	* Used to set status of event sharing. Activated through context menu.
+	*
+	* @method toggleRemotePointerEventPassing
+	*/
+	toggleRemotePointerEventPassing: function(responseObject) {
+		this.shouldPassRemotePointerEvents = responseObject.value ? true : false;
+	},
+
+	/**
 	* SAGE2CopyState method called on init or load to copy state of app instance
 	*
 	* @method SAGE2CopyState
@@ -959,34 +968,47 @@ var SAGE2_App = Class.extend({
 			// If the application defines a menu function, use it
 			if (typeof this.getContextEntries === "function") {
 				appContextMenu.entries = this.getContextEntries();
+			} else {
+				appContextMenu.entries = [];
+			}
+			appContextMenu.entries.push({
+				description: "separator"
+			});
+			appContextMenu.entries.push({
+				description: "Send to back",
+				callback: "SAGE2SendToBack",
+				parameters: {}
+			});
+			appContextMenu.entries.push({
+				description: "Maximize",
+				callback: "SAGE2Maximize",
+				parameters: {}
+			});
+			appContextMenu.entries.push({
+				description: "separator"
+			});
+			// currently testing with remote pointer event testing
+			if (!this.shouldPassRemotePointerEvents) {
 				appContextMenu.entries.push({
-					description: "separator"
-				});
-				appContextMenu.entries.push({
-					description: "Send to back",
-					callback: "SAGE2SendToBack",
-					parameters: {}
-				});
-				appContextMenu.entries.push({
-					description: "Maximize",
-					callback: "SAGE2Maximize",
-					parameters: {}
-				});
-				appContextMenu.entries.push({
-					description: "separator"
-				});
-				appContextMenu.entries.push({
-					description: "Close " + (this.title || "application"),
-					callback: "SAGE2DeleteElement",
-					parameters: {}
+					description: "Enable remote pointer passing",
+					callback: "toggleRemotePointerEventPassing",
+					parameters: { value: true }
 				});
 			} else {
-				appContextMenu.entries = [{
-					description: "Close application",
-					callback: "SAGE2DeleteElement",
-					parameters: {}
-				}];
+				appContextMenu.entries.push({
+					description: "Disable remote pointer passing",
+					callback: "toggleRemotePointerEventPassing",
+					parameters: { value: false }
+				});
 			}
+			appContextMenu.entries.push({
+				description: "separator"
+			});
+			appContextMenu.entries.push({
+				description: "Close " + (this.title || "application"),
+				callback: "SAGE2DeleteElement",
+				parameters: {}
+			});
 			wsio.emit("appContextMenuContents", appContextMenu);
 		}
 	},

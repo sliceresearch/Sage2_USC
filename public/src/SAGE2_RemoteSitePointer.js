@@ -44,6 +44,9 @@ var SAGE2RemoteSitePointer = {
 			};
 			app.state.pointersOverApp.push(pointer);
 			SAGE2RemoteSitePointer.addAppToTracking(app); // pointer add means app should be added to tracking
+			if (app.shouldPassRemotePointerEvents === undefined) {
+				app.shouldPassRemotePointerEvents = false;
+			}
 		} else {
 			pointer = app.state.pointersOverApp[found];
 		}
@@ -70,7 +73,7 @@ var SAGE2RemoteSitePointer = {
 	*/
 	trackEvent: function(app, event) {
 		// this can potentially cause problems with apps like google maps where infinite loops can be generated.
-		if (!this.shouldPassEvents) {
+		if (!app.shouldPassRemotePointerEvents) {
 			return;
 		}
 
@@ -169,7 +172,7 @@ var SAGE2RemoteSitePointer = {
 			pointer.lastUpdate = pointer_data.lastUpdate;
 
 			// event pass if enabled
-			if (this.shouldPassEvents) {
+			if (app.shouldPassRemotePointerEvents) {
 				var pEvent;
 				while (pointer_data.eventQueue.length > 0) {
 					pEvent = pointer_data.eventQueue.shift();
