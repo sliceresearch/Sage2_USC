@@ -171,14 +171,12 @@ var SAGE2RemoteSitePointer = {
 			}
 			pointer.lastUpdate = pointer_data.lastUpdate;
 
-			// event pass if enabled
-			if (app.shouldPassRemotePointerEvents) {
-				var pEvent;
-				while (pointer_data.eventQueue.length > 0) {
-					pEvent = pointer_data.eventQueue.shift();
-					if (pEvent.s2rspTime === pointer_data.lastUpdate) {
-						app.event(pEvent.eventType, pEvent.position, pEvent.user_id, pEvent.data, pEvent.date);
-					}
+			// now update if events have been passed
+			var pEvent;
+			while (pointer_data.eventQueue.length > 0) {
+				pEvent = pointer_data.eventQueue.shift();
+				if (pEvent.s2rspTime === pointer_data.lastUpdate) {
+					app.event(pEvent.eventType, pEvent.position, pEvent.user_id, pEvent.data, pEvent.date);
 				}
 			}
 		}
