@@ -661,6 +661,13 @@ function emitLog(data) {
 // Make the function global
 global.emitLog = emitLog;
 
+// Export variables to sub modules
+// dirname: used by application plugins to load plugin source
+// broadcast: used by plugins to send results back to apps
+exports.dirname = path.join(__dirname, "node_modules");
+exports.broadcast = broadcast;
+
+
 // global variables to manage clients
 var clients           = [];
 var masterDisplay     = null;
