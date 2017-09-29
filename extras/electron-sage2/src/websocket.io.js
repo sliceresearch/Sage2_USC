@@ -36,6 +36,7 @@ function WebsocketIO(url) {
 	 * @type WebSocket
 	 */
 	this.ws = null;
+
 	/**
 	 * list of messages to be handled (name + callback)
 	 *
@@ -43,6 +44,7 @@ function WebsocketIO(url) {
 	 * @type Object
 	 */
 	this.messages = {};
+
 	/**
 	 * number of aliases created for listeners
 	 *
@@ -50,6 +52,7 @@ function WebsocketIO(url) {
 	 * @type Integer
 	 */
 	this.aliasCount = 1;
+
 	/**
 	 * list of listeners on other side of connection
 	 *
@@ -57,6 +60,7 @@ function WebsocketIO(url) {
 	 * @type Object
 	 */
 	this.remoteListeners = {"#WSIO#addListener": "0000"};
+
 	/**
 	 * list of local listeners on this side of connection
 	 *
@@ -71,19 +75,11 @@ function WebsocketIO(url) {
 	* @method open
 	* @param callback {Function} function to be called when the socket is ready
 	*/
-	this.open = function(callback, errcb) {
+	this.open = function(callback) {
 		var _this = this;
 
 		console.log('WebsocketIO> open', this.url);
-		try {
-			this.ws = new WebSocket(this.url);
-		} catch (err) {
-			console.log('Error', err);
-			if (errcb) {
-				errcb(err);
-			}
-			return;
-		}
+		this.ws = new WebSocket(this.url);
 		this.ws.binaryType = "arraybuffer";
 		this.ws.onopen = callback;
 
