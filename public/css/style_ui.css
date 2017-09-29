@@ -1081,6 +1081,7 @@ The z-index is very important.
 
 	width: 100px;
 	text-align: center;
+	white-space: pre-wrap;
 }
 
 .rmbColorOption {
@@ -1118,7 +1119,7 @@ The z-index is very important.
 .contextMenuEntry {
 	position: relative;
 	cursor: pointer;
-	white-space:nowrap;
+	white-space: nowrap;
 
 	padding: 0 5px;
 }

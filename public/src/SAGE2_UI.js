@@ -2919,7 +2919,7 @@ function addMenuEntry(menuDiv, entry, id, app) {
 		workingDiv.addEventListener('mousedown', entry.buttonEffect);
 		workingDiv.addEventListener('mousedown', function(e) {
 			e.stopPropagation();
-			console.log("Button Clicked", this.callback, this.parameters, this.app);
+			// console.log("Button Clicked", this.callback, this.parameters, this.app);
 		});
 		// highlighting effect on mouseover
 		workingDiv.addEventListener('mouseover', function () {

@@ -272,6 +272,7 @@ var googlemaps = SAGE2_App.extend({
 							break;
 						case "sliderRelease":
 							this.map.setZoom(this.state.zoomLevel);
+							this.getFullContextMenuAndUpdate(); // update context menu (for zoom slider)
 							break;
 						default:
 							console.log("No handler for: " + data.identifier + "->" + data.action);
@@ -288,7 +289,7 @@ var googlemaps = SAGE2_App.extend({
 
 					break;
 				case "MapType":
-					this.changeMapType(data.value);
+					this.changeMapType(data);
 					break;
 				default:
 					console.log("No handler for:", data.identifier);
@@ -333,11 +334,13 @@ var googlemaps = SAGE2_App.extend({
 		}
 	},
 
-	changeMapType: function(value) {
+	changeMapType: function(data) {
+		console.log("changeMapType", data);
 		var options = [google.maps.MapTypeId.TERRAIN, google.maps.MapTypeId.ROADMAP,
 			google.maps.MapTypeId.SATELLITE, google.maps.MapTypeId.HYBRID];
 		var i;
-		if (value !== null && value !== undefined) {
+		if (data !== null && data !== undefined) {
+			let value = data.value;
 			// Change due to radio button
 			for (i = 0; i < options.length; i++) {
 				if (this.mapTypeRadioButton.options[i] === value) {
@@ -435,6 +438,32 @@ var googlemaps = SAGE2_App.extend({
 		entry.inputUpdateOnChange = true;
 		entry.sliderRange = [0, 20];
 		entry.parameters = {};
+		entries.push(entry);
+
+		entry = {};
+		entry.description = "Map";
+		entry.children = [
+			{
+				description: "Turf",
+				callback: "changeMapType",
+				parameters: {value: "Turf"}
+			},
+			{
+				description: "Roads",
+				callback: "changeMapType",
+				parameters: { value: "Roads" }
+			},
+			{
+				description: "Arial",
+				callback: "changeMapType",
+				parameters: { value: "Arial" }
+			},
+			{
+				description: "Mix",
+				callback: "changeMapType",
+				parameters: { value: "Mix" }
+			}
+		];
 		entries.push(entry);
 
 		entry = {};
