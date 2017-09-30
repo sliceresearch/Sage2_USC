@@ -64,6 +64,9 @@ RegistryManager.prototype.initialize = function(assetsFolder) {
 	// Load the SAGE2 applications file association
 	// mime.load(path.join(this.mimeFile));
 
+	// Add the jupyter notebook mime definition
+	mime.define({'application/x-ipynb+json': ['ipynb']}, true);
+
 	// mime version 2 removed the load function
 	var content = fs.readFileSync(path.join(this.mimeFile), 'ascii');
 	// split the file content in lines
