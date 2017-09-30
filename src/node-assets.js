@@ -508,6 +508,9 @@ var addFile = function(filename, exif, callback) {
 			callback();
 		});
 		anAsset.exif.SAGE2thumbnail = rthumb;
+	} else {
+		// otherwise, just call the callback
+		callback();
 	}
 	saveAssets();
 };
@@ -810,7 +813,7 @@ var listApps = function() {
 var recursiveReaddirSync = function(aPath) {
 	var list     = [];
 	var excludes = ['.DS_Store', 'Thumbs.db', 'tmp', 'passwd.json',
-		'assets', 'sessions', 'config', 'sabiConfig', 'web', 'savedFiles', 'apps'];
+		'assets', 'sessions', 'config', 'sabiConfig', 'savedFiles', 'apps'];
 	var files, stats;
 
 	files = fs.readdirSync(aPath);
