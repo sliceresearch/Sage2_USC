@@ -76,7 +76,7 @@ var FileBufferManager	= require('./src/node-filebuffer');
 var PartitionList       = require('./src/node-partitionlist');    // list of SAGE2 Partitions
 var SharedDataManager	= require('./src/node-sharedserverdata'); // manager for shared data
 var S2Logger            = require('./src/node-logger');           // SAGE2 logging module
-
+var PerformanceManager	= require('./src/node-performancemanager'); // SAGE2 performance module
 //
 // Globals
 //
@@ -127,6 +127,7 @@ var config;
 var SAGE2_version;
 var interactMgr;
 var drawingManager;
+var performanceManager;
 
 // Partition variables
 var partitions;
@@ -285,6 +286,9 @@ function initializeSage2Server() {
 			ffmpegOptions.appPath = config.dependencies.FFMpeg;
 		}
 	}
+
+	performanceManager = new PerformanceManager();
+
 	imageMagick = gm.subClass(imageMagickOptions);
 	assets.initializeConfiguration(config);
 	assets.setupBinaries(imageMagickOptions, ffmpegOptions);
@@ -5286,6 +5290,9 @@ function processInputCommand(line) {
 			console.log('sessions\tlist the available sessions');
 			console.log('screenshot\ttake a screenshot of the wall');
 			console.log('update\t\trun a git update');
+			console.log('performance\tshow performance information');
+			console.log('perfsampling\tset performance metric sampling rate');
+			console.log('update\t\trun a git update');
 			console.log('version\t\tprint SAGE2 version');
 			console.log('exit\t\tstop SAGE2');
 			break;
@@ -5459,6 +5466,16 @@ function processInputCommand(line) {
 			listMediaBlockStreams();
 			break;
 		}
+		case 'perfsampling':
+			if (command.length > 1 && typeof command[1] === "string") {
+				performanceManager.setSamplingInterval(command[1]);
+			} else {
+				sageutils.log("Command", "should be: perfsampling often (normal, slow)");
+			}
+			break;
+		case 'performance':
+			performanceManager.printMetrics();
+			break;
 		case 'exit':
 		case 'quit':
 		case 'bye': {
