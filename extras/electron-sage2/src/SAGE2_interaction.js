@@ -393,6 +393,9 @@ function SAGE2_interaction(wsio) {
 			document.addEventListener('click', pointerClick, false);
 
 			// sagePointerDisabled();
+			var pbutton = $$('pointer_id').$view.querySelector('button');
+			pbutton.style.backgroundColor = "#3498db";
+			pbutton.innerText = "Start pointer";
 		} else {
 			// enable SAGE2 Pointer
 			this.wsio.emit('startSagePointer', {label: localStorage.SAGE2_ptrName, color: localStorage.SAGE2_ptrColor});
@@ -409,6 +412,9 @@ function SAGE2_interaction(wsio) {
 			document.removeEventListener('click', pointerClick, false);
 
 			// sagePointerEnabled();
+			var pbutton = $$('pointer_id').$view.querySelector('button');
+			pbutton.style.backgroundColor = "#00b359";
+			pbutton.innerText = "Stop pointer";
 		}
 	};
 

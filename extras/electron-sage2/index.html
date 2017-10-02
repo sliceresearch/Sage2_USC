@@ -5,7 +5,7 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no" />
 
     <meta charset="UTF-8">
-    <title>SAGE2 - Electron</title>
+    <title>SAGE2</title>
 
 	<link rel="stylesheet" type="text/css" href="css/fonts.css"/>
 	<link rel="stylesheet" type="text/css" href="css/app.css" media="screen" />
@@ -150,6 +150,28 @@ function isValidWebsocket(str) {
 	return pattern1.test(str) || pattern2.test(str);
 }
 
+function geoLocation() {
+	let location;
+	if("geolocation" in navigator) {
+		console.log('LOC0> Location services available')
+		navigator.geolocation.getCurrentPosition(function(position) {
+			console.log('LOC1>', position);
+			location = {
+				lat: position.coords.latitude,
+				lng: position.coords.longitude
+			}
+			console.log('LOC2>', location);
+		}, function (err) {
+			console.warn('User geolocation error:', err.message, err.code);
+		}, {
+			enableHighAccuracy: true, // high-precision
+			timeout: 5000,  // 5 sec. maximum
+			maximumAge: 0   // get a fresh value
+		});
+	}
+}
+
+
 
 /**
  * Entry point of the user interface
@@ -159,6 +181,8 @@ function isValidWebsocket(str) {
 function SAGE2_init() {
 	console.log('SAGE2 Init');
 
+	geoLocation();
+
 	var menu = [
 		{ value: "Home"},
 		{ value: "Messages"},
@@ -167,142 +191,75 @@ function SAGE2_init() {
   
 	var mainUI = webix.ui({
 		"id": "mainUI",
-	    "container": "wrapper",
-		// "type": "space",
-		"rows": [
+		"container": "wrapper",
+		id: "column1",
+		width: 300,
+		// autowidth: true,
+		rows : [
 		{
-			id: "panel_id",
 			cols : [
-			    {
-			    	width: 300, minWidth: 0,
-					id: "column1",
-			    	rows : [
-					{
-						cols : [
-							{
-								label: "URL", view: "text",
-								id: "sage2_id",
-								placeholder: "SAGE2 host, hostname[:port]"
-							}
-						]
-					},
-					{
-						cols : [
-							{
-								label: "Passcode", view: "text",
-								type:'password',
-								id: "passcode_id",
-								placeholder: "Access code (optional)"
-							}
-						]
-					},
-					{
-						cols : [
-							{
-								value: "Connect", view: "button",
-								id: "connect_id",
-								click: connect_func,
-							}
-						]
-					},
-					{
-						cols : [
-							{
-								value: "Share this window", view: "button",
-								id: "share_id",
-								click: share_func,
-							}
-						]
-					},
-					{
-						cols : [
-							{
-								value: "Share the whole screen", view: "button",
-								id: "sharescreen_id",
-								click: sharescreen_func,
-							}
-						]
-					},
-					{
-						cols : [
-							{
-								value: "Stop sharing", view: "button",
-								click: stopsharing_func,
-							}
-						]
-					},
-					{
-						value: "Show/Hide browser", view: "button",
-						click: hidebrowser_func,						
-					},
-					{
-						value: "Start pointer", view: "button",
-						id: "pointer_id",
-						click: startpointer_func,						
-					},
-					{
-						template: '<img width=170 src="' + 'images/S2-logo.png' + '"/>',
-						width:  170,
-						height: 170
-					}
-				]},
-				{ view : "resizer", id: "resizer_id" },
 				{
-					id: "column2",
-					rows : [
-					{
-						padding: 1,
-						height: 48,
-						cols: [
-							{
-								view: "button",
-								label: "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; back",
-								click: navigate_back,
-								type: "imageButton", image: "images/back2.png", 
-							},
-							{
-								view: "button",
-								label: "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; forward",
-								click: navigate_forward,
-								type: "imageButton", image: "images/forward2.png", 
-							},
-							{
-								view: "button",
-								label: "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; reload",
-								click: navigate_reload,
-								type: "imageButton", image: "images/refresh2.png", 
-							},
-							{
-								view: "button",
-								label: "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; home",
-								click: navigate_home,
-								type: "imageButton", image: "images/home.png", 
-							}
-					]},
-					{
-						cols: [
-						{
-							id: "url_id",
-							view: "text",
-							value: "http://google.com/",
-							gravity: 3,
-							placeholder: "enter website name"
-						},
-						{
-							view: "label",
-							label: "",
-							id: "status_id",
-							align: "center"
-						}
-						]
-					},
-					{
-						view: "template",
-						id:   "iframe",
-						template: "<div id=webview_div style=\"width:100%;\"><webview id=webview_content src='http://google.com/'/></webview></div>",
-					}
-				]}
+					label: "URL", view: "text",
+					id: "sage2_id",
+					placeholder: "SAGE2 host, hostname[:port]",
+					value: "wss://localhost:9090"
+				}
 			]
+		},
+		{
+			cols : [
+				{
+					label: "Passcode", view: "text",
+					type:'password',
+					id: "passcode_id",
+					placeholder: "Access code (optional)"
+				}
+			]
+		},
+		{
+			cols : [
+				{
+					value: "Connect", view: "button",
+					id: "connect_id",
+					click: connect_func,
+				}
+			]
+		},
+		// {
+		// 	cols : [
+		// 		{
+		// 			value: "Share this window", view: "button",
+		// 			id: "share_id",
+		// 			click: share_func,
+		// 		}
+		// 	]
+		// },
+		{
+			cols : [
+				{
+					value: "Share your screen", view: "button",
+					id: "sharescreen_id",
+					click: sharescreen_func,
+				}
+			]
+		},
+		{
+			cols : [
+				{
+					value: "Stop sharing", view: "button",
+					click: stopsharing_func,
+				}
+			]
+		},
+		{
+			value: "Start pointer", view: "button",
+			id: "pointer_id",
+			click: startpointer_func,						
+		},
+		{
+			template: '<img height=100% style="display:block;margin-left:auto;margin-right:auto"' + 
+				'src="images/S2-logo.png"/>',
+			height: 170,
 		}
 		],
 		ready: function() {
@@ -311,64 +268,8 @@ function SAGE2_init() {
 		}
 	});
 
-	var webview_content = document.getElementById('webview_content');
-
-	$$("url_id").attachEvent("onKeyPress", function(code, e) {
-		if (code === 13 && !e.ctrlKey && !e.shiftKey && !e.altKey) {
-			var a_url = this.getValue();
-			if (isValidURL(a_url)) {
-				webview_content.src = a_url;
-			} else {
-				webview_content.src = "http://" + a_url;
-				this.setValue(webview_content.src);
-			}
-			return false;
-		}
-	});
-
-	var failed_loading = false;
-	var is_loading = true;
-    var indicator = document.getElementById("indicator");
-
-	var loadstart = function() {
-		$$('status_id').setValue("loading...");
-		failed_loading = false;
-		is_loading = true;
-	}
-	var loadstop = function(evt) {
-		if (!failed_loading) {
-			$$('status_id').setValue("done");
-		}
-	}
-	var loadfail = function(evt) {
-		$$('status_id').setValue("Unknown URL");
-		failed_loading = true;
-	}
-	var loadcommit = function(evt) {
-		if (is_loading && evt.isMainFrame) {
-			$$("url_id").setValue(evt.url);
-			is_loading = false;
-		}
-	}
-	var loaddetails = function(evt) {
-		// console.log('details', evt)
-	}
-    webview_content.addEventListener("did-start-loading", loadstart);
-    webview_content.addEventListener("did-stop-loading",  loadstop);
-    webview_content.addEventListener("did-load-failed",   loadfail);
-    webview_content.addEventListener("did-fail-load",     loadfail);
-    webview_content.addEventListener("load-commit",       loadcommit);
-    // webview_content.addEventListener("did-get-response-details", loaddetails);
-	webview_content.addEventListener('new-window', function(e) {
-		console.log("Opening window", e.url);
-		webview_content.src = e.url;
-		return false;
-	});
-
 	window.addEventListener('resize', doResize);
 	doResize();
-	// hide the browser by default
-	hidebrowser_func();
 }
 
 function showMessage(msg) {
@@ -438,7 +339,7 @@ function share_func() {
 	if (interactor) {
 		if (!interactor.broadcasting) {
 			interactor.captureDesktop("window");
-			$$('share_id').$view.querySelector('button').style.backgroundColor = "#00b359";
+			$$('sharescreen_id').$view.querySelector('button').style.backgroundColor = "#00b359";
 			// update tray item
 			trayMenu.items[0].checked = true;
 		}
@@ -466,27 +367,8 @@ function stopsharing_func() {
 		track.stop();
 		// update tray item
 		trayMenu.items[0].checked = false;
-		$$('share_id').$view.querySelector('button').style.backgroundColor = "#3498db";
+		// $$('share_id').$view.querySelector('button').style.backgroundColor = "#3498db";
 		$$('sharescreen_id').$view.querySelector('button').style.backgroundColor = "#3498db";
-	}
-}
-
-function hidebrowser_func() {
-	var w = window.outerWidth;
-	var h = window.outerHeight;
-	var c1 = $$('column1').$view.clientWidth + 10;
-	h = 485;
-	w = 1200;
-
-console.log('C1', c1, w, h)
-	if (show_browser) {
-		save_width = w;
-		remote.getCurrentWindow().setSize(c1, h, true);
-		show_browser = false;
-		console.log('save_width', save_width)
-	} else {
-		remote.getCurrentWindow().setSize(save_width, h, true);
-		show_browser = true;		
 	}
 }
 
@@ -496,29 +378,16 @@ function startpointer_func() {
 	}
 }
 
-function navigate_back() {
-	webview_content.goBack();
-}
-function navigate_forward() {
-	webview_content.goForward();
-}
-function navigate_home() {
-	webview_content.src = "http://www.google.com/";
-}
-function navigate_reload() {
-	webview_content.reload();
-}
-
 function pointerClick(event) {
 	console.log('Click')
 }
 function doResize() {
-	var h = window.innerHeight - 95;
-	document.getElementById('webview_div').style.height = h + 'px';
-	document.getElementById('webview_content').style.height = h + 'px';
-	$$('iframe').config.height = h;
-	$$('iframe').resize();
-	$$('mainUI').resize();
+	// var h = window.innerHeight - 95;
+	// document.getElementById('webview_div').style.height = h + 'px';
+	// document.getElementById('webview_content').style.height = h + 'px';
+	// $$('iframe').config.height = h;
+	// $$('iframe').resize();
+	// $$('mainUI').resize();
 }
 
 function setupListeners() {
@@ -569,7 +438,7 @@ function setupListeners() {
   </head>
   <body>
 
-	<div style="padding:0;margin:0;width:100%;background-color:#FFFFFF;">
+	<div style="width:100%;background-color:#FFFFFF;">
 		<div id="wrapper" style="background-color: #ececec;">
 		</div>
 	</div>

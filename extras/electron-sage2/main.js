@@ -7,6 +7,8 @@ const app = electron.app;
 const BrowserWindow = electron.BrowserWindow;
 
 app.commandLine.appendSwitch('enable-usermedia-screen-capturing');
+// SAGE2 Google maps APIKEY
+process.env.GOOGLE_API_KEY = 'AIzaSyANE6rJqcfc7jH-bDOwhXQZK_oYq9BWRDY';
 
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
@@ -15,8 +17,10 @@ let mainWindow;
 function createWindow () {
 	// Create the browser window.
 	mainWindow = new BrowserWindow({
-		width: 1200,
-		height: 485,
+		// width: 1200,
+		width: 320,
+		height: 432,
+		// resizable: false,
 		webPreferences: {
 			nodeIntegration: true,
 			webSecurity: true,
