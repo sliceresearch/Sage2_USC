@@ -287,6 +287,7 @@ function initializeSage2Server() {
 		}
 	}
 
+	// Create an object to gather performance statistics
 	performanceManager = new PerformanceManager();
 
 	imageMagick = gm.subClass(imageMagickOptions);
@@ -5467,10 +5468,10 @@ function processInputCommand(line) {
 			break;
 		}
 		case 'perfsampling':
-			if (command.length > 1 && typeof command[1] === "string") {
+			if (command.length > 1) {
 				performanceManager.setSamplingInterval(command[1]);
 			} else {
-				sageutils.log("Command", "should be: perfsampling often (normal, slow)");
+				sageutils.log("Command", "should be: perfsampling [slow|normal|often]");
 			}
 			break;
 		case 'performance':
