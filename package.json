@@ -73,7 +73,8 @@
 		"websocketio": "https://github.com/renambot-uic/websocketio.git",
 		"rimraf": "latest",
 		"node-pre-gyp": "latest",
-		"electron": "latest"
+		"electron": "latest",
+    "systeminformation": "latest"
 	},
 	"optionalDependencies": {
 		"node-demux": "https://github.com/renambot-uic/node-demux.git"

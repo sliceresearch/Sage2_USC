@@ -76,7 +76,7 @@ var FileBufferManager	= require('./src/node-filebuffer');
 var PartitionList       = require('./src/node-partitionlist');    // list of SAGE2 Partitions
 var SharedDataManager	= require('./src/node-sharedserverdata'); // manager for shared data
 var S2Logger            = require('./src/node-logger');           // SAGE2 logging module
-
+var PerformanceManager	= require('./src/node-performancemanager'); // SAGE2 performance module
 //
 // Globals
 //
@@ -127,6 +127,7 @@ var config;
 var SAGE2_version;
 var interactMgr;
 var drawingManager;
+var performanceManager;
 
 // Partition variables
 var partitions;
@@ -285,6 +286,9 @@ function initializeSage2Server() {
 			ffmpegOptions.appPath = config.dependencies.FFMpeg;
 		}
 	}
+
+	performanceManager = new PerformanceManager();
+
 	imageMagick = gm.subClass(imageMagickOptions);
 	assets.initializeConfiguration(config);
 	assets.setupBinaries(imageMagickOptions, ffmpegOptions);
@@ -383,7 +387,7 @@ function initializeSage2Server() {
 	}
 	// try to exclude some folders from the monitoring
 	var excludesFiles   = ['.DS_Store', 'Thumbs.db', 'passwd.json'];
-	var excludesFolders = ['assets', 'apps', 'config', 'savedFiles', 'sessions', 'tmp', 'web'];
+	var excludesFolders = ['assets', 'apps', 'config', 'savedFiles', 'sessions', 'tmp'];
 	sageutils.monitorFolders(listOfFolders, excludesFiles, excludesFolders,
 		function(change) {
 			sageutils.log("Monitor", "Changes detected in", this.root);
@@ -660,6 +664,13 @@ function emitLog(data) {
 }
 // Make the function global
 global.emitLog = emitLog;
+
+// Export variables to sub modules
+// dirname: used by application plugins to load plugin source
+// broadcast: used by plugins to send results back to apps
+exports.dirname = path.join(__dirname, "node_modules");
+exports.broadcast = broadcast;
+
 
 // global variables to manage clients
 var clients           = [];
@@ -5279,6 +5290,9 @@ function processInputCommand(line) {
 			console.log('sessions\tlist the available sessions');
 			console.log('screenshot\ttake a screenshot of the wall');
 			console.log('update\t\trun a git update');
+			console.log('performance\tshow performance information');
+			console.log('perfsampling\tset performance metric sampling rate');
+			console.log('update\t\trun a git update');
 			console.log('version\t\tprint SAGE2 version');
 			console.log('exit\t\tstop SAGE2');
 			break;
@@ -5452,6 +5466,16 @@ function processInputCommand(line) {
 			listMediaBlockStreams();
 			break;
 		}
+		case 'perfsampling':
+			if (command.length > 1 && typeof command[1] === "string") {
+				performanceManager.setSamplingInterval(command[1]);
+			} else {
+				sageutils.log("Command", "should be: perfsampling often (normal, slow)");
+			}
+			break;
+		case 'performance':
+			performanceManager.printMetrics();
+			break;
 		case 'exit':
 		case 'quit':
 		case 'bye': {
@@ -8755,6 +8779,12 @@ function pointerCloseGesture(uniqueID, pointerX, pointerY, time, gesture) {
 }
 
 function handleNewApplication(appInstance, videohandle) {
+	// Create tracking for all apps by default stacking another state load value.
+	// It must be done here due to how mergeObjects() works as specified in src/node-utils.js
+	if (appInstance.data === null || appInstance.data === undefined) {
+		appInstance.data = {};
+	}
+	appInstance.data.pointersOverApp = [];
 	broadcast('createAppWindow', appInstance);
 	broadcast('createAppWindowPositionSizeOnly', getAppPositionSize(appInstance));
 

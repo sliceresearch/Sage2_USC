@@ -9,7 +9,7 @@
 // Copyright (c) 2014-2015
 
 
-/* global ignoreFields, SAGE2WidgetControl, SAGE2PointerToNativeMouseEvent, SAGE2SharedServerData */
+/* global ignoreFields, SAGE2WidgetControl, SAGE2PointerToNativeMouseEvent, SAGE2SharedServerData, SAGE2RemoteSitePointer */
 /* global addStoredFileListEventHandler, removeStoredFileListEventHandler */
 
 /**
@@ -161,6 +161,9 @@ var SAGE2_App = Class.extend({
 		this.SAGE2CopyState(state);
 		this.SAGE2UpdateAppOptionsFromState();
 
+		// update remote pointers if any over this app
+		SAGE2RemoteSitePointer.checkIfAppNeedsUpdate(this);
+
 		this.load(date);
 	},
 
@@ -300,12 +303,53 @@ var SAGE2_App = Class.extend({
 			this.SAGE2UserModification = true;
 			this.event(eventType, position, user_id, data, date);
 
+			// If the app has specified, convert pointer actions into mouse events.
 			if (this.passSAGE2PointerAsMouseEvents) {
 				SAGE2PointerToNativeMouseEvent.processAndPassEvents(this.id, eventType, position,
 					user_id, data, date);
 			}
+
+			// If the pointer is moved, keep track of it for showing remote pointer
+			if (isMaster && eventType === "pointerMove" && this.isSharedWithRemoteSite()) {
+				// if app is shared, then track pointer
+				SAGE2RemoteSitePointer.trackPointer(this, user_id, position);
+			} else if (isMaster  && SAGE2RemoteSitePointer.shouldPassEvents && this.isSharedWithRemoteSite()) {
+				SAGE2RemoteSitePointer.trackEvent(this, {
+					eventType: eventType,
+					position: position,
+					user_id: user_id,
+					data: data,
+					date: date
+				});
+			}
+
 			this.SAGE2UserModification = false;
 		}
+	},
+
+	/**
+	* Used to check if display believes this app is shared with a remote site.
+	* This is done by checking if the sync icon is visible.
+	*
+	* @method isSharedWithRemoteSite
+	*/
+	isSharedWithRemoteSite: function() {
+		var windowIconSync = document.getElementById(this.id + "_iconSync");
+		var windowIconUnSync = document.getElementById(this.id + "_iconUnSync");
+		// if either sync button is visible, then this app is shared.
+		if (windowIconSync.style.display !== "none" || windowIconUnSync.style.display !== "none") {
+			return true;
+		}
+		return false;
+	},
+
+	/**
+	* Used to set status of event sharing. Activated through context menu.
+	*
+	* @method toggleRemotePointerEventPassing
+	*/
+	toggleRemotePointerEventPassing: function(responseObject) {
+		this.shouldPassRemotePointerEvents = responseObject.value ? true : false;
 	},
 
 	/**
@@ -743,6 +787,8 @@ var SAGE2_App = Class.extend({
 		if (isMaster && this.hasFileBuffer === true) {
 			wsio.emit('closeFileBuffer', {id: this.div.id});
 		}
+		// hide remote pointers if any
+		SAGE2RemoteSitePointer.appQuitHidePointers(this);
 		// remove values placed on server
 		this.serverDataRemoveAllValuesGivenToServer();
 	},
@@ -922,34 +968,47 @@ var SAGE2_App = Class.extend({
 			// If the application defines a menu function, use it
 			if (typeof this.getContextEntries === "function") {
 				appContextMenu.entries = this.getContextEntries();
+			} else {
+				appContextMenu.entries = [];
+			}
+			appContextMenu.entries.push({
+				description: "separator"
+			});
+			appContextMenu.entries.push({
+				description: "Send to back",
+				callback: "SAGE2SendToBack",
+				parameters: {}
+			});
+			appContextMenu.entries.push({
+				description: "Maximize",
+				callback: "SAGE2Maximize",
+				parameters: {}
+			});
+			appContextMenu.entries.push({
+				description: "separator"
+			});
+			// currently testing with remote pointer event testing
+			if (!this.shouldPassRemotePointerEvents) {
 				appContextMenu.entries.push({
-					description: "separator"
-				});
-				appContextMenu.entries.push({
-					description: "Send to back",
-					callback: "SAGE2SendToBack",
-					parameters: {}
-				});
-				appContextMenu.entries.push({
-					description: "Maximize",
-					callback: "SAGE2Maximize",
-					parameters: {}
-				});
-				appContextMenu.entries.push({
-					description: "separator"
-				});
-				appContextMenu.entries.push({
-					description: "Close " + (this.title || "application"),
-					callback: "SAGE2DeleteElement",
-					parameters: {}
+					description: "Enable remote pointer passing",
+					callback: "toggleRemotePointerEventPassing",
+					parameters: { value: true }
 				});
 			} else {
-				appContextMenu.entries = [{
-					description: "Close application",
-					callback: "SAGE2DeleteElement",
-					parameters: {}
-				}];
+				appContextMenu.entries.push({
+					description: "Disable remote pointer passing",
+					callback: "toggleRemotePointerEventPassing",
+					parameters: { value: false }
+				});
 			}
+			appContextMenu.entries.push({
+				description: "separator"
+			});
+			appContextMenu.entries.push({
+				description: "Close " + (this.title || "application"),
+				callback: "SAGE2DeleteElement",
+				parameters: {}
+			});
 			wsio.emit("appContextMenuContents", appContextMenu);
 		}
 	},

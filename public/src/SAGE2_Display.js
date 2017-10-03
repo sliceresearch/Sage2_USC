@@ -18,6 +18,8 @@
 /* global hideWidgetToAppConnectors */
 /* global createWidgetToAppConnector, getTextFromTextInputWidget */
 /* global SAGE2_Partition, require */
+/* global SAGE2RemoteSitePointer */
+
 
 /* global require */
 
@@ -432,6 +434,7 @@ function setupListeners() {
 	});
 
 	wsio.on('hideSagePointer', function(pointer_data) {
+		SAGE2RemoteSitePointer.notifyAppsPointerIsHidden(pointer_data);
 		ui.hideSagePointer(pointer_data);
 		var uniqueID = pointer_data.id.slice(0, pointer_data.id.lastIndexOf("_"));
 		var re = /\.|:/g;
@@ -965,6 +968,7 @@ function setupListeners() {
 				app.move(date);
 			}
 		}
+		SAGE2RemoteSitePointer.checkIfAppNeedsUpdate(app);
 	});
 
 	wsio.on('startResize', function(data) {
@@ -988,6 +992,7 @@ function setupListeners() {
 				app.resize(date);
 			}
 		}
+		SAGE2RemoteSitePointer.checkIfAppNeedsUpdate(app);
 	});
 
 	wsio.on('animateCanvas', function(data) {
