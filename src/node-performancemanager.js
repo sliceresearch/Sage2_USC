@@ -77,6 +77,12 @@ function PerformanceManager() {
 	// Get the basic information of the system
 	sysInfo.getStaticData(function(data) {
 		this.performanceMetrics.staticInformation = data;
+		// fix on some system with no memory layout
+		if (data.memLayout.length === 0) {
+			sysInfo.mem(function(mem) {
+				this.performanceMetrics.staticInformation.memLayout[0] = {size: mem.total};
+			}.bind(this));
+		}
 	}.bind(this));
 
 
@@ -488,7 +494,7 @@ PerformanceManager.prototype.printServerHardware = function() {
 	var data = this.performanceMetrics.staticInformation;
 
 	sageutils.log('HW', 'System:', data.system.manufacturer, data.system.model);
-	sageutils.log('HW', 'OS:', data.os.platform, data.os.distro, data.os.release);
+	sageutils.log('HW', 'OS:', data.os.platform, data.os.arch, data.os.distro, data.os.release);
 	sageutils.log('HW', 'CPU:', data.cpu.manufacturer, data.cpu.brand, data.cpu.speed + 'Ghz', data.cpu.cores + 'cores');
 	var totalMem = data.memLayout.reduce(function(sum, value) {
 		return sum + value.size;
@@ -496,7 +502,7 @@ PerformanceManager.prototype.printServerHardware = function() {
 	var memInfo = getNiceNumber(totalMem);
 	sageutils.log('HW', 'RAM:', memInfo.number + memInfo.suffix);
 	var gpuMem = getNiceNumber(data.graphics.controllers[0].vram * 1024 * 1024);
-	sageutils.log('HW', 'GPU:', data.graphics.controllers[0].model, gpuMem.number + gpuMem.suffix + ' VRAM');
+	sageutils.log('HW', 'GPU:', data.graphics.controllers[0].vendor, data.graphics.controllers[0].model, gpuMem.number + gpuMem.suffix + ' VRAM');
 };
 
 /**
