@@ -954,6 +954,12 @@ function initializeWSClient(wsio, reqConfig, reqVersion, reqTime, reqConsole) {
 	if (wsio.clientType === "webBrowser") {
 		webBrowserClient = wsio;
 	}
+
+	if (wsio.clientType === "performance") {
+		wsio.emit('hardwareInformation',
+			performanceManager.performanceMetrics.staticInformation
+		);
+	}
 }
 
 /**

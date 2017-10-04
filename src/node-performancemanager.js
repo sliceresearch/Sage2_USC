@@ -438,9 +438,9 @@ function getPercentString(val, remaining) {
 }
 
 /**
-  * Helper function to convert a number to shorter format with  
+  * Helper function to convert a number to shorter format with
   * appropriate suffix determined (K for Kilo and so on)
-  * 
+  *
   * @method getNiceNumber
   * @param {number} number - large number
   * @param {Boolean} giga - using 1000 or 1024
