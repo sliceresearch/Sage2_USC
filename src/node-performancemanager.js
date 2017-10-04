@@ -493,16 +493,25 @@ function formatMemoryString(used, free, short) {
 PerformanceManager.prototype.printServerHardware = function() {
 	var data = this.performanceMetrics.staticInformation;
 
-	sageutils.log('HW', 'System:', data.system.manufacturer, data.system.model);
-	sageutils.log('HW', 'OS:', data.os.platform, data.os.arch, data.os.distro, data.os.release);
-	sageutils.log('HW', 'CPU:', data.cpu.manufacturer, data.cpu.brand, data.cpu.speed + 'Ghz', data.cpu.cores + 'cores');
-	var totalMem = data.memLayout.reduce(function(sum, value) {
-		return sum + value.size;
-	}, 0);
-	var memInfo = getNiceNumber(totalMem);
-	sageutils.log('HW', 'RAM:', memInfo.number + memInfo.suffix);
-	var gpuMem = getNiceNumber(data.graphics.controllers[0].vram * 1024 * 1024);
-	sageutils.log('HW', 'GPU:', data.graphics.controllers[0].vendor, data.graphics.controllers[0].model, gpuMem.number + gpuMem.suffix + ' VRAM');
+	// make sure the data has been produced
+	if (data) {
+		sageutils.log('HW', 'System:', data.system.manufacturer, data.system.model);
+		sageutils.log('HW', 'OS:', data.os.platform,
+			data.os.arch, data.os.distro, data.os.release);
+		sageutils.log('HW', 'CPU:', data.cpu.manufacturer, data.cpu.brand,
+			data.cpu.speed + 'Ghz', data.cpu.cores + 'cores');
+		// Sum up all the memory banks
+		var totalMem = data.memLayout.reduce(function(sum, value) {
+			return sum + value.size;
+		}, 0);
+		var memInfo = getNiceNumber(totalMem);
+		sageutils.log('HW', 'RAM:', memInfo.number + memInfo.suffix);
+		var gpuMem = getNiceNumber(data.graphics.controllers[0].vram * 1024 * 1024);
+		// not very good on Linux (need to check nvidia tools)
+		sageutils.log('HW', 'GPU:', data.graphics.controllers[0].vendor,
+			data.graphics.controllers[0].model,
+			gpuMem.number + gpuMem.suffix + ' VRAM');
+	}
 };
 
 /**
