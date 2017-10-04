@@ -1143,6 +1143,9 @@ function setupListeners(wsio) {
 	wsio.on('partitionScreen',                      wsPartitionScreen);
 	wsio.on('deleteAllPartitions',                  wsDeleteAllPartitions);
 	wsio.on('partitionsGrabAllContent',             wsPartitionsGrabAllContent);
+
+	// message from electron display client
+	wsio.on('displayHardware',                      wsDisplayHardware);
 }
 
 /**
@@ -10030,6 +10033,18 @@ function wsWallScreenshotFromDisplay(wsio, data) {
 	}
 	// Reset variable to allow another capture
 	masterDisplay.startedScreenshot = false;
+}
+
+/**
+ * Receive data from Electron display client about their hardware
+ *
+ * @method     wsDisplayHardware
+ * @param      {<type>}  wsio    The wsio
+ * @param      {<type>}  data    The data
+ */
+function wsDisplayHardware(wsio, data) {
+	// store the hardware data for a given client
+	performanceManager.addDisplayClient(wsio.clientID, data);
 }
 
 /**

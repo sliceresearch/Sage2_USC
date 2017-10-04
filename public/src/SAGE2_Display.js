@@ -174,6 +174,14 @@ function setupFocusHandlers() {
 				deleteElement('problemDialog');
 			}, 2500);
 		});
+
+		// Receive hardware info from the main process (electron node)
+		require('electron').ipcRenderer.on('hardwareData', function(event, message) {
+			if (wsio !== undefined) {
+				// and send it to the server
+				wsio.emit('displayHardware', message);
+			}
+		});
 	}
 }
 

@@ -28,16 +28,6 @@ var sageutils = require('../src/node-utils');
   */
 
 function PerformanceManager() {
-	// Flags
-	this.debugSocketsNotOpen = true;
-	this.profilingStarted = false;
-	// Handles
-	this.debugSockets = [];
-	this.webSocketDebuggerUrls = [];
-	this.clientProfiles = {};
-
-	// Data elements
-
 	// Temporary placeholder that collects network data between calls to collectMetrics
 	this.trafficData = {
 		date: Date.now(),
@@ -74,6 +64,9 @@ function PerformanceManager() {
 		}
 	};
 
+	// Array to store display client data
+	this.clientInformation = [];
+
 	// Get the basic information of the system
 	sysInfo.getStaticData(function(data) {
 		this.performanceMetrics.staticInformation = data;
@@ -95,6 +88,17 @@ function PerformanceManager() {
 	this.loopHandle = setInterval(this.collectMetrics.bind(this),
 		this.samplingInterval * 1000);
 }
+
+/**
+ * Adds data for a display client.
+ *
+ * @method     addDisplayClient
+ * @param      {<type>}  idx     The client ID
+ * @param      {<type>}  data    The data
+ */
+PerformanceManager.prototype.addDisplayClient = function(idx, data) {
+	this.clientInformation[idx] = data;
+};
 
 /**
   * Sets sampling interval to 1, 2 or 5 seconds and restarts the sampling loop
