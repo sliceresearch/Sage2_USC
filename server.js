@@ -5293,6 +5293,7 @@ function processInputCommand(line) {
 			console.log('update\t\trun a git update');
 			console.log('performance\tshow performance information');
 			console.log('perfsampling\tset performance metric sampling rate');
+			console.log('hardware\tget an summary of the hardware running the server');
 			console.log('update\t\trun a git update');
 			console.log('version\t\tprint SAGE2 version');
 			console.log('exit\t\tstop SAGE2');
@@ -5476,6 +5477,9 @@ function processInputCommand(line) {
 			break;
 		case 'performance':
 			performanceManager.printMetrics();
+			break;
+		case 'hardware':
+			performanceManager.printServerHardware();
 			break;
 		case 'exit':
 		case 'quit':

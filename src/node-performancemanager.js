@@ -16,6 +16,8 @@
 
 // module to retrieve hardware, system and OS information
 var sysInfo = require('systeminformation');
+// pretty formating a la sprintf
+var sprint  = require('sprint');
 
 // SAGE2 module: for log function
 var sageutils = require('../src/node-utils');
@@ -260,8 +262,8 @@ PerformanceManager.prototype.collectServerProcessLoad = function(data) {
 		date: Date.now(),
 		cpuPercent: serverProcess.pcpu,
 		memPercent: serverProcess.pmem,
-		memVirtual: serverProcess.mem_vsz * 1000,
-		memResidentSet: serverProcess.mem_rss * 1000
+		memVirtual: serverProcess.mem_vsz * 1024,
+		memResidentSet: serverProcess.mem_rss * 1024
 	};
 
 	this.saveData('serverProcessLoad', serverLoad);
@@ -341,11 +343,11 @@ PerformanceManager.prototype.computeMovingAverages = function(metric, oneMinute,
 PerformanceManager.prototype.collectMemoryUsage = function(data) {
 	var memUsage = {
 		date: Date.now(),
-		used: data.used,
-		free: data.free,
-		active: data.active // Used - active = used by buffer and cache
+		total:  data.total,  // total memory in bytes
+		used:   data.used,   // incl. buffers/cache
+		free:   data.free,
+		active: data.active  // used actively (excl. buffers/cache)
 	};
-
 	this.saveData('memUsage', memUsage);
 
 	// Creating empty objects to store moving averages for 1 minute
@@ -426,24 +428,31 @@ function getPercentString(val, remaining) {
 	val = parseInt(val);
 	remaining = parseInt(remaining);
 	var percent = val * 100 / (val + remaining);
-	return percent.toFixed(1);
+	return sprint("%3.0f", percent);
 }
 
 /**
   * Helper function to convert a number to shorter format with  
-  ** appropriate suffix determined (K for Kilo and so on) 
+  * appropriate suffix determined (K for Kilo and so on)
   * 
   * @method getNiceNumber
   * @param {number} number - large number
+  * @param {Boolean} giga - using 1000 or 1024
   */
-function getNiceNumber(number) {
-	var suffix = ['', 'K', 'M', 'G', 'T', 'P'];
+function getNiceNumber(number, giga) {
+	var suffix;
 	var idx = 0;
-	while (number > 1000) {
-		number = number / 1000;
-		idx = idx + 1; // For every 1000, a new suffix is chosen
+	var base = giga ? 1000 : 1024;
+	if (giga) {
+		suffix = ['', 'Kb', 'Mb', 'Gb', 'Tb', 'Pb'];
+	} else {
+		suffix = ['', 'KB', 'MB', 'GB', 'TB', 'PB'];
 	}
-	return {number: number.toFixed(1), suffix: suffix[idx]};
+	while (number > base) {
+		number = number / base;
+		idx = idx + 1;  // For every 1000 or 1024, a new suffix is chosen
+	}
+	return {number: number.toFixed(0), suffix: suffix[idx]};
 }
 
 /**
@@ -459,16 +468,36 @@ function formatMemoryString(used, free, short) {
 	var usedPercent = used / total * 100;
 	used  = getNiceNumber(used);
 	total = getNiceNumber(total);
-	usedPercent = usedPercent.toFixed(1);
+	usedPercent = sprint('%3.0f', usedPercent);
 	var printString;
 	if (short === true) {
 		printString = usedPercent;
 	} else {
-		printString = usedPercent + "% ("  + used.number + used.suffix + "B) of " +
-			total.number + total.suffix + "B";
+		printString = usedPercent + "% ("  + used.number + used.suffix + ") of " +
+			total.number + total.suffix;
 	}
 	return printString;
 }
+
+/**
+ * Print a summary of the hardware that the server is running on
+ *
+ * @method     printServerHardware
+ */
+PerformanceManager.prototype.printServerHardware = function() {
+	var data = this.performanceMetrics.staticInformation;
+
+	sageutils.log('HW', 'System:', data.system.manufacturer, data.system.model);
+	sageutils.log('HW', 'OS:', data.os.platform, data.os.distro, data.os.release);
+	sageutils.log('HW', 'CPU:', data.cpu.manufacturer, data.cpu.brand, data.cpu.speed + 'Ghz', data.cpu.cores + 'cores');
+	var totalMem = data.memLayout.reduce(function(sum, value) {
+		return sum + value.size;
+	}, 0);
+	var memInfo = getNiceNumber(totalMem);
+	sageutils.log('HW', 'RAM:', memInfo.number + memInfo.suffix);
+	var gpuMem = getNiceNumber(data.graphics.controllers[0].vram * 1024 * 1024);
+	sageutils.log('HW', 'GPU:', data.graphics.controllers[0].model, gpuMem.number + gpuMem.suffix + ' VRAM');
+};
 
 /**
   * Prints different performance metrics to the console
@@ -480,55 +509,59 @@ PerformanceManager.prototype.printMetrics = function() {
 	var serverLoad1MinuteAvg = this.performanceMetrics.movingAvg1Minute.serverProcessLoad;
 	var serverLoadEntireDurationAvg = this.performanceMetrics.movingAvgEntireDuration.serverProcessLoad;
 
-	console.log("");
-	console.log("\tSAGE2 Server");
-	console.log("\t------------");
-	console.log("");
-	console.log("\tLoad");
-	var cpup   = parseFloat(serverLoad.cpuPercent).toFixed(1);
-	var cpup1m = parseFloat(serverLoad1MinuteAvg.cpuPercent).toFixed(1);
-	var cpupdm = parseFloat(serverLoadEntireDurationAvg.cpuPercent).toFixed(1);
+	sageutils.log('Perf', "");
+	sageutils.log('Perf', "SAGE2 Server");
+	sageutils.log('Perf', "------------");
+	sageutils.log('Perf', "Load");
+	var cpup   = sprint('%3.0f', serverLoad.cpuPercent);
+	var cpup1m = sprint('%3.0f', serverLoad1MinuteAvg.cpuPercent);
+	var cpupdm = sprint('%3.0f', serverLoadEntireDurationAvg.cpuPercent);
 
-	var printString = "\tCurrent: " + cpup + "%\t\t\t\tAverage(1 min): " + cpup1m + "%"
-		+ "\t\tAverage(" + this.durationInMinutes + " min): " + cpupdm + "%";
-	console.log(printString);
-	console.log("");
-	console.log("\tMemory");
-	var memUsage = this.performanceMetrics.memUsage;
-	var totalMem = memUsage.used + memUsage.free;
+	// Process load
+	var printString = "Current: " + cpup + "%\t\t\tAverage (1 min): " + cpup1m + "%"
+		+ "\tAverage (" + this.durationInMinutes + " min): " + cpupdm + "%";
+	sageutils.log('Perf', printString);
+
+	// Memory load
+	sageutils.log('Perf', "Memory");
+	var memUsage  = this.performanceMetrics.memUsage;
+	var totalMem  = memUsage.used + memUsage.free;
 	var memServer = serverLoad.memResidentSet;
 	var memServer1m = serverLoad1MinuteAvg.memResidentSet;
 	var memServerdm = serverLoadEntireDurationAvg.memResidentSet;
-	printString = "\tCurrent: " + formatMemoryString(memServer, totalMem - memServer)
-		+ "\tAverage(1 min): " + formatMemoryString(memServer1m, totalMem - memServer1m, true) + "%"
-		+ "\t\tAverage(" + this.durationInMinutes + " min): "
+	printString = "Current: " + formatMemoryString(memServer, totalMem - memServer)
+		+ "\tAverage (1 min): " + formatMemoryString(memServer1m, totalMem - memServer1m, true) + "%"
+		+ "\tAverage (" + this.durationInMinutes + " min): "
 		+ formatMemoryString(memServerdm, totalMem - memServerdm, true) + "%";
-	console.log(printString);
-	console.log("");
-	console.log("\tSystem");
-	console.log("\t------");
-	console.log("");
-	console.log("\tLoad");
+	sageutils.log('Perf', printString);
+	sageutils.log('Perf', "");
+
+	// System load
+	sageutils.log('Perf', "System");
+	sageutils.log('Perf', "------");
+
+	// CPU load
+	sageutils.log('Perf', "Load");
 	var cpuLoad = this.performanceMetrics.cpuLoad;
 	var cpuLoad1MinuteAvg = this.performanceMetrics.movingAvg1Minute.cpuLoad;
 	var cpuLoadEntireDurationAvg = this.performanceMetrics.movingAvgEntireDuration.cpuLoad;
-	printString = "\tCurrent: " + getPercentString(cpuLoad.load, cpuLoad.idle) + "%"
-		+ "\t\t\t\tAverage(1 min): " + getPercentString(cpuLoad1MinuteAvg.load, cpuLoad1MinuteAvg.idle) + "%"
-		+ "\t\tAverage(" + this.durationInMinutes + " min): "
+	printString = "Current: " + getPercentString(cpuLoad.load, cpuLoad.idle) + "%"
+		+ "\t\t\tAverage (1 min): " + getPercentString(cpuLoad1MinuteAvg.load, cpuLoad1MinuteAvg.idle) + "%"
+		+ "\tAverage (" + this.durationInMinutes + " min): "
 		+ getPercentString(cpuLoadEntireDurationAvg.load, cpuLoadEntireDurationAvg.idle) + "%";
+	sageutils.log('Perf', printString);
 
-	console.log(printString);
-	console.log("");
-	console.log("\tMemory");
+	// Memory
+	sageutils.log('Perf', "Memory");
 	memUsage = this.performanceMetrics.memUsage;
 	var memUsage1MinuteAvg = this.performanceMetrics.movingAvg1Minute.memUsage;
 	var memUsageEntireDurationAvg = this.performanceMetrics.movingAvgEntireDuration.memUsage;
-	printString = "\tCurrent: " + formatMemoryString(memUsage.used, memUsage.free)
-		+ "\tAverage(1 min): " + getPercentString(memUsage1MinuteAvg.used, memUsage1MinuteAvg.free) + "%"
-		+ "\t\tAverage(" + this.durationInMinutes + " min): "
+	printString = "Current: " + formatMemoryString(memUsage.used, memUsage.total - memUsage.used)
+		+ "\tAverage (1 min): " + getPercentString(memUsage1MinuteAvg.used, memUsage1MinuteAvg.free) + "%"
+		+ "\tAverage (" + this.durationInMinutes + " min): "
 		+ getPercentString(memUsageEntireDurationAvg.used, memUsageEntireDurationAvg.free) + "%";
-	console.log(printString);
-	console.log("");
+	sageutils.log('Perf', printString);
+	sageutils.log('Perf', "");
 };
 
 // export the PerformanceManager class
