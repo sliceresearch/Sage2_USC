@@ -3098,7 +3098,7 @@ function wsLoadApplication(wsio, data) {
 
 function wsLoadImageFromBuffer(wsio, data) {
 	appLoader.loadImageFromDataBuffer(data.src, data.width, data.height,
-		"image/jpeg", "", data.url, data.title, {},
+		data.mime, "", data.url, data.title, {},
 		function(appInstance) {
 			// Get the drop position and convert it to wall coordinates
 			var position = data.position || [0, 0];
