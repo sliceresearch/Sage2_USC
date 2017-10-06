@@ -16,3 +16,6 @@ CHANGES LOG:
 Commented out the code to create the buttons on mobile pointer.
 Changed 'function wsStartSagePointer' in 'server.js' to always start in APP_INTERACTION mode.
 Updated '#sage2MobileTrackpad' in 'style_ui.css' to be 100% height.
+
+node-sagepointer.js hold the start function with the starting position of pointers
+style.css to change stroke width of pointer

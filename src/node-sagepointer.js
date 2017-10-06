@@ -44,6 +44,7 @@ function SagePointer(id) {
 * @param color {Array} RGB array
 * @param sourceType {String} type of pointer
 */
+// SLICE change pointer start position with this.left and this.top.
 SagePointer.prototype.start = function(label, color, sourceType) {
 	this.label = label;
 	this.color = color;
