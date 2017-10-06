@@ -65,7 +65,7 @@ function PerformanceManager() {
 	};
 
 	// Array to store display client data
-	this.clientInformation = [];
+	this.clientsInformation = [];
 
 	// Get the basic information of the system
 	sysInfo.getStaticData(function(data) {
@@ -97,7 +97,32 @@ function PerformanceManager() {
  * @param      {<type>}  data    The data
  */
 PerformanceManager.prototype.addDisplayClient = function(idx, data) {
-	this.clientInformation[idx] = data;
+	// the clientID to the data
+	data.clientID = idx;
+	// store the info into the array
+	this.clientsInformation.push(data);
+
+	// send the displays specifics
+	module.parent.exports.broadcast('displayHardwareInformation',
+		this.clientsInformation
+	);
+};
+
+/**
+ * Send a new monitoring client all the specifics
+ *
+ * @method     updateClient
+ * @param      {Object}  wsio    client's websocket
+ */
+PerformanceManager.prototype.updateClient = function(wsio) {
+	// send the server specifics
+	wsio.emit('serverHardwareInformation',
+		this.performanceMetrics.staticInformation
+	);
+	// send the displays specifics
+	wsio.emit('displayHardwareInformation',
+		this.clientsInformation
+	);
 };
 
 /**
@@ -399,6 +424,14 @@ PerformanceManager.prototype.collectMetrics = function() {
 	// }
 
 	// Disk Usage
+
+	// Send some of the data to the performance pages
+	// (use the broadcast function from the server)
+	module.parent.exports.broadcast('performanceData', {
+		cpuLoad:    this.performanceMetrics.cpuLoad,
+		serverLoad: this.performanceMetrics.serverProcessLoad,
+		memLoad:    this.performanceMetrics.memUsage
+	});
 };
 
 

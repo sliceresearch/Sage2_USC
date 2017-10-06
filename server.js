@@ -956,9 +956,7 @@ function initializeWSClient(wsio, reqConfig, reqVersion, reqTime, reqConsole) {
 	}
 
 	if (wsio.clientType === "performance") {
-		wsio.emit('hardwareInformation',
-			performanceManager.performanceMetrics.staticInformation
-		);
+		performanceManager.updateClient(wsio);
 	}
 }
 

@@ -85,6 +85,8 @@ function SAGE2_init() {
 function setupListeners(wsio) {
 	// Get elements from the DOM
 	var terminal1 = document.getElementById('terminal1');
+	var terminal2 = document.getElementById('terminal2');
+	var terminal3 = document.getElementById('terminal3');
 
 	// Got a reply from the server
 	wsio.on('initialize', function() {
@@ -101,13 +103,8 @@ function setupListeners(wsio) {
 		console.log('wall configuration');
 	});
 
-	// Server sends the animate loop event
-	wsio.on('animateCanvas', function() {
-		console.log('animateCanvas');
-	});
-
 	// Server sends hardware and performance data
-	wsio.on('hardwareInformation', function(data) {
+	wsio.on('serverHardwareInformation', function(data) {
 		var msg = "";
 		if (data) {
 			msg += 'System: ' + data.system.manufacturer + ' ' +
@@ -133,8 +130,42 @@ function setupListeners(wsio) {
 		// automatic scrolling to bottom
 		terminal1.scrollTop    = terminal1.scrollHeight;
 	});
+
+	wsio.on('displayHardwareInformation', function(data) {
+		var msg = "";
+		for (let i = 0; i < data.length; i++) {
+			let disp = data[i];
+			msg += '<span style="color:cyan;">Display ' + disp.clientID + ' </span>: ' + disp.system.manufacturer + ' ' +
+				disp.system.model + '\n';
+			msg += 'OS: ' + disp.os.platform + ' ' +
+				disp.os.arch + ' ' + disp.os.distro + ' ' + disp.os.release + '\n';
+			msg += 'CPU: ' + disp.cpu.manufacturer + ' ' + disp.cpu.brand + ' ' +
+				disp.cpu.speed + 'Ghz ' + disp.cpu.cores + 'cores\n';
+			// Sum up all the memory banks
+			var totalMem = disp.memLayout.reduce(function(sum, value) {
+				return sum + value.size;
+			}, 0);
+			var memInfo = getNiceNumber(totalMem);
+			msg += 'RAM: ' + memInfo.number + memInfo.suffix + '\n';
+			var gpuMem = getNiceNumber(disp.graphics.controllers[0].vram * 1024 * 1024);
+			// not very good on Linux (need to check nvidia tools)
+			msg += 'GPU: ' + disp.graphics.controllers[0].vendor + ' ' +
+				disp.graphics.controllers[0].model + ' ' +
+				gpuMem.number + gpuMem.suffix + ' VRAM\n';
+		}
+		// Added content
+		terminal2.innerHTML = msg;
+		// automatic scrolling to bottom
+		terminal2.scrollTop = terminal2.scrollHeight;
+	});
+
 	wsio.on('performanceData', function(data) {
-		console.log('performanceData', data);
+		var msg = "";
+		if (data) {
+			msg += JSON.stringify(data, null, 4);
+		}
+		// Added content
+		terminal3.textContent = msg;
 	});
 }
 
