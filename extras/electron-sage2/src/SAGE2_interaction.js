@@ -11,7 +11,7 @@
 /* global showSAGE2Message, showDialog */
 /* global cancelIdleCallback, requestIdleCallback */
 /* global showSAGE2PointerOverlayNoMouse, hideSAGE2PointerOverlayNoMouse */
-/* global pointerClick, sagePointerDisabled, sagePointerEnabled */
+/* global sagePointerDisabled, sagePointerEnabled */
 /* global viewOnlyMode */
 
 "use strict";
@@ -42,6 +42,7 @@ function SAGE2_interaction(wsio) {
 	this.mediaQuality    = 9;
 	this.chromeDesktopCaptureEnabled = false;
 	this.broadcasting  = false;
+	this.pointering    = false;  // pointer on/off
 	this.gotRequest    = false;
 	this.pix           = null;
 	this.chunk         = 32 * 1024; // 32 KB
@@ -60,7 +61,7 @@ function SAGE2_interaction(wsio) {
 	this.scrollTimeId = null;
 
 	// Check if a domain cookie exists for the name
-	var cookieName = "Luc"; // getCookie('SAGE2_ptrName');
+	var cookieName = "Pointer"; // getCookie('SAGE2_ptrName');
 	if (cookieName) {
 		localStorage.SAGE2_ptrName = cookieName;
 	}
@@ -324,11 +325,12 @@ function SAGE2_interaction(wsio) {
 		} else {
 			button = buttonId;
 		}
-		button.addEventListener('pointerlockchange', function(e) {
-			console.log('button pointerlockchange', e);
-			e.preventDefault();
-			e.stopPropagation();
-		});
+
+		// button.addEventListener('pointerlockchange', function(e) {
+		// 	console.log('button pointerlockchange', e);
+		// 	e.preventDefault();
+		// 	e.stopPropagation();
+		// });
 
 		// Ask the browser to lock the pointer
 		if (button.requestPointerLock) {
@@ -367,6 +369,26 @@ function SAGE2_interaction(wsio) {
 	};
 
 	/**
+	 * Removes all the event listeners.
+	 *
+	 * @method     removeListeners
+	 */
+	this.removeListeners = function() {
+		document.removeEventListener('mousedown',  this.pointerPress,     false);
+		document.removeEventListener('mousemove',  this.pointerMove,      false);
+		document.removeEventListener('mouseup',    this.pointerRelease,   false);
+		document.removeEventListener('dblclick',   this.pointerDblClick,  false);
+		document.removeEventListener('wheel',      this.pointerScroll,    false);
+		document.removeEventListener('keydown',    this.pointerKeyDown,   false);
+		document.removeEventListener('keyup',      this.pointerKeyUp,     false);
+		document.removeEventListener('keypress',   this.pointerKeyPress,  false);
+
+		document.removeEventListener('pointerlockerror',  this.pointerLockError,  false);
+		document.removeEventListener('pointerlockchange', this.pointerLockChange, false);
+		document.getElementById('mediaVideo').removeEventListener('canplay', this.streamCanPlay,               false);
+	};
+
+	/**
 	* Called when a pointer lock change is triggered, release or aquire
 	*
 	* @method pointerLockChangeMethod
@@ -379,6 +401,7 @@ function SAGE2_interaction(wsio) {
 
 		// disable SAGE2 Pointer
 		if (pointerLockElement === undefined || pointerLockElement === null) {
+			this.pointering = false;
 			this.wsio.emit('stopSagePointer');
 
 			document.removeEventListener('mousedown',  this.pointerPress,     false);
@@ -390,13 +413,11 @@ function SAGE2_interaction(wsio) {
 			document.removeEventListener('keyup',      this.pointerKeyUp,     false);
 			document.removeEventListener('keypress',   this.pointerKeyPress,  false);
 
-			document.addEventListener('click', pointerClick, false);
-
-			// sagePointerDisabled();
 			var pbutton = $$('pointer_id').$view.querySelector('button');
 			pbutton.style.backgroundColor = "#3498db";
-			pbutton.innerText = "Start pointer";
+			pbutton.innerText = "Show pointer";
 		} else {
+			this.pointering = true;
 			// enable SAGE2 Pointer
 			this.wsio.emit('startSagePointer', {label: localStorage.SAGE2_ptrName, color: localStorage.SAGE2_ptrColor});
 
@@ -409,12 +430,9 @@ function SAGE2_interaction(wsio) {
 			document.addEventListener('keyup',      this.pointerKeyUp,     false);
 			document.addEventListener('keypress',   this.pointerKeyPress,  false);
 
-			document.removeEventListener('click', pointerClick, false);
-
-			// sagePointerEnabled();
 			var pbutton = $$('pointer_id').$view.querySelector('button');
 			pbutton.style.backgroundColor = "#00b359";
-			pbutton.innerText = "Stop pointer";
+			pbutton.innerText = "Stop pointer [ESC]";
 		}
 	};
 
@@ -455,41 +473,39 @@ function SAGE2_interaction(wsio) {
 				// }
 				for (var i = 0; i < sources.length; ++i) {
 					if (target === "window" && sources[i].name == "SAGE2 - Electron") {
-						navigator.getUserMedia({
-								audio: false,
-								video: {
-									mandatory: {
-										chromeMediaSource: 'desktop',
-										chromeMediaSourceId: sources[i].id,
-										minWidth: 1280,
-										maxWidth: 1920,
-										minHeight: 720,
-										maxHeight: 1080
-									}
+
+						navigator.mediaDevices.getUserMedia({
+							audio: false,
+							video: {
+								mandatory: {
+									chromeMediaSource: 'desktop',
+									chromeMediaSourceId: sources[i].id,
+									minWidth: 1280,
+									maxWidth: 1920,
+									minHeight: 720,
+									maxHeight: 1080
 								}
-							},
-							_this.streamSuccess, _this.streamFail
-						);
+							}
+							}).then(_this.streamSuccess).catch(_this.streamFail);
 						return;
 					}
 					if (target === "screen" &&
 						(sources[i].name == "Entire screen" ||
 						sources[i].name == "Screen 1")) {
-						navigator.getUserMedia({
-								audio: false,
-								video: {
-									mandatory: {
-										chromeMediaSource: 'desktop',
-										chromeMediaSourceId: sources[i].id,
-										minWidth: 1280,
-										maxWidth: 1920,
-										minHeight: 720,
-										maxHeight: 1080
-									}
+
+						navigator.mediaDevices.getUserMedia({
+							audio: false,
+							video: {
+								mandatory: {
+									chromeMediaSource: 'desktop',
+									chromeMediaSourceId: sources[i].id,
+									minWidth: 1280,
+									maxWidth: 1920,
+									minHeight: 720,
+									maxHeight: 1080
 								}
-							},
-							_this.streamSuccess, _this.streamFail
-						);
+							}
+							}).then(_this.streamSuccess).catch(_this.streamFail);
 						return;
 					}
 				}
@@ -601,7 +617,6 @@ function SAGE2_interaction(wsio) {
 				var height = parseInt(widths[i] * mediaVideo.videoHeight / mediaVideo.videoWidth, 10);
 				screenShareResolution.options[i].value = widths[i] + "x" + height;
 			}
-
 
 			var res = screenShareResolution.options[this.mediaResolution].value.split("x");
 			mediaCanvas.width  = parseInt(res[0], 10);
@@ -968,15 +983,8 @@ function SAGE2_interaction(wsio) {
 	this.changeScreenShareQuality    = this.changeScreenShareQualityMethod.bind(this);
 	this.step                        = this.stepMethod.bind(this);
 
-	document.addEventListener('pointerlockerror',        this.pointerLockError,  false);
-	document.addEventListener('mozpointerlockerror',     this.pointerLockError,  false);
-	document.addEventListener('pointerlockchange',       this.pointerLockChange, false);
-	// document.addEventListener('mozpointerlockchange',    this.pointerLockChange, false);
-
-	document.addEventListener('pointerlockerror', function(e) {
-		console.log('Pointer error', e)
-	}, false);
-
+	document.addEventListener('pointerlockerror',  this.pointerLockError,  false);
+	document.addEventListener('pointerlockchange', this.pointerLockChange, false);
 
 	// document.getElementById('sage2PointerLabel').addEventListener('input',      this.changeSage2PointerLabel,     false);
 	// document.getElementById('sage2PointerColor').addEventListener('input',      this.changeSage2PointerColor,     false);
@@ -984,25 +992,5 @@ function SAGE2_interaction(wsio) {
 	// document.getElementById('sage2PointerColorInit').addEventListener('input',  this.changeSage2PointerColor,     false);
 	// document.getElementById('screenShareResolution').addEventListener('change', this.changeScreenShareResolution, false);
 	// document.getElementById('screenShareQuality').addEventListener('input',     this.changeScreenShareQuality,    false);
-	document.getElementById('mediaVideo').addEventListener('canplay',           this.streamCanPlay,               false);
-
-
-	// -----------
-	// Shim for requestIdleCallback (available on Chrome)
-	// -----------
-	window.requestIdleCallback = window.requestIdleCallback || function(cb) {
-		var start = Date.now();
-		return setTimeout(function() {
-			cb({
-				didTimeout: false,
-				timeRemaining: function() {
-					return Math.max(0, 50 - (Date.now() - start));
-				}
-			});
-		}, 1);
-	};
-	window.cancelIdleCallback =	window.cancelIdleCallback || function(id) {
-		clearTimeout(id);
-	};
-	// -----------
+	document.getElementById('mediaVideo').addEventListener('canplay', this.streamCanPlay,               false);
 }

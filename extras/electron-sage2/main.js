@@ -7,7 +7,9 @@ const app = electron.app;
 const BrowserWindow = electron.BrowserWindow;
 
 app.commandLine.appendSwitch('enable-usermedia-screen-capturing');
+
 // SAGE2 Google maps APIKEY
+// needed for user geo-location service
 process.env.GOOGLE_API_KEY = 'AIzaSyANE6rJqcfc7jH-bDOwhXQZK_oYq9BWRDY';
 
 // Keep a global reference of the window object, if you don't, the window will
@@ -18,8 +20,8 @@ function createWindow () {
 	// Create the browser window.
 	mainWindow = new BrowserWindow({
 		// width: 1200,
-		width: 320,
-		height: 432,
+		width: 315,
+		height: 355,
 		// resizable: false,
 		webPreferences: {
 			nodeIntegration: true,
@@ -29,8 +31,13 @@ function createWindow () {
 		}
 	});
 
-	// and load the index.html of the app.
-	mainWindow.loadURL('file://' + __dirname + '/index.html');
+	const session = electron.session.defaultSession;
+	session.clearStorageData({
+		storages: ["appcache", "cookies", "local storage", "serviceworkers"]
+	}, function() {
+		// Clear cache and load the index.html of the app.
+		mainWindow.loadURL('file://' + __dirname + '/index.html');
+	});
 
 	// Open the DevTools.
 	// mainWindow.webContents.openDevTools();
@@ -45,7 +52,7 @@ function createWindow () {
 
 	mainWindow.webContents.on('will-navigate', function(ev) {
 		console.log('will-navigate')
-		ev.preventDefault();
+		// ev.preventDefault();
 	})
 }
 

@@ -5,7 +5,7 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no" />
 
     <meta charset="UTF-8">
-    <title>SAGE2</title>
+    <title>SAGE2™</title>
 
 	<link rel="stylesheet" type="text/css" href="css/fonts.css"/>
 	<link rel="stylesheet" type="text/css" href="css/app.css" media="screen" />
@@ -37,8 +37,15 @@ appIcon.setHighlightMode(false);
 appIcon.setToolTip('SAGE2');
 appIcon.setContextMenu(trayMenu);
 
+/**
+ * Function for the Tray icon, to start/stop screen sharing
+ *
+ * @method     sharing_func
+ * @param      {<type>}  menuitem  The menuitem
+ * @param      {<type>}  win       The window
+ * @param      {<type>}  event     The event
+ */
 function sharing_func(menuitem, win, event) {
-	console.log('Event', menuitem.checked);
 	if (menuitem.checked) {
 		sharescreen_func();
 	} else {
@@ -47,65 +54,88 @@ function sharing_func(menuitem, win, event) {
 }
 
 
-var template = [
-  {
-    label: 'Edit',
-    submenu: [
-      {
-        label: 'Cut',
-        accelerator: 'CmdOrCtrl+X',
-        role: 'cut'
-      },
-      {
-        label: 'Copy',
-        accelerator: 'CmdOrCtrl+C',
-        role: 'copy'
-      },
-      {
-        label: 'Paste',
-        accelerator: 'CmdOrCtrl+V',
-        role: 'paste'
-      }
-    ]
-  }];
+var template = [{
+	label: 'Edit',
+	submenu: [{
+		label: 'Share Screen',
+		click: function() {
+			// start/stop screen sharing
+			sharescreen_func();
+		}
+	}, {
+		type: 'separator'
+	}, {
+		label: 'Cut',
+		accelerator: 'CmdOrCtrl+X',
+		role: 'cut'
+	}, {
+		label: 'Copy',
+		accelerator: 'CmdOrCtrl+C',
+		role: 'copy'
+	}, {
+		label: 'Paste',
+		accelerator: 'CmdOrCtrl+V',
+		role: 'paste'
+	}]
+	}, {
+		label: 'View',
+		submenu: [
+			{role: 'reload'},
+			{role: 'forcereload'},
+			{role: 'toggledevtools'},
+			{type: 'separator'},
+			{role: 'resetzoom'},
+			{role: 'zoomin'},
+			{role: 'zoomout'},
+			{type: 'separator'},
+			{role: 'togglefullscreen'}
+		]
+	}, {
+		role: 'window',
+		submenu: [
+			{role: 'minimize'}
+		]
+	}, {
+		role: 'help',
+		submenu: [{
+			label: 'Learn More',
+			click () { require('electron').shell.openExternal('http://sage2.sagecommons.org/') }
+		}]
+	}
+];
 
 if (process.platform == 'darwin') {
-  var name = require('electron').remote.app.getName();
-  template.unshift({
-    label: name,
-    submenu: [
-      {
-        label: 'About ' + name,
-        role: 'about'
-      },
-      {
-        label: 'Hide ' + name,
-        accelerator: 'Command+H',
-        role: 'hide'
-      },
-      {
-        label: 'Hide Others',
-        accelerator: 'Command+Alt+H',
-        role: 'hideothers'
-      },
-      {
-        label: 'Show All',
-        role: 'unhide'
-      },
-      {
-        type: 'separator'
-      },
-      {
-        label: 'Quit',
-        accelerator: 'Command+Q',
-        click: function() {
-			stopsharing_func();
-        	require('electron').remote.app.quit();
-        }
-      },
-    ]
-  });
+	var name = require('electron').remote.app.getName();
+	template.unshift({
+		label: name,
+		submenu: [{
+			label: 'About ' + name,
+			role: 'about'
+		}, {
+			label: 'Hide ' + name,
+			accelerator: 'Command+H',
+			role: 'hide'
+		}, {
+			label: 'Hide Others',
+			accelerator: 'Command+Alt+H',
+			role: 'hideothers'
+		}, {
+			label: 'Show All',
+			role: 'unhide'
+		}, {
+			type: 'separator'
+		}, {
+			label: 'Quit',
+			accelerator: 'Command+Q',
+			click: function() {
+				stopsharing_func();
+				require('electron').remote.app.quit();
+			}
+		}]
+	});
 }
+const menu = Menu.buildFromTemplate(template)
+Menu.setApplicationMenu(menu)
 
 // SAGE2 code
 var wsio;
@@ -120,16 +150,21 @@ var hasMouse     = true;
 
 // Explicitely close web socket when web browser is closed
 window.onbeforeunload = function() {
+	if (appIcon) {
+		appIcon.destroy();
+	}
 	// stop screen sharing
 	stopsharing_func();
 };
 
 /**
- * When the page loads, SAGE2 starts
+ * When the page loads, everything starts
  *
  */
 window.addEventListener('load', function(event) {
-	SAGE2_init();
+	webix.ready(function () {
+		SAGE2_init();
+	});
 });
 
 function fileUploadStart(files) {
@@ -149,25 +184,35 @@ function isValidWebsocket(str) {
 	var pattern2 = new RegExp('^(ws?:\\/\\/)');
 	return pattern1.test(str) || pattern2.test(str);
 }
+function isValidSecureWebsocket(str) {
+	var pattern1 = new RegExp('^(wss?:\\/\\/)');
+	return pattern1.test(str);
+}
 
+/**
+ * Get geolocation from thebrowser if possible (google API key put in the electron process)
+ *
+ * @method     geoLocation
+ */
 function geoLocation() {
 	let location;
-	if("geolocation" in navigator) {
-		console.log('LOC0> Location services available')
+	if ("geolocation" in navigator) {
+		console.log('Geo> Location services available')
 		navigator.geolocation.getCurrentPosition(function(position) {
-			console.log('LOC1>', position);
 			location = {
 				lat: position.coords.latitude,
 				lng: position.coords.longitude
 			}
-			console.log('LOC2>', location);
+			console.log('Geo> got location', location);
 		}, function (err) {
-			console.warn('User geolocation error:', err.message, err.code);
+			console.warn('Geo> user geolocation error:', err.message, err.code);
 		}, {
 			enableHighAccuracy: true, // high-precision
 			timeout: 5000,  // 5 sec. maximum
 			maximumAge: 0   // get a fresh value
 		});
+	} else {
+		console.warn('Geo> geolocation services unvailable in this browser');		
 	}
 }
 
@@ -181,6 +226,7 @@ function geoLocation() {
 function SAGE2_init() {
 	console.log('SAGE2 Init');
 
+	// Get location of the user
 	geoLocation();
 
 	var menu = [
@@ -194,15 +240,14 @@ function SAGE2_init() {
 		"container": "wrapper",
 		id: "column1",
 		width: 300,
-		// autowidth: true,
 		rows : [
 		{
 			cols : [
 				{
-					label: "URL", view: "text",
+					label: "Server", view: "text",
 					id: "sage2_id",
-					placeholder: "SAGE2 host, hostname[:port]",
-					value: "wss://localhost:9090"
+					placeholder: "hostname[:secure_port]",
+					// value: "localhost:9090"
 				}
 			]
 		},
@@ -212,7 +257,7 @@ function SAGE2_init() {
 					label: "Passcode", view: "text",
 					type:'password',
 					id: "passcode_id",
-					placeholder: "Access code (optional)"
+					placeholder: "Optional access code"
 				}
 			]
 		},
@@ -225,15 +270,6 @@ function SAGE2_init() {
 				}
 			]
 		},
-		// {
-		// 	cols : [
-		// 		{
-		// 			value: "Share this window", view: "button",
-		// 			id: "share_id",
-		// 			click: share_func,
-		// 		}
-		// 	]
-		// },
 		{
 			cols : [
 				{
@@ -244,15 +280,7 @@ function SAGE2_init() {
 			]
 		},
 		{
-			cols : [
-				{
-					value: "Stop sharing", view: "button",
-					click: stopsharing_func,
-				}
-			]
-		},
-		{
-			value: "Start pointer", view: "button",
+			value: "Show pointer", view: "button",
 			id: "pointer_id",
 			click: startpointer_func,						
 		},
@@ -261,22 +289,33 @@ function SAGE2_init() {
 				'src="images/S2-logo.png"/>',
 			height: 170,
 		}
-		],
-		ready: function() {
-			console.log('Webix ready')
-			$$("url_id").focus();
-		}
+		]
 	});
 
-	window.addEventListener('resize', doResize);
-	doResize();
+	// When all UI ready
+	webix.promise.all([]).then(function() {
+		// Attach handlers for keyboard
+		$$("sage2_id").attachEvent("onKeyPress", function(code, e) {
+			// ENTER activates
+			if (code === 13) {
+				connect_func();
+			}
+		});
+		$$("passcode_id").attachEvent("onKeyPress", function(code, e) {
+			// ENTER activates
+			if (code === 13) {
+				connect_func();
+			}
+		});
+		// set the URL fox the default focus
+		$$("sage2_id").focus();
+	});
 }
 
 function showMessage(msg) {
 	webix.alert({
 		type: "alert-warning",
-		title: "SAGE2 (tm)",
-		// width: 500,
+		title: "SAGE2™",
 		ok: "OK",
 		text: msg
 	});
@@ -285,25 +324,57 @@ function showMessage(msg) {
 function connect_func() {
 	if (wsio) {
 		wsio.close();
+		if (interactor) {
+			interactor.stopSAGE2Pointer();
+			interactor.removeListeners();
+			delete interactor;
+		}
+		delete wsio;
+
+		var pbutton = $$('connect_id').$view.querySelector('button');
+		pbutton.style.backgroundColor = "#3498db";
+		pbutton.innerText = "Connect";
 	}
 
-	var url   = $$('sage2_id').getValue();
+	var aurl  = $$('sage2_id').getValue();
 	var pcode = $$('passcode_id').getValue();
+	var surl;
 
-	if (! isValidWebsocket(url)) {
-		url = 'wss://' + url;
-		$$('sage2_id').setValue(url);
+	if (!aurl) {
+		return;
 	}
-	console.log('Connecting to', url, pcode);
+
+	if (isValidSecureWebsocket(aurl)) {
+		surl = aurl;
+	} else {
+		if (!isValidURL(aurl)) {
+			aurl = 'https://' + aurl;
+		}
+		var parsedURL = new URL(aurl);
+		if (parsedURL.host) {
+			aurl = parsedURL.host;
+		} else {
+			aurl = parsedURL.href;
+		}
+		surl = "wss://" + aurl;
+		// update the UI
+		$$('sage2_id').setValue(aurl);
+	}
+
+	console.log('Connecting to', surl, pcode);
 
 	// Detect which browser is being used
 	SAGE2_browser();
 
 	// Create a connection to the SAGE2 server
-	wsio = new WebsocketIO(url);
+	wsio = new WebsocketIO(surl);
 	// socket close event (i.e. server crashed)
 	wsio.on('close', function(evt) {
 		showMessage("Connection closed");
+
+		var pbutton = $$('connect_id').$view.querySelector('button');
+		pbutton.style.backgroundColor = "#3498db";
+		pbutton.innerText = "Connect";
 	});
 	wsio.open(function() {
 		console.log("Websocket opened");
@@ -328,36 +399,25 @@ function connect_func() {
 		interactor.setFileUploadStartCallback(fileUploadStart);
 		interactor.setFileUploadProgressCallback(fileUploadProgress);
 		interactor.setFileUploadCompleteCallback(fileUploadComplete);
-	}, function (err) {
-		// open failed
-		showMessage(err);
-		$$('connect_id').$view.querySelector('button').style.backgroundColor = "#ff4000";
 	});
 }
 
-function share_func() {
-	if (interactor) {
-		if (!interactor.broadcasting) {
-			interactor.captureDesktop("window");
-			$$('sharescreen_id').$view.querySelector('button').style.backgroundColor = "#00b359";
-			// update tray item
-			trayMenu.items[0].checked = true;
-		}
-	} else {
-		showMessage("Connect to server first");
-	}
-}
-
 function sharescreen_func() {
-	if (interactor) {
-		if (!interactor.broadcasting) {
+	if (interactor && interactor.broadcasting) {
+		stopsharing_func();
+	} else if (interactor && !interactor.broadcasting) {
+			// start the sharing
 			interactor.captureDesktop("screen");
-			$$('sharescreen_id').$view.querySelector('button').style.backgroundColor = "#00b359";
+			// update the button
+			var pbutton = $$('sharescreen_id').$view.querySelector('button');
+			pbutton.style.backgroundColor = "#00b359";
+			pbutton.innerText = "Sharing...";
 			// update tray item
 			trayMenu.items[0].checked = true;
-		}
 	} else {
 		showMessage("Connect to server first");
+		// update tray item
+		trayMenu.items[0].checked = false;
 	}
 }
 
@@ -367,13 +427,16 @@ function stopsharing_func() {
 		track.stop();
 		// update tray item
 		trayMenu.items[0].checked = false;
-		// $$('share_id').$view.querySelector('button').style.backgroundColor = "#3498db";
-		$$('sharescreen_id').$view.querySelector('button').style.backgroundColor = "#3498db";
+		// update button
+		// update the button
+		var pbutton = $$('sharescreen_id').$view.querySelector('button');
+		pbutton.style.backgroundColor = "#3498db";
+		pbutton.innerText = "Share your screen";
 	}
 }
 
 function startpointer_func() {
-	if (interactor) {
+	if (interactor && !interactor.pointering) {
 		interactor.startSAGE2Pointer($$('pointer_id').$view.querySelector('button'));
 	}
 }
@@ -381,22 +444,16 @@ function startpointer_func() {
 function pointerClick(event) {
 	console.log('Click')
 }
-function doResize() {
-	// var h = window.innerHeight - 95;
-	// document.getElementById('webview_div').style.height = h + 'px';
-	// document.getElementById('webview_content').style.height = h + 'px';
-	// $$('iframe').config.height = h;
-	// $$('iframe').resize();
-	// $$('mainUI').resize();
-}
 
 function setupListeners() {
 	wsio.on('initialize', function(data) {
 		console.log('initialize', data);
 		interactor.setInteractionId(data.UID);
 
-		// Update button color
-		$$('connect_id').$view.querySelector('button').style.backgroundColor = "#00b359";
+		// Update button color and label
+		var pbutton = $$('connect_id').$view.querySelector('button');
+		pbutton.style.backgroundColor = "#00b359";
+		pbutton.innerText = "Connected";
 	});
 
 
@@ -438,7 +495,7 @@ function setupListeners() {
   </head>
   <body>
 
-	<div style="width:100%;background-color:#FFFFFF;">
+	<div style="width:300px;background-color:#FFFFFF;">
 		<div id="wrapper" style="background-color: #ececec;">
 		</div>
 	</div>
