@@ -17,11 +17,17 @@ process.env.GOOGLE_API_KEY = 'AIzaSyANE6rJqcfc7jH-bDOwhXQZK_oYq9BWRDY';
 let mainWindow;
 
 function createWindow () {
+	var ww = 315;
+	var hh = 355;
+	if (process.platform === 'win32') {
+		ww += 17;
+		hh += 38;
+	}
+
 	// Create the browser window.
 	mainWindow = new BrowserWindow({
-		// width: 1200,
-		width: 315,
-		height: 355,
+		width:  ww,
+		height: hh,
 		// resizable: false,
 		webPreferences: {
 			nodeIntegration: true,
