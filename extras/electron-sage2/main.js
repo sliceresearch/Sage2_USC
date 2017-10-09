@@ -39,7 +39,8 @@ function createWindow () {
 
 	const session = electron.session.defaultSession;
 	session.clearStorageData({
-		storages: ["appcache", "cookies", "local storage", "serviceworkers"]
+		storages: ["appcache", "cookies", "serviceworkers"]
+		// "localstorage",
 	}, function() {
 		// Clear cache and load the index.html of the app.
 		mainWindow.loadURL('file://' + __dirname + '/index.html');
@@ -57,8 +58,7 @@ function createWindow () {
 	});
 
 	mainWindow.webContents.on('will-navigate', function(ev) {
-		console.log('will-navigate')
-		// ev.preventDefault();
+		ev.preventDefault();
 	})
 }
 

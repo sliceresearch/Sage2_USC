@@ -60,51 +60,6 @@ function SAGE2_interaction(wsio) {
 	// Timeout for when scrolling ends
 	this.scrollTimeId = null;
 
-	// Check if a domain cookie exists for the name
-	var cookieName = "Pointer"; // getCookie('SAGE2_ptrName');
-	if (cookieName) {
-		localStorage.SAGE2_ptrName = cookieName;
-	}
-	// Check if a domain cookie exists for the color
-	var cookieColor = "#FF0000"; // getCookie('SAGE2_ptrColor');
-	if (cookieColor) {
-		localStorage.SAGE2_ptrColor = cookieColor;
-	}
-
-	// if (!cookieName && !localStorage.SAGE2_ptrColor) {
-	// 	if (!viewOnlyMode) {
-	// 		// only show dialog in full UI mode
-	// 		showDialog('settingsDialog2');
-	// 	}
-	// }
-
-	// Post message to the Chrome extension to register the UI
-	// if (__SAGE2__.browser.isChrome === true) {
-	// 	window.postMessage('SAGE2_registerUI', '*');
-	// }
-
-	// Deals with the name and color of the pointer
-	if (localStorage.SAGE2_ptrName  === undefined ||
-		localStorage.SAGE2_ptrName  === null ||
-		localStorage.SAGE2_ptrName  === "Default") {
-		if (hasMouse) {
-			localStorage.SAGE2_ptrName  = "SAGE2_user";
-		} else {
-			localStorage.SAGE2_ptrName  = "SAGE2_mobile";
-
-		}
-	}
-	if (localStorage.SAGE2_ptrColor === undefined ||
-		localStorage.SAGE2_ptrColor === null) {
-		localStorage.SAGE2_ptrColor = "#B4B4B4";
-	}
-
-	addCookie('SAGE2_ptrName',  localStorage.SAGE2_ptrName);
-	addCookie('SAGE2_ptrColor', localStorage.SAGE2_ptrColor);
-
-	// document.getElementById('sage2PointerLabel').value = localStorage.SAGE2_ptrName;
-	// document.getElementById('sage2PointerColor').value = localStorage.SAGE2_ptrColor;
-
 	this.wsio.emit('registerInteractionClient', {
 		name:  localStorage.SAGE2_ptrName,
 		color: localStorage.SAGE2_ptrColor
@@ -250,13 +205,16 @@ function SAGE2_interaction(wsio) {
 				var xhr = new XMLHttpRequest();
 				// add the request into the array
 				this.array_xhr.push(xhr);
-				xhr.open("POST", "upload", true);
+				// build the URL
+				var server = 'https://' + configuration.host + ':' + configuration.secure_port;
+				server += '/upload';
+				xhr.open("POST", server, true);
 				xhr.upload.id = "file" + i.toString();
 				xhr.upload.addEventListener('progress', progressCallback, false);
 				xhr.addEventListener('load', loadCallback, false);
 				xhr.send(formdata);
 			} else {
-				// show message for 4 seconds
+				// show error message
 				showSAGE2Message("File: " + files[i].name + " is too large (max size is " +
 					(this.maxUploadSize / (1024 * 1024 * 1024)) + " GB)");
 			}
@@ -325,12 +283,6 @@ function SAGE2_interaction(wsio) {
 		} else {
 			button = buttonId;
 		}
-
-		// button.addEventListener('pointerlockchange', function(e) {
-		// 	console.log('button pointerlockchange', e);
-		// 	e.preventDefault();
-		// 	e.stopPropagation();
-		// });
 
 		// Ask the browser to lock the pointer
 		if (button.requestPointerLock) {
