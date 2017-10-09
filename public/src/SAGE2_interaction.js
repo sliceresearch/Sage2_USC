@@ -337,7 +337,7 @@ function SAGE2_interaction(wsio) {
 			console.log("No mouse detected - entering touch interface for SAGE2 Pointer");
 
 			this.wsio.emit('startSagePointer', {label: localStorage.SAGE2_ptrName, color: localStorage.SAGE2_ptrColor});
-
+			
 			showSAGE2PointerOverlayNoMouse();
 		}
 	};
@@ -719,6 +719,28 @@ function SAGE2_interaction(wsio) {
 	};
 
 	/**
+	 * SLICE Handles acceleration curve under testing 
+	 * 
+	 * @method accelerate
+	 * @param delta
+	 */
+	this.accelerate = function(delta) {
+		if (hasMouse) {
+			return delta * this.sensitivity;
+		} else {
+			if (Math.abs(delta) <= 3) {
+				// no acceleration
+				return delta;
+			} else if (delta > 0) {
+				return (delta - 3)  * this.sensitivity;
+			} else if (delta < 0) {
+				return (delta + 3)  * this.sensitivity;
+			}
+		}
+		return 0;
+	};
+
+	/**
 	* Handler for mouse move
 	*
 	* @method pointerMoveMethod
@@ -737,9 +759,10 @@ function SAGE2_interaction(wsio) {
 		if (diff >= (1000 / this.sendFrequency)) {
 			// Calculate the offset
 			// increase the speed for touch devices
-			var scale = (hasMouse ? this.sensitivity : 3 * this.sensitivity);
-			var px  = this.deltaX * scale;
-			var py  = this.deltaY * scale;
+			// var scale = (hasmouse ? this.sensitivity: 3 * this.sensitivity);
+			// SLICE added accelerate method 
+			var px  = this.accelerate(this.deltaX);
+			var py  = this.accelerate(this.deltaY);
 			// Send the event
 			this.wsio.emit('pointerMove', {dx: Math.round(px), dy: Math.round(py)});
 			// Reset the accumulators

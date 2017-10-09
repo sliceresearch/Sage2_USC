@@ -1531,6 +1531,8 @@ function handleClick(element) {
 	} else if (element.id === "settingsCloseBtn2") {
 		// Init Settings Dialog
 		hideDialog('settingsDialog2');
+		// SLICE added to refresh browser once added name and colour settings from mobile device.
+		location.reload(); 
 	} else if (element.id.length > 14 && element.id.substring(0, 14) === "available_app_") {
 		// Application Selected
 		var application_selected = element.getAttribute("application");
