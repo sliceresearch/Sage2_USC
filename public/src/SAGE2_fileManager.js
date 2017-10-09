@@ -469,6 +469,12 @@ function FileManager(wsio, mydiv, uniqueID) {
 			callback: function (evt) {
 				window.open("admin/console.html", '_blank');
 			}
+		},
+		performance_menu: {value: "Performance Console",
+			tooltip: "Opens a new page displaying performance monitoring data",
+			callback: function (evt) {
+				window.open("admin/performance.html", '_blank');
+			}
 		}
 	};
 

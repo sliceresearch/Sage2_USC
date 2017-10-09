@@ -75,7 +75,7 @@ var Webview = SAGE2_App.extend({
 		this.title = "Webview";
 
 		// Get the URL from parameter or session
-		var view_url = data.params || this.state.url;
+		var view_url = data.params || this.state.file || this.state.url;
 		var video_id, ampersandPosition;
 
 		// A youtube URL with a 'watch' video
@@ -102,6 +102,10 @@ var Webview = SAGE2_App.extend({
 			if (vimeo_id) {
 				view_url = 'https://player.vimeo.com/video/' + vimeo_id;
 			}
+		} else if (view_url.endsWith('.ipynb')) {
+			// ipython notebook file are link to nbviewer.jupyter.org online
+			var host = this.config.host + ':' + this.config.port;
+			view_url = "https://nbviewer.jupyter.org/url/" + host + view_url;
 		}
 
 		// Store the zoom level, when in desktop emulation
