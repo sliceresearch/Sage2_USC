@@ -39,7 +39,7 @@ function SAGE2_interaction(wsio) {
 	this.mediaStream = null;
 	this.mediaVideo  = null;
 	this.mediaResolution = 2; // 2;
-	this.mediaQuality    = 6; // 9;
+	this.mediaQuality    = 8; // 9;
 	this.chromeDesktopCaptureEnabled = false;
 	this.broadcasting  = false;
 	this.pointering    = false;  // pointer on/off
