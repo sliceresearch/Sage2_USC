@@ -22,16 +22,22 @@ var template = [{
 		label: 'Recent servers',
 		submenu: []
 	}, {
+		label: 'Share Screen',
+		click: function() {
+			// start/stop screen sharing
+			sharescreen_func();
+		}
+	}, {
 		label: 'Pointer Settings',
 		click: function() {
 			// call the pointer name and color dialog
 			userDialog();
 		}
 	}, {
-		label: 'Share Screen',
+		label: 'Clear Settings',
 		click: function() {
 			// start/stop screen sharing
-			sharescreen_func();
+			clearSettings();
 		}
 	}, {
 		type: 'separator'
@@ -174,6 +180,23 @@ function sharing_func(menuitem, win, event) {
 		stopsharing_func();
 	}
 }
+
+/**
+ * Clear all the cache and application storage
+ *
+ * @method     clearSettings
+ */
+function clearSettings() {
+	const session = remote.session.defaultSession;
+	session.clearStorageData({
+		storages: ["appcache", "cookies", "localstorage", "serviceworkers"]
+	}, function() {
+		// Reload the Electron page
+		remote.getCurrentWindow().reload();
+	});
+}
+
+
 
 /**
 * Open Dialog asking for pointer name and color
@@ -436,7 +459,8 @@ function SAGE2_init() {
 					label: "Server", view: "text",
 					id: "sage2_id",
 					placeholder: "hostname[:secure_port]",
-					value: lastServer
+					value: lastServer,
+					css: "mylabel"
 				}
 			]
 		},
@@ -447,7 +471,8 @@ function SAGE2_init() {
 					type:'password',
 					id: "passcode_id",
 					placeholder: "Optional access code",
-					value: lastCode
+					value: lastCode,
+					css: "mylabel"
 				}
 			]
 		},
@@ -563,15 +588,19 @@ function connect_func() {
 
 	var myservers = getRecentServers();
 	// add the address to the top, if not already included
-	var got = myservers.find(function(elt) {
+	var got = myservers.findIndex(function(elt) {
 		return (elt.server === aurl);
 	});
-	if (!got) {
-		var len = myservers.unshift({server: aurl, code: pcode});
-		if (len >= 5) {
-			// only keep the 5 most recent
-			myservers = myservers.slice(0, 4);
-		}
+	if (got !== -1) {
+		// if found, delete the element
+		myservers.splice(got, 1);
+	}
+	// and add it on top
+	var len = myservers.unshift({server: aurl, code: pcode});
+	// if too big, reduce
+	if (len >= 5) {
+		// only keep the 5 most recent
+		myservers = myservers.slice(0, 4);
 	}
 	// put it back into storage
 	localStorage.servers = JSON.stringify(myservers);

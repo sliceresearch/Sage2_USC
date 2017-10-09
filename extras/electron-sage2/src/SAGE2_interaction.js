@@ -38,8 +38,8 @@ function SAGE2_interaction(wsio) {
 	this.fileUploadComplete = null;
 	this.mediaStream = null;
 	this.mediaVideo  = null;
-	this.mediaResolution = 2;
-	this.mediaQuality    = 9;
+	this.mediaResolution = 2; // 2;
+	this.mediaQuality    = 6; // 9;
 	this.chromeDesktopCaptureEnabled = false;
 	this.broadcasting  = false;
 	this.pointering    = false;  // pointer on/off
@@ -483,6 +483,8 @@ function SAGE2_interaction(wsio) {
 			tracks[0].onended = this.streamEnded;
 		}
 
+		console.log('Track', stream, tracks[0])
+
 		var mediaVideo = document.getElementById('mediaVideo');
 		mediaVideo.src = window.URL.createObjectURL(this.mediaStream);
 		mediaVideo.play();
@@ -530,7 +532,7 @@ function SAGE2_interaction(wsio) {
 	*/
 	this.stepMethod = function(deadline) {
 		// if more than 10ms of freetime, go for it
-		if (deadline.timeRemaining() > 10) {
+		if (deadline.timeRemaining() > 1) {
 			if (this.gotRequest) {
 				this.pix = this.captureMediaFrame();
 				this.sendMediaStreamFrame();
