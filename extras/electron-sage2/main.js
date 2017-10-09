@@ -19,7 +19,7 @@ let mainWindow;
 function createWindow () {
 	var ww = 315;
 	var hh = 355;
-	if (process.platform === 'win32') {
+	if (process.platform !== 'darwin') {
 		ww += 17;
 		hh += 38;
 	}

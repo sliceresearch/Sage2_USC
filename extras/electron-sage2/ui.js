@@ -116,7 +116,13 @@ var recentServers = getRecentServers();
 recentServers.map(function(elt) {
 	newtemplate.push({label: elt.server, click: selectServer});
 })
-template[1].submenu[0].submenu = newtemplate;
+if (process.platform === 'darwin') {
+	// Mac
+	template[1].submenu[0].submenu = newtemplate;
+} else {
+	// Linux / Windows
+	template[0].submenu[0].submenu = newtemplate;
+}
 
 // Build the menu
 var menu = Menu.buildFromTemplate(template);
@@ -610,7 +616,14 @@ function connect_func() {
 	myservers.map(function(elt) {
 		newtemplate.push({label: elt.server, click: selectServer});
 	})
-	template[1].submenu[0].submenu = newtemplate;
+	if (process.platform === 'darwin') {
+		// Mac
+		template[1].submenu[0].submenu = newtemplate;
+	} else {
+		// Linux / Windows
+		template[0].submenu[0].submenu = newtemplate;
+	}
+
 	// Rebuild the menu
 	var menu = Menu.buildFromTemplate(template);
 	Menu.setApplicationMenu(menu)
