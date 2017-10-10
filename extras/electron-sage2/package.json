@@ -1,7 +1,7 @@
 {
-  "name": "SAGE2",
+  "name": "SAGE2_UI",
   "version": "2.0.0",
-  "description": "SAGE2 Lite",
+  "description": "SAGE2 UI Lite",
   "main": "main.js",
   "scripts": {
     "start": "electron main.js",
