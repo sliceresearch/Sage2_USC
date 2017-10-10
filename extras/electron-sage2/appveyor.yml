@@ -21,7 +21,7 @@ install:
   - cd %APPVEYOR_BUILD_FOLDER%
   - cd extras
   - cd electron-sage2
-  - npm install --production --msvs_version=2013
+  - npm install --msvs_version=2013
   - dir
   - .\node_modules\.bin\electron-packager . --platform=win32 --arch=x64 --icon=sage2.ico --overwrite
   - copy /Y README.md SAGE2_UI-win32-x64\README
