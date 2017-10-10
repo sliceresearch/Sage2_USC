@@ -26,7 +26,7 @@ install:
   - .\node_modules\.bin\electron-packager . --platform=win32 --arch=x64 --icon=sage2.ico --overwrite
   - copy /Y README.md SAGE2_UI-win32-x64\README
   - 7z a -sfx7z.sfx SAGE2_UI-win64.exe SAGE2_UI-win32-x64 > nul
-  - move SAGE2_UI-win64.exe ..
+  - move SAGE2_UI-win64.exe ..\..
 
 build: off
 
