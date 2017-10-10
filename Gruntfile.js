@@ -79,37 +79,6 @@ module.exports = function(grunt) {
 				}
 			}
 		},
-		uglify: {
-			options: {
-				compress: true,
-				report: 'min',
-				preserveComments: false
-			},
-			build: {
-				files: {
-					'public/min/display.min.js':
-						[ "public/src/websocket.io.js", "public/src/DynamicImage.js",
-						"public/src/Class.js", "public/src/SAGE2_App.js",
-						"public/src/SAGE2_BlockStreamingApp.js", "public/src/SAGE2_runtime.js",
-						"public/src/image_viewer.js", "public/src/movie_player.js",
-						"public/src/pdf_viewer.js", "public/src/media_stream.js",
-						"public/src/media_block_stream.js", "public/src/ui_builder.js",
-						"public/src/pointer.js", "public/src/SAGE2_WidgetButtonTypes.js",
-						"public/src/SAGE2_WidgetControl.js", "public/src/SAGE2_WidgetControlInstance.js",
-						"public/src/widgetHelperFunctions.js", "public/src/radialMenu.js",
-						"public/src/SAGE2_Display.js", "public/src/SAGE2_RemoteSitePointer.js" ],
-					'public/min/audio.min.js':
-						["public/src/websocket.io.js",
-						"public/src/SAGE2_runtime.js",
-						"public/src/SAGE2_AudioManager.js" ],
-					'public/min/ui.min.js':
-						[ "public/src/websocket.io.js",
-						"public/src/SAGE2_runtime.js",
-						"public/src/SAGE2_interaction.js",
-						"public/src/SAGE2_DisplayUI.js",
-						"public/src/SAGE2_UI.js" ]
-				}	}
-		},
 		// prompt questions when generating a new application: 'genapp' task
 		prompt: {
 			genapp: {
@@ -134,12 +103,11 @@ module.exports = function(grunt) {
 	// Load the dependencies
 	grunt.loadNpmTasks('grunt-eslint');
 	grunt.loadNpmTasks('grunt-contrib-yuidoc');
-	grunt.loadNpmTasks('grunt-contrib-uglify');
 	grunt.loadNpmTasks('grunt-mocha-cli');
 	grunt.loadNpmTasks('grunt-prompt');
 
 	// this would be run by typing "grunt test" on the command line
-	grunt.registerTask('all', ['eslint', 'yuidoc', 'uglify', 'mochacli']);
+	grunt.registerTask('all', ['eslint', 'yuidoc', 'mochacli']);
 
 	// the default task can be run just by typing "grunt" on the command line
 	grunt.registerTask('default', ['eslint']);
