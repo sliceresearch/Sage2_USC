@@ -15,7 +15,7 @@ var SAGE2RemoteSitePointer = {
 	allPointersOnThisSite: [],
 	pointerUpdateInterval: 100, // ms
 	allAppsWithRemotePointerTracking: {},
-	shouldPassEvents: true,
+	shouldPassEvents: false, // currently disabled
 
 
 	/**

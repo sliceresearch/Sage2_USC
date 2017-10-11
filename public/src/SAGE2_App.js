@@ -314,6 +314,7 @@ var SAGE2_App = Class.extend({
 				// if app is shared, then track pointer
 				SAGE2RemoteSitePointer.trackPointer(this, user_id, position);
 			} else if (isMaster  && SAGE2RemoteSitePointer.shouldPassEvents && this.isSharedWithRemoteSite()) {
+				// for events beyond pointerMove
 				SAGE2RemoteSitePointer.trackEvent(this, {
 					eventType: eventType,
 					position: position,
@@ -988,6 +989,7 @@ var SAGE2_App = Class.extend({
 				description: "separator"
 			});
 			// currently testing with remote pointer event testing
+			/* currently disabled
 			if (!this.shouldPassRemotePointerEvents) {
 				appContextMenu.entries.push({
 					description: "Enable remote pointer passing",
@@ -1000,7 +1002,7 @@ var SAGE2_App = Class.extend({
 					callback: "toggleRemotePointerEventPassing",
 					parameters: { value: false }
 				});
-			}
+			} //*/
 			appContextMenu.entries.push({
 				description: "separator"
 			});
