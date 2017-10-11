@@ -74,7 +74,7 @@
 		"rimraf": "latest",
 		"node-pre-gyp": "latest",
 		"electron": "latest",
-    "systeminformation": "latest"
+		"systeminformation": "latest"
 	},
 	"optionalDependencies": {
 		"node-demux": "https://github.com/renambot-uic/node-demux.git"
@@ -84,7 +84,6 @@
 		"grunt-cli": "latest",
 		"grunt-eslint": "latest",
 		"grunt-contrib-yuidoc": "latest",
-		"grunt-contrib-uglify": "latest",
 		"grunt-prompt": "latest",
 		"grunt-mocha-cli": "latest",
 		"nodemon": "latest",
@@ -103,7 +102,6 @@
 		"monitor": "nodemon -e json,js,html -I -L -i public/uploads -i public/service-worker.js server.js -l",
 		"lint": "grunt eslint",
 		"doc": "grunt yuidoc",
-		"mini": "grunt uglify --verbose",
 		"newapp": "grunt newapp",
 		"test": "grunt all",
 		"in": "node ./install_dependencies.js",

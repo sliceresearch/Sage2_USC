@@ -287,6 +287,7 @@ function initializeSage2Server() {
 		}
 	}
 
+	// Create an object to gather performance statistics
 	performanceManager = new PerformanceManager();
 
 	imageMagick = gm.subClass(imageMagickOptions);
@@ -953,6 +954,10 @@ function initializeWSClient(wsio, reqConfig, reqVersion, reqTime, reqConsole) {
 	if (wsio.clientType === "webBrowser") {
 		webBrowserClient = wsio;
 	}
+
+	if (wsio.clientType === "performance") {
+		performanceManager.updateClient(wsio);
+	}
 }
 
 /**
@@ -1136,6 +1141,9 @@ function setupListeners(wsio) {
 	wsio.on('partitionScreen',                      wsPartitionScreen);
 	wsio.on('deleteAllPartitions',                  wsDeleteAllPartitions);
 	wsio.on('partitionsGrabAllContent',             wsPartitionsGrabAllContent);
+
+	// message from electron display client
+	wsio.on('displayHardware',                      wsDisplayHardware);
 }
 
 /**
@@ -3098,7 +3106,7 @@ function wsLoadApplication(wsio, data) {
 
 function wsLoadImageFromBuffer(wsio, data) {
 	appLoader.loadImageFromDataBuffer(data.src, data.width, data.height,
-		"image/jpeg", "", data.url, data.title, {},
+		data.mime, "", data.url, data.title, {},
 		function(appInstance) {
 			// Get the drop position and convert it to wall coordinates
 			var position = data.position || [0, 0];
@@ -5292,6 +5300,7 @@ function processInputCommand(line) {
 			console.log('update\t\trun a git update');
 			console.log('performance\tshow performance information');
 			console.log('perfsampling\tset performance metric sampling rate');
+			console.log('hardware\tget an summary of the hardware running the server');
 			console.log('update\t\trun a git update');
 			console.log('version\t\tprint SAGE2 version');
 			console.log('exit\t\tstop SAGE2');
@@ -5467,14 +5476,17 @@ function processInputCommand(line) {
 			break;
 		}
 		case 'perfsampling':
-			if (command.length > 1 && typeof command[1] === "string") {
+			if (command.length > 1) {
 				performanceManager.setSamplingInterval(command[1]);
 			} else {
-				sageutils.log("Command", "should be: perfsampling often (normal, slow)");
+				sageutils.log("Command", "should be: perfsampling [slow|normal|often]");
 			}
 			break;
 		case 'performance':
 			performanceManager.printMetrics();
+			break;
+		case 'hardware':
+			performanceManager.printServerHardware();
 			break;
 		case 'exit':
 		case 'quit':
@@ -10019,6 +10031,18 @@ function wsWallScreenshotFromDisplay(wsio, data) {
 	}
 	// Reset variable to allow another capture
 	masterDisplay.startedScreenshot = false;
+}
+
+/**
+ * Receive data from Electron display client about their hardware
+ *
+ * @method     wsDisplayHardware
+ * @param      {<type>}  wsio    The wsio
+ * @param      {<type>}  data    The data
+ */
+function wsDisplayHardware(wsio, data) {
+	// store the hardware data for a given client
+	performanceManager.addDisplayClient(wsio.clientID, data);
 }
 
 /**

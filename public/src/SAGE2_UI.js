@@ -425,6 +425,8 @@ function SAGE2_init() {
 			interactor.captureDesktop(event.data.mediaSourceId);
 		}
 		if (event.data.cmd === "screenshot") {
+			// declare mime type to be "image/jpeg" for screenshots
+			event.data.mime = "image/jpeg";
 			wsio.emit('loadImageFromBuffer', event.data);
 		}
 		if (event.data.cmd === "openlink") {

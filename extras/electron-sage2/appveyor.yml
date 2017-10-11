@@ -19,29 +19,22 @@ install:
   - dir C:\avvm\node
   - node -v
   - cd %APPVEYOR_BUILD_FOLDER%
-  - cd client
-  - npm install --production --msvs_version=2013
-  - copy /Y ..\electron.js  electron.js
+  - cd extras
+  - cd electron-sage2
+  - npm install --msvs_version=2013
   - dir
-  - mkdir public
-  - mkdir public\uploads
-  - mkdir public\uploads\apps
-  - mkdir public\uploads\apps\Webview
-  - copy /Y ..\public\uploads\apps\Webview\SAGE2_script_supplement.js public\uploads\apps\Webview\SAGE2_script_supplement.js
   - .\node_modules\.bin\electron-packager . --platform=win32 --arch=x64 --icon=sage2.ico --overwrite
-  - copy /Y README.win      SAGE2_client-win32-x64\README
-  - copy /Y View.win        SAGE2_client-win32-x64\Display0.bat
-  - copy /Y Fullscreen.win  SAGE2_client-win32-x64\Fullscreen.bat
-  - 7z a -sfx7z.sfx SAGE2_client-win64.exe SAGE2_client-win32-x64 > nul
-  - move SAGE2_client-win64.exe ..
+  - copy /Y README.md SAGE2_UI-win32-x64\README
+  - 7z a -sfx7z.sfx SAGE2_UI-win64.exe SAGE2_UI-win32-x64 > nul
+  - move SAGE2_UI-win64.exe ..\..
 
 build: off
 
 test: off
 
 artifacts:
-  - path: SAGE2_client-win64.exe
-    name: sage2_client
+  - path: SAGE2_UI-win64.exe
+    name: sage2_UI
 
 deploy:
   - provider: FTP
@@ -51,7 +44,7 @@ deploy:
     password:
       secure: L4I4NkKN7mrQww7GgwPLrA==
     folder: /
-    artifact: sage2_client
+    artifact: sage2_UI
 
 notifications:
   - provider: Slack

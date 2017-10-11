@@ -814,6 +814,7 @@ var recursiveReaddirSync = function(aPath) {
 	var list     = [];
 	var excludes = ['.DS_Store', 'Thumbs.db', 'tmp', 'passwd.json',
 		'assets', 'sessions', 'config', 'sabiConfig', 'savedFiles', 'apps'];
+	var excludeExtensions = ['.js', '.css'];
 	var files, stats;
 
 	files = fs.readdirSync(aPath);
@@ -822,7 +823,12 @@ var recursiveReaddirSync = function(aPath) {
 		list.push(aPath);
 	} else {
 		files.forEach(function(file) {
-			if (excludes.indexOf(file) === -1) {
+			// get the file extension
+			var ext = path.extname(file);
+			// exclude bad folders and bad filenames
+			// and exclude bad extensions
+			if (excludes.indexOf(file) === -1 &&
+				excludeExtensions.indexOf(ext) === -1) {
 				stats = fs.lstatSync(path.join(aPath, file));
 				if (stats.isDirectory()) {
 					list = list.concat(recursiveReaddirSync(path.join(aPath, file)));

@@ -1,10 +1,13 @@
 {
-  "name": "SAGE2",
-  "version": "1.1.0",
-  "description": "SAGE2 application",
+  "name": "SAGE2_UI",
+  "version": "2.0.0",
+  "description": "SAGE2 UI Lite",
   "main": "main.js",
   "scripts": {
-    "start": "electron main.js"
+    "start": "electron main.js",
+    "mac": "electron-packager ./ --platform=darwin --arch=x64 --icon=sage2.icns --overwrite",
+    "win": "electron-packager .  --platform=win32 --arch=x64 --icon=sage2.ico --overwrite",
+    "lnx": "electron-packager ./ --platform=linux --arch=x64 --icon=sage2.icns --overwrite"
   },
   "keywords": [
     "Electron",
@@ -13,7 +16,7 @@
   "author": "Luc Renambot",
   "license": "CC0-1.0",
   "devDependencies": {
-    "electron-prebuilt": "latest",
+    "electron": "latest",
     "electron-packager": "latest"
   }
 }
