@@ -725,6 +725,7 @@ function closeWebSocketClient(wsio) {
 	if (wsio.clientType === "display") {
 		sageutils.log("Disconnect", chalk.bold.red(wsio.id) +
 			" (" + wsio.clientType + " " + wsio.clientID + ")");
+		performanceManager.removeDisplayClient(wsio.clientID);
 	} else {
 		if (wsio.clientType) {
 			sageutils.log("Disconnect", chalk.bold.red(wsio.id) + " (" + wsio.clientType + ")");
@@ -956,10 +957,7 @@ function initializeWSClient(wsio, reqConfig, reqVersion, reqTime, reqConsole) {
 	}
 
 	if (wsio.clientType === "performance") {
-		performanceManager.addMonitoringClient(wsio);
-		wsio.emit('hardwareInformation',
-			performanceManager.performanceMetrics.staticInformation
-		);
+		performanceManager.updateClient(wsio);
 	}
 }
 
@@ -1147,6 +1145,7 @@ function setupListeners(wsio) {
 
 	// message from electron display client
 	wsio.on('displayHardware',                      wsDisplayHardware);
+	wsio.on('performanceData',						wsPerformanceData);
 }
 
 /**
@@ -3109,7 +3108,7 @@ function wsLoadApplication(wsio, data) {
 
 function wsLoadImageFromBuffer(wsio, data) {
 	appLoader.loadImageFromDataBuffer(data.src, data.width, data.height,
-		"image/jpeg", "", data.url, data.title, {},
+		data.mime, "", data.url, data.title, {},
 		function(appInstance) {
 			// Get the drop position and convert it to wall coordinates
 			var position = data.position || [0, 0];
@@ -10047,6 +10046,20 @@ function wsDisplayHardware(wsio, data) {
 	// store the hardware data for a given client
 	performanceManager.addDisplayClient(wsio.clientID, data);
 }
+
+/**
+ * Receive data from Electron display client about their hardware
+ *
+ * @method     wsPerformanceData
+ * @param      {<type>}  wsio    The wsio
+ * @param      {<type>}  data    The data
+ */
+function wsPerformanceData(wsio, data) {
+	// Pass the performance data from Electron display client
+	// on the performance manager
+	performanceManager.saveDisplayPerformanceData(data);
+}
+
 
 /**
  * Start a jupyter connection

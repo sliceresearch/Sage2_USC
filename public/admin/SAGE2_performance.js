@@ -29,21 +29,21 @@
 var performanceMetrics = {
 	staticInformation: null,
 	cpuLoad: null,
-	serverProcessLoad: null,
+	serverLoad: null,
 	serverTraffic: null,
 	network: null,
 	memUsage: null,
 	movingAvg1Minute: {
 		cpuLoad: null,
 		cpuCoresLoad: null,
-		serverProcessLoad: null,
+		serverLoad: null,
 		serverTraffic: null,
 		network: null,
 		memUsage: null
 	},
 	movingAvgEntireDuration: {
 		cpuLoad: null,
-		serverProcessLoad: null,
+		serverLoad: null,
 		serverTraffic: null,
 		network: null,
 		memUsage: null
@@ -51,7 +51,7 @@ var performanceMetrics = {
 	//Historical data for establishing time line
 	history: {
 		cpuLoad: [],
-		serverProcessLoad: [],
+		serverLoad: [],
 		serverTraffic: [],
 		network: [],
 		memUsage: []
@@ -134,7 +134,8 @@ function SAGE2_init() {
 function setupListeners(wsio) {
 	// Get elements from the DOM
 	var terminal1 = document.getElementById('terminal1');
-	
+	var terminal2 = document.getElementById('terminal2');
+
 	// Got a reply from the server
 	wsio.on('initialize', function() {
 		initializeCharts();
@@ -150,13 +151,8 @@ function setupListeners(wsio) {
 		console.log('wall configuration');
 	});
 
-	// Server sends the animate loop event
-	wsio.on('animateCanvas', function() {
-		console.log('animateCanvas');
-	});
-
 	// Server sends hardware and performance data
-	wsio.on('hardwareInformation', function(data) {
+	wsio.on('serverHardwareInformation', function(data) {
 		var msg = "";
 		if (data) {
 			performanceMetrics.staticInformation = data;
@@ -183,6 +179,36 @@ function setupListeners(wsio) {
 		// automatic scrolling to bottom
 		terminal1.scrollTop    = terminal1.scrollHeight;
 	});
+
+	wsio.on('displayHardwareInformation', function(data) {
+		var msg = "";
+		for (let i = 0; i < data.length; i++) {
+			let disp = data[i];
+			msg += '<span style="color:cyan;">Display ' + disp.clientID + ' </span>: ' + disp.system.manufacturer + ' ' +
+				disp.system.model + '\n';
+			msg += 'OS: ' + disp.os.platform + ' ' +
+				disp.os.arch + ' ' + disp.os.distro + ' ' + disp.os.release + '\n';
+			msg += 'CPU: ' + disp.cpu.manufacturer + ' ' + disp.cpu.brand + ' ' +
+				disp.cpu.speed + 'Ghz ' + disp.cpu.cores + 'cores\n';
+			// Sum up all the memory banks
+			var totalMem = disp.memLayout.reduce(function(sum, value) {
+				return sum + value.size;
+			}, 0);
+			var memInfo = getNiceNumber(totalMem);
+			msg += 'RAM: ' + memInfo.number + memInfo.suffix + '\n';
+			var gpuMem = getNiceNumber(disp.graphics.controllers[0].vram);
+			// not very good on Linux (need to check nvidia tools)
+			msg += 'GPU: ' + disp.graphics.controllers[0].vendor + ' ' +
+				disp.graphics.controllers[0].model + ' ' +
+				gpuMem.number + gpuMem.suffix + ' VRAM\n';
+		}
+		console.log(data);
+		// Added content
+		terminal2.innerHTML = msg;
+		// automatic scrolling to bottom
+		terminal2.scrollTop = terminal2.scrollHeight;
+	});
+
 	wsio.on('performanceData', function(data) {
 		if (data.durationInMinutes) {
 			durationInMinutes = data.durationInMinutes;	
@@ -196,17 +222,17 @@ function setupListeners(wsio) {
 		saveData('memUsage', data.memUsage);
 		saveData('network', data.network);
 		
-		saveData('serverProcessLoad', data.serverProcessLoad);
+		saveData('serverLoad', data.serverLoad);
 		saveData('serverTraffic', data.serverTraffic);
+
 		findNetworkMax();
-		console.log(performanceMetrics.network);
 		updateChart('cpuload', performanceMetrics.history.cpuLoad);
-		updateChart('serverload', performanceMetrics.history.serverProcessLoad);
+		updateChart('serverload', performanceMetrics.history.serverLoad);
 		updateChart('memusage', performanceMetrics.history.memUsage);
-		updateChart('servermem', performanceMetrics.history.serverProcessLoad);
+		updateChart('servermem', performanceMetrics.history.serverLoad);
 		updateChart('servertraffic', performanceMetrics.history.serverTraffic);
 		updateChart('systemtraffic', performanceMetrics.history.network);
-		
+		console.log(data.displayPerf);
 	});
 }
 
@@ -363,7 +389,7 @@ function initializeCharts() {
     }, yAxisFormatMemory, currentMemUsageText, 0.7);
 
     var currentServerLoadText = function() {
-		var serverLoad = performanceMetrics.serverProcessLoad;
+		var serverLoad = performanceMetrics.serverLoad;
 		return "Current: " + d3.format('3.0f')(serverLoad.cpuPercent) + "%";
 	}
 	setupChart('serverload', 'Server Load', function(d) {
@@ -372,7 +398,7 @@ function initializeCharts() {
 
 	var currentServerMemText = function() {
 		var memUsage = performanceMetrics.memUsage;
-		var servermem = performanceMetrics.serverProcessLoad.memResidentSet;
+		var servermem = performanceMetrics.serverLoad.memResidentSet;
 		return "Current: " + formatMemoryString(servermem, memUsage.total - servermem);
 	}
     setupChart('servermem', 'Server Memory', function(d) {
