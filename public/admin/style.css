@@ -40,7 +40,9 @@ h2 {
 }
 
 h3 {
+	font-size: 12pt;
 	color: #FFFFFF;
+	margin: 10px;
 }
 
 h4 {
@@ -180,3 +182,69 @@ a:hover {
 	top:1px;
 }
 
+.chart {
+	border: #666666 solid 5px;
+	color: #f0f0f0;
+	background: #000;
+}
+
+.line {
+  fill: none;
+  stroke: url(#value-gradient);
+  stroke-width: 1.5px;
+}
+
+.axis {
+	shape-rendering: crispEdges;
+}
+
+.x.axis path,
+.x.axis line {
+	stroke: #fff;
+	fill: #fff;
+}
+
+.x.axis .minor {
+	stroke-opacity: .5;
+}
+
+
+.y.axis line,
+.y.axis path {
+	fill: #fff;
+	stroke: #fff;
+}
+
+.tick text{
+	fill: #fff;
+	font-family: "DejaVu Sans Mono", "Liberation Mono", monospace;
+	font-size: 10pt;
+}
+
+.title{
+	fill: #fff;
+	font-family: "DejaVu Sans Mono", "Liberation Mono", monospace;
+	font-size: 10pt;
+}
+
+
+#paneContainer{
+	width: 100%;
+	overflow: hidden;
+}
+
+#paneContainer > div {
+	float: left;
+	width: 33.3%;
+}
+
+
+#serverload,
+#cpuload{
+	border-left: 0;
+}
+
+#servertraffic,
+#systemTraffic{
+	border-right: 0;
+}

@@ -289,7 +289,7 @@ function initializeSage2Server() {
 
 	// Create an object to gather performance statistics
 	performanceManager = new PerformanceManager();
-
+	performanceManager.wrapDataTransferFunctions(WebsocketIO);
 	imageMagick = gm.subClass(imageMagickOptions);
 	assets.initializeConfiguration(config);
 	assets.setupBinaries(imageMagickOptions, ffmpegOptions);
@@ -956,6 +956,7 @@ function initializeWSClient(wsio, reqConfig, reqVersion, reqTime, reqConsole) {
 	}
 
 	if (wsio.clientType === "performance") {
+		performanceManager.addMonitoringClient(wsio);
 		wsio.emit('hardwareInformation',
 			performanceManager.performanceMetrics.staticInformation
 		);
