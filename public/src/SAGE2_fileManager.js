@@ -1139,8 +1139,12 @@ function FileManager(wsio, mydiv, uniqueID) {
 							if (yesno) {
 								// for all elements
 								tbd.map(function(tid) {
+									var apptype  = _this.allFiles[tid].exif.MIMEType;
 									// Send delete message to server
-									wsio.emit('deleteElementFromStoredFiles', {filename: tid});
+									wsio.emit('deleteElementFromStoredFiles', {
+										filename: tid,
+										application: apptype
+									});
 									// Element will be deleted from table by return message from server
 									// _this.allTable.remove(tid);
 								});
@@ -1288,8 +1292,12 @@ function FileManager(wsio, mydiv, uniqueID) {
 					if (yesno) {
 						// for all elements
 						tbd.map(function(tid) {
+							var apptype  = _this.allFiles[tid].exif.MIMEType;
 							// Send delete message to server
-							wsio.emit('deleteElementFromStoredFiles', {filename: tid});
+							wsio.emit('deleteElementFromStoredFiles', {
+								filename: tid,
+								application: apptype
+							});
 						});
 					}
 				}

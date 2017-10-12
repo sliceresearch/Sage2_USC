@@ -518,23 +518,38 @@ var addFile = function(filename, exif, callback) {
 
 
 var deleteAsset = function(filename, cb) {
-	var filepath = path.resolve(filename);
-	fs.unlink(filepath, function(err) {
-		if (err) {
-			sageutils.log("Assets", "error removing file:", filename, err);
-			if (cb) {
-				cb(err);
-			}
-		} else {
-			sageutils.log("Assets", "successfully deleted file:", filename);
-			// Delete the metadata
-			delete AllAssets.list[filepath];
-			saveAssets();
-			if (cb) {
-				cb(null);
-			}
+	var elt = AllAssets.list[filename];
+	if (elt && elt.sage2Type === "sage2/url") {
+		// if it's a URL, just remove from array
+		delete AllAssets.list[filename];
+		sageutils.log("Assets", "successfully deleted URL:", filename);
+		// save the DB and trigger the callback
+		saveAssets();
+		if (cb) {
+			cb(null);
 		}
-	});
+	} else if (elt && elt.sage2Type !== "application/custom") {
+		// if it's a file and not an application
+		var filepath = path.resolve(filename);
+		if (filepath in AllAssets.list) {
+			fs.unlink(filepath, function(err) {
+				if (err) {
+					sageutils.log("Assets", "error removing file:", filename, err);
+					if (cb) {
+						cb(err);
+					}
+				} else {
+					sageutils.log("Assets", "successfully deleted file:", filename);
+					// Delete the metadata
+					delete AllAssets.list[filepath];
+					saveAssets();
+					if (cb) {
+						cb(null);
+					}
+				}
+			});
+		}
+	}
 };
 
 

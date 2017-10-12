@@ -2237,19 +2237,23 @@ function listSessions() {
 	return thelist;
 }
 
-function deleteSession(filename) {
+function deleteSession(filename, cb) {
 	if (filename) {
-		var fullpath = path.join(sessionDirectory, filename);
-		// if it doesn't end in .json, add it
-		if (fullpath.indexOf(".json", fullpath.length - 5) === -1) {
-			fullpath += '.json';
-		}
+		// var fullpath = path.join(sessionDirectory, filename);
+		// // if it doesn't end in .json, add it
+		// if (fullpath.indexOf(".json", fullpath.length - 5) === -1) {
+		// 	fullpath += '.json';
+		// }
+		var fullpath = path.resolve(filename);
 		fs.unlink(fullpath, function(err) {
 			if (err) {
 				sageutils.log("Session", "Could not delete session", filename, err);
 				return;
 			}
 			sageutils.log("Session", "Successfully deleted session", filename);
+			if (cb) {
+				cb();
+			}
 		});
 	}
 }
@@ -3389,9 +3393,12 @@ function calculateValidBlocks(app, blockSize, renderhandle) {
 }
 
 function wsDeleteElementFromStoredFiles(wsio, data) {
-	if (data.application === "load_session") {
+	if (data.application === "sage2/session") {
 		// if it's a session
-		deleteSession(data.filename);
+		deleteSession(data.filename, function() {
+			// send the update file list
+			broadcast('storedFileList', getSavedFilesList());
+		});
 	} else {
 		assets.deleteAsset(data.filename, function(err) {
 			if (!err) {
