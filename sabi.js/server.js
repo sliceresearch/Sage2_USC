@@ -1137,7 +1137,9 @@ function updateCertificates() {
 	rewriteContents += "call init_webserver.bat localhost\n";
 	rewriteContents += "call init_webserver.bat 127.0.0.1\n";
 	rewriteContents += "call init_webserver.bat " + host + "\n";
-	rewriteContents += "call init_webserver.bat " + alternate + "\n";
+	for (var i = 0; i < alternate.length; i++) {
+		rewriteContents += "call init_webserver.bat " + alternate[i] + "\n";
+	}
 	fs.writeFileSync(pathToGoWindowsCertGenFile, rewriteContents);
 
 	rewriteContents = "@echo off\n\n";
