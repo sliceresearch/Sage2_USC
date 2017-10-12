@@ -59,11 +59,12 @@ function Asset() {
  * Set an URL for an asset
  *
  * @method setURL
- * @param aUrl {String} url string
+ * @param aURL {String} url string
  */
-Asset.prototype.setURL = function(aUrl) {
-	this.url = aUrl;
-	this.id  = aUrl;
+Asset.prototype.setURL = function(aURL) {
+	this.url = aURL;
+	this.id  = aURL;
+	this.sage2URL = aURL;
 };
 
 /**
@@ -543,6 +544,7 @@ var addURL = function(aUrl, exif) {
 	anAsset.setURL(aUrl);
 	anAsset.setEXIF(exif);
 	AllAssets.list[anAsset.id] = anAsset;
+	saveAssets();
 };
 
 var getDimensions = function(id) {
@@ -717,6 +719,7 @@ var listAssets = function() {
 	var videos = [];
 	var apps   = [];
 	var images = [];
+	var links  = [];
 	var others = [];
 
 	// Get all the assets
@@ -743,9 +746,12 @@ var listAssets = function() {
 	videos.sort(sageutils.compareFilename);
 	pdfs.sort(sageutils.compareFilename);
 	apps.sort(sageutils.compareFilename);
+	links.sort(sageutils.compareFilename);
+
 	return {
 		images: images, videos: videos, pdfs: pdfs,
-		applications: apps, others: others
+		applications: apps, links: links,
+		others: others
 	};
 };
 

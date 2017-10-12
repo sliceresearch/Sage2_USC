@@ -381,6 +381,8 @@ function initializeSage2Server() {
 		}
 	}
 
+	/*
+	Monitor OFF, cause issues with drag-drop files
 	// Monitoring some folders
 	var listOfFolders = [];
 	for (var lf in mediaFolders) {
@@ -395,9 +397,9 @@ function initializeSage2Server() {
 			if (change.modifiedFiles.length > 0) {
 				sageutils.log("Monitor",  "	Modified files: %j", change.modifiedFiles);
 				// broadcast the new file list
-				assets.refresh(this.root, function(count) {
-					broadcast('storedFileList', getSavedFilesList());
-				});
+				// assets.refresh(this.root, function(count) {
+				// 	broadcast('storedFileList', getSavedFilesList());
+				// });
 			}
 			if (change.addedFiles.length > 0) {
 				// sageutils.log("Monitor", "	Added files:    %j",   change.addedFiles);
@@ -416,6 +418,7 @@ function initializeSage2Server() {
 			}
 		}
 	);
+	*/
 
 	// Initialize app loader
 	appLoader = new Loader(mainFolder.path, hostOrigin, config, imageMagickOptions, ffmpegOptions);
@@ -2488,6 +2491,9 @@ function saveSession(filename) {
 	try {
 		fs.writeFileSync(fullPreviewPath, header + svg);
 		sageutils.log("Session", "saved session preview image to", chalk.yellow.bold(fullPreviewPath));
+
+		// Update the file manager in the UI clients
+		broadcast('storedFileList', getSavedFilesList());
 	} catch (err) {
 		sageutils.log("Session", "error saving", err);
 	}
@@ -3430,6 +3436,8 @@ function wsMoveElementFromStoredFiles(wsio, data) {
 
 function wsAddNewWebElement(wsio, data) {
 	appLoader.loadFileFromWebURL(data, function(appInstance, videohandle) {
+		// Update the file list for the UI clients
+		broadcast('storedFileList', getSavedFilesList());
 
 		// Get the drop position and convert it to wall coordinates
 		var position = data.position || [0, 0];

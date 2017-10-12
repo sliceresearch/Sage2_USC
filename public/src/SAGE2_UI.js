@@ -449,8 +449,8 @@ function SAGE2_init() {
 //
 function showSAGE2Message(message, delay) {
 	var aMessage = webix.alert({
-		type:  "alert-error",
-		title: "SAGE2 Error",
+		type:  "alert-warning",
+		title: "SAGE2 Message",
 		ok:    "OK",
 		width: "40%",
 		text:  "<span style='font-weight:bold;'>" + message + "</span>"
