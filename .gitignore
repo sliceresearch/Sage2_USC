@@ -58,3 +58,5 @@ package-lock.json
 Launcher.bat
 sabi.js/bin/node.exe
 sabi.js/scripts/MonitorInfo.json
+.vscode
+.eslintrc

@@ -75,6 +75,8 @@ var registry            = require('./src/node-registry');         // Registry Ma
 var FileBufferManager	= require('./src/node-filebuffer');
 var PartitionList	= require('./src/node-partitionlist');        // list of SAGE2 Partitions
 var SharedDataManager	= require('./src/node-sharedserverdata'); // manager for shared data
+// SLICE added modules
+var SlicePointer 		= require('./src-slice/node-slicepointer');	// 
 
 //
 // Globals
@@ -813,7 +815,8 @@ function wsAddClient(wsio, data) {
 	// Check if there's a new pointer for a mobile client
 	if (data.browser && data.browser.isMobile && remoteInteraction[wsio.id]) {
 		// for mobile clients, default to window interaction mode
-		remoteInteraction[wsio.id].previousMode = 0;
+		// SLICE change default mode to app interaction mode
+		remoteInteraction[wsio.id].previousMode = 1; // 0;
 	}
 
 	// If it's a UI, send message to enable screenshot capability
@@ -1384,9 +1387,9 @@ function wsRegisterInteractionClient(wsio, data) {
 
 function wsStartSagePointer(wsio, data) {
 	// Switch interaction from window mode (on web) to app mode (wall)
-	// SLICE hard coded the starting pointer mode to APP_INTERACTION
-	remoteInteraction[wsio.id].interactionMode = 1; // remoteInteraction[wsio.id].getPreviousMode();
-	broadcast('changeSagePointerMode', {id: sagePointers[wsio.id].id, mode: 1}); // remoteInteraction[wsio.id].getPreviousMode()});
+	// SLICE hard coded the starting pointer mode to APP_INTERACTION: fixed to mobile devices only
+	remoteInteraction[wsio.id].interactionMode = remoteInteraction[wsio.id].getPreviousMode();
+	broadcast('changeSagePointerMode', {id: sagePointers[wsio.id].id, mode: remoteInteraction[wsio.id].getPreviousMode()});
 
 	showPointer(wsio.id, data);
 
@@ -5688,7 +5691,8 @@ function showPointer(uniqueID, data) {
 		data.sourceType = "Pointer";
 	}
 
-	sagePointers[uniqueID].start(data.label, data.color, data.sourceType);
+	// SLICE added left and top to pointer construction
+	sagePointers[uniqueID].start(data.label, data.color, data.sourceType, data.left, data.top);
 	broadcast('showSagePointer', sagePointers[uniqueID]);
 }
 

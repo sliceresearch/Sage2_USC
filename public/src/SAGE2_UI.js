@@ -355,6 +355,7 @@ function SAGE2_init() {
 			
 		// SLICE attempt to auto start the pointer for mobile devices on load
 		if (__SAGE2__.browser.isMobile){
+			// window.location.replace("/mobile_index.html");
 			var element = {id: "sage2pointer"};
 			handleClick(element);
 		}

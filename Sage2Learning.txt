@@ -8,6 +8,8 @@ Prototypes of the 'SAGE2-' classes are found here.
 From the index.html the pointer selection is handeled by 'SAGE2_UI.js' and is passed to 'SAGE2_interaction.js'.
 'SAGE2_interaction.js' sends the changes to 'server.js' via websockets.
 
+all web clients enter via node-httpserver.js 
+
 NOTES:
 websocket code 16 to sever is togglePointerMode
     checkForSpecialKeys 
@@ -19,3 +21,8 @@ Updated '#sage2MobileTrackpad' in 'style_ui.css' to be 100% height.
 
 node-sagepointer.js hold the start function with the starting position of pointers
 style.css to change stroke width of pointer
+
+In src/server.js use userConfig.layout and userConfig.resolution from defaultWin-cfg.json for locking pointer to display clients.
+    displayClientWidth = userConfig.resolution.width / userConfig.layout.column;
+    minLeft = displayClientWidth * pointerClientMin; // beginning of display client pointerClientMin
+    maxLeft = minLeft + displayClientWidth;

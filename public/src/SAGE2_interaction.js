@@ -336,7 +336,8 @@ function SAGE2_interaction(wsio) {
 		} else {
 			console.log("No mouse detected - entering touch interface for SAGE2 Pointer");
 
-			this.wsio.emit('startSagePointer', {label: localStorage.SAGE2_ptrName, color: localStorage.SAGE2_ptrColor});
+			// SLICE added left and top to pointer constructor
+			this.wsio.emit('startSagePointer', {label: localStorage.SAGE2_ptrName, color: localStorage.SAGE2_ptrColor, left: 50, top: 50});
 			
 			showSAGE2PointerOverlayNoMouse();
 		}
@@ -399,7 +400,8 @@ function SAGE2_interaction(wsio) {
 			sagePointerDisabled();
 		} else {
 			// enable SAGE2 Pointer
-			this.wsio.emit('startSagePointer', {label: localStorage.SAGE2_ptrName, color: localStorage.SAGE2_ptrColor});
+			// SLICE add left and top
+			this.wsio.emit('startSagePointer', {label: localStorage.SAGE2_ptrName, color: localStorage.SAGE2_ptrColor, left: 50, top: 50});
 
 			document.addEventListener('mousedown',  this.pointerPress,     false);
 			document.addEventListener('mousemove',  this.pointerMove,      false);
