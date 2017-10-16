@@ -1,7 +1,10 @@
-const remote   = require('electron').remote;
-const Menu     = remote.Menu;
-const MenuItem = remote.MenuItem;
-const Tray     = remote.Tray;
+// require variables to be declared
+"use strict";
+
+var remote   = require('electron').remote;
+var Menu     = remote.Menu;
+var MenuItem = remote.MenuItem;
+var Tray     = remote.Tray;
 
 // Tray
 var appIcon = null;
@@ -163,7 +166,7 @@ var msgOpen = false;
 var uploadMessage, msgui;
 
 function getRecentServers() {
-	myservers = [];
+	var myservers = [];
 	if (localStorage.servers) {
 		myservers = JSON.parse(localStorage.servers);
 	}
@@ -193,7 +196,7 @@ function sharing_func(menuitem, win, event) {
  * @method     clearSettings
  */
 function clearSettings() {
-	const session = remote.session.defaultSession;
+	var session = remote.session.defaultSession;
 	session.clearStorageData({
 		storages: ["appcache", "cookies", "localstorage", "serviceworkers"]
 	}, function() {
@@ -407,7 +410,7 @@ function isValidSecureWebsocket(str) {
  * @method     geoLocation
  */
 function geoLocation() {
-	let location;
+	var location;
 	if ("geolocation" in navigator) {
 		console.log('Geo> Location services available')
 		navigator.geolocation.getCurrentPosition(function(position) {
@@ -574,9 +577,11 @@ function connect_func() {
 		if (interactor) {
 			interactor.stopSAGE2Pointer();
 			interactor.removeListeners();
-			delete interactor;
+			// delete interactor;
+			interactor = undefined;
 		}
-		delete wsio;
+		// delete wsio;
+		wsio = undefined;
 
 		var pbutton = $$('connect_id').$view.querySelector('button');
 		pbutton.style.backgroundColor = "#3498db";

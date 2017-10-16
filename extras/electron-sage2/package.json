@@ -2,14 +2,15 @@
   "name": "SAGE2_UI",
   "version": "2.0.0",
   "description": "SAGE2 UI Lite",
-  "main": "main.js",
+  "main": "src/main.js",
   "scripts": {
     "start": "electron main.js",
-    "mac": "electron-packager ./ --platform=darwin --arch=x64 --icon=sage2.icns --overwrite",
-    "win": "electron-packager .  --platform=win32 --arch=x64 --icon=sage2.ico --overwrite",
-    "lnx": "electron-packager ./ --platform=linux --arch=x64 --icon=sage2.icns --overwrite"
+    "mac1": "electron-packager ./ --platform=darwin --arch=x64 --icon=sage2.icns --overwrite",
+    "mac2": "electron-installer-dmg SAGE2_UI-darwin-x64/SAGE2_UI.app SAGE2_UI --out=SAGE2_UI-darwin-x64 --icon=sage2.icns --background=background.png --overwrite",
+    "win":  "electron-packager .  --platform=win32 --arch=x64 --icon=sage2.ico --overwrite",
+    "lnx":  "electron-packager ./ --platform=linux --arch=x64 --icon=sage2.icns --overwrite"
   },
-  "keywords": [
+ "keywords": [
     "Electron",
     "SAGE2"
   ],
@@ -17,6 +18,7 @@
   "license": "CC0-1.0",
   "devDependencies": {
     "electron": "latest",
+    "electron-installer-dmg": "latest",
     "electron-packager": "latest"
   }
 }
