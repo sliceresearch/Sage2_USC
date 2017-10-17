@@ -21,10 +21,12 @@
   "license": "CC0-1.0",
   "devDependencies": {
     "electron": "latest",
+    "electron-packager": "latest"
+  },
+  "optionalDependencies": {
     "electron-installer-dmg": "latest",
     "electron-winstaller": "latest",
     "electron-installer-redhat": "latest",
-    "electron-installer-debian": "latest",
-    "electron-packager": "latest"
+    "electron-installer-debian": "latest"
   }
 }
