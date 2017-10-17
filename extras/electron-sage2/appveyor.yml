@@ -23,10 +23,9 @@ install:
   - cd electron-sage2
   - npm install --msvs_version=2013
   - dir
-  - npm run win
-  - copy /Y README.md sage2-ui-win32-x64\README
-  - 7z a -sfx7z.sfx sage2-ui-win64.exe sage2-ui-win32-x64 > nul
-  - move sage2-ui-win64.exe ..\..
+  - npm run win1
+  - npm run win2
+  - move windows-installer\sage2-ui-Installer.exe ..\..\sage2-ui-win64.exe
 
 build: off
 
