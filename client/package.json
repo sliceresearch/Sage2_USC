@@ -10,6 +10,7 @@
   "dependencies": {
     "electron": "latest",
     "electron-packager": "latest",
+    "systeminformation": "latest",
     "commander": "latest"
   },
   "scripts": {

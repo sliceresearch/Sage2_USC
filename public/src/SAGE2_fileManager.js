@@ -19,6 +19,7 @@
 
 /* global SAGE2_init, SAGE2_resize, escape, unescape, sage2Version, showDialog */
 /* global removeAllChildren, SAGE2_copyToClipboard, displayUI, dateToYYYYMMDDHHMMSS */
+/* global showSAGE2Message */
 
 "use strict";
 
@@ -63,13 +64,14 @@ function FileManager(wsio, mydiv, uniqueID) {
 	var data_with_icon = [
 		{id: "treeroot", value: "SAGE2", icon: "home", open: true, tooltip: "All the files",
 			data: [
-				{id: "Image:/", value: "Image", icon: "search", data: [], tooltip: "Show all the images"},
-				{id: "Video:/", value: "Video", icon: "search", data: [], tooltip: "Show all the videos"},
-				{id: "PDF:/", value: "PDF", icon: "search", data: [], tooltip: "Show all the PDF files"},
-				{id: "Note:/", value: "Note", icon: "search", data: [], tooltip: "Show all the notes"},
-				{id: "App:/", value: "Application", icon: "search", data: [], tooltip: "Show all the applications"},
+				{id: "Image:/",   value: "Image", icon: "search", data: [], tooltip: "Show all the images"},
+				{id: "Video:/",   value: "Video", icon: "search", data: [], tooltip: "Show all the videos"},
+				{id: "PDF:/",     value: "PDF", icon: "search", data: [], tooltip: "Show all the PDF files"},
+				{id: "Note:/",    value: "Note", icon: "search", data: [], tooltip: "Show all the notes"},
+				{id: "App:/",     value: "Application", icon: "search", data: [], tooltip: "Show all the applications"},
 				{id: "Session:/", value: "Session", icon: "search", data: [], tooltip: "Show all the sessions"},
-				{id: "Mine:/", value: "My files", icon: "search", data: [], tooltip: "Show all my uploaded files"}
+				{id: "Link:/",    value: "Link", icon: "search", data: [], tooltip: "Show all the links"},
+				{id: "Mine:/",    value: "My files", icon: "search", data: [], tooltip: "Show all my uploaded files"}
 			]
 		}
 	];
@@ -117,6 +119,11 @@ function FileManager(wsio, mydiv, uniqueID) {
 			// Get selected items
 			var dItems = _this.allTable.getSelectedId(true);
 			copyURLItem(dItems[0].id);
+		}},
+		taburl_menu: {value: "Open in Tab", callback: function (evt) {
+			// Get selected items
+			var dItems = _this.allTable.getSelectedId(true);
+			openURLItem(dItems[0].id);
 		}},
 		download_menu: {value: "Download", callback: function (evt) {
 			// Get selected items
@@ -469,6 +476,12 @@ function FileManager(wsio, mydiv, uniqueID) {
 			callback: function (evt) {
 				window.open("admin/console.html", '_blank');
 			}
+		},
+		performance_menu: {value: "Performance Console",
+			tooltip: "Opens a new page displaying performance monitoring data",
+			callback: function (evt) {
+				window.open("admin/performance.html", '_blank');
+			}
 		}
 	};
 
@@ -662,9 +675,9 @@ function FileManager(wsio, mydiv, uniqueID) {
 								if (obj.image) {
 									if (obj.session) {
 										// if it is from a session
-										return "<img src='" + obj.image + "'></img>";
+										return "<img src='" + obj.image + "' style='width:100%;'></img>";
 									}
-									return "<img src='" + obj.image + "_256.jpg'></img>";
+									return "<img src='" + obj.image + "_256.jpg' style='width:100%;'></img>";
 								}
 								return "";
 							}
@@ -804,6 +817,10 @@ function FileManager(wsio, mydiv, uniqueID) {
 			metadata.config.elements.push({label: "Encoder", value: info});
 
 		} else if (_this.allFiles[elt.id].exif.MIMEType.indexOf('application/pdf') >= 0) {
+			// Clear the panel
+			metadata.config.elements = [];
+
+			// Create a PDF section
 			metadata.config.elements.push({label: "PDF", type: "label"});
 
 			info = _this.allFiles[elt.id].exif.Title || '';
@@ -841,6 +858,9 @@ function FileManager(wsio, mydiv, uniqueID) {
 				}
 			}
 		} else if (_this.allFiles[elt.id].exif.MIMEType.indexOf('application/custom') >= 0) {
+			// Clear the panel
+			metadata.config.elements = [];
+			// Add an application section
 			metadata.config.elements.push({label: "Application", type: "label"});
 
 			info = _this.allFiles[elt.id].exif.metadata.title || '';
@@ -878,8 +898,23 @@ function FileManager(wsio, mydiv, uniqueID) {
 				label: info, type: "label",
 				css: {height: "100px"}
 			});
+		} else if (_this.allFiles[elt.id].exif.MIMEType.indexOf('sage2/url') >= 0) {
+			// Clear the panel
+			metadata.config.elements = [];
+			metadata.config.elements.push({label: "URL", type: "label"});
+			metadata.config.elements.push({label: "Link",
+				value: _this.allFiles[elt.id].sage2URL || '-'});
+			metadata.config.elements.push({label: "Author",
+				value: _this.allFiles[elt.id].exif.SAGE2user || '-'});
 		} else if (_this.allFiles[elt.id].exif.MIMEType.indexOf('sage2/session') >= 0) {
-			// Nothing yet
+			// Clear the panel
+			metadata.config.elements = [];
+
+			metadata.config.elements.push({label: "Metadata", type: "label"});
+			metadata.config.elements.push({label: "Author",
+				value: _this.allFiles[elt.id].exif.Creator || '-'});
+			metadata.config.elements.push({label: "File",
+				value: _this.allFiles[elt.id].exif.MIMEType || '-'});
 		}
 
 		// Done updating metadata
@@ -887,10 +922,17 @@ function FileManager(wsio, mydiv, uniqueID) {
 
 		// Update the thumbnail
 		var thumb = $$("thumb");
-		thumb.data = {
-			image: _this.allFiles[elt.id].exif.SAGE2thumbnail,
-			session: (_this.allFiles[elt.id].exif.MIMEType.indexOf('sage2/session') >= 0)
-		};
+		// what type of app is it
+		var sessionType = _this.allFiles[elt.id].exif.MIMEType === "sage2/session" ||
+			_this.allFiles[elt.id].exif.MIMEType === "sage2/url";
+		// default thumbnail
+		var thumbURL = _this.allFiles[elt.id].exif.SAGE2thumbnail;
+		// if it's a URL, try to get the  favico of the site
+		if (_this.allFiles[elt.id].exif.MIMEType === "sage2/url") {
+			thumbURL = "https://icons.better-idea.org/icon?size=48..128..256&url=" +
+				_this.allFiles[elt.id].sage2URL;
+		}
+		thumb.data = {image: thumbURL, session: sessionType};
 		thumb.refresh();
 	});
 
@@ -970,6 +1012,7 @@ function FileManager(wsio, mydiv, uniqueID) {
 			context.target.startsWith("Video:")   ||
 			context.target.startsWith("App:")     ||
 			context.target.startsWith("Session:") ||
+			context.target.startsWith("Link:")     ||
 			context.target.startsWith("Mine:")) {
 			// No DnD on search icons
 			return false;
@@ -1028,7 +1071,7 @@ function FileManager(wsio, mydiv, uniqueID) {
 	webix.ui({
 		view: "contextmenu",
 		id: "cmenu",
-		data: ["Open", "Copy URL", "Download", { $template: "Separator" }, "Delete"],
+		data: ["Open", "Copy URL", "Open in Tab", "Download", { $template: "Separator" }, "Delete"],
 		on: {
 			onItemClick: function(id) {
 				var i;
@@ -1045,6 +1088,8 @@ function FileManager(wsio, mydiv, uniqueID) {
 					}
 				} else if (id === "Copy URL") {
 					copyURLItem(list.getItem(listId).id);
+				} else if (id === "Open in Tab") {
+					openURLItem(list.getItem(listId).id);
 				} else if (id === "Open") {
 					var tbo = [];
 					if (dItems.length === 0) {
@@ -1094,8 +1139,12 @@ function FileManager(wsio, mydiv, uniqueID) {
 							if (yesno) {
 								// for all elements
 								tbd.map(function(tid) {
+									var apptype  = _this.allFiles[tid].exif.MIMEType;
 									// Send delete message to server
-									wsio.emit('deleteElementFromStoredFiles', {filename: tid});
+									wsio.emit('deleteElementFromStoredFiles', {
+										filename: tid,
+										application: apptype
+									});
 									// Element will be deleted from table by return message from server
 									// _this.allTable.remove(tid);
 								});
@@ -1243,8 +1292,12 @@ function FileManager(wsio, mydiv, uniqueID) {
 					if (yesno) {
 						// for all elements
 						tbd.map(function(tid) {
+							var apptype  = _this.allFiles[tid].exif.MIMEType;
 							// Send delete message to server
-							wsio.emit('deleteElementFromStoredFiles', {filename: tid});
+							wsio.emit('deleteElementFromStoredFiles', {
+								filename: tid,
+								application: apptype
+							});
 						});
 					}
 				}
@@ -1328,6 +1381,12 @@ function FileManager(wsio, mydiv, uniqueID) {
 				user: _this.uniqueID,
 				position: position
 			});
+		} else if (appType === "sage2/url") {
+			wsio.emit('openNewWebpage',	{
+				url: tid,
+				user: _this.uniqueID,
+				position: position
+			});
 		} else {
 			// Opening a file
 			wsio.emit('loadFileFromServer', {
@@ -1354,41 +1413,85 @@ function FileManager(wsio, mydiv, uniqueID) {
 				response = "movie_player";
 			} else if (elt.exif.MIMEType.indexOf('sage2/session') >= 0) {
 				response = "load_session";
+			} else if (elt.exif.MIMEType.indexOf('sage2/url') >= 0) {
+				response = "sage2/url";
 			}
 		}
 		// send the result
 		return response;
 	};
 
+	/**
+	 * Trigger a browser downlaod
+	 *
+	 * @method     downloadItem
+	 * @param      {<type>}   elt     The element
+	 * @return     {Boolean}  (description_of_the_return_value)
+	 */
 	function downloadItem(elt) {
-		var url = _this.allFiles[elt].sage2URL;
-		if (url) {
-			// Open the file
-			// window.open(url, '_blank');
-
-			// Download the file
-			var link = document.createElement('a');
-			link.href = url;
-			if (link.download !== undefined) {
-				// Set HTML5 download attribute. This will prevent file from opening if supported.
-				var fileName = url.substring(url.lastIndexOf('/') + 1, url.length);
-				link.download = fileName;
+		var mimetype = _this.allFiles[elt].exif.MIMEType;
+		if (mimetype !== "sage2/url" &&
+			mimetype !== "application/custom") {
+			var url = _this.allFiles[elt].sage2URL;
+			if (url) {
+				// Download the file
+				var link = document.createElement('a');
+				link.href = url;
+				if (link.download !== undefined) {
+					// Set HTML5 download attribute. This will prevent file from opening if supported.
+					var fileName = url.substring(url.lastIndexOf('/') + 1, url.length);
+					link.download = fileName;
+				}
+				// Dispatching click event
+				if (document.createEvent) {
+					var me = document.createEvent('MouseEvents');
+					me.initEvent('click', true, true);
+					link.dispatchEvent(me);
+					return true;
+				}
 			}
-			// Dispatching click event
-			if (document.createEvent) {
-				var me = document.createEvent('MouseEvents');
-				me.initEvent('click', true, true);
-				link.dispatchEvent(me);
-				return true;
-			}
+		} else {
+			showSAGE2Message("File cannot be downloaded");
 		}
 	}
 
+	/**
+	 * Copy the URL of the item into the user's clipboard
+	 *
+	 * @method     copyURLItem
+	 * @param      {<type>}  elt     The element
+	 */
 	function copyURLItem(elt) {
-		var url = _this.allFiles[elt].sage2URL;
-		if (url) {
+		var sage2url = _this.allFiles[elt].sage2URL;
+		if (sage2url) {
+			var url;
+			if (_this.allFiles[elt].exif.MIMEType === 'sage2/url') {
+				url = sage2url;
+			} else {
+				url = window.location.origin + sage2url;
+			}
 			// Copy to clipboard (defined in SAGE2_runtime)
-			SAGE2_copyToClipboard(window.location.origin + url);
+			SAGE2_copyToClipboard(url);
+		}
+	}
+
+	/**
+	 * Opens the content in a browser tab
+	 *
+	 * @method     openURLItem
+	 * @param      {<type>}  elt     The element
+	 */
+	function openURLItem(elt) {
+		var sage2url = _this.allFiles[elt].sage2URL;
+		if (sage2url) {
+			var url;
+			if (_this.allFiles[elt].exif.MIMEType === 'sage2/url') {
+				url = sage2url;
+			} else {
+				url = window.location.origin + sage2url;
+			}
+			// open in a browser tab
+			window.open(url, '_blank');
 		}
 	}
 
@@ -1419,6 +1522,10 @@ function FileManager(wsio, mydiv, uniqueID) {
 		} else if (searchParam === "Session:/") {
 			_this.allTable.filter(function(obj) {
 				return _this.allFiles[obj.id].exif.MIMEType.indexOf('sage2/session') >= 0;
+			});
+		} else if (searchParam === "Link:/") {
+			_this.allTable.filter(function(obj) {
+				return _this.allFiles[obj.id].exif.MIMEType.indexOf('sage2/url') >= 0;
 			});
 		} else if (searchParam === "Mine:/") {
 			_this.allTable.filter(function(obj) {
@@ -1569,6 +1676,10 @@ function FileManager(wsio, mydiv, uniqueID) {
 			f = data.sessions[i];
 			this.allFiles[f.id] = f;
 		}
+		for (i = 0; i < data.links.length; i++) {
+			f = data.links[i];
+			this.allFiles[f.id] = f;
+		}
 
 		i = 0;
 		var mm, createDate;
@@ -1590,7 +1701,7 @@ function FileManager(wsio, mydiv, uniqueID) {
 				});
 			} else if (f.exif.MIMEType.indexOf('sage2/session') >= 0) {
 				// It's a SAGE2 session
-				mm = moment(f.exif.FileDate, 'YYYY/MM/DD HH:mm:ss');
+				mm = moment(f.exif.FileDate, 'YYYY/MM/DD HH:mm:ssZ');
 				f.exif.FileModifyDate = mm;
 				this.allTable.data.add({id: f.id,
 					name: f.exif.FileName,
@@ -1600,6 +1711,18 @@ function FileManager(wsio, mydiv, uniqueID) {
 					type: "SESSION",
 					size: fileSizeIEC(f.exif.FileSize)
 				});
+			} else if (f.exif.MIMEType.indexOf('sage2/url') >= 0) {
+				// It's a URL
+				mm = moment(f.exif.FileDate, 'YYYY/MM/DD HH:mm:ssZ');
+				f.exif.FileModifyDate = mm;
+				this.allTable.data.add({id: f.id,
+					name: f.exif.FileName,
+					user: f.exif.SAGE2user ? f.exif.SAGE2user : "-",
+					date: mm.format("YYYY/MM/DD HH:mm:ss"),
+					ago:  mm.fromNow(),
+					type: "LINK",
+					size: fileSizeIEC(f.exif.FileSize)
+				});
 			} else {
 				// Any other asset type
 				// Try to find creation
@@ -1607,10 +1730,10 @@ function FileManager(wsio, mydiv, uniqueID) {
 						f.exif.DateTimeOriginal ||
 						f.exif.ModifyDate ||
 						f.exif.FileModifyDate;
-				mm = moment(createDate, 'YYYY:MM:DD HH:mm:ssZZ');
+				mm = moment(createDate, 'YYYY:MM:DD HH:mm:ssZ');
 				if (!mm.isValid()) {
 					// sometimes a value is not valid
-					mm = moment(f.exif.FileModifyDate, 'YYYY:MM:DD HH:mm:ssZZ');
+					mm = moment(f.exif.FileModifyDate, 'YYYY:MM:DD HH:mm:ssZ');
 				}
 				f.exif.FileModifyDate = mm;
 				this.allTable.data.add({id: f.id,
@@ -1795,10 +1918,11 @@ function FileManager(wsio, mydiv, uniqueID) {
 			if (id === 'treeroot' ||
 				(id.indexOf('Image:/') >= 0) ||
 				(id.indexOf('Video:/') >= 0) ||
-				(id.indexOf('PDF:/') >= 0) ||
-				(id.indexOf('Note:/') >= 0) ||
-				(id.indexOf('App:/') >= 0) ||
-				(id.indexOf('Mine:/') >= 0) ||
+				(id.indexOf('PDF:/') >= 0)   ||
+				(id.indexOf('Note:/') >= 0)  ||
+				(id.indexOf('App:/') >= 0)   ||
+				(id.indexOf('Mine:/') >= 0)  ||
+				(id.indexOf('Link:/') >= 0)  ||
 				(id.indexOf('Session:/') >= 0)) {
 				tmenu.hideItem('New folder');
 			} else {

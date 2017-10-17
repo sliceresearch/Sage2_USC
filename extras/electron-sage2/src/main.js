@@ -1,6 +1,8 @@
 'use strict';
 
 const electron = require('electron');
+electron.app.setAppPath(process.cwd());
+
 // Module to control application life.
 const app = electron.app;
 // Module to create native browser window.
@@ -8,15 +10,27 @@ const BrowserWindow = electron.BrowserWindow;
 
 app.commandLine.appendSwitch('enable-usermedia-screen-capturing');
 
+// SAGE2 Google maps APIKEY
+// needed for user geo-location service
+process.env.GOOGLE_API_KEY = 'AIzaSyANE6rJqcfc7jH-bDOwhXQZK_oYq9BWRDY';
+
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
 let mainWindow;
 
 function createWindow () {
+	var ww = 315;
+	var hh = 355;
+	if (process.platform !== 'darwin') {
+		ww += 17;
+		hh += 38;
+	}
+
 	// Create the browser window.
 	mainWindow = new BrowserWindow({
-		width: 1200,
-		height: 485,
+		width:  ww,
+		height: hh,
+		// resizable: false,
 		webPreferences: {
 			nodeIntegration: true,
 			webSecurity: true,
@@ -25,8 +39,14 @@ function createWindow () {
 		}
 	});
 
-	// and load the index.html of the app.
-	mainWindow.loadURL('file://' + __dirname + '/index.html');
+	const session = electron.session.defaultSession;
+	session.clearStorageData({
+		storages: ["appcache", "cookies", "serviceworkers"]
+		// "localstorage",
+	}, function() {
+		// Clear cache and load the index.html of the app.
+		mainWindow.loadURL('file://' + __dirname + '/index.html');
+	});
 
 	// Open the DevTools.
 	// mainWindow.webContents.openDevTools();
@@ -40,7 +60,6 @@ function createWindow () {
 	});
 
 	mainWindow.webContents.on('will-navigate', function(ev) {
-		console.log('will-navigate')
 		ev.preventDefault();
 	})
 }

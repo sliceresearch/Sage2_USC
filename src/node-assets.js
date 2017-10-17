@@ -59,11 +59,12 @@ function Asset() {
  * Set an URL for an asset
  *
  * @method setURL
- * @param aUrl {String} url string
+ * @param aURL {String} url string
  */
-Asset.prototype.setURL = function(aUrl) {
-	this.url = aUrl;
-	this.id  = aUrl;
+Asset.prototype.setURL = function(aURL) {
+	this.url = aURL;
+	this.id  = aURL;
+	this.sage2URL = aURL;
 };
 
 /**
@@ -508,29 +509,47 @@ var addFile = function(filename, exif, callback) {
 			callback();
 		});
 		anAsset.exif.SAGE2thumbnail = rthumb;
+	} else {
+		// otherwise, just call the callback
+		callback();
 	}
 	saveAssets();
 };
 
 
 var deleteAsset = function(filename, cb) {
-	var filepath = path.resolve(filename);
-	fs.unlink(filepath, function(err) {
-		if (err) {
-			sageutils.log("Assets", "error removing file:", filename, err);
-			if (cb) {
-				cb(err);
-			}
-		} else {
-			sageutils.log("Assets", "successfully deleted file:", filename);
-			// Delete the metadata
-			delete AllAssets.list[filepath];
-			saveAssets();
-			if (cb) {
-				cb(null);
-			}
+	var elt = AllAssets.list[filename];
+	if (elt && elt.sage2Type === "sage2/url") {
+		// if it's a URL, just remove from array
+		delete AllAssets.list[filename];
+		sageutils.log("Assets", "successfully deleted URL:", filename);
+		// save the DB and trigger the callback
+		saveAssets();
+		if (cb) {
+			cb(null);
 		}
-	});
+	} else if (elt && elt.sage2Type !== "application/custom") {
+		// if it's a file and not an application
+		var filepath = path.resolve(filename);
+		if (filepath in AllAssets.list) {
+			fs.unlink(filepath, function(err) {
+				if (err) {
+					sageutils.log("Assets", "error removing file:", filename, err);
+					if (cb) {
+						cb(err);
+					}
+				} else {
+					sageutils.log("Assets", "successfully deleted file:", filename);
+					// Delete the metadata
+					delete AllAssets.list[filepath];
+					saveAssets();
+					if (cb) {
+						cb(null);
+					}
+				}
+			});
+		}
+	}
 };
 
 
@@ -540,6 +559,7 @@ var addURL = function(aUrl, exif) {
 	anAsset.setURL(aUrl);
 	anAsset.setEXIF(exif);
 	AllAssets.list[anAsset.id] = anAsset;
+	saveAssets();
 };
 
 var getDimensions = function(id) {
@@ -714,6 +734,7 @@ var listAssets = function() {
 	var videos = [];
 	var apps   = [];
 	var images = [];
+	var links  = [];
 	var others = [];
 
 	// Get all the assets
@@ -740,9 +761,12 @@ var listAssets = function() {
 	videos.sort(sageutils.compareFilename);
 	pdfs.sort(sageutils.compareFilename);
 	apps.sort(sageutils.compareFilename);
+	links.sort(sageutils.compareFilename);
+
 	return {
 		images: images, videos: videos, pdfs: pdfs,
-		applications: apps, others: others
+		applications: apps, links: links,
+		others: others
 	};
 };
 
@@ -810,7 +834,8 @@ var listApps = function() {
 var recursiveReaddirSync = function(aPath) {
 	var list     = [];
 	var excludes = ['.DS_Store', 'Thumbs.db', 'tmp', 'passwd.json',
-		'assets', 'sessions', 'config', 'sabiConfig', 'web', 'savedFiles', 'apps'];
+		'assets', 'sessions', 'config', 'sabiConfig', 'savedFiles', 'apps'];
+	var excludeExtensions = ['.js', '.css'];
 	var files, stats;
 
 	files = fs.readdirSync(aPath);
@@ -819,7 +844,12 @@ var recursiveReaddirSync = function(aPath) {
 		list.push(aPath);
 	} else {
 		files.forEach(function(file) {
-			if (excludes.indexOf(file) === -1) {
+			// get the file extension
+			var ext = path.extname(file);
+			// exclude bad folders and bad filenames
+			// and exclude bad extensions
+			if (excludes.indexOf(file) === -1 &&
+				excludeExtensions.indexOf(ext) === -1) {
 				stats = fs.lstatSync(path.join(aPath, file));
 				if (stats.isDirectory()) {
 					list = list.concat(recursiveReaddirSync(path.join(aPath, file)));

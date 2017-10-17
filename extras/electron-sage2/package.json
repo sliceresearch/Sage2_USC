@@ -1,19 +1,30 @@
 {
-  "name": "SAGE2",
-  "version": "1.1.0",
-  "description": "SAGE2 application",
-  "main": "main.js",
+  "name": "sage2-ui",
+  "version": "2.0.0",
+  "description": "SAGE2 UI Lite",
+  "main": "src/main.js",
   "scripts": {
-    "start": "electron main.js"
+    "start": "electron main.js",
+    "mac1":  "electron-packager ./ --platform=darwin --arch=x64 --icon=sage2.icns --overwrite",
+    "mac2":  "electron-installer-dmg sage2-ui-darwin-x64/sage2-ui.app sage2-ui --out=sage2-ui-darwin-x64 --icon=sage2.icns --background=background.png --overwrite",
+    "win":   "electron-packager .  --platform=win32 --arch=x64 --icon=sage2.ico --overwrite",
+    "lnx1":  "electron-packager ./ --platform=linux --arch=x64 --icon=sage2.icns --overwrite",
+    "lnx2":  "electron-installer-redhat --src sage2-ui-linux-x64 --dest . --arch x86_64",
+    "lnx3":  "electron-installer-debian --src sage2-ui-linux-x64 --dest . --arch amd64",
+    "lnx4":  "zip -r -9 sage2-ui-linux-x64 sage2-ui-linux-x64"
   },
-  "keywords": [
+ "keywords": [
     "Electron",
     "SAGE2"
   ],
   "author": "Luc Renambot",
   "license": "CC0-1.0",
   "devDependencies": {
-    "electron-prebuilt": "latest",
+    "electron": "latest",
+    "electron-installer-dmg": "latest",
+    "electron-winstaller": "latest",
+    "electron-installer-redhat": "latest",
+    "electron-installer-debian": "latest",
     "electron-packager": "latest"
   }
 }

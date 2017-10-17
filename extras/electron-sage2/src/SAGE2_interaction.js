@@ -11,7 +11,8 @@
 /* global showSAGE2Message, showDialog */
 /* global cancelIdleCallback, requestIdleCallback */
 /* global showSAGE2PointerOverlayNoMouse, hideSAGE2PointerOverlayNoMouse */
-/* global pointerClick, sagePointerDisabled, sagePointerEnabled */
+/* global sagePointerDisabled, sagePointerEnabled */
+/* global viewOnlyMode */
 
 "use strict";
 
@@ -37,12 +38,12 @@ function SAGE2_interaction(wsio) {
 	this.fileUploadComplete = null;
 	this.mediaStream = null;
 	this.mediaVideo  = null;
-	this.mediaResolution = 2;
-	this.mediaQuality    = 9;
+	this.mediaResolution = 2; // 2;
+	this.mediaQuality    = 8; // 9;
 	this.chromeDesktopCaptureEnabled = false;
 	this.broadcasting  = false;
+	this.pointering    = false;  // pointer on/off
 	this.gotRequest    = false;
-	// this.videoTimer    = null;
 	this.pix           = null;
 	this.chunk         = 32 * 1024; // 32 KB
 	this.maxUploadSize = 20 * (1024 * 1024 * 1024); // 20GB just as a precaution
@@ -55,51 +56,9 @@ function SAGE2_interaction(wsio) {
 	this.deltaX = 0;
 	this.deltaY = 0;
 	// Send frequency (frames per second)
-	this.sendFrequency = 25;
+	this.sendFrequency = 30;
 	// Timeout for when scrolling ends
 	this.scrollTimeId = null;
-
-	// Check if a domain cookie exists for the name
-	var cookieName = "Luc"; // getCookie('SAGE2_ptrName');
-	if (cookieName) {
-		localStorage.SAGE2_ptrName = cookieName;
-	}
-	// Check if a domain cookie exists for the color
-	var cookieColor = "#FF0000"; // getCookie('SAGE2_ptrColor');
-	if (cookieColor) {
-		localStorage.SAGE2_ptrColor = cookieColor;
-	}
-
-	// if (!cookieName && !localStorage.SAGE2_ptrColor) {
-	// 	showDialog('settingsDialog2');
-	// }
-
-	// Post message to the Chrome extension to register the UI
-	// if (__SAGE2__.browser.isChrome === true) {
-	// 	window.postMessage('SAGE2_registerUI', '*');
-	// }
-
-	// Deals with the name and color of the pointer
-	if (localStorage.SAGE2_ptrName  === undefined ||
-		localStorage.SAGE2_ptrName  === null ||
-		localStorage.SAGE2_ptrName  === "Default") {
-		if (hasMouse) {
-			localStorage.SAGE2_ptrName  = "SAGE2_user";
-		} else {
-			localStorage.SAGE2_ptrName  = "SAGE2_mobile";
-
-		}
-	}
-	if (localStorage.SAGE2_ptrColor === undefined ||
-		localStorage.SAGE2_ptrColor === null) {
-		localStorage.SAGE2_ptrColor = "#B4B4B4";
-	}
-
-	addCookie('SAGE2_ptrName',  localStorage.SAGE2_ptrName);
-	addCookie('SAGE2_ptrColor', localStorage.SAGE2_ptrColor);
-
-	// document.getElementById('sage2PointerLabel').value = localStorage.SAGE2_ptrName;
-	// document.getElementById('sage2PointerColor').value = localStorage.SAGE2_ptrColor;
 
 	this.wsio.emit('registerInteractionClient', {
 		name:  localStorage.SAGE2_ptrName,
@@ -238,6 +197,7 @@ function SAGE2_interaction(wsio) {
 				formdata.append("file" + i.toString(), files[i]);
 				formdata.append("dropX", dropX);
 				formdata.append("dropY", dropY);
+				formdata.append("open",  true);
 
 				formdata.append("SAGE2_ptrName",  localStorage.SAGE2_ptrName);
 				formdata.append("SAGE2_ptrColor", localStorage.SAGE2_ptrColor);
@@ -245,14 +205,18 @@ function SAGE2_interaction(wsio) {
 				var xhr = new XMLHttpRequest();
 				// add the request into the array
 				this.array_xhr.push(xhr);
-				xhr.open("POST", "upload", true);
+				// build the URL
+				var server = 'https://' + configuration.host + ':' + configuration.secure_port;
+				server += '/upload';
+				xhr.open("POST", server, true);
 				xhr.upload.id = "file" + i.toString();
 				xhr.upload.addEventListener('progress', progressCallback, false);
 				xhr.addEventListener('load', loadCallback, false);
 				xhr.send(formdata);
 			} else {
-				// show message for 4 seconds
-				showSAGE2Message("File: " + files[i].name + " is too large (max size is " + (this.maxUploadSize / (1024 * 1024 * 1024)) + " GB)");
+				// show error message
+				showSAGE2Message("File: " + files[i].name + " is too large (max size is " +
+					(this.maxUploadSize / (1024 * 1024 * 1024)) + " GB)");
 			}
 		}
 	};
@@ -277,7 +241,8 @@ function SAGE2_interaction(wsio) {
 		}
 		ext = ext.toLowerCase();
 		if (youtube >= 0) {
-			mimeType = "video/youtube";
+			// mimeType = "video/youtube";
+			mimeType = "application/url";
 		} else if (ext === "jpg") {
 			mimeType = "image/jpeg";
 		} else if (ext === "jpeg") {
@@ -294,6 +259,9 @@ function SAGE2_interaction(wsio) {
 			mimeType = "video/webm";
 		} else if (ext === "pdf") {
 			mimeType = "application/pdf";
+		} else {
+			// madeup mimetype for drag-drop URL
+			mimeType = "application/url";
 		}
 		console.log("URL: " + url + ", type: " + mimeType);
 
@@ -315,14 +283,6 @@ function SAGE2_interaction(wsio) {
 		} else {
 			button = buttonId;
 		}
-		button.addEventListener('pointerlockchange', function(e) {
-			console.log('button pointerlockchange', e);
-			e.preventDefault();
-			e.stopPropagation();
-		});
-		button.requestPointerLock = button.requestPointerLock       ||
-									button.mozRequestPointerLock    ||
-									button.webkitRequestPointerLock;
 
 		// Ask the browser to lock the pointer
 		if (button.requestPointerLock) {
@@ -361,6 +321,26 @@ function SAGE2_interaction(wsio) {
 	};
 
 	/**
+	 * Removes all the event listeners.
+	 *
+	 * @method     removeListeners
+	 */
+	this.removeListeners = function() {
+		document.removeEventListener('mousedown',  this.pointerPress,     false);
+		document.removeEventListener('mousemove',  this.pointerMove,      false);
+		document.removeEventListener('mouseup',    this.pointerRelease,   false);
+		document.removeEventListener('dblclick',   this.pointerDblClick,  false);
+		document.removeEventListener('wheel',      this.pointerScroll,    false);
+		document.removeEventListener('keydown',    this.pointerKeyDown,   false);
+		document.removeEventListener('keyup',      this.pointerKeyUp,     false);
+		document.removeEventListener('keypress',   this.pointerKeyPress,  false);
+
+		document.removeEventListener('pointerlockerror',  this.pointerLockError,  false);
+		document.removeEventListener('pointerlockchange', this.pointerLockChange, false);
+		document.getElementById('mediaVideo').removeEventListener('canplay', this.streamCanPlay,               false);
+	};
+
+	/**
 	* Called when a pointer lock change is triggered, release or aquire
 	*
 	* @method pointerLockChangeMethod
@@ -371,10 +351,9 @@ function SAGE2_interaction(wsio) {
 								document.mozPointerLockElement ||
 								document.webkitPointerLockElement;
 
-		console.log('pointerLockChangeMethod', pointerLockElement);
-
 		// disable SAGE2 Pointer
 		if (pointerLockElement === undefined || pointerLockElement === null) {
+			this.pointering = false;
 			this.wsio.emit('stopSagePointer');
 
 			document.removeEventListener('mousedown',  this.pointerPress,     false);
@@ -386,10 +365,11 @@ function SAGE2_interaction(wsio) {
 			document.removeEventListener('keyup',      this.pointerKeyUp,     false);
 			document.removeEventListener('keypress',   this.pointerKeyPress,  false);
 
-			document.addEventListener('click', pointerClick, false);
-
-			// sagePointerDisabled();
+			var pbutton = $$('pointer_id').$view.querySelector('button');
+			pbutton.style.backgroundColor = "#3498db";
+			pbutton.innerText = "Show pointer";
 		} else {
+			this.pointering = true;
 			// enable SAGE2 Pointer
 			this.wsio.emit('startSagePointer', {label: localStorage.SAGE2_ptrName, color: localStorage.SAGE2_ptrColor});
 
@@ -402,9 +382,9 @@ function SAGE2_interaction(wsio) {
 			document.addEventListener('keyup',      this.pointerKeyUp,     false);
 			document.addEventListener('keypress',   this.pointerKeyPress,  false);
 
-			document.removeEventListener('click',	pointerClick, false);
-
-			// sagePointerEnabled();
+			var pbutton = $$('pointer_id').$view.querySelector('button');
+			pbutton.style.backgroundColor = "#00b359";
+			pbutton.innerText = "Stop pointer [ESC]";
 		}
 	};
 
@@ -415,7 +395,7 @@ function SAGE2_interaction(wsio) {
 	*/
 	this.startScreenShare = function() {
 		if (!this.broadcasting) {
-			// window.postMessage('SAGE2_capture_desktop', '*');
+			// nothing
 		}
 	};
 
@@ -445,41 +425,39 @@ function SAGE2_interaction(wsio) {
 				// }
 				for (var i = 0; i < sources.length; ++i) {
 					if (target === "window" && sources[i].name == "SAGE2 - Electron") {
-						navigator.getUserMedia({
-								audio: false,
-								video: {
-									mandatory: {
-										chromeMediaSource: 'desktop',
-										chromeMediaSourceId: sources[i].id,
-										minWidth: 1280,
-										maxWidth: 1920,
-										minHeight: 720,
-										maxHeight: 1080
-									}
+
+						navigator.mediaDevices.getUserMedia({
+							audio: false,
+							video: {
+								mandatory: {
+									chromeMediaSource: 'desktop',
+									chromeMediaSourceId: sources[i].id,
+									minWidth: 1280,
+									maxWidth: 1920,
+									minHeight: 720,
+									maxHeight: 1080
 								}
-							},
-							_this.streamSuccess, _this.streamFail
-						);
+							}
+							}).then(_this.streamSuccess).catch(_this.streamFail);
 						return;
 					}
 					if (target === "screen" &&
 						(sources[i].name == "Entire screen" ||
 						sources[i].name == "Screen 1")) {
-						navigator.getUserMedia({
-								audio: false,
-								video: {
-									mandatory: {
-										chromeMediaSource: 'desktop',
-										chromeMediaSourceId: sources[i].id,
-										minWidth: 1280,
-										maxWidth: 1920,
-										minHeight: 720,
-										maxHeight: 1080
-									}
+
+						navigator.mediaDevices.getUserMedia({
+							audio: false,
+							video: {
+								mandatory: {
+									chromeMediaSource: 'desktop',
+									chromeMediaSourceId: sources[i].id,
+									minWidth: 1280,
+									maxWidth: 1920,
+									minHeight: 720,
+									maxHeight: 1080
 								}
-							},
-							_this.streamSuccess, _this.streamFail
-						);
+							}
+							}).then(_this.streamSuccess).catch(_this.streamFail);
 						return;
 					}
 				}
@@ -494,10 +472,18 @@ function SAGE2_interaction(wsio) {
 	* @param stream {Object} media stream
 	*/
 	this.streamSuccessMethod = function(stream) {
-		console.log("media capture success!");
-
 		this.mediaStream = stream;
-		this.mediaStream.onended = this.streamEnded;
+
+		// deprecated:
+		// this.mediaStream.onended = this.streamEnded;
+		// Get list of tracks and set the handler on the track
+		var tracks = stream.getTracks();
+		if (tracks.length > 0) {
+			// Place the callback when the track is ended
+			tracks[0].onended = this.streamEnded;
+		}
+
+		console.log('Track', stream, tracks[0])
 
 		var mediaVideo = document.getElementById('mediaVideo');
 		mediaVideo.src = window.URL.createObjectURL(this.mediaStream);
@@ -533,6 +519,7 @@ function SAGE2_interaction(wsio) {
 	*/
 	this.streamEndedMethod = function(event) {
 		this.broadcasting = false;
+		// cancelAnimationFrame(this.req);
 		cancelIdleCallback(this.req);
 		this.wsio.emit('stopMediaStream', {id: this.uniqueID + "|0"});
 	};
@@ -545,7 +532,7 @@ function SAGE2_interaction(wsio) {
 	*/
 	this.stepMethod = function(deadline) {
 		// if more than 10ms of freetime, go for it
-		if (deadline.timeRemaining() > 10) {
+		if (deadline.timeRemaining() > 1) {
 			if (this.gotRequest) {
 				this.pix = this.captureMediaFrame();
 				this.sendMediaStreamFrame();
@@ -573,10 +560,12 @@ function SAGE2_interaction(wsio) {
 				return;
 			}
 
-			var widths = [Math.min(852,  mediaVideo.videoWidth),
-						Math.min(1280, mediaVideo.videoWidth),
-						Math.min(1920, mediaVideo.videoWidth),
-						mediaVideo.videoWidth];
+			var widths = [
+				Math.min(852,  mediaVideo.videoWidth),
+				Math.min(1280, mediaVideo.videoWidth),
+				Math.min(1920, mediaVideo.videoWidth),
+				mediaVideo.videoWidth
+			];
 
 			for (var i = 0; i < 4; i++) {
 				var height = parseInt(widths[i] * mediaVideo.videoHeight / mediaVideo.videoWidth, 10);
@@ -590,13 +579,33 @@ function SAGE2_interaction(wsio) {
 			var frame = this.captureMediaFrame();
 			this.pix  = frame;
 			var raw   = atob(frame.split(",")[1]); // base64 to string
-			this.wsio.emit('startNewMediaStream', {id: this.uniqueID + "|0",
+			this.wsio.emit('startNewMediaStream', {
+				id: this.uniqueID + "|0",
 				title: localStorage.SAGE2_ptrName + ": Shared Screen",
 				color: localStorage.SAGE2_ptrColor,
 				src: raw, type: "image/jpeg", encoding: "binary",
-				width: mediaVideo.videoWidth, height: mediaVideo.videoHeight});
-
+				width: mediaVideo.videoWidth, height: mediaVideo.videoHeight
+			});
+			console.log('share', mediaVideo.videoWidth, mediaVideo.videoHeight)
 			this.broadcasting = true;
+
+			// Using requestAnimationFrame
+			// var _this = this;
+			// var lastCapture = performance.now();
+			// function step(timestamp) {
+			// 	console.log('    update', timestamp - lastCapture);
+			// 	var interval = timestamp - lastCapture;
+			// 	// if (_this.broadcasting && interval >= 16) {
+			// 		lastCapture = timestamp;
+			// 		if (_this.gotRequest) {
+			// 			console.log('  Capture', timestamp);
+			// 			_this.pix = _this.captureMediaFrame();
+			// 			_this.sendMediaStreamFrame();
+			// 		}
+			// 		_this.req = requestAnimationFrame(step);
+			// 	// }
+			// }
+			// this.req = requestAnimationFrame(step);
 
 			// Request an idle callback for screencapture
 			this.req = requestIdleCallback(this.step);
@@ -696,7 +705,6 @@ function SAGE2_interaction(wsio) {
 			var px  = this.deltaX * scale;
 			var py  = this.deltaY * scale;
 			// Send the event
-	console.log('pointerMove', Math.round(px), Math.round(py), this.deltaX, this.deltaY, scale);
 			this.wsio.emit('pointerMove', {dx: Math.round(px), dy: Math.round(py)});
 			// Reset the accumulators
 			this.deltaX = 0;
@@ -772,6 +780,7 @@ function SAGE2_interaction(wsio) {
 	* @param event {Object} key event
 	*/
 	this.pointerKeyDownMethod = function(event) {
+		// Get the code of the event
 		var code = parseInt(event.keyCode, 10);
 		// exit if 'esc' key
 		if (code === 27) {
@@ -892,6 +901,7 @@ function SAGE2_interaction(wsio) {
 			var mediaCanvas = document.getElementById('mediaCanvas');
 			mediaCanvas.width  = parseInt(res[0], 10);
 			mediaCanvas.height = parseInt(res[1], 10);
+			console.log("Media resolution: " + event.target.options[this.mediaResolution].value);
 		}
 	};
 
@@ -927,15 +937,8 @@ function SAGE2_interaction(wsio) {
 	this.changeScreenShareQuality    = this.changeScreenShareQualityMethod.bind(this);
 	this.step                        = this.stepMethod.bind(this);
 
-	document.addEventListener('pointerlockerror',        this.pointerLockError,  false);
-	document.addEventListener('mozpointerlockerror',     this.pointerLockError,  false);
-	document.addEventListener('pointerlockchange',       this.pointerLockChange, false);
-	// document.addEventListener('mozpointerlockchange',    this.pointerLockChange, false);
-
-	document.addEventListener('pointerlockerror', function(e) {
-		console.log('Pointer error', e)
-	}, false);
-
+	document.addEventListener('pointerlockerror',  this.pointerLockError,  false);
+	document.addEventListener('pointerlockchange', this.pointerLockChange, false);
 
 	// document.getElementById('sage2PointerLabel').addEventListener('input',      this.changeSage2PointerLabel,     false);
 	// document.getElementById('sage2PointerColor').addEventListener('input',      this.changeSage2PointerColor,     false);
@@ -943,25 +946,5 @@ function SAGE2_interaction(wsio) {
 	// document.getElementById('sage2PointerColorInit').addEventListener('input',  this.changeSage2PointerColor,     false);
 	// document.getElementById('screenShareResolution').addEventListener('change', this.changeScreenShareResolution, false);
 	// document.getElementById('screenShareQuality').addEventListener('input',     this.changeScreenShareQuality,    false);
-	document.getElementById('mediaVideo').addEventListener('canplay',           this.streamCanPlay,               false);
-
-
-	// -----------
-	// Shim for requestIdleCallback (available on Chrome)
-	// -----------
-	window.requestIdleCallback = window.requestIdleCallback || function(cb) {
-		var start = Date.now();
-		return setTimeout(function() {
-			cb({
-				didTimeout: false,
-				timeRemaining: function() {
-					return Math.max(0, 50 - (Date.now() - start));
-				}
-			});
-		}, 1);
-	};
-	window.cancelIdleCallback =	window.cancelIdleCallback || function(id) {
-		clearTimeout(id);
-	};
-	// -----------
+	document.getElementById('mediaVideo').addEventListener('canplay', this.streamCanPlay,               false);
 }

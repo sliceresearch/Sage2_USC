@@ -425,6 +425,8 @@ function SAGE2_init() {
 			interactor.captureDesktop(event.data.mediaSourceId);
 		}
 		if (event.data.cmd === "screenshot") {
+			// declare mime type to be "image/jpeg" for screenshots
+			event.data.mime = "image/jpeg";
 			wsio.emit('loadImageFromBuffer', event.data);
 		}
 		if (event.data.cmd === "openlink") {
@@ -447,8 +449,8 @@ function SAGE2_init() {
 //
 function showSAGE2Message(message, delay) {
 	var aMessage = webix.alert({
-		type:  "alert-error",
-		title: "SAGE2 Error",
+		type:  "alert-warning",
+		title: "SAGE2 Message",
 		ok:    "OK",
 		width: "40%",
 		text:  "<span style='font-weight:bold;'>" + message + "</span>"
