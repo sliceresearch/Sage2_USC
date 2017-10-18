@@ -7709,29 +7709,39 @@ function pointerReleaseOnStaticUI(uniqueID, pointerX, pointerY, obj) {
 	var remote = obj.data;
 	var app = dropSelectedItem(uniqueID, false, null);
 	if (app !== null && SAGE2Items.applications.list.hasOwnProperty(app.application.id) && remote.connected === "on") {
-		var sharedId = app.application.id + "_" + config.host + ":" + config.secure_port + "+" + remote.wsio.id;
-		if (sharedApps[app.application.id] === undefined) {
-			sharedApps[app.application.id] = [{wsio: remote.wsio, sharedId: sharedId}];
-		} else {
-			sharedApps[app.application.id].push({wsio: remote.wsio, sharedId: sharedId});
-		}
-
-		SAGE2Items.applications.editButtonVisibilityOnItem(app.application.id, "syncButton", true);
-
-		remote.wsio.emit('addNewSharedElementFromRemoteServer',
-			{application: app.application, id: sharedId, remoteAppId: app.application.id});
-		broadcast('setAppSharingFlag', {id: app.application.id, sharing: true});
-
-		var eLogData = {
-			host: remote.wsio.remoteAddress.address,
-			port: remote.wsio.remoteAddress.port,
-			application: {
-				id: app.application.id,
-				type: app.application.application
-			}
-		};
-		addEventToUserLog(uniqueID, {type: "shareApplication", data: eLogData, time: Date.now()});
+		shareApplicationWithRemoteSite(uniqueID, app, remote);
 	}
+}
+
+/**
+ * Shares an application with a remote site
+ *
+ * @method shareApplicationWithRemoteSite
+ * @param  {Object} wsio - The websocket of sender.
+ * @param  {Object} data - The object needed to get menu, properties described below.
+ */
+function shareApplicationWithRemoteSite(uniqueID, app, remote) {
+	var sharedId = app.application.id + "_" + config.host + ":" + config.secure_port + "+" + remote.wsio.id;
+	if (sharedApps[app.application.id] === undefined) {
+		sharedApps[app.application.id] = [{wsio: remote.wsio, sharedId: sharedId}];
+	} else {
+		sharedApps[app.application.id].push({wsio: remote.wsio, sharedId: sharedId});
+	}
+	SAGE2Items.applications.editButtonVisibilityOnItem(app.application.id, "syncButton", true);
+
+	remote.wsio.emit('addNewSharedElementFromRemoteServer',
+		{application: app.application, id: sharedId, remoteAppId: app.application.id});
+	broadcast('setAppSharingFlag', {id: app.application.id, sharing: true});
+
+	var eLogData = {
+		host: remote.wsio.remoteAddress.address,
+		port: remote.wsio.remoteAddress.port,
+		application: {
+			id: app.application.id,
+			type: app.application.application
+		}
+	};
+	addEventToUserLog(uniqueID, {type: "shareApplication", data: eLogData, time: Date.now()});
 }
 
 function pointerReleaseOnPortal(uniqueID, portalId, localPt, data) {
@@ -9363,12 +9373,15 @@ function wsRequestAppContextMenu(wsio, data) {
 		if (SAGE2Items.applications.list.hasOwnProperty(obj.data.id)) {
 			// if an app was under the right-click
 			if (SAGE2Items.applications.list[obj.data.id].contextMenu) {
+				// before passing back the menu, fill in the share options.
+				let contextMenu = SAGE2Items.applications.list[obj.data.id].contextMenu;
+				fillContextMenuWithShareSites(contextMenu, obj.data.id);
 				// If we already have the menu info, send it
 				wsio.emit('appContextMenuContents', {
 					x: data.xClick,
 					y: data.yClick,
 					app: obj.data.id,
-					entries: SAGE2Items.applications.list[obj.data.id].contextMenu
+					entries: contextMenu
 				});
 			} else { // Else, app did not submit menu, give default (not loaded).
 				wsio.emit('appContextMenuContents', {
@@ -9390,6 +9403,48 @@ function wsRequestAppContextMenu(wsio, data) {
 			});
 		}
 
+	}
+}
+
+/**
+ * Given a context menu, will fill with appropriate share sites.
+ *
+ * @method fillContextMenuWithShareSites
+ * @param  {Object} contextMenu - The context menu of the application.
+ */
+function fillContextMenuWithShareSites(contextMenu, appId) {
+	let shareIndex = -1;
+	let shareDescription = "Share with:"; // match for this description
+	let maximizeIndex = -1;
+	let maximizeDescription = "Maximize"; // also look for maximize description
+	let entry;
+	// first search for the share entry
+	for (let i = 0; i < contextMenu.length; i++) {
+		if (contextMenu[i].description === shareDescription) {
+			shareIndex = i;
+		} else if (contextMenu[i].description === maximizeDescription) {
+			maximizeIndex = i;
+		}
+	}
+	// if there was no share entry, they need to add it
+	if (shareIndex === -1) {
+		entry = {};
+		entry.description = shareDescription;
+		contextMenu.splice(maximizeIndex + 1, 0, entry); // add after the maximize entry
+	} else { // otherwise get the reference
+		entry = contextMenu[shareIndex];
+	}
+	entry.children = []; // clear out the sites, there may have been a status change.
+
+	// for each remote site, check if connected, if so add a share option
+	for (let i = 0; i < remoteSites.length; i++) {
+		if (remoteSites[i].connected === "on") {
+			entry.children.push({
+				description: remoteSites[i].name,
+				callback: "SAGE2_shareWithSite",
+				parameters: { app: appId, siteName: remoteSites[i].name, remoteSiteIndex: i }
+			});
+		}
 	}
 }
 
@@ -9442,6 +9497,15 @@ function wsCallFunctionOnApp(wsio, data) {
 					SAGE2Items.applications.list[data.app],
 					true);
 			}
+			return;
+		} else if (data.func === "SAGE2_shareWithSite"
+			&& (remoteSites[data.parameters.remoteSiteIndex].connected === "on")) {
+			// share this application with a site.
+			let uniqueID = wsio.id;
+			// the release
+			let app = {application: SAGE2Items.applications.list[data.app]};
+			let remote = remoteSites[data.parameters.remoteSiteIndex];
+			shareApplicationWithRemoteSite(uniqueID, app, remote);
 			return;
 		}
 
