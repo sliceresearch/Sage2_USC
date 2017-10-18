@@ -2,7 +2,7 @@
 <html>
 <head lang="en">
 <meta charset="utf-8">
-<title>SAGE2 console</title>
+<title>SAGE2 performance</title>
 
 <script type="text/license">
 	// SAGE2 is available for use under the SAGE2 Software License
@@ -13,12 +13,12 @@
 	//
 	// See full text, terms and conditions in the LICENSE.txt included file
 	//
-	// Copyright (c) 2014-15
+	// Copyright (c) 2017
 </script>
 
 <script src="../src/websocket.io.js"></script>
 <script src="../src/SAGE2_runtime.js"></script>
-<script src="SAGE2_console.js"></script>
+<script src="SAGE2_performance.js"></script>
 
 
 <link rel="stylesheet" type="text/css" href="style.css" media="screen" />
@@ -28,19 +28,24 @@
 <body onload="SAGE2_init()">
 
 	<header>
-		<h1>SAGE2 console</h1>
+		<h1>SAGE2 Performance Monitoring</h1>
 	</header>
 
 	<main>
 
 		<section class="siteType">
-			<h2>SAGE console messages</h2>
-			<pre id="terminal" class="mycode" style="height:40em;"></pre>
-			<input id="command" class="commandline" type="text" name="command" value="" autofocus>
+			<h2>Server</h2>
+			<pre id="terminal1" class="mycode" style="height:8em;"></pre>
 		</section>
 
 		<section class="siteType">
-			<p>Type commands in the above text box (help, for a list of commands)</p>
+			<h2>Display clients</h2>
+			<pre id="terminal2" class="mycode" style="height:12em;"></pre>
+		</section>
+
+		<section class="siteType">
+			<h2>Server metrics</h2>
+			<pre id="terminal3" class="mycode" style="height:40em;"></pre>
 		</section>
 
 	</main>

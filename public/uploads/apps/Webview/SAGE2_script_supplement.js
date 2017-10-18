@@ -72,4 +72,104 @@ document.addEventListener("keyup", function(e) {
 });
 
 
+/**
+ * Loads a css file into the DOM
+ *
+ * @method     loadCSS
+ * @param      {String}  res     The resource
+ */
+function loadCSS(res) {
+	var style = document.createElement("link");
+	style.setAttribute("type", "text/css");
+	style.setAttribute("rel",  "stylesheet");
+	style.setAttribute("href", res);
+	style.onload = style.onreadystatechange = function() {
+		console.log('loadCCS> file loaded: ' + res);
+	};
+	document.body.appendChild(style);
+}
+
+/**
+ * Loads a js file into the DOM
+ *
+ * @method     loadJS
+ * @param      {String}    res     The resource
+ * @param      {Function}  cb      callback to call when done
+ */
+function loadJS(res, cb) {
+	var script = document.createElement("script");
+	script.type  = "text/javascript";
+	script.async = false;
+	script.src = res;
+	script.onload = script.onreadystatechange = function() {
+		console.log('loadJS> file loaded: ' + res);
+		if (cb) {
+			cb();
+		}
+	};
+	document.body.appendChild(script);
+}
+
+// Start the code
+// --------------
+
+// wait for the page (webview) to load
+var scriptAddInterval = setInterval(function() {
+	if (document.readyState === "complete") {
+		// stop trying
+		clearInterval(scriptAddInterval);
+		// load some runtime files and process hack
+		if (location.hostname.indexOf("appear.in") !== -1) {
+			// apparently JQuery is already loaded in appear.in
+			// just call the hack
+			processAppearIn();
+		}
+	}
+	// try to load every second till done
+}, 1000);
+
+
+// Specific to appear.in hack
+// --------------------------
+
+function processAppearIn() {
+	var doneCam  = false;
+	var doneAin  = false;
+	var doneAout = false;
+
+	var scriptSearch = setInterval(function() {
+		var cam = $('[name="cameraInputSelector"]').val();
+		if (cam && !doneCam) {
+			console.log('Appear.in> Found cam: ' + cam);
+			$('[name="cameraInputSelector"]').attr('multiple', true);
+			var hcam = $('[name="cameraInputSelector"]').height();
+			$('[name="cameraInputSelector"]').height(2 * hcam);
+			doneCam = true;
+		}
+		var ain = $('[name="audioInputSelector"]').val();
+		if (ain && !doneAin) {
+			console.log('Appear.in> Found audio input: ' + ain);
+			$('[name="audioInputSelector"]').attr('multiple', true);
+			var hin = $('[name="audioInputSelector"]').height();
+			$('[name="audioInputSelector"]').height(2 * hin);
+			doneAin = true;
+		}
+		var aout = $('[name="audioOutputSelector"]').val();
+		if (aout && !doneAout) {
+			console.log('Appear.in> Found audio output: ' + aout);
+			$('[name="audioOutputSelector"]').attr('multiple', true);
+			var hout = $('[name="audioOutputSelector"]').height();
+			$('[name="audioOutputSelector"]').height(2 * hout);
+			doneAout = true;
+		}
+		if (doneCam && doneAin && doneAout) {
+			// if all done, cancel the timer
+			clearInterval(scriptSearch);
+			console.log('Appear.in> All done hacking');
+		} else {
+			console.log('Appear.in> Still trying');
+		}
+		// try every 500ms till done
+	}, 500);
+}
 

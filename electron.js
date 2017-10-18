@@ -26,8 +26,11 @@ const app = electron.app;
 const BrowserWindow = electron.BrowserWindow;
 
 // parsing command-line arguments
-var commander  = require('commander');
-var version    = require('./package.json').version;
+var commander = require('commander');
+// get hardware and performance data
+var si = require('systeminformation');
+// Get the version from the package file
+var version = require('./package.json').version;
 
 /**
  * Setup the command line argument parsing (commander module)
@@ -280,6 +283,16 @@ function createWindow() {
 	mainWindow.on('closed', function() {
 		// Dereference the window object
 		mainWindow = null;
+	});
+
+	// when the display client is loaded
+	mainWindow.webContents.on('did-finish-load', function() {
+		// Get the basic information of the system
+		si.getStaticData(function(data) {
+			// Send it to the page, since it has the connection
+			// to the server
+			mainWindow.webContents.send('hardwareData', data);
+		});
 	});
 
 	// If the window opens before the server is ready,
