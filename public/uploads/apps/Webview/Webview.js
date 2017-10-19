@@ -106,6 +106,10 @@ var Webview = SAGE2_App.extend({
 			// ipython notebook file are link to nbviewer.jupyter.org online
 			var host = this.config.host + ':' + this.config.port;
 			view_url = "https://nbviewer.jupyter.org/url/" + host + view_url;
+		} else if (view_url.startsWith("http://"+this.config.host + ':' + this.config.port+"//user/apps")) {
+			// Locally hosted WebViews are assumed to be Unity applications
+			// Move to more dedicated url later? //users/apps/unity ?
+			this.contentType = "unity";
 		}
 
 		// Store the zoom level, when in desktop emulation
@@ -723,6 +727,12 @@ var Webview = SAGE2_App.extend({
 						this.playPause();
 						return;
 					}
+				}
+
+				if (this.contentType === "unity") {
+					// Bit of a hack to allow Unity InputManager controls to work
+					// Only upper case characters trigger InputManager -- Arthur
+					data.character = data.character.toUpperCase();
 				}
 
 				this.element.sendInputEvent({
