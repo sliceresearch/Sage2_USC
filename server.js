@@ -8718,7 +8718,7 @@ function deleteApplication(appId, portalId) {
 			sender.wsio.emit('stopMediaCapture', {streamId: sender.streamId});
 		}
 	} else if (application === "JupyterLab") {
-		broadcast('jupyterShareTerminated', {id: appId})
+		broadcast('jupyterShareTerminated', {id: appId});
 	}
 
 	var stickingItems = stickyAppHandler.getFirstLevelStickingItems(app);
@@ -10090,7 +10090,7 @@ function wsStartJupyterSharing(wsio, data) {
 
 			console.log(appInstance.id);
 		}
-	);	
+	);
 }
 
 function wsUpdateJupyterSharing(wsio, data) {

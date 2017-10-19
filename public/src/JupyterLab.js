@@ -57,7 +57,7 @@ var JupyterLab = SAGE2_App.extend({
 
 		console.log(this.sage2_width, this.sage2_height);
 		console.log(data.width, data.height);
-		
+
 		if (newAspect > this.imgAspect) { // wider
 			this.sendResize(this.sage2_height * newAspect, this.sage2_height);
 		} else { // taller
