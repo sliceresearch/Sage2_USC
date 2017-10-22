@@ -11,5 +11,8 @@
 /**
  * SAGE2 SLICE Pointer
  *
- * @class SlicePointer
+ * @module server
+ * @submodule slicepointer
  */
+// require variables to be declared
+"use strict";

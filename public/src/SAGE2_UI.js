@@ -95,6 +95,30 @@ var note;
 
 var viewOnlyMode;
 
+// SLICE
+var params = {};
+
+/** SLICE
+ * JavaScript Get URL Parameter
+ * 
+ * https://www.kevinleary.net/javascript-get-url-parameters/
+ * 
+ * @param String prop The specific URL parameter you want to retreive the value for
+ * @return String|Object If prop is provided a string value is returned, otherwise an object of all properties is returned
+ */
+function getUrlParams( prop ) {
+    var search = decodeURIComponent( window.location.href.slice( window.location.href.indexOf( '?' ) + 1 ) );
+    var definitions = search.split( '&' );
+
+    definitions.forEach( function( val, key ) {
+        var parts = val.split( '=', 2 );
+        params[ parts[ 0 ] ] = parts[ 1 ];
+    } );
+
+    return ( prop && prop in params ) ? params[ prop ] : params;
+}
+
+
 /**
  * Reload the page if a application cache update is available
  *
@@ -1245,8 +1269,9 @@ function pointerClick(event) {
  */
 function handleClick(element) {
 	// Menu Buttons
+	params = getUrlParams();
 	if (element.id === "sage2pointer"        || element.id === "sage2pointerContainer" || element.id === "sage2pointerLabel") {
-		interactor.startSAGE2Pointer(element.id);
+		interactor.startSAGE2Pointer(element.id, params);
 	} else if (element.id === "sharescreen"  || element.id === "sharescreenContainer"  || element.id === "sharescreenLabel") {
 		interactor.startScreenShare();
 	} else if (element.id === "applauncher"  || element.id === "applauncherContainer"  || element.id === "applauncherLabel") {
