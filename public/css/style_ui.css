@@ -240,17 +240,9 @@ h2 {
 
 /***** Light Box    *****/
 #sage2pointerDialog {
-	top: 50%;
-	left: 50%;
-	-webkit-transform: translate(-50%, -50%);
-	-moz-transform: translate(-50%, -50%);
-	-ms-transform: translate(-50%, -50%);
-	transform: translate(-50%, -50%);
 }
 
 #appLauncherDialog {
-	left: 15%;
-	top: 15%;
 	width: 70%;
 	height: 70%;
 }
@@ -291,8 +283,6 @@ h2 {
 }
 
 #mediaBrowserDialog {
-	left: 25%;
-	top: 25%;
 	width: 50%;
 	height: 50%;
 }
@@ -366,12 +356,7 @@ h2 {
 }
 
 #arrangementDialog {
-	top: 50%;
-	left: 50%;
-	-webkit-transform: translate(-50%, -50%);
-	-moz-transform: translate(-50%, -50%);
-	-ms-transform: translate(-50%, -50%);
-	transform: translate(-50%, -50%);
+
 }
 
 #arrangementItems {
@@ -427,12 +412,7 @@ h2 {
 }
 
 #createpartitionsDialog {
-	top: 50%;
-	left: 50%;
-	-webkit-transform: translate(-50%, -50%);
-	-moz-transform: translate(-50%, -50%);
-	-ms-transform: translate(-50%, -50%);
-	transform: translate(-50%, -50%);
+
 }
 
 #createpartitionsItems {
@@ -453,12 +433,7 @@ h2 {
 }
 
 #infoDialog {
-	top: 50%;
-	left: 50%;
-	-webkit-transform: translate(-50%, -50%);
-	-moz-transform: translate(-50%, -50%);
-	-ms-transform: translate(-50%, -50%);
-	transform: translate(-50%, -50%);
+
 }
 
 #infoItems {
@@ -507,38 +482,6 @@ h2 {
 
 #infoData {
 	margin: 10px;
-}
-
-#settingsDialog {
-	top: 50%;
-	left: 50%;
-	-webkit-transform: translate(-50%, -50%);
-	-moz-transform: translate(-50%, -50%);
-	-ms-transform: translate(-50%, -50%);
-	transform: translate(-50%, -50%);
-}
-
-#settingsDialog2 {
-	top: 50%;
-	left: 50%;
-	-webkit-transform: translate(-50%, -50%);
-	-moz-transform: translate(-50%, -50%);
-	-ms-transform: translate(-50%, -50%);
-	transform: translate(-50%, -50%);
-}
-
-#settingsItems {
-	margin: 10px 10px 66px;
-	overflow: auto;
-}
-
-#browserDialog {
-	top: 50%;
-	left: 50%;
-	-webkit-transform: translate(-50%, -50%);
-	-moz-transform: translate(-50%, -50%);
-	-ms-transform: translate(-50%, -50%);
-	transform: translate(-50%, -50%);
 }
 
 #sage2PointerSettingsContainer {
@@ -591,12 +534,6 @@ h2 {
 }
 
 #ffShareScreenDialog {
-	top: 50%;
-	left: 50%;
-	-webkit-transform: translate(-50%, -50%);
-	-moz-transform: translate(-50%, -50%);
-	-ms-transform: translate(-50%, -50%);
-	transform: translate(-50%, -50%);
 	width: 265px;
 	height: 60px;
 }
@@ -615,11 +552,6 @@ h2 {
 
 #localfileDialog {
 	top: 40%;
-	left: 50%;
-	-webkit-transform: translate(-50%, -50%);
-	-moz-transform: translate(-50%, -50%);
-	-ms-transform: translate(-50%, -50%);
-	transform: translate(-50%, -50%);
 	width: 510px;
 	height: 100px;
 }
@@ -636,12 +568,6 @@ h2 {
 }
 
 #uploadDialog {
-	top: 50%;
-	left: 50%;
-	-webkit-transform: translate(-50%, -50%);
-	-moz-transform: translate(-50%, -50%);
-	-ms-transform: translate(-50%, -50%);
-	transform: translate(-50%, -50%);
 	width: 310px;
 	height: 60px;
 }
@@ -799,8 +725,31 @@ The z-index is very important.
 	position:  absolute;
 	visibility: hidden;
 	border:     1px solid black;
-	background: white;
+	background: rgb(255, 248, 225);
 	z-index:    1999;
+}
+.appContextMenuEntry {
+	padding: 2px 5px;
+	cursor:default;
+}
+.appContextMenuEntry:first-of-type {
+	padding-top:5px;
+}
+.appContextMenuEntry:last-of-type {
+	padding-bottom:5px;
+}
+#appContextMenu .okButton {
+	border: 1px solid black;
+	padding:0 2px;
+	display:inline-block;
+	margin-left:5px;
+	cursor:pointer;
+}
+
+#appContextMenu .okButton:hover,
+#appContextMenu .noInputEntry:hover {
+	cursor:pointer;
+	background:lightgray !important;
 }
 
 #uiNoteMaker {
@@ -913,9 +862,11 @@ The z-index is very important.
 }
 
 .button {
-	padding: 10px 12px;
-	border-radius: 12px;
+	border:none;
+	padding: 6px 8px;
+	border-radius: 5px;
 	color: #FFFFFF;
+	cursor:pointer;
 	background-color: #787878;
 	-webkit-user-select: none;
 	-moz-user-select: none;
@@ -936,7 +887,18 @@ The z-index is very important.
 	z-index: 1002;
 	overflow: hidden;
 	cursor: default;
+
+	top: 50%;
+	left: 50%;
+	-webkit-transform: translate(-50%, -50%);
+	-moz-transform: translate(-50%, -50%);
+	-ms-transform: translate(-50%, -50%);
+	transform: translate(-50%, -50%);
 }
+
+.dialog-tab {display:none;}
+.active.dialog, .active.dialog-tab {display:block;}
+
 
 /***** File Browser *****/
 

@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+<meta charset="utf-8">
+<title>SAGE2 console</title>
+
+<script type="text/license">
+	// SAGE2 is available for use under the SAGE2 Software License
+	//
+	// University of Illinois at Chicago's Electronic Visualization Laboratory (EVL)
+	// and University of Hawai'i at Manoa's Laboratory for Advanced Visualization and
+	// Applications (LAVA)
+	//
+	// See full text, terms and conditions in the LICENSE.txt included file
+	//
+	// Copyright (c) 2014-15
+</script>
+
+<script src="../src/websocket.io.js"></script>
+<script src="../src/SAGE2_runtime.js"></script>
+
+
+<link rel="stylesheet" type="text/css" href="style.css" media="screen" />
+<style>
+	#main { color: white; text-align:left; font-size:14px; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; padding:20px;}
+	p { font-family:monospace;text-indent: initial; margin:1em 0; font-size:13.5px;}
+	b { color: crimson; font-weight:700; font-size:13.5px; font-family:monospace; margin-right:10px; min-width:80px; display:inline-block;}
+</style>
+</head>
+
+<body>
+	<div id="main">
+		listening...
+	</div>
+<script>
+(function(){ 
+	var wsio = new WebsocketIO();
+	var session = getCookie("session");
+
+	// open socket
+	wsio.open(function() {
+		wsio.emit('addClient', {
+			session: session,
+			requests: {
+				config:  true,
+				version: true,
+				time:    false,
+				console: true
+			}
+		});
+
+		wsio.on('userEvent', addUserEvent);
+	});
+
+	// Socket close event (ie server crashed)
+	wsio.on('close', function() {
+		var refresh = setInterval(function() {
+			// make a dummy request to test the server every 2 sec
+			var xhr = new XMLHttpRequest();
+			xhr.open("GET", "/", true);
+			xhr.onreadystatechange = function() {
+				if (xhr.readyState === 4 && xhr.status === 200) {
+					console.log("server ready");
+					// when server ready, clear the interval callback
+					clearInterval(refresh);
+					// and reload the page
+					window.location.reload();
+				}
+			};
+			xhr.send();
+		}, 2000);
+	});
+
+	let container = document.getElementById('main');
+
+	function addText(el, text) {
+		el.appendChild(document.createTextNode(text));
+	}
+
+	function addUserEvent(event) {
+		let p = document.createElement('p');
+
+		p.innerHTML += new Date() + '<br>';
+
+		let span = document.createElement('b');
+		addText(span, event.type);
+
+		p.appendChild(span);
+
+		console.log(event.data);
+
+		if (event.data) {
+
+			if (event.data.user) {
+				addText(p, event.data.user.name);
+			}
+			else if (event.data.label) {
+				addText(p, event.data.label);
+			}
+
+		}
+
+		container.appendChild(p);
+	}
+})();
+</script>
+
+</body>
+</html>
+

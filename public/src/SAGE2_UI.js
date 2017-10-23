@@ -1265,8 +1265,6 @@ function handleClick(element) {
 		}
 	} else if (element.id === "arrangement" || element.id === "arrangementContainer" || element.id === "arrangementLabel") {
 		showDialog('arrangementDialog');
-	} else if (element.id === "settings"    || element.id === "settingsContainer"    || element.id === "settingsLabel") {
-		showDialog('settingsDialog');
 	} else if (element.id === "browser") {
 		// Build a webix dialog
 		webix.ui({
@@ -1425,7 +1423,7 @@ function handleClick(element) {
 		data.func = "addClientIdAsEditor";
 		data.customLaunchParams = {
 			clientId: interactor.uniqueID,
-			clientName: document.getElementById('sage2PointerLabel').value
+			clientName: interactor.pointerValue
 		};
 		wsio.emit('launchAppWithValues', data);
 
@@ -1522,12 +1520,6 @@ function handleClick(element) {
 		hideDialog('infoDialog');
 		var awin3 = window.open("help/info.html", '_blank');
 		awin3.focus();
-	} else if (element.id === "settingsCloseBtn") {
-		// Settings Dialog
-		hideDialog('settingsDialog');
-	} else if (element.id === "settingsCloseBtn2") {
-		// Init Settings Dialog
-		hideDialog('settingsDialog2');
 	} else if (element.id.length > 14 && element.id.substring(0, 14) === "available_app_") {
 		// Application Selected
 		var application_selected = element.getAttribute("application");
@@ -2564,7 +2556,7 @@ function setAppContextMenuEntries(data) {
 					data.app = this.app;
 					data.func = this.callback;
 					data.parameters = this.parameters;
-					data.parameters.clientName = document.getElementById('sage2PointerLabel').value;
+					data.parameters.clientName = interactor.pointerLabel;
 					data.parameters.clientId   = interactor.uniqueID;
 					wsio.emit('callFunctionOnApp', data);
 				}
@@ -2583,9 +2575,12 @@ function setAppContextMenuEntries(data) {
 	// for each entry to add, create the div, app the properties, and effects
 	var workingDiv;
 	for (i = 0; i < entriesToAdd.length; i++) {
-		workingDiv = document.createElement('div');
+		var isSeparator = entriesToAdd[i].description === "separator";
+		workingDiv = document.createElement(isSeparator ? 'hr' : 'div');
+
 		// unique entry id
 		workingDiv.id = 'appContextMenuEntry' + i;
+
 		if (typeof entriesToAdd[i].entryColor === "string") {
 			// use given color if specified
 			workingDiv.startingBgColor = entriesToAdd[i].entryColor;
@@ -2594,14 +2589,9 @@ function setAppContextMenuEntries(data) {
 			workingDiv.startingBgColor = "#FFF8E1";
 		}
 		workingDiv.style.background = workingDiv.startingBgColor;
-		// Add a little padding
-		workingDiv.style.padding = "0 5px 0 5px";
-		// Align main text to the left
-		workingDiv.style.textAlign = "left";
-		// special case for a separator (line) entry
-		if (entriesToAdd[i].description === "separator") {
-			workingDiv.innerHTML = "<hr>";
-		} else {
+
+		if (!isSeparator) {
+			workingDiv.className = 'appContextMenuEntry';
 			if (entriesToAdd[i].accelerator) {
 				// Add description of the keyboard shortcut
 				workingDiv.innerHTML = "<p style='float: left;'>" + entriesToAdd[i].description + "</p>";
@@ -2651,12 +2641,11 @@ function setAppContextMenuEntries(data) {
 			// add the button effect to the input field to allow enter to send
 			workingDiv["buttonEffect" + inputField.id] =  entriesToAdd[i].buttonEffect;
 			workingDiv.appendChild(inputField);
-			workingDiv.innerHTML += "&nbsp&nbsp&nbsp";
 			workingDiv.inputFieldId = inputField.id;
 			// create OK button to send
 			var appEntryOkButton = document.createElement('span');
-			appEntryOkButton.innerHTML = "&nbspOK&nbsp";
-			appEntryOkButton.style.border = "1px solid black";
+			appEntryOkButton.className = 'okButton';
+			appEntryOkButton.innerHTML = "OK";
 			appEntryOkButton.inputField = true;
 			appEntryOkButton.inputFieldId = inputField.id;
 			// click effect
@@ -2664,28 +2653,11 @@ function setAppContextMenuEntries(data) {
 			appEntryOkButton.parameters = entriesToAdd[i].parameters;
 			appEntryOkButton.app = app;
 			appEntryOkButton.addEventListener('mousedown', entriesToAdd[i].buttonEffect);
-			// highlighting effect on mouseover
-			appEntryOkButton.addEventListener('mouseover', function() {
-				this.style.background = "lightgray";
-			});
-			appEntryOkButton.addEventListener('mouseout', function() {
-				this.style.background = this.startingBgColor;
-			});
 			workingDiv.appendChild(appEntryOkButton);
-			// Add spacing
-			var entrySpacer = document.createElement('span');
-			entrySpacer.innerHTML = "&nbsp&nbsp&nbsp";
-			workingDiv.appendChild(entrySpacer);
-		} else {
+		} else if (!isSeparator) {
 			// if no input field attach button effect to entire div instead of just OK button.
 			workingDiv.addEventListener('mousedown', entriesToAdd[i].buttonEffect);
-			// highlighting effect on mouseover
-			workingDiv.addEventListener('mouseover', function() {
-				this.style.background = "lightgray";
-			});
-			workingDiv.addEventListener('mouseout', function() {
-				this.style.background = this.startingBgColor;
-			});
+			workingDiv.classList.add('noInputEntry');
 		}
 		// click effect
 		workingDiv.callback = entriesToAdd[i].callback;
@@ -2790,7 +2762,7 @@ function sendMessageMakeNote() {
 		data.parameters = sendButton.parameters;
 		data.parameters.clientInput = workingDiv.value;
 		data.parameters.clientId   = interactor.uniqueID;
-		data.parameters.clientName = document.getElementById('sage2PointerLabel').value;
+		data.parameters.clientName = interactor.pointerLabel;
 		if (document.getElementById("uiNoteMakerCheckAnonymous").checked) {
 			data.parameters.clientName = "Anonymous";
 		}
@@ -2809,7 +2781,7 @@ function sendMessageMakeNote() {
 	} else {
 		data.appName	= "quickNote";
 		data.customLaunchParams		= {};
-		data.customLaunchParams.clientName = document.getElementById('sage2PointerLabel').value;
+		data.customLaunchParams.clientName = interactor.pointerLabel;
 		data.customLaunchParams.clientInput = workingDiv.value;
 		if (document.getElementById("uiNoteMakerCheckAnonymous").checked) {
 			data.customLaunchParams.clientName = "Anonymous";
@@ -2885,7 +2857,7 @@ function setupUiDrawCanvas() {
 			data.app = workingDiv.appId;
 			data.func = "SAGE2DeleteElement";
 			data.parameters = {};
-			data.parameters.clientName = document.getElementById('sage2PointerLabel').value;
+			data.parameters.clientName = interactor.pointerLabel;
 			wsio.emit('callFunctionOnApp', data);
 		}
 	);
@@ -2899,7 +2871,7 @@ function setupUiDrawCanvas() {
 			data.func = "addClientIdAsEditor"; // send this data to function after app starts
 			data.customLaunchParams = {
 				clientId: interactor.uniqueID,
-				clientName: document.getElementById('sage2PointerLabel').value
+				clientName: interactor.pointerLabel
 			};
 			wsio.emit('launchAppWithValues', data);
 		}

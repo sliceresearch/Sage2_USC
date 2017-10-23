@@ -899,6 +899,21 @@ function addCookie(sKey, sValue) {
 }
 
 /**
+ * Delete a cookie for a given key
+ *
+ * @method deleteCookie
+ * @param sKey {String} key
+ * @return {Boolean} true/false
+ */
+function deleteCookie(sKey) {
+	if (!sKey) {
+		return false;
+	}
+	document.cookie = encodeURIComponent(sKey) + '=; expires=Thu, 01 Jan 1970 00:00:01 GMT;';
+	return true;
+}
+
+/**
  * Return a cookie value for given key
  *
  * @method getCookie

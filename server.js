@@ -75,6 +75,7 @@ var registry            = require('./src/node-registry');         // Registry Ma
 var FileBufferManager	= require('./src/node-filebuffer');
 var PartitionList       = require('./src/node-partitionlist');    // list of SAGE2 Partitions
 var SharedDataManager	= require('./src/node-sharedserverdata'); // manager for shared data
+var userlist            = require('./src/node-userlist');		  // list of users
 var S2Logger            = require('./src/node-logger');           // SAGE2 logging module
 var PerformanceManager	= require('./src/node-performancemanager'); // SAGE2 performance module
 //
@@ -733,6 +734,7 @@ function closeWebSocketClient(wsio) {
 		}
 	}
 
+	broadcast("userEvent", {type: "disconnect"});
 	addEventToUserLog(wsio.id, {type: "disconnect", data: null, time: Date.now()});
 
 	// if client is a remote site, send disconnect message
@@ -968,6 +970,10 @@ function initializeWSClient(wsio, reqConfig, reqVersion, reqTime, reqConsole) {
  */
 function setupListeners(wsio) {
 	wsio.on('registerInteractionClient',            wsRegisterInteractionClient);
+	wsio.on('loginUser',                            wsLoginUser);
+	wsio.on('logoutUser',                           wsLogoutUser);
+	wsio.on('createUser',                           wsCreateUser);
+	wsio.on('editUser',                             wsEditUser);
 
 	wsio.on('startSagePointer',                     wsStartSagePointer);
 	wsio.on('stopSagePointer',                      wsStopSagePointer);
@@ -1404,6 +1410,65 @@ function wsSelectionModeOnOff(wsio, data) {
 	drawingManager.selectionModeOnOff();
 }
 
+// ************** User functions ****************
+function wsLoginUser(wsio, data) {
+
+	let res = userlist.getUser(data.name, data.email);
+
+	wsio.emit('loginStateChanged', {
+		login: true,
+		success: res.error === null,
+		uid: res && res.uid,
+		user: res && res.user,
+		errorMessage: res.error,
+		init: data.init
+	});
+
+	if (res.error === null) {
+		broadcast('userEvent', {
+			type: 'login',
+			data: { user: res && res.user }
+		});
+	}
+}
+
+function wsLogoutUser(wsio, data) {
+	wsio.emit('loginStateChanged', {
+		login: false
+	});
+
+	broadcast('userEvent', {
+		type: 'logout',
+		data: {}
+	});
+}
+
+function wsCreateUser(wsio, data) {
+	let res = userlist.addNewUser(data.name, data.email, {
+		SAGE2_ptrName: data.SAGE2_ptrName,
+		SAGE2_ptrColor: data.SAGE2_ptrColor
+	});
+	wsio.emit('loginStateChanged', {
+		login: true,
+		success: res.error === null,
+		uid: res && res.uid,
+		user: res && res.user,
+		errorMessage: res.error
+	});
+
+	if (res && res.success) {
+		broadcast('userEvent', {
+			type: 'newUser',
+			data: { user: res.user }
+		});
+	}
+}
+
+function wsEditUser(wsio, data) {
+	userlist.editUser(data.uid, data.properties);
+}
+
+
 // **************  Sage Pointer Functions *****************
 
 function wsRegisterInteractionClient(wsio, data) {
@@ -1456,6 +1521,7 @@ function wsStartSagePointer(wsio, data) {
 
 	showPointer(wsio.id, data);
 
+	broadcast('userEvent', {type: 'start SAGE2 pointer', data: data});
 	addEventToUserLog(wsio.id, {type: "SAGE2PointerStart", data: null, time: Date.now()});
 }
 
@@ -1474,6 +1540,7 @@ function wsStopSagePointer(wsio, data) {
 		remoteSharingSessions[key].wsio.emit('stopRemoteSagePointer', {id: wsio.id});
 	}
 
+	broadcast('userEvent', {type: 'stop SAGE2 pointer', data: data});
 	addEventToUserLog(wsio.id, {type: "SAGE2PointerEnd", data: null, time: Date.now()});
 }
 
@@ -1602,6 +1669,7 @@ function wsStartNewMediaStream(wsio, data) {
 					type: appInstance.application
 				}
 			};
+			broadcast('userEvent', {type: 'media stream start', data: data});
 			addEventToUserLog(wsio.id, {type: "mediaStreamStart", data: eLogData, time: Date.now()});
 		});
 }
@@ -1719,6 +1787,7 @@ function wsStopMediaStream(wsio, data) {
 				type: stream.application
 			}
 		};
+		broadcast('userEvent', {type: 'media stream stop', data: data});
 		addEventToUserLog(wsio.id, {type: "delete", data: eLogData, time: Date.now()});
 	}
 
@@ -2959,12 +3028,14 @@ function wsDeleteAllApplications(wsio) {
 function wsClearDisplay(wsio, data) {
 	clearDisplay();
 
+	broadcast('userEvent', {type: 'clear display', data: data});
 	addEventToUserLog(wsio.id, {type: "clearDisplay", data: null, time: Date.now()});
 }
 
 function wsTileApplications(wsio, data) {
 	tileApplications();
 
+	broadcast('userEvent', {type: 'tile applications', data: data});
 	addEventToUserLog(wsio.id, {type: "tileApplications", data: null, time: Date.now()});
 }
 
@@ -3099,6 +3170,7 @@ function wsLoadApplication(wsio, data) {
 		// By not deleting it will be given whenever display client refreshes/connect
 		// delete appInstance.customLaunchParams;
 
+		broadcast('userEvent', {type: 'load application', data: data});
 		addEventToUserLog(data.user, {type: "openApplication", data:
 			{application: {id: appInstance.id, type: appInstance.application}}, time: Date.now()});
 	});
@@ -3139,6 +3211,7 @@ function wsLoadImageFromBuffer(wsio, data) {
 
 			handleNewApplication(appInstance, null);
 
+			broadcast('userEvent', {type: 'load file', data: data});
 			addEventToUserLog(data.user, {type: "openFile", data:
 				{name: data.filename, application: {id: appInstance.id, type: appInstance.application}}, time: Date.now()});
 		});
@@ -3149,6 +3222,7 @@ function wsLoadFileFromServer(wsio, data) {
 		// if it's a session, then load it
 		loadSession(data.filename);
 
+		broadcast('userEvent', {type: 'load file', data: data});
 		addEventToUserLog(wsio.id, {type: "openFile", data: {name: data.filename,
 			application: {id: null, type: "session"}}, time: Date.now()});
 	} else {
@@ -3197,6 +3271,7 @@ function wsLoadFileFromServer(wsio, data) {
 
 			handleNewApplication(appInstance, videohandle);
 
+			broadcast('userEvent', {type: 'load file', data: data});
 			addEventToUserLog(data.user, {type: "openFile", data:
 				{name: data.filename, application: {id: appInstance.id, type: appInstance.application}}, time: Date.now()});
 		});
@@ -3996,6 +4071,8 @@ function wsStartApplicationMove(wsio, data) {
 			height: parseInt(app.height, 10)
 		}
 	};
+
+	broadcast('userEvent', {type: 'start moving app', data: data});
 	addEventToUserLog(data.id, {type: "windowManagement", data: eLogData, time: Date.now()});
 }
 
@@ -4028,6 +4105,7 @@ function wsStartApplicationResize(wsio, data) {
 			height: parseInt(app.height, 10)
 		}
 	};
+	broadcast('userEvent', {type: 'start resizing app', data: data});
 	addEventToUserLog(data.id, {type: "windowManagement", data: eLogData, time: Date.now()});
 }
 
@@ -4114,6 +4192,7 @@ function wsFinishApplicationMove(wsio, data) {
 	}
 
 	broadcast('finishedMove', {id: data.appId, date: Date.now()});
+	broadcast('userEvent', {type: 'stop moving app', data: data});
 
 	var eLogData = {
 		type: "move",
@@ -4146,6 +4225,7 @@ function wsFinishApplicationResize(wsio, data) {
 	}
 
 	broadcast('finishedResize', {id: data.appId, date: Date.now()});
+	broadcast('userEvent', {type: 'stop resizing app', data: data});
 
 	var eLogData = {
 		type: "resize",
@@ -4166,6 +4246,7 @@ function wsFinishApplicationResize(wsio, data) {
 
 function wsDeleteApplication(wsio, data) {
 	deleteApplication(data.appId);
+	broadcast('userEvent', {type: 'delete app', data: data});
 
 	// Is that diffent ?
 	// if (SAGE2Items.applications.list.hasOwnProperty(data.appId)) {
