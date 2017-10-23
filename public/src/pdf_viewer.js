@@ -234,6 +234,13 @@ var pdf_viewer = SAGE2_App.extend({
 
 				var neww = that.baseWidthPage * that.state.numberOfPageToShow * that.resizeValue;
 				var newh = (that.baseHeightPage + that.commandBarG.height + that.thumbnailHeight) * that.resizeValue;
+				// calculate the aspect ratio
+				var newar = neww / newh;
+				// use the same width as specified by the server
+				neww = that.sage2_width;
+				// adjust the height
+				newh = neww / newar;
+				// ask for a size update
 				that.sendResize(neww, newh);
 				return;
 			}

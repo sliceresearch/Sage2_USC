@@ -568,24 +568,32 @@ function selectServer(elt) {
 	$$('sage2_id').setValue(got.server);
 	$$('passcode_id').setValue(got.code);
 	// Connect automatically
+	disconnect_func();
 	connect_func();
 }
 
-function connect_func() {
+function disconnect_func() {
 	if (wsio) {
 		wsio.close();
 		if (interactor) {
 			interactor.stopSAGE2Pointer();
 			interactor.removeListeners();
-			// delete interactor;
 			interactor = undefined;
 		}
-		// delete wsio;
 		wsio = undefined;
+	}
 
-		var pbutton = $$('connect_id').$view.querySelector('button');
-		pbutton.style.backgroundColor = "#3498db";
-		pbutton.innerText = "Connect";
+	var pbutton = $$('connect_id').$view.querySelector('button');
+	pbutton.style.backgroundColor = "#3498db";
+	pbutton.innerText = "Connect";
+}
+
+function connect_func() {
+	if (wsio) {
+		// if socket exists, disconnect
+		disconnect_func();
+
+		return;
 	}
 
 	var aurl  = $$('sage2_id').getValue();

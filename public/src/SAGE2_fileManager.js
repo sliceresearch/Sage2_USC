@@ -86,6 +86,13 @@ function FileManager(wsio, mydiv, uniqueID) {
 			// open the file uploader panel
 			showDialog('uploadDialog');
 		}},
+		session_menu2: {value: "Save the Session",
+			tooltip: "Saves the opened applications and their states in a session file",
+			callback: function (evt) {
+				// open the session popup
+				_this.saveSession();
+			}
+		},
 		separator: {value: "separator"},
 		refresh_menu: {value: "Refresh Media Browser", callback: function (evt) {
 			wsio.emit('requestStoredFiles');
@@ -1635,7 +1642,10 @@ function FileManager(wsio, mydiv, uniqueID) {
 				return false;
 			}
 		});
+		// Set focus on the text box
 		$$('session_filename').focus();
+		// select the text in the box (easier to type another name)
+		$$('session_filename').getInputNode().select();
 	};
 
 	// Server sends the media files list
