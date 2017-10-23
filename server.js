@@ -9415,22 +9415,19 @@ function wsRequestAppContextMenu(wsio, data) {
 function fillContextMenuWithShareSites(contextMenu, appId) {
 	let shareIndex = -1;
 	let shareDescription = "Share with:"; // match for this description
-	let maximizeIndex = -1;
-	let maximizeDescription = "Maximize"; // also look for maximize description
 	let entry;
 	// first search for the share entry
 	for (let i = 0; i < contextMenu.length; i++) {
 		if (contextMenu[i].description === shareDescription) {
 			shareIndex = i;
-		} else if (contextMenu[i].description === maximizeDescription) {
-			maximizeIndex = i;
 		}
 	}
 	// if there was no share entry, they need to add it
 	if (shareIndex === -1) {
-		entry = {};
-		entry.description = shareDescription;
-		contextMenu.splice(maximizeIndex + 1, 0, entry); // add after the maximize entry
+		entry = { description: "separator" };
+		contextMenu.splice(contextMenu.length - 3, 0, entry); // add separator after the maximize entry
+		entry = { description: shareDescription };
+		contextMenu.splice(contextMenu.length - 3, 0, entry); // add share option after that
 	} else { // otherwise get the reference
 		entry = contextMenu[shareIndex];
 	}
