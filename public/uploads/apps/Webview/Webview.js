@@ -95,17 +95,32 @@ var Webview = SAGE2_App.extend({
 			video_id = view_url.split('/').pop();
 			view_url = 'https://www.youtube.com/embed/' + video_id + '?autoplay=0';
 			this.contentType = "youtube";
-		} else if (view_url.indexOf('vimeo') >= 0 && view_url.indexOf('player') === -1) {
+		} else if (view_url.indexOf('vimeo') >= 0) {
 			// Search for the Vimeo ID
 			var m = view_url.match(/^.+vimeo.com\/(.*\/)?([^#?]*)/);
 			var vimeo_id =  m ? m[2] || m[1] : null;
 			if (vimeo_id) {
 				view_url = 'https://player.vimeo.com/video/' + vimeo_id;
 			}
+			this.contentType = "vimeo";
 		} else if (view_url.endsWith('.ipynb')) {
 			// ipython notebook file are link to nbviewer.jupyter.org online
 			var host = this.config.host + ':' + this.config.port;
 			view_url = "https://nbviewer.jupyter.org/url/" + host + view_url;
+			this.contentType = "ipython";
+		} else if (view_url.indexOf('twitch.tv') >= 0) {
+			// Twitch video from:
+			//    https://go.twitch.tv/videos/180266596
+			// to embedded:
+			//    https://player.twitch.tv/?!autoplay&video=v180266596
+
+			// Search for the Twitch ID
+			var tw = view_url.match(/^.+twitch.tv\/(.*\/)?([^#?]*)/);
+			var twitch_id =  tw ? tw[2] || tw[1] : null;
+			if (twitch_id) {
+				view_url = 'https://player.twitch.tv/?!autoplay&video=v' + twitch_id;
+			}
+			this.contentType = "twitch";
 		}
 
 		// Store the zoom level, when in desktop emulation
@@ -266,7 +281,8 @@ var Webview = SAGE2_App.extend({
 			newtext += ' <i class="fa">\u{f017}</i>';
 		}
 		// if the page is loading
-		if (this.isLoading && this.contentType !== "youtube") {
+		if (this.isLoading && this.contentType !== "youtube" &&
+			this.contentType !== "vimeo" && this.contentType !== "twitch") {
 			// add a spinner using a FontAwsome character
 			newtext += ' <i class="fa fa-spinner fa-spin"></i>';
 		}
@@ -414,21 +430,29 @@ var Webview = SAGE2_App.extend({
 
 
 	playPause: function(act) {
-		// Simulate a mouse click
-		this.element.sendInputEvent({
-			type: "mouseDown",
-			x: 10, y: 10,
-			button: "left",
-			modifiers: null,
-			clickCount: 1
-		});
-		this.element.sendInputEvent({
-			type: "mouseUp",
-			x: 10, y: 10,
-			button: "left",
-			modifiers: null,
-			clickCount: 1
-		});
+		if (this.contentType === "youtube") {
+			// Simulate a mouse click
+			this.element.sendInputEvent({
+				type: "mouseDown",
+				x: 10, y: 10,
+				button: "left",
+				modifiers: null,
+				clickCount: 1
+			});
+			this.element.sendInputEvent({
+				type: "mouseUp",
+				x: 10, y: 10,
+				button: "left",
+				modifiers: null,
+				clickCount: 1
+			});
+		} else if (this.contentType === "vimeo" || this.contentType === "twitch") {
+			// Simulate a spacebar
+			this.element.sendInputEvent({
+				type: "char",
+				keyCode: ' '
+			});
+		}
 	},
 	muteUnmute: function(act) {
 		if (isMaster) {
@@ -450,17 +474,19 @@ var Webview = SAGE2_App.extend({
 		var entries = [];
 		var entry;
 
-		if (this.contentType === "youtube") {
+		if (this.contentType === "youtube" ||
+			this.contentType === "vimeo" ||
+			this.contentType === "twitch") {
 			entry = {};
 			entry.description = "Play/Pause";
-			entry.accelerator = "p";
+			entry.accelerator = "P";
 			entry.callback = "playPause";
 			entry.parameters = {};
 			entries.push(entry);
 
 			entry = {};
 			entry.description = "Mute/Unmute";
-			entry.accelerator = "m";
+			entry.accelerator = "M";
 			entry.callback = "muteUnmute";
 			entry.parameters = {};
 			entries.push(entry);
@@ -490,7 +516,7 @@ var Webview = SAGE2_App.extend({
 			entries.push(entry);
 
 			entry = {};
-			entry.description = "Auto refresh (5min)";
+			entry.description = "Auto Refresh (5min)";
 			entry.callback = "reloadPage";
 			entry.parameters = {time: 5 * 60};
 			entries.push(entry);
@@ -498,21 +524,21 @@ var Webview = SAGE2_App.extend({
 			entries.push({description: "separator"});
 
 			entry = {};
-			entry.description = "Mobile emulation";
+			entry.description = "Mobile Emulation";
 			entry.callback = "changeMode";
 			entry.parameters = {};
 			entry.parameters.mode = "mobile";
 			entries.push(entry);
 
 			entry = {};
-			entry.description = "Desktop emulation";
+			entry.description = "Desktop Emulation";
 			entry.callback = "changeMode";
 			entry.parameters = {};
 			entry.parameters.mode = "desktop";
 			entries.push(entry);
 
 			entry = {};
-			entry.description = "Show/Hide the console";
+			entry.description = "Show/Hide Console";
 			entry.callback = "showConsole";
 			entry.parameters = {};
 			entries.push(entry);
@@ -520,7 +546,7 @@ var Webview = SAGE2_App.extend({
 			entries.push({description: "separator"});
 
 			entry = {};
-			entry.description = "Zoom in";
+			entry.description = "Zoom In";
 			entry.accelerator = "Alt \u2191";     // ALT up-arrow
 			entry.callback = "zoomPage";
 			entry.parameters = {};
@@ -528,7 +554,7 @@ var Webview = SAGE2_App.extend({
 			entries.push(entry);
 
 			entry = {};
-			entry.description = "Zoom out";
+			entry.description = "Zoom Out";
 			entry.accelerator = "Alt \u2193";     // ALT down-arrow
 			entry.callback = "zoomPage";
 			entry.parameters = {};
@@ -539,7 +565,7 @@ var Webview = SAGE2_App.extend({
 
 			entry   = {};
 			// label of them menu
-			entry.description = "Type a URL:";
+			entry.description = "Type URL:";
 			// callback
 			entry.callback = "navigation";
 			// input setting
@@ -555,7 +581,7 @@ var Webview = SAGE2_App.extend({
 
 			entry   = {};
 			// label of them menu
-			entry.description = "Web search:";
+			entry.description = "Web Search:";
 			// callback
 			entry.callback = "navigation";
 			// input setting
@@ -568,7 +594,7 @@ var Webview = SAGE2_App.extend({
 		}
 
 		entries.push({
-			description: "Copy URL to clipboard",
+			description: "Copy URL to Clipboard",
 			callback: "SAGE2_copyURL",
 			parameters: {
 				url: this.state.url
@@ -713,7 +739,9 @@ var Webview = SAGE2_App.extend({
 				// widget events
 			} else if (eventType === "keyboard") {
 
-				if (this.contentType === "youtube") {
+				if (this.contentType === "youtube" ||
+					this.contentType === "vimeo"   ||
+					this.contentType === "twitch") {
 					if (data.character === "m") {
 						// m mute
 						this.muteUnmute();

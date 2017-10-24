@@ -50,7 +50,7 @@ deploy:
     username: upload@sagecommons.org
     password:
       secure: L4I4NkKN7mrQww7GgwPLrA==
-    folder: /
+    folder: /Display
     artifact: sage2_client
 
 notifications:

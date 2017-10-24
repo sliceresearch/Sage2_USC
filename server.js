@@ -8565,7 +8565,15 @@ function keyPress(uniqueID, pointerX, pointerY, data) {
 		// if in empty space:
 		// Pressing ? for help (with shift)
 		if (data.code === 63 && remoteInteraction[uniqueID].SHIFT) {
-			broadcast('toggleHelp', {});
+			// Load the cheet sheet on the wall
+			wsLoadApplication(null, {
+				application: "/uploads/pdfs/cheat-sheet.pdf",
+				user: "127.0.0.1:42",
+				// position in center and 100pix down
+				position: [0.5, 100]
+			});
+			// show a popup
+			// broadcast('toggleHelp', {});
 		}
 		return;
 	}
@@ -9414,7 +9422,7 @@ function wsRequestAppContextMenu(wsio, data) {
  */
 function fillContextMenuWithShareSites(contextMenu, appId) {
 	let shareIndex = -1;
-	let shareDescription = "Share with:"; // match for this description
+	let shareDescription = "Share With:"; // match for this description
 	let entry;
 	// first search for the share entry
 	for (let i = 0; i < contextMenu.length; i++) {

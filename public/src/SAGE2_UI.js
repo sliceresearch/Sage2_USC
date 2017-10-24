@@ -381,6 +381,8 @@ function SAGE2_init() {
 	if (webix) {
 		// disabling the webix touch managment for now
 		webix.Touch.disable();
+		// Fix webix layer system to be above SAGE2 UI
+		webix.ui.zIndexBase = 2000;
 	}
 
 	document.addEventListener('mousemove',  mouseCheck,   false);
@@ -424,11 +426,13 @@ function SAGE2_init() {
 		if (event.data.cmd === "window_selected") {
 			interactor.captureDesktop(event.data.mediaSourceId);
 		}
+		// event coming from the extension icon ("send screenshot to..."")
 		if (event.data.cmd === "screenshot") {
 			// declare mime type to be "image/jpeg" for screenshots
 			event.data.mime = "image/jpeg";
 			wsio.emit('loadImageFromBuffer', event.data);
 		}
+		// event coming from the extension icon ("send webpage to..."")
 		if (event.data.cmd === "openlink") {
 			wsio.emit('openNewWebpage', {
 				id: interactor.uniqueID,
@@ -1274,15 +1278,47 @@ function handleClick(element) {
 			id: "browser_form",
 			position: "center",
 			modal: true,
-			zIndex: 1999,
+			zIndex: "1999",
 			head: "Open a browser window",
 			width: 400,
 			body: {
 				view: "form",
 				borderless: false,
 				elements: [
+					// URL box
 					{view: "text", value: "", id: "browser_url", label: "Please enter a URL:", name: "browser_url"},
-					{view: "text", value: "", id: "browser_search", label: "or search terms:", name: "browser_search"},
+					// Shortcut for some sites
+					{view: "combo", id: "field_t", label: "Commonly used", value: "1",
+						options: { body: {
+							data: [
+								{id: 1, value: "Google Docs - documents"},
+								{id: 2, value: "Office 365 - office online"},
+								{id: 3, value: "Appear.in - videoconference"},
+								{id: 4, value: "Youtube - videos"},
+								{id: 5, value: "Slack - team collaboration"},
+								{id: 6, value: "NbViewer - jupyter notebooks"},
+								{id: 7, value: "PubMed - biomedical literature"}
+							],
+							on: {
+								onItemClick: function(id) {
+									var urls = [
+										"https://docs.google.com/",
+										"https://login.microsoftonline.com/",
+										"https://appear.in/",
+										"https://www.youtube.com/",
+										"https://slack.com/signin",
+										"https://nbviewer.jupyter.org/",
+										"https://www.ncbi.nlm.nih.gov/pubmed/"
+									];
+									$$('browser_url').setValue(urls[id - 1]);
+								}
+							}
+						}
+						}
+					},
+					// Google search
+					{view: "text", value: "", id: "browser_search",
+						label: "or search terms (with Google):", name: "browser_search"},
 					{margin: 5, cols: [
 						{view: "button", value: "Cancel", click: function() {
 							this.getTopParentView().hide();
@@ -1345,9 +1381,16 @@ function handleClick(element) {
 				}
 				// if we have something valid, open a webview
 				if (url) {
-					wsio.emit('openNewWebpage', {
+					// wsio.emit('openNewWebpage', {
+					// 	id: interactor.uniqueID,
+					// 	url: url
+					// });
+					wsio.emit('addNewWebElement', {
+						type: "application/url",
+						url: url, position: [0, 0],
 						id: interactor.uniqueID,
-						url: url
+						SAGE2_ptrName:  localStorage.SAGE2_ptrName,
+						SAGE2_ptrColor: localStorage.SAGE2_ptrColor
 					});
 				}
 				// close the form
@@ -2212,8 +2255,8 @@ function noBackspace(event) {
 			title: "Mouse and keyboard operations",
 			buttons: ["Ok"],
 			text: "<img src=/images/cheat-sheet.jpg width=100%>",
-			width: "75%",
-			height: "75%"
+			width: "70%",
+			height: "50%"
 		});
 	}
 	return true;
@@ -2577,7 +2620,7 @@ function setAppContextMenuEntries(data) {
 	} // end adding a send function to each menu entry
 	// always add the Close Menu entry.
 	var closeEntry = {};
-	closeEntry.description = "Close menu";
+	closeEntry.description = "Close Menu";
 	closeEntry.buttonEffect = function () {
 		hideAppContextMenuDiv();
 	};
@@ -2624,7 +2667,8 @@ function addMenuEntry(menuDiv, entry, id, app) {
 		if (entry.accelerator) {
 			// Add description of the keyboard shortcut
 			workingDiv.innerHTML = "<p style='float: left;'>" + entry.description + "</p>";
-			workingDiv.innerHTML += "<p style='float: right; padding-left: 5px;'> [" + entry.accelerator + "]</p>";
+			// workingDiv.innerHTML += "<p style='float: right; padding-left: 5px;'> [" + entry.accelerator + "]</p>";
+			workingDiv.innerHTML += "<p style='float: right; padding-left: 5px;'>" + entry.accelerator + "</p>";
 			workingDiv.innerHTML += "<div style='clear: both;'></div>";
 		} else {
 			// or just plain text
@@ -2642,6 +2686,24 @@ function addMenuEntry(menuDiv, entry, id, app) {
 		inputField.id = workingDiv.id + "Input";
 		// check if the data has a value field
 		inputField.defaultValue = entry.value || "";
+		// special case to use color input type
+		if (entry.inputColor) {
+			inputField.type = "color";
+			if (entry.colorChoices) {
+				// inputField.list = entry.colorChoices;
+				inputField.setAttribute('list', workingDiv.id + "Colors");
+
+				let colorList = document.createElement("datalist");
+				colorList.id = workingDiv.id + "Colors";
+
+				for (let color of entry.colorChoices) {
+					let opt = document.createElement("option");
+					opt.value = color;
+
+					colorList.appendChild(opt);
+				}
+			}
+		}
 		// special case to use color/range input type
 		if (entry.inputType) {
 
