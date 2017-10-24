@@ -976,7 +976,7 @@ var SAGE2_App = Class.extend({
 				description: "separator"
 			});
 			appContextMenu.entries.push({
-				description: "Send to back",
+				description: "Send to Back",
 				callback: "SAGE2SendToBack",
 				parameters: {}
 			});
