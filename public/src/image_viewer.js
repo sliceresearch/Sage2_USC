@@ -145,7 +145,7 @@ var image_viewer = SAGE2_App.extend({
 		// Show overlay with EXIF data
 		entries.push({
 			description: "Show EXIF",
-			accelerator: "i",
+			accelerator: "I",
 			callback: "showEXIF",
 			parameters: {}
 		});
