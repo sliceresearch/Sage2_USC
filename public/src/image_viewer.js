@@ -126,14 +126,6 @@ var image_viewer = SAGE2_App.extend({
 	getContextEntries: function() {
 		var entries = [];
 
-		// Show overlay with EXIF data
-		entries.push({
-			description: "Show EXIF",
-			accelerator: "i",
-			callback: "showEXIF",
-			parameters: {}
-		});
-
 		// Special callback: download the file
 		entries.push({
 			description: "Download image",
@@ -148,6 +140,14 @@ var image_viewer = SAGE2_App.extend({
 			parameters: {
 				url: cleanURL(this.state.src || this.state.img_url)
 			}
+		});
+
+		// Show overlay with EXIF data
+		entries.push({
+			description: "Show EXIF",
+			accelerator: "I",
+			callback: "showEXIF",
+			parameters: {}
 		});
 
 		// Special callback: convert to a doodle.

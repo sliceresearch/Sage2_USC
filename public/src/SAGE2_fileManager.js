@@ -404,8 +404,8 @@ function FileManager(wsio, mydiv, uniqueID) {
 					title: "Mouse and keyboard operations",
 					buttons: ["Ok"],
 					text: "<img src=/images/cheat-sheet.jpg width=100%>",
-					width: "75%",
-					height: "75%"
+					width: "70%",
+					height: "50%"
 				});
 			}
 		},

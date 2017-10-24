@@ -479,14 +479,14 @@ var Webview = SAGE2_App.extend({
 			this.contentType === "twitch") {
 			entry = {};
 			entry.description = "Play/Pause";
-			entry.accelerator = "p";
+			entry.accelerator = "P";
 			entry.callback = "playPause";
 			entry.parameters = {};
 			entries.push(entry);
 
 			entry = {};
 			entry.description = "Mute/Unmute";
-			entry.accelerator = "m";
+			entry.accelerator = "M";
 			entry.callback = "muteUnmute";
 			entry.parameters = {};
 			entries.push(entry);
@@ -516,7 +516,7 @@ var Webview = SAGE2_App.extend({
 			entries.push(entry);
 
 			entry = {};
-			entry.description = "Auto refresh (5min)";
+			entry.description = "Auto Refresh (5min)";
 			entry.callback = "reloadPage";
 			entry.parameters = {time: 5 * 60};
 			entries.push(entry);
@@ -524,21 +524,21 @@ var Webview = SAGE2_App.extend({
 			entries.push({description: "separator"});
 
 			entry = {};
-			entry.description = "Mobile emulation";
+			entry.description = "Mobile Emulation";
 			entry.callback = "changeMode";
 			entry.parameters = {};
 			entry.parameters.mode = "mobile";
 			entries.push(entry);
 
 			entry = {};
-			entry.description = "Desktop emulation";
+			entry.description = "Desktop Emulation";
 			entry.callback = "changeMode";
 			entry.parameters = {};
 			entry.parameters.mode = "desktop";
 			entries.push(entry);
 
 			entry = {};
-			entry.description = "Show/Hide the console";
+			entry.description = "Show/Hide Console";
 			entry.callback = "showConsole";
 			entry.parameters = {};
 			entries.push(entry);
@@ -546,7 +546,7 @@ var Webview = SAGE2_App.extend({
 			entries.push({description: "separator"});
 
 			entry = {};
-			entry.description = "Zoom in";
+			entry.description = "Zoom In";
 			entry.accelerator = "Alt \u2191";     // ALT up-arrow
 			entry.callback = "zoomPage";
 			entry.parameters = {};
@@ -554,7 +554,7 @@ var Webview = SAGE2_App.extend({
 			entries.push(entry);
 
 			entry = {};
-			entry.description = "Zoom out";
+			entry.description = "Zoom Out";
 			entry.accelerator = "Alt \u2193";     // ALT down-arrow
 			entry.callback = "zoomPage";
 			entry.parameters = {};
@@ -565,7 +565,7 @@ var Webview = SAGE2_App.extend({
 
 			entry   = {};
 			// label of them menu
-			entry.description = "Type a URL:";
+			entry.description = "Type URL:";
 			// callback
 			entry.callback = "navigation";
 			// input setting
@@ -581,7 +581,7 @@ var Webview = SAGE2_App.extend({
 
 			entry   = {};
 			// label of them menu
-			entry.description = "Web search:";
+			entry.description = "Web Search:";
 			// callback
 			entry.callback = "navigation";
 			// input setting
@@ -594,7 +594,7 @@ var Webview = SAGE2_App.extend({
 		}
 
 		entries.push({
-			description: "Copy URL to clipboard",
+			description: "Copy URL to Clipboard",
 			callback: "SAGE2_copyURL",
 			parameters: {
 				url: this.state.url

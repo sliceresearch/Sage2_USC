@@ -2255,8 +2255,8 @@ function noBackspace(event) {
 			title: "Mouse and keyboard operations",
 			buttons: ["Ok"],
 			text: "<img src=/images/cheat-sheet.jpg width=100%>",
-			width: "75%",
-			height: "75%"
+			width: "70%",
+			height: "50%"
 		});
 	}
 	return true;
@@ -2618,7 +2618,7 @@ function setAppContextMenuEntries(data) {
 	} // end adding a send function to each menu entry
 	// always add the Close Menu entry.
 	var closeEntry = {};
-	closeEntry.description = "Close menu";
+	closeEntry.description = "Close Menu";
 	closeEntry.buttonEffect = function () {
 		hideAppContextMenuDiv();
 	};
