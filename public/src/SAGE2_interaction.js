@@ -413,8 +413,8 @@ function SAGE2_interaction(wsio) {
 			sagePointerDisabled();
 		} else {
 			// enable SAGE2 Pointer
-			// SLICE add left and top
-			this.wsio.emit('startSagePointer', {label: localStorage.SAGE2_ptrName, color: localStorage.SAGE2_ptrColor, left: 50, top: 50});
+			// SLICE added url parameters
+			this.wsio.emit('startSagePointer', {label: localStorage.SAGE2_ptrName, color: localStorage.SAGE2_ptrColor, urlParameters: params});
 
 			document.addEventListener('mousedown',  this.pointerPress,     false);
 			document.addEventListener('mousemove',  this.pointerMove,      false);

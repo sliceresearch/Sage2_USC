@@ -70,11 +70,11 @@ var Drawing             = require('./src/node-drawing');          // handles Omi
 var Radialmenu          = require('./src/node-radialmenu');       // radial menu
 var Sage2ItemList       = require('./src/node-sage2itemlist');    // list of SAGE2 items
 var Sagepointer         = require('./src/node-sagepointer');      // handles sage pointers (creation, location, etc.)
-var Slicepointer         = require('./src-slice/node-slicepointer'); 	  // SLICE
+var Slicepointer        = require('./src-slice/node-slicepointer'); 	  // SLICE
 var StickyItems         = require('./src/node-stickyitems');
 var registry            = require('./src/node-registry');         // Registry Manager
 var FileBufferManager	= require('./src/node-filebuffer');
-var PartitionList	= require('./src/node-partitionlist');        // list of SAGE2 Partitions
+var PartitionList		= require('./src/node-partitionlist');        // list of SAGE2 Partitions
 var SharedDataManager	= require('./src/node-sharedserverdata'); // manager for shared data
 
 //
@@ -875,8 +875,8 @@ function initializeWSClient(wsio, reqConfig, reqVersion, reqTime, reqConsole, pa
 		setTimeout(initializeExistingControls, 6000, wsio); // why can't this be done immediately with the rest?
 	} else if (wsio.clientType === "audioManager") {
 		initializeExistingAppsAudio(wsio);
-	} else if (wsio.clientType === "sageUI" || wsio.clientType === "sliceUI") { // SLICE
-		createSagePointer(wsio.id, wsio.clientType);
+	} else if (wsio.clientType === "sageUI" || wsio.clientType === "sliceUI") { // SLICE added slicepointer handling
+		createSagePointer(wsio.id, wsio.clientType, params);
 		var key;
 		for (key in remoteSharingSessions) {
 			remoteSharingSessions[key].wsio.emit('createRemoteSagePointer', {
@@ -5671,9 +5671,9 @@ function getAppPositionSize(appInstance) {
 
 // **************  Pointer Functions *****************
 
-function createSagePointer(uniqueID, clientType, portal) {
+function createSagePointer(uniqueID, clientType, params, portal) { // SLICE added params parameter
 	// SLICE From addClient type == sageUI
-	if (false) { // clientType === "sliceUI") {
+	if (clientType === "sliceUI") {
 		sagePointers[uniqueID] = new Slicepointer(uniqueID + "_slicePointer", params);
 	} else {
 		sagePointers[uniqueID] = new Sagepointer(uniqueID + "_pointer");
@@ -5697,7 +5697,7 @@ function showPointer(uniqueID, data) {
 	}
 
 	// SLICE added left and top to pointer construction: Removed
-	sagePointers[uniqueID].start(data.label, data.color, data.sourceType);
+	sagePointers[uniqueID].start(data.label, data.color, data.sourceType, data.urlParameters);
 	broadcast('showSagePointer', sagePointers[uniqueID]);
 }
 

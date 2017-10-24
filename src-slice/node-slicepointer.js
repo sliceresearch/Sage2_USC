@@ -13,10 +13,14 @@
  *
  * @module server
  * @submodule slicepointer
+ * @extends sagepointer
  */
+
 // require variables to be declared
 "use strict";
+
 var SagePointer         = require('../src/node-sagepointer'); 
+
 /**
  * SlicePointer class
  *
@@ -27,14 +31,21 @@ class SlicePointer extends SagePointer {
         super(id);
         this.params = params;
     }
-    start(label, color, sourceType, left, top) {
+    start(label, color, sourceType, urlParameters) {
         this.label = label;
         this.color = color;
         this.sourceType = sourceType;
-        this.left    = left;
-        this.top     = top;
+        if (urlParameters.left){
+            this.left    = urlParameters.left;
+        } else {
+            this.left    = 50;
+        }
+        if (urlParameters.top){
+            this.top    = urlParameters.top;
+        } else {
+            this.top    = 50;
+        }
         this.visible = true;
-        
     }
     updatePointerPosition(data, maxW, maxH) {
         if (data.pointerX !== undefined) {
@@ -64,3 +75,5 @@ class SlicePointer extends SagePointer {
         }
     }
 }
+
+module.exports = SlicePointer;
