@@ -317,7 +317,7 @@ function SAGE2_interaction(wsio) {
 	* @method startSAGE2Pointer
 	* @param buttonId {String} name of the button triggering the pointer
 	*/
-	this.startSAGE2Pointer = function(buttonId, pramas) {
+	this.startSAGE2Pointer = function(buttonId, params) {
 		if (hasMouse) {
 			var button = document.getElementById(buttonId);
 			button.addEventListener('pointerlockchange', function(e) {
@@ -337,20 +337,20 @@ function SAGE2_interaction(wsio) {
 			console.log("No mouse detected - entering touch interface for SAGE2 Pointer");
 
 			// SLICE If there is URL parameters for left and top they are parsed
-			var left;
-			var top;
-			if (params.left) {
-				left = parseInt(params.left);
-			} else {
-				left = 50;
-			}
-			if (params.top) {
-				top = parseInt(params.top);
-			} else {
-				top = 50;
-			}
+			// var left;
+			// var top;
+			// if (params.left) {
+			// 	left = parseInt(params.left);
+			// } else {
+			// 	left = 50;
+			// }
+			// if (params.top) {
+			// 	top = parseInt(params.top);
+			// } else {
+			// 	top = 50;
+			// }
 			// SLICE added left and top to pointer constructor
-			this.wsio.emit('startSagePointer', {label: localStorage.SAGE2_ptrName, color: localStorage.SAGE2_ptrColor, left: left, top: top});
+			this.wsio.emit('startSagePointer', {label: localStorage.SAGE2_ptrName, color: localStorage.SAGE2_ptrColor, urlParameters: params});
 			
 			showSAGE2PointerOverlayNoMouse();
 		}

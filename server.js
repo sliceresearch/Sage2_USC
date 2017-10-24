@@ -70,13 +70,12 @@ var Drawing             = require('./src/node-drawing');          // handles Omi
 var Radialmenu          = require('./src/node-radialmenu');       // radial menu
 var Sage2ItemList       = require('./src/node-sage2itemlist');    // list of SAGE2 items
 var Sagepointer         = require('./src/node-sagepointer');      // handles sage pointers (creation, location, etc.)
+var Slicepointer         = require('./src-slice/node-slicepointer'); 	  // SLICE
 var StickyItems         = require('./src/node-stickyitems');
 var registry            = require('./src/node-registry');         // Registry Manager
 var FileBufferManager	= require('./src/node-filebuffer');
 var PartitionList	= require('./src/node-partitionlist');        // list of SAGE2 Partitions
 var SharedDataManager	= require('./src/node-sharedserverdata'); // manager for shared data
-// SLICE added modules
-var SlicePointer 		= require('./src-slice/node-slicepointer');	// 
 
 //
 // Globals
@@ -808,7 +807,8 @@ function wsAddClient(wsio, data) {
 	}
 
 	clients.push(wsio);
-	initializeWSClient(wsio, data.requests.config, data.requests.version, data.requests.time, data.requests.console);
+	// SLICE passing through params
+	initializeWSClient(wsio, data.requests.config, data.requests.version, data.requests.time, data.requests.console, data.params);
 	if (wsio.clientType === "display") {
 		drawingManager.init(wsio);
 	}
@@ -819,8 +819,8 @@ function wsAddClient(wsio, data) {
 		remoteInteraction[wsio.id].previousMode = 1; // 0;
 	}
 
-	// If it's a UI, send message to enable screenshot capability
-	if (wsio.clientType === "sageUI") {
+	// If it's a UI, send message to enable screenshot capability -- SLICE
+	if (wsio.clientType === "sageUI" || wsio.clientType === "sliceUI") {
 		reportIfCanWallScreenshot();
 	}
 
@@ -842,8 +842,9 @@ function wsAddClient(wsio, data) {
  * @param      {bool}  reqVersion  client requests version
  * @param      {bool}  reqTime     client requests time information
  * @param      {bool}  reqConsole  client requests console messages
+ * SLICE
  */
-function initializeWSClient(wsio, reqConfig, reqVersion, reqTime, reqConsole) {
+function initializeWSClient(wsio, reqConfig, reqVersion, reqTime, reqConsole, params) {
 	setupListeners(wsio);
 
 	wsio.emit('initialize', {UID: wsio.id, time: Date.now(), start: startTime});
@@ -874,8 +875,8 @@ function initializeWSClient(wsio, reqConfig, reqVersion, reqTime, reqConsole) {
 		setTimeout(initializeExistingControls, 6000, wsio); // why can't this be done immediately with the rest?
 	} else if (wsio.clientType === "audioManager") {
 		initializeExistingAppsAudio(wsio);
-	} else if (wsio.clientType === "sageUI") {
-		createSagePointer(wsio.id);
+	} else if (wsio.clientType === "sageUI" || wsio.clientType === "sliceUI") { // SLICE
+		createSagePointer(wsio.id, wsio.clientType);
 		var key;
 		for (key in remoteSharingSessions) {
 			remoteSharingSessions[key].wsio.emit('createRemoteSagePointer', {
@@ -884,7 +885,7 @@ function initializeWSClient(wsio, reqConfig, reqVersion, reqTime, reqConsole) {
 		}
 		initializeExistingAppsPositionSizeTypeOnly(wsio);
 		initializeExistingPartitionsUI(wsio);
-	}
+	} 
 
 	var remote = findRemoteSiteByConnection(wsio);
 	if (remote !== null) {
@@ -5670,9 +5671,13 @@ function getAppPositionSize(appInstance) {
 
 // **************  Pointer Functions *****************
 
-function createSagePointer(uniqueID, portal) {
-	// From addClient type == sageUI
-	sagePointers[uniqueID] = new Sagepointer(uniqueID + "_pointer");
+function createSagePointer(uniqueID, clientType, portal) {
+	// SLICE From addClient type == sageUI
+	if (false) { // clientType === "sliceUI") {
+		sagePointers[uniqueID] = new Slicepointer(uniqueID + "_slicePointer", params);
+	} else {
+		sagePointers[uniqueID] = new Sagepointer(uniqueID + "_pointer");
+	}
 	sagePointers[uniqueID].portal = portal;
 	remoteInteraction[uniqueID] = new Interaction(config);
 	remoteInteraction[uniqueID].local = portal ? false : true;
@@ -5691,8 +5696,8 @@ function showPointer(uniqueID, data) {
 		data.sourceType = "Pointer";
 	}
 
-	// SLICE added left and top to pointer construction
-	sagePointers[uniqueID].start(data.label, data.color, data.sourceType, data.left, data.top);
+	// SLICE added left and top to pointer construction: Removed
+	sagePointers[uniqueID].start(data.label, data.color, data.sourceType);
 	broadcast('showSagePointer', sagePointers[uniqueID]);
 }
 

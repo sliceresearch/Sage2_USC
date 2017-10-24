@@ -354,7 +354,8 @@ function SAGE2_init() {
 
 		// Get the cookie for the session, if there's one
 		var session = getCookie("session");
-
+		// SLICE params is the url parameters
+		params = getUrlParams();
 		var clientDescription = {
 			clientType: "sageUI",
 			requests: {
@@ -364,8 +365,13 @@ function SAGE2_init() {
 				console: false
 			},
 			browser: __SAGE2__.browser,
-			session: session
+			session: session,
+			urlParams: params
 		};
+		// SLICE 
+		if (__SAGE2__.browser.isMobile) {
+			clientDescription.clientType = "sliceUI";
+		}
 		wsio.emit('addClient', clientDescription);
 
 		// Interaction object: file upload, desktop sharing, ...
@@ -1269,7 +1275,6 @@ function pointerClick(event) {
  */
 function handleClick(element) {
 	// Menu Buttons
-	params = getUrlParams();
 	if (element.id === "sage2pointer"        || element.id === "sage2pointerContainer" || element.id === "sage2pointerLabel") {
 		interactor.startSAGE2Pointer(element.id, params);
 	} else if (element.id === "sharescreen"  || element.id === "sharescreenContainer"  || element.id === "sharescreenLabel") {
