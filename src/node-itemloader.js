@@ -729,6 +729,7 @@ AppLoader.prototype.loadUnityAppFromZip = function(appLoader, unityLoader, zipFo
 			}
 		});
 
+		// Generate instructions.json if it doesn't exist
 		if (data.instructionsExists == false) {
 			var obj = {
 				main_script: "UnityLoader.js",
@@ -763,7 +764,6 @@ AppLoader.prototype.loadUnityAppFromZip = function(appLoader, unityLoader, zipFo
 				}
 				console.log(sageutils.header("Loader") + " found unity file " + unityLoader);
 				var appInstance = appLoader.readInstructionsFile(json_str, zipFolder, data.mime_type, data.external_url);
-				//var appInstance = _this.processUnityApp(json_str, zipFolder, mime_type, external_url);
 				appLoader.scaleAppToFitDisplay(appInstance);
 				// Seems to cause issues, when drag-drop, the first time the app is opened.
 				// appInstance.file = file;
@@ -1300,69 +1300,6 @@ AppLoader.prototype.readInstructionsFile = function(json_str, file, mime_type, e
 		resizeMode: resizeMode,
 		sticky: instructions.sticky,
 		plugin: instructions.plugin,
-		file: file,
-		sage2URL: s2url,
-		date: new Date()
-	};
-	return result;
-};
-
-AppLoader.prototype.processUnityApp = function(json_str, file, mime_type, external_url) {
-	//var instructions = JSON.parse(json_str);
-	var instructions = {load: null, width: 960, height: 600}; // 960, 600 unity default WebGL resolution
-	//var appName = instructions.main_script.substring(0, instructions.main_script.lastIndexOf('.'));
-	var aspectRatio = instructions.width / instructions.height;
-
-	var resizeMode = "proportional";
-	//if (instructions.resize !== undefined && instructions.resize !== null && instructions.resize !== "") {
-	//	resizeMode = instructions.resize;
-	//}
-	var exif  = assets.getExifData(file);
-	var s2url = assets.getURL(file);
-
-	var appName = "Webview";
-	mime_type = "application/custom";
-	var webpath = getSAGE2Path('/uploads/apps/Webview');
-	external_url = this.hostOrigin + '/uploads/apps/Webview';
-
-	// Load from the SAGE2 web server itself
-	instructions.load = {
-		url: this.hostOrigin + assets.getURL(file) + "/index.html",
-		// set webview arguments
-		zoom: 1,
-		mode: "mobile",
-		favicon: ""
-	};
-
-	file = webpath;
-	s2url = '/uploads/apps/Webview';
-
-	var result = {
-		id: null,
-		title: "Unity Application", //exif.metadata.title,
-		application: appName,
-		icon: exif ? exif.SAGE2thumbnail : null,
-		type: mime_type,
-		url: external_url,
-		data: instructions.load,
-		resrc: null,
-		left: this.titleBarHeight,
-		top: 1.5 * this.titleBarHeight,
-		width: instructions.width,
-		height: instructions.height,
-		native_width: instructions.width,
-		native_height: instructions.height,
-		previous_left: null,
-		previous_top: null,
-		previous_width: null,
-		previous_height: null,
-		maximized: false,
-		aspect: aspectRatio,
-		animation: instructions.animation,
-		metadata: null,
-		resizeMode: resizeMode,
-		sticky: null,
-		plugin: null,
 		file: file,
 		sage2URL: s2url,
 		date: new Date()
