@@ -1008,7 +1008,7 @@ var SAGE2_App = Class.extend({
 			});
 
 			// limit the size of the title, especially for webview titles
-			var menuTitle = this.title || "application";
+			var menuTitle = this.title || "Application";
 			if (menuTitle.length > 40) {
 				// crop the title to 40 characters and add ellipsis
 				menuTitle = menuTitle.substring(0, 40) + '...';

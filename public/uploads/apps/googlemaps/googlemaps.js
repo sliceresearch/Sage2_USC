@@ -408,7 +408,7 @@ var googlemaps = SAGE2_App.extend({
 
 		var entry   = {};
 		// label of them menu
-		entry.description = "Type a location:";
+		entry.description = "Type Location:";
 		// callback
 		entry.callback = "setLocation";
 		// parameters of the callback function
@@ -418,18 +418,16 @@ var googlemaps = SAGE2_App.extend({
 		entries.push(entry);
 
 		entry = {};
-		entry.description = "Save current location";
+		entry.description = "Save Current Location";
 		entry.callback = "setDefault";
 		entry.parameters = {};
 		entries.push(entry);
 
 		entry = {};
-		entry.description = "Load saved location";
+		entry.description = "Load Saved Location";
 		entry.callback = "loadDefault";
 		entry.parameters = {};
 		entries.push(entry);
-
-		entries.push({description: "separator"});
 
 		return entries;
 	},
