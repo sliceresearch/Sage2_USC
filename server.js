@@ -8559,8 +8559,10 @@ function keyPress(uniqueID, pointerX, pointerY, data) {
 			wsLoadApplication(null, {
 				application: "/uploads/pdfs/cheat-sheet.pdf",
 				user: "127.0.0.1:42",
-				position: [0.5, 100], // center and 100pix down
+				// position in center and 100pix down
+				position: [0.5, 100]
 			});
+			// show a popup
 			// broadcast('toggleHelp', {});
 		}
 		return;
