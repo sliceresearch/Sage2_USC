@@ -172,6 +172,23 @@ class UserList {
 		};
 	}
 
+	getUserById(uid) {
+		let req = this.getData(this.userPath(uid));
+		if (req.success) {
+			return {
+				uid: uid,
+				user: req.data,
+				error: null
+			};
+		}
+
+		return {
+			user: null,
+			uid: null,
+			error: "Could not find user."
+		};
+	}
+
 	/* compare uid to existing data in db */
 	userExists(uid) {
 		return this.getData(this.userPath(uid)).success;

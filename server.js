@@ -117,6 +117,7 @@ var hostOrigin         = "";
 var SAGE2Items         = {};
 var sharedApps         = {};
 var users              = null;
+var users2             = {};
 var appLoader          = null;
 var mediaBlockSize     = 512;
 var pressingCTRL       = true;
@@ -734,7 +735,8 @@ function closeWebSocketClient(wsio) {
 		}
 	}
 
-	broadcast("userEvent", {type: "disconnect"});
+	delete users2[wsio.id];
+	broadcast('userEvent', { type: 'disconnect', data: null, id: wsio.id });
 	addEventToUserLog(wsio.id, {type: "disconnect", data: null, time: Date.now()});
 
 	// if client is a remote site, send disconnect message
@@ -970,6 +972,7 @@ function initializeWSClient(wsio, reqConfig, reqVersion, reqTime, reqConsole) {
  */
 function setupListeners(wsio) {
 	wsio.on('registerInteractionClient',            wsRegisterInteractionClient);
+	wsio.on('pollActiveClients',                    wsPollActiveClients);
 	wsio.on('loginUser',                            wsLoginUser);
 	wsio.on('logoutUser',                           wsLogoutUser);
 	wsio.on('createUser',                           wsCreateUser);
@@ -1411,6 +1414,38 @@ function wsSelectionModeOnOff(wsio, data) {
 }
 
 // ************** User functions ****************
+function wsPollActiveClients(wsio, data) {
+	let clients = {
+		users: [],
+		guests: []
+	};
+
+	for (let ip in users2) {
+		const user = users2[ip];
+		if (user) {
+			const foundUser = clients.users.find(u => u.name === user.name && u.email === user.email);
+
+			// if user does not already exist
+			if (!foundUser) {
+				clients.users.push({
+					name: user.name,
+					email: user.email,
+					label: user.SAGE2_ptrName,
+					id: [ip]
+				});
+			} else {
+				foundUser.id.push(ip);
+			}
+		} else {
+			clients.guests.push(ip);
+		}
+	}
+
+	wsio.emit('activeClientsRetrieved', {
+		clients: clients
+	});
+}
+
 function wsLoginUser(wsio, data) {
 
 	let res = userlist.getUser(data.name, data.email);
@@ -1418,29 +1453,51 @@ function wsLoginUser(wsio, data) {
 	wsio.emit('loginStateChanged', {
 		login: true,
 		success: res.error === null,
-		uid: res && res.uid,
-		user: res && res.user,
+		uid: res.uid,
+		user: res.user,
 		errorMessage: res.error,
 		init: data.init
 	});
 
 	if (res.error === null) {
+		users2[wsio.id] = {
+			wid: wsio.id,
+			uid: res.uid,
+			name: res.user.name
+		};
+
 		broadcast('userEvent', {
 			type: 'login',
-			data: { user: res && res.user }
+			data: res.user,
+			id: wsio.id
+		});
+	} else if (data.init) {
+		users2[wsio.id] = null;
+
+		broadcast('userEvent', {
+			type: 'login',
+			data: res.user,
+			id: wsio.id
 		});
 	}
 }
 
 function wsLogoutUser(wsio, data) {
-	wsio.emit('loginStateChanged', {
-		login: false
-	});
+	let res = userlist.getUserById(data);
 
-	broadcast('userEvent', {
-		type: 'logout',
-		data: {}
-	});
+	if (res.error === null) {
+		wsio.emit('loginStateChanged', {
+			login: false
+		});
+
+		users2[wsio.id] = null;
+
+		broadcast('userEvent', {
+			type: 'logout',
+			data: res.user,
+			id: wsio.id
+		});
+	}
 }
 
 function wsCreateUser(wsio, data) {
@@ -1451,15 +1508,21 @@ function wsCreateUser(wsio, data) {
 	wsio.emit('loginStateChanged', {
 		login: true,
 		success: res.error === null,
-		uid: res && res.uid,
-		user: res && res.user,
+		uid: res.uid,
+		user: res.user,
 		errorMessage: res.error
 	});
 
-	if (res && res.success) {
+	if (res.error === null) {
+		users2[wsio.id] = {
+			wid: wsio.id,
+			uid: res.uid,
+			name: res.user.name
+		};
+
 		broadcast('userEvent', {
-			type: 'newUser',
-			data: { user: res.user }
+			type: 'new user',
+			data: res.user
 		});
 	}
 }
@@ -1669,7 +1732,6 @@ function wsStartNewMediaStream(wsio, data) {
 					type: appInstance.application
 				}
 			};
-			broadcast('userEvent', {type: 'media stream start', data: data});
 			addEventToUserLog(wsio.id, {type: "mediaStreamStart", data: eLogData, time: Date.now()});
 		});
 }
@@ -3028,14 +3090,12 @@ function wsDeleteAllApplications(wsio) {
 function wsClearDisplay(wsio, data) {
 	clearDisplay();
 
-	broadcast('userEvent', {type: 'clear display', data: data});
 	addEventToUserLog(wsio.id, {type: "clearDisplay", data: null, time: Date.now()});
 }
 
 function wsTileApplications(wsio, data) {
 	tileApplications();
 
-	broadcast('userEvent', {type: 'tile applications', data: data});
 	addEventToUserLog(wsio.id, {type: "tileApplications", data: null, time: Date.now()});
 }
 
@@ -4072,7 +4132,6 @@ function wsStartApplicationMove(wsio, data) {
 		}
 	};
 
-	broadcast('userEvent', {type: 'start moving app', data: data});
 	addEventToUserLog(data.id, {type: "windowManagement", data: eLogData, time: Date.now()});
 }
 
@@ -4105,7 +4164,6 @@ function wsStartApplicationResize(wsio, data) {
 			height: parseInt(app.height, 10)
 		}
 	};
-	broadcast('userEvent', {type: 'start resizing app', data: data});
 	addEventToUserLog(data.id, {type: "windowManagement", data: eLogData, time: Date.now()});
 }
 
@@ -4192,7 +4250,6 @@ function wsFinishApplicationMove(wsio, data) {
 	}
 
 	broadcast('finishedMove', {id: data.appId, date: Date.now()});
-	broadcast('userEvent', {type: 'stop moving app', data: data});
 
 	var eLogData = {
 		type: "move",
@@ -4225,7 +4282,6 @@ function wsFinishApplicationResize(wsio, data) {
 	}
 
 	broadcast('finishedResize', {id: data.appId, date: Date.now()});
-	broadcast('userEvent', {type: 'stop resizing app', data: data});
 
 	var eLogData = {
 		type: "resize",
@@ -4246,7 +4302,6 @@ function wsFinishApplicationResize(wsio, data) {
 
 function wsDeleteApplication(wsio, data) {
 	deleteApplication(data.appId);
-	broadcast('userEvent', {type: 'delete app', data: data});
 
 	// Is that diffent ?
 	// if (SAGE2Items.applications.list.hasOwnProperty(data.appId)) {

@@ -2,7 +2,7 @@
 <html>
 <head lang="en">
 <meta charset="utf-8">
-<title>SAGE2 console</title>
+<title>event console</title>
 
 <script type="text/license">
 	// SAGE2 is available for use under the SAGE2 Software License
@@ -73,6 +73,9 @@
 
 	let container = document.getElementById('main');
 
+	var nli = 0;
+	var tli = 1;
+
 	function addText(el, text) {
 		el.appendChild(document.createTextNode(text));
 	}
@@ -80,10 +83,10 @@
 	function addUserEvent(event) {
 		let p = document.createElement('p');
 
-		p.innerHTML += new Date() + '<br>';
+		p.innerHTML = new Date() + '<br>';
 
 		let span = document.createElement('b');
-		addText(span, event.type);
+		addText(span, tli + '. ' + event.type);
 
 		p.appendChild(span);
 
@@ -91,13 +94,36 @@
 
 		if (event.data) {
 
-			if (event.data.user) {
-				addText(p, event.data.user.name);
+			if (event.data.SAGE2_ptrName || event.data.label) {
+				addText(p, (event.data.SAGE2_ptrName || event.data.label));
 			}
-			else if (event.data.label) {
-				addText(p, event.data.label);
+			if (event.data.name) {
+				addText(p, ' [' + event.data.name + ']');
+			}
+			if (event.data.id) {
+				addText(span, ' - ' + event.data.id);
 			}
 
+			if (event.data.filename) {
+				addText(span, ' ' + event.data.filename);
+			}
+			else if (event.data.application) {
+				let slice = event.data.application.lastIndexOf('/');
+				if (slice > -1) {
+					addText(span, ' ' + event.data.application.slice(slice + 1));
+				}
+				else {
+					addText(span, ' ' + event.data.application);
+				}
+			}
+		}
+
+		++tli;
+		if (nli < 20) {
+			++nli;
+		}
+		else {
+			container.removeChild(container.querySelector('p'));
 		}
 
 		container.appendChild(p);

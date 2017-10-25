@@ -358,7 +358,7 @@ const SAGE2_interaction = (function() {
 			} else {
 				console.log("No mouse detected - entering touch interface for SAGE2 Pointer");
 
-				this.wsio.emit('startSagePointer', _userSettings);
+				this.wsio.emit('startSagePointer', this.user);
 
 				showSAGE2PointerOverlayNoMouse();
 			}
@@ -377,7 +377,7 @@ const SAGE2_interaction = (function() {
 					console.log("No PointerLock support");
 				}
 			} else {
-				this.wsio.emit('stopSagePointer', _userSettings);
+				this.wsio.emit('stopSagePointer', this.user);
 				hideSAGE2PointerOverlayNoMouse();
 			}
 		};
@@ -405,7 +405,7 @@ const SAGE2_interaction = (function() {
 
 			// disable SAGE2 Pointer
 			if (pointerLockElement === undefined || pointerLockElement === null) {
-				this.wsio.emit('stopSagePointer', _userSettings);
+				this.wsio.emit('stopSagePointer', this.user);
 
 				document.removeEventListener('mousedown',  this.pointerPress,     false);
 				document.removeEventListener('mousemove',  this.pointerMove,      false);
@@ -421,7 +421,7 @@ const SAGE2_interaction = (function() {
 				sagePointerDisabled();
 			} else {
 				// enable SAGE2 Pointer
-				this.wsio.emit('startSagePointer', _userSettings);
+				this.wsio.emit('startSagePointer', this.user);
 
 				document.addEventListener('mousedown',  this.pointerPress,     false);
 				document.addEventListener('mousemove',  this.pointerMove,      false);
@@ -1175,7 +1175,7 @@ const SAGE2_interaction = (function() {
 					var userElements;
 
 					// if (!_loggedIn) {
-						userElements = elements.splice(0,2);
+					userElements = elements.splice(0, 2);
 					// }
 					// else {
 					// 	userElements = elements.splice(0, 2,
@@ -1270,13 +1270,6 @@ const SAGE2_interaction = (function() {
 
 			// close the dialog without saving changes
 			$$("user_cancel").attachEvent("onItemClick", function() {
-				// fall back to default values
-				_userSettings.SAGE2_ptrName = username;
-				_userSettings.SAGE2_ptrColor = color;
-				addCookie('SAGE2_ptrName', _userSettings.SAGE2_ptrName);
-				addCookie('SAGE2_ptrColor', _userSettings.SAGE2_ptrColor);
-
-				// Close the UI
 				parent.destructor();
 			});
 
@@ -1306,6 +1299,22 @@ const SAGE2_interaction = (function() {
 			// Focus the text box
 			$$('user_name').focus();
 		};
+
+		/**
+		* Getter for user settings
+		*
+		* @property user
+		*/
+		Object.defineProperty(this, "user", {
+			get: function() {
+				return {
+					name: _userSettings.SAGE2_userName,
+					// id: _uid,
+					label: _userSettings.SAGE2_ptrName,
+					color: _userSettings.SAGE2_ptrColor
+				};
+			}
+		});
 
 
 		/**
