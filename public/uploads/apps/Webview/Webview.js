@@ -459,12 +459,24 @@ var Webview = SAGE2_App.extend({
 	startPresentation: function(act) {
 		var _this = this;
 		if (this.contentType === "google_slides") {
-			// Simulate a start of presentation CMD-Enter
-			this.element.sendInputEvent({
-				type: "keyDown",
-				keyCode: "Enter",
-				modifiers: ["meta"]
-			});
+			// Simulate a start of presentation CMD-Enter on Mac,
+			// Ctrl-F5 on Windows
+			var os = require('os').platform();
+			if (os === "darwin") {
+				// Cmd-Enter
+				this.element.sendInputEvent({
+					type: "keyDown",
+					keyCode: "Enter",
+					modifiers: ["Command"]
+				});
+			} else {
+				// Ctrl-F5
+				this.element.sendInputEvent({
+					type: "keyDown",
+					keyCode: "F5",
+					modifiers: ["Control"]
+				});
+			}
 			setTimeout(function() {
 				_this.element.sendInputEvent({
 					type: "keyUp",
