@@ -817,6 +817,13 @@ var Webview = SAGE2_App.extend({
 					if (data.status.ALT) {
 						// navigate back
 						this.element.goBack();
+					} else {
+						// send the left arrow key
+						this.element.sendInputEvent({
+							type: "keyDown",
+							keyCode: "Left",
+							modifiers: null
+						});
 					}
 					this.refresh(date);
 				} else if (data.code === 38 && data.state === "down") {
@@ -825,11 +832,16 @@ var Webview = SAGE2_App.extend({
 						// ALT-up_arrow zooms in
 						this.zoomPage({dir: "zoomin"});
 					} else {
+						// this.element.sendInputEvent({
+						// 	type: "mouseWheel",
+						// 	deltaX: 0, deltaY: 64,
+						// 	x: 0, y: 0,
+						// 	canScroll: true
+						// });
 						this.element.sendInputEvent({
-							type: "mouseWheel",
-							deltaX: 0, deltaY: 64,
-							x: 0, y: 0,
-							canScroll: true
+							type: "keyDown",
+							keyCode: "Up",
+							modifiers: null
 						});
 					}
 					this.refresh(date);
@@ -846,6 +858,13 @@ var Webview = SAGE2_App.extend({
 					if (data.status.ALT) {
 						// navigate forward
 						this.element.goForward();
+					} else {
+						// send the right arrow key
+						this.element.sendInputEvent({
+							type: "keyDown",
+							keyCode: "Right",
+							modifiers: null
+						});
 					}
 					this.refresh(date);
 				} else if (data.code === 40 && data.state === "down") {
@@ -854,11 +873,16 @@ var Webview = SAGE2_App.extend({
 						// ALT-down_arrow zooms out
 						this.zoomPage({dir: "zoomout"});
 					} else {
+						// this.element.sendInputEvent({
+						// 	type: "mouseWheel",
+						// 	deltaX: 0, deltaY: -64,
+						// 	x: 0, y: 0,
+						// 	canScroll: true
+						// });
 						this.element.sendInputEvent({
-							type: "mouseWheel",
-							deltaX: 0, deltaY: -64,
-							x: 0, y: 0,
-							canScroll: true
+							type: "keyDown",
+							keyCode: "Down",
+							modifiers: null
 						});
 					}
 					this.refresh(date);
