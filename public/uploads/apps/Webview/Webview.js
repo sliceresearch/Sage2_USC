@@ -121,6 +121,8 @@ var Webview = SAGE2_App.extend({
 				view_url = 'https://player.twitch.tv/?!autoplay&video=v' + twitch_id;
 			}
 			this.contentType = "twitch";
+		} else if (view_url.indexOf('docs.google.com/presentation') >= 0) {
+			this.contentType = "google_slides";
 		}
 
 		// Store the zoom level, when in desktop emulation
@@ -281,8 +283,7 @@ var Webview = SAGE2_App.extend({
 			newtext += ' <i class="fa">\u{f017}</i>';
 		}
 		// if the page is loading
-		if (this.isLoading && this.contentType !== "youtube" &&
-			this.contentType !== "vimeo" && this.contentType !== "twitch") {
+		if (this.isLoading && this.contentType === "web") {
 			// add a spinner using a FontAwsome character
 			newtext += ' <i class="fa fa-spinner fa-spin"></i>';
 		}
@@ -454,6 +455,45 @@ var Webview = SAGE2_App.extend({
 			});
 		}
 	},
+
+	startPresentation: function(act) {
+		var _this = this;
+		if (this.contentType === "google_slides") {
+			// Simulate a start of presentation CMD-Enter
+			this.element.sendInputEvent({
+				type: "keyDown",
+				keyCode: "Enter",
+				modifiers: ["meta"]
+			});
+			setTimeout(function() {
+				_this.element.sendInputEvent({
+					type: "keyUp",
+					keyCode: "Enter",
+					modifiers: null
+				});
+			}, 100);
+		}
+	},
+
+	sendESC: function(act) {
+		var _this = this;
+		if (this.contentType === "google_slides") {
+			// Simulate a start of presentation CMD-Enter
+			this.element.sendInputEvent({
+				type: "keyDown",
+				keyCode: "Escape",
+				modifiers: null
+			});
+			setTimeout(function() {
+				_this.element.sendInputEvent({
+					type: "keyUp",
+					keyCode: "Escape",
+					modifiers: null
+				});
+			}, 100);
+		}
+	},
+
 	muteUnmute: function(act) {
 		if (isMaster) {
 			var content = this.element.getWebContents();
@@ -491,6 +531,37 @@ var Webview = SAGE2_App.extend({
 			entry.parameters = {};
 			entries.push(entry);
 
+		} else if (this.contentType === "google_slides") {
+			entry = {};
+			entry.description = "Start Presentation";
+			entry.accelerator = "P";
+			entry.callback = "startPresentation";
+			entry.parameters = {};
+			entries.push(entry);
+
+			entry = {};
+			entry.description = "Stop Presentation";
+			entry.callback = "sendESC";
+			entry.parameters = {};
+			entries.push(entry);
+
+			// right arrow
+			entry = {};
+			entry.description = "Next Slide";
+			entry.accelerator = "\u2192";     // ->
+			entry.callback = "navigation";
+			entry.parameters = {};
+			entry.parameters.action = "forward";
+			entries.push(entry);
+
+			// left arrow
+			entry = {};
+			entry.description = "Previous Slide";
+			entry.accelerator = "\u2190";     // <-
+			entry.callback = "navigation";
+			entry.parameters = {};
+			entry.parameters.action = "back";
+			entries.push(entry);
 		} else {
 			entry = {};
 			entry.description = "Back";
@@ -651,9 +722,29 @@ var Webview = SAGE2_App.extend({
 		if (this.isElectron) {
 			var action = responseObject.action;
 			if (action === "back") {
-				this.element.goBack();
+				if (this.contentType === "google_slides") {
+					// send the left arrow key
+					this.element.sendInputEvent({
+						type: "keyDown",
+						keyCode: "Left",
+						modifiers: null
+					});
+				} else {
+					// navigate the webview
+					this.element.goBack();
+				}
 			} else if (action === "forward") {
-				this.element.goForward();
+				if (this.contentType === "google_slides") {
+					// send the right arrow key
+					this.element.sendInputEvent({
+						type: "keyDown",
+						keyCode: "Right",
+						modifiers: null
+					});
+				} else {
+					// navigate the webview
+					this.element.goForward();
+				}
 			} else if (action === "address") {
 				if ((responseObject.clientInput.indexOf("://") === -1) &&
 					!responseObject.clientInput.startsWith("/")) {
@@ -699,7 +790,6 @@ var Webview = SAGE2_App.extend({
 			// Making Integer values, seems to be required by sendInputEvent
 			var x = Math.round(position.x);
 			var y = Math.round(position.y);
-			var _this = this;
 
 			if (eventType === "pointerPress") {
 				// click
@@ -738,6 +828,7 @@ var Webview = SAGE2_App.extend({
 			} else if (eventType === "widgetEvent") {
 				// widget events
 			} else if (eventType === "keyboard") {
+				this.element.focus();
 
 				if (this.contentType === "youtube" ||
 					this.contentType === "vimeo"   ||
@@ -752,19 +843,30 @@ var Webview = SAGE2_App.extend({
 						return;
 					}
 				}
+				if (this.contentType === "google_slides") {
+					if (data.character === "p") {
+						// p play
+						this.startPresentation();
+						return;
+					} else if (data.character === " ") {
+						// send the right arrow key
+						this.element.sendInputEvent({
+							type: "keyDown",
+							keyCode: "Right",
+							modifiers: null
+						});
+						return;
+					}
+				}
 
+				// send the character event
 				this.element.sendInputEvent({
 					// type: "keyDown",
 					// Not sure why we need 'char' but it works ! -- Luc
 					type: "char",
 					keyCode: data.character
 				});
-				setTimeout(function() {
-					_this.element.sendInputEvent({
-						type: "keyUp",
-						keyCode: data.character
-					});
-				}, 0);
+
 			} else if (eventType === "specialKey") {
 				// clear the array
 				this.modifiers = [];
@@ -832,12 +934,6 @@ var Webview = SAGE2_App.extend({
 						// ALT-up_arrow zooms in
 						this.zoomPage({dir: "zoomin"});
 					} else {
-						// this.element.sendInputEvent({
-						// 	type: "mouseWheel",
-						// 	deltaX: 0, deltaY: 64,
-						// 	x: 0, y: 0,
-						// 	canScroll: true
-						// });
 						this.element.sendInputEvent({
 							type: "keyDown",
 							keyCode: "Up",
@@ -873,12 +969,6 @@ var Webview = SAGE2_App.extend({
 						// ALT-down_arrow zooms out
 						this.zoomPage({dir: "zoomout"});
 					} else {
-						// this.element.sendInputEvent({
-						// 	type: "mouseWheel",
-						// 	deltaX: 0, deltaY: -64,
-						// 	x: 0, y: 0,
-						// 	canScroll: true
-						// });
 						this.element.sendInputEvent({
 							type: "keyDown",
 							keyCode: "Down",
