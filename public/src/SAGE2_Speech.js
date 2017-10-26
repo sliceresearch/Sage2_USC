@@ -568,27 +568,34 @@ SAGE2_speech.speechSynthesisInit = function() {
 	// timeout needed because the synch seemed to be an asynchronous action.
 	setTimeout(function() {
 		SAGE2_speech.voices = SAGE2_speech.synth.getVoices();
-		var kyoko, samantha, victoria;
-		kyoko = samantha = victoria = false;
+		var kyoko    = {found: false};
+		var samantha = {found: false};
+		var victoria = {found: false};
 		if (SAGE2_speech.voices.length > 0) {
 			for (let i = 0; i < SAGE2_speech.voices.length; i++) {
 				if (SAGE2_speech.voices[i].name === "Samantha") {
-					samantha = i;
+					samantha.found = true;
+					samantha.index = i;
 				} else if (SAGE2_speech.voices[i].name === "Kyoko") {
-					kyoko = i;
+					kyoko.found = true;
+					kyoko.index = i;
 				} else if (SAGE2_speech.voices[i].name === "Victoria") {
-					victoria = i;
+					victoria.found = true;
+					victoria.index = i;
 				}
 			}
 		} else {
 			console.log("SpeechRecognition> Speech synthesis voices not available");
 		}
-		if (samantha) {
-			SAGE2_speech.ttsConverter.voice = SAGE2_speech.voices[samantha];
-		} else if (kyoko) {
-			SAGE2_speech.ttsConverter.voice = SAGE2_speech.voices[kyoko];
-		} else if (victoria) {
-			SAGE2_speech.ttsConverter.voice = SAGE2_speech.voices[victoria];
+		if (samantha.found) {
+			// priority to samantha
+			SAGE2_speech.ttsConverter.voice = SAGE2_speech.voices[samantha.index];
+		} else if (kyoko.found) {
+			// then kyoko
+			SAGE2_speech.ttsConverter.voice = SAGE2_speech.voices[kyoko.index];
+		} else if (victoria.found) {
+			// finally victoria
+			SAGE2_speech.ttsConverter.voice = SAGE2_speech.voices[victoria.index];
 		}
 		SAGE2_speech.ttsConverter.lang = 'en-US';
 	}, 2000);
@@ -605,7 +612,7 @@ SAGE2_speech.textToSpeech = function (whatToSay) {
 		return;
 	}
 	try {
-		console.log("SpeechRecognition> Speech:" + whatToSay);
+		console.log("SpeechRecognition> Speech:", whatToSay);
 		SAGE2_speech.ttsConverter.text = whatToSay;
 		window.speechSynthesis.speak(SAGE2_speech.ttsConverter);
 	} catch (e) {
