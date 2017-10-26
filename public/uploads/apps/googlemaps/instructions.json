@@ -4,6 +4,7 @@
 	"width":  800,
 	"height": 600,
 	"resize": "free",
+	"animation": true,
 	"dependencies": [
 		"googlemapsInit.js",
 		"https://maps.googleapis.com/maps/api/js?key=AIzaSyANE6rJqcfc7jH-bDOwhXQZK_oYq9BWRDY&callback=googleMapsForSAGE2Init"

@@ -97,6 +97,10 @@ body {
 	display: block;
 }
 
+.svgForegroundDraw {
+	pointer-events: none;
+}
+
 .widgetBackground {
 	fill: rgba(150, 166, 189, 0.8);
 	stroke: rgba(230, 230, 230, 1);

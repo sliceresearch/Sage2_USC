@@ -10,7 +10,7 @@
 
 "use strict";
 
-/* global google */
+/* global google svgForegroundForWidgetConnectors */
 
 //
 // The instruction.json file contains a default key to access the Google Maps API.
@@ -24,6 +24,7 @@ var googlemaps = SAGE2_App.extend({
 		this.element.id = "div" + this.id;
 
 		this.resizeEvents = "continuous"; // "onfinish";
+		this.maxFPS = "10";
 
 		this.map          = null;
 		this.dragging     = false;
@@ -39,6 +40,12 @@ var googlemaps = SAGE2_App.extend({
 
 		this.initializeWidgets();
 		this.initializeOnceMapsLoaded();
+
+		// vars for plotting data
+		this.plotAnyNewGeoSource = false;
+		this.mapMarkers = [];
+		this.markerCycleIndex = 0;
+		this.broadcastData(); // variable broadcasting
 	},
 
 	initializeWidgets: function() {
@@ -158,6 +165,7 @@ var googlemaps = SAGE2_App.extend({
 	},
 
 	draw: function(date) {
+		this.updateLinesToSource();
 	},
 
 	resize: function(date) {
@@ -194,6 +202,7 @@ var googlemaps = SAGE2_App.extend({
 		if (this.trafficTimer) {
 			clearInterval(this.trafficTimer);
 		}
+		this.removeAllLinkLines();
 	},
 
 	event: function(eventType, position, user_id, data, date) {
@@ -216,6 +225,8 @@ var googlemaps = SAGE2_App.extend({
 			this.dragging = false;
 			this.position.x = position.x;
 			this.position.y = position.y;
+			// check if there is a marker under the cursor
+			this.showMarkerInfoIfReleasedOver({x: position.x, y: position.y});
 
 			this.refresh(date);
 		} else if (eventType === "pointerDblClick") {
@@ -479,6 +490,42 @@ var googlemaps = SAGE2_App.extend({
 		entry.parameters = {};
 		entries.push(entry);
 
+		entries.push({description: "separator"});
+
+		// toggle for plotting image data.
+		if (this.plotAnyNewGeoSource) {
+			entry = {};
+			entry.description = "Stop Plotting New Image Locations";
+			entry.callback = "toggleAutomaticPlot";
+			entry.parameters = { plot: false };
+			entries.push(entry);
+		} else {
+			entry = {};
+			entry.description = "Plot New Images With Location";
+			entry.callback = "toggleAutomaticPlot";
+			entry.parameters = { plot: true };
+			entries.push(entry);
+		}
+		// enables cycling between plotted image coordinates
+		if (this.mapMarkers.length > 0) {
+			entries.push({description: "separator"});
+			entry = {};
+			entry.description = "Remove All Markers From Map"; // remove marker plots
+			entry.callback = "removeAllMarkersFromMap";
+			entry.parameters = {};
+			entries.push(entry);
+			// even if only 1, allow going to it.
+			entry = {};
+			entry.description = "Go To Next Marker";
+			entry.callback = "focusOnMarkerIndex";
+			entry.parameters = { cycle: "next" };
+			entries.push(entry);
+			entry = {};
+			entry.description = "Go To Prevous Marker";
+			entry.callback = "focusOnMarkerIndex";
+			entry.parameters = { cycle: "previous" };
+			entries.push(entry);
+		}
 		return entries;
 	},
 
@@ -647,8 +694,335 @@ var googlemaps = SAGE2_App.extend({
 			// Need to sync since it's an async function
 			_this.SAGE2Sync(true);
 		});
-	}
+	},
 
+	// ------------------------------------------------------------------------------------------------------------------------
+	// From here is code related to plotting of image geo coordinates
+	// ------------------------------------------------------------------------------------------------------------------------
+	// First is the menu functions
+
+	/**
+	 * Menu entry to toggle automatic plotting of images.
+	 *
+	 * @method toggleAutomaticPlot
+	 * @param {Object} responseObject - Mainly used for .plot property.
+	 */
+	toggleAutomaticPlot: function(responseObject) {
+		this.plotAnyNewGeoSource = responseObject.plot;
+		this.getFullContextMenuAndUpdate();
+	},
+
+	/**
+	 * Menu entry to remove all plotted markers.
+	 *
+	 * @method removeAllMarkersFromMap
+	 */
+	removeAllMarkersFromMap: function() {
+		// if any of the maps have active lines, remove them
+		this.removeAllLinkLines();
+		for (let i = 0; i < this.mapMarkers.length; i++) {
+			this.mapMarkers[i].setMap(null);
+		}
+		this.mapMarkers = [];
+		this.getFullContextMenuAndUpdate();
+	},
+
+	/**
+	 * Menu entry to center map on a marker.
+	 * @method focusOnMarkerIndex
+	 * @param {Object} responseObject - Mainly used for .cycle property.
+	 */
+	focusOnMarkerIndex: function(responseObject) {
+		// if there are no markers, cannot focus on it
+		if (this.mapMarkers.length <= 0) {
+			return;
+		}
+		// based on which way to cycle
+		if (responseObject.cycle === "next") {
+			this.markerCycleIndex++;
+			if (this.markerCycleIndex >= this.mapMarkers.length) {
+				this.markerCycleIndex = 0;
+			}
+		} else {
+			this.markerCycleIndex--;
+			if (this.markerCycleIndex < 0) {
+				this.markerCycleIndex = this.mapMarkers.length - 1;
+			}
+		}
+		this.map.setCenter(this.mapMarkers[this.markerCycleIndex].markerLocation);
+		this.updateCenter();
+		this.showMarkerInfoIfReleasedOver({blank: "would have been coordinates"}, this.markerCycleIndex);
+		this.refresh(new Date());
+	},
+
+	// ------------------------------------------------------------------------------------------------------------------------
+	// Marker functions
+
+	/**
+	 * Adds a marker to the map
+	 * @method addMarkerToMap
+	 * @param {Object} markerLocation - Mainly used for .cycle property.
+	 * @param {Object} preventViewChange - Mainly used for .cycle property.
+	 */
+	addMarkerToMap: function(markerLocation, preventViewChange) {
+		var _this = this;
+		if (typeof markerLocation === "string") {
+			var latlng = markerLocation.split(",");
+			markerLocation = {
+				lat: parseFloat(latlng[0].trim()),
+				lng: parseFloat(latlng[1].trim())
+			};
+		}
+		if (typeof markerLocation.lat === "string") {
+			// there are at least two different string types
+			markerLocation.lat = this.convertDegMinSecDirToSignedDegree(markerLocation.lat);
+			markerLocation.lng = this.convertDegMinSecDirToSignedDegree(markerLocation.lng);
+		}
+		// add marker to map at location
+		let markToAdd = new google.maps.Marker({
+			position: markerLocation,
+			map: this.map
+		});
+		// add to tracking array to allow removal later
+		this.mapMarkers.push(markToAdd);
+		markToAdd.markerLocation = markerLocation;
+		// always center view on new marker
+		if (!preventViewChange) {
+			this.map.setCenter(markerLocation);
+			this.updateCenter();
+		}
+		// add info window if it doesn't exist
+		if (this.gmapInfoWindow === undefined || this.gmapInfoWindow === null) {
+			this.gmapInfoWindow = new google.maps.InfoWindow();
+			google.maps.event.addListener(this.gmapInfoWindow, 'closeclick', function() {
+				_this.removeAllLinkLines();
+			});
+		}
+		// add overlay for this map if doesn't exist
+		if (this.gmapOverlay === undefined || this.gmapOverlay === null) {
+			this.gmapOverlay = new google.maps.OverlayView();
+			this.gmapOverlay.draw = function() {}; // required?
+			this.gmapOverlay.setMap(this.map);
+		}
+		// add a click effect to marker
+		// google.maps.event.addListener(markToAdd, 'click', function(e) {
+		// 	_this.gmapInfoWindow.setContent("Latitude: " + this.markerLocation.lat
+		// 									+ "<br>\nLongitude:" + this.markerLocation.lng);
+		// 	_this.gmapInfoWindow.open(_this.map, this); // this is the marker
+		// });
+		this.getFullContextMenuAndUpdate();
+	},
+
+	/**
+	 * Converts string with degree, minute, second, direction to signed degree.
+	 * To avoid being token specific, checks for numbers rather than symbols.
+	 * Example coordinates from some images:
+	 *
+	 * lat: "21 deg 41' 33.14\" N",
+	 * lng: "157 deg 50' 55.48\" W"
+	 * lat: "19 deg 48' 59.66\" N ",
+	 * lng:"156 deg 10' 45.01\" W "
+	 * lat:"21 deg 52' 26.86\" N "
+	 * lng:"159 deg 27' 22.96\" W "
+	 *
+	 * @method convertDegMinSecDirToSignedDegree
+	 * @param {String} input - Will convert degree with mins and seconds notation to signed degree.
+	 */
+	convertDegMinSecDirToSignedDegree: function (input) {
+		var index = 0, partIndex = -1; // find the number first, might be prefix fluff
+		var findingNextNumber = true;
+		var parts = ["", "", "", ""]; // deg, min, sec, dir
+		// for each of the characters
+		while (index < input.length) {
+			// if finding next number
+			if (findingNextNumber) {
+				// if finding next number, but have gone through first 3, want direction
+				if (partIndex == 2) {
+					if (input.charAt(index) === "N"
+						|| input.charAt(index) === "S"
+						|| input.charAt(index) === "E"
+						|| input.charAt(index) === "W") {
+						parts[3] += input.charAt(index);
+					}
+				} else if (!isNaN(input.charAt(index))) {
+					// else if this char is a number moveup part index and stop looking
+					partIndex++;
+					findingNextNumber = false;
+				}
+			} // if at the next number, add to the part
+			if (!findingNextNumber) {
+				// if it is a number or a decimal, add it.
+				if (!isNaN(input.charAt(index))
+					|| input.charAt(index) === ".") {
+					parts[partIndex] += input.charAt(index);
+				} else {
+					// hitting a non-number or . means in between numbers
+					findingNextNumber = true;
+				}
+			} // always increase the index
+			index++;
+		}
+		// for all but the direction, convert to floats
+		for (let i = 0; i < parts.length - 1; i++) {
+			parts[i] = parseFloat(parts[i]);
+		}
+		var justDegrees = parts[0];
+		justDegrees += parts[1] / 60;
+		justDegrees += parts[2] / (60 * 60);
+
+		// flip the sign depending on which direction the count was in
+		if (parts[3] == "S" || parts[3] == "W") {
+			justDegrees = justDegrees * -1;
+		}
+		return justDegrees;
+	},
+
+	/**
+	 * Will check each marker to see if under the pointer
+	 * @method showMarkerInfoIfReleasedOver
+	 * @param {Object} releasePoint - Mainly used for .cycle property.
+	 * @param {Object} indexMatcher - Mainly used for .cycle property.
+	 */
+	showMarkerInfoIfReleasedOver: function(releasePoint, indexMatcher) {
+		var mpos;
+		for (let i = 0; i < this.mapMarkers.length; i++) {
+			// this will get the position relative to app top left corner
+			mpos = this.gmapOverlay.getProjection().fromLatLngToContainerPixel(this.mapMarkers[i].position);
+			// if clicking by the marker, or matches indexMatcher
+			if ((indexMatcher !== undefined && indexMatcher === i)
+				|| ((releasePoint.x > mpos.x - 15) // these values are estimated based on Mokulua site.
+				&& (releasePoint.x < mpos.x + 15)
+				&& (releasePoint.y > mpos.y - 45)
+				&& (releasePoint.y < mpos.x + 5))) {
+				// show the pop up google info window
+				// google.maps.event.trigger(this.mapMarkers[i], 'click');
+				this.removeAllLinkLines();
+				// create a line to source app
+				let said = this.mapMarkers[i].markerLocation.sourceAppId;
+				let svgLine = svgForegroundForWidgetConnectors.line(0, 0, 0, 0);
+				this.mapMarkers[i].s2lineLink = svgLine;
+				svgLine.attr({
+					id: this.id + "syncLineFor" + said,
+					strokeWidth: ui.widgetControlSize * 0.18,
+					stroke:  "rgba(250,250,250,1.0)"
+				});
+			}
+		}
+	},
+
+	// ------------------------------------------------------------------------------------------------------------------------
+	// Line functions
+
+	/**
+	 * Updates the lines from a marker to the source image.
+	 * Called as part of the draw function.
+	 * @method updateLinesToSource
+	 */
+	updateLinesToSource: function() {
+		var mpos, borderToleranceForMarkerRemoval = 15;
+		// for each marker
+		for (let i = 0; i < this.mapMarkers.length; i++) {
+			// if there is a line
+			if (this.mapMarkers[i].s2lineLink !== null && this.mapMarkers[i].s2lineLink !== undefined) {
+				// check if the app still exists
+				if (applications[this.mapMarkers[i].markerLocation.sourceAppId] === undefined) {
+					// if not, remove the line and move to the next marker
+					this.mapMarkers[i].s2lineLink.remove();
+					continue;
+				}
+				mpos = this.gmapOverlay.getProjection().fromLatLngToContainerPixel(this.mapMarkers[i].position);
+				// if the marker is too close or off the view, remove it
+				if (mpos.x < borderToleranceForMarkerRemoval
+					|| mpos.x > this.sage2_width - borderToleranceForMarkerRemoval
+					|| mpos.y < borderToleranceForMarkerRemoval
+					|| mpos.y > this.sage2_height - borderToleranceForMarkerRemoval) {
+					this.mapMarkers[i].s2lineLink.remove();
+					continue;
+				}
+				// if the line and app exist, then redraw
+				this.mapMarkers[i].s2lineLink.attr({
+					x1: (this.sage2_x + mpos.x),
+					y1: (this.sage2_y + mpos.y),
+					x2: (applications[this.mapMarkers[i].markerLocation.sourceAppId].sage2_x + 10),
+					y2: (applications[this.mapMarkers[i].markerLocation.sourceAppId].sage2_y
+						- ui.titleBarHeight + 10)
+				});
+			}
+		}
+	}, //applications[this.mapMarkers[i].markerLocation.sourceAppId].sage2_height / 2)
+
+	/**
+	 * If a marker has a link line, remove it from the svg space.
+	 * Support function for removeAllMarkersFromMap.
+	 * @method removeAllLinkLines
+	 */
+	removeAllLinkLines: function() {
+		for (var i = 0; i < this.mapMarkers.length; i++) {
+			if (this.mapMarkers[i].s2lineLink !== null && this.mapMarkers[i].s2lineLink !== undefined) {
+				this.mapMarkers[i].s2lineLink.remove();
+			}
+		}
+	},
+
+	// ------------------------------------------------------------------------------------------------------------------------
+	// Line functions
+
+	/**
+	 * Sets up data handling from server.
+	 * Currently just for images.
+	 *
+	 * @method broadcastData
+	 */
+	broadcastData: function() {
+		if (!isMaster) {
+			return; // prevent spamming
+		}
+		// ask for any new variables that are given to the server
+		this.serverDataSubscribeToNewValueNotification("handlerForNewVariableNotification");
+	},
+
+	/**
+	 * This function will receive notifications of new variables.
+	 * If enabled, will grab image data to plot markers.
+	 *
+	 * @method handlerForNewVariableNotification
+	 * @param {Object} addedVar - An object with properties as described below.
+	 * @param {Object} addedVar.nameOfValue - Name of the value on server, needed for requesting.
+	 * @param {Object} addedVar.description - User defined description.
+	 */
+	handlerForNewVariableNotification: function(addedVar) {
+		if (!isMaster) {
+			return; // prevent spam
+		}
+		// if this should plot any new geo data source
+		if (this.plotAnyNewGeoSource
+			&& addedVar.nameOfValue.indexOf("geoLocation") !== -1
+			&& addedVar.nameOfValue.indexOf("source") !== -1
+			&& addedVar.description.indexOf("image") !== -1) {
+			// serverDataGetValue: function(nameOfValue, callback)
+			this.serverDataGetValue(addedVar.nameOfValue, "makeMarkerGivenImageGeoLocation");
+		}
+	},
+
+	/**
+	 * Requires the image to send data in a particular way.
+	 *
+	 * @method makeMarkerGivenImageGeoLocation
+	 * @param {Object} value - An object with properties as described below.
+	 * @param {Object} addedVar.nameOfValue - Name of the value on server, needed for requesting.
+	 * @param {Object} addedVar.description - User defined description.
+	 */
+	makeMarkerGivenImageGeoLocation: function(value) {
+		if (Array.isArray(value) && value.length < 1) {
+			return; // don't use empty arrays
+		}
+		// all display clients need this to sync correctly
+		this.addMarkerToMap({
+			lat: value.location.lat,
+			lng: value.location.lng,
+			sourceAppId: value.source
+		});
+	}
 });
 
 /**

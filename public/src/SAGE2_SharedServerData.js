@@ -192,7 +192,7 @@ var SAGE2SharedServerData = {
 		if (isMaster) {
 			var nameOfValue = this.id + ":source:" + nameSuffix;
 			if (!this.dataSourcesBeingBroadcast.includes(nameOfValue)) {
-				throw new "Cannot update source value that hasn't been created yet:" + nameOfValue;
+				throw "Cannot update source value that hasn't been created yet:" + nameOfValue;
 			}
 			wsio.emit("serverDataSetValue", {
 				nameOfValue: nameOfValue,

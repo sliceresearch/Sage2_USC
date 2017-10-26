@@ -49,6 +49,7 @@ var image_viewer = SAGE2_App.extend({
 
 		this.updateAppFromState();
 		this.addWidgetControlsToImageViewer();
+		this.broadcastData();
 	},
 
 	/**
@@ -150,6 +151,20 @@ var image_viewer = SAGE2_App.extend({
 			parameters: {}
 		});
 
+		if (this.checkIfHasGpsData()) {
+			// Disable this for now
+			// entries.push({
+			// 	description: "Plot Location On Open Map",
+			// 	callback: "tryPlotOnGoogleMap",
+			// 	parameters: {}
+			// });
+			entries.push({
+				description: "Plot Location On New Map",
+				callback: "plotOnNewGoogleMap",
+				parameters: {}
+			});
+		}
+
 		// Special callback: convert to a doodle.
 		// entries.push({
 		// 	description: "Make Doodle",
@@ -158,6 +173,51 @@ var image_viewer = SAGE2_App.extend({
 		// });
 
 		return entries;
+	},
+
+	checkIfHasGpsData: function() {
+		if (this.state
+			&& this.state.exif
+			&& this.state.exif.GPSLatitude
+			&& this.state.exif.GPSLongitude) {
+			return true;
+		}
+		return false;
+	},
+
+	tryPlotOnGoogleMap: function() {
+		var mapAppIndex = this.checkForGoogleMapApp();
+		if (mapAppIndex !== -1) {
+			applications[mapAppIndex].addMarkerToMap({
+				lat: this.state.exif.GPSLatitude,
+				lng: this.state.exif.GPSLongitude,
+				sourceAppId: this.id,
+				shouldFocusViewOnNewMarker: true
+			}); // focus after plotting
+		}
+	},
+
+	checkForGoogleMapApp: function() {
+		var keys = Object.keys(applications);
+		// go from most recent to oldest
+		for (let i = keys.length - 1; i >= 0; i--) {
+			if (applications[keys[i]].application == "googlemaps") {
+				return keys[i];
+			}
+		}
+		return -1;
+	},
+
+	plotOnNewGoogleMap: function() {
+		if (isMaster) {
+			// function(appName, params, x, y, funcToPassParams) {
+			this.launchAppWithValues("googlemap", {
+				lat: this.state.exif.GPSLatitude,
+				lng: this.state.exif.GPSLongitude,
+				sourceAppId: this.id,
+				shouldFocusViewOnNewMarker: true
+			}, this.sage2_x + 100, this.sage2_y, "addMarkerToMap");
+		}
 	},
 
 	/**
@@ -301,7 +361,22 @@ var image_viewer = SAGE2_App.extend({
 		// UI stuff
 		this.controls.addButton({label: "info", position: 7, identifier: "Info"});
 		this.controls.finishedAddingControls();
+	},
+
+	broadcastData: function() {
+		if (!isMaster) {
+			return; // prevent spamming
+		}
+		if (this.checkIfHasGpsData()) {
+			// serverDataBroadcastSource: function(nameOfValue, value, description)
+			this.serverDataBroadcastSource("geoLocation", {
+				source: this.id,
+				location: {
+					lat: this.state.exif.GPSLatitude,
+					lng: this.state.exif.GPSLongitude
+				}
+			}, "an image geolocation");
+		}
 	}
 
 });
-
