@@ -417,6 +417,56 @@ var googlemaps = SAGE2_App.extend({
 		entry.inputFieldSize = 20;
 		entries.push(entry);
 
+		entry   = {};
+		entry.description = "Show me";
+		entry.callback = "setLocation";
+		entry.parameters     = {};
+		entry.inputField     = true;
+		entry.inputFieldSize = 20;
+		entry.voiceEntryOverload = true;
+		entries.push(entry);
+
+		entry   = {};
+		entry.description = "go to";
+		entry.callback = "setLocation";
+		entry.parameters     = {};
+		entry.inputField     = true;
+		entry.inputFieldSize = 20;
+		entry.voiceEntryOverload = true;
+		entries.push(entry);
+
+		entry   = {};
+		entry.description = "set zoom level";
+		entry.callback = "setZoomLevel";
+		entry.parameters     = {};
+		entry.inputField     = true;
+		entry.inputFieldSize = 20;
+		entry.voiceEntryOverload = true;
+		entries.push(entry);
+
+		entry   = {};
+		entry.description = "zoom in";
+		entry.callback = "setZoomLevel";
+		entry.parameters     = { increase: true };
+		entry.voiceEntryOverload = true;
+		entries.push(entry);
+
+		entry   = {};
+		entry.description = "zoom out";
+		entry.callback = "setZoomLevel";
+		entry.parameters     = { decrease: true };
+		entry.voiceEntryOverload = true;
+		entries.push(entry);
+
+		entry   = {};
+		entry.description = "zoom to";
+		entry.callback = "setZoomLevel";
+		entry.parameters     = {};
+		entry.inputField     = true;
+		entry.inputFieldSize = 20;
+		entry.voiceEntryOverload = true;
+		entries.push(entry);
+
 		entry = {};
 		entry.description = "Save Current Location";
 		entry.callback = "setDefault";
@@ -438,7 +488,126 @@ var googlemaps = SAGE2_App.extend({
 	setLocation: function(msgParams) {
 		// receive an object from the web ui
 		// .clientInput for what they typed
+		// UHM: 21.299N 157.8179887W,
+		// oahu: 21.5N 158W, little right of wahiawa
+		if (this.convertIntoLatLngIfCan(msgParams.clientInput)) {
+			return;
+		}
 		this.codeAddress(msgParams.clientInput);
+	},
+
+	convertIntoLatLngIfCan: function(line) {
+		var lowerCaseLine = line.toLowerCase();
+		var words = line.trim().split(" ");
+
+		// search for numbers and direction
+		var num1 = false, num2 = false, dir1 = false, dir2 = false;
+
+		// check if searched for a degree value
+		if (lowerCaseLine.includes("north") || lowerCaseLine.includes("south") || lowerCaseLine.includes("latitude")) {
+			if (lowerCaseLine.includes("east") || lowerCaseLine.includes("west") || lowerCaseLine.includes("longitude")) {
+				for (let i = 0; i < words.length; i++) {
+					// if this is a number
+					if (!isNaN(+words[i])) {
+						if (num1 === false) {
+							num1 = +words[i];
+						} else {
+							num2 = +words[i];
+						}
+					} else if ((words[i] === "north") // if this is a direction
+						|| (words[i] === "south")
+						|| (words[i] === "east")
+						|| (words[i] === "west")
+						|| (words[i] === "latitude")
+						|| (words[i] === "longitude")
+					) {
+						if (dir1 === false) {
+							dir1 = words[i];
+						} else {
+							dir2 = words[i];
+						}
+					}
+				}
+			}
+		}
+
+		// if able to get all numbers and directions
+		if (num1 && num2 && dir1 && dir2) {
+			var centerLatLng = {};
+			if (dir1 === "north" || dir1 === "south" || dir1 === "latitude") {
+				centerLatLng.lat = num1;
+				centerLatLng.lng = num2;
+				if (dir1 === "south") {
+					centerLatLng.lat *= -1;
+				}
+				if (dir2 === "west") {
+					centerLatLng.lng *= -1;
+				}
+			} else {
+				centerLatLng.lat = num2; // reversed
+				centerLatLng.lng = num1;
+				if (dir2 === "south") {
+					centerLatLng.lat *= -1;
+				}
+				if (dir1 === "west") {
+					centerLatLng.lng *= -1;
+				}
+			}
+			// Update the map with the result
+			this.map.setCenter(centerLatLng);
+			// Update the state variable
+			this.state.center = centerLatLng;
+			// Need to sync since it's an async function
+			this.SAGE2Sync(true);
+			return true;
+		}
+		return false;
+	},
+
+	setZoomLevel: function(responseObject) {
+		var zoomValue;
+		if (responseObject.increase) {
+			zoomValue = this.map.getZoom() + 1;
+		} else if (responseObject.decrease) {
+			zoomValue = this.map.getZoom() - 1;
+		} else {
+			// convert input to a number
+			zoomValue = +responseObject.clientInput;
+			if (isNaN(zoomValue)) {
+				var lowerCaseLine = responseObject.clientInput.toLowerCase();
+				if (lowerCaseLine.includes("world")
+					|| lowerCaseLine.includes("glob")
+					|| lowerCaseLine.includes("overview")) {
+					zoomValue = 3;
+				} else if (lowerCaseLine.includes("country")) {
+					zoomValue = 6;
+				} else if (lowerCaseLine.includes("province")
+					|| lowerCaseLine.includes("prefecture")
+					|| lowerCaseLine.includes("region")) {
+					zoomValue = 9;
+				} else if (lowerCaseLine.includes("city")
+					|| lowerCaseLine.includes("town")
+					|| lowerCaseLine.includes("district")
+					|| lowerCaseLine.includes("territory")) {
+					zoomValue = 12;
+				} else if (lowerCaseLine.includes("neighborhood")
+					|| lowerCaseLine.includes("block")
+					|| lowerCaseLine.includes("street")) {
+					zoomValue = 15;
+				} else if (lowerCaseLine.includes("max")
+					|| (lowerCaseLine.includes("close") && lowerCaseLine.includes("up"))
+					|| lowerCaseLine.includes("ground")) {
+					zoomValue = 20;
+				} else {
+					return;
+				}
+			}
+		}
+		zoomValue = (zoomValue < 1) ? 1 : zoomValue;
+		zoomValue = (zoomValue > 20) ? 20 : zoomValue;
+
+		this.map.setZoom(zoomValue);
+		this.state.zoomLevel = zoomValue;
 	},
 
 	/**

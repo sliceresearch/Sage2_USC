@@ -986,7 +986,10 @@ var SAGE2_App = Class.extend({
 				parameters: {}
 			});
 			appContextMenu.entries.push({
-				description: "separator"
+				description: "minimize",
+				callback: "SAGE2Maximize",
+				parameters: {},
+				voiceEntryOverload: true // not displayed on UI, added for voice entry
 			});
 			// currently testing with remote pointer event testing
 			/* currently disabled

@@ -20,6 +20,7 @@
 /* global SAGE2_init, SAGE2_resize, escape, unescape, sage2Version, showDialog */
 /* global removeAllChildren, SAGE2_copyToClipboard, displayUI, dateToYYYYMMDDHHMMSS */
 /* global showSAGE2Message */
+/* global SAGE2_speech */
 
 "use strict";
 
@@ -385,8 +386,18 @@ function FileManager(wsio, mydiv, uniqueID) {
 				var videoUrl = "https://sage2rtt.evl.uic.edu:3043/video/";
 				window.open(videoUrl, '_blank');
 			}
+		},
+		voiceserviceEnable_menu: {value: "Enable voice recognition",
+			tooltip: "Voice recognition will activate if left mouse button is held down for 1 second",
+			callback: SAGE2_speech.toggleVoiceRecognition
+		},
+		voiceserviceDisable_menu: {value: "Disable voice recognition",
+			tooltip: "Will not activate voice recognition when holding down left mouse button",
+			callback: SAGE2_speech.toggleVoiceRecognition
 		}
 	};
+	SAGE2_speech.uiMenuEntryEnable = servicesActions.voiceserviceEnable_menu;
+	SAGE2_speech.uiMenuEntryDisable = servicesActions.voiceserviceDisable_menu;
 
 	// Help
 	var helpActions = {
@@ -557,6 +568,9 @@ function FileManager(wsio, mydiv, uniqueID) {
 
 	// Disable the screenshot menu. Will wbe enabled later froms server
 	$$('topmenu').disableItem('wallScreenshot_menu');
+	// Disable voice recognition. Will be enabled from SAGE2_Speech.js file
+	$$('topmenu').hideItem('voiceserviceEnable_menu');
+	$$('topmenu').hideItem('voiceserviceDisable_menu');
 
 	// Set the actions for the file menu
 	attachCallbacks($$("topmenu").getSubMenu('topfile_menu'), fileActions);

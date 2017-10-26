@@ -77,6 +77,7 @@ var PartitionList       = require('./src/node-partitionlist');    // list of SAG
 var SharedDataManager	= require('./src/node-sharedserverdata'); // manager for shared data
 var S2Logger            = require('./src/node-logger');           // SAGE2 logging module
 var PerformanceManager	= require('./src/node-performancemanager'); // SAGE2 performance module
+var VoiceActionManager	= require('./src/node-voiceToAction'); // manager for shared data
 //
 // Globals
 //
@@ -695,6 +696,25 @@ var stickyAppHandler     = new StickyItems();
 // create manager for shared data
 var sharedServerData = new SharedDataManager(clients, broadcast);
 
+// create manager for voice actions, major functions are given on creation
+// each of these needs to be memory references
+var variablesUsedInVoiceHandler = {
+	sagePointers,
+	interactMgr,
+	SAGE2Items,
+	assets,
+	listSessions,
+	sharedServerData,
+	wsCallFunctionOnApp,
+	wsLaunchAppWithValues,
+	wsLoadFileFromServer,
+	wsSaveSesion,
+	tileApplications,
+	deleteAllApplications,
+	broadcast,
+	voiceNameMarker: "sage " // that space is important for checking // change this later to check config
+};
+var voiceHandler = new VoiceActionManager(variablesUsedInVoiceHandler);
 
 //
 // Catch the uncaught errors that weren't wrapped in a domain or try catch statement
@@ -889,6 +909,8 @@ function wsAddClient(wsio, data) {
 	// If it's a UI, send message to enable screenshot capability
 	if (wsio.clientType === "sageUI") {
 		reportIfCanWallScreenshot();
+		// also tell it variablesUsedInVoiceHandler.voiceNameMarker
+		wsio.emit("setVoiceNameMarker", {name: variablesUsedInVoiceHandler.voiceNameMarker});
 	}
 
 	// If it's a display, check for Electron and send enable screenshot capability
@@ -1146,6 +1168,9 @@ function setupListeners(wsio) {
 	wsio.on('serverDataGetAllTrackedValues',		wsServerDataGetAllTrackedValues);
 	wsio.on('serverDataGetAllTrackedDescriptions',	wsServerDataGetAllTrackedDescriptions);
 	wsio.on('serverDataSubscribeToNewValueNotification',	wsServerDataSubscribeToNewValueNotification);
+
+	// voice to sage2 actions
+	wsio.on('voiceToAction',                      wsVoiceToAction);
 
 	// Screenshot messages
 	wsio.on('startWallScreenshot',                  wsStartWallScreenshot);
@@ -9556,7 +9581,7 @@ function wsCallFunctionOnApp(wsio, data) {
  * @param  {Object} data - The object properties described below.
  * @param  {String} data.appName - Folder name to check for the app.
  * @param  {Object} data.params - Will be passed to the app. Function too, it is specified.
- * @param  {String}  data.func - Optional, if specified, will also call this funciton and pass parameters.
+ * @param  {String} data.func - Optional, if specified, will also call this funciton and pass parameters.
  */
 function wsLaunchAppWithValues(wsio, data) {
 	// first try see if the app is registered with apps exif.
@@ -10508,7 +10533,6 @@ function updateInformationAboutConnections() {
 	}
 }
 
-
 /**
  * Updates the stored information about failed remote site connections
  *
@@ -10536,4 +10560,15 @@ function updateInformationAboutConnectionsFailedRemoteSite(wsio) {
 		sites.push({id: wsio.id, total: 1});
 	}
 	sharedServerData.setValue(null, data); //  wsio is not needed to set value
+}
+
+/**
+ * Will attempt to take a transcript and use best case to activate a context menu item.
+ * 
+ * @method wsVoiceToAction
+ * @param {Object} wsio - ws to originator.
+ * @param {Object} data - should contain words.
+ */
+function wsVoiceToAction(wsio, data) {
+	voiceHandler.process(wsio, data);
 }

@@ -807,6 +807,31 @@ var pdf_viewer = SAGE2_App.extend({
 		entries.push(entry);
 
 		entry = {};
+		entry.description = "Go to page: ";
+		entry.callback = "changeThePage";
+		entry.parameters = {};
+		entry.inputField = true;
+		entry.inputFieldSize = 3;
+		entry.voiceEntryOverload = true; // not visible on UI
+		entries.push(entry);
+
+		entry = {};
+		entry.description = "Jump to page: ";
+		entry.callback = "changeThePage";
+		entry.parameters = {};
+		entry.inputField = true;
+		entry.inputFieldSize = 3;
+		entry.voiceEntryOverload = true; // not visible on UI
+		entries.push(entry);
+
+		entry = {};
+		entry.description = "Show page: ";
+		entry.callback = "changeThePage";
+		entry.parameters = {};
+		entry.inputField = true;
+		entry.inputFieldSize = 3;
+		entry.voiceEntryOverload = true; // not visible on UI
+
 		entry.description = "separator";
 		entries.push(entry);
 
