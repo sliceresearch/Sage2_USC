@@ -56,27 +56,22 @@ SAGE2_speech.uiMenuEntryDisable = true;
  * @method init
  */
 SAGE2_speech.init = function() {
-	// console.log("SAGE2_speech init()");
 	if (!("webkitSpeechRecognition" in window)) {
-		console.log("This browser doesn't support webkitSpeechRecognition, updated Chrome needed");
+		console.log("SpeechRecognition> This browser doesn't support SpeechRecognition API");
 	} else {
-		console.log("webkitSpeechRecognition exists beginning setup");
+		console.log("SpeechRecognition> API exists, beginning setup");
 		// the contructor is actually lower case
 		this.webkitSR = new webkitSpeechRecognition(); // eslint-disable-line
 		this.webkitSR.continuous = false;
 		this.webkitSR.interimResults = true;
 
 		// give weight to the system name
-		// var grammar = '#JSGF V1.0; grammar systemName; public <systemName> = ' + SAGE2_speech.nameMarker + ' ;';
 		var grammar = '#JSGF V1.0; grammar noun; public <noun> = ' + 'Sage' + ' ;';
-		// var grammar = '#JSGF V1.0; grammar systemName; public <systemName> = ' + 'Athena | sage' + ' ;';
-		// var grammar = '#JSGF V1.0; grammar name; public <name> = ' + SAGE2_speech.nameMarker + ' ;';
 		if (webkitSpeechGrammarList) {
 			var speechRecognitionList = this.webkitSR.grammars;
-			speechRecognitionList.addFromString(grammar, 1); // 0->1 weight of grammar likely to happen compared to others.
+			// 0->1 weight of grammar likely to happen compared to others.
+			speechRecognitionList.addFromString(grammar, 1);
 			this.webkitSR.grammars = speechRecognitionList;
-			// console.log("Added grammar:" + this.webkitSR.grammars);
-			// console.dir(this.webkitSR.grammars);
 		}
 
 		// initialize other parts
@@ -84,25 +79,24 @@ SAGE2_speech.init = function() {
 		this.speechSynthesisInit();
 		this.listeningVisualInit();
 
+		// Triggers with event onstart, reset variables
 
-		/*
-			Triggers with event onstart, reset variables.
-		*/
 		this.webkitSR.onstart = function() {
-			console.log("SAGE2_speech started");
+			console.log("SpeechRecognition> SAGE2_speech started");
 			this.recognizing = true;
 			// cleanup variables
 			SAGE2_speech.showListening = true;
 			SAGE2_speech.firstNameMention = false;
 			SAGE2_speech.listentingInfo.imageDetectedInterim = false;
 			SAGE2_speech.listentingInfo.imageCycleFrame = 0;
-			document.getElementById(SAGE2_speech.listentingInfo.transcriptId).textContent = ""; // start blank
-			document.getElementById(SAGE2_speech.listentingInfo.transcriptId).style.width = "1px"; // start blank
+			// start blank
+			document.getElementById(SAGE2_speech.listentingInfo.transcriptId).textContent = "";
+			// start blank
+			document.getElementById(SAGE2_speech.listentingInfo.transcriptId).style.width = "1px";
 		};
 
-		/*
-			After getting a result, but this also includes pieces that aren't detected as full sentences.
-		*/
+		// After getting a result, but this also includes pieces
+		// that aren't detected as full sentences
 		this.webkitSR.onresult = function(event) {
 			this.interim_transcript = " ";
 			for (var i = event.resultIndex; i < event.results.length; ++i) {
@@ -112,11 +106,13 @@ SAGE2_speech.init = function() {
 						&& !this.final_transcript.toLowerCase().includes(SAGE2_speech.nameMarker)) {
 						this.final_transcript = SAGE2_speech.nameMarker + this.final_transcript;
 					}
-					console.log("final_transcript(" + event.results[i][0].confidence + "%):" + this.final_transcript);
+					console.log("SpeechRecognition> final_transcript(",
+						event.results[i][0].confidence, "%):" + this.final_transcript);
 
 					setTimeout(function() {
 						SAGE2_speech.webkitSR.stop();
-						if (SAGE2_speech.mouseIsDown) { // if mouse is held down, restart for continuous commands.
+						// if mouse is held down, restart for continuous commands
+						if (SAGE2_speech.mouseIsDown) {
 							setTimeout(function() {
 								SAGE2_speech.mouseHoldActivated = true;
 								SAGE2_speech.webkitSR.start();
@@ -137,14 +133,14 @@ SAGE2_speech.init = function() {
 							value: "Submitted phrase:" + this.final_transcript,
 							confidence: event.results[i][0].confidence
 						});
-						// do something with it now.
+						// do something with it now
 						wsio.emit('voiceToAction', {words: this.final_transcript, confidence: event.results[i][0].confidence});
 						document.getElementById("voiceTranscriptActual").textContent =
 							"(" + parseInt(event.results[i][0].confidence * 100) + "%) " + this.final_transcript;
 					}
 				} else {
 					this.interim_transcript += event.results[i][0].transcript;
-					console.log("interim_transcript:" + this.interim_transcript);
+					console.log("SpeechRecognition> interim_transcript:", this.interim_transcript);
 					// put transcript in visual
 					let tdiv  = document.getElementById(SAGE2_speech.listentingInfo.transcriptId);
 					tdiv.textContent = this.interim_transcript;
@@ -156,19 +152,20 @@ SAGE2_speech.init = function() {
 						window.clearTimeout(SAGE2_speech.interimId);
 						SAGE2_speech.interimId = null;
 					}
+
 					// if ever gets stuck on a single interim transcript for timeout restart
 					SAGE2_speech.interimId = setTimeout(() => {
 						SAGE2_speech.init();
-					}, 6000); // good enough?
+					}, 6000); // good enough? no
+
 					// if this is the first time name is said then play listening sound
 					if ((!SAGE2_speech.firstNameMention) &&
 						(!SAGE2_speech.mouseHoldActivated) &&
 						this.interim_transcript.toLowerCase().includes(SAGE2_speech.nameMarker)) {
 						SAGE2_speech.firstNameMention = true;
-						// SAGE2_speech.listenSound.play();
-						// SAGE2_speech.showListening = true;
-						console.log("speech marker detected");
-					} if (SAGE2_speech.firstNameMention) { // if first name is mentioned set the transcript
+						console.log("SpeechRecognition> speech marker detected");
+					} if (SAGE2_speech.firstNameMention) {
+						// if first name is mentioned set the transcript
 						let transcript = this.interim_transcript.toLowerCase();
 						// possible that the transcript changes with an update
 						if (!transcript.includes(SAGE2_speech.nameMarker)) {
@@ -188,12 +185,13 @@ SAGE2_speech.init = function() {
 		}; //end onresult
 
 		this.webkitSR.onerror = function(e) {
-			console.log("webkitSpeechRecognition error:" + e.error);
-			console.dir(e);
+			console.log("SpeechRecognition> webkitSpeechRecognition error:", e.error);
+			console.dir("SpeechRecognition>", e);
 			// this particular error will be triggered if the microphone is blocked.
 			if (e.error === "not-allowed") {
 				SAGE2_speech.errorNotAllowed = true;
-				SAGE2_speech.isEnabled = true; // the toggle wil swap it to false
+				// the toggle wil swap it to false
+				SAGE2_speech.isEnabled = true;
 				SAGE2_speech.toggleVoiceRecognition();
 			}
 		};
@@ -206,12 +204,10 @@ SAGE2_speech.init = function() {
 			SAGE2_speech.mouseHoldActivated = false;
 		};
 		this.toggleSAGE2_speech();
-		this.isEnabled = false; // toggle will flip
+		// toggle will flip
+		this.isEnabled = false;
 		SAGE2_speech.toggleVoiceRecognition();
-	} //end else there is webkit
-	// this.successSound = new Audio('sounds/ALARM.WAV');
-	// this.failSound    = new Audio('sounds/ALARMTIME1.WAV');
-	// this.listenSound  = new Audio('sounds/IDENTIFY.WAV');
+	}
 };
 
 /**
@@ -237,7 +233,7 @@ SAGE2_speech.doesTranscriptActivateLocally = function(transcript) {
 	// UI debug activator check
 	transcript = transcript.toLowerCase();
 
-	//local checks
+	// local checks
 	var localActions = {
 		showSpeechDebug: {
 			keywords: ["show voice debug", "show speech debug"],
@@ -258,18 +254,17 @@ SAGE2_speech.doesTranscriptActivateLocally = function(transcript) {
 		for (let keySets = 0; keySets < localActions[actionNames[i]].keywords.length; keySets++) {
 			keywords = localActions[actionNames[i]].keywords[keySets].toLowerCase().split(" ");
 			for (let k = 0; k < keywords.length; k++) {
-				// console.log("Checking transcript '" + transcript + "' for " + keywords[k]);
 				if (!transcript.includes(keywords[k])) {
-					break; // exits out of keyword loop
+					// exits out of keyword loop
+					break;
 				} else if (k == keywords.length - 1) {
-					console.log("Local voice function:" + actionNames[i]);
+					console.log("SpeechRecognition> Local voice function:" + actionNames[i]);
 					localActions[actionNames[i]].successFunction();
 					return true;
 				}
 			}
 		}
 	}
-
 	return false;
 };
 
@@ -308,27 +303,27 @@ SAGE2_speech.sayTheDate = function() {
 	var d = new Date();
 	var whatToSay = "";
 	switch (d.getDay()) {
-		case 0: whatToSay = "Sunday "; break;
-		case 1: whatToSay = "Monday "; break;
-		case 2: whatToSay = "Tuesday "; break;
+		case 0: whatToSay = "Sunday ";    break;
+		case 1: whatToSay = "Monday ";    break;
+		case 2: whatToSay = "Tuesday ";   break;
 		case 3: whatToSay = "Wednesday "; break;
-		case 4: whatToSay = "Thursday "; break;
-		case 5: whatToSay = "Friday "; break;
-		case 6: whatToSay = "Saturday "; break;
+		case 4: whatToSay = "Thursday ";  break;
+		case 5: whatToSay = "Friday ";    break;
+		case 6: whatToSay = "Saturday ";  break;
 	}
 	switch (d.getMonth()) {
-		case 0: whatToSay += "January "; break;
-		case 1: whatToSay += "February "; break;
-		case 2: whatToSay += "March "; break;
-		case 3: whatToSay += "April "; break;
-		case 4: whatToSay += "May "; break;
-		case 5: whatToSay += "June "; break;
-		case 6: whatToSay += "July "; break;
-		case 7: whatToSay += "August "; break;
-		case 8: whatToSay += "September "; break;
-		case 9: whatToSay += "October "; break;
-		case 10: whatToSay += "November "; break;
-		case 11: whatToSay += "December "; break;
+		case  0: whatToSay += "January ";   break;
+		case  1: whatToSay += "February ";  break;
+		case  2: whatToSay += "March ";     break;
+		case  3: whatToSay += "April ";     break;
+		case  4: whatToSay += "May ";       break;
+		case  5: whatToSay += "June ";      break;
+		case  6: whatToSay += "July ";      break;
+		case  7: whatToSay += "August ";    break;
+		case  8: whatToSay += "September "; break;
+		case  9: whatToSay += "October ";   break;
+		case 10: whatToSay += "November ";  break;
+		case 11: whatToSay += "December ";  break;
 	}
 	whatToSay += d.getDate();
 	SAGE2_speech.textToSpeech(whatToSay);
@@ -343,7 +338,8 @@ SAGE2_speech.initMouseholdToStart = function() {
 	// on mouse down, if over canvas, set a timeout to check for listening
 	document.addEventListener("mousedown", function(e) {
 		if (!SAGE2_speech.isEnabled) {
-			return; // if speech recognition was disabled by user, don't
+			// if speech recognition was disabled by user, don't
+			return;
 		}
 		// reset the move
 		SAGE2_speech.mousePosition.dx = 0;
@@ -396,8 +392,10 @@ SAGE2_speech.enableMouseholdToStart = function(e) {
 			this.webkitSR.stop(); // stop
 			setTimeout(function() {
 				SAGE2_speech.mouseHoldActivated = true;
-				SAGE2_speech.webkitSR.start(); // start
-			}, SAGE2_speech.mouseHoldTimeNeeded / 2); // not sure best minimum
+				// start
+				SAGE2_speech.webkitSR.start();
+			}, SAGE2_speech.mouseHoldTimeNeeded / 2);
+			// not sure best minimum
 		}
 	}
 };
@@ -419,10 +417,11 @@ SAGE2_speech.listeningVisualInit = function () {
 		circleRadius:  25,
 		cycleTime: 1500, // divide by 2 to get one sweep time
 		// swap to images
-		imageId: ["imageEar0", "imageEar1", "imageEar2", "imageEar3"], // multiple images
+		// multiple images
+		imageId: ["imageEar0", "imageEar1", "imageEar2", "imageEar3"],
 		imageWidth: 40,
 		imageHeight: 40,
-		imageFrameDuration: 100, // ms
+		imageFrameDuration: 100, // in ms
 		imageFrameStartTime: 0,
 		imageCycleFrame: 0,
 		imageDetectedInterim: false,
@@ -432,45 +431,42 @@ SAGE2_speech.listeningVisualInit = function () {
 
 	var d = document.createElement("div");
 	d.id = SAGE2_speech.listentingInfo.divId;
-	// d.style.border = "2px solid black";
 	d.style.position = "absolute";
-	// d.style.width = SAGE2_speech.listentingInfo.imageWidth + "px";
-	// d.style.height = SAGE2_speech.listentingInfo.imageHeight + "px";
-	// d.style.width = SAGE2_speech.listentingInfo.canvasWidth + "px";
-	// d.style.height = SAGE2_speech.listentingInfo.canvasHeight + "px";
-	d.style.zIndex = 10000; // unsure of highest value
-
-	// var c = document.createElement("canvas");
-	// c.id = SAGE2_speech.listentingInfo.canvasId;
-	// c.style.width = SAGE2_speech.listentingInfo.canvasWidth + "px";
-	// c.style.height = SAGE2_speech.listentingInfo.canvasHeight + "px";
+	// unsure of highest value
+	d.style.zIndex = 10000;
 
 	// transcript holder appendChild before images to make transcript visually behind them.
 	var transcriptDiv = document.createElement("div");
 	transcriptDiv.id = SAGE2_speech.listentingInfo.transcriptId;
 	transcriptDiv.style.position = "absolute";
-	transcriptDiv.style.height = (SAGE2_speech.listentingInfo.imageHeight / 2) + "px"; // not as big as image
-	transcriptDiv.style.top = (SAGE2_speech.listentingInfo.imageHeight / 4 - 6) + "px"; // center the transcript
-	transcriptDiv.style.left = (SAGE2_speech.listentingInfo.imageWidth - 20) + "px"; // put right of image
-	transcriptDiv.style.paddingLeft = "20px"; // match the left offset from image
-	transcriptDiv.style.paddingTop = "5px"; // match the left offset from image
+	// not as big as image
+	transcriptDiv.style.height = (SAGE2_speech.listentingInfo.imageHeight / 2) + "px";
+	// center the transcript
+	transcriptDiv.style.top = (SAGE2_speech.listentingInfo.imageHeight / 4 - 6) + "px";
+	// put right of image
+	transcriptDiv.style.left = (SAGE2_speech.listentingInfo.imageWidth - 20) + "px";
+	// match the left offset from image
+	transcriptDiv.style.paddingLeft = "20px";
+	// match the left offset from image
+	transcriptDiv.style.paddingTop = "5px";
 	transcriptDiv.style.border = "2px solid black";
 	transcriptDiv.style.borderRadius = "2px 20px 20px 2px";
 	transcriptDiv.style.background = "white";
-	transcriptDiv.textContent = ""; // start blank
+	// start blank
+	transcriptDiv.textContent = "";
 	transcriptDiv.style.width = (transcriptDiv.textContent.length
 		* SAGE2_speech.listentingInfo.transcriptCharacterPadding) + "px";
 	d.appendChild(transcriptDiv);
 
 	// images
-	for (let i = 0; i < SAGE2_speech.listentingInfo.imageId.length; i++) { // currently 4 frames 0,1,2,3
+	// currently 4 frames 0,1,2,3
+	for (let i = 0; i < SAGE2_speech.listentingInfo.imageId.length; i++) {
 		let c = document.createElement("img");
 		c.id = SAGE2_speech.listentingInfo.imageId[i];
 		c.style.width = SAGE2_speech.listentingInfo.imageWidth + "px";
 		c.style.height = SAGE2_speech.listentingInfo.imageHeight + "px";
 		c.src = "images/speech-ear" + i + ".png";
 		c.style.position = "absolute";
-		// c.style.border = "2px solid black"; // no border, final image should be transparent around circle
 		if (i > 0) {
 			c.style.display = "none";
 		}
@@ -478,7 +474,6 @@ SAGE2_speech.listeningVisualInit = function () {
 	}
 
 	// add to page
-	// d.appendChild(c);
 	document.body.appendChild(d);
 
 	// add listener for mouse move
@@ -495,8 +490,8 @@ SAGE2_speech.listeningVisualInit = function () {
  * @param {Object} e - The mouse event, should be standard.
  */
 SAGE2_speech.mouseMoveListener = function (e) {
-	SAGE2_speech.mousePosition.x = e.clientX;
-	SAGE2_speech.mousePosition.y = e.clientY;
+	SAGE2_speech.mousePosition.x  =  e.clientX;
+	SAGE2_speech.mousePosition.y  =  e.clientY;
 	SAGE2_speech.mousePosition.dx += e.movementX;
 	SAGE2_speech.mousePosition.dy += e.movementY;
 };
@@ -512,16 +507,18 @@ SAGE2_speech.drawListeningVisual = function () {
 	if (SAGE2_speech.showListening) {
 		listeningDiv.style.left = (SAGE2_speech.mousePosition.x
 			- SAGE2_speech.listentingInfo.imageWidth / 2) + "px";
-		listeningDiv.style.top = (SAGE2_speech.mousePosition.y - 10 - SAGE2_speech.listentingInfo.imageHeight) + "px";
+		listeningDiv.style.top = (SAGE2_speech.mousePosition.y - 10
+			- SAGE2_speech.listentingInfo.imageHeight) + "px";
 		if (document.pointerLockElement) {
 			listeningDiv.style.left = "50px";
-			listeningDiv.style.top = "50px";
+			listeningDiv.style.top  = "50px";
 		}
 	} else {
 		listeningDiv.style.left = "-100px";
-		listeningDiv.style.top = "-100px";
+		listeningDiv.style.top  = "-100px";
 		window.requestAnimationFrame(SAGE2_speech.drawListeningVisual);
-		return; // dont forget to recall frame if not showing, otherwise will not restart.
+		// dont forget to recall frame if not showing, otherwise will not restart.
+		return;
 	}
 
 	// only draw animation if interim activated
@@ -543,28 +540,6 @@ SAGE2_speech.drawListeningVisual = function () {
 		}
 	}
 
-	// // // Currently disabled, testing ear images
-	// // draw update
-	// var ctx = document.getElementById(SAGE2_speech.listentingInfo.canvasId).getContext('2d');
-	// ctx.clearRect(0, 0, SAGE2_speech.listentingInfo.canvasWidth, SAGE2_speech.listentingInfo.canvasHeight); // clear canvas
-
-	// var timeCurrent = (SAGE2_speech.listentingInfo.cycleTime / 2); // half a cycle makes one sweep
-	// timeCurrent = Date.now() % SAGE2_speech.listentingInfo.cycleTime / timeCurrent;
-	// if (timeCurrent > 1) { // >1 means on return cycle.
-	// 	timeCurrent = 2 - timeCurrent; // it cannot be 2
-	// }
-	// var xCurrent = SAGE2_speech.listentingInfo.canvasWidth * timeCurrent;
-	// var yCurrent = SAGE2_speech.listentingInfo.canvasHeight;
-	// // xycenter, radius start , xy end, radius end
-	// var gradient = ctx.createRadialGradient(
-	// 	xCurrent, yCurrent, SAGE2_speech.listentingInfo.circleRadius,
-	// 	xCurrent, yCurrent, 0);
-	// gradient.addColorStop(0, 'black');
-	// gradient.addColorStop(1, 'red');
-	// ctx.fillStyle = gradient;
-	// ctx.fillRect(0, 0, SAGE2_speech.listentingInfo.canvasWidth, SAGE2_speech.listentingInfo.canvasHeight);
-
-
 	// set into next animation frame.
 	window.requestAnimationFrame(SAGE2_speech.drawListeningVisual);
 };
@@ -576,7 +551,8 @@ SAGE2_speech.drawListeningVisual = function () {
  * @param {Boolean} shouldShow - true to show, otherwise false.
  */
 SAGE2_speech.setListeningVisual = function(shouldShow) {
-	shouldShow = (shouldShow) ? shouldShow : false; // in case called without params
+	// in case called without params
+	shouldShow = (shouldShow) ? shouldShow : false;
 	SAGE2_speech.showListening = shouldShow;
 };
 
@@ -605,7 +581,7 @@ SAGE2_speech.speechSynthesisInit = function() {
 				}
 			}
 		} else {
-			console.log("Speech synthesis voices not available");
+			console.log("SpeechRecognition> Speech synthesis voices not available");
 		}
 		if (samantha) {
 			SAGE2_speech.ttsConverter.voice = SAGE2_speech.voices[samantha];
@@ -629,11 +605,11 @@ SAGE2_speech.textToSpeech = function (whatToSay) {
 		return;
 	}
 	try {
-		console.log("Speech:" + whatToSay);
+		console.log("SpeechRecognition> Speech:" + whatToSay);
 		SAGE2_speech.ttsConverter.text = whatToSay;
 		window.speechSynthesis.speak(SAGE2_speech.ttsConverter);
 	} catch (e) {
-		console.log("Error with textToSpeech");
+		console.log("SpeechRecognition> Error with textToSpeech");
 	}
 };
 

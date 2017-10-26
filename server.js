@@ -815,8 +815,8 @@ function closeWebSocketClient(wsio) {
 	try {
 		updateInformationAboutConnections();
 	} catch (e) {
-		console.log("Error with retrieving client data");
-		console.log(e);
+		sageutils.log("Connections", "Error with updating client data");
+		sageutils.log("Connections", e);
 	}
 }
 
@@ -925,8 +925,8 @@ function wsAddClient(wsio, data) {
 	try {
 		updateInformationAboutConnections();
 	} catch (e) {
-		console.log("Error with retrieving client data");
-		console.log(e);
+		sageutils.log("Connections", "Error with updating client data");
+		sageutils.log("Connections", e);
 	}
 }
 
@@ -5151,8 +5151,8 @@ function manageRemoteConnection(remote, site, index) {
 		try {
 			updateInformationAboutConnections();
 		} catch (e) {
-			console.log("Error with retrieving client data");
-			console.log(e);
+			sageutils.log("Connections", "Error with updating client data");
+			sageutils.log("Connections", e);
 		}
 	});
 
@@ -10499,7 +10499,7 @@ function updateInformationAboutConnections() {
 	for (let i = 0; i < clients.length; i++) {
 		if (clients[i].clientType === "sageUI") {
 			currentItem = {};
-			currentItem.name = sagePointers[clients[i].id].label;
+			currentItem.name  = sagePointers[clients[i].id].label;
 			currentItem.color = sagePointers[clients[i].id].color;
 			currentItem.uniqueID = clients[i].id;
 			currentUiList.push(currentItem);
@@ -10519,17 +10519,20 @@ function updateInformationAboutConnections() {
 	if (currentUiList.length > 0) {
 		data.nameOfValue = "serverConnectionDataUiList";
 		data.value = currentUiList;
-		sharedServerData.setValue(null, data); //  wsio is not needed to set value
+		//  wsio is not needed to set value
+		sharedServerData.setValue(null, data);
 	}
 	if (currentDisplayList.length > 0) {
 		data.nameOfValue = "serverConnectionDataDisplayList";
 		data.value = currentDisplayList;
-		sharedServerData.setValue(null, data); //  wsio is not needed to set value
+		//  wsio is not needed to set value
+		sharedServerData.setValue(null, data);
 	}
 	if (currentRemoteSiteList.length > 0) {
 		data.nameOfValue = "serverConnectionDataRemoteSiteList";
 		data.value = currentRemoteSiteList;
-		sharedServerData.setValue(null, data); //  wsio is not needed to set value
+		//  wsio is not needed to set value
+		sharedServerData.setValue(null, data);
 	}
 }
 
@@ -10559,7 +10562,8 @@ function updateInformationAboutConnectionsFailedRemoteSite(wsio) {
 	if (!found) {
 		sites.push({id: wsio.id, total: 1});
 	}
-	sharedServerData.setValue(null, data); //  wsio is not needed to set value
+	// wsio is not needed to set value
+	sharedServerData.setValue(null, data);
 }
 
 /**

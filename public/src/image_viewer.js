@@ -45,7 +45,7 @@ var image_viewer = SAGE2_App.extend({
 		// old image url
 		this.old_img_url = "";
 
-		this.title  = data.title;
+		this.title = data.title;
 
 		this.updateAppFromState();
 		this.addWidgetControlsToImageViewer();
@@ -165,13 +165,6 @@ var image_viewer = SAGE2_App.extend({
 			});
 		}
 
-		// Special callback: convert to a doodle.
-		// entries.push({
-		// 	description: "Make Doodle",
-		// 	callback: "makeDoodle",
-		// 	parameters: {}
-		// });
-
 		return entries;
 	},
 
@@ -193,7 +186,7 @@ var image_viewer = SAGE2_App.extend({
 				lng: this.state.exif.GPSLongitude,
 				sourceAppId: this.id,
 				shouldFocusViewOnNewMarker: true
-			}); // focus after plotting
+			});
 		}
 	},
 
@@ -210,7 +203,6 @@ var image_viewer = SAGE2_App.extend({
 
 	plotOnNewGoogleMap: function() {
 		if (isMaster) {
-			// function(appName, params, x, y, funcToPassParams) {
 			this.launchAppWithValues("googlemap", {
 				lat: this.state.exif.GPSLatitude,
 				lng: this.state.exif.GPSLongitude,
@@ -365,10 +357,10 @@ var image_viewer = SAGE2_App.extend({
 
 	broadcastData: function() {
 		if (!isMaster) {
-			return; // prevent spamming
+			// prevent spamming
+			return;
 		}
 		if (this.checkIfHasGpsData()) {
-			// serverDataBroadcastSource: function(nameOfValue, value, description)
 			this.serverDataBroadcastSource("geoLocation", {
 				source: this.id,
 				location: {

@@ -45,7 +45,8 @@ var googlemaps = SAGE2_App.extend({
 		this.plotAnyNewGeoSource = false;
 		this.mapMarkers = [];
 		this.markerCycleIndex = 0;
-		this.broadcastData(); // variable broadcasting
+		// variable broadcasting
+		this.broadcastData();
 	},
 
 	initializeWidgets: function() {
@@ -137,9 +138,9 @@ var googlemaps = SAGE2_App.extend({
 			zoom: this.state.zoomLevel,
 			mapTypeId: this.state.mapType,
 			disableDefaultUI: true,
-			zoomControl: false,
+			zoomControl:  false,
 			scaleControl: false,
-			scrollwheel: false
+			scrollwheel:  false
 		};
 		this.map.setOptions(mapOptions);
 
@@ -280,7 +281,7 @@ var googlemaps = SAGE2_App.extend({
 							this.map.setZoom(this.state.zoomLevel);
 							break;
 						default:
-							console.log("No handler for: " + data.identifier + "->" + data.action);
+							console.log("GoogleMaps> No handler for: " + data.identifier + "->" + data.action);
 							break;
 					}
 					break;
@@ -295,7 +296,7 @@ var googlemaps = SAGE2_App.extend({
 					this.changeMapType(data.value);
 					break;
 				default:
-					console.log("No handler for:", data.identifier);
+					console.log("GoogleMaps> No handler for:", data.identifier);
 			}
 			this.refresh(date);
 		} else if (eventType === "keyboard") {
@@ -395,7 +396,7 @@ var googlemaps = SAGE2_App.extend({
 				// Need to sync since it's an async function
 				this.SAGE2Sync(true);
 			} else {
-				console.log('Geocode was not successful for the following reason: ' + status);
+				console.log('GoogleMaps> Geocode was not successful for the following reason: ' + status);
 			}
 		}.bind(this));
 	},
@@ -510,7 +511,8 @@ var googlemaps = SAGE2_App.extend({
 		if (this.mapMarkers.length > 0) {
 			entries.push({description: "separator"});
 			entry = {};
-			entry.description = "Remove All Markers From Map"; // remove marker plots
+			// remove marker plots
+			entry.description = "Remove All Markers From Map";
 			entry.callback = "removeAllMarkersFromMap";
 			entry.parameters = {};
 			entries.push(entry);
@@ -561,13 +563,14 @@ var googlemaps = SAGE2_App.extend({
 						} else {
 							num2 = +words[i];
 						}
-					} else if ((words[i] === "north") // if this is a direction
+					} else if ((words[i] === "north")
 						|| (words[i] === "south")
 						|| (words[i] === "east")
 						|| (words[i] === "west")
 						|| (words[i] === "latitude")
 						|| (words[i] === "longitude")
 					) {
+						// if this is a direction
 						if (dir1 === false) {
 							dir1 = words[i];
 						} else {
@@ -696,10 +699,9 @@ var googlemaps = SAGE2_App.extend({
 		});
 	},
 
-	// ------------------------------------------------------------------------------------------------------------------------
+	//
 	// From here is code related to plotting of image geo coordinates
-	// ------------------------------------------------------------------------------------------------------------------------
-	// First is the menu functions
+	//
 
 	/**
 	 * Menu entry to toggle automatic plotting of images.
@@ -755,8 +757,9 @@ var googlemaps = SAGE2_App.extend({
 		this.refresh(new Date());
 	},
 
-	// ------------------------------------------------------------------------------------------------------------------------
+	//
 	// Marker functions
+	//
 
 	/**
 	 * Adds a marker to the map
@@ -804,12 +807,7 @@ var googlemaps = SAGE2_App.extend({
 			this.gmapOverlay.draw = function() {}; // required?
 			this.gmapOverlay.setMap(this.map);
 		}
-		// add a click effect to marker
-		// google.maps.event.addListener(markToAdd, 'click', function(e) {
-		// 	_this.gmapInfoWindow.setContent("Latitude: " + this.markerLocation.lat
-		// 									+ "<br>\nLongitude:" + this.markerLocation.lng);
-		// 	_this.gmapInfoWindow.open(_this.map, this); // this is the marker
-		// });
+		// update the menu
 		this.getFullContextMenuAndUpdate();
 	},
 
@@ -829,9 +827,12 @@ var googlemaps = SAGE2_App.extend({
 	 * @param {String} input - Will convert degree with mins and seconds notation to signed degree.
 	 */
 	convertDegMinSecDirToSignedDegree: function (input) {
-		var index = 0, partIndex = -1; // find the number first, might be prefix fluff
+		// find the number first, might be prefix fluff
+		var index = 0;
+		var partIndex = -1;
 		var findingNextNumber = true;
-		var parts = ["", "", "", ""]; // deg, min, sec, dir
+		// deg, min, sec, dir
+		var parts = ["", "", "", ""];
 		// for each of the characters
 		while (index < input.length) {
 			// if finding next number
@@ -890,12 +891,11 @@ var googlemaps = SAGE2_App.extend({
 			mpos = this.gmapOverlay.getProjection().fromLatLngToContainerPixel(this.mapMarkers[i].position);
 			// if clicking by the marker, or matches indexMatcher
 			if ((indexMatcher !== undefined && indexMatcher === i)
-				|| ((releasePoint.x > mpos.x - 15) // these values are estimated based on Mokulua site.
+				|| ((releasePoint.x > mpos.x - 15)
 				&& (releasePoint.x < mpos.x + 15)
 				&& (releasePoint.y > mpos.y - 45)
 				&& (releasePoint.y < mpos.x + 5))) {
-				// show the pop up google info window
-				// google.maps.event.trigger(this.mapMarkers[i], 'click');
+				// these values are estimated based on Mokulua site.
 				this.removeAllLinkLines();
 				// create a line to source app
 				let said = this.mapMarkers[i].markerLocation.sourceAppId;
@@ -910,8 +910,9 @@ var googlemaps = SAGE2_App.extend({
 		}
 	},
 
-	// ------------------------------------------------------------------------------------------------------------------------
+	//
 	// Line functions
+	//
 
 	/**
 	 * Updates the lines from a marker to the source image.
@@ -949,7 +950,7 @@ var googlemaps = SAGE2_App.extend({
 				});
 			}
 		}
-	}, //applications[this.mapMarkers[i].markerLocation.sourceAppId].sage2_height / 2)
+	},
 
 	/**
 	 * If a marker has a link line, remove it from the svg space.
@@ -964,8 +965,9 @@ var googlemaps = SAGE2_App.extend({
 		}
 	},
 
-	// ------------------------------------------------------------------------------------------------------------------------
+	//
 	// Line functions
+	//
 
 	/**
 	 * Sets up data handling from server.
@@ -992,14 +994,14 @@ var googlemaps = SAGE2_App.extend({
 	 */
 	handlerForNewVariableNotification: function(addedVar) {
 		if (!isMaster) {
-			return; // prevent spam
+			// prevent spam
+			return;
 		}
 		// if this should plot any new geo data source
 		if (this.plotAnyNewGeoSource
 			&& addedVar.nameOfValue.indexOf("geoLocation") !== -1
 			&& addedVar.nameOfValue.indexOf("source") !== -1
-			&& addedVar.description.indexOf("image") !== -1) {
-			// serverDataGetValue: function(nameOfValue, callback)
+			&& addedVar.description.indexOf("image")  !== -1) {
 			this.serverDataGetValue(addedVar.nameOfValue, "makeMarkerGivenImageGeoLocation");
 		}
 	},
@@ -1014,7 +1016,8 @@ var googlemaps = SAGE2_App.extend({
 	 */
 	makeMarkerGivenImageGeoLocation: function(value) {
 		if (Array.isArray(value) && value.length < 1) {
-			return; // don't use empty arrays
+			// don't use empty arrays
+			return;
 		}
 		// all display clients need this to sync correctly
 		this.addMarkerToMap({
