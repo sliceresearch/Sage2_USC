@@ -792,6 +792,12 @@ function closeWebSocketClient(wsio) {
 		drawingManager.removeWebSocket(wsio);
 	}
 
+	try {
+		updateInformationAboutConnections();
+	} catch (e) {
+		console.log("Error with retrieving client data");
+		console.log(e);
+	}
 }
 
 /**
@@ -810,6 +816,7 @@ function wsAddClient(wsio, data) {
 			wsio.emit('remoteConnection', {status: "refused", reason: 'wrong session hash'});
 			// If server protected and wrong hash, close the socket and byebye
 			wsio.ws.close();
+			updateInformationAboutConnectionsFailedRemoteSite(wsio);
 			return;
 		}
 	}
@@ -890,6 +897,14 @@ function wsAddClient(wsio, data) {
 		wsio.capableOfScreenshot = data.browser.isElectron;
 		// Send message to UI clients
 		reportIfCanWallScreenshot();
+	}
+
+	// update connection data
+	try {
+		updateInformationAboutConnections();
+	} catch (e) {
+		console.log("Error with retrieving client data");
+		console.log(e);
 	}
 }
 
@@ -5107,6 +5122,13 @@ function manageRemoteConnection(remote, site, index) {
 			broadcast('connectedToRemoteSite', delete_site);
 		}
 		removeElement(clients, remote);
+
+		try {
+			updateInformationAboutConnections();
+		} catch (e) {
+			console.log("Error with retrieving client data");
+			console.log(e);
+		}
 	});
 
 	remote.on('addClient',                              wsAddClient);
@@ -10435,4 +10457,83 @@ function deletePartition(id) {
 	broadcast('deletePartitionWindow', ptn.getDisplayInfo());
 	partitions.removePartition(ptn.id);
 	interactMgr.removeGeometry(ptn.id, "partitions");
+}
+
+/**
+ * Updates the stored information about connections.
+ * Currently updates three values: UI, displays, remote servers.
+ * Users information from 
+ *
+ * @method updateInformationAboutConnections
+ */
+function updateInformationAboutConnections() {
+	var currentUiList = [];
+	var currentDisplayList = [];
+	var currentRemoteSiteList = [];
+	var currentItem;
+	for (let i = 0; i < clients.length; i++) {
+		if (clients[i].clientType === "sageUI") {
+			currentItem = {};
+			currentItem.name = sagePointers[clients[i].id].label;
+			currentItem.color = sagePointers[clients[i].id].color;
+			currentItem.uniqueID = clients[i].id;
+			currentUiList.push(currentItem);
+		} else if (clients[i].clientType === "display") {
+			currentItem = {};
+			currentItem.viewPort = clients[i].clientID;
+			currentItem.uniqueID = clients[i].id;
+			currentDisplayList.push(currentItem);
+		} else if (clients[i].clientType === "remoteServer") {
+			currentItem = {};
+			currentItem.remoteAddress = clients[i].remoteAddress.address;
+			currentItem.uniqueID = clients[i].id;
+			currentRemoteSiteList.push(currentItem);
+		}
+	}
+	var data = {};
+	if (currentUiList.length > 0) {
+		data.nameOfValue = "serverConnectionDataUiList";
+		data.value = currentUiList;
+		sharedServerData.setValue(null, data); //  wsio is not needed to set value
+	}
+	if (currentDisplayList.length > 0) {
+		data.nameOfValue = "serverConnectionDataDisplayList";
+		data.value = currentDisplayList;
+		sharedServerData.setValue(null, data); //  wsio is not needed to set value
+	}
+	if (currentRemoteSiteList.length > 0) {
+		data.nameOfValue = "serverConnectionDataRemoteSiteList";
+		data.value = currentRemoteSiteList;
+		sharedServerData.setValue(null, data); //  wsio is not needed to set value
+	}
+}
+
+
+/**
+ * Updates the stored information about failed remote site connections
+ *
+ * @method updateInformationAboutConnectionsFailedRemoteSite
+ * @param  {Object} wsio - The websocket of sender.
+ */
+function updateInformationAboutConnectionsFailedRemoteSite(wsio) {
+	var data = {};
+	data.nameOfValue = "serverConnectionDataFailedRemoteSite";
+	if (sharedServerData.dataStructure.allNamesOfValues.includes(data.nameOfValue)) {
+		data.value = sharedServerData.dataStructure.allValues[data.nameOfValue].value;
+	} else {
+		data.value = {total: 0, sites: []};
+	}
+	data.value.total++;
+	var sites = data.value.sites;
+	var found = false;
+	for (let i = 0; i < sites.length; i++) {
+		if (sites[i].id === wsio.id) {
+			sites[i].total++;
+			found = true;
+		}
+	}
+	if (!found) {
+		sites.push({id: wsio.id, total: 1});
+	}
+	sharedServerData.setValue(null, data); //  wsio is not needed to set value
 }
