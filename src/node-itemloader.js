@@ -1321,7 +1321,7 @@ AppLoader.prototype.existsInDir = function(startDir, target) {
 			if (result !== undefined) {
 				return result;
 			}
-		} 
+		}
 		if (filename.indexOf(target) >= 0) {
 			return filename;
 		}

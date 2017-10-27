@@ -512,7 +512,7 @@ VoiceActionManager.prototype.checkForContextMenuMatch = function(contextMenuToCh
 
 /**
  * Will take transcript and attempt to launch application
- * 
+ *
  * @method getWordsAfterInList
  * @param {String} wordToSearchFor - word to search for in the list.
  * @param {Array} listOfWords - list of words
@@ -531,7 +531,7 @@ VoiceActionManager.prototype.getWordsAfterInList = function(wordToSearchFor, lis
 
 /**
  * Will take transcript and attempt to launch application
- * 
+ *
  * @method voiceHandlerForApplicationLaunch
  * @param {Array} words - transcript as array of words
  */
@@ -729,7 +729,7 @@ VoiceActionManager.prototype.voiceHandlerForApplicationLaunch = function(wsio, w
 
 /**
  * Will try to make a note
- * 
+ *
  * @method voiceHandlerForMakeNote
  * @param {Array} words - transcript as array of words
  */
@@ -771,7 +771,7 @@ VoiceActionManager.prototype.voiceHandlerForMakeNote = function(wsio, words) {
 
 /**
  * Will take transcript and attempt to restore session.
- * 
+ *
  * @method voiceHandlerForSessionRestore
  * @param {Array} words - transcript as array of words
  */
@@ -836,7 +836,7 @@ VoiceActionManager.prototype.voiceHandlerForSessionRestore = function(wsio, word
 
 /**
  * Will take transcript and attempt to save session.
- * 
+ *
  * @method voiceHandlerForSessionSave
  * @param {Array} words - transcript as array of words
  */
@@ -877,7 +877,7 @@ VoiceActionManager.prototype.voiceHandlerForSessionSave = function(wsio, words) 
 
 /**
  * Will perform search. If "image" keyword is used early then will perform image search.
- * 
+ *
  * @method voiceHandlerForWebSearch
  * @param {Array} words - transcript as array of words
  */
