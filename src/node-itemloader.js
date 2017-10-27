@@ -618,7 +618,6 @@ AppLoader.prototype.loadZipAppFromFile = function(file, mime_type, aUrl, externa
 
 		// Check if UnityLoader.js exists in unzipped directory structure
 		var unityLoader = _this.existsInDir(zipFolder, "UnityLoader.js");
-
 		if (unityLoader) {
 			var instructionInfo = {
 				instuctionsFile: instuctionsFile,
@@ -1318,11 +1317,16 @@ AppLoader.prototype.existsInDir = function(startDir, target) {
 		var filename = path.join(startDir, files[i]);
 		var stat = fs.lstatSync(filename);
 		if (stat.isDirectory()) {
-			return this.existsInDir(filename, target);
-		} else if (filename.indexOf(target) >= 0) {
+			var result = this.existsInDir(filename, target);
+			if (result !== undefined) {
+				return result;
+			}
+		} 
+		if (filename.indexOf(target) >= 0) {
 			return filename;
 		}
 	}
+	return;
 };
 
 module.exports = AppLoader;
