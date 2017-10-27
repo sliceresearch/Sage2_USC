@@ -710,7 +710,7 @@ var variablesUsedInVoiceHandler = {
 	wsLoadFileFromServer,
 	wsSaveSesion,
 	tileApplications,
-	deleteAllApplications,
+	clearDisplay,
 	broadcast,
 	voiceNameMarker: "sage " // that space is important for checking // change this later to check config
 };
@@ -1058,7 +1058,7 @@ function setupListeners(wsio) {
 	wsio.on('moveElementFromStoredFiles',           wsMoveElementFromStoredFiles);
 	wsio.on('saveSesion',                           wsSaveSesion);
 	wsio.on('clearDisplay',                         wsClearDisplay);
-	wsio.on('deleteAllApplications',								wsDeleteAllApplications);
+	wsio.on('deleteAllApplications',                wsDeleteAllApplications);
 	wsio.on('tileApplications',                     wsTileApplications);
 
 	// Radial menu should have its own message section? Just appended here for now.
@@ -2967,13 +2967,23 @@ function tileApplications() {
 	stickyAppHandler.enablePiling = false;
 }
 
-// Remove all apps and partitions
+
+/**
+ * Remove all partitions and all applications
+ *
+ * @method     clearDisplay
+ */
 function clearDisplay() {
 	deleteAllPartitions();
 	deleteAllApplications();
 }
 
-// Remove all applications
+
+/**
+ * Close all the applications
+ *
+ * @method     deleteAllApplications
+ */
 function deleteAllApplications() {
 	var i;
 	var all = Object.keys(SAGE2Items.applications.list);
@@ -2985,7 +2995,11 @@ function deleteAllApplications() {
 	getUniqueAppId(-1);
 }
 
-// Remove all Partitions
+/**
+ * Remove all the partitions and keep the applications
+ *
+ * @method     deleteAllPartitions
+ */
 function deleteAllPartitions() {
 	// delete all partitions
 	for (var key of Object.keys(partitions.list)) {
@@ -2997,10 +3011,10 @@ function deleteAllPartitions() {
 }
 
 /**
-	* Remove all applications
-	*
-	* @method wsDeleteAllApplications
-	*/
+ * Remove all applications
+ *
+ * @method wsDeleteAllApplications
+ */
 function wsDeleteAllApplications(wsio) {
 	deleteAllApplications();
 }
