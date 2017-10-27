@@ -26,7 +26,7 @@ SAGE2_speech.errorTime          = null; // can probably get away without using t
 SAGE2_speech.interimStart       = -1;
 SAGE2_speech.interimId          = null;
 // restart listener for mouse hold
-SAGE2_speech.mouseHoldTimeNeeded = 800; // ms
+SAGE2_speech.mouseHoldTimeNeeded = 400; // ms
 SAGE2_speech.mouseHoldTimeoutId  = null;
 SAGE2_speech.mouseHoldActivated  = false;
 SAGE2_speech.mouseHoldStartPos   = {x: -100, y: -100};
@@ -93,6 +93,7 @@ SAGE2_speech.init = function() {
 			document.getElementById(SAGE2_speech.listentingInfo.transcriptId).textContent = "";
 			// start blank
 			document.getElementById(SAGE2_speech.listentingInfo.transcriptId).style.width = "1px";
+			document.getElementById(SAGE2_speech.listentingInfo.transcriptId).style.visibility = "hidden";
 		};
 
 		// After getting a result, but this also includes pieces
@@ -116,7 +117,7 @@ SAGE2_speech.init = function() {
 							setTimeout(function() {
 								SAGE2_speech.mouseHoldActivated = true;
 								SAGE2_speech.webkitSR.start();
-							}, 50);
+							}, 100);
 						}
 					}, 10);
 					// remove the checker for stuck transcript
@@ -146,6 +147,8 @@ SAGE2_speech.init = function() {
 					tdiv.textContent = this.interim_transcript;
 					tdiv.style.width = (tdiv.textContent.length
 						* SAGE2_speech.listentingInfo.transcriptCharacterPadding) + "px";
+					// make the element visibe on screen
+					tdiv.style.visibility = "visible";
 					SAGE2_speech.listentingInfo.imageDetectedInterim = true;
 					if (SAGE2_speech.interimId) {
 						// this should get cleared out each transcript change
@@ -413,20 +416,19 @@ SAGE2_speech.listeningVisualInit = function () {
 		divId: "divForListentingVisual",
 		canvasId: "canvasVoiceListening",
 		canvasWidth:  100,
-		canvasHeight: 20,
+		canvasHeight:  20,
 		circleRadius:  25,
-		cycleTime: 1500, // divide by 2 to get one sweep time
 		// swap to images
 		// multiple images
 		imageId: ["imageEar0", "imageEar1", "imageEar2", "imageEar3"],
-		imageWidth: 40,
+		imageWidth:  40,
 		imageHeight: 40,
-		imageFrameDuration: 100, // in ms
+		imageFrameDuration: 75, // in ms
 		imageFrameStartTime: 0,
 		imageCycleFrame: 0,
 		imageDetectedInterim: false,
 		transcriptId: "listeningTranscriptDiv",
-		transcriptCharacterPadding: 6
+		transcriptCharacterPadding: 7
 	};
 
 	var d = document.createElement("div");
@@ -446,12 +448,12 @@ SAGE2_speech.listeningVisualInit = function () {
 	// put right of image
 	transcriptDiv.style.left = (SAGE2_speech.listentingInfo.imageWidth - 20) + "px";
 	// match the left offset from image
-	transcriptDiv.style.paddingLeft = "20px";
+	transcriptDiv.style.paddingLeft = "25px";
 	// match the left offset from image
 	transcriptDiv.style.paddingTop = "5px";
-	transcriptDiv.style.border = "2px solid black";
-	transcriptDiv.style.borderRadius = "2px 20px 20px 2px";
-	transcriptDiv.style.background = "white";
+	transcriptDiv.style.border = "1px solid black";
+	transcriptDiv.style.borderRadius = "1px 20px 20px 1px";
+	transcriptDiv.style.background   = "#e6e6e6";
 	// start blank
 	transcriptDiv.textContent = "";
 	transcriptDiv.style.width = (transcriptDiv.textContent.length
@@ -627,10 +629,12 @@ SAGE2_speech.textToSpeech = function (whatToSay) {
  */
 SAGE2_speech.toggleVoiceRecognition = function () {
 	// toogle: if enabled, disable and make menu allow reenable
+	// in the top menu bar (webix ui)
 	if (SAGE2_speech.isEnabled) {
 		$$('topmenu').showItem('voiceserviceEnable_menu');
 		$$('topmenu').hideItem('voiceserviceDisable_menu');
-	} else { // else was disabled, enable it and allow disable
+	} else {
+		// else was disabled, enable it and allow disable
 		$$('topmenu').showItem('voiceserviceDisable_menu');
 		$$('topmenu').hideItem('voiceserviceEnable_menu');
 	}
