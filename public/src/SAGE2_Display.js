@@ -658,7 +658,9 @@ function setupListeners() {
 
 		// Tell the application it is over
 		var app = applications[elem_data.elemId];
-		app.terminate();
+		if (app) {
+			app.terminate();
+		}
 
 		// Remove the app from the list
 		delete applications[elem_data.elemId];

@@ -976,7 +976,7 @@ var SAGE2_App = Class.extend({
 				description: "separator"
 			});
 			appContextMenu.entries.push({
-				description: "Send to back",
+				description: "Send to Back",
 				callback: "SAGE2SendToBack",
 				parameters: {}
 			});
@@ -986,7 +986,10 @@ var SAGE2_App = Class.extend({
 				parameters: {}
 			});
 			appContextMenu.entries.push({
-				description: "separator"
+				description: "minimize",
+				callback: "SAGE2Maximize",
+				parameters: {},
+				voiceEntryOverload: true // not displayed on UI, added for voice entry
 			});
 			// currently testing with remote pointer event testing
 			/* currently disabled
@@ -1008,7 +1011,7 @@ var SAGE2_App = Class.extend({
 			});
 
 			// limit the size of the title, especially for webview titles
-			var menuTitle = this.title || "application";
+			var menuTitle = this.title || "Application";
 			if (menuTitle.length > 40) {
 				// crop the title to 40 characters and add ellipsis
 				menuTitle = menuTitle.substring(0, 40) + '...';

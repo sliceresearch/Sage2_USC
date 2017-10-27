@@ -696,8 +696,10 @@ AppLoader.prototype.loadUnityAppFromZip = function(appLoader, unityLoader, zipFo
 
 		// Unity 5.6+ no longer stores the width/height in <canvas>
 		if (htmlCanvasHeight == undefined) {
-			htmlCanvasHeight = "600px";
-			htmlCanvasWidth = "960px";
+			// Get width/height from div style, parse out ; and spaces
+			var style = indexHtml("div").attr("style").split(/[\s;]+/);
+			htmlCanvasHeight = style[3];
+			htmlCanvasWidth = style[1];
 		}
 
 		// Title is in the form 'Unity WebGL Player | [Product Name]'

@@ -80,22 +80,30 @@
 	],
 	experimental: {
 		omicron: {
-			// Standard 'SAGE' connection
-			// SAGE listens for a sageinputserver to stream events
 			enable: true,
+			
+			// Port SAGE will listen for a oinputserver connection
+			msgPort: 28000,
+			
+			// If specified, SAGE will actively attempt to connect to
+			// an oinputserver on the specified IP and data port
+			inputServerIP: "131.193.76.121",
 			dataPort: 30005,
+			
 			eventDebug: false,
+			
+			enableTouch: true,
+			enableMocap: false,
+			enableWand: false,
+			
+			style: "Touch", // Display as "Touch" or "Pointer"
+			interactionMode: "App", // "Window" or "App"
 
 			// Touch gestures
+			touchOffset: [ 12, 5 ], // in pixels
 			zoomGestureScale: 2000,
 			acceleratedDragScale: 3,
-			gestureDebug: false,
-
-			// Additional 'CAVE2' type connection
-			// SAGE connects to an oinputserver to get events
-			useOinputserver: true,
-			inputServerIP: "127.0.0.1",
-			msgPort: 28000
+			gestureDebug: false
 		}
 	},
 	dependencies: {
