@@ -757,10 +757,23 @@ AppLoader.prototype.loadApplicationFromRemoteServer = function(application, call
 };
 
 AppLoader.prototype.loadFileFromWebURL = function(file, callback) {
-	// XXX - Will this work with our custom apps?
+	// Add the URL in the asset DB
+	var appIcon = path.resolve('public', 'images', 'link_256.png');
+	var urlName = file.url;
+	// build a fake EXIF structure
+	var exif = {FileName: urlName, icon: appIcon, MIMEType: "sage2/url",
+		FileSize: 0, FileDate: new Date(),
+		SAGE2user: file.SAGE2_ptrName, SAGE2color: file.SAGE2_ptrColor,
+		metadata: {}};
+	// Store the asset
+	assets.addURL(urlName, exif);
+
+	// Extract the filename from URL,
+	// used in case of dragging an image or PDF for instance from the web
 	var mime_type = file.type;
 	var filename = decodeURI(file.url.substring(file.url.lastIndexOf("/") + 1));
 
+	// Load the app
 	this.loadApplication({location: "url", url: file.url, type: mime_type, name: filename, strictSSL: false},
 		callback);
 };
