@@ -1434,6 +1434,7 @@ const SAGE2_interaction = (function() {
 		});
 
 		this.wsio.on('loginStateChanged', handleLoginStateChange.bind(this));
+		this.wsio.on('stopSAGE2Pointer',this.stopSAGE2Pointer.bind(this));
 
 		document.addEventListener('pointerlockerror',        this.pointerLockError,  false);
 		document.addEventListener('mozpointerlockerror',     this.pointerLockError,  false);

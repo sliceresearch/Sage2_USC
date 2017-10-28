@@ -20,25 +20,72 @@
 <script src="../src/SAGE2_runtime.js"></script>
 
 
-<link rel="stylesheet" type="text/css" href="style.css" media="screen" />
 <style>
-	#main { color: white; text-align:left; font-size:14px; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; padding:20px;}
+	body { font-family: Arimo, Helvetica, sans-serif; background:white; color: #333; text-align:left; font-size:14px; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; padding:20px;}
+
+	a.tab {
+		display:inline-block;
+		padding:10px;
+		color:#498;
+		background:#fafafa;
+		box-shadow:2px 2px 5px #ccc;
+		text-decoration:none;
+		margin-right:10px;
+	}
 	p { font-family:monospace;text-indent: initial; margin:1em 0; font-size:13.5px;}
 	b { color: crimson; font-weight:700; font-size:13.5px; font-family:monospace; margin-right:10px; min-width:80px; display:inline-block;}
+
+	section { display:none; border: 1px dotted #eee; background: #fafafa; margin-top: 15px; padding: 20px; min-height:200px;}
+	section.active {display:block;}
+	section > ul {
+		padding:0;
+		list-style-type: none;
+		margin:0;
+	}
+	ul, li {
+		list-style-type: none;		
+	}
+
+
 </style>
 </head>
 
 <body>
-	<div id="main">
-		listening...
-	</div>
+
+	<a class="tab" href="#users">Users</a>
+	<a class="tab" href="#permissions">Permissions</a>
+	<a class="tab" href="#log">Log</a>
+
+	<section id="users" class="active">
+	</section>
+	<section id="permissions">
+	</section>
+	<section id="log">
+	</section>
 <script>
 (function(){ 
+
+	document.querySelectorAll('a.tab').forEach(a => {
+		a.onclick = function() {
+			let href = this.getAttribute('href');
+
+			let section = document.querySelector(href);
+			if (section) {
+				document.querySelectorAll('section.active').forEach(s => {
+					s.classList.remove('active');
+				});
+				section.classList.add('active');
+			}
+			return false;
+		}
+	})
+
 	var wsio = new WebsocketIO();
 	var session = getCookie("session");
 
 	// open socket
 	wsio.open(function() {
+		document.getElementById('log').innerHTML = 'listening...';
 		wsio.emit('addClient', {
 			session: session,
 			requests: {
@@ -48,6 +95,11 @@
 				console: true
 			}
 		});
+
+		redrawPermissions();
+		wsio.emit('pollActiveClients');
+
+		wsio.on('activeClientsRetrieved', listUsers)
 
 		wsio.on('userEvent', addUserEvent);
 	});
@@ -71,10 +123,118 @@
 		}, 2000);
 	});
 
-	let container = document.getElementById('main');
+
+	// users
+	let clients = {};
+	function listUsers(data) {
+		console.log('users retrieved:', data);
+
+		clients = data.clients;
+
+		redraw();
+	};
+
+	function redrawPermissions() {
+		let container = document.getElementById('permissions');
+
+		let permissions = [
+			'Upload files',
+			'Use apps',
+			'Share screen',
+			'Share pointer',
+			'Move windows'
+		];
+
+		let liHtml = permissions.map(p => {
+			return '<li><input type="checkbox" checked>&emsp;'+p+'</li>';
+		}).join('');
+
+		let ulHtml = ['Admin', 'User', 'Guest'].map(category => {
+			let lcCat = category.toLowerCase();
+			return [
+				'<li class="permission permission--' + lcCat +'">',
+					category,
+					'<ul>',
+						liHtml,
+					'</ul>',
+				'</li>'
+			].join('');
+		}).join('');
+
+		container.innerHTML = '<ul>' + ulHtml + '</ul>';
+
+		container.querySelectorAll('input').forEach(i => {
+			i.onclick = function() {
+				let role = this.parentNode.parentNode.parentNode.className.split('--')[1];
+				let checked = this.checked;
+
+				let lis = this.parentNode.parentNode.children;
+				let index = [].slice.apply(lis).indexOf(this.parentNode);
+				let ids = [];
+				if (role === 'user') {
+					clients.users.forEach(u => {
+						ids = ids.concat(u.id);
+					});
+				}
+				else {
+					clients.users.forEach(u => {
+						ids.push(u);
+					});
+				}
+				wsio.emit('editRole', {
+					role: index,
+					hasRole: checked,
+					ids: ids
+				});
+			}
+		});
+
+	}
+
+	function redraw() {
+		let container = document.getElementById('users');
+
+		let ulHtml = ['Admin', 'User', 'Guest'].map(category => {
+			let lcCat = category.toLowerCase();
+			return [
+				'<li class="role role--' + lcCat +'">',
+					category,
+					'<ul></ul>',
+				'</li>'
+			].join('');
+		}).join('');
+
+
+		container.innerHTML = '<ul>' + ulHtml + '</ul>';
+
+		let userEl = container.querySelector('.role--user > ul');
+		let guestEl = container.querySelector('.role--guest > ul');
+
+		let users = clients.users;
+		let guests = clients.guests;
+
+		users.sort((a,b) => a.label.localeCompare(b.label)).forEach((u) => {
+			let li = document.createElement('li');
+
+			li.appendChild(document.createTextNode(`${u.label} (${u.name})`));
+			userEl.appendChild(li);
+		});
+
+		guests.sort().forEach((g) => {
+			let li = document.createElement('li');
+
+			li.appendChild(document.createTextNode(g));
+			guestEl.appendChild(li);
+		});
+	};
+
+
+
+
+	// log
+	let container = document.getElementById('log');
 
 	var nli = 0;
-	var tli = 1;
 
 	function addText(el, text) {
 		el.appendChild(document.createTextNode(text));
@@ -86,7 +246,7 @@
 		p.innerHTML = new Date() + '<br>';
 
 		let span = document.createElement('b');
-		addText(span, tli + '. ' + event.type);
+		addText(span, event.type);
 
 		p.appendChild(span);
 
@@ -118,7 +278,6 @@
 			}
 		}
 
-		++tli;
 		if (nli < 20) {
 			++nli;
 		}
@@ -127,7 +286,100 @@
 		}
 
 		container.appendChild(p);
-	}
+
+
+		clients.users = clients.users || [];
+		clients.guests = clients.guests || [];
+
+		switch (event.type) {
+			case 'new user':
+			case 'login':
+				var guestIndex = clients.guests.indexOf(event.id);
+				if (event.data === null) {
+					// add non-logged-in user to guest
+					if (guestIndex < 0) {
+						clients.guests.push(event.id);
+					}
+				}
+				else {
+					// check if newly logged-in user was previously a guest
+					// non-blocking? :(
+					if (guestIndex > -1) {
+						clients.guests.splice(guestIndex, 1);
+					}
+
+					// check if logged-in user already has an instance
+					var foundUser = clients.users.find(u => u.name === event.data.name && u.email === event.data.email);
+
+					if (!foundUser) {
+						clients.users.push({
+							name: event.data.name,
+							label: event.data.SAGE2_ptrName,
+							email: event.data.email,
+							id: [event.id]
+						});
+					}
+					else {
+						foundUser.id.push(event.id);
+					}
+				}
+
+				redraw();
+				break;
+			case 'logout':
+				// search existing users and move to guests
+				for (let i in clients.users) {
+					if (clients.users[i].id.indexOf(event.id) > -1) {
+						// only instance -- remove user
+						if (clients.users[i].id.length <= 1) {
+							clients.users.splice(i, 1);
+						}
+						else {
+							// only remove this ip from the user
+							clients.users[i].id.splice(clients.users[i].id.indexOf(event.id), 1);
+						}
+
+						// add to guests
+						if (clients.guests.indexOf(event.id) < 0) {
+							clients.guests.push(event.id);
+						}
+						break;
+					}
+				}
+
+				redraw();
+				break;
+			case 'disconnect':
+				// search existing guests and users and remove
+				for (let i in clients.users) {
+					if (clients.users[i].id.indexOf(event.id) > -1) {
+						// only instance -- remove user
+						if (clients.users[i].id.length <= 1) {
+							clients.users.splice(i, 1);
+						}
+						else {
+							// only remove this ip from the user
+							clients.users[i].id.splice(clients.users[i].id.indexOf(event.id), 1);
+						}
+						break;
+					}
+				}
+
+				for (let i in clients.guests) {
+					if (clients.guests[i] === event.id) {
+						// remove ip from guests
+						clients.guests.splice(i, 1);
+						break;
+					}
+				}
+
+				redraw();
+				break;
+			default:
+				break;
+		} // end switch-case
+	};
+
 })();
 </script>
 

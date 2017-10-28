@@ -117,7 +117,6 @@ var hostOrigin         = "";
 var SAGE2Items         = {};
 var sharedApps         = {};
 var users              = null;
-var users2             = {};
 var appLoader          = null;
 var mediaBlockSize     = 512;
 var pressingCTRL       = true;
@@ -735,7 +734,7 @@ function closeWebSocketClient(wsio) {
 		}
 	}
 
-	delete users2[wsio.id];
+	userlist.disconnect(wsio.id);
 	broadcast('userEvent', { type: 'disconnect', data: null, id: wsio.id });
 	addEventToUserLog(wsio.id, {type: "disconnect", data: null, time: Date.now()});
 
@@ -977,6 +976,7 @@ function setupListeners(wsio) {
 	wsio.on('logoutUser',                           wsLogoutUser);
 	wsio.on('createUser',                           wsCreateUser);
 	wsio.on('editUser',                             wsEditUser);
+	wsio.on('editRole',                             wsEditRole);
 
 	wsio.on('startSagePointer',                     wsStartSagePointer);
 	wsio.on('stopSagePointer',                      wsStopSagePointer);
@@ -1415,34 +1415,9 @@ function wsSelectionModeOnOff(wsio, data) {
 
 // ************** User functions ****************
 function wsPollActiveClients(wsio, data) {
-	let clients = {
-		users: [],
-		guests: []
-	};
-
-	for (let ip in users2) {
-		const user = users2[ip];
-		if (user) {
-			const foundUser = clients.users.find(u => u.name === user.name && u.email === user.email);
-
-			// if user does not already exist
-			if (!foundUser) {
-				clients.users.push({
-					name: user.name,
-					email: user.email,
-					label: user.SAGE2_ptrName,
-					id: [ip]
-				});
-			} else {
-				foundUser.id.push(ip);
-			}
-		} else {
-			clients.guests.push(ip);
-		}
-	}
-
 	wsio.emit('activeClientsRetrieved', {
-		clients: clients
+		clients: userlist.clients,
+		rbac: userlist.rbac
 	});
 }
 
@@ -1460,11 +1435,7 @@ function wsLoginUser(wsio, data) {
 	});
 
 	if (res.error === null) {
-		users2[wsio.id] = {
-			wid: wsio.id,
-			uid: res.uid,
-			name: res.user.name
-		};
+		userlist.track(wsio.id, res.user);
 
 		broadcast('userEvent', {
 			type: 'login',
@@ -1472,7 +1443,7 @@ function wsLoginUser(wsio, data) {
 			id: wsio.id
 		});
 	} else if (data.init) {
-		users2[wsio.id] = null;
+		userlist.track(wsio.id, null);
 
 		broadcast('userEvent', {
 			type: 'login',
@@ -1490,7 +1461,7 @@ function wsLogoutUser(wsio, data) {
 			login: false
 		});
 
-		users2[wsio.id] = null;
+		userlist.track(wsio.id, null);
 
 		broadcast('userEvent', {
 			type: 'logout',
@@ -1514,21 +1485,27 @@ function wsCreateUser(wsio, data) {
 	});
 
 	if (res.error === null) {
-		users2[wsio.id] = {
-			wid: wsio.id,
-			uid: res.uid,
-			name: res.user.name
-		};
+		userlist.track(wsio.id, res.user);
 
 		broadcast('userEvent', {
 			type: 'new user',
-			data: res.user
+			data: res.user,
+			id: wsio.id
 		});
 	}
 }
 
 function wsEditUser(wsio, data) {
 	userlist.editUser(data.uid, data.properties);
+}
+
+function wsEditRole(wsio, data) {
+	if (data.hasRole) {
+		userlist.grantPermission(data.role, data.action);
+	}
+	else {
+		userlist.revokePermission(data.role, data.action);
+	}
 }
 
 
@@ -1578,6 +1555,11 @@ function wsRegisterInteractionClient(wsio, data) {
 }
 
 function wsStartSagePointer(wsio, data) {
+	if (!userlist.isAllowed(wsio.id, 'share pointer')) {
+		wsio.emit('stopSAGE2Pointer');
+		return; 
+	}
+
 	// Switch interaction from window mode (on web) to app mode (wall)
 	remoteInteraction[wsio.id].interactionMode = remoteInteraction[wsio.id].getPreviousMode();
 	broadcast('changeSagePointerMode', {id: sagePointers[wsio.id].id, mode: remoteInteraction[wsio.id].getPreviousMode()});
@@ -3113,6 +3095,10 @@ function wsRequestStoredFiles(wsio, data) {
 }
 
 function wsLoadApplication(wsio, data) {
+	if (!userlist.isAllowed(wsio.id, 'use apps')) {
+		return; 
+	}
+
 	var appData = {application: "custom_app", filename: data.application, data: data.data};
 	appLoader.loadFileFromLocalStorage(appData, function(appInstance) {
 		appInstance.id = getUniqueAppId();

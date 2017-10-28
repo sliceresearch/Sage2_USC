@@ -445,12 +445,6 @@ function FileManager(wsio, mydiv, uniqueID) {
 
 	// Build the Advanced menu
 	var advancedToolbarActions = {
-		admin_login: {
-			value: "Administrator Login",
-			callback: function(evt) {
-
-			}
-		},
 		display_menu: {value: "Display Client 0",
 			tooltip: "Opens a new page with the first display client",
 			callback: function (evt) {

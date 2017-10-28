@@ -24,10 +24,32 @@ const sageutils   = require('../src/node-utils');
 const pathname = 'logs';
 const filename = 'users.json';
 
+const anonUserIndex = 0;
+const tempNames = "Aardvark Albatross Alligator Alpaca Ant Anteater Antelope Ape Armadillo Baboon Badger Barracuda Bat Beaver Bee Bison Boar Buffalo Butterfly Camel Caribou Cassowary Cat Caterpillar Cheetah Chicken Chimpanzee Chinchilla Cobra Cormorant Coyote Crab Crane Crocodile Crow Deer Dog Dolphin Donkey Dove Dragonfly Duck Eagle Echidna Eel Elephant Emu Falcon Ferret Finch Flamingo Fox Frog Gazelle Gerbil Giraffe Goat Goldfish Goose Gorilla Grasshopper Hamster Hawk Hedgehog Heron Hippo Horse Hummingbird Hyena Ibex Jackal Jaguar Jellyfish Kangaroo Koala Lark Lemur Leopard Lion Llama Lobster Manatee Mandrill Mink Mole Mongoose Monkey Mouse Narwhal Newt Nightingale Octopus Okapi Opossum Ostrich Otter Owl Oyster Panther Parrot Panda Partridge Pelican Penguin Pheasant Pigeon Porcupine Porpoise Quail Rabbit Raccoon Raven Rhinoceros Salamander Seahorse Seal Shark Sheep Skunk Sloth Snail Squid Squirrel Starling Swan Tapir Tiger T-rex Turtle Walrus Weasel Whale Wolf Wombat Yak Zebra".split(' ');
+
 function createUid(name, email) {
 	return name.replace(/[;,=]/g, '-') + '-' + Date.now();
 }
 
+function shuffle(array) {
+	let l = array.length, t, i;
+
+	while (l) {
+		i = Math.floor(Math.random() * l--);
+
+		// swap random element to end of unshuffled segment
+		t = array[l];
+		array[l] = array[i];
+		array[i] = t;
+	}
+}
+
+/**
+ * Handles users and storage to database
+ * as well as user roles and permissions
+ *
+ * @class UserList
+ */
 class UserList {
 	constructor() {
 		this.currentSession = null;
@@ -47,17 +69,199 @@ class UserList {
 			true	// save in human-readable format
 		);
 
-		this.roles = [];
+		// per session
+		shuffle(tempNames);
+		this.clients = {};
+
+		// get roles/permissions
+		this.initRolesAndPermissions({
+			roles: ['admin', 'user', 'guest'],
+			actions: [
+				'upload files',
+				'use apps',
+				'share screen',
+				'share pointer',
+				'move/resize windows'
+			],
+			permissions: {
+				admin: 0b11111,
+				user: 0b11111,
+				guest: 0b11111
+			}
+		});
 	}
 
-	/* reload database if json file was changed externally */
+	/**
+	* Track user locally by ip
+	*
+	* @method track
+	* @param ip {String} ip address
+	* @param user {Object} user
+	*/
+	track(ip, user) {
+		this.clients[ip] = {
+			user: user,
+			role: []
+		};
+	}
+
+	// ***********  Role Management Functions *************
+	/**
+	* Initialize role access system
+	*
+	* @method initRolesAndPermissions
+	* @param rbac {Object} object containing the three parameters:
+	*  - roles:       an array of strings of role names
+	*  - actions:     an array of strings of action names
+	*  - permissions: an object of role-bitfield pairs
+	*/
+	initRolesAndPermissions(rbac) {
+		rbac.mask = {};
+
+		let l = rbac.actions.length - 1;
+		rbac.actions.forEach((action, i) => {
+			rbac.mask[action] = (1 << (l - i));
+		});
+		rbac.maskAll = (1 << rbac.actions.length) - 1;
+
+		this.rbac = rbac;
+	}
+
+	/**
+	* Set permissions for this role
+	*
+	* @method defineRolePermissions
+	* @param role {String}
+	* @param permissions {Object} list of permission names and values
+	* as String-Boolean pairs
+	*/
+	defineRolePermissions(role, permissions) {
+		if (this.rbac.roles.indexOf(role) < 0) {
+			this.rbac.roles.push(role);
+		}
+
+		// generate permission bit string
+		let l =this.rbac.actions.length - 1;
+		let pBits = 0;
+		for (let action in permissions) {
+			if (permissions[action] && this.rbac.mask[action]) {
+				pBits |= this.rbac.mask[action];
+			}
+		}
+
+		this.rbac.permissions[role] = pBits;
+	}
+
+	/**
+	* Add permission for this action to the role
+	*
+	* @method grantPermission
+	* @param role {String}
+	* @param action {String}
+	*/
+	grantPermission(role, action) {
+		if (this.rbac.roles.indexOf(role) > -1) {
+			this.rbac.permissions[role] |= this.rbac.mask[action];
+		}
+	}
+
+	/**
+	* Remove permission for this action from the role
+	*
+	* @method revokePermission
+	* @param role {String}
+	* @param action {String}
+	*/
+	revokePermission(role, action) {
+		if (this.rbac.roles.indexOf(role) > -1) {
+			this.rbac.permissions[role] &= (this.rbac.maskAll ^ this.rbac.mask[action]);
+		}
+	}
+
+
+	/**
+	* Set the user to have only this role
+	*
+	* @method assignRole
+	* @param ip {String}
+	* @param role {String}
+	*/
+	assignRole(ip, role) {
+		if (this.clients[ip]) {
+			this.clients[ip].role = [role];
+		}
+	}
+
+	/**
+	* Add this role to the list of user's roles
+	*
+	* @method addRole
+	* @param ip {String}
+	* @param role {String}
+	*/
+	addRole(ip, role) {
+		if (this.clients[ip] && this.clients[ip].role.indexOf(role) < 0) {
+			this.clients[ip].role.push(role);
+		}
+	}
+
+	/**
+	* Remove this role from the list of user's roles
+	*
+	* @method removeRole
+	* @param ip {String}
+	* @param role {String}
+	*/
+	removeRole(ip, role) {
+		if (this.clients[ip]) {
+			let i = this.clients[ip].role.indexOf(role);
+			if (i > -1) {
+				this.clients[ip].role.splice(i, 1);
+			}
+		}
+	}
+
+	/**
+	* Check if user has permission to do an action
+	*
+	* @method isAllowed
+	* @param ip {String} client ip requesting permission
+	* @param action {String} name of the action
+	* @return {Boolean} true if user is permitted to perform this action
+	*/
+	isAllowed(ip, action) {
+		if (!this.clients[ip]) { return false; }
+		let roles = this.clients[ip].role;
+		for (let i in roles) {
+			if (this.rbac.mask[action] & roles[i]) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	saveRolePermissionsToStorage() {
+
+	}
+
+	// **************  Database Functions *****************
+
+	/**
+	* Reload database if json file was changed externally
+	*
+	* @method reload
+	*/
 	reload() {
 		this.db.reload();
 	}
 
-	/* wrapper for JsonDB.getData()
-	 * retrieve data from json database or log an error if it fails 
-	 * return an object with success flag and the data
+	/**
+	 * Wrapper for JsonDB.getData()
+	 * Retrieve data from json database or log an error if it fails 
+	 *
+	 * @method getData
+	 * @param path {String}
+	 * @return {Object} object with the success flag and the retrieved data
 	 */
 	getData(path) {
 		try {
@@ -74,16 +278,22 @@ class UserList {
 		}
 	}
 
-	/* wrapper for JsonDB.push()
-	 * push data to json database or log an error if it fails
-	 * return true/false for success
+	/**
+	 * Wrapper for JsonDB.push()
+	 * Push data to json database or log an error if it fails
+	 * 
+	 * @method push
+	 * @param path {String}
+	 * @param data {Object} new data to be pushed
+	 * @param checkIfPathExists {Boolean} check if path exists before pushing * the data; default is false
+	 * @return {Boolean} true if push succeeds
 	 */
-	push(path, obj, overwrite = true, checkIfPathExists = false) {
+	push(path, data, overwrite = true, checkIfPathExists = false) {
 		try {
 			if (checkIfPathExists) {
 				this.db.getData(path);
 			}
-			this.db.push(path, obj, overwrite);
+			this.db.push(path, data, overwrite);
 			return true;
 		} catch (error) {
 			console.error(sageutils.header("Userlist") + error);
@@ -91,9 +301,13 @@ class UserList {
 		}
 	}
 
-	/* wrapper for JsonDB.delete()
-	 * remove data at a path or log an error if it fails
-	 * return true/false for success
+	/**
+	 * Wrapper for JsonDB.delete()
+	 * Remove data at a path or log an error if it fails
+	 * 
+	 * @method delete
+	 * @param path {String}
+	 * @return {Boolean} true if delete succeeds
 	 */
 	delete(path) {
 		try {
@@ -105,21 +319,16 @@ class UserList {
 		return false;
 	}
 
-
-	/* store a new session in the database */
-	startSession(config) {
-		let now = Date.now();
-		this.currentSession = config.host + ':' + config.port + ' ' + new Date(now);
-		this.push(this.sessionPath, { start: now });
-	}
-
-	/* mark the end of the current session */
-	endSession() {
-		this.push(this.sessionPath, { end: Date.now() }, false, true);
-		this.currentSession = null;
-	}
-
-	/* store a new user in the database */
+	/**
+	 * Store a new user in the database 
+	 * 
+	 * @method addNewUser
+	 * @param name {String}
+	 * @param email {String}
+	 * @param properties {Object}
+	 * @return {Object} object with the user token, user object, and an error
+	 * message if the user could not be added
+	 */
 	addNewUser(name, email, properties = {}) {
 		name = name && name.trim();
 		email = email && email.trim();
@@ -150,7 +359,15 @@ class UserList {
 		};
 	}
 
-	/* retrieve uid of user if user exists in database */
+	/**
+	 * Retrieve a user in the database by name and email
+	 * 
+	 * @method getUser
+	 * @param name {String}
+	 * @param email {String}
+	 * @return {Object} object with the user token, user object, and an error
+	 * message if the user could not be added
+	 */
 	getUser(name, email) {
 		let req = this.getData('/user');
 		if (req.success) {
@@ -172,6 +389,14 @@ class UserList {
 		};
 	}
 
+	/**
+	 * Retrieve a user in the database by user id
+	 * 
+	 * @method getUserById
+	 * @param uid {String}
+	 * @return {Object} object with the user token, user object, and an error
+	 * message if the user could not be added
+	 */
 	getUserById(uid) {
 		let req = this.getData(this.userPath(uid));
 		if (req.success) {
@@ -189,17 +414,26 @@ class UserList {
 		};
 	}
 
-	/* compare uid to existing data in db */
-	userExists(uid) {
-		return this.getData(this.userPath(uid)).success;
-	}
-
-	/* remove user from the database */
+	/**
+	 * Remove user from the database 
+	 *
+	 * @method removeUser
+	 * @param uid {String}
+	 * @return {Boolean} true if delete succeeds
+	 */
 	removeUser(uid) {
-		this.delete(this.userPath(uid));
+		return this.delete(this.userPath(uid));
 	}
 
-	/* update user properties */
+
+	/**
+	 * Edit user properties
+	 *
+	 * @method editUser
+	 * @param uid {String}
+	 * @param properties {Object}
+	 * @return {Boolean} true if edit succeeds
+	 */
 	editUser(uid, properties) {
 		// name and email keys cannot be empty
 		if (!properties.name || !properties.name.trim()) {
@@ -211,7 +445,14 @@ class UserList {
 		return this.push(this.userPath(uid), properties, false, true);
 	}
 
-	/* get properties of a user */
+	/**
+	 * Get properties of a user 
+	 *
+	 * @method getProperty
+	 * @param uid {String}
+	 * @param arguments {String} property key(s)
+	 * @return the property or an array of properties
+	 */
 	getProperty(uid) {
 		var keys = [].slice.call(arguments, 1);
 		let req = this.getData(this.userPath(uid));
@@ -233,9 +474,6 @@ class UserList {
 
 	get filePath() {
 		return path.join(pathname, filename);
-	}
-	get sessionPath() {
-		return '/session/' + this.currentSession;
 	}
 }
 
