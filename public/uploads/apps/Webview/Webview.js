@@ -121,6 +121,10 @@ var Webview = SAGE2_App.extend({
 				view_url = 'https://player.twitch.tv/?!autoplay&video=v' + twitch_id;
 			}
 			this.contentType = "twitch";
+		} else if (view_url.startsWith("http://" + this.config.host + ':' + this.config.port + "//user/apps")) {
+			// Locally hosted WebViews are assumed to be Unity applications
+			// Move to more dedicated url later? //users/apps/unity ?
+			this.contentType = "unity";
 		} else if (view_url.indexOf('docs.google.com/presentation') >= 0) {
 			this.contentType = "google_slides";
 		}
@@ -916,6 +920,12 @@ var Webview = SAGE2_App.extend({
 						});
 						return;
 					}
+				}
+
+				if (this.contentType === "unity") {
+					// Bit of a hack to allow Unity InputManager controls to work
+					// Only upper case characters trigger InputManager -- Arthur
+					data.character = data.character.toUpperCase();
 				}
 
 				// send the character event

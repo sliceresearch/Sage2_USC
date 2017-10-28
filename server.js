@@ -10501,7 +10501,7 @@ function deletePartition(id) {
 /**
  * Updates the stored information about connections.
  * Currently updates three values: UI, displays, remote servers.
- * Users information from 
+ * Users information from
  *
  * @method updateInformationAboutConnections
  */
@@ -10582,7 +10582,7 @@ function updateInformationAboutConnectionsFailedRemoteSite(wsio) {
 
 /**
  * Will attempt to take a transcript and use best case to activate a context menu item.
- * 
+ *
  * @method wsVoiceToAction
  * @param {Object} wsio - ws to originator.
  * @param {Object} data - should contain words.
