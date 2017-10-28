@@ -625,8 +625,7 @@ AppLoader.prototype.loadZipAppFromFile = function(file, mime_type, aUrl, externa
 				mime_type: mime_type,
 				external_url: external_url
 			};
-
-			console.log(sageutils.header('AppLoader') + " Found Unity app " + unityLoader);
+			sageutils.log("AppLoader", "Found Unity app", unityLoader);
 			_this.loadUnityAppFromZip(_this, unityLoader, zipFolder, instructionInfo, callback);
 		} else {
 			fs.readFile(instuctionsFile, 'utf8', function(err1, json_str) {
@@ -678,8 +677,8 @@ AppLoader.prototype.loadZipAppFromFile = function(file, mime_type, aUrl, externa
 
 AppLoader.prototype.loadUnityAppFromZip = function(appLoader, unityLoader, zipFolder, data, callback) {
 	var unityIndexHtml = path.join(zipFolder, "index.html");
+	sageutils.log('AppLoader', 'Unity index file', unityIndexHtml);
 
-	console.log(sageutils.header('AppLoader') + unityIndexHtml);
 	fs.readFile(unityIndexHtml, 'utf8', function(err1, html_str) {
 		if (err1) {
 			throw err1;
@@ -710,7 +709,7 @@ AppLoader.prototype.loadUnityAppFromZip = function(appLoader, unityLoader, zipFo
 
 		// Get the canvas width/height, parsing out "px"
 		htmlCanvasHeight = parseInt(htmlCanvasHeight.slice(0, htmlCanvasHeight.indexOf("p")));
-		htmlCanvasWidth = parseInt(htmlCanvasWidth.slice(0, htmlCanvasWidth.indexOf("p")));
+		htmlCanvasWidth  = parseInt(htmlCanvasWidth.slice(0, htmlCanvasWidth.indexOf("p")));
 
 		// Sets style flag for proper SAGE2 scaling
 		var htmlStyle = "* {margin: 0; padding: 0;}html, body {width: 100vw;height: 100vh;}";
@@ -726,7 +725,8 @@ AppLoader.prototype.loadUnityAppFromZip = function(appLoader, unityLoader, zipFo
 		// Update index.html
 		fs.writeFile(unityIndexHtml, indexHtml.html(), function(err) {
 			if (err) {
-				return console.log(err);
+				sageutils.log('AppLoader', 'Unity error writing file', err);
+				return;
 			}
 		});
 
@@ -739,10 +739,8 @@ AppLoader.prototype.loadUnityAppFromZip = function(appLoader, unityLoader, zipFo
 				height: htmlCanvasHeight,
 				resize: "free",
 				animation: true,
-				dependencies: [
-				],
-				load: {
-				},
+				dependencies: [],
+				load: {},
 				title: htmlTitle,
 				version: "1.0.0",
 				description: "Loads a Unity3D webgl output into a webview",
@@ -750,7 +748,6 @@ AppLoader.prototype.loadUnityAppFromZip = function(appLoader, unityLoader, zipFo
 				author: "",
 				license: "SAGE2-Software-License"
 			};
-
 			jsonfile.writeFileSync(data.instuctionsFile, obj);
 		}
 
@@ -763,7 +760,7 @@ AppLoader.prototype.loadUnityAppFromZip = function(appLoader, unityLoader, zipFo
 				if (err2) {
 					throw err2;
 				}
-				console.log(sageutils.header("Loader") + " found unity file " + unityLoader);
+				sageutils.log("Loader", "Found unity file", unityLoader);
 				var appInstance = appLoader.readInstructionsFile(json_str, zipFolder, data.mime_type, data.external_url);
 				appLoader.scaleAppToFitDisplay(appInstance);
 				// Seems to cause issues, when drag-drop, the first time the app is opened.
@@ -1308,6 +1305,14 @@ AppLoader.prototype.readInstructionsFile = function(json_str, file, mime_type, e
 	return result;
 };
 
+/**
+ * Determines if it exists in directory
+ *
+ * @method     existsInDir
+ * @param      {<type>}           startDir  The start dir
+ * @param      {<type>}           target    The target
+ * @return     {String|String[]}  True if exists in dir, False otherwise.
+ */
 AppLoader.prototype.existsInDir = function(startDir, target) {
 	if (!fs.existsSync(startDir)) {
 		return;
