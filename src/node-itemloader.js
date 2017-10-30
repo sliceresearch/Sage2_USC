@@ -879,6 +879,7 @@ AppLoader.prototype.loadFileFromWebURL = function(file, callback) {
 		metadata: {}};
 	// Store the asset
 	assets.addURL(urlName, exif);
+	assets.saveAssets();
 
 	// Extract the filename from URL,
 	// used in case of dragging an image or PDF for instance from the web
@@ -1097,6 +1098,7 @@ AppLoader.prototype.manageAndLoadUploadedFile = function(file, callback) {
 							callback(appInstance, handle);
 						});
 					});
+					assets.saveAssets();
 				}
 			});
 		}
