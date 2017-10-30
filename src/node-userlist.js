@@ -24,7 +24,7 @@ const sageutils   = require('../src/node-utils');
 const pathname = 'logs';
 const filename = 'users.json';
 
-const anonUserIndex = 0;
+let nAnonClients = 0;
 const tempNames = "Aardvark Albatross Alligator Alpaca Ant Anteater Antelope Ape Armadillo Baboon Badger Barracuda Bat Beaver Bee Bison Boar Buffalo Butterfly Camel Caribou Cassowary Cat Caterpillar Cheetah Chicken Chimpanzee Chinchilla Cobra Cormorant Coyote Crab Crane Crocodile Crow Deer Dog Dolphin Donkey Dove Dragonfly Duck Eagle Echidna Eel Elephant Emu Falcon Ferret Finch Flamingo Fox Frog Gazelle Gerbil Giraffe Goat Goldfish Goose Gorilla Grasshopper Hamster Hawk Hedgehog Heron Hippo Horse Hummingbird Hyena Ibex Jackal Jaguar Jellyfish Kangaroo Koala Lark Lemur Leopard Lion Llama Lobster Manatee Mandrill Mink Mole Mongoose Monkey Mouse Narwhal Newt Nightingale Octopus Okapi Opossum Ostrich Otter Owl Oyster Panther Parrot Panda Partridge Pelican Penguin Pheasant Pigeon Porcupine Porpoise Quail Rabbit Raccoon Raven Rhinoceros Salamander Seahorse Seal Shark Sheep Skunk Sloth Snail Squid Squirrel Starling Swan Tapir Tiger T-rex Turtle Walrus Weasel Whale Wolf Wombat Yak Zebra".split(' ');
 
 function createUid(name, email) {
@@ -97,12 +97,34 @@ class UserList {
 	* @method track
 	* @param ip {String} ip address
 	* @param user {Object} user
+	* @return {String} name of the user
 	*/
 	track(ip, user) {
+		let role = 'user';
+		if (!user.name && !user.email) {
+			role = 'guest';
+			if (!user.SAGE2_ptrName) {
+				user.SAGE2_ptrName = 'Anon ' + tempNames[nAnonClients];
+				nAnonClients = (nAnonClients + 1) % tempNames.length; // FIXME
+			}
+		}
+
 		this.clients[ip] = {
 			user: user,
-			role: []
+			role: [role]
 		};
+
+		return user.SAGE2_ptrName;
+	}
+
+	/**
+	* Stop tracking this ip
+	*
+	* @method track
+	* @param ip {String} ip address
+	*/
+	disconnect(ip) {
+		delete this.clients[ip];
 	}
 
 	// ***********  Role Management Functions *************
@@ -141,7 +163,6 @@ class UserList {
 		}
 
 		// generate permission bit string
-		let l =this.rbac.actions.length - 1;
 		let pBits = 0;
 		for (let action in permissions) {
 			if (permissions[action] && this.rbac.mask[action]) {
@@ -230,10 +251,12 @@ class UserList {
 	* @return {Boolean} true if user is permitted to perform this action
 	*/
 	isAllowed(ip, action) {
-		if (!this.clients[ip]) { return false; }
+		if (!this.clients[ip]) {
+			return false;
+		}
 		let roles = this.clients[ip].role;
 		for (let i in roles) {
-			if (this.rbac.mask[action] & roles[i]) {
+			if (this.rbac.mask[action] & this.rbac.permissions[roles[i]]) {
 				return true;
 			}
 		}

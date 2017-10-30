@@ -2,7 +2,7 @@
 <html>
 <head lang="en">
 <meta charset="utf-8">
-<title>event console</title>
+<title>User console</title>
 
 <script type="text/license">
 	// SAGE2 is available for use under the SAGE2 Software License
@@ -19,57 +19,153 @@
 <script src="../src/websocket.io.js"></script>
 <script src="../src/SAGE2_runtime.js"></script>
 
-
 <style>
-	body { font-family: Arimo, Helvetica, sans-serif; background:white; color: #333; text-align:left; font-size:14px; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; padding:20px;}
+	body {
+		font-family: Arimo, Helvetica, sans-serif;
+		background:white;
+		color: #333;
+		text-align:left;
+		font-size:14px;
+		-webkit-font-smoothing: antialiased;
+		-moz-osx-font-smoothing: grayscale;
+		padding:20px;
+	}
 
-	a.tab {
+	button.tab {
+		font:inherit;
+		font-weight:bold;
 		display:inline-block;
+		border:none;
 		padding:10px;
 		color:#498;
 		background:#fafafa;
 		box-shadow:2px 2px 5px #ccc;
 		text-decoration:none;
 		margin-right:10px;
+		outline:none;
+		cursor:pointer;
 	}
-	p { font-family:monospace;text-indent: initial; margin:1em 0; font-size:13.5px;}
-	b { color: crimson; font-weight:700; font-size:13.5px; font-family:monospace; margin-right:10px; min-width:80px; display:inline-block;}
+	button.tab:active, button.tab.active:active {
+		background:#ddd;
+		box-shadow:none;
+	}
+	button.tab.active {
+		background:#f0f0f0;
+		box-shadow:none;
+	}
 
-	section { display:none; border: 1px dotted #eee; background: #fafafa; margin-top: 15px; padding: 20px; min-height:200px;}
-	section.active {display:block;}
+	p {
+		font-family:monospace;
+		margin:1em 0;
+		font-size:13.5px;
+	}
+
+	b {
+		color: crimson;
+		font-weight:700;
+		font-size:13.5px;
+		font-family:monospace;
+		margin-right:10px;
+		min-width:80px;
+		display:inline-block;
+	}
+
+	section {
+		display:none;
+		border: 1px dotted #eee;
+		background: #fafafa;
+		margin-top: 15px;
+		padding: 20px;
+		min-height:200px;
+		overflow-x:auto;
+	}
+	section.active {
+		display:block;
+	}
 	section > ul {
 		padding:0;
 		list-style-type: none;
 		margin:0;
 	}
 	ul, li {
-		list-style-type: none;		
+		list-style-type: none;
 	}
 
-
+	table {
+		margin:-5px;
+		width:100%;
+		border-collapse: collapse;
+	}
+	tr:first-of-type {
+		border-bottom:1px solid #ccc;		
+	}
+	th {
+		padding: 5px;
+		padding-bottom:10px;
+		font-weight:400;
+		vertical-align: top;
+		white-space: nowrap;
+		padding-right:20px;
+	}
+	tr:first-of-type+tr td {
+		padding-top:15px;
+	}
+	td {
+		padding:8px 5px;
+	}
+	span.cursor {
+		display:inline-block;
+		width:0.9em;
+		height:0.9em;
+		border:1px solid white;
+		box-shadow:1px 1px 2px rgba(0,0,0,0.5);
+	}
 </style>
 </head>
 
 <body>
 
-	<a class="tab" href="#users">Users</a>
-	<a class="tab" href="#permissions">Permissions</a>
-	<a class="tab" href="#log">Log</a>
+	<button class="tab active" data-tab="users">Users</button>
+	<button class="tab" data-tab="permissions">Permissions</button>
+	<button class="tab" data-tab="log">Log</button>
 
 	<section id="users" class="active">
+		<table id="user--table">
+			<tr>
+				<th></th>
+				<th>Display name</th>
+				<th>User name</th>
+				<th>Role</th>
+				<th>IP address</th>
+			</tr>
+		</table>
 	</section>
 	<section id="permissions">
 	</section>
 	<section id="log">
 	</section>
+
 <script>
 (function(){ 
+	let clients = {};
+	let rbac = {};
+	let nli = 0;
+	let wsio = new WebsocketIO();
+	let session = getCookie("session");
 
-	document.querySelectorAll('a.tab').forEach(a => {
-		a.onclick = function() {
-			let href = this.getAttribute('href');
+	// navigate between tabs
+	document.querySelectorAll('button.tab').forEach(btn => {
+		btn.onclick = function() {
+			let id = this.getAttribute('data-tab');
 
-			let section = document.querySelector(href);
+			// toggle 'active' class for header buttons & for sections
+			let activeTab = document.querySelector('button.tab.active');
+			if (activeTab) {
+				activeTab.classList.remove('active');
+			}
+			this.classList.add('active');
+
+			let section = document.getElementById(id);
 			if (section) {
 				document.querySelectorAll('section.active').forEach(s => {
 					s.classList.remove('active');
@@ -78,14 +174,11 @@
 			}
 			return false;
 		}
-	})
-
-	var wsio = new WebsocketIO();
-	var session = getCookie("session");
+	});
 
 	// open socket
 	wsio.open(function() {
-		document.getElementById('log').innerHTML = 'listening...';
+		document.getElementById('log').innerHTML = 'Listening...';
 		wsio.emit('addClient', {
 			session: session,
 			requests: {
@@ -96,12 +189,12 @@
 			}
 		});
 
-		redrawPermissions();
-		wsio.emit('pollActiveClients');
+		wsio.on('initialize', function() {
+			wsio.emit('pollActiveClients');
+		});
 
-		wsio.on('activeClientsRetrieved', listUsers)
-
-		wsio.on('userEvent', addUserEvent);
+		wsio.on('activeClientsRetrieved', handleClientsRetrieved);
+		wsio.on('userEvent', handleUserEvent);
 	});
 
 	// Socket close event (ie server crashed)
@@ -123,262 +216,270 @@
 		}, 2000);
 	});
 
-
-	// users
-	let clients = {};
-	function listUsers(data) {
-		console.log('users retrieved:', data);
-
+	// ********* Listeners ***********
+	function handleClientsRetrieved(data) {
+		console.log('clients retrieved:', data);
 		clients = data.clients;
+		rbac = data.rbac;
 
-		redraw();
-	};
+		redrawUsers();
+		redrawPermissions();
+	}
+
+	function handleUserEvent(data) {
+		logEvent(data);
+
+		updateClients(data);
+		console.log('user event:', data);
+	}
+
+
+	// ******* Utility functions *********
+	
+	// transforms string to sentence case
+	function sentenceCase(word) {
+		return word.toLowerCase().replace(/(.)/, firstLetter => firstLetter.toUpperCase());
+	}
+
+	// insert text into a dom node
+	function addText(el, text) {
+		el.appendChild(document.createTextNode(text));
+		return el;
+	}
+
+	// ******* UI/data handling functions *********
+	function updateClients(event) {
+		switch (event.type) {
+			case 'new user':
+			case 'user edited':
+			case 'login':
+			case 'logout':
+			case 'connect':
+			case 'disconnect':
+				wsio.emit('pollActiveClients');
+				break;
+			default:
+				break;
+		}
+	}
+
+	function redrawUsers() {
+		let head = document.querySelector('#user--table tr');
+
+		let container = head.parentNode;
+
+		// delete children
+		for (let i = container.children.length - 1; i >= 0; --i) {
+			if (head !== container.children[i]) {
+				container.removeChild(container.children[i]);
+			}
+		}
+
+		for (let ip in clients) {
+			let color = clients[ip].user.SAGE2_ptrColor;
+			let label = clients[ip].user.SAGE2_ptrName || '';
+			let name = clients[ip].user.name || '';
+			let role = clients[ip].role.join(', ');
+
+			let tr = document.createElement('tr');
+			tr.innerHTML = '<th><span class="cursor" style="background-color:' + color + '"></span></th>';
+
+			[label, name, role, ip].forEach(string => {
+				let th = document.createElement('th');
+				th.appendChild(document.createTextNode(string));
+				tr.appendChild(th);
+			});
+
+			container.appendChild(tr);
+		}
+
+
+		// let users = [];
+		// for (let ip in clients) {
+		// 	let user = clients[ip].user;
+		// 	if (user) {
+		// 		let foundUser = users.find(user => user.name === clients[ip].user.name && user.email === clients[ip].user.email);
+		// 		if (foundUser) {
+		// 			foundUser.ips.push(ip);
+		// 		} else {
+		// 			users.push({
+		// 				name: user.name,
+		// 				email: user.email,
+		// 				roles: clients[ip].role,
+		// 				ips: [ip]
+		// 			});
+		// 		}
+		// 	}
+		// }
+	}
 
 	function redrawPermissions() {
-		let container = document.getElementById('permissions');
+		// populate html
+		let html = '';
+		rbac.roles.forEach(role => {
+			let liHtml = '';
 
-		let permissions = [
-			'Upload files',
-			'Use apps',
-			'Share screen',
-			'Share pointer',
-			'Move windows'
-		];
+			rbac.actions.forEach((action, i) => {
+				let label = 'action--' + role + '_' + i;
 
-		let liHtml = permissions.map(p => {
-			return '<li><input type="checkbox" checked>&emsp;'+p+'</li>';
-		}).join('');
+				liHtml += [
+					'<li class="action">',
+						'<input id="' + label + '" type="checkbox">',
+						'&emsp;<label for="' + label + '">',
+							sentenceCase(action),
+						'</label>',
+					'</li>'
+				].join('');
+			});
 
-		let ulHtml = ['Admin', 'User', 'Guest'].map(category => {
-			let lcCat = category.toLowerCase();
-			return [
-				'<li class="permission permission--' + lcCat +'">',
-					category,
+			html += [
+				'<li class="role role--' + role + '">',
+					sentenceCase(role),
 					'<ul>',
 						liHtml,
 					'</ul>',
 				'</li>'
 			].join('');
-		}).join('');
+		});
 
-		container.innerHTML = '<ul>' + ulHtml + '</ul>';
+		document.getElementById('permissions').innerHTML = html;
 
-		container.querySelectorAll('input').forEach(i => {
-			i.onclick = function() {
-				let role = this.parentNode.parentNode.parentNode.className.split('--')[1];
-				let checked = this.checked;
+		// attach handlers to inputs
+		document.querySelectorAll('#permissions input').forEach(input => {
+			let match = input.id.match(/action--(.+)_(\d+)/);
+			let role = match[1];
+			let action = rbac.actions[match[2]];
 
-				let lis = this.parentNode.parentNode.children;
-				let index = [].slice.apply(lis).indexOf(this.parentNode);
-				let ids = [];
-				if (role === 'user') {
-					clients.users.forEach(u => {
-						ids = ids.concat(u.id);
-					});
-				}
-				else {
-					clients.users.forEach(u => {
-						ids.push(u);
-					});
-				}
+			input.checked = (rbac.permissions[role] & rbac.mask[action]) !== 0;
+
+			input.onchange = function() {
 				wsio.emit('editRole', {
-					role: index,
-					hasRole: checked,
-					ids: ids
+					role: role,
+					action: action,
+					hasRole: this.checked
 				});
 			}
 		});
-
 	}
 
-	function redraw() {
-		let container = document.getElementById('users');
+	function logEvent(event) {
+		let log = document.getElementById('log');
 
-		let ulHtml = ['Admin', 'User', 'Guest'].map(category => {
-			let lcCat = category.toLowerCase();
-			return [
-				'<li class="role role--' + lcCat +'">',
-					category,
-					'<ul></ul>',
-				'</li>'
-			].join('');
-		}).join('');
-
-
-		container.innerHTML = '<ul>' + ulHtml + '</ul>';
-
-		let userEl = container.querySelector('.role--user > ul');
-		let guestEl = container.querySelector('.role--guest > ul');
-
-		let users = clients.users;
-		let guests = clients.guests;
-
-		users.sort((a,b) => a.label.localeCompare(b.label)).forEach((u) => {
-			let li = document.createElement('li');
-
-			li.appendChild(document.createTextNode(`${u.label} (${u.name})`));
-			userEl.appendChild(li);
-		});
-
-		guests.sort().forEach((g) => {
-			let li = document.createElement('li');
-
-			li.appendChild(document.createTextNode(g));
-			guestEl.appendChild(li);
-		});
-	};
-
-
-
-
-	// log
-	let container = document.getElementById('log');
-
-	var nli = 0;
-
-	function addText(el, text) {
-		el.appendChild(document.createTextNode(text));
-	}
-
-	function addUserEvent(event) {
 		let p = document.createElement('p');
-
-		p.innerHTML = new Date() + '<br>';
-
-		let span = document.createElement('b');
-		addText(span, event.type);
-
-		p.appendChild(span);
-
-		console.log(event.data);
+		p.innerHTML = new Date() + '<br><b>' + event.type + '</b>';
 
 		if (event.data) {
-
-			if (event.data.SAGE2_ptrName || event.data.label) {
-				addText(p, (event.data.SAGE2_ptrName || event.data.label));
-			}
-			if (event.data.name) {
-				addText(p, ' [' + event.data.name + ']');
-			}
-			if (event.data.id) {
-				addText(span, ' - ' + event.data.id);
-			}
-
 			if (event.data.filename) {
-				addText(span, ' ' + event.data.filename);
+				p.innerHTML += event.data.filename + ' - ';
 			}
-			else if (event.data.application) {
-				let slice = event.data.application.lastIndexOf('/');
-				if (slice > -1) {
-					addText(span, ' ' + event.data.application.slice(slice + 1));
-				}
-				else {
-					addText(span, ' ' + event.data.application);
-				}
-			}
+
+			addText(p, event.data.name || event.data.SAGE2_ptrName);
+			addText(p, ' [' + event.id + ']');
 		}
 
+		log.appendChild(p);
 		if (nli < 20) {
 			++nli;
 		}
 		else {
 			container.removeChild(container.querySelector('p'));
 		}
+	}
 
-		container.appendChild(p);
 
 
-		clients.users = clients.users || [];
-		clients.guests = clients.guests || [];
 
-		switch (event.type) {
-			case 'new user':
-			case 'login':
-				var guestIndex = clients.guests.indexOf(event.id);
-				if (event.data === null) {
-					// add non-logged-in user to guest
-					if (guestIndex < 0) {
-						clients.guests.push(event.id);
-					}
-				}
-				else {
-					// check if newly logged-in user was previously a guest
-					// non-blocking? :(
-					if (guestIndex > -1) {
-						clients.guests.splice(guestIndex, 1);
-					}
+	// 	clients.users = clients.users || [];
+	// 	clients.guests = clients.guests || [];
 
-					// check if logged-in user already has an instance
-					var foundUser = clients.users.find(u => u.name === event.data.name && u.email === event.data.email);
+	// 	switch (event.type) {
+	// 		case 'new user':
+	// 		case 'login':
+	// 			var guestIndex = clients.guests.indexOf(event.id);
+	// 			if (event.data === null) {
+	// 				// add non-logged-in user to guest
+	// 				if (guestIndex < 0) {
+	// 					clients.guests.push(event.id);
+	// 				}
+	// 			}
+	// 			else {
+	// 				// check if newly logged-in user was previously a guest
+	// 				// non-blocking? :(
+	// 				if (guestIndex > -1) {
+	// 					clients.guests.splice(guestIndex, 1);
+	// 				}
 
-					if (!foundUser) {
-						clients.users.push({
-							name: event.data.name,
-							label: event.data.SAGE2_ptrName,
-							email: event.data.email,
-							id: [event.id]
-						});
-					}
-					else {
-						foundUser.id.push(event.id);
-					}
-				}
+	// 				// check if logged-in user already has an instance
+	// 				var foundUser = clients.users.find(u => u.name === event.data.name && u.email === event.data.email);
 
-				redraw();
-				break;
-			case 'logout':
-				// search existing users and move to guests
-				for (let i in clients.users) {
-					if (clients.users[i].id.indexOf(event.id) > -1) {
-						// only instance -- remove user
-						if (clients.users[i].id.length <= 1) {
-							clients.users.splice(i, 1);
-						}
-						else {
-							// only remove this ip from the user
-							clients.users[i].id.splice(clients.users[i].id.indexOf(event.id), 1);
-						}
+	// 				if (!foundUser) {
+	// 					clients.users.push({
+	// 						name: event.data.name,
+	// 						label: event.data.SAGE2_ptrName,
+	// 						email: event.data.email,
+	// 						id: [event.id]
+	// 					});
+	// 				}
+	// 				else {
+	// 					foundUser.id.push(event.id);
+	// 				}
+	// 			}
 
-						// add to guests
-						if (clients.guests.indexOf(event.id) < 0) {
-							clients.guests.push(event.id);
-						}
-						break;
-					}
-				}
+	// 			redraw();
+	// 			break;
+	// 		case 'logout':
+	// 			// search existing users and move to guests
+	// 			for (let i in clients.users) {
+	// 				if (clients.users[i].id.indexOf(event.id) > -1) {
+	// 					// only instance -- remove user
+	// 					if (clients.users[i].id.length <= 1) {
+	// 						clients.users.splice(i, 1);
+	// 					}
+	// 					else {
+	// 						// only remove this ip from the user
+	// 						clients.users[i].id.splice(clients.users[i].id.indexOf(event.id), 1);
+	// 					}
 
-				redraw();
-				break;
-			case 'disconnect':
-				// search existing guests and users and remove
-				for (let i in clients.users) {
-					if (clients.users[i].id.indexOf(event.id) > -1) {
-						// only instance -- remove user
-						if (clients.users[i].id.length <= 1) {
-							clients.users.splice(i, 1);
-						}
-						else {
-							// only remove this ip from the user
-							clients.users[i].id.splice(clients.users[i].id.indexOf(event.id), 1);
-						}
-						break;
-					}
-				}
+	// 					// add to guests
+	// 					if (clients.guests.indexOf(event.id) < 0) {
+	// 						clients.guests.push(event.id);
+	// 					}
+	// 					break;
+	// 				}
+	// 			}
 
-				for (let i in clients.guests) {
-					if (clients.guests[i] === event.id) {
-						// remove ip from guests
-						clients.guests.splice(i, 1);
-						break;
-					}
-				}
+	// 			redraw();
+	// 			break;
+	// 		case 'disconnect':
+	// 			// search existing guests and users and remove
+	// 			for (let i in clients.users) {
+	// 				if (clients.users[i].id.indexOf(event.id) > -1) {
+	// 					// only instance -- remove user
+	// 					if (clients.users[i].id.length <= 1) {
+	// 						clients.users.splice(i, 1);
+	// 					}
+	// 					else {
+	// 						// only remove this ip from the user
+	// 						clients.users[i].id.splice(clients.users[i].id.indexOf(event.id), 1);
+	// 					}
+	// 					break;
+	// 				}
+	// 			}
 
-				redraw();
-				break;
-			default:
-				break;
-		} // end switch-case
-	};
+	// 			for (let i in clients.guests) {
+	// 				if (clients.guests[i] === event.id) {
+	// 					// remove ip from guests
+	// 					clients.guests.splice(i, 1);
+	// 					break;
+	// 				}
+	// 			}
+
+	// 			redraw();
+	// 			break;
+	// 		default:
+	// 			break;
+	// 	} // end switch-case
+	// };
 
 })();
 </script>

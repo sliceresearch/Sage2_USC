@@ -41,27 +41,29 @@ const SAGE2_interaction = (function() {
 		// console.log('login', response);
 
 		// if user tried to log in: check if successful
-		if (response.login && response.success) {
-			_uid = response.uid;
-			_loggedIn = true;
+		if (response.login) {
+			let user = response.user;
+			if (response.success) {
+				_uid = response.uid;
+				_loggedIn = true;
 
-			if ($$("login_form_container")) {
-				$$("login_form_container").hide();
-				$$("settings_dialog").show();
+				if ($$("login_form_container")) {
+					$$("login_form_container").hide();
+					$$("settings_dialog").show();
+				}
+
+				// store auth credentials in cookies
+				_userSettings.SAGE2_userName = user.name;
+				_userSettings.SAGE2_userEmail = user.email;
+				addCookie('SAGE2_userName', user.name);
+				addCookie('SAGE2_userEmail', user.email);
 			}
 
-			// store auth credentials in cookies
-			let user = response.user;
-			_userSettings.SAGE2_userName = user.name;
-			_userSettings.SAGE2_userEmail = user.email;
-			addCookie('SAGE2_userName', user.name);
-			addCookie('SAGE2_userEmail', user.email);
-
-			if (user.SAGE2_ptrName && user.SAGE2_ptrColor) {
-				let uname = user.SAGE2_ptrName;
-				let ucolor = user.SAGE2_ptrColor;
-				this.changeSage2PointerLabel(uname);
-				this.changeSage2PointerColor(ucolor);
+			if (user.SAGE2_ptrName !== _userSettings.SAGE2_ptrName) {
+				this.changeSage2PointerLabel(user.SAGE2_ptrName);
+			}
+			if (user.SAGE2_ptrColor !== _userSettings.SAGE2_ptrColor) {
+				this.changeSage2PointerColor(user.SAGE2_ptrColor);
 			}
 		}
 
@@ -75,10 +77,10 @@ const SAGE2_interaction = (function() {
 			delete _userSettings.SAGE2_userEmail;
 			deleteCookie('SAGE2_userName');
 			deleteCookie('SAGE2_userEmail');
-			this.changeSage2PointerLabel();
-			this.changeSage2PointerColor();
+			this.changeSage2PointerLabel(response.name);
 		}
 
+		// if an error message is shown
 		if (response.errorMessage && $$("login_error")) {
 			$$("login_error").setValue(response.errorMessage);
 			$$("login_error").show();
@@ -92,6 +94,18 @@ const SAGE2_interaction = (function() {
 		}
 
 		this.updateLoginButton();
+	}
+
+	/**
+	* @method randomHexColor
+	* @return {String} color as a hex string
+	*/
+	function randomHexColor() {
+		let hex = (Math.floor(Math.random() * 0xffffff)).toString(16);
+		if (hex.length < 6) {
+			hex = Array(6 - hex.length + 1).join('0') + hex;
+		}
+		return '#' + hex;
 	}
 
 
@@ -946,7 +960,7 @@ const SAGE2_interaction = (function() {
 		* @param value {String} new name
 		*/
 		this.changeSage2PointerColorMethod = function(value) {
-			_userSettings.SAGE2_ptrColor = value || "#B4B4B4";
+			_userSettings.SAGE2_ptrColor = value || randomHexColor();
 
 			addCookie('SAGE2_ptrColor', _userSettings.SAGE2_ptrColor);
 			if ($$("settings_dialog")) {
@@ -1117,7 +1131,7 @@ const SAGE2_interaction = (function() {
 
 			// get default or stored values
 			let username = _userSettings.SAGE2_ptrName || (hasMouse ? "SAGE2_user" : "SAGE2_mobile");
-			let color = _userSettings.SAGE2_ptrColor || "#B4B4B4";
+			let color = _userSettings.SAGE2_ptrColor || randomHexColor();
 
 			let webixOptions = {
 				view: "window",
@@ -1283,15 +1297,14 @@ const SAGE2_interaction = (function() {
 				// Set the values into _userSettings of browser
 				this.changeSage2PointerLabel(uname);
 				this.changeSage2PointerColor(ucolor);
-				if (_loggedIn) {
-					this.wsio.emit('editUser', {
-						uid: _uid,
-						properties: {
-							SAGE2_ptrColor: ucolor,
-							SAGE2_ptrName: uname
-						}
-					});
-				}
+
+				this.wsio.emit('editUser', {
+					uid: _uid,
+					properties: {
+						SAGE2_ptrColor: ucolor,
+						SAGE2_ptrName: uname
+					}
+				});
 
 				// Close the UI
 				parent.destructor();
@@ -1405,23 +1418,11 @@ const SAGE2_interaction = (function() {
 		}
 
 		// Deals with the name and color of the pointer
-		if (_userSettings.SAGE2_ptrName  === undefined ||
-			_userSettings.SAGE2_ptrName  === null ||
-			_userSettings.SAGE2_ptrName  === "Default") {
-			if (hasMouse) {
-				_userSettings.SAGE2_ptrName  = "SAGE2_user";
-			} else {
-				_userSettings.SAGE2_ptrName  = "SAGE2_mobile";
-			}
-		}
 		if (_userSettings.SAGE2_ptrColor === undefined ||
 			_userSettings.SAGE2_ptrColor === null) {
-			_userSettings.SAGE2_ptrColor = "#B4B4B4";
+			_userSettings.SAGE2_ptrColor = randomHexColor();
+			addCookie('SAGE2_ptrColor', _userSettings.SAGE2_ptrColor);
 		}
-
-		addCookie('SAGE2_ptrName',  _userSettings.SAGE2_ptrName);
-		addCookie('SAGE2_ptrColor', _userSettings.SAGE2_ptrColor);
-
 
 		// Check if user email / name exists
 		var cookieUserName = getCookie('SAGE2_userName') || '';
@@ -1430,11 +1431,13 @@ const SAGE2_interaction = (function() {
 		wsio.emit('loginUser', {
 			name: cookieUserName,
 			email: cookieEmail,
+			SAGE2_ptrName: _userSettings.SAGE2_ptrName,
+			SAGE2_ptrColor: _userSettings.SAGE2_ptrColor,
 			init: true
 		});
 
 		this.wsio.on('loginStateChanged', handleLoginStateChange.bind(this));
-		this.wsio.on('stopSAGE2Pointer',this.stopSAGE2Pointer.bind(this));
+		this.wsio.on('cancelSAGE2Pointer', this.stopSAGE2Pointer.bind(this));
 
 		document.addEventListener('pointerlockerror',        this.pointerLockError,  false);
 		document.addEventListener('mozpointerlockerror',     this.pointerLockError,  false);

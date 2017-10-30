@@ -894,7 +894,7 @@ function wsAddClient(wsio, data) {
 }
 
 /**
- * Sends the firt messages when client built
+ * Sends the first messages when client built
  *
  * @method     initializeWSClient
  * @param      {Websocket}  wsio        client's websocket
@@ -1425,15 +1425,7 @@ function wsLoginUser(wsio, data) {
 
 	let res = userlist.getUser(data.name, data.email);
 
-	wsio.emit('loginStateChanged', {
-		login: true,
-		success: res.error === null,
-		uid: res.uid,
-		user: res.user,
-		errorMessage: res.error,
-		init: data.init
-	});
-
+	// check if login was successful or not
 	if (res.error === null) {
 		userlist.track(wsio.id, res.user);
 
@@ -1443,29 +1435,43 @@ function wsLoginUser(wsio, data) {
 			id: wsio.id
 		});
 	} else if (data.init) {
-		userlist.track(wsio.id, null);
+		// first connection of an anonymous user
+		userlist.track(wsio.id, data);
 
 		broadcast('userEvent', {
-			type: 'login',
-			data: res.user,
+			type: 'connect',
+			data: data,
 			id: wsio.id
 		});
 	}
+
+	// return message to calling client
+	wsio.emit('loginStateChanged', {
+		login: true,
+		success: res.error === null,
+		uid: res.uid,
+		user: res.user || data,
+		errorMessage: res.error,
+		init: data.init
+	});
 }
 
 function wsLogoutUser(wsio, data) {
 	let res = userlist.getUserById(data);
 
 	if (res.error === null) {
-		wsio.emit('loginStateChanged', {
-			login: false
+		let name = userlist.track(wsio.id, {
+			SAGE2_ptrColor: res.user.SAGE2_ptrColor
 		});
-
-		userlist.track(wsio.id, null);
+		wsio.emit('loginStateChanged', {
+			login: false,
+			name: name
+		});
 
 		broadcast('userEvent', {
 			type: 'logout',
 			data: res.user,
+			name: name,
 			id: wsio.id
 		});
 	}
@@ -1496,14 +1502,28 @@ function wsCreateUser(wsio, data) {
 }
 
 function wsEditUser(wsio, data) {
-	userlist.editUser(data.uid, data.properties);
+	if (data.uid) {
+		let success = userlist.editUser(data.uid, data.properties);
+
+		if (success) {
+			data = userlist.getUserById(data.uid).user;
+		}
+	}
+
+	if (data.properties.SAGE2_ptrColor && data.properties.SAGE2_ptrName) {
+		userlist.track(wsio.id, data.properties);
+		broadcast('userEvent', {
+			type: 'user edited',
+			data: data.properties,
+			id: wsio.id
+		});
+	}
 }
 
 function wsEditRole(wsio, data) {
 	if (data.hasRole) {
 		userlist.grantPermission(data.role, data.action);
-	}
-	else {
+	} else {
 		userlist.revokePermission(data.role, data.action);
 	}
 }
@@ -1556,8 +1576,8 @@ function wsRegisterInteractionClient(wsio, data) {
 
 function wsStartSagePointer(wsio, data) {
 	if (!userlist.isAllowed(wsio.id, 'share pointer')) {
-		wsio.emit('stopSAGE2Pointer');
-		return; 
+		wsio.emit('cancelSAGE2Pointer');
+		return;
 	}
 
 	// Switch interaction from window mode (on web) to app mode (wall)
@@ -1566,7 +1586,7 @@ function wsStartSagePointer(wsio, data) {
 
 	showPointer(wsio.id, data);
 
-	broadcast('userEvent', {type: 'start SAGE2 pointer', data: data});
+	broadcast('userEvent', {type: 'start SAGE2 pointer', data: data, id: wsio.id});
 	addEventToUserLog(wsio.id, {type: "SAGE2PointerStart", data: null, time: Date.now()});
 }
 
@@ -1585,7 +1605,7 @@ function wsStopSagePointer(wsio, data) {
 		remoteSharingSessions[key].wsio.emit('stopRemoteSagePointer', {id: wsio.id});
 	}
 
-	broadcast('userEvent', {type: 'stop SAGE2 pointer', data: data});
+	broadcast('userEvent', {type: 'stop SAGE2 pointer', data: data, id: wsio.id});
 	addEventToUserLog(wsio.id, {type: "SAGE2PointerEnd", data: null, time: Date.now()});
 }
 
@@ -3096,7 +3116,7 @@ function wsRequestStoredFiles(wsio, data) {
 
 function wsLoadApplication(wsio, data) {
 	if (!userlist.isAllowed(wsio.id, 'use apps')) {
-		return; 
+		return;
 	}
 
 	var appData = {application: "custom_app", filename: data.application, data: data.data};
@@ -3216,7 +3236,7 @@ function wsLoadApplication(wsio, data) {
 		// By not deleting it will be given whenever display client refreshes/connect
 		// delete appInstance.customLaunchParams;
 
-		broadcast('userEvent', {type: 'load application', data: data});
+		broadcast('userEvent', {type: 'load application', data: data, id: wsio.id});
 		addEventToUserLog(data.user, {type: "openApplication", data:
 			{application: {id: appInstance.id, type: appInstance.application}}, time: Date.now()});
 	});
@@ -3257,7 +3277,7 @@ function wsLoadImageFromBuffer(wsio, data) {
 
 			handleNewApplication(appInstance, null);
 
-			broadcast('userEvent', {type: 'load file', data: data});
+			broadcast('userEvent', {type: 'load file', data: data, id: wsio.id});
 			addEventToUserLog(data.user, {type: "openFile", data:
 				{name: data.filename, application: {id: appInstance.id, type: appInstance.application}}, time: Date.now()});
 		});
@@ -3268,7 +3288,7 @@ function wsLoadFileFromServer(wsio, data) {
 		// if it's a session, then load it
 		loadSession(data.filename);
 
-		broadcast('userEvent', {type: 'load file', data: data});
+		broadcast('userEvent', {type: 'load file', data: data, id: wsio.id});
 		addEventToUserLog(wsio.id, {type: "openFile", data: {name: data.filename,
 			application: {id: null, type: "session"}}, time: Date.now()});
 	} else {
@@ -3317,7 +3337,7 @@ function wsLoadFileFromServer(wsio, data) {
 
 			handleNewApplication(appInstance, videohandle);
 
-			broadcast('userEvent', {type: 'load file', data: data});
+			broadcast('userEvent', {type: 'load file', data: data, id: wsio.id});
 			addEventToUserLog(data.user, {type: "openFile", data:
 				{name: data.filename, application: {id: appInstance.id, type: appInstance.application}}, time: Date.now()});
 		});
