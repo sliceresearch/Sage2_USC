@@ -96,7 +96,7 @@ var note;
 var viewOnlyMode;
 
 // SLICE
-var params = {};
+var urlParams = {};
 
 /** SLICE
  * JavaScript Get URL Parameter
@@ -108,14 +108,15 @@ var params = {};
  */
 function getUrlParams( prop ) {
     var search = decodeURIComponent( window.location.href.slice( window.location.href.indexOf( '?' ) + 1 ) );
-    var definitions = search.split( '&' );
+	var definitions = search.split( '&' );
+	var localParams = {};
 
     definitions.forEach( function( val, key ) {
         var parts = val.split( '=', 2 );
-        params[ parts[ 0 ] ] = parts[ 1 ];
+        localParams[ parts[ 0 ] ] = parts[ 1 ];
     } );
 
-    return ( prop && prop in params ) ? params[ prop ] : params;
+    return ( prop && prop in localParams ) ? localParams[ prop ] : localParams;
 }
 
 
@@ -355,9 +356,9 @@ function SAGE2_init() {
 		// Get the cookie for the session, if there's one
 		var session = getCookie("session");
 		// SLICE params is the url parameters
-		params = getUrlParams();
-		params.left = parseInt(params.left);
-		params.top = parseInt(params.top);
+		urlParams = getUrlParams();
+		urlParams.left = parseInt(urlParams.left);
+		urlParams.top = parseInt(urlParams.top);
 		var clientDescription = {
 			clientType: "sageUI",
 			requests: {
@@ -368,7 +369,7 @@ function SAGE2_init() {
 			},
 			browser: __SAGE2__.browser,
 			session: session,
-			urlParams: params
+			urlParams: urlParams
 		};
 		// SLICE 
 		if (__SAGE2__.browser.isMobile) {
@@ -1278,7 +1279,8 @@ function pointerClick(event) {
 function handleClick(element) {
 	// Menu Buttons
 	if (element.id === "sage2pointer"        || element.id === "sage2pointerContainer" || element.id === "sage2pointerLabel") {
-		interactor.startSAGE2Pointer(element.id, params);
+		// SLICE added urlParams
+		interactor.startSAGE2Pointer(element.id, urlParams);
 	} else if (element.id === "sharescreen"  || element.id === "sharescreenContainer"  || element.id === "sharescreenLabel") {
 		interactor.startScreenShare();
 	} else if (element.id === "applauncher"  || element.id === "applauncherContainer"  || element.id === "applauncherLabel") {

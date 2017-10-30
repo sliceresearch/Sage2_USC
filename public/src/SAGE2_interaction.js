@@ -313,11 +313,12 @@ function SAGE2_interaction(wsio) {
 
 	/**
 	* Request a pointer lock or assume that's a touch device
+	* SLICE added urlParams
 	*
 	* @method startSAGE2Pointer
 	* @param buttonId {String} name of the button triggering the pointer
 	*/
-	this.startSAGE2Pointer = function(buttonId, params) {
+	this.startSAGE2Pointer = function(buttonId, urlParams) {
 		if (hasMouse) {
 			var button = document.getElementById(buttonId);
 			button.addEventListener('pointerlockchange', function(e) {
@@ -349,8 +350,8 @@ function SAGE2_interaction(wsio) {
 			// } else {
 			// 	top = 50;
 			// }
-			// SLICE added left and top to pointer constructor
-			this.wsio.emit('startSagePointer', {label: localStorage.SAGE2_ptrName, color: localStorage.SAGE2_ptrColor, urlParameters: params});
+			// SLICE added urlParams
+			this.wsio.emit('startSagePointer', {label: localStorage.SAGE2_ptrName, color: localStorage.SAGE2_ptrColor, urlParameters: urlParams});
 			
 			showSAGE2PointerOverlayNoMouse();
 		}
@@ -414,7 +415,7 @@ function SAGE2_interaction(wsio) {
 		} else {
 			// enable SAGE2 Pointer
 			// SLICE added url parameters
-			this.wsio.emit('startSagePointer', {label: localStorage.SAGE2_ptrName, color: localStorage.SAGE2_ptrColor, urlParameters: params});
+			this.wsio.emit('startSagePointer', {label: localStorage.SAGE2_ptrName, color: localStorage.SAGE2_ptrColor, urlParameters: urlParams});
 
 			document.addEventListener('mousedown',  this.pointerPress,     false);
 			document.addEventListener('mousemove',  this.pointerMove,      false);

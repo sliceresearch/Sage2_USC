@@ -685,7 +685,8 @@ function closeWebSocketClient(wsio) {
 		broadcast('connectedToRemoteSite', site);
 	}
 
-	if (wsio.clientType === "sageUI") {
+	// SLICE removes pointer on refresh
+	if (wsio.clientType === "sageUI" || wsio.clientType === "sliceUI") {
 		hidePointer(wsio.id);
 		removeControlsForUser(wsio.id);
 		delete sagePointers[wsio.id];
@@ -842,9 +843,9 @@ function wsAddClient(wsio, data) {
  * @param      {bool}  reqVersion  client requests version
  * @param      {bool}  reqTime     client requests time information
  * @param      {bool}  reqConsole  client requests console messages
- * SLICE
+ * SLICE added urlParams
  */
-function initializeWSClient(wsio, reqConfig, reqVersion, reqTime, reqConsole, params) {
+function initializeWSClient(wsio, reqConfig, reqVersion, reqTime, reqConsole, urlParams) {
 	setupListeners(wsio);
 
 	wsio.emit('initialize', {UID: wsio.id, time: Date.now(), start: startTime});
@@ -876,7 +877,8 @@ function initializeWSClient(wsio, reqConfig, reqVersion, reqTime, reqConsole, pa
 	} else if (wsio.clientType === "audioManager") {
 		initializeExistingAppsAudio(wsio);
 	} else if (wsio.clientType === "sageUI" || wsio.clientType === "sliceUI") { // SLICE added slicepointer handling
-		createSagePointer(wsio.id, wsio.clientType, params);
+		// SLICE added urlParams
+		createSagePointer(wsio.id, wsio.clientType, urlParams);
 		var key;
 		for (key in remoteSharingSessions) {
 			remoteSharingSessions[key].wsio.emit('createRemoteSagePointer', {
@@ -5671,10 +5673,14 @@ function getAppPositionSize(appInstance) {
 
 // **************  Pointer Functions *****************
 
-function createSagePointer(uniqueID, clientType, params, portal) { // SLICE added params parameter
+// SLICE added urlParams
+function createSagePointer(uniqueID, clientType, urlParams, portal) { // SLICE added urlParams parameter
 	// SLICE From addClient type == sageUI
 	if (clientType === "sliceUI") {
-		sagePointers[uniqueID] = new Slicepointer(uniqueID + "_slicePointer", params);
+		if (urlParams.app){
+			urlParams.pointerApp = SAGE2Items.applications.list["app_"+urlParams.app];
+		}
+		sagePointers[uniqueID] = new Slicepointer(uniqueID + "_slicePointer", urlParams);
 	} else {
 		sagePointers[uniqueID] = new Sagepointer(uniqueID + "_pointer");
 	}
@@ -5696,8 +5702,8 @@ function showPointer(uniqueID, data) {
 		data.sourceType = "Pointer";
 	}
 
-	// SLICE added left and top to pointer construction: Removed
-	sagePointers[uniqueID].start(data.label, data.color, data.sourceType, data.urlParameters);
+	// SLICE added left and top to pointer construction: Removed. Added urlParams
+	sagePointers[uniqueID].start(data.label, data.color, data.sourceType);
 	broadcast('showSagePointer', sagePointers[uniqueID]);
 }
 
