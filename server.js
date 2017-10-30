@@ -8801,6 +8801,8 @@ function deleteApplication(appId, portalId) {
 		if (sender.wsio !== null) {
 			sender.wsio.emit('stopMediaCapture', {streamId: sender.streamId});
 		}
+	} else if (application === "JupyterLab") {
+		broadcast('jupyterShareTerminated', {id: appId});
 	}
 
 	var stickingItems = stickyAppHandler.getFirstLevelStickingItems(app);
@@ -10148,18 +10150,56 @@ function wsStartJupyterSharing(wsio, data) {
 	}
 	*/
 
+	console.log(data.width, data.height);
+
 	// forcing 'int' type for width and height
 	data.width  = parseInt(data.width,  10);
 	data.height = parseInt(data.height, 10);
 
-	appLoader.createJupyterApp(data.src, data.type, data.encoding, data.title, data.color, 800, 1200,
-		function(appInstance) {
+	// appLoader.createJupyterApp(data.src, data.type, data.encoding, data.title, data.color, 800, 1200,
+	// 	function(appInstance) {
+	// 		appInstance.id = data.id;
+	// 		handleNewApplication(appInstance, null);
+	// 	}
+	// );
+
+	console.log(data.id);
+
+	console.log("createJupyterApp: ", data.src, data.type, data.encoding, data.title, data.color, data.width, data.height);
+
+	appLoader.createJupyterApp(data.src, data.type, data.encoding, data.title, data.color, data.width, data.height,
+		function (appInstance) {
 			appInstance.id = data.id;
 			handleNewApplication(appInstance, null);
+
+			console.log(appInstance.id);
 		}
 	);
 }
 
+function wsUpdateJupyterSharing(wsio, data) {
+	sageutils.log('Jupyter', "received update from:", data.id);
+
+	// pass data into app by ID
+	sendApplicationDataUpdate(data);
+}
+
+function sendApplicationDataUpdate(data) {
+	var eUser = { id: 1, label: "Touch", color: "none" };
+
+	var event = {
+		id: data.id,
+		type: "dataUpdate",
+		position: 0,
+		user: eUser,
+		data: data,
+		date: Date.now()
+	};
+
+	broadcast('eventInItem', event);
+}
+
+/*
 function wsUpdateJupyterSharing(wsio, data) {
 	sageutils.log('Jupyter', "received update from:", data.id);
 	sendJupyterUpdates(data);
@@ -10180,6 +10220,7 @@ function sendJupyterUpdates(data) {
 
 	broadcast('eventInItem', event);
 }
+*/
 
 /**
  * Method handling a file save request from a SAGE2_App

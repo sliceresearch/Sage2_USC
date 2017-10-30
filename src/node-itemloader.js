@@ -896,16 +896,16 @@ AppLoader.prototype.createJupyterApp = function(source, type, encoding, name, co
 	var metadata         = {};
 	metadata.title       = "Jupyter";
 	metadata.version     = "1.0.0";
-	metadata.description = "Jupyer for SAGE2";
+	metadata.description = "JupyterLab-SAGE2 Application";
 	metadata.author      = "SAGE2";
 	metadata.license     = "SAGE2-Software-License";
-	metadata.keywords    = ["jupyter"];
+	metadata.keywords    = ["jupyter", "jupyterlab"];
 
 	var appInstance = {
 		id: null,
 		title: name,
 		color: color,
-		application: "jupyter",
+		application: "JupyterLab",
 		icon: "/images/jupyter.png",
 		type: "mime_type",
 		url: "src",
