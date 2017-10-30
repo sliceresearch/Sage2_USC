@@ -808,7 +808,7 @@ function wsAddClient(wsio, data) {
 
 	clients.push(wsio);
 	// SLICE passing through params
-	initializeWSClient(wsio, data.requests.config, data.requests.version, data.requests.time, data.requests.console, data.params);
+	initializeWSClient(wsio, data.requests.config, data.requests.version, data.requests.time, data.requests.console, data.urlParams);
 	if (wsio.clientType === "display") {
 		drawingManager.init(wsio);
 	}

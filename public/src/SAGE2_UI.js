@@ -356,6 +356,8 @@ function SAGE2_init() {
 		var session = getCookie("session");
 		// SLICE params is the url parameters
 		params = getUrlParams();
+		params.left = parseInt(params.left);
+		params.top = parseInt(params.top);
 		var clientDescription = {
 			clientType: "sageUI",
 			requests: {
