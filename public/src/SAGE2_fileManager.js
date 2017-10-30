@@ -732,15 +732,16 @@ function FileManager(wsio, mydiv, uniqueID) {
 
 	// filter the list of assets based on a search string
 	$$("search_text").attachEvent("onTimedKeyPress", function() {
-		var sel = _this.tree.getSelectedId() || "treeroot";
+		var select = _this.tree.getSelectedId() || "treeroot";
+		updateSearch(select);
 		var filter = $$("search_text").getValue();
-		updateSearch(sel);
 		if (filter) {
+			let filter_regexp = new RegExp(filter, "i");
 			_this.allTable.filter(function(obj) {
 				// do a case-insensitive search on name, user and type
-				return (obj.name.search(new RegExp(filter, "i")) !== -1) ||
-					(obj.user.search(new RegExp(filter, "i")) !== -1) ||
-					(obj.type.search(new RegExp(filter, "i")) !== -1);
+				return (obj.name.search(filter_regexp) !== -1) ||
+					(obj.user.search(filter_regexp) !== -1) ||
+					(obj.type.search(filter_regexp) !== -1);
 			}, null, true);
 		}
 	});
