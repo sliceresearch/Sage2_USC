@@ -77,6 +77,7 @@ var PartitionList       = require('./src/node-partitionlist');    // list of SAG
 var SharedDataManager	= require('./src/node-sharedserverdata'); // manager for shared data
 var S2Logger            = require('./src/node-logger');           // SAGE2 logging module
 var PerformanceManager	= require('./src/node-performancemanager'); // SAGE2 performance module
+var VoiceActionManager	= require('./src/node-voiceToAction'); // manager for shared data
 //
 // Globals
 //
@@ -695,6 +696,25 @@ var stickyAppHandler     = new StickyItems();
 // create manager for shared data
 var sharedServerData = new SharedDataManager(clients, broadcast);
 
+// create manager for voice actions, major functions are given on creation
+// each of these needs to be memory references
+var variablesUsedInVoiceHandler = {
+	sagePointers,
+	interactMgr,
+	SAGE2Items,
+	assets,
+	listSessions,
+	sharedServerData,
+	wsCallFunctionOnApp,
+	wsLaunchAppWithValues,
+	wsLoadFileFromServer,
+	wsSaveSesion,
+	tileApplications,
+	clearDisplay,
+	broadcast,
+	voiceNameMarker: "sage " // that space is important for checking // change this later to check config
+};
+var voiceHandler = new VoiceActionManager(variablesUsedInVoiceHandler);
 
 //
 // Catch the uncaught errors that weren't wrapped in a domain or try catch statement
@@ -792,6 +812,12 @@ function closeWebSocketClient(wsio) {
 		drawingManager.removeWebSocket(wsio);
 	}
 
+	try {
+		updateInformationAboutConnections();
+	} catch (e) {
+		sageutils.log("Connections", "Error with updating client data");
+		sageutils.log("Connections", e);
+	}
 }
 
 /**
@@ -810,6 +836,7 @@ function wsAddClient(wsio, data) {
 			wsio.emit('remoteConnection', {status: "refused", reason: 'wrong session hash'});
 			// If server protected and wrong hash, close the socket and byebye
 			wsio.ws.close();
+			updateInformationAboutConnectionsFailedRemoteSite(wsio);
 			return;
 		}
 	}
@@ -882,6 +909,8 @@ function wsAddClient(wsio, data) {
 	// If it's a UI, send message to enable screenshot capability
 	if (wsio.clientType === "sageUI") {
 		reportIfCanWallScreenshot();
+		// also tell it variablesUsedInVoiceHandler.voiceNameMarker
+		wsio.emit("setVoiceNameMarker", {name: variablesUsedInVoiceHandler.voiceNameMarker});
 	}
 
 	// If it's a display, check for Electron and send enable screenshot capability
@@ -890,6 +919,14 @@ function wsAddClient(wsio, data) {
 		wsio.capableOfScreenshot = data.browser.isElectron;
 		// Send message to UI clients
 		reportIfCanWallScreenshot();
+	}
+
+	// update connection data
+	try {
+		updateInformationAboutConnections();
+	} catch (e) {
+		sageutils.log("Connections", "Error with updating client data");
+		sageutils.log("Connections", e);
 	}
 }
 
@@ -1021,7 +1058,7 @@ function setupListeners(wsio) {
 	wsio.on('moveElementFromStoredFiles',           wsMoveElementFromStoredFiles);
 	wsio.on('saveSesion',                           wsSaveSesion);
 	wsio.on('clearDisplay',                         wsClearDisplay);
-	wsio.on('deleteAllApplications',								wsDeleteAllApplications);
+	wsio.on('deleteAllApplications',                wsDeleteAllApplications);
 	wsio.on('tileApplications',                     wsTileApplications);
 
 	// Radial menu should have its own message section? Just appended here for now.
@@ -1131,6 +1168,9 @@ function setupListeners(wsio) {
 	wsio.on('serverDataGetAllTrackedValues',		wsServerDataGetAllTrackedValues);
 	wsio.on('serverDataGetAllTrackedDescriptions',	wsServerDataGetAllTrackedDescriptions);
 	wsio.on('serverDataSubscribeToNewValueNotification',	wsServerDataSubscribeToNewValueNotification);
+
+	// voice to sage2 actions
+	wsio.on('voiceToAction',                      wsVoiceToAction);
 
 	// Screenshot messages
 	wsio.on('startWallScreenshot',                  wsStartWallScreenshot);
@@ -2927,13 +2967,23 @@ function tileApplications() {
 	stickyAppHandler.enablePiling = false;
 }
 
-// Remove all apps and partitions
+
+/**
+ * Remove all partitions and all applications
+ *
+ * @method     clearDisplay
+ */
 function clearDisplay() {
 	deleteAllPartitions();
 	deleteAllApplications();
 }
 
-// Remove all applications
+
+/**
+ * Close all the applications
+ *
+ * @method     deleteAllApplications
+ */
 function deleteAllApplications() {
 	var i;
 	var all = Object.keys(SAGE2Items.applications.list);
@@ -2945,7 +2995,11 @@ function deleteAllApplications() {
 	getUniqueAppId(-1);
 }
 
-// Remove all Partitions
+/**
+ * Remove all the partitions and keep the applications
+ *
+ * @method     deleteAllPartitions
+ */
 function deleteAllPartitions() {
 	// delete all partitions
 	for (var key of Object.keys(partitions.list)) {
@@ -2957,10 +3011,10 @@ function deleteAllPartitions() {
 }
 
 /**
-	* Remove all applications
-	*
-	* @method wsDeleteAllApplications
-	*/
+ * Remove all applications
+ *
+ * @method wsDeleteAllApplications
+ */
 function wsDeleteAllApplications(wsio) {
 	deleteAllApplications();
 }
@@ -5107,6 +5161,13 @@ function manageRemoteConnection(remote, site, index) {
 			broadcast('connectedToRemoteSite', delete_site);
 		}
 		removeElement(clients, remote);
+
+		try {
+			updateInformationAboutConnections();
+		} catch (e) {
+			sageutils.log("Connections", "Error with updating client data");
+			sageutils.log("Connections", e);
+		}
 	});
 
 	remote.on('addClient',                              wsAddClient);
@@ -8555,7 +8616,15 @@ function keyPress(uniqueID, pointerX, pointerY, data) {
 		// if in empty space:
 		// Pressing ? for help (with shift)
 		if (data.code === 63 && remoteInteraction[uniqueID].SHIFT) {
-			broadcast('toggleHelp', {});
+			// Load the cheet sheet on the wall
+			wsLoadApplication(null, {
+				application: "/uploads/pdfs/cheat-sheet.pdf",
+				user: "127.0.0.1:42",
+				// position in center and 100pix down
+				position: [0.5, 100]
+			});
+			// show a popup
+			// broadcast('toggleHelp', {});
 		}
 		return;
 	}
@@ -9528,7 +9597,7 @@ function wsCallFunctionOnApp(wsio, data) {
  * @param  {Object} data - The object properties described below.
  * @param  {String} data.appName - Folder name to check for the app.
  * @param  {Object} data.params - Will be passed to the app. Function too, it is specified.
- * @param  {String}  data.func - Optional, if specified, will also call this funciton and pass parameters.
+ * @param  {String} data.func - Optional, if specified, will also call this funciton and pass parameters.
  */
 function wsLaunchAppWithValues(wsio, data) {
 	// first try see if the app is registered with apps exif.
@@ -10468,4 +10537,97 @@ function deletePartition(id) {
 	broadcast('deletePartitionWindow', ptn.getDisplayInfo());
 	partitions.removePartition(ptn.id);
 	interactMgr.removeGeometry(ptn.id, "partitions");
+}
+
+/**
+ * Updates the stored information about connections.
+ * Currently updates three values: UI, displays, remote servers.
+ * Users information from
+ *
+ * @method updateInformationAboutConnections
+ */
+function updateInformationAboutConnections() {
+	var currentUiList = [];
+	var currentDisplayList = [];
+	var currentRemoteSiteList = [];
+	var currentItem;
+	for (let i = 0; i < clients.length; i++) {
+		if (clients[i].clientType === "sageUI") {
+			currentItem = {};
+			currentItem.name  = sagePointers[clients[i].id].label;
+			currentItem.color = sagePointers[clients[i].id].color;
+			currentItem.uniqueID = clients[i].id;
+			currentUiList.push(currentItem);
+		} else if (clients[i].clientType === "display") {
+			currentItem = {};
+			currentItem.viewPort = clients[i].clientID;
+			currentItem.uniqueID = clients[i].id;
+			currentDisplayList.push(currentItem);
+		} else if (clients[i].clientType === "remoteServer") {
+			currentItem = {};
+			currentItem.remoteAddress = clients[i].remoteAddress.address;
+			currentItem.uniqueID = clients[i].id;
+			currentRemoteSiteList.push(currentItem);
+		}
+	}
+	var data = {};
+	if (currentUiList.length > 0) {
+		data.nameOfValue = "serverConnectionDataUiList";
+		data.value = currentUiList;
+		//  wsio is not needed to set value
+		sharedServerData.setValue(null, data);
+	}
+	if (currentDisplayList.length > 0) {
+		data.nameOfValue = "serverConnectionDataDisplayList";
+		data.value = currentDisplayList;
+		//  wsio is not needed to set value
+		sharedServerData.setValue(null, data);
+	}
+	if (currentRemoteSiteList.length > 0) {
+		data.nameOfValue = "serverConnectionDataRemoteSiteList";
+		data.value = currentRemoteSiteList;
+		//  wsio is not needed to set value
+		sharedServerData.setValue(null, data);
+	}
+}
+
+/**
+ * Updates the stored information about failed remote site connections
+ *
+ * @method updateInformationAboutConnectionsFailedRemoteSite
+ * @param  {Object} wsio - The websocket of sender.
+ */
+function updateInformationAboutConnectionsFailedRemoteSite(wsio) {
+	var data = {};
+	data.nameOfValue = "serverConnectionDataFailedRemoteSite";
+	if (sharedServerData.dataStructure.allNamesOfValues.includes(data.nameOfValue)) {
+		data.value = sharedServerData.dataStructure.allValues[data.nameOfValue].value;
+	} else {
+		data.value = {total: 0, sites: []};
+	}
+	data.value.total++;
+	var sites = data.value.sites;
+	var found = false;
+	for (let i = 0; i < sites.length; i++) {
+		if (sites[i].id === wsio.id) {
+			sites[i].total++;
+			found = true;
+		}
+	}
+	if (!found) {
+		sites.push({id: wsio.id, total: 1});
+	}
+	// wsio is not needed to set value
+	sharedServerData.setValue(null, data);
+}
+
+/**
+ * Will attempt to take a transcript and use best case to activate a context menu item.
+ *
+ * @method wsVoiceToAction
+ * @param {Object} wsio - ws to originator.
+ * @param {Object} data - should contain words.
+ */
+function wsVoiceToAction(wsio, data) {
+	voiceHandler.process(wsio, data);
 }

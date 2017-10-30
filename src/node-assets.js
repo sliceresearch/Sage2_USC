@@ -740,18 +740,26 @@ var listAssets = function() {
 	// Get all the assets
 	var keys = Object.keys(AllAssets.list);
 	for (var f in keys) {
+		var defaultApp;
 		var one = AllAssets.list[keys[f]];
+		if (!one.filename) {
+			defaultApp = registry.getDefaultAppFromMime(one.exif.MIMEType);
+		} else {
+			defaultApp = registry.getDefaultApp(one.filename);
+		}
 		if (one.exif.MIMEType === 'application/custom') {
 			if (!one.exif.metadata.removeFromLauncher) {
 				// exclude 'viewer' applications
 				apps.push(one);
 			}
-		} else if (registry.getDefaultApp(one.filename) === "pdf_viewer") {
+		} else if (defaultApp === "pdf_viewer") {
 			pdfs.push(one);
-		} else if (registry.getDefaultApp(one.filename) === "image_viewer") {
+		} else if (defaultApp === "image_viewer") {
 			images.push(one);
-		} else if (registry.getDefaultApp(one.filename) === "movie_player") {
+		} else if (defaultApp === "movie_player") {
 			videos.push(one);
+		} else if (defaultApp === "Webview") {
+			links.push(one);
 		} else {
 			others.push(one);
 		}
