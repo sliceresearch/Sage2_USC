@@ -373,7 +373,7 @@
 				p.innerHTML += event.data.filename + ' - ';
 			}
 
-			addText(p, event.data.name || event.data.SAGE2_ptrName);
+			addText(p, clients[event.id].user.SAGE2_ptrName);
 			addText(p, ' [' + event.id + ']');
 		}
 
@@ -385,102 +385,6 @@
 			container.removeChild(container.querySelector('p'));
 		}
 	}
-
-
-
-
-	// 	clients.users = clients.users || [];
-	// 	clients.guests = clients.guests || [];
-
-	// 	switch (event.type) {
-	// 		case 'new user':
-	// 		case 'login':
-	// 			var guestIndex = clients.guests.indexOf(event.id);
-	// 			if (event.data === null) {
-	// 				// add non-logged-in user to guest
-	// 				if (guestIndex < 0) {
-	// 					clients.guests.push(event.id);
-	// 				}
-	// 			}
-	// 			else {
-	// 				// check if newly logged-in user was previously a guest
-	// 				// non-blocking? :(
-	// 				if (guestIndex > -1) {
-	// 					clients.guests.splice(guestIndex, 1);
-	// 				}
-
-	// 				// check if logged-in user already has an instance
-	// 				var foundUser = clients.users.find(u => u.name === event.data.name && u.email === event.data.email);
-
-	// 				if (!foundUser) {
-	// 					clients.users.push({
-	// 						name: event.data.name,
-	// 						label: event.data.SAGE2_ptrName,
-	// 						email: event.data.email,
-	// 						id: [event.id]
-	// 					});
-	// 				}
-	// 				else {
-	// 					foundUser.id.push(event.id);
-	// 				}
-	// 			}
-
-	// 			redraw();
-	// 			break;
-	// 		case 'logout':
-	// 			// search existing users and move to guests
-	// 			for (let i in clients.users) {
-	// 				if (clients.users[i].id.indexOf(event.id) > -1) {
-	// 					// only instance -- remove user
-	// 					if (clients.users[i].id.length <= 1) {
-	// 						clients.users.splice(i, 1);
-	// 					}
-	// 					else {
-	// 						// only remove this ip from the user
-	// 						clients.users[i].id.splice(clients.users[i].id.indexOf(event.id), 1);
-	// 					}
-
-	// 					// add to guests
-	// 					if (clients.guests.indexOf(event.id) < 0) {
-	// 						clients.guests.push(event.id);
-	// 					}
-	// 					break;
-	// 				}
-	// 			}
-
-	// 			redraw();
-	// 			break;
-	// 		case 'disconnect':
-	// 			// search existing guests and users and remove
-	// 			for (let i in clients.users) {
-	// 				if (clients.users[i].id.indexOf(event.id) > -1) {
-	// 					// only instance -- remove user
-	// 					if (clients.users[i].id.length <= 1) {
-	// 						clients.users.splice(i, 1);
-	// 					}
-	// 					else {
-	// 						// only remove this ip from the user
-	// 						clients.users[i].id.splice(clients.users[i].id.indexOf(event.id), 1);
-	// 					}
-	// 					break;
-	// 				}
-	// 			}
-
-	// 			for (let i in clients.guests) {
-	// 				if (clients.guests[i] === event.id) {
-	// 					// remove ip from guests
-	// 					clients.guests.splice(i, 1);
-	// 					break;
-	// 				}
-	// 			}
-
-	// 			redraw();
-	// 			break;
-	// 		default:
-	// 			break;
-	// 	} // end switch-case
-	// };
-
 })();
 </script>
 

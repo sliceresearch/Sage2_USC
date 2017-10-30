@@ -1502,19 +1502,22 @@ function wsCreateUser(wsio, data) {
 }
 
 function wsEditUser(wsio, data) {
+	let properties = data.properties;
 	if (data.uid) {
-		let success = userlist.editUser(data.uid, data.properties);
+		let success = userlist.editUser(data.uid, properties);
 
 		if (success) {
-			data = userlist.getUserById(data.uid).user;
+			properties = userlist.getUserById(data.uid).user;
 		}
 	}
 
-	if (data.properties.SAGE2_ptrColor && data.properties.SAGE2_ptrName) {
-		userlist.track(wsio.id, data.properties);
+	if (properties) {
+		if (properties.SAGE2_ptrColor && properties.SAGE2_ptrName) {
+			userlist.track(wsio.id, properties);
+		}
 		broadcast('userEvent', {
 			type: 'user edited',
-			data: data.properties,
+			data: properties,
 			id: wsio.id
 		});
 	}
