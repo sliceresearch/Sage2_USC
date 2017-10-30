@@ -730,13 +730,17 @@ function FileManager(wsio, mydiv, uniqueID) {
 		$$("uploadlist").clearAll();
 	});
 
+	// filter the list of assets based on a search string
 	$$("search_text").attachEvent("onTimedKeyPress", function() {
 		var sel = _this.tree.getSelectedId() || "treeroot";
 		var filter = $$("search_text").getValue();
 		updateSearch(sel);
 		if (filter) {
 			_this.allTable.filter(function(obj) {
-				return obj.name.search(new RegExp(filter, "i")) !== -1;
+				// do a case-insensitive search on name, user and type
+				return (obj.name.search(new RegExp(filter, "i")) !== -1) ||
+					(obj.user.search(new RegExp(filter, "i")) !== -1) ||
+					(obj.type.search(new RegExp(filter, "i")) !== -1);
 			}, null, true);
 		}
 	});
