@@ -6,11 +6,11 @@
 //
 // See full text, terms and conditions in the LICENSE.txt included file
 //
-// Copyright (c) 2014-15
+// Copyright (c) 2014-17
 
 "use strict";
 
-/* global FileManager, SAGE2_interaction, SAGE2DisplayUI */
+/* global FileManager, SAGE2_interaction, SAGE2DisplayUI, SAGE2_speech */
 /* global removeAllChildren, SAGE2_copyToClipboard, parseBool */
 
 /**
@@ -381,6 +381,8 @@ function SAGE2_init() {
 	if (webix) {
 		// disabling the webix touch managment for now
 		webix.Touch.disable();
+		// Fix webix layer system to be above SAGE2 UI
+		webix.ui.zIndexBase = 2000;
 	}
 
 	document.addEventListener('mousemove',  mouseCheck,   false);
@@ -424,11 +426,13 @@ function SAGE2_init() {
 		if (event.data.cmd === "window_selected") {
 			interactor.captureDesktop(event.data.mediaSourceId);
 		}
+		// event coming from the extension icon ("send screenshot to..."")
 		if (event.data.cmd === "screenshot") {
 			// declare mime type to be "image/jpeg" for screenshots
 			event.data.mime = "image/jpeg";
 			wsio.emit('loadImageFromBuffer', event.data);
 		}
+		// event coming from the extension icon ("send webpage to..."")
 		if (event.data.cmd === "openlink") {
 			wsio.emit('openNewWebpage', {
 				id: interactor.uniqueID,
@@ -449,8 +453,8 @@ function SAGE2_init() {
 //
 function showSAGE2Message(message, delay) {
 	var aMessage = webix.alert({
-		type:  "alert-error",
-		title: "SAGE2 Error",
+		type:  "alert-warning",
+		title: "SAGE2 Message",
 		ok:    "OK",
 		width: "40%",
 		text:  "<span style='font-weight:bold;'>" + message + "</span>"
@@ -711,6 +715,18 @@ function setupListeners() {
 			// No luck (need to use Electron)
 			console.log("Server> No screenshot capability");
 		}
+	});
+
+	wsio.on('setVoiceNameMarker', function(data) {
+		SAGE2_speech.setNameMarker(data.name);
+	});
+	wsio.on('playVoiceCommandSuccessSound', function(data) {
+		// SAGE2_speech.successSound.play();
+		SAGE2_speech.textToSpeech(data.message);
+	});
+	wsio.on('playVoiceCommandFailSound', function(data) {
+		// SAGE2_speech.failSound.play();
+		SAGE2_speech.textToSpeech(data.message);
 	});
 }
 
@@ -1272,15 +1288,47 @@ function handleClick(element) {
 			id: "browser_form",
 			position: "center",
 			modal: true,
-			zIndex: 1999,
+			zIndex: "1999",
 			head: "Open a browser window",
 			width: 400,
 			body: {
 				view: "form",
 				borderless: false,
 				elements: [
+					// URL box
 					{view: "text", value: "", id: "browser_url", label: "Please enter a URL:", name: "browser_url"},
-					{view: "text", value: "", id: "browser_search", label: "or search terms:", name: "browser_search"},
+					// Shortcut for some sites
+					{view: "combo", id: "field_t", label: "Commonly used", value: "1",
+						options: { body: {
+							data: [
+								{id: 1, value: "Google Docs - documents"},
+								{id: 2, value: "Office 365 - office online"},
+								{id: 3, value: "Appear.in - videoconference"},
+								{id: 4, value: "Youtube - videos"},
+								{id: 5, value: "Slack - team collaboration"},
+								{id: 6, value: "NbViewer - jupyter notebooks"},
+								{id: 7, value: "PubMed - biomedical literature"}
+							],
+							on: {
+								onItemClick: function(id) {
+									var urls = [
+										"https://docs.google.com/",
+										"https://login.microsoftonline.com/",
+										"https://appear.in/",
+										"https://www.youtube.com/",
+										"https://slack.com/signin",
+										"https://nbviewer.jupyter.org/",
+										"https://www.ncbi.nlm.nih.gov/pubmed/"
+									];
+									$$('browser_url').setValue(urls[id - 1]);
+								}
+							}
+						}
+						}
+					},
+					// Google search
+					{view: "text", value: "", id: "browser_search",
+						label: "or search terms (with Google):", name: "browser_search"},
 					{margin: 5, cols: [
 						{view: "button", value: "Cancel", click: function() {
 							this.getTopParentView().hide();
@@ -1343,9 +1391,16 @@ function handleClick(element) {
 				}
 				// if we have something valid, open a webview
 				if (url) {
-					wsio.emit('openNewWebpage', {
+					// wsio.emit('openNewWebpage', {
+					// 	id: interactor.uniqueID,
+					// 	url: url
+					// });
+					wsio.emit('addNewWebElement', {
+						type: "application/url",
+						url: url, position: [0, 0],
 						id: interactor.uniqueID,
-						url: url
+						SAGE2_ptrName:  localStorage.SAGE2_ptrName,
+						SAGE2_ptrColor: localStorage.SAGE2_ptrColor
 					});
 				}
 				// close the form
@@ -2204,8 +2259,8 @@ function noBackspace(event) {
 			title: "Mouse and keyboard operations",
 			buttons: ["Ok"],
 			text: "<img src=/images/cheat-sheet.jpg width=100%>",
-			width: "75%",
-			height: "75%"
+			width: "70%",
+			height: "50%"
 		});
 	}
 	return true;
@@ -2571,7 +2626,7 @@ function setAppContextMenuEntries(data) {
 	} // end adding a send function to each menu entry
 	// always add the Close Menu entry.
 	var closeEntry = {};
-	closeEntry.description = "Close menu";
+	closeEntry.description = "Close Menu";
 	closeEntry.buttonEffect = function () {
 		hideAppContextMenuDiv();
 	};
@@ -2579,6 +2634,9 @@ function setAppContextMenuEntries(data) {
 	// for each entry to add, create the div, app the properties, and effects
 	var workingDiv;
 	for (i = 0; i < entriesToAdd.length; i++) {
+		if (entriesToAdd[i].voiceEntryOverload) {
+			continue;
+		}
 		var isSeparator = entriesToAdd[i].description === "separator";
 		workingDiv = document.createElement(isSeparator ? 'hr' : 'div');
 
@@ -2599,7 +2657,7 @@ function setAppContextMenuEntries(data) {
 			if (entriesToAdd[i].accelerator) {
 				// Add description of the keyboard shortcut
 				workingDiv.innerHTML = "<p style='float: left;'>" + entriesToAdd[i].description + "</p>";
-				workingDiv.innerHTML += "<p style='float: right; padding-left: 5px;'> [" + entriesToAdd[i].accelerator + "]</p>";
+				workingDiv.innerHTML += "<p style='float: right; padding-left: 5px;'>" + entriesToAdd[i].accelerator + "</p>";
 				workingDiv.innerHTML += "<div style='clear: both;'></div>";
 			} else {
 				// or just plain text

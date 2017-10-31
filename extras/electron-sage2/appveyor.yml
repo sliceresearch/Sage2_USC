@@ -23,18 +23,17 @@ install:
   - cd electron-sage2
   - npm install --msvs_version=2013
   - dir
-  - .\node_modules\.bin\electron-packager . --platform=win32 --arch=x64 --icon=sage2.ico --overwrite
-  - copy /Y README.md SAGE2_UI-win32-x64\README
-  - 7z a -sfx7z.sfx SAGE2_UI-win64.exe SAGE2_UI-win32-x64 > nul
-  - move SAGE2_UI-win64.exe ..\..
+  - npm run win1
+  - npm run win2
+  - move windows-installer\sage2-ui-Installer.exe ..\..\sage2-ui-win64.exe
 
 build: off
 
 test: off
 
 artifacts:
-  - path: SAGE2_UI-win64.exe
-    name: sage2_UI
+  - path: sage2-ui-win64.exe
+    name: sage2-ui
 
 deploy:
   - provider: FTP
@@ -43,8 +42,8 @@ deploy:
     username: upload@sagecommons.org
     password:
       secure: L4I4NkKN7mrQww7GgwPLrA==
-    folder: /
-    artifact: sage2_UI
+    folder: /UI
+    artifact: sage2-ui
 
 notifications:
   - provider: Slack

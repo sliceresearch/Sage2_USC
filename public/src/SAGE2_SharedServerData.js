@@ -6,7 +6,7 @@
 //
 // See full text, terms and conditions in the LICENSE.txt included file
 //
-// Copyright (c) 2015-2016
+// Copyright (c) 2015-2017
 
 // Create a global that will act as a namespace
 
@@ -108,9 +108,6 @@ var SAGE2SharedServerData = {
 		this.childrenAppIds.push(appId);
 	},
 
-	// -------------------------------------------------------------------------------------------------------------------------------------------------
-	// -------------------------------------------------------------------------------------------------------------------------------------------------
-
 	/**
 	* This is used to send data to a specific SAGE2 client. Usually UI clients.
 	*
@@ -127,9 +124,6 @@ var SAGE2SharedServerData = {
 			wsio.emit("sendDataToClient", paramObj);
 		}
 	},
-
-	// -------------------------------------------------------------------------------------------------------------------------------------------------
-	// -------------------------------------------------------------------------------------------------------------------------------------------------
 
 	/**
 	* Given the name of the variable, will ask server for the variable.
@@ -192,7 +186,7 @@ var SAGE2SharedServerData = {
 		if (isMaster) {
 			var nameOfValue = this.id + ":source:" + nameSuffix;
 			if (!this.dataSourcesBeingBroadcast.includes(nameOfValue)) {
-				throw new "Cannot update source value that hasn't been created yet:" + nameOfValue;
+				throw "Cannot update source value that hasn't been created yet:" + nameOfValue;
 			}
 			wsio.emit("serverDataSetValue", {
 				nameOfValue: nameOfValue,
@@ -245,9 +239,6 @@ var SAGE2SharedServerData = {
 			}
 		}
 	},
-
-	// -------------------------------------------------------------------------------------------------------------------------------------------------
-	// -------------------------------------------------------------------------------------------------------------------------------------------------
 
 	/**
 	* Given the name of the variable, will ask server to send value each time it is assigned.
@@ -315,9 +306,6 @@ var SAGE2SharedServerData = {
 		}
 	},
 
-	// -------------------------------------------------------------------------------------------------------------------------------------------------
-	// -------------------------------------------------------------------------------------------------------------------------------------------------
-
 	/**
 	* Given the name of the variable, remove variable from server.
 	* Expectation is this is not called by user (but the option is there) instead as part of cleanup on quit().
@@ -354,9 +342,6 @@ var SAGE2SharedServerData = {
 		}
 	},
 
-	// -------------------------------------------------------------------------------------------------------------------------------------------------
-	// -------------------------------------------------------------------------------------------------------------------------------------------------
-
 	/**
 	 * Uses WebSocket to send a request to the server get value of a variable stored on server.
 	 *
@@ -385,9 +370,6 @@ var SAGE2SharedServerData = {
 		return callbackName;
 	},
 
-	// -------------------------------------------------------------------------------------------------------------------------------------------------
-	// -------------------------------------------------------------------------------------------------------------------------------------------------
-
 	/**
 	* Adds the shared data functionality to the SAGE2_App class.
 	* Here instead of the SAGE2_App file for easy removal / grouping of functionality.
@@ -399,16 +381,16 @@ var SAGE2SharedServerData = {
 			window.requestAnimationFrame(SAGE2SharedServerData.addToAppClass);
 			return;
 		}
-		SAGE2_App.prototype.launchAppWithValues = SAGE2SharedServerData.launchAppWithValues;
+		SAGE2_App.prototype.launchAppWithValues    = SAGE2SharedServerData.launchAppWithValues;
 		SAGE2_App.prototype.sendDataToChildrenApps = SAGE2SharedServerData.sendDataToChildrenApps;
-		SAGE2_App.prototype.sendDataToParentApp = SAGE2SharedServerData.sendDataToParentApp;
-		SAGE2_App.prototype.addToAppsLaunchedList = SAGE2SharedServerData.addToAppsLaunchedList;
+		SAGE2_App.prototype.sendDataToParentApp    = SAGE2SharedServerData.sendDataToParentApp;
+		SAGE2_App.prototype.addToAppsLaunchedList  = SAGE2SharedServerData.addToAppsLaunchedList;
 		// app to client
 		SAGE2_App.prototype.sendDataToClient = SAGE2SharedServerData.sendDataToClient;
 		// section shared data related
-		SAGE2_App.prototype.serverDataGetValue = SAGE2SharedServerData.serverDataGetValue;
-		SAGE2_App.prototype.serverDataSetValue = SAGE2SharedServerData.serverDataSetValue;
-		SAGE2_App.prototype.serverDataSetSourceValue = SAGE2SharedServerData.serverDataSetSourceValue;
+		SAGE2_App.prototype.serverDataGetValue        = SAGE2SharedServerData.serverDataGetValue;
+		SAGE2_App.prototype.serverDataSetValue        = SAGE2SharedServerData.serverDataSetValue;
+		SAGE2_App.prototype.serverDataSetSourceValue  = SAGE2SharedServerData.serverDataSetSourceValue;
 		SAGE2_App.prototype.serverDataBroadcastSource = SAGE2SharedServerData.serverDataBroadcastSource;
 		SAGE2_App.prototype.serverDataBroadcastDestination = SAGE2SharedServerData.serverDataBroadcastDestination;
 		// subscription

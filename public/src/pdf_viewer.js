@@ -234,6 +234,13 @@ var pdf_viewer = SAGE2_App.extend({
 
 				var neww = that.baseWidthPage * that.state.numberOfPageToShow * that.resizeValue;
 				var newh = (that.baseHeightPage + that.commandBarG.height + that.thumbnailHeight) * that.resizeValue;
+				// calculate the aspect ratio
+				var newar = neww / newh;
+				// use the same width as specified by the server
+				neww = that.sage2_width;
+				// adjust the height
+				newh = neww / newar;
+				// ask for a size update
 				that.sendResize(neww, newh);
 				return;
 			}
@@ -800,6 +807,31 @@ var pdf_viewer = SAGE2_App.extend({
 		entries.push(entry);
 
 		entry = {};
+		entry.description = "Go to page: ";
+		entry.callback = "changeThePage";
+		entry.parameters = {};
+		entry.inputField = true;
+		entry.inputFieldSize = 3;
+		entry.voiceEntryOverload = true; // not visible on UI
+		entries.push(entry);
+
+		entry = {};
+		entry.description = "Jump to page: ";
+		entry.callback = "changeThePage";
+		entry.parameters = {};
+		entry.inputField = true;
+		entry.inputFieldSize = 3;
+		entry.voiceEntryOverload = true; // not visible on UI
+		entries.push(entry);
+
+		entry = {};
+		entry.description = "Show page: ";
+		entry.callback = "changeThePage";
+		entry.parameters = {};
+		entry.inputField = true;
+		entry.inputFieldSize = 3;
+		entry.voiceEntryOverload = true; // not visible on UI
+
 		entry.description = "separator";
 		entries.push(entry);
 

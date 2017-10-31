@@ -658,7 +658,9 @@ function setupListeners() {
 
 		// Tell the application it is over
 		var app = applications[elem_data.elemId];
-		app.terminate();
+		if (app) {
+			app.terminate();
+		}
 
 		// Remove the app from the list
 		delete applications[elem_data.elemId];
@@ -1014,6 +1016,9 @@ function setupListeners() {
 
 	wsio.on('eventInItem', function(event_data) {
 		var app = applications[event_data.id];
+
+		console.log(event_data, app, applications);
+
 		if (app) {
 			var date = new Date(event_data.date);
 			app.SAGE2Event(event_data.type, event_data.position, event_data.user, event_data.data, date);

@@ -343,7 +343,12 @@ const SAGE2_interaction = (function() {
 			console.log("URL: " + url + ", type: " + mimeType);
 
 			if (mimeType !== "") {
-				this.wsio.emit('addNewWebElement', {type: mimeType, url: url, position: [dropX, dropY]});
+				this.wsio.emit('addNewWebElement', {
+					type: mimeType, url: url, position: [dropX, dropY],
+					id: this.uniqueID,
+					SAGE2_ptrName:  localStorage.SAGE2_ptrName,
+					SAGE2_ptrColor: localStorage.SAGE2_ptrColor
+				});
 			}
 		};
 
