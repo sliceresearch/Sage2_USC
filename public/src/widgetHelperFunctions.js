@@ -20,6 +20,7 @@
  */
 var dynamicStyleSheets = {};
 var svgBackgroundForWidgetConnectors = null;
+var svgForegroundForWidgetConnectors = null;
 
 function drawSpokeForRadialLayout(instanceID, paper, center, point) {
 	var spoke = paper.line(center.x, center.y, point.x, point.y);
@@ -415,6 +416,16 @@ function makeSvgBackgroundForWidgetConnectors(width, height) {
 	backDrop.node.style.position = "absolute";
 	ui.main.appendChild(backDrop.node);
 	svgBackgroundForWidgetConnectors = backDrop;
+	// testing with a foreground
+	var foreground = new Snap(parseInt(width), parseInt(height));
+	foreground.node.style.zIndex = "10000";
+	foreground.node.style.left = "0";
+	foreground.node.style.top = "0";
+	foreground.node.style.position = "absolute";
+	foreground.attr("class", "svgForegroundDraw");
+	ui.main.appendChild(foreground.node);
+	svgForegroundForWidgetConnectors = foreground;
+
 	return backDrop;
 }
 

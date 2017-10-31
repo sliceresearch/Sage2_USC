@@ -499,8 +499,8 @@ function getNiceNumber(number, giga) {
 }
 
 /**
-  * Helper function to format memory usage info in a string 
-  * 
+  * Helper function to format memory usage info in a string
+  *
   * @method formatMemoryString
   * @param {number} used - amount of memory used
   * @param {number} free - amount of memory free

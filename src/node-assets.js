@@ -513,7 +513,6 @@ var addFile = function(filename, exif, callback) {
 		// otherwise, just call the callback
 		callback();
 	}
-	saveAssets();
 };
 
 
@@ -746,14 +745,26 @@ var listAssets = function() {
 				// exclude 'viewer' applications
 				apps.push(one);
 			}
-		} else if (registry.getDefaultApp(one.filename) === "pdf_viewer") {
-			pdfs.push(one);
-		} else if (registry.getDefaultApp(one.filename) === "image_viewer") {
-			images.push(one);
-		} else if (registry.getDefaultApp(one.filename) === "movie_player") {
-			videos.push(one);
 		} else {
-			others.push(one);
+			var defaultApp;
+			// Get the app for the asset
+			if (!one.filename) {
+				defaultApp = registry.getDefaultAppFromMime(one.exif.MIMEType);
+			} else {
+				defaultApp = registry.getDefaultApp(one.filename);
+			}
+			// Put the asset in the right category
+			if (defaultApp === "pdf_viewer") {
+				pdfs.push(one);
+			} else if (defaultApp === "image_viewer") {
+				images.push(one);
+			} else if (defaultApp === "movie_player") {
+				videos.push(one);
+			} else if (defaultApp === "Webview") {
+				links.push(one);
+			} else {
+				others.push(one);
+			}
 		}
 	}
 	// Sort independently of case
@@ -1028,6 +1039,7 @@ var initialize = function(mainFolder, mediaFolders, whenDone) {
 						delete AllAssets.list[item].valid;
 					}
 				}
+				saveAssets();
 				// callback when done
 				if (whenDone) {
 					whenDone();
@@ -1095,6 +1107,7 @@ var addAssetFolder = function(root, whenDone) {
 					delete AllAssets.list[item].valid;
 				}
 			}
+			saveAssets();
 			// callback when done
 			if (whenDone) {
 				whenDone();

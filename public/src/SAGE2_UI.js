@@ -6,11 +6,11 @@
 //
 // See full text, terms and conditions in the LICENSE.txt included file
 //
-// Copyright (c) 2014-15
+// Copyright (c) 2014-17
 
 "use strict";
 
-/* global FileManager, SAGE2_interaction, SAGE2DisplayUI */
+/* global FileManager, SAGE2_interaction, SAGE2DisplayUI, SAGE2_speech */
 /* global removeAllChildren, SAGE2_copyToClipboard, parseBool */
 
 /**
@@ -715,6 +715,18 @@ function setupListeners() {
 			// No luck (need to use Electron)
 			console.log("Server> No screenshot capability");
 		}
+	});
+
+	wsio.on('setVoiceNameMarker', function(data) {
+		SAGE2_speech.setNameMarker(data.name);
+	});
+	wsio.on('playVoiceCommandSuccessSound', function(data) {
+		// SAGE2_speech.successSound.play();
+		SAGE2_speech.textToSpeech(data.message);
+	});
+	wsio.on('playVoiceCommandFailSound', function(data) {
+		// SAGE2_speech.failSound.play();
+		SAGE2_speech.textToSpeech(data.message);
 	});
 }
 
@@ -2635,6 +2647,9 @@ function setAppContextMenuEntries(data) {
 	contextMenuDiv.classList.add(side === "left" ? "contextMenuLeft" : "contextMenuRight");
 
 	for (i = 0; i < entriesToAdd.length; i++) {
+		if (entriesToAdd[i].voiceEntryOverload) {
+			continue;
+		}
 		addMenuEntry(contextMenuDiv, entriesToAdd[i], "" + i, app);
 	} // end for each entry
 } // end setAppContextMenuEntries

@@ -210,13 +210,20 @@ var SAGE2RemoteSitePointer = {
 	*/
 	appQuitHidePointers: function(app) {
 		var currentPointer;
+		let main = document.getElementById("main");
 		for (let i = 0; i < app.state.pointersOverApp.length; i++) {
 			currentPointer = app.state.pointersOverApp[i];
 			currentPointer.lastUpdate = currentPointer.lastUpdate + 1;
 			currentPointer.hidden = true;
 			this.updateRemotePointer(currentPointer, app);
-			// put the pointer back onto the main area.
-			document.getElementById("main").appendChild(document.getElementById(currentPointer.id));
+			// put the pointer back onto the main area
+			if (main) {
+				let ptr_id = document.getElementById(currentPointer.id);
+				if (ptr_id) {
+					// add the pointer element back into the DOM
+					main.appendChild(ptr_id);
+				}
+			}
 		}
 	},
 
