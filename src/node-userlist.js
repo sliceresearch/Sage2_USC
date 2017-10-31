@@ -6,7 +6,7 @@
 //
 // See full text, terms and conditions in the LICENSE.txt included file
 //
-// Copyright (c) 2014
+// Copyright (c) 2017
 
 /**
  * @module server
@@ -25,12 +25,37 @@ const pathname = 'logs';
 const filename = 'users.json';
 
 let nAnonClients = 0;
-const tempNames = "Aardvark Albatross Alligator Alpaca Ant Anteater Antelope Ape Armadillo Baboon Badger Barracuda Bat Beaver Bee Bison Boar Buffalo Butterfly Camel Caribou Cassowary Cat Caterpillar Cheetah Chicken Chimpanzee Chinchilla Cobra Cormorant Coyote Crab Crane Crocodile Crow Deer Dog Dolphin Donkey Dove Dragonfly Duck Eagle Echidna Eel Elephant Emu Falcon Ferret Finch Flamingo Fox Frog Gazelle Gerbil Giraffe Goat Goldfish Goose Gorilla Grasshopper Hamster Hawk Hedgehog Heron Hippo Horse Hummingbird Hyena Ibex Jackal Jaguar Jellyfish Kangaroo Koala Lark Lemur Leopard Lion Llama Lobster Manatee Mandrill Mink Mole Mongoose Monkey Mouse Narwhal Newt Nightingale Octopus Okapi Opossum Ostrich Otter Owl Oyster Panther Parrot Panda Partridge Pelican Penguin Pheasant Pigeon Porcupine Porpoise Quail Rabbit Raccoon Raven Rhinoceros Salamander Seahorse Seal Shark Sheep Skunk Sloth Snail Squid Squirrel Starling Swan Tapir Tiger T-rex Turtle Walrus Weasel Whale Wolf Wombat Yak Zebra".split(' ');
+const tempNames = "Aardvark Albatross Alligator Alpaca Ant Anteater Antelope Ape Armadillo Baboon " +
+	"Badger Barracuda Bat Beaver Bee Bison Boar Buffalo Butterfly Camel Caribou Cassowary Cat " +
+	"Caterpillar Cheetah Chicken Chimpanzee Chinchilla Cobra Cormorant Coyote Crab Crane " +
+	"Crocodile Crow Deer Dog Dolphin Donkey Dove Dragonfly Duck Eagle Echidna Eel Elephant " +
+	"Emu Falcon Ferret Finch Flamingo Fox Frog Gazelle Gerbil Giraffe Goat Goldfish Goose " +
+	"Gorilla Grasshopper Hamster Hawk Hedgehog Heron Hippo Horse Hummingbird Hyena Ibex Jackal " +
+	"Jaguar Jellyfish Kangaroo Koala Lark Lemur Leopard Lion Llama Lobster Manatee Mandrill " +
+	"Mink Mole Mongoose Monkey Mouse Narwhal Newt Nightingale Octopus Okapi Opossum Ostrich " +
+	"Otter Owl Oyster Panther Parrot Panda Partridge Pelican Penguin Pheasant Pigeon Porcupine " +
+	"Porpoise Quail Rabbit Raccoon Raven Rhinoceros Salamander Seahorse Seal Shark Sheep Skunk " +
+	"Sloth Snail Squid Squirrel Starling Swan Tapir Tiger T-rex Turtle Walrus Weasel Whale " +
+	"Wolf Wombat Yak Zebra".split(' ');
 
+/**
+ * Creates an uid.
+ *
+ * @method     createUid
+ * @param      {String}  name    The name
+ * @param      {<type>}  email   The email
+ * @return     {String}  the uid string
+ */
 function createUid(name, email) {
 	return name.replace(/[;,=]/g, '-') + '-' + Date.now();
 }
 
+/**
+ * shuffle randomly and array
+ *
+ * @method     shuffle
+ * @param      {<type>}  array   The array
+ */
 function shuffle(array) {
 	let l = array.length, t, i;
 
@@ -85,7 +110,7 @@ class UserList {
 			],
 			permissions: {
 				admin: 0b11111,
-				user: 0b11111,
+				user:  0b11111,
 				guest: 0b11111
 			}
 		});
@@ -128,6 +153,7 @@ class UserList {
 	}
 
 	// ***********  Role Management Functions *************
+
 	/**
 	* Initialize role access system
 	*
@@ -280,7 +306,7 @@ class UserList {
 
 	/**
 	 * Wrapper for JsonDB.getData()
-	 * Retrieve data from json database or log an error if it fails 
+	 * Retrieve data from json database or log an error if it fails
 	 *
 	 * @method getData
 	 * @param path {String}
@@ -304,7 +330,7 @@ class UserList {
 	/**
 	 * Wrapper for JsonDB.push()
 	 * Push data to json database or log an error if it fails
-	 * 
+	 *
 	 * @method push
 	 * @param path {String}
 	 * @param data {Object} new data to be pushed
@@ -327,7 +353,7 @@ class UserList {
 	/**
 	 * Wrapper for JsonDB.delete()
 	 * Remove data at a path or log an error if it fails
-	 * 
+	 *
 	 * @method delete
 	 * @param path {String}
 	 * @return {Boolean} true if delete succeeds
@@ -343,8 +369,8 @@ class UserList {
 	}
 
 	/**
-	 * Store a new user in the database 
-	 * 
+	 * Store a new user in the database
+	 *
 	 * @method addNewUser
 	 * @param name {String}
 	 * @param email {String}
@@ -384,7 +410,7 @@ class UserList {
 
 	/**
 	 * Retrieve a user in the database by name and email
-	 * 
+	 *
 	 * @method getUser
 	 * @param name {String}
 	 * @param email {String}
@@ -414,7 +440,7 @@ class UserList {
 
 	/**
 	 * Retrieve a user in the database by user id
-	 * 
+	 *
 	 * @method getUserById
 	 * @param uid {String}
 	 * @return {Object} object with the user token, user object, and an error
@@ -438,7 +464,7 @@ class UserList {
 	}
 
 	/**
-	 * Remove user from the database 
+	 * Remove user from the database
 	 *
 	 * @method removeUser
 	 * @param uid {String}
@@ -469,7 +495,7 @@ class UserList {
 	}
 
 	/**
-	 * Get properties of a user 
+	 * Get properties of a user
 	 *
 	 * @method getProperty
 	 * @param uid {String}

@@ -2260,7 +2260,7 @@ function keyPress(event) {
 function loadSelectedApplication() {
 	if (selectedAppEntry !== null) {
 		var app_path = selectedAppEntry.getAttribute("appfullpath");
-		wsio.emit('loadApplication', Object.assign({}, {
+		wsio.emit('loadApplication', Object.assign({
 			application: app_path, user: interactor.uniqueID
 		}, interactor.user));
 	}
@@ -2275,8 +2275,8 @@ function loadSelectedFile() {
 	if (selectedFileEntry !== null) {
 		var application = selectedFileEntry.getAttribute("application");
 		var file = selectedFileEntry.getAttribute("file");
-		wsio.emit('loadFileFromServer', Object.assign({}, {
-			application: app_path, filename: file, user: interactor.uniqueID
+		wsio.emit('loadFileFromServer', Object.assign({
+			application: application, filename: file, user: interactor.uniqueID
 		}, interactor.user));
 	}
 }

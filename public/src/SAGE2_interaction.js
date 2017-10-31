@@ -12,7 +12,7 @@
 /* global cancelIdleCallback, requestIdleCallback */
 /* global showSAGE2PointerOverlayNoMouse, hideSAGE2PointerOverlayNoMouse */
 /* global pointerClick, sagePointerDisabled, sagePointerEnabled */
-/* global viewOnlyMode */
+/* global viewOnlyMode, deleteCookie */
 
 "use strict";
 
