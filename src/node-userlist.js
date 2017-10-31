@@ -27,18 +27,19 @@ const pathname = 'logs';
 const filename = 'users.json';
 
 let nAnonClients = 0;
-const tempNames = "Aardvark Albatross Alligator Alpaca Ant Anteater Antelope Ape Armadillo Baboon \
-	Badger Barracuda Bat Beaver Bee Bison Boar Buffalo Butterfly Camel Caribou Cassowary Cat \
-	Caterpillar Cheetah Chicken Chimpanzee Chinchilla Cobra Cormorant Coyote Crab Crane \
-	Crocodile Crow Deer Dog Dolphin Donkey Dove Dragonfly Duck Eagle Echidna Eel Elephant \
-	Emu Falcon Ferret Finch Flamingo Fox Frog Gazelle Gerbil Giraffe Goat Goldfish Goose \
-	Gorilla Grasshopper Hamster Hawk Hedgehog Heron Hippo Horse Hummingbird Hyena Ibex Jackal \
-	Jaguar Jellyfish Kangaroo Koala Lark Lemur Leopard Lion Llama Lobster Manatee Mandrill \
-	Mink Mole Mongoose Monkey Mouse Narwhal Newt Nightingale Octopus Okapi Opossum Ostrich \
-	Otter Owl Oyster Panther Parrot Panda Partridge Pelican Penguin Pheasant Pigeon Porcupine \
-	Porpoise Quail Rabbit Raccoon Raven Rhinoceros Salamander Seahorse Seal Shark Sheep Skunk \
-	Sloth Snail Squid Squirrel Starling Swan Tapir Tiger T-rex Turtle Walrus Weasel Whale \
-	Wolf Wombat Yak Zebra".split(' ');
+const strNames = "Aardvark Albatross Alligator Alpaca Ant Anteater Antelope Ape Armadillo Baboon " +
+	"Badger Barracuda Bat Beaver Bee Bison Boar Buffalo Butterfly Camel Caribou Cassowary Cat "    +
+	"Caterpillar Cheetah Chicken Chimpanzee Chinchilla Cobra Cormorant Coyote Crab Crane "         +
+	"Crocodile Crow Deer Dog Dolphin Donkey Dove Dragonfly Duck Eagle Echidna Eel Elephant "       +
+	"Emu Falcon Ferret Finch Flamingo Fox Frog Gazelle Gerbil Giraffe Goat Goldfish Goose "        +
+	"Gorilla Grasshopper Hamster Hawk Hedgehog Heron Hippo Horse Hummingbird Hyena Ibex Jackal "   +
+	"Jaguar Jellyfish Kangaroo Koala Lark Lemur Leopard Lion Llama Lobster Manatee Mandrill "      +
+	"Mink Mole Mongoose Monkey Mouse Narwhal Newt Nightingale Octopus Okapi Opossum Ostrich "      +
+	"Otter Owl Oyster Panther Parrot Panda Partridge Pelican Penguin Pheasant Pigeon Porcupine "   +
+	"Porpoise Quail Rabbit Raccoon Raven Rhinoceros Salamander Seahorse Seal Shark Sheep Skunk "   +
+	"Sloth Snail Squid Squirrel Starling Swan Tapir Tiger T-rex Turtle Walrus Weasel Whale "       +
+	"Wolf Wombat Yak Zebra";
+const tempNames = strNames.split(' ');
 
 /**
  * Creates an uid.
