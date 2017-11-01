@@ -371,7 +371,14 @@ const SAGE2_interaction = (function() {
 				}
 			} else {
 				console.log("No mouse detected - entering touch interface for SAGE2 Pointer");
-
+				if (mimeType !== "") {
+					this.wsio.emit('addNewWebElement', {
+						type: mimeType, url: url, position: [dropX, dropY],
+						id: this.uniqueID,
+						SAGE2_ptrName:  localStorage.SAGE2_ptrName,
+						SAGE2_ptrColor: localStorage.SAGE2_ptrColor
+					});
+				}
 				this.wsio.emit('startSagePointer', this.user);
 
 				showSAGE2PointerOverlayNoMouse();

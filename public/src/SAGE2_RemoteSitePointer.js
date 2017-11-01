@@ -15,7 +15,7 @@ var SAGE2RemoteSitePointer = {
 	allPointersOnThisSite: [],
 	pointerUpdateInterval: 100, // ms
 	allAppsWithRemotePointerTracking: {},
-	shouldPassEvents: true,
+	shouldPassEvents: false, // currently disabled
 
 
 	/**
@@ -140,12 +140,16 @@ var SAGE2RemoteSitePointer = {
 				color: pointer_data.color,
 				visible: true,
 				// needed for showing: id, left, top, label, color, sourceType
-				left: pointer_data.positionInPercent.x * app.sage2_width + app.sage2_x,
-				top: pointer_data.positionInPercent.y * app.sage2_height + app.sage2_y,
+				// left: pointer_data.positionInPercent.x * app.sage2_width + app.sage2_x,
+				// top: pointer_data.positionInPercent.y * app.sage2_height + app.sage2_y,
+				left: pointer_data.positionInPercent.x * app.sage2_width, // put it on the app based on percent
+				top: pointer_data.positionInPercent.y * app.sage2_height,
 				sourceType: "Remote", // only "Touch" should matter,
-				lastUpdate: pointer_data.lastUpdate
+				lastUpdate: pointer_data.lastUpdate,
+				mode: 1 // app interaction visual style.
 			};
 			ui.createSagePointer(pointer);
+			ui.changeSagePointerMode(pointer);
 			ui.showSagePointer(pointer);
 			this.allRemotePointers.push(pointer_data);
 		} else { // if exists, use existing. Data overwritten in case user changes values, but not lastUpdate
@@ -153,8 +157,8 @@ var SAGE2RemoteSitePointer = {
 			pointer.id = pointer_data.id;
 			pointer.label = pointer_data.label + "@" + pointer_data.server;
 			pointer.color = pointer_data.color;
-			pointer.left = pointer_data.positionInPercent.x * app.sage2_width + app.sage2_x;
-			pointer.top = pointer_data.positionInPercent.y * app.sage2_height + app.sage2_y;
+			pointer.left = pointer_data.positionInPercent.x * app.sage2_width; // put it on the app based on percent
+			pointer.top = pointer_data.positionInPercent.y * app.sage2_height;
 			pointer.hidden = pointer_data.hidden;
 		}
 
@@ -168,6 +172,8 @@ var SAGE2RemoteSitePointer = {
 			} else {
 				// update position
 				ui.showSagePointer(pointer);
+				// move the pointer to the application.
+				document.getElementById(app.id).appendChild(document.getElementById(pointer.id));
 			}
 			pointer.lastUpdate = pointer_data.lastUpdate;
 
@@ -204,11 +210,20 @@ var SAGE2RemoteSitePointer = {
 	*/
 	appQuitHidePointers: function(app) {
 		var currentPointer;
+		let main = document.getElementById("main");
 		for (let i = 0; i < app.state.pointersOverApp.length; i++) {
 			currentPointer = app.state.pointersOverApp[i];
 			currentPointer.lastUpdate = currentPointer.lastUpdate + 1;
 			currentPointer.hidden = true;
 			this.updateRemotePointer(currentPointer, app);
+			// put the pointer back onto the main area
+			if (main) {
+				let ptr_id = document.getElementById(currentPointer.id);
+				if (ptr_id) {
+					// add the pointer element back into the DOM
+					main.appendChild(ptr_id);
+				}
+			}
 		}
 	},
 

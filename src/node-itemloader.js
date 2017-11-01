@@ -34,6 +34,8 @@ var exiftool     = require('../src/node-exiftool');        // gets exif tags for
 var assets       = require('../src/node-assets');          // asset management
 var sageutils    = require('../src/node-utils');           // provides utility functions
 var registry     = require('../src/node-registry');        // Registry Manager
+var jsonfile     = require('jsonfile');
+var cheerio     = require('cheerio');
 
 var imageMagick;
 
@@ -611,25 +613,39 @@ AppLoader.prototype.loadZipAppFromFile = function(file, mime_type, aUrl, externa
 
 	var unzipper = new Unzip(file);
 	unzipper.on('extract', function(log) {
-		// read instructions for how to handle
 		var instuctionsFile = path.join(zipFolder, "instructions.json");
-		fs.readFile(instuctionsFile, 'utf8', function(err1, json_str) {
-			if (err1) {
-				throw err1;
-			}
+		var hasInstructionsFile = fs.existsSync(instuctionsFile);
 
-			assets.exifAsync([zipFolder], function(err2) {
-				if (err2) {
-					throw err2;
+		// Check if UnityLoader.js exists in unzipped directory structure
+		var unityLoader = _this.existsInDir(zipFolder, "UnityLoader.js");
+		if (unityLoader) {
+			var instructionInfo = {
+				instuctionsFile: instuctionsFile,
+				instructionsExists: hasInstructionsFile,
+				mime_type: mime_type,
+				external_url: external_url
+			};
+			sageutils.log("AppLoader", "Found Unity app", unityLoader);
+			_this.loadUnityAppFromZip(_this, unityLoader, zipFolder, instructionInfo, callback);
+		} else {
+			fs.readFile(instuctionsFile, 'utf8', function(err1, json_str) {
+				if (err1) {
+					throw err1;
 				}
 
-				var appInstance = _this.readInstructionsFile(json_str, zipFolder, mime_type, external_url);
-				_this.scaleAppToFitDisplay(appInstance);
-				// Seems to cause issues, when drag-drop, the first time the app is opened.
-				// appInstance.file = file;
-				callback(appInstance);
+				assets.exifAsync([zipFolder], function(err2) {
+					if (err2) {
+						throw err2;
+					}
+
+					var appInstance = _this.readInstructionsFile(json_str, zipFolder, mime_type, external_url);
+					_this.scaleAppToFitDisplay(appInstance);
+					// Seems to cause issues, when drag-drop, the first time the app is opened.
+					// appInstance.file = file;
+					callback(appInstance);
+				});
 			});
-		});
+		}
 
 		// delete original zip file
 		fs.unlink(file, function(err) {
@@ -656,6 +672,102 @@ AppLoader.prototype.loadZipAppFromFile = function(file, mime_type, aUrl, externa
 
 			return true;
 		}
+	});
+};
+
+AppLoader.prototype.loadUnityAppFromZip = function(appLoader, unityLoader, zipFolder, data, callback) {
+	var unityIndexHtml = path.join(zipFolder, "index.html");
+	sageutils.log('AppLoader', 'Unity index file', unityIndexHtml);
+
+	fs.readFile(unityIndexHtml, 'utf8', function(err1, html_str) {
+		if (err1) {
+			throw err1;
+		}
+
+		// Read index.html
+		var indexHtml = cheerio.load(html_str);
+
+		// Grab html info
+		var htmlTitle = indexHtml("title").text();
+		var htmlCanvasHeight = indexHtml("canvas").attr("height");
+		var htmlCanvasWidth = indexHtml("canvas").attr("width");
+
+		// Unity 5.6+ no longer stores the width/height in <canvas>
+		if (htmlCanvasHeight == undefined) {
+			// Get width/height from div style, parse out ; and spaces
+			var style = indexHtml("div").attr("style").split(/[\s;]+/);
+			htmlCanvasHeight = style[3];
+			htmlCanvasWidth = style[1];
+		}
+
+		// Title is in the form 'Unity WebGL Player | [Product Name]'
+		// Get just the Product Name
+		htmlTitle = htmlTitle.split("|")[1].trim();
+
+		// Set the html <title> the new parsed name
+		indexHtml("title").text(htmlTitle);
+
+		// Get the canvas width/height, parsing out "px"
+		htmlCanvasHeight = parseInt(htmlCanvasHeight.slice(0, htmlCanvasHeight.indexOf("p")));
+		htmlCanvasWidth  = parseInt(htmlCanvasWidth.slice(0, htmlCanvasWidth.indexOf("p")));
+
+		// Sets style flag for proper SAGE2 scaling
+		var htmlStyle = "* {margin: 0; padding: 0;}html, body {width: 100vw;height: 100vh;}";
+		htmlStyle += "canvas {height: 100vh;width: 100vw;display: block;}";
+
+		// If <style> tag exists, set it. If not, append it to head (Unity 5.6+)
+		if (indexHtml("style").length == 1) {
+			indexHtml("style").text(htmlStyle);
+		} else {
+			indexHtml('head').append("<style>" + htmlStyle + "</style>");
+		}
+
+		// Update index.html
+		fs.writeFile(unityIndexHtml, indexHtml.html(), function(err) {
+			if (err) {
+				sageutils.log('AppLoader', 'Unity error writing file', err);
+				return;
+			}
+		});
+
+		// Generate instructions.json if it doesn't exist
+		if (data.instructionsExists == false) {
+			var obj = {
+				main_script: "UnityLoader.js",
+				icon: "",
+				width: htmlCanvasWidth,
+				height: htmlCanvasHeight,
+				resize: "free",
+				animation: true,
+				dependencies: [],
+				load: {},
+				title: htmlTitle,
+				version: "1.0.0",
+				description: "Loads a Unity3D webgl output into a webview",
+				keywords: ["sage2", "unity3d", "webview"],
+				author: "",
+				license: "SAGE2-Software-License"
+			};
+			jsonfile.writeFileSync(data.instuctionsFile, obj);
+		}
+
+		fs.readFile(data.instuctionsFile, 'utf8', function(err1, json_str) {
+			if (err1) {
+				throw err1;
+			}
+
+			assets.exifAsync([zipFolder], function(err2) {
+				if (err2) {
+					throw err2;
+				}
+				sageutils.log("Loader", "Found unity file", unityLoader);
+				var appInstance = appLoader.readInstructionsFile(json_str, zipFolder, data.mime_type, data.external_url);
+				appLoader.scaleAppToFitDisplay(appInstance);
+				// Seems to cause issues, when drag-drop, the first time the app is opened.
+				// appInstance.file = file;
+				callback(appInstance);
+			});
+		});
 	});
 };
 
@@ -757,10 +869,24 @@ AppLoader.prototype.loadApplicationFromRemoteServer = function(application, call
 };
 
 AppLoader.prototype.loadFileFromWebURL = function(file, callback) {
-	// XXX - Will this work with our custom apps?
+	// Add the URL in the asset DB
+	var appIcon = path.resolve('public', 'images', 'link_256.png');
+	var urlName = file.url;
+	// build a fake EXIF structure
+	var exif = {FileName: urlName, icon: appIcon, MIMEType: "sage2/url",
+		FileSize: 0, FileDate: new Date(),
+		SAGE2user: file.SAGE2_ptrName, SAGE2color: file.SAGE2_ptrColor,
+		metadata: {}};
+	// Store the asset
+	assets.addURL(urlName, exif);
+	assets.saveAssets();
+
+	// Extract the filename from URL,
+	// used in case of dragging an image or PDF for instance from the web
 	var mime_type = file.type;
 	var filename = decodeURI(file.url.substring(file.url.lastIndexOf("/") + 1));
 
+	// Load the app
 	this.loadApplication({location: "url", url: file.url, type: mime_type, name: filename, strictSSL: false},
 		callback);
 };
@@ -771,16 +897,16 @@ AppLoader.prototype.createJupyterApp = function(source, type, encoding, name, co
 	var metadata         = {};
 	metadata.title       = "Jupyter";
 	metadata.version     = "1.0.0";
-	metadata.description = "Jupyer for SAGE2";
+	metadata.description = "JupyterLab-SAGE2 Application";
 	metadata.author      = "SAGE2";
 	metadata.license     = "SAGE2-Software-License";
-	metadata.keywords    = ["jupyter"];
+	metadata.keywords    = ["jupyter", "jupyterlab"];
 
 	var appInstance = {
 		id: null,
 		title: name,
 		color: color,
-		application: "jupyter",
+		application: "JupyterLab",
 		icon: "/images/jupyter.png",
 		type: "mime_type",
 		url: "src",
@@ -972,6 +1098,7 @@ AppLoader.prototype.manageAndLoadUploadedFile = function(file, callback) {
 							callback(appInstance, handle);
 						});
 					});
+					assets.saveAssets();
 				}
 			});
 		}
@@ -1131,7 +1258,7 @@ AppLoader.prototype.readInstructionsFile = function(json_str, file, mime_type, e
 	if (appName == "UnityLoader") {
 		// Set type as WebView
 		appName = "Webview";
-		mime_type = "applicaion/custom";
+		mime_type = "application/custom";
 		var webpath = getSAGE2Path('/uploads/apps/Webview');
 		external_url = this.hostOrigin + '/uploads/apps/Webview';
 
@@ -1143,7 +1270,6 @@ AppLoader.prototype.readInstructionsFile = function(json_str, file, mime_type, e
 			mode: "mobile",
 			favicon: ""
 		};
-
 		file = webpath;
 		s2url = '/uploads/apps/Webview';
 	}
@@ -1181,5 +1307,33 @@ AppLoader.prototype.readInstructionsFile = function(json_str, file, mime_type, e
 	return result;
 };
 
+/**
+ * Determines if it exists in directory
+ *
+ * @method     existsInDir
+ * @param      {<type>}           startDir  The start dir
+ * @param      {<type>}           target    The target
+ * @return     {String|String[]}  True if exists in dir, False otherwise.
+ */
+AppLoader.prototype.existsInDir = function(startDir, target) {
+	if (!fs.existsSync(startDir)) {
+		return;
+	}
+	var files = fs.readdirSync(startDir);
+	for (var i = 0; i < files.length; i++) {
+		var filename = path.join(startDir, files[i]);
+		var stat = fs.lstatSync(filename);
+		if (stat.isDirectory()) {
+			var result = this.existsInDir(filename, target);
+			if (result !== undefined) {
+				return result;
+			}
+		}
+		if (filename.indexOf(target) >= 0) {
+			return filename;
+		}
+	}
+	return;
+};
 
 module.exports = AppLoader;

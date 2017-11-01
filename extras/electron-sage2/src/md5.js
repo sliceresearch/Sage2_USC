@@ -273,4 +273,4 @@ var blueimpMd5 =
 	} else {
 		$.md5 = md5;
 	}
-}(this));
+}(window));

@@ -314,6 +314,7 @@ var SAGE2_App = Class.extend({
 				// if app is shared, then track pointer
 				SAGE2RemoteSitePointer.trackPointer(this, user_id, position);
 			} else if (isMaster  && SAGE2RemoteSitePointer.shouldPassEvents && this.isSharedWithRemoteSite()) {
+				// for events beyond pointerMove
 				SAGE2RemoteSitePointer.trackEvent(this, {
 					eventType: eventType,
 					position: position,
@@ -975,7 +976,7 @@ var SAGE2_App = Class.extend({
 				description: "separator"
 			});
 			appContextMenu.entries.push({
-				description: "Send to back",
+				description: "Send to Back",
 				callback: "SAGE2SendToBack",
 				parameters: {}
 			});
@@ -985,9 +986,13 @@ var SAGE2_App = Class.extend({
 				parameters: {}
 			});
 			appContextMenu.entries.push({
-				description: "separator"
+				description: "minimize",
+				callback: "SAGE2Maximize",
+				parameters: {},
+				voiceEntryOverload: true // not displayed on UI, added for voice entry
 			});
 			// currently testing with remote pointer event testing
+			/* currently disabled
 			if (!this.shouldPassRemotePointerEvents) {
 				appContextMenu.entries.push({
 					description: "Enable remote pointer passing",
@@ -1000,12 +1005,19 @@ var SAGE2_App = Class.extend({
 					callback: "toggleRemotePointerEventPassing",
 					parameters: { value: false }
 				});
-			}
+			} //*/
 			appContextMenu.entries.push({
 				description: "separator"
 			});
+
+			// limit the size of the title, especially for webview titles
+			var menuTitle = this.title || "Application";
+			if (menuTitle.length > 40) {
+				// crop the title to 40 characters and add ellipsis
+				menuTitle = menuTitle.substring(0, 40) + '...';
+			}
 			appContextMenu.entries.push({
-				description: "Close " + (this.title || "application"),
+				description: "Close " + menuTitle,
 				callback: "SAGE2DeleteElement",
 				parameters: {}
 			});
