@@ -630,7 +630,6 @@ const SAGE2_interaction = (function() {
 		this.streamCanPlayMethod = function(event) {
 			// Making sure it's not already sending
 			if (!this.broadcasting) {
-				var screenShareResolution = document.getElementById('screenShareResolution');
 				var mediaVideo  = document.getElementById('mediaVideo');
 				var mediaCanvas = document.getElementById('mediaCanvas');
 
@@ -646,14 +645,10 @@ const SAGE2_interaction = (function() {
 					mediaVideo.videoWidth
 				];
 
-				for (var i = 0; i < 4; i++) {
-					var height = parseInt(widths[i] * mediaVideo.videoHeight / mediaVideo.videoWidth, 10);
-					screenShareResolution.options[i].value = widths[i] + "x" + height;
-				}
+				var height = widths[this.mediaResolution] * mediaVideo.videoHeight / mediaVideo.videoWidth;
 
-				var res = screenShareResolution.options[this.mediaResolution].value.split("x");
-				mediaCanvas.width  = parseInt(res[0], 10);
-				mediaCanvas.height = parseInt(res[1], 10);
+				mediaCanvas.width  = widths[this.mediaResolution];
+				mediaCanvas.height = height;
 
 				var frame = this.captureMediaFrame();
 				this.pix  = frame;
@@ -988,10 +983,12 @@ const SAGE2_interaction = (function() {
 		this.changeScreenShareResolutionMethod = function(value, resolution) {
 			this.mediaResolution = value;
 			var res = resolution.split("x");
-			var mediaCanvas = document.getElementById('mediaCanvas');
-			mediaCanvas.width  = parseInt(res[0], 10);
-			mediaCanvas.height = parseInt(res[1], 10);
-			console.log("Media resolution: " + resolution);
+			if (res.length === 2) {
+				var mediaCanvas = document.getElementById('mediaCanvas');
+				mediaCanvas.width  = parseInt(res[0], 10);
+				mediaCanvas.height = parseInt(res[1], 10);
+				console.log("Media resolution: " + resolution);
+			}
 		};
 
 		/**

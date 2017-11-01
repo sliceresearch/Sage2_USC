@@ -228,7 +228,6 @@
 
 	function handleUserEvent(data) {
 		logEvent(data);
-
 		updateClients(data);
 		console.log('user event:', data);
 	}
@@ -292,25 +291,6 @@
 
 			container.appendChild(tr);
 		}
-
-
-		// let users = [];
-		// for (let ip in clients) {
-		// 	let user = clients[ip].user;
-		// 	if (user) {
-		// 		let foundUser = users.find(user => user.name === clients[ip].user.name && user.email === clients[ip].user.email);
-		// 		if (foundUser) {
-		// 			foundUser.ips.push(ip);
-		// 		} else {
-		// 			users.push({
-		// 				name: user.name,
-		// 				email: user.email,
-		// 				roles: clients[ip].role,
-		// 				ips: [ip]
-		// 			});
-		// 		}
-		// 	}
-		// }
 	}
 
 	function redrawPermissions() {
@@ -373,7 +353,10 @@
 				p.innerHTML += event.data.filename + ' - ';
 			}
 
-			addText(p, clients[event.id].user.SAGE2_ptrName);
+			let name = event.data.label || event.data.SAGE2_ptrName;
+			if (name) {
+				addText(p, name);
+			}
 			addText(p, ' [' + event.id + ']');
 		}
 
