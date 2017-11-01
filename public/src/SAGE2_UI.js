@@ -2315,7 +2315,7 @@ function keyPress(event) {
 function loadSelectedApplication() {
 	if (selectedAppEntry !== null) {
 		var app_path = selectedAppEntry.getAttribute("appfullpath");
-		wsio.emit('loadApplication', Object.assign({}, {
+		wsio.emit('loadApplication', Object.assign({
 			application: app_path, user: interactor.uniqueID
 		}, interactor.user));
 	}
@@ -2330,8 +2330,8 @@ function loadSelectedFile() {
 	if (selectedFileEntry !== null) {
 		var application = selectedFileEntry.getAttribute("application");
 		var file = selectedFileEntry.getAttribute("file");
-		wsio.emit('loadFileFromServer', Object.assign({}, {
-			application: app_path, filename: file, user: interactor.uniqueID
+		wsio.emit('loadFileFromServer', Object.assign({
+			application: application, filename: file, user: interactor.uniqueID
 		}, interactor.user));
 	}
 }
@@ -2634,6 +2634,9 @@ function setAppContextMenuEntries(data) {
 	// for each entry to add, create the div, app the properties, and effects
 	var workingDiv;
 	for (i = 0; i < entriesToAdd.length; i++) {
+		if (entriesToAdd[i].voiceEntryOverload) {
+			continue;
+		}
 		var isSeparator = entriesToAdd[i].description === "separator";
 		workingDiv = document.createElement(isSeparator ? 'hr' : 'div');
 
@@ -2656,7 +2659,6 @@ function setAppContextMenuEntries(data) {
 			workingDiv.className = 'appContextMenuEntry';
 			if (entriesToAdd[i].accelerator) {
 				// Add description of the keyboard shortcut
-				workingDiv.innerHTML = "<p style='float: left;'>" + entriesToAdd[i].description + "</p>";
 				// workingDiv.innerHTML += "<p style='float: right; padding-left: 5px;'> [" + entriesToAdd[i].accelerator + "]</p>";
 				workingDiv.innerHTML += "<p style='float: right; padding-left: 5px;'>" + entriesToAdd[i].accelerator + "</p>";
 				workingDiv.innerHTML += "<div style='clear: both;'></div>";
