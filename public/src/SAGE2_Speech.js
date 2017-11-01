@@ -578,13 +578,13 @@ SAGE2_speech.speechSynthesisInit = function() {
 				if (SAGE2_speech.voices[i].name === "Samantha") {
 					samantha.found = true;
 					samantha.index = i;
-				} else if (SAGE2_speech.voices[i].name === "Kyoko") {
-					kyoko.found = true;
-					kyoko.index = i;
 				} else if (SAGE2_speech.voices[i].name === "Victoria") {
 					victoria.found = true;
 					victoria.index = i;
-				}
+				} else if (SAGE2_speech.voices[i].name === "Kyoko") {
+					kyoko.found = true;
+					kyoko.index = i;
+				} 
 			}
 		} else {
 			console.log("SpeechRecognition> Speech synthesis voices not available");

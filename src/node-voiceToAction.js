@@ -33,6 +33,9 @@ function VoiceActionManager(obj) {
 	var today = new Date();
 	this.fileLogPath = "./" + today.getFullYear() + "-"
 		+ (today.getMonth() + 1) + "-" + today.getDate() + "-transcript.json";
+	this.confirmPhrases = null;
+	this.rejectPhrases = null;
+	this.fillPhrases();
 }
 
 /**
@@ -304,7 +307,7 @@ VoiceActionManager.prototype.secondaryProcessCallToUseInTryCatch = function(wsio
 		if (wordsToPassAsInput && wordsToPassAsInput.length === 0) {
 			this.currentCommandLogInfo.status = "FAIL - Missing input";
 			this.oldLog("Match found, but missing input in " + app + " for the phrase:" + words, true);
-			wsio.emit("playVoiceCommandFailSound", {message: "please repeat"});
+			wsio.emit("playVoiceCommandFailSound", {message: this.getRandomRejectPhrase()});
 		} else {
 			// begin sending preparation
 			var dataToSend = {
@@ -325,11 +328,11 @@ VoiceActionManager.prototype.secondaryProcessCallToUseInTryCatch = function(wsio
 			if (wordsToPassAsInput !== null) {
 				this.oldLog("--clientInput being given:" + wordsToPassAsInput);
 			}
-			wsio.emit("playVoiceCommandSuccessSound", {message: "By your command"});
+			wsio.emit("playVoiceCommandSuccessSound", {message: this.getRandomConfirmPhrase()});
 		}
 	} else {
 		this.oldLog("No voice matches found in " + app + " for the phrase:" + words, true);
-		wsio.emit("playVoiceCommandFailSound", {message: "please repeat"});
+		wsio.emit("playVoiceCommandFailSound", {message: this.getRandomRejectPhrase()});
 	}
 };
 
@@ -351,6 +354,7 @@ VoiceActionManager.prototype.voicePreCheckForServerCommands = function (wsio, wo
 				"tile context", // speech to text commonly turns content into context
 				"tile everything",
 				"tile wall",
+				"tile window", // no "s" since these words are required, window is in windows
 				"organize"
 			],
 			successPhrase: "Organizing wall content"
@@ -527,6 +531,49 @@ VoiceActionManager.prototype.getWordsAfterInList = function(wordToSearchFor, lis
 		}
 	}
 	return retval;
+};
+
+/**
+ * Fills the phrases.
+ *
+ * @method fillPhraseP
+ * @param {Array} words - Array of transcript words
+ */
+VoiceActionManager.prototype.fillPhrases = function () {
+	this.confirmPhrases = [
+		"Activating", "Affirmative", "Alright", "Beginning", "Can do", "Commencing",
+		"Give me a second", "Great", "Got it", "No problem", "Of course", "Ok", "One moment",
+		"Please wait", "Processing", "Pull that up", "Retrieving", "Roger", "Starting on that", "Sure",
+		"Understood", "Will do", "Working on it", "Yeah, sure", "Yes boss",
+		"You got it", "You're the boss", "Yup"
+	];
+	this.rejectPhrases = [
+		"Huh", "I couldn't process that", "I couldn't hear you",
+		"I didn't catch that", "I didn't follow", "I don't understand what you said",
+		"I'm not sure", "No matching command available",
+		"Please repeat", "Please speak up", "Please try again",
+		"Unsure what was said", "What", "Would you repeat"
+	];
+};
+
+/**
+ * Grabs a random confirm response so the same phrase isn't constantly repeated.
+ *
+ * @method getRandomConfirmPhrase
+ * @param {Array} words - Array of transcript words
+ */
+VoiceActionManager.prototype.getRandomConfirmPhrase = function () {
+	return this.confirmPhrases[parseInt(Math.random() * this.confirmPhrases.length)];
+};
+
+/**
+ * Grabs a random reject response so the same phrase isn't constantly repeated.
+ *
+ * @method getRandomRejectPhrase
+ * @param {Array} words - Array of transcript words
+ */
+VoiceActionManager.prototype.getRandomRejectPhrase = function () {
+	return this.rejectPhrases[parseInt(Math.random() * this.rejectPhrases.length)];
 };
 
 /**
