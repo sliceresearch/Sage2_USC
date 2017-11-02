@@ -74,6 +74,7 @@
 		"rimraf": "latest",
 		"node-pre-gyp": "latest",
 		"electron": "latest",
+		"electron-squirrel-startup": "latest",
 		"systeminformation": "latest"
 	},
 	"optionalDependencies": {
