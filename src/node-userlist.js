@@ -128,19 +128,30 @@ class UserList {
 	* @return {String} name of the user
 	*/
 	track(ip, user) {
-		let role = 'user';
+		this.clients[ip] = {
+			user: user,
+			role: []
+		};
+
+		// assign guest role to non-logged in users
 		if (!user.name && !user.email) {
-			role = 'guest';
+			this.assignRole(ip, 'guest');
 			if (!user.SAGE2_ptrName) {
 				user.SAGE2_ptrName = 'Anon ' + tempNames[nAnonClients];
 				nAnonClients = (nAnonClients + 1) % tempNames.length; // FIXME
 			}
-		}
+		} else {
+			// assign user role to logged in users by default
+			this.assignRole(ip, 'user');
 
-		this.clients[ip] = {
-			user: user,
-			role: [role]
-		};
+			// find if user already has an active client
+			for (let i in this.clients) {
+				if (i !== ip && this.clients[i].user.name === user.name && this.clients[i].user.email === user.email) {
+					this.clients[ip].role = this.clients[i].role;
+				}
+				break;
+			}
+		}
 
 		return user.SAGE2_ptrName;
 	}
@@ -148,7 +159,7 @@ class UserList {
 	/**
 	* Stop tracking this ip
 	*
-	* @method track
+	* @method disconnect
 	* @param ip {String} ip address
 	*/
 	disconnect(ip) {

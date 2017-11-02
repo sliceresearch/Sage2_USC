@@ -1016,6 +1016,7 @@ function setupListeners(wsio) {
 	wsio.on('logoutUser',                           wsLogoutUser);
 	wsio.on('createUser',                           wsCreateUser);
 	wsio.on('editUser',                             wsEditUser);
+	wsio.on('editUserRole',                         wsEditUserRole);
 	wsio.on('editRole',                             wsEditRole);
 
 	wsio.on('startSagePointer',                     wsStartSagePointer);
@@ -1036,6 +1037,7 @@ function setupListeners(wsio) {
 
 	wsio.on('uploadedFile',                         wsUploadedFile);
 
+	wsio.on('requestToStartMediaStream',            wsRequestToStartMediaStream);
 	wsio.on('startNewMediaStream',                  wsStartNewMediaStream);
 	wsio.on('updateMediaStreamFrame',               wsUpdateMediaStreamFrame);
 	wsio.on('updateMediaStreamChunk',               wsUpdateMediaStreamChunk);
@@ -1458,7 +1460,7 @@ function wsSelectionModeOnOff(wsio, data) {
 
 // ************** User functions ****************
 function wsPollActiveClients(wsio, data) {
-	wsio.emit('activeClientsRetrieved', {
+	broadcast('activeClientsRetrieved', {
 		clients: userlist.clients,
 		rbac: userlist.rbac
 	});
@@ -1574,6 +1576,15 @@ function wsEditRole(wsio, data) {
 	}
 }
 
+function wsEditUserRole(wsio, data) {
+	if (data.ips) {
+		data.ips.forEach(ip => {
+			userlist.assignRole(ip, data.role);
+		});
+		wsPollActiveClients();
+	}
+}
+
 
 // **************  Sage Pointer Functions *****************
 
@@ -1622,7 +1633,7 @@ function wsRegisterInteractionClient(wsio, data) {
 
 function wsStartSagePointer(wsio, data) {
 	if (!userlist.isAllowed(wsio.id, 'share pointer')) {
-		wsio.emit('cancelSAGE2Pointer');
+		wsio.emit('cancelAction', 'pointer');
 		return;
 	}
 
@@ -1753,6 +1764,13 @@ function wsRadialMenuClick(wsio, data) {
 }
 
 // **************  Media Stream Functions *****************
+function wsRequestToStartMediaStream(wsio) {
+	if (userlist.isAllowed(wsio.id, 'share screen')) {
+		wsio.emit('allowAction', 'stream');
+	} else {
+		wsio.emit('cancelAction', 'stream');
+	}
+}
 
 function wsStartNewMediaStream(wsio, data) {
 	sageutils.log("Media stream", 'new stream:', data.id);
@@ -1780,6 +1798,7 @@ function wsStartNewMediaStream(wsio, data) {
 					type: appInstance.application
 				}
 			};
+			broadcast('userEvent', {type: 'media stream start', data: data, id: wsio.id });
 			addEventToUserLog(wsio.id, {type: "mediaStreamStart", data: eLogData, time: Date.now()});
 		});
 }
@@ -1888,6 +1907,7 @@ function wsUpdateMediaStreamChunk(wsio, data) {
 
 function wsStopMediaStream(wsio, data) {
 	var stream = SAGE2Items.applications.list[data.id];
+	broadcast('userEvent', {type: 'media stream stop', data: data, id: wsio.id});
 	if (stream !== undefined && stream !== null) {
 		deleteApplication(stream.id);
 
@@ -1897,7 +1917,6 @@ function wsStopMediaStream(wsio, data) {
 				type: stream.application
 			}
 		};
-		broadcast('userEvent', {type: 'media stream stop', data: data});
 		addEventToUserLog(wsio.id, {type: "delete", data: eLogData, time: Date.now()});
 	}
 
@@ -3182,7 +3201,14 @@ function wsRequestStoredFiles(wsio, data) {
 }
 
 function wsLoadApplication(wsio, data) {
+	if (!wsio) {
+		// for handling an application like webview
+		wsio = data.wsio || {
+			emit: function() { }
+		};
+	}
 	if (!userlist.isAllowed(wsio.id, 'use apps')) {
+		wsio.emit('cancelAction', 'application');
 		return;
 	}
 
@@ -3310,6 +3336,11 @@ function wsLoadApplication(wsio, data) {
 }
 
 function wsLoadImageFromBuffer(wsio, data) {
+	if (!userlist.isAllowed(wsio.id, 'upload files')) {
+		wsio.emit('cancelAction', 'file');
+		return;
+	}
+
 	appLoader.loadImageFromDataBuffer(data.src, data.width, data.height,
 		data.mime, "", data.url, data.title, {},
 		function(appInstance) {
@@ -3351,6 +3382,11 @@ function wsLoadImageFromBuffer(wsio, data) {
 }
 
 function wsLoadFileFromServer(wsio, data) {
+	if (!userlist.isAllowed(wsio.id, 'upload files')) {
+		wsio.emit('cancelAction', 'file');
+		return;
+	}
+
 	if (data.application === "load_session") {
 		// if it's a session, then load it
 		loadSession(data.filename);
@@ -3640,6 +3676,18 @@ function wsMoveElementFromStoredFiles(wsio, data) {
 // **************  Adding Web Content (URL) *****************
 
 function wsAddNewWebElement(wsio, data) {
+	if (data.type === "application/url") {
+		if (!userlist.isAllowed(wsio.id, 'use apps')) {
+			wsio.emit('cancelAction', 'application');
+			return;
+		}
+	} else {
+		if (!userlist.isAllowed(wsio.id, 'upload files')) {
+			wsio.emit('cancelAction', 'file');
+			return;
+		}
+	}
+
 	appLoader.loadFileFromWebURL(data, function(appInstance, videohandle) {
 		// Update the file list for the UI clients
 		broadcast('storedFileList', getSavedFilesList());
@@ -3711,6 +3759,7 @@ function wsOpenNewWebpage(wsio, data) {
 
 	wsLoadApplication(null, {
 		application: "/uploads/apps/Webview",
+		wsio: wsio,
 		user: wsio.id,
 		// pass the url in the data object
 		data: data,
@@ -8974,7 +9023,7 @@ function deleteApplication(appId, portalId) {
 		handleStickyItem(null);
 	}
 
-
+	broadcast('userEvent', {type: 'close app', data: app });
 	broadcast('deleteElement', {elemId: appId});
 
 	if (portalId !== undefined && portalId !== null) {

@@ -97,6 +97,49 @@ const SAGE2_interaction = (function() {
 	}
 
 	/**
+	* Handles server notification that action was permitted
+	*
+	* @method allowAction
+	*/
+	function allowAction(action) {
+		switch (action) {
+			case 'stream':
+				this.startScreenShare();
+				break;
+		}
+	}
+
+
+	/**
+	* Handles server notification that action was canceled due to
+	* permissions
+	*
+	* @method cancelAction
+	*/
+	function cancelAction(action) {
+		let actionFound;
+		switch (action) {
+			case 'pointer':
+				this.stopSAGE2Pointer();
+				actionFound = true;
+				break;
+			case 'stream':
+				actionFound = true;
+				break;
+			case 'application':
+				actionFound = true;
+				break;
+			case 'file':
+				actionFound = true;
+				break;
+		}
+
+		if (actionFound) {
+			webix.alert("You don't have permission to do that.");
+		}
+	}
+
+	/**
 	* @method randomHexColor
 	* @return {String} color as a hex string
 	*/
@@ -344,7 +387,9 @@ const SAGE2_interaction = (function() {
 
 			if (mimeType !== "") {
 				this.wsio.emit('addNewWebElement', {
-					type: mimeType, url: url, position: [dropX, dropY],
+					type: mimeType,
+					url: url,
+					position: [dropX, dropY],
 					id: this.uniqueID,
 					SAGE2_ptrName:  localStorage.SAGE2_ptrName,
 					SAGE2_ptrColor: localStorage.SAGE2_ptrColor
@@ -376,14 +421,6 @@ const SAGE2_interaction = (function() {
 				}
 			} else {
 				console.log("No mouse detected - entering touch interface for SAGE2 Pointer");
-				if (mimeType !== "") {
-					this.wsio.emit('addNewWebElement', {
-						type: mimeType, url: url, position: [dropX, dropY],
-						id: this.uniqueID,
-						SAGE2_ptrName:  localStorage.SAGE2_ptrName,
-						SAGE2_ptrColor: localStorage.SAGE2_ptrColor
-					});
-				}
 				this.wsio.emit('startSagePointer', this.user);
 
 				showSAGE2PointerOverlayNoMouse();
@@ -461,6 +498,12 @@ const SAGE2_interaction = (function() {
 				document.removeEventListener('click', pointerClick, false);
 
 				sagePointerEnabled();
+			}
+		};
+
+		this.requestToStartScreenShare = function() {
+			if (!this.broadcasting) {
+				wsio.emit('requestToStartMediaStream');
 			}
 		};
 
@@ -605,7 +648,7 @@ const SAGE2_interaction = (function() {
 			this.broadcasting = false;
 			// cancelAnimationFrame(this.req);
 			cancelIdleCallback(this.req);
-			this.wsio.emit('stopMediaStream', {id: this.uniqueID + "|0"});
+			this.wsio.emit('stopMediaStream', Object.assign({id: this.uniqueID + "|0"}, _userSettings));
 		};
 
 		/**
@@ -658,13 +701,13 @@ const SAGE2_interaction = (function() {
 				var frame = this.captureMediaFrame();
 				this.pix  = frame;
 				var raw   = atob(frame.split(",")[1]); // base64 to string
-				this.wsio.emit('startNewMediaStream', {
+				this.wsio.emit('startNewMediaStream', Object.assign({
 					id: this.uniqueID + "|0",
 					title: _userSettings.SAGE2_ptrName + ": Shared Screen",
 					color: _userSettings.SAGE2_ptrColor,
 					src: raw, type: "image/jpeg", encoding: "binary",
 					width: mediaVideo.videoWidth, height: mediaVideo.videoHeight
-				});
+				}, _userSettings));
 
 				this.broadcasting = true;
 
@@ -1446,7 +1489,8 @@ const SAGE2_interaction = (function() {
 		});
 
 		this.wsio.on('loginStateChanged', handleLoginStateChange.bind(this));
-		this.wsio.on('cancelSAGE2Pointer', this.stopSAGE2Pointer.bind(this));
+		this.wsio.on('allowAction', allowAction.bind(this));
+		this.wsio.on('cancelAction', cancelAction.bind(this));
 
 		document.addEventListener('pointerlockerror',        this.pointerLockError,  false);
 		document.addEventListener('mozpointerlockerror',     this.pointerLockError,  false);

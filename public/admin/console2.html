@@ -178,7 +178,6 @@
 
 	// open socket
 	wsio.open(function() {
-		document.getElementById('log').innerHTML = 'Listening...';
 		wsio.emit('addClient', {
 			session: session,
 			requests: {
@@ -190,6 +189,7 @@
 		});
 
 		wsio.on('initialize', function() {
+			document.getElementById('log').innerHTML = 'Listening...';
 			wsio.emit('pollActiveClients');
 		});
 
@@ -281,12 +281,45 @@
 			let role = clients[ip].role.join(', ');
 
 			let tr = document.createElement('tr');
-			tr.innerHTML = '<th><span class="cursor" style="background-color:' + color + '"></span></th>';
+			tr.innerHTML = '<td><span class="cursor" style="background-color:' + color + '"></span></td>';
 
-			[label, name, role, ip].forEach(string => {
-				let th = document.createElement('th');
-				th.appendChild(document.createTextNode(string));
-				tr.appendChild(th);
+			[label, name, role, ip].forEach((string, i) => {
+				let td = document.createElement('td');
+
+				if (i !== 2 || role === "guest") {
+					td.appendChild(document.createTextNode(string));
+				} else {
+					// create dropdown field
+					let select = document.createElement('select');
+					let roles = rbac.roles.filter(r => r !== "guest");
+					roles.forEach(role => {
+						let option = document.createElement('option');
+						addText(option, role);
+						if (role === string) {
+							option.selected = true;
+						}
+						select.appendChild(option);
+					});
+					td.appendChild(select);
+
+					// attach listener to select input
+					select.onchange = function() {
+						let selectedRole = roles[this.selectedIndex];
+						let selectedUser = clients[ip];
+						if (selectedRole && selectedUser) {
+
+							// find all ips with the same user
+							let ips = Object.keys(clients).filter(ip => clients[ip].name === selectedUser.name && clients[ip].email === selectedUser.email);
+
+							wsio.emit('editUserRole', {
+								ips: ips,
+								role: selectedRole
+							});
+						}
+					};
+				}
+
+				tr.appendChild(td);
 			});
 
 			container.appendChild(tr);
@@ -346,11 +379,19 @@
 		let log = document.getElementById('log');
 
 		let p = document.createElement('p');
-		p.innerHTML = new Date() + '<br><b>' + event.type + '</b>';
+		p.innerHTML = new Date() + '<br>';
+		let b = addText(document.createElement('b'), event.type);
+		p.appendChild(b);
 
 		if (event.data) {
-			if (event.data.filename) {
-				p.innerHTML += event.data.filename + ' - ';
+			let appname = event.data.filename || event.data.application;
+
+			if (appname) {
+				if (appname.indexOf('/') > -1) {
+					addText(b, ' ' + appname.slice(appname.lastIndexOf('/') + 1));
+				} else {
+					addText(b, ' ' + appname);
+				}
 			}
 
 			let name = event.data.label || event.data.SAGE2_ptrName;

@@ -1259,7 +1259,7 @@ function handleClick(element) {
 	if (element.id === "sage2pointer"        || element.id === "sage2pointerContainer" || element.id === "sage2pointerLabel") {
 		interactor.startSAGE2Pointer(element.id);
 	} else if (element.id === "sharescreen"  || element.id === "sharescreenContainer"  || element.id === "sharescreenLabel") {
-		interactor.startScreenShare();
+		interactor.requestToStartScreenShare();
 	} else if (element.id === "applauncher"  || element.id === "applauncherContainer"  || element.id === "applauncherLabel") {
 		wsio.emit('requestAvailableApplications');
 	} else if (element.id === "mediabrowser" || element.id === "mediabrowserContainer" || element.id === "mediabrowserLabel") {
@@ -2660,6 +2660,7 @@ function setAppContextMenuEntries(data) {
 			if (entriesToAdd[i].accelerator) {
 				// Add description of the keyboard shortcut
 				// workingDiv.innerHTML += "<p style='float: right; padding-left: 5px;'> [" + entriesToAdd[i].accelerator + "]</p>";
+				workingDiv.innerHTML = entriesToAdd[i].description;
 				workingDiv.innerHTML += "<p style='float: right; padding-left: 5px;'>" + entriesToAdd[i].accelerator + "</p>";
 				workingDiv.innerHTML += "<div style='clear: both;'></div>";
 			} else {
