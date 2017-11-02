@@ -1748,7 +1748,8 @@ function wsUpdateMediaStreamChunk(wsio, data) {
 		wsUpdateMediaStreamFrame(wsio, {id: data.id, state: {
 			src: SAGE2Items.renderSync[data.id].chunks.join(""),
 			type: data.state.type,
-			encoding: data.state.encoding}});
+			encoding: data.state.encoding,
+			pointersOverApp: []}});
 		SAGE2Items.renderSync[data.id].chunks = [];
 	}
 }
@@ -1979,6 +1980,10 @@ function wsUpdateAppState(wsio, data) {
 	if (wsio === masterDisplay && SAGE2Items.applications.list.hasOwnProperty(data.id)) {
 		var app = SAGE2Items.applications.list[data.id];
 
+		if (!app.data.pointersOverApp) {
+			// console.log("erase me, something removed the pointersOverApp property. Readding...");
+			// app.data.pointersOverApp = [];
+		}
 		sageutils.mergeObjects(data.localState, app.data, ['doc_url', 'video_url', 'video_type', 'audio_url', 'audio_type']);
 
 		if (data.updateRemote === true) {

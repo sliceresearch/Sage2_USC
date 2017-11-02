@@ -335,7 +335,7 @@ var SAGE2_App = Class.extend({
 			if (isMaster && eventType === "pointerMove" && this.isSharedWithRemoteSite()) {
 				// if app is shared, then track pointer
 				SAGE2RemoteSitePointer.trackPointer(this, user_id, position);
-			} else if (isMaster  && SAGE2RemoteSitePointer.shouldPassEvents && this.isSharedWithRemoteSite()) {
+			} else if (isMaster && SAGE2RemoteSitePointer.shouldPassEvents && this.isSharedWithRemoteSite()) {
 				// for events beyond pointerMove
 				SAGE2RemoteSitePointer.trackEvent(this, {
 					eventType: eventType,
