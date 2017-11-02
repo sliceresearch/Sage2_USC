@@ -708,7 +708,7 @@ var variablesUsedInVoiceHandler = {
 	wsCallFunctionOnApp,
 	wsLaunchAppWithValues,
 	wsLoadFileFromServer,
-	wsSaveSesion,
+	wsSaveSession,
 	tileApplications,
 	clearDisplay,
 	broadcast,
@@ -1056,7 +1056,7 @@ function setupListeners(wsio) {
 	wsio.on('loadImageFromBuffer',                  wsLoadImageFromBuffer);
 	wsio.on('deleteElementFromStoredFiles',         wsDeleteElementFromStoredFiles);
 	wsio.on('moveElementFromStoredFiles',           wsMoveElementFromStoredFiles);
-	wsio.on('saveSesion',                           wsSaveSesion);
+	wsio.on('saveSession',                           wsSaveSession);
 	wsio.on('clearDisplay',                         wsClearDisplay);
 	wsio.on('deleteAllApplications',                wsDeleteAllApplications);
 	wsio.on('tileApplications',                     wsTileApplications);
@@ -2213,7 +2213,7 @@ function wsApplicationRPC(wsio, data) {
 
 // **************  Session Functions *****************
 
-function wsSaveSesion(wsio, data) {
+function wsSaveSession(wsio, data) {
 	var sname = "";
 	if (data) {
 		// If a name is passed, use it
