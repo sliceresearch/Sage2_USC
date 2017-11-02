@@ -1635,7 +1635,7 @@ function FileManager(wsio, mydiv, uniqueID) {
 						}},
 						{view: "button", value: "Save", type: "form", click: function() {
 							var values = this.getFormView().getValues();
-							wsio.emit('saveSesion', values.session);
+							wsio.emit('saveSession', values.session);
 							this.getTopParentView().hide();
 						}}
 					]}
@@ -1656,7 +1656,7 @@ function FileManager(wsio, mydiv, uniqueID) {
 			// ENTER activates
 			if (code === 13 && !e.ctrlKey && !e.shiftKey && !e.altKey) {
 				var values = this.getFormView().getValues();
-				wsio.emit('saveSesion', values.session);
+				wsio.emit('saveSession', values.session);
 				this.getTopParentView().hide();
 				return false;
 			}
