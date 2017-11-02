@@ -360,7 +360,7 @@ VoiceActionManager.prototype.voicePreCheckForServerCommands = function (wsio, wo
 			successPhrase: "Organizing wall content"
 		},
 		clearAllContent: {
-			successFunction: this.s2.clearDisplay,
+			successFunction: this.voiceHandlerForClearDisplay,
 			phraseRequirements: [
 				"close everything",
 				"clear everything",
@@ -369,6 +369,14 @@ VoiceActionManager.prototype.voicePreCheckForServerCommands = function (wsio, wo
 				"toss it all"
 			],
 			successPhrase: "Closing all open applications"
+		},
+		viewRestore: {
+			successFunction: this.voiceHandlerForViewRestore,
+			phraseRequirements: [
+				"restore view",
+				"bring back everything"
+			],
+			successPhrase: "Restoring the view"
 		},
 		launchApplication: {
 			successFunction: this.voiceHandlerForApplicationLaunch,
@@ -393,8 +401,7 @@ VoiceActionManager.prototype.voicePreCheckForServerCommands = function (wsio, wo
 			successFunction: this.voiceHandlerForSessionRestore,
 			phraseRequirements: [
 				"restore session",
-				"load session",
-				"bring back"
+				"load session"
 			],
 			successPhrase: "Restoring session"
 		},
@@ -574,6 +581,34 @@ VoiceActionManager.prototype.getRandomConfirmPhrase = function () {
  */
 VoiceActionManager.prototype.getRandomRejectPhrase = function () {
 	return this.rejectPhrases[parseInt(Math.random() * this.rejectPhrases.length)];
+};
+
+/**
+ * Don't just clear the display, first save the session because it might include things wanted.
+ *
+ * @method voiceHandlerForClearDisplay
+ * @param {Array} words - transcript as array of words
+ */
+VoiceActionManager.prototype.voiceHandlerForClearDisplay = function(wsio, words) {
+	// First save the session, use the default
+	this.s2.wsSaveSession(wsio, "default.json");
+	// Then clear the display.
+	this.s2.clearDisplay();
+};
+
+/**
+ * Loads the default session, which is probably result of accidentially closing everything.
+ *
+ * @method voiceHandlerForViewRestore
+ * @param {Array} words - transcript as array of words
+ */
+VoiceActionManager.prototype.voiceHandlerForViewRestore = function(wsio, words) {
+	// First save the session, use the default
+	this.s2.wsLoadFileFromServer(wsio, {
+		application: 'load_session',
+		filename: "default.json",
+		user: wsio.id
+	});
 };
 
 /**
@@ -918,7 +953,7 @@ VoiceActionManager.prototype.voiceHandlerForSessionSave = function(wsio, words) 
 	}
 	// save the session with the given name
 	this.oldLog("Saving session, filename:" + wordsDescribing.join(" "));
-	this.s2.wsSaveSesion(wsio, wordsDescribing.join(" "));
+	this.s2.wsSaveSession(wsio, wordsDescribing.join(" "));
 	return wordsDescribing.join(" ");
 };
 
@@ -950,14 +985,14 @@ VoiceActionManager.prototype.voiceHandlerForWebSearch = function(wsio, words) {
 	var foundSearch = false;
 	for (let i = 0; i < words.length; i++) {
 		if (words[i].includes("image")) {
-			// engine should be before image
-			if ((foundEngine !== false) && (foundEngine === (i - 1))) {
+			if ((foundFor ==  false)
+				&& ((foundEngine == false) || (foundSearch == false))) {
+				// only image search if "for" has not been found and both engine and search was not found
+				// if for has been found, this isn't an image search
+				// if engine and search was found, this isn't an image search
 				imageSearching = true;
-			} else {
-				// finding "image" before engine means use the engine's image search
-				imageSearching = true;
+				foundImage = i;
 			}
-			foundImage = i;
 		} else if (words[i].includes(searchEngine)) {
 			// want index of the word
 			foundEngine = i;
@@ -977,11 +1012,12 @@ VoiceActionManager.prototype.voiceHandlerForWebSearch = function(wsio, words) {
 
 	// determine which word of the keywords marks the start of the search terms.
 	if (foundFor !== false) {
+		// if "for" was in the phrase, will take everything after "for"
 		searchTermStartIndex = foundFor;
-	} else if (foundImage !== false) {
-		// if found "image"
-		// need to know if search was after, or image
+	} else if ((foundImage !== false) && (imageSearching)) {
+		// if found "image" need to know if "search" was earlier
 		if (foundImage > foundSearch) {
+			// if index of image was after search
 			searchTermStartIndex = foundImage;
 		} else if (foundSearch > foundEngine) {
 			searchTermStartIndex = foundSearch;
@@ -989,7 +1025,7 @@ VoiceActionManager.prototype.voiceHandlerForWebSearch = function(wsio, words) {
 			searchTermStartIndex = foundEngine;
 		}
 	} else {
-		// else it was after engine or search
+		// else words following engine or "search"
 		if (foundEngine > foundSearch) {
 			searchTermStartIndex = foundEngine;
 		} else {

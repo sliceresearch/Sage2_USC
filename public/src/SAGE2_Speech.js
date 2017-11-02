@@ -32,6 +32,7 @@ SAGE2_speech.mouseHoldActivated  = false;
 SAGE2_speech.mouseHoldStartPos   = {x: -100, y: -100};
 SAGE2_speech.mouseHoldMoveLimit  = {x: 10, y: 10};
 SAGE2_speech.mouseIsDown         = false;
+SAGE2_speech.mouseUpCancel       = false;
 // listening variables
 SAGE2_speech.showListening      = false;
 SAGE2_speech.listentingInfo     = null;
@@ -89,6 +90,7 @@ SAGE2_speech.init = function() {
 			SAGE2_speech.firstNameMention = false;
 			SAGE2_speech.listentingInfo.imageDetectedInterim = false;
 			SAGE2_speech.listentingInfo.imageCycleFrame = 0;
+			SAGE2_speech.mouseUpCancel = false;
 			// start blank
 			document.getElementById(SAGE2_speech.listentingInfo.transcriptId).textContent = "";
 			// start blank
@@ -102,6 +104,9 @@ SAGE2_speech.init = function() {
 			this.interim_transcript = " ";
 			for (var i = event.resultIndex; i < event.results.length; ++i) {
 				if (event.results[i].isFinal) {
+					if (SAGE2_speech.mouseUpCancel) {
+						return;
+					}
 					this.final_transcript = event.results[i][0].transcript;
 					if (SAGE2_speech.mouseHoldActivated
 						&& !this.final_transcript.toLowerCase().includes(SAGE2_speech.nameMarker)) {
@@ -110,16 +115,6 @@ SAGE2_speech.init = function() {
 					console.log("SpeechRecognition> final_transcript(",
 						event.results[i][0].confidence, "%):" + this.final_transcript);
 
-					setTimeout(function() {
-						SAGE2_speech.webkitSR.stop();
-						// if mouse is held down, restart for continuous commands
-						if (SAGE2_speech.mouseIsDown) {
-							setTimeout(function() {
-								SAGE2_speech.mouseHoldActivated = true;
-								SAGE2_speech.webkitSR.start();
-							}, 100);
-						}
-					}, 10);
 					// remove the checker for stuck transcript
 					if (SAGE2_speech.interimId) {
 						window.clearTimeout(SAGE2_speech.interimId);
@@ -145,8 +140,10 @@ SAGE2_speech.init = function() {
 					// put transcript in visual
 					let tdiv  = document.getElementById(SAGE2_speech.listentingInfo.transcriptId);
 					tdiv.textContent = this.interim_transcript;
-					tdiv.style.width = (tdiv.textContent.length
-						* SAGE2_speech.listentingInfo.transcriptCharacterPadding) + "px";
+					// calculate how wide to make it
+					let tmeasureDiv  = document.getElementById(SAGE2_speech.listentingInfo.tMeasureId);
+					tmeasureDiv.textContent = this.interim_transcript;
+					tdiv.style.width = tmeasureDiv.clientWidth + "px";
 					// make the element visibe on screen
 					tdiv.style.visibility = "visible";
 					SAGE2_speech.listentingInfo.imageDetectedInterim = true;
@@ -358,11 +355,14 @@ SAGE2_speech.initMouseholdToStart = function() {
 				window.clearTimeout(SAGE2_speech.mouseHoldTimeoutId);
 				SAGE2_speech.mouseHoldTimeoutId = null;
 			}
+			SAGE2_speech.mouseIsDown = true;
 			// after timeout attempt speech recognition if valid
 			SAGE2_speech.mouseHoldTimeoutId = setTimeout(function() {
-				SAGE2_speech.mouseHoldTimeoutId = null;
-				SAGE2_speech.enableMouseholdToStart(e);
-				SAGE2_speech.mouseIsDown = true;
+				// mouseup will set SAGE2_speech.mouseIsDown to false
+				if (SAGE2_speech.mouseIsDown) {
+					SAGE2_speech.mouseHoldTimeoutId = null;
+					SAGE2_speech.enableMouseholdToStart(e);
+				}
 			}, SAGE2_speech.mouseHoldTimeNeeded);
 		}
 	});
@@ -373,6 +373,7 @@ SAGE2_speech.initMouseholdToStart = function() {
 			window.clearTimeout(SAGE2_speech.mouseHoldTimeoutId);
 			SAGE2_speech.mouseHoldTimeoutId = null;
 		}
+		SAGE2_speech.mouseUpCancel = true;
 		SAGE2_speech.webkitSR.stop();
 	});
 };
@@ -428,6 +429,7 @@ SAGE2_speech.listeningVisualInit = function () {
 		imageCycleFrame: 0,
 		imageDetectedInterim: false,
 		transcriptId: "listeningTranscriptDiv",
+		tMeasureId: "measurementForTranscriptDiv",
 		transcriptCharacterPadding: 7
 	};
 
@@ -459,6 +461,17 @@ SAGE2_speech.listeningVisualInit = function () {
 	transcriptDiv.style.width = (transcriptDiv.textContent.length
 		* SAGE2_speech.listentingInfo.transcriptCharacterPadding) + "px";
 	d.appendChild(transcriptDiv);
+
+	// create measurement div
+	var transcriptMeasuringDiv = document.createElement("div");
+	transcriptMeasuringDiv.id = SAGE2_speech.listentingInfo.tMeasureId;
+	transcriptMeasuringDiv.style.paddingLeft = "25px";
+	transcriptMeasuringDiv.style.paddingTop = "5px";
+	transcriptMeasuringDiv.style.position = "absolute";
+	transcriptMeasuringDiv.style.float = "left";
+	transcriptMeasuringDiv.style.whiteSpace = "nowrap";
+	transcriptMeasuringDiv.style.visibility = "hidden";
+	d.appendChild(transcriptMeasuringDiv);
 
 	// images
 	// currently 4 frames 0,1,2,3
@@ -584,7 +597,7 @@ SAGE2_speech.speechSynthesisInit = function() {
 				} else if (SAGE2_speech.voices[i].name === "Kyoko") {
 					kyoko.found = true;
 					kyoko.index = i;
-				} 
+				}
 			}
 		} else {
 			console.log("SpeechRecognition> Speech synthesis voices not available");
@@ -617,6 +630,9 @@ SAGE2_speech.textToSpeech = function (whatToSay) {
 		console.log("SpeechRecognition> Speech:", whatToSay);
 		SAGE2_speech.ttsConverter.text = whatToSay;
 		window.speechSynthesis.speak(SAGE2_speech.ttsConverter);
+		setTimeout(function() {
+			SAGE2_speech.restartIfMouseStillDownAndNotTalking();
+		}, 100);
 	} catch (e) {
 		console.log("SpeechRecognition> Error with textToSpeech");
 	}
@@ -651,4 +667,24 @@ SAGE2_speech.setNameMarker = function (nameMarkerFromServer) {
 	// console.log("Voice marker:'" + nameMarkerFromServer + "'");
 	SAGE2_speech.nameMarker = nameMarkerFromServer.toLowerCase(); // server should give a space
 	SAGE2_speech.init();
+};
+
+/**
+ * Restarts the voice recognition if mouse is held down, after response speech is done.
+ *
+ * @method restartIfMouseStillDownAndNotTalking
+ */
+SAGE2_speech.restartIfMouseStillDownAndNotTalking = function () {
+	// if computer response is still going and user mouse still down, delay check
+	if (window.speechSynthesis.speaking && SAGE2_speech.mouseIsDown) {
+		setTimeout(function() {
+			SAGE2_speech.restartIfMouseStillDownAndNotTalking();
+		}, 100);
+	} else if (SAGE2_speech.mouseIsDown) {
+		// if not speaking and mouse is still down, restart
+		setTimeout(function() {
+			SAGE2_speech.mouseHoldActivated = true;
+			SAGE2_speech.webkitSR.start();
+		}, 100);
+	}
 };
