@@ -590,23 +590,24 @@ VoiceActionManager.prototype.getRandomRejectPhrase = function () {
  * @param {Array} words - transcript as array of words
  */
 VoiceActionManager.prototype.voiceHandlerForClearDisplay = function(wsio, words) {
-	// First save the session, use the default
-	this.s2.wsSaveSession(wsio, "default.json");
+	// First save the session, use autosave name,
+	// default one might be overwritten on save
+	this.s2.wsSaveSession(wsio, "autosave.json");
 	// Then clear the display.
 	this.s2.clearDisplay();
 };
 
 /**
- * Loads the default session, which is probably result of accidentially closing everything.
+ * Loads the saved session, which is probably result of accidentially closing everything.
  *
  * @method voiceHandlerForViewRestore
  * @param {Array} words - transcript as array of words
  */
 VoiceActionManager.prototype.voiceHandlerForViewRestore = function(wsio, words) {
-	// First save the session, use the default
+	// Request the session 'autosave' from a previous clear command
 	this.s2.wsLoadFileFromServer(wsio, {
 		application: 'load_session',
-		filename: "default.json",
+		filename: "autosave.json",
 		user: wsio.id
 	});
 };
