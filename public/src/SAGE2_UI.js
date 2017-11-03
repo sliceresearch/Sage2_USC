@@ -2721,7 +2721,6 @@ function addMenuEntry(menuDiv, entry, id, app) {
 		}
 		// special case to use color/range input type
 		if (entry.inputType) {
-
 			if (entry.inputType === "color") {
 				// inputField.type = "color";
 				inputField.size = 7;
@@ -2809,7 +2808,7 @@ function addMenuEntry(menuDiv, entry, id, app) {
 				workingDiv.appendChild(colorPalette);
 
 			} else if (entry.inputType === "range") {
-				inputField.type = "range";
+				// inputField.type = "range";
 				inputField.classList.add("rmbRangeInput");
 
 				// default range is 100
@@ -2821,23 +2820,164 @@ function addMenuEntry(menuDiv, entry, id, app) {
 				workingDiv.style.paddingTop = "2px";
 				workingDiv.style.paddingBottom = "2px";
 
-				let valLabel = document.createElement("label");
-				valLabel.innerHTML = inputField.defaultValue;
-				valLabel.id = workingDiv.id + "Label";
-				valLabel.style.marginRight = "5px";
-				valLabel.style.textAlign = "right";
-				valLabel.style.width = "25px";
-				valLabel.style.display = "inline-block";
-				workingDiv.appendChild(valLabel);
+				// left arrow
+				let reduce = document.createElement("span");
+				reduce.id = workingDiv.id + "reduceArrow";
+				reduce.classList.add("rmbRangeInputArrow");
+				reduce.innerHTML = "&#x2BC7";
 
+				// right arrow
+				let increase = document.createElement("span");
+				increase.id = workingDiv.id + "increaseArrow";
+				increase.classList.add("rmbRangeInputArrow");
+				increase.innerHTML = "&#x2BC8";
+
+				// div containing whole slider
+				let sliderWrapper = document.createElement("div");
+				sliderWrapper.id = workingDiv.id + "rangeWrapper";
+				sliderWrapper.classList.add("rmbRangeInputSliderWrapper");
+
+				// horizontal slider "track"
+				let sliderBar = document.createElement("div");
+				sliderBar.id = workingDiv.id + "rangeBar";
+				sliderBar.classList.add("rmbRangeInputSliderBar");
+
+				// drag handle to move the slider
+				let sliderHandle = document.createElement("div");
+				sliderHandle.id = workingDiv.id + "rangeHandle";
+				sliderHandle.classList.add("rmbRangeInputSliderHandle");
+				sliderHandle.style.left = valueToPixel(entry.value);
+
+				sliderWrapper.appendChild(sliderBar);
+				sliderWrapper.appendChild(sliderHandle);
+
+				workingDiv.appendChild(reduce);
+				workingDiv.appendChild(sliderWrapper);
+				workingDiv.appendChild(increase);
+
+				// text input handler
 				pendingListeners.push({
 					id: inputField.id,
 					event: "input",
 					func: function () {
-						document.getElementById(valLabel.id).innerHTML = this.value;
+						valueChanged();
 					}
 				});
 
+				// left "reduce" arrow handler
+				pendingListeners.push({
+					id: reduce.id,
+					event: "click",
+					func: function () {
+						let input = document.getElementById(inputField.id);
+						input.value = +input.value - 1;
+						if (input.value < range[0]) {
+							input.value = range[0];
+						}
+						valueChanged();
+					}
+				});
+
+				// right "increase" arrow handler
+				pendingListeners.push({
+					id: increase.id,
+					event: "click",
+					func: function () {
+						let input = document.getElementById(inputField.id);
+						input.value = +input.value + 1;
+						if (input.value > range[1]) {
+							input.value = range[1];
+						}
+
+						valueChanged();
+					}
+				});
+
+				// slider "drag" start listener
+				pendingListeners.push({
+					id: sliderHandle.id,
+					event: "mousedown",
+					func: function(e) {
+						let handle = document.getElementById(sliderHandle.id);
+
+						handle.slidestart = e.clientX;
+						handle.offsetstart = parseInt(handle.style.left);
+						handle.sliding = true;
+					}
+				});
+
+				// slider "drag" move listener
+				pendingListeners.push({
+					id: sliderWrapper.id,
+					event: "mousemove",
+					func: function (e) {
+						let handle = document.getElementById(sliderHandle.id);
+
+						if (handle.sliding && handle.slidestart) {
+							let newLeft = handle.offsetstart + e.clientX - handle.slidestart;
+							if (newLeft <= 100 && newLeft >= 0) {
+								handle.style.left = newLeft + "px";
+								document.getElementById(inputField.id).value = pixelToValue(newLeft);
+							} else {
+								handle.slidestart = null;
+								handle.offsetstart = null;
+								handle.sliding = null;
+							}
+						}
+					}
+				});
+
+				// slider release AND track click listener (to click to another value on range)
+				pendingListeners.push({
+					id: sliderWrapper.id,
+					event: "click",
+					func: function (e) {
+						let handle = document.getElementById(sliderHandle.id);
+
+						if (handle.sliding) {
+							handle.slidestart = null;
+							handle.offsetstart = null;
+							handle.sliding = null;
+						} else {
+							let newLeft = e.offsetX;
+							if (newLeft <= 100 && newLeft >= 0) {
+								handle.style.left = newLeft + "px";
+								document.getElementById(inputField.id).value = pixelToValue(newLeft);
+							}
+						}
+					}
+				});
+
+				// extra listener to cancel drag if the mouse leaves the slider wrapper
+				pendingListeners.push({
+					id: sliderWrapper.id,
+					event: "mouseleave",
+					func: function (e) {
+						document.getElementById(sliderHandle.id).slidestart = null;
+						document.getElementById(sliderHandle.id).sliding = null;
+					}
+				});
+
+				// value changed using arrow buttons or input field moves the slider handle
+				let valueChanged = function() {
+					let value = document.getElementById(inputField.id).value;
+
+					if (parseFloat(value)) {
+						document.getElementById(sliderHandle.id).style.left = valueToPixel(parseFloat(value));
+					}
+				};
+
+				// utility functions mapping 0-100 pixels to the range provided
+				let valueToPixel = function(val) {
+					if (!isNaN(parseFloat(val))) {
+						return ((val - range[0]) / range[1] - range[0]) * 100 + "px";
+					}
+					return "0px";
+				};
+
+				let pixelToValue = function(pix) {
+					return ((pix / 100 * (range[1] - range[0])) + range[0]).toFixed(0);
+				};
 			}
 
 			if (entry.inputUpdateOnChange) {
