@@ -374,6 +374,7 @@ VoiceActionManager.prototype.voicePreCheckForServerCommands = function (wsio, wo
 			successFunction: this.voiceHandlerForViewRestore,
 			phraseRequirements: [
 				"restore view",
+				"bring it back",
 				"bring back everything"
 			],
 			successPhrase: "Restoring the view"
