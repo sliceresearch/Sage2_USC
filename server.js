@@ -1171,10 +1171,11 @@ function setupListeners(wsio) {
 	wsio.on('serverDataSubscribeToValue',			wsServerDataSubscribeToValue);
 	wsio.on('serverDataGetAllTrackedValues',		wsServerDataGetAllTrackedValues);
 	wsio.on('serverDataGetAllTrackedDescriptions',	wsServerDataGetAllTrackedDescriptions);
-	wsio.on('serverDataSubscribeToNewValueNotification',	wsServerDataSubscribeToNewValueNotification);
+	wsio.on('serverDataSubscribeToNewValueNotification',
+		wsServerDataSubscribeToNewValueNotification);
 
 	// voice to sage2 actions
-	wsio.on('voiceToAction',                      wsVoiceToAction);
+	wsio.on('voiceToAction',                        wsVoiceToAction);
 
 	// Screenshot messages
 	wsio.on('startWallScreenshot',                  wsStartWallScreenshot);
