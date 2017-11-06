@@ -158,7 +158,8 @@ function setupLineChart(id, titleText, lineFuncY, yAxisFormat, currentTextFunc, 
 			.tickSizeInner(5)
 			.tickSizeOuter(0)
 			.tickPadding(5)
-			.ticks(d3.timeMinute.every(1));
+			.ticks(d3.timeMinute.every(1))
+			.tickFormat(d3.timeFormat("%_I:%M"));
 
 		var xAxis =  chart.svg.append("g")
 			.attr("class", "x axis")
