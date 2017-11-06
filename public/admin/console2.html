@@ -164,6 +164,7 @@
 	let clients = {};
 	let rbac = {};
 	let nli = 0;
+	let socketOpen = false;
 	let wsio = new WebsocketIO();
 	let session = getCookie("session");
 
@@ -215,6 +216,7 @@
 
 	// Socket close event (ie server crashed)
 	wsio.on('close', function() {
+		socketOpen = false;
 		var refresh = setInterval(function() {
 			// make a dummy request to test the server every 2 sec
 			var xhr = new XMLHttpRequest();
@@ -239,7 +241,11 @@
 		rbac = data.rbac;
 
 		redrawUsers();
-		redrawPermissions();
+
+		if (!socketOpen) {
+			socketOpen = true;
+			redrawPermissions();
+		}
 	}
 
 	function handleUserEvent(data) {

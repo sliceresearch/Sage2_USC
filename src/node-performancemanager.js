@@ -22,53 +22,82 @@ var sprint  = require('sprint');
 // SAGE2 module: for log function
 var sageutils = require('../src/node-utils');
 
+var os = require('os');
+
 /**
   * @class PerformanceManager
   * @constructor
   */
 
 function PerformanceManager() {
+	// Flags
+
+	this.collectAppSpecificTraffic = false;
 	// Temporary placeholder that collects network data between calls to collectMetrics
 	this.trafficData = {
 		date: Date.now(),
 		totalOutBound: 0,
 		totalInBound: 0
 	};
+	this.previousBytesRead = {};
+	this.previousBytesWritten = {};
 
 	// One object that holds all performance related information
 	this.performanceMetrics = {
 		staticInformation: null,
 		cpuLoad: null,
-		serverProcessLoad: null,
+		serverLoad: null,
+		serverTraffic: null,
 		network: null,
 		memUsage: null,
+		displayPerf: null,
 		movingAvg1Minute: {
 			cpuLoad: null,
 			cpuCoresLoad: null,
-			serverProcessLoad: null,
+			serverLoad: null,
+			serverTraffic: null,
 			network: null,
 			memUsage: null
 		},
 		movingAvgEntireDuration: {
 			cpuLoad: null,
-			serverProcessLoad: null,
+			serverLoad: null,
+			serverTraffic: null,
 			network: null,
 			memUsage: null
 		},
 		// Historical data for establishing time line
 		history: {
 			cpuLoad: [],
-			serverProcessLoad: [],
+			serverLoad: [],
+			serverTraffic: [],
 			network: [],
-			memUsage: []
+			memUsage: [],
+			displayPerf: []
 		}
 	};
 
+	this.clients = {
+		hardware: [],
+		performanceMetrics: [],
+		history: []
+	};
+	this.clientPerformceMetrics = {
+		clientID: null,
+		cpuLoad: null,
+		memUsage: null,
+		clientLoad: null
+	};
 	// Array to store display client data
 	this.clientsInformation = [];
 
+	// Array to keep track of wall widgets showing perf data
+	this.activeWidgets = [];
 	// Get the basic information of the system
 	sysInfo.getStaticData(function(data) {
+		data.hostname = os.hostname();
+		data.servername = this.config.name || "";
+		data.serverhost = this.config.host;
 		this.performanceMetrics.staticInformation = data;
 		// fix on some system with no memory layout
 		if (data.memLayout.length === 0) {
@@ -89,6 +118,14 @@ function PerformanceManager() {
 		this.samplingInterval * 1000);
 }
 
+
+
+PerformanceManager.prototype.initializeConfiguration = function(cfg) {
+	this.config = cfg;
+};
+
+
+
 /**
  * Adds data for a display client.
  *
@@ -96,16 +133,36 @@ function PerformanceManager() {
  * @param      {<type>}  idx     The client ID
  * @param      {<type>}  data    The data
  */
-PerformanceManager.prototype.addDisplayClient = function(idx, data) {
+PerformanceManager.prototype.addDisplayClient = function(id, idx, data) {
 	// the clientID to the data
+
+	data.id = id;
 	data.clientID = idx;
 	// store the info into the array
-	this.clientsInformation.push(data);
+	if (this.clients.hardware.find(function(d) {
+		return d.clientID === idx && d.id === id;
+	}) === undefined) {
+		this.clients.hardware.push(data);
+		// send the displays specifics
+		module.parent.exports.broadcast('displayHardwareInformation',
+			this.clients.hardware
+		);
+	}
+};
 
-	// send the displays specifics
-	module.parent.exports.broadcast('displayHardwareInformation',
-		this.clientsInformation
-	);
+/**
+ * Removes data of a closed display client.
+ *
+ * @method     removeDisplayClient
+ * @param      {<type>}  idx     The client ID
+ */
+PerformanceManager.prototype.removeDisplayClient = function(id) {
+	if (removeObjectsFromArrayOnPropertyValue(this.clients.hardware, "id", id) === true) {
+		module.parent.exports.broadcast('displayHardwareInformation',
+			this.clients.hardware
+		);
+	}
+	removeObjectsFromArrayOnPropertyValue(this.clients.performanceMetrics, "id", id, 'eq');
 };
 
 /**
@@ -121,9 +178,15 @@ PerformanceManager.prototype.updateClient = function(wsio) {
 	);
 	// send the displays specifics
 	wsio.emit('displayHardwareInformation',
-		this.clientsInformation
+		this.clients.hardware
+	);
+
+	// Send the historic data to show trend up to this point
+	wsio.emit('performanceData',
+		this.performanceMetrics.history
 	);
 };
+
 
 /**
   * Sets sampling interval to 1, 2 or 5 seconds and restarts the sampling loop
@@ -155,24 +218,6 @@ PerformanceManager.prototype.setSamplingInterval = function(interval) {
 };
 
 /**
-  * Retrieves the network traffic data and resets the place holder
-  *
-  * @method getTrafficData
-  */
-PerformanceManager.prototype.getTrafficData = function() {
-	var temp = this.trafficData;
-	// reset the data structure
-	this.trafficData = {
-		date: Date.now(),
-		totalOutBound: 0,
-		totalInBound: 0
-	};
-	return temp;
-};
-
-
-
-/**
   * Gets current CPU load and adds it to a list collected over time
   ** also computes moving averages of 1 minute and a longer duration (5 minutes)
   *
@@ -192,8 +237,6 @@ PerformanceManager.prototype.collectCPULoad = function(data) {
 		date: Date.now(), // Mark the time for creating a time line
 		load: data.raw_currentload,
 		idle: data.raw_currentload_idle,
-		loadp: data.currentload,
-		idlep: data.currentload_idle,
 		cores: cores     // Store the previously extracted cores information
 	};
 
@@ -282,10 +325,10 @@ PerformanceManager.prototype.collectCPULoad = function(data) {
   * Gets current Server process load and adds it to a list collected over time
   * also computes moving averages of 1 minute and a longer duration (5 minutes)
   *
-  * @method collectServerProcessLoad
+  * @method collectserverLoad
   * @param {object} data - processes load data list
   */
-PerformanceManager.prototype.collectServerProcessLoad = function(data) {
+PerformanceManager.prototype.collectserverLoad = function(data) {
 	// Filter process information of server from the list
 	var serverProcess = data.list.filter(function(d) {
 		return parseInt(d.pid) === parseInt(process.pid);
@@ -301,7 +344,7 @@ PerformanceManager.prototype.collectServerProcessLoad = function(data) {
 		memResidentSet: serverProcess.mem_rss * 1024
 	};
 
-	this.saveData('serverProcessLoad', serverLoad);
+	this.saveData('serverLoad', serverLoad);
 
 	// Creating empty objects to store moving averages for 1 minute and
 	// entire duration as specified by this.durationInMinutes
@@ -319,7 +362,7 @@ PerformanceManager.prototype.collectServerProcessLoad = function(data) {
 		memResidentSet: 0
 	};
 
-	this.computeMovingAverages('serverProcessLoad',
+	this.computeMovingAverages('serverLoad',
 		serverLoad1Minute, serverLoadEntireDuration);
 };
 
@@ -376,6 +419,7 @@ PerformanceManager.prototype.computeMovingAverages = function(metric, oneMinute,
   * @param {object} data - memory usage data
   */
 PerformanceManager.prototype.collectMemoryUsage = function(data) {
+
 	var memUsage = {
 		date: Date.now(),
 		total:  data.total,  // total memory in bytes
@@ -402,6 +446,59 @@ PerformanceManager.prototype.collectMemoryUsage = function(data) {
 
 
 /**
+  * Gets current server traffic and adds it to a list collected over time
+  * also computes moving averages of 1 minute and a longer duration (5 minutes)
+  *
+  * @method collectServerTraffic
+  */
+PerformanceManager.prototype.collectServerTraffic = function() {
+
+	this.saveData('serverTraffic', this.getTrafficData());
+
+	// Creating empty objects to store moving averages for 1 minute
+	// and entire duration as specified by this.durationInMinutes
+	var serverTraffic1Minute = {
+		totalOutBound: 0,
+		totalInBound: 0
+	};
+	var serverTrafficEntireDuration = {
+		totalOutBound: 0,
+		totalInBound: 0
+	};
+	this.computeMovingAverages('serverTraffic', serverTraffic1Minute, serverTrafficEntireDuration);
+};
+
+
+/**
+  * Gets current system traffic and adds it to a list collected over time
+  * also computes moving averages of 1 minute and a longer duration (5 minutes)
+  *
+  * @method collectSystemTraffic
+  */
+PerformanceManager.prototype.collectSystemTraffic = function(data) {
+	var systemTraffic = {
+		date: Date.now(),
+		totalOutBound: data.tx_sec * data.ms / 1000,
+		totalInBound: data.rx_sec * data.ms / 1000
+	};
+
+
+	this.saveData('network', systemTraffic);
+
+	// Creating empty objects to store moving averages for 1 minute
+	// and entire duration as specified by this.durationInMinutes
+	var systemTraffic1Minute = {
+		totalOutBound: 0,
+		totalInBound: 0
+	};
+	var systemTrafficEntireDuration = {
+		totalOutBound: 0,
+		totalInBound: 0
+	};
+	this.computeMovingAverages('network', systemTraffic1Minute, systemTrafficEntireDuration);
+};
+
+/**
   * Calls all metric collection functions to gather data
   *
   * @method collectMetrics
@@ -411,28 +508,146 @@ PerformanceManager.prototype.collectMetrics = function() {
 	sysInfo.currentLoad(this.collectCPULoad.bind(this));
 
 	// Server Load
-	sysInfo.processes(this.collectServerProcessLoad.bind(this));
+	sysInfo.processes(this.collectserverLoad.bind(this));
 
 	// Memory usage
 	sysInfo.mem(this.collectMemoryUsage.bind(this));
 
 	// Network traffic
-	// this.performanceMetrics.network = this.getTrafficData();
-	// this.performanceMetrics.history.network.push(this.performanceMetrics.network);
-	// if (this.performanceMetrics.history.network.length > samplesInDuration) {
-	// 	this.performanceMetrics.history.network.splice(0, this.performanceMetrics.history.network.length - samplesInDuration);
-	// }
+	sysInfo.networkStats(this.collectSystemTraffic.bind(this));
 
-	// Disk Usage
+	this.collectServerTraffic();
+
+	module.parent.exports.broadcast('getPerformanceData', {});
+	// Disk Usage ?
 
 	// Send some of the data to the performance pages
 	// (use the broadcast function from the server)
 	module.parent.exports.broadcast('performanceData', {
-		cpuLoad:    this.performanceMetrics.cpuLoad,
-		serverLoad: this.performanceMetrics.serverProcessLoad,
-		memLoad:    this.performanceMetrics.memUsage
+		appList: 		this.activeWidgets,
+		cpuLoad:		this.performanceMetrics.cpuLoad,
+		serverLoad:		this.performanceMetrics.serverLoad,
+		memUsage:		this.performanceMetrics.memUsage,
+		serverTraffic:	this.performanceMetrics.serverTraffic,
+		network:		this.performanceMetrics.network,
+		displayPerf:	this.clients.performanceMetrics
 	});
 };
+
+
+PerformanceManager.prototype.addDataReceiver = function(id) {
+	this.activeWidgets.push(id);
+};
+
+
+PerformanceManager.prototype.removeDataReceiver = function(id) {
+	var idx = this.activeWidgets.indexOf(id);
+	if (idx > -1) {
+		this.activeWidgets.splice(idx, 1);
+	}
+};
+
+
+PerformanceManager.prototype.saveDisplayPerformanceData = function(id, idx, data) {
+	var negLoad = checkForNegatives(data.cpuLoad);
+	var negMem = checkForNegatives(data.mem);
+	var negClientProc = checkForNegatives(data.processLoad);
+	if (negLoad || negMem || negClientProc) {
+		return;
+	}
+	var clientSystemLoad = {
+		load: data.cpuLoad.raw_currentload,
+		idle: data.cpuLoad.raw_currentload_idle
+	};
+	var clientSystemMem = {
+		total:  data.mem.total,  // total memory in bytes
+		used:   data.mem.used,   // incl. buffers/cache
+		free:   data.mem.free,
+		active: data.mem.active  // used actively (excl. buffers/cache)
+	};
+
+	var clientProcessLoad = {
+		cpuPercent: data.processLoad.cpuPercent,
+		memPercent: data.processLoad.memPercent,
+		memVirtual: data.processLoad.memVirtual * 1024,
+		memResidentSet: data.processLoad.memResidentSet * 1024
+	};
+
+	var clientData =  {
+		id: id,
+		clientID: idx,
+		date: Date.now(), // Mark the time for creating a time line
+		cpuLoad: clientSystemLoad,
+		memUsage: clientSystemMem,
+		clientLoad: clientProcessLoad
+	};
+
+	var hardwareData = this.clients.hardware.find(function(d) {
+		return d.clientID === idx && d.id === id;
+	});
+
+	if (hardwareData !== undefined) {
+		clientData.hostname = hardwareData.hostname;
+	}
+
+	// Duration ago in milliseconds
+
+	var durationAgo = Date.now() - this.durationInMinutes * (60 * 1000);
+	// Remove previous entry
+	removeObjectsFromArrayOnPropertyValue(this.clients.performanceMetrics, "id", id, 'eq');
+	this.clients.performanceMetrics.push(clientData);
+
+	removeObjectsFromArrayOnPropertyValue(this.clients.history, "date", durationAgo, 'lt');
+	this.clients.history.push(clientData);
+
+};
+
+function removeObjectsFromArrayOnPropertyValue(array, property, value, condition) {
+	// Current value
+	var filterFunc;
+	switch (condition) {
+		case 'lt':
+			filterFunc = function(d) {
+				return d[property] < value;
+			};
+			break;
+		case 'gt':
+			filterFunc = function(d) {
+				return d[property] > value;
+			};
+			break;
+		case 'lte':
+			filterFunc = function(d) {
+				return d[property] <= value;
+			};
+			break;
+		case 'gte':
+			filterFunc = function(d) {
+				return d[property] >= value;
+			};
+			break;
+		case 'eq':
+		default:
+			filterFunc = function(d) {
+				return d[property] === value;
+			};
+			break;
+	}
+	var keys = array.map(function(d, i) {
+		var obj = {
+			arrIdx: i
+		};
+		obj[property] = d[property];
+		return obj;
+	}).filter(filterFunc);
+	for (var i = 0; i < keys.length; i++) {
+		array.splice(keys[i].arrIdx, 1);
+	}
+	if (keys.length > 0) {
+		return true;
+	}
+	return false;
+}
 
 
 /**
@@ -443,20 +658,19 @@ PerformanceManager.prototype.collectMetrics = function() {
   * @param {object} data - current metric values obtained
   */
 PerformanceManager.prototype.saveData = function(metric, data) {
-	// Number of samples in the history
-	// time in seconds
-	var samplesInDuration = this.durationInMinutes * 60 * (1.0 / this.samplingInterval);
+	// Filter out negative values
+	if (checkForNegatives(data) === true) {
+		return;
+	}
 
 	// Current value
 	this.performanceMetrics[metric] = data;
 	// Add data to the historic list
 	this.performanceMetrics.history[metric].push(data);
 
-	if (this.performanceMetrics.history[metric].length > samplesInDuration) {
-		// Prune samples that are older than the set duration
-		this.performanceMetrics.history[metric].splice(0,
-			this.performanceMetrics.history[metric].length - samplesInDuration);
-	}
+	// Duration ago in milliseconds
+	var durationAgo = Date.now() - this.durationInMinutes * (60 * 1000);
+	removeObjectsFromArrayOnPropertyValue(this.performanceMetrics.history[metric], "date", durationAgo, 'lt');
 };
 
 /**
@@ -487,9 +701,9 @@ function getNiceNumber(number, giga) {
 	var idx = 0;
 	var base = giga ? 1000 : 1024;
 	if (giga) {
-		suffix = ['', 'Kb', 'Mb', 'Gb', 'Tb', 'Pb'];
+		suffix = ['b', 'Kb', 'Mb', 'Gb', 'Tb', 'Pb'];
 	} else {
-		suffix = ['', 'KB', 'MB', 'GB', 'TB', 'PB'];
+		suffix = ['B', 'KB', 'MB', 'GB', 'TB', 'PB'];
 	}
 	while (number > base) {
 		number = number / base;
@@ -533,6 +747,7 @@ PerformanceManager.prototype.printServerHardware = function() {
 	// make sure the data has been produced
 	if (data) {
 		sageutils.log('HW', 'System:', data.system.manufacturer, data.system.model);
+		sageutils.log('HW', 'Hostname:', data.hostname);
 		sageutils.log('HW', 'OS:', data.os.platform,
 			data.os.arch, data.os.distro, data.os.release);
 		sageutils.log('HW', 'CPU:', data.cpu.manufacturer, data.cpu.brand,
@@ -543,7 +758,7 @@ PerformanceManager.prototype.printServerHardware = function() {
 		}, 0);
 		var memInfo = getNiceNumber(totalMem);
 		sageutils.log('HW', 'RAM:', memInfo.number + memInfo.suffix);
-		var gpuMem = getNiceNumber(data.graphics.controllers[0].vram * 1024 * 1024);
+		var gpuMem = getNiceNumber(data.graphics.controllers[0].vram);
 		// not very good on Linux (need to check nvidia tools)
 		sageutils.log('HW', 'GPU:', data.graphics.controllers[0].vendor,
 			data.graphics.controllers[0].model,
@@ -557,9 +772,9 @@ PerformanceManager.prototype.printServerHardware = function() {
   * @method printMetrics
   */
 PerformanceManager.prototype.printMetrics = function() {
-	var serverLoad = this.performanceMetrics.serverProcessLoad;
-	var serverLoad1MinuteAvg = this.performanceMetrics.movingAvg1Minute.serverProcessLoad;
-	var serverLoadEntireDurationAvg = this.performanceMetrics.movingAvgEntireDuration.serverProcessLoad;
+	var serverLoad = this.performanceMetrics.serverLoad;
+	var serverLoad1MinuteAvg = this.performanceMetrics.movingAvg1Minute.serverLoad;
+	var serverLoadEntireDurationAvg = this.performanceMetrics.movingAvgEntireDuration.serverLoad;
 
 	sageutils.log('Perf', "");
 	sageutils.log('Perf', "SAGE2 Server");
@@ -615,6 +830,187 @@ PerformanceManager.prototype.printMetrics = function() {
 	sageutils.log('Perf', printString);
 	sageutils.log('Perf', "");
 };
+
+/**
+  * Wraps the WebsocketIO emit and on functions to append size computation of the data
+  ** being transferred
+  *
+  * @method wrapDataTransferFunctions
+  * @param {object} WebsocketIO - Websocket object that is responsible to client-server communication
+  */
+
+PerformanceManager.prototype.wrapDataTransferFunctions = function(WebsocketIO) {
+	// Save performance manager object reference
+	var getMessageSize = this.getMessageSize.bind(this);
+	// Save the original on function
+	var onFunc = WebsocketIO.prototype.on;
+	// Wrapper function
+	WebsocketIO.prototype.on = function(name, callback) {
+		// Reference to wsio object
+		var _this = this;
+		// New callback function that calls the actual callback and then computes size
+		var wrappedCallback = function(obj, data) {
+			callback(obj, data);
+			getMessageSize(_this, false);
+		};
+		// Call the original on function with the new callback and return the result
+		return onFunc.bind(this)(name, wrappedCallback);
+	};
+
+	// Save the original emit function
+	var emitFunc = WebsocketIO.prototype.emit;
+	// Wrapper function
+	WebsocketIO.prototype.emit = function (name, dataString, attempts) {
+		// Call the original emit function
+		var emitReturnValue = emitFunc.bind(this)(name, dataString, attempts);
+		// Compute size
+		getMessageSize(this, true);
+		// Return the value of the original emit function
+		return emitReturnValue;
+	};
+
+	// Save the original emitString function
+	var emitStringFunc = WebsocketIO.prototype.emitString;
+	// Wrapper function
+	WebsocketIO.prototype.emitString = function (name, dataString, attempts) {
+		// Call the original emitString function
+		var emitReturnValue = emitStringFunc.bind(this)(name, dataString, attempts);
+		// Compute size
+		getMessageSize(this, true);
+		// Return the result of the original emitString function
+		return emitReturnValue;
+	};
+};
+
+
+PerformanceManager.prototype.getMessageSize = function(wsio, outBound) {
+	var size;
+	if (outBound === true) {
+		if (this.previousBytesWritten[wsio.id]) {
+			size = wsio.bytesWritten - this.previousBytesWritten[wsio.id];
+		} else {
+			size = wsio.bytesWritten;
+		}
+		this.previousBytesWritten[wsio.id] = wsio.bytesWritten;
+		this.trafficData.totalOutBound += size;
+	} else {
+		if (this.previousBytesWritten[wsio.id]) {
+			size = wsio.bytesRead - this.previousBytesRead[wsio.id];
+		} else {
+			size = wsio.bytesRead;
+		}
+		this.previousBytesRead[wsio.id] = wsio.bytesRead;
+		this.trafficData.totalInBound += size;
+	}
+};
+
+
+/**
+  * Computes size of the data being transferred and received through Websockets
+  *
+  * @method computeMessageSize
+  * @param {object} wsio - Websocket object that is responsible to client-server communication
+  * @param {object} data - Data being sent or received through sockets
+  * @param {boolean} outBound - Flag indicates whether data is outgoing or incoming
+  */
+
+PerformanceManager.prototype.computeMessageSize = function(wsio, data, outBound) {
+
+	var obj = null;
+	var id = null, size = 0;
+
+	if (Buffer.isBuffer(data) === true) {
+		// If data is a Buffer object .length gives its size in bytes
+		size = data.length;
+	} else if (typeof data === "string") {
+		size = Buffer.byteLength(data);
+	} else if (data !== null && data !== undefined) { // Data is a json object
+		size = Buffer.byteLength(JSON.stringify(data));
+	}
+
+
+	if (this.collectAppSpecificTraffic === true) {
+		if (Buffer.isBuffer(data) === true) {
+			//Extract the app ID from the data
+			id = byteBufferToString(data);
+		} else if (typeof data === "string") {
+			//String contains a json object, parse it to get app ID
+			obj = JSON.parse(data);
+			if (obj !== null && obj !== undefined) {
+				id = obj.id;
+			}
+		} else if (data !== null && data !== undefined) {
+			// Data is a json object
+			id = data.id;
+		}
+		if (id === undefined || id === null) {
+			id = "no_app";
+		}
+
+		var clientAppID = wsio.clientID + "_" + id;
+		if (this.trafficData.hasOwnProperty(clientAppID) === false) {
+			this.trafficData[clientAppID] = {
+				appId: id,
+				clientID: wsio.clientID,
+				clientType: wsio.clientType,
+				outBoundSize: 0,
+				inBoundSize: 0
+			};
+		}
+		if (outBound === true) {
+			this.trafficData[clientAppID].outBound += size;
+		} else {
+			this.trafficData[clientAppID].inBound += size;
+		}
+	}
+	if (outBound === true) {
+		this.trafficData.totalOutBound += size;
+	} else {
+		this.trafficData.totalInBound += size;
+	}
+};
+
+
+
+function byteBufferToString(buf) {
+	var str = "";
+	var i   = 0;
+	while (buf[i] !== 0 && i < buf.length) {
+		str += String.fromCharCode(buf[i]);
+		i++;
+	}
+	return str;
+}
+
+/**
+  * Retrieves the network traffic data and resets the place holder
+  *
+  * @method getTrafficData
+  */
+
+PerformanceManager.prototype.getTrafficData = function() {
+	var temp = this.trafficData;
+	this.trafficData = {
+		date: Date.now(),
+		totalOutBound: 0,
+		totalInBound: 0
+	};
+	return temp;
+};
+
+
+function checkForNegatives(obj) {
+	for (var k in obj) {
+		if (obj.hasOwnProperty(k)) {
+			if (Object.prototype.toString.call(obj[k]) === '[object Number]' && obj[k] < 0) {
+				return true;
+			}
+		}
+	}
+	return false;
+}
+
+
 
 // export the PerformanceManager class
 module.exports = PerformanceManager;
