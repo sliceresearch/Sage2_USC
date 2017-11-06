@@ -23,7 +23,6 @@
 
 // Object to hold chart references
 var charts = {};
-var selectedDisplayClientIDList = [];
 var clientCharts = {};
 
 
@@ -308,6 +307,12 @@ function drawDisplaySM() {
 			return fillColor(w / width, 0.5);
 		});
 
+	chart.svg.selectAll('.displaySM')
+		.select('#displaytext')
+		.text(function(d, i) {
+			return 'Display ' + d.clientID;
+		});
+
 	var clientSM = smallMultiples.enter().append('g')
 		.attr('class', 'displaySM')
 		.attr('transform', function(d, i) {
@@ -336,6 +341,7 @@ function drawDisplaySM() {
 		.attr('fill', 'rgb(80, 80, 80)')
 		.attr('stroke', 'white');
 	clientSM.append('text')
+		.attr('id', 'displaytext')
 		.attr('x', width / 2)
 		.attr('text-anchor', 'middle')
 		.attr('alignment-baseline', 'middle')
