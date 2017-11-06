@@ -139,7 +139,7 @@ function setupListeners(wsio) {
 	// Get elements from the DOM
 	var terminal1 = document.getElementById('terminal1');
 	var terminal2 = document.getElementById('terminal2');
-	var heading1 = document.getElementById('serverheading');
+	var heading1  = document.getElementById('serverheading');
 	// Got a reply from the server
 	wsio.on('initialize', function() {
 		initializeCharts();
@@ -173,15 +173,21 @@ function setupListeners(wsio) {
 			}, 0);
 			var memInfo = getNiceNumber(totalMem);
 			msg += 'RAM: ' + memInfo.number + memInfo.suffix + '\n';
-			var gpuMem = getNiceNumber(data.graphics.controllers[0].vram);
-			// not very good on Linux (need to check nvidia tools)
-			msg += 'GPU: ' + data.graphics.controllers[0].vendor + ' ' +
-				data.graphics.controllers[0].model + ' ' +
-				gpuMem.number + gpuMem.suffix + ' VRAM\n';
-
+			// iterates over the GPU list
+			for (let i = data.graphics.controllers.length - 1; i >= 0; i--) {
+				let gpu = data.graphics.controllers[i];
+				let gpuMem = getNiceNumber(gpu.vram);
+				msg += 'GPU: ' + gpu.vendor + ' ' + gpu.model + ' ' +
+					gpuMem.number + gpuMem.suffix + ' VRAM\n';
+			}
+			// if there's no GPU recognized
+			if (data.graphics.controllers.length === 0) {
+				msg += 'GPU: -\n';
+			}
+			// Set the name of the server in the page
 			if (heading1) {
 				if (data.servername.length > 0) {
-					heading1.textContent = 'Server: ' + data.servername + '( ' + data.serverhost + ' )';
+					heading1.textContent = 'Server: ' + data.servername + ' (' + data.serverhost + ')';
 				} else {
 					heading1.textContent = 'Server: ' + data.serverhost;
 				}
