@@ -19,7 +19,7 @@
  */
 
 /*global SAGE2_init: true, d3: true, drawDisplaySM: true, showDisplayClientsHistory: true,
-  selectedDisplayClientIDList: true, setupLineChart: true, charts: true */
+  setupLineChart: true, charts: true */
 
 
 /**
@@ -70,6 +70,7 @@ var durationInMinutes = 5;
 var samplingInterval  = 2;
 
 var clientColorMap = {};
+var selectedDisplayClientIDList = [];
 var colors = [];
 
 /**
@@ -272,7 +273,10 @@ function setupListeners(wsio) {
 				terminal2.innerHTML = 'No Electron Display Client active.';
 				var smDiv = document.getElementById('smallmultiplediv');
 				smDiv.style.height = 0 + 'px';
+				var displayMetricDiv = document.getElementById('displaypanecontainer');
+				displayMetricDiv.style.height = 0 + 'px';
 			}
+			cleanUpSelectedDisplayList();
 			drawDisplaySM();
 			showDisplayClientsHistory();
 		}
@@ -654,4 +658,22 @@ function buttonClicked (d, i) {
 			.attr('stroke', clientColorMap[d.id]);
 	}
 	showDisplayClientsHistory(true);
+}
+
+function cleanUpSelectedDisplayList () {
+	var currentList = clients.performanceMetrics;
+	if (currentList.length === 0) {
+		selectedDisplayClientIDList = [];
+		return;
+	}
+
+	for (var i = 0; i < selectedDisplayClientIDList.length; i++) {
+		var sdisplayid = selectedDisplayClientIDList[i];
+		var result = currentList.find(function(d) {
+			return d.id === sdisplayid;
+		});
+		if (result === null || result === undefined) {
+			selectedDisplayClientIDList.splice(i, 1);
+		}
+	}
 }
