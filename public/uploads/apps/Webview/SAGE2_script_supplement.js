@@ -66,7 +66,7 @@ Keydown not activated due to squelch in keypress->keydown conversion to prevent 
 Normal keypress doesn't cause the backspace action either. Is this because backspace is not an input value?
 */
 document.addEventListener("keyup", function(e) {
-	if (e.keyCode == 8) {
+	if (e.keyCode == 8 && s2InjectForKeys.lastClickedElement.value !== undefined) {
 		s2InjectForKeys.lastClickedElement.value = s2InjectForKeys.lastClickedElement.value.substring(0, s2InjectForKeys.lastClickedElement.value.length - 1);
 	}
 });

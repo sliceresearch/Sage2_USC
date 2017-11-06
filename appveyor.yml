@@ -1,9 +1,10 @@
-version: 2.0.{build}
+version: 2.9.{build}
 
 branches:
   only:
   - master
-  - remotePointer
+  - perdis17
+  - voiceTests
 
 shallow_clone: true
 

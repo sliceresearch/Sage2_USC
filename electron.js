@@ -20,6 +20,69 @@
 'use strict';
 
 const electron = require('electron');
+electron.app.setAppPath(process.cwd());
+
+//
+// handle install/update for Windows
+//
+if (require('electron-squirrel-startup')) {
+	return;
+}
+// this should be placed at top of main.js to handle setup events quickly
+if (handleSquirrelEvent()) {
+	// squirrel event handled and app will exit in 1000ms, so don't do anything else
+	return;
+}
+
+function handleSquirrelEvent() {
+	if (process.argv.length === 1) {
+		return false;
+	}
+
+	const ChildProcess = require('child_process');
+	const path = require('path');
+
+	const appFolder = path.resolve(process.execPath, '..');
+	const rootAtomFolder = path.resolve(appFolder, '..');
+	const updateDotExe = path.resolve(path.join(rootAtomFolder, 'Update.exe'));
+	const exeName = path.basename(process.execPath);
+
+	const spawn = function(command, args) {
+		let spawnedProcess;
+
+		try {
+			spawnedProcess = ChildProcess.spawn(command, args, {detached: true});
+		} catch (error) {
+			// pass
+		}
+
+		return spawnedProcess;
+	};
+
+	const spawnUpdate = function(args) {
+		return spawn(updateDotExe, args);
+	};
+
+	const squirrelEvent = process.argv[1];
+	switch (squirrelEvent) {
+		case '--squirrel-install':
+		case '--squirrel-updated':
+			// Install desktop and start menu shortcuts
+			spawnUpdate(['--createShortcut', exeName]);
+			setTimeout(app.quit, 1000);
+			return true;
+		case '--squirrel-uninstall':
+			// Remove desktop and start menu shortcuts
+			spawnUpdate(['--removeShortcut', exeName]);
+			setTimeout(app.quit, 1000);
+			return true;
+		case '--squirrel-obsolete':
+			app.quit();
+			return true;
+	}
+}
+
+
 // Module to control application life.
 const app = electron.app;
 // Module to create native browser window.

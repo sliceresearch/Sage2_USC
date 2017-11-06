@@ -79,7 +79,8 @@ SharedServerDataManager.prototype.setValue = function(wsio, data) {
 		newValue.subscribers		= [];
 		// placeholder for subscription ahead of time
 		if (data.subscribePlaceholder) {
-			newValue.value = undefined; // this should be the only way a value is undefined
+			// this should be the only way a value is undefined
+			newValue.value = undefined;
 		}
 		// add it and update tracking vars.
 		this.dataStructure.allValues["" + data.nameOfValue] = newValue;
@@ -98,7 +99,8 @@ SharedServerDataManager.prototype.setValue = function(wsio, data) {
 		}
 	}
 	var dataForApp = {};
-	dataForApp.data = { // this data piece is only for new value watchers
+	// this data piece is only for new value watchers
+	dataForApp.data = {
 		nameOfValue: data.nameOfValue,
 		description: data.description,
 		status: "add"
@@ -148,7 +150,8 @@ SharedServerDataManager.prototype.getValue = function(wsio, data) {
 	dataForApp.app  = data.app;
 	dataForApp.func = data.func;
 	dataForApp.data = this.dataStructure.allValues[ "" + data.nameOfValue ].value;
-	// send only to the client that requestd it. Q: does it matter it multiple display clients?
+	// send only to the client that requestd it.
+	// Q: does it matter it multiple display clients?
 	this.broadcast('broadcast', dataForApp);
 };
 
@@ -171,7 +174,8 @@ SharedServerDataManager.prototype.removeValue = function(wsio, data) {
 		nameToRemove = data.namesOfValuesToRemove[i];
 		// also don't do anything if the value doesn't exist
 		if (this.dataStructure.allValues["" + nameToRemove] === undefined) {
-			continue; // doesn't exist, move to next one
+			// doesn't exist, move to next one
+			continue;
 		} else {
 			// remove from names of values
 			this.dataStructure.allNamesOfValues.splice(this.dataStructure.allNamesOfValues.indexOf(nameToRemove), 1);
@@ -215,7 +219,8 @@ SharedServerDataManager.prototype.subscribeToValue = function(wsio, data) {
 	}
 	// if value doesn't exist make it, when changed later the subscription will work
 	if (this.dataStructure.allValues["" + data.nameOfValue] === undefined) {
-		data.value = null; // nothing, it'll be replace later if at all
+		// nothing, it'll be replace later if at all
+		data.value = null;
 		data.subscribePlaceholder = true;
 		this.setValue(wsio, data);
 	}
@@ -260,12 +265,13 @@ SharedServerDataManager.prototype.getAllTrackedValues = function(wsio, data) {
 	dataForApp.app  = data.app;
 	dataForApp.func = data.func;
 	for (var i = 0; i < this.dataStructure.allNamesOfValues.length; i++) {
-		dataForApp.data.push(
-			{	nameOfValue: this.dataStructure.allNamesOfValues[i],
-				value: this.dataStructure.allValues[ this.dataStructure.allNamesOfValues[i] ]
-			});
+		dataForApp.data.push({
+			nameOfValue: this.dataStructure.allNamesOfValues[i],
+			value: this.dataStructure.allValues[ this.dataStructure.allNamesOfValues[i] ]
+		});
 	}
-	this.broadcast('broadcast', dataForApp); // send to all clients, they want it.
+	// send to all clients, they want it.
+	this.broadcast('broadcast', dataForApp);
 };
 
 /**
@@ -283,10 +289,10 @@ SharedServerDataManager.prototype.getAllTrackedDescriptions = function(wsio, dat
 	dataForApp.app  = data.app;
 	dataForApp.func = data.func;
 	for (var i = 0; i < this.dataStructure.allNamesOfValues.length; i++) {
-		dataForApp.data.push(
-			{	nameOfValue: this.dataStructure.allNamesOfValues[i],
-				description: this.dataStructure.allValues[this.dataStructure.allNamesOfValues[i]].description
-			});
+		dataForApp.data.push({
+			nameOfValue: this.dataStructure.allNamesOfValues[i],
+			description: this.dataStructure.allValues[this.dataStructure.allNamesOfValues[i]].description
+		});
 	}
 	this.broadcast('broadcast', dataForApp);
 };
@@ -317,10 +323,95 @@ SharedServerDataManager.prototype.subscribeToNewValueNotification = function(wsi
 			if (data.unsubscribe) {
 				this.dataStructure.newValueWatchers.splice(i, 1);
 			}
-			return; // they are already subscribed, or this was an unsubscribe
+			// they are already subscribed, or this was an unsubscribe
+			return;
 		}
 	}
 	this.dataStructure.newValueWatchers.push(appWatcher);
+};
+
+/**
+ * Updates the stored information about connections.
+ * Currently updates three values for: UI, displays, remote servers.
+ * Users information from the clients array.
+ *
+ * @method updateInformationAboutConnections
+ * @param  {Array} clients - The array containing information of all connected clients.
+ * @param  {Array} sagePointers - The array containing information of all pointers.
+ */
+SharedServerDataManager.prototype.updateInformationAboutConnections = function(clients, sagePointers) {
+	var currentUiList = [];
+	var currentDisplayList = [];
+	var currentRemoteSiteList = [];
+	var currentItem;
+	for (let i = 0; i < clients.length; i++) {
+		if (clients[i].clientType === "sageUI") {
+			currentItem = {};
+			currentItem.name  = sagePointers[clients[i].id].label;
+			currentItem.color = sagePointers[clients[i].id].color;
+			currentItem.uniqueID = clients[i].id;
+			currentUiList.push(currentItem);
+		} else if (clients[i].clientType === "display") {
+			currentItem = {};
+			currentItem.viewPort = clients[i].clientID;
+			currentItem.uniqueID = clients[i].id;
+			currentDisplayList.push(currentItem);
+		} else if (clients[i].clientType === "remoteServer") {
+			currentItem = {};
+			currentItem.remoteAddress = clients[i].remoteAddress.address;
+			currentItem.uniqueID = clients[i].id;
+			currentRemoteSiteList.push(currentItem);
+		}
+	}
+	var data = {};
+	if (currentUiList.length > 0) {
+		data.nameOfValue = "serverConnectionDataUiList";
+		data.value = currentUiList;
+		//  wsio is not needed to set value
+		this.setValue(null, data);
+	}
+	if (currentDisplayList.length > 0) {
+		data.nameOfValue = "serverConnectionDataDisplayList";
+		data.value = currentDisplayList;
+		//  wsio is not needed to set value
+		this.setValue(null, data);
+	}
+	if (currentRemoteSiteList.length > 0) {
+		data.nameOfValue = "serverConnectionDataRemoteSiteList";
+		data.value = currentRemoteSiteList;
+		//  wsio is not needed to set value
+		this.setValue(null, data);
+	}
+};
+
+/**
+ * Updates the stored information about failed remote site connections.
+ *
+ * @method updateInformationAboutConnectionsFailedRemoteSite
+ * @param  {Object} wsio - The websocket of sender.
+ */
+SharedServerDataManager.prototype.updateInformationAboutConnectionsFailedRemoteSite = function(wsio) {
+	var data = {};
+	data.nameOfValue = "serverConnectionDataFailedRemoteSite";
+	if (this.dataStructure.allNamesOfValues.includes(data.nameOfValue)) {
+		data.value = this.dataStructure.allValues[data.nameOfValue].value;
+	} else {
+		data.value = {total: 0, sites: []};
+	}
+	data.value.total++;
+	var sites = data.value.sites;
+	var found = false;
+	for (let i = 0; i < sites.length; i++) {
+		if (sites[i].id === wsio.id) {
+			sites[i].total++;
+			found = true;
+		}
+	}
+	if (!found) {
+		sites.push({id: wsio.id, total: 1});
+	}
+	// wsio is not needed to set value
+	this.setValue(null, data);
 };
 
 module.exports = SharedServerDataManager;

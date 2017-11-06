@@ -9,7 +9,7 @@
 // Copyright (c) 2014-2015
 
 
-/* global ignoreFields, SAGE2WidgetControl, SAGE2PointerToNativeMouseEvent, SAGE2SharedServerData, SAGE2RemoteSitePointer */
+/* global ignoreFields, SAGE2WidgetControl, SAGE2PointerToNativeMouseEvent, SAGE2RemoteSitePointer */
 /* global addStoredFileListEventHandler, removeStoredFileListEventHandler */
 
 /**
@@ -77,6 +77,13 @@ var SAGE2_App = Class.extend({
 
 		// Enabling this will attempt to convert SAGE2 pointer as mouse events as much as possible.
 		this.passSAGE2PointerAsMouseEvents = false;
+
+		// Tracking variables when this app launches or is launched by another.
+		this.childrenAppIds = [];
+		this.parentIdOfThisApp = null;
+		// Used to track variables specific to this app submitted for data sharing
+		this.dataSourcesBeingBroadcast = [];
+		this.dataDestinationsBeingBroadcast = [];
 	},
 
 	/**
@@ -153,8 +160,23 @@ var SAGE2_App = Class.extend({
 		this.SAGE2CopyState(data.state);
 		this.SAGE2InitializeAppOptionsFromState();
 
-		// add serverData functions, or update later to have that file .extend() the function into SAGE2_App.
-		SAGE2SharedServerData.addSharedServerDataFunctions(this, data);
+		// Check for customLaunchParams and optionally a function to activate on next frame
+		if (data.customLaunchParams) {
+			if (data.customLaunchParams.parent) {
+				this.parentIdOfThisApp = data.customLaunchParams.parent;
+			}
+			// If the function call should be made, do so on the next frame after app has fully initialized
+			if (data.customLaunchParams.functionToCallAfterInit) {
+				if (this[data.customLaunchParams.functionToCallAfterInit]) {
+					window.requestAnimationFrame(() => {
+						this[data.customLaunchParams.functionToCallAfterInit](data.customLaunchParams);
+					});
+				} else {
+					console.log("App was given a function to call after init, but it doesn't exist: "
+						+ data.customLaunchParams.functionToCallAfterInit);
+				}
+			}
+		}
 	},
 
 	SAGE2Load: function(state, date) {
@@ -313,7 +335,8 @@ var SAGE2_App = Class.extend({
 			if (isMaster && eventType === "pointerMove" && this.isSharedWithRemoteSite()) {
 				// if app is shared, then track pointer
 				SAGE2RemoteSitePointer.trackPointer(this, user_id, position);
-			} else if (isMaster  && SAGE2RemoteSitePointer.shouldPassEvents && this.isSharedWithRemoteSite()) {
+			} else if (isMaster && SAGE2RemoteSitePointer.shouldPassEvents && this.isSharedWithRemoteSite()) {
+				// for events beyond pointerMove
 				SAGE2RemoteSitePointer.trackEvent(this, {
 					eventType: eventType,
 					position: position,
@@ -975,7 +998,7 @@ var SAGE2_App = Class.extend({
 				description: "separator"
 			});
 			appContextMenu.entries.push({
-				description: "Send to back",
+				description: "Send to Back",
 				callback: "SAGE2SendToBack",
 				parameters: {}
 			});
@@ -985,9 +1008,13 @@ var SAGE2_App = Class.extend({
 				parameters: {}
 			});
 			appContextMenu.entries.push({
-				description: "separator"
+				description: "minimize",
+				callback: "SAGE2Maximize",
+				parameters: {},
+				voiceEntryOverload: true // not displayed on UI, added for voice entry
 			});
 			// currently testing with remote pointer event testing
+			/* currently disabled
 			if (!this.shouldPassRemotePointerEvents) {
 				appContextMenu.entries.push({
 					description: "Enable remote pointer passing",
@@ -1000,12 +1027,19 @@ var SAGE2_App = Class.extend({
 					callback: "toggleRemotePointerEventPassing",
 					parameters: { value: false }
 				});
-			}
+			} //*/
 			appContextMenu.entries.push({
 				description: "separator"
 			});
+
+			// limit the size of the title, especially for webview titles
+			var menuTitle = this.title || "Application";
+			if (menuTitle.length > 40) {
+				// crop the title to 40 characters and add ellipsis
+				menuTitle = menuTitle.substring(0, 40) + '...';
+			}
 			appContextMenu.entries.push({
-				description: "Close " + (this.title || "application"),
+				description: "Close " + menuTitle,
 				callback: "SAGE2DeleteElement",
 				parameters: {}
 			});
@@ -1083,6 +1117,335 @@ var SAGE2_App = Class.extend({
 				},
 				saveData: data
 			});
+		}
+	},
+
+	/**
+	* Asks server to launch app with values. On the server this will add additional associations like which app launched which.
+	* Part of the launch process will include calling back to this app and stating the id of the newly launched app.
+	*
+	* @method launchAppWithValues
+	* @param {String} appName - name of app to launch. Has to correctly match.
+	* @param {Object} paramObj - optional. What to pass the launched app. Appears within init() as serverDataInitValues.
+	* @param {Integer|undefined|null} x - optional. X coordinate to start the app at.
+	* @param {Integer|undefined|null} y -optional. Y coordinate to start the app at.
+	* @param {String|undefined|null} funcToPassParams - optional. app which called this function. Could be a function and will convert to string.
+	*/
+	launchAppWithValues: function(appName, paramObj, x, y, funcToPassParams) {
+		if (isMaster) {
+			var callbackName = this.getCallbackName(funcToPassParams);
+			wsio.emit("launchAppWithValues", {
+				appName: appName,
+				app: this.id,
+				func: callbackName,
+				customLaunchParams: paramObj,
+				xLaunch: x,
+				yLaunch: y
+			});
+		}
+	},
+
+	/**
+	* Sends data to any apps that this one launched. This doesn't go through server.
+	*
+	* @method sendDataToChildrenApps
+	* @param {String} func - name of function to activate. Has to correctly match
+	* @param {Object} data - data to send. doens't have to be an object.
+	*/
+	sendDataToChildrenApps: function(func, data) {
+		for (let i = 0; i < this.childrenAppIds.length; i++) {
+			if (applications[this.childrenAppIds[i]]) {
+				applications[this.childrenAppIds[i]][func](data);
+			}
+		}
+	},
+
+	/**
+	* Sends data to app that launched this one if possible. This doesn't go through server.
+	*
+	* @method sendDataToParentApp
+	* @param {String} func - name of function to activate. Has to correctly match.
+	* @param {Object} data - data to send. doens't have to be an object.
+	*/
+	sendDataToParentApp: function(func, data) {
+		if (this.parentIdOfThisApp) {
+			applications[this.parentIdOfThisApp][func](data);
+		}
+	},
+
+	/**
+	* Asks server to launch app with values. On the server this will add additional associations like which app launched which.
+	* Part of the launch process will include calling back to this app and stating the id of the newly launched app.
+	*
+	* @method addToAppsLaunchedList
+	* @param {String} data - name of app to launch. Has to correctly match.
+	*/
+	addToAppsLaunchedList: function(appId) {
+		this.childrenAppIds.push(appId);
+	},
+
+	/**
+	* This is used to send data to a specific SAGE2 client. Usually UI clients.
+	*
+	* @method sendDataToClient
+	* @param {String} clientDest - Which client to send the data.
+	* @param {String} func - What function to call on the client.
+	* @param {Object} paramObj - Object to give the function as parameter. This will have clientDest, func, and appId added.
+	*/
+	sendDataToClient: function(clientDest, func, paramObj) {
+		if (isMaster) {
+			paramObj.clientDest = clientDest;
+			paramObj.func = func;
+			paramObj.appId = this.id;
+			wsio.emit("sendDataToClient", paramObj);
+		}
+	},
+
+	/**
+	 * Given a function, will attempt to determine the string name.
+	 *
+	 * @method getCallbackName
+	 * @param {Function} callback - The function to get name as a string.
+	 */
+	getCallbackName: function(callback) {
+		var callbackName = undefined;
+		if (callback === undefined || callback === null) {
+			return undefined;
+		} else if (typeof(callback) == "string") {
+			// If already a string, keep as is
+			callbackName = callback;
+		} else if (callback.name !== undefined && callback.name !== null) {
+			callbackName = callback.name;
+		} else {
+			// Check all properties of the app, if it isn't there the given callback wasn't part of this.
+			var keys = Object.keys(this);
+			for (let i = 0; i < keys.length; i++) {
+				if (this[i] === callback) {
+					callbackName = i;
+					break;
+				}
+			}
+		}
+		return callbackName;
+	},
+
+	/**
+	* Given the name of the variable, will ask server for the variable.
+	* The given callback will be activated with that variable's value.
+	* Current setup will not activate callback if there is no variable.
+	*
+	* @method serverDataGetValue
+	* @param {String} nameOfValue - which value to get
+	* @param {String} callback - function on app to give value. Could be a function ref and will convert to string.
+	*/
+	serverDataGetValue: function(nameOfValue, callback) {
+		if (isMaster) {
+			var callbackName = this.getCallbackName(callback);
+			if (callbackName === undefined) {
+				throw "Missing callback for serverDataGetValue";
+			}
+			wsio.emit("serverDataGetValue", {
+				nameOfValue: nameOfValue,
+				app: this.id,
+				func: callbackName
+			});
+		}
+	},
+
+	/**
+	* Given the name of the variable, set value of variable on server.
+	* Will create if doesn't exist.
+	*
+	* @method serverDataSetValue
+	* @param {String} nameOfValue - name of value on server to set
+	* @param {Object} value - the value to store for this variable
+	* @param {Object} description - description object
+	* @param {Boolean} shouldRemoveValueFromServerWhenAppCloses - Optional. If true, app quit will remove value from server.
+	*/
+	serverDataSetValue: function(nameOfValue, value, description, shouldRemoveValueFromServerWhenAppCloses = false) {
+		if (isMaster) {
+			wsio.emit("serverDataSetValue", {
+				nameOfValue: nameOfValue,
+				value: value,
+				description: description
+			});
+			if (shouldRemoveValueFromServerWhenAppCloses
+				&& !this.dataSourcesBeingBroadcast.includes(nameOfValue)) {
+				this.dataSourcesBeingBroadcast.push(nameOfValue);
+			}
+		}
+	},
+
+	/**
+	* Helper function, given the variable name suffix, set value of variable on server.
+	* Checks in place to ensure value exists.
+	*
+	* @method serverDataSetSourceValue
+	* @param {String} nameSuffix - name of value on server to set
+	* @param {Object} value - the value to store for this variable
+	* @param {Object} description - description object
+	* @param {Boolean} shouldRemoveValueFromServerWhenAppCloses - Optional. If true, app quit will remove value from server.
+	*/
+	serverDataSetSourceValue: function(nameSuffix, value) {
+		if (isMaster) {
+			var nameOfValue = this.id + ":source:" + nameSuffix;
+			if (!this.dataSourcesBeingBroadcast.includes(nameOfValue)) {
+				throw "Cannot update source value that this app hasn't created yet:" + nameOfValue;
+			}
+			wsio.emit("serverDataSetValue", {
+				nameOfValue: nameOfValue,
+				value: value
+			});
+		}
+	},
+
+	/**
+	* Helper function to tell server about a source. This will add additional markers to the variable.
+	* Name will be of format:
+	*	app_id:source:givenName
+	*
+	* @method serverDataBroadcastSource
+	* @param {String} nameSuffix - name suffix
+	* @param {Object} value - the value to store for this variable
+	* @param {Object} description - description object
+	*/
+	serverDataBroadcastSource: function(nameSuffix, value, description) {
+		if (isMaster) {
+			var nameOfValue = this.id + ":source:" + nameSuffix;
+			this.serverDataSetValue(nameOfValue, value, description, true);
+			if (!this.dataSourcesBeingBroadcast.includes(nameOfValue)) {
+				this.dataSourcesBeingBroadcast.push(nameOfValue);
+			}
+		}
+	},
+
+	/**
+	* Helper function to tell server about a destination.
+	* In addition to creating the variable on the server, will also subscribe to the variable.
+	* Name will be of format:
+	*	app_id:destination:givenName
+	*
+	* @method serverDataBroadcastDestination
+	* @param {String} nameSuffix - name suffix
+	* @param {Object} value - the initial value. Probably is blank.
+	* @param {Object} description - description object
+	* @param {String} callback - what function will handle values given to the source
+	*/
+	serverDataBroadcastDestination: function(nameSuffix, value, description, callback) {
+		if (isMaster) {
+			var nameOfValue = this.id + ":destination:" + nameSuffix;
+			var callbackName = this.getCallbackName(callback);
+			// Set value first, then subscribe to it
+			this.serverDataSetValue(nameOfValue, value, description, true);
+			this.serverDataSubscribeToValue(nameOfValue, callbackName);
+			if (!this.dataDestinationsBeingBroadcast.includes(nameOfValue)) {
+				this.dataDestinationsBeingBroadcast.push(nameOfValue);
+			}
+		}
+	},
+
+	/**
+	* Given the name of a variable, will ask server to send its value each time it is assigned.
+	* Values will be sent to callback.
+	*
+	* @method serverDataSubscribeToValue
+	* @param {String} nameOfValue - app which called this function
+	* @param {String} callback - app which called this function. Could be a function and will convert to string.
+	* @param {Boolean} unsubscribe - optional. If true, will stop receiving updates for that variable.
+	*/
+	serverDataSubscribeToValue: function(nameOfValue, callback, unsubscribe = false) {
+		if (isMaster) {
+			var callbackName = this.getCallbackName(callback);
+			if (callbackName === undefined) {
+				throw "Missing callback for serverDataSubscribeToValue";
+			}
+			wsio.emit("serverDataSubscribeToValue", {
+				nameOfValue: nameOfValue,
+				app: this.id,
+				func: callbackName,
+				unsubscribe: unsubscribe
+			});
+		}
+	},
+
+	/**
+	* Asks server for notifications of any new variables that are added to server.
+	* The callback will get one object with properties: nameOfValue and description.
+	*
+	* @method serverDataSubscribeToNewValueNotification
+	* @param {String} callback - app which called this function. Could be a function and will convert to string.
+	* @param {Boolean} unsubscribe - optional. If true, will stop receiving notificaitons.
+	*/
+	serverDataSubscribeToNewValueNotification: function(callback, unsubscribe) {
+		if (isMaster) {
+			var callbackName = this.getCallbackName(callback);
+			if (callbackName === undefined) {
+				throw "Missing callback for serverDataSubscribeToNewValueNotification";
+			}
+			// If there is a value for unsubscribe, keep otherwise false
+			unsubscribe = unsubscribe ? unsubscribe : false;
+			wsio.emit("serverDataSubscribeToNewValueNotification", {
+				app: this.id,
+				func: callbackName,
+				unsubscribe: unsubscribe
+			});
+		}
+	},
+
+	/**
+	* Asks server for all variable names and their descriptions. Goes to callback as array.
+	* Contents of the array will be objects with two properties: nameOfValue and description.
+	*
+	* @method serverDataGetAllTrackedDescriptions
+	* @param {String} callback - app which called this function. Could be a function and will convert to string.
+	* @param {Boolean} unsubscribe - optional. If true, will stop receiving updates for that variable.
+	*/
+	serverDataGetAllTrackedDescriptions: function(callback) {
+		if (isMaster) {
+			var callbackName = this.getCallbackName(callback);
+			if (callbackName === undefined) {
+				throw "Missing callback for serverDataGetAllTrackedDescriptions";
+			}
+			wsio.emit("serverDataGetAllTrackedDescriptions", {
+				app: this.id,
+				func: callbackName
+			});
+		}
+	},
+
+	/**
+	* Given the name of the variable, remove variable from server.
+	* Expectation is this is not called by user (but the option is there) instead as part of cleanup on quit().
+	* Sends an array of strings, which this function is just the specified value.
+	*
+	* @method serverDataRemoveValue
+	* @param {String | Array} namesOfValuesToRemove - Can give a single name as string, or an array of string to remove.
+	*/
+	serverDataRemoveValue: function(namesOfValuesToRemove) {
+		if (isMaster) {
+			if (!Array.isArray(namesOfValuesToRemove)) {
+				namesOfValuesToRemove = [namesOfValuesToRemove];
+			}
+			wsio.emit("serverDataRemoveValue", { namesOfValuesToRemove: namesOfValuesToRemove });
+		}
+	},
+
+	/**
+	* Will remove all source and destination variables submitted to server.
+	* Expectation is this is not called by user (but the option is there) instead as part of cleanup on quit().
+	*
+	* @method serverDataRemoveAllValuesGivenToServer
+	*/
+	serverDataRemoveAllValuesGivenToServer: function() {
+		if (isMaster) {
+			var namesOfValuesToRemove = [];
+			for (let i = 0; i < this.dataSourcesBeingBroadcast.length; i++) {
+				namesOfValuesToRemove.push(this.dataSourcesBeingBroadcast[i]);
+			}
+			for (let i = 0; i < this.dataDestinationsBeingBroadcast.length; i++) {
+				namesOfValuesToRemove.push(this.dataDestinationsBeingBroadcast[i]);
+			}
+			wsio.emit("serverDataRemoveValue", { namesOfValuesToRemove: namesOfValuesToRemove });
 		}
 	}
 });
