@@ -372,7 +372,7 @@ function SAGE2_init() {
 			urlParams: urlParams
 		};
 		// SLICE 
-		if (__SAGE2__.browser.isMobile) {
+		if (urlParams !== undefined || urlParams !== null) {
 			clientDescription.clientType = "sliceUI";
 		}
 		wsio.emit('addClient', clientDescription);

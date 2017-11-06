@@ -4048,6 +4048,9 @@ function wsFinishApplicationMove(wsio, data) {
 	} else if (SAGE2Items.applications.list.hasOwnProperty(wsio.id + "|" + data.appId)) {
 		data.appId = wsio.id + "|" + data.appId;
 		app = SAGE2Items.applications.list[data.appId];
+	} else if (SAGE2Items.applications.list.hasOwnProperty(wsio.id)) { // SLICE
+		data.appId = wsio.id;
+		app = SAGE2Items.applications.list[data.appId];
 	}
 	if (app === undefined || app === null) {
 		return;
@@ -5679,6 +5682,7 @@ function createSagePointer(uniqueID, clientType, urlParams, portal) { // SLICE a
 	if (clientType === "sliceUI") {
 		if (urlParams.app){
 			urlParams.pointerApp = SAGE2Items.applications.list["app_"+urlParams.app];
+			urlParams.titleBar = config.ui.titleBarHeight;
 		}
 		sagePointers[uniqueID] = new Slicepointer(uniqueID + "_slicePointer", urlParams);
 	} else {
@@ -6186,49 +6190,54 @@ function pointerPressOnApplication(uniqueID, pointerX, pointerY, data, obj, loca
 		return;
 	}
 
-	switch (btn.id) {
-		case "titleBar":
-			if (drawingManager.paletteID !== uniqueID) {
-				selectApplicationForMove(uniqueID, obj.data, pointerX, pointerY, portalId);
-			}
-			break;
-		case "dragCorner":
-			if (obj.data.application === "Webview") {
-				// resize with corner only in window mode
-				if (!sagePointers[uniqueID].visible || remoteInteraction[uniqueID].windowManagementMode()) {
-					selectApplicationForResize(uniqueID, obj.data, pointerX, pointerY, portalId);
-				} else {
-					// if corner click and webview, then send the click to app
-					sendPointerPressToApplication(uniqueID, obj.data, pointerX, pointerY, data);
+	// SLICE Stops slice pointers from pressing app buttons
+	if (sagePointers[uniqueID].id === (uniqueID+"_slicePointer")){
+		return;
+	} else {
+		switch (btn.id) {
+			case "titleBar":
+				if (drawingManager.paletteID !== uniqueID) {
+					selectApplicationForMove(uniqueID, obj.data, pointerX, pointerY, portalId);
 				}
-			} else {
-				selectApplicationForResize(uniqueID, obj.data, pointerX, pointerY, portalId);
-			}
-			break;
-		case "syncButton":
-			if (sagePointers[uniqueID].visible) {
-				// only if pointer on the wall, not the web UI
-				broadcast('toggleSyncOptions', {id: obj.data.id});
-			}
-			break;
-		case "fullscreenButton":
-			if (sagePointers[uniqueID].visible) {
-				// only if pointer on the wall, not the web UI
-				toggleApplicationFullscreen(uniqueID, obj.data, portalId);
-			}
-			break;
-		case "pinButton":
-			if (sagePointers[uniqueID].visible) {
-				// only if pointer on the wall, not the web UI
-				toggleStickyPin(obj.data.id);
-			}
-			break;
-		case "closeButton":
-			if (sagePointers[uniqueID].visible) {
-				// only if pointer on the wall, not the web UI
-				deleteApplication(obj.data.id, portalId);
-			}
-			break;
+				break;
+			case "dragCorner":
+				if (obj.data.application === "Webview") {
+					// resize with corner only in window mode
+					if (!sagePointers[uniqueID].visible || remoteInteraction[uniqueID].windowManagementMode()) {
+						selectApplicationForResize(uniqueID, obj.data, pointerX, pointerY, portalId);
+					} else {
+						// if corner click and webview, then send the click to app
+						sendPointerPressToApplication(uniqueID, obj.data, pointerX, pointerY, data);
+					}
+				} else {
+					selectApplicationForResize(uniqueID, obj.data, pointerX, pointerY, portalId);
+				}
+				break;
+			case "syncButton":
+				if (sagePointers[uniqueID].visible) {
+					// only if pointer on the wall, not the web UI
+					broadcast('toggleSyncOptions', {id: obj.data.id});
+				}
+				break;
+			case "fullscreenButton":
+				if (sagePointers[uniqueID].visible) {
+					// only if pointer on the wall, not the web UI
+					toggleApplicationFullscreen(uniqueID, obj.data, portalId);
+				}
+				break;
+			case "pinButton":
+				if (sagePointers[uniqueID].visible) {
+					// only if pointer on the wall, not the web UI
+					toggleStickyPin(obj.data.id);
+				}
+				break;
+			case "closeButton":
+				if (sagePointers[uniqueID].visible) {
+					// only if pointer on the wall, not the web UI
+					deleteApplication(obj.data.id, portalId);
+				}
+				break;
+		}
 	}
 }
 

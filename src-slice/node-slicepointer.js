@@ -30,7 +30,7 @@ class SlicePointer extends SagePointer {
     constructor(id, urlParams){
         super(id);
         this.urlParams = urlParams;
-        this.titleBar = 18;
+        this.titleBar = urlParams.titleBar + 1;
         if (urlParams.pointerApp){
 		    this.visibleLeft = urlParams.pointerApp.left;
             this.visibleTop = urlParams.pointerApp.top+this.titleBar;
