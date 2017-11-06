@@ -244,10 +244,11 @@ a:hover {
 }
 
 #smallmultiplediv {
-	width: 100%;
 	height: 200;
 	overflow: hidden;
 	transition: height 0.5s ease;
+	border-left: 0;
+	border-right: 0;
 }
 
 #displaypanecontainer > div {
