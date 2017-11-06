@@ -336,6 +336,11 @@ PerformanceManager.prototype.collectserverLoad = function(data) {
 	if (serverProcess.length === 1) {
 		serverProcess = serverProcess[0];
 	}
+
+	if (serverProcess.pcpu > 100 || serverProcess.pmem > 100) {
+		return;
+	}
+
 	var serverLoad = {
 		date: Date.now(),
 		cpuPercent: serverProcess.pcpu,

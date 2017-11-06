@@ -139,6 +139,7 @@ function setupLineChart(id, titleText, lineFuncY, yAxisFormat, currentTextFunc, 
 				chartLine = chart.svg.append('path');
 				if (ythreshold === 0) {
 					chartLine.attr("class", "line");
+					chartLine.attr("stroke", "rgb(76, 164, 247)");
 				} else {
 					chartLine.attr("class", "thresholdline");
 				}

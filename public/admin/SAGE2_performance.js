@@ -457,7 +457,7 @@ function initializeCharts() {
 	};
 	setupLineChart('servertraffic', 'SAGE2 Traffic', function(d) {
 		return (d.totalOutBound + d.totalInBound) / (performanceMetrics.serverTrafficMax * 1.2);
-	}, yAxisFormatNetworkServer, currentServerTrafficText, 1.0);
+	}, yAxisFormatNetworkServer, currentServerTrafficText, 0);
 
 	var currentSystemTrafficText = function() {
 		var network = performanceMetrics.network;
@@ -466,7 +466,7 @@ function initializeCharts() {
 	};
 	setupLineChart('systemtraffic', 'System Traffic', function(d) {
 		return (d.totalOutBound + d.totalInBound) / (performanceMetrics.networkMax * 1.2);
-	}, yAxisFormatNetworkSystem, currentSystemTrafficText, 1.0);
+	}, yAxisFormatNetworkSystem, currentSystemTrafficText, 0);
 
 	colors.push(...d3.schemeCategory20);
 	colors.push(...d3.schemeCategory20b);
