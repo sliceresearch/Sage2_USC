@@ -123,14 +123,57 @@
 		box-shadow:1px 1px 2px rgba(0,0,0,0.5);
 	}
 
-	#permissions {
-		position:relative;
-		white-space: nowrap;
-		margin-top:30px;
+	#permission--nav {
+		margin-top:35px;
+		font-weight:bold;
 	}
-	#permissions > div {
+	#permission--nav select,
+	#permission--nav button {
+		font-size:inherit;
+		border:none;
+		border-radius:0;
+		padding:5px 10px;
+		outline:none;
+		cursor:pointer;
+		background:white;
+		display:inline-block;
+		margin-left:5px;
+	}
+	#permission--nav select {
+		height:2em;
+		border:1px solid #ccc;
+	}
+
+	#permission--nav button {
+		box-shadow:2px 2px 5px #ccc;
+	}
+	#permission--nav button:active {
+		box-shadow: none;
+		background:#ccc;
+	}
+
+	#permission--input {
+		padding:5px 10px;
+		border:1px solid #ccc;
+		width:6em;
+		outline:none;
+		font-size:inherit;
+	}
+	#permission--input:focus {
+		background:#fafafa;
+	}
+
+	#permission--form {
+		display:none;
+	}
+	#permission--nav.adding select,
+	.adding #permission--new {
+		display:none;
+	}
+	.adding #permission--form {
 		display:inline-block;
 	}
+
 </style>
 </head>
 
@@ -154,7 +197,20 @@
 		<div class="box">
 			<table id="permission--list">
 			</table>
+
+			<div id="permission--nav">
+				Permissions:
+				<select id="permission--select">
+				</select>
+				<button id="permission--new">New</button>
+				<form id="permission--form">
+					<input id="permission--input" placeholder="Title">
+					<button id="permission--add">Add</button>
+					<button id="permission--cancel">Cancel</button>
+				</form>
+			</div>
 		</div>
+
 	</section>
 	<section id="log" class="box">
 	</section>
@@ -163,6 +219,7 @@
 (function(){ 
 	let clients = {};
 	let rbac = {};
+	let rbacList = [];
 	let nli = 0;
 	let socketOpen = false;
 	let wsio = new WebsocketIO();
@@ -191,6 +248,34 @@
 		}
 	});
 
+	// manage "new permissions" interaction
+	document.getElementById('permission--new').onclick = function() {
+		document.getElementById('permission--nav').classList.add('adding');
+		document.getElementById('permission--input').focus();
+	}
+	document.getElementById('permission--add').onclick = function() {
+		let val = document.getElementById('permission--input').value;
+		if (val && val.trim()) {
+			val = val.trim();
+			if (val === 'Default' || rbacList.find(rbac => rbac.name === val)) {
+				// FIXME
+				alert('Please choose a unique name.')
+			} else {
+				document.getElementById('permission--nav').classList.remove('adding');
+				document.getElementById('permission--form').reset();
+				if (socketOpen) {
+					wsio.emit('createPermissionsModel', {name: val});
+				}
+			}
+		}
+		return false;
+	}
+	document.getElementById('permission--cancel').onclick = function() {
+		document.getElementById('permission--nav').classList.remove('adding');
+		document.getElementById('permission--form').reset();
+		return false;
+	}
+
 	// open socket
 	wsio.open(function() {
 		wsio.emit('addClient', {
@@ -205,12 +290,15 @@
 		});
 
 		wsio.on('initialize', function() {
+			socketOpen = true;
 			document.getElementById('log').innerHTML = 'Listening...';
 
-			wsio.emit('pollActiveClients');
+			wsio.emit('getActiveClients');
+			wsio.emit('getRbac');
 		});
 
 		wsio.on('activeClientsRetrieved', handleClientsRetrieved);
+		wsio.on('rbacRetrieved', handleRbacRetrieved);
 		wsio.on('userEvent', handleUserEvent);
 	});
 
@@ -236,16 +324,15 @@
 
 	// ********* Listeners ***********
 	function handleClientsRetrieved(data) {
-		console.log('clients retrieved:', data);
 		clients = data.clients;
-		rbac = data.rbac;
 
 		redrawUsers();
+	}
 
-		if (!socketOpen) {
-			socketOpen = true;
-			redrawPermissions();
-		}
+	function handleRbacRetrieved(data) {
+		rbac = data.rbac;
+		rbacList = data.rbacList;
+		redrawPermissions();
 	}
 
 	function handleUserEvent(data) {
@@ -277,7 +364,7 @@
 			case 'logout':
 			case 'connect':
 			case 'disconnect':
-				wsio.emit('pollActiveClients');
+				wsio.emit('getActiveClients');
 				break;
 			default:
 				break;
@@ -352,6 +439,7 @@
 
 	function redrawPermissions() {
 		// populate html
+		// table
 		let table = document.getElementById('permission--list');
 		table.innerHTML = '';
 
@@ -375,6 +463,19 @@
 		});
 		table.innerHTML += html;
 
+		// select
+		let select = document.getElementById('permission--select');
+		select.innerHTML = '';
+		rbacList.forEach(_rbac => {
+			let name = _rbac.name || 'Default';
+			let option = addText(document.createElement('option'), name);
+			if (_rbac.name === rbac.name) {
+				option.selected = true;
+			}
+			select.appendChild(option);
+		});
+		select.disabled = rbacList.length === 1;
+
 		// attach handlers to inputs
 		document.querySelectorAll('#permission--list input').forEach(input => {
 			let match = input.id.match(/action--(.+)_(\d+)/);
@@ -393,6 +494,14 @@
 				}
 			}
 		});
+
+		// attach handler to select change
+		select.onchange = function() {
+			let rbac = rbacList[this.selectedIndex];
+			if (rbac) {
+				wsio.emit('switchPermissionsModel', rbac.name);
+			}
+		}
 	}
 
 	function logEvent(event) {

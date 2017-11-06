@@ -753,8 +753,6 @@ function closeWebSocketClient(wsio) {
 		sageutils.log("Disconnect", chalk.bold.red(wsio.id) +
 			" (" + wsio.clientType + " " + wsio.clientID + ")");
 		performanceManager.removeDisplayClient(wsio.id);
-	} else if (wsio.clientType === "userManager") {
-		userlist.save();
 	} else {
 		userlist.disconnect(wsio.id);
 		broadcast('userEvent', { type: 'disconnect', data: null, id: wsio.id });
@@ -1019,13 +1017,16 @@ function initializeWSClient(wsio, reqConfig, reqVersion, reqTime, reqConsole) {
  */
 function setupListeners(wsio) {
 	wsio.on('registerInteractionClient',            wsRegisterInteractionClient);
-	wsio.on('pollActiveClients',                    wsPollActiveClients);
+	wsio.on('getActiveClients',                     wsGetActiveClients);
+	wsio.on('getRbac',                              wsGetRbac);
 	wsio.on('loginUser',                            wsLoginUser);
 	wsio.on('logoutUser',                           wsLogoutUser);
 	wsio.on('createUser',                           wsCreateUser);
 	wsio.on('editUser',                             wsEditUser);
 	wsio.on('editUserRole',                         wsEditUserRole);
 	wsio.on('editRole',                             wsEditRole);
+	wsio.on('createPermissionsModel',               wsCreatePermissionsModel);
+	wsio.on('switchPermissionsModel',               wsSwitchPermissionsModel);
 
 	wsio.on('startSagePointer',                     wsStartSagePointer);
 	wsio.on('stopSagePointer',                      wsStopSagePointer);
@@ -1469,10 +1470,17 @@ function wsSelectionModeOnOff(wsio, data) {
 }
 
 // ************** User functions ****************
-function wsPollActiveClients(wsio, data) {
+function wsGetActiveClients(wsio, data) {
 	broadcast('activeClientsRetrieved', {
 		clients: userlist.clients,
 		rbac: userlist.rbac
+	});
+}
+
+function wsGetRbac() {
+	broadcast('rbacRetrieved', {
+		rbac: userlist.rbac,
+		rbacList: userlist.rbacList
 	});
 }
 
@@ -1591,7 +1599,29 @@ function wsEditUserRole(wsio, data) {
 		data.ips.forEach(ip => {
 			userlist.assignRole(ip, data.role);
 		});
-		wsPollActiveClients();
+		wsGetActiveClients();
+	}
+}
+
+function wsCreatePermissionsModel(wsio, data) {
+	userlist.initRolesAndPermissions(Object.assign({
+		roles: userlist.rbac.roles.slice(),
+		actions: userlist.rbac.actions.slice(),
+		permissions: Object.assign({}, userlist.rbac.permissions)
+	}, data));
+	wsGetRbac();
+}
+
+function wsSwitchPermissionsModel(wsio, data) {
+	if (data == undefined) {
+		userlist.rbac = userlist.rbacList[0];
+		wsGetRbac();
+	} else {
+		let foundRbac = userlist.rbacList.find(rbac => rbac.name === data);
+		if (foundRbac) {
+			userlist.rbac = foundRbac;
+			wsGetRbac();
+		}
 	}
 }
 
