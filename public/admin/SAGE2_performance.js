@@ -138,7 +138,7 @@ function setupListeners(wsio) {
 	// Get elements from the DOM
 	var terminal1 = document.getElementById('terminal1');
 	var terminal2 = document.getElementById('terminal2');
-	var heading1 = document.getElementById('serverheading');
+	var heading1  = document.getElementById('serverheading');
 	// Got a reply from the server
 	wsio.on('initialize', function() {
 		initializeCharts();
@@ -180,7 +180,7 @@ function setupListeners(wsio) {
 
 			if (heading1) {
 				if (data.servername.length > 0) {
-					heading1.textContent = 'Server: ' + data.servername + '( ' + data.serverhost + ' )';
+					heading1.textContent = 'Server: ' + data.servername + ' (' + data.serverhost + ')';
 				} else {
 					heading1.textContent = 'Server: ' + data.serverhost;
 				}
