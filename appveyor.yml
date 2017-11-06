@@ -98,6 +98,7 @@ install:
   - move electron.js SAGE2
   - move generate-service-worker.js SAGE2
   - move src SAGE2
+  - move src-slice SAGE2
   - ren SAGE2 SAGE2-%APPVEYOR_BUILD_VERSION%
   - 7z a -sfx7z.sfx SAGE2-win64-%APPVEYOR_BUILD_VERSION%-%APPVEYOR_REPO_BRANCH%.exe SAGE2-%APPVEYOR_BUILD_VERSION% > nul
 
