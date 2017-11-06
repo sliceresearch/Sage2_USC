@@ -2701,24 +2701,45 @@ function addMenuEntry(menuDiv, entry, id, app) {
 		inputField.id = workingDiv.id + "Input";
 		// check if the data has a value field
 		inputField.defaultValue = entry.value || "";
+
+
 		// special case to use color input type
-		if (entry.inputColor) {
-			inputField.type = "color";
-			if (entry.colorChoices) {
-				// inputField.list = entry.colorChoices;
-				inputField.setAttribute('list', workingDiv.id + "Colors");
 
-				let colorList = document.createElement("datalist");
-				colorList.id = workingDiv.id + "Colors";
+		// if (entry.inputColor) {
+		// 	inputField.type = "color";
+		// 	if (entry.colorChoices) {
+		// 		// inputField.list = entry.colorChoices;
+		// 		inputField.setAttribute('list', workingDiv.id + "Colors");
 
-				for (let color of entry.colorChoices) {
-					let opt = document.createElement("option");
-					opt.value = color;
+		// 		let colorList = document.createElement("datalist");
+		// 		colorList.id = workingDiv.id + "Colors";
 
-					colorList.appendChild(opt);
-				}
-			}
+		// 		for (let color of entry.colorChoices) {
+		// 			let opt = document.createElement("option");
+		// 			opt.value = color;
+
+		// 			colorList.appendChild(opt);
+		// 		}
+		// 	}
+		// }
+
+		if (entry.inputUpdateOnChange) {
+			// bind necessary data for buttonEffect function
+			inputField.inputField = true;
+			inputField.inputFieldId = inputField.id;
+
+			// click effect
+			inputField.callback = entry.callback;
+			inputField.parameters = entry.parameters;
+			inputField.app = app;
+
+			pendingListeners.push({
+				id: inputField.id,
+				event: "change",
+				func: entry.buttonEffect.bind(inputField) // necessary to have correct data for "this.___"
+			});
 		}
+
 		// special case to use color/range input type
 		if (entry.inputType) {
 			if (entry.inputType === "color") {
@@ -2794,11 +2815,16 @@ function addMenuEntry(menuDiv, entry, id, app) {
 					pendingListeners.push({
 						id: colorOption.id,
 						event: "click",
-						func: function () {
+						func: function (e) {
 							document.getElementById(inputField.id).value = this;
 							document.getElementById(previewSwatch.id).style.background = this;
 
 							document.getElementById(colorPalette.id).style.display = "none";
+
+							// when color changed, send input if update on change
+							if (entry.inputUpdateOnChange) {
+								entry.buttonEffect.bind(inputField)(e);
+							}
 						}.bind(color) // bind color to be accessed in handler as (this)
 					});
 
@@ -2961,12 +2987,19 @@ function addMenuEntry(menuDiv, entry, id, app) {
 							handle.slidestart = null;
 							handle.offsetstart = null;
 							handle.sliding = null;
+
+							// when done dragging, take input if update on change
+							if (entry.inputUpdateOnChange) {
+								entry.buttonEffect.bind(inputField)(e);
+							}
 						} else {
 							let newLeft = e.offsetX;
 							if (newLeft <= 100 && newLeft >= 0) {
 								handle.style.left = newLeft + "px";
 								document.getElementById(inputField.id).value = pixelToValue(newLeft);
 							}
+
+							// don't auto update on click (imprecise) may change?
 						}
 					}
 				});
@@ -2976,28 +3009,15 @@ function addMenuEntry(menuDiv, entry, id, app) {
 					id: sliderWrapper.id,
 					event: "mouseleave",
 					func: function (e) {
-						document.getElementById(sliderHandle.id).slidestart = null;
-						document.getElementById(sliderHandle.id).sliding = null;
+						let handle = document.getElementById(sliderHandle.id);
+
+						handle.slidestart = null;
+						handle.offsetstart = null;
+						handle.sliding = null;
 					}
 				});
 			}
 
-			if (entry.inputUpdateOnChange) {
-				// bind necessary data for buttonEffect function
-				inputField.inputField = true;
-				inputField.inputFieldId = inputField.id;
-
-				// click effect
-				inputField.callback = entry.callback;
-				inputField.parameters = entry.parameters;
-				inputField.app = app;
-
-				pendingListeners.push({
-					id: inputField.id,
-					event: "change",
-					func: entry.buttonEffect.bind(inputField) // necessary to have correct data for "this.___"
-				});
-			}
 		}
 
 		if (entry.inputFieldSize) {

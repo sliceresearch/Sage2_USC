@@ -1063,15 +1063,6 @@ Partition.prototype.getContextMenu = function() {
 				description: this.innerTiling ? "Stop Tiling" : "Tile",
 				callback: "toggleInnerTiling",
 				parameters: {}
-			},
-			{
-				description: "Test Multi-Level",
-				children: [
-					{
-						description: "Test Item",
-						parameters: {}
-					}
-				]
 			}
 		]
 	});
@@ -1128,6 +1119,7 @@ Partition.prototype.getContextMenu = function() {
 		],
 		inputFieldSize: 7,
 		inputDefault: this.color,
+		inputUpdateOnChange: true,
 		parameters: {}
 	});
 
