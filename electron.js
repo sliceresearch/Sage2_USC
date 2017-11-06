@@ -388,46 +388,28 @@ function createWindow() {
 			perfData.cpuLoad = data;
 			return si.mem();
 		});
-		var proc = mem.then(data => {
+		mem.then(data => {
 			perfData.mem = data;
 			return si.processes();
 		})
-		.then(data => {
-			var displayProcess = data.list.filter(function(d) {
-				return parseInt(d.pid) === parseInt(process.pid)
-					|| parseInt(d.pid) === mainWindow.webContents.getOSProcessId();
-			});
+			.then(data => {
+				var displayProcess = data.list.filter(function(d) {
+					return parseInt(d.pid) === parseInt(process.pid)
+						|| parseInt(d.pid) === mainWindow.webContents.getOSProcessId();
+				});
 
-			displayProcess.forEach(el => {
-				displayLoad.cpuPercent += el.pcpu;
-				displayLoad.memPercent += el.pmem;
-				displayLoad.memVirtual += el.mem_vsz;
-				displayLoad.memResidentSet += el.mem_rss;
+				displayProcess.forEach(el => {
+					displayLoad.cpuPercent += el.pcpu;
+					displayLoad.memPercent += el.pmem;
+					displayLoad.memVirtual += el.mem_vsz;
+					displayLoad.memResidentSet += el.mem_rss;
+				});
+
+				perfData.processLoad = displayLoad;
+				mainWindow.webContents.send('performanceData', perfData);
 			})
-			
-			/*if (displayProcess.length === 1) {
-				displayProcess = displayProcess[0];
-			}*/
-			perfData.processLoad = displayLoad;
-			//console.log(displayLoad);
-			mainWindow.webContents.send('performanceData', perfData);
-		})
-		.catch(error => console.error(error));
-			/*.then(function(data) {
-				
-				
-
-			})*/
-
-		/*// Server Load
-		si.processes(this.collectserverLoad.bind(this));
-
-		// Memory usage
-		si.mem(this.collectMemoryUsage.bind(this));
-
-		// Network traffic
-		si.networkStats(this.collectSystemTraffic.bind(this));*/
-	})
+			.catch(error => console.error(error));
+	});
 }
 
 /**

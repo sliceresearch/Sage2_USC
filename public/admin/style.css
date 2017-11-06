@@ -280,3 +280,9 @@ a:hover {
 	fill: white;
 	alignment-baseline:middle;
 }
+
+#serverheading {
+	font-family: "Arial";
+	font-size: 12pt;
+	fill: white;
+}

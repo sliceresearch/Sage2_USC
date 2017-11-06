@@ -39,6 +39,8 @@ function PerformanceManager() {
 		totalOutBound: 0,
 		totalInBound: 0
 	};
+	this.previousBytesRead = {};
+	this.previousBytesWritten = {};
 
 	// One object that holds all performance related information
 	this.performanceMetrics = {
@@ -85,7 +87,7 @@ function PerformanceManager() {
 		cpuLoad: null,
 		memUsage: null,
 		clientLoad: null
-	}
+	};
 	// Array to store display client data
 	this.clientsInformation = [];
 
@@ -94,6 +96,8 @@ function PerformanceManager() {
 	// Get the basic information of the system
 	sysInfo.getStaticData(function(data) {
 		data.hostname = os.hostname();
+		data.servername = this.config.name || "";
+		data.serverhost = this.config.host;
 		this.performanceMetrics.staticInformation = data;
 		// fix on some system with no memory layout
 		if (data.memLayout.length === 0) {
@@ -113,6 +117,14 @@ function PerformanceManager() {
 	this.loopHandle = setInterval(this.collectMetrics.bind(this),
 		this.samplingInterval * 1000);
 }
+
+
+
+PerformanceManager.prototype.initializeConfiguration = function(cfg) {
+	this.config = cfg;
+};
+
+
 
 /**
  * Adds data for a display client.
@@ -135,7 +147,7 @@ PerformanceManager.prototype.addDisplayClient = function(id, idx, data) {
 		module.parent.exports.broadcast('displayHardwareInformation',
 			this.clients.hardware
 		);
-	}	
+	}
 };
 
 /**
@@ -440,7 +452,7 @@ PerformanceManager.prototype.collectMemoryUsage = function(data) {
   * @method collectServerTraffic
   */
 PerformanceManager.prototype.collectServerTraffic = function() {
-	
+
 	this.saveData('serverTraffic', this.getTrafficData());
 
 	// Creating empty objects to store moving averages for 1 minute
@@ -543,9 +555,9 @@ PerformanceManager.prototype.saveDisplayPerformanceData = function(id, idx, data
 	if (negLoad || negMem || negClientProc) {
 		return;
 	}
-	var clientSystemLoad = {		
+	var clientSystemLoad = {
 		load: data.cpuLoad.raw_currentload,
-		idle: data.cpuLoad.raw_currentload_idle,
+		idle: data.cpuLoad.raw_currentload_idle
 	};
 	var clientSystemMem = {
 		total:  data.mem.total,  // total memory in bytes
@@ -560,7 +572,7 @@ PerformanceManager.prototype.saveDisplayPerformanceData = function(id, idx, data
 		memVirtual: data.processLoad.memVirtual * 1024,
 		memResidentSet: data.processLoad.memResidentSet * 1024
 	};
-	
+
 	var clientData =  {
 		id: id,
 		clientID: idx,
@@ -568,7 +580,7 @@ PerformanceManager.prototype.saveDisplayPerformanceData = function(id, idx, data
 		cpuLoad: clientSystemLoad,
 		memUsage: clientSystemMem,
 		clientLoad: clientProcessLoad
-	}
+	};
 
 	var hardwareData = this.clients.hardware.find(function(d) {
 		return d.clientID === idx && d.id === id;
@@ -582,23 +594,22 @@ PerformanceManager.prototype.saveDisplayPerformanceData = function(id, idx, data
 
 	var durationAgo = Date.now() - this.durationInMinutes * (60 * 1000);
 	// Remove previous entry
-	removeObjectsFromArrayOnPropertyValue(this.clients.performanceMetrics, "id", id, 'eq');	
+	removeObjectsFromArrayOnPropertyValue(this.clients.performanceMetrics, "id", id, 'eq');
 	this.clients.performanceMetrics.push(clientData);
 
 	removeObjectsFromArrayOnPropertyValue(this.clients.history, "date", durationAgo, 'lt');
 	this.clients.history.push(clientData);
 
-}
+};
 
 function removeObjectsFromArrayOnPropertyValue(array, property, value, condition) {
 	// Current value
 	var filterFunc;
-	switch(condition) {
+	switch (condition) {
 		case 'lt':
 			filterFunc = function(d) {
 				return d[property] < value;
 			};
-
 			break;
 		case 'gt':
 			filterFunc = function(d) {
@@ -629,7 +640,7 @@ function removeObjectsFromArrayOnPropertyValue(array, property, value, condition
 		obj[property] = d[property];
 		return obj;
 	}).filter(filterFunc);
-	for (var i = 0; i < keys.length; i ++) {
+	for (var i = 0; i < keys.length; i++) {
 		array.splice(keys[i].arrIdx, 1);
 	}
 	if (keys.length > 0) {
@@ -820,13 +831,8 @@ PerformanceManager.prototype.printMetrics = function() {
 	sageutils.log('Perf', "");
 };
 
-
-
-
-
-
 /**
-  * Wraps the WebsocketIO emit and on functions to append size computation of the data 
+  * Wraps the WebsocketIO emit and on functions to append size computation of the data
   ** being transferred
   *
   * @method wrapDataTransferFunctions
@@ -835,17 +841,17 @@ PerformanceManager.prototype.printMetrics = function() {
 
 PerformanceManager.prototype.wrapDataTransferFunctions = function(WebsocketIO) {
 	// Save performance manager object reference
-	var _this = this;
+	var getMessageSize = this.getMessageSize.bind(this);
 	// Save the original on function
 	var onFunc = WebsocketIO.prototype.on;
 	// Wrapper function
 	WebsocketIO.prototype.on = function(name, callback) {
 		// Reference to wsio object
-		var __this = this;
+		var _this = this;
 		// New callback function that calls the actual callback and then computes size
 		var wrappedCallback = function(obj, data) {
 			callback(obj, data);
-			_this.computeMessageSize(__this, data, false);
+			getMessageSize(_this, false);
 		};
 		// Call the original on function with the new callback and return the result
 		return onFunc.bind(this)(name, wrappedCallback);
@@ -858,7 +864,7 @@ PerformanceManager.prototype.wrapDataTransferFunctions = function(WebsocketIO) {
 		// Call the original emit function
 		var emitReturnValue = emitFunc.bind(this)(name, dataString, attempts);
 		// Compute size
-		_this.computeMessageSize(this, dataString, true);
+		getMessageSize(this, true);
 		// Return the value of the original emit function
 		return emitReturnValue;
 	};
@@ -870,11 +876,34 @@ PerformanceManager.prototype.wrapDataTransferFunctions = function(WebsocketIO) {
 		// Call the original emitString function
 		var emitReturnValue = emitStringFunc.bind(this)(name, dataString, attempts);
 		// Compute size
-		_this.computeMessageSize(this, dataString, true);
+		getMessageSize(this, true);
 		// Return the result of the original emitString function
 		return emitReturnValue;
 	};
 };
+
+
+PerformanceManager.prototype.getMessageSize = function(wsio, outBound) {
+	var size;
+	if (outBound === true) {
+		if (this.previousBytesWritten[wsio.id]) {
+			size = wsio.bytesWritten - this.previousBytesWritten[wsio.id];
+		} else {
+			size = wsio.bytesWritten;
+		}
+		this.previousBytesWritten[wsio.id] = wsio.bytesWritten;
+		this.trafficData.totalOutBound += size;
+	} else {
+		if (this.previousBytesWritten[wsio.id]) {
+			size = wsio.bytesRead - this.previousBytesRead[wsio.id];
+		} else {
+			size = wsio.bytesRead;
+		}
+		this.previousBytesRead[wsio.id] = wsio.bytesRead;
+		this.trafficData.totalInBound += size;
+	}
+};
+
 
 /**
   * Computes size of the data being transferred and received through Websockets
@@ -882,42 +911,42 @@ PerformanceManager.prototype.wrapDataTransferFunctions = function(WebsocketIO) {
   * @method computeMessageSize
   * @param {object} wsio - Websocket object that is responsible to client-server communication
   * @param {object} data - Data being sent or received through sockets
-  * @param {boolean} outBound - Flag indicates whether data is outgoing or incoming 
+  * @param {boolean} outBound - Flag indicates whether data is outgoing or incoming
   */
 
 PerformanceManager.prototype.computeMessageSize = function(wsio, data, outBound) {
-	
+
 	var obj = null;
 	var id = null, size = 0;
 
 	if (Buffer.isBuffer(data) === true) {
 		// If data is a Buffer object .length gives its size in bytes
 		size = data.length;
-	} else if (typeof data === "string") { 
+	} else if (typeof data === "string") {
 		size = Buffer.byteLength(data);
-	} else if (data !== null && data !== undefined){ // Data is a json object
+	} else if (data !== null && data !== undefined) { // Data is a json object
 		size = Buffer.byteLength(JSON.stringify(data));
 	}
 
-	
+
 	if (this.collectAppSpecificTraffic === true) {
 		if (Buffer.isBuffer(data) === true) {
 			//Extract the app ID from the data
 			id = byteBufferToString(data);
-		} else if (typeof data === "string") { 
+		} else if (typeof data === "string") {
 			//String contains a json object, parse it to get app ID
-			obj = JSON.parse(data); 
+			obj = JSON.parse(data);
 			if (obj !== null && obj !== undefined) {
 				id = obj.id;
 			}
-		} else if (data !== null && data !== undefined){
+		} else if (data !== null && data !== undefined) {
 			// Data is a json object
 			id = data.id;
 		}
 		if (id === undefined || id === null) {
 			id = "no_app";
 		}
-	
+
 		var clientAppID = wsio.clientID + "_" + id;
 		if (this.trafficData.hasOwnProperty(clientAppID) === false) {
 			this.trafficData[clientAppID] = {
@@ -925,7 +954,7 @@ PerformanceManager.prototype.computeMessageSize = function(wsio, data, outBound)
 				clientID: wsio.clientID,
 				clientType: wsio.clientType,
 				outBoundSize: 0,
-				inBoundSize:0
+				inBoundSize: 0
 			};
 		}
 		if (outBound === true) {

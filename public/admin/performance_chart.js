@@ -18,34 +18,35 @@
  * @class Performance_Chart
  */
 
+/*global d3: true, performanceMetrics: true, durationInMinutes: true,
+  getNiceNumber: true, clients: true, buttonClicked: true */
+
 // Object to hold chart references
 var charts = {};
 var selectedDisplayClientIDList = [];
 var clientCharts = {};
 
-var colors = [];
-var clientColorMap = {};
+
 
 function makeSvg(domElementID, dim) {
-	var chartMargin = dim || {top: 20, right: 50, bottom: 25, left: 20};
+	var chartMargin = dim || {top: 20, right: 60, bottom: 25, left: 20};
 	var domElement = document.getElementById(domElementID);
 	var width = chartMargin.width || parseInt(domElement.clientWidth);
 	var height = chartMargin.height || parseInt(domElement.clientHeight);
 	width = width - chartMargin.left - chartMargin.right;
 	height = height - chartMargin.top - chartMargin.bottom;
-	console.log(height);
 	var box =  "0, 0, 1000, " + parseInt(1000 * (height / width));
 	var svg = d3.select(domElement).append("svg")
-    	.attr("width", width + chartMargin.left + chartMargin.right)
-    	.attr("height", height + chartMargin.top + chartMargin.bottom)
-        .attr("viewbox", box)
-        .attr("preserveAspectRatio", "xMinYMin meet")
+		.attr("width", width + chartMargin.left + chartMargin.right)
+		.attr("height", height + chartMargin.top + chartMargin.bottom)
+		.attr("viewbox", box)
+		.attr("preserveAspectRatio", "xMinYMin meet")
 		.append("g")
-		.attr("transform", "translate(" + chartMargin.left + "," + chartMargin.top + ")")
-    return {svg: svg, width: width, height: height};
+		.attr("transform", "translate(" + chartMargin.left + "," + chartMargin.top + ")");
+	return {svg: svg, width: width, height: height};
 }
 
-function handlePageResize(){
+function handlePageResize() {
 	var chartMargin = {top: 20, right: 50, bottom: 25, left: 20};
 	var domElement, svg, width, height, box;
 	for (var id in charts) {
@@ -58,61 +59,12 @@ function handlePageResize(){
 			box =  "0, 0, 1000, " + parseInt(1000 * (height / width));
 			svg = charts[id].svg;
 			svg.attr("width", width);
-		    svg.attr("height", height);
-		    svg.attr("viewbox", box);
+			svg.attr("height", height);
+			svg.attr("viewbox", box);
 		}
 	}
 }
 
-
-function updateLineChart(chartId, data, key, filterlist) {
-	var now = performanceMetrics.cpuLoad.date;
-	var entireDurationInMilliseconds = durationInMinutes * 60 * 1000;
-	var timeDomain = [now - entireDurationInMilliseconds, now];
-	var chart = charts[chartId];
-	chart.scaleX.domain(timeDomain);
-	chart.xAxis.call(chart.xAxisFunc);
-	chart.yAxis.call(chart.yAxisFunc);
-	if (chart.current) {
-		chart.current.text(chart.currentTextFunc());	
-	}
-	
-	if (key !== null && key !== undefined) {
-		var nestedData = d3.nest()
-			.key(d => d[key])
-			.object(data);
-		//console.log(nestedData);
-		for (var k in nestedData) {
-			if (nestedData.hasOwnProperty(k) === true && filterlist.indexOf(k) < 0) {
-				delete nestedData[k];
-			}
-		}
-		var svg = chart.svg;
-		
-		svg.selectAll('.' + chartId + 'lines').remove();
-
-		var lines = svg.selectAll('.' + chartId + 'lines')
-			.data(Object.keys(nestedData));
-
-		var lineg = lines.enter().append('g')
-			.attr('class', chartId + 'lines');
-
-		lineg.append('path')
-			.attr('class', 'line')
-			.attr('id', 'clientline')
-			//.attr('class', 'line')
-			.attr('stroke', function(d, i) {
-				return clientColorMap[d];
-			})
-			.attr('d', function(d) {
-				return chart.lineFunc(nestedData[d]);
-			});
-
-		lines.exit().remove();
-	} else {
-		chart.lineChart.attr('d', chart.lineFunc(data));
-	}
-}
 
 function initializeGradientColors(threshold) {
 	var gradientColors = [{
@@ -144,8 +96,8 @@ function setupLineChart(id, titleText, lineFuncY, yAxisFormat, currentTextFunc, 
 		chart = charts[id];
 	} else {
 		chart = makeSvg(id);
-			
-	    // set the ranges
+
+		// set the ranges
 		var scaleX = d3.scaleTime()
 			.range([0, chart.width]);
 		var scaleY = d3.scaleLinear()
@@ -161,26 +113,26 @@ function setupLineChart(id, titleText, lineFuncY, yAxisFormat, currentTextFunc, 
 				.selectAll("stop")
 				.data(initializeGradientColors(ythreshold))
 				.enter().append("stop")
-					.attr("offset", function(d) {
-						return d.offset;
-					})
-					.attr("stop-color", function(d) {
-						return d.color;
-					});
+				.attr("offset", function(d) {
+					return d.offset;
+				})
+				.attr("stop-color", function(d) {
+					return d.color;
+				});
 		}
-		
+
 		// define the line
 		var chartLineFunc = d3.line()
-	    	.x(function(d) { 
-	    		return scaleX(d.date); 
-	    	})
-	    	.y(function(d) { 
-	    		return scaleY(lineFuncY(d)); 
-	    	})
-	    	.curve(d3.curveLinear);
+			.x(function(d) {
+				return scaleX(d.date);
+			})
+			.y(function(d) {
+				return scaleY(lineFuncY(d));
+			})
+			.curve(d3.curveLinear);
 
-	    var chartLine;
-	    if (multiLineChart === true) {
+		var chartLine;
+		if (multiLineChart === true) {
 			chartLine = null;
 		} else {
 			chartLine = chart.svg.select('path');
@@ -217,120 +169,54 @@ function setupLineChart(id, titleText, lineFuncY, yAxisFormat, currentTextFunc, 
 			.attr("transform", "translate(" + chart.width + ", 0)");
 
 		var title = chart.svg.append("text")
-	      .attr("x", 0)
-	      .attr("y", 0)
-	      .attr('class', "title")
-	      .style("text-anchor", "start")
-	      .text(titleText);
+			.attr("x", 0)
+			.attr("y", 0)
+			.attr('class', "title")
+			.style("text-anchor", "start")
+			.text(titleText);
 
-	    var current = null;
-	    if (currentTextFunc) {
-	    	current = chart.svg.append("text")
+		var current = null;
+		if (currentTextFunc) {
+			current = chart.svg.append("text")
 				.attr("x", 0)
 				.attr("y", 15)
 				.attr('class', "title")
 				.style("text-anchor", "start");
-	    }
-	    
+		}
+
 
 		charts[id] = {
 			svg: chart.svg,
 			width: chart.width,
 			height: chart.height,
-	    	lineChart: chartLine,
-	    	lineFunc: chartLineFunc,
-	    	scaleX: scaleX,
-	    	scaleY: scaleY,
-	    	yAxisFunc: yAxisFunc,
-	    	xAxisFunc: xAxisFunc,
-	    	yAxis: yAxis,
-	    	xAxis: xAxis,
-	    	title: title,
-	    	current: current,
-	    	currentTextFunc: currentTextFunc
-
-	    };
-	}
-}
-
-
-
-function buttonClicked (d, i){
-	var idx = selectedDisplayClientIDList.indexOf(d.id);
-	if (idx > -1) {
-		selectedDisplayClientIDList.splice(idx, 1);
-		d3.select(this.firstChild)
-			.attr('stroke', 'black');
-	} else {
-		selectedDisplayClientIDList.push(d.id);
-		d3.select(this.firstChild)
-			.attr('stroke', clientColorMap[d.id]);
-	}
-	d3.select(this).attr()
-	showDisplayClientsHistory(true);
-}
-
-
-function showDisplayClientsHistory(clicked) {
-	var clientsHistoryDiv = document.getElementById('displaypanecontainer');
-	
-	if (selectedDisplayClientIDList.length > 0) {
-		var yAxisFormatLoad = function(d) {
-			return (d * 100) + "%";
+			lineChart: chartLine,
+			lineFunc: chartLineFunc,
+			scaleX: scaleX,
+			scaleY: scaleY,
+			yAxisFunc: yAxisFunc,
+			xAxisFunc: xAxisFunc,
+			yAxis: yAxis,
+			xAxis: xAxis,
+			title: title,
+			current: current,
+			currentTextFunc: currentTextFunc
 		};
-		var yAxisFormatMemory = function(d) {
-			var mem = getNiceNumber(d
-				* (performanceMetrics.memUsage.used + performanceMetrics.memUsage.free));
-			return mem.number + mem.suffix;
-		}
-		setupLineChart('displaycpuload', 'Client CPU Load', function(d) {
-				var cpu = d.cpuLoad;
-		    	return cpu.load / (cpu.load + cpu.idle);
-		    }, yAxisFormatLoad, null, 0.5, true);
-		setupLineChart('displayclientload', 'SAGE2 Display Client Load', function(d) {
-			var client = d.clientLoad;
-			return client.cpuPercent / 100;
-		}, yAxisFormatLoad, null, 0.5, true);
-		setupLineChart('displaymemusage', 'Client System Memory', function(d) {
-			var mem = d.memUsage;
-			return mem.used / (mem.used + mem.free);
-		}, yAxisFormatMemory, null, 0.7, true);
-
-		setupLineChart('displayclientmem', 'SAGE2 Display Client Memory', function(d) {
-			var client = d.clientLoad;
-			return client.memPercent / 100;
-		}, yAxisFormatMemory, null, 0.7, true);
-
-		updateLineChart('displaycpuload', clients.history, 'id', selectedDisplayClientIDList);
-		updateLineChart('displayclientload', clients.history, 'id', selectedDisplayClientIDList);
-		updateLineChart('displaymemusage', clients.history, 'id', selectedDisplayClientIDList);
-		updateLineChart('displayclientmem', clients.history, 'id', selectedDisplayClientIDList);
-	} else {
-		clientsHistoryDiv.style.height = 0 + "px";
-	}
-	if (clicked === true) {
-		
-		if (selectedDisplayClientIDList.length > 0) {
-			window.scrollTo(0, document.body.scrollHeight);
-			clientsHistoryDiv.style.height = clientsHistoryDiv.scrollHeight + "px";
-
-		} else {
-			clientsHistoryDiv.style.height = 0 + "px";
-		}
 	}
 }
+
+
 
 
 function fillColor(weight, threshold) {
 	var color1 = [76, 164, 247]; // Blue
 	var color2 = [255, 84, 84]; // Red
-    var w1 = 1 - parseInt(weight + (1 - threshold));
-    var w2 = weight;
-    var w3 = 1 - w2;
-    var rgb = [Math.round(color1[0] * w1 + (1 - w1) *(color1[0] * w3 + color2[0] * w2)),
-        Math.round(color1[1] * w1 + (1 - w1) *(color1[1] * w3 + color2[1] * w2)),
-        Math.round(color1[2] * w1 + (1 - w1) *(color1[2] * w3 + color2[2] * w2))];
-    return 'rgb(' + rgb.join(',') + ')';
+	var w1 = 1 - parseInt(weight + (1 - threshold));
+	var w2 = weight;
+	var w3 = 1 - w2;
+	var rgb = [Math.round(color1[0] * w1 + (1 - w1) * (color1[0] * w3 + color2[0] * w2)),
+		Math.round(color1[1] * w1 + (1 - w1) * (color1[1] * w3 + color2[1] * w2)),
+		Math.round(color1[2] * w1 + (1 - w1) * (color1[2] * w3 + color2[2] * w2))];
+	return 'rgb(' + rgb.join(',') + ')';
 }
 
 function drawDisplaySM() {
@@ -342,40 +228,38 @@ function drawDisplaySM() {
 		return;
 	}
 	//var arr = new Array(36).fill().map(u => (clients.performanceMetrics[0]));
-	
-	var smDiv = document.getElementById('smallmultiplediv');
+	var smId = 'smallmultiplediv';
+	var smDiv = document.getElementById(smId);
 	var margin = {left: 18, right: 18, top: 15, bottom: 15};
 	var width = 150;
 	var height = 140;
 	var ncols = parseInt(smDiv.clientWidth / (width + margin.left + margin.right));
 	var nrows = Math.round(0.4 + data.length / ncols);
-	
+
 	var barHeight = (height - 10) / 5;
 	var divHeight = nrows * (height + margin.top + margin.bottom);
-	
+
 	smDiv.style.height = divHeight + "px";
 
 	var chart;
-	if (clientCharts['smallmultiplediv']) {
-		chart = clientCharts['smallmultiplediv'];
+	if (clientCharts[smId]) {
+		chart = clientCharts[smId];
 	} else {
-		chart = makeSvg('smallmultiplediv', {
+		chart = makeSvg(smId, {
 			width: smDiv.clientWidth,
 			height: divHeight,
 			left: 0,
-			right: 0, 
+			right: 0,
 			top: 0,
 			bottom: 0
 		});
-		clientCharts['smallmultiplediv'] = {
+		clientCharts[smId] = {
 			svg: chart.svg
 		};
 	}
 
 
-	//console.log(clients.performanceMetrics[0].cpuLoad);
 	var smallMultiples = chart.svg.selectAll('.displaySM')
-		//.data(arr);
 		.data(data);
 
 	smallMultiples.exit().remove();
@@ -424,11 +308,6 @@ function drawDisplaySM() {
 			return fillColor(w / width, 0.5);
 		});
 
-
-
-	//console.log(smallMultiples.selectAll('#cpubar'));
-	
-
 	var clientSM = smallMultiples.enter().append('g')
 		.attr('class', 'displaySM')
 		.attr('transform', function(d, i) {
@@ -444,7 +323,7 @@ function drawDisplaySM() {
 		.attr('height', height)
 		.attr('x', 0)
 		.attr('y', 0)
-		.attr('fill','none')
+		.attr('fill', 'none')
 		.attr('stroke', 'black')
 		.attr('stroke-width', 4);
 
@@ -454,7 +333,7 @@ function drawDisplaySM() {
 		.attr('height', height - 10)
 		.attr('x', 5)
 		.attr('y', 5)
-		.attr('fill','rgb(80, 80, 80)')
+		.attr('fill', 'rgb(80, 80, 80)')
 		.attr('stroke', 'white');
 	clientSM.append('text')
 		.attr('x', width / 2)
@@ -465,7 +344,7 @@ function drawDisplaySM() {
 		.text(function(d, i) {
 			return 'Display ' + d.clientID;
 		});
-	
+
 	// Server Load
 	clientSM.append('rect')
 		.attr('class', 'clickable')
@@ -584,3 +463,4 @@ function drawDisplaySM() {
 		.attr('y', 5 + barHeight * 4.5)
 		.text('System Memory');
 }
+

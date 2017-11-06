@@ -292,6 +292,7 @@ function initializeSage2Server() {
 
 	// Create an object to gather performance statistics
 	performanceManager = new PerformanceManager();
+	performanceManager.initializeConfiguration(config);
 	performanceManager.wrapDataTransferFunctions(WebsocketIO);
 	imageMagick = gm.subClass(imageMagickOptions);
 	assets.initializeConfiguration(config);
@@ -8834,7 +8835,7 @@ function deleteApplication(appId, portalId) {
 	if (app.title === "performancewidget") {
 		performanceManager.removeDataReceiver(appId);
 	}
-	
+
 	var stickingItems = stickyAppHandler.getFirstLevelStickingItems(app);
 	stickyAppHandler.removeElement(app);
 
@@ -8962,7 +8963,7 @@ function handleNewApplication(appInstance, videohandle) {
 
 	if (appInstance.title === "performancewidget") {
 		performanceManager.addDataReceiver(appInstance.id);
-	}	
+	}
 	// assign content to a partition immediately when it is created
 	var changedPartitions = partitions.updateOnItemRelease(appInstance);
 	changedPartitions.forEach((id => {

@@ -18,7 +18,8 @@
  * @class SAGE2_Performance
  */
 
-/*global SAGE2_init: true */
+/*global SAGE2_init: true, d3: true, drawDisplaySM: true, showDisplayClientsHistory: true,
+  selectedDisplayClientIDList: true, setupLineChart: true, charts: true */
 
 
 /**
@@ -68,7 +69,8 @@ var durationInMinutes = 5;
 // default to 2 second - 'normal'
 var samplingInterval  = 2;
 
-
+var clientColorMap = {};
+var colors = [];
 
 /**
  * Entry point of the performance application
@@ -136,7 +138,7 @@ function setupListeners(wsio) {
 	// Get elements from the DOM
 	var terminal1 = document.getElementById('terminal1');
 	var terminal2 = document.getElementById('terminal2');
-
+	var heading1 = document.getElementById('serverheading');
 	// Got a reply from the server
 	wsio.on('initialize', function() {
 		initializeCharts();
@@ -175,6 +177,14 @@ function setupListeners(wsio) {
 			msg += 'GPU: ' + data.graphics.controllers[0].vendor + ' ' +
 				data.graphics.controllers[0].model + ' ' +
 				gpuMem.number + gpuMem.suffix + ' VRAM\n';
+
+			if (heading1) {
+				if (data.servername.length > 0) {
+					heading1.textContent = 'Server: ' + data.servername + '( ' + data.serverhost + ' )';
+				} else {
+					heading1.textContent = 'Server: ' + data.serverhost;
+				}
+			}
 		}
 		// Added content
 		terminal1.textContent += msg;
@@ -223,26 +233,24 @@ function setupListeners(wsio) {
 			saveData('cpuLoad', data.cpuLoad, true);
 			saveData('memUsage', data.memUsage, true);
 			saveData('network', data.network, true);
-			
 			saveData('serverLoad', data.serverLoad, true);
 			saveData('serverTraffic', data.serverTraffic, true);
-    	} else {
-    		// Current values
-    		if (data.durationInMinutes) {
-				durationInMinutes = data.durationInMinutes;	
+		} else {
+			// Current values
+			if (data.durationInMinutes) {
+				durationInMinutes = data.durationInMinutes;
 			}
 
 			if (data.samplingInterval) {
 				samplingInterval = data.samplingInterval;
 			}
-			
+
 			saveData('cpuLoad', data.cpuLoad);
 			saveData('memUsage', data.memUsage);
 			saveData('network', data.network);
-			
 			saveData('serverLoad', data.serverLoad);
 			saveData('serverTraffic', data.serverTraffic);
-			
+
 			findNetworkMax();
 			updateLineChart('cpuload', performanceMetrics.history.cpuLoad);
 			updateLineChart('serverload', performanceMetrics.history.serverLoad);
@@ -267,9 +275,7 @@ function setupListeners(wsio) {
 			}
 			drawDisplaySM();
 			showDisplayClientsHistory();
-			console.log(data.displayPerf);
-    	}
-		
+		}
 	});
 }
 
@@ -343,8 +349,6 @@ function saveData(metric, data, history) {
 	if (history === true) {
 		performanceMetrics.history[metric] = data;
 	} else {
-		var samplesInDuration = durationInMinutes * 60 * (1.0 / samplingInterval);
-
 		// Current value
 		performanceMetrics[metric] = data;
 		// Add data to the historic list
@@ -353,12 +357,11 @@ function saveData(metric, data, history) {
 		var durationAgo = Date.now() - durationInMinutes * (60 * 1000);
 		removeObjectsFromArrayOnPropertyValue(performanceMetrics.history[metric], "date", durationAgo, 'lt');
 	}
-	
-};
+}
 
 /**
-  * Helper function to format memory usage info in a string 
-  * 
+  * Helper function to format memory usage info in a string
+  *
   * @method formatMemoryString
   * @param {number} used - amount of memory used
   * @param {number} free - amount of memory free
@@ -391,85 +394,83 @@ function initializeCharts() {
 		var mem = getNiceNumber(d
 			* (performanceMetrics.memUsage.used + performanceMetrics.memUsage.free));
 		return mem.number + mem.suffix;
-	}
+	};
 
 	var yAxisFormatNetworkServer = function(d) {
-		var mem = getNiceNumber(d * performanceMetrics.serverTrafficMax , true);
+		var mem = getNiceNumber(d * performanceMetrics.serverTrafficMax, true);
 		return mem.number + mem.suffix;
-	}
+	};
 
 	var yAxisFormatNetworkSystem = function(d) {
 		var mem = getNiceNumber(d * performanceMetrics.networkMax, true);
 		return mem.number + mem.suffix;
-	}
+	};
 
 	var currentCPULoadText = function() {
 		var cpuLoad = performanceMetrics.cpuLoad;
 		return "Current: " + getPercentString(cpuLoad.load, cpuLoad.idle) + "%";
-	}
+	};
 	setupLineChart('cpuload', 'CPU Load', function(d) {
-    	return d.load / (d.load + d.idle);
-    }, yAxisFormatLoad, currentCPULoadText, 0.5);
+		return d.load / (d.load + d.idle);
+	}, yAxisFormatLoad, currentCPULoadText, 0.5);
 
-	
+
 	var currentMemUsageText = function() {
 		var memUsage = performanceMetrics.memUsage;
 		return "Current: " + formatMemoryString(memUsage.used, memUsage.total - memUsage.used);
-	}
-    setupLineChart('memusage', 'System Memory', function(d) {
-    	return d.used / (d.used + d.free);
-    }, yAxisFormatMemory, currentMemUsageText, 0.7);
+	};
+	setupLineChart('memusage', 'System Memory', function(d) {
+		return d.used / (d.used + d.free);
+	}, yAxisFormatMemory, currentMemUsageText, 0.7);
 
-    var currentServerLoadText = function() {
+	var currentServerLoadText = function() {
 		var serverLoad = performanceMetrics.serverLoad;
 		return "Current: " + d3.format('3.0f')(serverLoad.cpuPercent) + "%";
-	}
+	};
 	setupLineChart('serverload', 'SAGE2 Load', function(d) {
-    	return d.cpuPercent / 100;
-    }, yAxisFormatLoad, currentServerLoadText, 0.5);
+		return d.cpuPercent / 100;
+	}, yAxisFormatLoad, currentServerLoadText, 0.5);
 
 	var currentServerMemText = function() {
 		var memUsage = performanceMetrics.memUsage;
 		var servermem = performanceMetrics.serverLoad.memResidentSet;
 		return "Current: " + formatMemoryString(servermem, memUsage.total - servermem);
-	}
-    setupLineChart('servermem', 'SAGE2 Memory', function(d) {
-    	return d.memPercent / 100;
-    }, yAxisFormatMemory, currentServerMemText, 0.7);
+	};
+	setupLineChart('servermem', 'SAGE2 Memory', function(d) {
+		return d.memPercent / 100;
+	}, yAxisFormatMemory, currentServerMemText, 0.7);
 
-    var currentServerTrafficText = function() {
+	var currentServerTrafficText = function() {
 		var serverTraffic = performanceMetrics.serverTraffic;
 		var currentTraffic = getNiceNumber(serverTraffic.totalOutBound + serverTraffic.totalInBound, true);
 		return "Current: " + currentTraffic.number + currentTraffic.suffix;
-	}
-    setupLineChart('servertraffic', 'SAGE2 Traffic', function(d) {
-    	return (d.totalOutBound + d.totalInBound) / (performanceMetrics.serverTrafficMax * 1.2);
-    }, yAxisFormatNetworkServer, currentServerTrafficText, 1.0);
+	};
+	setupLineChart('servertraffic', 'SAGE2 Traffic', function(d) {
+		return (d.totalOutBound + d.totalInBound) / (performanceMetrics.serverTrafficMax * 1.2);
+	}, yAxisFormatNetworkServer, currentServerTrafficText, 1.0);
 
-    var currentServerTrafficText = function() {
+	var currentSystemTrafficText = function() {
 		var network = performanceMetrics.network;
 		var currentTraffic = getNiceNumber(network.totalOutBound + network.totalInBound, true);
 		return "Current: " + currentTraffic.number + currentTraffic.suffix;
-	}
-    setupLineChart('systemtraffic', 'System Traffic', function(d) {
-    	return (d.totalOutBound + d.totalInBound) / (performanceMetrics.networkMax * 1.2);
-    }, yAxisFormatNetworkSystem, currentServerTrafficText, 1.0);
+	};
+	setupLineChart('systemtraffic', 'System Traffic', function(d) {
+		return (d.totalOutBound + d.totalInBound) / (performanceMetrics.networkMax * 1.2);
+	}, yAxisFormatNetworkSystem, currentSystemTrafficText, 1.0);
 
-    colors.push(...d3.schemeCategory20);
-    colors.push(...d3.schemeCategory20b);
-
-
+	colors.push(...d3.schemeCategory20);
+	colors.push(...d3.schemeCategory20b);
 }
 
 
 function findNetworkMax() {
 	var totalTrafficList = performanceMetrics.history.network.map(function(d) {
 		return d.totalOutBound + d.totalInBound;
-	})
+	});
 	performanceMetrics.networkMax = getNextPowerOfTen(d3.max(totalTrafficList));
 	var totalServerTrafficList = performanceMetrics.history.serverTraffic.map(function(d) {
 		return d.totalOutBound + d.totalInBound;
-	})
+	});
 	performanceMetrics.serverTrafficMax = getNextPowerOfTen(d3.max(totalServerTrafficList));
 }
 
@@ -477,12 +478,11 @@ function findNetworkMax() {
 function removeObjectsFromArrayOnPropertyValue(array, property, value, condition) {
 	// Current value
 	var filterFunc;
-	switch(condition) {
+	switch (condition) {
 		case 'lt':
 			filterFunc = function(d) {
 				return d[property] < value;
 			};
-
 			break;
 		case 'gt':
 			filterFunc = function(d) {
@@ -513,7 +513,7 @@ function removeObjectsFromArrayOnPropertyValue(array, property, value, condition
 		obj[property] = d[property];
 		return obj;
 	}).filter(filterFunc);
-	for (var i = 0; i < keys.length; i ++) {
+	for (var i = 0; i < keys.length; i++) {
 		array.splice(keys[i].arrIdx, 1);
 	}
 	if (keys.length > 0) {
@@ -540,4 +540,118 @@ function checkForNegatives(obj) {
 		}
 	}
 	return false;
+}
+
+
+function updateLineChart(chartId, data, key, filterlist) {
+	var now = performanceMetrics.cpuLoad.date;
+	var entireDurationInMilliseconds = durationInMinutes * 60 * 1000;
+	var timeDomain = [now - entireDurationInMilliseconds, now];
+	var chart = charts[chartId];
+	chart.scaleX.domain(timeDomain);
+	chart.xAxis.call(chart.xAxisFunc);
+	chart.yAxis.call(chart.yAxisFunc);
+	if (chart.current) {
+		chart.current.text(chart.currentTextFunc());
+	}
+
+	if (key !== null && key !== undefined) {
+		var nestedData = d3.nest()
+			.key(d => d[key])
+			.object(data);
+		//console.log(nestedData);
+		for (var k in nestedData) {
+			if (nestedData.hasOwnProperty(k) === true && filterlist.indexOf(k) < 0) {
+				delete nestedData[k];
+			}
+		}
+		var svg = chart.svg;
+
+		svg.selectAll('.' + chartId + 'lines').remove();
+
+		var lines = svg.selectAll('.' + chartId + 'lines')
+			.data(Object.keys(nestedData));
+
+		var lineg = lines.enter().append('g')
+			.attr('class', chartId + 'lines');
+
+		lineg.append('path')
+			.attr('class', 'line')
+			.attr('id', 'clientline')
+			//.attr('class', 'line')
+			.attr('stroke', function(d, i) {
+				return clientColorMap[d];
+			})
+			.attr('d', function(d) {
+				return chart.lineFunc(nestedData[d]);
+			});
+
+		lines.exit().remove();
+	} else {
+		chart.lineChart.attr('d', chart.lineFunc(data));
+	}
+}
+
+
+
+
+function showDisplayClientsHistory(clicked) {
+	var clientsHistoryDiv = document.getElementById('displaypanecontainer');
+
+	if (selectedDisplayClientIDList.length > 0) {
+		var yAxisFormatLoad = function(d) {
+			return (d * 100) + "%";
+		};
+		var yAxisFormatMemory = function(d) {
+			var mem = getNiceNumber(d
+				* (performanceMetrics.memUsage.used + performanceMetrics.memUsage.free));
+			return mem.number + mem.suffix;
+		};
+		setupLineChart('displaycpuload', 'Client CPU Load', function(d) {
+			var cpu = d.cpuLoad;
+			return cpu.load / (cpu.load + cpu.idle);
+		}, yAxisFormatLoad, null, 0.5, true);
+		setupLineChart('displayclientload', 'SAGE2 Display Client Load', function(d) {
+			var client = d.clientLoad;
+			return client.cpuPercent / 100;
+		}, yAxisFormatLoad, null, 0.5, true);
+		setupLineChart('displaymemusage', 'Client System Memory', function(d) {
+			var mem = d.memUsage;
+			return mem.used / (mem.used + mem.free);
+		}, yAxisFormatMemory, null, 0.7, true);
+		setupLineChart('displayclientmem', 'SAGE2 Display Client Memory', function(d) {
+			var client = d.clientLoad;
+			return client.memPercent / 100;
+		}, yAxisFormatMemory, null, 0.7, true);
+
+		updateLineChart('displaycpuload', clients.history, 'id', selectedDisplayClientIDList);
+		updateLineChart('displayclientload', clients.history, 'id', selectedDisplayClientIDList);
+		updateLineChart('displaymemusage', clients.history, 'id', selectedDisplayClientIDList);
+		updateLineChart('displayclientmem', clients.history, 'id', selectedDisplayClientIDList);
+	} else {
+		clientsHistoryDiv.style.height = 0 + "px";
+	}
+	if (clicked === true) {
+		if (selectedDisplayClientIDList.length > 0) {
+			window.scrollTo(0, document.body.scrollHeight);
+			clientsHistoryDiv.style.height = clientsHistoryDiv.scrollHeight + "px";
+		} else {
+			clientsHistoryDiv.style.height = 0 + "px";
+		}
+	}
+}
+
+
+function buttonClicked (d, i) {
+	var idx = selectedDisplayClientIDList.indexOf(d.id);
+	if (idx > -1) {
+		selectedDisplayClientIDList.splice(idx, 1);
+		d3.select(this.firstChild)
+			.attr('stroke', 'black');
+	} else {
+		selectedDisplayClientIDList.push(d.id);
+		d3.select(this.firstChild)
+			.attr('stroke', clientColorMap[d.id]);
+	}
+	showDisplayClientsHistory(true);
 }
