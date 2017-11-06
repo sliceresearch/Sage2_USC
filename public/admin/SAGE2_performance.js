@@ -58,14 +58,15 @@ var performanceMetrics = {
 	}
 };
 
+var clients = {
+	hardware: [],
+	performanceMetrics: [],
+	history: []
+};
+
 var durationInMinutes = 5;
 // default to 2 second - 'normal'
 var samplingInterval  = 2;
-
-// Object to hold chart references
-var charts = {};
-
-
 
 
 
@@ -158,6 +159,7 @@ function setupListeners(wsio) {
 			performanceMetrics.staticInformation = data;
 			msg += 'System: ' + data.system.manufacturer + ' ' +
 				data.system.model + '\n';
+			msg += 'Hostname: ' + data.hostname + '\n';
 			msg += 'OS: ' + data.os.platform + ' ' +
 				data.os.arch + ' ' + data.os.distro + ' ' + data.os.release + '\n';
 			msg += 'CPU: ' + data.cpu.manufacturer + ' ' + data.cpu.brand + ' ' +
@@ -186,6 +188,7 @@ function setupListeners(wsio) {
 			let disp = data[i];
 			msg += '<span style="color:cyan;">Display ' + disp.clientID + ' </span>: ' + disp.system.manufacturer + ' ' +
 				disp.system.model + '\n';
+			msg += 'Hostname: ' + disp.hostname + '\n';
 			msg += 'OS: ' + disp.os.platform + ' ' +
 				disp.os.arch + ' ' + disp.os.distro + ' ' + disp.os.release + '\n';
 			msg += 'CPU: ' + disp.cpu.manufacturer + ' ' + disp.cpu.brand + ' ' +
@@ -201,8 +204,13 @@ function setupListeners(wsio) {
 			msg += 'GPU: ' + disp.graphics.controllers[0].vendor + ' ' +
 				disp.graphics.controllers[0].model + ' ' +
 				gpuMem.number + gpuMem.suffix + ' VRAM\n';
+
+			// Assign colors to display clients
+			if (clientColorMap.hasOwnProperty(disp.id) === false) {
+				clientColorMap[disp.id] = getNewColor(clientColorMap);
+			}
 		}
-		console.log(data);
+		//console.log(data);
 		// Added content
 		terminal2.innerHTML = msg;
 		// automatic scrolling to bottom
@@ -210,29 +218,58 @@ function setupListeners(wsio) {
 	});
 
 	wsio.on('performanceData', function(data) {
-		if (data.durationInMinutes) {
-			durationInMinutes = data.durationInMinutes;	
-		}
+		if (Object.prototype.toString.call(data.cpuLoad) === '[object Array]') {
+			// History has been sent
+			saveData('cpuLoad', data.cpuLoad, true);
+			saveData('memUsage', data.memUsage, true);
+			saveData('network', data.network, true);
+			
+			saveData('serverLoad', data.serverLoad, true);
+			saveData('serverTraffic', data.serverTraffic, true);
+    	} else {
+    		// Current values
+    		if (data.durationInMinutes) {
+				durationInMinutes = data.durationInMinutes;	
+			}
 
-		if (data.samplingInterval) {
-			samplingInterval = data.samplingInterval;
-		}
-		
-		saveData('cpuLoad', data.cpuLoad);
-		saveData('memUsage', data.memUsage);
-		saveData('network', data.network);
-		
-		saveData('serverLoad', data.serverLoad);
-		saveData('serverTraffic', data.serverTraffic);
+			if (data.samplingInterval) {
+				samplingInterval = data.samplingInterval;
+			}
+			
+			saveData('cpuLoad', data.cpuLoad);
+			saveData('memUsage', data.memUsage);
+			saveData('network', data.network);
+			
+			saveData('serverLoad', data.serverLoad);
+			saveData('serverTraffic', data.serverTraffic);
+			
+			findNetworkMax();
+			updateLineChart('cpuload', performanceMetrics.history.cpuLoad);
+			updateLineChart('serverload', performanceMetrics.history.serverLoad);
+			updateLineChart('memusage', performanceMetrics.history.memUsage);
+			updateLineChart('servermem', performanceMetrics.history.serverLoad);
+			updateLineChart('servertraffic', performanceMetrics.history.serverTraffic);
+			updateLineChart('systemtraffic', performanceMetrics.history.network);
 
-		findNetworkMax();
-		updateChart('cpuload', performanceMetrics.history.cpuLoad);
-		updateChart('serverload', performanceMetrics.history.serverLoad);
-		updateChart('memusage', performanceMetrics.history.memUsage);
-		updateChart('servermem', performanceMetrics.history.serverLoad);
-		updateChart('servertraffic', performanceMetrics.history.serverTraffic);
-		updateChart('systemtraffic', performanceMetrics.history.network);
-		console.log(data.displayPerf);
+			if (data.displayPerf !== null && data.displayPerf !== undefined && data.displayPerf.length > 0) {
+				clients.performanceMetrics = data.displayPerf;
+				clients.performanceMetrics.sort(function(a, b) {
+					return a.clientID - b.clientID;
+				});
+				clients.history.push(...clients.performanceMetrics);
+				var durationAgo = Date.now() - durationInMinutes * (60 * 1000);
+				removeObjectsFromArrayOnPropertyValue(clients.history, 'date', durationAgo, 'lt');
+			} else {
+				clients.performanceMetrics = [];
+				terminal2.innerHTML = 'No Electron Display Client active.';
+				var smDiv = document.getElementById('smallmultiplediv');
+				smDiv.style.height = 0 + 'px';
+			}
+			drawDisplaySM();
+			showDisplayClientsHistory();
+			console.log(data.displayPerf);
+    	}
+		
 	});
 }
 
@@ -255,11 +292,26 @@ function getNiceNumber(number, giga) {
 	} else {
 		suffix = ['B', 'KB', 'MB', 'GB', 'TB', 'PB'];
 	}
-	while (number > base) {
+	while (number >= base) {
 		number = number / base;
 		idx = idx + 1;  // For every 1000 or 1024, a new suffix is chosen
 	}
 	return {number: number.toFixed(0), suffix: suffix[idx]};
+}
+
+
+/**
+  * Helper function to get the next power of ten closest to a number
+  *
+  * @method getNextPowerOfTen
+  * @param {number} number - some number
+  */
+function getNextPowerOfTen(number) {
+	var powerOfTen = 1;
+	while (number >= powerOfTen) {
+		powerOfTen = powerOfTen * 10;
+	}
+	return powerOfTen;
 }
 
 /**
@@ -285,23 +337,23 @@ function getPercentString(val, remaining) {
   * @param {string} metric - metric for which data is being saved
   * @param {object} data - current metric values obtained
   */
-function saveData(metric, data) {
+function saveData(metric, data, history) {
 	// Number of samples in the history
 	// time in seconds
-	var samplesInDuration = durationInMinutes * 60 * (1.0 / samplingInterval);
-
-	// Current value
-	performanceMetrics[metric] = data;
-	// Add data to the historic list
-	performanceMetrics.history[metric].push(data);
-
-	if (performanceMetrics.history[metric].length > samplesInDuration) {
-		// Prune samples that are older than the set duration
-		performanceMetrics.history[metric].splice(0,
-			performanceMetrics.history[metric].length - samplesInDuration);
+	if (history === true) {
+		performanceMetrics.history[metric] = data;
 	} else {
+		var samplesInDuration = durationInMinutes * 60 * (1.0 / samplingInterval);
 
+		// Current value
+		performanceMetrics[metric] = data;
+		// Add data to the historic list
+		performanceMetrics.history[metric].push(data);
+
+		var durationAgo = Date.now() - durationInMinutes * (60 * 1000);
+		removeObjectsFromArrayOnPropertyValue(performanceMetrics.history[metric], "date", durationAgo, 'lt');
 	}
+	
 };
 
 /**
@@ -329,26 +381,6 @@ function formatMemoryString(used, free, short) {
 }
 
 
-function makeSvg(domElementID) {
-	var chartMargin = {top: 20, right: 50, bottom: 25, left: 20};
-	var domElement = document.getElementById(domElementID);
-	var width = parseInt(domElement.clientWidth);
-	var height = parseInt(domElement.clientHeight);
-	width = width - chartMargin.left - chartMargin.right;
-	height = height - chartMargin.top - chartMargin.bottom;
-
-	var box =  "0, 0, 1000, " + parseInt(1000 * (height / width));
-	var svg = d3.select(domElement).append("svg")
-    	.attr("width", width + chartMargin.left + chartMargin.right)
-    	.attr("height", height + chartMargin.top + chartMargin.bottom)
-        .attr("viewbox", box)
-        .attr("preserveAspectRatio", "xMinYMin meet")
-		.append("g")
-		.attr("transform", "translate(" + chartMargin.left + "," + chartMargin.top + ")")
-    return {svg: svg, width: width, height: height};
-}
-
-
 function initializeCharts() {
 
 	var yAxisFormatLoad = function(d) {
@@ -362,12 +394,12 @@ function initializeCharts() {
 	}
 
 	var yAxisFormatNetworkServer = function(d) {
-		var mem = getNiceNumber(d * performanceMetrics.serverTrafficMax * 1.2, true);
+		var mem = getNiceNumber(d * performanceMetrics.serverTrafficMax , true);
 		return mem.number + mem.suffix;
 	}
 
 	var yAxisFormatNetworkSystem = function(d) {
-		var mem = getNiceNumber(d * performanceMetrics.networkMax * 1.2, true);
+		var mem = getNiceNumber(d * performanceMetrics.networkMax, true);
 		return mem.number + mem.suffix;
 	}
 
@@ -375,7 +407,7 @@ function initializeCharts() {
 		var cpuLoad = performanceMetrics.cpuLoad;
 		return "Current: " + getPercentString(cpuLoad.load, cpuLoad.idle) + "%";
 	}
-	setupChart('cpuload', 'CPU Load', function(d) {
+	setupLineChart('cpuload', 'CPU Load', function(d) {
     	return d.load / (d.load + d.idle);
     }, yAxisFormatLoad, currentCPULoadText, 0.5);
 
@@ -384,7 +416,7 @@ function initializeCharts() {
 		var memUsage = performanceMetrics.memUsage;
 		return "Current: " + formatMemoryString(memUsage.used, memUsage.total - memUsage.used);
 	}
-    setupChart('memusage', 'System Memory', function(d) {
+    setupLineChart('memusage', 'System Memory', function(d) {
     	return d.used / (d.used + d.free);
     }, yAxisFormatMemory, currentMemUsageText, 0.7);
 
@@ -392,7 +424,7 @@ function initializeCharts() {
 		var serverLoad = performanceMetrics.serverLoad;
 		return "Current: " + d3.format('3.0f')(serverLoad.cpuPercent) + "%";
 	}
-	setupChart('serverload', 'Server Load', function(d) {
+	setupLineChart('serverload', 'SAGE2 Load', function(d) {
     	return d.cpuPercent / 100;
     }, yAxisFormatLoad, currentServerLoadText, 0.5);
 
@@ -401,7 +433,7 @@ function initializeCharts() {
 		var servermem = performanceMetrics.serverLoad.memResidentSet;
 		return "Current: " + formatMemoryString(servermem, memUsage.total - servermem);
 	}
-    setupChart('servermem', 'Server Memory', function(d) {
+    setupLineChart('servermem', 'SAGE2 Memory', function(d) {
     	return d.memPercent / 100;
     }, yAxisFormatMemory, currentServerMemText, 0.7);
 
@@ -410,135 +442,102 @@ function initializeCharts() {
 		var currentTraffic = getNiceNumber(serverTraffic.totalOutBound + serverTraffic.totalInBound, true);
 		return "Current: " + currentTraffic.number + currentTraffic.suffix;
 	}
-    setupChart('servertraffic', 'Server Traffic', function(d) {
+    setupLineChart('servertraffic', 'SAGE2 Traffic', function(d) {
     	return (d.totalOutBound + d.totalInBound) / (performanceMetrics.serverTrafficMax * 1.2);
-    }, yAxisFormatNetworkServer, currentServerTrafficText, 0.99);
+    }, yAxisFormatNetworkServer, currentServerTrafficText, 1.0);
 
     var currentServerTrafficText = function() {
 		var network = performanceMetrics.network;
 		var currentTraffic = getNiceNumber(network.totalOutBound + network.totalInBound, true);
 		return "Current: " + currentTraffic.number + currentTraffic.suffix;
 	}
-    setupChart('systemtraffic', 'System Traffic', function(d) {
+    setupLineChart('systemtraffic', 'System Traffic', function(d) {
     	return (d.totalOutBound + d.totalInBound) / (performanceMetrics.networkMax * 1.2);
-    }, yAxisFormatNetworkSystem, currentServerTrafficText, 0.99);
+    }, yAxisFormatNetworkSystem, currentServerTrafficText, 1.0);
+
+    colors.push(...d3.schemeCategory20);
+    colors.push(...d3.schemeCategory20b);
+
+
 }
 
-function updateChart(chartId, data) {
-	var now = performanceMetrics.cpuLoad.date;
-	var entireDurationInMilliseconds = durationInMinutes * 60 * 1000;
-	var timeDomain = [now - entireDurationInMilliseconds, now];
-	var chart = charts[chartId];
-	chart.scaleX.domain(timeDomain);
-	chart.lineChart.attr('d', chart.lineFunc(data));
-	chart.xAxis.call(chart.xAxisFunc);
-	chart.yAxis.call(chart.yAxisFunc);
-	chart.current.text(chart.currentTextFunc());
-}
-
-function setupChart(id, titleText, lineFuncY, yAxisFormat, currentTextFunc, ythreshhold) {
-	var chart = makeSvg(id);
-	
-    // set the ranges
-	var scaleX = d3.scaleTime()
-		.range([0, chart.width]);
-	var scaleY = d3.scaleLinear()
-		.range([chart.height, 0])
-		.domain([0, 1.0]);
-
-	chart.svg.append("linearGradient")
-		.attr("id", "value-gradient")
-		.attr("gradientUnits", "userSpaceOnUse")
-		.attr("x1", 0).attr("y1", scaleY(ythreshhold))
-		.attr("x2", 0).attr("y2", scaleY(ythreshhold + 0.1))
-		.selectAll("stop")
-		.data([
-			{offset: "0%", color: "yellow"},
-			{offset: (ythreshhold * 100) + "%", color: "yellow"},
-			{offset: (ythreshhold * 100) + "%", color: "red"},
-			{offset: "100%", color: "red"}
-		])
-		.enter().append("stop")
-			.attr("offset", function(d) {
-				return d.offset;
-			})
-			.attr("stop-color", function(d) {
-				return d.color;
-			});
-	// define the line
-	var chartLineFunc = d3.line()
-    	.x(function(d) { 
-    		return scaleX(d.date); 
-    	})
-    	.y(function(d) { 
-    		return scaleY(lineFuncY(d)); 
-    	});
-
-    var chartLine = chart.svg.select('path');
-
-	if (chartLine.empty()) {
-		chartLine = chart.svg.append('path')
-			.attr("class", "line");
-	}
-
-
-	var yAxisFunc = d3.axisRight(scaleY)
-		.tickSizeInner(5)
-		.tickSizeOuter(0)
-		.tickPadding(5)
-		.ticks(3)
-		.tickFormat(yAxisFormat);
-
-	var xAxisFunc = d3.axisBottom(scaleX)
-		.tickSizeInner(5)
-		.tickSizeOuter(0)
-		.tickPadding(5)
-		.ticks(d3.timeMinute.every(1));
-
-	var xAxis =  chart.svg.append("g")
-		.attr("class", "x axis")
-		.attr("transform", "translate(0, " + chart.height + ")");
-
-	var yAxis = chart.svg.append("g")
-		.attr("class", "y axis")
-		.attr("transform", "translate(" + chart.width + ", 0)");
-
-	var title = chart.svg.append("text")
-      .attr("x", 0)
-      .attr("y", 0)
-      .attr('class', "title")
-      .style("text-anchor", "start")
-      .text(titleText);
-
-    var current = chart.svg.append("text")
-      .attr("x", 0)
-      .attr("y", 15)
-      .attr('class', "title")
-      .style("text-anchor", "start");
-
-	charts[id] = {
-    	lineChart: chartLine,
-    	lineFunc: chartLineFunc,
-    	scaleX: scaleX,
-    	scaleY: scaleY,
-    	yAxisFunc: yAxisFunc,
-    	xAxisFunc: xAxisFunc,
-    	yAxis: yAxis,
-    	xAxis: xAxis,
-    	title: title,
-    	current: current,
-    	currentTextFunc: currentTextFunc
-
-    };
-}
 
 function findNetworkMax() {
 	var totalTrafficList = performanceMetrics.history.network.map(function(d) {
 		return d.totalOutBound + d.totalInBound;
 	})
-	performanceMetrics.networkMax = d3.max(totalTrafficList);
+	performanceMetrics.networkMax = getNextPowerOfTen(d3.max(totalTrafficList));
 	var totalServerTrafficList = performanceMetrics.history.serverTraffic.map(function(d) {
 		return d.totalOutBound + d.totalInBound;
 	})
-	performanceMetrics.serverTrafficMax = d3.max(totalServerTrafficList);
+	performanceMetrics.serverTrafficMax = getNextPowerOfTen(d3.max(totalServerTrafficList));
+}
+
+
+function removeObjectsFromArrayOnPropertyValue(array, property, value, condition) {
+	// Current value
+	var filterFunc;
+	switch(condition) {
+		case 'lt':
+			filterFunc = function(d) {
+				return d[property] < value;
+			};
+
+			break;
+		case 'gt':
+			filterFunc = function(d) {
+				return d[property] > value;
+			};
+			break;
+		case 'lte':
+			filterFunc = function(d) {
+				return d[property] <= value;
+			};
+			break;
+		case 'gte':
+			filterFunc = function(d) {
+				return d[property] >= value;
+			};
+			break;
+		case 'eq':
+		default:
+			filterFunc = function(d) {
+				return d[property] === value;
+			};
+			break;
+	}
+	var keys = array.map(function(d, i) {
+		var obj = {
+			arrIdx: i
+		};
+		obj[property] = d[property];
+		return obj;
+	}).filter(filterFunc);
+	for (var i = 0; i < keys.length; i ++) {
+		array.splice(keys[i].arrIdx, 1);
+	}
+	if (keys.length > 0) {
+		return true;
+	}
+	return false;
+}
+
+
+
+function getNewColor(colorMap) {
+	var usedList = Object.keys(colorMap);
+	var len = usedList.length;
+	return colors[len % colors.length];
+}
+
+
+function checkForNegatives(obj) {
+	for (var k in obj) {
+		if (obj.hasOwnProperty(k)) {
+			if (Object.prototype.toString.call(obj[k]) == '[object Number]' && obj[k] < 0) {
+				return true;
+			}
+		}
+	}
+	return false;
 }

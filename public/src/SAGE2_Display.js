@@ -182,6 +182,13 @@ function setupFocusHandlers() {
 				wsio.emit('displayHardware', message);
 			}
 		});
+		// Receive hardware info from the main process (electron node)
+		require('electron').ipcRenderer.on('performanceData', function(event, message) {
+			if (wsio !== undefined) {
+				// and send it to the server
+				wsio.emit('performanceData', message);
+			}
+		});
 	}
 }
 
@@ -1419,6 +1426,24 @@ function setupListeners() {
 		titleText.style.marginLeft = Math.round(titleBarHeight / 4.0) + "px";
 		windowIconPinned.style.display = "none";
 		windowIconPinout.style.display = "none";
+	});
+
+	wsio.on('getPerformanceData', function(data) {
+		if (__SAGE2__.browser.isElectron) {
+			require('electron').ipcRenderer.send('getPerformanceData');
+		}
+	});
+
+	wsio.on('performanceData', function(data) {
+		var perfAppList = data.appList;
+		var app;
+		if (perfAppList === undefined || perfAppList === null) {
+			return;
+		}
+		for (var i = 0; i < perfAppList.length; i++) {
+			app = applications[perfAppList[i]];
+			app.SAGE2Event('performanceData', null, null, data, data.date);
+		}
 	});
 }
 

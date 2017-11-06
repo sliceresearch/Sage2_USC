@@ -22,6 +22,8 @@ var sprint  = require('sprint');
 // SAGE2 module: for log function
 var sageutils = require('../src/node-utils');
 
+var os = require('os');
+
 /**
   * @class PerformanceManager
   * @constructor
@@ -73,11 +75,25 @@ function PerformanceManager() {
 		}
 	};
 
+	this.clients = {
+		hardware: [],
+		performanceMetrics: [],
+		history: []
+	};
+	this.clientPerformceMetrics = {
+		clientID: null,
+		cpuLoad: null,
+		memUsage: null,
+		clientLoad: null
+	}
 	// Array to store display client data
 	this.clientsInformation = [];
 
+	// Array to keep track of wall widgets showing perf data
+	this.activeWidgets = [];
 	// Get the basic information of the system
 	sysInfo.getStaticData(function(data) {
+		data.hostname = os.hostname();
 		this.performanceMetrics.staticInformation = data;
 		// fix on some system with no memory layout
 		if (data.memLayout.length === 0) {
@@ -105,17 +121,19 @@ function PerformanceManager() {
  * @param      {<type>}  idx     The client ID
  * @param      {<type>}  data    The data
  */
-PerformanceManager.prototype.addDisplayClient = function(idx, data) {
+PerformanceManager.prototype.addDisplayClient = function(id, idx, data) {
 	// the clientID to the data
+
+	data.id = id;
 	data.clientID = idx;
 	// store the info into the array
-	if (this.clientsInformation.find(function(d) {
-		return d.clientID === idx;
+	if (this.clients.hardware.find(function(d) {
+		return d.clientID === idx && d.id === id;
 	}) === undefined) {
-		this.clientsInformation.push(data);
+		this.clients.hardware.push(data);
 		// send the displays specifics
 		module.parent.exports.broadcast('displayHardwareInformation',
-			this.clientsInformation
+			this.clients.hardware
 		);
 	}	
 };
@@ -126,19 +144,13 @@ PerformanceManager.prototype.addDisplayClient = function(idx, data) {
  * @method     removeDisplayClient
  * @param      {<type>}  idx     The client ID
  */
-PerformanceManager.prototype.removeDisplayClient = function(idx) {
-	var key = this.clientsInformation.map(function(d, i) {
-		return {arrIdx:i, clientID: d.clientID};
-	}).filter(function(d) {
-		return d.clientID === idx;
-	});
-	if (key.length === 1) {
-		key = key[0];
-		this.clientsInformation.splice(key.arrIdx, 1);
+PerformanceManager.prototype.removeDisplayClient = function(id) {
+	if (removeObjectsFromArrayOnPropertyValue(this.clients.hardware, "id", id) === true) {
 		module.parent.exports.broadcast('displayHardwareInformation',
-			this.clientsInformation
+			this.clients.hardware
 		);
 	}
+	removeObjectsFromArrayOnPropertyValue(this.clients.performanceMetrics, "id", id, 'eq');
 };
 
 /**
@@ -154,7 +166,12 @@ PerformanceManager.prototype.updateClient = function(wsio) {
 	);
 	// send the displays specifics
 	wsio.emit('displayHardwareInformation',
-		this.clientsInformation
+		this.clients.hardware
+	);
+
+	// Send the historic data to show trend up to this point
+	wsio.emit('performanceData',
+		this.performanceMetrics.history
 	);
 };
 
@@ -390,6 +407,7 @@ PerformanceManager.prototype.computeMovingAverages = function(metric, oneMinute,
   * @param {object} data - memory usage data
   */
 PerformanceManager.prototype.collectMemoryUsage = function(data) {
+
 	var memUsage = {
 		date: Date.now(),
 		total:  data.total,  // total memory in bytes
@@ -494,32 +512,132 @@ PerformanceManager.prototype.collectMetrics = function() {
 	// Send some of the data to the performance pages
 	// (use the broadcast function from the server)
 	module.parent.exports.broadcast('performanceData', {
+		appList: 		this.activeWidgets,
 		cpuLoad:		this.performanceMetrics.cpuLoad,
 		serverLoad:		this.performanceMetrics.serverLoad,
 		memUsage:		this.performanceMetrics.memUsage,
 		serverTraffic:	this.performanceMetrics.serverTraffic,
 		network:		this.performanceMetrics.network,
-		displayPerf: this.performanceMetrics.displayPerf
+		displayPerf:	this.clients.performanceMetrics
 	});
 };
 
 
-PerformanceManager.prototype.saveDisplayPerformanceData = function(data) {
-	this.saveData('displayPerf', data);
+PerformanceManager.prototype.addDataReceiver = function(id) {
+	this.activeWidgets.push(id);
+};
 
-	/*// Creating empty objects to store moving averages for 1 minute
-	// and entire duration as specified by this.durationInMinutes
-	var serverTraffic1Minute = {
-		totalOutBound: 0,
-		totalInBound: 0
+
+PerformanceManager.prototype.removeDataReceiver = function(id) {
+	var idx = this.activeWidgets.indexOf(id);
+	if (idx > -1) {
+		this.activeWidgets.splice(idx, 1);
+	}
+};
+
+
+PerformanceManager.prototype.saveDisplayPerformanceData = function(id, idx, data) {
+	var negLoad = checkForNegatives(data.cpuLoad);
+	var negMem = checkForNegatives(data.mem);
+	var negClientProc = checkForNegatives(data.processLoad);
+	if (negLoad || negMem || negClientProc) {
+		return;
+	}
+	var clientSystemLoad = {		
+		load: data.cpuLoad.raw_currentload,
+		idle: data.cpuLoad.raw_currentload_idle,
 	};
-	var serverTrafficEntireDuration = {
-		totalOutBound: 0,
-		totalInBound: 0
+	var clientSystemMem = {
+		total:  data.mem.total,  // total memory in bytes
+		used:   data.mem.used,   // incl. buffers/cache
+		free:   data.mem.free,
+		active: data.mem.active  // used actively (excl. buffers/cache)
 	};
-	this.computeMovingAverages('serverTraffic', serverTraffic1Minute, serverTrafficEntireDuration);
-*/
+
+	var clientProcessLoad = {
+		cpuPercent: data.processLoad.cpuPercent,
+		memPercent: data.processLoad.memPercent,
+		memVirtual: data.processLoad.memVirtual * 1024,
+		memResidentSet: data.processLoad.memResidentSet * 1024
+	};
+	
+	var clientData =  {
+		id: id,
+		clientID: idx,
+		date: Date.now(), // Mark the time for creating a time line
+		cpuLoad: clientSystemLoad,
+		memUsage: clientSystemMem,
+		clientLoad: clientProcessLoad
+	}
+
+	var hardwareData = this.clients.hardware.find(function(d) {
+		return d.clientID === idx && d.id === id;
+	});
+
+	if (hardwareData !== undefined) {
+		clientData.hostname = hardwareData.hostname;
+	}
+
+	// Duration ago in milliseconds
+
+	var durationAgo = Date.now() - this.durationInMinutes * (60 * 1000);
+	// Remove previous entry
+	removeObjectsFromArrayOnPropertyValue(this.clients.performanceMetrics, "id", id, 'eq');	
+	this.clients.performanceMetrics.push(clientData);
+
+	removeObjectsFromArrayOnPropertyValue(this.clients.history, "date", durationAgo, 'lt');
+	this.clients.history.push(clientData);
+
 }
+
+function removeObjectsFromArrayOnPropertyValue(array, property, value, condition) {
+	// Current value
+	var filterFunc;
+	switch(condition) {
+		case 'lt':
+			filterFunc = function(d) {
+				return d[property] < value;
+			};
+
+			break;
+		case 'gt':
+			filterFunc = function(d) {
+				return d[property] > value;
+			};
+			break;
+		case 'lte':
+			filterFunc = function(d) {
+				return d[property] <= value;
+			};
+			break;
+		case 'gte':
+			filterFunc = function(d) {
+				return d[property] >= value;
+			};
+			break;
+		case 'eq':
+		default:
+			filterFunc = function(d) {
+				return d[property] === value;
+			};
+			break;
+	}
+	var keys = array.map(function(d, i) {
+		var obj = {
+			arrIdx: i
+		};
+		obj[property] = d[property];
+		return obj;
+	}).filter(filterFunc);
+	for (var i = 0; i < keys.length; i ++) {
+		array.splice(keys[i].arrIdx, 1);
+	}
+	if (keys.length > 0) {
+		return true;
+	}
+	return false;
+}
+
 
 /**
   * Saves metric data into current value placeholder and history list
@@ -529,20 +647,19 @@ PerformanceManager.prototype.saveDisplayPerformanceData = function(data) {
   * @param {object} data - current metric values obtained
   */
 PerformanceManager.prototype.saveData = function(metric, data) {
-	// Number of samples in the history
-	// time in seconds
-	var samplesInDuration = this.durationInMinutes * 60 * (1.0 / this.samplingInterval);
+	// Filter out negative values
+	if (checkForNegatives(data) === true) {
+		return;
+	}
 
 	// Current value
 	this.performanceMetrics[metric] = data;
 	// Add data to the historic list
 	this.performanceMetrics.history[metric].push(data);
 
-	if (this.performanceMetrics.history[metric].length > samplesInDuration) {
-		// Prune samples that are older than the set duration
-		this.performanceMetrics.history[metric].splice(0,
-			this.performanceMetrics.history[metric].length - samplesInDuration);
-	}
+	// Duration ago in milliseconds
+	var durationAgo = Date.now() - this.durationInMinutes * (60 * 1000);
+	removeObjectsFromArrayOnPropertyValue(this.performanceMetrics.history[metric], "date", durationAgo, 'lt');
 };
 
 /**
@@ -619,6 +736,7 @@ PerformanceManager.prototype.printServerHardware = function() {
 	// make sure the data has been produced
 	if (data) {
 		sageutils.log('HW', 'System:', data.system.manufacturer, data.system.model);
+		sageutils.log('HW', 'Hostname:', data.hostname);
 		sageutils.log('HW', 'OS:', data.os.platform,
 			data.os.arch, data.os.distro, data.os.release);
 		sageutils.log('HW', 'CPU:', data.cpu.manufacturer, data.cpu.brand,
@@ -852,7 +970,16 @@ PerformanceManager.prototype.getTrafficData = function() {
 };
 
 
-
+function checkForNegatives(obj) {
+	for (var k in obj) {
+		if (obj.hasOwnProperty(k)) {
+			if (Object.prototype.toString.call(obj[k]) === '[object Number]' && obj[k] < 0) {
+				return true;
+			}
+		}
+	}
+	return false;
+}
 
 
 

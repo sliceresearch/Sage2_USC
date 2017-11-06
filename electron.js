@@ -24,6 +24,8 @@ const electron = require('electron');
 const app = electron.app;
 // Module to create native browser window.
 const BrowserWindow = electron.BrowserWindow;
+// Module to handle ipc with Browser Window
+const ipcMain = electron.ipcMain;
 
 // parsing command-line arguments
 var commander = require('commander');
@@ -291,6 +293,8 @@ function createWindow() {
 		si.getStaticData(function(data) {
 			// Send it to the page, since it has the connection
 			// to the server
+			data.hostname = os.hostname();
+			//console.log(os.hostname());
 			mainWindow.webContents.send('hardwareData', data);
 		});
 	});
@@ -306,6 +310,61 @@ function createWindow() {
 	mainWindow.webContents.on('will-navigate', function(ev) {
 		// ev.preventDefault();
 	});
+
+	ipcMain.on('getPerformanceData', function() {
+		var perfData = {};
+		var displayLoad = {
+			cpuPercent: 0,
+			memPercent: 0,
+			memVirtual: 0,
+			memResidentSet: 0
+		};
+		// CPU Load
+		var load = si.currentLoad();
+		var mem = load.then(function(data) {
+			perfData.cpuLoad = data;
+			return si.mem();
+		});
+		var proc = mem.then(data => {
+			perfData.mem = data;
+			return si.processes();
+		})
+		.then(data => {
+			var displayProcess = data.list.filter(function(d) {
+				return parseInt(d.pid) === parseInt(process.pid)
+					|| parseInt(d.pid) === mainWindow.webContents.getOSProcessId();
+			});
+
+			displayProcess.forEach(el => {
+				displayLoad.cpuPercent += el.pcpu;
+				displayLoad.memPercent += el.pmem;
+				displayLoad.memVirtual += el.mem_vsz;
+				displayLoad.memResidentSet += el.mem_rss;
+			})
+			
+			/*if (displayProcess.length === 1) {
+				displayProcess = displayProcess[0];
+			}*/
+			perfData.processLoad = displayLoad;
+			//console.log(displayLoad);
+			mainWindow.webContents.send('performanceData', perfData);
+		})
+		.catch(error => console.error(error));
+			/*.then(function(data) {
+				
+				
+
+			})*/
+
+		/*// Server Load
+		si.processes(this.collectserverLoad.bind(this));
+
+		// Memory usage
+		si.mem(this.collectMemoryUsage.bind(this));
+
+		// Network traffic
+		si.networkStats(this.collectSystemTraffic.bind(this));*/
+	})
 }
 
 /**

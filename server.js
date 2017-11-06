@@ -725,7 +725,7 @@ function closeWebSocketClient(wsio) {
 	if (wsio.clientType === "display") {
 		sageutils.log("Disconnect", chalk.bold.red(wsio.id) +
 			" (" + wsio.clientType + " " + wsio.clientID + ")");
-		performanceManager.removeDisplayClient(wsio.clientID);
+		performanceManager.removeDisplayClient(wsio.id);
 	} else {
 		if (wsio.clientType) {
 			sageutils.log("Disconnect", chalk.bold.red(wsio.id) + " (" + wsio.clientType + ")");
@@ -8721,6 +8721,10 @@ function deleteApplication(appId, portalId) {
 		}
 	}
 
+	if (app.title === "performancewidget") {
+		performanceManager.removeDataReceiver(appId);
+	}
+	
 	var stickingItems = stickyAppHandler.getFirstLevelStickingItems(app);
 	stickyAppHandler.removeElement(app);
 
@@ -8846,6 +8850,9 @@ function handleNewApplication(appInstance, videohandle) {
 
 	initializeLoadedVideo(appInstance, videohandle);
 
+	if (appInstance.title === "performancewidget") {
+		performanceManager.addDataReceiver(appInstance.id);
+	}	
 	// assign content to a partition immediately when it is created
 	var changedPartitions = partitions.updateOnItemRelease(appInstance);
 	changedPartitions.forEach((id => {
@@ -10044,7 +10051,7 @@ function wsWallScreenshotFromDisplay(wsio, data) {
  */
 function wsDisplayHardware(wsio, data) {
 	// store the hardware data for a given client
-	performanceManager.addDisplayClient(wsio.clientID, data);
+	performanceManager.addDisplayClient(wsio.id, wsio.clientID, data);
 }
 
 /**
@@ -10057,7 +10064,7 @@ function wsDisplayHardware(wsio, data) {
 function wsPerformanceData(wsio, data) {
 	// Pass the performance data from Electron display client
 	// on the performance manager
-	performanceManager.saveDisplayPerformanceData(data);
+	performanceManager.saveDisplayPerformanceData(wsio.id, wsio.clientID, data);
 }
 
 
