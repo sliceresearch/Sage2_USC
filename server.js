@@ -1194,7 +1194,7 @@ function setupListeners(wsio) {
 
 	// message from electron display client
 	wsio.on('displayHardware',                      wsDisplayHardware);
-	wsio.on('performanceData',						wsPerformanceData);
+	wsio.on('performanceData',                      wsPerformanceData);
 }
 
 /**

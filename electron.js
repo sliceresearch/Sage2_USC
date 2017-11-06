@@ -357,8 +357,17 @@ function createWindow() {
 			// Send it to the page, since it has the connection
 			// to the server
 			data.hostname = os.hostname();
-			//console.log(os.hostname());
-			mainWindow.webContents.send('hardwareData', data);
+			// fix on some system with no memory layout
+			if (data.memLayout.length === 0) {
+				si.mem(function(mem) {
+					data.memLayout[0] = {size: mem.total};
+					// send data to the HTML page, ie SAGE2_Display.js
+					mainWindow.webContents.send('hardwareData', data);
+				});
+			} else {
+				// send data to the HTML page, ie SAGE2_Display.js
+				mainWindow.webContents.send('hardwareData', data);
+			}
 		});
 	});
 
