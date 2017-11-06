@@ -70,14 +70,16 @@
 		display:inline-block;
 	}
 
-	section {
-		display:none;
-		border: 1px dotted #eee;
-		background: #fafafa;
+	.box {
+		background:#f0f0f0;
 		margin-top: 15px;
 		padding: 20px;
-		min-height:200px;
+		min-height:100px;
 		overflow-x:auto;
+	}
+
+	section {
+		display:none;
 	}
 	section.active {
 		display:block;
@@ -120,29 +122,41 @@
 		border:1px solid white;
 		box-shadow:1px 1px 2px rgba(0,0,0,0.5);
 	}
+
+	#permissions {
+		position:relative;
+		white-space: nowrap;
+		margin-top:30px;
+	}
+	#permissions > div {
+		display:inline-block;
+	}
 </style>
 </head>
 
 <body>
-
 	<button class="tab active" data-tab="users">Users</button>
-	<button class="tab" data-tab="permissions">Permissions</button>
 	<button class="tab" data-tab="log">Log</button>
 
 	<section id="users" class="active">
-		<table id="user--table">
-			<tr>
-				<th></th>
-				<th>Display name</th>
-				<th>User name</th>
-				<th>Role</th>
-				<th>IP address</th>
-			</tr>
-		</table>
+		<div class="box">
+			<table id="user--table">
+				<tr>
+					<th></th>
+					<th>Pointer name</th>
+					<th>User name</th>
+					<th>Role</th>
+					<th>IP address</th>
+				</tr>
+			</table>
+		</div>
+
+		<div class="box">
+			<table id="permission--list">
+			</table>
+		</div>
 	</section>
-	<section id="permissions">
-	</section>
-	<section id="log">
+	<section id="log" class="box">
 	</section>
 
 <script>
@@ -179,6 +193,7 @@
 	// open socket
 	wsio.open(function() {
 		wsio.emit('addClient', {
+			clientType: 'userManager',
 			session: session,
 			requests: {
 				config:  true,
@@ -190,6 +205,7 @@
 
 		wsio.on('initialize', function() {
 			document.getElementById('log').innerHTML = 'Listening...';
+
 			wsio.emit('pollActiveClients');
 		});
 
@@ -278,7 +294,7 @@
 			let color = clients[ip].user.SAGE2_ptrColor;
 			let label = clients[ip].user.SAGE2_ptrName || '';
 			let name = clients[ip].user.name || '';
-			let role = clients[ip].role.join(', ');
+			let role = clients[ip].role[0];
 
 			let tr = document.createElement('tr');
 			tr.innerHTML = '<td><span class="cursor" style="background-color:' + color + '"></span></td>';
@@ -286,12 +302,12 @@
 			[label, name, role, ip].forEach((string, i) => {
 				let td = document.createElement('td');
 
-				if (i !== 2 || role === "guest") {
-					td.appendChild(document.createTextNode(string));
+				if (i !== 2 || role === 'guest') {
+					addText(td, string);
 				} else {
 					// create dropdown field
 					let select = document.createElement('select');
-					let roles = rbac.roles.filter(r => r !== "guest");
+					let roles = rbac.roles.filter(r => r !== 'guest');
 					roles.forEach(role => {
 						let option = document.createElement('option');
 						addText(option, role);
@@ -309,7 +325,9 @@
 						if (selectedRole && selectedUser) {
 
 							// find all ips with the same user
-							let ips = Object.keys(clients).filter(ip => clients[ip].name === selectedUser.name && clients[ip].email === selectedUser.email);
+							let ips = Object.keys(clients).filter(ip => {
+								return clients[ip].user.name === selectedUser.user.name && clients[ip].user.email === selectedUser.user.email
+							});
 
 							wsio.emit('editUserRole', {
 								ips: ips,
@@ -328,49 +346,45 @@
 
 	function redrawPermissions() {
 		// populate html
-		let html = '';
+		let table = document.getElementById('permission--list');
+		table.innerHTML = '';
+
+		let tableHead = document.createElement('tr');
+		tableHead.appendChild(document.createElement('th'));
 		rbac.roles.forEach(role => {
-			let liHtml = '';
-
-			rbac.actions.forEach((action, i) => {
-				let label = 'action--' + role + '_' + i;
-
-				liHtml += [
-					'<li class="action">',
-						'<input id="' + label + '" type="checkbox">',
-						'&emsp;<label for="' + label + '">',
-							sentenceCase(action),
-						'</label>',
-					'</li>'
-				].join('');
-			});
-
-			html += [
-				'<li class="role role--' + role + '">',
-					sentenceCase(role),
-					'<ul>',
-						liHtml,
-					'</ul>',
-				'</li>'
-			].join('');
+			let th = addText(document.createElement('th'), sentenceCase(role));
+			tableHead.appendChild(th);
 		});
+		table.append(tableHead);
 
-		document.getElementById('permissions').innerHTML = html;
+		let html = '';
+		rbac.actions.forEach((action, i) => {
+			html += '<tr><td>' + sentenceCase(action) + '</td>';
+			
+			rbac.roles.forEach(role => {
+				let id = 'action--' + role + '_' + i;
+				html += '<td><input type="checkbox" id="' + id + '"></td>';
+			});
+			html += '</tr>';
+		});
+		table.innerHTML += html;
 
 		// attach handlers to inputs
-		document.querySelectorAll('#permissions input').forEach(input => {
+		document.querySelectorAll('#permission--list input').forEach(input => {
 			let match = input.id.match(/action--(.+)_(\d+)/);
-			let role = match[1];
-			let action = rbac.actions[match[2]];
+			if (match) {
+				let role = match[1];
+				let action = rbac.actions[match[2]];
 
-			input.checked = (rbac.permissions[role] & rbac.mask[action]) !== 0;
+				input.checked = (rbac.permissions[role] & rbac.mask[action]) !== 0;
 
-			input.onchange = function() {
-				wsio.emit('editRole', {
-					role: role,
-					action: action,
-					hasRole: this.checked
-				});
+				input.onchange = function() {
+					wsio.emit('editRole', {
+						role: role,
+						action: action,
+						hasRole: this.checked
+					});
+				}
 			}
 		});
 	}

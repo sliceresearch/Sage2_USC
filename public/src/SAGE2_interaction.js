@@ -124,11 +124,7 @@ const SAGE2_interaction = (function() {
 				actionFound = true;
 				break;
 			case 'stream':
-				actionFound = true;
-				break;
 			case 'application':
-				actionFound = true;
-				break;
 			case 'file':
 				actionFound = true;
 				break;

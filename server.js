@@ -751,6 +751,10 @@ function closeWebSocketClient(wsio) {
 	if (wsio.clientType === "display") {
 		sageutils.log("Disconnect", chalk.bold.red(wsio.id) +
 			" (" + wsio.clientType + " " + wsio.clientID + ")");
+		userlist.disconnect(wsio.id);
+		broadcast('userEvent', { type: 'disconnect', data: null, id: wsio.id });
+	} else if (wsio.clientType === "userManager") {
+		userlist.save();
 	} else {
 		if (wsio.clientType) {
 			sageutils.log("Disconnect", chalk.bold.red(wsio.id) + " (" + wsio.clientType + ")");
@@ -759,8 +763,6 @@ function closeWebSocketClient(wsio) {
 		}
 	}
 
-	userlist.disconnect(wsio.id);
-	broadcast('userEvent', { type: 'disconnect', data: null, id: wsio.id });
 	addEventToUserLog(wsio.id, {type: "disconnect", data: null, time: Date.now()});
 
 	// if client is a remote site, send disconnect message
@@ -1589,7 +1591,6 @@ function wsEditUserRole(wsio, data) {
 		wsPollActiveClients();
 	}
 }
-
 
 // **************  Sage Pointer Functions *****************
 
@@ -3151,9 +3152,9 @@ function tileApplications() {
  *
  * @method     clearDisplay
  */
-function clearDisplay() {
+function clearDisplay(wsio) {
 	deleteAllPartitions();
-	deleteAllApplications();
+	deleteAllApplications(wsio);
 }
 
 
@@ -3162,11 +3163,11 @@ function clearDisplay() {
  *
  * @method     deleteAllApplications
  */
-function deleteAllApplications() {
+function deleteAllApplications(wsio) {
 	var i;
 	var all = Object.keys(SAGE2Items.applications.list);
 	for (i = 0; i < all.length; i++) {
-		deleteApplication(all[i]);
+		deleteApplication(all[i], null, wsio);
 	}
 
 	// Reset the app_id counter to 0
@@ -3194,12 +3195,12 @@ function deleteAllPartitions() {
  * @method wsDeleteAllApplications
  */
 function wsDeleteAllApplications(wsio) {
-	deleteAllApplications();
+	deleteAllApplications(wsio);
 }
 
 // handlers for messages from UI
 function wsClearDisplay(wsio, data) {
-	clearDisplay();
+	clearDisplay(wsio);
 
 	addEventToUserLog(wsio.id, {type: "clearDisplay", data: null, time: Date.now()});
 }
@@ -4451,7 +4452,7 @@ function wsFinishApplicationResize(wsio, data) {
 }
 
 function wsDeleteApplication(wsio, data) {
-	deleteApplication(data.appId);
+	deleteApplication(data.appId, null, wsio);
 
 	// Is that diffent ?
 	// if (SAGE2Items.applications.list.hasOwnProperty(data.appId)) {
@@ -4573,7 +4574,7 @@ function wsAddNewControl(wsio, data) {
 
 
 function wsCloseAppFromControl(wsio, data) {
-	deleteApplication(data.appId);
+	deleteApplication(data.appId, null, wsio);
 }
 
 function wsHideWidgetFromControl(wsio, data) {
@@ -5840,6 +5841,7 @@ function quitSAGE2() {
 	if (config.register_site) {
 		// de-register with EVL's server
 		sageutils.deregisterSAGE2(config, function() {
+			userlist.save();
 			saveUserLog();
 			saveSession();
 			assets.saveAssets();
@@ -5849,6 +5851,7 @@ function quitSAGE2() {
 			process.exit(0);
 		});
 	} else {
+		userlist.save();
 		saveUserLog();
 		saveSession();
 		assets.saveAssets();
@@ -8703,7 +8706,7 @@ function keyUp(uniqueID, pointerX, pointerY, data) {
 			if (remoteInteraction[uniqueID].windowManagementMode() &&
 				(data.code === 8 || data.code === 46)) {
 				// backspace or delete
-				deleteApplication(obj.data.id);
+				deleteApplication(obj.data.id, null, {id: uniqueID});
 
 				var eLogData = {
 					application: {
@@ -8987,7 +8990,7 @@ function toggleApplicationFullscreen(uniqueID, app, dblClick) {
 	}
 }
 
-function deleteApplication(appId, portalId) {
+function deleteApplication(appId, portalId, wsio) {
 	if (!SAGE2Items.applications.list.hasOwnProperty(appId)) {
 		return;
 	}
@@ -9047,7 +9050,11 @@ function deleteApplication(appId, portalId) {
 		handleStickyItem(null);
 	}
 
-	broadcast('userEvent', {type: 'close app', data: app });
+	if (wsio) {
+		broadcast('userEvent', {type: 'close app', data: Object.assign(app, userlist.clients[wsio.id]), id: wsio.id});
+	} else {
+		broadcast('userEvent', {type: 'close app', data: app });
+	}
 	broadcast('deleteElement', {elemId: appId});
 
 	if (portalId !== undefined && portalId !== null) {
@@ -9716,7 +9723,7 @@ function wsCallFunctionOnApp(wsio, data) {
 	if (SAGE2Items.applications.list.hasOwnProperty(data.app)) {
 		// check for special cases, no message sent to app.
 		if (data.func === "SAGE2DeleteElement") {
-			deleteApplication(data.app);
+			deleteApplication(data.app, null, wsio);
 			return;
 		} else if (data.func === "SAGE2SendToBack") {
 			// data.app should contain the id.

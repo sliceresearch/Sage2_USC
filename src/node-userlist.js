@@ -100,23 +100,32 @@ class UserList {
 		// per session
 		shuffle(tempNames);
 		this.clients = {};
+		this.rbac = null;
+		this.rbacList = [];
 
 		// get roles/permissions
-		this.initRolesAndPermissions({
-			roles: ['admin', 'user', 'guest'],
-			actions: [
-				'upload files',
-				'use apps',
-				'share screen',
-				'share pointer',
-				'move/resize windows'
-			],
-			permissions: {
-				admin: 0b11111,
-				user:  0b11111,
-				guest: 0b11111
-			}
-		});
+		let getRbac = this.getData('/rbac');
+		if (getRbac.success) {
+			this.rbacList = getRbac.data || [];
+			this.rbac = this.rbacList[0];
+		}
+		if (!this.rbac) {
+			this.initRolesAndPermissions({
+				roles: ['admin', 'user', 'guest'],
+				actions: [
+					'upload files',
+					'use apps',
+					'share screen',
+					'share pointer',
+					'move/resize windows'
+				],
+				permissions: {
+					admin: 0b11111,
+					user:  0b11111,
+					guest: 0b11111
+				}
+			});
+		}
 	}
 
 	/**
@@ -186,6 +195,7 @@ class UserList {
 		});
 		rbac.maskAll = (1 << rbac.actions.length) - 1;
 
+		this.rbacList.push(rbac);
 		this.rbac = rbac;
 	}
 
@@ -302,9 +312,13 @@ class UserList {
 		}
 		return false;
 	}
-
-	saveRolePermissionsToStorage() {
-
+	/**
+	* save permissions models to database
+	*
+	* @method save
+	*/
+	save() {
+		this.push('/rbac', this.rbacList);
 	}
 
 	// **************  Database Functions *****************
@@ -334,7 +348,7 @@ class UserList {
 				data: data
 			};
 		} catch (error) {
-			sageutils.log("Userlist", "Error", error);
+			sageutils.log("Userlist", "Error", error.message);
 			return {
 				success: false
 			};
@@ -359,7 +373,7 @@ class UserList {
 			this.db.push(path, data, overwrite);
 			return true;
 		} catch (error) {
-			sageutils.log("Userlist", "Error", error);
+			sageutils.log("Userlist", "Error", error.message);
 			return false;
 		}
 	}
@@ -377,7 +391,7 @@ class UserList {
 			this.db.delete(path);
 			return true;
 		} catch (error) {
-			sageutils.log("Userlist", "Error", error);
+			sageutils.log("Userlist", "Error", error.message);
 		}
 		return false;
 	}
