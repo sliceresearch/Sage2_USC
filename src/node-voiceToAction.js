@@ -33,6 +33,9 @@ function VoiceActionManager(obj) {
 	var today = new Date();
 	this.fileLogPath = "./" + today.getFullYear() + "-"
 		+ (today.getMonth() + 1) + "-" + today.getDate() + "-transcript.json";
+	this.confirmPhrases = null;
+	this.rejectPhrases = null;
+	this.fillPhrases();
 }
 
 /**
@@ -304,7 +307,7 @@ VoiceActionManager.prototype.secondaryProcessCallToUseInTryCatch = function(wsio
 		if (wordsToPassAsInput && wordsToPassAsInput.length === 0) {
 			this.currentCommandLogInfo.status = "FAIL - Missing input";
 			this.oldLog("Match found, but missing input in " + app + " for the phrase:" + words, true);
-			wsio.emit("playVoiceCommandFailSound", {message: "please repeat"});
+			wsio.emit("playVoiceCommandFailSound", {message: this.getRandomRejectPhrase()});
 		} else {
 			// begin sending preparation
 			var dataToSend = {
@@ -325,11 +328,11 @@ VoiceActionManager.prototype.secondaryProcessCallToUseInTryCatch = function(wsio
 			if (wordsToPassAsInput !== null) {
 				this.oldLog("--clientInput being given:" + wordsToPassAsInput);
 			}
-			wsio.emit("playVoiceCommandSuccessSound", {message: "By your command"});
+			wsio.emit("playVoiceCommandSuccessSound", {message: this.getRandomConfirmPhrase()});
 		}
 	} else {
 		this.oldLog("No voice matches found in " + app + " for the phrase:" + words, true);
-		wsio.emit("playVoiceCommandFailSound", {message: "please repeat"});
+		wsio.emit("playVoiceCommandFailSound", {message: this.getRandomRejectPhrase()});
 	}
 };
 
@@ -351,12 +354,13 @@ VoiceActionManager.prototype.voicePreCheckForServerCommands = function (wsio, wo
 				"tile context", // speech to text commonly turns content into context
 				"tile everything",
 				"tile wall",
+				"tile window", // no "s" since these words are required, window is in windows
 				"organize"
 			],
 			successPhrase: "Organizing wall content"
 		},
 		clearAllContent: {
-			successFunction: this.s2.clearDisplay,
+			successFunction: this.voiceHandlerForClearDisplay,
 			phraseRequirements: [
 				"close everything",
 				"clear everything",
@@ -365,6 +369,15 @@ VoiceActionManager.prototype.voicePreCheckForServerCommands = function (wsio, wo
 				"toss it all"
 			],
 			successPhrase: "Closing all open applications"
+		},
+		viewRestore: {
+			successFunction: this.voiceHandlerForViewRestore,
+			phraseRequirements: [
+				"restore view",
+				"bring it back",
+				"bring back everything"
+			],
+			successPhrase: "Restoring the view"
 		},
 		launchApplication: {
 			successFunction: this.voiceHandlerForApplicationLaunch,
@@ -389,8 +402,7 @@ VoiceActionManager.prototype.voicePreCheckForServerCommands = function (wsio, wo
 			successFunction: this.voiceHandlerForSessionRestore,
 			phraseRequirements: [
 				"restore session",
-				"load session",
-				"bring back"
+				"load session"
 			],
 			successPhrase: "Restoring session"
 		},
@@ -527,6 +539,78 @@ VoiceActionManager.prototype.getWordsAfterInList = function(wordToSearchFor, lis
 		}
 	}
 	return retval;
+};
+
+/**
+ * Fills the phrases.
+ *
+ * @method fillPhraseP
+ * @param {Array} words - Array of transcript words
+ */
+VoiceActionManager.prototype.fillPhrases = function () {
+	this.confirmPhrases = [
+		"Activating", "Affirmative", "Alright", "Beginning", "Can do", "Commencing",
+		"Give me a second", "Great", "Got it", "No problem", "Of course", "Ok", "One moment",
+		"Please wait", "Processing", "Pull that up", "Retrieving", "Roger", "Starting on that", "Sure",
+		"Understood", "Will do", "Working on it", "Yeah, sure", "Yes boss",
+		"You got it", "You're the boss", "Yup"
+	];
+	this.rejectPhrases = [
+		"Huh", "I couldn't process that", "I couldn't hear you",
+		"I didn't catch that", "I didn't follow", "I don't understand what you said",
+		"I'm not sure", "No matching command available",
+		"Please repeat", "Please speak up", "Please try again",
+		"Unsure what was said", "What", "Would you repeat"
+	];
+};
+
+/**
+ * Grabs a random confirm response so the same phrase isn't constantly repeated.
+ *
+ * @method getRandomConfirmPhrase
+ * @param {Array} words - Array of transcript words
+ */
+VoiceActionManager.prototype.getRandomConfirmPhrase = function () {
+	return this.confirmPhrases[parseInt(Math.random() * this.confirmPhrases.length)];
+};
+
+/**
+ * Grabs a random reject response so the same phrase isn't constantly repeated.
+ *
+ * @method getRandomRejectPhrase
+ * @param {Array} words - Array of transcript words
+ */
+VoiceActionManager.prototype.getRandomRejectPhrase = function () {
+	return this.rejectPhrases[parseInt(Math.random() * this.rejectPhrases.length)];
+};
+
+/**
+ * Don't just clear the display, first save the session because it might include things wanted.
+ *
+ * @method voiceHandlerForClearDisplay
+ * @param {Array} words - transcript as array of words
+ */
+VoiceActionManager.prototype.voiceHandlerForClearDisplay = function(wsio, words) {
+	// First save the session, use autosave name,
+	// default one might be overwritten on save
+	this.s2.wsSaveSession(wsio, "autosave.json");
+	// Then clear the display.
+	this.s2.clearDisplay();
+};
+
+/**
+ * Loads the saved session, which is probably result of accidentially closing everything.
+ *
+ * @method voiceHandlerForViewRestore
+ * @param {Array} words - transcript as array of words
+ */
+VoiceActionManager.prototype.voiceHandlerForViewRestore = function(wsio, words) {
+	// Request the session 'autosave' from a previous clear command
+	this.s2.wsLoadFileFromServer(wsio, {
+		application: 'load_session',
+		filename: "autosave.json",
+		user: wsio.id
+	});
 };
 
 /**
@@ -871,7 +955,7 @@ VoiceActionManager.prototype.voiceHandlerForSessionSave = function(wsio, words) 
 	}
 	// save the session with the given name
 	this.oldLog("Saving session, filename:" + wordsDescribing.join(" "));
-	this.s2.wsSaveSesion(wsio, wordsDescribing.join(" "));
+	this.s2.wsSaveSession(wsio, wordsDescribing.join(" "));
 	return wordsDescribing.join(" ");
 };
 
@@ -903,14 +987,14 @@ VoiceActionManager.prototype.voiceHandlerForWebSearch = function(wsio, words) {
 	var foundSearch = false;
 	for (let i = 0; i < words.length; i++) {
 		if (words[i].includes("image")) {
-			// engine should be before image
-			if ((foundEngine !== false) && (foundEngine === (i - 1))) {
+			if ((foundFor ==  false)
+				&& ((foundEngine == false) || (foundSearch == false))) {
+				// only image search if "for" has not been found and both engine and search was not found
+				// if for has been found, this isn't an image search
+				// if engine and search was found, this isn't an image search
 				imageSearching = true;
-			} else {
-				// finding "image" before engine means use the engine's image search
-				imageSearching = true;
+				foundImage = i;
 			}
-			foundImage = i;
 		} else if (words[i].includes(searchEngine)) {
 			// want index of the word
 			foundEngine = i;
@@ -930,11 +1014,12 @@ VoiceActionManager.prototype.voiceHandlerForWebSearch = function(wsio, words) {
 
 	// determine which word of the keywords marks the start of the search terms.
 	if (foundFor !== false) {
+		// if "for" was in the phrase, will take everything after "for"
 		searchTermStartIndex = foundFor;
-	} else if (foundImage !== false) {
-		// if found "image"
-		// need to know if search was after, or image
+	} else if ((foundImage !== false) && (imageSearching)) {
+		// if found "image" need to know if "search" was earlier
 		if (foundImage > foundSearch) {
+			// if index of image was after search
 			searchTermStartIndex = foundImage;
 		} else if (foundSearch > foundEngine) {
 			searchTermStartIndex = foundSearch;
@@ -942,7 +1027,7 @@ VoiceActionManager.prototype.voiceHandlerForWebSearch = function(wsio, words) {
 			searchTermStartIndex = foundEngine;
 		}
 	} else {
-		// else it was after engine or search
+		// else words following engine or "search"
 		if (foundEngine > foundSearch) {
 			searchTermStartIndex = foundEngine;
 		} else {

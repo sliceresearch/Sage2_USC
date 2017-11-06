@@ -218,7 +218,9 @@ var whiteboardDirectory = sessionDirectory;
 // Validate all the media folders
 for (var folder in mediaFolders) {
 	var f = mediaFolders[folder];
-	sageutils.log("Folders", f.name, f.path, f.url);
+	sageutils.log("Folders", '[' + f.name + ']',
+		'path:', chalk.yellow.bold(f.path),
+		'url:', chalk.yellow.bold(f.url));
 	if (!sageutils.folderExists(f.path)) {
 		sageutils.mkdirParent(f.path);
 	}
@@ -331,7 +333,7 @@ function initializeSage2Server() {
 	var qr_png = qrimage.image(hostOrigin, { ec_level: 'M', size: 15, margin: 3, type: 'png' });
 	var qr_out = path.join(uploadsDirectory, "images", "QR.png");
 	qr_png.on('end', function() {
-		sageutils.log("QR", "image generated", qr_out);
+		sageutils.log("QR", "QR code generated", qr_out);
 	});
 	qr_png.pipe(fs.createWriteStream(qr_out));
 
@@ -709,7 +711,7 @@ var variablesUsedInVoiceHandler = {
 	wsCallFunctionOnApp,
 	wsLaunchAppWithValues,
 	wsLoadFileFromServer,
-	wsSaveSesion,
+	wsSaveSession,
 	tileApplications,
 	clearDisplay,
 	broadcast,
@@ -816,7 +818,8 @@ function closeWebSocketClient(wsio) {
 	}
 
 	try {
-		updateInformationAboutConnections();
+		// For debugging connections and slow down. Client just disconnected, update connection count.
+		sharedServerData.updateInformationAboutConnections(clients, sagePointers);
 	} catch (e) {
 		sageutils.log("Connections", "Error with updating client data");
 		sageutils.log("Connections", e);
@@ -839,7 +842,8 @@ function wsAddClient(wsio, data) {
 			wsio.emit('remoteConnection', {status: "refused", reason: 'wrong session hash'});
 			// If server protected and wrong hash, close the socket and byebye
 			wsio.ws.close();
-			updateInformationAboutConnectionsFailedRemoteSite(wsio);
+			// For debugging connections and slow down. This one logs failed connection attemps.
+			sharedServerData.updateInformationAboutConnectionsFailedRemoteSite(wsio);
 			return;
 		}
 	}
@@ -924,9 +928,9 @@ function wsAddClient(wsio, data) {
 		reportIfCanWallScreenshot();
 	}
 
-	// update connection data
 	try {
-		updateInformationAboutConnections();
+		// For debugging connections and slow down. Creates varibles apps can request for.
+		sharedServerData.updateInformationAboutConnections(clients, sagePointers);
 	} catch (e) {
 		sageutils.log("Connections", "Error with updating client data");
 		sageutils.log("Connections", e);
@@ -1067,7 +1071,7 @@ function setupListeners(wsio) {
 	wsio.on('loadImageFromBuffer',                  wsLoadImageFromBuffer);
 	wsio.on('deleteElementFromStoredFiles',         wsDeleteElementFromStoredFiles);
 	wsio.on('moveElementFromStoredFiles',           wsMoveElementFromStoredFiles);
-	wsio.on('saveSesion',                           wsSaveSesion);
+	wsio.on('saveSession',                           wsSaveSession);
 	wsio.on('clearDisplay',                         wsClearDisplay);
 	wsio.on('deleteAllApplications',                wsDeleteAllApplications);
 	wsio.on('tileApplications',                     wsTileApplications);
@@ -1178,10 +1182,11 @@ function setupListeners(wsio) {
 	wsio.on('serverDataSubscribeToValue',			wsServerDataSubscribeToValue);
 	wsio.on('serverDataGetAllTrackedValues',		wsServerDataGetAllTrackedValues);
 	wsio.on('serverDataGetAllTrackedDescriptions',	wsServerDataGetAllTrackedDescriptions);
-	wsio.on('serverDataSubscribeToNewValueNotification',	wsServerDataSubscribeToNewValueNotification);
+	wsio.on('serverDataSubscribeToNewValueNotification',
+		wsServerDataSubscribeToNewValueNotification);
 
 	// voice to sage2 actions
-	wsio.on('voiceToAction',                      wsVoiceToAction);
+	wsio.on('voiceToAction',                        wsVoiceToAction);
 
 	// Screenshot messages
 	wsio.on('startWallScreenshot',                  wsStartWallScreenshot);
@@ -1900,7 +1905,8 @@ function wsUpdateMediaStreamChunk(wsio, data) {
 		wsUpdateMediaStreamFrame(wsio, {id: data.id, state: {
 			src: SAGE2Items.renderSync[data.id].chunks.join(""),
 			type: data.state.type,
-			encoding: data.state.encoding}});
+			encoding: data.state.encoding,
+			pointersOverApp: []}});
 		SAGE2Items.renderSync[data.id].chunks = [];
 	}
 }
@@ -2132,6 +2138,10 @@ function wsUpdateAppState(wsio, data) {
 	if (wsio === masterDisplay && SAGE2Items.applications.list.hasOwnProperty(data.id)) {
 		var app = SAGE2Items.applications.list[data.id];
 
+		if (!app.data.pointersOverApp) {
+			// console.log("erase me, something removed the pointersOverApp property. Readding...");
+			// app.data.pointersOverApp = [];
+		}
 		sageutils.mergeObjects(data.localState, app.data, ['doc_url', 'video_url', 'video_type', 'audio_url', 'audio_type']);
 
 		if (data.updateRemote === true) {
@@ -2368,7 +2378,7 @@ function wsApplicationRPC(wsio, data) {
 
 // **************  Session Functions *****************
 
-function wsSaveSesion(wsio, data) {
+function wsSaveSession(wsio, data) {
 	var sname = "";
 	if (data) {
 		// If a name is passed, use it
@@ -2540,6 +2550,7 @@ function saveSession(filename) {
 	states.numpartitions = 0;
 	states.date    = Date.now();
 	for (key in SAGE2Items.applications.list) {
+		// make a copy of the application object
 		var a = Object.assign({}, SAGE2Items.applications.list[key]);
 
 		if (a.partition) {
@@ -2551,13 +2562,25 @@ function saveSession(filename) {
 		// appId contains a + character
 		var isNotShared = (a.id.indexOf('+') === -1);
 
+		// Delete circular structures about the sticky applications
+		if (a.foregroundItems) {
+			delete a.foregroundItems;
+		}
+		if (a.backgroundItem) {
+			a.sticky = false;
+			delete a.backgroundItem;
+		}
+
 		// Ignore media streaming applications for now (desktop sharing) and shared applications
-		if (a.application !== 'media_stream' && a.application !== 'media_block_stream' && isNotShared) {
+		if (a.application !== 'media_stream' &&
+			a.application !== 'media_block_stream' &&
+			isNotShared) {
 			states.apps.push(a);
 			states.numapps++;
 		}
 	}
 
+	// Delete circular reference in the state of partitions
 	for (key in partitions.list) {
 		var p = Object.assign({}, partitions.list[key]);
 
@@ -4585,7 +4608,7 @@ function loadConfiguration() {
 
 				if (text !== "") {
 					configFile = text;
-					sageutils.log("SAGE2", "Found configuration file:", configFile);
+					sageutils.log("SAGE2", "Found configuration file:", chalk.yellow.bold(configFile));
 					break;
 				}
 			}
@@ -4601,7 +4624,7 @@ function loadConfiguration() {
 		}
 		configFile = path.join("config", hn + "-cfg.json");
 		if (sageutils.fileExists(configFile)) {
-			sageutils.log("SAGE2", "Found configuration file:", configFile);
+			sageutils.log("SAGE2", "Found configuration file:", chalk.yellow.bold(configFile));
 		} else {
 			// Check in ~/Document/SAGE2_Media/config
 			if (platform === "Windows") {
@@ -4617,7 +4640,7 @@ function loadConfiguration() {
 					configFile = path.join("config", "default-cfg.json");
 				}
 			}
-			sageutils.log("SAGE2", "Using default configuration file:", configFile);
+			sageutils.log("SAGE2", "Using default configuration file:", chalk.yellow.bold(configFile));
 		}
 	}
 
@@ -5357,7 +5380,8 @@ function manageRemoteConnection(remote, site, index) {
 		removeElement(clients, remote);
 
 		try {
-			updateInformationAboutConnections();
+			// For debugging connections and slow down. Remote site just disconnected, update connection count.
+			sharedServerData.updateInformationAboutConnections(clients, sagePointers);
 		} catch (e) {
 			sageutils.log("Connections", "Error with updating client data");
 			sageutils.log("Connections", e);
@@ -10734,89 +10758,8 @@ function deletePartition(id) {
 }
 
 /**
- * Updates the stored information about connections.
- * Currently updates three values: UI, displays, remote servers.
- * Users information from
- *
- * @method updateInformationAboutConnections
- */
-function updateInformationAboutConnections() {
-	var currentUiList = [];
-	var currentDisplayList = [];
-	var currentRemoteSiteList = [];
-	var currentItem;
-	for (let i = 0; i < clients.length; i++) {
-		if (clients[i].clientType === "sageUI") {
-			currentItem = {};
-			currentItem.name  = sagePointers[clients[i].id].label;
-			currentItem.color = sagePointers[clients[i].id].color;
-			currentItem.uniqueID = clients[i].id;
-			currentUiList.push(currentItem);
-		} else if (clients[i].clientType === "display") {
-			currentItem = {};
-			currentItem.viewPort = clients[i].clientID;
-			currentItem.uniqueID = clients[i].id;
-			currentDisplayList.push(currentItem);
-		} else if (clients[i].clientType === "remoteServer") {
-			currentItem = {};
-			currentItem.remoteAddress = clients[i].remoteAddress.address;
-			currentItem.uniqueID = clients[i].id;
-			currentRemoteSiteList.push(currentItem);
-		}
-	}
-	var data = {};
-	if (currentUiList.length > 0) {
-		data.nameOfValue = "serverConnectionDataUiList";
-		data.value = currentUiList;
-		//  wsio is not needed to set value
-		sharedServerData.setValue(null, data);
-	}
-	if (currentDisplayList.length > 0) {
-		data.nameOfValue = "serverConnectionDataDisplayList";
-		data.value = currentDisplayList;
-		//  wsio is not needed to set value
-		sharedServerData.setValue(null, data);
-	}
-	if (currentRemoteSiteList.length > 0) {
-		data.nameOfValue = "serverConnectionDataRemoteSiteList";
-		data.value = currentRemoteSiteList;
-		//  wsio is not needed to set value
-		sharedServerData.setValue(null, data);
-	}
-}
-
-/**
- * Updates the stored information about failed remote site connections
- *
- * @method updateInformationAboutConnectionsFailedRemoteSite
- * @param  {Object} wsio - The websocket of sender.
- */
-function updateInformationAboutConnectionsFailedRemoteSite(wsio) {
-	var data = {};
-	data.nameOfValue = "serverConnectionDataFailedRemoteSite";
-	if (sharedServerData.dataStructure.allNamesOfValues.includes(data.nameOfValue)) {
-		data.value = sharedServerData.dataStructure.allValues[data.nameOfValue].value;
-	} else {
-		data.value = {total: 0, sites: []};
-	}
-	data.value.total++;
-	var sites = data.value.sites;
-	var found = false;
-	for (let i = 0; i < sites.length; i++) {
-		if (sites[i].id === wsio.id) {
-			sites[i].total++;
-			found = true;
-		}
-	}
-	if (!found) {
-		sites.push({id: wsio.id, total: 1});
-	}
-	// wsio is not needed to set value
-	sharedServerData.setValue(null, data);
-}
-
-/**
  * Will attempt to take a transcript and use best case to activate a context menu item.
+ * All logic is performed within the src/voiceToAction.js file.
  *
  * @method wsVoiceToAction
  * @param {Object} wsio - ws to originator.

@@ -38,6 +38,8 @@ function SAGE2_interaction(wsio) {
 	this.fileUploadComplete = null;
 	this.mediaStream = null;
 	this.mediaVideo  = null;
+	this.mediaCanvas = null;
+	this.mediaCtx    = null;
 	this.mediaResolution = 2; // 2;
 	this.mediaQuality    = 8; // 9;
 	this.chromeDesktopCaptureEnabled = false;
@@ -337,7 +339,8 @@ function SAGE2_interaction(wsio) {
 
 		document.removeEventListener('pointerlockerror',  this.pointerLockError,  false);
 		document.removeEventListener('pointerlockchange', this.pointerLockChange, false);
-		document.getElementById('mediaVideo').removeEventListener('canplay', this.streamCanPlay,               false);
+		this.mediaVideo.removeEventListener('canplay',    this.streamCanPlay,     false);
+		this.mediaVideo.removeEventListener('timeupdate', this.timeUpdate,        false);
 	};
 
 	/**
@@ -485,9 +488,9 @@ function SAGE2_interaction(wsio) {
 
 		console.log('Track', stream, tracks[0])
 
-		var mediaVideo = document.getElementById('mediaVideo');
-		mediaVideo.src = window.URL.createObjectURL(this.mediaStream);
-		mediaVideo.play();
+		this.mediaVideo.src = window.URL.createObjectURL(this.mediaStream);
+		// this.mediaVideo.srcObject = this.mediaStream;
+		this.mediaVideo.play();
 	};
 
 	/**
@@ -531,8 +534,9 @@ function SAGE2_interaction(wsio) {
 	* @param deadline {Object} object containing timing information
 	*/
 	this.stepMethod = function(deadline) {
+		let timeRemaining = deadline.timeRemaining();
 		// if more than 10ms of freetime, go for it
-		if (deadline.timeRemaining() > 1) {
+		if (timeRemaining > 33) {
 			if (this.gotRequest) {
 				this.pix = this.captureMediaFrame();
 				this.sendMediaStreamFrame();
@@ -541,6 +545,23 @@ function SAGE2_interaction(wsio) {
 		// and request again
 		this.req = requestIdleCallback(this.step);
 	};
+
+	/**
+	 * called when a video frame is drawn
+	 *
+	 * @method     timeUpdateMethod
+	 * @param      {<type>}  event   The event
+	 */
+	this.timeUpdateMethod = function(event) {
+		// if we got a frame request from server
+		if (this.gotRequest) {
+			// capture the frame
+			this.pix = this.captureMediaFrame();
+			// send it to server
+			this.sendMediaStreamFrame();
+		}
+	};
+
 
 	/**
 	* The screen sharing can start
@@ -552,29 +573,27 @@ function SAGE2_interaction(wsio) {
 		// Making sure it's not already sending
 		if (!this.broadcasting) {
 			var screenShareResolution = {options:[ {}, {}, {}, {} ]};
-			var mediaVideo  = document.getElementById('mediaVideo');
-			var mediaCanvas = document.getElementById('mediaCanvas');
 
-			if (mediaVideo.videoWidth === 0 || mediaVideo.videoHeight === 0) {
+			if (this.mediaVideo.videoWidth === 0 || this.mediaVideo.videoHeight === 0) {
 				setTimeout(this.streamCanPlay, 500, event);
 				return;
 			}
 
 			var widths = [
-				Math.min(852,  mediaVideo.videoWidth),
-				Math.min(1280, mediaVideo.videoWidth),
-				Math.min(1920, mediaVideo.videoWidth),
-				mediaVideo.videoWidth
+				Math.min(852,  this.mediaVideo.videoWidth),
+				Math.min(1280, this.mediaVideo.videoWidth),
+				Math.min(1920, this.mediaVideo.videoWidth),
+				this.mediaVideo.videoWidth
 			];
 
 			for (var i = 0; i < 4; i++) {
-				var height = parseInt(widths[i] * mediaVideo.videoHeight / mediaVideo.videoWidth, 10);
+				var height = parseInt(widths[i] * this.mediaVideo.videoHeight / this.mediaVideo.videoWidth, 10);
 				screenShareResolution.options[i].value = widths[i] + "x" + height;
 			}
 
 			var res = screenShareResolution.options[this.mediaResolution].value.split("x");
-			mediaCanvas.width  = parseInt(res[0], 10);
-			mediaCanvas.height = parseInt(res[1], 10);
+			this.mediaCanvas.width  = parseInt(res[0], 10);
+			this.mediaCanvas.height = parseInt(res[1], 10);
 
 			var frame = this.captureMediaFrame();
 			this.pix  = frame;
@@ -584,10 +603,11 @@ function SAGE2_interaction(wsio) {
 				title: localStorage.SAGE2_ptrName + ": Shared Screen",
 				color: localStorage.SAGE2_ptrColor,
 				src: raw, type: "image/jpeg", encoding: "binary",
-				width: mediaVideo.videoWidth, height: mediaVideo.videoHeight
+				width: this.mediaVideo.videoWidth, height: this.mediaVideo.videoHeight
 			});
-			console.log('share', mediaVideo.videoWidth, mediaVideo.videoHeight)
+			console.log('share', this.mediaVideo.videoWidth, this.mediaVideo.videoHeight)
 			this.broadcasting = true;
+
 
 			// Using requestAnimationFrame
 			// var _this = this;
@@ -608,7 +628,7 @@ function SAGE2_interaction(wsio) {
 			// this.req = requestAnimationFrame(step);
 
 			// Request an idle callback for screencapture
-			this.req = requestIdleCallback(this.step);
+			// this.req = requestIdleCallback(this.step);
 		}
 	};
 
@@ -618,13 +638,8 @@ function SAGE2_interaction(wsio) {
 	* @method captureMediaFrame
 	*/
 	this.captureMediaFrame = function() {
-		var mediaVideo  = document.getElementById('mediaVideo');
-		var mediaCanvas = document.getElementById('mediaCanvas');
-		var mediaCtx    = mediaCanvas.getContext('2d');
-
-		// mediaCtx.clearRect(0, 0, mediaCanvas.width, mediaCanvas.height);
-		mediaCtx.drawImage(mediaVideo, 0, 0, mediaCanvas.width, mediaCanvas.height);
-		return mediaCanvas.toDataURL("image/jpeg", (this.mediaQuality / 10));
+		this.mediaCtx.drawImage(this.mediaVideo, 0, 0, this.mediaCanvas.width, this.mediaCanvas.height);
+		return this.mediaCanvas.toDataURL("image/jpeg", (this.mediaQuality / 10));
 	};
 
 	this.requestMediaStreamFrame = function(argument) {
@@ -641,19 +656,23 @@ function SAGE2_interaction(wsio) {
 	this.sendMediaStreamFrame = function() {
 		if (this.broadcasting) {
 			// var frame = this.captureMediaFrame();
-			var frame = this.pix;
-			var raw   = atob(frame.split(",")[1]);  // base64 to string
+			var raw = atob(this.pix.split(",")[1]);  // base64 to string
 
 			if (raw.length > this.chunk) {
 				var _this   = this;
 				var nchunks = Math.ceil(raw.length / this.chunk);
 
 				var updateMediaStreamChunk = function(index, msg_chunk) {
-					setTimeout(function() {
+					// setTimeout(function() {
+					// 	_this.wsio.emit('updateMediaStreamChunk', {id: _this.uniqueID + "|0",
+					// 		state: {src: msg_chunk, type: "image/jpeg", encoding: "binary"},
+					// 		piece: index, total: nchunks});
+					// }, 1);
+					setImmediate(function() {
 						_this.wsio.emit('updateMediaStreamChunk', {id: _this.uniqueID + "|0",
 							state: {src: msg_chunk, type: "image/jpeg", encoding: "binary"},
 							piece: index, total: nchunks});
-					}, 4);
+					});
 				};
 				for (var i = 0; i < nchunks; i++) {
 					var start = i * this.chunk;
@@ -898,9 +917,8 @@ function SAGE2_interaction(wsio) {
 		if (event.target.options[event.target.selectedIndex].value) {
 			this.mediaResolution = event.target.selectedIndex;
 			var res = event.target.options[this.mediaResolution].value.split("x");
-			var mediaCanvas = document.getElementById('mediaCanvas');
-			mediaCanvas.width  = parseInt(res[0], 10);
-			mediaCanvas.height = parseInt(res[1], 10);
+			this.mediaCanvas.width  = parseInt(res[0], 10);
+			this.mediaCanvas.height = parseInt(res[1], 10);
 			console.log("Media resolution: " + event.target.options[this.mediaResolution].value);
 		}
 	};
@@ -919,6 +937,7 @@ function SAGE2_interaction(wsio) {
 	this.streamFail                  = this.streamFailMethod.bind(this);
 	this.streamEnded                 = this.streamEndedMethod.bind(this);
 	this.streamCanPlay               = this.streamCanPlayMethod.bind(this);
+	this.timeUpdate                  = this.timeUpdateMethod.bind(this);
 
 	this.pointerLockError            = this.pointerLockErrorMethod.bind(this);
 	this.pointerLockChange           = this.pointerLockChangeMethod.bind(this);
@@ -940,11 +959,9 @@ function SAGE2_interaction(wsio) {
 	document.addEventListener('pointerlockerror',  this.pointerLockError,  false);
 	document.addEventListener('pointerlockchange', this.pointerLockChange, false);
 
-	// document.getElementById('sage2PointerLabel').addEventListener('input',      this.changeSage2PointerLabel,     false);
-	// document.getElementById('sage2PointerColor').addEventListener('input',      this.changeSage2PointerColor,     false);
-	// document.getElementById('sage2PointerLabelInit').addEventListener('input',  this.changeSage2PointerLabel,     false);
-	// document.getElementById('sage2PointerColorInit').addEventListener('input',  this.changeSage2PointerColor,     false);
-	// document.getElementById('screenShareResolution').addEventListener('change', this.changeScreenShareResolution, false);
-	// document.getElementById('screenShareQuality').addEventListener('input',     this.changeScreenShareQuality,    false);
-	document.getElementById('mediaVideo').addEventListener('canplay', this.streamCanPlay,               false);
+	this.mediaCanvas = document.getElementById('mediaCanvas');
+	this.mediaCtx    = this.mediaCanvas.getContext('2d');
+	this.mediaVideo  = document.getElementById('mediaVideo');
+	this.mediaVideo.addEventListener('canplay', this.streamCanPlay, false);
+	this.mediaVideo.addEventListener('timeupdate', this.timeUpdate, false);
 }

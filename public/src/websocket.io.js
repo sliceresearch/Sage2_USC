@@ -70,6 +70,38 @@ function WebsocketIO(url) {
 	this.localListeners = {"0000": "#WSIO#addListener"};
 
 	/**
+	 * bytes sent property
+	 * @property bytesWritten
+	 * type       {Number}
+	 */
+	this._bytesWritten = 0;
+
+	/**
+	 * getter for the bytesRead property
+	 */
+	Object.defineProperty(this, "bytesRead", {
+		get: function () {
+			return this._bytesRead;
+		}
+	});
+
+	/**
+	 * bytes received property
+	 * @property bytesWritten
+	 * type       {Number}
+	 */
+	this._bytesRead = 0;
+
+	/**
+	 * getter for the bytesWritten property
+	 */
+	Object.defineProperty(this, "bytesWritten", {
+		get: function () {
+			return this._bytesWritten;
+		}
+	});
+
+	/**
 	* Open a websocket
 	*
 	* @method open
@@ -88,6 +120,9 @@ function WebsocketIO(url) {
 			var fName;
 			// text message
 			if (typeof message.data === "string") {
+				// update the bytes read value
+				_this._bytesRead += message.data.length;
+				// decode the message
 				var msg = JSON.parse(message.data);
 				fName = _this.localListeners[msg.f];
 				if (fName === undefined) {
@@ -100,6 +135,9 @@ function WebsocketIO(url) {
 				}
 				_this.messages[fName](msg.d);
 			} else {
+				// update the bytes read value
+				_this._bytesRead += message.data.byteLength;
+				// decode the message
 				var uInt8 = new Uint8Array(message.data);
 				var func  = String.fromCharCode(uInt8[0]) +
 							String.fromCharCode(uInt8[1]) +
@@ -182,10 +220,14 @@ function WebsocketIO(url) {
 			message.set(data, 4);
 			// send the message using websocket
 			this.ws.send(message.buffer);
+			// update property
+			this._bytesWritten += message.buffer.byteLength;
 		} else {
 			// send data as JSON string
-			message = {f: alias, d: data};
-			this.ws.send(JSON.stringify(message));
+			message = JSON.stringify({f: alias, d: data});
+			this.ws.send(message);
+			// update property
+			this._bytesWritten += message.length;
 		}
 	};
 

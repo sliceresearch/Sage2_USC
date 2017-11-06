@@ -1017,7 +1017,7 @@ function setupListeners() {
 	wsio.on('eventInItem', function(event_data) {
 		var app = applications[event_data.id];
 
-		console.log(event_data, app, applications);
+		// console.log(event_data, app, applications);
 
 		if (app) {
 			var date = new Date(event_data.date);

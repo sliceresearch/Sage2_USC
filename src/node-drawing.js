@@ -1,4 +1,24 @@
+// SAGE2 is available for use under the SAGE2 Software License
+//
+// University of Illinois at Chicago's Electronic Visualization Laboratory (EVL)
+// and University of Hawai'i at Manoa's Laboratory for Advanced Visualization and
+// Applications (LAVA)
+//
+// See full text, terms and conditions in the LICENSE.txt included file
+//
+// Copyright (c) 2015
+
+/**
+ *  Module for whiteboard app
+ *
+ * @module server
+ * @submodule DrawingManager
+ */
+
 "use strict";
+
+// provides utility functions
+var sageutils    = require('../src/node-utils');
 
 // Put a Tutorial, maybe an overlay text to say that drawing is enabled
 
@@ -202,9 +222,9 @@ DrawingManager.prototype.removeWebSocket = function(wsio) {
 	var position = this.clientIDandSockets[clientID].indexOf(wsio);
 	if (position > -1) {
 		this.clientIDandSockets[clientID].splice(position, 1);
-		console.log("DrawingManager>	Socket removed from drawingManager");
+		sageutils.log("DrawingManager",	"Socket removed from drawingManager");
 	} else {
-		console.log("DrawingManager>	Attempt to remove a socket from drawingManager, but not present");
+		sageutils.log("DrawingManager",	"Attempt to remove a socket from drawingManager, but not present");
 	}
 
 };
@@ -299,7 +319,7 @@ DrawingManager.prototype.changeStyle = function(data) {
 };
 
 DrawingManager.prototype.enableDrawingMode = function(data) {
-	// console.log("DrawingManager>	Drawing mode enabled");
+	// sageutils.log("DrawingManager", "Drawing mode enabled");
 	this.drawingMode = true;
 	this.paletteID = data.id;
 	this.sendStyleToPalette(this.paletteID, this.style);
@@ -307,14 +327,14 @@ DrawingManager.prototype.enableDrawingMode = function(data) {
 };
 
 DrawingManager.prototype.reEnableDrawingMode = function(data) {
-	// console.log("DrawingManager>	Drawing mode reEnabled");
+	// sageutils.log("DrawingManager", "Drawing mode reEnabled");
 	this.drawingMode = true;
 	this.sendStyleToPalette(this.paletteID, this.style);
 	this.sendModesToPalette();
 };
 
 DrawingManager.prototype.disableDrawingMode = function(data) {
-	// console.log("DrawingManager>	Drawing mode disabled");
+	// sageutils.log("DrawingManager", "Drawing mode disabled");
 	this.drawingMode = false;
 	// this.paletteID = null;
 	this.sendModesToPalette();
@@ -713,7 +733,7 @@ DrawingManager.prototype.updateTimer = function() {
 	for (var i in this.lastTimeSeen) {
 		var e = this.lastTimeSeen[i];
 		if (t - e > this.TIMEOUT_TIME) {
-			console.log("DrawingManager>	Timeout for id: " + i);
+			sageutils.log("DrawingManager", "Timeout for id:", i);
 			timouted.push(i);
 			break;
 		}
@@ -996,7 +1016,6 @@ DrawingManager.prototype.pointerEvent = function(e, sourceId, posX, posY, w, h) 
 		delete this.lastTimeSeen[e.sourceId];
 	}
 
-	// console.log( e.type+": "+this.actionXTouch[e.sourceId]  );
 	if (this.lastTimeSeen[e.sourceId] !== undefined) {
 		if (this.actionXTouch[e.sourceId] == "drawing") {
 			var drawingId = this.dictionaryId[e.sourceId];
@@ -1175,12 +1194,10 @@ DrawingManager.prototype.checkInvolvedClient = function(posX, posY) {
 			client.endY >= posY) {
 
 			return client.clientID;
-
 		}
-
 	}
 
-	console.log("DrawingManager>	No single client involved");
+	sageutils.log("DrawingManager", "No single client involved");
 	return;
 };
 
@@ -1229,4 +1246,5 @@ DrawingManager.prototype.setCallbacks = function(
 	this.loadSession = loadSessionCB;
 	this.sendSessionListToPalette = sendSessionListCB;
 };
+
 module.exports = DrawingManager;

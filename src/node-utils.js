@@ -180,7 +180,8 @@ function getShortVersion() {
  * @return {String} version number
  */
 function getNodeVersion() {
-	return _NODE_VERSION.toString() +  " (v" +  process.versions.node + ")";
+	// return _NODE_VERSION.toString() +  " (v" +  process.versions.node + ")";
+	return process.versions.node;
 }
 
 /**

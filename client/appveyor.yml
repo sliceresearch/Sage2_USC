@@ -1,4 +1,4 @@
-version: 2.0.{build}
+version: 2.9.{build}
 
 branches:
   only:
@@ -14,13 +14,13 @@ init:
   - set PATH=C:\Program Files\Git\mingw64\bin;%PATH%
 
 install:
-  - ps: Get-NodeJsLatestBuild 8.4
-  - ps: Install-Product node 8.4.0 x64
+  - ps: Get-NodeJsLatestBuild 8.7
+  - ps: Install-Product node 8.7.0 x64
   - dir C:\avvm\node
   - node -v
   - cd %APPVEYOR_BUILD_FOLDER%
   - cd client
-  - npm install --production --msvs_version=2013
+  - npm install --msvs_version=2013
   - copy /Y ..\electron.js  electron.js
   - dir
   - mkdir public
@@ -32,15 +32,15 @@ install:
   - copy /Y README.win      SAGE2_client-win32-x64\README
   - copy /Y View.win        SAGE2_client-win32-x64\Display0.bat
   - copy /Y Fullscreen.win  SAGE2_client-win32-x64\Fullscreen.bat
-  - 7z a -sfx7z.sfx SAGE2_client-win64.exe SAGE2_client-win32-x64 > nul
-  - move SAGE2_client-win64.exe ..
+  - node build_win.js
+  - move windows-installer\SAGE2_client-Installer.exe ..
 
 build: off
 
 test: off
 
 artifacts:
-  - path: SAGE2_client-win64.exe
+  - path: SAGE2_client-Installer.exe
     name: sage2_client
 
 deploy:

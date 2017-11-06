@@ -151,6 +151,10 @@ var image_viewer = SAGE2_App.extend({
 			parameters: {}
 		});
 
+		entries.push({
+			description: "separator"
+		});
+
 		if (this.checkIfHasGpsData()) {
 			// Disable this for now
 			// entries.push({
