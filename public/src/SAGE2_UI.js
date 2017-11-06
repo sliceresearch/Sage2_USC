@@ -2545,9 +2545,9 @@ function setAppContextMenuEntries(data) {
 	// data.entries, data.app, data.x, data.y
 	var entriesToAdd = data.entries;
 	var app = data.app;
-	let side = (data.x > document.getElementById("applicationsDiv").clientWidth / 2) ? "left" : "right";
+	let side = (data.x > window.innerWidth / 2) ? "left" : "right";
 
-	showAppContextMenuDiv(data.x, data.y, side);
+	showAppContextMenuDiv(data.x, data.y);
 	// full removal of current contents
 	removeAllChildren('appContextMenu');
 	// for each entry
