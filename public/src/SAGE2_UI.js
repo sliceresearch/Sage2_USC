@@ -2808,6 +2808,7 @@ function addMenuEntry(menuDiv, entry, id, app) {
 				workingDiv.appendChild(colorPalette);
 
 			} else if (entry.inputType === "range") {
+
 				// inputField.type = "range";
 				inputField.classList.add("rmbRangeInput");
 
@@ -2846,6 +2847,28 @@ function addMenuEntry(menuDiv, entry, id, app) {
 				let sliderHandle = document.createElement("div");
 				sliderHandle.id = workingDiv.id + "rangeHandle";
 				sliderHandle.classList.add("rmbRangeInputSliderHandle");
+
+				// value changed using arrow buttons or input field moves the slider handle
+				let valueChanged = function () {
+					let value = document.getElementById(inputField.id).value;
+
+					if (parseFloat(value)) {
+						document.getElementById(sliderHandle.id).style.left = valueToPixel(parseFloat(value));
+					}
+				};
+
+				// utility functions mapping 0-100 pixels to the range provided
+				let valueToPixel = function (val) {
+					if (!isNaN(parseFloat(val))) {
+						return ((val - range[0]) / range[1] - range[0]) * 100 + "px";
+					}
+					return "0px";
+				};
+
+				let pixelToValue = function (pix) {
+					return ((pix / 100 * (range[1] - range[0])) + range[0]).toFixed(0);
+				};
+
 				sliderHandle.style.left = valueToPixel(entry.value);
 
 				sliderWrapper.appendChild(sliderBar);
@@ -2957,27 +2980,6 @@ function addMenuEntry(menuDiv, entry, id, app) {
 						document.getElementById(sliderHandle.id).sliding = null;
 					}
 				});
-
-				// value changed using arrow buttons or input field moves the slider handle
-				let valueChanged = function() {
-					let value = document.getElementById(inputField.id).value;
-
-					if (parseFloat(value)) {
-						document.getElementById(sliderHandle.id).style.left = valueToPixel(parseFloat(value));
-					}
-				};
-
-				// utility functions mapping 0-100 pixels to the range provided
-				let valueToPixel = function(val) {
-					if (!isNaN(parseFloat(val))) {
-						return ((val - range[0]) / range[1] - range[0]) * 100 + "px";
-					}
-					return "0px";
-				};
-
-				let pixelToValue = function(pix) {
-					return ((pix / 100 * (range[1] - range[0])) + range[0]).toFixed(0);
-				};
 			}
 
 			if (entry.inputUpdateOnChange) {
