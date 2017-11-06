@@ -217,7 +217,9 @@ var whiteboardDirectory = sessionDirectory;
 // Validate all the media folders
 for (var folder in mediaFolders) {
 	var f = mediaFolders[folder];
-	sageutils.log("Folders", f.name, f.path, f.url);
+	sageutils.log("Folders", '[' + f.name + ']',
+		'path:', chalk.yellow.bold(f.path),
+		'url:', chalk.yellow.bold(f.url));
 	if (!sageutils.folderExists(f.path)) {
 		sageutils.mkdirParent(f.path);
 	}
@@ -330,7 +332,7 @@ function initializeSage2Server() {
 	var qr_png = qrimage.image(hostOrigin, { ec_level: 'M', size: 15, margin: 3, type: 'png' });
 	var qr_out = path.join(uploadsDirectory, "images", "QR.png");
 	qr_png.on('end', function() {
-		sageutils.log("QR", "image generated", qr_out);
+		sageutils.log("QR", "QR code generated", qr_out);
 	});
 	qr_png.pipe(fs.createWriteStream(qr_out));
 
@@ -1169,10 +1171,11 @@ function setupListeners(wsio) {
 	wsio.on('serverDataSubscribeToValue',			wsServerDataSubscribeToValue);
 	wsio.on('serverDataGetAllTrackedValues',		wsServerDataGetAllTrackedValues);
 	wsio.on('serverDataGetAllTrackedDescriptions',	wsServerDataGetAllTrackedDescriptions);
-	wsio.on('serverDataSubscribeToNewValueNotification',	wsServerDataSubscribeToNewValueNotification);
+	wsio.on('serverDataSubscribeToNewValueNotification',
+		wsServerDataSubscribeToNewValueNotification);
 
 	// voice to sage2 actions
-	wsio.on('voiceToAction',                      wsVoiceToAction);
+	wsio.on('voiceToAction',                        wsVoiceToAction);
 
 	// Screenshot messages
 	wsio.on('startWallScreenshot',                  wsStartWallScreenshot);
@@ -2392,6 +2395,7 @@ function saveSession(filename) {
 	states.numpartitions = 0;
 	states.date    = Date.now();
 	for (key in SAGE2Items.applications.list) {
+		// make a copy of the application object
 		var a = Object.assign({}, SAGE2Items.applications.list[key]);
 
 		if (a.partition) {
@@ -2403,13 +2407,25 @@ function saveSession(filename) {
 		// appId contains a + character
 		var isNotShared = (a.id.indexOf('+') === -1);
 
+		// Delete circular structures about the sticky applications
+		if (a.foregroundItems) {
+			delete a.foregroundItems;
+		}
+		if (a.backgroundItem) {
+			a.sticky = false;
+			delete a.backgroundItem;
+		}
+
 		// Ignore media streaming applications for now (desktop sharing) and shared applications
-		if (a.application !== 'media_stream' && a.application !== 'media_block_stream' && isNotShared) {
+		if (a.application !== 'media_stream' &&
+			a.application !== 'media_block_stream' &&
+			isNotShared) {
 			states.apps.push(a);
 			states.numapps++;
 		}
 	}
 
+	// Delete circular reference in the state of partitions
 	for (key in partitions.list) {
 		var p = Object.assign({}, partitions.list[key]);
 
@@ -4398,7 +4414,7 @@ function loadConfiguration() {
 
 				if (text !== "") {
 					configFile = text;
-					sageutils.log("SAGE2", "Found configuration file:", configFile);
+					sageutils.log("SAGE2", "Found configuration file:", chalk.yellow.bold(configFile));
 					break;
 				}
 			}
@@ -4414,7 +4430,7 @@ function loadConfiguration() {
 		}
 		configFile = path.join("config", hn + "-cfg.json");
 		if (sageutils.fileExists(configFile)) {
-			sageutils.log("SAGE2", "Found configuration file:", configFile);
+			sageutils.log("SAGE2", "Found configuration file:", chalk.yellow.bold(configFile));
 		} else {
 			// Check in ~/Document/SAGE2_Media/config
 			if (platform === "Windows") {
@@ -4430,7 +4446,7 @@ function loadConfiguration() {
 					configFile = path.join("config", "default-cfg.json");
 				}
 			}
-			sageutils.log("SAGE2", "Using default configuration file:", configFile);
+			sageutils.log("SAGE2", "Using default configuration file:", chalk.yellow.bold(configFile));
 		}
 	}
 
