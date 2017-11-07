@@ -312,6 +312,7 @@ class UserList {
 		}
 		return false;
 	}
+
 	/**
 	* save permissions models to database
 	*
