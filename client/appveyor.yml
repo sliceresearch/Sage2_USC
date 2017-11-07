@@ -48,6 +48,7 @@ deploy:
     host: ftp.evl.uic.edu
     protocol: ftp
     username: anonymous
+    password: toto@gmail.com
     folder: /pub/INcoming/luc/app
     artifact: sage2_client
 
