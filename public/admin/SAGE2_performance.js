@@ -262,15 +262,6 @@ function setupListeners(wsio) {
 			saveData('network', data.network);
 			saveData('serverLoad', data.serverLoad);
 			saveData('serverTraffic', data.serverTraffic);
-
-			findNetworkMax();
-			updateLineChart('cpuload', performanceMetrics.history.cpuLoad);
-			updateLineChart('serverload', performanceMetrics.history.serverLoad);
-			updateLineChart('memusage', performanceMetrics.history.memUsage);
-			updateLineChart('servermem', performanceMetrics.history.serverLoad);
-			updateLineChart('servertraffic', performanceMetrics.history.serverTraffic);
-			updateLineChart('systemtraffic', performanceMetrics.history.network);
-
 			if (data.displayPerf !== null && data.displayPerf !== undefined && data.displayPerf.length > 0) {
 				clients.performanceMetrics = data.displayPerf;
 				clients.performanceMetrics.sort(function(a, b) {
@@ -289,6 +280,15 @@ function setupListeners(wsio) {
 				var displayMetricDiv = document.getElementById('displaypanecontainer');
 				displayMetricDiv.style.height = 0 + 'px';
 			}
+
+			findMaxValues();
+			updateLineChart('cpuload', performanceMetrics.history.cpuLoad);
+			updateLineChart('serverload', performanceMetrics.history.serverLoad);
+			updateLineChart('memusage', performanceMetrics.history.memUsage);
+			updateLineChart('servermem', performanceMetrics.history.serverLoad);
+			updateLineChart('servertraffic', performanceMetrics.history.serverTraffic);
+			updateLineChart('systemtraffic', performanceMetrics.history.network);
+
 			cleanUpSelectedDisplayList();
 			drawDisplaySM();
 			showDisplayClientsHistory();
@@ -485,7 +485,7 @@ function initializeCharts() {
 }
 
 
-function findNetworkMax() {
+function findMaxValues() {
 	var totalTrafficList = performanceMetrics.history.network.map(function(d) {
 		return d.totalOutBound + d.totalInBound;
 	});
@@ -499,6 +499,18 @@ function findNetworkMax() {
 		return d.memResidentSet;
 	});
 	performanceMetrics.sage2MemoryMax = getNextPowerOfTen(d3.max(totalSage2MemoryList));
+
+	var totalClientMemoryList = clients.history.map(function(d) {
+		var mem = d.memUsage;
+		return mem.used + mem.free;
+	});
+	clients.systemMemoryMax = d3.max(totalClientMemoryList);
+
+	var totClientDisplayMemList = clients.history.map(function(d) {
+		var clientLoad = d.clientLoad;
+		return clientLoad.memResidentSet;
+	});
+	clients.displayMemoryMax = getNextPowerOfTen(d3.max(totClientDisplayMemList));
 }
 
 
@@ -630,8 +642,11 @@ function showDisplayClientsHistory(clicked) {
 			return (d * 100) + "%";
 		};
 		var yAxisFormatMemory = function(d) {
-			var mem = getNiceNumber(d
-				* (performanceMetrics.memUsage.used + performanceMetrics.memUsage.free));
+			var mem = getNiceNumber(d * clients.systemMemoryMax);
+			return mem.number + mem.suffix;
+		};
+		var yAxisFormatDisplayMemory = function(d) {
+			var mem = getNiceNumber(d * clients.displayMemoryMax, true);
 			return mem.number + mem.suffix;
 		};
 		setupLineChart('displaycpuload', 'Client CPU Load', function(d) {
@@ -648,8 +663,8 @@ function showDisplayClientsHistory(clicked) {
 		}, yAxisFormatMemory, null, 0.7, true);
 		setupLineChart('displayclientmem', 'SAGE2 Display Client Memory', function(d) {
 			var client = d.clientLoad;
-			return client.memPercent / 100;
-		}, yAxisFormatMemory, null, 0.7, true);
+			return client.memResidentSet / clients.displayMemoryMax;
+		}, yAxisFormatDisplayMemory, null, 0.7, true);
 
 		updateLineChart('displaycpuload', clients.history, 'id', selectedDisplayClientIDList);
 		updateLineChart('displayclientload', clients.history, 'id', selectedDisplayClientIDList);
