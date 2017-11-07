@@ -519,7 +519,27 @@ PerformanceManager.prototype.collectMetrics = function() {
 	sysInfo.mem(this.collectMemoryUsage.bind(this));
 
 	// Network traffic
-	sysInfo.networkStats(this.collectSystemTraffic.bind(this));
+	if (this.performanceMetrics.staticInformation) {
+		var netInterfaces = this.performanceMetrics.staticInformation.net;
+		var totalTransferred = {
+			tx_sec: 0,
+			rx_sec: 0,
+			ms: 0
+		};
+		var count = 0;
+		for (var i = 0; i < netInterfaces.length; i++) {
+			sysInfo.networkStats(netInterfaces[i].iface, function (data) {
+				totalTransferred.tx_sec += data.tx_sec;
+				totalTransferred.rx_sec += data.rx_sec;
+				totalTransferred.ms += data.ms;
+				count++;
+				if (count === netInterfaces.length) {
+					totalTransferred.ms /= count;
+					this.collectSystemTraffic(totalTransferred);
+				}
+			}.bind(this));
+		}
+	}
 
 	this.collectServerTraffic();
 
