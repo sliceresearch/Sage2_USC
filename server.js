@@ -6003,7 +6003,8 @@ function pointerPressOnOpenSpace(uniqueID, pointerX, pointerY, data) {
 	if (data.button === "right") {
 		// Right click opens the radial menu
 		createRadialMenu(uniqueID, pointerX, pointerY);
-	} else if (data.button === "left" && remoteInteraction[uniqueID].CTRL) {
+	} else if (data.button === "left" && sagePointers[uniqueID].visible && remoteInteraction[uniqueID].CTRL) {
+		// CTRL with pointer open will begin to drag to create a new parititon
 		// start tracking size to create new partition
 		draggingPartition[uniqueID] = {};
 		draggingPartition[uniqueID].ptn = createPartition({left: pointerX, top: pointerY, width: 0, height: 0},
@@ -6408,7 +6409,8 @@ function pointerPressOnPartition(uniqueID, pointerX, pointerY, data, obj, localP
 	// pointer press on ptn window
 	if (btn === null) {
 		if (data.button === "left") {
-			if (remoteInteraction[uniqueID].CTRL) {
+			// control drag on partition begins cutting action
+			if (sagePointers[uniqueID].visible && remoteInteraction[uniqueID].CTRL) {
 				// start tracking size to create new partition
 				cuttingPartition[uniqueID] = {};
 				cuttingPartition[uniqueID].start = {x: pointerX, y: pointerY};
@@ -7573,13 +7575,10 @@ function pointerRelease(uniqueID, pointerX, pointerY, data) {
 				draggingPartition[uniqueID].start.y - pointerY : pointerY - draggingPartition[uniqueID].start.y;
 
 		// if the partition is much too small (most likely created by mistake)
-		if (draggingPartition[uniqueID].ptn.width < 25 || draggingPartition[uniqueID].ptn.height < 25) {
+		if (draggingPartition[uniqueID].ptn.width < partitions.minSize.width
+			|| draggingPartition[uniqueID].ptn.height < partitions.minSize.height) {
 
 			// delete the partition
-			// broadcast('deletePartitionWindow', partitions.list[draggingPartition[uniqueID].ptn.id].getDisplayInfo());
-			// partitions.removePartition(draggingPartition[uniqueID].ptn.id);
-			// interactMgr.removeGeometry(draggingPartition[uniqueID].ptn.id, "partitions");
-
 			deletePartition(draggingPartition[uniqueID].ptn.id);
 		} else {
 			// increase partition width to minimum width if too thin
