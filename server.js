@@ -1208,7 +1208,10 @@ function setupListeners(wsio) {
 
 	// message from electron display client
 	wsio.on('displayHardware',                      wsDisplayHardware);
-	wsio.on('performanceData',						wsPerformanceData);
+	wsio.on('performanceData',                      wsPerformanceData);
+
+	// message from performance page
+	wsio.on('requestClientUpdate',					wsRequestClientUpdate);
 }
 
 /**
@@ -6236,7 +6239,8 @@ function pointerPressOnOpenSpace(uniqueID, pointerX, pointerY, data) {
 	if (data.button === "right") {
 		// Right click opens the radial menu
 		createRadialMenu(uniqueID, pointerX, pointerY);
-	} else if (data.button === "left" && remoteInteraction[uniqueID].CTRL) {
+	} else if (data.button === "left" && sagePointers[uniqueID].visible && remoteInteraction[uniqueID].CTRL) {
+		// CTRL with pointer open will begin to drag to create a new parititon
 		// start tracking size to create new partition
 		draggingPartition[uniqueID] = {};
 		draggingPartition[uniqueID].ptn = createPartition({left: pointerX, top: pointerY, width: 0, height: 0},
@@ -6641,7 +6645,8 @@ function pointerPressOnPartition(uniqueID, pointerX, pointerY, data, obj, localP
 	// pointer press on ptn window
 	if (btn === null) {
 		if (data.button === "left") {
-			if (remoteInteraction[uniqueID].CTRL) {
+			// control drag on partition begins cutting action
+			if (sagePointers[uniqueID].visible && remoteInteraction[uniqueID].CTRL) {
 				// start tracking size to create new partition
 				cuttingPartition[uniqueID] = {};
 				cuttingPartition[uniqueID].start = {x: pointerX, y: pointerY};
@@ -7806,13 +7811,10 @@ function pointerRelease(uniqueID, pointerX, pointerY, data) {
 				draggingPartition[uniqueID].start.y - pointerY : pointerY - draggingPartition[uniqueID].start.y;
 
 		// if the partition is much too small (most likely created by mistake)
-		if (draggingPartition[uniqueID].ptn.width < 25 || draggingPartition[uniqueID].ptn.height < 25) {
+		if (draggingPartition[uniqueID].ptn.width < partitions.minSize.width
+			|| draggingPartition[uniqueID].ptn.height < partitions.minSize.height) {
 
 			// delete the partition
-			// broadcast('deletePartitionWindow', partitions.list[draggingPartition[uniqueID].ptn.id].getDisplayInfo());
-			// partitions.removePartition(draggingPartition[uniqueID].ptn.id);
-			// interactMgr.removeGeometry(draggingPartition[uniqueID].ptn.id, "partitions");
-
 			deletePartition(draggingPartition[uniqueID].ptn.id);
 		} else {
 			// increase partition width to minimum width if too thin
@@ -8030,29 +8032,39 @@ function pointerReleaseOnStaticUI(uniqueID, pointerX, pointerY, obj) {
 	var remote = obj.data;
 	var app = dropSelectedItem(uniqueID, false, null);
 	if (app !== null && SAGE2Items.applications.list.hasOwnProperty(app.application.id) && remote.connected === "on") {
-		var sharedId = app.application.id + "_" + config.host + ":" + config.secure_port + "+" + remote.wsio.id;
-		if (sharedApps[app.application.id] === undefined) {
-			sharedApps[app.application.id] = [{wsio: remote.wsio, sharedId: sharedId}];
-		} else {
-			sharedApps[app.application.id].push({wsio: remote.wsio, sharedId: sharedId});
-		}
-
-		SAGE2Items.applications.editButtonVisibilityOnItem(app.application.id, "syncButton", true);
-
-		remote.wsio.emit('addNewSharedElementFromRemoteServer',
-			{application: app.application, id: sharedId, remoteAppId: app.application.id});
-		broadcast('setAppSharingFlag', {id: app.application.id, sharing: true});
-
-		var eLogData = {
-			host: remote.wsio.remoteAddress.address,
-			port: remote.wsio.remoteAddress.port,
-			application: {
-				id: app.application.id,
-				type: app.application.application
-			}
-		};
-		addEventToUserLog(uniqueID, {type: "shareApplication", data: eLogData, time: Date.now()});
+		shareApplicationWithRemoteSite(uniqueID, app, remote);
 	}
+}
+
+/**
+ * Shares an application with a remote site
+ *
+ * @method shareApplicationWithRemoteSite
+ * @param  {Object} wsio - The websocket of sender.
+ * @param  {Object} data - The object needed to get menu, properties described below.
+ */
+function shareApplicationWithRemoteSite(uniqueID, app, remote) {
+	var sharedId = app.application.id + "_" + config.host + ":" + config.secure_port + "+" + remote.wsio.id;
+	if (sharedApps[app.application.id] === undefined) {
+		sharedApps[app.application.id] = [{wsio: remote.wsio, sharedId: sharedId}];
+	} else {
+		sharedApps[app.application.id].push({wsio: remote.wsio, sharedId: sharedId});
+	}
+	SAGE2Items.applications.editButtonVisibilityOnItem(app.application.id, "syncButton", true);
+
+	remote.wsio.emit('addNewSharedElementFromRemoteServer',
+		{application: app.application, id: sharedId, remoteAppId: app.application.id});
+	broadcast('setAppSharingFlag', {id: app.application.id, sharing: true});
+
+	var eLogData = {
+		host: remote.wsio.remoteAddress.address,
+		port: remote.wsio.remoteAddress.port,
+		application: {
+			id: app.application.id,
+			type: app.application.application
+		}
+	};
+	addEventToUserLog(uniqueID, {type: "shareApplication", data: eLogData, time: Date.now()});
 }
 
 function pointerReleaseOnPortal(uniqueID, portalId, localPt, data) {
@@ -9705,12 +9717,15 @@ function wsRequestAppContextMenu(wsio, data) {
 		if (SAGE2Items.applications.list.hasOwnProperty(obj.data.id)) {
 			// if an app was under the right-click
 			if (SAGE2Items.applications.list[obj.data.id].contextMenu) {
+				// before passing back the menu, fill in the share options.
+				let contextMenu = SAGE2Items.applications.list[obj.data.id].contextMenu;
+				fillContextMenuWithShareSites(contextMenu, obj.data.id);
 				// If we already have the menu info, send it
 				wsio.emit('appContextMenuContents', {
 					x: data.xClick,
 					y: data.yClick,
 					app: obj.data.id,
-					entries: SAGE2Items.applications.list[obj.data.id].contextMenu
+					entries: contextMenu
 				});
 			} else { // Else, app did not submit menu, give default (not loaded).
 				wsio.emit('appContextMenuContents', {
@@ -9732,6 +9747,45 @@ function wsRequestAppContextMenu(wsio, data) {
 			});
 		}
 
+	}
+}
+
+/**
+ * Given a context menu, will fill with appropriate share sites.
+ *
+ * @method fillContextMenuWithShareSites
+ * @param  {Object} contextMenu - The context menu of the application.
+ */
+function fillContextMenuWithShareSites(contextMenu, appId) {
+	let shareIndex = -1;
+	let shareDescription = "Share With:"; // match for this description
+	let entry;
+	// first search for the share entry
+	for (let i = 0; i < contextMenu.length; i++) {
+		if (contextMenu[i].description === shareDescription) {
+			shareIndex = i;
+		}
+	}
+	// if there was no share entry, they need to add it
+	if (shareIndex === -1) {
+		entry = { description: "separator" };
+		contextMenu.splice(contextMenu.length - 3, 0, entry); // add separator after the maximize entry
+		entry = { description: shareDescription };
+		contextMenu.splice(contextMenu.length - 3, 0, entry); // add share option after that
+	} else { // otherwise get the reference
+		entry = contextMenu[shareIndex];
+	}
+	entry.children = []; // clear out the sites, there may have been a status change.
+
+	// for each remote site, check if connected, if so add a share option
+	for (let i = 0; i < remoteSites.length; i++) {
+		if (remoteSites[i].connected === "on") {
+			entry.children.push({
+				description: remoteSites[i].name,
+				callback: "SAGE2_shareWithSite",
+				parameters: { app: appId, siteName: remoteSites[i].name, remoteSiteIndex: i }
+			});
+		}
 	}
 }
 
@@ -9784,6 +9838,15 @@ function wsCallFunctionOnApp(wsio, data) {
 					SAGE2Items.applications.list[data.app],
 					true);
 			}
+			return;
+		} else if (data.func === "SAGE2_shareWithSite"
+			&& (remoteSites[data.parameters.remoteSiteIndex].connected === "on")) {
+			// share this application with a site.
+			let uniqueID = wsio.id;
+			// the release
+			let app = {application: SAGE2Items.applications.list[data.app]};
+			let remote = remoteSites[data.parameters.remoteSiteIndex];
+			shareApplicationWithRemoteSite(uniqueID, app, remote);
 			return;
 		}
 
@@ -9849,7 +9912,7 @@ function wsCallFunctionOnApp(wsio, data) {
 			broadcast('updatePartitionColor', partitions.list[data.app].getDisplayInfo());
 		} else {
 			// invoke the other callback
-			partitions.list[data.app][data.func]();
+			partitions.list[data.app][data.func](data.parameters);
 		}
 		updatePartitionInnerLayout(partitions.list[data.app], true);
 
@@ -10834,4 +10897,14 @@ function deletePartition(id) {
  */
 function wsVoiceToAction(wsio, data) {
 	voiceHandler.process(wsio, data);
+}
+
+
+/**
+ * Resend display hardware information to performance page
+ *
+ */
+
+function wsRequestClientUpdate(wsio) {
+	performanceManager.updateClient(wsio);
 }

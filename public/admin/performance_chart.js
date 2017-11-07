@@ -23,7 +23,6 @@
 
 // Object to hold chart references
 var charts = {};
-var selectedDisplayClientIDList = [];
 var clientCharts = {};
 
 
@@ -140,6 +139,7 @@ function setupLineChart(id, titleText, lineFuncY, yAxisFormat, currentTextFunc, 
 				chartLine = chart.svg.append('path');
 				if (ythreshold === 0) {
 					chartLine.attr("class", "line");
+					chartLine.attr("stroke", "rgb(76, 164, 247)");
 				} else {
 					chartLine.attr("class", "thresholdline");
 				}
@@ -158,7 +158,8 @@ function setupLineChart(id, titleText, lineFuncY, yAxisFormat, currentTextFunc, 
 			.tickSizeInner(5)
 			.tickSizeOuter(0)
 			.tickPadding(5)
-			.ticks(d3.timeMinute.every(1));
+			.ticks(d3.timeMinute.every(1))
+			.tickFormat(d3.timeFormat("%_I:%M"));
 
 		var xAxis =  chart.svg.append("g")
 			.attr("class", "x axis")
@@ -308,6 +309,12 @@ function drawDisplaySM() {
 			return fillColor(w / width, 0.5);
 		});
 
+	chart.svg.selectAll('.displaySM')
+		.select('#displaytext')
+		.text(function(d, i) {
+			return 'Display ' + d.clientID;
+		});
+
 	var clientSM = smallMultiples.enter().append('g')
 		.attr('class', 'displaySM')
 		.attr('transform', function(d, i) {
@@ -336,6 +343,7 @@ function drawDisplaySM() {
 		.attr('fill', 'rgb(80, 80, 80)')
 		.attr('stroke', 'white');
 	clientSM.append('text')
+		.attr('id', 'displaytext')
 		.attr('x', width / 2)
 		.attr('text-anchor', 'middle')
 		.attr('alignment-baseline', 'middle')

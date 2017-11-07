@@ -477,13 +477,14 @@ function FileManager(wsio, mydiv, uniqueID) {
 				window.open(displayUrl, '_blank');
 			}
 		},
-		overview_menu: {value: "Display Overview Client",
+		overview_menu: {value: "Display Full Wall",
 			tooltip: "Opens a new page with the overview display client",
 			callback: function (evt) {
 				var overviewUrl = "http://" + window.location.hostname + _this.http_port +  "/display.html?clientID=-1";
 				window.open(overviewUrl, '_blank');
 			}
 		},
+		separator1: { value: "separator" },
 		audio_menu: {value: "Audio Manager",
 			tooltip: "Opens a new page with the audio manager",
 			callback: function (evt) {
@@ -502,7 +503,8 @@ function FileManager(wsio, mydiv, uniqueID) {
 			callback: function (evt) {
 				window.open("admin/performance.html", '_blank');
 			}
-		}
+		},
+		separator2: { value: "separator" }
 	};
 
 	// Advanced setting, right-aligned in the top menubar
@@ -1968,13 +1970,15 @@ function FileManager(wsio, mydiv, uniqueID) {
 		// add overview client
 		displayList[0] = {
 			id: "displayclient_00",
-			value: "Display -1",
+			value: "Display Full Wall",
 			href:  "http://" + window.location.hostname + this.http_port +  "/display.html?clientID=-1",
 			target: "_blank"
 		};
+		// add a separator line
+		displayList[1] = {$template: "Separator"};
 		// add all display clients to list
 		for (var i = 0; i <  this.json_cfg.displays.length; i++) {
-			displayList[i + 1] = {
+			displayList[i + 2] = {
 				id:     "displayclient_" + i,
 				value:  "Display " + i,
 				href:   "http://" + window.location.hostname + this.http_port +  "/display.html?clientID=" + i,
