@@ -1087,7 +1087,6 @@ The z-index is very important.
     transform: translateY(-50%);
     width: 100%;
     height: 3px;
-    /* background: #333333; */
     background-color: white;
     border: 1.25px solid rgba(100, 100, 100, 0.5);
 }
@@ -1097,20 +1096,28 @@ The z-index is very important.
     left: 0;
     top: 50%;
     transform: translateY(-50%) translateX(-50%);
-    width: 3px;
-    border-radius: 2px;
+    width: 4px;
     height: 100%;
     background: black;
-    border: 1px solid rgba(0, 0, 0, 0.5);
+    border: 1.25px solid rgba(0, 0, 0, 0.5);
     border-style: solid;
     border-width: 1px;
 }
 
+.rmbRangeInputSliderHandle:hover,
+.rmbRangeInputSliderHandle.dragging {
+    background: lightgray;
+}
+
 .rmbRangeInputArrow {
+    height: 14px;
+    display: inline-block;
     padding: 0 4px;
     border: 1px solid black;
     margin-left: 5px;
     margin-right: 5px;
+    padding-top: 2px;
+    margin-bottom: -5px;
     -webkit-user-select: none;
     /* webkit (safari, chrome) browsers */
     -moz-user-select: none;
@@ -1119,6 +1126,36 @@ The z-index is very important.
     /* webkit (konqueror) browsers */
     -ms-user-select: none;
     /* IE10+ */
+}
+
+.rmbRangeInputArrow:hover {
+    background-color: lightgray;
+}
+
+.rmbRangeInputArrow.rightArrow::before {
+    content: ' ';
+    width: 0;
+    height: 0;
+    border-top: 5px solid transparent;
+    border-bottom: 5px solid transparent;
+    border-left: 5px solid black;
+    /* font-size: 0; */
+    display: block;
+    float: right;
+    margin: 0px 2px;
+    margin-top: 1px;
+}
+
+.rmbRangeInputArrow.leftArrow::before {
+    content: ' ';
+    width: 0;
+    height: 0;
+    border-top: 5px solid transparent;
+    border-bottom: 5px solid transparent;
+    border-right: 5px solid black;
+    display: block;
+    margin: 0px 2px;
+    margin-top: 1px;
 }
 
 .rmbColorSwatch {

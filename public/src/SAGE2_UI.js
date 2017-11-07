@@ -2826,16 +2826,18 @@ function addMenuEntry(menuDiv, entry, id, app) {
 				workingDiv.style.paddingBottom = "2px";
 
 				// left arrow
-				let reduce = document.createElement("span");
+				let reduce = document.createElement("div");
 				reduce.id = workingDiv.id + "reduceArrow";
 				reduce.classList.add("rmbRangeInputArrow");
-				reduce.innerHTML = "&#x2BC7";
+				reduce.classList.add("leftArrow");
+				// reduce.innerHTML = "&#x2BC7";
 
 				// right arrow
-				let increase = document.createElement("span");
+				let increase = document.createElement("div");
 				increase.id = workingDiv.id + "increaseArrow";
 				increase.classList.add("rmbRangeInputArrow");
-				increase.innerHTML = "&#x2BC8";
+				increase.classList.add("rightArrow");
+				// increase.innerHTML = "&#x2BC8";
 
 				// div containing whole slider
 				let sliderWrapper = document.createElement("div");
@@ -2935,6 +2937,8 @@ function addMenuEntry(menuDiv, entry, id, app) {
 					func: function(e) {
 						let handle = document.getElementById(sliderHandle.id);
 
+						handle.classList.add("dragging");
+
 						handle.slidestart = e.clientX;
 						handle.offsetstart = parseInt(handle.style.left);
 						handle.sliding = true;
@@ -2970,6 +2974,8 @@ function addMenuEntry(menuDiv, entry, id, app) {
 						let handle = document.getElementById(sliderHandle.id);
 
 						if (handle.sliding) {
+							handle.classList.remove("dragging");
+
 							handle.slidestart = null;
 							handle.offsetstart = null;
 							handle.sliding = null;
