@@ -40,7 +40,9 @@ h2 {
 }
 
 h3 {
+	font-size: 12pt;
 	color: #FFFFFF;
+	margin: 10px;
 }
 
 h4 {
@@ -180,3 +182,108 @@ a:hover {
 	top:1px;
 }
 
+.chart {
+	border: #666666 solid 5px;
+	color: #f0f0f0;
+	background: #000;
+}
+
+.thresholdline {
+	fill: none;
+	stroke: url(#value-gradient);
+	stroke-width: 2px;
+}
+
+.line {
+	fill: none;
+	stroke-width: 2px;
+}
+
+.axis {
+	shape-rendering: crispEdges;
+}
+
+.x.axis path,
+.x.axis line {
+	stroke: #fff;
+	fill: #fff;
+}
+
+.x.axis .minor {
+	stroke-opacity: .5;
+}
+
+
+.y.axis line,
+.y.axis path {
+	fill: #fff;
+	stroke: #fff;
+}
+
+.tick text{
+	fill: #fff;
+	font-family: "DejaVu Sans Mono", "Liberation Mono", monospace;
+	font-size: 10pt;
+}
+
+.title{
+	fill: #fff;
+	font-family: "DejaVu Sans Mono", "Liberation Mono", monospace;
+	font-size: 10pt;
+}
+
+
+#paneContainer {
+	width: 100%;
+	overflow: hidden;
+}
+#displaypanecontainer {
+	height: 0;
+	overflow: hidden;
+	transition: height 0.5s ease;
+}
+
+#smallmultiplediv {
+	height: 200;
+	overflow: hidden;
+	transition: height 0.5s ease;
+	border-left: 0;
+	border-right: 0;
+}
+
+#displaypanecontainer > div {
+	float: left;
+	width: 50%;
+}
+
+#paneContainer > div {
+	float: left;
+	width: 33.3%;
+}
+
+#displayclientload,
+#displaycpuload,
+#serverload,
+#cpuload {
+	border-left: 0;
+}
+
+#displayclientmem,
+#displaymemusage,
+#servertraffic,
+#systemtraffic {
+	border-right: 0;
+}
+
+.barlabel{
+	font-family: "DejaVu Sans Mono", "Liberation Mono", monospace;
+	font-size: : 8pt;
+	fill: white;
+	alignment-baseline:middle;
+}
+
+#serverheading {
+	font-family: "Arial";
+	font-size: 12pt;
+	fill: white;
+}

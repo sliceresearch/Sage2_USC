@@ -292,7 +292,8 @@ function initializeSage2Server() {
 
 	// Create an object to gather performance statistics
 	performanceManager = new PerformanceManager();
-
+	performanceManager.initializeConfiguration(config);
+	performanceManager.wrapDataTransferFunctions(WebsocketIO);
 	imageMagick = gm.subClass(imageMagickOptions);
 	assets.initializeConfiguration(config);
 	assets.setupBinaries(imageMagickOptions, ffmpegOptions);
@@ -750,6 +751,7 @@ function closeWebSocketClient(wsio) {
 	if (wsio.clientType === "display") {
 		sageutils.log("Disconnect", chalk.bold.red(wsio.id) +
 			" (" + wsio.clientType + " " + wsio.clientID + ")");
+		performanceManager.removeDisplayClient(wsio.id);
 	} else {
 		if (wsio.clientType) {
 			sageutils.log("Disconnect", chalk.bold.red(wsio.id) + " (" + wsio.clientType + ")");
@@ -1192,6 +1194,7 @@ function setupListeners(wsio) {
 
 	// message from electron display client
 	wsio.on('displayHardware',                      wsDisplayHardware);
+	wsio.on('performanceData',                      wsPerformanceData);
 }
 
 /**
@@ -8839,6 +8842,10 @@ function deleteApplication(appId, portalId) {
 		broadcast('jupyterShareTerminated', {id: appId});
 	}
 
+	if (app.title === "performancewidget") {
+		performanceManager.removeDataReceiver(appId);
+	}
+
 	var stickingItems = stickyAppHandler.getFirstLevelStickingItems(app);
 	stickyAppHandler.removeElement(app);
 
@@ -8964,6 +8971,9 @@ function handleNewApplication(appInstance, videohandle) {
 
 	initializeLoadedVideo(appInstance, videohandle);
 
+	if (appInstance.title === "performancewidget") {
+		performanceManager.addDataReceiver(appInstance.id);
+	}
 	// assign content to a partition immediately when it is created
 	var changedPartitions = partitions.updateOnItemRelease(appInstance);
 	changedPartitions.forEach((id => {
@@ -10213,8 +10223,22 @@ function wsWallScreenshotFromDisplay(wsio, data) {
  */
 function wsDisplayHardware(wsio, data) {
 	// store the hardware data for a given client
-	performanceManager.addDisplayClient(wsio.clientID, data);
+	performanceManager.addDisplayClient(wsio.id, wsio.clientID, data);
 }
+
+/**
+ * Receive data from Electron display client about their hardware
+ *
+ * @method     wsPerformanceData
+ * @param      {<type>}  wsio    The wsio
+ * @param      {<type>}  data    The data
+ */
+function wsPerformanceData(wsio, data) {
+	// Pass the performance data from Electron display client
+	// on the performance manager
+	performanceManager.saveDisplayPerformanceData(wsio.id, wsio.clientID, data);
+}
+
 
 /**
  * Start a jupyter connection
