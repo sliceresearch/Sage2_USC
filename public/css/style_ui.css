@@ -795,6 +795,29 @@ The z-index is very important.
     background: white;
     z-index: 1999;
 }
+.appContextMenuEntry {
+	padding: 2px 5px;
+	cursor:default;
+}
+.appContextMenuEntry:first-of-type {
+	padding-top:5px;
+}
+.appContextMenuEntry:last-of-type {
+	padding-bottom:5px;
+}
+#appContextMenu .okButton {
+	border: 1px solid black;
+	padding:0 2px;
+	display:inline-block;
+	margin-left:5px;
+	cursor:pointer;
+}
+
+#appContextMenu .okButton:hover,
+#appContextMenu .noInputEntry:hover {
+	cursor:pointer;
+	background:lightgray !important;
+}
 
 #uiNoteMaker {
     border: 1px solid black;
@@ -950,7 +973,6 @@ The z-index is very important.
     overflow: hidden;
     cursor: default;
 }
-
 
 /***** File Browser *****/
 
