@@ -1259,7 +1259,7 @@ function handleClick(element) {
 	if (element.id === "sage2pointer"        || element.id === "sage2pointerContainer" || element.id === "sage2pointerLabel") {
 		interactor.startSAGE2Pointer(element.id);
 	} else if (element.id === "sharescreen"  || element.id === "sharescreenContainer"  || element.id === "sharescreenLabel") {
-		interactor.startScreenShare();
+		interactor.requestToStartScreenShare();
 	} else if (element.id === "applauncher"  || element.id === "applauncherContainer"  || element.id === "applauncherLabel") {
 		wsio.emit('requestAvailableApplications');
 	} else if (element.id === "mediabrowser" || element.id === "mediabrowserContainer" || element.id === "mediabrowserLabel") {
@@ -1281,8 +1281,6 @@ function handleClick(element) {
 		}
 	} else if (element.id === "arrangement" || element.id === "arrangementContainer" || element.id === "arrangementLabel") {
 		showDialog('arrangementDialog');
-	} else if (element.id === "settings"    || element.id === "settingsContainer"    || element.id === "settingsLabel") {
-		showDialog('settingsDialog');
 	} else if (element.id === "browser") {
 		// Build a webix dialog
 		webix.ui({
@@ -1480,7 +1478,7 @@ function handleClick(element) {
 		data.func = "addClientIdAsEditor";
 		data.customLaunchParams = {
 			clientId: interactor.uniqueID,
-			clientName: document.getElementById('sage2PointerLabel').value
+			clientName: interactor.pointerValue
 		};
 		wsio.emit('launchAppWithValues', data);
 
@@ -1577,12 +1575,6 @@ function handleClick(element) {
 		hideDialog('infoDialog');
 		var awin3 = window.open("help/info.html", '_blank');
 		awin3.focus();
-	} else if (element.id === "settingsCloseBtn") {
-		// Settings Dialog
-		hideDialog('settingsDialog');
-	} else if (element.id === "settingsCloseBtn2") {
-		// Init Settings Dialog
-		hideDialog('settingsDialog2');
 	} else if (element.id.length > 14 && element.id.substring(0, 14) === "available_app_") {
 		// Application Selected
 		var application_selected = element.getAttribute("application");
@@ -2323,7 +2315,9 @@ function keyPress(event) {
 function loadSelectedApplication() {
 	if (selectedAppEntry !== null) {
 		var app_path = selectedAppEntry.getAttribute("appfullpath");
-		wsio.emit('loadApplication', {application: app_path, user: interactor.uniqueID});
+		wsio.emit('loadApplication', Object.assign({
+			application: app_path, user: interactor.uniqueID
+		}, interactor.user));
 	}
 }
 
@@ -2336,7 +2330,9 @@ function loadSelectedFile() {
 	if (selectedFileEntry !== null) {
 		var application = selectedFileEntry.getAttribute("application");
 		var file = selectedFileEntry.getAttribute("file");
-		wsio.emit('loadFileFromServer', {application: application, filename: file, user: interactor.uniqueID});
+		wsio.emit('loadFileFromServer', Object.assign({
+			application: application, filename: file, user: interactor.uniqueID
+		}, interactor.user));
 	}
 }
 
@@ -2621,7 +2617,7 @@ function setAppContextMenuEntries(data) {
 					data.app = this.app;
 					data.func = this.callback;
 					data.parameters = this.parameters;
-					data.parameters.clientName = document.getElementById('sage2PointerLabel').value;
+					data.parameters.clientName = interactor.pointerLabel;
 					data.parameters.clientId   = interactor.uniqueID;
 					wsio.emit('callFunctionOnApp', data);
 				}
@@ -3007,7 +3003,6 @@ function addMenuEntry(menuDiv, entry, id, app) {
 					}
 				});
 			}
-
 		}
 
 		if (entry.inputFieldSize) {
@@ -3281,7 +3276,7 @@ function sendMessageMakeNote() {
 		data.parameters = sendButton.parameters;
 		data.parameters.clientInput = workingDiv.value;
 		data.parameters.clientId   = interactor.uniqueID;
-		data.parameters.clientName = document.getElementById('sage2PointerLabel').value;
+		data.parameters.clientName = interactor.pointerLabel;
 		if (document.getElementById("uiNoteMakerCheckAnonymous").checked) {
 			data.parameters.clientName = "Anonymous";
 		}
@@ -3300,7 +3295,7 @@ function sendMessageMakeNote() {
 	} else {
 		data.appName	= "quickNote";
 		data.customLaunchParams		= {};
-		data.customLaunchParams.clientName = document.getElementById('sage2PointerLabel').value;
+		data.customLaunchParams.clientName = interactor.pointerLabel;
 		data.customLaunchParams.clientInput = workingDiv.value;
 		if (document.getElementById("uiNoteMakerCheckAnonymous").checked) {
 			data.customLaunchParams.clientName = "Anonymous";
@@ -3376,7 +3371,7 @@ function setupUiDrawCanvas() {
 			data.app = workingDiv.appId;
 			data.func = "SAGE2DeleteElement";
 			data.parameters = {};
-			data.parameters.clientName = document.getElementById('sage2PointerLabel').value;
+			data.parameters.clientName = interactor.pointerLabel;
 			wsio.emit('callFunctionOnApp', data);
 		}
 	);
@@ -3390,7 +3385,7 @@ function setupUiDrawCanvas() {
 			data.func = "addClientIdAsEditor"; // send this data to function after app starts
 			data.customLaunchParams = {
 				clientId: interactor.uniqueID,
-				clientName: document.getElementById('sage2PointerLabel').value
+				clientName: interactor.pointerLabel
 			};
 			wsio.emit('launchAppWithValues', data);
 		}
