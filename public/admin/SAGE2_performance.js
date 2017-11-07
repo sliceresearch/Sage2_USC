@@ -280,7 +280,7 @@ function setupListeners(wsio) {
 				var durationAgo = Date.now() - durationInMinutes * (60 * 1000);
 				removeObjectsFromArrayOnPropertyValue(clients.history, 'date', durationAgo, 'lt');
 				if (clients.performanceMetrics.length > clients.hardware.length) {
-					wsio.emit("resendDisplayHardwareInformation");
+					wsio.emit("requestClientUpdate");
 				}
 			} else {
 				clients.performanceMetrics = [];

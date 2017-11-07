@@ -1195,6 +1195,9 @@ function setupListeners(wsio) {
 	// message from electron display client
 	wsio.on('displayHardware',                      wsDisplayHardware);
 	wsio.on('performanceData',                      wsPerformanceData);
+
+	// message from performance page
+	wsio.on('requestClientUpdate',					wsRequestClientUpdate);
 }
 
 /**
@@ -10657,4 +10660,14 @@ function deletePartition(id) {
  */
 function wsVoiceToAction(wsio, data) {
 	voiceHandler.process(wsio, data);
+}
+
+
+/**
+ * Resend display hardware information to performance page
+ *
+ */
+
+function wsRequestClientUpdate(wsio) {
+	performanceManager.updateClient(wsio);
 }
