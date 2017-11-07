@@ -1051,12 +1051,58 @@ Partition.prototype.getContextMenu = function() {
 	var contextMenu = [];
 
 	contextMenu.push({
+		description: "Content Management",
+		parameters: {},
+		children: [
+			{
+				description: "Clear",
+				callback: "clearPartition",
+				parameters: {}
+			},
+			{
+				description: this.innerTiling ? "Stop Tiling" : "Tile",
+				callback: "toggleInnerTiling",
+				parameters: {}
+			}
+		]
+	});
+
+	contextMenu.push({
+		description: "Partition Snapping",
+		callback: "toggleSnapping",
+		parameters: {},
+		children: this.isSnapping ?
+			[
+				{
+					description: "Un-Snap",
+					callback: "toggleSnapping",
+					parameters: {}
+				},
+				{
+					description: "Update Neighbors",
+					callback: "updateNeighborPartitionList",
+					parameters: {}
+				}
+			] : [
+				{
+					description: "Snap",
+					callback: "toggleSnapping",
+					parameters: {}
+				}
+			]
+	});
+
+	contextMenu.push({
+		description: "separator"
+	});
+
+	contextMenu.push({
 		description: "Set Color: ",
 		callback: "setColor",
 		value: this.color,
 		inputField: true,
 		// color input field (special input)
-		inputColor: true,
+		inputType: "color",
 		colorChoices: [
 			'#a6cee3',
 			'#1f78b4',
@@ -1073,41 +1119,8 @@ Partition.prototype.getContextMenu = function() {
 		],
 		inputFieldSize: 7,
 		inputDefault: this.color,
+		inputUpdateOnChange: true,
 		parameters: {}
-	});
-
-	contextMenu.push({
-		description: this.innerTiling ? "Stop Tiling" : "Tile Content",
-		callback: "toggleInnerTiling",
-		parameters: {}
-	});
-	contextMenu.push({
-		description: "Clear Content",
-		callback: "clearPartition",
-		parameters: {}
-	});
-
-	contextMenu.push({
-		description: "separator"
-	});
-
-
-	contextMenu.push({
-		description: this.isSnapping ? "Un-Snap Partition" : "Snap Partition",
-		callback: "toggleSnapping",
-		parameters: {}
-	});
-
-	if (this.isSnapping) {
-		contextMenu.push({
-			description: "Update Snapped Neighbors",
-			callback: "updateNeighborPartitionList",
-			parameters: {}
-		});
-	}
-
-	contextMenu.push({
-		description: "separator"
 	});
 
 	contextMenu.push({
@@ -1122,6 +1135,13 @@ Partition.prototype.getContextMenu = function() {
 	});
 
 	return contextMenu;
+};
+
+Partition.prototype.print = function(data) {
+	console.log(data);
+
+	this.sliderVal = data.clientInput;
+	console.log(this.sliderVal);
 };
 
 

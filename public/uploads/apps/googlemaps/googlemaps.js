@@ -170,7 +170,10 @@ var googlemaps = SAGE2_App.extend({
 	},
 
 	resize: function(date) {
+		this.updateCenter();
 		google.maps.event.trigger(this.map, 'resize');
+		this.map.setCenter(this.state.center);
+
 		this.refresh(date);
 	},
 
@@ -259,6 +262,8 @@ var googlemaps = SAGE2_App.extend({
 				this.scrollAmount += 64;
 			}
 
+			this.getFullContextMenuAndUpdate(); // update context menu (for zoom slider)
+
 			this.refresh(date);
 		} else if (eventType === "widgetEvent") {
 			switch (data.identifier) {
@@ -279,6 +284,7 @@ var googlemaps = SAGE2_App.extend({
 							break;
 						case "sliderRelease":
 							this.map.setZoom(this.state.zoomLevel);
+							this.getFullContextMenuAndUpdate(); // update context menu (for zoom slider)
 							break;
 						default:
 							console.log("GoogleMaps> No handler for: " + data.identifier + "->" + data.action);
@@ -291,9 +297,11 @@ var googlemaps = SAGE2_App.extend({
 					// Setting the zoom
 					this.map.setZoom(15);
 					this.state.zoomLevel = 15;
+					this.getFullContextMenuAndUpdate(); // update context menu (for zoom slider)
+
 					break;
 				case "MapType":
-					this.changeMapType(data.value);
+					this.changeMapType(data);
 					break;
 				default:
 					console.log("GoogleMaps> No handler for:", data.identifier);
@@ -338,11 +346,13 @@ var googlemaps = SAGE2_App.extend({
 		}
 	},
 
-	changeMapType: function(value) {
+	changeMapType: function(data) {
+		console.log("changeMapType", data);
 		var options = [google.maps.MapTypeId.TERRAIN, google.maps.MapTypeId.ROADMAP,
 			google.maps.MapTypeId.SATELLITE, google.maps.MapTypeId.HYBRID];
 		var i;
-		if (value !== null && value !== undefined) {
+		if (data !== null && data !== undefined) {
+			let value = data.value;
 			// Change due to radio button
 			for (i = 0; i < options.length; i++) {
 				if (this.mapTypeRadioButton.options[i] === value) {
@@ -382,7 +392,9 @@ var googlemaps = SAGE2_App.extend({
 		delta = (delta > -1) ? 1 : -1;
 		var z = this.map.getZoom();
 		this.map.setZoom(z + delta);
+
 		this.state.zoomLevel = this.map.getZoom();
+		this.getFullContextMenuAndUpdate(); // update context menu (for zoom slider)
 	},
 
 	codeAddress: function(text) {
@@ -480,6 +492,43 @@ var googlemaps = SAGE2_App.extend({
 		entries.push(entry);
 
 		entry = {};
+		entry.description = "Zoom:";
+		entry.callback = "setZoom";
+		entry.value = this.state.zoomLevel.toString();
+		entry.inputField = true;
+		entry.inputType = "range";
+		entry.inputUpdateOnChange = true;
+		entry.sliderRange = [0, 20];
+		entry.parameters = {};
+		entries.push(entry);
+
+		entry = {};
+		entry.description = "Map";
+		entry.children = [
+			{
+				description: "Turf",
+				callback: "changeMapType",
+				parameters: {value: "Turf"}
+			},
+			{
+				description: "Roads",
+				callback: "changeMapType",
+				parameters: { value: "Roads" }
+			},
+			{
+				description: "Arial",
+				callback: "changeMapType",
+				parameters: { value: "Arial" }
+			},
+			{
+				description: "Mix",
+				callback: "changeMapType",
+				parameters: { value: "Mix" }
+			}
+		];
+		entries.push(entry);
+
+		entry = {};
 		entry.description = "Save Current Location";
 		entry.callback = "setDefault";
 		entry.parameters = {};
@@ -532,7 +581,16 @@ var googlemaps = SAGE2_App.extend({
 	},
 
 	/**
-	 * Callback from th web ui menu (right click)
+	 * Callback from the web ui menu (right click) for zoom slider
+	*/
+	setZoom: function(msgParams) {
+		this.state.zoomLevel = parseInt(msgParams.clientInput);
+		this.map.setZoom(this.state.zoomLevel);
+		this.getFullContextMenuAndUpdate();
+	},
+
+	/**
+	 * Callback from the web ui menu (right click)
 	*/
 	setLocation: function(msgParams) {
 		// receive an object from the web ui
@@ -682,6 +740,8 @@ var googlemaps = SAGE2_App.extend({
 			// Setting the zoom
 			_this.map.setZoom(data.zoomLevel);
 			_this.state.zoomLevel = data.zoomLevel;
+			_this.getFullContextMenuAndUpdate(); // update context menu (for zoom slider)
+
 			// Set map type
 			_this.map.setMapTypeId(data.mapType);
 			_this.state.mapType = data.mapType;
