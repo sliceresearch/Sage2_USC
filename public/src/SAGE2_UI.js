@@ -2625,8 +2625,6 @@ function setAppContextMenuEntries(data) {
 					data.parameters.clientId   = interactor.uniqueID;
 					wsio.emit('callFunctionOnApp', data);
 				}
-				// hide after use
-				hideAppContextMenuDiv();
 			};
 		} // end if the button should send something
 	} // end adding a send function to each menu entry
@@ -2702,27 +2700,7 @@ function addMenuEntry(menuDiv, entry, id, app) {
 		// check if the data has a value field
 		inputField.defaultValue = entry.value || "";
 
-
-		// special case to use color input type
-
-		// if (entry.inputColor) {
-		// 	inputField.type = "color";
-		// 	if (entry.colorChoices) {
-		// 		// inputField.list = entry.colorChoices;
-		// 		inputField.setAttribute('list', workingDiv.id + "Colors");
-
-		// 		let colorList = document.createElement("datalist");
-		// 		colorList.id = workingDiv.id + "Colors";
-
-		// 		for (let color of entry.colorChoices) {
-		// 			let opt = document.createElement("option");
-		// 			opt.value = color;
-
-		// 			colorList.appendChild(opt);
-		// 		}
-		// 	}
-		// }
-
+		// flag if an application wants to be updated immediately when an input is changed
 		if (entry.inputUpdateOnChange) {
 			// bind necessary data for buttonEffect function
 			inputField.inputField = true;
@@ -2924,6 +2902,11 @@ function addMenuEntry(menuDiv, entry, id, app) {
 							input.value = range[0];
 						}
 						valueChanged();
+
+						// when done dragging, take input if update on change
+						if (entry.inputUpdateOnChange) {
+							entry.buttonEffect.bind(inputField)();
+						}
 					}
 				});
 
@@ -2937,8 +2920,11 @@ function addMenuEntry(menuDiv, entry, id, app) {
 						if (input.value > range[1]) {
 							input.value = range[1];
 						}
-
 						valueChanged();
+						// when done dragging, take input if update on change
+						if (entry.inputUpdateOnChange) {
+							entry.buttonEffect.bind(inputField)();
+						}
 					}
 				});
 
@@ -2987,19 +2973,17 @@ function addMenuEntry(menuDiv, entry, id, app) {
 							handle.slidestart = null;
 							handle.offsetstart = null;
 							handle.sliding = null;
-
-							// when done dragging, take input if update on change
-							if (entry.inputUpdateOnChange) {
-								entry.buttonEffect.bind(inputField)(e);
-							}
 						} else {
 							let newLeft = e.offsetX;
 							if (newLeft <= 100 && newLeft >= 0) {
 								handle.style.left = newLeft + "px";
 								document.getElementById(inputField.id).value = pixelToValue(newLeft);
 							}
+						}
 
-							// don't auto update on click (imprecise) may change?
+						// when done dragging or value clicked, take input if update on change
+						if (entry.inputUpdateOnChange) {
+							entry.buttonEffect.bind(inputField)(e);
 						}
 					}
 				});
@@ -3048,7 +3032,13 @@ function addMenuEntry(menuDiv, entry, id, app) {
 		appEntryOkButton.callback = entry.callback;
 		appEntryOkButton.parameters = entry.parameters;
 		appEntryOkButton.app = app;
-		appEntryOkButton.addEventListener('mousedown', entry.buttonEffect);
+		appEntryOkButton.addEventListener('mousedown', function() {
+			entry.buttonEffect.bind(appEntryOkButton)();
+
+			// hide after use
+			hideAppContextMenuDiv();
+		});
+
 		// highlighting effect on mouseover
 		appEntryOkButton.addEventListener('mouseover', function () {
 			this.style.background = "lightgray";
@@ -3157,7 +3147,12 @@ function addMenuEntry(menuDiv, entry, id, app) {
 
 
 		// if no input field attach button effect to entire div instead of just OK button.
-		workingDiv.addEventListener('mousedown', entry.buttonEffect);
+		workingDiv.addEventListener('mousedown', function () {
+			entry.buttonEffect.bind(this)();
+
+			// hide after use
+			hideAppContextMenuDiv();
+		});
 		workingDiv.addEventListener('mousedown', function(e) {
 			e.stopPropagation();
 			// console.log("Button Clicked", this.callback, this.parameters, this.app);
