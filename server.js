@@ -1526,9 +1526,30 @@ function wsLogoutUser(wsio, data) {
 	let res = userlist.getUserById(data);
 
 	if (res.error === null) {
+		// log out user and get anon name
 		let name = userlist.track(wsio.id, {
 			SAGE2_ptrColor: res.user.SAGE2_ptrColor
 		});
+
+		// log out all instances of the user on this server
+		for (let ip in userlist.clients) {
+			let user = userlist.clients[ip].user;
+			if (user && user.name === res.user.name && user.email === res.user.email) {
+				let foundWsio = clients.find(wsio => wsio.id === ip);
+				if (foundWsio) {
+					userlist.track(ip, {
+						SAGE2_ptrColor: res.user.SAGE2_ptrColor,
+						SAGE2_ptrName: name
+					});
+
+					foundWsio.emit('loginStateChanged', {
+						login: false,
+						name: name
+					});
+				}
+			}
+		}
+
 		wsio.emit('loginStateChanged', {
 			login: false,
 			name: name

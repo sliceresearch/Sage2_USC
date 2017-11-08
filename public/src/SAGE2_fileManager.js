@@ -498,6 +498,12 @@ function FileManager(wsio, mydiv, uniqueID) {
 				window.open("admin/console.html", '_blank');
 			}
 		},
+		user_menu: {value: "User Console",
+			tooltip: "Opens a new page displaying users and roles",
+			callback: function (evt) {
+				window.open("admin/SAGE2_user.html", '_blank');
+			}
+		},
 		performance_menu: {value: "Performance Console",
 			tooltip: "Opens a new page displaying performance monitoring data",
 			callback: function (evt) {
