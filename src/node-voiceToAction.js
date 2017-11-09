@@ -1009,7 +1009,7 @@ VoiceActionManager.prototype.voiceHandlerForWebSearch = function(wsio, words) {
 		// Currently either "google search" or "web search"
 		searchEngine = "web";
 	}
-	// Now determine 
+	// Now determine
 	for (let i = 0; i < words.length; i++) {
 		if (words[i].includes("image") && foundImage === false) {
 			if ((foundFor ==  false)
