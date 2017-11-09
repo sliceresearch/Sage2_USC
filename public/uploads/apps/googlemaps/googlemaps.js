@@ -448,26 +448,23 @@ var googlemaps = SAGE2_App.extend({
 		entries.push(entry);
 
 		entry   = {};
-		entry.description = "set zoom level";
+		entry.description = "Zoom level:";
 		entry.callback = "setZoomLevel";
 		entry.parameters     = {};
 		entry.inputField     = true;
-		entry.inputFieldSize = 20;
-		entry.voiceEntryOverload = true;
+		entry.inputFieldSize = 5;
 		entries.push(entry);
 
 		entry   = {};
-		entry.description = "zoom in";
+		entry.description = "Zoom in";
 		entry.callback = "setZoomLevel";
 		entry.parameters     = { increase: true };
-		entry.voiceEntryOverload = true;
 		entries.push(entry);
 
 		entry   = {};
-		entry.description = "zoom out";
+		entry.description = "Zoom out";
 		entry.callback = "setZoomLevel";
 		entry.parameters     = { decrease: true };
-		entry.voiceEntryOverload = true;
 		entries.push(entry);
 
 		entry   = {};
@@ -478,6 +475,8 @@ var googlemaps = SAGE2_App.extend({
 		entry.inputFieldSize = 20;
 		entry.voiceEntryOverload = true;
 		entries.push(entry);
+
+		entries.push({description: "separator"});
 
 		entry = {};
 		entry.description = "Save Current Location";

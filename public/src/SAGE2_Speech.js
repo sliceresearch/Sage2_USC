@@ -19,21 +19,22 @@ SAGE2_speech.recognizing        = false;
 SAGE2_speech.final_transcript   = false;
 SAGE2_speech.interim_transcript = false;
 SAGE2_speech.firstNameMention   = false;
-SAGE2_speech.nameMarker         = "sage "; // should be set by server, this space is critical
+// Should be set by server, this space is critical
+SAGE2_speech.nameMarker         = "sage ";
 SAGE2_speech.errorNotAllowed    = false;
 SAGE2_speech.errorCount         = -1;
-SAGE2_speech.errorTime          = null; // can probably get away without using time for now
+SAGE2_speech.errorTime          = null;
 SAGE2_speech.interimStart       = -1;
 SAGE2_speech.interimId          = null;
-// restart listener for mouse hold
-SAGE2_speech.mouseHoldTimeNeeded = 400; // ms
+// Restart listener for mouse hold
+SAGE2_speech.mouseHoldTimeNeeded = 400; // Milliseconds
 SAGE2_speech.mouseHoldTimeoutId  = null;
 SAGE2_speech.mouseHoldActivated  = false;
 SAGE2_speech.mouseHoldStartPos   = {x: -100, y: -100};
 SAGE2_speech.mouseHoldMoveLimit  = {x: 10, y: 10};
 SAGE2_speech.mouseIsDown         = false;
 SAGE2_speech.mouseUpCancel       = false;
-// listening variables
+// Listening variables
 SAGE2_speech.showListening      = false;
 SAGE2_speech.listentingInfo     = null;
 SAGE2_speech.mousePosition      = {
@@ -42,7 +43,7 @@ SAGE2_speech.mousePosition      = {
 	dx: 0,
 	dy: 0
 };
-// speech synthesis
+// Speech synthesis
 SAGE2_speech.ttsConverter       = null;
 SAGE2_speech.synth              = null;
 SAGE2_speech.voices             = null;
@@ -61,12 +62,12 @@ SAGE2_speech.init = function() {
 		console.log("SpeechRecognition> This browser doesn't support SpeechRecognition API");
 	} else {
 		console.log("SpeechRecognition> API exists, beginning setup");
-		// the contructor is actually lower case
+		// The contructor is actually lower case
 		this.webkitSR = new webkitSpeechRecognition(); // eslint-disable-line
 		this.webkitSR.continuous = false;
 		this.webkitSR.interimResults = true;
 
-		// give weight to the system name
+		// Give weight to the system name
 		var grammar = '#JSGF V1.0; grammar noun; public <noun> = ' + 'Sage' + ' ;';
 		if (webkitSpeechGrammarList) {
 			var speechRecognitionList = this.webkitSR.grammars;
@@ -75,7 +76,7 @@ SAGE2_speech.init = function() {
 			this.webkitSR.grammars = speechRecognitionList;
 		}
 
-		// initialize other parts
+		// Initialize other parts
 		this.initMouseholdToStart();
 		this.speechSynthesisInit();
 		this.listeningVisualInit();
@@ -85,21 +86,21 @@ SAGE2_speech.init = function() {
 		this.webkitSR.onstart = function() {
 			console.log("SpeechRecognition> SAGE2_speech started");
 			this.recognizing = true;
-			// cleanup variables
+			// Cleanup variables
 			SAGE2_speech.showListening = true;
 			SAGE2_speech.firstNameMention = false;
 			SAGE2_speech.listentingInfo.imageDetectedInterim = false;
 			SAGE2_speech.listentingInfo.imageCycleFrame = 0;
 			SAGE2_speech.mouseUpCancel = false;
-			// start blank
+			// Start blank
 			document.getElementById(SAGE2_speech.listentingInfo.transcriptId).textContent = "";
-			// start blank
+			// Start blank
 			document.getElementById(SAGE2_speech.listentingInfo.transcriptId).style.width = "1px";
 			document.getElementById(SAGE2_speech.listentingInfo.transcriptId).style.visibility = "hidden";
 		};
 
 		// After getting a result, but this also includes pieces
-		// that aren't detected as full sentences
+		// That aren't detected as full sentences
 		this.webkitSR.onresult = function(event) {
 			this.interim_transcript = " ";
 			for (var i = event.resultIndex; i < event.results.length; ++i) {
@@ -115,21 +116,21 @@ SAGE2_speech.init = function() {
 					console.log("SpeechRecognition> final_transcript(",
 						event.results[i][0].confidence, "%):" + this.final_transcript);
 
-					// remove the checker for stuck transcript
+					// Remove the checker for stuck transcript
 					if (SAGE2_speech.interimId) {
 						window.clearTimeout(SAGE2_speech.interimId);
 						SAGE2_speech.interimId = null;
 					}
 
-					// if not a local activation give to server
+					// If not a local activation give to server
 					if (!SAGE2_speech.doesTranscriptActivateLocally(this.final_transcript)) {
-						// this is the final transcript to log
+						// This is the final transcript to log
 						wsio.emit("serverDataSetValue", {
 							nameOfValue: "voiceToActionInterimTranscript",
 							value: "Submitted phrase:" + this.final_transcript,
 							confidence: event.results[i][0].confidence
 						});
-						// do something with it now
+						// Do something with it now
 						wsio.emit('voiceToAction', {words: this.final_transcript, confidence: event.results[i][0].confidence});
 						document.getElementById("voiceTranscriptActual").textContent =
 							"(" + parseInt(event.results[i][0].confidence * 100) + "%) " + this.final_transcript;
@@ -137,37 +138,37 @@ SAGE2_speech.init = function() {
 				} else {
 					this.interim_transcript += event.results[i][0].transcript;
 					console.log("SpeechRecognition> interim_transcript:", this.interim_transcript);
-					// put transcript in visual
+					// Put transcript in visual
 					let tdiv  = document.getElementById(SAGE2_speech.listentingInfo.transcriptId);
 					tdiv.textContent = this.interim_transcript;
-					// calculate how wide to make it
+					// Calculate how wide to make it
 					let tmeasureDiv  = document.getElementById(SAGE2_speech.listentingInfo.tMeasureId);
 					tmeasureDiv.textContent = this.interim_transcript;
 					tdiv.style.width = tmeasureDiv.clientWidth + "px";
-					// make the element visibe on screen
+					// Make the element visibe on screen
 					tdiv.style.visibility = "visible";
 					SAGE2_speech.listentingInfo.imageDetectedInterim = true;
 					if (SAGE2_speech.interimId) {
-						// this should get cleared out each transcript change
+						// This should get cleared out each transcript change
 						window.clearTimeout(SAGE2_speech.interimId);
 						SAGE2_speech.interimId = null;
 					}
 
-					// if ever gets stuck on a single interim transcript for timeout restart
+					// If ever gets stuck on a single interim transcript for timeout restart
 					SAGE2_speech.interimId = setTimeout(() => {
 						SAGE2_speech.init();
-					}, 6000); // good enough? no
+					}, 6000);
 
-					// if this is the first time name is said then play listening sound
+					// If this is the first time name is said then play listening sound
 					if ((!SAGE2_speech.firstNameMention) &&
 						(!SAGE2_speech.mouseHoldActivated) &&
 						this.interim_transcript.toLowerCase().includes(SAGE2_speech.nameMarker)) {
 						SAGE2_speech.firstNameMention = true;
 						console.log("SpeechRecognition> speech marker detected");
 					} if (SAGE2_speech.firstNameMention) {
-						// if first name is mentioned set the transcript
+						// If first name is mentioned set the transcript
 						let transcript = this.interim_transcript.toLowerCase();
-						// possible that the transcript changes with an update
+						// Possible that the transcript changes with an update
 						if (!transcript.includes(SAGE2_speech.nameMarker)) {
 							SAGE2_speech.firstNameMention = false;
 						} else {
@@ -187,24 +188,24 @@ SAGE2_speech.init = function() {
 		this.webkitSR.onerror = function(e) {
 			console.log("SpeechRecognition> webkitSpeechRecognition error:", e.error);
 			console.dir("SpeechRecognition>", e);
-			// this particular error will be triggered if the microphone is blocked.
+			// This particular error will be triggered if the microphone is blocked.
 			if (e.error === "not-allowed") {
 				SAGE2_speech.errorNotAllowed = true;
-				// the toggle wil swap it to false
+				// The toggle wil swap it to false
 				SAGE2_speech.isEnabled = true;
 				SAGE2_speech.toggleVoiceRecognition();
 			}
 		};
 
-		// after ending restart
+		// After ending restart
 		this.webkitSR.onend = function() {
 			this.recognizing = false;
 			SAGE2_speech.showListening = false;
-			// cleanup variables
+			// Cleanup variables
 			SAGE2_speech.mouseHoldActivated = false;
 		};
 		this.toggleSAGE2_speech();
-		// toggle will flip
+		// Toggle will flip
 		this.isEnabled = false;
 		SAGE2_speech.toggleVoiceRecognition();
 	}
@@ -233,7 +234,7 @@ SAGE2_speech.doesTranscriptActivateLocally = function(transcript) {
 	// UI debug activator check
 	transcript = transcript.toLowerCase();
 
-	// local checks
+	// Local checks
 	var localActions = {
 		showSpeechDebug: {
 			keywords: ["show voice debug", "show speech debug"],
@@ -246,6 +247,10 @@ SAGE2_speech.doesTranscriptActivateLocally = function(transcript) {
 		tellTheDate: {
 			keywords: ["what today", "what date"],
 			successFunction: SAGE2_speech.sayTheDate
+		},
+		openHelp: {
+			keywords: ["help", "what command use", "what command available", "what can say"],
+			successFunction: SAGE2_speech.openVoiceHelpPage
 		}
 	};
 	var actionNames = Object.keys(localActions);
@@ -255,7 +260,7 @@ SAGE2_speech.doesTranscriptActivateLocally = function(transcript) {
 			keywords = localActions[actionNames[i]].keywords[keySets].toLowerCase().split(" ");
 			for (let k = 0; k < keywords.length; k++) {
 				if (!transcript.includes(keywords[k])) {
-					// exits out of keyword loop
+					// Exits out of keyword loop
 					break;
 				} else if (k == keywords.length - 1) {
 					console.log("SpeechRecognition> Local voice function:" + actionNames[i]);
@@ -330,35 +335,44 @@ SAGE2_speech.sayTheDate = function() {
 };
 
 /**
+ * Will open a page containing the voice help.
+ *
+ * @method openVoiceHelpPage
+ */
+SAGE2_speech.openVoiceHelpPage = function() {
+	window.open("help/index.html#voiceQuickReference");
+};
+
+/**
  * Initializes by creating listeners to restart and enable sending if mouse is held down.
  *
  * @method initMouseholdToStart
  */
 SAGE2_speech.initMouseholdToStart = function() {
-	// on mouse down, if over canvas, set a timeout to check for listening
+	// On mouse down, if over canvas, set a timeout to check for listening
 	document.addEventListener("mousedown", function(e) {
 		if (!SAGE2_speech.isEnabled) {
-			// if speech recognition was disabled by user, don't
+			// If speech recognition was disabled by user, don't
 			return;
 		}
-		// reset the move
+		// Reset the move
 		SAGE2_speech.mousePosition.dx = 0;
 		SAGE2_speech.mousePosition.dy = 0;
 		SAGE2_speech.mouseHoldTimeoutId = null;
-		// only activate if over the sage2UICanvas
+		// Only activate if over the sage2UICanvas
 		if (event.target.id === "sage2UICanvas"
 			|| document.getElementById("sage2pointerDialog").style.display === "block") {
 			SAGE2_speech.mouseHoldStartPos.x = e.clientX;
 			SAGE2_speech.mouseHoldStartPos.y = e.clientY;
-			// clear out existing timeouts if they exist.
+			// Clear out existing timeouts if they exist.
 			if (SAGE2_speech.mouseHoldTimeoutId) {
 				window.clearTimeout(SAGE2_speech.mouseHoldTimeoutId);
 				SAGE2_speech.mouseHoldTimeoutId = null;
 			}
 			SAGE2_speech.mouseIsDown = true;
-			// after timeout attempt speech recognition if valid
+			// After timeout attempt speech recognition if valid
 			SAGE2_speech.mouseHoldTimeoutId = setTimeout(function() {
-				// mouseup will set SAGE2_speech.mouseIsDown to false
+				// Mouseup will set SAGE2_speech.mouseIsDown to false
 				if (SAGE2_speech.mouseIsDown) {
 					SAGE2_speech.mouseHoldTimeoutId = null;
 					SAGE2_speech.enableMouseholdToStart(e);
@@ -366,7 +380,7 @@ SAGE2_speech.initMouseholdToStart = function() {
 			}, SAGE2_speech.mouseHoldTimeNeeded);
 		}
 	});
-	// on mouse up, if there is a timer waiting for speech recognition remove it
+	// On mouse up, if there is a timer waiting for speech recognition remove it
 	document.addEventListener("mouseup", function() {
 		SAGE2_speech.mouseIsDown = false;
 		if (SAGE2_speech.mouseHoldTimeoutId) {
@@ -389,17 +403,17 @@ SAGE2_speech.initMouseholdToStart = function() {
 SAGE2_speech.enableMouseholdToStart = function(e) {
 	var dx = Math.abs(SAGE2_speech.mousePosition.dx);
 	var dy = Math.abs(SAGE2_speech.mousePosition.dy);
-	// if mouse cursor is still within move limit
+	// If mouse cursor is still within move limit
 	if (dx < SAGE2_speech.mouseHoldMoveLimit.x && dy < SAGE2_speech.mouseHoldMoveLimit.y) {
-		// if it isn't listening.
+		// If it isn't listening.
 		if (!SAGE2_speech.firstNameMention) {
-			this.webkitSR.stop(); // stop
+			this.webkitSR.stop(); // Stop
 			setTimeout(function() {
 				SAGE2_speech.mouseHoldActivated = true;
-				// start
+				// Start
 				SAGE2_speech.webkitSR.start();
 			}, SAGE2_speech.mouseHoldTimeNeeded / 2);
-			// not sure best minimum
+			// Not sure best minimum
 		}
 	}
 };
@@ -419,12 +433,12 @@ SAGE2_speech.listeningVisualInit = function () {
 		canvasWidth:  100,
 		canvasHeight:  20,
 		circleRadius:  25,
-		// swap to images
-		// multiple images
+		// Swap to images
+		// Multiple images
 		imageId: ["imageEar0", "imageEar1", "imageEar2", "imageEar3"],
 		imageWidth:  40,
 		imageHeight: 40,
-		imageFrameDuration: 75, // in ms
+		imageFrameDuration: 75, // In ms
 		imageFrameStartTime: 0,
 		imageCycleFrame: 0,
 		imageDetectedInterim: false,
@@ -439,30 +453,30 @@ SAGE2_speech.listeningVisualInit = function () {
 	// unsure of highest value
 	d.style.zIndex = 10000;
 
-	// transcript holder appendChild before images to make transcript visually behind them.
+	// Transcript holder appendChild before images to make transcript visually behind them.
 	var transcriptDiv = document.createElement("div");
 	transcriptDiv.id = SAGE2_speech.listentingInfo.transcriptId;
 	transcriptDiv.style.position = "absolute";
-	// not as big as image
+	// Not as big as image
 	transcriptDiv.style.height = (SAGE2_speech.listentingInfo.imageHeight / 2) + "px";
-	// center the transcript
+	// Center the transcript
 	transcriptDiv.style.top = (SAGE2_speech.listentingInfo.imageHeight / 4 - 6) + "px";
-	// put right of image
+	// Put right of image
 	transcriptDiv.style.left = (SAGE2_speech.listentingInfo.imageWidth - 20) + "px";
-	// match the left offset from image
+	// Match the left offset from image
 	transcriptDiv.style.paddingLeft = "25px";
-	// match the left offset from image
+	// Match the left offset from image
 	transcriptDiv.style.paddingTop = "5px";
 	transcriptDiv.style.border = "1px solid black";
 	transcriptDiv.style.borderRadius = "1px 20px 20px 1px";
 	transcriptDiv.style.background   = "#e6e6e6";
-	// start blank
+	// Start blank
 	transcriptDiv.textContent = "";
 	transcriptDiv.style.width = (transcriptDiv.textContent.length
 		* SAGE2_speech.listentingInfo.transcriptCharacterPadding) + "px";
 	d.appendChild(transcriptDiv);
 
-	// create measurement div
+	// Create measurement div
 	var transcriptMeasuringDiv = document.createElement("div");
 	transcriptMeasuringDiv.id = SAGE2_speech.listentingInfo.tMeasureId;
 	transcriptMeasuringDiv.style.paddingLeft = "25px";
@@ -473,8 +487,8 @@ SAGE2_speech.listeningVisualInit = function () {
 	transcriptMeasuringDiv.style.visibility = "hidden";
 	d.appendChild(transcriptMeasuringDiv);
 
-	// images
-	// currently 4 frames 0,1,2,3
+	// Images
+	// Currently 4 frames 0,1,2,3
 	for (let i = 0; i < SAGE2_speech.listentingInfo.imageId.length; i++) {
 		let c = document.createElement("img");
 		c.id = SAGE2_speech.listentingInfo.imageId[i];
@@ -488,13 +502,13 @@ SAGE2_speech.listeningVisualInit = function () {
 		d.appendChild(c);
 	}
 
-	// add to page
+	// Add to page
 	document.body.appendChild(d);
 
-	// add listener for mouse move
+	// Add listener for mouse move
 	document.addEventListener("mousemove", SAGE2_speech.mouseMoveListener);
 
-	// start drawing
+	// Start drawing
 	window.requestAnimationFrame(SAGE2_speech.drawListeningVisual);
 };
 
@@ -517,7 +531,7 @@ SAGE2_speech.mouseMoveListener = function (e) {
  * @method drawListeningVisual
  */
 SAGE2_speech.drawListeningVisual = function () {
-	// move to below mouse cursor
+	// Move to below mouse cursor
 	var listeningDiv = document.getElementById(SAGE2_speech.listentingInfo.divId);
 	if (SAGE2_speech.showListening) {
 		listeningDiv.style.left = (SAGE2_speech.mousePosition.x
@@ -532,11 +546,11 @@ SAGE2_speech.drawListeningVisual = function () {
 		listeningDiv.style.left = "-100px";
 		listeningDiv.style.top  = "-100px";
 		window.requestAnimationFrame(SAGE2_speech.drawListeningVisual);
-		// dont forget to recall frame if not showing, otherwise will not restart.
+		// Dont forget to recall frame if not showing, otherwise will not restart.
 		return;
 	}
 
-	// only draw animation if interim activated
+	// Only draw animation if interim activated
 	if (SAGE2_speech.listentingInfo.imageDetectedInterim) {
 		if ((Date.now() - SAGE2_speech.listentingInfo.imageFrameStartTime)
 			>= SAGE2_speech.listentingInfo.imageFrameDuration) {
@@ -555,7 +569,7 @@ SAGE2_speech.drawListeningVisual = function () {
 		}
 	}
 
-	// set into next animation frame.
+	// Set into next animation frame.
 	window.requestAnimationFrame(SAGE2_speech.drawListeningVisual);
 };
 
@@ -566,7 +580,7 @@ SAGE2_speech.drawListeningVisual = function () {
  * @param {Boolean} shouldShow - true to show, otherwise false.
  */
 SAGE2_speech.setListeningVisual = function(shouldShow) {
-	// in case called without params
+	// In case called without params
 	shouldShow = (shouldShow) ? shouldShow : false;
 	SAGE2_speech.showListening = shouldShow;
 };
@@ -577,10 +591,10 @@ SAGE2_speech.setListeningVisual = function(shouldShow) {
  * @method speechSynthesisInit
  */
 SAGE2_speech.speechSynthesisInit = function() {
-	// speech setup
+	// Speech setup
 	SAGE2_speech.ttsConverter = new SpeechSynthesisUtterance();
 	SAGE2_speech.synth        = window.speechSynthesis;
-	// timeout needed because the synch seemed to be an asynchronous action.
+	// Timeout needed because the synch seemed to be an asynchronous action.
 	setTimeout(function() {
 		SAGE2_speech.voices = SAGE2_speech.synth.getVoices();
 		var kyoko    = {found: false};
@@ -603,13 +617,13 @@ SAGE2_speech.speechSynthesisInit = function() {
 			console.log("SpeechRecognition> Speech synthesis voices not available");
 		}
 		if (samantha.found) {
-			// priority to samantha
+			// Priority to samantha
 			SAGE2_speech.ttsConverter.voice = SAGE2_speech.voices[samantha.index];
 		} else if (kyoko.found) {
-			// then kyoko
+			// Then kyoko
 			SAGE2_speech.ttsConverter.voice = SAGE2_speech.voices[kyoko.index];
 		} else if (victoria.found) {
-			// finally victoria
+			// Finally victoria
 			SAGE2_speech.ttsConverter.voice = SAGE2_speech.voices[victoria.index];
 		}
 		SAGE2_speech.ttsConverter.lang = 'en-US';
@@ -644,13 +658,13 @@ SAGE2_speech.textToSpeech = function (whatToSay) {
  * @method toggleVoiceRecognition
  */
 SAGE2_speech.toggleVoiceRecognition = function () {
-	// toogle: if enabled, disable and make menu allow reenable
-	// in the top menu bar (webix ui)
+	// Toogle: if enabled, disable and make menu allow reenable
+	// In the top menu bar (webix ui)
 	if (SAGE2_speech.isEnabled) {
 		$$('topmenu').showItem('voiceserviceEnable_menu');
 		$$('topmenu').hideItem('voiceserviceDisable_menu');
 	} else {
-		// else was disabled, enable it and allow disable
+		// Else was disabled, enable it and allow disable
 		$$('topmenu').showItem('voiceserviceDisable_menu');
 		$$('topmenu').hideItem('voiceserviceEnable_menu');
 	}
@@ -664,8 +678,9 @@ SAGE2_speech.toggleVoiceRecognition = function () {
  * @method setNameMarker
  */
 SAGE2_speech.setNameMarker = function (nameMarkerFromServer) {
-	// console.log("Voice marker:'" + nameMarkerFromServer + "'");
-	SAGE2_speech.nameMarker = nameMarkerFromServer.toLowerCase(); // server should give a space
+	// Console.log("Voice marker:'" + nameMarkerFromServer + "'");
+	// Server should include a space
+	SAGE2_speech.nameMarker = nameMarkerFromServer.toLowerCase();
 	SAGE2_speech.init();
 };
 
@@ -675,13 +690,13 @@ SAGE2_speech.setNameMarker = function (nameMarkerFromServer) {
  * @method restartIfMouseStillDownAndNotTalking
  */
 SAGE2_speech.restartIfMouseStillDownAndNotTalking = function () {
-	// if computer response is still going and user mouse still down, delay check
+	// If computer response is still going and user mouse still down, delay check
 	if (window.speechSynthesis.speaking && SAGE2_speech.mouseIsDown) {
 		setTimeout(function() {
 			SAGE2_speech.restartIfMouseStillDownAndNotTalking();
 		}, 100);
 	} else if (SAGE2_speech.mouseIsDown) {
-		// if not speaking and mouse is still down, restart
+		// If not speaking and mouse is still down, restart
 		setTimeout(function() {
 			SAGE2_speech.mouseHoldActivated = true;
 			SAGE2_speech.webkitSR.start();

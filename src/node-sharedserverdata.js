@@ -395,7 +395,8 @@ SharedServerDataManager.prototype.updateInformationAboutConnectionsFailedRemoteS
 	data.nameOfValue = "serverConnectionDataFailedRemoteSite";
 	if (this.dataStructure.allNamesOfValues.includes(data.nameOfValue)) {
 		data.value = this.dataStructure.allValues[data.nameOfValue].value;
-	} else {
+	}
+	if (data.value === undefined) {
 		data.value = {total: 0, sites: []};
 	}
 	data.value.total++;
