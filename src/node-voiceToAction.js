@@ -35,6 +35,7 @@ function VoiceActionManager(obj) {
 		+ (today.getMonth() + 1) + "-" + today.getDate() + "-transcript.json";
 	this.confirmPhrases = null;
 	this.rejectPhrases = null;
+	this.appIdUnderPointer = null;
 	this.fillPhrases();
 }
 
@@ -187,6 +188,7 @@ VoiceActionManager.prototype.secondaryProcessCallToUseInTryCatch = function(wsio
 	// Get app under pointer, then get context menu
 	var obj = this.s2.interactMgr.searchGeometry({x: pointerX, y: pointerY});
 	var contextMenu = null, app = false;
+	this.appIdUnderPointer = null;
 	if (obj !== null) {
 		// Check type of item under click
 		if (this.s2.SAGE2Items.applications.list.hasOwnProperty(obj.data.id)) {
@@ -194,6 +196,7 @@ VoiceActionManager.prototype.secondaryProcessCallToUseInTryCatch = function(wsio
 			if (this.s2.SAGE2Items.applications.list[obj.data.id].contextMenu) {
 				contextMenu = this.s2.SAGE2Items.applications.list[obj.data.id].contextMenu;
 				app = obj.data.id;
+				this.appIdUnderPointer = app;
 			}
 		}
 	}
@@ -442,10 +445,10 @@ VoiceActionManager.prototype.voicePreCheckForWallCommands = function (wsio, word
 		shareToRemoteSite: {
 			successFunction: this.voiceHandlerForShareToRemoteSite,
 			phraseRequirements: [
-				// "share with",
-				// "send to"
+				"share with",
+				"send to"
 			],
-			successPhrase: "Sending "
+			successPhrase: "Sending to "
 		}
 	};
 
@@ -1085,7 +1088,40 @@ VoiceActionManager.prototype.voiceHandlerForWebSearch = function(wsio, words) {
  * @param {Array} words - transcript as array of words
  */
 VoiceActionManager.prototype.voiceHandlerForShareToRemoteSite = function(wsio, words) {
-	// to be filled out after SC17
+	// Need an app under pointer to share
+	if (this.appIdUnderPointer) {
+		// Get context menu
+		var contextMenu = this.s2.SAGE2Items.applications.list[this.appIdUnderPointer].contextMenu;
+		// If there is no context menu, can't do anything. This means it wasn't loaded on display.
+		if (!contextMenu) {
+			return false;
+		}
+		// Update the share entries
+		this.s2.fillContextMenuWithShareSites(contextMenu, this.appIdUnderPointer);
+		var shareDescription = "Share With:";
+		var availableRemoteSites;
+		// first search for the share entry
+		for (let i = 0; i < contextMenu.length; i++) {
+			if (contextMenu[i].description === shareDescription) {
+				availableRemoteSites = contextMenu[i].children;
+			}
+		}
+		// If there is no availableRemoteSites, can't do anything.
+		if (!availableRemoteSites) {
+			return false;
+		}
+		var match = this.checkForContextMenuMatch(availableRemoteSites, words);
+		if (match.foundMatch) {
+			match = availableRemoteSites[match.indexOfMostMatches];
+			// Params are: uniqueId, app object, remoteSites[data.parameters.remoteSiteIndex]
+			this.s2.shareApplicationWithRemoteSite(
+				wsio.id,
+				{application: this.s2.SAGE2Items.applications.list[this.appIdUnderPointer]},
+				this.s2.remoteSites[match.parameters.remoteSiteIndex]);
+			return match.parameters.siteName;
+		}
+	}
+	return false;
 };
 
 
