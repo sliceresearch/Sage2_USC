@@ -1616,6 +1616,7 @@ function wsEditRole(wsio, data) {
 	} else {
 		userlist.revokePermission(data.role, data.action);
 	}
+	wsGetRbac();
 }
 
 function wsEditUserRole(wsio, data) {
@@ -1834,10 +1835,10 @@ function wsRadialMenuClick(wsio, data) {
 
 // **************  Media Stream Functions *****************
 function wsRequestToStartMediaStream(wsio) {
-	if (userlist.isAllowed(wsio.id, 'share screen')) {
-		wsio.emit('allowAction', 'stream');
-	} else {
+	if (!userlist.isAllowed(wsio.id, 'share screen')) {
 		wsio.emit('cancelAction', 'stream');
+	} else {
+		wsio.emit('allowAction', 'stream');
 	}
 }
 
