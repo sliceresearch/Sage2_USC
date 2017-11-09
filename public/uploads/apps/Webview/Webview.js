@@ -680,6 +680,9 @@ var Webview = SAGE2_App.extend({
 			entries.push(entry);
 		}
 
+		/*
+		Disabling these entries for SC17 release since they do not consistently work yet.
+
 		entries.push({
 			description: "Type In Page:",
 			callback: "sendTextToLastClickedInputField",
@@ -694,6 +697,7 @@ var Webview = SAGE2_App.extend({
 			inputFieldSize: 20,
 			parameters: {}
 		});
+		*/
 
 		entries.push({
 			description: "Copy URL to Clipboard",

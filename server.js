@@ -716,6 +716,9 @@ var variablesUsedInVoiceHandler = {
 	tileApplications,
 	clearDisplay,
 	broadcast,
+	shareApplicationWithRemoteSite,
+	fillContextMenuWithShareSites,
+	remoteSites,
 	voiceNameMarker: "sage " // that space is important for checking // change this later to check config
 };
 var voiceHandler = new VoiceActionManager(variablesUsedInVoiceHandler);
@@ -1616,6 +1619,7 @@ function wsEditRole(wsio, data) {
 	} else {
 		userlist.revokePermission(data.role, data.action);
 	}
+	wsGetRbac();
 }
 
 function wsEditUserRole(wsio, data) {
@@ -1834,10 +1838,10 @@ function wsRadialMenuClick(wsio, data) {
 
 // **************  Media Stream Functions *****************
 function wsRequestToStartMediaStream(wsio) {
-	if (userlist.isAllowed(wsio.id, 'share screen')) {
-		wsio.emit('allowAction', 'stream');
-	} else {
+	if (!userlist.isAllowed(wsio.id, 'share screen')) {
 		wsio.emit('cancelAction', 'stream');
+	} else {
+		wsio.emit('allowAction', 'stream');
 	}
 }
 
@@ -8061,8 +8065,9 @@ function pointerReleaseOnStaticUI(uniqueID, pointerX, pointerY, obj) {
  * Shares an application with a remote site
  *
  * @method shareApplicationWithRemoteSite
- * @param  {Object} wsio - The websocket of sender.
- * @param  {Object} data - The object needed to get menu, properties described below.
+ * @param  {String} uniqueID - The wsio.id.
+ * @param  {Object} app - The app object to share. Usually: {application: SAGE2Items.applications.list[data.app]}
+ * @param  {Object} remote - Remote site. Usually: remoteSites[data.parameters.remoteSiteIndex]
  */
 function shareApplicationWithRemoteSite(uniqueID, app, remote) {
 	var sharedId = app.application.id + "_" + config.host + ":" + config.secure_port + "+" + remote.wsio.id;
@@ -9731,14 +9736,14 @@ function showOrHideWidgetLinks(data) {
  * @param  {Integer} data.yClick - Where client clicked on their screen, because this is async.
  */
 function wsRequestAppContextMenu(wsio, data) {
-	// first find if there is an app at location, top most element.
+	// First find if there is an app at location, top most element.
 	var obj = interactMgr.searchGeometry({x: data.x, y: data.y});
 	if (obj !== null) {
-		// check if it was an application
+		// Check if it was an application
 		if (SAGE2Items.applications.list.hasOwnProperty(obj.data.id)) {
-			// if an app was under the right-click
+			// If an app was under the right-click
 			if (SAGE2Items.applications.list[obj.data.id].contextMenu) {
-				// before passing back the menu, fill in the share options.
+				// Before passing back the menu, fill in the share options.
 				let contextMenu = SAGE2Items.applications.list[obj.data.id].contextMenu;
 				fillContextMenuWithShareSites(contextMenu, obj.data.id);
 				// If we already have the menu info, send it
@@ -9776,6 +9781,7 @@ function wsRequestAppContextMenu(wsio, data) {
  *
  * @method fillContextMenuWithShareSites
  * @param  {Object} contextMenu - The context menu of the application.
+ * @param  {String} appId - Unique string to get app, SAGE2Items.applications.list[appId].
  */
 function fillContextMenuWithShareSites(contextMenu, appId) {
 	let shareIndex = -1;
