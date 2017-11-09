@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+<meta charset="utf-8">
+<title>User console</title>
+
+<script type="text/license">
+	// SAGE2 is available for use under the SAGE2 Software License
+	//
+	// University of Illinois at Chicago's Electronic Visualization Laboratory (EVL)
+	// and University of Hawai'i at Manoa's Laboratory for Advanced Visualization and
+	// Applications (LAVA)
+	//
+	// See full text, terms and conditions in the LICENSE.txt included file
+	//
+	// Copyright (c) 2014-15
+</script>
+
+<script src="../src/websocket.io.js"></script>
+<script src="../src/SAGE2_runtime.js"></script>
+<link href="./SAGE2_user.css" rel="stylesheet"></style>
+<script src="./SAGE2_user.js"></script>
+</head>
+
+<body>
+	<button class="tab active" data-tab="users">Users</button>
+	<button class="tab" data-tab="log">Log</button>
+
+	<section id="users" class="active">
+		<div class="box">
+			<table id="user--table">
+				<tr>
+					<th></th>
+					<th>Pointer name</th>
+					<th>User name</th>
+					<th>Role</th>
+					<th>IP address</th>
+				</tr>
+			</table>
+		</div>
+
+		<div class="box">
+			<table id="permission--list">
+			</table>
+
+			<div id="permission--nav">
+				User model:
+				<select id="permission--select">
+				</select>
+				<button id="permission--new">New</button>
+				<form id="permission--form">
+					<input id="permission--input" placeholder="Title">
+					<button id="permission--add">Add</button>
+					<button id="permission--cancel">Cancel</button>
+				</form>
+			</div>
+		</div>
+
+	</section>
+	<section id="log" class="box">
+	</section>
+</body>
+</html>
+

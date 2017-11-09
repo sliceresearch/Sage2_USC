@@ -36,6 +36,8 @@ function fileSizeIEC(a, b, c, d, e) {
 		a / b.pow(d, e)).toFixed(1) + ' ' + (e ? 'KMGTPEZY'[--e] : 'B');
 }
 
+var interactor;
+
 /**
  * FileManager object
  *
@@ -322,7 +324,7 @@ function FileManager(wsio, mydiv, uniqueID) {
 		settings_menu: {value: "Settings",
 			tooltip: "Opens the pointer and screen sharing settings panel",
 			callback: function (evt) {
-				showDialog('settingsDialog');
+				interactor.settingsDialog('main');
 			}
 		},
 		separator1: {value: "separator"},
@@ -475,13 +477,14 @@ function FileManager(wsio, mydiv, uniqueID) {
 				window.open(displayUrl, '_blank');
 			}
 		},
-		overview_menu: {value: "Display Overview Client",
+		overview_menu: {value: "Display Full Wall",
 			tooltip: "Opens a new page with the overview display client",
 			callback: function (evt) {
 				var overviewUrl = "http://" + window.location.hostname + _this.http_port +  "/display.html?clientID=-1";
 				window.open(overviewUrl, '_blank');
 			}
 		},
+		separator1: { value: "separator" },
 		audio_menu: {value: "Audio Manager",
 			tooltip: "Opens a new page with the audio manager",
 			callback: function (evt) {
@@ -495,12 +498,19 @@ function FileManager(wsio, mydiv, uniqueID) {
 				window.open("admin/console.html", '_blank');
 			}
 		},
+		user_menu: {value: "User Console",
+			tooltip: "Opens a new page displaying users and roles",
+			callback: function (evt) {
+				window.open("admin/SAGE2_user.html", '_blank');
+			}
+		},
 		performance_menu: {value: "Performance Console",
 			tooltip: "Opens a new page displaying performance monitoring data",
 			callback: function (evt) {
 				window.open("admin/performance.html", '_blank');
 			}
-		}
+		},
+		separator2: { value: "separator" }
 	};
 
 	// Advanced setting, right-aligned in the top menubar
@@ -1557,7 +1567,7 @@ function FileManager(wsio, mydiv, uniqueID) {
 			_this.allTable.filter(function(obj) {
 				var val = false;
 				if (_this.allFiles[obj.id].exif.SAGE2user) {
-					val = _this.allFiles[obj.id].exif.SAGE2user.indexOf(localStorage.SAGE2_ptrName) >= 0;
+					val = _this.allFiles[obj.id].exif.SAGE2user.indexOf(interactor.pointerColor) >= 0;
 				}
 				return val;
 			});
@@ -1966,13 +1976,15 @@ function FileManager(wsio, mydiv, uniqueID) {
 		// add overview client
 		displayList[0] = {
 			id: "displayclient_00",
-			value: "Display -1",
+			value: "Display Full Wall",
 			href:  "http://" + window.location.hostname + this.http_port +  "/display.html?clientID=-1",
 			target: "_blank"
 		};
+		// add a separator line
+		displayList[1] = {$template: "Separator"};
 		// add all display clients to list
 		for (var i = 0; i <  this.json_cfg.displays.length; i++) {
-			displayList[i + 1] = {
+			displayList[i + 2] = {
 				id:     "displayclient_" + i,
 				value:  "Display " + i,
 				href:   "http://" + window.location.hostname + this.http_port +  "/display.html?clientID=" + i,

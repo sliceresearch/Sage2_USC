@@ -857,6 +857,7 @@ var Webview = SAGE2_App.extend({
 			// Making Integer values, seems to be required by sendInputEvent
 			var x = Math.round(position.x);
 			var y = Math.round(position.y);
+			var _this = this;
 
 			if (eventType === "pointerPress") {
 				// click
@@ -895,7 +896,9 @@ var Webview = SAGE2_App.extend({
 			} else if (eventType === "widgetEvent") {
 				// widget events
 			} else if (eventType === "keyboard") {
-				this.element.focus();
+				if (this.contentType !== "unity") {
+					this.element.focus();
+				}
 
 				if (this.contentType === "youtube" ||
 					this.contentType === "vimeo"   ||
@@ -939,7 +942,12 @@ var Webview = SAGE2_App.extend({
 					type: "char",
 					keyCode: data.character
 				});
-
+				setTimeout(function() {
+					_this.element.sendInputEvent({
+						type: "keyUp",
+						keyCode: data.character
+					});
+				}, 0);
 			} else if (eventType === "specialKey") {
 				// clear the array
 				this.modifiers = [];

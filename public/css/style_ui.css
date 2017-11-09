@@ -11,1012 +11,1307 @@
  * Copyright (c) 2014
  */
 
+
 /* CSS Document */
 
 * {
-	font-family: Arimo, Helvetica, sans-serif;
-	font-size: 12px;
-	font-weight: normal;
-	font-style: normal;
-	margin: 0;
-	padding: 0;
+    font-family: Arimo, Helvetica, sans-serif;
+    font-size: 12px;
+    font-weight: normal;
+    font-style: normal;
+    margin: 0;
+    padding: 0;
 }
 
 body {
-	margin: 0;
-	padding: 0;
+    margin: 0;
+    padding: 0;
 }
 
 p {
-	color: #000000;
+    color: #000000;
 }
 
 label {
-	color: #000000;
+    color: #000000;
 }
 
 span {
-	color: #000000;
+    color: #000000;
 }
 
 h1 {
-	font-size: 18pt;
+    font-size: 18pt;
 }
 
 h2 {
-	font-size: 14pt;
-	margin: 10px;
+    font-size: 14pt;
+    margin: 10px;
 }
 
 #mainUI {
-	margin: 0;
-	overflow: hidden;
+    margin: 0;
+    overflow: hidden;
 }
 
 #displayUIDiv {
-	position: relative;
-	float: left;
-	margin: 5px 10px 0 0;
-	cursor: pointer;
+    position: relative;
+    float: left;
+    margin: 5px 10px 0 0;
+    cursor: pointer;
 }
 
 #applicationsDiv {
-	position: absolute;
-	overflow: hidden;
-	background-color: #B4B4B4;
-	margin: 2px 0 0 2px;
+    position: absolute;
+    overflow: hidden;
+    background-color: #B4B4B4;
+    margin: 2px 0 0 2px;
 }
 
 #partitionsDiv {
-	position: absolute;
-	overflow: hidden;
-	background-color: #B4B4B4;
-	margin: 2px 0 0 2px;
+    position: absolute;
+    overflow: hidden;
+    background-color: #B4B4B4;
+    margin: 2px 0 0 2px;
 }
 
-
 #sage2UICanvas {
-	position: absolute;
-	border: solid 2px #565656;
-	-webkit-box-sizing: border-box;
-	-moz-box-sizing: border-box;
-	box-sizing: border-box;
-	z-index: 999;
+    position: absolute;
+    border: solid 2px #565656;
+    -webkit-box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    box-sizing: border-box;
+    z-index: 999;
 }
 
 #menuContainer {
-	width: 100%;
-	float: left;
-	text-align: center;
+    width: 100%;
+    float: left;
+    text-align: center;
 }
 
 #menuUI {
-	margin: 0 auto;
-	white-space: nowrap;
-	-webkit-transform-origin: 0 0;
-	-moz-transform-origin: 0 0;
-	-ms-transform-origin: 0 0;
-	transform-origin: 0 0;
+    margin: 0 auto;
+    white-space: nowrap;
+    -webkit-transform-origin: 0 0;
+    -moz-transform-origin: 0 0;
+    -ms-transform-origin: 0 0;
+    transform-origin: 0 0;
 }
 
 #menuUI tr td {
-	min-width: 120px;
-	text-align: center;
+    min-width: 120px;
+    text-align: center;
 }
 
 #menuUI tr td img {
-	display: block;
-	margin: 8px auto;
-	-webkit-transition: 100ms ease-in-out;
-	-moz-transition: 100ms ease-in-out;
-	transition: 100ms ease-in-out;
+    display: block;
+    margin: 8px auto;
+    -webkit-transition: 100ms ease-in-out;
+    -moz-transition: 100ms ease-in-out;
+    transition: 100ms ease-in-out;
 }
 
 #menuUI tr td:hover img {
-	-webkit-transform: scale(1);
-	-moz-transform: scale(1);
-	-ms-transform: scale(1);
-	transform: scale(1);
-	background-color: rgba(0, 0, 0, 0);
+    -webkit-transform: scale(1);
+    -moz-transform: scale(1);
+    -ms-transform: scale(1);
+    transform: scale(1);
+    background-color: rgba(0, 0, 0, 0);
 }
 
 #menuUI tr td p {
-	white-space: nowrap;
-	display: inline;
-	padding: 2px 8px;
-	color: #FFFFFF;
-	background-color: #787878;
-	border-radius: 8px;
-	opacity: 1;
-	cursor: default;
-	-webkit-transition: opacity 100ms ease-in-out;
-	-moz-transition: opacity 100ms ease-in-out;
-	transition: opacity 100ms ease-in-out;
+    white-space: nowrap;
+    display: inline;
+    padding: 2px 8px;
+    color: #FFFFFF;
+    background-color: #787878;
+    border-radius: 8px;
+    opacity: 1;
+    cursor: default;
+    -webkit-transition: opacity 100ms ease-in-out;
+    -moz-transition: opacity 100ms ease-in-out;
+    transition: opacity 100ms ease-in-out;
 }
 
-#menuUI tr td:hover img + p {
-	opacity: 1;
+#menuUI tr td:hover img+p {
+    opacity: 1;
 }
 
 #textWidthTest {
-	white-space: nowrap;
-	position: absolute;
-	visibility: hidden;
-	height: auto;
-	width: auto;
+    white-space: nowrap;
+    position: absolute;
+    visibility: hidden;
+    height: auto;
+    width: auto;
 }
 
 .appWindow {
-	display: block;
-	position: absolute;
-	border: solid 1px #6C6C6C;
+    display: block;
+    position: absolute;
+    border: solid 1px #6C6C6C;
 }
 
 .appWindowHover {
-	display: block;
-	position: absolute;
-	border: solid 1px #3694B7;
+    display: block;
+    position: absolute;
+    border: solid 1px #3694B7;
 }
 
 .appWindowTitle {
-	position: absolute;
-	border: solid 1px #6C6C6C;
-	background-color: #E6E6E6;
-	-webkit-box-sizing: border-box;
-	-moz-box-sizing: border-box;
-	box-sizing: border-box;
+    position: absolute;
+    border: solid 1px #6C6C6C;
+    background-color: #E6E6E6;
+    -webkit-box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    box-sizing: border-box;
 }
 
 .appWindowTitleHover {
-	position: absolute;
-	border: solid 1px #6C6C6C;
-	background-color: #3694B7;
-	-webkit-box-sizing: border-box;
-	-moz-box-sizing: border-box;
-	box-sizing: border-box;
+    position: absolute;
+    border: solid 1px #6C6C6C;
+    background-color: #3694B7;
+    -webkit-box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    box-sizing: border-box;
 }
 
 .appWindowArea {
-	position: absolute;
-	border: solid 1px #6C6C6C;
-	-webkit-box-sizing: border-box;
-	-moz-box-sizing: border-box;
-	box-sizing: border-box;
-	background-color: #484848;
+    position: absolute;
+    border: solid 1px #6C6C6C;
+    -webkit-box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    box-sizing: border-box;
+    background-color: #484848;
 }
 
 .appWindowIcon {
-	position: absolute;
-	left: 50%;
-	top: 50%;
-	max-height: 100%;
-	max-width: 100%;
-	height: auto;
-
-	-webkit-transform: translate(-50%, -50%);
-	-moz-transform: translate(-50%, -50%);
-	-ms-transform: translate(-50%, -50%);
-	transform: translate(-50%, -50%);
-
-	-webkit-user-drag: none;
-	-moz-user-drag: none;
-	user-drag: none;
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    max-height: 100%;
+    max-width: 100%;
+    height: auto;
+    -webkit-transform: translate(-50%, -50%);
+    -moz-transform: translate(-50%, -50%);
+    -ms-transform: translate(-50%, -50%);
+    transform: translate(-50%, -50%);
+    -webkit-user-drag: none;
+    -moz-user-drag: none;
+    user-drag: none;
 }
 
 .clear {
-	clear: both;
+    clear: both;
 }
 
 .ptnWindow {
-	display: block;
-	position: absolute;
-	border: solid 1px #6C6C6C;
+    display: block;
+    position: absolute;
+    border: solid 1px #6C6C6C;
 }
 
 .ptnWindowTitle {
-	position: absolute;
-	border: solid 1px #6C6C6C;
-	-webkit-box-sizing: border-box;
-	-moz-box-sizing: border-box;
-	box-sizing: border-box;
+    position: absolute;
+    border: solid 1px #6C6C6C;
+    -webkit-box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    box-sizing: border-box;
 }
 
 .ptnWindowTitleHover {
-	position: absolute;
-	border: solid 1px #6C6C6C;
-	background-color: #3694B7;
-	-webkit-box-sizing: border-box;
-	-moz-box-sizing: border-box;
-	box-sizing: border-box;
+    position: absolute;
+    border: solid 1px #6C6C6C;
+    background-color: #3694B7;
+    -webkit-box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    box-sizing: border-box;
 }
 
 .ptnWindowArea {
-	position: absolute;
-	border: solid 1px #6C6C6C;
-	-webkit-box-sizing: border-box;
-	-moz-box-sizing: border-box;
-	box-sizing: border-box;
+    position: absolute;
+    border: solid 1px #6C6C6C;
+    -webkit-box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    box-sizing: border-box;
 }
 
+
 /***** Light Box    *****/
+
 #sage2pointerDialog {
-	top: 50%;
-	left: 50%;
-	-webkit-transform: translate(-50%, -50%);
-	-moz-transform: translate(-50%, -50%);
-	-ms-transform: translate(-50%, -50%);
-	transform: translate(-50%, -50%);
+    top: 50%;
+    left: 50%;
+    -webkit-transform: translate(-50%, -50%);
+    -moz-transform: translate(-50%, -50%);
+    -ms-transform: translate(-50%, -50%);
+    transform: translate(-50%, -50%);
 }
 
 #appLauncherDialog {
-	left: 15%;
-	top: 15%;
-	width: 70%;
-	height: 70%;
+    left: 15%;
+    top: 15%;
+    width: 70%;
+    height: 70%;
 }
 
 #appListContainer {
-	position: absolute;
-	left: 12px;
-	top: 12px;
-	margin: 0;
-	overflow: scroll;
+    position: absolute;
+    left: 12px;
+    top: 12px;
+    margin: 0;
+    overflow: scroll;
 }
 
 #appList {
-	width: 100%;
-	background-color: #484848;
+    width: 100%;
+    background-color: #484848;
 }
 
 #appList p {
-	color: #FFFFFF;
+    color: #FFFFFF;
 }
 
 #appStoreBtn {
-	position: absolute;
-	left: 10px;
-	bottom: 10px;
+    position: absolute;
+    left: 10px;
+    bottom: 10px;
 }
 
 #appOpenBtn {
-	position: absolute;
-	right: 10px;
-	bottom: 10px;
+    position: absolute;
+    right: 10px;
+    bottom: 10px;
 }
 
 #appCloseBtn {
-	position: absolute;
-	right: 75px;
-	bottom: 10px;
+    position: absolute;
+    right: 75px;
+    bottom: 10px;
 }
 
 #mediaBrowserDialog {
-	left: 25%;
-	top: 25%;
-	width: 50%;
-	height: 50%;
+    left: 25%;
+    top: 25%;
+    width: 50%;
+    height: 50%;
 }
 
 #fileListContainer {
-	position: absolute;
-	left: 12px;
-	top: 12px;
-	margin: 0;
-	background-color: #484848;
-	overflow: scroll;
+    position: absolute;
+    left: 12px;
+    top: 12px;
+    margin: 0;
+    background-color: #484848;
+    overflow: scroll;
 }
 
 #fileListElems {
-	text-align: left;
+    text-align: left;
 }
 
 #fileListElems label {
-	color: #FFFFFF;
+    color: #FFFFFF;
 }
 
 #fileListElems li {
-	color: #FFFFFF;
+    color: #FFFFFF;
 }
 
 #metadata {
-	position: absolute;
-	margin: 0;
-	padding: 0;
-	top: 12px;
-	text-align: center;
-	background-color: #484848;
-	border-left: solid 1px #000000;
+    position: absolute;
+    margin: 0;
+    padding: 0;
+    top: 12px;
+    text-align: center;
+    background-color: #484848;
+    border-left: solid 1px #000000;
 }
 
 #thumbnail {
-	margin-top: 5%;
-	border: none;
+    margin-top: 5%;
+    border: none;
 }
 
 #metadata_text {
-	display: block;
-	color: #FFFFFF;
-	white-space: pre-wrap;
-	word-wrap: break-word;
-	word-break: break-all;
+    display: block;
+    color: #FFFFFF;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    word-break: break-all;
 }
 
 #fileOpenBtn {
-	position: absolute;
-	right: 10px;
-	bottom: 10px;
+    position: absolute;
+    right: 10px;
+    bottom: 10px;
 }
 
 #fileCloseBtn {
-	position: absolute;
-	right: 75px;
-	bottom: 10px;
+    position: absolute;
+    right: 75px;
+    bottom: 10px;
 }
 
 #fileDeleteBtn {
-	position: absolute;
-	left: 10px;
-	bottom: 10px;
+    position: absolute;
+    left: 10px;
+    bottom: 10px;
 }
 
 #fileUploadBtn {
-	position: absolute;
-	left: 82px;
-	bottom: 10px;
+    position: absolute;
+    left: 82px;
+    bottom: 10px;
 }
 
 #arrangementDialog {
-	top: 50%;
-	left: 50%;
-	-webkit-transform: translate(-50%, -50%);
-	-moz-transform: translate(-50%, -50%);
-	-ms-transform: translate(-50%, -50%);
-	transform: translate(-50%, -50%);
+    top: 50%;
+    left: 50%;
+    -webkit-transform: translate(-50%, -50%);
+    -moz-transform: translate(-50%, -50%);
+    -ms-transform: translate(-50%, -50%);
+    transform: translate(-50%, -50%);
 }
 
 #arrangementItems {
-	margin: 10px 10px 20px;
-	overflow: auto;
+    margin: 10px 10px 20px;
+    overflow: auto;
 }
 
 #arrangementItems2 {
-	margin: 10px 10px 66px;
-	overflow: auto;
+    margin: 10px 10px 66px;
+    overflow: auto;
 }
 
 #clearcontentContainer {
-	width: 100px;
-	float: left;
-	text-align: center;
+    width: 100px;
+    float: left;
+    text-align: center;
 }
 
 #tilecontentContainer {
-	width: 100px;
-	float: left;
-	text-align: center;
+    width: 100px;
+    float: left;
+    text-align: center;
 }
 
 #savesessionContainer {
-	width: 100px;
-	float: left;
-	text-align: center;
+    width: 100px;
+    float: left;
+    text-align: center;
 }
 
 #createpartitionsContainer {
-	width: 100px;
-	float: left;
-	text-align: center;
+    width: 100px;
+    float: left;
+    text-align: center;
 }
 
 #deletepartitionsContainer {
-	width: 100px;
-	float: left;
-	text-align: center;
+    width: 100px;
+    float: left;
+    text-align: center;
 }
 
 #deleteApplicationsContainer {
-	width: 100px;
-	float: left;
-	text-align: center;
+    width: 100px;
+    float: left;
+    text-align: center;
 }
 
 #arrangementCloseBtn {
-	position: absolute;
-	right: 10px;
-	bottom: 10px;
+    position: absolute;
+    right: 10px;
+    bottom: 10px;
 }
 
 #createpartitionsDialog {
-	top: 50%;
-	left: 50%;
-	-webkit-transform: translate(-50%, -50%);
-	-moz-transform: translate(-50%, -50%);
-	-ms-transform: translate(-50%, -50%);
-	transform: translate(-50%, -50%);
+    top: 50%;
+    left: 50%;
+    -webkit-transform: translate(-50%, -50%);
+    -moz-transform: translate(-50%, -50%);
+    -ms-transform: translate(-50%, -50%);
+    transform: translate(-50%, -50%);
 }
 
 #createpartitionsItems {
-	margin: 10px 10px 66px;
-	overflow: auto;
+    margin: 10px 10px 66px;
+    overflow: auto;
 }
 
 #createpartitionsCreateBtn {
-	position: absolute;
-	right: 10px;
-	bottom: 10px;
+    position: absolute;
+    right: 10px;
+    bottom: 10px;
 }
 
 #createpartitionsCloseBtn {
-	position: absolute;
-	right: 75px;
-	bottom: 10px;
+    position: absolute;
+    right: 75px;
+    bottom: 10px;
 }
 
 #infoDialog {
-	top: 50%;
-	left: 50%;
-	-webkit-transform: translate(-50%, -50%);
-	-moz-transform: translate(-50%, -50%);
-	-ms-transform: translate(-50%, -50%);
-	transform: translate(-50%, -50%);
+    top: 50%;
+    left: 50%;
+    -webkit-transform: translate(-50%, -50%);
+    -moz-transform: translate(-50%, -50%);
+    -ms-transform: translate(-50%, -50%);
+    transform: translate(-50%, -50%);
 }
 
 #infoItems {
-	margin: 5px 5px 45px;
-	overflow: auto;
+    margin: 5px 5px 45px;
+    overflow: auto;
 }
 
 #helpContainer {
-	width: 100px;
-	float: left;
-	text-align: center;
+    width: 100px;
+    float: left;
+    text-align: center;
 }
 
 #adminContainer {
-	width: 100px;
-	float: left;
-	text-align: center;
+    width: 100px;
+    float: left;
+    text-align: center;
 }
 
 #infoContainer {
-	width: 100px;
-	text-align: center;
+    width: 100px;
+    text-align: center;
 }
 
 #ezNoteContainer {
-	width: 100px;
-	text-align: center;
+    width: 100px;
+    text-align: center;
 }
 
 #ezDrawContainer {
-	width: 100px;
-	text-align: center;
+    width: 100px;
+    text-align: center;
 }
 
 #informationContainer {
-	width: 100px;
-	float: left;
-	text-align: center;
+    width: 100px;
+    float: left;
+    text-align: center;
 }
 
 #infoCloseBtn {
-	position: absolute;
-	right: 10px;
-	bottom: 10px;
+    position: absolute;
+    right: 10px;
+    bottom: 10px;
 }
 
 #infoData {
-	margin: 10px;
+    margin: 10px;
 }
 
 #settingsDialog {
-	top: 50%;
-	left: 50%;
-	-webkit-transform: translate(-50%, -50%);
-	-moz-transform: translate(-50%, -50%);
-	-ms-transform: translate(-50%, -50%);
-	transform: translate(-50%, -50%);
+    top: 50%;
+    left: 50%;
+    -webkit-transform: translate(-50%, -50%);
+    -moz-transform: translate(-50%, -50%);
+    -ms-transform: translate(-50%, -50%);
+    transform: translate(-50%, -50%);
 }
 
 #settingsDialog2 {
-	top: 50%;
-	left: 50%;
-	-webkit-transform: translate(-50%, -50%);
-	-moz-transform: translate(-50%, -50%);
-	-ms-transform: translate(-50%, -50%);
-	transform: translate(-50%, -50%);
+    top: 50%;
+    left: 50%;
+    -webkit-transform: translate(-50%, -50%);
+    -moz-transform: translate(-50%, -50%);
+    -ms-transform: translate(-50%, -50%);
+    transform: translate(-50%, -50%);
 }
 
 #settingsItems {
-	margin: 10px 10px 66px;
-	overflow: auto;
+    margin: 10px 10px 66px;
+    overflow: auto;
 }
 
 #browserDialog {
-	top: 50%;
-	left: 50%;
-	-webkit-transform: translate(-50%, -50%);
-	-moz-transform: translate(-50%, -50%);
-	-ms-transform: translate(-50%, -50%);
-	transform: translate(-50%, -50%);
+    top: 50%;
+    left: 50%;
+    -webkit-transform: translate(-50%, -50%);
+    -moz-transform: translate(-50%, -50%);
+    -ms-transform: translate(-50%, -50%);
+    transform: translate(-50%, -50%);
 }
 
 #sage2PointerSettingsContainer {
-	width: 225px;
-	float: left;
-	margin-right: 10px;
+    width: 225px;
+    float: left;
+    margin-right: 10px;
 }
 
 #screenSharingSettingsContainer {
-	width: 225px;
-	float: left;
+    width: 225px;
+    float: left;
 }
 
 #sage2PointerSettingsContainer td {
-	padding-bottom: 4px;
+    padding-bottom: 4px;
 }
 
 #screenSharingSettingsContainer td {
-	padding-bottom: 4px;
+    padding-bottom: 4px;
 }
 
 #sage2PointerLabel {
-	width: 120px;
-	height: 16px;
+    width: 120px;
+    height: 16px;
 }
 
 #sage2PointerColor {
-	width: 50px;
-	height: 25px;
+    width: 50px;
+    height: 25px;
 }
 
 #screenShareResolution {
-	width: 100px;
+    width: 100px;
 }
 
 #screenShareQuality {
-	width: 100px;
+    width: 100px;
 }
 
 #settingsCloseBtn {
-	position: absolute;
-	right: 10px;
-	bottom: 10px;
+    position: absolute;
+    right: 10px;
+    bottom: 10px;
 }
 
 #settingsCloseBtn2 {
-	position: absolute;
-	right: 10px;
-	bottom: 10px;
+    position: absolute;
+    right: 10px;
+    bottom: 10px;
 }
 
 #ffShareScreenDialog {
-	top: 50%;
-	left: 50%;
-	-webkit-transform: translate(-50%, -50%);
-	-moz-transform: translate(-50%, -50%);
-	-ms-transform: translate(-50%, -50%);
-	transform: translate(-50%, -50%);
-	width: 265px;
-	height: 60px;
+    top: 50%;
+    left: 50%;
+    -webkit-transform: translate(-50%, -50%);
+    -moz-transform: translate(-50%, -50%);
+    -ms-transform: translate(-50%, -50%);
+    transform: translate(-50%, -50%);
+    width: 265px;
+    height: 60px;
 }
 
 #ffShareScreenBtn {
-	position: absolute;
-	left: 10px;
-	bottom: 10px;
+    position: absolute;
+    left: 10px;
+    bottom: 10px;
 }
 
 #ffShareWindowBtn {
-	position: absolute;
-	right: 10px;
-	bottom: 10px;
+    position: absolute;
+    right: 10px;
+    bottom: 10px;
 }
 
 #localfileDialog {
-	top: 40%;
-	left: 50%;
-	-webkit-transform: translate(-50%, -50%);
-	-moz-transform: translate(-50%, -50%);
-	-ms-transform: translate(-50%, -50%);
-	transform: translate(-50%, -50%);
-	width: 510px;
-	height: 100px;
+    top: 40%;
+    left: 50%;
+    -webkit-transform: translate(-50%, -50%);
+    -moz-transform: translate(-50%, -50%);
+    -ms-transform: translate(-50%, -50%);
+    transform: translate(-50%, -50%);
+    width: 510px;
+    height: 100px;
 }
 
 #cancelFilesBtn2 {
-	position: absolute;
-	right: 10px;
-	top: 12px;
+    position: absolute;
+    right: 10px;
+    top: 12px;
 }
 
 #localfileItems {
-	margin: 10px 10px 66px;
-	overflow: auto;
+    margin: 10px 10px 66px;
+    overflow: auto;
 }
 
 #uploadDialog {
-	top: 50%;
-	left: 50%;
-	-webkit-transform: translate(-50%, -50%);
-	-moz-transform: translate(-50%, -50%);
-	-ms-transform: translate(-50%, -50%);
-	transform: translate(-50%, -50%);
-	width: 310px;
-	height: 60px;
+    top: 50%;
+    left: 50%;
+    -webkit-transform: translate(-50%, -50%);
+    -moz-transform: translate(-50%, -50%);
+    -ms-transform: translate(-50%, -50%);
+    transform: translate(-50%, -50%);
+    width: 310px;
+    height: 60px;
 }
 
 #localFilesBtn {
-	position: absolute;
-	left: 10px;
-	bottom: 10px;
+    position: absolute;
+    left: 10px;
+    bottom: 10px;
 }
 
 #dropboxFilesBtn {
-	position: absolute;
-	left: 90px;
-	bottom: 10px;
+    position: absolute;
+    left: 90px;
+    bottom: 10px;
 }
 
 #cancelFilesBtn {
-	position: absolute;
-	right: 10px;
-	bottom: 10px;
+    position: absolute;
+    right: 10px;
+    bottom: 10px;
 }
 
 #blackoverlay {
-	display: none;
-	position: fixed;
-	top: 0;
-	left: 0;
-	width: 100%;
-	height: 100%;
-	background-color: #000000;
-	z-index: 1001;
-	opacity: 0.65;
-	cursor: default;
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: #000000;
+    z-index: 1001;
+    opacity: 0.65;
+    cursor: default;
 }
 
 #sage2MobileContainer {
-	display: none;
-	position: fixed;
-	top: 0;
-	left: 0;
-	width: 100%;
-	height: 100%;
-	background-color: #464646;
-	z-index: 1001;
-	cursor: default;
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: #464646;
+    z-index: 1001;
+    cursor: default;
 }
 
 #sage2Mobile {
-	width: 100%;
-	height: 100%;
+    width: 100%;
+    height: 100%;
 }
 
 #sage2MobileTrackpad {
-	width: 100%;
-	height: 80%;
-	border: solid 3px #000000;
-	color: #FFFFFF;
-	-moz-box-sizing: border-box;
-	-webkit-box-sizing: border-box;
-	box-sizing: border-box;
-
-	background: url('../images/trackpad.svg') no-repeat;
-	background-position: 50% 70%;
-	background-size: 55vh;
-	background-origin: content-box;
-	padding: 10px;
+    width: 100%;
+    height: 80%;
+    border: solid 3px #000000;
+    color: #FFFFFF;
+    -moz-box-sizing: border-box;
+    -webkit-box-sizing: border-box;
+    box-sizing: border-box;
+    background: url('../images/trackpad.svg') no-repeat;
+    background-position: 50% 70%;
+    background-size: 55vh;
+    background-origin: content-box;
+    padding: 10px;
 }
 
 #sage2MobileButtons {
-	width: 100%;
-	height: 20%;
+    width: 100%;
+    height: 20%;
 }
 
 #sage2MobileLeftButton {
-	float: left;
-	width: 35%;
-	height: 100%;
-	border: solid 3px #000000;
-	color: #FFFFFF;
-	font-size: 16px;
-
-	background: url('../images/mouse-left.svg') no-repeat;
-	background-position: 50% 0;
-	background-size: contain;
-	background-origin: content-box;
-	padding: 5px;
-
-	-moz-box-sizing: border-box;
-	-webkit-box-sizing: border-box;
-	box-sizing: border-box;
+    float: left;
+    width: 35%;
+    height: 100%;
+    border: solid 3px #000000;
+    color: #FFFFFF;
+    font-size: 16px;
+    background: url('../images/mouse-left.svg') no-repeat;
+    background-position: 50% 0;
+    background-size: contain;
+    background-origin: content-box;
+    padding: 5px;
+    -moz-box-sizing: border-box;
+    -webkit-box-sizing: border-box;
+    box-sizing: border-box;
 }
 
 #sage2MobileMiddleButton {
-	float: left;
-	width: 15%;
-	height: 100%;
-	border: solid 3px #000000;
-	color: #FFFFFF;
-	font-size: 16px;
-
-	background: url('../images/switch.svg') no-repeat;
-	background-position: 50% 0;
-	background-size: contain;
-	background-origin: content-box;
-	padding: 5px;
-
-	-moz-box-sizing: border-box;
-	-webkit-box-sizing: border-box;
-	box-sizing: border-box;
+    float: left;
+    width: 15%;
+    height: 100%;
+    border: solid 3px #000000;
+    color: #FFFFFF;
+    font-size: 16px;
+    background: url('../images/switch.svg') no-repeat;
+    background-position: 50% 0;
+    background-size: contain;
+    background-origin: content-box;
+    padding: 5px;
+    -moz-box-sizing: border-box;
+    -webkit-box-sizing: border-box;
+    box-sizing: border-box;
 }
 
 #sage2MobileMiddle2Button {
-	float: left;
-	width: 15%;
-	height: 100%;
-	border: solid 3px #000000;
-	color: #FFFFFF;
-	font-size: 16px;
-
-	background: url('../images/spacebar.svg') no-repeat;
-	background-position: 50% 0;
-	background-size: contain;
-	background-origin: content-box;
-	padding: 5px;
-
-	-moz-box-sizing: border-box;
-	-webkit-box-sizing: border-box;
-	box-sizing: border-box;
+    float: left;
+    width: 15%;
+    height: 100%;
+    border: solid 3px #000000;
+    color: #FFFFFF;
+    font-size: 16px;
+    background: url('../images/spacebar.svg') no-repeat;
+    background-position: 50% 0;
+    background-size: contain;
+    background-origin: content-box;
+    padding: 5px;
+    -moz-box-sizing: border-box;
+    -webkit-box-sizing: border-box;
+    box-sizing: border-box;
 }
 
 #sage2MobileRightButton {
-	float: right;
-	width: 35%;
-	height: 100%;
-	border: solid 3px #000000;
-	color: #FFFFFF;
-	font-size: 16px;
-
-	background: url('../images/mouse-right.svg') no-repeat;
-	background-position: 50% 0;
-	background-size: contain;
-	background-origin: content-box;
-	padding: 5px;
-
-	-moz-box-sizing: border-box;
-	-webkit-box-sizing: border-box;
-	box-sizing: border-box;
+    float: right;
+    width: 35%;
+    height: 100%;
+    border: solid 3px #000000;
+    color: #FFFFFF;
+    font-size: 16px;
+    background: url('../images/mouse-right.svg') no-repeat;
+    background-position: 50% 0;
+    background-size: contain;
+    background-origin: content-box;
+    padding: 5px;
+    -moz-box-sizing: border-box;
+    -webkit-box-sizing: border-box;
+    box-sizing: border-box;
 }
+
 
 /*
 The z-index is very important.
 999 is 1 layer below dialog, but one above UI canvas.
 */
+
 #appContextMenu {
-	position:  absolute;
-	visibility: hidden;
-	border:     1px solid black;
-	background: white;
-	z-index:    1999;
+    position: absolute;
+    visibility: hidden;
+    border: 1px solid black;
+    background: white;
+    z-index: 1999;
+}
+.appContextMenuEntry {
+	padding: 2px 5px;
+	cursor:default;
+}
+.appContextMenuEntry:first-of-type {
+	padding-top:5px;
+}
+.appContextMenuEntry:last-of-type {
+	padding-bottom:5px;
+}
+#appContextMenu .okButton {
+	border: 1px solid black;
+	padding:0 2px;
+	display:inline-block;
+	margin-left:5px;
+	cursor:pointer;
+}
+
+#appContextMenu .okButton:hover,
+#appContextMenu .noInputEntry:hover {
+	cursor:pointer;
+	background:lightgray !important;
 }
 
 #uiNoteMaker {
-	border:            1px solid black;
-	top:               50%;
-	left:              50%;
-	-webkit-transform: translate(-50%, -50%);
-	-moz-transform:    translate(-50%, -50%);
-	-ms-transform:     translate(-50%, -50%);
-	transform:         translate(-50%, -50%);
-	text-align:        center;
+    border: 1px solid black;
+    top: 50%;
+    left: 50%;
+    -webkit-transform: translate(-50%, -50%);
+    -moz-transform: translate(-50%, -50%);
+    -ms-transform: translate(-50%, -50%);
+    transform: translate(-50%, -50%);
+    text-align: center;
 }
 
 #uiNoteMakerInputField {
-	resize: none;
-	font-size: 20px;
-	font-family: Lucidia Console, Monaco, monospace;
+    resize: none;
+    font-size: 20px;
+    font-family: Lucidia Console, Monaco, monospace;
 }
 
 .uinmColorPickColumn {
-	height: 71px;
-	width: 	101px;
+    height: 71px;
+    width: 101px;
 }
 
 .uinmColorPickBlock {
-	width: 	95px;
-	height: 65px;
-	border: 1px solid black;
+    width: 95px;
+    height: 65px;
+    border: 1px solid black;
 }
 
 #uiDrawZone {
-	top:               50%;
-	left:              50%;
-	-webkit-transform: translate(-50%, -50%);
-	-moz-transform:    translate(-50%, -50%);
-	-ms-transform:     translate(-50%, -50%);
-	transform:         translate(-50%, -50%);
+    top: 50%;
+    left: 50%;
+    -webkit-transform: translate(-50%, -50%);
+    -moz-transform: translate(-50%, -50%);
+    -ms-transform: translate(-50%, -50%);
+    transform: translate(-50%, -50%);
 }
 
 #uiDrawZoneCanvas {
-	border:            1px solid black;
-	width:             500px;
-	height:            500px;
-	position:          relative;
-	left:              50%;
-	-webkit-transform: translate(-50%, 0);
-	-moz-transform:    translate(-50%, 0);
-	-ms-transform:     translate(-50%, 0);
-	transform:         translate(-50%, 0);
+    border: 1px solid black;
+    width: 500px;
+    height: 500px;
+    position: relative;
+    left: 50%;
+    -webkit-transform: translate(-50%, 0);
+    -moz-transform: translate(-50%, 0);
+    -ms-transform: translate(-50%, 0);
+    transform: translate(-50%, 0);
 }
 
 #uiDrawZoneCloseDoodleButton {
-	position:   relative;
-	text-align: left;
-	left:       5%
+    position: relative;
+    text-align: left;
+    left: 5%
 }
 
 #uiDrawZoneCloseEditorButton {
-	position:   relative;
-	float:      right;
-	top:        -10px;
-	text-align: right;
-	right:      5%
+    position: relative;
+    float: right;
+    top: -10px;
+    text-align: right;
+    right: 5%
 }
 
 #uiDrawZoneEraseReference {
-	position:       absolute;
-	display:        none;
-	top:            -100;
-	left:           -100;
-	width:          1;
-	border:         1px solid black;
-	border-radius:  50%;
-	z-index:        1003;
-	pointer-events: none;
+    position: absolute;
+    display: none;
+    top: -100;
+    left: -100;
+    width: 1;
+    border: 1px solid black;
+    border-radius: 50%;
+    z-index: 1003;
+    pointer-events: none;
 }
 
 .uidzBarBox {
-	width: 30px;
-	height: 30px;
-	border: 1px solid black;
+    width: 30px;
+    height: 30px;
+    border: 1px solid black;
 }
 
 .uidzBarAll {
-	height: 100%;
-	left: 50%;
-	position: relative;
-	background: black;
-	-webkit-transform: translate(-50%, 0);
-	-moz-transform: translate(-50%, 0);
-	-ms-transform: translate(-50%, 0);
-	transform: translate(-50%, 0);
+    height: 100%;
+    left: 50%;
+    position: relative;
+    background: black;
+    -webkit-transform: translate(-50%, 0);
+    -moz-transform: translate(-50%, 0);
+    -ms-transform: translate(-50%, 0);
+    transform: translate(-50%, 0);
 }
 
-.uidzBarS1 { width: 1px; }
-.uidzBarS2 { width: 2px; }
-.uidzBarS3 { width: 4px; }
-.uidzBarS4 { width: 8px; }
-.uidzBarS5 { width: 16px; }
-.uidzBarS6 { width: 32px; }
-.uidzBarS7 { width: 64px; }
+.uidzBarS1 {
+    width: 1px;
+}
+
+.uidzBarS2 {
+    width: 2px;
+}
+
+.uidzBarS3 {
+    width: 4px;
+}
+
+.uidzBarS4 {
+    width: 8px;
+}
+
+.uidzBarS5 {
+    width: 16px;
+}
+
+.uidzBarS6 {
+    width: 32px;
+}
+
+.uidzBarS7 {
+    width: 64px;
+}
 
 .fileItem {
-	cursor: default;
+    cursor: default;
 }
 
 .textDialog {
-	text-align:  left;
-	padding-left: 10px;
+    text-align: left;
+    padding-left: 10px;
 }
 
 .button {
-	padding: 10px 12px;
-	border-radius: 12px;
-	color: #FFFFFF;
-	background-color: #787878;
-	-webkit-user-select: none;
-	-moz-user-select: none;
-	-ms-user-select: none;
-	user-select: none;
+    padding: 10px 12px;
+    border-radius: 12px;
+    color: #FFFFFF;
+    background-color: #787878;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
 }
 
 .button:active {
-	background-color: #565656;
+    background-color: #565656;
 }
 
 .dialog {
-	display: none;
-	position: absolute;
-	border: 4px solid #787878;
-	border-radius: 12px;
-	background-color: #FFFFFF;
-	z-index: 1002;
-	overflow: hidden;
-	cursor: default;
+    display: none;
+    position: absolute;
+    border: 4px solid #787878;
+    border-radius: 12px;
+    background-color: #FFFFFF;
+    z-index: 1002;
+    overflow: hidden;
+    cursor: default;
 }
 
 /***** File Browser *****/
 
 .css-treeview {
-	-webkit-user-select: none;
-	-moz-user-select: none;
-	-ms-user-select: none;
-	user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
 }
 
 .css-treeview ul,
 .css-treeview li {
-	padding: 0;
-	margin: 6px 3px 0;
-	list-style: none;
-	display: block;
-	white-space: nowrap;
+    padding: 0;
+    margin: 6px 3px 0;
+    list-style: none;
+    display: block;
+    white-space: nowrap;
 }
 
 .css-treeview input {
-	position: absolute;
-	opacity: 0;
+    position: absolute;
+    opacity: 0;
 }
 
 .css-treeview label {
-	cursor: pointer;
+    cursor: pointer;
 }
 
-.css-treeview input + label {
-	background: url('../images/dir-closed.svg') no-repeat;
-	background-size: 32px 17px;
-	padding: 3px 0 3px 42px;
-	background-position: 0 0;
+.css-treeview input+label {
+    background: url('../images/dir-closed.svg') no-repeat;
+    background-size: 32px 17px;
+    padding: 3px 0 3px 42px;
+    background-position: 0 0;
 }
 
-.css-treeview input:checked + label {
-	background: url('../images/dir-open.svg') no-repeat;
-	background-size: 32px 17px;
+.css-treeview input:checked+label {
+    background: url('../images/dir-open.svg') no-repeat;
+    background-size: 32px 17px;
 }
 
-.css-treeview input ~ ul {
-	margin: 0;
-	display: none;
+.css-treeview input~ul {
+    margin: 0;
+    display: none;
 }
 
-.css-treeview input ~ ul > li {
-	margin: 0;
-	padding-left: 48px;
-	font-size: 11px;
+.css-treeview input~ul>li {
+    margin: 0;
+    padding-left: 48px;
+    font-size: 11px;
 }
 
-.css-treeview input:checked ~ ul {
-	display: block;
+.css-treeview input:checked~ul {
+    display: block;
 }
+
 
 /* Styling top menu bar */
-.my_style .webix_layout_toolbar.webix_toolbar{
-	background: #787878;
-	border: none;
+
+.my_style .webix_layout_toolbar.webix_toolbar {
+    background: #787878;
+    border: none;
 }
 
-.my_style a.webix_list_item{
-	background: #787878;
+.my_style a.webix_list_item {
+    background: #787878;
 }
-.my_style a.webix_list_item:focus{
-	background: #787878;
+
+.my_style a.webix_list_item:focus {
+    background: #787878;
 }
-.my_style a.webix_list_item:hover{
-	background: #666666;
+
+.my_style a.webix_list_item:hover {
+    background: #666666;
 }
 
 
 /******** Text - Width Test ********/
+
 #textWidthTest {
-	font-size: 11px;
-	position: absolute;
-	bottom: 0;
-	left: 0;
-	visibility: hidden;
-	height: auto;
-	width: auto;
-	white-space: nowrap;
+    font-size: 11px;
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    visibility: hidden;
+    height: auto;
+    width: auto;
+    white-space: nowrap;
+}
+
+
+/* .rmbRangeInput {
+	-webkit-appearance: none;
+	-moz-appearance: none;
+	background-color: #fff;
+	height: 3px;
+	width: 100px;
+	border: 1.25px solid rgba(100, 100, 100, 0.5);
+	outline-color: transparent;
+}
+
+.rmbRangeInput::-webkit-slider-thumb {
+	-webkit-appearance: none;
+	background: #e0e0e0;
+	height: 12px;
+	width: 8px;
+	border: 1px solid rgba(0, 0, 0, 0.5);
+	border-style: solid;
+	border-width: 1px;
+}
+
+
+.rmbRangeInput::-moz-range-thumb {
+	-webkit-appearance: none;
+	background: #e0e0e0;
+	height: 12px;
+	width: 8px;
+	border: 1px solid rgba(0, 0, 0, 0.5);
+	border-style: solid;
+	border-width: 1px;
+} */
+
+.rmbRangeInputSliderWrapper {
+    position: relative;
+    display: inline-block;
+    width: 100px;
+    height: 14px;
+    background: transparent;
+    margin: 2px 0px -3px;
+}
+
+.rmbRangeInputSliderBar {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 100%;
+    height: 3px;
+    background-color: white;
+    border: 1.25px solid rgba(100, 100, 100, 0.5);
+}
+
+.rmbRangeInputSliderHandle {
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%) translateX(-50%);
+    width: 4px;
+    height: 100%;
+    background: black;
+    border: 1.25px solid rgba(0, 0, 0, 0.5);
+    border-style: solid;
+    border-width: 1px;
+}
+
+.rmbRangeInputSliderHandle:hover,
+.rmbRangeInputSliderHandle.dragging {
+    background: lightgray;
+}
+
+.rmbRangeInputArrow {
+    height: 14px;
+    display: inline-block;
+    padding: 0 4px;
+    border: 1px solid black;
+    margin-left: 5px;
+    margin-right: 5px;
+    padding-top: 2px;
+    margin-bottom: -5px;
+    -webkit-user-select: none;
+    /* webkit (safari, chrome) browsers */
+    -moz-user-select: none;
+    /* mozilla browsers */
+    -khtml-user-select: none;
+    /* webkit (konqueror) browsers */
+    -ms-user-select: none;
+    /* IE10+ */
+}
+
+.rmbRangeInputArrow:hover {
+    background-color: lightgray;
+}
+
+.rmbRangeInputArrow.rightArrow::before {
+    content: ' ';
+    width: 0;
+    height: 0;
+    border-top: 5px solid transparent;
+    border-bottom: 5px solid transparent;
+    border-left: 5px solid black;
+    /* font-size: 0; */
+    display: block;
+    float: right;
+    margin: 0px 2px;
+    margin-top: 1px;
+}
+
+.rmbRangeInputArrow.leftArrow::before {
+    content: ' ';
+    width: 0;
+    height: 0;
+    border-top: 5px solid transparent;
+    border-bottom: 5px solid transparent;
+    border-right: 5px solid black;
+    display: block;
+    margin: 0px 2px;
+    margin-top: 1px;
+}
+
+.rmbColorSwatch {
+    display: inline-block;
+    height: 16px;
+    width: 16px;
+    margin-bottom: -5px;
+    margin-right: 3px;
+    border: 1px solid gray;
+    cursor: pointer;
+}
+
+.rmbColorSwatch:hover {
+    border: 1px solid black;
+}
+
+.rmbColorPalette {
+    position: absolute;
+    top: 0px;
+    margin-top: -1px;
+    left: 100%;
+    padding: 3px;
+    background: inherit;
+    border: 1px solid black;
+    width: 100px;
+    text-align: center;
+    white-space: pre-wrap;
+}
+
+.rmbColorOption {
+    display: inline-block;
+    height: 16px;
+    width: 16px;
+    margin: 3px;
+    border: 1px solid gray;
+    cursor: pointer;
+}
+
+.rmbColorOption:hover {
+    border: 1px solid black;
+}
+
+
+/* Keep OK buttons aligned on right side of contextMenu */
+
+.inputOKButton {
+    position: absolute;
+    right: 5px;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+#appContextMenu input {
+    margin-right: 20px;
+    /* position: absolute;
+	right: 40px;
+	top: 50%;
+	transform: translateY(-50%); */
+}
+
+
+/* styling for submenu  */
+
+.contextMenuEntry {
+    position: relative;
+    cursor: pointer;
+    white-space: nowrap;
+    padding: 0 5px;
+}
+
+.contextMenuEntry:hover {
+    background: lightgray;
+}
+
+.contextMenuLeft {
+    transform: translateX(-100%);
+}
+
+.contextMenuRight .entryWithSubMenu {
+    padding: 0 15px 0 5px;
+}
+
+.contextMenuLeft .entryWithSubMenu {
+    padding: 0 5px 0 15px;
+}
+
+.contextMenuRight .entryWithSubMenu::after {
+    display: block;
+    content: ' ';
+    float: right;
+    width: 0;
+    height: 0;
+    border-color: transparent;
+    border-style: solid;
+    border-width: 5px 0 5px 5px;
+    border-left-color: black;
+    margin-top: 2px;
+    margin-right: -10px;
+}
+
+.contextMenuLeft .entryWithSubMenu::before {
+    display: block;
+    content: ' ';
+    float: left;
+    width: 0;
+    height: 0;
+    border-color: transparent;
+    border-style: solid;
+    border-width: 5px 5px 5px 0;
+    border-right-color: black;
+    margin-top: 2px;
+    margin-left: -10px;
+}
+
+.contextSubMenu {
+    border: 1px solid black;
+    min-width: 75px;
+}
+
+.contextMenuRight .contextMenuEntry>.contextSubMenu {
+    display: none;
+    position: absolute;
+    left: 100%;
+    top: -1px;
+}
+
+.contextMenuLeft .contextMenuEntry>.contextSubMenu {
+    display: none;
+    position: absolute;
+    left: 0;
+    transform: translateX(-100%);
+    top: -1px;
+}
+
+.contextMenuEntry:hover>.contextSubMenu {
+    display: block;
 }
