@@ -338,18 +338,18 @@ class UserList {
 	 * Retrieve data from json database or log an error if it fails
 	 *
 	 * @method getData
-	 * @param name {String}
+	 * @param path {String}
 	 * @return {Object} object with the success flag and the retrieved data
 	 */
-	getData(name) {
+	getData(path) {
 		try {
-			let data = this.db.getData(name);
+			let data = this.db.getData(path);
 			return {
 				success: true,
 				data: data
 			};
 		} catch (error) {
-			// sageutils.log("Userlist", "Error", error.message);
+			sageutils.log("Userlist", "Error", error.message);
 			return {
 				success: false
 			};
@@ -361,17 +361,17 @@ class UserList {
 	 * Push data to json database or log an error if it fails
 	 *
 	 * @method push
-	 * @param name {String}
+	 * @param path {String}
 	 * @param data {Object} new data to be pushed
 	 * @param checkIfPathExists {Boolean} check if path exists before pushing * the data; default is false
 	 * @return {Boolean} true if push succeeds
 	 */
-	push(name, data, overwrite = true, checkIfPathExists = false) {
+	push(path, data, overwrite = true, checkIfPathExists = false) {
 		try {
 			if (checkIfPathExists) {
-				this.db.getData(name);
+				this.db.getData(path);
 			}
-			this.db.push(name, data, overwrite);
+			this.db.push(path, data, overwrite);
 			return true;
 		} catch (error) {
 			sageutils.log("Userlist", "Error", error.message);
@@ -384,12 +384,12 @@ class UserList {
 	 * Remove data at a path or log an error if it fails
 	 *
 	 * @method delete
-	 * @param name {String}
+	 * @param path {String}
 	 * @return {Boolean} true if delete succeeds
 	 */
-	delete(name) {
+	delete(path) {
 		try {
-			this.db.delete(name);
+			this.db.delete(path);
 			return true;
 		} catch (error) {
 			sageutils.log("Userlist", "Error", error.message);
