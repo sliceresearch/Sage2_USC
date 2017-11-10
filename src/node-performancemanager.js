@@ -73,7 +73,8 @@ function PerformanceManager() {
 			serverTraffic: [],
 			network: [],
 			memUsage: [],
-			displayPerf: []
+			displayPerf: [],
+			clients: []
 		}
 	};
 
@@ -134,20 +135,12 @@ PerformanceManager.prototype.initializeConfiguration = function(cfg) {
  * @param      {<type>}  data    The data
  */
 PerformanceManager.prototype.addDisplayClient = function(id, idx, data) {
-	// the clientID to the data
-
+	// Add the id & clientID to the data
 	data.id = id;
 	data.clientID = idx;
-	// store the info into the array
-	if (this.clients.hardware.find(function(d) {
-		return d.clientID === idx && d.id === id;
-	}) === undefined) {
-		this.clients.hardware.push(data);
-		// send the displays specifics
-		module.parent.exports.broadcast('displayHardwareInformation',
-			this.clients.hardware
-		);
-	}
+	this.clients.hardware.push(data);
+	// send the displays specifics
+	module.parent.exports.broadcast('addDisplayHardwareInformation', data);
 };
 
 /**
@@ -157,11 +150,8 @@ PerformanceManager.prototype.addDisplayClient = function(id, idx, data) {
  * @param      {<type>}  idx     The client ID
  */
 PerformanceManager.prototype.removeDisplayClient = function(id) {
-	if (removeObjectsFromArrayOnPropertyValue(this.clients.hardware, "id", id) === true) {
-		module.parent.exports.broadcast('displayHardwareInformation',
-			this.clients.hardware
-		);
-	}
+	module.parent.exports.broadcast('removeDisplayHardwareInformation',	{id: id});
+	removeObjectsFromArrayOnPropertyValue(this.clients.hardware, "id", id);
 	removeObjectsFromArrayOnPropertyValue(this.clients.performanceMetrics, "id", id, 'eq');
 };
 
@@ -177,7 +167,7 @@ PerformanceManager.prototype.updateClient = function(wsio) {
 		this.performanceMetrics.staticInformation
 	);
 	// send the displays specifics
-	wsio.emit('displayHardwareInformation',
+	wsio.emit('addDisplayHardwareInformation',
 		this.clients.hardware
 	);
 
@@ -622,58 +612,73 @@ PerformanceManager.prototype.saveDisplayPerformanceData = function(id, idx, data
 	removeObjectsFromArrayOnPropertyValue(this.clients.performanceMetrics, "id", id, 'eq');
 	this.clients.performanceMetrics.push(clientData);
 
-	removeObjectsFromArrayOnPropertyValue(this.clients.history, "date", durationAgo, 'lt');
-	this.clients.history.push(clientData);
+	removeObjectsFromArrayOnPropertyValue(this.performanceMetrics.history.clients, "date", durationAgo, 'lt');
+	this.performanceMetrics.history.clients.push(clientData);
 
 };
 
+
 function removeObjectsFromArrayOnPropertyValue(array, property, value, condition) {
 	// Current value
-	var filterFunc;
+	var mapFunc;
 	switch (condition) {
 		case 'lt':
-			filterFunc = function(d) {
-				return d[property] < value;
+			mapFunc = function(d) {
+				if ((d !== null) && (d !== undefined)) {
+					return d[property] < value;
+				} else {
+					return false;
+				}
 			};
 			break;
 		case 'gt':
-			filterFunc = function(d) {
-				return d[property] > value;
+			mapFunc = function(d) {
+				if ((d !== null) && (d !== undefined)) {
+					return d[property] > value;
+				} else {
+					return false;
+				}
 			};
 			break;
 		case 'lte':
-			filterFunc = function(d) {
-				return d[property] <= value;
+			mapFunc = function(d) {
+				if ((d !== null) && (d !== undefined)) {
+					return d[property] <= value;
+				} else {
+					return false;
+				}
 			};
 			break;
 		case 'gte':
-			filterFunc = function(d) {
-				return d[property] >= value;
+			mapFunc = function(d) {
+				if ((d !== null) && (d !== undefined)) {
+					return d[property] >= value;
+				} else {
+					return false;
+				}
 			};
 			break;
 		case 'eq':
 		default:
-			filterFunc = function(d) {
-				return d[property] === value;
+			mapFunc = function(d) {
+				if ((d !== null) && (d !== undefined)) {
+					return d[property] === value;
+				} else {
+					return false;
+				}
 			};
 			break;
 	}
-	var keys = array.map(function(d, i) {
-		var obj = {
-			arrIdx: i
-		};
-		obj[property] = d[property];
-		return obj;
-	}).filter(filterFunc);
-	for (var i = 0; i < keys.length; i++) {
-		array.splice(keys[i].arrIdx, 1);
+	var results = array.map(mapFunc);
+	var count = 0;
+	for (var i = results.length - 1; i >= 0; i--) {
+		if (results[i] === true) {
+			array.splice(i, 1);
+			count++;
+		}
 	}
-	if (keys.length > 0) {
-		return true;
-	}
-	return false;
+	return count;
 }
-
 
 /**
   * Saves metric data into current value placeholder and history list
@@ -1027,7 +1032,7 @@ PerformanceManager.prototype.getTrafficData = function() {
 function checkForNegatives(obj) {
 	for (var k in obj) {
 		if (obj.hasOwnProperty(k)) {
-			if (Object.prototype.toString.call(obj[k]) === '[object Number]' && obj[k] < 0) {
+			if (typeof obj[k] === 'number' && isNaN(obj[k]) === false && obj[k] < 0) {
 				return true;
 			}
 		}
