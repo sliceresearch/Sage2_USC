@@ -16,7 +16,7 @@
 // require variables to be declared
 "use strict";
 
-const path        = require('path');
+const pathModule  = require('path');
 const fs          = require('fs');
 const JsonDB      = require('node-json-db');
 const sageutils   = require('../src/node-utils');
@@ -353,7 +353,7 @@ class UserList {
 				data: data
 			};
 		} catch (error) {
-			sageutils.log("Userlist", "Error", error.message);
+			// sageutils.log("Userlist", "Error", error.message);
 			return {
 				success: false
 			};
@@ -378,7 +378,7 @@ class UserList {
 			this.db.push(path, data, overwrite);
 			return true;
 		} catch (error) {
-			sageutils.log("Userlist", "Error", error.message);
+			// sageutils.log("Userlist", "Error", error.message);
 			return false;
 		}
 	}
@@ -555,7 +555,7 @@ class UserList {
 	}
 
 	get filePath() {
-		return path.join(pathname, filename);
+		return pathModule.join(pathname, filename);
 	}
 }
 

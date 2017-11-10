@@ -38,8 +38,6 @@ const SAGE2_interaction = (function() {
 	* @param response {Object} data returned by the server
 	*/
 	function handleLoginStateChange(response) {
-		// console.log('login', response);
-
 		// if user tried to log in: check if successful
 		if (response.login) {
 			let user = response.user;
@@ -88,7 +86,7 @@ const SAGE2_interaction = (function() {
 
 		// on initialization
 		if (response.init) {
-			if (!_loggedIn) {
+			if (!_loggedIn && _userSettings.SAGE2_ptrName && _userSettings.SAGE2_ptrName.startsWith('Anon ')) {
 				this.settingsDialog('init');
 			}
 		}
@@ -1083,8 +1081,8 @@ const SAGE2_interaction = (function() {
 										view: "button", id: "login_cancel", label: "Cancel", type: "prev",
 										click: function() {
 											this.getTopParentView().hide();
-											if (callingView) {
-												callingView.show();
+											if (callingView && $$('settings_dialog')) {
+												$$('settings_dialog').show();
 											}
 										}
 									},
@@ -1092,8 +1090,13 @@ const SAGE2_interaction = (function() {
 										view: "button", id: "login_create", label: "Create new user",
 										click: function() {
 											let data = $$("login_form").getValues();
-											data.SAGE2_ptrName = _userSettings.SAGE2_ptrName;
-											data.SAGE2_ptrColor = _userSettings.SAGE2_ptrColor;
+											if ($$("settings_dialog")) {
+												data.SAGE2_ptrName = $$("user_name").getValue();
+												data.SAGE2_ptrColor = $$("user_color").getValue();
+											} else {
+												data.SAGE2_ptrName = _userSettings.SAGE2_ptrName;
+												data.SAGE2_ptrColor = _userSettings.SAGE2_ptrColor;
+											}
 											wsio.emit('createUser', data);
 										}
 									},
@@ -1148,12 +1151,44 @@ const SAGE2_interaction = (function() {
 			}
 		};
 
-		this.updateLoginButton = function(data) {
+		this.updateLoginButton = function() {
+			if ($$('user_confirm')) {
+				let label = "Ok";
+				if (!_loggedIn && !$$('user_cancel')) {
+					label = "Log in as guest";
+				}
+
+				webix.ui({
+					view: "button", id: "user_confirm", value: label, type: "form",
+					click: () => {
+						// When OK button pressed
+
+						var uname  = $$("user_name").getValue();
+						var ucolor = $$("user_color").getValue();
+
+						// Set the values into _userSettings of browser
+						this.changeSage2PointerLabel(uname);
+						this.changeSage2PointerColor(ucolor);
+
+						this.wsio.emit('editUser', {
+							uid: _uid,
+							properties: {
+								SAGE2_ptrColor: ucolor,
+								SAGE2_ptrName: uname
+							}
+						});
+
+						// Close the UI
+						$$('settings_dialog').destructor();
+					}
+				}, $$('user_confirm'));
+			}
+
 			if ($$("user_login")) {
 				webix.ui({
 					view: "button", id: "user_login",
-					type: _loggedIn ? "warning" : "next",
-					label: _loggedIn ? "Log out" : "Log in",
+					template: "<button style='border:none; color:#555; background:#ddd;'>#label#</button>",
+					label: _loggedIn ? "Sign out" : "Sign up for more options",
 					click: () => {
 						if (_loggedIn) {
 							wsio.emit('logoutUser', _uid);
@@ -1181,6 +1216,28 @@ const SAGE2_interaction = (function() {
 			let username = _userSettings.SAGE2_ptrName || (hasMouse ? "SAGE2_user" : "SAGE2_mobile");
 			let color = _userSettings.SAGE2_ptrColor || randomHexColor();
 
+			let loginElement;
+			if (type === 'init') {
+				loginElement = {
+					view: "button", id: "user_confirm", value: "Log in as guest", type: "form"
+				};
+			} else {
+				loginElement = {
+					margin: 5, cols: [
+						{
+							view: "button", id: "user_cancel", value: "Cancel",
+							click: function() {
+								// close the dialog without saving changes
+								this.getTopParentView().destructor();
+							}
+						},
+						{
+							view: "button", id: "user_confirm", value: "Ok", type: "form"
+						}
+					]
+				};
+			}
+
 			let webixOptions = {
 				view: "window",
 				id: "settings_dialog",
@@ -1206,18 +1263,9 @@ const SAGE2_interaction = (function() {
 							label: "Color",
 							value: color
 						},
+						loginElement,
 						{
 							view: "button", id: "user_login"
-						},
-						{
-							margin: 5, cols: [
-								{
-									view: "button", id: "user_cancel", value: "Cancel"
-								},
-								{
-									view: "button", id: "user_confirm", value: "Ok", type: "form"
-								}
-							]
 						}
 					],
 					elementsConfig: {
@@ -1226,7 +1274,6 @@ const SAGE2_interaction = (function() {
 				}
 			};
 
-			let elements = webixOptions.body.elements;
 			switch (type) {
 				case 'init':
 					webixOptions.head = "Set your pointer name and color";
@@ -1234,35 +1281,10 @@ const SAGE2_interaction = (function() {
 				case 'main':
 					// also show screen resolution options when called via toolbar
 					webixOptions.head = "Settings";
-					var userElements;
+					var elements = webixOptions.body.elements;
+					var userElements = elements.splice(0, 2);
 
-					// if (!_loggedIn) {
-					userElements = elements.splice(0, 2);
-					// }
-					// else {
-					// 	userElements = elements.splice(0, 2,
-					// 	{
-					// 		view: "label", label: "Account", align: "center"
-					// 	},
-					// 	{
-					// 		type: "space",
-					// 		rows: [
-					// 			{
-					// 				view: "text",
-					// 				id: "user2_name",
-					// 				label: "Name",
-					// 				value: _userSettings.SAGE2_userName
-					// 			},
-					// 			{
-					// 				view: "text",
-					// 				id: "user2_email",
-					// 				label: "Email",
-					// 				value: _userSettings.SAGE2_userEmail
-					// 			}
-					// 		]
-					// 	});
-					// }
-					elements.splice(elements.length - 1, 0,
+					elements.unshift(
 						{
 							view: "label", label: "Pointer", align: "center"
 						},
@@ -1300,6 +1322,9 @@ const SAGE2_interaction = (function() {
 									]
 								}
 							]
+						},
+						{
+							view: "label"
 						}
 					);
 					break;
@@ -1308,9 +1333,6 @@ const SAGE2_interaction = (function() {
 
 			webix.ui.zIndexBase = 10000;	// to make the colorboard appear on top of the modal
 			webix.ui(webixOptions).show();
-
-			// get reference to ui form
-			let parent = $$("settings_dialog");
 
 			this.updateLoginButton();
 
@@ -1330,33 +1352,6 @@ const SAGE2_interaction = (function() {
 				});
 			}
 
-			// close the dialog without saving changes
-			$$("user_cancel").attachEvent("onItemClick", function() {
-				parent.destructor();
-			});
-
-			// close the dialog and save changes
-			$$("user_confirm").attachEvent("onItemClick", () => {
-				// When OK button pressed
-
-				var uname  = $$("user_name").getValue();
-				var ucolor = $$("user_color").getValue();
-
-				// Set the values into _userSettings of browser
-				this.changeSage2PointerLabel(uname);
-				this.changeSage2PointerColor(ucolor);
-
-				this.wsio.emit('editUser', {
-					uid: _uid,
-					properties: {
-						SAGE2_ptrColor: ucolor,
-						SAGE2_ptrName: uname
-					}
-				});
-
-				// Close the UI
-				parent.destructor();
-			});
 			// Focus the text box
 			$$('user_name').focus();
 		};
@@ -1480,13 +1475,15 @@ const SAGE2_interaction = (function() {
 		var cookieUserName = getCookie('SAGE2_userName') || '';
 		var cookieEmail = getCookie('SAGE2_userEmail') || '';
 
-		wsio.emit('loginUser', {
-			name: cookieUserName,
-			email: cookieEmail,
-			SAGE2_ptrName: _userSettings.SAGE2_ptrName,
-			SAGE2_ptrColor: _userSettings.SAGE2_ptrColor,
-			init: true
-		});
+		if (!viewOnlyMode) {
+			wsio.emit('loginUser', {
+				name: cookieUserName,
+				email: cookieEmail,
+				SAGE2_ptrName: _userSettings.SAGE2_ptrName,
+				SAGE2_ptrColor: _userSettings.SAGE2_ptrColor,
+				init: true
+			});
+		}
 
 		this.wsio.on('loginStateChanged', handleLoginStateChange.bind(this));
 		this.wsio.on('allowAction', allowAction.bind(this));
