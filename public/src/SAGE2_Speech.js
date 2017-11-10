@@ -10,7 +10,7 @@
 
 "use strict";
 
-/* global showSAGE2Message webkitSpeechGrammarList */
+/* global showSAGE2Message webkitSpeechGrammarList displayUI*/
 
 var SAGE2_speech = {};
 SAGE2_speech.hasInit            = false;
@@ -58,6 +58,7 @@ SAGE2_speech.uiMenuEntryDisable = true;
  * @method init
  */
 SAGE2_speech.init = function() {
+	this.hasInit = true;
 	if (!("webkitSpeechRecognition" in window)) {
 		console.log("SpeechRecognition> This browser doesn't support SpeechRecognition API");
 	} else {
@@ -205,9 +206,6 @@ SAGE2_speech.init = function() {
 			SAGE2_speech.mouseHoldActivated = false;
 		};
 		this.toggleSAGE2_speech();
-		// Toggle will flip
-		this.isEnabled = false;
-		SAGE2_speech.toggleVoiceRecognition();
 	}
 };
 
@@ -667,6 +665,9 @@ SAGE2_speech.toggleVoiceRecognition = function () {
 		// Else was disabled, enable it and allow disable
 		$$('topmenu').showItem('voiceserviceDisable_menu');
 		$$('topmenu').hideItem('voiceserviceEnable_menu');
+		if (!SAGE2_speech.hasInit) {
+			SAGE2_speech.init();
+		}
 	}
 	SAGE2_speech.isEnabled = !SAGE2_speech.isEnabled;
 };
@@ -681,7 +682,17 @@ SAGE2_speech.setNameMarker = function (nameMarkerFromServer) {
 	// Console.log("Voice marker:'" + nameMarkerFromServer + "'");
 	// Server should include a space
 	SAGE2_speech.nameMarker = nameMarkerFromServer.toLowerCase();
-	SAGE2_speech.init();
+
+	// If voice is enabled, begin init
+	if (displayUI.config.voice_commands.enabled) {
+		SAGE2_speech.init();
+		// Toggle will flip
+		SAGE2_speech.isEnabled = false;
+	} else {
+		// Otherwise, begin disabled. Toggle will flip value from true to false
+		SAGE2_speech.isEnabled = true;
+	}
+	SAGE2_speech.toggleVoiceRecognition();
 };
 
 /**

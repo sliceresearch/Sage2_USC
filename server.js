@@ -703,6 +703,7 @@ var sharedServerData = new SharedDataManager(clients, broadcast);
 // create manager for voice actions, major functions are given on creation
 // each of these needs to be memory references
 var variablesUsedInVoiceHandler = {
+	config,
 	sagePointers,
 	interactMgr,
 	SAGE2Items,
@@ -719,7 +720,7 @@ var variablesUsedInVoiceHandler = {
 	shareApplicationWithRemoteSite,
 	fillContextMenuWithShareSites,
 	remoteSites,
-	voiceNameMarker: "sage " // that space is important for checking // change this later to check config
+	voiceNameMarker: config.voice_commands.system_name
 };
 var voiceHandler = new VoiceActionManager(variablesUsedInVoiceHandler);
 
@@ -921,7 +922,7 @@ function wsAddClient(wsio, data) {
 	// If it's a UI, send message to enable screenshot capability
 	if (wsio.clientType === "sageUI") {
 		reportIfCanWallScreenshot();
-		// also tell it variablesUsedInVoiceHandler.voiceNameMarker
+		// Also tell it what name the system is called
 		wsio.emit("setVoiceNameMarker", {name: variablesUsedInVoiceHandler.voiceNameMarker});
 	}
 
@@ -4775,6 +4776,58 @@ function loadConfiguration() {
 		userConfig.ui.maxWindowHeight = parseInt(userConfig.ui.maxWindowHeight, 10);
 	} else {
 		userConfig.ui.maxWindowHeight = Math.round(1.2 * maxDim); // 120%
+	}
+
+	// Voice defaults
+	if (userConfig.voice_commands === undefined) {
+		userConfig.voice_commands = {
+			enabled: true,
+			log: false,
+			// The space matters for parsing
+			system_name: "sage "
+		};
+	}
+
+	// Voice command are enabled by default
+	if (userConfig.voice_commands.enabled === undefined) {
+		userConfig.voice_commands.enabled = true;
+	} else {
+		// Test for a true value: true, on, yes, 1, ...
+		if (sageutils.isTrue(userConfig.voice_commands.enabled)) {
+			userConfig.voice_commands.enabled = true;
+		} else {
+			userConfig.voice_commands.enabled = false;
+		}
+	}
+
+	// Voice logging is off by default
+	if (userConfig.voice_commands.log === undefined) {
+		userConfig.voice_commands.log = false;
+	} else {
+		// Test for a true value: true, on, yes, 1, ...
+		if (sageutils.isTrue(userConfig.voice_commands.log)) {
+			userConfig.voice_commands.log = true;
+		} else {
+			userConfig.voice_commands.log = false;
+		}
+	}
+
+	// What the system is called, for when it passively listens
+	if (userConfig.voice_commands.system_name === undefined) {
+		// Default is "sage" the " " is important for parsing purposes
+		userConfig.voice_commands.system_name = "sage ";
+	} else {
+		if (typeof userConfig.voice_commands.system_name === "string") {
+			userConfig.voice_commands.system_name = userConfig.voice_commands.system_name.trim();
+			if (userConfig.voice_commands.system_name.length === 0) {
+				userConfig.voice_commands.system_name = "sage ";
+			} else {
+				// The " " is important for parsing purposes
+				userConfig.voice_commands.system_name += " ";
+			}
+		} else {
+			userConfig.voice_commands.system_name = "sage ";
+		}
 	}
 
 	// Check the borders settings (for hidding the borders)
