@@ -199,44 +199,24 @@ function setupListeners(wsio) {
 		terminal1.scrollTop    = terminal1.scrollHeight;
 	});
 
-	wsio.on('displayHardwareInformation', function(data) {
-		if (data.length > 0) {
-			var msg = "";
-			for (let i = 0; i < data.length; i++) {
-				let disp = data[i];
-				msg += '<span style="color:cyan;">Display ' + disp.clientID + ' </span>: ' + disp.system.manufacturer + ' ' +
-					disp.system.model + '\n';
-				msg += 'Hostname: ' + disp.hostname + '\n';
-				msg += 'OS: ' + disp.os.platform + ' ' +
-					disp.os.arch + ' ' + disp.os.distro + ' ' + disp.os.release + '\n';
-				msg += 'CPU: ' + disp.cpu.manufacturer + ' ' + disp.cpu.brand + ' ' +
-					disp.cpu.speed + 'Ghz ' + disp.cpu.cores + 'cores\n';
-				// Sum up all the memory banks
-				var totalMem = disp.memLayout.reduce(function(sum, value) {
-					return sum + value.size;
-				}, 0);
-				var memInfo = getNiceNumber(totalMem);
-				msg += 'RAM: ' + memInfo.number + memInfo.suffix + '\n';
-				var gpuMem = getNiceNumber(disp.graphics.controllers[0].vram);
-				// not very good on Linux (need to check nvidia tools)
-				msg += 'GPU: ' + disp.graphics.controllers[0].vendor + ' ' +
-					disp.graphics.controllers[0].model + ' ' +
-					gpuMem.number + gpuMem.suffix + ' VRAM\n';
-
-				// Assign colors to display clients
-				if (clientColorMap.hasOwnProperty(disp.id) === false) {
-					clientColorMap[disp.id] = getNewColor(clientColorMap);
-				}
-			}
-			// Added content
-			terminal2.innerHTML = msg;
-			// automatic scrolling to bottom
-			terminal2.scrollTop = terminal2.scrollHeight;
+	wsio.on('addDisplayHardwareInformation', function(data) {
+		if (Object.prototype.toString.call(data) === '[object Array]') {
+			clients.hardware = data;
 		} else {
-			terminal2.innerHTML = 'No Electron Display Client active.';
+			clients.hardware.push(data);	
 		}
-		clients.hardware = data;
-
+		showDisplayHardwareInformation();
+	});
+	wsio.on('removeDisplayHardwareInformation', function(data) {
+		if(data.id !== null && data.id !== undefined) {
+			var closedDisplay = clients.hardware.findIndex(function(d) {
+				return d.id === data.id;
+			});
+			if (closedDisplay > -1) {
+				clients.hardware.splice(closedDisplay, 1);
+			}
+		}
+		showDisplayHardwareInformation();
 	});
 
 	wsio.on('performanceData', function(data) {
@@ -247,6 +227,7 @@ function setupListeners(wsio) {
 			saveData('network', data.network, true);
 			saveData('serverLoad', data.serverLoad, true);
 			saveData('serverTraffic', data.serverTraffic, true);
+			clients.history = data.clients;
 		} else {
 			// Current values
 			if (data.durationInMinutes) {
@@ -293,10 +274,94 @@ function setupListeners(wsio) {
 			drawDisplaySM();
 			showDisplayClientsHistory();
 		}
+
+		if (performanceMetrics.staticInformation === null ||
+				performanceMetrics.staticInformation === undefined) {
+			wsio.emit("requestClientUpdate");
+		}
+	});
+
+	// Socket close event (ie server crashed)
+	wsio.on('close', function(evt) {
+		showSAGE2Message("Server offline");
+		var refresh = setInterval(function() {
+			// make a dummy request to test the server every 2 sec
+			var xhr = new XMLHttpRequest();
+			xhr.open("GET", "/", true);
+			xhr.onreadystatechange = function() {
+				if (xhr.readyState === 4 && xhr.status === 200) {
+					console.log("server ready");
+					// when server ready, clear the interval callback
+					clearInterval(refresh);
+					// and reload the page
+					window.location.reload();
+				}
+			};
+			xhr.send();
+		}, 2000);
 	});
 }
 
+//
+// Show error message
+// if time given as parameter in seconds, close after delay
+//
+function showSAGE2Message(message, delay) {
+	var aMessage = webix.alert({
+		type:  "alert-warning",
+		title: "SAGE2 Message",
+		ok:    "OK",
+		width: "40%",
+		text:  "<span style='font-weight:bold;'>" + message + "</span>"
+	});
+	if (delay) {
+		setTimeout(function() {
+			if (aMessage) {
+				webix.modalbox.hide(aMessage);
+			}
+		}, delay * 1000);
+	}
+}
 
+
+function showDisplayHardwareInformation() {
+	var data = clients.hardware;
+	if (data.length > 0) {
+		var msg = "";
+		for (let i = 0; i < data.length; i++) {
+			let disp = data[i];
+			msg += '<span style="color:cyan;">Display ' + disp.clientID + ' </span>: ' + disp.system.manufacturer + ' ' +
+				disp.system.model + '\n';
+			msg += 'Hostname: ' + disp.hostname + '\n';
+			msg += 'OS: ' + disp.os.platform + ' ' +
+				disp.os.arch + ' ' + disp.os.distro + ' ' + disp.os.release + '\n';
+			msg += 'CPU: ' + disp.cpu.manufacturer + ' ' + disp.cpu.brand + ' ' +
+				disp.cpu.speed + 'Ghz ' + disp.cpu.cores + 'cores\n';
+			// Sum up all the memory banks
+			var totalMem = disp.memLayout.reduce(function(sum, value) {
+				return sum + value.size;
+			}, 0);
+			var memInfo = getNiceNumber(totalMem);
+			msg += 'RAM: ' + memInfo.number + memInfo.suffix + '\n';
+			var gpuMem = getNiceNumber(disp.graphics.controllers[0].vram);
+			// not very good on Linux (need to check nvidia tools)
+			msg += 'GPU: ' + disp.graphics.controllers[0].vendor + ' ' +
+				disp.graphics.controllers[0].model + ' ' +
+				gpuMem.number + gpuMem.suffix + ' VRAM\n';
+
+			// Assign colors to display clients
+			if (clientColorMap.hasOwnProperty(disp.id) === false) {
+				clientColorMap[disp.id] = getNewColor(clientColorMap);
+			}
+		}
+		// Added content
+		terminal2.innerHTML = msg;
+		// automatic scrolling to bottom
+		terminal2.scrollTop = terminal2.scrollHeight;
+	} else {
+		terminal2.innerHTML = 'No Electron Display Client active.';
+	}
+}
 
 /**
   * Helper function to convert a number to shorter format with
@@ -429,8 +494,12 @@ function initializeCharts() {
 	};
 
 	var currentCPULoadText = function() {
-		var cpuLoad = performanceMetrics.cpuLoad;
-		return "Current: " + getPercentString(cpuLoad.load, cpuLoad.idle) + "%";
+		if (performanceMetrics.cpuLoad) {
+			var cpuLoad = performanceMetrics.cpuLoad;
+			return "Current: " + getPercentString(cpuLoad.load, cpuLoad.idle) + "%";
+		} else {
+			return "";
+		}
 	};
 	setupLineChart('cpuload', 'CPU Load', function(d) {
 		return d.load / (d.load + d.idle);
@@ -438,43 +507,63 @@ function initializeCharts() {
 
 
 	var currentMemUsageText = function() {
-		var memUsage = performanceMetrics.memUsage;
-		return "Current: " + formatMemoryString(memUsage.used, memUsage.total - memUsage.used);
+		if (performanceMetrics.memUsage) {
+			var memUsage = performanceMetrics.memUsage;
+			return "Current: " + formatMemoryString(memUsage.used, memUsage.total - memUsage.used);
+		} else {
+			return "";
+		}
 	};
 	setupLineChart('memusage', 'System Memory', function(d) {
 		return d.used / (d.used + d.free);
 	}, yAxisFormatMemory, currentMemUsageText, 0.7);
 
 	var currentServerLoadText = function() {
-		var serverLoad = performanceMetrics.serverLoad;
-		return "Current: " + d3.format('3.0f')(serverLoad.cpuPercent) + "%";
+		if (performanceMetrics.serverLoad) {
+			var serverLoad = performanceMetrics.serverLoad;
+			return "Current: " + d3.format('3.0f')(serverLoad.cpuPercent) + "%";
+		} else {
+			return "";
+		}
 	};
 	setupLineChart('serverload', 'SAGE2 Load', function(d) {
 		return d.cpuPercent / 100;
 	}, yAxisFormatLoad, currentServerLoadText, 0.5);
 
 	var currentServerMemText = function() {
-		var memUsage = performanceMetrics.memUsage;
-		var servermem = performanceMetrics.serverLoad.memResidentSet;
-		return "Current: " + formatMemoryString(servermem, memUsage.total - servermem);
+		if (performanceMetrics.memUsage) {
+			var memUsage = performanceMetrics.memUsage;
+			var servermem = performanceMetrics.serverLoad.memResidentSet;
+			return "Current: " + formatMemoryString(servermem, memUsage.total - servermem);
+		} else {
+			return "";
+		}
 	};
 	setupLineChart('servermem', 'SAGE2 Memory', function(d) {
 		return d.memResidentSet / performanceMetrics.sage2MemoryMax;
-	}, yAxisFormatSAGE2Memory, currentServerMemText, 0.7);
+	}, yAxisFormatSAGE2Memory, currentServerMemText, 0);
 
 	var currentServerTrafficText = function() {
-		var serverTraffic = performanceMetrics.serverTraffic;
-		var currentTraffic = getNiceNumber(serverTraffic.totalOutBound + serverTraffic.totalInBound, true);
-		return "Current: " + currentTraffic.number + currentTraffic.suffix;
+		if (performanceMetrics.serverTraffic) {
+			var serverTraffic = performanceMetrics.serverTraffic;
+			var currentTraffic = getNiceNumber(serverTraffic.totalOutBound + serverTraffic.totalInBound, true);
+			return "Current: " + currentTraffic.number + currentTraffic.suffix;
+		} else {
+			return "";
+		}
 	};
 	setupLineChart('servertraffic', 'SAGE2 Traffic', function(d) {
 		return (d.totalOutBound + d.totalInBound) / performanceMetrics.serverTrafficMax;
 	}, yAxisFormatNetworkServer, currentServerTrafficText, 0);
 
 	var currentSystemTrafficText = function() {
-		var network = performanceMetrics.network;
-		var currentTraffic = getNiceNumber(network.totalOutBound + network.totalInBound, true);
-		return "Current: " + currentTraffic.number + currentTraffic.suffix;
+		if (performanceMetrics.network) {
+			var network = performanceMetrics.network;
+			var currentTraffic = getNiceNumber(network.totalOutBound + network.totalInBound, true);
+			return "Current: " + currentTraffic.number + currentTraffic.suffix;
+		} else {
+			return "";
+		}
 	};
 	setupLineChart('systemtraffic', 'System Traffic', function(d) {
 		return (d.totalOutBound + d.totalInBound) / performanceMetrics.networkMax;
@@ -486,27 +575,37 @@ function initializeCharts() {
 
 
 function findMaxValues() {
-	var totalTrafficList = performanceMetrics.history.network.map(function(d) {
+	var totalTrafficList = performanceMetrics.history.network.filter(function(d) {
+		return d !== null && d !== undefined;
+	}).map(function(d) {
 		return d.totalOutBound + d.totalInBound;
 	});
 	performanceMetrics.networkMax = getNextPowerOfTen(d3.max(totalTrafficList));
-	var totalServerTrafficList = performanceMetrics.history.serverTraffic.map(function(d) {
+	var totalServerTrafficList = performanceMetrics.history.serverTraffic.filter(function(d) {
+		return d !== null && d !== undefined;
+	}).map(function(d) {
 		return d.totalOutBound + d.totalInBound;
 	});
 	performanceMetrics.serverTrafficMax = getNextPowerOfTen(d3.max(totalServerTrafficList));
 
-	var totalSage2MemoryList = performanceMetrics.history.serverLoad.map(function(d) {
+	var totalSage2MemoryList = performanceMetrics.history.serverLoad.filter(function(d) {
+		return d !== null && d !== undefined;
+	}).map(function(d) {
 		return d.memResidentSet;
 	});
 	performanceMetrics.sage2MemoryMax = getNextPowerOfTen(d3.max(totalSage2MemoryList));
 
-	var totalClientMemoryList = clients.history.map(function(d) {
+	var totalClientMemoryList = clients.history.filter(function(d) {
+		return d !== null && d !== undefined;
+	}).map(function(d) {
 		var mem = d.memUsage;
 		return mem.used + mem.free;
 	});
 	clients.systemMemoryMax = d3.max(totalClientMemoryList);
 
-	var totClientDisplayMemList = clients.history.map(function(d) {
+	var totClientDisplayMemList = clients.history.filter(function(d) {
+		return d !== null && d !== undefined;
+	}).map(function(d) {
 		var clientLoad = d.clientLoad;
 		return clientLoad.memResidentSet;
 	});
@@ -545,7 +644,9 @@ function removeObjectsFromArrayOnPropertyValue(array, property, value, condition
 			};
 			break;
 	}
-	var keys = array.map(function(d, i) {
+	var keys = array.filter(function(d) {
+		return d !== null && d !== undefined;
+	}).map(function(d, i) {
 		var obj = {
 			arrIdx: i
 		};
@@ -583,6 +684,9 @@ function checkForNegatives(obj) {
 
 
 function updateLineChart(chartId, data, key, filterlist) {
+	data = data.filter(function(d) {
+		return d !== null && d !== undefined;
+	});
 	var now = performanceMetrics.cpuLoad.date;
 	var entireDurationInMilliseconds = durationInMinutes * 60 * 1000;
 	var timeDomain = [now - entireDurationInMilliseconds, now];

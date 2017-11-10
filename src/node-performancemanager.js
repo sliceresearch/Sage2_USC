@@ -73,7 +73,8 @@ function PerformanceManager() {
 			serverTraffic: [],
 			network: [],
 			memUsage: [],
-			displayPerf: []
+			displayPerf: [],
+			clients: []
 		}
 	};
 
@@ -134,20 +135,12 @@ PerformanceManager.prototype.initializeConfiguration = function(cfg) {
  * @param      {<type>}  data    The data
  */
 PerformanceManager.prototype.addDisplayClient = function(id, idx, data) {
-	// the clientID to the data
-
+	// Add the id & clientID to the data
 	data.id = id;
 	data.clientID = idx;
-	// store the info into the array
-	if (this.clients.hardware.find(function(d) {
-		return d.clientID === idx && d.id === id;
-	}) === undefined) {
-		this.clients.hardware.push(data);
-		// send the displays specifics
-		module.parent.exports.broadcast('displayHardwareInformation',
-			this.clients.hardware
-		);
-	}
+	this.clients.hardware.push(data);
+	// send the displays specifics
+	module.parent.exports.broadcast('addDisplayHardwareInformation', data);
 };
 
 /**
@@ -157,11 +150,8 @@ PerformanceManager.prototype.addDisplayClient = function(id, idx, data) {
  * @param      {<type>}  idx     The client ID
  */
 PerformanceManager.prototype.removeDisplayClient = function(id) {
-	if (removeObjectsFromArrayOnPropertyValue(this.clients.hardware, "id", id) === true) {
-		module.parent.exports.broadcast('displayHardwareInformation',
-			this.clients.hardware
-		);
-	}
+	module.parent.exports.broadcast('removeDisplayHardwareInformation',	{id: id});
+	removeObjectsFromArrayOnPropertyValue(this.clients.hardware, "id", id);
 	removeObjectsFromArrayOnPropertyValue(this.clients.performanceMetrics, "id", id, 'eq');
 };
 
@@ -177,7 +167,7 @@ PerformanceManager.prototype.updateClient = function(wsio) {
 		this.performanceMetrics.staticInformation
 	);
 	// send the displays specifics
-	wsio.emit('displayHardwareInformation',
+	wsio.emit('addDisplayHardwareInformation',
 		this.clients.hardware
 	);
 
@@ -622,8 +612,8 @@ PerformanceManager.prototype.saveDisplayPerformanceData = function(id, idx, data
 	removeObjectsFromArrayOnPropertyValue(this.clients.performanceMetrics, "id", id, 'eq');
 	this.clients.performanceMetrics.push(clientData);
 
-	removeObjectsFromArrayOnPropertyValue(this.clients.history, "date", durationAgo, 'lt');
-	this.clients.history.push(clientData);
+	removeObjectsFromArrayOnPropertyValue(this.performanceMetrics.history['clients'], "date", durationAgo, 'lt');
+	this.performanceMetrics.history['clients'].push(clientData);
 
 };
 

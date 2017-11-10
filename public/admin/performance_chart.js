@@ -45,23 +45,41 @@ function makeSvg(domElementID, dim) {
 	return {svg: svg, width: width, height: height};
 }
 
+
 function handlePageResize() {
-	var chartMargin = {top: 20, right: 50, bottom: 25, left: 20};
-	var domElement, svg, width, height, box;
+	var body = document.body;
+	var scaleFactor = body.clientWidth / 1920;
+	// body.style.webkitTransform = "scale(" + scaleFactor + ")";
+	// body.style.mozTransform    = "scale(" + scaleFactor + ")";
+	// body.style.transform       = "scale(" + scaleFactor + ")";
+
+	d3.selectAll('svg')
+		.attr("width", function(d) {
+			return this.parentNode.clientWidth;
+		})
+		.attr("height", function(d) {
+			return this.parentNode.clientHeight;
+		})
+		.attr("viewbox", function(d) {
+			var width = this.parentNode.clientWidth;
+			var height = this.parentNode.clientHeight;
+			console.log(this.parentNode.id, width);
+			return "0, 0, 1000, " + parseInt(1000 * (height / width));
+		});
+	/*var domElement, svg, width, height, box, rect;
 	for (var id in charts) {
 		if (charts.hasOwnProperty(id) === true) {
 			domElement = document.getElementById(id);
-			width = parseInt(domElement.clientWidth);
-			height = parseInt(domElement.clientHeight);
-			width = width - chartMargin.left - chartMargin.right;
-			height = height - chartMargin.top - chartMargin.bottom;
+			rect = domElement.getBoundingClientRect();
+			width = rect.width;
+			height = rect.height;
 			box =  "0, 0, 1000, " + parseInt(1000 * (height / width));
 			svg = charts[id].svg;
-			svg.attr("width", width);
-			svg.attr("height", height);
+			svg.style("width", width);
+			svg.style("height", height);
 			svg.attr("viewbox", box);
 		}
-	}
+	}*/
 }
 
 
