@@ -1482,7 +1482,7 @@ const SAGE2_interaction = (function() {
 				SAGE2_ptrName: _userSettings.SAGE2_ptrName,
 				SAGE2_ptrColor: _userSettings.SAGE2_ptrColor,
 				init: true
-			});			
+			});
 		}
 
 		this.wsio.on('loginStateChanged', handleLoginStateChange.bind(this));

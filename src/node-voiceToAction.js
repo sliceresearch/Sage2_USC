@@ -70,12 +70,15 @@ VoiceActionManager.prototype.oldLog = function(line, shouldConsolePrint = false)
 
 /**
  * File logging for command submission and transcripts.
- * Writes based on data within this.currentCommandLogInfo
+ * Writes based on data within this.currentCommandLogInfo.
+ * 
+ * Must be enabled with the configuration file entry: logVoiceCommands.
  *
  * @method fileLog
  */
 VoiceActionManager.prototype.fileLog = function() {
-	if (this.currentCommandLogInfo.logged) {
+	if (this.currentCommandLogInfo.logged
+		|| !this.s2.config.voice_commands.log) {
 		// Don't double log
 		return;
 	}
@@ -577,7 +580,7 @@ VoiceActionManager.prototype.fillPhrases = function () {
 	this.rejectPhrases = [
 		"Huh", "I couldn't process that", "I couldn't hear you",
 		"I didn't catch that", "I didn't follow", "I don't understand what you said",
-		"I'm not sure", "No matching command available",
+		"I'm not sure what was said", "No matching command available",
 		"Please repeat", "Please speak up", "Please try again",
 		"Unsure what was said", "What", "Would you repeat"
 	];

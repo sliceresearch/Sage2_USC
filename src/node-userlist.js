@@ -301,8 +301,12 @@ class UserList {
 	* @return {Boolean} true if user is permitted to perform this action
 	*/
 	isAllowed(ip, action) {
+		// server's special case
+		if (ip === "127.0.0.1:42") {
+			return true;
+		}
 		if (!this.clients[ip]) {
-			return true;  // hopefully should not occur but permit anything
+			return false;
 		}
 		let roles = this.clients[ip].role;
 		for (let i in roles) {

@@ -703,6 +703,7 @@ var sharedServerData = new SharedDataManager(clients, broadcast);
 // create manager for voice actions, major functions are given on creation
 // each of these needs to be memory references
 var variablesUsedInVoiceHandler = {
+	config,
 	sagePointers,
 	interactMgr,
 	SAGE2Items,
@@ -719,7 +720,7 @@ var variablesUsedInVoiceHandler = {
 	shareApplicationWithRemoteSite,
 	fillContextMenuWithShareSites,
 	remoteSites,
-	voiceNameMarker: "sage " // that space is important for checking // change this later to check config
+	voiceNameMarker: config.voice_commands.system_name
 };
 var voiceHandler = new VoiceActionManager(variablesUsedInVoiceHandler);
 
@@ -921,7 +922,7 @@ function wsAddClient(wsio, data) {
 	// If it's a UI, send message to enable screenshot capability
 	if (wsio.clientType === "sageUI") {
 		reportIfCanWallScreenshot();
-		// also tell it variablesUsedInVoiceHandler.voiceNameMarker
+		// Also tell it what name the system is called
 		wsio.emit("setVoiceNameMarker", {name: variablesUsedInVoiceHandler.voiceNameMarker});
 	}
 
@@ -1079,7 +1080,7 @@ function setupListeners(wsio) {
 	wsio.on('loadImageFromBuffer',                  wsLoadImageFromBuffer);
 	wsio.on('deleteElementFromStoredFiles',         wsDeleteElementFromStoredFiles);
 	wsio.on('moveElementFromStoredFiles',           wsMoveElementFromStoredFiles);
-	wsio.on('saveSession',                           wsSaveSession);
+	wsio.on('saveSession',                          wsSaveSession);
 	wsio.on('clearDisplay',                         wsClearDisplay);
 	wsio.on('deleteAllApplications',                wsDeleteAllApplications);
 	wsio.on('tileApplications',                     wsTileApplications);
@@ -3292,14 +3293,12 @@ function wsRequestStoredFiles(wsio, data) {
 }
 
 function wsLoadApplication(wsio, data) {
-	if (!wsio) {
-		// for handling an application like webview
-		wsio = data.wsio || {
-			emit: function() { }
-		};
-	}
-	if (!userlist.isAllowed(wsio.id, 'use apps')) {
-		wsio.emit('cancelAction', 'application');
+	// Check if the user can do that
+	if (!userlist.isAllowed(wsio.id, 'use apps')
+		&& (wsio.clientType !== "display")) {
+		if (wsio.emit) {
+			wsio.emit('cancelAction', 'application');
+		}
 		return;
 	}
 
@@ -3848,9 +3847,8 @@ function wsCommand(wsio, data) {
 function wsOpenNewWebpage(wsio, data) {
 	sageutils.log('Webview', "opening", data.url);
 
-	wsLoadApplication(null, {
+	wsLoadApplication(wsio, {
 		application: "/uploads/apps/Webview",
-		wsio: wsio,
 		user: wsio.id,
 		// pass the url in the data object
 		data: data,
@@ -4775,6 +4773,58 @@ function loadConfiguration() {
 		userConfig.ui.maxWindowHeight = parseInt(userConfig.ui.maxWindowHeight, 10);
 	} else {
 		userConfig.ui.maxWindowHeight = Math.round(1.2 * maxDim); // 120%
+	}
+
+	// Voice defaults
+	if (userConfig.voice_commands === undefined) {
+		userConfig.voice_commands = {
+			enabled: true,
+			log: false,
+			// The space matters for parsing
+			system_name: "sage "
+		};
+	}
+
+	// Voice command are enabled by default
+	if (userConfig.voice_commands.enabled === undefined) {
+		userConfig.voice_commands.enabled = true;
+	} else {
+		// Test for a true value: true, on, yes, 1, ...
+		if (sageutils.isTrue(userConfig.voice_commands.enabled)) {
+			userConfig.voice_commands.enabled = true;
+		} else {
+			userConfig.voice_commands.enabled = false;
+		}
+	}
+
+	// Voice logging is off by default
+	if (userConfig.voice_commands.log === undefined) {
+		userConfig.voice_commands.log = false;
+	} else {
+		// Test for a true value: true, on, yes, 1, ...
+		if (sageutils.isTrue(userConfig.voice_commands.log)) {
+			userConfig.voice_commands.log = true;
+		} else {
+			userConfig.voice_commands.log = false;
+		}
+	}
+
+	// What the system is called, for when it passively listens
+	if (userConfig.voice_commands.system_name === undefined) {
+		// Default is "sage" the " " is important for parsing purposes
+		userConfig.voice_commands.system_name = "sage ";
+	} else {
+		if (typeof userConfig.voice_commands.system_name === "string") {
+			userConfig.voice_commands.system_name = userConfig.voice_commands.system_name.trim();
+			if (userConfig.voice_commands.system_name.length === 0) {
+				userConfig.voice_commands.system_name = "sage ";
+			} else {
+				// The " " is important for parsing purposes
+				userConfig.voice_commands.system_name += " ";
+			}
+		} else {
+			userConfig.voice_commands.system_name = "sage ";
+		}
 	}
 
 	// Check the borders settings (for hidding the borders)
@@ -5712,13 +5762,13 @@ function processInputCommand(line) {
 				}
 				var mt = assets.getMimeType(getSAGE2Path(file));
 				if (mt === "application/custom") {
-					wsLoadApplication(null, {
+					wsLoadApplication({id: "127.0.0.1:42"}, {
 						application: file,
 						user: "127.0.0.1:42",
 						position: pos
 					});
 				} else {
-					wsLoadFileFromServer(null, {
+					wsLoadFileFromServer({id: "127.0.0.1:42"}, {
 						application: "something",
 						filename: file,
 						user: "127.0.0.1:42",
@@ -6298,9 +6348,9 @@ function pointerPressOnStaticUI(uniqueID, pointerX, pointerY, data, obj, localPt
 		}
 
 		// Create the webview to the remote UI
-		wsLoadApplication(obj.data.wsio, {
+		wsLoadApplication({id: uniqueID}, {
 			application: "/uploads/apps/Webview",
-			user: obj.data.wsio.id,
+			user: uniqueID,
 			// pass the url in the data object
 			data: {
 				id:  uniqueID,
@@ -8915,7 +8965,7 @@ function keyPress(uniqueID, pointerX, pointerY, data) {
 		// Pressing ? for help (with shift)
 		if (data.code === 63 && remoteInteraction[uniqueID].SHIFT) {
 			// Load the cheet sheet on the wall
-			wsLoadApplication(null, {
+			wsLoadApplication({id: "127.0.0.1:42"}, {
 				application: "/uploads/pdfs/cheat-sheet.pdf",
 				user: "127.0.0.1:42",
 				// position in center and 100pix down
