@@ -23,7 +23,6 @@
 
 // Object to hold chart references
 var charts = {};
-var clientCharts = {};
 
 
 
@@ -35,6 +34,7 @@ function makeSvg(domElementID, dim) {
 	width = width - chartMargin.left - chartMargin.right;
 	height = height - chartMargin.top - chartMargin.bottom;
 	var box =  "0, 0, 1000, " + parseInt(1000 * (height / width));
+	d3.select(domElement).selectAll('svg').remove();
 	var svg = d3.select(domElement).append("svg")
 		.attr("width", width + chartMargin.left + chartMargin.right)
 		.attr("height", height + chartMargin.top + chartMargin.bottom)
@@ -44,44 +44,6 @@ function makeSvg(domElementID, dim) {
 		.attr("transform", "translate(" + chartMargin.left + "," + chartMargin.top + ")");
 	return {svg: svg, width: width, height: height};
 }
-
-
-function handlePageResize() {
-	var body = document.body;
-	var scaleFactor = body.clientWidth / 1920;
-	// body.style.webkitTransform = "scale(" + scaleFactor + ")";
-	// body.style.mozTransform    = "scale(" + scaleFactor + ")";
-	// body.style.transform       = "scale(" + scaleFactor + ")";
-
-	d3.selectAll('svg')
-		.attr("width", function(d) {
-			return this.parentNode.clientWidth;
-		})
-		.attr("height", function(d) {
-			return this.parentNode.clientHeight;
-		})
-		.attr("viewbox", function(d) {
-			var width = this.parentNode.clientWidth;
-			var height = this.parentNode.clientHeight;
-			console.log(this.parentNode.id, width);
-			return "0, 0, 1000, " + parseInt(1000 * (height / width));
-		});
-	/*var domElement, svg, width, height, box, rect;
-	for (var id in charts) {
-		if (charts.hasOwnProperty(id) === true) {
-			domElement = document.getElementById(id);
-			rect = domElement.getBoundingClientRect();
-			width = rect.width;
-			height = rect.height;
-			box =  "0, 0, 1000, " + parseInt(1000 * (height / width));
-			svg = charts[id].svg;
-			svg.style("width", width);
-			svg.style("height", height);
-			svg.attr("viewbox", box);
-		}
-	}*/
-}
-
 
 function initializeGradientColors(threshold) {
 	var gradientColors = [{
@@ -108,119 +70,113 @@ function initializeGradientColors(threshold) {
 }
 
 function setupLineChart(id, titleText, lineFuncY, yAxisFormat, currentTextFunc, ythreshold, multiLineChart) {
-	var chart;
-	if (charts[id]) {
-		chart = charts[id];
+	var chart = makeSvg(id);
+	// set the ranges
+	var scaleX = d3.scaleTime()
+		.range([0, chart.width]);
+	var scaleY = d3.scaleLinear()
+		.range([chart.height, 0])
+		.domain([0, 1.0]);
+
+	if (ythreshold > 0) {
+		chart.svg.append("linearGradient")
+			.attr("id", "value-gradient")
+			.attr("gradientUnits", "userSpaceOnUse")
+			.attr("x1", 0).attr("y1", scaleY(0))
+			.attr("x2", 0).attr("y2", scaleY(1.0))
+			.selectAll("stop")
+			.data(initializeGradientColors(ythreshold))
+			.enter().append("stop")
+			.attr("offset", function(d) {
+				return d.offset;
+			})
+			.attr("stop-color", function(d) {
+				return d.color;
+			});
+	}
+
+	// define the line
+	var chartLineFunc = d3.line()
+		.x(function(d) {
+			return scaleX(d.date);
+		})
+		.y(function(d) {
+			return scaleY(lineFuncY(d));
+		})
+		.curve(d3.curveLinear);
+
+	var chartLine;
+	if (multiLineChart === true) {
+		chartLine = null;
 	} else {
-		chart = makeSvg(id);
-
-		// set the ranges
-		var scaleX = d3.scaleTime()
-			.range([0, chart.width]);
-		var scaleY = d3.scaleLinear()
-			.range([chart.height, 0])
-			.domain([0, 1.0]);
-
-		if (ythreshold > 0) {
-			chart.svg.append("linearGradient")
-				.attr("id", "value-gradient")
-				.attr("gradientUnits", "userSpaceOnUse")
-				.attr("x1", 0).attr("y1", scaleY(0))
-				.attr("x2", 0).attr("y2", scaleY(1.0))
-				.selectAll("stop")
-				.data(initializeGradientColors(ythreshold))
-				.enter().append("stop")
-				.attr("offset", function(d) {
-					return d.offset;
-				})
-				.attr("stop-color", function(d) {
-					return d.color;
-				});
-		}
-
-		// define the line
-		var chartLineFunc = d3.line()
-			.x(function(d) {
-				return scaleX(d.date);
-			})
-			.y(function(d) {
-				return scaleY(lineFuncY(d));
-			})
-			.curve(d3.curveLinear);
-
-		var chartLine;
-		if (multiLineChart === true) {
-			chartLine = null;
-		} else {
-			chartLine = chart.svg.select('path');
-			if (chartLine.empty()) {
-				chartLine = chart.svg.append('path');
-				if (ythreshold === 0) {
-					chartLine.attr("class", "line");
-					chartLine.attr("stroke", "rgb(76, 164, 247)");
-				} else {
-					chartLine.attr("class", "thresholdline");
-				}
+		chartLine = chart.svg.select('path');
+		if (chartLine.empty()) {
+			chartLine = chart.svg.append('path');
+			if (ythreshold === 0) {
+				chartLine.attr("class", "line");
+				chartLine.attr("stroke", "rgb(76, 164, 247)");
+			} else {
+				chartLine.attr("class", "thresholdline");
 			}
 		}
-
-
-		var yAxisFunc = d3.axisRight(scaleY)
-			.tickSizeInner(5)
-			.tickSizeOuter(0)
-			.tickPadding(5)
-			.ticks(4)
-			.tickFormat(yAxisFormat);
-
-		var xAxisFunc = d3.axisBottom(scaleX)
-			.tickSizeInner(5)
-			.tickSizeOuter(0)
-			.tickPadding(5)
-			.ticks(d3.timeMinute.every(1))
-			.tickFormat(d3.timeFormat("%_I:%M"));
-
-		var xAxis =  chart.svg.append("g")
-			.attr("class", "x axis")
-			.attr("transform", "translate(0, " + chart.height + ")");
-
-		var yAxis = chart.svg.append("g")
-			.attr("class", "y axis")
-			.attr("transform", "translate(" + chart.width + ", 0)");
-
-		var title = chart.svg.append("text")
-			.attr("x", 0)
-			.attr("y", 0)
-			.attr('class', "title")
-			.style("text-anchor", "start")
-			.text(titleText);
-
-		var current = null;
-		if (currentTextFunc) {
-			current = chart.svg.append("text")
-				.attr("x", 0)
-				.attr("y", 15)
-				.attr('class', "title")
-				.style("text-anchor", "start");
-		}
-
-
-		charts[id] = {
-			svg: chart.svg,
-			width: chart.width,
-			height: chart.height,
-			lineChart: chartLine,
-			lineFunc: chartLineFunc,
-			scaleX: scaleX,
-			scaleY: scaleY,
-			yAxisFunc: yAxisFunc,
-			xAxisFunc: xAxisFunc,
-			yAxis: yAxis,
-			xAxis: xAxis,
-			title: title,
-			current: current,
-			currentTextFunc: currentTextFunc
-		};
 	}
+
+
+	var yAxisFunc = d3.axisRight(scaleY)
+		.tickSizeInner(5)
+		.tickSizeOuter(0)
+		.tickPadding(5)
+		.ticks(4)
+		.tickFormat(yAxisFormat);
+
+	var xAxisFunc = d3.axisBottom(scaleX)
+		.tickSizeInner(5)
+		.tickSizeOuter(0)
+		.tickPadding(5)
+		.ticks(d3.timeMinute.every(1))
+		.tickFormat(d3.timeFormat("%_I:%M"));
+
+	var xAxis =  chart.svg.append("g")
+		.attr("class", "x axis")
+		.attr("transform", "translate(0, " + chart.height + ")");
+
+	var yAxis = chart.svg.append("g")
+		.attr("class", "y axis")
+		.attr("transform", "translate(" + chart.width + ", 0)");
+
+	var title = chart.svg.append("text")
+		.attr("x", 0)
+		.attr("y", 0)
+		.attr('class', "title")
+		.style("text-anchor", "start")
+		.text(titleText);
+
+	var current = null;
+	if (currentTextFunc) {
+		current = chart.svg.append("text")
+			.attr("x", 0)
+			.attr("y", 15)
+			.attr('class', "title")
+			.style("text-anchor", "start");
+	}
+
+
+	charts[id] = {
+		svg: chart.svg,
+		width: chart.width,
+		height: chart.height,
+		lineChart: chartLine,
+		lineFunc: chartLineFunc,
+		scaleX: scaleX,
+		scaleY: scaleY,
+		yAxisFunc: yAxisFunc,
+		xAxisFunc: xAxisFunc,
+		yAxis: yAxis,
+		xAxis: xAxis,
+		title: title,
+		current: current,
+		currentTextFunc: currentTextFunc
+	};
 }
 
 
@@ -261,8 +217,8 @@ function drawDisplaySM() {
 	smDiv.style.height = divHeight + "px";
 
 	var chart;
-	if (clientCharts[smId]) {
-		chart = clientCharts[smId];
+	if (charts[smId]) {
+		chart = charts[smId];
 	} else {
 		chart = makeSvg(smId, {
 			width: smDiv.clientWidth,
@@ -272,7 +228,7 @@ function drawDisplaySM() {
 			top: 0,
 			bottom: 0
 		});
-		clientCharts[smId] = {
+		charts[smId] = {
 			svg: chart.svg
 		};
 	}
@@ -362,7 +318,7 @@ function drawDisplaySM() {
 		.attr('stroke', 'white');
 	clientSM.append('text')
 		.attr('id', 'displaytext')
-		.attr('x', width / 2)
+		.attr('x', 5 + width / 2)
 		.attr('text-anchor', 'middle')
 		.attr('alignment-baseline', 'middle')
 		.attr('y', 5 + barHeight * 0.5)

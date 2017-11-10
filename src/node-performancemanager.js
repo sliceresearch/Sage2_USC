@@ -624,8 +624,8 @@ function removeObjectsFromArrayOnPropertyValue(array, property, value, condition
 	switch (condition) {
 		case 'lt':
 			mapFunc = function(d) {
-				if ((d !== null) && (d !== undefined)){
-					return d[property] < value;	
+				if ((d !== null) && (d !== undefined) && (d[property] < value)){
+					return true;	
 				} else {
 					return false;
 				}
@@ -670,9 +670,8 @@ function removeObjectsFromArrayOnPropertyValue(array, property, value, condition
 			break;
 	}
 	var results = array.map(mapFunc);
-
 	var count = 0;
-	for (var i = 0; i < results.length; i++) {
+	for (var i = results.length - 1; i >= 0; i--) {
 		if (results[i] === true) {
 			array.splice(i, 1);
 			count++;
@@ -680,7 +679,6 @@ function removeObjectsFromArrayOnPropertyValue(array, property, value, condition
 	}
 	return count;
 }
-
 
 /**
   * Saves metric data into current value placeholder and history list
@@ -1034,7 +1032,7 @@ PerformanceManager.prototype.getTrafficData = function() {
 function checkForNegatives(obj) {
 	for (var k in obj) {
 		if (obj.hasOwnProperty(k)) {
-			if (Object.prototype.toString.call(obj[k]) === '[object Number]' && obj[k] < 0) {
+			if (typeof obj[k] === 'number' && isNaN(obj[k]) === false && obj[k] < 0) {
 				return true;
 			}
 		}

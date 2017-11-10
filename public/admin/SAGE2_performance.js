@@ -142,6 +142,8 @@ function setupListeners(wsio) {
 	var heading1  = document.getElementById('serverheading');
 	// Got a reply from the server
 	wsio.on('initialize', function() {
+		colors.push(...d3.schemeCategory20);
+		colors.push(...d3.schemeCategory20b);
 		initializeCharts();
 	});
 
@@ -200,7 +202,7 @@ function setupListeners(wsio) {
 	});
 
 	wsio.on('addDisplayHardwareInformation', function(data) {
-		if (Object.prototype.toString.call(data) === '[object Array]') {
+		if (Array.isArray(data) === true) {
 			clients.hardware = data;
 		} else {
 			clients.hardware.push(data);	
@@ -220,7 +222,7 @@ function setupListeners(wsio) {
 	});
 
 	wsio.on('performanceData', function(data) {
-		if (Object.prototype.toString.call(data.cpuLoad) === '[object Array]') {
+		if (Array.isArray(data.cpuLoad) === true) {
 			// History has been sent
 			saveData('cpuLoad', data.cpuLoad, true);
 			saveData('memUsage', data.memUsage, true);
@@ -245,11 +247,12 @@ function setupListeners(wsio) {
 			saveData('serverTraffic', data.serverTraffic);
 			if (data.displayPerf !== null && data.displayPerf !== undefined && data.displayPerf.length > 0) {
 				clients.performanceMetrics = data.displayPerf;
+				var now = clients.performanceMetrics[0].date;
 				clients.performanceMetrics.sort(function(a, b) {
 					return a.clientID - b.clientID;
 				});
 				clients.history.push(...clients.performanceMetrics);
-				var durationAgo = Date.now() - durationInMinutes * (60 * 1000);
+				var durationAgo = now - durationInMinutes * (60 * 1000);
 				removeObjectsFromArrayOnPropertyValue(clients.history, 'date', durationAgo, 'lt');
 				if (clients.performanceMetrics.length > clients.hardware.length) {
 					wsio.emit("requestClientUpdate");
@@ -263,16 +266,8 @@ function setupListeners(wsio) {
 			}
 
 			findMaxValues();
-			updateLineChart('cpuload', performanceMetrics.history.cpuLoad);
-			updateLineChart('serverload', performanceMetrics.history.serverLoad);
-			updateLineChart('memusage', performanceMetrics.history.memUsage);
-			updateLineChart('servermem', performanceMetrics.history.serverLoad);
-			updateLineChart('servertraffic', performanceMetrics.history.serverTraffic);
-			updateLineChart('systemtraffic', performanceMetrics.history.network);
-
-			cleanUpSelectedDisplayList();
-			drawDisplaySM();
-			showDisplayClientsHistory();
+			initializeCharts();
+			drawCharts();
 		}
 
 		if (performanceMetrics.staticInformation === null ||
@@ -283,7 +278,7 @@ function setupListeners(wsio) {
 
 	// Socket close event (ie server crashed)
 	wsio.on('close', function(evt) {
-		showSAGE2Message("Server offline");
+		//showSAGE2Message("Server offline");
 		var refresh = setInterval(function() {
 			// make a dummy request to test the server every 2 sec
 			var xhr = new XMLHttpRequest();
@@ -302,25 +297,51 @@ function setupListeners(wsio) {
 	});
 }
 
+
+function drawCharts() {
+	updateLineChart('cpuload', performanceMetrics.history.cpuLoad);
+	updateLineChart('serverload', performanceMetrics.history.serverLoad);
+	updateLineChart('memusage', performanceMetrics.history.memUsage);
+	updateLineChart('servermem', performanceMetrics.history.serverLoad);
+	updateLineChart('servertraffic', performanceMetrics.history.serverTraffic);
+	updateLineChart('systemtraffic', performanceMetrics.history.network);
+
+	cleanUpSelectedDisplayList();
+	drawDisplaySM();
+	showDisplayClientsHistory();
+}
+
+
+function handlePageResize() {
+	var body = document.body;
+	var scaleFactor = body.clientWidth / 1920;
+	// body.style.webkitTransform = "scale(" + scaleFactor + ")";
+	// body.style.mozTransform    = "scale(" + scaleFactor + ")";
+	// body.style.transform       = "scale(" + scaleFactor + ")";
+
+	d3.selectAll('svg')
+		.attr("width", function(d) {
+			return this.parentNode.clientWidth;
+		})
+		.attr("height", function(d) {
+			return this.parentNode.clientHeight;
+		})
+		.attr("viewbox", function(d) {
+			var width = this.parentNode.clientWidth;
+			var height = this.parentNode.clientHeight;
+			//console.log(this.parentNode.id, width);
+			return "0, 0, 1000, " + parseInt(1000 * (height / width));
+		});
+	initializeCharts();
+	drawCharts();
+}
+
 //
 // Show error message
 // if time given as parameter in seconds, close after delay
 //
 function showSAGE2Message(message, delay) {
-	var aMessage = webix.alert({
-		type:  "alert-warning",
-		title: "SAGE2 Message",
-		ok:    "OK",
-		width: "40%",
-		text:  "<span style='font-weight:bold;'>" + message + "</span>"
-	});
-	if (delay) {
-		setTimeout(function() {
-			if (aMessage) {
-				webix.modalbox.hide(aMessage);
-			}
-		}, delay * 1000);
-	}
+	// Display server offline message
 }
 
 
@@ -430,13 +451,14 @@ function saveData(metric, data, history) {
 	// time in seconds
 	if (history === true) {
 		performanceMetrics.history[metric] = data;
-	} else {
+	} else if (data !== null) {
 		// Current value
 		performanceMetrics[metric] = data;
+		var now = data.date;
 		// Add data to the historic list
 		performanceMetrics.history[metric].push(data);
 
-		var durationAgo = Date.now() - durationInMinutes * (60 * 1000);
+		var durationAgo = now - durationInMinutes * (60 * 1000);
 		removeObjectsFromArrayOnPropertyValue(performanceMetrics.history[metric], "date", durationAgo, 'lt');
 	}
 }
@@ -568,9 +590,6 @@ function initializeCharts() {
 	setupLineChart('systemtraffic', 'System Traffic', function(d) {
 		return (d.totalOutBound + d.totalInBound) / performanceMetrics.networkMax;
 	}, yAxisFormatNetworkSystem, currentSystemTrafficText, 0);
-
-	colors.push(...d3.schemeCategory20);
-	colors.push(...d3.schemeCategory20b);
 }
 
 
@@ -665,9 +684,8 @@ function removeObjectsFromArrayOnPropertyValue(array, property, value, condition
 			break;
 	}
 	var results = array.map(mapFunc);
-
 	var count = 0;
-	for (var i = 0; i < results.length; i++) {
+	for (var i = results.length - 1; i >= 0; i--) {
 		if (results[i] === true) {
 			array.splice(i, 1);
 			count++;
@@ -688,7 +706,7 @@ function getNewColor(colorMap) {
 function checkForNegatives(obj) {
 	for (var k in obj) {
 		if (obj.hasOwnProperty(k)) {
-			if (Object.prototype.toString.call(obj[k]) == '[object Number]' && obj[k] < 0) {
+			if (typeof obj[k] === 'number' && isNaN(obj[k]) === false && obj[k] < 0) {
 				return true;
 			}
 		}
@@ -833,3 +851,5 @@ function cleanUpSelectedDisplayList () {
 		}
 	}
 }
+
+
