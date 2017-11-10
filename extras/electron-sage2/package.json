@@ -1,6 +1,6 @@
 {
   "name": "sage2-ui",
-  "version": "2.9.0",
+  "version": "3.0.0",
   "description": "SAGE2 UI Lite",
   "main": "src/main.js",
   "scripts": {
