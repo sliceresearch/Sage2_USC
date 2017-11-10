@@ -1083,8 +1083,8 @@ const SAGE2_interaction = (function() {
 										view: "button", id: "login_cancel", label: "Cancel", type: "prev",
 										click: function() {
 											this.getTopParentView().hide();
-											if (callingView) {
-												callingView.show();
+											if (callingView && $$('settings_dialog')) {
+												$$('settings_dialog').show();
 											}
 										}
 									},
@@ -1092,8 +1092,13 @@ const SAGE2_interaction = (function() {
 										view: "button", id: "login_create", label: "Create new user",
 										click: function() {
 											let data = $$("login_form").getValues();
-											data.SAGE2_ptrName = _userSettings.SAGE2_ptrName;
-											data.SAGE2_ptrColor = _userSettings.SAGE2_ptrColor;
+											if ($$("settings_dialog")) {
+												data.SAGE2_ptrName = $$("user_name").getValue();
+												data.SAGE2_ptrColor = $$("user_color").getValue();
+											} else {
+												data.SAGE2_ptrName = _userSettings.SAGE2_ptrName;
+												data.SAGE2_ptrColor = _userSettings.SAGE2_ptrColor;
+											}
 											wsio.emit('createUser', data);
 										}
 									},
@@ -1152,8 +1157,8 @@ const SAGE2_interaction = (function() {
 			if ($$("user_login")) {
 				webix.ui({
 					view: "button", id: "user_login",
-					type: _loggedIn ? "warning" : "next",
-					label: _loggedIn ? "Log out" : "Log in",
+					template: "<button style='border:none; color:#555; background:#ddd;'>#label#</button>",
+					label: _loggedIn ? "Sign out" : "Sign in for more options",
 					click: () => {
 						if (_loggedIn) {
 							wsio.emit('logoutUser', _uid);
@@ -1207,9 +1212,6 @@ const SAGE2_interaction = (function() {
 							value: color
 						},
 						{
-							view: "button", id: "user_login"
-						},
-						{
 							margin: 5, cols: [
 								{
 									view: "button", id: "user_cancel", value: "Cancel"
@@ -1218,6 +1220,9 @@ const SAGE2_interaction = (function() {
 									view: "button", id: "user_confirm", value: "Ok", type: "form"
 								}
 							]
+						},
+						{
+							view: "button", id: "user_login"
 						}
 					],
 					elementsConfig: {
@@ -1226,7 +1231,6 @@ const SAGE2_interaction = (function() {
 				}
 			};
 
-			let elements = webixOptions.body.elements;
 			switch (type) {
 				case 'init':
 					webixOptions.head = "Set your pointer name and color";
@@ -1234,35 +1238,10 @@ const SAGE2_interaction = (function() {
 				case 'main':
 					// also show screen resolution options when called via toolbar
 					webixOptions.head = "Settings";
-					var userElements;
+					let elements = webixOptions.body.elements;
+					let userElements = elements.splice(0, 2);
 
-					// if (!_loggedIn) {
-					userElements = elements.splice(0, 2);
-					// }
-					// else {
-					// 	userElements = elements.splice(0, 2,
-					// 	{
-					// 		view: "label", label: "Account", align: "center"
-					// 	},
-					// 	{
-					// 		type: "space",
-					// 		rows: [
-					// 			{
-					// 				view: "text",
-					// 				id: "user2_name",
-					// 				label: "Name",
-					// 				value: _userSettings.SAGE2_userName
-					// 			},
-					// 			{
-					// 				view: "text",
-					// 				id: "user2_email",
-					// 				label: "Email",
-					// 				value: _userSettings.SAGE2_userEmail
-					// 			}
-					// 		]
-					// 	});
-					// }
-					elements.splice(elements.length - 1, 0,
+					elements.unshift(
 						{
 							view: "label", label: "Pointer", align: "center"
 						},
@@ -1300,6 +1279,9 @@ const SAGE2_interaction = (function() {
 									]
 								}
 							]
+						},
+						{
+							view: "label"
 						}
 					);
 					break;
