@@ -617,51 +617,68 @@ PerformanceManager.prototype.saveDisplayPerformanceData = function(id, idx, data
 
 };
 
+
 function removeObjectsFromArrayOnPropertyValue(array, property, value, condition) {
 	// Current value
-	var filterFunc;
+	var mapFunc;
 	switch (condition) {
 		case 'lt':
-			filterFunc = function(d) {
-				return d[property] < value;
+			mapFunc = function(d) {
+				if ((d !== null) && (d !== undefined)){
+					return d[property] < value;	
+				} else {
+					return false;
+				}
 			};
 			break;
 		case 'gt':
-			filterFunc = function(d) {
-				return d[property] > value;
+			mapFunc = function(d) {
+				if ((d !== null) && (d !== undefined)){
+					return d[property] > value;	
+				} else {
+					return false;
+				}
 			};
 			break;
 		case 'lte':
-			filterFunc = function(d) {
-				return d[property] <= value;
+			mapFunc = function(d) {
+				if ((d !== null) && (d !== undefined)){
+					return d[property] <= value;	
+				} else {
+					return false;
+				}
 			};
 			break;
 		case 'gte':
-			filterFunc = function(d) {
-				return d[property] >= value;
+			mapFunc = function(d) {
+				if ((d !== null) && (d !== undefined)){
+					return d[property] >= value;	
+				} else {
+					return false;
+				}
 			};
 			break;
 		case 'eq':
 		default:
-			filterFunc = function(d) {
-				return d[property] === value;
+			mapFunc = function(d) {
+				if ((d !== null) && (d !== undefined)){
+					return d[property] === value;	
+				} else {
+					return false;
+				}
 			};
 			break;
 	}
-	var keys = array.map(function(d, i) {
-		var obj = {
-			arrIdx: i
-		};
-		obj[property] = d[property];
-		return obj;
-	}).filter(filterFunc);
-	for (var i = 0; i < keys.length; i++) {
-		array.splice(keys[i].arrIdx, 1);
+	var results = array.map(mapFunc);
+
+	var count = 0;
+	for (var i = 0; i < results.length; i++) {
+		if (results[i] === true) {
+			array.splice(i, 1);
+			count++;
+		}
 	}
-	if (keys.length > 0) {
-		return true;
-	}
-	return false;
+	return count;
 }
 
 
