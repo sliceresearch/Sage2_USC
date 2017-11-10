@@ -27,16 +27,16 @@ const pathname = 'logs';
 const filename = 'users.json';
 
 let nAnonClients = 0;
-const strNames = "Aardvark Albatross Alligator Alpaca Ant Anteater Antelope Ape Armadillo Baboon " +
+const strNames = "Aardvark Albatross Alligator Alpaca Ant Anteater Antelope Armadillo " +
 	"Badger Barracuda Bat Beaver Bee Bison Boar Buffalo Butterfly Camel Caribou Cassowary Cat "    +
-	"Caterpillar Cheetah Chicken Chimpanzee Chinchilla Cobra Cormorant Coyote Crab Crane "         +
-	"Crocodile Crow Deer Dog Dolphin Donkey Dove Dragonfly Duck Eagle Echidna Eel Elephant "       +
-	"Emu Falcon Ferret Finch Flamingo Fox Frog Gazelle Gerbil Giraffe Goat Goldfish Goose "        +
-	"Gorilla Grasshopper Hamster Hawk Hedgehog Heron Hippo Horse Hummingbird Hyena Ibex Jackal "   +
-	"Jaguar Jellyfish Kangaroo Koala Lark Lemur Leopard Lion Llama Lobster Manatee Mandrill "      +
+	"Caterpillar Cheetah Chicken Chinchilla Cobra Cormorant Coyote Crab Crane Crocodile "         +
+	"Crow Deer Dinosaur Dog Dolphin Dove Dragonfly Duck Eagle Echidna Eel Elephant "       +
+	"Emu Falcon Ferret Finch Flamingo Fox Frog Gazelle Giraffe Goat Goldfish Goose Gorilla "        +
+	"Grasshopper Grizzly Hamster Hawk Hedgehog Heron Hippo Horse Hummingbird Hyena Ibex Jackal "   +
+	"Jaguar Jellyfish Kangaroo Koala Lark Lemur Leopard Lion Llama Lobster Manatee "      +
 	"Mink Mole Mongoose Monkey Mouse Narwhal Newt Nightingale Octopus Okapi Opossum Ostrich "      +
 	"Otter Owl Oyster Panther Parrot Panda Partridge Pelican Penguin Pheasant Pigeon Porcupine "   +
-	"Porpoise Quail Rabbit Raccoon Raven Rhinoceros Salamander Seahorse Seal Shark Sheep Skunk "   +
+	"Porpoise Quail Rabbit Raccoon Raven Rhinoceros Salamander Seahorse Seal Shark Sheep "   +
 	"Sloth Snail Squid Squirrel Starling Swan Tapir Tiger T-rex Turtle Walrus Weasel Whale "       +
 	"Wolf Wombat Yak Zebra";
 const tempNames = strNames.split(' ');
@@ -301,6 +301,10 @@ class UserList {
 	* @return {Boolean} true if user is permitted to perform this action
 	*/
 	isAllowed(ip, action) {
+		// server's special case
+		if (ip === "127.0.0.1:42") {
+			return true;
+		}
 		if (!this.clients[ip]) {
 			return false;
 		}

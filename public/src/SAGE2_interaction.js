@@ -1452,6 +1452,10 @@ const SAGE2_interaction = (function() {
 		// Check if a domain cookie exists for the name
 		var cookieName = getCookie('SAGE2_ptrName');
 		if (cookieName) {
+			if (cookieName.startsWith('Anon ')) {
+				deleteCookie('SAGE2_ptrName');
+				cookieName = null;
+			}
 			_userSettings.SAGE2_ptrName = cookieName;
 		}
 		// Check if a domain cookie exists for the color

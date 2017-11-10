@@ -3131,7 +3131,7 @@ function addMenuEntry(menuDiv, entry, id, app) {
 							data.app = this.app;
 							data.func = this.callback;
 							data.parameters = this.parameters;
-							data.parameters.clientName = document.getElementById('sage2PointerLabel').value;
+							data.parameters.clientName = interactor.pointerLabel;
 							data.parameters.clientId = interactor.uniqueID;
 							wsio.emit('callFunctionOnApp', data);
 						}

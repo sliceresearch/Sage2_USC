@@ -1,222 +1,4 @@
-<!DOCTYPE html>
-<html>
-<head lang="en">
-<meta charset="utf-8">
-<title>User console</title>
-
-<script type="text/license">
-	// SAGE2 is available for use under the SAGE2 Software License
-	//
-	// University of Illinois at Chicago's Electronic Visualization Laboratory (EVL)
-	// and University of Hawai'i at Manoa's Laboratory for Advanced Visualization and
-	// Applications (LAVA)
-	//
-	// See full text, terms and conditions in the LICENSE.txt included file
-	//
-	// Copyright (c) 2014-15
-</script>
-
-<script src="../src/websocket.io.js"></script>
-<script src="../src/SAGE2_runtime.js"></script>
-
-<style>
-	body {
-		font-family: Arimo, Helvetica, sans-serif;
-		background:white;
-		color: #333;
-		text-align:left;
-		font-size:14px;
-		-webkit-font-smoothing: antialiased;
-		-moz-osx-font-smoothing: grayscale;
-		padding:20px;
-	}
-
-	button.tab {
-		font:inherit;
-		font-weight:bold;
-		display:inline-block;
-		border:none;
-		padding:10px;
-		color:#498;
-		background:#fafafa;
-		box-shadow:2px 2px 5px #ccc;
-		text-decoration:none;
-		margin-right:10px;
-		outline:none;
-		cursor:pointer;
-	}
-	button.tab:active, button.tab.active:active {
-		background:#ddd;
-		box-shadow:none;
-	}
-	button.tab.active {
-		background:#f0f0f0;
-		box-shadow:none;
-	}
-
-	p {
-		font-family:monospace;
-		margin:1em 0;
-		font-size:13.5px;
-	}
-
-	b {
-		color: crimson;
-		font-weight:700;
-		font-size:13.5px;
-		font-family:monospace;
-		margin-right:10px;
-		min-width:80px;
-		display:inline-block;
-	}
-
-	.box {
-		background:#f0f0f0;
-		margin-top: 15px;
-		padding: 20px;
-		min-height:100px;
-		overflow-x:auto;
-	}
-
-	section {
-		display:none;
-	}
-	section.active {
-		display:block;
-	}
-	section > ul {
-		padding:0;
-		list-style-type: none;
-		margin:0;
-	}
-	ul, li {
-		list-style-type: none;
-	}
-
-	table {
-		margin:-5px;
-		width:100%;
-		border-collapse: collapse;
-	}
-	tr:first-of-type {
-		border-bottom:1px solid #ccc;		
-	}
-	th {
-		padding: 5px;
-		padding-bottom:10px;
-		font-weight:400;
-		vertical-align: top;
-		white-space: nowrap;
-		padding-right:20px;
-	}
-	tr:first-of-type+tr td {
-		padding-top:15px;
-	}
-	td {
-		padding:8px 5px;
-	}
-	span.cursor {
-		display:inline-block;
-		width:0.9em;
-		height:0.9em;
-		border:1px solid white;
-		box-shadow:1px 1px 2px rgba(0,0,0,0.5);
-	}
-
-	#permission--nav {
-		margin-top:35px;
-		font-weight:bold;
-	}
-	#permission--nav select,
-	#permission--nav button {
-		font-size:inherit;
-		border:none;
-		border-radius:0;
-		padding:5px 10px;
-		outline:none;
-		cursor:pointer;
-		background:white;
-		display:inline-block;
-		margin-left:5px;
-	}
-	#permission--nav select {
-		height:2em;
-		border:1px solid #ccc;
-	}
-
-	#permission--nav button {
-		box-shadow:2px 2px 5px #ccc;
-	}
-	#permission--nav button:active {
-		box-shadow: none;
-		background:#ccc;
-	}
-
-	#permission--input {
-		padding:5px 10px;
-		border:1px solid #ccc;
-		width:6em;
-		outline:none;
-		font-size:inherit;
-	}
-	#permission--input:focus {
-		background:#fafafa;
-	}
-
-	#permission--form {
-		display:none;
-	}
-	#permission--nav.adding select,
-	.adding #permission--new {
-		display:none;
-	}
-	.adding #permission--form {
-		display:inline-block;
-	}
-
-</style>
-</head>
-
-<body>
-	<button class="tab active" data-tab="users">Users</button>
-	<button class="tab" data-tab="log">Log</button>
-
-	<section id="users" class="active">
-		<div class="box">
-			<table id="user--table">
-				<tr>
-					<th></th>
-					<th>Pointer name</th>
-					<th>User name</th>
-					<th>Role</th>
-					<th>IP address</th>
-				</tr>
-			</table>
-		</div>
-
-		<div class="box">
-			<table id="permission--list">
-			</table>
-
-			<div id="permission--nav">
-				Permissions:
-				<select id="permission--select">
-				</select>
-				<button id="permission--new">New</button>
-				<form id="permission--form">
-					<input id="permission--input" placeholder="Title">
-					<button id="permission--add">Add</button>
-					<button id="permission--cancel">Cancel</button>
-				</form>
-			</div>
-		</div>
-
-	</section>
-	<section id="log" class="box">
-	</section>
-
-<script>
-(function(){ 
+(function() {
 	let clients = {};
 	let rbac = {};
 	let rbacList = [];
@@ -225,41 +7,84 @@
 	let wsio = new WebsocketIO();
 	let session = getCookie("session");
 
-	// navigate between tabs
-	document.querySelectorAll('button.tab').forEach(btn => {
-		btn.onclick = function() {
-			let id = this.getAttribute('data-tab');
+	// attach handlers on DOM load
+	document.addEventListener('DOMContentLoaded', function() {
+		// enable navigation between screens via tabs
+		document.querySelectorAll('button.tab').forEach(btn => {
+			btn.onclick = changeView;
+		});
 
-			// toggle 'active' class for header buttons & for sections
-			let activeTab = document.querySelector('button.tab.active');
-			if (activeTab) {
-				activeTab.classList.remove('active');
-			}
-			this.classList.add('active');
+		// manage "new user model" interaction
+		document.getElementById('permission--new').onclick = openNewModelForm;
+		document.getElementById('permission--add').onclick = addNewModel;
+		document.getElementById('permission--cancel').onclick = closeNewModelForm;
 
-			let section = document.getElementById(id);
-			if (section) {
-				document.querySelectorAll('section.active').forEach(s => {
-					s.classList.remove('active');
-				});
-				section.classList.add('active');
-			}
-			return false;
-		}
+		// open socket
+		wsio.open(onSocketOpen);
+
+		// Socket close event (ie server crashed)
+		wsio.on('close', onSocketClose);
 	});
 
-	// manage "new permissions" interaction
-	document.getElementById('permission--new').onclick = function() {
+	// ********** DOM UI actions *************
+	/**
+	 * Open new view in single-page app on button click
+	 *
+	 * @method changeView
+	 */
+	function changeView() {
+		let id = this.getAttribute('data-tab');
+
+		// toggle 'active' class for header buttons & for sections
+		let activeTab = document.querySelector('button.tab.active');
+		if (activeTab) {
+			activeTab.classList.remove('active');
+		}
+		this.classList.add('active');
+
+		let section = document.getElementById(id);
+		if (section) {
+			document.querySelectorAll('section.active').forEach(s => {
+				s.classList.remove('active');
+			});
+			section.classList.add('active');
+		}
+	}
+
+	/**
+	 * Open form to enable user to create a new user model
+	 *
+	 * @method openNewModelForm
+	 */
+	function openNewModelForm() {
 		document.getElementById('permission--nav').classList.add('adding');
 		document.getElementById('permission--input').focus();
 	}
-	document.getElementById('permission--add').onclick = function() {
+
+	/**
+	 * Hide form for creating a new user model
+	 *
+	 * @method closeNewModelForm
+	 */
+	function closeNewModelForm(e) {
+		e.preventDefault();
+		document.getElementById('permission--nav').classList.remove('adding');
+		document.getElementById('permission--form').reset();
+	}
+
+	/**
+	 * Send message to server to create a new user model
+	 *
+	 * @method addNewModel
+	 */
+	function addNewModel(e) {
+		e.preventDefault();
 		let val = document.getElementById('permission--input').value;
 		if (val && val.trim()) {
 			val = val.trim();
 			if (val === 'Default' || rbacList.find(rbac => rbac.name === val)) {
 				// FIXME
-				alert('Please choose a unique name.')
+				alert('Please choose a unique name.');
 			} else {
 				document.getElementById('permission--nav').classList.remove('adding');
 				document.getElementById('permission--form').reset();
@@ -268,16 +93,15 @@
 				}
 			}
 		}
-		return false;
-	}
-	document.getElementById('permission--cancel').onclick = function() {
-		document.getElementById('permission--nav').classList.remove('adding');
-		document.getElementById('permission--form').reset();
-		return false;
 	}
 
-	// open socket
-	wsio.open(function() {
+	// ********* Socket listeners ***********
+	/**
+	 * Connect client to SAGE2 server as a 'userManager' and attach listeners
+	 *
+	 * @method onSocketOpen
+	 */
+	function onSocketOpen() {
 		wsio.emit('addClient', {
 			clientType: 'userManager',
 			session: session,
@@ -289,21 +113,28 @@
 			}
 		});
 
+		// on socket initialization
 		wsio.on('initialize', function() {
 			socketOpen = true;
 			document.getElementById('log').innerHTML = 'Listening...';
 
+			// request client and rbac data
 			wsio.emit('getActiveClients');
 			wsio.emit('getRbac');
 		});
 
+		// attach wsio event listeners
 		wsio.on('activeClientsRetrieved', handleClientsRetrieved);
 		wsio.on('rbacRetrieved', handleRbacRetrieved);
 		wsio.on('userEvent', handleUserEvent);
-	});
+	}
 
-	// Socket close event (ie server crashed)
-	wsio.on('close', function() {
+	/**
+	 * Attempt to reconnect to server on disconnect
+	 *
+	 * @method onSocketClose
+	 */
+	function onSocketClose() {
 		socketOpen = false;
 		var refresh = setInterval(function() {
 			// make a dummy request to test the server every 2 sec
@@ -320,31 +151,42 @@
 			};
 			xhr.send();
 		}, 2000);
-	});
+	}
 
-	// ********* Listeners ***********
+	/**
+	 * If new client (user) data received from server
+	 *
+	 * @method handleClientsRetrieved
+	 */
 	function handleClientsRetrieved(data) {
 		clients = data.clients;
 		rbac = data.rbac;
-
 		redrawUsers();
 	}
 
+	/**
+	 * If new rbac data received from server
+	 *
+	 * @method handleRbacRetrieved
+	 */
 	function handleRbacRetrieved(data) {
 		rbac = data.rbac;
 		rbacList = data.rbacList;
 		redrawPermissions();
 	}
 
+	/**
+	 * Log event
+	 *
+	 * @method handleUserEvent
+	 */
 	function handleUserEvent(data) {
 		logEvent(data);
-		updateClients(data);
-		console.log('user event:', data);
+		updateClients(data.type);
 	}
 
-
 	// ******* Utility functions *********
-	
+
 	// transforms string to sentence case
 	function sentenceCase(word) {
 		return word.toLowerCase().replace(/(.)/, firstLetter => firstLetter.toUpperCase());
@@ -356,9 +198,16 @@
 		return el;
 	}
 
-	// ******* UI/data handling functions *********
-	function updateClients(event) {
-		switch (event.type) {
+	// ******* Update functions *********
+	/**
+	 * Check if client has been changed and user section
+	 * needs to be redrawn
+	 *
+	 * @method updateClients
+	 * @param eventType {String} the type of the event
+	 */
+	function updateClients(eventType) {
+		switch (eventType) {
 			case 'new user':
 			case 'user edited':
 			case 'login':
@@ -372,6 +221,11 @@
 		}
 	}
 
+	/**
+	 * Repopulate table with information on connected clients
+	 *
+	 * @method redrawUsers
+	 */
 	function redrawUsers() {
 		let head = document.querySelector('#user--table tr');
 
@@ -420,7 +274,8 @@
 
 							// find all ips with the same user
 							let ips = Object.keys(clients).filter(ip => {
-								return clients[ip].user.name === selectedUser.user.name && clients[ip].user.email === selectedUser.user.email
+								let user = clients[ip].user;
+								return user.name === selectedUser.user.name && user.email === selectedUser.user.email;
 							});
 
 							wsio.emit('editUserRole', {
@@ -438,6 +293,11 @@
 		}
 	}
 
+	/**
+	 * Repopulate table with information on roles and permissions models
+	 *
+	 * @method redrawPermissions
+	 */
 	function redrawPermissions() {
 		// populate html
 		// table
@@ -455,7 +315,7 @@
 		let html = '';
 		rbac.actions.forEach((action, i) => {
 			html += '<tr><td>' + sentenceCase(action) + '</td>';
-			
+
 			rbac.roles.forEach(role => {
 				let id = 'action--' + role + '_' + i;
 				html += '<td><input type="checkbox" id="' + id + '"></td>';
@@ -492,7 +352,7 @@
 						action: action,
 						hasRole: this.checked
 					});
-				}
+				};
 			}
 		});
 
@@ -502,9 +362,14 @@
 			if (rbac) {
 				wsio.emit('switchPermissionsModel', rbac.name);
 			}
-		}
+		};
 	}
 
+	/**
+	 * Print event to screen
+	 *
+	 * @method logEvent
+	 */
 	function logEvent(event) {
 		let log = document.getElementById('log');
 
@@ -534,14 +399,8 @@
 		log.appendChild(p);
 		if (nli < 20) {
 			++nli;
-		}
-		else {
-			container.removeChild(container.querySelector('p'));
+		} else {
+			log.removeChild(log.querySelector('p'));
 		}
 	}
-})();
-</script>
-
-</body>
-</html>
-
+}());

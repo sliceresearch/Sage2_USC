@@ -716,6 +716,9 @@ var variablesUsedInVoiceHandler = {
 	tileApplications,
 	clearDisplay,
 	broadcast,
+	shareApplicationWithRemoteSite,
+	fillContextMenuWithShareSites,
+	remoteSites,
 	voiceNameMarker: "sage " // that space is important for checking // change this later to check config
 };
 var voiceHandler = new VoiceActionManager(variablesUsedInVoiceHandler);
@@ -1076,7 +1079,7 @@ function setupListeners(wsio) {
 	wsio.on('loadImageFromBuffer',                  wsLoadImageFromBuffer);
 	wsio.on('deleteElementFromStoredFiles',         wsDeleteElementFromStoredFiles);
 	wsio.on('moveElementFromStoredFiles',           wsMoveElementFromStoredFiles);
-	wsio.on('saveSession',                           wsSaveSession);
+	wsio.on('saveSession',                          wsSaveSession);
 	wsio.on('clearDisplay',                         wsClearDisplay);
 	wsio.on('deleteAllApplications',                wsDeleteAllApplications);
 	wsio.on('tileApplications',                     wsTileApplications);
@@ -1526,9 +1529,30 @@ function wsLogoutUser(wsio, data) {
 	let res = userlist.getUserById(data);
 
 	if (res.error === null) {
+		// log out user and get anon name
 		let name = userlist.track(wsio.id, {
 			SAGE2_ptrColor: res.user.SAGE2_ptrColor
 		});
+
+		// log out all instances of the user on this server
+		for (let ip in userlist.clients) {
+			let user = userlist.clients[ip].user;
+			if (user && user.name === res.user.name && user.email === res.user.email) {
+				let foundWsio = clients.find(wsio => wsio.id === ip);
+				if (foundWsio) {
+					userlist.track(ip, {
+						SAGE2_ptrColor: res.user.SAGE2_ptrColor,
+						SAGE2_ptrName: name
+					});
+
+					foundWsio.emit('loginStateChanged', {
+						login: false,
+						name: name
+					});
+				}
+			}
+		}
+
 		wsio.emit('loginStateChanged', {
 			login: false,
 			name: name
@@ -1595,6 +1619,7 @@ function wsEditRole(wsio, data) {
 	} else {
 		userlist.revokePermission(data.role, data.action);
 	}
+	wsGetRbac();
 }
 
 function wsEditUserRole(wsio, data) {
@@ -1813,10 +1838,10 @@ function wsRadialMenuClick(wsio, data) {
 
 // **************  Media Stream Functions *****************
 function wsRequestToStartMediaStream(wsio) {
-	if (userlist.isAllowed(wsio.id, 'share screen')) {
-		wsio.emit('allowAction', 'stream');
-	} else {
+	if (!userlist.isAllowed(wsio.id, 'share screen')) {
 		wsio.emit('cancelAction', 'stream');
+	} else {
+		wsio.emit('allowAction', 'stream');
 	}
 }
 
@@ -3267,14 +3292,11 @@ function wsRequestStoredFiles(wsio, data) {
 }
 
 function wsLoadApplication(wsio, data) {
-	if (!wsio) {
-		// for handling an application like webview
-		wsio = data.wsio || {
-			emit: function() { }
-		};
-	}
+	// check if the user can do that
 	if (!userlist.isAllowed(wsio.id, 'use apps')) {
-		wsio.emit('cancelAction', 'application');
+		if (wsio.emit) {
+			wsio.emit('cancelAction', 'application');
+		}
 		return;
 	}
 
@@ -3823,9 +3845,8 @@ function wsCommand(wsio, data) {
 function wsOpenNewWebpage(wsio, data) {
 	sageutils.log('Webview', "opening", data.url);
 
-	wsLoadApplication(null, {
+	wsLoadApplication(wsio, {
 		application: "/uploads/apps/Webview",
-		wsio: wsio,
 		user: wsio.id,
 		// pass the url in the data object
 		data: data,
@@ -5687,13 +5708,13 @@ function processInputCommand(line) {
 				}
 				var mt = assets.getMimeType(getSAGE2Path(file));
 				if (mt === "application/custom") {
-					wsLoadApplication(null, {
+					wsLoadApplication({id: "127.0.0.1:42"}, {
 						application: file,
 						user: "127.0.0.1:42",
 						position: pos
 					});
 				} else {
-					wsLoadFileFromServer(null, {
+					wsLoadFileFromServer({id: "127.0.0.1:42"}, {
 						application: "something",
 						filename: file,
 						user: "127.0.0.1:42",
@@ -6273,9 +6294,9 @@ function pointerPressOnStaticUI(uniqueID, pointerX, pointerY, data, obj, localPt
 		}
 
 		// Create the webview to the remote UI
-		wsLoadApplication(obj.data.wsio, {
+		wsLoadApplication({id: uniqueID}, {
 			application: "/uploads/apps/Webview",
-			user: obj.data.wsio.id,
+			user: uniqueID,
 			// pass the url in the data object
 			data: {
 				id:  uniqueID,
@@ -8040,8 +8061,9 @@ function pointerReleaseOnStaticUI(uniqueID, pointerX, pointerY, obj) {
  * Shares an application with a remote site
  *
  * @method shareApplicationWithRemoteSite
- * @param  {Object} wsio - The websocket of sender.
- * @param  {Object} data - The object needed to get menu, properties described below.
+ * @param  {String} uniqueID - The wsio.id.
+ * @param  {Object} app - The app object to share. Usually: {application: SAGE2Items.applications.list[data.app]}
+ * @param  {Object} remote - Remote site. Usually: remoteSites[data.parameters.remoteSiteIndex]
  */
 function shareApplicationWithRemoteSite(uniqueID, app, remote) {
 	var sharedId = app.application.id + "_" + config.host + ":" + config.secure_port + "+" + remote.wsio.id;
@@ -8889,7 +8911,7 @@ function keyPress(uniqueID, pointerX, pointerY, data) {
 		// Pressing ? for help (with shift)
 		if (data.code === 63 && remoteInteraction[uniqueID].SHIFT) {
 			// Load the cheet sheet on the wall
-			wsLoadApplication(null, {
+			wsLoadApplication({id: "127.0.0.1:42"}, {
 				application: "/uploads/pdfs/cheat-sheet.pdf",
 				user: "127.0.0.1:42",
 				// position in center and 100pix down
@@ -9710,14 +9732,14 @@ function showOrHideWidgetLinks(data) {
  * @param  {Integer} data.yClick - Where client clicked on their screen, because this is async.
  */
 function wsRequestAppContextMenu(wsio, data) {
-	// first find if there is an app at location, top most element.
+	// First find if there is an app at location, top most element.
 	var obj = interactMgr.searchGeometry({x: data.x, y: data.y});
 	if (obj !== null) {
-		// check if it was an application
+		// Check if it was an application
 		if (SAGE2Items.applications.list.hasOwnProperty(obj.data.id)) {
-			// if an app was under the right-click
+			// If an app was under the right-click
 			if (SAGE2Items.applications.list[obj.data.id].contextMenu) {
-				// before passing back the menu, fill in the share options.
+				// Before passing back the menu, fill in the share options.
 				let contextMenu = SAGE2Items.applications.list[obj.data.id].contextMenu;
 				fillContextMenuWithShareSites(contextMenu, obj.data.id);
 				// If we already have the menu info, send it
@@ -9755,6 +9777,7 @@ function wsRequestAppContextMenu(wsio, data) {
  *
  * @method fillContextMenuWithShareSites
  * @param  {Object} contextMenu - The context menu of the application.
+ * @param  {String} appId - Unique string to get app, SAGE2Items.applications.list[appId].
  */
 function fillContextMenuWithShareSites(contextMenu, appId) {
 	let shareIndex = -1;

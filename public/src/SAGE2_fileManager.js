@@ -403,25 +403,37 @@ function FileManager(wsio, mydiv, uniqueID) {
 
 	// Help
 	var helpActions = {
-		help_menu: {value: "Help",
-			tooltip: "Presents help on how to setup desktop sharing and\nlist supported media formats",
+		help_menu: {value: "SAGE2 Help",
+			tooltip: "Help on how to setup desktop sharing and\nlist supported media formats",
 			callback: function (evt) {
 				window.open("help/index.html", '_blank');
 			}
 		},
 
-		shortcuts_menu: {value: "Shortcuts",
+		separator1: { value: "separator" },
+
+		shortcuts_menu: {value: "Interaction",
 			tooltip: "Mouse and keyboard operations and shortcuts",
 			callback: function (evt) {
-				webix.modalbox({
-					title: "Mouse and keyboard operations",
-					buttons: ["Ok"],
-					text: "<img src=/images/cheat-sheet.jpg width=100%>",
-					width: "70%",
-					height: "50%"
-				});
+				window.open("help/interaction.html", '_blank');
+				// webix.modalbox({
+				// 	title: "Mouse and keyboard operations",
+				// 	buttons: ["Ok"],
+				// 	text: "<img src=/images/cheat-sheet.jpg width=100%>",
+				// 	width: "70%",
+				// 	height: "50%"
+				// });
 			}
 		},
+
+		voice_menu: {value: "Voice Commands",
+			tooltip: "Quick Reference for Voice Commands",
+			callback: function (evt) {
+				window.open("help/voice.html", '_blank');
+			}
+		},
+
+		separator2: { value: "separator" },
 
 		forum_menu: {value: "User Forum",
 			tooltip: "User forum on Google Groups",
@@ -436,7 +448,7 @@ function FileManager(wsio, mydiv, uniqueID) {
 			}
 		},
 		about_menu: {value: "About",
-			tooltip: "Shows the SAGE2 server version and configuration",
+			tooltip: "SAGE2 server version and configuration",
 			callback: function (evt) {
 				var versionText = buildAboutHTML();
 				// Open the popup
@@ -496,6 +508,12 @@ function FileManager(wsio, mydiv, uniqueID) {
 			tooltip: "Opens a new page displaying the server debug messages",
 			callback: function (evt) {
 				window.open("admin/console.html", '_blank');
+			}
+		},
+		user_menu: {value: "User Console",
+			tooltip: "Opens a new page displaying users and roles",
+			callback: function (evt) {
+				window.open("admin/SAGE2_user.html", '_blank');
 			}
 		},
 		performance_menu: {value: "Performance Console",

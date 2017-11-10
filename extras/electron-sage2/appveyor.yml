@@ -37,11 +37,12 @@ artifacts:
 
 deploy:
   - provider: FTP
-    host: ftp.evl.uic.edu
+    host: ftp.sagecommons.org
     protocol: ftp
-    username: anonymous
-    password: toto@gmail.com
-    folder: /pub/INcoming/luc/app
+    username: upload@sagecommons.org
+    password:
+      secure: L4I4NkKN7mrQww7GgwPLrA==
+    folder: /UI
     artifact: sage2-ui
 
 notifications:
