@@ -612,8 +612,8 @@ PerformanceManager.prototype.saveDisplayPerformanceData = function(id, idx, data
 	removeObjectsFromArrayOnPropertyValue(this.clients.performanceMetrics, "id", id, 'eq');
 	this.clients.performanceMetrics.push(clientData);
 
-	removeObjectsFromArrayOnPropertyValue(this.performanceMetrics.history['clients'], "date", durationAgo, 'lt');
-	this.performanceMetrics.history['clients'].push(clientData);
+	removeObjectsFromArrayOnPropertyValue(this.performanceMetrics.history.clients, "date", durationAgo, 'lt');
+	this.performanceMetrics.history.clients.push(clientData);
 
 };
 
@@ -624,8 +624,8 @@ function removeObjectsFromArrayOnPropertyValue(array, property, value, condition
 	switch (condition) {
 		case 'lt':
 			mapFunc = function(d) {
-				if ((d !== null) && (d !== undefined) && (d[property] < value)){
-					return true;	
+				if ((d !== null) && (d !== undefined)) {
+					return d[property] < value;
 				} else {
 					return false;
 				}
@@ -633,8 +633,8 @@ function removeObjectsFromArrayOnPropertyValue(array, property, value, condition
 			break;
 		case 'gt':
 			mapFunc = function(d) {
-				if ((d !== null) && (d !== undefined)){
-					return d[property] > value;	
+				if ((d !== null) && (d !== undefined)) {
+					return d[property] > value;
 				} else {
 					return false;
 				}
@@ -642,8 +642,8 @@ function removeObjectsFromArrayOnPropertyValue(array, property, value, condition
 			break;
 		case 'lte':
 			mapFunc = function(d) {
-				if ((d !== null) && (d !== undefined)){
-					return d[property] <= value;	
+				if ((d !== null) && (d !== undefined)) {
+					return d[property] <= value;
 				} else {
 					return false;
 				}
@@ -651,8 +651,8 @@ function removeObjectsFromArrayOnPropertyValue(array, property, value, condition
 			break;
 		case 'gte':
 			mapFunc = function(d) {
-				if ((d !== null) && (d !== undefined)){
-					return d[property] >= value;	
+				if ((d !== null) && (d !== undefined)) {
+					return d[property] >= value;
 				} else {
 					return false;
 				}
@@ -661,8 +661,8 @@ function removeObjectsFromArrayOnPropertyValue(array, property, value, condition
 		case 'eq':
 		default:
 			mapFunc = function(d) {
-				if ((d !== null) && (d !== undefined)){
-					return d[property] === value;	
+				if ((d !== null) && (d !== undefined)) {
+					return d[property] === value;
 				} else {
 					return false;
 				}

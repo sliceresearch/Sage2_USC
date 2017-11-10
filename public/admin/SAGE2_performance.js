@@ -138,7 +138,6 @@ function SAGE2_init() {
 function setupListeners(wsio) {
 	// Get elements from the DOM
 	var terminal1 = document.getElementById('terminal1');
-	var terminal2 = document.getElementById('terminal2');
 	var heading1  = document.getElementById('serverheading');
 	// Got a reply from the server
 	wsio.on('initialize', function() {
@@ -205,12 +204,12 @@ function setupListeners(wsio) {
 		if (Array.isArray(data) === true) {
 			clients.hardware = data;
 		} else {
-			clients.hardware.push(data);	
+			clients.hardware.push(data);
 		}
 		showDisplayHardwareInformation();
 	});
 	wsio.on('removeDisplayHardwareInformation', function(data) {
-		if(data.id !== null && data.id !== undefined) {
+		if (data.id !== null && data.id !== undefined) {
 			var closedDisplay = clients.hardware.findIndex(function(d) {
 				return d.id === data.id;
 			});
@@ -313,8 +312,6 @@ function drawCharts() {
 
 
 function handlePageResize() {
-	var body = document.body;
-	var scaleFactor = body.clientWidth / 1920;
 	// body.style.webkitTransform = "scale(" + scaleFactor + ")";
 	// body.style.mozTransform    = "scale(" + scaleFactor + ")";
 	// body.style.transform       = "scale(" + scaleFactor + ")";
@@ -346,6 +343,7 @@ function showSAGE2Message(message, delay) {
 
 
 function showDisplayHardwareInformation() {
+	var terminal2 = document.getElementById('terminal2');
 	var data = clients.hardware;
 	if (data.length > 0) {
 		var msg = "";
@@ -638,8 +636,8 @@ function removeObjectsFromArrayOnPropertyValue(array, property, value, condition
 	switch (condition) {
 		case 'lt':
 			mapFunc = function(d) {
-				if ((d !== null) && (d !== undefined)){
-					return d[property] < value;	
+				if ((d !== null) && (d !== undefined)) {
+					return d[property] < value;
 				} else {
 					return false;
 				}
@@ -647,8 +645,8 @@ function removeObjectsFromArrayOnPropertyValue(array, property, value, condition
 			break;
 		case 'gt':
 			mapFunc = function(d) {
-				if ((d !== null) && (d !== undefined)){
-					return d[property] > value;	
+				if ((d !== null) && (d !== undefined)) {
+					return d[property] > value;
 				} else {
 					return false;
 				}
@@ -656,8 +654,8 @@ function removeObjectsFromArrayOnPropertyValue(array, property, value, condition
 			break;
 		case 'lte':
 			mapFunc = function(d) {
-				if ((d !== null) && (d !== undefined)){
-					return d[property] <= value;	
+				if ((d !== null) && (d !== undefined)) {
+					return d[property] <= value;
 				} else {
 					return false;
 				}
@@ -665,8 +663,8 @@ function removeObjectsFromArrayOnPropertyValue(array, property, value, condition
 			break;
 		case 'gte':
 			mapFunc = function(d) {
-				if ((d !== null) && (d !== undefined)){
-					return d[property] >= value;	
+				if ((d !== null) && (d !== undefined)) {
+					return d[property] >= value;
 				} else {
 					return false;
 				}
@@ -675,8 +673,8 @@ function removeObjectsFromArrayOnPropertyValue(array, property, value, condition
 		case 'eq':
 		default:
 			mapFunc = function(d) {
-				if ((d !== null) && (d !== undefined)){
-					return d[property] === value;	
+				if ((d !== null) && (d !== undefined)) {
+					return d[property] === value;
 				} else {
 					return false;
 				}
