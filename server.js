@@ -3293,8 +3293,9 @@ function wsRequestStoredFiles(wsio, data) {
 }
 
 function wsLoadApplication(wsio, data) {
-	// check if the user can do that
-	if (!userlist.isAllowed(wsio.id, 'use apps')) {
+	// Check if the user can do that
+	if (!userlist.isAllowed(wsio.id, 'use apps')
+		&& (wsio.clientType !== "display")) {
 		if (wsio.emit) {
 			wsio.emit('cancelAction', 'application');
 		}
