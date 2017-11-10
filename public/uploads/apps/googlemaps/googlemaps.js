@@ -465,18 +465,21 @@ var googlemaps = SAGE2_App.extend({
 		entry.parameters     = {};
 		entry.inputField     = true;
 		entry.inputFieldSize = 5;
+		entry.voiceEntryOverload = true;
 		entries.push(entry);
 
 		entry   = {};
 		entry.description = "Zoom in";
 		entry.callback = "setZoomLevel";
 		entry.parameters     = { increase: true };
+		entry.voiceEntryOverload = true;
 		entries.push(entry);
 
 		entry   = {};
 		entry.description = "Zoom out";
 		entry.callback = "setZoomLevel";
 		entry.parameters     = { decrease: true };
+		entry.voiceEntryOverload = true;
 		entries.push(entry);
 
 		entry   = {};
