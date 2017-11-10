@@ -1158,7 +1158,7 @@ const SAGE2_interaction = (function() {
 				webix.ui({
 					view: "button", id: "user_login",
 					template: "<button style='border:none; color:#555; background:#ddd;'>#label#</button>",
-					label: _loggedIn ? "Sign out" : "Sign in for more options",
+					label: _loggedIn ? "Sign out" : "Sign up for more options",
 					click: () => {
 						if (_loggedIn) {
 							wsio.emit('logoutUser', _uid);
@@ -1186,6 +1186,28 @@ const SAGE2_interaction = (function() {
 			let username = _userSettings.SAGE2_ptrName || (hasMouse ? "SAGE2_user" : "SAGE2_mobile");
 			let color = _userSettings.SAGE2_ptrColor || randomHexColor();
 
+			let loginElement;
+			if (type === 'init') {
+				loginElement = {
+					view: "button", id: "user_confirm", value: "Log in as guest", type: "form"
+				}
+			} else {
+				loginElement = {
+					margin: 5, cols: [
+						{
+							view: "button", id: "user_cancel", value: "Cancel",
+							click: function() {
+								// close the dialog without saving changes
+								this.getTopParentView().destructor();
+							}
+						},
+						{
+							view: "button", id: "user_confirm", value: "Ok", type: "form"
+						}
+					]
+				};
+			}
+
 			let webixOptions = {
 				view: "window",
 				id: "settings_dialog",
@@ -1211,16 +1233,7 @@ const SAGE2_interaction = (function() {
 							label: "Color",
 							value: color
 						},
-						{
-							margin: 5, cols: [
-								{
-									view: "button", id: "user_cancel", value: "Cancel"
-								},
-								{
-									view: "button", id: "user_confirm", value: "Ok", type: "form"
-								}
-							]
-						},
+						loginElement,
 						{
 							view: "button", id: "user_login"
 						}
@@ -1311,11 +1324,6 @@ const SAGE2_interaction = (function() {
 					this.changeScreenShareQuality(quality.getValue());
 				});
 			}
-
-			// close the dialog without saving changes
-			$$("user_cancel").attachEvent("onItemClick", function() {
-				parent.destructor();
-			});
 
 			// close the dialog and save changes
 			$$("user_confirm").attachEvent("onItemClick", () => {
