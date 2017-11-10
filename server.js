@@ -1080,7 +1080,7 @@ function setupListeners(wsio) {
 	wsio.on('loadImageFromBuffer',                  wsLoadImageFromBuffer);
 	wsio.on('deleteElementFromStoredFiles',         wsDeleteElementFromStoredFiles);
 	wsio.on('moveElementFromStoredFiles',           wsMoveElementFromStoredFiles);
-	wsio.on('saveSession',                           wsSaveSession);
+	wsio.on('saveSession',                          wsSaveSession);
 	wsio.on('clearDisplay',                         wsClearDisplay);
 	wsio.on('deleteAllApplications',                wsDeleteAllApplications);
 	wsio.on('tileApplications',                     wsTileApplications);
@@ -3293,14 +3293,11 @@ function wsRequestStoredFiles(wsio, data) {
 }
 
 function wsLoadApplication(wsio, data) {
-	if (!wsio) {
-		// for handling an application like webview
-		wsio = data.wsio || {
-			emit: function() { }
-		};
-	}
+	// check if the user can do that
 	if (!userlist.isAllowed(wsio.id, 'use apps')) {
-		wsio.emit('cancelAction', 'application');
+		if (wsio.emit) {
+			wsio.emit('cancelAction', 'application');
+		}
 		return;
 	}
 
@@ -3849,9 +3846,8 @@ function wsCommand(wsio, data) {
 function wsOpenNewWebpage(wsio, data) {
 	sageutils.log('Webview', "opening", data.url);
 
-	wsLoadApplication(null, {
+	wsLoadApplication(wsio, {
 		application: "/uploads/apps/Webview",
-		wsio: wsio,
 		user: wsio.id,
 		// pass the url in the data object
 		data: data,
@@ -5765,13 +5761,13 @@ function processInputCommand(line) {
 				}
 				var mt = assets.getMimeType(getSAGE2Path(file));
 				if (mt === "application/custom") {
-					wsLoadApplication(null, {
+					wsLoadApplication({id: "127.0.0.1:42"}, {
 						application: file,
 						user: "127.0.0.1:42",
 						position: pos
 					});
 				} else {
-					wsLoadFileFromServer(null, {
+					wsLoadFileFromServer({id: "127.0.0.1:42"}, {
 						application: "something",
 						filename: file,
 						user: "127.0.0.1:42",
@@ -6351,9 +6347,9 @@ function pointerPressOnStaticUI(uniqueID, pointerX, pointerY, data, obj, localPt
 		}
 
 		// Create the webview to the remote UI
-		wsLoadApplication(obj.data.wsio, {
+		wsLoadApplication({id: uniqueID}, {
 			application: "/uploads/apps/Webview",
-			user: obj.data.wsio.id,
+			user: uniqueID,
 			// pass the url in the data object
 			data: {
 				id:  uniqueID,
@@ -8968,7 +8964,7 @@ function keyPress(uniqueID, pointerX, pointerY, data) {
 		// Pressing ? for help (with shift)
 		if (data.code === 63 && remoteInteraction[uniqueID].SHIFT) {
 			// Load the cheet sheet on the wall
-			wsLoadApplication(null, {
+			wsLoadApplication({id: "127.0.0.1:42"}, {
 				application: "/uploads/pdfs/cheat-sheet.pdf",
 				user: "127.0.0.1:42",
 				// position in center and 100pix down
