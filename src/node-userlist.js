@@ -302,7 +302,7 @@ class UserList {
 	*/
 	isAllowed(ip, action) {
 		if (!this.clients[ip]) {
-			return false;
+			return true;  // hopefully should not occur but permit anything
 		}
 		let roles = this.clients[ip].role;
 		for (let i in roles) {

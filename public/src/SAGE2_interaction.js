@@ -1475,13 +1475,15 @@ const SAGE2_interaction = (function() {
 		var cookieUserName = getCookie('SAGE2_userName') || '';
 		var cookieEmail = getCookie('SAGE2_userEmail') || '';
 
-		wsio.emit('loginUser', {
-			name: cookieUserName,
-			email: cookieEmail,
-			SAGE2_ptrName: _userSettings.SAGE2_ptrName,
-			SAGE2_ptrColor: _userSettings.SAGE2_ptrColor,
-			init: true
-		});
+		if (!viewOnlyMode) {
+			wsio.emit('loginUser', {
+				name: cookieUserName,
+				email: cookieEmail,
+				SAGE2_ptrName: _userSettings.SAGE2_ptrName,
+				SAGE2_ptrColor: _userSettings.SAGE2_ptrColor,
+				init: true
+			});			
+		}
 
 		this.wsio.on('loginStateChanged', handleLoginStateChange.bind(this));
 		this.wsio.on('allowAction', allowAction.bind(this));
