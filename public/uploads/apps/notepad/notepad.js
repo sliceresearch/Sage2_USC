@@ -59,7 +59,7 @@ var	NotepadBlinker = function(id, ctx, date, color) {
 };
 
 
-var notepadf = SAGE2_App.extend({
+var notepad = SAGE2_App.extend({
 	init: function(data) {
 		this.SAGE2Init("canvas", data);
 
@@ -166,7 +166,7 @@ var notepadf = SAGE2_App.extend({
 		for (var parts = 0; parts < this.range.length; parts++) {
 			var start = this.range[parts][0];
 			var end = this.range[parts][1];
-			console.log(start + " : " + end);
+			// console.log(start + " : " + end);
 			for (var i = start; i <= end; i++) {
 
 				this.ctx.font = "16px " + this.font;
@@ -225,13 +225,13 @@ var notepadf = SAGE2_App.extend({
 
 	enterKey: function(curL, curC, userId) {
 		if (curL + this.range[0][0] - 1 in this.state.content) {
-			console.log("curL::::" + curL);
+			// console.log("curL::::" + curL);
 			var nl = this.state.content[curL + this.range[0][0] - 1].substring(curC,
 				this.state.content[curL + this.range[0][0] - 1].length);
 			this.state.content[curL + this.range[0][0] - 1] =
 				this.state.content[curL + this.range[0][0] - 1].substring(0, curC);
 			if (curL + this.range[0][0] in this.state.content) {
-				console.log("");
+				// console.log("");
 				this.state.content.splice(curL + 1, 0, nl);
 			} else {
 				this.state.content[curL + 1] = nl;
@@ -277,7 +277,7 @@ var notepadf = SAGE2_App.extend({
 				var lno = Math.ceil(y / this.fontHeight);
 				var tArIdx = lno + this.range[0][0] - 1;
 				if (tArIdx in this.state.content && this.state.content[tArIdx] != null) {
-					console.log(tArIdx);
+					// console.log(tArIdx);
 					var len = this.ctx.measureText(this.state.content[tArIdx]).width;
 					if (x >= len) {
 						this.blinkerArr[userId.id].moveLC(lno, this.state.content[tArIdx].length);
@@ -351,7 +351,7 @@ var notepadf = SAGE2_App.extend({
 						t = "";
 						if (curL + this.range[0][0] - 2 in this.state.content) {
 							t =  this.state.content[curL + this.range[0][0] - 2];
-							console.log("T : ");
+							// console.log("T : ");
 						}
 						this.state.content[curL + this.range[0][0] - 2] = t + post;
 						this.state.content.splice(curL + this.range[0][0] - 1, 1);
