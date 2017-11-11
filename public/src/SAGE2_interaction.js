@@ -1447,7 +1447,7 @@ const SAGE2_interaction = (function() {
 		// Check if a domain cookie exists for the name
 		var cookieName = getCookie('SAGE2_ptrName');
 		if (cookieName) {
-			if (cookieName.startsWith('Anon ') || 
+			if (cookieName.startsWith('Anon ')  ||
 				cookieName === 'SAGE2_user' ||
 				cookieName === 'SAGE2_mobile') {
 				deleteCookie('SAGE2_ptrName');
