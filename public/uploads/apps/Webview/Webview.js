@@ -79,16 +79,17 @@ var Webview = SAGE2_App.extend({
 		var video_id, ampersandPosition;
 
 		// A youtube URL with a 'watch' video
-		if (view_url.startsWith('https://www.youtube.com') &&
-				view_url.indexOf('embed') === -1 &&
+		if (view_url.startsWith('https://www.youtube.com')) {
+			if (view_url.indexOf('embed') === -1 ||
 				view_url.indexOf("watch?v=") >= 0) {
-			// Search for the Youtube ID
-			video_id = view_url.split('v=')[1];
-			ampersandPosition = video_id.indexOf('&');
-			if (ampersandPosition != -1) {
-				video_id = video_id.substring(0, ampersandPosition);
+				// Search for the Youtube ID
+				video_id = view_url.split('v=')[1];
+				ampersandPosition = video_id.indexOf('&');
+				if (ampersandPosition != -1) {
+					video_id = video_id.substring(0, ampersandPosition);
+				}
+				view_url = 'https://www.youtube.com/embed/' + video_id + '?autoplay=0';
 			}
-			view_url = 'https://www.youtube.com/embed/' + video_id + '?autoplay=0';
 			this.contentType = "youtube";
 		} else if (view_url.startsWith('https://youtu.be')) {
 			// youtube short URL (used in sharing)
