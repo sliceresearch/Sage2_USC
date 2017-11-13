@@ -325,11 +325,15 @@ var Webview = SAGE2_App.extend({
 		var app = require("electron").remote.app;
 		// get the application path
 		var appPath = app.getAppPath();
-		// split the path at node_modules
-		var subPath = appPath.split("node_modules");
-		// take the first element which contains the current folder of the application
-		var rootPath = subPath[0];
-		// add the relative path to the webview folder
+		console.log('appPath', appPath)
+		// // split the path at node_modules
+		// var subPath = appPath.split("node_modules");
+		// // take the first element which contains the current folder of the application
+		// var rootPath = subPath[0];
+		// // add the relative path to the webview folder
+		var rootPath = appPath;
+		console.log('dir', rootPath)
+		// var preloadPath = path.join(rootPath, 'public/uploads/apps/Webview', 'SAGE2_script_supplement.js');
 		var preloadPath = path.join(rootPath, 'public/uploads/apps/Webview', 'SAGE2_script_supplement.js');
 		// finally make it a local URL and pass it to the webview element
 		this.element.preload = "file://" + preloadPath;

@@ -1,7 +1,7 @@
 #!/bin/sh
 
 # update the electron.js file
-npm run update
+#npm run update
 
 # add the webview runtime
 mkdir -p public/uploads/apps/Webview

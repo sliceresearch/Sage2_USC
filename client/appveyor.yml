@@ -21,7 +21,7 @@ install:
   - cd %APPVEYOR_BUILD_FOLDER%
   - cd client
   - npm install --msvs_version=2013
-  - copy /Y ..\electron.js  electron.js
+  # - copy /Y ..\electron.js  electron.js
   - dir
   - mkdir public
   - mkdir public\uploads
