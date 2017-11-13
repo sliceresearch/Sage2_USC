@@ -54,7 +54,15 @@ deploy:
     password:
       secure: L4I4NkKN7mrQww7GgwPLrA==
     folder: /Display
-    artifact: sage2_client sage2_client2
+    artifact: sage2_client
+  - provider: FTP
+    host: ftp.sagecommons.org
+    protocol: ftp
+    username: upload@sagecommons.org
+    password:
+      secure: L4I4NkKN7mrQww7GgwPLrA==
+    folder: /Display
+    artifact: sage2_client2
 
 notifications:
   - provider: Slack
