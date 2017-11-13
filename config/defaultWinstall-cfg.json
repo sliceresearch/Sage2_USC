@@ -24,6 +24,10 @@
 		maxWindowHeight: 8192,
 		noDropShadow: true
 	},
+	voice_commands: {
+		enabled: true,
+		log: false
+	},
 	resolution: {
 		width: 1920,
 		height: 1080
