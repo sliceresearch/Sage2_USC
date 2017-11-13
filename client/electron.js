@@ -20,7 +20,7 @@
 'use strict';
 
 const electron = require('electron');
-electron.app.setAppPath(process.cwd());
+// electron.app.setAppPath(process.cwd());
 
 //
 // handle install/update for Windows
