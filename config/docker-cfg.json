@@ -8,9 +8,13 @@
 	index_port: 9292,
 	background: {
 		color: "#333333",
+		image: {
+			url: "images/background/dbgrid.png",
+			style: "tile"
+		},
 		watermark: {
 			svg: "images/EVL-LAVA.svg",
-			color: "rgba(255, 255, 255, 0.5)"
+			color: "rgba(86, 117, 114, 0.9)"
 		}
 	},
 	ui: {
