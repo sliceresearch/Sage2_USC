@@ -122,7 +122,7 @@ var Webview = SAGE2_App.extend({
 				view_url = 'https://player.twitch.tv/?!autoplay&video=v' + twitch_id;
 			}
 			this.contentType = "twitch";
-		} else if (view_url.startsWith("http://" + this.config.host + ':' + this.config.port + "//user/apps")) {
+		} else if (view_url.includes("http://" + this.config.host) && view_url.includes("/user/apps")) {
 			// Locally hosted WebViews are assumed to be Unity applications
 			// Move to more dedicated url later? //users/apps/unity ?
 			this.contentType = "unity";
