@@ -387,7 +387,8 @@ function SAGE2_init() {
 		window.postMessage('SAGE2_desktop_capture_enabled', "*");
 			
 		// SLICE attempt to auto start the pointer for mobile devices on load
-		if (__SAGE2__.browser.isMobile){
+		// but not for teacher
+		if (__SAGE2__.browser.isMobile && urlParams.teacher !== "yes"){
 			// window.location.replace("/mobile_index.html");
 			var element = {id: "sage2pointer"};
 			handleClick(element);
@@ -2372,6 +2373,16 @@ function hideDialog(id) {
  */
 function showSAGE2PointerOverlayNoMouse() {
 	document.getElementById('sage2MobileContainer').style.display = "block";
+	// SLICE urlParam teacher adds the buttons back to the trackpad display
+	if (urlParams.teacher !== "yes"){
+		document.getElementById('closeMobileSAGE2Pointer').style.display = "none";
+	} else {
+		document.getElementById('sage2MobileTrackpad').style.height = "80%";
+		document.getElementById('sage2MobileButtons').style.position = "fixed";
+		document.getElementById('sage2MobileButtons').style.left = "0%";
+		document.getElementById('sage2MobileButtons').style.top = "80%";
+
+	}
 }
 
 /**
