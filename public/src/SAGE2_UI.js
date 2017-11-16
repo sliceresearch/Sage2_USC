@@ -425,9 +425,9 @@ function SAGE2_init() {
 	}
 
 	document.addEventListener('mousemove',  mouseCheck,   false);
-	document.addEventListener('touchstart', touchStart,   false);
-	document.addEventListener('touchend',   touchEnd,     false);
-	document.addEventListener('touchmove',  touchMove,    false);
+	document.addEventListener('touchstart', touchStart,   {passive: false}); //SLICE todo test if this prevents scrolling on mobile devices
+	document.addEventListener('touchend',   touchEnd,     {passive: false}); //SLICE todo test if this prevents scrolling on mobile devices
+	document.addEventListener('touchmove',  touchMove,    {passive: false}); //SLICE todo test if this prevents scrolling on mobile devices
 	document.addEventListener('keyup',      escapeDialog, false);
 	document.addEventListener('keydown',    noBackspace,  false);
 
