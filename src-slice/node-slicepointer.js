@@ -38,7 +38,7 @@ class SlicePointer extends SagePointer {
     }
     updatePointerPosition(data, maxW, maxH) {
         super.updatePointerPosition(data, maxW, maxH);
-        if (this.urlParams.pointerApp) {
+        if (this.urlParams.pointerApp && this.urlParams.teacher !== "yes") {
             if (this.left < this.urlParams.pointerApp.left) {
                 this.left = this.urlParams.pointerApp.left;
             }
