@@ -1,5 +1,5 @@
-(unreleased)
-------------
+Version2 to Version3
+--------------------
 
 New
 ~~~
@@ -243,11 +243,8 @@ Changes
 - Alter the check to use offset modification rather than repeated
   getboundingclientrect calls. Assumption is that offset is quicker.
   [Dylan Kobayashi]
-- Updated lint. [D K]
-- Lint. [D K]
 - Removing missed csd variables. [D K]
 - Removed unecessary function call. [D K]
-- Lint. [D K]
 - Utd and dtu removed. Variables with rmbContextMenu changed to
   appContextMenu. [D K]
 - Lint and removed debug print. [Dylan Kobayashi]
@@ -279,13 +276,8 @@ Fix
 - Reload youtube videos from session properly. [Luc Renambot]
 - Trying to fix preload in webview with binary builds. [Luc Renambot]
 - Fix to build the binary display client. [Luc Renambot]
-- Appveyor.yml. [Luc Renambot]
-- Appveyor.yml. [Luc Renambot]
 - Login as guest using the new user system, when using the electron ui
   client. [Luc Renambot]
-- Linting. [Luc Renambot]
-- Linting. [Luc Renambot]
-- Linting. [krishnaBharadwaj]
 - Charts resize properly when page is resized. [krishnaBharadwaj]
 - History clear function bug fix. [krishnaBharadwaj]
 - Display client add and remove made into separate messages.
@@ -297,7 +289,6 @@ Fix
 - Undo last commit since fix commited to another branch. [Luc Renambot]
 - Changing variable name from path to name, to avoid variable shadowing.
   [Luc Renambot]
-- Linting. [Luc Renambot]
 - Restore the appveyor builds to be uploaded to sagecommons.org. [Luc
   Renambot]
 - Update multiple instances of user console with role change. [Kristine
@@ -314,8 +305,6 @@ Fix
   width, not window innerWidth. [Andrew Burks]
 - Function expression declaration not hoisted like function declartaion
   -- reorganize code. [Andrew Burks]
-- Merge conflict. [Dylan Kobayashi]
-- Merge conflict. [Dylan Kobayashi]
 - Added all network interface transfers to system traffic, dynamic y
   axis for sage2 mem. [krishnaBharadwaj]
 - Removed leading zeros from time on x axis of charts.
@@ -335,7 +324,6 @@ Fix
 - Cosmetic changes. [Luc Renambot]
 - Adding sageutils.log instead of console.log in some old drawing code.
   [Luc Renambot]
-- Linting. [Luc Renambot]
 - Add dependency for display client. [Luc Renambot]
 - Changed backup session to 'autosave' when issuing a 'clear' voice
   command. 'default' could be overwritten on save or crash. Just in
@@ -362,7 +350,6 @@ Fix
 - Search assets based on filename, user and type in the mediabrowser.
   [Luc Renambot]
 - Little tweaks to unity3d loader. [Luc Renambot]
-- Lint. [Arthur Nishimoto]
 - Unity directory search still checks for files alphabetically after
   folders. [Arthur Nishimoto]
 - Clean up server-side voice code. [Luc Renambot]
@@ -377,14 +364,12 @@ Fix
 - Shortcut to start presentation fix for win/mac. [Luc Renambot]
 - Send arrow keys to th webivew. Fix issue for google slides
   presentation for instance. [Luc Renambot]
-- Linting. [Luc Renambot]
 - Should restore pdf documents from session with correct size. [Luc
   Renambot]
 - In electron ui client, the connect button is a toggle to
   connect/disconnect. [Luc Renambot]
 - Limit to 40 char the title of app in the right click menu (otherwise
   too long, especially with some urls) [Luc Renambot]
-- Lint. [Arthur Nishimoto]
 - Undefined error causing Electron popup on Backspace press. [Arthur
   Nishimoto]
 - Update appveyor of sage2 ui client. [Luc Renambot]
@@ -433,7 +418,6 @@ Fix
   Renambot]
 - Mime version for sabi.js also switched back to 1. V2 doesn't support
   lookup function. [Dylan Kobayashi]
-- Merge conflict. [Dylan Kobayashi]
 - Using ? in a right click menu will no longer bring up the help image.
   Quick note edit will now bring up the original edit window with what
   is currently displayed. [Dylan Kobayashi]
@@ -442,12 +426,10 @@ Fix
   web devices. Better score in Lighthouse audit. [Luc Renambot]
 - Fix issue #104 with sharing PDF document: removed some of the shared
   attributes and update the number of shown pages. [Luc Renambot]
-- Merge conflict. [Dylan Kobayashi]
 - Resolves issue #105, invisible widget bug. Display connection seems to
   always generate more of any open widget. Tested and code checked,
   couldn't find anything that needed the additional widget creation.
   [Dylan Kobayashi]
-- Merge conflict. [Dylan Kobayashi]
 - Bug of maximized & tiled partition having maximized app stuck in
   maximized/tiled state. [Andrew Burks]
 - Key input for chrome and electron should properly be added to input
@@ -459,7 +441,6 @@ Fix
   example vega. [Dylan Kobayashi]
 - Function are added to prototype instead of each individual app. [Dylan
   Kobayashi]
-- Resolve merge conflicts. [D K]
 - Forgot the handlers for new value subscription and get all tracked
   descriptions. [D K]
 - Merge with removeAcronyms branch and fix conflicts. [D K]
@@ -558,9 +539,6 @@ Fix
 Other
 ~~~~~
 - Merge branch 'master' of bitbucket.org:sage2/sage2. [Luc Renambot]
-- Lint. [Luc Renambot]
-- Appveyor.yml. [Luc Renambot]
-- Appveyor.yml. [Luc Renambot]
 - Merge branch 'master' of bitbucket.org:sage2/sage2. [Luc Renambot]
 - Merge branch 'master' into user-model2. [Kristine Lee]
 - Merge branch 'master' into performance. [krishnaBharadwaj]
@@ -596,33 +574,19 @@ Other
 - Merge branch 'master' of https://bitbucket.org/sage2/sage2 into user-
   model2. [Kristine Lee]
 - Merged user-model2 into master. [kristine lee]
-
   * pass user auth/data to server
-
   * add events for tracking user/client connections
-
   * role access to users
-
   * sync edits to users to console page
-
   * fix user edit for logged/non-logged in case
-
   * fix: linting and details
-
   * fix: using sageutils.log
-
   * fix: annoying multi-line string with eslint
-
   * Merge branch 'master' of https://bitbucket.org/sage2/sage2 into user-model2
-
   * fix bug with event log and screen resolution
-
   * extend permissions to open file/app, role assignment in console
-
   * update user console layout, save permissions to storage
-
   * add multiple permissions models
-
   * add general move/resize permission
 - Merge branch 'master' of https://bitbucket.org/sage2/sage2 into user-
   model2. [Kristine Lee]
@@ -653,7 +617,6 @@ Other
 - Merge branch 'master' of bitbucket.org:sage2/sage2. [Luc Renambot]
 - Merge branch 'master' into performance. [krishnaBharadwaj]
 - Merged in UnityWebview (pull request #11) [Arthur Nishimoto]
-
   fix: Unity Webview conflict with Google Slides keyboard mapping
 - Add general move/resize permission. [Kristine Lee]
 - Add multiple permissions models. [Kristine Lee]
@@ -665,17 +628,12 @@ Other
   Lee]
 - Merge branch 'master' of https://bitbucket.org/sage2/sage2 into user-
   model2. [Kristine Lee]
-- Linting. [Luc Renambot]
 - Bitbucket-pipelines.yml edited online with Bitbucket. [Luc Renambot]
-- Appveyor.yml. [Luc Renambot]
-- Appveyor.yml. [Luc Renambot]
-- Appveyor.yml. [Luc Renambot]
 - Merge branch 'voiceTests' [Dylan Kobayashi]
 - Extend permissions to open file/app, role assignment in console.
   [Kristine Lee]
 - Merge branch 'user-model2' of https://bitbucket.org/sage2/sage2 into
   user-model2. [Kristine Lee]
-- Resolved merge conflict. [Luc Renambot]
 - Merge branch 'master' of https://bitbucket.org/sage2/sage2. [Andrew
   Burks]
 - Merge branch 'jupyter-lab' [Andrew Burks]
@@ -688,9 +646,6 @@ Other
 - Merge branch 'UnityWebview' [Luc Renambot]
 - Merge remote-tracking branch 'remotes/origin/master' into
   UnityWebview. [Arthur Nishimoto]
-
-  # Conflicts:
-  #	public/uploads/apps/Webview/Webview.js
 - Merge branch 'master' of https://bitbucket.org/sage2/sage2. [Dylan
   Kobayashi]
 - Merge branch 'master' of https://bitbucket.org/sage2/sage2. [Dylan
@@ -699,9 +654,6 @@ Other
   Kobayashi]
 - Merge remote-tracking branch 'remotes/origin/master' into
   UnityWebview. [Arthur Nishimoto]
-
-  # Conflicts:
-  #	public/uploads/apps/Webview/Webview.js
 - Merge remote-tracking branch 'remotes/origin/master' into
   UnityWebview. [Arthur Nishimoto]
 - Merge branch 'master' of bitbucket.org:sage2/sage2. [Luc Renambot]
@@ -714,9 +666,6 @@ Other
   Kobayashi]
 - Merge remote-tracking branch 'remotes/origin/master' into
   UnityWebview. [Arthur Nishimoto]
-
-  # Conflicts:
-  #	src/node-omicron.js
 - Lint: lint. [Arthur Nishimoto]
 - Fix bug with event log and screen resolution. [Kristine Lee]
 - Merge branch 'master' of https://bitbucket.org/sage2/sage2 into user-
@@ -783,7 +732,6 @@ Other
 - Merge branch 'master' of https://bitbucket.org/sage2/sage2. [Luc
   Renambot]
 - Update electron.js file in  client. [Luc Renambot]
-- Lint. [Luc Renambot]
 - Merge branch 'master' of bitbucket.org:sage2/sage2. [Luc Renambot]
 - Appveyor. [Luc Renambot]
 - Merge branch 'master' into stickyitems. [krishnaBharadwaj]
@@ -801,7 +749,6 @@ Other
   Renambot]
 - Lint: lint tweaks. [Luc Renambot]
 - Merged in uhhcs/sage2chemviewermodification (pull request #10) [uhhcs]
-
   Added ability to load mol files to chemviewer
 - Added ability to load mol files to chemviewer. [DESKTOP-TCRB84H\Jared]
 - Merge branch 'UnityWebview' [Luc Renambot]
@@ -809,9 +756,6 @@ Other
   [Arthur Nishimoto]
 - Merge remote-tracking branch 'remotes/origin/master' into TouchUI.
   [Arthur Nishimoto]
-
-  # Conflicts:
-  #	server.js
 - Merge branch 'master' into remotePointer. [D K]
 - Docker. [Luc Renambot]
 - Merge branch 'master' of bitbucket.org:sage2/sage2. [Luc Renambot]
@@ -837,15 +781,6 @@ Other
 - Fix crash on start if config file doesn't have remote sites entry. [D
   K]
 - Merge branch 'clientWindows' [Luc Renambot]
-- Appveyor.yml. [Luc Renambot]
-- Appveyor.yml. [Luc Renambot]
-- Appveyor.yml. [Luc Renambot]
-- Appveyor.yml. [Luc Renambot]
-- Appveyor.yml. [Luc Renambot]
-- Package.json. [Luc Renambot]
-- Appveyor.yml. [Luc Renambot]
-- Appveyor.yml. [Luc Renambot]
-- Appveyor.yml. [Luc Renambot]
 - Adding a appveyor file to build Windows display clients. [Luc
   Renambot]
 - Disable security in webview: it seems to be a problem with some sites,
@@ -878,9 +813,6 @@ Other
 - Changed moveItemWithAnimation function to use vanilla js selectors and
   style property assignment as opposed to d3. [Andrew Burks]
 - Update the webix widget library. [Luc Renambot]
-- Dockerfile. [Luc Renambot]
-- Dockerfile. [Luc Renambot]
-- Dockerfile. [Luc Renambot]
 - Dockerfile. [Luc Renambot]
 - Trying a smaller dockerfile. [Luc Renambot]
 - Apparently ws has no more binary dependencies (for a while). So
@@ -920,9 +852,6 @@ Other
 - Merge branch 'master' of https://bitbucket.org/sage2/sage2. [D K]
 - Update _this vs this. [D K]
 - Dockerfile. [Luc Renambot]
-- Dockerfile. [Luc Renambot]
-- Dockerfile. [Luc Renambot]
-- Dockerfile. [Luc Renambot]
 - Trying Docker without sudo and using latest ubuntu. [Luc Renambot]
 - Going back to 14.04 ;-( [Luc Renambot]
 - Trying to update docker image to ubuntu 16.04. [Luc Renambot]
@@ -940,8 +869,6 @@ Other
   Renambot]
 - Make electron script work in binary build. [Luc Renambot]
 - Updating build for standalone client. [Luc Renambot]
-- Merge. [D K]
-- Linting. [Andrew Burks]
 - Fix to note size and removal of automatic webview connection back to
   server. [D K]
 - Webview pages connect to the server through websocket. Possible to
@@ -987,7 +914,6 @@ Other
 - Delete temp file after the screenshot. [Luc Renambot]
 - Add the package rimraf as dependency, to delete files with glob. [Luc
   Renambot]
-- Lint. [Luc Renambot]
 - Add to the runtime a function to delete files with a glob pattern.
   [Luc Renambot]
 - Simplify screenshot, added to asset management, automatically opened,
@@ -996,7 +922,6 @@ Other
   situation. [Luc Renambot]
 - Merge resolved. [Luc Renambot]
 - Merge branch 'master' into wallScreenCap. [Luc Renambot]
-- Merge. [D K]
 - Merge to keep new functions. [D K]
 - Simplify a little the screenshot ability detection (using browser
   info) and changed to JPEG. Todo next: checking image generation. [Luc
@@ -1012,10 +937,8 @@ Other
   wall froze. [D K]
 - Merge branch 'master' into wallScreenCap. [D K]
 - Brief explanation of actions taken. [D K]
-- Lint. [D K]
 - Adding check on connection of display to see if can take a screenshot
   (is electron) [D K]
-- Lint. [D K]
 - Changing write location to tmp seems to remove file detection errors
   and properly generates thumbnails now. [D K]
 - Bug fixes. [D K]
@@ -1044,7 +967,6 @@ Other
 - Merge branch 'master' into videoSync. [D K]
 - Merged in samw10/sage2/samw10/thiselementid-doesnt-exist-thisid-
   contai-1490860190918 (pull request #8) [samw10]
-
   this.element.id doesn't exist. this.id contains the data it needs
 - This.element.id doesn't exist. this.id contains the data it needs.
   [samw10]
@@ -1398,5 +1320,3 @@ Other
   [d-k-k]
 - Added .DS_Store to gitignore. Mac seems to continously generate the
   file after the Sierra update whenever a file is edited. [d-k-k]
-
-
