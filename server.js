@@ -1452,6 +1452,9 @@ function wsPointerMove(wsio, data) {
 	var pointerX = sagePointers[wsio.id].left;
 	var pointerY = sagePointers[wsio.id].top;
 
+	//SLICE phone log
+	console.log(wsio.id, data);
+
 	pointerMove(wsio.id, pointerX, pointerY, data);
 }
 

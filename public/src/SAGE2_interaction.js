@@ -741,16 +741,17 @@ function SAGE2_interaction(wsio) {
 	 * @param delta
 	 */
 	this.accelerate = function(delta) {
+		var detail = 3;
 		if (hasMouse) {
 			return delta * this.sensitivity;
 		} else {
-			if (Math.abs(delta) <= 3) {
+			if (Math.abs(delta) <= detail) {
 				// no acceleration
 				return delta;
 			} else if (delta > 0) {
-				return (delta - 3)  * this.sensitivity;
+				return (delta - detail)  * this.sensitivity + detail;
 			} else if (delta < 0) {
-				return (delta + 3)  * this.sensitivity;
+				return (delta + detail)  * this.sensitivity - detail;
 			}
 		}
 		return 0;
@@ -763,6 +764,8 @@ function SAGE2_interaction(wsio) {
 	* @param event {Event} move event
 	*/
 	this.pointerMoveMethod = function(event) {
+		//SLICE pointer acceleration
+		// this.sensitivity = 1;
 		var movementX = event.movementX || event.mozMovementX || event.webkitMovementX || 0;
 		var movementY = event.movementY || event.mozMovementY || event.webkitMovementY || 0;
 
@@ -792,6 +795,7 @@ function SAGE2_interaction(wsio) {
 			this.deltaX += movementX;
 			this.deltaY += movementY;
 		}
+
 		if (event.preventDefault) {
 			event.preventDefault();
 		}
