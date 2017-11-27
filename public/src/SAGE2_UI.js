@@ -2088,6 +2088,17 @@ function touchEnd(event) {
 			event.preventDefault();
 			event.stopPropagation();
 		}
+		if (touchTap === 2) {
+			interactor.pointerReleaseMethod({button: 0});
+			touchMode = "translate";
+			touchHold = setTimeout(function() {
+				interactor.pointerKeyDownMethod({keyCode: 8});
+				interactor.pointerKeyUpMethod({keyCode: 8});
+			}, 1500);
+	
+			event.preventDefault();
+			event.stopPropagation();
+		}
 		event.preventDefault();
 		event.stopPropagation();
 	} else if (event.target.id === "sage2MobileLeftButton") {

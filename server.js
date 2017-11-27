@@ -6191,7 +6191,7 @@ function pointerPressOnApplication(uniqueID, pointerX, pointerY, data, obj, loca
 	}
 
 	// SLICE Stops slice pointers from pressing app buttons
-	if (sagePointers[uniqueID].id === (uniqueID+"_slicePointer")){
+	if (sagePointers[uniqueID].id === (uniqueID+"_slicePointer") && sagePointers[uniqueID].urlParams.teacher !== "yes"){
 		return;
 	} else {
 		switch (btn.id) {
