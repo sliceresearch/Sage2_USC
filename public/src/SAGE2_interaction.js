@@ -646,6 +646,16 @@ const SAGE2_interaction = (function() {
 		};
 
 		/**
+		* Screen sharing has to stop
+		*
+		* @method streamEnd
+		*/
+		this.streamEnd = function() {
+			this.broadcasting = false;
+			cancelIdleCallback(this.req);
+		};
+
+		/**
 		* Using requestIdleCallback from Chrome for screen capture
 		*
 		* @method stepMethod
