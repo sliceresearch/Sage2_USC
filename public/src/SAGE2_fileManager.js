@@ -1116,12 +1116,12 @@ function FileManager(wsio, mydiv, uniqueID) {
 	this.tree.closeAll();
 	this.tree.open("treeroot");
 
-	webix.ui({
+	var ctx_menu = webix.ui({
 		view: "contextmenu",
 		id: "cmenu",
 		data: ["Open", "Copy URL", "Open in Tab", "Download", { $template: "Separator" }, "Delete"],
 		on: {
-			onItemClick: function(id) {
+			onMenuItemClick: function(id) {
 				var i;
 				var context = this.getContext();
 				var list    = context.obj;
@@ -1203,7 +1203,34 @@ function FileManager(wsio, mydiv, uniqueID) {
 			}
 		}
 	});
-	$$("cmenu").attachTo($$("all_table"));
+	ctx_menu.attachTo($$("all_table"));
+	// Hidding some menus
+	$$("all_table").attachEvent('onBeforeContextMenu', function(id, e, node) {
+		// Reset
+		$$('cmenu').enableItem('Copy URL');
+		$$('cmenu').enableItem('Open in Tab');
+		$$('cmenu').enableItem('Download');
+		$$('cmenu').enableItem('Delete');
+		// Select
+		var dItems  = this.getSelectedId(true);
+		if (dItems.length === 1) {
+			let item = dItems[0].id;
+			let appType = _this.allFiles[item].exif.MIMEType;
+			if (appType === "sage2/session") {
+				$$('cmenu').disableItem('Copy URL');
+				$$('cmenu').disableItem('Open in Tab');
+				$$('cmenu').disableItem('Download');
+			} else if (appType === "application/custom") {
+				$$('cmenu').disableItem('Copy URL');
+				$$('cmenu').disableItem('Open in Tab');
+				$$('cmenu').disableItem('Download');
+				$$('cmenu').disableItem('Delete');
+			} else if (appType === "sage2/url") {
+				$$('cmenu').disableItem('Download');
+			}
+		}
+		return true;
+	});
 
 	this.main.config.height = Math.round(window.innerHeight * 0.80);
 	this.main.show();
@@ -1873,7 +1900,7 @@ function FileManager(wsio, mydiv, uniqueID) {
 		id: "tmenu",
 		data: ["New folder", { $template: "Separator" }, "Refresh"],
 		on: {
-			onItemClick: function(id) {
+			onMenuItemClick: function(id) {
 				var context = this.getContext();
 				var list    = context.obj;
 				var listId  = context.id;
@@ -1975,9 +2002,9 @@ function FileManager(wsio, mydiv, uniqueID) {
 				(id.indexOf('Mine:/') >= 0)  ||
 				(id.indexOf('Link:/') >= 0)  ||
 				(id.indexOf('Session:/') >= 0)) {
-				tmenu.hideItem('New folder');
+				tmenu.disableItem('New folder');
 			} else {
-				tmenu.showItem('New folder');
+				tmenu.enableItem('New folder');
 			}
 			return true;
 		});
