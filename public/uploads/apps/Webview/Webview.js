@@ -157,7 +157,8 @@ var Webview = SAGE2_App.extend({
 		});
 
 		// done loading
-		this.element.addEventListener("did-finish-load", function() {
+		// this.element.addEventListener("did-finish-load", function() {
+		this.element.addEventListener("did-stop-loading", function() {
 			// code injection to support key translation
 			_this.codeInject();
 			// update the context menu with the current URL
