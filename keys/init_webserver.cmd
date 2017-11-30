@@ -28,7 +28,12 @@ echo ""
 echo ""
 
 echo "Sign Server Certificate"
-openssl x509 -req -sha256 -days 365 -in server.csr -signkey $server-server.key -out $server-server.crt
+if [ $server = "localhost" ]
+then
+	openssl x509 -req -sha256 -extfile v3.ext -days 365 -in server.csr -signkey $server-server.key -out $server-server.crt
+else
+	openssl x509 -req -sha256 -days 365 -in server.csr -signkey $server-server.key -out $server-server.crt
+fi
 echo ""
 echo ""
 
