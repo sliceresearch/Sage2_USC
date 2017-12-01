@@ -128,6 +128,12 @@ var Webview = SAGE2_App.extend({
 			this.contentType = "unity";
 		} else if (view_url.indexOf('docs.google.com/presentation') >= 0) {
 			this.contentType = "google_slides";
+		} else if (view_url.indexOf('appear.in') >= 0) {
+			if (!view_url.endsWith('?widescreen')) {
+				// to enable non-cropped mode, in widescreen
+				view_url += '?widescreen';
+			}
+			this.contentType = "appearin";
 		}
 
 		// Store the zoom level, when in desktop emulation
