@@ -301,20 +301,23 @@ class UserList {
 	* @return {Boolean} true if user is permitted to perform this action
 	*/
 	isAllowed(ip, action) {
+		// Skip authorization for now
+		return true;
+
 		// server's special case
-		if (ip === "127.0.0.1:42") {
-			return true;
-		}
-		if (!this.clients[ip]) {
-			return false;
-		}
-		let roles = this.clients[ip].role;
-		for (let i in roles) {
-			if (this.rbac.mask[action] & this.rbac.permissions[roles[i]]) {
-				return true;
-			}
-		}
-		return false;
+		// if (ip === "127.0.0.1:42") {
+		// 	return true;
+		// }
+		// if (!this.clients[ip]) {
+		// 	return false;
+		// }
+		// let roles = this.clients[ip].role;
+		// for (let i in roles) {
+		// 	if (this.rbac.mask[action] & this.rbac.permissions[roles[i]]) {
+		// 		return true;
+		// 	}
+		// }
+		// return false;
 	}
 
 	/**

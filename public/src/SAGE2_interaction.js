@@ -1274,9 +1274,9 @@ const SAGE2_interaction = (function() {
 							value: color
 						},
 						loginElement,
-						{
-							view: "button", id: "user_login"
-						}
+						// {
+						// 	view: "button", id: "user_login"
+						// }
 					],
 					elementsConfig: {
 						// labelPosition: "top"
