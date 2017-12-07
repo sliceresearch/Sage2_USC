@@ -1028,7 +1028,7 @@ const SAGE2_interaction = (function() {
 					cols: [
 						{
 							view: "label",
-							align:"left",
+							align: "left",
 							label: "Color"
 						},
 						{
@@ -1038,7 +1038,7 @@ const SAGE2_interaction = (function() {
 							value: _userSettings.SAGE2_ptrColor,
 							width: 290, height: 100,
 							cols: 12, rows: 5,
-							minLightness: 0.3, maxLightness: 0.9,
+							minLightness: 0.3, maxLightness: 0.9
 						}
 					]
 				}, $$("user_color"));
@@ -1300,7 +1300,7 @@ const SAGE2_interaction = (function() {
 							cols: [
 								{
 									view: "label",
-									align:"left",
+									align: "left",
 									label: "Color"
 								},
 								{
@@ -1310,12 +1310,12 @@ const SAGE2_interaction = (function() {
 									value: color,
 									width: 295, height: 100,
 									cols: 12, rows: 5,
-									minLightness: 0.3, maxLightness: 0.9,
+									minLightness: 0.3, maxLightness: 0.9
 								}
 							]
 						},
 
-						loginElement,
+						loginElement
 						// {
 						// 	view: "button", id: "user_login"
 						// }
