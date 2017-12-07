@@ -1019,8 +1019,28 @@ const SAGE2_interaction = (function() {
 			addCookie('SAGE2_ptrColor', _userSettings.SAGE2_ptrColor);
 			if ($$("settings_dialog")) {
 				// this should be the same as in settingsdialog
+				// webix.ui({
+				// 	view: "colorpicker", id: "user_color", label: "Color", value: _userSettings.SAGE2_ptrColor
+				// }, $$("user_color"));
+
+				// not sure what that code does
 				webix.ui({
-					view: "colorpicker", id: "user_color", label: "Color", value: _userSettings.SAGE2_ptrColor
+					cols: [
+						{
+							view: "label",
+							align:"left",
+							label: "Color"
+						},
+						{
+							view: "colorboard",
+							id: "user_color",
+							label: "Color",
+							value: _userSettings.SAGE2_ptrColor,
+							width: 290, height: 100,
+							cols: 12, rows: 5,
+							minLightness: 0.3, maxLightness: 0.9,
+						}
+					]
 				}, $$("user_color"));
 			}
 		};
@@ -1266,13 +1286,35 @@ const SAGE2_interaction = (function() {
 							label: "Name",
 							value: username
 						},
+
+						// {
+						// 	// this should be the same as in changeSage2PointerColorMethod
+						// 	view: "colorpicker",
+						// 	id: "user_color",
+						// 	label: "Color",
+						// 	value: color
+						// },
+
+						// Alternate version with just a colorboard
 						{
-							// this should be the same as in changeSage2PointerColorMethod
-							view: "colorpicker",
-							id: "user_color",
-							label: "Color",
-							value: color
+							cols: [
+								{
+									view: "label",
+									align:"left",
+									label: "Color"
+								},
+								{
+									view: "colorboard",
+									id: "user_color",
+									label: "Color",
+									value: color,
+									width: 295, height: 100,
+									cols: 12, rows: 5,
+									minLightness: 0.3, maxLightness: 0.9,
+								}
+							]
 						},
+
 						loginElement,
 						// {
 						// 	view: "button", id: "user_login"
