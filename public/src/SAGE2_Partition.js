@@ -92,20 +92,22 @@ var SAGE2_Partition = function (data) {
 	this.maxIcon = maxIcon;
 
 	var clearcontentIcon = document.createElement("img");
-	clearcontentIcon.src = "images/ui/clearcontent.svg";
-	clearcontentIcon.height = Math.round(ui.titleBarHeight + 20);
+	clearcontentIcon.src = "images/clearcontent-partition.svg";
+	clearcontentIcon.height = Math.round(ui.titleBarHeight - 4);
+	// clearcontentIcon.height = Math.round(ui.titleBarHeight + 20);
 	clearcontentIcon.style.position = "absolute";
 	clearcontentIcon.style.left = "0px";
-	clearcontentIcon.style.top = "-12px";
+	// clearcontentIcon.style.top = "-12px";
 
 	this.clearcontentIcon = clearcontentIcon;
 
 	var tilecontentIcon = document.createElement("img");
-	tilecontentIcon.src = "images/ui/tilecontent.svg";
-	tilecontentIcon.height = Math.round(ui.titleBarHeight + 20);
+	tilecontentIcon.src = "images/tilecontent-partition.svg";
+	tilecontentIcon.height = Math.round(ui.titleBarHeight - 4);
+	// tilecontentIcon.height = Math.round(ui.titleBarHeight + 20);
 	tilecontentIcon.style.position = "absolute";
 	tilecontentIcon.style.left = (ui.titleBarHeight * 1.25) + "px";
-	tilecontentIcon.style.top = "-12px";
+	// tilecontentIcon.style.top = "-12px";
 
 	this.tilecontentIcon = tilecontentIcon;
 

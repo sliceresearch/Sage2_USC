@@ -15,6 +15,8 @@
 	},
 	"title": "Webview",
 	"version": "1.0.0",
+        "fileTypes": [ "html", "htm", "ipynb" ],
+        "directory": "web",
 	"description": "SAGE2 application Webview",
 	"keywords": [ "sage2", "Webview" ],
 	"author": "Luc Renambot <renambot@gmail.com>",

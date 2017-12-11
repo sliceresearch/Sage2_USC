@@ -23,7 +23,7 @@ done
 macos=`uname -r | tr "." "\n" | head -1`
 echo "MacOS version" $macos
 
-if [ $macos = "16" ]
+if [ $macos = "16" -o $macos = "17" ]
 then
 	echo ""
 	echo "============================"

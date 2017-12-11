@@ -1,7 +1,8 @@
 image: node:latest
 
 pipelines:
-  default:
+  branches:
+    master:
     - step:
         script: # Modify the commands below to build your repository.
           - npm --version

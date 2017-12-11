@@ -1,6 +1,6 @@
 {
   "name": "SAGE2_client",
-  "version": "2.0.0",
+  "version": "3.0.0",
   "description": "Electron-based SAGE2 client",
   "main": "electron.js",
 	"repository": {
@@ -8,9 +8,19 @@
 		"url": "https://bitbucket.org/sage2/sage2/"
 	},
   "dependencies": {
-    "electron": "latest",
-    "electron-packager": "latest",
+    "systeminformation": "latest",
     "commander": "latest"
+  },
+  "devDependencies": {
+    "electron": "latest",
+    "electron-packager": "latest"
+  },
+  "optionalDependencies": {
+    "electron-installer-dmg": "latest",
+    "electron-winstaller": "latest",
+    "electron-squirrel-startup": "latest",
+    "electron-installer-redhat": "latest",
+    "electron-installer-debian": "latest"
   },
   "scripts": {
      "electron": "electron electron.js -s https://localhost:9090 -d -1",

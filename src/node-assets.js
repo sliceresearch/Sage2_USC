@@ -59,11 +59,12 @@ function Asset() {
  * Set an URL for an asset
  *
  * @method setURL
- * @param aUrl {String} url string
+ * @param aURL {String} url string
  */
-Asset.prototype.setURL = function(aUrl) {
-	this.url = aUrl;
-	this.id  = aUrl;
+Asset.prototype.setURL = function(aURL) {
+	this.url = aURL;
+	this.id  = aURL;
+	this.sage2URL = aURL;
 };
 
 /**
@@ -173,9 +174,9 @@ var printAssets = function() {
 	for (var f in keys) {
 		one = AllAssets.list[keys[f]];
 		if (one.exif.FileSize) {
-			console.log(sageutils.header("Assets"), idx, one.exif.FileName, one.exif.MIMEType, one.sage2URL, one.exif.FileSize);
+			sageutils.log("Assets", idx, one.exif.FileName, one.exif.MIMEType, one.sage2URL, one.exif.FileSize);
 		} else {
-			console.log(sageutils.header("Assets"), idx, one.exif.FileName, one.exif.MIMEType, one.sage2URL);
+			sageutils.log("Assets", idx, one.exif.FileName, one.exif.MIMEType, one.sage2URL);
 		}
 		idx++;
 	}
@@ -194,7 +195,7 @@ var saveAssets = function(filename) {
 	try {
 		fs.writeFileSync(fullpath, JSON.stringify(AllAssets, null, 4));
 	} catch (err) {
-		console.log(sageutils.header("Assets") + "error saving assets", err);
+		sageutils.log("Assets", "error saving assets", err);
 	}
 };
 
@@ -212,7 +213,7 @@ var generateImageThumbnails = function(infile, outfile, sizes, index, callback) 
 		.in("-extent", sizes[index] + "x" + sizes[index])
 		.out("-quality", "70").write(outfile + '_' + sizes[index] + '.jpg', function(err) {
 			if (err) {
-				console.log(sageutils.header("Assets") + "cannot generate " + sizes[index] +
+				sageutils.log("Assets", "cannot generate " + sizes[index] +
 					"x" + sizes[index] + " thumbnail for:", infile);
 				return;
 			}
@@ -237,7 +238,7 @@ var generatePdfThumbnailsHelper = function(intermediate, infile, outfile, sizes,
 		.in("-background", "rgb(71,71,71)").in("-extent", sizes[index] + "x" + sizes[index])
 		.out("-quality", "70").write(outfile + '_' + sizes[index] + '.jpg', function(err) {
 			if (err) {
-				console.log(sageutils.header("Assets") + "cannot generate " + sizes[index] + "x" + sizes[index] +
+				sageutils.log("Assets", "cannot generate " + sizes[index] + "x" + sizes[index] +
 					" thumbnail for:" + infile + ' -- ' + err);
 				return;
 			}
@@ -252,7 +253,7 @@ var generatePdfThumbnails = function(infile, outfile, width, height, sizes, inde
 	imageMagick(width, height, "#ffffff").append(infile + "[0]").colorspace("RGB").noProfile().flatten()
 		.write(tmpfile, function(err, buffer) {
 			if (err) {
-				console.log(sageutils.header("Assets") + "cannot generate thumbnails for:" + infile + ' -- ' + err);
+				sageutils.log("Assets", "cannot generate thumbnails for:" + infile + ' -- ' + err);
 				return;
 			}
 
@@ -277,7 +278,7 @@ var generateVideoThumbnails = function(infile, outfile, width, height, sizes, in
 
 	ffmpeg(infile)
 		.on('error', function(err) {
-			console.log(sageutils.header("Assets") + 'Error processing ' + infile);
+			sageutils.log("Assets", 'Error processing ' + infile);
 			// recursive call to generate the next size
 			generateVideoThumbnails(infile, outfile, width, height, sizes, index + 1, callback);
 		})
@@ -288,7 +289,7 @@ var generateVideoThumbnails = function(infile, outfile, width, height, sizes, in
 				.in("-extent", sizes[index] + "x" + sizes[index])
 				.out("-quality", "70").write(outfile + '_' + sizes[index] + '.jpg', function(err) {
 					if (err) {
-						console.log(sageutils.header("Assets") + "cannot generate " + sizes[index] + "x" +
+						sageutils.log("Assets", "cannot generate " + sizes[index] + "x" +
 							sizes[index] + " thumbnail for:", infile);
 						return;
 					}
@@ -331,7 +332,7 @@ var generateAppThumbnails = function(infile, outfile, acolor, sizes, index, call
 		.in("-draw", "circle " + circle).in("-draw", "image src-over " + img + " '" + infile + "'")
 		.out("-quality", "70").write(outfile + '_' + sizes[index] + '.jpg', function(err) {
 			if (err) {
-				console.log(sageutils.header("Assets") + "cannot generate " + sizes[index] + "x" +
+				sageutils.log("Assets", "cannot generate " + sizes[index] + "x" +
 					sizes[index] + " thumbnail for:", infile);
 				return;
 			}
@@ -370,7 +371,7 @@ var generateRemoteSiteThumbnails = function(infile, outfile, sizes, index, callb
 	imageMagick(sizes[index], sizes[index], connected).fill("#FFFFFF").font(font, fontSize)
 		.drawText(0, 0, infile, "Center").write(outfile + '_' + sizes[index] + '.jpg', function(err) {
 			if (err) {
-				console.log(sageutils.header("Assets") + "cannot generate " + sizes[index] + "x" +
+				sageutils.log("Assets", "cannot generate " + sizes[index] + "x" +
 					sizes[index] + " thumbnail for:", infile);
 				return;
 			}
@@ -383,7 +384,7 @@ var generateRemoteSiteThumbnails = function(infile, outfile, sizes, index, callb
 	imageMagick(sizes[index], sizes[index], disconnected).fill("#FFFFFF").font(font, fontSize).
 		drawText(0, 0, infile, "Center").write(outfile + '_disconnected_' + sizes[index] + '.jpg', function(err) {
 			if (err) {
-				console.log(sageutils.header("Assets") + "cannot generate " + sizes[index] + "x" +
+				sageutils.log("Assets", "cannot generate " + sizes[index] + "x" +
 					sizes[index] + " thumbnail for:", infile);
 				return;
 			}
@@ -508,29 +509,46 @@ var addFile = function(filename, exif, callback) {
 			callback();
 		});
 		anAsset.exif.SAGE2thumbnail = rthumb;
+	} else {
+		// otherwise, just call the callback
+		callback();
 	}
-	saveAssets();
 };
 
 
 var deleteAsset = function(filename, cb) {
-	var filepath = path.resolve(filename);
-	fs.unlink(filepath, function(err) {
-		if (err) {
-			console.log(sageutils.header("Assets") + "error removing file: " + filename + err);
-			if (cb) {
-				cb(err);
-			}
-		} else {
-			console.log(sageutils.header("Assets") + "successfully deleted file: " + filename);
-			// Delete the metadata
-			delete AllAssets.list[filepath];
-			saveAssets();
-			if (cb) {
-				cb(null);
-			}
+	var elt = AllAssets.list[filename];
+	if (elt && elt.sage2Type === "sage2/url") {
+		// if it's a URL, just remove from array
+		delete AllAssets.list[filename];
+		sageutils.log("Assets", "successfully deleted URL:", filename);
+		// save the DB and trigger the callback
+		saveAssets();
+		if (cb) {
+			cb(null);
 		}
-	});
+	} else if (elt && elt.sage2Type !== "application/custom") {
+		// if it's a file and not an application
+		var filepath = path.resolve(filename);
+		if (filepath in AllAssets.list) {
+			fs.unlink(filepath, function(err) {
+				if (err) {
+					sageutils.log("Assets", "error removing file:", filename, err);
+					if (cb) {
+						cb(err);
+					}
+				} else {
+					sageutils.log("Assets", "successfully deleted file:", filename);
+					// Delete the metadata
+					delete AllAssets.list[filepath];
+					saveAssets();
+					if (cb) {
+						cb(null);
+					}
+				}
+			});
+		}
+	}
 };
 
 
@@ -540,6 +558,7 @@ var addURL = function(aUrl, exif) {
 	anAsset.setURL(aUrl);
 	anAsset.setEXIF(exif);
 	AllAssets.list[anAsset.id] = anAsset;
+	saveAssets();
 };
 
 var getDimensions = function(id) {
@@ -627,7 +646,7 @@ var exifAsync = function(cmds, cb) {
 				appIcon = path.join(file, instructions.icon);
 			}
 			var app = path.basename(file);
-			console.log(sageutils.header("EXIF") + "Adding " + chalk.cyan.bold(app) + chalk.dim(" (App)"));
+			sageutils.log("EXIF", "Adding", chalk.cyan.bold(app), chalk.dim("(App)"));
 
 			var metadata = {};
 			if (instructions.title !== undefined && instructions.title !== null && instructions.title !== "") {
@@ -692,7 +711,7 @@ var exifAsync = function(cmds, cb) {
 					console.log("internal error for file", file);
 					cb(err);
 				} else {
-					console.log(sageutils.header("EXIF") + "Adding " + data.FileName);
+					sageutils.log("EXIF", "Adding " + data.FileName);
 					addFile(data.SourceFile, data, function() {
 						if (cmds.length > 0) {
 							execNext();
@@ -714,6 +733,7 @@ var listAssets = function() {
 	var videos = [];
 	var apps   = [];
 	var images = [];
+	var links  = [];
 	var others = [];
 
 	// Get all the assets
@@ -725,14 +745,26 @@ var listAssets = function() {
 				// exclude 'viewer' applications
 				apps.push(one);
 			}
-		} else if (registry.getDefaultApp(one.filename) === "pdf_viewer") {
-			pdfs.push(one);
-		} else if (registry.getDefaultApp(one.filename) === "image_viewer") {
-			images.push(one);
-		} else if (registry.getDefaultApp(one.filename) === "movie_player") {
-			videos.push(one);
 		} else {
-			others.push(one);
+			var defaultApp;
+			// Get the app for the asset
+			if (!one.filename) {
+				defaultApp = registry.getDefaultAppFromMime(one.exif.MIMEType);
+			} else {
+				defaultApp = registry.getDefaultApp(one.filename);
+			}
+			// Put the asset in the right category
+			if (defaultApp === "pdf_viewer") {
+				pdfs.push(one);
+			} else if (defaultApp === "image_viewer") {
+				images.push(one);
+			} else if (defaultApp === "movie_player") {
+				videos.push(one);
+			} else if (defaultApp === "Webview") {
+				links.push(one);
+			} else {
+				others.push(one);
+			}
 		}
 	}
 	// Sort independently of case
@@ -740,9 +772,12 @@ var listAssets = function() {
 	videos.sort(sageutils.compareFilename);
 	pdfs.sort(sageutils.compareFilename);
 	apps.sort(sageutils.compareFilename);
+	links.sort(sageutils.compareFilename);
+
 	return {
 		images: images, videos: videos, pdfs: pdfs,
-		applications: apps, others: others
+		applications: apps, links: links,
+		others: others
 	};
 };
 
@@ -810,7 +845,8 @@ var listApps = function() {
 var recursiveReaddirSync = function(aPath) {
 	var list     = [];
 	var excludes = ['.DS_Store', 'Thumbs.db', 'tmp', 'passwd.json',
-		'assets', 'sessions', 'config', 'sabiConfig', 'web', 'savedFiles', 'apps'];
+		'assets', 'sessions', 'config', 'sabiConfig', 'savedFiles', 'apps'];
+	var excludeExtensions = ['.js', '.css'];
 	var files, stats;
 
 	files = fs.readdirSync(aPath);
@@ -819,7 +855,12 @@ var recursiveReaddirSync = function(aPath) {
 		list.push(aPath);
 	} else {
 		files.forEach(function(file) {
-			if (excludes.indexOf(file) === -1) {
+			// get the file extension
+			var ext = path.extname(file);
+			// exclude bad folders and bad filenames
+			// and exclude bad extensions
+			if (excludes.indexOf(file) === -1 &&
+				excludeExtensions.indexOf(ext) === -1) {
 				stats = fs.lstatSync(path.join(aPath, file));
 				if (stats.isDirectory()) {
 					list = list.concat(recursiveReaddirSync(path.join(aPath, file)));
@@ -867,13 +908,13 @@ var refreshApps = function(root, callback) {
 	}
 
 	if (thelist.length > 0) {
-		console.log(sageutils.header("EXIF") + "Starting processing: " + thelist.length + " items");
+		sageutils.log("EXIF", "Starting processing:", thelist.length, "items");
 
 		exifAsync(thelist, function(err) {
 			if (err) {
-				console.log(sageutils.header("EXIF") + chalk.red.bold("Error:", err));
+				sageutils.log("EXIF", chalk.red.bold("Error:", err));
 			} else {
-				console.log(sageutils.header("EXIF") + chalk.green.bold("Processing finished for " + root));
+				sageutils.log("EXIF", chalk.green.bold("Processing finished for " + root));
 				if (callback) {
 					callback(thelist.length);
 				}
@@ -905,13 +946,13 @@ var refreshAssets = function(root, callback) {
 	}
 
 	if (thelist.length > 0) {
-		console.log(sageutils.header("EXIF") + "Starting processing: " + thelist.length + " items");
+		sageutils.log("EXIF", "Starting processing:", thelist.length, "items");
 
 		exifAsync(thelist, function(err) {
 			if (err) {
-				console.log(sageutils.header("EXIF") + "Error:", err);
+				sageutils.log("EXIF", "Error:", err);
 			} else {
-				console.log(sageutils.header("EXIF") + "Processing finished for " + root);
+				sageutils.log("EXIF", "Processing finished for " + root);
 				if (callback) {
 					callback(thelist.length);
 				}
@@ -933,7 +974,7 @@ var initialize = function(mainFolder, mediaFolders, whenDone) {
 		var root = mainFolder.path;
 		var relativePath = mainFolder.url;
 
-		console.log(sageutils.header("Assets") + 'Main asset folder: ' + chalk.yellow.bold(root));
+		sageutils.log("Assets", 'Main asset folder:', chalk.yellow.bold(root));
 
 		// Make sure the asset folder exists
 		var assetFolder = path.join(root, 'assets');
@@ -991,13 +1032,14 @@ var initialize = function(mainFolder, mediaFolders, whenDone) {
 				// Finally, delete the elements which are not there anymore
 				for (var item in AllAssets.list) {
 					if (item.startsWith(root) && AllAssets.list[item].valid === false) {
-						console.log(sageutils.header("Assets") + "Removing old item", item);
+						sageutils.log("Assets", "Removing old item", item);
 						delete AllAssets.list[item];
 					} else {
 						// Just remove the valid flag
 						delete AllAssets.list[item].valid;
 					}
 				}
+				saveAssets();
 				// callback when done
 				if (whenDone) {
 					whenDone();
@@ -1028,7 +1070,7 @@ var initialize = function(mainFolder, mediaFolders, whenDone) {
 };
 
 var addAssetFolder = function(root, whenDone) {
-	console.log(sageutils.header("Assets") + 'Adding asset folder: ' + chalk.yellow.bold(root));
+	sageutils.log("Assets", 'Adding asset folder:', chalk.yellow.bold(root));
 	// Make sure the asset folder exists
 	var assetFolder = path.join(root, 'assets');
 	if (!sageutils.folderExists(assetFolder)) {
@@ -1058,13 +1100,14 @@ var addAssetFolder = function(root, whenDone) {
 			// Finally, delete the elements which are not there anymore
 			for (var item in AllAssets.list) {
 				if (item.startsWith(root) && AllAssets.list[item].valid === false) {
-					console.log(sageutils.header("Assets") + "Removing old item", item);
+					sageutils.log("Assets", "Removing old item", item);
 					delete AllAssets.list[item];
 				} else {
 					// Just remove the valid flag
 					delete AllAssets.list[item].valid;
 				}
 			}
+			saveAssets();
 			// callback when done
 			if (whenDone) {
 				whenDone();
@@ -1084,7 +1127,7 @@ var regenerateAssets = function() {
 	var assetFile = path.join(assetFolder, 'assets.json');
 	if (sageutils.fileExists(assetFile)) {
 		fs.unlinkSync(assetFile);
-		console.log(sageutils.header("Assets") + "successfully deleted", assetFile);
+		sageutils.log("Assets", "successfully deleted", assetFile);
 	}
 	// var rootdir = AllAssets.root;
 	// var relativ = AllAssets.rel;

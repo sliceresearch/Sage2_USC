@@ -1,0 +1,17 @@
+{
+	"main_script": "voiceReporter.js",
+	"width": 300,
+	"height": 600,
+	"animation": false,
+	"resize": "free",
+	"dependencies": [
+	],
+	"load": {
+	},
+	"title": "voice reporter",
+	"version": "1.0.0",
+	"description": "shows voice log mainly used for debugging purposes",
+	"keywords": [  ],
+	"author": "Dylan Kobayashi <dylank@hawaii.edu>",
+	"license": "SAGE2-Software-License"
+}
