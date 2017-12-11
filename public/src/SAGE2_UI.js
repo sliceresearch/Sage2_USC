@@ -388,7 +388,7 @@ function SAGE2_init() {
 			
 		// SLICE attempt to auto start the pointer for mobile devices on load
 		// but not for teacher
-		if (__SAGE2__.browser.isMobile && urlParams.teacher !== "yes"){
+		if (clientDescription.clientType === "sliceUI" && urlParams.teacher !== "yes"){
 			// window.location.replace("/mobile_index.html");
 			var element = {id: "sage2pointer"};
 			handleClick(element);
@@ -1487,6 +1487,7 @@ function handleClick(element) {
 	} else if (element.id === "closeMobileSAGE2Pointer") {
 		// Mobile SAGE2 Pointer
 		interactor.stopSAGE2Pointer();
+		handleClick('settings');
 	} else if (element.id === "fileOpenBtn") {
 		// Media Browser Dialog
 		loadSelectedFile();
