@@ -74,11 +74,7 @@ var Slicepointer        = require('./src-slice/node-slicepointer'); 	  // SLICE
 var StickyItems         = require('./src/node-stickyitems');
 var registry            = require('./src/node-registry');         // Registry Manager
 var FileBufferManager	= require('./src/node-filebuffer');
-<<<<<<< HEAD
 var PartitionList		= require('./src/node-partitionlist');        // list of SAGE2 Partitions
-=======
-var PartitionList       = require('./src/node-partitionlist');    // list of SAGE2 Partitions
->>>>>>> upstream/master
 var SharedDataManager	= require('./src/node-sharedserverdata'); // manager for shared data
 var userlist            = require('./src/node-userlist');		  // list of users
 var S2Logger            = require('./src/node-logger');           // SAGE2 logging module
