@@ -413,10 +413,14 @@ SAGE2DisplayUI.prototype.addAppWindow = function(data) {
 	appIcon.className = "appWindowIcon";
 	appIcon.onerror = function(event) {
 		setTimeout(function() {
-			if (data.icon.startsWith('data:image')) {
-				appIcon.src = data.icon;
+			if (data.icon) {
+				if (data.icon.startsWith('data:image')) {
+					appIcon.src = data.icon;
+				} else {
+					appIcon.src = data.icon + "_512.jpg";
+				}
 			} else {
-				appIcon.src = data.icon + "_512.jpg";
+				appIcon.src = "/images/unknownapp_512.jpg";
 			}
 		}, 1000);
 	};

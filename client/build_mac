@@ -1,17 +1,18 @@
 #!/bin/sh
 
 # update the electron.js file
-npm run update
+#npm run update
 
 # add the webview runtime
 mkdir -p public/uploads/apps/Webview
 cp ../public/uploads/apps/Webview/SAGE2_script_supplement.js public/uploads/apps/Webview/SAGE2_script_supplement.js
 
 # package the app
-./node_modules/.bin/electron-packager ./ --platform=darwin --arch=x64 --icon=sage2.icns --overwrite
+npx electron-packager ./ --platform=darwin --arch=x64 --icon=sage2.icns --overwrite
 
 # add some utility files
-cp README.mac     SAGE2_client-darwin-x64/README
-cp View.mac       SAGE2_client-darwin-x64/Display0.command
-cp Fullscreen.mac SAGE2_client-darwin-x64/Fullscreen.command
+cp README.mac     SAGE2_client-darwin-x64/SAGE2_client.app/Contents/Resources/README
+cp View.mac       SAGE2_client-darwin-x64/SAGE2_client.app/Contents/Resources/Display0.command
+cp Fullscreen.mac SAGE2_client-darwin-x64/SAGE2_client.app/Contents/Resources/Fullscreen.command
 
+npx electron-installer-dmg SAGE2_client-darwin-x64/SAGE2_client.app SAGE2_client --out=SAGE2_client-darwin-x64 --icon=sage2.icns --background=background.png --overwrite

@@ -43,8 +43,10 @@
 		viewing_distance: 0.71	// in meters
 	},
 	resolution: {
-		width: 2560,
-		height: 1600
+		width: 3840,
+		height: 2160
+		//width: 2560,
+		//height: 1600
 		//width: 1366,
 		//height: 768
 	},
@@ -66,7 +68,8 @@
 			name: "Cyber-Commons",
 			host: "inferno.evl.uic.edu",
 			port: 443,
-			secure: true
+			secure: true,
+			password: "evl123"
 		},
 		{
 			name: "IceWall",
@@ -78,7 +81,8 @@
 			name: "CAVE2",
 			host: "lyra.evl.uic.edu",
 			port: 443,
-			secure: true
+			secure: true,
+			password: "evl123"
 		},
 		{
 			name: "CAVE2-Wall",
@@ -94,7 +98,7 @@
 		
 		omicron: // enable omicron input module
 		{
-			enable: true,
+			enable: false,
 			
 			// Port SAGE will listen on for a oinputserver connection
 			msgPort: 28000,
@@ -105,6 +109,10 @@
 			dataPort: 30015,
 			
 			eventDebug: false,
+			
+			enableTouch: true,
+			enableMocap: false,
+			enableWand: false,
 			
 			style: "Touch", // Display as "Touch" or "Pointer"
 			interactionMode: "App", // "Window" or "App"

@@ -28,7 +28,7 @@
  * @type {Object}
  */
 var __SAGE2__ = {};
-__SAGE2__.version = "2.0.0";
+__SAGE2__.version = "3.0.0";
 
 
 /**
@@ -895,6 +895,21 @@ function addCookie(sKey, sValue) {
 		"; expires=Fri, 31 Dec 9999 23:59:59 GMT" +
 		"; domain=" + domain +
 		"; path=/";
+	return true;
+}
+
+/**
+ * Delete a cookie for a given key
+ *
+ * @method deleteCookie
+ * @param sKey {String} key
+ * @return {Boolean} true/false
+ */
+function deleteCookie(sKey) {
+	if (!sKey) {
+		return false;
+	}
+	document.cookie = encodeURIComponent(sKey) + '=; expires=Thu, 01 Jan 1970 00:00:01 GMT;';
 	return true;
 }
 

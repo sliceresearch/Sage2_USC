@@ -1,20 +1,18 @@
 How to run:
 -----------
 
-Navigate to the folder 'SAGE2_client-[arch]'
+Install application in /Applications from the DMG file
 
-To start a display for client 0 (from the command-line or double-click):
-	./Display0.command 
+Example:
+   - display client 0 on default host (localhost:9090)
+   open /Applications/SAGE2_client.app --args electron.js -d 0
 
-To pass extra parameters (from the command-line):
-	./Display0.command -d -1          # overview client
-	./Display0.command -d -1 -f       # fullscreen
-	./Display0.command -s http://localhost:9292 # specify a server URL
 
-Fullscreen.command is similar but goes fullscreen (same parameters can be added)
+Default is opening the client 0 on default port (UI at http://localhost:9292).
 
-Default is opening the client 0 on default port (http://localhost:9292).
-
+Command line help
+-----------------
+/Applications/SAGE2_client.app/Contents/MacOS/SAGE2_client electron.js -h
 
 # Electron SAGE2 arguments
 # -h, --help           output usage information
@@ -37,3 +35,5 @@ Default is opening the client 0 on default port (http://localhost:9292).
 # --console            Open the devtools console
 
 
+Use the following syntax:
+  - open /Applications/SAGE2_client.app --args electron.js [args]

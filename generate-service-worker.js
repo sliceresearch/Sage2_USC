@@ -40,6 +40,7 @@ function generate() {
 			rootDir + '/images/ui/*.svg',
 			rootDir + '/images/radialMenu/*.svg',
 			rootDir + '/images/appUi/*.svg',
+			rootDir + '/images/icons/*.png',
 			// HTML pages
 			rootDir + 'audioManager.html',
 			rootDir + 'index.html',

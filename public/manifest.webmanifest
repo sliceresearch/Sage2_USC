@@ -21,9 +21,21 @@
       "src": "images/icons/S2-192.png",
       "sizes": "192x192",
       "type": "image/png"
+    },
+    {
+      "src": "images/icons/S2-256.png",
+      "sizes": "256x256",
+      "type": "image/png"
+    },
+    {
+      "src": "images/icons/S2-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
     }
   ],
-  "start_url": "/index.html",
+  "start_url": "index.html",
+  "background_color": "#d1d1d1",
+  "theme_color": "#23B064",
   "display": "standalone"
 }
 

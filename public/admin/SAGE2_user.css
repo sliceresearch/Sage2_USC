@@ -1,0 +1,153 @@
+body {
+	font-family: Arimo, Helvetica, sans-serif;
+	background:white;
+	color: #333;
+	text-align:left;
+	font-size:14px;
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
+	padding:20px;
+}
+
+button.tab {
+	font:inherit;
+	font-weight:bold;
+	display:inline-block;
+	border:none;
+	padding:10px;
+	color:#498;
+	background:#fafafa;
+	box-shadow:2px 2px 5px #ccc;
+	text-decoration:none;
+	margin-right:10px;
+	outline:none;
+	cursor:pointer;
+}
+button.tab:active, button.tab.active:active {
+	background:#ddd;
+	box-shadow:none;
+}
+button.tab.active {
+	background:#f0f0f0;
+	box-shadow:none;
+}
+
+p {
+	font-family:monospace;
+	margin:1em 0;
+	font-size:13.5px;
+}
+
+b {
+	color: crimson;
+	font-weight:700;
+	font-size:13.5px;
+	font-family:monospace;
+	margin-right:10px;
+	min-width:80px;
+	display:inline-block;
+}
+
+.box {
+	background:#f0f0f0;
+	margin-top: 15px;
+	padding: 20px;
+	min-height:100px;
+	overflow-x:auto;
+}
+
+section {
+	display:none;
+}
+section.active {
+	display:block;
+}
+section > ul {
+	padding:0;
+	list-style-type: none;
+	margin:0;
+}
+ul, li {
+	list-style-type: none;
+}
+
+table {
+	margin:-5px;
+	width:100%;
+	border-collapse: collapse;
+}
+tr:first-of-type {
+	border-bottom:1px solid #ccc;		
+}
+th {
+	padding: 5px;
+	padding-bottom:10px;
+	font-weight:400;
+	vertical-align: top;
+	white-space: nowrap;
+	padding-right:20px;
+}
+tr:first-of-type+tr td {
+	padding-top:15px;
+}
+td {
+	padding:8px 5px;
+}
+span.cursor {
+	display:inline-block;
+	width:0.9em;
+	height:0.9em;
+	border:1px solid white;
+	box-shadow:1px 1px 2px rgba(0,0,0,0.5);
+}
+
+#permission--nav {
+	margin-top:35px;
+	font-weight:bold;
+}
+#permission--nav select,
+#permission--nav button {
+	font-size:inherit;
+	border:none;
+	border-radius:0;
+	padding:5px 10px;
+	outline:none;
+	cursor:pointer;
+	background:white;
+	display:inline-block;
+	margin-left:5px;
+}
+#permission--nav select {
+	height:2em;
+	border:1px solid #ccc;
+}
+
+#permission--nav button {
+	box-shadow:2px 2px 5px #ccc;
+}
+#permission--nav button:active {
+	box-shadow: none;
+	background:#ccc;
+}
+
+#permission--input {
+	padding:5px 10px;
+	border:1px solid #ccc;
+	width:6em;
+	outline:none;
+	font-size:inherit;
+}
+#permission--input:focus {
+	background:#fafafa;
+}
+
+#permission--form {
+	display:none;
+}
+#permission--nav.adding select,
+.adding #permission--new {
+	display:none;
+}
+.adding #permission--form {
+	display:inline-block;
+}

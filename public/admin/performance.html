@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+<meta charset="utf-8">
+<title>SAGE2 performance</title>
+
+<script type="text/license">
+	// SAGE2 is available for use under the SAGE2 Software License
+	//
+	// University of Illinois at Chicago's Electronic Visualization Laboratory (EVL)
+	// and University of Hawai'i at Manoa's Laboratory for Advanced Visualization and
+	// Applications (LAVA)
+	//
+	// See full text, terms and conditions in the LICENSE.txt included file
+	//
+	// Copyright (c) 2017
+</script>
+
+<script async src="../src/websocket.io.js"></script>
+<script async src="../src/SAGE2_runtime.js"></script>
+<script async src="performance_chart.js"></script>
+<script async src="SAGE2_performance.js"></script>
+
+<script async src="../lib/d3.min.js"></script>
+
+<link rel="stylesheet" type="text/css" href="style.css" media="screen" />
+
+</head>
+
+<body onload="SAGE2_init()" onresize="handlePageResize()">
+
+	<header>
+		<h1>SAGE2 Performance Monitoring</h1>
+	</header>
+
+	<main>
+
+		<section class="siteType">
+			<h2 id="serverheading">Server</h2>
+			<pre id="terminal1" class="mycode" style="height:8em;"></pre>
+			<h3>Server Metrics</h3>
+			<div id="paneContainer"> 
+				<div id="loadPane">
+					<div id="serverload" class="chart" style="height:10em;"></div>
+					<div id="cpuload" class="chart" style="height:10em;"></div>
+				</div>
+				
+				<div id="memoryPane">
+					<div id="servermem" class="chart" style="height:10em;"></div>
+					<div id="memusage" class="chart" style="height:10em;"></div>
+				</div>	
+				<div id="networkPane">
+					<div id="servertraffic" class="chart" style="height:10em;"></div>
+					<div id="systemtraffic" class="chart" style="height:10em;"></div>
+				</div>
+			</div>
+		</section>
+
+		<section class="siteType">
+			<h2>Display Clients</h2>
+			<pre id="terminal2" class="mycode" style="height:12em;"></pre>
+			<h3>Display Client Metrics</h3>
+			<div id="clientPerformance"> 
+				<div id="smallmultiplediv" class="chart"></div>
+				<div id="displaypanecontainer">
+					<div id="displayloadpane">
+						<div id="displayclientload" class="chart" style="height:18em;"></div>
+						<div id="displaycpuload" class="chart" style="height:18em;"></div>
+					</div>
+					
+					<div id="displaymemorypane">
+						<div id="displayclientmem" class="chart" style="height:18em;"></div>
+						<div id="displaymemusage" class="chart" style="height:18em;"></div>
+					</div>	
+				</div>
+			</div>
+		</section>
+	</main>
+
+</body>
+</html>
+

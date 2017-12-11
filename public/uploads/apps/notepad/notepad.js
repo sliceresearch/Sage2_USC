@@ -13,20 +13,23 @@
 var	NotepadBlinker = function(id, ctx, date, color) {
 	this.id = id;
 	this.visible  = true;
-	this.color    = color;
+	this.color	= color;
 	this.blinkerX = null;
 	this.blinkerY = null;
 	this.textIdx  = null;
 	this.blinkerL = null;
 	this.blinkerC = null;
+	this.rangeBlinker = [0, 0];
+
 	this.draw = function(text, fH) {
 		// This function assumes that offSet function is always called prior to this function
+		// console.log(fH);
 		this.blinkerY += this.blinkerL * fH;
-		if (this.blinkerC > 0 && this.blinkerL in text) {
-			this.blinkerX += ctx.measureText(text[this.blinkerL].substring(0, this.blinkerC)).width;
+		if (this.blinkerC > 0 && this.blinkerL + this.rangeBlinker[0] in text) {
+			this.blinkerX += ctx.measureText(text[this.blinkerL +
+				this.rangeBlinker[0]].substring(0, this.blinkerC)).width;
 		}
-
-		var col    = ctx.strokeStyle;
+		var col	= ctx.strokeStyle;
 		var offset = fH * 0.25;
 		var offY   = this.blinkerY + offset;
 		ctx.strokeStyle = "rgba(" + this.color[0] + "," + this.color[1] + "," + this.color[2] + ",1.0)";
@@ -48,6 +51,11 @@ var	NotepadBlinker = function(id, ctx, date, color) {
 		this.blinkerX = x;
 		this.blinkerY = y;
 	};
+
+	this.range = function(start, end) {
+		this.rangeBlinker[0] = start;
+		this.rangeBlinker[1] = end;
+	};
 };
 
 
@@ -64,15 +72,15 @@ var notepad = SAGE2_App.extend({
 		this.lines   = null;
 
 		this.fontSize = 12;
-		this.font     = "Arial";
-		this.bold     = false;
+		this.font	 = "Arial";
+		this.bold	 = false;
 		this.height   = null;
-		this.space    = null;
+		this.space	= null;
 		this.lMargin  = 40;
 		this.fontHeight = null;
 
 		this.minDim  = null;
-		this.text    = "";
+		this.text	= "";
 		this.range   = [];
 		this.timer   = null;
 		this.blinkerArr = [];
@@ -99,6 +107,7 @@ var notepad = SAGE2_App.extend({
 		this.ctx = this.element.getContext('2d');
 		this.minDim = Math.min(this.element.width, this.element.height);
 		this.computeMetrics();
+		this.findRange();
 		if (isMaster) {
 			this.fileRead = true;
 			this.fileName = "Sample.txt";
@@ -157,6 +166,7 @@ var notepad = SAGE2_App.extend({
 		for (var parts = 0; parts < this.range.length; parts++) {
 			var start = this.range[parts][0];
 			var end = this.range[parts][1];
+			// console.log(start + " : " + end);
 			for (var i = start; i <= end; i++) {
 
 				this.ctx.font = "16px " + this.font;
@@ -165,8 +175,8 @@ var notepad = SAGE2_App.extend({
 				if (i in this.state.content && this.state.content[i] !== null) {
 					var wrSpc = this.element.width - (2 * this.space + this.lMargin);
 					if (this.ctx.measureText(this.state.content[i]).width > wrSpc) {
-						var cut = Math.floor(wrSpc / this.ctx.measureText(this.state.content[i]).width *
-							this.state.content[i].length);
+						var cut = Math.floor(wrSpc / this.ctx.measureText(this.state.content[i]).width
+							* this.state.content[i].length);
 						var re = new RegExp(".{1," + cut + "}", "g");
 						var mLines = this.state.content[i].match(re);
 						for (var ml = 0; ml < mLines.length; ml++) {
@@ -196,7 +206,6 @@ var notepad = SAGE2_App.extend({
 		this.ctx.strokeStyle = "rgba(0, 0, 0, 1.0)";
 		this.ctx.fillStyle = "rgba(0, 0, 0, 1.0)";
 		this.space = this.ctx.measureText(" ").width;
-		this.findRange();
 		this.displayText();
 		if (date.getMilliseconds() < 500) {
 			for (var bkr in this.blinkerArr) {
@@ -209,21 +218,26 @@ var notepad = SAGE2_App.extend({
 	resize: function(date) {
 		this.fontSize = Math.max(Math.floor(0.02 * this.element.height), 14);
 		this.computeMetrics();
+		this.findRange();
 		this.draw(date);
 	},
 
 
 	enterKey: function(curL, curC, userId) {
-		if (curL in this.state.content) {
-			var nl = this.state.content[curL].substring(curC, this.state.content[curL].length);
-			this.state.content[curL] = this.state.content[curL].substring(0, curC);
-			if (curL + 1 in this.state.content) {
+		if (curL + this.range[0][0] - 1 in this.state.content) {
+			// console.log("curL::::" + curL);
+			var nl = this.state.content[curL + this.range[0][0] - 1].substring(curC,
+				this.state.content[curL + this.range[0][0] - 1].length);
+			this.state.content[curL + this.range[0][0] - 1] =
+				this.state.content[curL + this.range[0][0] - 1].substring(0, curC);
+			if (curL + this.range[0][0] in this.state.content) {
+				// console.log("");
 				this.state.content.splice(curL + 1, 0, nl);
 			} else {
 				this.state.content[curL + 1] = nl;
 			}
 		} else {
-			this.state.content[curL] = "";
+			this.state.content[curL + this.range[0][0] - 1] = "";
 		}
 		this.blinkerArr[userId].moveLC(curL + 1, 0);
 	},
@@ -257,13 +271,13 @@ var notepad = SAGE2_App.extend({
 				if ((userId.id in this.blinkerArr) === false) {
 					var bkr = new NotepadBlinker(userId.id, this.ctx, date, user_color);
 					this.blinkerArr[userId.id] = bkr;
-
 				} else {
 					this.blinkerArr[userId.id].color = user_color;
 				}
 				var lno = Math.ceil(y / this.fontHeight);
-				var tArIdx = lno;
-				if (tArIdx in this.state.content) {
+				var tArIdx = lno + this.range[0][0] - 1;
+				if (tArIdx in this.state.content && this.state.content[tArIdx] != null) {
+					// console.log(tArIdx);
 					var len = this.ctx.measureText(this.state.content[tArIdx]).width;
 					if (x >= len) {
 						this.blinkerArr[userId.id].moveLC(lno, this.state.content[tArIdx].length);
@@ -307,11 +321,16 @@ var notepad = SAGE2_App.extend({
 			if (theAsciiCode === 13) {
 				this.enterKey(curL, curC, userId.id);
 			} else {
-				if (curL in this.state.content) {
-					this.state.content[curL] = this.state.content[curL].substring(0, curC) +  String.fromCharCode(theAsciiCode) +
-										this.state.content[curL].substring(curC, this.state.content[curL].length);
+				if (curL + this.range[0][0] - 1 in this.state.content
+					&& this.state.content[curL + this.range[0][0] - 1] != null) {
+					this.blinkerArr[userId.id].range(this.range[0][0] - 1, this.range[0][1]);
+					this.state.content[curL + this.range[0][0] - 1] =
+						this.state.content[curL + this.range[0][0] - 1].substring(0, curC)
+						+ String.fromCharCode(theAsciiCode)
+						+ this.state.content[curL + this.range[0][0] - 1].substring(curC,
+							this.state.content[curL + this.range[0][0] - 1].length);
 				} else {
-					this.state.content[curL] = String.fromCharCode(theAsciiCode);
+					this.state.content[curL + this.range[0][0] - 1] = String.fromCharCode(theAsciiCode);
 				}
 				this.blinkerArr[userId.id].moveLC(curL, curC + 1);
 			}
@@ -320,45 +339,49 @@ var notepad = SAGE2_App.extend({
 			curL = userId.id && this.blinkerArr[userId.id].blinkerL;
 			curC = this.blinkerArr[userId.id].blinkerC;
 			if (theJavascriptCode === 8) {
-				if (curL in this.state.content) {
-					pre  = this.state.content[curL].substring(0, curC - 1);
-					post = this.state.content[curL].substring(curC, this.state.content[curL].length);
+				if (curL + this.range[0][0] - 1 in this.state.content) {
+					pre  = this.state.content[curL + this.range[0][0] - 1].substring(0, curC - 1);
+					post = this.state.content[curL + this.range[0][0] - 1].substring(curC,
+						this.state.content[curL + this.range[0][0] - 1].length);
 					if (curC > 0) {
-						this.state.content[curL] = pre + post;
+						this.state.content[curL + this.range[0][0] - 1] = pre + post;
 						this.blinkerArr[userId.id].moveLC(curL, curC - 1);
 
 					} else if (curL > 1) {
 						t = "";
-						if (curL - 1 in this.state.content) {
-							t =  this.state.content[curL - 1];
+						if (curL + this.range[0][0] - 2 in this.state.content) {
+							t =  this.state.content[curL + this.range[0][0] - 2];
+							// console.log("T : ");
 						}
-						this.state.content[curL - 1] = t + post;
-						this.state.content.splice(curL, 1);
+						this.state.content[curL + this.range[0][0] - 2] = t + post;
+						this.state.content.splice(curL + this.range[0][0] - 1, 1);
 						this.blinkerArr[userId.id].moveLC(curL - 1, t.length);
 					}
-				} else if (curL - 1 in this.state.content) {
+				} else if (curL + this.range[0][0] - 1 in this.state.content) {
 					this.blinkerArr[userId.id].moveLC(curL - 1, this.state.content[curL - 1].length);
 				} else if (curL > 1) {
 					this.blinkerArr[userId.id].moveLC(curL - 1, 0);
 				}
 
 			} else if (theJavascriptCode === 46) {
-				pre  = this.state.content[curL].substring(0, curC);
-				post = this.state.content[curL].substring(curC + 1, this.state.content[curL].length);
+				pre  = this.state.content[curL + this.range[0][0] - 1].substring(0, curC);
+				post = this.state.content[curL + this.range[0][0] - 1].substring(curC + 1,
+					this.state.content[curL + this.range[0][0] - 1].length);
 
-				if ((curL in this.state.content) === false) {
+				if ((curL + this.range[0][0] - 1 in this.state.content) === false) {
 					return;
 				}
 
-				if (curC < this.state.content[curL].length) {
-					this.state.content[curL] = pre + post;
+				if (curC < this.state.content[curL + this.range[0][0] - 1].length) {
+					this.state.content[curL + this.range[0][0] - 1] = pre + post;
 				} else {
 					t = "";
-					if (curL + 1 in this.state.content) {
-						t = this.state.content[curL + 1];
+					if (curL + this.range[0][0] in this.state.content) {
+						t = this.state.content[curL + this.range[0][0]];
 						this.state.content.splice(curL + 1, 1);
 					}
-					this.state.content[curL] = this.state.content[curL]  + t;
+					this.state.content[curL + this.range[0][0] - 1] =
+						this.state.content[curL + this.range[0][0] - 1]  + t;
 				}
 
 			} else if (theJavascriptCode === 37) {
@@ -366,12 +389,14 @@ var notepad = SAGE2_App.extend({
 					curC--;
 				} else {
 					curL = curL - 1 || curL;
-					curC = (curL in this.state.content) ? this.state.content[curL].length : 0;
+					curC = (curL + this.range[0][0] - 1 in this.state.content)
+						? this.state.content[curL + this.range[0][0] - 1].length : 0;
 				}
 				this.blinkerArr[userId.id].moveLC(curL, curC);
 
 			} else if (theJavascriptCode === 39) {
-				if (curL in this.state.content && curC < this.state.content[curL].length) {
+				if (curL + this.range[0][0] - 1 in this.state.content && curC
+					< this.state.content[curL + this.range[0][0] - 1].length) {
 					curC++;
 				} else {
 					curL++;
@@ -400,9 +425,18 @@ var notepad = SAGE2_App.extend({
 
 		} else if (type === "pointerScroll") {
 			// not implemented yet
+			if (data.wheelDelta > 0) {
+				this.range[0][0] += 5;
+				this.range[0][1] += 5;
+			} else if (data.wheelDelta < 0) {
+				if (this.range[0][0] > 5) {
+					this.range[0][0] += -5;
+					this.range[0][1] += -5;
+				}
+			}
 		}
 
-		this.refresh(date);
+		// this.refresh(date);
 	},
 
 	quit: function() {
@@ -410,4 +444,3 @@ var notepad = SAGE2_App.extend({
 	}
 
 });
-

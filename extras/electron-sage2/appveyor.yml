@@ -1,0 +1,56 @@
+version: 3.0.{build}
+
+branches:
+  only:
+  - master
+
+shallow_clone: true
+
+configuration: Release
+
+platform: x64
+
+init:
+  - set PATH=C:\Program Files\Git\mingw64\bin;%PATH%
+
+install:
+  - ps: Get-NodeJsLatestBuild 8.4
+  - ps: Install-Product node 8.4.0 x64
+  - dir C:\avvm\node
+  - node -v
+  - cd %APPVEYOR_BUILD_FOLDER%
+  - cd extras
+  - cd electron-sage2
+  - npm install --msvs_version=2013
+  - dir
+  - npm run win1
+  - npm run win2
+  - move windows-installer\sage2-ui-Installer.exe ..\..\sage2-ui-win64.exe
+
+build: off
+
+test: off
+
+artifacts:
+  - path: sage2-ui-win64.exe
+    name: sage2-ui
+
+deploy:
+  - provider: FTP
+    host: ftp.sagecommons.org
+    protocol: ftp
+    username: upload@sagecommons.org
+    password:
+      secure: L4I4NkKN7mrQww7GgwPLrA==
+    folder: /UI
+    artifact: sage2-ui
+
+notifications:
+  - provider: Slack
+    channel: '#appveyor'
+    auth_token:
+      secure: zWPzLLrh/2HV3lXJd9q5XHTy015slI7x1ptyvmOARG2TXpeftHtzKbtzxufzpVBirSHrvr95vgBR+ouSX+KQHceIPeAXEJEBXvA7wHZS7ng=
+    on_build_success: true
+    on_build_failure: true
+    on_build_status_changed: true
+

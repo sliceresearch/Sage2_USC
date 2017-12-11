@@ -96,6 +96,10 @@
 			
 			eventDebug: false,
 			
+			enableTouch: true,
+			enableMocap: false,
+			enableWand: false,
+			
 			style: "Touch", // Display as "Touch" or "Pointer"
 			interactionMode: "App", // "Window" or "App"
 
