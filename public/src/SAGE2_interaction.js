@@ -1328,7 +1328,7 @@ const SAGE2_interaction = (function() {
 
 			switch (type) {
 				case 'init':
-					webixOptions.head = "Set your pointer name and color";
+					webixOptions.head = "Enter your name or nickname and choose a pointer color";
 					break;
 				case 'main':
 					// also show screen resolution options when called via toolbar
@@ -1338,14 +1338,14 @@ const SAGE2_interaction = (function() {
 
 					elements.unshift(
 						{
-							view: "label", label: "Pointer", align: "center"
+							view: "label", label: "Enter your name or nickname and choose a pointer color", align: "center"
 						},
 						{
 							type: "space",
 							rows: userElements
 						},
 						{
-							view: "label", label: "Screen sharing", align: "center"
+							view: "label", label: "Screen sharing settings", align: "center"
 						},
 						{
 							type: "space",
