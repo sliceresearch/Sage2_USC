@@ -278,7 +278,7 @@ function setupListeners(wsio) {
 				//clients.performanceMetrics.splice(0, 1);
 				if (clients.performanceMetrics.length > clients.hardware.length) {
 					wsio.emit("requestClientUpdate");
-				} else if (clients.performanceMetrics.length < clients.hardware.length) {
+				} else if (clients.performanceMetrics.length < displayConfig.displays.length) {
 					flagOfflineDisplayClients();
 				}
 				if (displayConfig.displays.length > clients.hardware.length) {
@@ -324,24 +324,19 @@ function setupListeners(wsio) {
 	});
 }
 
-function flagOfflineDisplayClients() {
-	var data = clients.hardware;
+function flagMissingDisplayClients() {
+	var data = clients.performanceMetrics;
 	data.forEach(el => {
-		var match = clients.performanceMetrics.find(function(d) {
+		var match = clients.hardware.find(function(d) {
 			return d.clientID === el.clientID;
 		});
 		if (match === null || match === undefined) {
-			var clientPerfEntry = {
-				clientID: el.clientID,
-				id: el.id,
-				status: 'off'
-			};
-			clients.performanceMetrics.push(clientPerfEntry);
+			el.status = 'missing';
 		}
 	});
 }
 
-function flagMissingDisplayClients() {
+function flagOfflineDisplayClients() {
 	var data = displayConfig.displays;
 	data.forEach(el => {
 		var match = clients.performanceMetrics.find(function(d) {
@@ -351,10 +346,13 @@ function flagMissingDisplayClients() {
 			var clientPerfEntry = {
 				clientID: el.ID,
 				id: null,
-				status: 'missing'
+				status: 'off'
 			};
 			clients.performanceMetrics.push(clientPerfEntry);
 		}
+	});
+	clients.performanceMetrics.sort(function(a, b) {
+		return a.clientID - b.clientID;
 	});
 }
 
