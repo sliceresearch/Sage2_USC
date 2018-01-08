@@ -266,6 +266,9 @@ function setupListeners(wsio) {
 			saveData('network', data.network);
 			saveData('serverLoad', data.serverLoad);
 			saveData('serverTraffic', data.serverTraffic);
+			if (displayConfig === null) {
+				return;
+			}
 			if (data.displayPerf !== null && data.displayPerf !== undefined && data.displayPerf.length > 0) {
 				clients.performanceMetrics = data.displayPerf;
 				var now = clients.performanceMetrics[0].date;
@@ -275,7 +278,6 @@ function setupListeners(wsio) {
 				clients.history.push(...clients.performanceMetrics);
 				var durationAgo = now - durationInMinutes * (60 * 1000);
 				removeObjectsFromArrayOnPropertyValue(clients.history, 'date', durationAgo, 'lt');
-				//clients.performanceMetrics.splice(0, 1);
 				if (clients.performanceMetrics.length > clients.hardware.length) {
 					wsio.emit("requestClientUpdate");
 				} else if (clients.performanceMetrics.length < displayConfig.displays.length) {
@@ -338,16 +340,17 @@ function flagMissingDisplayClients() {
 
 function flagOfflineDisplayClients() {
 	var data = displayConfig.displays;
-	data.forEach(el => {
+	data.forEach(function (el, i) {
 		var match = clients.performanceMetrics.find(function(d) {
-			return d.clientID === el.ID;
+			return d.clientID === i;
 		});
 		if (match === null || match === undefined) {
 			var clientPerfEntry = {
-				clientID: el.ID,
+				clientID: i,
 				id: null,
 				status: 'off'
 			};
+
 			clients.performanceMetrics.push(clientPerfEntry);
 		}
 	});
