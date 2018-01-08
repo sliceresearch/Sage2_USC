@@ -71,7 +71,7 @@ VoiceActionManager.prototype.oldLog = function(line, shouldConsolePrint = false)
 /**
  * File logging for command submission and transcripts.
  * Writes based on data within this.currentCommandLogInfo.
- * 
+ *
  * Must be enabled with the configuration file entry: logVoiceCommands.
  *
  * @method fileLog
