@@ -67,6 +67,19 @@ function SAGE2_interaction(wsio) {
 		color: localStorage.SAGE2_ptrColor
 	});
 
+	// Handler for login state
+	this.wsio.on('loginStateChanged', function(newdata) {
+		console.log('loginStateChanged', newdata);
+	});
+	// Login as a guest in the new login system
+	this.wsio.emit('loginUser', {
+		name: '',
+		email: '',
+		SAGE2_ptrName: localStorage.SAGE2_ptrName,
+		SAGE2_ptrColor: localStorage.SAGE2_ptrColor,
+		init: true
+	});
+
 	/**
 	* Set a unique ID
 	*

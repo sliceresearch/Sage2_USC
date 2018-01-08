@@ -79,16 +79,17 @@ var Webview = SAGE2_App.extend({
 		var video_id, ampersandPosition;
 
 		// A youtube URL with a 'watch' video
-		if (view_url.startsWith('https://www.youtube.com') &&
-				view_url.indexOf('embed') === -1 &&
+		if (view_url.startsWith('https://www.youtube.com')) {
+			if (view_url.indexOf('embed') === -1 ||
 				view_url.indexOf("watch?v=") >= 0) {
-			// Search for the Youtube ID
-			video_id = view_url.split('v=')[1];
-			ampersandPosition = video_id.indexOf('&');
-			if (ampersandPosition != -1) {
-				video_id = video_id.substring(0, ampersandPosition);
+				// Search for the Youtube ID
+				video_id = view_url.split('v=')[1];
+				ampersandPosition = video_id.indexOf('&');
+				if (ampersandPosition != -1) {
+					video_id = video_id.substring(0, ampersandPosition);
+				}
+				view_url = 'https://www.youtube.com/embed/' + video_id + '?autoplay=0';
 			}
-			view_url = 'https://www.youtube.com/embed/' + video_id + '?autoplay=0';
 			this.contentType = "youtube";
 		} else if (view_url.startsWith('https://youtu.be')) {
 			// youtube short URL (used in sharing)
@@ -121,12 +122,18 @@ var Webview = SAGE2_App.extend({
 				view_url = 'https://player.twitch.tv/?!autoplay&video=v' + twitch_id;
 			}
 			this.contentType = "twitch";
-		} else if (view_url.startsWith("http://" + this.config.host + ':' + this.config.port + "//user/apps")) {
+		} else if (view_url.includes("http://" + this.config.host) && view_url.includes("/user/apps")) {
 			// Locally hosted WebViews are assumed to be Unity applications
 			// Move to more dedicated url later? //users/apps/unity ?
 			this.contentType = "unity";
 		} else if (view_url.indexOf('docs.google.com/presentation') >= 0) {
 			this.contentType = "google_slides";
+		} else if (view_url.indexOf('appear.in') >= 0) {
+			if (!view_url.endsWith('?widescreen')) {
+				// to enable non-cropped mode, in widescreen
+				view_url += '?widescreen';
+			}
+			this.contentType = "appearin";
 		}
 
 		// Store the zoom level, when in desktop emulation
@@ -156,7 +163,8 @@ var Webview = SAGE2_App.extend({
 		});
 
 		// done loading
-		this.element.addEventListener("did-finish-load", function() {
+		// this.element.addEventListener("did-finish-load", function() {
+		this.element.addEventListener("did-stop-loading", function() {
 			// code injection to support key translation
 			_this.codeInject();
 			// update the context menu with the current URL
@@ -325,11 +333,12 @@ var Webview = SAGE2_App.extend({
 		var app = require("electron").remote.app;
 		// get the application path
 		var appPath = app.getAppPath();
-		// split the path at node_modules
-		var subPath = appPath.split("node_modules");
-		// take the first element which contains the current folder of the application
-		var rootPath = subPath[0];
-		// add the relative path to the webview folder
+		// // split the path at node_modules
+		// var subPath = appPath.split("node_modules");
+		// // take the first element which contains the current folder of the application
+		// var rootPath = subPath[0];
+		// // add the relative path to the webview folder
+		var rootPath = appPath;
 		var preloadPath = path.join(rootPath, 'public/uploads/apps/Webview', 'SAGE2_script_supplement.js');
 		// finally make it a local URL and pass it to the webview element
 		this.element.preload = "file://" + preloadPath;

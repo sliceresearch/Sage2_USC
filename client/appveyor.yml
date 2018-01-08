@@ -1,4 +1,4 @@
-version: 2.9.{build}
+version: 3.0.{build}
 
 branches:
   only:
@@ -21,7 +21,7 @@ install:
   - cd %APPVEYOR_BUILD_FOLDER%
   - cd client
   - npm install --msvs_version=2013
-  - copy /Y ..\electron.js  electron.js
+  # - copy /Y ..\electron.js  electron.js
   - dir
   - mkdir public
   - mkdir public\uploads
@@ -32,6 +32,8 @@ install:
   - copy /Y README.win      SAGE2_client-win32-x64\README
   - copy /Y View.win        SAGE2_client-win32-x64\Display0.bat
   - copy /Y Fullscreen.win  SAGE2_client-win32-x64\Fullscreen.bat
+  - 7z a -sfx7z.sfx SAGE2_client-win64.exe SAGE2_client-win32-x64 > nul
+  - move SAGE2_client-win64.exe ..
   - node build_win.js
   - move windows-installer\SAGE2_client-Installer.exe ..
 
@@ -42,6 +44,8 @@ test: off
 artifacts:
   - path: SAGE2_client-Installer.exe
     name: sage2_client
+  - path: SAGE2_client-win64.exe
+    name: sage2_client2
 
 deploy:
   - provider: FTP
@@ -52,6 +56,14 @@ deploy:
       secure: L4I4NkKN7mrQww7GgwPLrA==
     folder: /Display
     artifact: sage2_client
+  - provider: FTP
+    host: ftp.sagecommons.org
+    protocol: ftp
+    username: upload@sagecommons.org
+    password:
+      secure: L4I4NkKN7mrQww7GgwPLrA==
+    folder: /Display
+    artifact: sage2_client2
 
 notifications:
   - provider: Slack

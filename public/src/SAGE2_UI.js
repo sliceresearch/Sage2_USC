@@ -684,6 +684,8 @@ function setupListeners() {
 		if (interactor.mediaStream !== null) {
 			var track = interactor.mediaStream.getTracks()[0];
 			track.stop();
+			// need to call streamEnd when window close through the UI
+			interactor.streamEnd();
 			// close notification
 			if (note) {
 				note.close();

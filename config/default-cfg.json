@@ -8,12 +8,16 @@
 	index_port: 9292,
 	background: {
 		color: "#333333",
+		image: {
+			url: "images/background/dbgrid.png",
+			style: "tile"
+		},
 		watermark: {
-			svg: "images/sage2.svg",
-			color: "rgba(255, 255, 255, 0.5)"
+			svg: "images/EVL-LAVA.svg",
+			color: "rgba(86, 117, 114, 0.9)"
 		}
 	},
-        audio: {
+    audio: {
                 initialVolume: 8,
         },
 	ui: {
@@ -23,6 +27,10 @@
                 maxWindowWidth: 8192,
                 maxWindowHeight: 8192,
                 noDropShadow: true
+	},
+	voice_commands: {
+		enabled: true,
+		log: false
 	},
 	resolution: {
 		width: 1920,

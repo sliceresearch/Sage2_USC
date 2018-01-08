@@ -1,10 +1,10 @@
 {
   "name": "sage2-ui",
-  "version": "2.9.0",
+  "version": "3.0.0",
   "description": "SAGE2 UI Lite",
   "main": "src/main.js",
   "scripts": {
-    "start": "electron main.js",
+    "start": "electron src/main.js",
     "mac1":  "electron-packager ./ --platform=darwin --arch=x64 --icon=sage2.icns --overwrite",
     "mac2":  "electron-installer-dmg sage2-ui-darwin-x64/sage2-ui.app sage2-ui --out=sage2-ui-darwin-x64 --icon=sage2.icns --background=background.png --overwrite",
     "win1":  "electron-packager .  --platform=win32 --arch=x64 --icon=sage2.ico --overwrite",

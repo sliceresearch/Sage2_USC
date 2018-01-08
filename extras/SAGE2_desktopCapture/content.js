@@ -8,6 +8,10 @@
 //
 // Copyright (c) 2014-16
 
+/* global chrome */
+
+"use strict";
+
 // this object is used to make sure our extension isn't conflicted with irrelevant messages!
 var desktopCaptureMessages = [
 	"SAGE2_desktop_capture_enabled",
