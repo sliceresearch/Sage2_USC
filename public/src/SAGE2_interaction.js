@@ -877,48 +877,7 @@ const SAGE2_interaction = (function() {
 				event.preventDefault();
 			}
 		};
-
-		/**
-		* Handler for mouse move
-		*
-		* @method pointerMoveMethod
-		* @param event {Event} move event
-		*/
-		// this.pointerMoveMethod = function(event) {
-		// 	var movementX = event.movementX || event.mozMovementX || event.webkitMovementX || 0;
-		// 	var movementY = event.movementY || event.mozMovementY || event.webkitMovementY || 0;
-
-		// 	// Event filtering
-		// 	var now  = Date.now();
-		// 	// time difference since last event
-		// 	var diff = now - this.now;
-		// 	// count the events
-		// 	this.cnt++;
-		// 	if (diff >= (1000 / this.sendFrequency)) {
-		// 		// Calculate the offset
-		// 		// increase the speed for touch devices
-		// 		var scale = (hasMouse ? this.sensitivity : 3 * this.sensitivity);
-		// 		var px  = this.deltaX * scale;
-		// 		var py  = this.deltaY * scale;
-		// 		// Send the event
-		// 		this.wsio.emit('pointerMove', {dx: Math.round(px), dy: Math.round(py)});
-		// 		// Reset the accumulators
-		// 		this.deltaX = 0;
-		// 		this.deltaY = 0;
-		// 		// Reset the time and count
-		// 		this.now = now;
-		// 		this.cnt = 0;
-		// 	} else {
-		// 		// if it's not time, just accumulate
-		// 		this.deltaX += movementX;
-		// 		this.deltaY += movementY;
-		// 	}
-		// 	if (event.preventDefault) {
-		// 		event.preventDefault();
-		// 	}
-		// };
 		
-
 		/**
 		* Handler for mouse release
 		*

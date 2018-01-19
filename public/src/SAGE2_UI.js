@@ -1545,7 +1545,6 @@ function handleClick(element) {
 	} else if (element.id === "closeMobileSAGE2Pointer") {
 		// Mobile SAGE2 Pointer
 		interactor.stopSAGE2Pointer();
-		handleClick('settings');
 	} else if (element.id === "fileOpenBtn") {
 		// Media Browser Dialog
 		loadSelectedFile();
@@ -1620,14 +1619,6 @@ function handleClick(element) {
 		hideDialog('infoDialog');
 		var awin3 = window.open("help/info.html", '_blank');
 		awin3.focus();
-	} else if (element.id === "settingsCloseBtn") {
-		// Settings Dialog
-		hideDialog('settingsDialog');
-	} else if (element.id === "settingsCloseBtn2") {
-		// Init Settings Dialog
-		hideDialog('settingsDialog2');
-		// SLICE added to refresh browser once added name and colour settings from mobile device.
-		window.location.reload(); 
 	} else if (element.id.length > 14 && element.id.substring(0, 14) === "available_app_") {
 		// Application Selected
 		var application_selected = element.getAttribute("application");

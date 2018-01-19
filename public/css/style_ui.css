@@ -695,7 +695,6 @@ h2 {
 }
 
 #sage2MobileTrackpad {
-<<<<<<< HEAD
 	width: 100%;
 	height: 100%; /* SLICE changed from 80% to remove gap from buttons */
 	border: solid 3px #000000;
@@ -709,20 +708,6 @@ h2 {
 	background-size: 55vh;
 	background-origin: content-box;
 	padding: 10px;
-=======
-    width: 100%;
-    height: 80%;
-    border: solid 3px #000000;
-    color: #FFFFFF;
-    -moz-box-sizing: border-box;
-    -webkit-box-sizing: border-box;
-    box-sizing: border-box;
-    background: url('../images/trackpad.svg') no-repeat;
-    background-position: 50% 70%;
-    background-size: 55vh;
-    background-origin: content-box;
-    padding: 10px;
->>>>>>> upstream/master
 }
 
 #sage2MobileButtons {
