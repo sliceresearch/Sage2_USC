@@ -24,8 +24,6 @@
 // Object to hold chart references
 var charts = {};
 
-
-
 function makeSvg(domElementID, dim) {
 	var chartMargin = dim || {top: 20, right: 60, bottom: 25, left: 20};
 	var domElement = document.getElementById(domElementID);
@@ -151,16 +149,6 @@ function setupLineChart(id, titleText, lineFuncY, yAxisFormat, currentTextFunc, 
 		.style("text-anchor", "start")
 		.text(titleText);
 
-	var current = null;
-	if (currentTextFunc) {
-		current = chart.svg.append("text")
-			.attr("x", 0)
-			.attr("y", 15)
-			.attr('class', "title")
-			.style("text-anchor", "start");
-	}
-
-
 	charts[id] = {
 		svg: chart.svg,
 		width: chart.width,
@@ -174,7 +162,7 @@ function setupLineChart(id, titleText, lineFuncY, yAxisFormat, currentTextFunc, 
 		yAxis: yAxis,
 		xAxis: xAxis,
 		title: title,
-		current: current,
+		titleText: titleText,
 		currentTextFunc: currentTextFunc
 	};
 }
@@ -197,12 +185,11 @@ function fillColor(weight, threshold) {
 function drawDisplaySM() {
 
 	var data = clients.performanceMetrics;
-
 	if (data.length === 0) {
 		d3.selectAll('.displaySM').remove();
 		return;
 	}
-	//var arr = new Array(36).fill().map(u => (clients.performanceMetrics[0]));
+
 	var smId = 'smallmultiplediv';
 	var smDiv = document.getElementById(smId);
 	var margin = {left: 18, right: 18, top: 15, bottom: 15};
@@ -233,58 +220,102 @@ function drawDisplaySM() {
 		};
 	}
 
+	var serverLoadBarWidth = function(d, i) {
+		if (d.status !== 'off' && d.status !== 'missing') {
+			var c = d.clientLoad;
+			return (width - 2)  *  c.cpuPercent / 100;
+		}
+		return 0;
+	};
+
+	var cpuLoadBarWidth = function(d, i) {
+		if (d.status !== 'off' && d.status !== 'missing') {
+			var cpu = d.cpuLoad;
+			return (width - 2)  *  cpu.load / (cpu.load + cpu.idle);
+		}
+		return 0;
+	};
+
+	var serverMemoryBarWidth = function(d, i) {
+		if (d.status !== 'off' && d.status !== 'missing') {
+			var c = d.clientLoad;
+			return (width - 2)  *  c.memPercent / 100;
+		}
+		return 0;
+	};
+
+	var systemMemoryBarWidth = function(d, i) {
+		if (d.status !== 'off' && d.status !== 'missing') {
+			var mem = d.memUsage;
+			return (width - 2)  *  mem.used / mem.total;
+		}
+		return 0;
+	};
+
+	var fillFunction = function(d) {
+		if (d.status !== 'off' && d.status !== 'missing') {
+			var w = d3.select(this).attr('width');
+			return fillColor(w / width, 0.5);
+		}
+		return 'black';
+	};
 
 	var smallMultiples = chart.svg.selectAll('.displaySM')
 		.data(data);
 
 	smallMultiples.exit().remove();
 
-	chart.svg.selectAll('.displaySM')
-		.select('#cpubar')
-		.attr('width', function(d, i) {
-			var cpu = d.cpuLoad;
-			return width  *  cpu.load / (cpu.load + cpu.idle);
-		})
-		.attr('fill', function(d) {
-			var w = d3.select(this).attr('width');
-			return fillColor(w / width, 0.5);
+	smallMultiples.select('#cpubar_foreground')
+		.attr('width', cpuLoadBarWidth)
+		.attr('fill', fillFunction);
+
+	smallMultiples.select('#membar_foreground')
+		.attr('width', systemMemoryBarWidth)
+		.attr('fill', fillFunction);
+
+	smallMultiples.select('#servercpubar_foreground')
+		.attr('width', serverLoadBarWidth)
+		.attr('fill', fillFunction);
+
+	smallMultiples.select('#servermembar_foreground')
+		.attr('width', serverMemoryBarWidth)
+		.attr('fill', fillFunction);
+
+	smallMultiples.select('#cpubar')
+		.style('opacity', function(d) {
+			return (d.status === 'off' || d.status === 'missing') ? 0 : 1;
 		});
 
-	chart.svg.selectAll('.displaySM')
-		.select('#membar')
-		.attr('width', function(d, i) {
-			var mem = d.memUsage;
-			return width  *  mem.used / mem.total;
-		})
-		.attr('fill', function(d) {
-			var w = d3.select(this).attr('width');
-			return fillColor(w / width, 0.5);
+	smallMultiples.select('#membar')
+		.style('opacity', function(d) {
+			return (d.status === 'off' || d.status === 'missing') ? 0 : 1;
 		});
 
-	chart.svg.selectAll('.displaySM')
-		.select('#servercpubar')
-		.attr('width', function(d, i) {
-			var c = d.clientLoad;
-			return width  *  c.cpuPercent / 100;
-		})
-		.attr('fill', function(d) {
-			var w = d3.select(this).attr('width');
-			return fillColor(w / width, 0.5);
+	smallMultiples.select('#servercpubar')
+		.style('opacity', function(d) {
+			return (d.status === 'off' || d.status === 'missing') ? 0 : 1;
 		});
 
-	chart.svg.selectAll('.displaySM')
-		.select('#servermembar')
-		.attr('width', function(d, i) {
-			var c = d.clientLoad;
-			return width  *  c.memPercent / 100;
-		})
-		.attr('fill', function(d) {
-			var w = d3.select(this).attr('width');
-			return fillColor(w / width, 0.5);
+	smallMultiples.select('#servermembar')
+		.style('opacity', function(d) {
+			return (d.status === 'off' || d.status === 'missing') ? 0 : 1;
 		});
 
-	chart.svg.selectAll('.displaySM')
-		.select('#displaytext')
+	smallMultiples.select('#msgbox')
+		.style('opacity', function(d) {
+			return (d.status === 'off' || d.status === 'missing') ? 1 : 0;
+		});
+
+	smallMultiples.select('#msgboxtext')
+		.attr('text', function(d) {
+			if (d.status === 'off') {
+				return 'Disconnected';
+			} else if (d.status === 'missing') {
+				return 'Not found';
+			}
+		});
+
+	smallMultiples.select('#displaytext')
 		.text(function(d, i) {
 			return 'Display ' + d.clientID;
 		});
@@ -326,123 +357,74 @@ function drawDisplaySM() {
 		.text(function(d, i) {
 			return 'Display ' + d.clientID;
 		});
+	//Offline alert
+	var msg = clientSM.append('g');
+	msg.attr('id', 'msgbox')
+		.style("opacity", 0)
+		.append('rect')
+		//.attr('id', 'msgbox')
+		.attr('width', width - 2)
+		.attr('height', barHeight * 4 - 2)
+		.attr('x', 6)
+		.attr('y', 6 + barHeight)
+		.attr('fill', 'rgba(173, 42, 42, 1.0)')
+		.attr('stroke', 'none');
+	msg.append('text')
+		.attr('id', 'msgboxtext')
+		.attr('x', 5 + width / 2)
+		.attr('text-anchor', 'middle')
+		.attr('alignment-baseline', 'middle')
+		.attr('y', 5 + barHeight * 3)
+		.attr('class', 'title')
+		.text(function(d, i) {
+			return 'Disconnected';
+		});
 
 	// Server Load
-	clientSM.append('rect')
-		.attr('class', 'clickable')
-		.attr('width', width - 2)
-		.attr('height', barHeight - 2)
-		.attr('x', 6)
-		.attr('y', 5 + barHeight)
-		.attr('fill', 'black')
-		.attr('stroke', 'none');
-	clientSM.append('rect')
-		.attr('id', 'servercpubar')
-		.attr('class', 'clickable')
-		.attr('width', function(d, i) {
-			var c = d.clientLoad;
-			return (width - 2) *  c.cpuPercent / 100;
-		})
-		.attr('height', barHeight - 2)
-		.attr('x', 6)
-		.attr('y', 5 + barHeight)
-		.attr('fill', function(d) {
-			var w = d3.select(this).attr('width');
-			return fillColor(w / width, 0.5);
-		});
-	clientSM.append('text')
-		.attr('class', 'barlabel')
-		.attr('x', width / 2)
-		.attr('text-anchor', 'middle')
-		.attr('y', 5 + barHeight * 1.5)
-		.text('Client Load');
-
-
-	// CPU Bar
-	clientSM.append('rect')
-		.attr('class', 'clickable')
-		.attr('width', width - 2)
-		.attr('height', barHeight - 2)
-		.attr('x', 6)
-		.attr('y', 5 + barHeight * 2)
-		.attr('fill', 'black');
-	clientSM.append('rect')
-		.attr('id', 'cpubar')
-		.attr('class', 'clickable')
-		.attr('width', function(d, i) {
-			var cpu = d.cpuLoad;
-			return (width - 2)  *  cpu.load / (cpu.load + cpu.idle);
-		})
-		.attr('height', barHeight - 2)
-		.attr('x', 6)
-		.attr('y', 5 + barHeight * 2)
-		.attr('fill', function(d) {
-			var w = d3.select(this).attr('width');
-			return fillColor(w / width, 0.5);
-		});
-	clientSM.append('text')
-		.attr('class', 'barlabel')
-		.attr('x', width / 2)
-		.attr('text-anchor', 'middle')
-		.attr('y', 5 + barHeight * 2.5)
-		.text('CPU Load');
-
+	makeBarWithText(clientSM, {w: width - 2, h: barHeight - 2, x: 6, y: 5 + barHeight},
+		'servercpubar', 'Client Load', serverLoadBarWidth);
+	// CPU Load
+	makeBarWithText(clientSM, {w: width - 2, h: barHeight - 2, x: 6, y: 5 + barHeight * 2},
+		'cpubar', 'CPU Load', cpuLoadBarWidth);
 	// Server Memory
-	clientSM.append('rect')
-		.attr('class', 'clickable')
-		.attr('width', width - 2)
-		.attr('height', barHeight - 2)
-		.attr('x', 6)
-		.attr('y', 5 + barHeight * 3)
-		.attr('fill', 'black');
-	clientSM.append('rect')
-		.attr('id', 'servermembar')
-		.attr('class', 'clickable')
-		.attr('width', function(d, i) {
-			var c = d.clientLoad;
-			return (width - 2)  *  c.memPercent / 100;
-		})
-		.attr('height', barHeight - 2)
-		.attr('x', 6)
-		.attr('y', 5 + barHeight * 3)
-		.attr('fill', function(d) {
-			var w = d3.select(this).attr('width');
-			return fillColor(w / width, 0.5);
-		});
-	clientSM.append('text')
-		.attr('class', 'barlabel')
-		.attr('x', width / 2)
-		.attr('text-anchor', 'middle')
-		.attr('y', 5 + barHeight * 3.5)
-		.text('Client Memory');
-
-	// Memory Bar
-	clientSM.append('rect')
-		.attr('class', 'clickable')
-		.attr('width', width - 2)
-		.attr('height', barHeight - 2)
-		.attr('x', 6)
-		.attr('y', 5 + barHeight * 4)
-		.attr('fill', 'black');
-	clientSM.append('rect')
-		.attr('id', 'membar')
-		.attr('class', 'clickable')
-		.attr('width', function(d, i) {
-			var mem = d.memUsage;
-			return (width - 2)  *  mem.used / mem.total;
-		})
-		.attr('height', barHeight - 2)
-		.attr('x', 6)
-		.attr('y', 5 + barHeight * 4)
-		.attr('fill', function(d) {
-			var w = d3.select(this).attr('width');
-			return fillColor(w / width, 0.5);
-		});
-	clientSM.append('text')
-		.attr('class', 'barlabel')
-		.attr('x', width / 2)
-		.attr('text-anchor', 'middle')
-		.attr('y', 5 + barHeight * 4.5)
-		.text('System Memory');
+	makeBarWithText(clientSM, {w: width - 2, h: barHeight - 2, x: 6, y: 5 + barHeight * 3},
+		'servermembar', 'Client Memory', serverMemoryBarWidth);
+	// System Memory
+	makeBarWithText(clientSM, {w: width - 2, h: barHeight - 2, x: 6, y: 5 + barHeight * 4},
+		'membar', 'System Memory', systemMemoryBarWidth);
 }
 
+
+function makeBarWithText(selection, box, id, text, widthFunc) {
+	var grp = selection.append('g')
+		.attr('id', id)
+		.attr('class', 'bar');
+	grp.append('rect')
+		.attr('class', 'clickable')
+		.attr('id', id + '_background')
+		.attr('width', box.w)
+		.attr('height', box.h)
+		.attr('x', box.x)
+		.attr('y', box.y)
+		.attr('fill', 'black')
+		.attr('stroke', 'none');
+	grp.append('rect')
+		.attr('id', id + '_foreground')
+		.attr('class', 'clickable')
+		.attr('width', widthFunc)
+		.attr('height', box.h)
+		.attr('x', box.x)
+		.attr('y', box.y)
+		.attr('fill', function(d) {
+			var w = d3.select(this).attr('width');
+			return fillColor(w / box.w, 0.5);
+		});
+	grp.append('text')
+		.attr('id', id + '_label')
+		.attr('class', 'barlabel')
+		.attr('x', box.x + box.w / 2)
+		.attr('text-anchor', 'middle')
+		.attr('y', box.y + box.h / 2)
+		.text(text);
+	return grp;
+}

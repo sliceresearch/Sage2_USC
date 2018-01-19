@@ -72,6 +72,8 @@ var samplingInterval  = 2;
 var clientColorMap = {};
 var selectedDisplayClientIDList = [];
 var colors = [];
+var displayConfig = null;
+
 
 /**
  * Entry point of the performance application
@@ -152,8 +154,20 @@ function setupListeners(wsio) {
 	});
 
 	// Server sends the wall configuration
-	wsio.on('setupDisplayConfiguration', function() {
-		console.log('wall configuration');
+	wsio.on('setupDisplayConfiguration', function(config) {
+		console.log(config);
+		if (displayConfig === null) {
+			displayConfig = config;
+			if (terminal1.textContent.length > 0) {
+				var dispRes = getDisplayResolutionInfo();
+				var msg = terminal1.textContent;
+				msg += '\n';
+				msg += 'Display Config \n';
+				msg += 'Layout:    ' + dispRes.layout + '\n';
+				msg += 'Total res: ' + dispRes.resolution + ' pixels' + '\n';
+				terminal1.textContent = msg;
+			}
+		}
 	});
 
 	// Server sends hardware and performance data
@@ -161,29 +175,36 @@ function setupListeners(wsio) {
 		var msg = "";
 		if (data) {
 			performanceMetrics.staticInformation = data;
-			msg += 'System: ' + data.system.manufacturer + ' ' +
+			msg += 'System:    ' + data.system.manufacturer + ' ' +
 				data.system.model + '\n';
-			msg += 'Hostname: ' + data.hostname + '\n';
-			msg += 'OS: ' + data.os.platform + ' ' +
+			msg += 'Name:      ' + data.hostname + '\n';
+			msg += 'OS:        ' + data.os.platform + ' ' +
 				data.os.arch + ' ' + data.os.distro + ' ' + data.os.release + '\n';
-			msg += 'CPU: ' + data.cpu.manufacturer + ' ' + data.cpu.brand + ' ' +
+			msg += 'CPU:       ' + data.cpu.manufacturer + ' ' + data.cpu.brand + ' ' +
 				data.cpu.speed + 'Ghz ' + data.cpu.cores + 'cores\n';
 			// Sum up all the memory banks
 			var totalMem = data.memLayout.reduce(function(sum, value) {
 				return sum + value.size;
 			}, 0);
 			var memInfo = getNiceNumber(totalMem);
-			msg += 'RAM: ' + memInfo.number + memInfo.suffix + '\n';
+			msg += 'RAM:       ' + memInfo.number + memInfo.suffix + '\n';
 			// iterates over the GPU list
 			for (let i = data.graphics.controllers.length - 1; i >= 0; i--) {
 				let gpu = data.graphics.controllers[i];
 				let gpuMem = getNiceNumber(gpu.vram);
-				msg += 'GPU: ' + gpu.vendor + ' ' + gpu.model + ' ' +
+				msg += 'GPU:       ' + gpu.vendor + ' ' + gpu.model + ' ' +
 					gpuMem.number + gpuMem.suffix + ' VRAM\n';
 			}
 			// if there's no GPU recognized
 			if (data.graphics.controllers.length === 0) {
-				msg += 'GPU: -\n';
+				msg += 'GPU:    -\n';
+			}
+			var dispRes = getDisplayResolutionInfo();
+			if (dispRes !== null) {
+				msg += '\n';
+				msg += 'Display Config \n';
+				msg += 'Layout:    ' + dispRes.layout + '\n';
+				msg += 'Total res: ' + dispRes.resolution + ' pixels' + '\n';
 			}
 			// Set the name of the server in the page
 			if (heading1) {
@@ -195,15 +216,16 @@ function setupListeners(wsio) {
 			}
 		}
 		// Added content
-		terminal1.textContent += msg;
+		terminal1.textContent = msg;
 		// automatic scrolling to bottom
-		terminal1.scrollTop    = terminal1.scrollHeight;
+		//terminal1.scrollTop    = terminal1.scrollHeight;
 	});
 
 	wsio.on('addDisplayHardwareInformation', function(data) {
 		if (Array.isArray(data) === true) {
 			clients.hardware = data;
 		} else {
+			console.log(data);
 			clients.hardware.push(data);
 		}
 		showDisplayHardwareInformation();
@@ -244,6 +266,9 @@ function setupListeners(wsio) {
 			saveData('network', data.network);
 			saveData('serverLoad', data.serverLoad);
 			saveData('serverTraffic', data.serverTraffic);
+			if (displayConfig === null) {
+				return;
+			}
 			if (data.displayPerf !== null && data.displayPerf !== undefined && data.displayPerf.length > 0) {
 				clients.performanceMetrics = data.displayPerf;
 				var now = clients.performanceMetrics[0].date;
@@ -255,6 +280,11 @@ function setupListeners(wsio) {
 				removeObjectsFromArrayOnPropertyValue(clients.history, 'date', durationAgo, 'lt');
 				if (clients.performanceMetrics.length > clients.hardware.length) {
 					wsio.emit("requestClientUpdate");
+				} else if (clients.performanceMetrics.length < displayConfig.displays.length) {
+					flagOfflineDisplayClients();
+				}
+				if (displayConfig.displays.length > clients.hardware.length) {
+					flagMissingDisplayClients();
 				}
 			} else {
 				clients.performanceMetrics = [];
@@ -296,6 +326,48 @@ function setupListeners(wsio) {
 	});
 }
 
+function flagMissingDisplayClients() {
+	var data = clients.performanceMetrics;
+	data.forEach(el => {
+		var match = clients.hardware.find(function(d) {
+			return d.clientID === el.clientID;
+		});
+		if (match === null || match === undefined) {
+			el.status = 'missing';
+		}
+	});
+}
+
+function flagOfflineDisplayClients() {
+	var data = displayConfig.displays;
+	data.forEach(function (el, i) {
+		var match = clients.performanceMetrics.find(function(d) {
+			return d.clientID === i;
+		});
+		if (match === null || match === undefined) {
+			var clientPerfEntry = {
+				clientID: i,
+				id: null,
+				status: 'off'
+			};
+
+			clients.performanceMetrics.push(clientPerfEntry);
+		}
+	});
+	clients.performanceMetrics.sort(function(a, b) {
+		return a.clientID - b.clientID;
+	});
+}
+
+function getDisplayResolutionInfo() {
+	var cfg = displayConfig;
+	if (cfg !== null) {
+		var lyt = cfg.layout.rows + " X " + cfg.layout.columns;
+		var res = cfg.totalWidth + " X " + cfg.totalHeight;
+		return {layout: lyt, resolution: res};
+	}
+	return null;
+}
 
 function drawCharts() {
 	updateLineChart('cpuload', performanceMetrics.history.cpuLoad);
@@ -350,24 +422,27 @@ function showDisplayHardwareInformation() {
 		for (let i = 0; i < data.length; i++) {
 			let disp = data[i];
 			msg += '<span style="color:cyan;">Display ' + disp.clientID + ' </span>: ' + disp.system.manufacturer + ' ' +
-				disp.system.model + '\n';
-			msg += 'Hostname: ' + disp.hostname + '\n';
-			msg += 'OS: ' + disp.os.platform + ' ' +
-				disp.os.arch + ' ' + disp.os.distro + ' ' + disp.os.release + '\n';
-			msg += 'CPU: ' + disp.cpu.manufacturer + ' ' + disp.cpu.brand + ' ' +
-				disp.cpu.speed + 'Ghz ' + disp.cpu.cores + 'cores\n';
+				disp.system.model + '\n   ';
+			msg += 'Name:  ' + disp.hostname + '\n   ';
+			msg += 'OS:    ' + disp.os.platform + ' ' +
+				disp.os.arch + ' ' + disp.os.distro + ' ' + disp.os.release + '\n   ';
+			msg += 'CPU:   ' + disp.cpu.manufacturer + ' ' + disp.cpu.brand + ' ' +
+				disp.cpu.speed + 'Ghz ' + disp.cpu.cores + 'cores\n   ';
 			// Sum up all the memory banks
 			var totalMem = disp.memLayout.reduce(function(sum, value) {
 				return sum + value.size;
 			}, 0);
 			var memInfo = getNiceNumber(totalMem);
-			msg += 'RAM: ' + memInfo.number + memInfo.suffix + '\n';
+			msg += 'RAM:   ' + memInfo.number + memInfo.suffix + '\n   ';
 			var gpuMem = getNiceNumber(disp.graphics.controllers[0].vram);
 			// not very good on Linux (need to check nvidia tools)
-			msg += 'GPU: ' + disp.graphics.controllers[0].vendor + ' ' +
+			msg += 'GPU:   ' + disp.graphics.controllers[0].vendor + ' ' +
 				disp.graphics.controllers[0].model + ' ' +
-				gpuMem.number + gpuMem.suffix + ' VRAM\n';
-
+				gpuMem.number + gpuMem.suffix + ' VRAM\n   ';
+			if (displayConfig !== null) {
+				msg += 'Res:   ' + displayConfig.resolution.width + ' X ' +
+					displayConfig.resolution.height + ' pixels' + '\n';
+			}
 			// Assign colors to display clients
 			if (clientColorMap.hasOwnProperty(disp.id) === false) {
 				clientColorMap[disp.id] = getNewColor(clientColorMap);
@@ -500,12 +575,12 @@ function initializeCharts() {
 
 	var yAxisFormatNetworkServer = function(d) {
 		var mem = getNiceNumber(d * performanceMetrics.serverTrafficMax, true);
-		return mem.number + mem.suffix;
+		return mem.number + mem.suffix + "ps";
 	};
 
 	var yAxisFormatNetworkSystem = function(d) {
 		var mem = getNiceNumber(d * performanceMetrics.networkMax, true);
-		return mem.number + mem.suffix;
+		return mem.number + mem.suffix + "ps";
 	};
 
 	var yAxisFormatSAGE2Memory = function(d) {
@@ -516,7 +591,7 @@ function initializeCharts() {
 	var currentCPULoadText = function() {
 		if (performanceMetrics.cpuLoad) {
 			var cpuLoad = performanceMetrics.cpuLoad;
-			return "Current: " + getPercentString(cpuLoad.load, cpuLoad.idle) + "%";
+			return getPercentString(cpuLoad.load, cpuLoad.idle) + "%";
 		} else {
 			return "";
 		}
@@ -529,7 +604,7 @@ function initializeCharts() {
 	var currentMemUsageText = function() {
 		if (performanceMetrics.memUsage) {
 			var memUsage = performanceMetrics.memUsage;
-			return "Current: " + formatMemoryString(memUsage.used, memUsage.total - memUsage.used);
+			return formatMemoryString(memUsage.used, memUsage.total - memUsage.used);
 		} else {
 			return "";
 		}
@@ -541,7 +616,7 @@ function initializeCharts() {
 	var currentServerLoadText = function() {
 		if (performanceMetrics.serverLoad) {
 			var serverLoad = performanceMetrics.serverLoad;
-			return "Current: " + d3.format('3.0f')(serverLoad.cpuPercent) + "%";
+			return d3.format('3.0f')(serverLoad.cpuPercent) + "%";
 		} else {
 			return "";
 		}
@@ -554,7 +629,7 @@ function initializeCharts() {
 		if (performanceMetrics.memUsage) {
 			var memUsage = performanceMetrics.memUsage;
 			var servermem = performanceMetrics.serverLoad.memResidentSet;
-			return "Current: " + formatMemoryString(servermem, memUsage.total - servermem);
+			return formatMemoryString(servermem, memUsage.total - servermem);
 		} else {
 			return "";
 		}
@@ -567,7 +642,7 @@ function initializeCharts() {
 		if (performanceMetrics.serverTraffic) {
 			var serverTraffic = performanceMetrics.serverTraffic;
 			var currentTraffic = getNiceNumber(serverTraffic.totalOutBound + serverTraffic.totalInBound, true);
-			return "Current: " + currentTraffic.number + currentTraffic.suffix;
+			return currentTraffic.number + currentTraffic.suffix + "ps";
 		} else {
 			return "";
 		}
@@ -580,7 +655,7 @@ function initializeCharts() {
 		if (performanceMetrics.network) {
 			var network = performanceMetrics.network;
 			var currentTraffic = getNiceNumber(network.totalOutBound + network.totalInBound, true);
-			return "Current: " + currentTraffic.number + currentTraffic.suffix;
+			return currentTraffic.number + currentTraffic.suffix + "ps";
 		} else {
 			return "";
 		}
@@ -724,8 +799,8 @@ function updateLineChart(chartId, data, key, filterlist) {
 	chart.scaleX.domain(timeDomain);
 	chart.xAxis.call(chart.xAxisFunc);
 	chart.yAxis.call(chart.yAxisFunc);
-	if (chart.current) {
-		chart.current.text(chart.currentTextFunc());
+	if (chart.currentTextFunc) {
+		chart.title.text(chart.titleText + ": " + chart.currentTextFunc());
 	}
 
 	if (key !== null && key !== undefined) {
@@ -819,6 +894,9 @@ function showDisplayClientsHistory(clicked) {
 
 
 function buttonClicked (d, i) {
+	if (d.status === 'off' || d.status === 'missing') {
+		return;
+	}
 	var idx = selectedDisplayClientIDList.indexOf(d.id);
 	if (idx > -1) {
 		selectedDisplayClientIDList.splice(idx, 1);
