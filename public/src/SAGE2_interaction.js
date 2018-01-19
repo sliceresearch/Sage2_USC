@@ -275,24 +275,6 @@ const SAGE2_interaction = (function() {
 				}
 			};
 
-<<<<<<< HEAD
-	/**
-	* Request a pointer lock or assume that's a touch device
-	* SLICE added urlParams
-	*
-	* @method startSAGE2Pointer
-	* @param buttonId {String} name of the button triggering the pointer
-	*/
-	this.startSAGE2Pointer = function(buttonId, urlParams) {
-		if (hasMouse) {
-			var button = document.getElementById(buttonId);
-			button.addEventListener('pointerlockchange', function(e) {
-				console.log('Pointerlockchange>', e);
-			});
-			button.requestPointerLock = button.requestPointerLock       ||
-										button.mozRequestPointerLock    ||
-										button.webkitRequestPointerLock;
-=======
 			var loadCallback = function(event) {
 				var sn = event.target.response.substring(event.target.response.indexOf("name: ") + 7);
 				var st = event.target.response.substring(event.target.response.indexOf("type: ") + 7);
@@ -408,7 +390,6 @@ const SAGE2_interaction = (function() {
 				});
 			}
 		};
->>>>>>> upstream/master
 
 		/**
 		* Request a pointer lock or assume that's a touch device
@@ -416,7 +397,8 @@ const SAGE2_interaction = (function() {
 		* @method startSAGE2Pointer
 		* @param buttonId {String} name of the button triggering the pointer
 		*/
-		this.startSAGE2Pointer = function(buttonId) {
+		this.startSAGE2Pointer = function(buttonId, urlParams) { // SLICE adding urlParams
+			this.urlParams = urlParams; // SLICE 
 			if (hasMouse) {
 				var button = document.getElementById(buttonId);
 				button.addEventListener('pointerlockchange', function(e) {
@@ -440,27 +422,6 @@ const SAGE2_interaction = (function() {
 			}
 		};
 
-<<<<<<< HEAD
-			// SLICE If there is URL parameters for left and top they are parsed
-			// var left;
-			// var top;
-			// if (params.left) {
-			// 	left = parseInt(params.left);
-			// } else {
-			// 	left = 50;
-			// }
-			// if (params.top) {
-			// 	top = parseInt(params.top);
-			// } else {
-			// 	top = 50;
-			// }
-			// SLICE added urlParams
-			this.wsio.emit('startSagePointer', {label: localStorage.SAGE2_ptrName, color: localStorage.SAGE2_ptrColor, urlParameters: urlParams});
-			
-			showSAGE2PointerOverlayNoMouse();
-		}
-	};
-=======
 		/**
 		* Release the pointer
 		*
@@ -488,7 +449,6 @@ const SAGE2_interaction = (function() {
 		this.pointerLockErrorMethod = function(event) {
 			console.log("Error locking pointer: ", event);
 		};
->>>>>>> upstream/master
 
 		/**
 		* Called when a pointer lock change is triggered, release or aquire
@@ -542,54 +502,6 @@ const SAGE2_interaction = (function() {
 			}
 		};
 
-<<<<<<< HEAD
-	/**
-	* Called when a pointer lock change is triggered, release or aquire
-	*
-	* @method pointerLockChangeMethod
-	* @param event {Event} event
-	*/
-	this.pointerLockChangeMethod = function(event) {
-		var pointerLockElement = document.pointerLockElement   ||
-								document.mozPointerLockElement ||
-								document.webkitPointerLockElement;
-
-		// disable SAGE2 Pointer
-		if (pointerLockElement === undefined || pointerLockElement === null) {
-			this.wsio.emit('stopSagePointer');
-
-			document.removeEventListener('mousedown',  this.pointerPress,     false);
-			document.removeEventListener('mousemove',  this.pointerMove,      false);
-			document.removeEventListener('mouseup',    this.pointerRelease,   false);
-			document.removeEventListener('dblclick',   this.pointerDblClick,  false);
-			document.removeEventListener('wheel',      this.pointerScroll,    false);
-			document.removeEventListener('keydown',    this.pointerKeyDown,   false);
-			document.removeEventListener('keyup',      this.pointerKeyUp,     false);
-			document.removeEventListener('keypress',   this.pointerKeyPress,  false);
-
-			document.addEventListener('click', pointerClick, false);
-
-			sagePointerDisabled();
-		} else {
-			// enable SAGE2 Pointer
-			// SLICE added url parameters
-			this.wsio.emit('startSagePointer', {label: localStorage.SAGE2_ptrName, color: localStorage.SAGE2_ptrColor, urlParameters: urlParams});
-
-			document.addEventListener('mousedown',  this.pointerPress,     false);
-			document.addEventListener('mousemove',  this.pointerMove,      false);
-			document.addEventListener('mouseup',    this.pointerRelease,   false);
-			document.addEventListener('dblclick',   this.pointerDblClick,  false);
-			document.addEventListener('wheel',      this.pointerScroll,    false);
-			document.addEventListener('keydown',    this.pointerKeyDown,   false);
-			document.addEventListener('keyup',      this.pointerKeyUp,     false);
-			document.addEventListener('keypress',   this.pointerKeyPress,  false);
-
-			document.removeEventListener('click', pointerClick, false);
-
-			sagePointerEnabled();
-		}
-	};
-=======
 		/**
 		* Start screen sharing, for Chrome or Firefox
 		*
@@ -621,7 +533,6 @@ const SAGE2_interaction = (function() {
 							webix.modalbox.hide(this);
 						}
 					});
->>>>>>> upstream/master
 
 					/* eslint-enable max-len */
 
@@ -898,6 +809,31 @@ const SAGE2_interaction = (function() {
 			}
 		};
 
+
+		/**
+		 * SLICE Handles acceleration curve under testing 
+		 * 
+		 * @method accelerate
+		 * @param delta
+		 */
+		this.accelerate = function(delta) {
+			var detail = 3;
+			if (hasMouse) {
+				return delta * this.sensitivity;
+			} else {
+				if (Math.abs(delta) <= detail) {
+					// no acceleration
+					return delta;
+				} else if (delta > 0) {
+					return (delta - detail)  * this.sensitivity + detail;
+				} else if (delta < 0) {
+					return (delta + detail)  * this.sensitivity - detail;
+				}
+			}
+			return 0;
+		};
+
+		
 		/**
 		* Handler for mouse move
 		*
@@ -905,6 +841,8 @@ const SAGE2_interaction = (function() {
 		* @param event {Event} move event
 		*/
 		this.pointerMoveMethod = function(event) {
+			//SLICE pointer acceleration
+			// this.sensitivity = 1;
 			var movementX = event.movementX || event.mozMovementX || event.webkitMovementX || 0;
 			var movementY = event.movementY || event.mozMovementY || event.webkitMovementY || 0;
 
@@ -917,9 +855,10 @@ const SAGE2_interaction = (function() {
 			if (diff >= (1000 / this.sendFrequency)) {
 				// Calculate the offset
 				// increase the speed for touch devices
-				var scale = (hasMouse ? this.sensitivity : 3 * this.sensitivity);
-				var px  = this.deltaX * scale;
-				var py  = this.deltaY * scale;
+				// var scale = (hasmouse ? this.sensitivity: 3 * this.sensitivity);
+				// SLICE added accelerate method 
+				var px  = this.accelerate(this.deltaX);
+				var py  = this.accelerate(this.deltaY);
 				// Send the event
 				this.wsio.emit('pointerMove', {dx: Math.round(px), dy: Math.round(py)});
 				// Reset the accumulators
@@ -933,10 +872,52 @@ const SAGE2_interaction = (function() {
 				this.deltaX += movementX;
 				this.deltaY += movementY;
 			}
+
 			if (event.preventDefault) {
 				event.preventDefault();
 			}
 		};
+
+		/**
+		* Handler for mouse move
+		*
+		* @method pointerMoveMethod
+		* @param event {Event} move event
+		*/
+		// this.pointerMoveMethod = function(event) {
+		// 	var movementX = event.movementX || event.mozMovementX || event.webkitMovementX || 0;
+		// 	var movementY = event.movementY || event.mozMovementY || event.webkitMovementY || 0;
+
+		// 	// Event filtering
+		// 	var now  = Date.now();
+		// 	// time difference since last event
+		// 	var diff = now - this.now;
+		// 	// count the events
+		// 	this.cnt++;
+		// 	if (diff >= (1000 / this.sendFrequency)) {
+		// 		// Calculate the offset
+		// 		// increase the speed for touch devices
+		// 		var scale = (hasMouse ? this.sensitivity : 3 * this.sensitivity);
+		// 		var px  = this.deltaX * scale;
+		// 		var py  = this.deltaY * scale;
+		// 		// Send the event
+		// 		this.wsio.emit('pointerMove', {dx: Math.round(px), dy: Math.round(py)});
+		// 		// Reset the accumulators
+		// 		this.deltaX = 0;
+		// 		this.deltaY = 0;
+		// 		// Reset the time and count
+		// 		this.now = now;
+		// 		this.cnt = 0;
+		// 	} else {
+		// 		// if it's not time, just accumulate
+		// 		this.deltaX += movementX;
+		// 		this.deltaY += movementY;
+		// 	}
+		// 	if (event.preventDefault) {
+		// 		event.preventDefault();
+		// 	}
+		// };
+		
 
 		/**
 		* Handler for mouse release
@@ -1235,78 +1216,9 @@ const SAGE2_interaction = (function() {
 			}
 
 
-<<<<<<< HEAD
-	/**
-	 * SLICE Handles acceleration curve under testing 
-	 * 
-	 * @method accelerate
-	 * @param delta
-	 */
-	this.accelerate = function(delta) {
-		var detail = 3;
-		if (hasMouse) {
-			return delta * this.sensitivity;
-		} else {
-			if (Math.abs(delta) <= detail) {
-				// no acceleration
-				return delta;
-			} else if (delta > 0) {
-				return (delta - detail)  * this.sensitivity + detail;
-			} else if (delta < 0) {
-				return (delta + detail)  * this.sensitivity - detail;
-			}
-		}
-		return 0;
-	};
-
-	/**
-	* Handler for mouse move
-	*
-	* @method pointerMoveMethod
-	* @param event {Event} move event
-	*/
-	this.pointerMoveMethod = function(event) {
-		//SLICE pointer acceleration
-		// this.sensitivity = 1;
-		var movementX = event.movementX || event.mozMovementX || event.webkitMovementX || 0;
-		var movementY = event.movementY || event.mozMovementY || event.webkitMovementY || 0;
-
-		// Event filtering
-		var now  = Date.now();
-		// time difference since last event
-		var diff = now - this.now;
-		// count the events
-		this.cnt++;
-		if (diff >= (1000 / this.sendFrequency)) {
-			// Calculate the offset
-			// increase the speed for touch devices
-			// var scale = (hasmouse ? this.sensitivity: 3 * this.sensitivity);
-			// SLICE added accelerate method 
-			var px  = this.accelerate(this.deltaX);
-			var py  = this.accelerate(this.deltaY);
-			// Send the event
-			this.wsio.emit('pointerMove', {dx: Math.round(px), dy: Math.round(py)});
-			// Reset the accumulators
-			this.deltaX = 0;
-			this.deltaY = 0;
-			// Reset the time and count
-			this.now = now;
-			this.cnt = 0;
-		} else {
-			// if it's not time, just accumulate
-			this.deltaX += movementX;
-			this.deltaY += movementY;
-		}
-
-		if (event.preventDefault) {
-			event.preventDefault();
-		}
-	};
-=======
 			if (callingView) {
 				callingView.hide();
 			}
->>>>>>> upstream/master
 
 			// clear initial values
 			let name = $$("login_name");
