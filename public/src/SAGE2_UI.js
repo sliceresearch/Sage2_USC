@@ -107,7 +107,10 @@ var urlParams = {};
  * @return String|Object If prop is provided a string value is returned, otherwise an object of all properties is returned
  */
 function getUrlParams( prop ) {
-    var search = decodeURIComponent( window.location.href.slice( window.location.href.indexOf( '?' ) + 1 ) );
+	if (window.location.href.indexOf( '?' ) === -1) {
+		return;
+	}
+	var search = decodeURIComponent( window.location.href.slice( window.location.href.indexOf( '?' ) + 1 ) );
 	var definitions = search.split( '&' );
 	var localParams = {};
 
@@ -357,8 +360,6 @@ function SAGE2_init() {
 		var session = getCookie("session");
 		// SLICE params is the url parameters
 		urlParams = getUrlParams();
-		urlParams.left = parseInt(urlParams.left);
-		urlParams.top = parseInt(urlParams.top);
 		var clientDescription = {
 			clientType: "sageUI",
 			requests: {
@@ -372,7 +373,7 @@ function SAGE2_init() {
 			urlParams: urlParams
 		};
 		// SLICE 
-		if (urlParams !== undefined || urlParams !== null) {
+		if (urlParams !== undefined) {
 			clientDescription.clientType = "sliceUI";
 		}
 		wsio.emit('addClient', clientDescription);
@@ -2430,8 +2431,15 @@ function hideDialog(id) {
 function showSAGE2PointerOverlayNoMouse() {
 	document.getElementById('sage2MobileContainer').style.display = "block";
 	// SLICE urlParam teacher adds the buttons back to the trackpad display
-	if (urlParams.teacher !== "yes"){
-		document.getElementById('closeMobileSAGE2Pointer').style.display = "none";
+	if (urlParams !== undefined){
+		if (urlParams.teacher !== "yes"){
+			document.getElementById('closeMobileSAGE2Pointer').style.display = "none";
+		}else {
+			document.getElementById('sage2MobileTrackpad').style.height = "80%";
+			document.getElementById('sage2MobileButtons').style.position = "fixed";
+			document.getElementById('sage2MobileButtons').style.left = "0%";
+			document.getElementById('sage2MobileButtons').style.top = "80%";
+		}
 	} else {
 		document.getElementById('sage2MobileTrackpad').style.height = "80%";
 		document.getElementById('sage2MobileButtons').style.position = "fixed";
